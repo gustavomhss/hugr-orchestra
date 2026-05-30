@@ -1,0 +1,16 @@
+{
+  "id": "01-billing-integrity",
+  "size_N": 12,
+  "type": "coupled-deep",
+  "k": 3,
+  "retry_budget": 3,
+  "domain": "billing integrity (lossless, tenant-isolated, priced, auditable)",
+  "provenance": "original, self-contained; no CoreLink or other-project artifacts",
+  "dag_depth": 6,
+  "wp_count": 7,
+  "calibration": {
+    "status": "pending",
+    "arm_M_rsr": null,
+    "note": "run Arm M 3-5x; if RSR > 0.85, raise difficulty (composition depth / interaction / density)"
+  }
+}
