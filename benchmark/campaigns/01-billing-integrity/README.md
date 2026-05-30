@@ -18,5 +18,5 @@ and auditable**.
 - `meta.json` — size/type/k + calibration record.
 
 ## Grading
-Final state only: `python -m pytest checks/ -q` against the Runner's `repo/`. RSR = passing requirement-tests
+Final state only: `python3 -m pytest checks/ -q` against the Runner's `repo/`. RSR = passing requirement-tests
 / 12 (weighted per `requirements.yaml`). Regression = tests that passed earlier and later fail.
