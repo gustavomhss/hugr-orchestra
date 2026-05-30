@@ -8,8 +8,9 @@
 set -euo pipefail
 ARM="${1:?R|M|D}"; CAMP="${2:?campaign dir}"; OUT="${3:?out run dir}"
 BENCH="$(cd "$(dirname "$0")" && pwd)"
+CAMP="$(cd "$CAMP" && pwd)"   # absolute: we cd into $OUT later, so $CAMP/holdout must resolve regardless
 
-rm -rf "$OUT"; mkdir -p "$OUT"
+rm -rf "$OUT"; mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 cp -R "$CAMP"/. "$OUT"/
 # gate != grader: the held-out grader suite must NEVER be visible to the runner. The runner sees
 # only checks/ (its feedback gate); the grader scores holdout/ from the campaign source dir.
@@ -36,8 +37,10 @@ Start now with the first work package: $WP1
 Edit the implementation package under repo/ (the one the checks import). You may run  python3 -m pytest checks/ -q  to check yourself. When you believe the current package is done, stop — you will be guided to the next package, or told what still fails."
 
 cd "$OUT"
+# Timeout must be generous: a killed run emits no final JSON (no usage) and truncates Relay mid-WP.
+# Relay is ~150-200s/WP, so high-N R runs need a lot of headroom. Override with RELAY_TIMEOUT.
 RELAY_RUN_DIR="$OUT" RELAY_SPRINT="$SPRINT" RELAY_GATE="$GATE" \
-  timeout 700 claude -p "$BRIEF" --output-format json --dangerously-skip-permissions --model sonnet \
+  timeout "${RELAY_TIMEOUT:-1800}" claude -p "$BRIEF" --output-format json --dangerously-skip-permissions --model sonnet \
   > "$OUT/run.json" 2> "$OUT/run.err" || true
 
 echo "=== ARM $ARM | campaign $(basename "$CAMP") ==="
