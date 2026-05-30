@@ -40,8 +40,8 @@ gate. Target **≥ 80% deterministic verifiers**; the `llm` residue must be rubr
 
 **Step 2 — Build the dependency DAG.**
 Draw an edge `Rⱼ → Rᵢ` when `Rⱼ ∈ deps(Rᵢ)`. The graph must be acyclic; break modelled cycles by splitting a
-requirement. (Cross-references in the CoreLink INV registry give these edges directly — e.g.
-`INV-BILLING-NO-LOSS` depends on `INV-AUDIT-APPEND-ONLY` and `INV-DEDUP-CONSISTENCY`.)
+requirement. (A well-specified domain yields these edges directly — e.g. a "no billable event is lost"
+requirement depends on "the audit log is append-only" and "events are deduplicated".)
 
 **Step 3 — Partition into work packages (the fixed rule).**
 Walk the DAG in topological order, greedily accreting requirements into the current WP while **all** of:
@@ -80,9 +80,10 @@ or a single frozen-prompt LLM pass constrained to the rule above), run **once** 
 reviewed against Step 1's reject criteria, then **frozen and committed**. It is never re-generated per run and
 never hand-edited for a specific arm.
 
-## Worked micro-example (CoreLink billing increment)
+## Worked micro-example (billing-integrity increment — original, illustrative)
 
-Campaign `G`: "make the usage→billing path lossless and auditable."
+Campaign `G`: "make the usage→billing path lossless and auditable." (An original, self-contained task;
+no CoreLink artifacts.)
 
 | Rᵢ | statement (atomic) | verifier | deps |
 |---|---|---|---|

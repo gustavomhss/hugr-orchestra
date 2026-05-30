@@ -26,21 +26,25 @@ compute, or only on best-of-k, **has not won**.
 
 ## 3. Campaign suite
 
-### Substrate: CoreLink (a deliberate, decisive choice)
-Campaigns are sourced from the **CoreLink private spec corpus** (198 `INV-*` invariants with binary
-pass/fail + work-item acceptance criteria across billing, multi-tenant isolation, distributed failover,
-crypto, and compliance). Two reasons this is the right substrate:
+### Substrate: original campaigns, CoreLink-grade difficulty (strict isolation)
+Campaigns are **authored fresh inside this repository**, under `benchmark/campaigns/` — original repos,
+requirements, and checks — in the *same hard problem domains* (billing integrity, multi-tenant isolation,
+distributed failover, crypto, compliance). **No CoreLink code, spec text, invariant identifiers, or any
+other project's files are copied in or referenced.** CoreLink only informed the *difficulty profile* (the
+dense, cross-referential, interacting requirement style); nothing is imported. The Relay benchmark stays
+strictly separated from CoreLink and every other project — all artifacts live under `relay/benchmark/`.
 
-1. **Contamination-immune by construction.** CoreLink's corpus is private and never in any model's
-   training data — sidestepping the #1 benchmark killer (the reason SWE-bench Verified was retired).
-   No temporal windowing or canary gymnastics needed: the tasks are genuinely unseen.
-2. **Naturally high difficulty.** The invariants are dense, cross-referential, domain-specific, and
-   interacting — exactly the composition-depth + OOD + interaction profile the research says is required
-   to force frontier models to drop requirements (raw count alone does not).
+Two reasons this substrate is right:
+1. **Contamination-immune by construction.** Freshly authored tasks are in no model's training data —
+   sidestepping the #1 benchmark killer (the reason SWE-bench Verified was retired). No temporal windowing
+   or canaries needed: the tasks are genuinely unseen. Authoring fresh (rather than lifting any private
+   corpus) gives the same immunity *and* keeps clean project separation.
+2. **Naturally high difficulty.** Modeling these domains yields dense, cross-referential, interacting
+   requirements — the composition-depth + OOD + interaction profile the research says is required to force
+   frontier models to drop requirements (raw count alone does not).
 
-Each campaign is translated into a **self-contained, runnable task**: a minimal repo + the frozen
-requirement set + deterministic checks. The translation is reviewed against the Step-1 reject criteria
-and committed.
+Each campaign is a **self-contained, runnable task**: a minimal repo + the frozen requirement set +
+deterministic checks, reviewed against the Step-1 reject criteria and committed under `relay/benchmark/`.
 
 ### The two sweep axes
 - **Size** (the central angle): campaigns at `N ∈ {8, 16, 32, 64}` requirements (and the WP cap
@@ -100,7 +104,7 @@ Each headline claim ships with its statistical test (effect size + p-value), per
 | Oracle/test-feedback leakage | Arm M gets the identical tests as feedback |
 | Best-of-k luck | pass^k over N seeds, never best-of-k |
 | Grader gaming | Isolated, blind, structured-parse grader; adversarial exploit pass |
-| Train/test contamination | Private CoreLink substrate (unseen by construction) |
+| Train/test contamination | Freshly-authored, unpublished campaigns (unseen by construction) |
 | Ambiguous requirements | Step-1 reject gate (too-narrow / too-wide checks discarded) |
 | Ceiling / no headroom | Per-campaign calibration; discard saturated campaigns |
 
