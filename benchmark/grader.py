@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 
 def weights(req_yaml):
     t = open(req_yaml).read()
-    ids = re.findall(r'-\s*id:\s*(\S+)', t)
+    ids = re.findall(r'id:\s*(R\d+)\b', t)   # robust to block AND inline-flow YAML
     ws = re.findall(r'weight:\s*(\d+)', t)
     return {i: int(w) for i, w in zip(ids, ws)}
 
