@@ -33,7 +33,7 @@ BRIEF="$GOAL
 
 Start now with the first work package: $WP1
 
-Edit billing/core.py. You may run  python3 -m pytest checks/ -q  to check yourself. When you believe the current package is done, stop — you will be guided to the next package, or told what still fails."
+Edit the implementation package under repo/ (the one the checks import). You may run  python3 -m pytest checks/ -q  to check yourself. When you believe the current package is done, stop — you will be guided to the next package, or told what still fails."
 
 cd "$OUT"
 RELAY_RUN_DIR="$OUT" RELAY_SPRINT="$SPRINT" RELAY_GATE="$GATE" \

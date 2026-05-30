@@ -36,7 +36,7 @@ advance() {
   ninstr=$(jq -r ".work_packages[$ni].instructions" "$SPRINT")
   printf '[%s] WP %s OK -> reveal %s\n' "$(date +%s)" "$wp_id" "$nid" >> "$LOG"
   ledger advance-reveal
-  jq -n --arg r "Work package $nid. $ninstr  (Edit billing/core.py; self-check with: python3 -m pytest checks/ -q)" \
+  jq -n --arg r "Work package $nid. $ninstr  (Edit the code under repo/; self-check with: python3 -m pytest checks/ -q)" \
         '{decision:"block", reason:$r}'
   exit 0
 }
@@ -70,6 +70,6 @@ echo $((r+1)) > "$STATE/retry_$i"
 instr=$(jq -r ".work_packages[$i].instructions" "$SPRINT")
 printf '[%s] WP %s GATE FAIL (retry %s) fails:%s reg:%s\n' "$(date +%s)" "$wp_id" "$((r+1))" "$fails" "$reg" >> "$LOG"
 ledger gate-fail "$((r+1))"
-msg="Work package $wp_id is NOT done. Still failing: ${fails}${reg:+ ; regressions:${reg}}. Fix billing/core.py so these pass (run: python3 -m pytest checks/ -q), then finish. Instructions: $instr"
+msg="Work package $wp_id is NOT done. Still failing: ${fails}${reg:+ ; regressions:${reg}}. Fix the code under repo/ so these pass (run: python3 -m pytest checks/ -q), then finish. Instructions: $instr"
 jq -n --arg r "$msg" '{decision:"block", reason:$r}'
 exit 0

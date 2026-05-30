@@ -25,3 +25,6 @@ node_modules/
 
 # Verified-trace ledger archive (per-run grade + trace + usage; the local flywheel store)
 .relay-ledger/
+
+# Generated campaigns are reproducible from generator/gen_campaign.py + (N, seed); don't bloat the repo
+benchmark/campaigns/_gen-*/
