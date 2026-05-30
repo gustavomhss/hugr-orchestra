@@ -1,0 +1,24 @@
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Secrets / env
+.env
+.env.local
+*.key
+
+# Relay runtime state (per-agent counters, transcripts, logs)
+.relay-state/
+*.log
