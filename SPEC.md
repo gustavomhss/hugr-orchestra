@@ -11,6 +11,19 @@ checking the finished WP against its **Definition of Done (the Gate)**, and eith
 next WP into the same agent (pass) or handing the current one back with the gap (fail) —
 **forward-only, never regressing** — until the sprint is delivered.
 
+> **Implementation status (shipped reality vs. this spec).** This spec describes the **`SubagentStop`
+> + per-runner `agent_id`** multi-runner mechanism. The **shipped** benchmark hook
+> (`benchmark/relay_hook.sh`) is a plain **`Stop`** hook driving **one runner per run**: it drains and
+> ignores `stdin`/`agent_id` and keys progress on a single flat-file counter. `SubagentStop` + stable
+> `agent_id` were verified in clean-room probes (§9) but are **roadmap, not running.** Treat the
+> `agent_id`-keyed pseudocode in §6 as the target design; the single-runner `Stop` path is what
+> executes today. See `WHITEPAPER.md` §3.5 and `PRODUCT.md` §4.4.
+>
+> **Gate ≠ grader.** The Gate (DoD checks the runner is told to self-check with) and the benchmark
+> **grader** are now **disjoint**: the grader scores a **held-out** suite (`<campaign>/holdout/`) the
+> runner never sees, so an implementation that hard-codes the visible `checks/` inputs scores low.
+> The held-out suite is stripped from the run dir by `run_arm.sh`.
+
 ## 2. Glossary (canonical terms — use verbatim)
 
 | Term | Meaning |

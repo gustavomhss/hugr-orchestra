@@ -22,3 +22,6 @@ node_modules/
 # Relay runtime state (per-agent counters, transcripts, logs)
 .relay-state/
 *.log
+
+# Verified-trace ledger archive (per-run grade + trace + usage; the local flywheel store)
+.relay-ledger/
