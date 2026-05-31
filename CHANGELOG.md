@@ -5,6 +5,13 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-05-31 (compliance CLI)
+- **`bin/relay verify <run-dir>`** — the compliance-facing command: verifies the ledger hash chain
+  (reusing `verify_ledger.py`) *and* reports each named control's final verdict + how it was graded,
+  with `--json` for pipelines. Exit 0 = intact + all deterministic controls passed; 1 = TAMPERED
+  (overrides green verdicts — a forged pass is worthless); 2 = a deterministic control failed. Advisory
+  (`judge`) controls are reported, never counted. SPEC.md §7 + README updated.
+
 ### Added — 2026-05-31 (compliance surface: checklist gate + tamper-evident ledger)
 - **Hash-chained ledger.** The verified-trace ledger is now an append-only hash chain (each line
   carries `prev`=previous `h`, `h`=sha256 of the line w/o `h`); `benchmark/verify_ledger.py` checks

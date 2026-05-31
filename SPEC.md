@@ -119,6 +119,18 @@ python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl   # exit 0 = 
 
 This is what makes "the gate witnessed a real check pass" a *signed fact* rather than a log we wrote.
 
+The compliance-facing wrapper is **`bin/relay verify <run-dir>`** — it verifies the chain *and* reports
+each named control's final verdict (and how it was graded) in one command, with `--json` for pipelines:
+
+```
+relay verify <run-dir>           # exit 0 = intact + all deterministic controls passed
+                                 #      1 = chain TAMPERED (record untrustworthy — overrides green verdicts)
+                                 #      2 = chain intact but a deterministic control FAILED
+```
+
+A TAMPERED chain forces a fail **even if every control reads green** — a forged "pass" is worthless.
+Advisory (`judge`) controls are reported but never affect the exit code.
+
 ## 5. The Relay loop (per stop)
 
 ```

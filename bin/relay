@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+"""relay — Relay's command-line entrypoint.
+
+Subcommands:
+  relay verify <run-dir | ledger.jsonl> [--json]
+      Audit a finished run: verify the verified-trace ledger's hash chain AND report the
+      final verdict of every named control. This is the command you hand to compliance — it
+      answers "did the controls actually pass, and can I trust this record?" in one shot.
+
+      Exit 0 = chain intact AND all deterministic controls passed (auditable PASS).
+      Exit 1 = chain TAMPERED/broken (the record cannot be trusted).
+      Exit 2 = chain intact but a deterministic control's final verdict is FAIL.
+      (Advisory/`judge` controls are reported but never affect the exit code — by design.)
+"""
+import sys, os, json, subprocess
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+VERIFY_LEDGER = os.path.join(HERE, "..", "benchmark", "verify_ledger.py")
+
+G, R, Y, B, X = "\033[32m", "\033[31m", "\033[33m", "\033[1m", "\033[0m"
+
+
+def resolve_ledger(arg: str) -> str:
+    if os.path.isdir(arg):
+        return os.path.join(arg, ".relay-state", "ledger.jsonl")
+    return arg
+
+
+def chain_status(path: str):
+    """Single source of truth for integrity: shell out to verify_ledger.py (exit 0/1/2)."""
+    p = subprocess.run([sys.executable, VERIFY_LEDGER, path],
+                       capture_output=True, text=True)
+    return p.returncode, (p.stdout + p.stderr).strip()
+
+
+def load_entries(path: str):
+    out = []
+    with open(path) as f:
+        for ln in f:
+            ln = ln.strip()
+            if ln:
+                out.append(json.loads(ln))
+    return out
+
+
+def control_report(entries):
+    """Final verdict per named control = its LAST recorded entry (post-repair state)."""
+    final = {}  # id -> entry (last wins, insertion order preserved)
+    for e in entries:
+        if e.get("event") == "checklist-item":
+            final[e["item"]] = e
+    return list(final.values())
+
+
+def cmd_verify(args):
+    as_json = "--json" in args
+    pos = [a for a in args if not a.startswith("--")]
+    if not pos:
+        print("usage: relay verify <run-dir | ledger.jsonl> [--json]", file=sys.stderr)
+        return 2
+    path = resolve_ledger(pos[0])
+    if not os.path.exists(path):
+        print(f"no ledger at {path}", file=sys.stderr)
+        return 2
+
+    rc, chain_msg = chain_status(path)
+    intact = rc == 0
+    entries = load_entries(path)
+    controls = control_report(entries)
+
+    det = [c for c in controls if c.get("graded_by") == "deterministic"]
+    det_fail = [c for c in det if c.get("verdict") == "fail"]
+    advisory = [c for c in controls if c.get("graded_by", "").startswith("judge")]
+    last_event = entries[-1].get("event") if entries else None
+    wps = sorted({e["wp"] for e in entries if e.get("wp") and e["wp"] != "?"})
+
+    # exit precedence: tamper (1) dominates a failing control (2) dominates pass (0)
+    code = 1 if not intact else (2 if det_fail else 0)
+
+    if as_json:
+        print(json.dumps({
+            "ledger": path,
+            "chain_intact": intact,
+            "chain_detail": chain_msg,
+            "controls": [{"id": c["item"], "assert": c.get("assert"),
+                          "verdict": c["verdict"], "graded_by": c["graded_by"]} for c in controls],
+            "deterministic_total": len(det),
+            "deterministic_passed": len(det) - len(det_fail),
+            "advisory": len(advisory),
+            "last_event": last_event,
+            "result": "PASS" if code == 0 else ("TAMPERED" if code == 1 else "CONTROL-FAIL"),
+            "exit": code,
+        }, indent=2))
+        return code
+
+    print(f"{B}RELAY VERIFY{X} — {path}\n")
+    if intact:
+        print(f"  chain integrity:  {G}✓ INTACT{X}   ({chain_msg.splitlines()[0] if chain_msg else 'ok'})")
+    else:
+        print(f"  chain integrity:  {R}✗ TAMPERED / BROKEN{X}")
+        for ln in chain_msg.splitlines():
+            print(f"      {ln}")
+    print()
+    if controls:
+        print(f"  {B}controls (final verdict){X}")
+        for c in controls:
+            v = c["verdict"]
+            mark = f"{G}✓{X}" if v == "pass" else (f"{R}✗{X}" if v == "fail" else f"{Y}⚠{X}")
+            gb = "deterministic" if c["graded_by"] == "deterministic" else f"{Y}advisory · {c['graded_by']}{X}"
+            print(f"    {mark} {c['item']:<8} {c.get('assert','')[:54]:<54}  {gb}")
+        print()
+    summary = f"{len(det)-len(det_fail)}/{len(det)} deterministic controls passed"
+    if advisory:
+        summary += f" · {len(advisory)} advisory (non-independent, not counted)"
+    summary += f" · chain {'intact' if intact else 'BROKEN'}"
+    print(f"  {summary}")
+    if wps:
+        print(f"  run: {', '.join(wps)} · last event {last_event}")
+    print()
+    if code == 0:
+        print(f"  {B}RESULT: {G}PASS{X}{B} — deterministic controls verified, chain intact, auditable.{X}")
+    elif code == 1:
+        print(f"  {B}RESULT: {R}TAMPERED{X}{B} — the record cannot be trusted. Do not accept this run.{X}")
+    else:
+        print(f"  {B}RESULT: {R}CONTROL FAIL{X}{B} — a real control did not pass: {', '.join(c['item'] for c in det_fail)}.{X}")
+    return code
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+        print(__doc__)
+        return 0
+    sub, rest = sys.argv[1], sys.argv[2:]
+    if sub == "verify":
+        return cmd_verify(rest)
+    print(f"unknown subcommand: {sub}\n", file=sys.stderr)
+    print(__doc__, file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

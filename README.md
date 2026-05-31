@@ -66,6 +66,14 @@ and `benchmark/verify_ledger.py` confirms the chain — then catches it as **TAM
 verdict is edited after the fact. A model's self-judgement is logged as *advisory, non-independent* —
 never silently passed off as verified.
 
+The one command you hand to compliance — verifies the chain **and** reports every control's verdict:
+
+```bash
+bin/relay verify <run-dir>        # exit 0 = intact + controls passed · 1 = tampered · 2 = a control failed
+```
+
+A tampered chain forces a fail **even if every control reads green** — a forged "pass" is worthless.
+
 ## Quick start
 
 1. Install the Relay hook (`Stop` → relay hook script) — see **[Configuration](docs/configuration.md)**.

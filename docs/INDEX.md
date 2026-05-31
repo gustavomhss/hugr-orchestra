@@ -3,18 +3,18 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
-- **Generated:** 2026-05-31T19:39:06Z
+- **Generated:** 2026-05-31T19:42:50Z
 - **Files:** 13
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `d4625180c552e1887f61b6d15d33cccd071982cfba4de36cdf54d2d27eb5ffa0`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `6a810dcc5be21d9fbbc7a39c58b759ed20c6bc7d22d7e33909553e23da08077e`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
-| `README.md` | 105 | 6652 | `99909662c8eab23209c697d8c9ac2e578982c5f5617d791021a6416d4c26c017` |
+| `README.md` | 113 | 6983 | `89f93c5cd2c470f3bc06b65c4bc69a43c4a1b374297a7bf68657a3ea5d47c89f` |
 | `WHITEPAPER.md` | 260 | 25552 | `4d53c105dfb17436f20999317023e8b27b8689c133943bc98af2a9b2dec0857f` |
 | `PRODUCT.md` | 429 | 38450 | `0d399ea94e7885cfb88ecb4dc05e0ae18bbb6027415a37f38f105df6fe462541` |
-| `SPEC.md` | 237 | 12485 | `169ba7671d79c88fc7365e8c08315496c2ec284fdd9327f61d97ffa592abe983` |
+| `SPEC.md` | 249 | 13172 | `3b834b58e8c458ec77b11992828929ec1d76dba3e7656c5beb021e3a741f4d62` |
 | `CONTRIBUTING.md` | 30 | 1498 | `2f978b51720b084cd55d60bb38647c5c505cbe218d881f808f1c0dfb60300dba` |
-| `CHANGELOG.md` | 54 | 3697 | `d78f6e9622acda98a647503c17ed21455286d15acc8b7c96eada3da9a4c7184c` |
+| `CHANGELOG.md` | 61 | 4225 | `14d02367335f5bbb21b96c717ea7fb4d2edb0332960e1a8f428753e5f24bbc58` |
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/authoring-sprints.md` | 246 | 12105 | `785dabbc1545c1b36789464d90df12c3a6a5f8f5046fac218e57ac5f620eb986` |
