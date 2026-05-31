@@ -42,6 +42,17 @@ spawn Runner ──► work WP ──► STOP ──► Gate ──┬─ fail �
               list exhausted → let it stop → SPRINT DELIVERED (+ verified trace)
 ```
 
+## See it in 90 seconds (no API key)
+
+```bash
+bash demo/relay_demo.sh
+```
+
+Drives the **real** Relay hook over a tiny sprint with a scripted runner (deterministic, instant,
+free). A vanilla agent declares "All done! ✅" and exits at 1/3 — silently broken. Under Relay, the
+gate fires **RED** and the door stays closed until every check passes, leaving a timestamped
+verified-trace ledger as proof. That is the whole product in one screen.
+
 ## Quick start
 
 1. Install the Relay hook (`Stop` → relay hook script) — see **[Configuration](docs/configuration.md)**.
