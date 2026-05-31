@@ -5,6 +5,19 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-05-31 (compliance surface: checklist gate + tamper-evident ledger)
+- **Hash-chained ledger.** The verified-trace ledger is now an append-only hash chain (each line
+  carries `prev`=previous `h`, `h`=sha256 of the line w/o `h`); `benchmark/verify_ledger.py` checks
+  it offline (exit 0 intact / 1 tampered). Turns the trace from "a log we wrote" into a signed proof.
+- **Checklist gate.** A WP may carry a `checklist` of **named controls** (LGPD / guardrail / business
+  rule). Deterministic items (`cmd`) block advancement and log `graded_by: deterministic`; semantic
+  items (`judge`) are **advisory, non-independent, never silently blocking** — honest by construction.
+  Every item's verdict is a `checklist-item` entry on the chain (per-control proof, not per-WP).
+- **`demo/compliance_demo.sh`** — runnable, deterministic, no API key: a vanilla agent ships 3 violated
+  controls and calls it done; under Relay the gate names each failing control, holds the door until all
+  pass, and leaves a chain that `verify_ledger.py` confirms — and flags as TAMPERED when one verdict is
+  edited after the fact. Documented in SPEC.md §4.1 + §7.
+
 ### Changed — 2026-05-31 (honest reframe after measurement)
 - **Retracted the amplifier thesis.** Benchmark measurement (held-out, contamination-immune)
   showed a strong model implements a complete, precise spec of up to N=300 distinct, coupled

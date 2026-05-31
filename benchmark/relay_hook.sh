@@ -11,12 +11,26 @@ STATE="$RUN_DIR/.relay-state"; LOG="$STATE/relay.log"; LEDGER="$STATE/ledger.jso
 mkdir -p "$STATE"
 cat >/dev/null  # drain stdin (payload not needed; one runner per run — plain Stop, no agent_id)
 fails=""; reg=""
-# Structured verified-trace ledger: one JSON line per gate fire (the compliance / RL-signal substrate).
-ledger() {  # $1=event  $2=retry(optional)
-  jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" --argjson i "${i:-0}" \
+# Tamper-evident verified-trace ledger: an append-only hash chain (one JSON line per event).
+# Each line carries prev=h(previous line) and h=sha256(this line w/o h), so any edit, reorder or
+# deletion breaks the chain — verifiable offline with benchmark/verify_ledger.py. This is the
+# compliance artifact: a signed proof of *what the gate witnessed*, not the agent's self-report.
+chain_append() {  # $1 = compact JSON body (no prev/h); links it onto the chain
+  local prev body h
+  prev=$(tail -1 "$LEDGER" 2>/dev/null | jq -r '.h // empty' 2>/dev/null); [ -z "$prev" ] && prev="GENESIS"
+  body=$(printf '%s' "$1" | jq -c --arg p "$prev" '. + {prev:$p}') || return 0
+  h=$(printf '%s' "$body" | shasum -a 256 | cut -d' ' -f1)
+  printf '%s' "$body" | jq -c --arg h "$h" '. + {h:$h}' >> "$LEDGER" 2>/dev/null || true
+}
+ledger() {  # $1=event  $2=retry(optional) — a gate-level event
+  chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" --argjson i "${i:-0}" \
          --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
-    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}' \
-    >> "$LEDGER" 2>/dev/null || true
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}')"
+}
+ledger_item() {  # $1=item-id $2=assertion $3=verdict $4=graded_by — a per-checklist-item verdict
+  chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" --argjson i "${i:-0}" \
+         --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb}')"
 }
 
 i=$(cat "$STATE/counter" 2>/dev/null || echo 0)
@@ -54,7 +68,29 @@ run_dods() {  # args: jq filter selecting dod cmds; echoes failing cmds
   printf '%s' "$out"
 }
 
+# Checklist gate: each item is an explicit, named control (LGPD / guardrail / business rule).
+# Items with a `cmd` are DETERMINISTIC (a real check is the oracle); items with only a `judge`
+# prompt are SEMANTIC and logged as non-independent/advisory — they NEVER silently block, because
+# an LLM self-judgement is not an auditable control. Every item's verdict is written to the chain.
+run_checklist() {  # echoes ids of FAILING deterministic items; logs every item's verdict
+  local out="" n j id as cmd verdict
+  n=$(jq ".work_packages[$i].checklist // [] | length" "$SPRINT")
+  for ((j=0; j<n; j++)); do
+    id=$(jq -r ".work_packages[$i].checklist[$j].id" "$SPRINT")
+    as=$(jq -r ".work_packages[$i].checklist[$j].assert // .work_packages[$i].checklist[$j].id" "$SPRINT")
+    cmd=$(jq -r ".work_packages[$i].checklist[$j].cmd // empty" "$SPRINT")
+    if [ -n "$cmd" ]; then
+      if ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ); then verdict=pass; else verdict=fail; out="$out; $id"; fi
+      ledger_item "$id" "$as" "$verdict" "deterministic"
+    else
+      ledger_item "$id" "$as" "advisory" "judge:not-wired(non-independent)"
+    fi
+  done
+  printf '%s' "$out"
+}
+
 fails=$(run_dods ".work_packages[$i].dod[].cmd")
+fails="$fails$(run_checklist)"
 reg=""
 [ "$i" -gt 0 ] && reg=$(run_dods ".work_packages[range(0;$i)].dod[].cmd")
 

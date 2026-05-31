@@ -53,6 +53,19 @@ free). A vanilla agent declares "All done! ✅" and exits at 1/3 — silently br
 gate fires **RED** and the door stays closed until every check passes, leaving a timestamped
 verified-trace ledger as proof. That is the whole product in one screen.
 
+For the compliance angle — a gate that is an itemized **checklist of named controls** (LGPD /
+guardrail / business rule), with a **tamper-evident** per-control proof:
+
+```bash
+bash demo/compliance_demo.sh
+```
+
+A vanilla agent ships three violated controls and calls it done; Relay names each failing control,
+holds the door until all pass, logs every verdict (and how it was graded) to a hash-chained ledger,
+and `benchmark/verify_ledger.py` confirms the chain — then catches it as **TAMPERED** the moment one
+verdict is edited after the fact. A model's self-judgement is logged as *advisory, non-independent* —
+never silently passed off as verified.
+
 ## Quick start
 
 1. Install the Relay hook (`Stop` → relay hook script) — see **[Configuration](docs/configuration.md)**.

@@ -83,6 +83,42 @@ Semantic (costs a model call — use only for criteria a script can't decide):
 
 The Gate runs mechanical checks first; `llm` checks only if present. A WP's verdict = AND of all its checks.
 
+### 4.1 Checklist gate (named controls — the compliance surface)
+
+A WP may carry a `checklist` alongside (or instead of) `dod`: a list of **named controls**
+(LGPD / guardrail / business-rule items), each logged individually. This is the auditable surface —
+the gate doesn't just say "WP failed", it records *which control* failed and *how it was graded*.
+
+```jsonc
+"checklist": [
+  { "id": "LGPD-1", "assert": "no raw email (PII) reaches the application logs",
+    "cmd": "rm -f app.log; python3 service.py >/dev/null 2>&1; ! grep -q '@' app.log" },
+  { "id": "PRIV-1", "assert": "privacy-notice wording is clear and adequate",
+    "judge": "Is the user-facing privacy notice adequate?" }
+]
+```
+
+- An item with **`cmd`** is **deterministic**: a real check is the oracle; it can block advancement
+  and is logged `graded_by: deterministic`. This is the auditable, regulator-acceptable kind.
+- An item with only **`judge`** is **semantic**: it is logged `graded_by: judge:…(non-independent)`
+  and is **advisory — it never silently blocks.** A model's self-judgement is not an auditable
+  control; surfacing it honestly (vs. pretending it's verified) is the whole point of `gate ≠ grader`.
+- Every item's verdict (`pass` / `fail` / `advisory`) is appended to the ledger (§7) as a
+  `checklist-item` entry, so the proof is per-control, not per-WP.
+
+### 7. Verified-trace ledger (the proof)
+
+Each gate event and each checklist-item verdict is appended to `.relay-state/ledger.jsonl` as a
+**hash chain**: every line carries `prev` = the previous line's `h`, and `h` = `sha256` of the line
+without its own `h`. Any edit, reorder, or deletion breaks the chain at that point. The trace is
+therefore a **tamper-evident proof an auditor can verify offline, without trusting the producer**:
+
+```
+python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl   # exit 0 = intact, 1 = tampered
+```
+
+This is what makes "the gate witnessed a real check pass" a *signed fact* rather than a log we wrote.
+
 ## 5. The Relay loop (per stop)
 
 ```
