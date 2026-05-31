@@ -5,6 +5,21 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Changed / Security — 2026-05-31 (ledger hardening)
+- **Keyed ledger mode.** `relay_hook.sh` and `verify_ledger.py` now seal each line with
+  `HMAC-SHA256(RELAY_LEDGER_KEY, body)` when the env var is set (**unforgeable without the secret**),
+  falling back to plain `SHA-256` otherwise. Same key must be present to write and to verify; a
+  missing/wrong key fails verification identically to a tampered line. See `docs/configuration.md`.
+- **Truncation surface.** Each entry now carries an explicit 0-based `seq`; the verifier checks `seq`
+  continuity and flags a trace that does not end in a terminal event (`sprint-complete` / `escalate`)
+  as possible tail-truncation.
+- **Honest claims.** Dropped the "proof you cannot forge" / "verify without trusting the producer"
+  overclaims for **plain** mode across `SPEC.md` §7, `compliance_demo.sh`, and the verifier docstring:
+  plain mode is tamper-*evident* (catches edits/reorders/middle-deletes) but a file-holder can re-seal
+  the whole chain — only keyed mode is unforgeable.
+- **Regression suite** (`tests/test_relay.py`, 19 tests): plain/keyed integrity, in-place edit /
+  reorder / truncation detection, `seq` checks, and wrong-key rejection.
+
 ### Added — 2026-05-31 (semantic judge, wired honestly)
 - **`benchmark/judge.py`** — real LLM judge for `judge` checklist items. Independent-auditor system
   prompt that **defaults to FAIL on insufficient/uncertain evidence**. Backends auto-select: `stub`

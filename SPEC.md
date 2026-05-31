@@ -116,15 +116,34 @@ the gate doesn't just say "WP failed", it records *which control* failed and *ho
 ### 7. Verified-trace ledger (the proof)
 
 Each gate event and each checklist-item verdict is appended to `.relay-state/ledger.jsonl` as a
-**hash chain**: every line carries `prev` = the previous line's `h`, and `h` = `sha256` of the line
-without its own `h`. Any edit, reorder, or deletion breaks the chain at that point. The trace is
-therefore a **tamper-evident proof an auditor can verify offline, without trusting the producer**:
+**hash chain**: every line carries `prev` = the previous line's `h`, `seq` = its 0-based position,
+and `h` = a MAC of the line without its own `h`. Any in-place edit, reorder, or middle-deletion
+breaks the chain (or the `seq` run) at that point.
+
+The MAC has two modes, and the guarantee differs — stated honestly, because "tamper-evident" is a
+claim an auditor will test:
+
+- **PLAIN** (default, `h = sha256(body)`): detects any in-place edit, reorder, or middle-deletion —
+  the broken link shows. It is **not** unforgeable: a party with write access to the file can
+  recompute every hash and rewrite the whole chain from genesis. Plain mode is integrity against
+  *accident and lazy tampering*, not against a motivated producer. (So plain mode does **not** by
+  itself let an auditor verify "without trusting the producer" — use keyed mode for that.)
+- **KEYED** (`RELAY_LEDGER_KEY` set, `h = HMAC-SHA256(key, body)`): the MAC depends on a secret the
+  producer does not hold, so it cannot edit, rewrite, append, or re-seal anything. **This** is the
+  mode that yields a proof an auditor verifies offline without trusting the producer.
+
+Tail-truncation (dropping trailing lines) leaves a valid prefix in *both* modes — only an
+out-of-band anchor of the latest head rules it out. The verifier therefore also reports the entry
+count and flags a trace that does not end in a terminal event (`sprint-complete` / `escalate`) as
+possible truncation.
 
 ```
-python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl   # exit 0 = intact, 1 = tampered
+python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl              # PLAIN  — exit 0 = intact, 1 = tampered
+RELAY_LEDGER_KEY=… python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl   # KEYED — same key the hook wrote with
 ```
 
-This is what makes "the gate witnessed a real check pass" a *signed fact* rather than a log we wrote.
+In keyed mode this is what makes "the gate witnessed a real check pass" a *signed fact* rather than
+a log we wrote.
 
 The compliance-facing wrapper is **`bin/relay verify <run-dir>`** — it verifies the chain *and* reports
 each named control's final verdict (and how it was graded) in one command, with `--json` for pipelines:
@@ -135,8 +154,10 @@ relay verify <run-dir>           # exit 0 = intact + all deterministic controls 
                                  #      2 = chain intact but a deterministic control FAILED
 ```
 
-A TAMPERED chain forces a fail **even if every control reads green** — a forged "pass" is worthless.
-Advisory (`judge`) controls are reported but never affect the exit code.
+A TAMPERED chain forces a fail **even if every control reads green** — a "pass" sitting on a broken
+chain is worthless. (A producer who re-seals the *entire* plain chain from genesis escapes this; that
+is exactly what keyed mode, §7, exists to defeat.) Advisory (`judge`) controls are reported but never
+affect the exit code.
 
 ## 5. The Relay loop (per stop)
 

@@ -109,6 +109,27 @@ visible") while keeping detail focused ("chapters revealed one at a time"). The 
 the orchestrator's initial prompt, not a hook knob — but the `title` field in each WP is the
 canonical source for Map content (SPEC §3).
 
+### RELAY_LEDGER_KEY (verified-trace ledger mode)
+
+Environment variable read by the hook (when it writes the ledger) and by `verify_ledger.py`
+(when it checks it). It selects how each ledger line is sealed (SPEC §7):
+
+```bash
+# PLAIN (default, unset): h = SHA-256(body). Tamper-EVIDENT — catches in-place edits, reorders,
+# and middle-deletions, but a holder of the file can rewrite the whole chain. Fine for demos/CI.
+python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl
+
+# KEYED: h = HMAC-SHA256(RELAY_LEDGER_KEY, body). UNFORGEABLE without the secret — the mode for an
+# actual adversary / a compliance artifact an auditor verifies without trusting the producer.
+export RELAY_LEDGER_KEY="$(openssl rand -hex 32)"   # set for BOTH the run and the verification
+```
+
+The **same** key must be present when the hook writes and when you verify — a missing or wrong key
+fails verification identically to a tampered line (by design). Keep the key out of the run directory
+(env / secret manager), or the ledger and its seal travel together and the guarantee is lost. Neither
+mode defends against tail-truncation on its own; anchor the latest chain head out-of-band if that is
+in scope (SPEC §7).
+
 ### Context compaction for long sprints
 
 A single continuous Runner accumulates context across all WPs (SPEC §7 design decision).
