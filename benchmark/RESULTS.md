@@ -64,3 +64,34 @@ exactly the regime strong models ace first-pass. It does NOT probe the deepest r
 holds reliably. Whether that regime (a) admits a clean deterministic oracle and (b) is one where Relay wins is
 still open — and is precisely the benchmark that is hard to build. Until such a substrate exists and shows a
 crossover, the efficacy half stays unsupported, and we ship the control-plane / compliance product.
+
+---
+
+## v2: the non-compressible substrate (the amplifier's last shot) — still no break (2026-05-31)
+
+To rule out that v1's negative was an artifact of *compressibility* (templated rules collapse to one
+general dispatch, so the model never holds N distinct things), generator v2 (`gen_campaign_v2.py`) emits
+N **bespoke** functions g1..gN — each a unique arithmetic expression that calls one earlier function (a
+single-call chain, so an error propagates), each applying 3 per-function global rules (index parity /
+index%7 / has-a-call). There is no table to interpret: the model must emit N **distinct** definitions and
+apply the right global-rule combination to each. Same gate≠grader + clean /tmp oracle; held-out
+anti-hack verified (cheat ≈0.03).
+
+| substrate | N | M held-out RSR | turns | cost $ |
+|---|---|---|---|---|
+| v2 bespoke-graph | 150 | **1.00 (150/150)** | 8 | 1.35 |
+| v2 bespoke-graph | 300 | **1.00 (300/300)** | 8 | 1.16 |
+
+Even with the compression shortcut removed and cross-function coupling added, the monolith implements 300
+distinct, coupled, non-local-rule-bearing functions in 8 turns for ~$1, held-out-confirmed. **The amplifier
+thesis is now falsified on two independent substrates.**
+
+### What this rules in and out
+A *complete, precise* spec of up to N=300 distinct coupled requirements is implemented first-pass by a strong
+model **regardless of compressibility**. The failure modes that actually break long agentic work — ambiguity,
+underspecification, evolving requirements, or context that genuinely exceeds the window — are exactly the ones
+that resist a clean deterministic oracle. The only remaining lever with a clean oracle is sheer
+output/context **saturation** (N ≫ 300, e.g. 1000+), but (a) M's bounded-repair loop gets multiple turns, so
+it may still complete — turning it into a **cost** question, not a quality one; and (b) a win there is "M
+can't fit it in one pass," a mechanical-capacity regime, not reasoning amplification. **Verdict: on every
+clean-oracle substrate up to N=300, there is no crossover. The durable product is control-plane / compliance.**
