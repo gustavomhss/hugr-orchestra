@@ -129,4 +129,6 @@ dim "  (changed one 'fail' verdict to 'pass' — leaving its own hash intact)"
 printf '  '; python3 "$VERIFY" "$D/.relay-state/ledger.jsonl" | sed 's/^/  /'
 rule
 b "Vanilla shipped 3 violated controls and called it done."
-b "Relay refused to finalize until every control passed — and left a proof you cannot forge."
+b "Relay refused to finalize until every control passed — and left a tamper-evident ledger of it."
+dim "(this run used the PLAIN chain: any in-place edit is caught. For an adversary who could rewrite"
+dim " the whole file, set RELAY_LEDGER_KEY to get a keyed HMAC chain — unforgeable without the secret.)"

@@ -16,11 +16,20 @@ fails=""; reg=""
 # Each line carries prev=h(previous line) and h=sha256(this line w/o h), so any edit, reorder or
 # deletion breaks the chain — verifiable offline with benchmark/verify_ledger.py. This is the
 # compliance artifact: a signed proof of *what the gate witnessed*, not the agent's self-report.
-chain_append() {  # $1 = compact JSON body (no prev/h); links it onto the chain
-  local prev body h
-  prev=$(tail -1 "$LEDGER" 2>/dev/null | jq -r '.h // empty' 2>/dev/null); [ -z "$prev" ] && prev="GENESIS"
-  body=$(printf '%s' "$1" | jq -c --arg p "$prev" '. + {prev:$p}') || return 0
-  h=$(printf '%s' "$body" | shasum -a 256 | cut -d' ' -f1)
+chain_append() {  # $1 = compact JSON body (no prev/seq/h); links it onto the chain
+  local last prev seq body h
+  last=$(tail -1 "$LEDGER" 2>/dev/null)
+  prev=$(printf '%s' "$last" | jq -r '.h // empty' 2>/dev/null); [ -z "$prev" ] && prev="GENESIS"
+  seq=$(printf '%s' "$last" | jq -r '.seq // -1' 2>/dev/null); [ -z "$seq" ] && seq=-1; seq=$((seq + 1))
+  body=$(printf '%s' "$1" | jq -c --arg p "$prev" --argjson s "$seq" '. + {prev:$p, seq:$s}') || return 0
+  # h = HMAC-SHA256(key, body) when RELAY_LEDGER_KEY is set (UNFORGEABLE without the key),
+  # else plain SHA-256 (tamper-EVIDENT vs in-place edits, but a holder of the file can rewrite
+  # the whole chain — see verify_ledger.py). `seq` makes the entry count explicit (truncation).
+  if [ -n "${RELAY_LEDGER_KEY:-}" ]; then
+    h=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$RELAY_LEDGER_KEY" | sed -E 's/.* //')
+  else
+    h=$(printf '%s' "$body" | shasum -a 256 | cut -d' ' -f1)
+  fi
   printf '%s' "$body" | jq -c --arg h "$h" '. + {h:$h}' >> "$LEDGER" 2>/dev/null || true
 }
 ledger() {  # $1=event  $2=retry(optional) — a gate-level event
