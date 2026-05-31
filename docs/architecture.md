@@ -239,16 +239,22 @@ across runs and in one case regressed a correct solution to broken (a refactor p
 introduced an undefined-variable bug). This finding directly motivates the keep-best
 invariant (§4) and rules out reflection as a Relay primitive.
 
-**Finding 3 — The real failure mode is context scale, not prompt scale.** Requirements are
-dropped, agents stop prematurely, and quality degrades when work is large, long-horizon,
-and sprawling — when many requirements compete for attention in one giant context. This is
-the failure mode Relay is designed to address: reveal one WP at a time, refuse to let the
-Runner leave until each WP is delivered.
+**Finding 3 — The hypothesized "requirements get dropped at scale" failure mode did NOT
+materialize (measured).** We originally designed Relay around the belief that a monolith drops
+requirements as work grows. Measurement falsified it: on freshly generated, contamination-immune,
+held-out-graded campaigns, a strong model implements a *complete, precise* spec of up to N=300
+distinct, coupled requirements first-pass (≈8 turns, ~$1), on both a templated and a non-compressible
+substrate. The monolith does not break, so there is no crossover for a per-step ratchet to win at
+(see [benchmark/RESULTS.md](../benchmark/RESULTS.md)). What this leaves is **not** "Relay recovers
+dropped requirements" — it is the deterministic, model-improvement-robust core: an external oracle
+("a real check passed" replaces "the agent said done"), the keep-best ratchet against regression, and
+a tamper-evident verified-trace ledger. Relay's value is **proof, not amplification.**
 
-These three findings explain every non-obvious decision in the design: why there is no
-reflection step, why the keep-best latch is a hard invariant, why WP details are withheld
-until the WP is relayed, and why the Gate must be objective (so PASS is a real signal, not
-a soft heuristic).
+These findings explain every non-obvious decision in the design: why there is no reflection step
+(Finding 2), why the keep-best latch is a hard invariant (Finding 2), why the Gate must be objective
+(so PASS is a real signal — the deterministic oracle, the part that survives Finding 3), and why a
+green gate must be earned by an *independent* held-out check, never the one the Runner self-tested
+against (gate ≠ grader).
 
 ---
 
