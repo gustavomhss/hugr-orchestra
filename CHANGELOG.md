@@ -5,6 +5,16 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-05-31 (semantic judge, wired honestly)
+- **`benchmark/judge.py`** — real LLM judge for `judge` checklist items. Independent-auditor system
+  prompt that **defaults to FAIL on insufficient/uncertain evidence**. Backends auto-select: `stub`
+  (deterministic — PASS iff context contains `RELAY_JUDGE_OK`; demos/CI only) → `api` (Anthropic
+  Messages API via urllib when `ANTHROPIC_API_KEY` set; model via `RELAY_JUDGE_MODEL`). Fails safe
+  (network/auth error ⇒ FAIL). The hook runs it per `judge` item; verdict logged
+  `judge:<backend>(non-independent)`, **advisory** unless the item sets `"blocking": true` (still
+  logged as judge, never deterministic). `relay verify` reports but never counts judge items.
+  `compliance_demo.sh` now exercises the wired judge (stub) — PRIV-1 flips FAIL→PASS with the fix.
+
 ### Added — 2026-05-31 (compliance CLI)
 - **`bin/relay verify <run-dir>`** — the compliance-facing command: verifies the ledger hash chain
   (reusing `verify_ledger.py`) *and* reports each named control's final verdict + how it was graded,

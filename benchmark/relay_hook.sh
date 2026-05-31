@@ -8,6 +8,7 @@ RUN_DIR="${RELAY_RUN_DIR:?}"
 SPRINT="${RELAY_SPRINT:?}"
 GATE="${RELAY_GATE:-on}"
 STATE="$RUN_DIR/.relay-state"; LOG="$STATE/relay.log"; LEDGER="$STATE/ledger.jsonl"
+JUDGE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/judge.py"
 mkdir -p "$STATE"
 cat >/dev/null  # drain stdin (payload not needed; one runner per run — plain Stop, no agent_id)
 fails=""; reg=""
@@ -83,7 +84,20 @@ run_checklist() {  # echoes ids of FAILING deterministic items; logs every item'
       if ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ); then verdict=pass; else verdict=fail; out="$out; $id"; fi
       ledger_item "$id" "$as" "$verdict" "deterministic"
     else
-      ledger_item "$id" "$as" "advisory" "judge:not-wired(non-independent)"
+      # semantic item: run the (non-independent) LLM judge. ADVISORY by default — it blocks
+      # advancement only when the item sets "blocking": true, and even then it is logged as
+      # judge (never deterministic), so the audit trail can't mistake it for a real control.
+      local crit block jout jverd jback ctxargs cf
+      crit=$(jq -r ".work_packages[$i].checklist[$j].judge" "$SPRINT")
+      block=$(jq -r ".work_packages[$i].checklist[$j].blocking // false" "$SPRINT")
+      ctxargs=()
+      while IFS= read -r cf; do [ -n "$cf" ] && ctxargs+=(--file "$RUN_DIR/$cf"); done < <(
+        jq -r ".work_packages[$i].checklist[$j].context // empty | if type==\"array\" then .[] else . end" "$SPRINT")
+      jout=$(python3 "$JUDGE" --criterion "$crit" "${ctxargs[@]}" 2>/dev/null)
+      jverd=$(printf '%s' "$jout" | jq -r '.verdict // "advisory"' 2>/dev/null); [ -z "$jverd" ] && jverd=advisory
+      jback=$(printf '%s' "$jout" | jq -r '.backend // "judge"' 2>/dev/null); [ -z "$jback" ] && jback=judge
+      [ "$block" = "true" ] && [ "$jverd" = "fail" ] && out="$out; $id"
+      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)"
     fi
   done
   printf '%s' "$out"

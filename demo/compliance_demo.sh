@@ -37,7 +37,8 @@ cat > "$D/sprint.json" <<'JSON'
         { "id": "BIZ-1",  "assert": "monetary amount is clamped at 10000",
           "cmd": "python3 -c \"import service; import sys; sys.exit(0 if service.process({'email':'x@y.z','amount':99999,'consent':True}).get('amount',0)<=10000 else 1)\"" },
         { "id": "PRIV-1", "assert": "privacy-notice wording is clear and adequate",
-          "judge": "Is the user-facing privacy notice adequate?" }
+          "judge": "Does the code define a clear user-facing privacy notice stating what data is collected and why?",
+          "context": "service.py" }
       ] } ] }
 JSON
 
@@ -53,6 +54,8 @@ PY
 }
 fixed() { cat > "$D/service.py" <<'PY'
 import hashlib
+# Privacy notice: we collect the account email (pseudonymised in logs) and the transaction
+# amount, solely to process the payment and meet audit-retention duties.  RELAY_JUDGE_OK
 def _redact(email): return "user:" + hashlib.sha256(email.encode()).hexdigest()[:8]
 def process(record):
     if not record.get("consent"):
@@ -67,7 +70,8 @@ PY
 }
 fire_stop() {
   local out
-  out="$(echo '{}' | RELAY_RUN_DIR="$D" RELAY_SPRINT="$D/sprint.json" RELAY_GATE=on bash "$HOOK")"
+  out="$(echo '{}' | RELAY_RUN_DIR="$D" RELAY_SPRINT="$D/sprint.json" RELAY_GATE=on \
+         RELAY_JUDGE_BACKEND=stub bash "$HOOK")"  # stub = deterministic/free (real judge is the `api` backend)
   [ -z "$out" ] && { echo "__COMPLETE__"; return; }
   printf '%s' "$out" | jq -r '.reason'
 }

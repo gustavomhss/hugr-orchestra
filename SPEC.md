@@ -100,9 +100,16 @@ the gate doesn't just say "WP failed", it records *which control* failed and *ho
 
 - An item with **`cmd`** is **deterministic**: a real check is the oracle; it can block advancement
   and is logged `graded_by: deterministic`. This is the auditable, regulator-acceptable kind.
-- An item with only **`judge`** is **semantic**: it is logged `graded_by: judge:…(non-independent)`
-  and is **advisory — it never silently blocks.** A model's self-judgement is not an auditable
-  control; surfacing it honestly (vs. pretending it's verified) is the whole point of `gate ≠ grader`.
+- An item with only **`judge`** is **semantic**: a real LLM call (`benchmark/judge.py`) evaluates the
+  `judge` criterion against the item's `context` file(s) under an *independent-auditor* system prompt
+  that **defaults to FAIL when the evidence is insufficient or uncertain** (a semantic gate that
+  defaults to PASS is theatre). Backends auto-select: `stub` (deterministic, demos/CI) → `api`
+  (Anthropic Messages API when `ANTHROPIC_API_KEY` is set; model via `RELAY_JUDGE_MODEL`). The verdict
+  is **always logged `graded_by: judge:<backend>(non-independent)`** and is **advisory — it never
+  silently blocks** unless the item explicitly sets `"blocking": true`, and even then it is logged as
+  judge, never deterministic. A model's self-judgement is not an auditable control; surfacing it
+  honestly (vs. pretending it's verified) is the whole point of `gate ≠ grader`. The `relay verify`
+  CLI counts only deterministic controls toward PASS — judge items are reported, never counted.
 - Every item's verdict (`pass` / `fail` / `advisory`) is appended to the ledger (§7) as a
   `checklist-item` entry, so the proof is per-control, not per-WP.
 
