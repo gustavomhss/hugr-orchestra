@@ -5,6 +5,19 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-06-01 (4 expansion roadmaps, built in parallel)
+Four §12 expansion bets, built concurrently by a 20-agent fleet (5 per roadmap: implement + two
+adversarial reviews + fix + verify), each owning a disjoint subtree, then tech-lead-verified end to end
+(full suite 118 green, zero tracked-file drift, injection-closed, cross-roadmap integration proven).
+- **R1 telemetry** — `bin/relay-dash.py`: burndown + fleet-health over the trace corpus (reuses
+  `relay-corpus.py`'s verify-then-include; tampered traces excluded). `docs/telemetry.md`.
+- **R2 guardrails** — `bin/relay-policy.py` + `policies/`: org DoD policy bundles prepended to every WP
+  (no-debug-prints, no-loosened-tests, coverage-floor). `docs/guardrails.md`.
+- **R3 spec library** — `bin/relay-spec.py` + `specs/`: versioned reusable sprints with `${param}`
+  instantiation (shlex-safe). `docs/spec-library.md`.
+- **R4 daemon** — `bin/relay-daemon.py`: HTTP gate service over `relay-gate` (one gate, no logic
+  duplication; localhost-only, auth/TLS noted as next). `docs/daemon.md`.
+
 ### Docs — 2026-06-01 (reconcile PRODUCT/WHITEPAPER with shipped reality)
 - The product docs were written before the roadmap shipped and marked ~6 capabilities as
   "UNBUILT / not yet implemented / aspirational / roadmap-not-running" that are now built and tested:
