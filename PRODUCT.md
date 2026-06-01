@@ -162,7 +162,15 @@ Verified in clean-room design probes but **not** exercised by the shipped hook: 
 
 ### 4.4 Doc/impl gap, stated plainly (honesty over polish)
 
-The shipped artifact today is a **plain `Stop` hook** (~64 lines of bash) that drains and ignores `stdin`/`agent_id` and counts progress via a flat file. The `SubagentStop` + stable-`agent_id` + multi-runner-keying mechanism described above and in our SPEC is **partly roadmap, not fully running.** We disclose this rather than imply the documented multi-runner design is the one executing. Closing this gap is a Section 11 priority and a prerequisite before any public efficacy number is cited.
+**Update (closed):** the multi-runner gap is now shipped. Two hooks share one gate core
+(`lib/relay-gate.sh`): the original plain-`Stop` single-runner benchmark hook, and `bin/relay-arm-hook.sh`
+— a **`SubagentStop`** hook that holds each spawned agent to its own checklist chain with per-runner
+state + ledger. One honest caveat on the keying: it is by a **`RELAY-ARM:<token>` marker in the agent's
+transcript**, *not* by `agent_id` — Task-spawned subagents inherit the parent cwd and expose no
+discriminating `agent_id`, so the token (unique per subagent transcript) is the realized basis for
+multi-runner keying. This is fleet-tested (15+ concurrent agents, distinct chains, zero cross-talk) and
+deterministically regression-covered (`examples/fleet-chain/`). The conceptual `agent_id` design in the
+SPEC stands as the target; the token mechanism is what runs.
 
 ---
 

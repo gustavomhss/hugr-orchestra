@@ -11,13 +11,19 @@ checking the finished WP against its **Definition of Done (the Gate)**, and eith
 next WP into the same agent (pass) or handing the current one back with the gap (fail) —
 **forward-only, never regressing** — until the sprint is delivered.
 
-> **Implementation status (shipped reality vs. this spec).** This spec describes the **`SubagentStop`
-> + per-runner `agent_id`** multi-runner mechanism. The **shipped** benchmark hook
-> (`benchmark/relay_hook.sh`) is a plain **`Stop`** hook driving **one runner per run**: it drains and
-> ignores `stdin`/`agent_id` and keys progress on a single flat-file counter. `SubagentStop` + stable
-> `agent_id` were verified in clean-room probes (§9) but are **roadmap, not running.** Treat the
-> `agent_id`-keyed pseudocode in §6 as the target design; the single-runner `Stop` path is what
-> executes today. See `WHITEPAPER.md` §3.5 and `PRODUCT.md` §4.4.
+> **Implementation status (shipped reality vs. this spec).** Two hooks now ship, sharing one gate core
+> (`lib/relay-gate.sh` — the hash chain + checklist evaluation, single source of truth):
+> - `benchmark/relay_hook.sh` — a plain **`Stop`** hook driving **one runner per run** (single flat-file
+>   counter); the measurement harness. Unchanged in behavior.
+> - `bin/relay-arm-hook.sh` — a **`SubagentStop`** multi-runner hook that keys each spawned agent to its
+>   own checklist chain **by a `RELAY-ARM:<token>` marker recovered from the agent's transcript**, with
+>   per-token state + ledger. This is the multi-runner mechanism running for real (see
+>   [docs/per-agent-arms.md](docs/per-agent-arms.md)).
+>
+> Note the binding is by **transcript token, not `agent_id`**: Task-spawned subagents inherit the parent
+> session's cwd and do not expose a discriminating per-runner `agent_id`, so the token (unique per
+> subagent transcript) is what keys the fleet. The `agent_id`-keyed pseudocode in §6 is the conceptual
+> target; the token mechanism is the shipped realization. See `PRODUCT.md` §4.4.
 >
 > **Gate ≠ grader.** The Gate (DoD checks the runner is told to self-check with) and the benchmark
 > **grader** are now **disjoint**: the grader scores a **held-out** suite (`<campaign>/holdout/`) the

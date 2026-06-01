@@ -24,6 +24,7 @@ set -euo pipefail
 ARMS_DIR="${RELAY_ARMS_DIR:-$HOME/.relay/arms}"
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 JUDGE="${RELAY_JUDGE:-$HOOK_DIR/../benchmark/judge.py}"
+. "$HOOK_DIR/../lib/relay-gate.sh"   # shared gate core: relay_chain_append + relay_run_checklist
 
 payload="$(cat 2>/dev/null || true)"   # the SubagentStop JSON on stdin
 transcript="$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null || true)"
@@ -45,27 +46,14 @@ RUN_DIR="$(jq -r '.workdir // "."' "$ARM/meta.json" 2>/dev/null)"
 LOG="$ARM/relay.log"; LEDGER="$ARM/ledger.jsonl"
 fails=""; reg=""
 
-# ---- per-arm tamper-evident ledger (same hash-chain as benchmark/relay_hook.sh) ----
-chain_append() {  # $1 = compact JSON body (no prev/seq/h)
-  local last prev seq body h
-  last=$(tail -1 "$LEDGER" 2>/dev/null || true)
-  prev=$(printf '%s' "$last" | jq -r '.h // empty' 2>/dev/null); [ -z "$prev" ] && prev="GENESIS"
-  seq=$(printf '%s' "$last" | jq -r '.seq // -1' 2>/dev/null); [ -z "$seq" ] && seq=-1; seq=$((seq + 1))
-  body=$(printf '%s' "$1" | jq -c --arg p "$prev" --argjson s "$seq" '. + {prev:$p, seq:$s}') || return 0
-  if [ -n "${RELAY_LEDGER_KEY:-}" ]; then
-    h=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$RELAY_LEDGER_KEY" | sed -E 's/.* //')
-  else
-    h=$(printf '%s' "$body" | shasum -a 256 | cut -d' ' -f1)
-  fi
-  printf '%s' "$body" | jq -c --arg h "$h" '. + {h:$h}' >> "$LEDGER" 2>/dev/null || true
-}
+# ---- per-arm tamper-evident ledger (hash chain from lib/relay-gate.sh; envelope carries the token) ----
 ledger() {  # $1=event  $2=retry(optional)
-  chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
     '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}')"
 }
 ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by
-  chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
     '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb}')"
 }
@@ -108,35 +96,8 @@ advance() {  # current gate passed: reveal the next, or finish the chain
   exit 0
 }
 
-# ---- gate evaluation (checklist of named controls; deterministic cmd OR advisory judge) ----
-run_checklist() {  # echoes ids of FAILING deterministic (or blocking-judge) items; logs each verdict
-  local out="" n j id as cmd verdict
-  n=$(jq ".work_packages[$i].checklist // [] | length" "$SPRINT")
-  for ((j=0; j<n; j++)); do
-    id=$(jq -r ".work_packages[$i].checklist[$j].id" "$SPRINT")
-    as=$(jq -r ".work_packages[$i].checklist[$j].assert // .work_packages[$i].checklist[$j].id" "$SPRINT")
-    cmd=$(jq -r ".work_packages[$i].checklist[$j].cmd // empty" "$SPRINT")
-    if [ -n "$cmd" ]; then
-      if ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ); then verdict=pass; else verdict=fail; out="$out; $id"; fi
-      ledger_item "$id" "$as" "$verdict" "deterministic"
-    else
-      local crit block jout jverd jback ctxargs cf
-      crit=$(jq -r ".work_packages[$i].checklist[$j].judge" "$SPRINT")
-      block=$(jq -r ".work_packages[$i].checklist[$j].blocking // false" "$SPRINT")
-      ctxargs=()
-      while IFS= read -r cf; do [ -n "$cf" ] && ctxargs+=(--file "$RUN_DIR/$cf"); done < <(
-        jq -r ".work_packages[$i].checklist[$j].context // empty | if type==\"array\" then .[] else . end" "$SPRINT")
-      jout=$(python3 "$JUDGE" --criterion "$crit" "${ctxargs[@]}" 2>/dev/null || true)
-      jverd=$(printf '%s' "$jout" | jq -r '.verdict // "advisory"' 2>/dev/null); [ -z "$jverd" ] && jverd=advisory
-      jback=$(printf '%s' "$jout" | jq -r '.backend // "judge"' 2>/dev/null); [ -z "$jback" ] && jback=judge
-      [ "$block" = "true" ] && [ "$jverd" = "fail" ] && out="$out; $id"
-      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)"
-    fi
-  done
-  printf '%s' "$out"
-}
-
-fails="$(run_checklist)"
+# gate evaluation: the shared checklist core (lib/relay-gate.sh) logs each verdict via ledger_item.
+fails="$(relay_run_checklist)"
 # regression guard: re-run all EARLIER gates' deterministic checks (keep-best / no backsliding).
 # Reports the failing item's id (tab-joined id\tcmd so we keep the name, not the raw command).
 if [ "$i" -gt 0 ]; then
