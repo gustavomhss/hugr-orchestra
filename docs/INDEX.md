@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-06-01T15:06:54Z
-- **Files:** 16
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `493028a31fb792951b0a8e676f46260285cd97b1708f20b9326993ee56cb073c`
+- **Generated:** 2026-06-01T15:40:55Z
+- **Files:** 18
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `6c095d0a099cda802cc27247db8cf392b6e7b7eda518295d6a4282b587dc2518`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -14,16 +14,18 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `PRODUCT.md` | 438 | 38822 | `1028edbc75dc9b5bbcecb2d60a42d834c171fc45c95a7011e2a4b75d2fc445a8` |
 | `SPEC.md` | 283 | 15802 | `022cdc1b6b26430d53f0995cd4bd8383d42b9375027432229b91502c81be5651` |
 | `CONTRIBUTING.md` | 30 | 1557 | `0ec40378b3573adeea93cc3b6ca4c2e2a9e541c5e4ec9ee779dfac4d36cb672a` |
-| `CHANGELOG.md` | 102 | 7631 | `546a131070d8a50a0c0a5238b2716eaa8bb339f00971775851bf54e11e0d348f` |
+| `CHANGELOG.md` | 125 | 9438 | `df1d7a08320b8455a88977aabf48afaaeebad4f28ed4e9be88ca442f9b269bc2` |
 | `docs/architecture.md` | 266 | 13374 | `33bc3f4a592ad429d8afaa78edfdf917b8313d2dfc410af6d76908bc5a209d21` |
 | `docs/authoring-sprints.md` | 246 | 12105 | `785dabbc1545c1b36789464d90df12c3a6a5f8f5046fac218e57ac5f620eb986` |
 | `docs/auto-decompose.md` | 61 | 2959 | `a72e0d02d8c632035829644a18e18a6a337c96d0a46ddc89ae0bdb140f7b735e` |
+| `docs/compaction.md` | 84 | 3781 | `63bbf7b052e31dcc90f3ba4864c83577f8a8a838fdc32ca1bf53eba8a1336b2b` |
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
 | `docs/configuration.md` | 237 | 9484 | `085cbab8598bfe9ff5e2aec7629e25b7889b7ec7fc62d6dad7bf129a3dcbfd4e` |
 | `docs/faq.md` | 166 | 7813 | `5755679e358ff6525b6f3a0c213e42f4772c3a42d87ebed683839030c4af0ef6` |
 | `docs/gates.md` | 248 | 8699 | `fc0a16d2f8c735d66aeb6d1dce9186f3c591c278a801ac0b748f8cc8824c90bd` |
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/per-agent-arms.md` | 93 | 4472 | `f7fad9bc29e16f60a7f1798c081093145a6122709d2d31eca98dde28c61be42c` |
+| `docs/sdk.md` | 66 | 3120 | `77213b84ad6b4143507cf245bccaab4a9d73ee2e8f65b74ee99a6261c5a7835b` |
 | `docs/trace-corpus.md` | 52 | 2500 | `06ecf57e2a0932788a241634b06c1bce8dfdf2679e813db2a6b7ad9bb13606f4` |
 
 ## Verify

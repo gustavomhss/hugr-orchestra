@@ -132,9 +132,12 @@ def cmd_controls(traces):
             continue
         for e in entries:
             if e.get("event") == "checklist-item":
-                total[e["item"]] += 1
+                item = e.get("item")  # an integrity-valid line may still lack `item`; skip it rather than crash
+                if not item:
+                    continue
+                total[item] += 1
                 if e.get("verdict") == "fail":
-                    fails[e["item"]] += 1
+                    fails[item] += 1
     print("== per-control difficulty (by fail count) ==")
     print(f"{'control':<32} {'fails':>6} {'seen':>6}")
     for item, f in fails.most_common():

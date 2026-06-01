@@ -254,8 +254,20 @@ def cli_verify(run_dir: Path):
     return p.returncode, p.stdout
 
 
+def _make_passing_checklist_run(tmp_path: Path) -> Path:
+    """A run that records a deterministic checklist control (DET-1 pass) and ends sprint-complete."""
+    d = tmp_path / "run"
+    d.mkdir()
+    sprint = write_sprint(d, {"brief": "x", "retry_budget": 5, "work_packages": [{
+        "id": "wp1", "title": "t", "instructions": "i", "dod": [],
+        "checklist": [{"id": "DET-1", "assert": "a present", "cmd": "test -f a.txt"}]}]})
+    (d / "a.txt").touch()
+    fire(d, sprint)
+    return d
+
+
 def test_cli_pass(tmp_path):
-    d = make_run(tmp_path, 2)
+    d = _make_passing_checklist_run(tmp_path)
     rc, out = cli_verify(d)
     assert rc == 0 and "PASS" in out
 
@@ -277,6 +289,53 @@ def test_cli_control_fail(tmp_path):
     fire(d, sprint)  # a.txt missing -> DET-1 recorded fail, run not complete
     rc, out = cli_verify(d)
     assert rc == 2 and "CONTROL FAIL" in out
+
+
+# ---------- BUG-FIX regression: empty-ledger / truncated-trace must not be PASS -----
+
+def _make_empty_ledger_run(tmp_path: Path) -> Path:
+    """Create a run dir whose ledger.jsonl exists but is empty (zero entries)."""
+    d = tmp_path / "empty_run"
+    state = d / ".relay-state"
+    state.mkdir(parents=True)
+    (state / "ledger.jsonl").write_text("")  # empty file
+    return d
+
+
+def test_cli_empty_ledger_not_pass(tmp_path):
+    """BUG 1 fix: an empty ledger must return exit 2 and print NO CONTROLS, never PASS."""
+    d = _make_empty_ledger_run(tmp_path)
+    rc, out = cli_verify(d)
+    assert rc == 2, f"expected exit 2 (NO CONTROLS), got {rc}; output:\n{out}"
+    assert "PASS" not in out, f"empty ledger must not print PASS; output:\n{out}"
+    assert "NO CONTROLS" in out or "no_controls" in out or "NO-CONTROLS" in out, (
+        f"expected 'NO CONTROLS' in output; got:\n{out}"
+    )
+
+
+def test_cli_truncated_trace_not_pass(tmp_path):
+    """BUG 2 fix: a chain that ends on a checklist-item (non-terminal) must exit 2 with WARN/TRUNCATED,
+    never a silent PASS. Uses a real checklist run stripped of its sprint-complete line so the trace
+    has deterministic controls but no terminal event."""
+    d = _make_passing_checklist_run(tmp_path)
+    lines = read_lines(d)
+    # drop sprint-complete; last entry is now the checklist-item (non-terminal)
+    write_lines(d, lines[:-1])
+    rc, out = cli_verify(d)
+    assert rc == 2, f"expected exit 2 (TRUNCATED), got {rc}; output:\n{out}"
+    assert "PASS" not in out, f"truncated trace must not print PASS; output:\n{out}"
+    assert "WARN" in out or "TRUNCATED" in out or "truncat" in out.lower(), (
+        f"expected a truncation warning in output; got:\n{out}"
+    )
+
+
+def test_cli_complete_trace_still_pass(tmp_path):
+    """Non-regression: a genuine intact trace with passing deterministic controls ending in a
+    terminal event must still be exit 0 / PASS after the bug fixes."""
+    d = _make_passing_checklist_run(tmp_path)
+    rc, out = cli_verify(d)
+    assert rc == 0, f"expected exit 0 (PASS), got {rc}; output:\n{out}"
+    assert "PASS" in out, f"expected PASS in output; got:\n{out}"
 
 
 # ---------- per-agent arms: the fleet-chain example as a regression -----------------

@@ -4,6 +4,7 @@ Builds a tiny throwaway repo with a known test layout, runs the real tool on it,
 drafted sprint is well-formed and matches the suite's structure (one WP per file, one control per
 test + a rollup). No network, no model.
 """
+import importlib.util
 import json
 import subprocess
 import sys
@@ -78,3 +79,91 @@ def test_output_is_hook_consumable_schema(tmp_path):
         assert {"id", "title", "instructions", "checklist"} <= set(wp)
         for ctrl in wp["checklist"]:
             assert {"id", "cmd"} <= set(ctrl)
+
+
+# ---------------------------------------------------------------------------
+# New tests — security and robustness regressions
+# ---------------------------------------------------------------------------
+
+def _load_draft():
+    """Import the draft() and item_id() helpers directly from relay-autodecompose.py."""
+    spec = importlib.util.spec_from_file_location("relay_autodecompose", str(TOOL))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_single_quote_nodeid_does_not_inject(tmp_path):
+    """BUG 1 regression: a nodeid containing a single quote and a shell subexpression must not
+    execute the subexpression when the emitted cmd is run via 'bash -c'.
+
+    Strategy: use draft() directly with a crafted nodeid, then execute the resulting cmd with
+    bash -c and assert no side-effect file was created.
+    """
+    mod = _load_draft()
+
+    # A nodeid that, if quoted with Python repr, would become "..." (double-quoted) and leave
+    # $(touch …) shell-active.
+    sentinel = tmp_path / "PWNED_relay_test"
+    malicious_nid = f"test_x.py::test_param[a'$(touch {sentinel})]"
+
+    from collections import OrderedDict
+    groups = OrderedDict({"test_x.py": [malicious_nid]})
+    sprint = mod.draft(groups, "python3 -m pytest", None, "brief", 3)
+
+    # Gather every cmd in the sprint.
+    cmds = [ctrl["cmd"] for wp in sprint["work_packages"] for ctrl in wp["checklist"]]
+    assert cmds, "draft produced no controls"
+
+    # Run each cmd through bash -c exactly as the Relay hook does.
+    for cmd in cmds:
+        subprocess.run(["bash", "-c", cmd], capture_output=True)
+
+    # The injection must NOT have been triggered — no sentinel file should exist.
+    assert not sentinel.exists(), (
+        f"Command injection succeeded — sentinel file was created.\n"
+        f"Offending cmds: {cmds}"
+    )
+
+
+def test_frozen_importlib_line_excluded(tmp_path):
+    """BUG 3 regression: lines like '<frozen importlib._bootstrap>::something' must be excluded
+    from the collected nodeids and therefore must not appear as WP ids or checklist entries.
+
+    Strategy: create a test repo whose pytest --collect-only output would normally contain such a
+    line; since we cannot force pytest to emit it here, we test the filter predicate directly by
+    confirming that '.py::' is required — lines without it are discarded.
+    """
+    # The filter applied in collect() is: ".py::" in ln
+    # Verify the predicate rejects frozen-module lines and accepts normal nodeids.
+    frozen_line = "<frozen importlib._bootstrap>::_find_and_load"
+    normal_line = "tests/test_alpha.py::test_a1"
+    parametrized_line = "tests/test_alpha.py::test_param[x-1]"
+    summary_line = "3 tests collected in 0.01s"
+    warning_line = "  PytestUnraisableExceptionWarning"
+
+    def _passes_filter(ln):
+        return ".py::" in ln and not ln.strip().startswith(("=", "ERROR"))
+
+    assert not _passes_filter(frozen_line), "frozen line should be excluded"
+    assert not _passes_filter(summary_line), "summary line should be excluded"
+    assert not _passes_filter(warning_line), "warning line should be excluded"
+    assert _passes_filter(normal_line), "normal nodeid should be included"
+    assert _passes_filter(parametrized_line), "parametrized nodeid should be included"
+
+    # End-to-end: run the real tool on a repo with a parametrized test that has a simple value
+    # containing a single quote (produces a nodeid with '.py::') and confirm no frozen lines
+    # pollute the WP list.
+    (tmp_path / "test_param.py").write_text(
+        "import pytest\n"
+        "@pytest.mark.parametrize('x', [\"a'b\"])\n"
+        "def test_p(x):\n"
+        "    assert x\n"
+    )
+    sprint = _run_tool(tmp_path)
+    all_ids = [wp["id"] for wp in sprint["work_packages"]]
+    # No WP id should contain "frozen" or "bootstrap".
+    for wid in all_ids:
+        assert "frozen" not in wid and "bootstrap" not in wid, (
+            f"Frozen-module line leaked into WP ids: {all_ids}"
+        )

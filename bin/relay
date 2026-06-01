@@ -74,10 +74,32 @@ def cmd_verify(args):
     last_event = entries[-1].get("event") if entries else None
     wps = sorted({e["wp"] for e in entries if e.get("wp") and e["wp"] != "?"})
 
-    # exit precedence: tamper (1) dominates a failing control (2) dominates pass (0)
-    code = 1 if not intact else (2 if det_fail else 0)
+    # BUG 1 fix: an empty ledger (or one with zero controls) is NOT an auditable pass.
+    no_controls = len(entries) == 0 or len(det) == 0
+
+    # BUG 2 fix: detect tail-truncation NOTE emitted by verify_ledger.py.
+    TERMINAL = {"sprint-complete", "escalate"}
+    truncated = intact and bool(entries) and last_event not in TERMINAL
+
+    # exit precedence: tamper (1) dominates no-controls/truncation/failing-control (2) dominates pass (0)
+    if not intact:
+        code = 1
+    elif no_controls or truncated or det_fail:
+        code = 2
+    else:
+        code = 0
 
     if as_json:
+        if code == 0:
+            result = "PASS"
+        elif code == 1:
+            result = "TAMPERED"
+        elif no_controls:
+            result = "NO-CONTROLS"
+        elif det_fail:
+            result = "CONTROL-FAIL"
+        else:
+            result = "TRUNCATED"
         print(json.dumps({
             "ledger": path,
             "chain_intact": intact,
@@ -88,7 +110,9 @@ def cmd_verify(args):
             "deterministic_passed": len(det) - len(det_fail),
             "advisory": len(advisory),
             "last_event": last_event,
-            "result": "PASS" if code == 0 else ("TAMPERED" if code == 1 else "CONTROL-FAIL"),
+            "truncated": truncated,
+            "no_controls": no_controls,
+            "result": result,
             "exit": code,
         }, indent=2))
         return code
@@ -117,12 +141,21 @@ def cmd_verify(args):
     if wps:
         print(f"  run: {', '.join(wps)} · last event {last_event}")
     print()
+    if truncated:
+        # Always emit a truncation WARN banner when applicable, before the final RESULT line.
+        print(f"  {Y}WARN: trace ends on '{last_event}', not a terminal event (sprint-complete / escalate).{X}")
+        print()
     if code == 0:
         print(f"  {B}RESULT: {G}PASS{X}{B} — deterministic controls verified, chain intact, auditable.{X}")
     elif code == 1:
         print(f"  {B}RESULT: {R}TAMPERED{X}{B} — the record cannot be trusted. Do not accept this run.{X}")
-    else:
+    elif no_controls:
+        print(f"  {B}RESULT: {R}NO CONTROLS{X}{B} — not an auditable pass: no deterministic controls were recorded.{X}")
+    elif det_fail:
         print(f"  {B}RESULT: {R}CONTROL FAIL{X}{B} — a real control did not pass: {', '.join(c['item'] for c in det_fail)}.{X}")
+    else:
+        # truncated and no other explicit failure — the truncation WARN above is the primary signal
+        print(f"  {B}RESULT: {R}TRUNCATED{X}{B} — possible tail-truncation; cannot issue an auditable pass.{X}")
     return code
 
 

@@ -5,6 +5,29 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-06-01 (model-agnostic gate CLI + compaction)
+- **Vendor-neutral gate CLI** (`bin/relay-gate eval`): evaluates one gate step with ZERO Claude-Code
+  knowledge — pure JSON outcome + exit code, so any harness can drive Relay (Roadmap #7, the
+  single-vendor-lock-in wedge). Docs: `docs/sdk.md`.
+- **Compaction for tail-context rot** (`bin/relay-arm-hook.sh`): repeated re-blocks on the same gate
+  inject a shortened reason (failing ids only, not the full instructions re-dump); a deep advance past
+  `RELAY_COMPACT_AFTER` (default 6) appends a checkpoint hint and logs a `compaction-hint` ledger event.
+  The full audit trail is unchanged — only the agent-facing reason compacts (Roadmap #6). Docs:
+  `docs/compaction.md`.
+
+### Fixed — 2026-06-01 (adversarial review pass)
+- **[HIGH] Command injection** in `relay-autodecompose.py`: pytest nodeids were `repr`-quoted, so a
+  parametrized id with a quote + `$(...)` executed under the hook's `eval`. Now `shlex.quote`'d.
+- **[HIGH] `relay verify` over-claims**: an empty ledger (zero controls) and a tail-truncated trace
+  (non-terminal end) both printed a green "auditable PASS". Now report NO CONTROLS / TRUNCATED and
+  exit non-zero — the §7 truncation flag reaches the compliance verdict.
+- **[MED] Escalation now terminal**: an escalated arm marked the chain done so it can't silently reopen
+  and self-complete on a later fire (was double-counting in the corpus).
+- **[MED] Regression-only failures** no longer burn the current gate's retry budget or escalate it —
+  re-block cites the regressed earlier control instead.
+- **[MED] `relay-corpus controls`** no longer KeyErrors on an integrity-valid checklist-item lacking
+  `item`; token binding uses the FIRST transcript marker (not an echoed later one) and rejects `..`.
+
 ### Added — 2026-06-01 (fleet orchestration: arms, auto-decompose, trace corpus)
 - **Per-agent checklist chains ("arms").** `bin/relay-arm-hook.sh` (SubagentStop) holds each spawned
   agent to its own ordered chain of checklists, bound by a `RELAY-ARM:<token>` marker recovered from

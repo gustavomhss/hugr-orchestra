@@ -24,7 +24,7 @@ Usage:
                          [--per-wp-cap N] [--brief "..."] [-o sprint.json]
   # then:  RELAY_ARMS_DIR / relay-arm  or  drop the sprint.json into a run and point the hook at it.
 """
-import argparse, json, os, re, subprocess, sys
+import argparse, json, os, re, shlex, subprocess, sys
 from collections import OrderedDict
 
 
@@ -36,10 +36,18 @@ def collect(repo, tests_path, runner):
     p = subprocess.run(cmd, cwd=repo, capture_output=True, text=True)
     # --collect-only -q prints one nodeid per line ("path::test" / "path::Class::test"); a summary
     # line ("N tests collected") and blank lines may follow — keep only lines containing "::".
-    nodeids = [ln.strip() for ln in p.stdout.splitlines() if "::" in ln and not ln.startswith(("=", "ERROR"))]
+    # Bug 3 fix: require ".py::" so that lines like "<frozen importlib._bootstrap>::..." are excluded.
+    nodeids = [ln.strip() for ln in p.stdout.splitlines()
+               if ".py::" in ln and not ln.startswith(("=", "ERROR"))]
     if not nodeids:
         sys.exit(f"[relay-autodecompose] no tests collected.\n  cmd: {' '.join(cmd)}\n"
                  f"  stdout tail: {p.stdout.strip()[-400:]}\n  stderr tail: {p.stderr.strip()[-400:]}")
+    # Bug 2 fix: warn (but don't abort) if pytest exited with an error code other than 0 (success)
+    # or 5 (no tests collected, already handled above).
+    if p.returncode not in (0, 5):
+        print(f"[relay-autodecompose] WARNING: pytest --collect-only exited with returncode "
+              f"{p.returncode} — collection may be partial. Check stderr above.",
+              file=sys.stderr)
     groups = OrderedDict()
     for nid in nodeids:
         f = nid.split("::", 1)[0]
@@ -71,13 +79,13 @@ def draft(groups, runner, per_wp_cap, brief, retry_budget):
             suffix = f"-{c+1}" if len(chunks) > 1 else ""
             checklist = [
                 {"id": item_id(nid), "assert": f"{nid} passes",
-                 "cmd": f"{runner} {nid!r} -q"} for nid in chunk
+                 "cmd": f"{runner} {shlex.quote(nid)} -q"} for nid in chunk
             ]
             # WP-level rollup: the whole chunk green in one shot (cheap belt-and-suspenders)
             checklist.append({
                 "id": f"{wp_id(test_file, idx)}{suffix}-suite",
                 "assert": f"all {len(chunk)} tests in this package pass together",
-                "cmd": f"{runner} " + " ".join(repr(n) for n in chunk) + " -q",
+                "cmd": f"{runner} " + " ".join(shlex.quote(n) for n in chunk) + " -q",
             })
             work_packages.append({
                 "id": f"{wp_id(test_file, idx)}{suffix}",
