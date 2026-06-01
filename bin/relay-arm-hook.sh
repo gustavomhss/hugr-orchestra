@@ -33,9 +33,14 @@ transcript="$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/
 # embedded. Fallback: an explicit RELAY_ARM_TOKEN env (useful for tests / claude -p sessions).
 token="${RELAY_ARM_TOKEN:-}"
 if [ -z "$token" ] && [ -n "$transcript" ] && [ -f "$transcript" ]; then
-  token="$(grep -oE 'RELAY-ARM:[A-Za-z0-9_.-]+' "$transcript" 2>/dev/null | tail -1 | cut -d: -f2 || true)"
+  # Bind to the FIRST marker: the orchestrator embeds it in the subagent's opening prompt, so the
+  # earliest occurrence is the agent's own arm. (tail-1 could bind to a token the agent merely echoed
+  # or quoted later in its output, mis-binding the gate to another agent's chain.)
+  token="$(grep -oE 'RELAY-ARM:[A-Za-z0-9_.-]+' "$transcript" 2>/dev/null | head -1 | cut -d: -f2 || true)"
 fi
 [ -z "$token" ] && exit 0   # not a relay-armed subagent — do not interfere
+# Reject path-traversal tokens (charset allows dots; `..` would escape the arms dir).
+case "$token" in *..*|.) exit 0 ;; esac
 
 ARM="$ARMS_DIR/$token"
 SPRINT="$ARM/sprint.json"
@@ -92,7 +97,13 @@ advance() {  # current gate passed: reveal the next, or finish the chain
   ninstr=$(jq -r ".work_packages[$ni].instructions // \"\"" "$SPRINT")
   printf '[%s] arm %s: gate %s OK -> reveal %s\n' "$(date +%s)" "$token" "$wp_id" "$nid" >> "$LOG"
   ledger advance-reveal
-  jq -n --arg r "Relay gate '$wp_id' passed. Next gate: $nid. $ninstr" '{decision:"block", reason:$r}'
+  local reason="Relay gate '$wp_id' passed. Next gate: $nid. $ninstr"
+  local compact_after="${RELAY_COMPACT_AFTER:-6}"
+  if [ "$ni" -ge "$compact_after" ]; then
+    ledger compaction-hint
+    reason="$reason (checkpoint: $ni gates cleared — summarize progress and drop now-stale detail before continuing)"
+  fi
+  jq -n --arg r "$reason" '{decision:"block", reason:$r}'
   exit 0
 }
 
@@ -109,16 +120,36 @@ fi
 
 if [ -z "$fails" ] && [ -z "$reg" ]; then advance; fi
 
-# something failed -> re-block (bounded). Escalate to the human when the budget is spent.
+# A regression-ONLY failure (current gate passes, an earlier gate backslid) is NOT a failure of the
+# current gate: it must not burn THIS gate's retry budget nor escalate it. Re-block pointing at the
+# regressed control, without touching retry_$i, so the current gate keeps its full budget.
+if [ -z "$fails" ] && [ -n "$reg" ]; then
+  printf '[%s] arm %s: gate %s REGRESSION in earlier gate reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$reg" >> "$LOG"
+  ledger gate-fail "$(cat "$ARM/retry_$i" 2>/dev/null || echo 0)"
+  jq -n --arg r "Relay: an earlier gate regressed — restore these before finishing: ${reg#; }. (Current gate '$wp_id' is satisfied; this is a backslide in prior work.)" '{decision:"block", reason:$r}'
+  exit 0
+fi
+
+# something failed at the current gate -> re-block (bounded). Escalate to the human when budget spent.
 r=$(cat "$ARM/retry_$i" 2>/dev/null || echo 0)
 if [ "$r" -ge "$rb" ]; then
   printf '[%s] arm %s: gate %s ESCALATE (budget=%s) fails:%s reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$rb" "$fails" "$reg" >> "$LOG"
-  ledger escalate "$rb"; archive_trace escalate; exit 0
+  ledger escalate "$rb"; archive_trace escalate
+  # Escalation is TERMINAL: a gate handed to a human must not silently reopen and self-resolve on a
+  # later fire. Mark the chain done (counter past end) so subsequent stops exit early at the top guard.
+  echo "$nwp" > "$ARM/counter"
+  exit 0
 fi
 echo $((r+1)) > "$ARM/retry_$i"
 instr=$(jq -r ".work_packages[$i].instructions // \"\"" "$SPRINT")
 printf '[%s] arm %s: gate %s FAIL (retry %s) fails:%s reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$((r+1))" "$fails" "$reg" >> "$LOG"
 ledger gate-fail "$((r+1))"
-msg="Relay gate '$wp_id' is NOT satisfied. Still failing:${fails:- (none)}${reg:+ ; regressions:${reg}}. Address these, then finish.${instr:+ Instructions: $instr}"
+if [ "$r" -ge 1 ]; then
+  # Compaction: subsequent retries of the same gate — inject only the failing ids to curb context growth.
+  # The full audit trail in the ledger is unchanged; only the agent-facing reason shrinks.
+  msg="Relay gate '$wp_id' still failing. Fix these: ${fails:-${reg:- (none)}}${reg:+ ; regressions:${reg}}"
+else
+  msg="Relay gate '$wp_id' is NOT satisfied. Still failing:${fails:- (none)}${reg:+ ; regressions:${reg}}. Address these, then finish.${instr:+ Instructions: $instr}"
+fi
 jq -n --arg r "$msg" '{decision:"block", reason:$r}'
 exit 0

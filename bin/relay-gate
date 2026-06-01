@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# relay-gate — the model-agnostic gate surface (Relay Roadmap #7).
+#
+# This CLI evaluates one gate step with ZERO knowledge of Claude Code or any specific agent harness.
+# Any loop driver (LangGraph, AutoGen, custom shell scripts, CI pipelines, etc.) can call it and act
+# on the JSON outcome + exit code. The Claude hooks (bin/relay-arm-hook.sh, benchmark/relay_hook.sh)
+# remain as-is; this is the vendor-neutral integration point described in PRODUCT.md §7.4 / §8.8.
+#
+# Subcommand:
+#   relay-gate eval --sprint <sprint.json> --workdir <dir> --state <state-dir> [--ledger <path>]
+#
+# Output: one JSON object on stdout, exit code indicates disposition:
+#   exit 0  + {"outcome":"advance",...}   — gate passed; counter already incremented
+#   exit 0  + {"outcome":"complete",...}  — sprint done; counter incremented past last WP
+#   exit 1  + {"outcome":"gate-fail",...} — failing controls; retry budget not yet exhausted
+#   exit 2  + {"outcome":"escalate",...}  — retry budget spent; surface to human
+#
+# The caller translates this to its own continue/stop convention — no {"decision":"block"} here.
+set -euo pipefail
+
+GATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+JUDGE="${RELAY_JUDGE:-$GATE_DIR/../benchmark/judge.py}"
+. "$GATE_DIR/../lib/relay-gate.sh"   # relay_chain_append + relay_run_checklist
+
+# ---- Subcommand dispatch -----------------------------------------------------------------------
+
+usage() {
+  printf 'Usage: relay-gate eval --sprint <sprint.json> --workdir <dir> --state <state-dir> [--ledger <path>]\n' >&2
+  exit 1
+}
+
+[ "${1:-}" = "eval" ] || usage
+shift
+
+SPRINT="" WORKDIR="" STATE_DIR="" LEDGER_OPT=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --sprint)  SPRINT="$2";    shift 2 ;;
+    --workdir) WORKDIR="$2";   shift 2 ;;
+    --state)   STATE_DIR="$2"; shift 2 ;;
+    --ledger)  LEDGER_OPT="$2"; shift 2 ;;
+    *) usage ;;
+  esac
+done
+
+[ -n "$SPRINT" ] && [ -n "$WORKDIR" ] && [ -n "$STATE_DIR" ] || usage
+[ -f "$SPRINT" ]  || { printf 'relay-gate: sprint file not found: %s\n' "$SPRINT" >&2; exit 1; }
+[ -d "$WORKDIR" ] || { printf 'relay-gate: workdir not found: %s\n' "$WORKDIR" >&2; exit 1; }
+
+mkdir -p "$STATE_DIR"
+
+# ---- State resolution --------------------------------------------------------------------------
+
+RUN_DIR="$WORKDIR"
+LEDGER="${LEDGER_OPT:-$STATE_DIR/ledger.jsonl}"
+fails="" reg=""
+
+i=$(cat "$STATE_DIR/counter" 2>/dev/null || echo 0)
+nwp=$(jq '.work_packages | length' "$SPRINT")
+rb=$(jq -r '.retry_budget // 3' "$SPRINT")
+wp_id=""
+
+# Already complete?
+if [ "$i" -ge "$nwp" ]; then
+  jq -n --argjson i "$i" '{"outcome":"complete","i":$i}'
+  exit 0
+fi
+
+wp_id=$(jq -r ".work_packages[$i].id" "$SPRINT")
+
+# ---- Ledger helpers (single-runner envelope — no `arm` field, matching benchmark/relay_hook.sh) --
+ledger() {  # $1=event  $2=retry(optional)
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" \
+         --arg fails "$fails" --arg reg "$reg" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}')"
+}
+
+ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "checklist-item" \
+         --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb}')"
+}
+
+# ---- Gate evaluation ---------------------------------------------------------------------------
+
+# 1. Checklist (shared core from lib/relay-gate.sh — logs each verdict via ledger_item above)
+fails="$(relay_run_checklist)"
+
+# 2. dod[] commands (the sprint-level DoD array, separate from named checklist controls)
+run_dods() {  # $1 = jq filter; echoes failing ids
+  local out=""
+  while IFS= read -r cmd; do
+    [ -z "$cmd" ] && continue
+    ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ) || out="$out; ${cmd##*::}"
+  done < <(jq -r "$1" "$SPRINT" 2>/dev/null || true)
+  printf '%s' "$out"
+}
+dod_fails="$(run_dods ".work_packages[$i].dod[].cmd")"
+[ -n "$dod_fails" ] && fails="${fails}${dod_fails}"
+
+# 3. Regression guard: re-run earlier WPs' deterministic checklist cmds
+if [ "$i" -gt 0 ]; then
+  while IFS=$'\t' read -r rid rcmd; do
+    [ -z "$rcmd" ] && continue
+    ( cd "$RUN_DIR" && eval "$rcmd" >/dev/null 2>&1 ) || reg="$reg; $rid"
+  done < <(jq -r ".work_packages[range(0;$i)].checklist[]? | select(.cmd) | \"\(.id)\t\(.cmd)\"" "$SPRINT" 2>/dev/null || true)
+  # also regression-guard dod[] cmds from earlier WPs
+  reg_dod="$(run_dods ".work_packages[range(0;$i)].dod[].cmd")"
+  [ -n "$reg_dod" ] && reg="${reg}${reg_dod}"
+fi
+
+# ---- Outcome ------------------------------------------------------------------------------------
+
+_advance() {
+  local ni=$((i+1))
+  echo "$ni" > "$STATE_DIR/counter"
+  if [ "$ni" -ge "$nwp" ]; then
+    ledger sprint-complete
+    jq -n --arg wp "$wp_id" --argjson i "$i" \
+      '{"outcome":"complete","i":$i,"wp":$wp}'
+    exit 0
+  fi
+  local nid
+  nid=$(jq -r ".work_packages[$ni].id" "$SPRINT")
+  ledger advance-reveal
+  jq -n --arg wp "$wp_id" --argjson i "$i" --arg next "$nid" \
+    '{"outcome":"advance","i":$i,"wp":$wp,"next":$next}'
+  exit 0
+}
+
+if [ -z "$fails" ] && [ -z "$reg" ]; then
+  _advance
+fi
+
+# Something failed — check retry budget
+r=$(cat "$STATE_DIR/retry_$i" 2>/dev/null || echo 0)
+
+# Build a clean array of failing ids (strip leading '; ' separators)
+_failing_ids() {
+  local raw="$1"
+  # strip leading '; ' and split on '; ' to produce a JSON array
+  printf '%s' "$raw" | sed 's/^; //' | python3 -c "
+import sys, json
+raw = sys.stdin.read().strip()
+if not raw:
+    print('[]')
+else:
+    ids = [x.strip() for x in raw.split(';') if x.strip()]
+    print(json.dumps(ids))
+"
+}
+
+failing_json="$(_failing_ids "${fails}${reg}")"
+
+if [ "$r" -ge "$rb" ]; then
+  ledger escalate "$rb"
+  jq -n --argjson i "$i" --arg wp "$wp_id" --argjson failing "$failing_json" \
+    '{"outcome":"escalate","i":$i,"wp":$wp,"failing":$failing}'
+  exit 2
+fi
+
+echo $((r+1)) > "$STATE_DIR/retry_$i"
+ledger gate-fail "$((r+1))"
+
+reason="gate '${wp_id}' is NOT satisfied. Still failing:${fails:- (none)}${reg:+ ; regressions:${reg}}"
+jq -n --argjson i "$i" --arg wp "$wp_id" --argjson failing "$failing_json" --arg reason "$reason" \
+  '{"outcome":"gate-fail","i":$i,"wp":$wp,"failing":$failing,"reason":$reason}'
+exit 1
