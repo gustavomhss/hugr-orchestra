@@ -95,3 +95,36 @@ output/context **saturation** (N ≫ 300, e.g. 1000+), but (a) M's bounded-repai
 it may still complete — turning it into a **cost** question, not a quality one; and (b) a win there is "M
 can't fit it in one pass," a mechanical-capacity regime, not reasoning amplification. **Verdict: on every
 clean-oracle substrate up to N=300, there is no crossover. The durable product is control-plane / compliance.**
+
+---
+
+## N=500: the saturation lever, integrity-guarded (2026-05-31)
+
+The one remaining lever §"What this rules in and out" left open was sheer **scale** (N ≫ 300). Tested it
+directly at **N=500** on the v2 non-compressible bespoke-graph substrate, via `run_crossover.py` — a new
+orchestrator that **refuses to report an RSR unless the run proves itself real**: it validates that the
+model actually executed (non-empty `run.json` with real turns/tokens) AND that the run's `engine/core.py`
+is **not** byte-identical to the `/tmp` reference (a reference-leak guard). Only runs passing both are
+counted; the grader-discriminates check (pristine skeleton must FAIL the held-out suite) confirmed the
+oracle still tests the candidate (500/500 fail on the empty skeleton).
+
+| substrate | N | arm | M held-out RSR | valid? | turns | out-tok | cost $ |
+|---|---|---|---|---|---|---|---|
+| v2 bespoke-graph | 500 | M (monolith) | **1.00 (500/500)** | ✅ guards passed | 7 | 88,178 | 1.84 |
+
+**The monolith aces N=500 too** — 500 distinct, coupled, non-local-rule-bearing functions implemented
+first-pass in 7 turns for ~$1.84, held-out-confirmed, with the implementation verified to be the model's
+own work (not a leaked reference). This is a **fifth independent substrate point** and it pushes the
+no-crossover finding past the scale lever that §"What this rules in and out" had flagged as the last
+open question.
+
+> Methodological note: an earlier attempt to run this from *inside* a Claude session produced a false
+> `RSR 1.0` — `claude -p` did not execute (empty `run.json`) and the `/tmp` reference leaked into the run
+> dir, so the grader scored the reference against itself. `run_crossover.py`'s two guards catch exactly
+> that pair and mark such runs INVALID; the table above is the clean-terminal run that passed both.
+
+### Updated verdict
+On every clean-oracle substrate **up to N=500**, there is no crossover. Intricacy is not a difficulty
+lever and — now measured, not extrapolated — neither is scale to N=500. The amplifier thesis stays
+unsupported; the durable product is the **control-plane / compliance** surface (external oracle +
+forward-only ratchet + verified-trace ledger), whose value never depended on a crossover existing.
