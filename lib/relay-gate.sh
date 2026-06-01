@@ -22,14 +22,17 @@
 # Append one compact JSON body (no prev/seq/h) onto the chain. Same algorithm both hooks always used:
 # prev = previous line's h (GENESIS first), seq = running 0-based index, h = MAC over the body.
 relay_chain_append() {  # $1 = compact JSON body
-  local last prev seq body h
+  local last prev seq macalg body h
   last=$(tail -1 "$LEDGER" 2>/dev/null || true)
   prev=$(printf '%s' "$last" | jq -r '.h // empty' 2>/dev/null); [ -z "$prev" ] && prev="GENESIS"
   seq=$(printf '%s' "$last" | jq -r '.seq // -1' 2>/dev/null); [ -z "$seq" ] && seq=-1; seq=$((seq + 1))
-  body=$(printf '%s' "$1" | jq -c --arg p "$prev" --argjson s "$seq" '. + {prev:$p, seq:$s}') || return 0
-  # h = HMAC-SHA256(key, body) when RELAY_LEDGER_KEY is set (UNFORGEABLE without the key), else plain
-  # SHA-256 (tamper-EVIDENT vs in-place edits, but a file-holder can re-seal the chain — see
-  # verify_ledger.py). `seq` makes the entry count explicit so tail-truncation is detectable.
+  # Stamp the MAC algorithm INTO the hashed body (non-secret — the algorithm name, never the key). This
+  # binds the mode to the artifact: an attacker who re-seals a keyed chain in plain mode must change
+  # `mac` too, which an auditor holding the key detects as a downgrade (verify_ledger.py). `seq` makes
+  # the entry count explicit so tail-truncation is detectable.
+  if [ -n "${RELAY_LEDGER_KEY:-}" ]; then macalg="hmac-sha256"; else macalg="sha256"; fi
+  body=$(printf '%s' "$1" | jq -c --arg p "$prev" --argjson s "$seq" --arg m "$macalg" \
+           '. + {prev:$p, seq:$s, mac:$m}') || return 0
   if [ -n "${RELAY_LEDGER_KEY:-}" ]; then
     h=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$RELAY_LEDGER_KEY" | sed -E 's/.* //')
   else

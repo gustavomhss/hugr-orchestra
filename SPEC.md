@@ -138,6 +138,14 @@ claim an auditor will test:
   producer does not hold, so it cannot edit, rewrite, append, or re-seal anything. **This** is the
   mode that yields a proof an auditor verifies offline without trusting the producer.
 
+**Mode is bound to the artifact.** Each entry stamps its MAC algorithm (`mac: "sha256" | "hmac-sha256"`)
+*inside the hashed body* — the algorithm name, never the key. The verifier refuses to validate a chain
+under a different mode than it was sealed with. This closes the downgrade: an adversary cannot take a
+keyed chain, flip a verdict, and re-seal it in plain `sha256` (which needs no key) and have it pass — an
+auditor holding the key sees `mac=sha256` while keyed and **REFUSES** it; a keyed chain checked without
+the key is REFUSED with "set `RELAY_LEDGER_KEY`" rather than silently accepted as plain. (Legacy ledgers
+with no `mac` field are read as plain.)
+
 Tail-truncation (dropping trailing lines) leaves a valid prefix in *both* modes — only an
 out-of-band anchor of the latest head rules it out. The verifier therefore also reports the entry
 count and flags a trace that does not end in a terminal event (`sprint-complete` / `escalate`) as

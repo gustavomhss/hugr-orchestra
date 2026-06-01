@@ -16,6 +16,13 @@ What each mode actually guarantees — stated honestly, because "tamper-evident"
   KEYED (RELAY_LEDGER_KEY):  the MAC depends on a secret, so a party without the key cannot edit,
                    rewrite, append, or re-seal anything. This is the mode for an actual adversary.
 
+Mode is BOUND to the artifact: each entry records the algorithm it was sealed with (the `mac` field,
+inside the hashed body — the algorithm name is not secret). The verifier refuses to validate a chain
+under a different mode than it was sealed with. This closes the downgrade attack: re-sealing a keyed
+chain in plain sha256 (which needs no key) is caught by an auditor holding the key (mac=sha256 while a
+key is set → REFUSED), and a keyed chain checked without the key is REFUSED with "set RELAY_LEDGER_KEY"
+rather than silently accepted as plain. Legacy ledgers without a `mac` field are treated as plain.
+
 Tail-truncation (dropping trailing lines) leaves a valid prefix in BOTH modes — only an out-of-band
 anchor of the latest head can rule it out. So we also report `seq` count and whether the trace ends
 in a terminal event (sprint-complete / escalate); a non-terminal end is flagged as possible truncation.
@@ -35,15 +42,16 @@ def mac(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
-def body_bytes(line: str) -> bytes:
-    """Exact bytes that were MAC'd: the line minus its trailing `,"h":"..."}` suffix.
+def body_bytes(line: str):
+    """Exact bytes that were MAC'd: the line minus its trailing `,"h":"..."}` suffix, or None if the
+    line carries no `h` field (a malformed/truncated entry — the caller reports it as TAMPERED).
 
     `h` is always appended last (jq `. + {h:$h}`), so stripping from the final `,"h":` recovers
     the canonical body with no re-serialization — hence no formatting drift.
     """
     idx = line.rfind(',"h":')
     if idx == -1:
-        raise ValueError("line has no h field")
+        return None
     return (line[:idx] + "}").encode()
 
 
@@ -70,8 +78,27 @@ def main() -> int:
             print(f"BROKEN line {n + 1}: not valid JSON ({e})")
             return 1
         h = entry.get("h")
-        computed = mac(body_bytes(line))
-        if not h or not hmac.compare_digest(computed, h):
+        body = body_bytes(line)
+        if body is None:
+            print(f"TAMPERED line {n + 1}: missing h field (malformed or truncated entry)")
+            return 1
+        # Mode binding: the line records the MAC algorithm it was sealed with (`mac`; absent on legacy
+        # ledgers, treated as plain sha256). Refuse to validate it under a DIFFERENT mode — this is what
+        # catches a keyed chain re-sealed in plain (downgrade), and tells an auditor when a key is needed
+        # instead of reporting a bare "TAMPERED".
+        stamped = entry.get("mac", "sha256")
+        expected = "hmac-sha256" if KEY else "sha256"
+        if stamped != expected:
+            if stamped == "hmac-sha256" and not KEY:
+                print(f"REFUSED line {n + 1}: this is a KEYED chain (mac=hmac-sha256) — set "
+                      "RELAY_LEDGER_KEY to verify it. Validating it as plain would accept a forgery.")
+            elif stamped == "sha256" and KEY:
+                print(f"REFUSED line {n + 1}: a key is set but this entry is sealed PLAIN (mac=sha256) "
+                      "— possible downgrade of a keyed chain. Refusing to accept it as intact.")
+            else:
+                print(f"TAMPERED line {n + 1}: unknown MAC algorithm {stamped!r}")
+            return 1
+        if not h or not hmac.compare_digest(mac(body), h):
             print(f"TAMPERED line {n + 1}: MAC mismatch under {mode}")
             if KEY:
                 print("   (wrong key, or the line was altered — both fail identically by design)")

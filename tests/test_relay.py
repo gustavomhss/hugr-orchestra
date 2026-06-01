@@ -348,3 +348,57 @@ def test_fleet_chain_example():
     assert p.returncode == 0, f"fleet-chain example failed:\n{p.stdout}\n{p.stderr}"
     assert "PASS" in p.stdout
     assert "4/4" in p.stdout  # all tracer flags planted via hook feedback
+
+
+# ---------- mode binding (the keyed↔plain downgrade defense) ------------------------
+
+def test_mac_field_stamped_in_chain(tmp_path):
+    """Every entry records the MAC algorithm it was sealed with — plain stamps mac=sha256."""
+    d = make_run(tmp_path, 2)
+    first = json.loads(read_lines(d)[0])
+    assert first.get("mac") == "sha256"
+    sub = tmp_path / "k"; sub.mkdir()
+    d2 = make_run(sub, 2, key="secret")
+    assert json.loads(read_lines(d2)[0]).get("mac") == "hmac-sha256"
+
+
+def test_keyed_chain_refused_without_key(tmp_path):
+    """A keyed chain verified WITHOUT the key must be REFUSED (not silently accepted as plain) —
+    accepting it as plain is exactly the forgery the mode-binding closes."""
+    d = make_run(tmp_path, 2, key="secret")
+    rc, out = verify(d, key=None)
+    assert rc == 1 and "REFUSED" in out and "KEYED" in out
+
+
+def test_downgrade_forgery_caught_with_key(tmp_path):
+    """The full attack: flip a verdict and re-seal the whole chain in PLAIN sha256 (no key needed),
+    then an auditor WITH the key must catch the downgrade rather than report INTACT."""
+    d = make_run(tmp_path, 2, key="secret")
+    import hashlib
+    lines = [json.loads(l) for l in read_lines(d)]
+    prev = "GENESIS"
+    forged = []
+    for e in lines:
+        e.pop("h", None)
+        e["prev"] = prev
+        e["mac"] = "sha256"  # downgrade
+        body = json.dumps(e, separators=(",", ":"))
+        h = hashlib.sha256(body.encode()).hexdigest()
+        e["h"] = h
+        prev = h
+        forged.append(json.dumps(e, separators=(",", ":")))
+    write_lines(d, forged)
+    rc, out = verify(d, key="secret")
+    assert rc == 1 and "REFUSED" in out and "downgrade" in out.lower()
+
+
+def test_missing_h_reports_tampered_not_crash(tmp_path):
+    """A line lacking its h field is reported as TAMPERED cleanly (no Python traceback)."""
+    d = make_run(tmp_path, 2)
+    lines = read_lines(d)
+    # strip the h field off the last line
+    last = json.loads(lines[-1]); last.pop("h", None)
+    lines[-1] = json.dumps(last, separators=(",", ":"))
+    write_lines(d, lines)
+    rc, out = verify(d)
+    assert rc == 1 and "missing h" in out and "Traceback" not in out

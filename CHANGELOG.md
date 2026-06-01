@@ -5,6 +5,17 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Security — 2026-06-01 (ledger mode-binding — close the keyed→plain downgrade)
+- **[HIGH] Mode is now bound to the artifact.** Each ledger entry stamps its MAC algorithm
+  (`mac: sha256 | hmac-sha256`) inside the hashed body, and `verify_ledger.py` refuses to validate a
+  chain under a different mode than it was sealed with. This closes the downgrade an adversarial review
+  found: re-sealing a keyed chain in plain sha256 (no key needed) to forge a verdict is now REFUSED by
+  an auditor holding the key; a keyed chain checked without the key is REFUSED ("set RELAY_LEDGER_KEY")
+  instead of silently accepted as plain. Legacy ledgers without `mac` read as plain (back-compatible).
+- **[MED] `verify_ledger.py`** reports a line missing its `h` field as TAMPERED cleanly instead of
+  raising an uncaught traceback. SPEC §7 updated; 4 regression tests (stamp, refuse-without-key,
+  full-downgrade-forgery-caught, missing-h-no-crash).
+
 ### Added — 2026-06-01 (model-agnostic gate CLI + compaction)
 - **Vendor-neutral gate CLI** (`bin/relay-gate eval`): evaluates one gate step with ZERO Claude-Code
   knowledge — pure JSON outcome + exit code, so any harness can drive Relay (Roadmap #7, the
