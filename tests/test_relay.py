@@ -277,3 +277,15 @@ def test_cli_control_fail(tmp_path):
     fire(d, sprint)  # a.txt missing -> DET-1 recorded fail, run not complete
     rc, out = cli_verify(d)
     assert rc == 2 and "CONTROL FAIL" in out
+
+
+# ---------- per-agent arms: the fleet-chain example as a regression -----------------
+
+def test_fleet_chain_example():
+    """The examples/fleet-chain loop must hold end-to-end: an agent held to a checklist it never
+    saw, driven to conformance + flag-planting purely by the hook's feedback. Deterministic, no LLM."""
+    example = ROOT / "examples" / "fleet-chain" / "run_example.py"
+    p = subprocess.run(["python3", str(example)], capture_output=True, text=True)
+    assert p.returncode == 0, f"fleet-chain example failed:\n{p.stdout}\n{p.stderr}"
+    assert "PASS" in p.stdout
+    assert "4/4" in p.stdout  # all tracer flags planted via hook feedback
