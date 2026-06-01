@@ -5,6 +5,19 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Docs — 2026-06-01 (reconcile PRODUCT/WHITEPAPER with shipped reality)
+- The product docs were written before the roadmap shipped and marked ~6 capabilities as
+  "UNBUILT / not yet implemented / aspirational / roadmap-not-running" that are now built and tested:
+  the verified-trace ledger + retained corpus, the SubagentStop multi-runner hook, auto-decomposition,
+  gate ≠ grader, in-hook compaction, and the high-N generator. Reconciled `PRODUCT.md` (§6 table, §7.2,
+  §8.3/8.5/8.6/8.8, §9 table, §11 roadmap) and `WHITEPAPER.md` (bumped to v0.2) to the artifacts that
+  close each gap — and, symmetrically, dialed back two over-claims of mine (the "15+ concurrent agents"
+  line now points at the reproducible `examples/fleet-chain/` distillation, not an un-rerunnable live
+  run; "model-agnostic SDK/daemon" is corrected to the CLI that actually ships). The crossover is
+  restated from "UNKNOWN" to "measured, no crossover up to N=500 — amplifier thesis falsified." Every
+  still-real limit (gate-expressiveness wall, tail-rot beyond agent-side compaction, corpus volume,
+  M+CI not run as a separate arm, vendor dependency on hook paths) is kept stated as such.
+
 ### Security — 2026-06-01 (ledger mode-binding — close the keyed→plain downgrade)
 - **[HIGH] Mode is now bound to the artifact.** Each ledger entry stamps its MAC algorithm
   (`mac: sha256 | hmac-sha256`) inside the hashed body, and `verify_ledger.py` refuses to validate a

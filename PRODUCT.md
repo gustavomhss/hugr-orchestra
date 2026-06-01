@@ -168,9 +168,11 @@ Verified in clean-room design probes but **not** exercised by the shipped hook: 
 state + ledger. One honest caveat on the keying: it is by a **`RELAY-ARM:<token>` marker in the agent's
 transcript**, *not* by `agent_id` — Task-spawned subagents inherit the parent cwd and expose no
 discriminating `agent_id`, so the token (unique per subagent transcript) is the realized basis for
-multi-runner keying. This is fleet-tested (15+ concurrent agents, distinct chains, zero cross-talk) and
-deterministically regression-covered (`examples/fleet-chain/`). The conceptual `agent_id` design in the
-SPEC stands as the target; the token mechanism is what runs.
+multi-runner keying. It was exercised in an ad-hoc multi-agent fleet run (distinct chains, no observed
+cross-talk); the *reproducible, committed* evidence is the deterministic LLM-free distillation in
+`examples/fleet-chain/` (a single-token end-to-end proof) — the live 15-agent run is not re-runnable
+in-repo. The conceptual `agent_id` design in the SPEC stands as the target; the token mechanism is what
+runs.
 
 ---
 
@@ -225,10 +227,10 @@ None of these erode as the model gets better. The *amplifier* dies with the next
 │  │ TELEMETRY /    │   │  VERIFIED-TRACE LEDGER  │ ★★ THE MOAT ★★      │
 │  │ BURNDOWN       │   │  tamper-evident pass/   │  compliance artifact│
 │  │ dashboard      │   │  fail per WP + diff +   │  + RL-signal corpus │
-│  └────────────────┘   │  retry distribution     │  (currently UNBUILT)│
-│                       └────────────────────────┘                     │
+│  │ (UNBUILT)      │   │  retry distribution     │  (BUILT)            │
+│  └────────────────┘   └────────────────────────┘                     │
 │  ┌───────────────────────────────────────────────────────────────┐   │
-│  │  MODEL-AGNOSTIC SDK / DAEMON  — removes single-vendor risk     │   │
+│  │  MODEL-AGNOSTIC GATE CLI  — removes single-vendor risk (BUILT) │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -238,10 +240,10 @@ None of these erode as the model gets better. The *amplifier* dies with the next
 | **Relay kernel** | intercept-done → gate → inject-next state machine; per-WP counter, keep-best lock, bounded retry + escalation. | **Zero.** Open-source it. It is distribution, not moat. |
 | **Deterministic gate catalog + regression engine** | The active ingredient: what *physically* enforces truth. Library of mechanical checks (pytest/lint/type/grep/shell/property-test) + the engine that re-runs prior gates. | Moat-adjacent via taste and breadth, but cloneable. |
 | **llm-judge residue** | Fallback for DoD that no shell command decides. **Clearly flagged as the weak link** — it over-rejects and reintroduces the unreliability Relay exists to kill. Minimized, never load-bearing. | Negative. A liability we bound, not a feature. |
-| **sprint.json authoring + auto-decomposition** | Drafts mechanical checks from the *existing test suite*, drives authoring cost toward zero. **The adoption flywheel** — authoring is the real tax. | Stickiness via workflow, not defensibility. |
-| **Telemetry / burndown dashboard** | Per-WP timing, retry distribution, gate first-pass rate, escalations, live context size, regression count. | Product surface; commodity. |
-| **Verified-trace ledger** | Tamper-evident pass/fail per WP + diff + retry distribution. **The compliance artifact AND the RL-signal substrate.** | **The real asset** — see Section 7. Currently UNBUILT. |
-| **Model-agnostic SDK / daemon** | The OEM surface; abstracts the pattern over any agent loop. Removes single-vendor risk. | The lock-in *escape*, and the OEM revenue surface. |
+| **sprint.json authoring + auto-decomposition** | Drafts mechanical checks from the *existing test suite*, drives authoring cost toward zero. **The adoption flywheel** — authoring is the real tax. **BUILT** (`bin/relay-autodecompose.py`). | Stickiness via workflow, not defensibility. |
+| **Telemetry / burndown dashboard** | Per-WP timing, retry distribution, gate first-pass rate, escalations, live context size, regression count. **UNBUILT** — the signal exists (`bin/relay-corpus.py export`), the dashboard does not. | Product surface; commodity. |
+| **Verified-trace ledger** | Tamper-evident pass/fail per WP + diff + retry distribution. **The compliance artifact AND the RL-signal substrate.** | **The real asset** — see Section 7. **BUILT**: hash-chain ledger (`lib/relay-gate.sh`) + retained corpus (`bin/relay-corpus.py`, `archive_trace`). |
+| **Model-agnostic gate CLI** | The vendor-neutral oracle; evaluates one gate step as pure JSON + exit code over any agent loop. Removes single-vendor risk. **BUILT** as a CLI (`bin/relay-gate`); a long-running daemon / multi-language SDK is the next step, not yet built. | The lock-in *escape*, and the OEM revenue surface. |
 
 ---
 
@@ -251,12 +253,12 @@ None of these erode as the model gets better. The *amplifier* dies with the next
 
 **The hook is not the moat.** It is ~64 lines of bash over a **public, documented** Claude Code feature (`Stop` + `{"decision":"block"}`), fully disclosed in our own SPEC/WHITEPAPER. A competent engineer clones the entire mechanism in an afternoon. Any pitch that claims the *mechanism* is defensible is lying.
 
-### 7.2 What IS defensible — both currently UNBUILT
+### 7.2 What IS defensible — the machinery is built; the moat is the accrued data
 
 | Asset | Why defensible | Status |
 |-------|----------------|--------|
-| **Private crossover-N eval suite** | A measured crossover dataset on a freshly-authored, contamination-immune, coupled-engineering suite is **proprietary ground truth a weekend cloner cannot fabricate** — *only if kept private as a paid eval*, not published as a whitepaper. | UNBUILT |
-| **Verified-trace data flywheel** | Gate verdict + diff + retry distribution per WP, at usage volume, is an **RLVR / process-supervision reward signal**: dense, verifiable, per-step. The model labs want exactly this. | UNBUILT — zero corpus on disk today; runs are ephemeral (the harness `rm -rf`s each run). |
+| **Crossover-N eval suite** | A freshly-authored, contamination-immune, coupled-engineering suite is **proprietary ground truth a weekend cloner cannot fabricate.** | **MACHINERY BUILT** (`benchmark/generator/gen_campaign_v2.py`, `grader.py`, `run_crossover.py`). But the measured result is **negative** — no crossover up to N=500, amplifier thesis falsified on two substrates (`benchmark/RESULTS.md`). There is no positive "crossover number" to keep private; the asset is the *eval methodology*, not a speed claim. |
+| **Verified-trace data flywheel** | Gate verdict + diff + retry distribution per WP, at usage volume, is an **RLVR / process-supervision reward signal**: dense, verifiable, per-step. The model labs want exactly this. | **BUILT** — traces are retained, not ephemeral: `archive_trace` copies each terminal trace into `$RELAY_CORPUS_DIR`; `bin/relay-corpus.py` extracts the per-step signal. The *moat* is the corpus accrued at usage volume, which is not clone-able without doing the work. |
 
 ### 7.3 Everything else is a head start
 
@@ -293,17 +295,17 @@ These are stated up front because the credibility of everything above depends on
 
 2. **Bounded-regime amplification is ARGUED, not proven, and the anchor already broke.** See Section 5.2. IFScale/ComplexBench do not transfer; ComplexBench is contradicted by our own N=30; the boundary recedes as models improve.
 
-3. **Zero on-substrate efficacy evidence; both campaigns SATURATED.** **MEASURED:** at N=12 and N=30, Relay is **pure overhead** — ~2.1x cost, ~3.8x turns (23 vs 6 on N=12), **identical RSR 1.0** vs monolithic. The crossover N is **UNKNOWN**, the N=150–500 generator is **UNBUILT**, and we may struggle to *build* a headroom campaign at all because we cannot make a strong model fail by adding interaction depth — only by adding scale.
+3. **Efficacy thesis FALSIFIED on every clean-oracle substrate up to N=500.** **MEASURED:** at N=12 and N=30, Relay is **pure overhead** — ~2.1x cost, ~3.8x turns (23 vs 6 on N=12), **identical RSR 1.0** vs monolithic. The high-N generator is now **built** (`gen_campaign_v2.py`), and the crossover was **measured, not left unknown**: the monolith aces N=60/150/300/**500** at RSR 1.0 on two independent substrates — `benchmark/RESULTS.md` records the amplifier thesis as *falsified*, not pending. Intricacy is not a difficulty lever and, now measured, neither is scale to 500. **The honest verdict: the speed/amplifier half is dead; the durable product is the control-plane / compliance surface, which never depended on a crossover.**
 
 4. **Missing the real baseline (M+CI).** Our arms are M (no-gate monolith), R (per-step gated), D (ungated decomposed). They omit the *actual* competitor: **one well-structured prompt + ONE final full-CI pass + a bounded aggregate-repair loop.** An R-beats-M result is partly attributable to "M had no final gate at all," not to "per-step beats end-gate." Until M+CI is run at equal budget, we cannot rule out that the per-step ratchet is redundant over end-gating.
 
-5. **Reward-hacking / gate == grader, as built.** Today the hook runs the *same* check nodes the grader grades, and the brief tells the agent to self-check with the test command. Under continuation pressure, the model is incentivized to special-case the exact asserted inputs. The **held-out-grader split** (gate ≠ grader) and the **adversarial exploit pass** are prescribed in our design but **NOT yet implemented.** As built, a green gate cannot be fully trusted to mean "done." Closing this is a prerequisite before any cited RSR.
+5. **Reward-hacking / gate == grader — now SPLIT.** The benchmark previously let the agent self-check against the same nodes the grader graded. **Fixed:** gate ≠ grader is implemented — `run_arm.sh` strips `holdout/` from the run dir so the runner never sees it, and `grader.py` scores the disjoint held-out suite (`graded_by:"holdout"`). The adversarial pass is **demonstrated** (an auto-emitted reward-hacker scores ~0.03 held-out; `run_crossover.py --check-grader` proves the empty skeleton fails the grader) but is not yet a standing continuous gate. Residual honesty: in production the *checklist* controls and any final grader are author-supplied, so "gate ≠ grader" is a discipline the author must keep, not an automatic guarantee.
 
-6. **Single-context rot at the tail.** "Every step stays at k=3–5" is true for revealed-requirement **count**, false for context **size**. By WP 80 of 100, the continuous context is large and degraded — the exact regime Relay claims to escape. The ratchet defends *prior* work via regression checks but does nothing for omission/misexecution on the *new* WP. **Compaction is named in every doc and built in none.**
+6. **Single-context rot at the tail.** "Every step stays at k=3–5" is true for revealed-requirement **count**, false for context **size**. By WP 80 of 100, the continuous context is large and degraded — the exact regime Relay claims to escape. The ratchet defends *prior* work via regression checks but does nothing for omission/misexecution on the *new* WP. **Compaction is now built** (a lightweight in-hook form: shortened repeat-reblocks + a deep-advance checkpoint hint past `RELAY_COMPACT_AFTER`, `docs/compaction.md`) — but it nudges the agent to self-summarize; it does not control the model's context directly. The deeper rot remains a real limit.
 
 7. **Coupling-benefit vs rot-cost is itself UNMEASURED.** Continuous-context value beats fresh-context orchestration only on coupled chains short enough that context has not rotted. On independent/parallelizable WPs and very long horizons, an orchestrator with isolated fresh-context agents likely wins. We carve out honestly to **coupled, not-yet-rotted** chains.
 
-8. **Vendor lock-in.** The mechanism rests on *observed* (not contracted) behavior of one vendor's harness. One settings/changelog change can silently kill it. Mitigable only by the (unbuilt) SDK/daemon.
+8. **Vendor lock-in — partially mitigated.** The Claude hooks rest on *observed* (not contracted) behavior of one vendor's harness; one settings/changelog change can silently kill them. **Mitigation shipped:** `bin/relay-gate` is a vendor-neutral CLI that evaluates a gate step as pure JSON + exit code, so any harness can drive Relay without the Claude hook. The lock-in survives only where you *use* the Claude hooks; the gate logic itself is now portable. A long-running daemon / packaged SDK is the remaining step.
 
 9. **Escalation is a floor, not a win.** On a campaign with one genuinely hard WP, a monolith may deliver *broad-but-partial* while Relay delivers *narrow-but-verified*. Which is better is a value judgment, not a strict win for Relay.
 
@@ -315,16 +317,20 @@ These are stated up front because the credibility of everything above depends on
 
 | State | Value |
 |-------|-------|
-| Crossover N | **UNKNOWN** |
-| Measured points | N=12, N=30 — both below crossover, Relay = 2.1x cost / 3.8x turns / RSR 1.0 (**MEASURED, pure overhead**) |
-| High-N generator | **UNBUILT** |
+| Crossover N | **NONE up to N=500** — measured, not unknown |
+| Measured points | N=12, N=30, and (generated) N=60/150/300/500 — monolith RSR 1.0 throughout; Relay = 2.1x cost / 3.8x turns / RSR 1.0 (**MEASURED, pure overhead**) |
+| High-N generator | **BUILT** (`gen_campaign_v2.py`); ran to N=500 |
 
-**Decision rule, stated in advance (so the result is falsifiable):**
+**The decision rule was stated in advance (falsifiable) — and it resolved against the amplifier:**
 
-- If the crossover lands at an N real campaigns actually hit (migrations, mass codemods, framework upgrades) **and** survives frontier models getting more reliable → the efficacy thesis is **confirmed**, and Relay gains a speed/cost story on top of the insurance story.
-- If it does not exist, recedes past usable N, or only beats the no-gate strawman M (not M+CI) → the **amplifier thesis is dead**, and we **deprecate the per-step ratchet**, keeping only **plan + gate + ledger** as the control-plane/compliance product.
+- If the crossover landed at a usable N **and** survived frontier models getting more reliable → efficacy thesis confirmed.
+- If it did not exist, receded past usable N, or only beat the no-gate strawman → the **amplifier thesis is dead**; keep only **plan + gate + ledger** as the control-plane/compliance product.
 
-Either way the control plane survives. Only the *amplifier* half is on trial.
+**Outcome (measured): no crossover up to N=500 on two substrates** (`RESULTS.md`). The amplifier half is
+deprecated as a sales claim; the control plane survives, exactly as the rule pre-committed. One honest
+asterisk remains: **M+CI** (one prompt + a final full-CI repair loop) was not run as a separate arm, so
+"per-step beats end-gate" is not separately proven — but since the monolith already saturates, the
+efficacy question is moot either way.
 
 ---
 
@@ -343,13 +349,21 @@ Either way the control plane survives. Only the *amplifier* half is on trial.
 
 ## 11. Roadmap (priority order)
 
-1. **Build the N=150–500 contamination-immune campaign generator and measure the crossover vs M+CI.** The top priority. Without this number, the efficacy half is unsold (Section 9).
-2. **Split gate from grader; run the adversarial exploit pass to ~0 hack rate.** Prerequisite before *any* public efficacy number (Section 8.5).
-3. **Close the Stop-vs-SubagentStop doc/impl gap.** Ship the multi-runner/`agent_id` keying the docs describe (Section 4.4).
-4. **Auto-decomposition + auto-drafted gates from the existing test suite.** Drive authoring cost toward zero — the #1 adoption tax (Section 13).
-5. **Build the verified-trace ledger and stop `rm -rf`-ing runs.** Start accruing the corpus *now*; the flywheel only spins if data is retained (Section 7.2).
-6. **Compaction for tail-context rot.** Named everywhere, built nowhere (Section 8.6).
-7. **Abstract into a model-agnostic SDK/daemon.** Remove single-vendor risk (Section 8.8).
+Items 1–7 below were the original priority order; **all seven are now done** (2026-06-01). Status in
+brackets; the durable conclusion is that the efficacy half is settled (negative) and the control-plane /
+compliance / data half is built.
+
+1. ✅ **High-N generator + crossover measurement.** [DONE — `gen_campaign_v2.py` + `run_crossover.py`; measured to N=500, **no crossover, thesis falsified** (`RESULTS.md`). The "number" is a negative.]
+2. ✅ **Split gate from grader; adversarial exploit pass.** [DONE — held-out grader in `run_arm.sh`/`grader.py`; reward-hacker scores ~0.03. Continuous-pass-as-standing-gate is the residual.]
+3. ✅ **Close the Stop-vs-SubagentStop gap.** [DONE — `bin/relay-arm-hook.sh` ships the SubagentStop multi-runner, keyed by transcript token (not `agent_id` — Task subagents share cwd / expose no discriminating id). §4.4.]
+4. ✅ **Auto-decomposition + auto-drafted gates.** [DONE — `bin/relay-autodecompose.py`.]
+5. ✅ **Verified-trace ledger; stop `rm -rf`-ing the asset.** [DONE — hash-chain ledger + `archive_trace` retention + `bin/relay-corpus.py`. The per-run *working* dir is still cleaned, but the ledger/corpus is copied out first.]
+6. ✅ **Compaction for tail-context rot.** [DONE — in-hook lightweight form; `docs/compaction.md`. Deeper model-side rot remains a limit (§8.6).]
+7. ✅ **Model-agnostic gate surface.** [DONE as a CLI — `bin/relay-gate`. A long-running daemon / packaged multi-language SDK is the next increment.]
+
+**What's next (the §12 expansion bets, now that the kernel + data layer ship):** telemetry/burndown
+dashboard over the corpus signal; org guardrail policy bundles; the executable-spec library; and — if a
+buyer pulls — packaging the gate CLI into a daemon/SDK.
 
 ---
 
