@@ -151,6 +151,13 @@ out-of-band anchor of the latest head rules it out. The verifier therefore also 
 count and flags a trace that does not end in a terminal event (`sprint-complete` / `escalate`) as
 possible truncation.
 
+**Known limitation (concurrency), stated plainly.** The append is not locked (`flock` is absent on
+macOS, the primary target). A ledger is written by one runner/subagent firing sequentially, so this is
+not a normal path; but two *simultaneous* appends to the same file would both read the same `prev`/`seq`
+and fork the chain. This fails **closed** — the verifier catches the second entry as a broken link /
+`seq` mismatch and reports TAMPERED — so it can cause a spurious TAMPERED, never an accepted forgery. A
+failed append is logged loudly (never silently dropped), so a lost verdict is visible rather than masked.
+
 ```
 python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl              # PLAIN  — exit 0 = intact, 1 = tampered
 RELAY_LEDGER_KEY=… python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl   # KEYED — same key the hook wrote with

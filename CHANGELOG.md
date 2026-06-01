@@ -15,6 +15,11 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 - **[MED] `verify_ledger.py`** reports a line missing its `h` field as TAMPERED cleanly instead of
   raising an uncaught traceback. SPEC §7 updated; 4 regression tests (stamp, refuse-without-key,
   full-downgrade-forgery-caught, missing-h-no-crash).
+- **[MED] No silent ledger-append loss**: `relay_chain_append` no longer swallows a failed write
+  (`|| true`); a failed append is logged loudly and returns non-zero so a dropped verdict is visible.
+- **Concurrency limitation disclosed (not faked)**: the append is unlocked (`flock` is absent on
+  macOS); a rare simultaneous double-append forks the chain and fails CLOSED (spurious TAMPERED, never
+  an accepted forgery). Documented in SPEC §7 rather than papered over with an unportable dependency.
 
 ### Added — 2026-06-01 (model-agnostic gate CLI + compaction)
 - **Vendor-neutral gate CLI** (`bin/relay-gate eval`): evaluates one gate step with ZERO Claude-Code

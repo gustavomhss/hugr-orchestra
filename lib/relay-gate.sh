@@ -38,7 +38,16 @@ relay_chain_append() {  # $1 = compact JSON body
   else
     h=$(printf '%s' "$body" | shasum -a 256 | cut -d' ' -f1)
   fi
-  printf '%s' "$body" | jq -c --arg h "$h" '. + {h:$h}' >> "$LEDGER" 2>/dev/null || true
+  # Do NOT swallow a failed append: a verdict silently dropped from the chain weakens "every verdict is
+  # on the chain". If the write fails (disk full, perms), record it loudly to the log + stderr so the
+  # loss is visible rather than masked. (No flock: it is absent on macOS, the primary target; a per-token
+  # ledger is written by one sequential subagent, so concurrent appends to the same file are not a normal
+  # path — a rare double-stop fails CLOSED as a spurious TAMPERED, never as an accepted forgery.)
+  if ! printf '%s' "$body" | jq -c --arg h "$h" '. + {h:$h}' >> "$LEDGER" 2>/dev/null; then
+    printf '[%s] RELAY LEDGER APPEND FAILED for %s\n' "$(date +%s)" "$LEDGER" >> "${LOG:-/dev/stderr}" 2>/dev/null || true
+    printf 'relay: ledger append failed (%s) — a verdict was not recorded\n' "$LEDGER" >&2
+    return 1
+  fi
 }
 
 # Evaluate the current WP's checklist. Each item with a `cmd` is DETERMINISTIC (a real check is the
