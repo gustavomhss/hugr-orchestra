@@ -5,6 +5,22 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-06-01 (fleet orchestration: arms, auto-decompose, trace corpus)
+- **Per-agent checklist chains ("arms").** `bin/relay-arm-hook.sh` (SubagentStop) holds each spawned
+  agent to its own ordered chain of checklists, bound by a `RELAY-ARM:<token>` marker recovered from
+  the agent's transcript — async / multi-model / multi-worktree fan-out with per-token state. Authored
+  via the `relay-arm` MCP tool (in the techlead repo). Docs: `docs/per-agent-arms.md`;
+  `examples/fleet-chain/` is a deterministic LLM-free proof of the loop.
+- **Auto-decomposition.** `bin/relay-autodecompose.py` drafts a `sprint.json` from a repo's existing
+  pytest suite (one WP per test file, one named control per test) — driving authoring cost toward zero.
+  Docs: `docs/auto-decompose.md`.
+- **Verified-trace corpus (the data flywheel).** The arm hook now RETAINS each terminal trace (ledger
+  + sprint + meta) under `$RELAY_CORPUS_DIR` on complete/escalate — runs are no longer ephemeral.
+  `bin/relay-corpus.py` extracts the per-step reward signal (retries→green, per-control difficulty,
+  complete/escalate rates) and excludes tampered traces. Docs: `docs/trace-corpus.md`.
+- **Doc-index generator.** `bin/gen-doc-index.py` (idempotent, `--check` for CI) regenerates the hashed
+  `docs/INDEX.md` that CONTRIBUTING required but had no generator for.
+
 ### Changed / Security — 2026-05-31 (ledger hardening)
 - **Keyed ledger mode.** `relay_hook.sh` and `verify_ledger.py` now seal each line with
   `HMAC-SHA256(RELAY_LEDGER_KEY, body)` when the env var is set (**unforgeable without the secret**),

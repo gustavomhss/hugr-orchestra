@@ -12,6 +12,7 @@ chk()  { if eval "$2"; then ok "$1"; else bad "$1 [$2]"; fi; }
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 ARMS="$TMP/arms"; WORK="$TMP/work"; mkdir -p "$ARMS" "$WORK"
+export RELAY_CORPUS_DIR="$TMP/corpus"   # isolate trace retention from the real ~/.relay/corpus
 TOKEN="sec-test01"
 ARM="$ARMS/$TOKEN"; mkdir -p "$ARM"
 

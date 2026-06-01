@@ -145,7 +145,9 @@ def fire(token, arm, workdir, arms_dir):
     """One SubagentStop fire of the real hook. Returns the block reason, or None on complete."""
     transcript = os.path.join(workdir, "..", "transcript.jsonl")
     open(transcript, "w").write(json.dumps({"type": "user", "content": f"done RELAY-ARM:{token}"}) + "\n")
-    env = {**os.environ, "RELAY_ARMS_DIR": arms_dir}
+    # keep retained traces inside this run's sandbox (sibling of arms_dir), never the real corpus
+    env = {**os.environ, "RELAY_ARMS_DIR": arms_dir,
+           "RELAY_CORPUS_DIR": os.path.join(os.path.dirname(arms_dir), "corpus")}
     p = subprocess.run(["bash", HOOK], input=json.dumps({"transcript_path": os.path.abspath(transcript)}),
                        capture_output=True, text=True, env=env)
     out = p.stdout.strip()

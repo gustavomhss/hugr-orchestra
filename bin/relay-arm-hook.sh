@@ -76,11 +76,28 @@ rb=$(jq -r '.retry_budget // 3' "$SPRINT")
 [ "$i" -ge "$nwp" ] && exit 0   # chain already complete
 wp_id=$(jq -r ".work_packages[$i].id" "$SPRINT")
 
+# Retain the finished trace in a durable corpus (the verified-trace data flywheel). Per-arm state
+# under $ARMS_DIR is volatile (a token dir can be cleaned), so on every TERMINAL outcome
+# (chain-complete or escalate) we copy the ledger + sprint + meta into $RELAY_CORPUS_DIR, keyed by
+# token + the chain head, append-only. This is the RL-signal substrate — runs are no longer ephemeral.
+archive_trace() {  # $1 = outcome (complete|escalate)
+  local corpus="${RELAY_CORPUS_DIR:-$HOME/.relay/corpus}"
+  local head dest
+  head=$(tail -1 "$LEDGER" 2>/dev/null | jq -r '.h // "nohash"' 2>/dev/null); head=${head:0:12}
+  dest="$corpus/${token}-${head}"
+  mkdir -p "$dest" 2>/dev/null || return 0
+  cp "$LEDGER" "$dest/ledger.jsonl" 2>/dev/null || true
+  cp "$SPRINT" "$dest/sprint.json" 2>/dev/null || true
+  cp "$ARM/meta.json" "$dest/meta.json" 2>/dev/null || true
+  printf '{"outcome":"%s","token":"%s","head":"%s","ts":%s}' "$1" "$token" "$head" "$(date +%s)" \
+    > "$dest/outcome.json" 2>/dev/null || true
+}
+
 advance() {  # current gate passed: reveal the next, or finish the chain
   local ni=$((i+1)); echo "$ni" > "$ARM/counter"
   if [ "$ni" -ge "$nwp" ]; then
     printf '[%s] arm %s: gate %s OK -> CHAIN COMPLETE\n' "$(date +%s)" "$token" "$wp_id" >> "$LOG"
-    ledger sprint-complete; exit 0
+    ledger sprint-complete; archive_trace complete; exit 0
   fi
   local nid ninstr
   nid=$(jq -r ".work_packages[$ni].id" "$SPRINT")
@@ -135,7 +152,7 @@ if [ -z "$fails" ] && [ -z "$reg" ]; then advance; fi
 r=$(cat "$ARM/retry_$i" 2>/dev/null || echo 0)
 if [ "$r" -ge "$rb" ]; then
   printf '[%s] arm %s: gate %s ESCALATE (budget=%s) fails:%s reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$rb" "$fails" "$reg" >> "$LOG"
-  ledger escalate "$rb"; exit 0
+  ledger escalate "$rb"; archive_trace escalate; exit 0
 fi
 echo $((r+1)) > "$ARM/retry_$i"
 instr=$(jq -r ".work_packages[$i].instructions // \"\"" "$SPRINT")
