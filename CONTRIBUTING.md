@@ -26,5 +26,5 @@ intended behavior, and the implementation answers to them.
 
 - Match the existing professional, concise tone.
 - Cross-link with relative paths.
-- After substantive doc changes, regenerate the hashed index (`docs/INDEX.md`) so integrity hashes
-  stay current.
+- After substantive doc changes, regenerate the hashed index: `bin/gen-doc-index.py` (and
+  `bin/gen-doc-index.py --check` in CI fails the build if `docs/INDEX.md` drifted).
