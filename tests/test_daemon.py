@@ -306,16 +306,32 @@ def _run_gate_cli(sprint_file, work, state):
 
 
 def _normalize_ledger(path):
-    """Ledger lines minus volatile fields (ts, and the chained hashes that depend on ts)."""
+    """Ledger lines minus volatile fields (ts, and the chained hashes that depend on ts).
+
+    `oracle` is dropped for the same reason: it is sha256 of the control's `cmd`, and this test's
+    commands embed their own workdir (`test -f {work}/f1`), so the daemon run and the CLI run have
+    genuinely different command text. Its PRESENCE is asserted separately by _assert_oracles_present
+    so a driver that stopped recording the oracle is still caught here.
+    """
     out = []
     for ln in Path(path).read_text().splitlines():
         if not ln.strip():
             continue
         e = json.loads(ln)
-        for k in ("ts", "prev", "h"):
+        for k in ("ts", "prev", "h", "oracle"):
             e.pop(k, None)
         out.append(e)
     return out
+
+
+def _assert_oracles_present(path):
+    """Every checklist-item entry must carry a full sha256 oracle (R5 — docs/control-plane.md §5)."""
+    for ln in Path(path).read_text().splitlines():
+        if not ln.strip():
+            continue
+        e = json.loads(ln)
+        if e.get("event") == "checklist-item":
+            assert len(e.get("oracle", "")) == 64, f"checklist-item without an oracle: {e}"
 
 
 def test_daemon_ledger_matches_cli(tmp_path):
@@ -348,6 +364,8 @@ def test_daemon_ledger_matches_cli(tmp_path):
     _run_gate_cli(sprint_file, c_work, c_state)
     (c_work / "f2").write_text("x"); _run_gate_cli(sprint_file, c_work, c_state)
 
+    _assert_oracles_present(d_state / "ledger.jsonl")
+    _assert_oracles_present(c_state / "ledger.jsonl")
     d_led = _normalize_ledger(d_state / "ledger.jsonl")
     c_led = _normalize_ledger(c_state / "ledger.jsonl")
     # The `fails`/`reg` strings embed the workdir-derived nothing; events + verdicts must match exactly.

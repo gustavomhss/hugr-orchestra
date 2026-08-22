@@ -264,6 +264,20 @@ SPRINT DELIVERED — 3 WPs, 1 retry, 0 regressions.
   Gate adds latency at the exit and on failure *extends* work with a new turn — it never cuts a thought.
 - **Map up front, detail progressively:** Runner sees the goal + WP titles up front (orientation),
   but each WP's details only when relayed (focus, no requirement to drop early).
+- **A verdict names its oracle:** every chain entry carries `oracle` (sha-256 of the `cmd` or judge
+  criterion that produced it) and `origin` (`sprint`, `policy:<bundle>`, or `injected:<actor>`),
+  inside the hashed body. Without them a control's `id` and `assert` can stay byte-identical while
+  the check underneath is swapped for `true`, and the chain still verifies INTACT — the record says
+  *that* something was graded, not *what graded it*. `relay verify` reports an oracle that changed
+  between a fail and a later pass (`ORACLE-CHANGED`).
+- **A verdict names its generation:** entries carry `gen`, the `sprint.json` generation they were
+  evaluated under. The plan is re-read on every gate evaluation, so without it a verdict cannot be
+  attributed to a version of the plan and a mutated chain is indistinguishable from a static one.
+- **A repeated failure is counted, not restated:** a round is identified by `round` (a sha over its
+  verdicts and the failing set they produced). The first occurrence is written in full; an identical
+  consecutive round becomes one `gate-fail-repeat` carrying that sha and a `repeat` count. Anything
+  that differs, and every terminal outcome, is written in full — collapse only hides repetition.
+  (Rationale in docs/control-plane.md §8: a Relay retry costs a model turn, not a poll.)
 
 ## 8. What Relay is NOT
 

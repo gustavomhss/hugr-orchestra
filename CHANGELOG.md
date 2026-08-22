@@ -5,6 +5,44 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added — 2026-08-22 (control plane, R5–R7: an orchestrator may mutate a live chain)
+`docs/control-plane.md` designs how an orchestrator amends a **running** chain and how a human watches
+and intervenes. R5–R7 build the record that has to carry it. Three defects were reproduced first, then
+fixed, then locked as regression tests. Full suite 138 green.
+- **R5 accountable chain entries** — entries now carry `oracle` (sha-256 of the `cmd` or judge
+  criterion that produced the verdict), `origin` (`sprint` / `policy:<bundle>` / `injected:<actor>`)
+  and `gen` (the plan generation evaluated), inside the hashed body. **The defect:** swapping only a
+  control's `cmd` — `! grep -q '@' app.log` for `true` — while keeping its `id` and `assert`
+  byte-identical turned a failing PII control into `RESULT: PASS — auditable`, exit 0, chain INTACT,
+  with the violation still on disk. The chain recorded *that* something was graded, never *what
+  graded it*. `relay verify` gained the `ORACLE-CHANGED` verdict (exit 2). `verify_ledger.py` needed
+  no change — it recomputes the MAC from stored bytes, so additive fields are backward-compatible and
+  legacy entries without them still verify.
+- **R6 position by id, keep-best by acceptance** — an arm's position is a WP **id**, not an array
+  index, and `state` (`active|complete|escalated`) is kept separate from it: position is a fact, not a
+  status enum. **The defect:** splicing a WP *before* the cursor livelocked — the index re-aimed at
+  different work, the regression guard charged controls the runner had never been given, and since a
+  regression-only failure deliberately spends no gate budget, nothing escalated: 12 fires, counter
+  frozen, zero escalations, one model turn burned per fire. The fix is the compliance criterion — an
+  amended plan binds only where the existing ledger is still a valid trace of it, so a control with no
+  recorded pass on this chain was never accepted and cannot regress. A position absent from the
+  current generation is now a named `position-lost` event, never a silent re-aim.
+- **R7 stuck-gate economics** — a fire that carries no new information no longer grows the record: a
+  round is identified by `round` (a sha over its verdicts and the failing set they produced), the first
+  occurrence is written in full, and identical consecutive rounds become one `gate-fail-repeat` with a
+  `repeat` count under that same sha. Anything that differs, and every terminal outcome, is written in
+  full. **The defect:** the regression-only path had no budget at all — "not the current gate's budget"
+  had been implemented as *none* — so an unfixable backslide re-blocked forever at a model turn per
+  fire. It now has its own, cleared by a clean pass. `relay-corpus.py` counts `gate-fail-repeat` so a
+  stuck gate is not undercounted.
+- **Correction to the design doc:** §8 first claimed Temporal's retry backoff transfers directly. It
+  does not. Backoff rations *polls*, which arrive on a timer; the Gate fires only when the Runner has
+  stopped, so sleeping buys latency and saves no turns. The transferable bound is a turn count.
+- `bin/relay-gate` and `benchmark/relay_hook.sh` deliberately stay on the integer counter and do not
+  collapse rounds: the benchmark hook is the measurement harness (historical ledgers must stay
+  comparable) and the CLI is driven by external loops that own their state and cadence. Recorded as a
+  decision in `docs/control-plane.md` §13, not an oversight.
+
 ### Added — 2026-06-01 (4 expansion roadmaps, built in parallel)
 Four §12 expansion bets, built concurrently by a 20-agent fleet (5 per roadmap: implement + two
 adversarial reviews + fix + verify), each owning a disjoint subtree, then tech-lead-verified end to end

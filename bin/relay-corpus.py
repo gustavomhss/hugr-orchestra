@@ -60,6 +60,8 @@ def load_corpus(corpus_dir):
 def per_wp_signal(entries):
     """From one trace's entries, derive per-WP rows: retries-to-green, controls, pass/fail."""
     # gate-fail entries carry retry counts per WP index i; advance-reveal/sprint-complete mark a WP done.
+    # gate-fail-repeat is the SAME failure re-counted rather than re-appended (R7, docs/control-plane.md
+    # §8) — it carries the retry counter too, so ignoring it would silently undercount stuck gates.
     retries = defaultdict(int)          # wp_id -> max retry seen (gate-fails before pass)
     wp_name = {}                        # i -> wp_id
     controls = defaultdict(list)        # wp_id -> [(item, verdict, graded_by)]
@@ -68,7 +70,7 @@ def per_wp_signal(entries):
         ev = e.get("event")
         wp = e.get("wp", "?")
         wp_name[e.get("i")] = wp
-        if ev == "gate-fail":
+        if ev in ("gate-fail", "gate-fail-repeat"):
             retries[wp] = max(retries[wp], e.get("retry", 0))
         elif ev == "checklist-item":
             controls[wp].append((e.get("item"), e.get("verdict"), e.get("graded_by")))

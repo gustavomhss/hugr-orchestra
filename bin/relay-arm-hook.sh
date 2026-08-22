@@ -52,22 +52,96 @@ LOG="$ARM/relay.log"; LEDGER="$ARM/ledger.jsonl"
 fails=""; reg=""
 
 # ---- per-arm tamper-evident ledger (hash chain from lib/relay-gate.sh; envelope carries the token) ----
-ledger() {  # $1=event  $2=retry(optional)
+ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-count(optional)
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
-    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}')"
-}
-ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by
-  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
-         --argjson i "${i:-0}" --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
-    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb}')"
+         --arg round "${3:-}" --arg rep "${4:-0}" \
+    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg,round:$round,repeat:($rep|tonumber)}')"
 }
 
-i=$(cat "$ARM/counter" 2>/dev/null || echo 0)
+# ---- Round collapse (R7 — docs/control-plane.md §8) ---------------------------------------------
+# A fire that changes nothing must not grow the record. Temporal writes only the FIRST workflow-task
+# failure to history and counts the rest, which is why a stuck execution shows one failure event and
+# an attempt counter in the thousands; relay used to append a full checklist round plus a gate-fail on
+# every fire, so the D2 livelock wrote twelve byte-identical rounds. So `ledger_item` no longer appends
+# directly: it BUFFERS the round, and the decision path below either flushes it (the situation changed,
+# or we are terminating and want the full evidence) or discards it in favour of one `gate-fail-repeat`
+# entry carrying the round's sha. The sha is the audit link — the collapsed round is on the chain once,
+# under that same value, so nothing is lost, only repeated.
+# The buffer is a FILE, not a shell array: `relay_run_checklist` is consumed through a command
+# substitution, so it runs in a subshell and any in-memory append it made would be discarded with it.
+ROUND_BUF="$(mktemp "${TMPDIR:-/tmp}/relay-round.XXXXXX")"
+trap 'rm -f "$ROUND_BUF"' EXIT
+ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin
+  jq -nc --arg tok "$token" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
+         --arg orc "${5:-}" --arg org "${6:-sprint}" \
+    '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}' \
+    >> "$ROUND_BUF"
+}
+round_flush() {  # append the buffered round to the chain, stamping each entry at flush time
+  local b
+  while IFS= read -r b; do
+    [ -n "$b" ] || continue
+    relay_chain_append "$(printf '%s' "$b" | jq -c --argjson ts "$(date +%s)" '{ts:$ts} + .')"
+  done < "$ROUND_BUF"
+  : > "$ROUND_BUF"
+}
+round_shape() {  # $1=fails $2=reg — sha over the verdicts AND the failure set they produced
+  # Deliberately excludes `ts`: two fires are "the same round" when every control was graded the same
+  # way by the same oracle and the same things are still failing. A judge that flips its verdict, a
+  # control whose oracle changed, or a different failing set all yield a different sha and are recorded
+  # in full — collapse only ever hides a repetition.
+  { cat "$ROUND_BUF"; printf '%s\n%s\n' "$1" "$2"; } | shasum -a 256 | cut -d' ' -f1
+}
+
 nwp=$(jq '.work_packages | length' "$SPRINT")
 rb=$(jq -r '.retry_budget // 3' "$SPRINT")
-[ "$i" -ge "$nwp" ] && exit 0   # chain already complete
-wp_id=$(jq -r ".work_packages[$i].id" "$SPRINT")
+
+# ---- Position (R6 — docs/control-plane.md §4) ---------------------------------------------------
+# The chain's position is a WP **id**, not an array index. sprint.json is re-read fresh on every fire,
+# so an index silently re-aims at a different WP the moment anything is inserted ahead of it — the
+# hook then demands work the runner was never given. `$ARM/counter` is still WRITTEN as a derived
+# mirror for older readers (examples/fleet-chain, docs/sdk.md) but is only READ to migrate an arm
+# that predates `position`.
+# `position` is a plain FACT (which WP the chain stands on). Whether the chain is still running is a
+# separate observation in `$ARM/state` (active|complete|escalated) — position is deliberately NOT a
+# status enum. Kubernetes shipped exactly that (`phase`) and deprecated it: a single linear enum
+# cannot express two simultaneous truths (e.g. "at wp3" AND "an amendment is pending"), and every new
+# value breaks consumers. R8 grows `state` into the full condition set.
+pos=$(cat "$ARM/position" 2>/dev/null || true)
+chain_state=$(cat "$ARM/state" 2>/dev/null || true)
+if [ -z "$pos" ]; then
+  ci=$(cat "$ARM/counter" 2>/dev/null || echo 0)
+  case "$ci" in ''|*[!0-9]*) ci=0 ;; esac
+  if [ "$ci" -ge "$nwp" ]; then
+    chain_state="complete"; printf 'complete' > "$ARM/state"
+    pos=$(jq -r ".work_packages[-1].id // \"?\"" "$SPRINT")
+  else
+    pos=$(jq -r ".work_packages[$ci].id" "$SPRINT")
+  fi
+  printf '%s' "$pos" > "$ARM/position"
+fi
+case "$chain_state" in complete|escalated) exit 0 ;; esac   # terminal — leave the agent alone
+
+i=$(jq -r --arg p "$pos" '[.work_packages[].id] | index($p) // -1' "$SPRINT")
+if [ "$i" = "-1" ] || [ -z "$i" ]; then
+  # The plan no longer contains the WP this arm is standing on. Under an index this was invisible
+  # (it just pointed somewhere else); named, it is a plan/position mismatch. Fail loudly and let the
+  # agent stop rather than blocking it forever against work it cannot be given — every block costs a
+  # model turn. R8 turns this into an `awaiting-human` state a person resumes.
+  wp_id="$pos"
+  printf '[%s] arm %s: POSITION LOST — %s is not in gen %s of the plan\n' \
+    "$(date +%s)" "$token" "$pos" "$(jq -r '.gen // 0' "$SPRINT")" >> "$LOG"
+  ledger position-lost
+  printf 'relay: arm %s is positioned at %s, which no longer exists in the plan\n' "$token" "$pos" >&2
+  exit 0
+fi
+wp_id="$pos"
+# retry state keys by id too, so it follows the WP rather than the slot it happened to occupy.
+id_safe=$(printf '%s' "$wp_id" | tr -c 'A-Za-z0-9._-' '_')
+RETRY_F="$ARM/retry_$id_safe"
+[ -f "$RETRY_F" ] || { [ -f "$ARM/retry_$i" ] && cp "$ARM/retry_$i" "$RETRY_F"; } 2>/dev/null || true
 
 # Retain the finished trace in a durable corpus (the verified-trace data flywheel). Per-arm state
 # under $ARMS_DIR is volatile (a token dir can be cleaned), so on every TERMINAL outcome
@@ -87,13 +161,16 @@ archive_trace() {  # $1 = outcome (complete|escalate)
 }
 
 advance() {  # current gate passed: reveal the next, or finish the chain
-  local ni=$((i+1)); echo "$ni" > "$ARM/counter"
+  round_flush                                      # the passing round goes on the chain, always
+  local ni=$((i+1)); echo "$ni" > "$ARM/counter"   # derived mirror, for pre-R6 readers
   if [ "$ni" -ge "$nwp" ]; then
+    printf 'complete' > "$ARM/state"
     printf '[%s] arm %s: gate %s OK -> CHAIN COMPLETE\n' "$(date +%s)" "$token" "$wp_id" >> "$LOG"
     ledger sprint-complete; archive_trace complete; exit 0
   fi
   local nid ninstr
   nid=$(jq -r ".work_packages[$ni].id" "$SPRINT")
+  printf '%s' "$nid" > "$ARM/position"
   ninstr=$(jq -r ".work_packages[$ni].instructions // \"\"" "$SPRINT")
   printf '[%s] arm %s: gate %s OK -> reveal %s\n' "$(date +%s)" "$token" "$wp_id" "$nid" >> "$LOG"
   ledger advance-reveal
@@ -111,39 +188,84 @@ advance() {  # current gate passed: reveal the next, or finish the chain
 fails="$(relay_run_checklist)"
 # regression guard: re-run all EARLIER gates' deterministic checks (keep-best / no backsliding).
 # Reports the failing item's id (tab-joined id\tcmd so we keep the name, not the raw command).
-if [ "$i" -gt 0 ]; then
+# Keep-best re-runs earlier gates' checks — but only for controls this chain ACTUALLY ACCEPTED.
+# Enforcing every control at a lower index instead means a control spliced in behind the cursor is
+# charged as a "regression" against work the runner was never given, and since a regression-only
+# failure deliberately does not burn the current gate's retry budget, nothing ever escalates: the
+# runner blocks forever, at a model turn per fire. The rule is the compliance criterion — an amended
+# plan binds only where the existing ledger is still a valid trace of it. A control with no recorded
+# pass on this chain was never accepted, so there is nothing to regress.
+if [ "$i" -gt 0 ] && [ -f "$LEDGER" ]; then
+  accepted=$(jq -r 'select(.event=="checklist-item" and .verdict=="pass") | .item' "$LEDGER" 2>/dev/null | sort -u)
   while IFS=$'\t' read -r rid rcmd; do
     [ -z "$rcmd" ] && continue
+    printf '%s\n' "$accepted" | grep -qxF "$rid" || continue   # never accepted -> not a regression
     ( cd "$RUN_DIR" && eval "$rcmd" >/dev/null 2>&1 ) || reg="$reg; $rid"
   done < <(jq -r ".work_packages[range(0;$i)].checklist[]? | select(.cmd) | \"\(.id)\t\(.cmd)\"" "$SPRINT")
 fi
 
-if [ -z "$fails" ] && [ -z "$reg" ]; then advance; fi
+rsha=$(round_shape "$fails" "$reg")
+ROUND_F="$ARM/round_$id_safe"     # sha of the last round RECORDED in full at this gate
+REPEAT_F="$ARM/repeat_$id_safe"   # consecutive identical rounds collapsed since then
+REG_F="$ARM/reg_retry"            # the regression path's own budget (see below)
+
+if [ -z "$fails" ] && [ -z "$reg" ]; then rm -f "$ROUND_F" "$REPEAT_F" "$REG_F"; advance; fi
+
+# Same verdicts, same failures as last fire? Then this fire carries no new information. Record the
+# first occurrence in full (it is already on the chain) and count the rest against its sha.
+collapsed=0; rep=0
+if [ "$(cat "$ROUND_F" 2>/dev/null || true)" = "$rsha" ]; then
+  collapsed=1
+  rep=$(cat "$REPEAT_F" 2>/dev/null || echo 0); case "$rep" in ''|*[!0-9]*) rep=0 ;; esac
+  rep=$((rep+1)); printf '%s' "$rep" > "$REPEAT_F"
+else
+  printf '%s' "$rsha" > "$ROUND_F"; printf '0' > "$REPEAT_F"
+fi
+# Non-terminal collapsed fire: the buffered round is a duplicate, drop it. Every other path flushes.
+emit_round() { if [ "$collapsed" = 1 ]; then : > "$ROUND_BUF"; else round_flush; fi; }
+
+escalate() {  # $1 = which budget was spent (for the log) — always terminal, always full evidence
+  printf '[%s] arm %s: gate %s ESCALATE (%s budget=%s) fails:%s reg:%s\n' \
+    "$(date +%s)" "$token" "$wp_id" "$1" "$rb" "$fails" "$reg" >> "$LOG"
+  round_flush   # a terminal outcome records the round in full even mid-collapse: this is the evidence
+  ledger escalate "$rb" "$rsha" "$rep"; archive_trace escalate
+  # Escalation is TERMINAL: a gate handed to a human must not silently reopen and self-resolve on a
+  # later fire. The terminal fact lives in `state`, distinct from `complete` — R8 turns `escalated`
+  # into `awaiting-human`, a state a person's action leaves.
+  printf 'escalated' > "$ARM/state"
+  echo "$nwp" > "$ARM/counter"
+  exit 0
+}
 
 # A regression-ONLY failure (current gate passes, an earlier gate backslid) is NOT a failure of the
-# current gate: it must not burn THIS gate's retry budget nor escalate it. Re-block pointing at the
-# regressed control, without touching retry_$i, so the current gate keeps its full budget.
+# current gate: it must not burn THIS gate's retry budget nor escalate it. But "not this gate's
+# budget" is not "no budget" — it had none at all, so an unfixable regression re-blocked forever at a
+# model turn per fire. Relay's retry unit is a model turn, not a worker poll (docs/control-plane.md
+# §8), which is why the bound here is a turn count and not a wall-clock backoff: this hook only fires
+# when the agent stops, so sleeping would buy latency and save nothing. The regression path gets its
+# own counter, so it terminates without ever charging the gate the runner did satisfy.
 if [ -z "$fails" ] && [ -n "$reg" ]; then
-  printf '[%s] arm %s: gate %s REGRESSION in earlier gate reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$reg" >> "$LOG"
-  ledger gate-fail "$(cat "$ARM/retry_$i" 2>/dev/null || echo 0)"
+  rr=$(cat "$REG_F" 2>/dev/null || echo 0); case "$rr" in ''|*[!0-9]*) rr=0 ;; esac
+  [ "$rr" -ge "$rb" ] && escalate regression
+  echo $((rr+1)) > "$REG_F"
+  printf '[%s] arm %s: gate %s REGRESSION in earlier gate (retry %s) reg:%s\n' \
+    "$(date +%s)" "$token" "$wp_id" "$((rr+1))" "$reg" >> "$LOG"
+  emit_round
+  if [ "$collapsed" = 1 ]; then ledger gate-fail-repeat "$((rr+1))" "$rsha" "$rep"
+  else                          ledger gate-fail        "$((rr+1))" "$rsha" "$rep"; fi
   jq -n --arg r "Relay: an earlier gate regressed — restore these before finishing: ${reg#; }. (Current gate '$wp_id' is satisfied; this is a backslide in prior work.)" '{decision:"block", reason:$r}'
   exit 0
 fi
 
 # something failed at the current gate -> re-block (bounded). Escalate to the human when budget spent.
-r=$(cat "$ARM/retry_$i" 2>/dev/null || echo 0)
-if [ "$r" -ge "$rb" ]; then
-  printf '[%s] arm %s: gate %s ESCALATE (budget=%s) fails:%s reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$rb" "$fails" "$reg" >> "$LOG"
-  ledger escalate "$rb"; archive_trace escalate
-  # Escalation is TERMINAL: a gate handed to a human must not silently reopen and self-resolve on a
-  # later fire. Mark the chain done (counter past end) so subsequent stops exit early at the top guard.
-  echo "$nwp" > "$ARM/counter"
-  exit 0
-fi
-echo $((r+1)) > "$ARM/retry_$i"
+r=$(cat "$RETRY_F" 2>/dev/null || echo 0)
+[ "$r" -ge "$rb" ] && escalate gate
+echo $((r+1)) > "$RETRY_F"
 instr=$(jq -r ".work_packages[$i].instructions // \"\"" "$SPRINT")
 printf '[%s] arm %s: gate %s FAIL (retry %s) fails:%s reg:%s\n' "$(date +%s)" "$token" "$wp_id" "$((r+1))" "$fails" "$reg" >> "$LOG"
-ledger gate-fail "$((r+1))"
+emit_round
+if [ "$collapsed" = 1 ]; then ledger gate-fail-repeat "$((r+1))" "$rsha" "$rep"
+else                          ledger gate-fail        "$((r+1))" "$rsha" "$rep"; fi
 if [ "$r" -ge 1 ]; then
   # Compaction: subsequent retries of the same gate — inject only the failing ids to curb context growth.
   # The full audit trail in the ledger is unchanged; only the agent-facing reason shrinks.

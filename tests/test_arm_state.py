@@ -91,9 +91,11 @@ def test_token_binds_to_first_marker(tmp_path):
     out = _fire(arms, corpus, "tokFIRST", transcript=tr)
     # tokFIRST's wp1 fails (no file) -> block citing C1; proves it bound to tokFIRST
     assert out and "wp1" in out["reason"]
-    # tokFIRST's counter advanced state exists; tokSECOND untouched
-    assert (arms / "tokFIRST" / "retry_0").exists()
-    assert not (arms / "tokSECOND" / "retry_0").exists()
+    # tokFIRST's retry state exists; tokSECOND untouched.
+    # Retry state keys by WP id (R6 — docs/control-plane.md §4), not by array index, so that it
+    # follows the work package rather than the slot it happened to occupy when the plan is amended.
+    assert (arms / "tokFIRST" / "retry_wp1").exists()
+    assert not list((arms / "tokSECOND").glob("retry_*")), "no cross-talk between arms"
 
 
 def test_path_traversal_token_rejected(tmp_path):

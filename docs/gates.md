@@ -172,6 +172,17 @@ if retries[runner][i] > sprint.retry_budget:
     allow_stop()
 ```
 
+### Every re-blocking path is bounded
+
+A **regression-only** failure — the current WP's Gate passes, but an earlier accepted control has
+backslid — is not a failure of the current WP, so it does not charge that WP's retry budget. It has
+a budget of its own (`$ARM/reg_retry`), spent on the same `retry_budget`, and cleared by a clean
+pass. Nothing may re-block without a bound: a Relay retry costs a model turn, so an unbounded path
+spends indefinitely (docs/control-plane.md §8).
+
+Note this is a *turn* budget, not a wall-clock backoff. The Gate fires only when the Runner has
+stopped, so there is no timer to ration — sleeping would add latency and save no turns.
+
 ---
 
 ## 6. Example DoDs

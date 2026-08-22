@@ -134,19 +134,28 @@ class TestReblockCompaction:
             f"Second reason ({len(reason2)} chars) should be shorter than first ({len(reason1)} chars)"
         )
 
-    def test_ledger_gate_fail_entries_are_unaffected(self, tmp_path):
-        """Ledger entries keep full fidelity regardless of compaction."""
+    def test_a_repeated_failure_counts_instead_of_duplicating(self, tmp_path):
+        """R7 (docs/control-plane.md §8): compaction shrinks the agent-facing reason; the ledger keeps
+        every retry counter, but a fire that produced the SAME verdicts on the SAME failing set is
+        recorded once and then counted — not appended again as a byte-identical round."""
         arms, work, corpus, token = self._setup(tmp_path)
         _fire(arms, corpus, token)
         _fire(arms, corpus, token)
 
         ledger_path = arms / token / "ledger.jsonl"
         entries = [json.loads(l) for l in ledger_path.read_text().splitlines() if l.strip()]
-        gate_fails = [e for e in entries if e.get("event") == "gate-fail"]
-        assert len(gate_fails) == 2, f"Expected 2 gate-fail events, got {len(gate_fails)}"
-        # Both entries record the retry counter (full fidelity)
-        retries = [e["retry"] for e in gate_fails]
-        assert retries == [1, 2], f"Expected retry counters [1,2], got {retries}"
+        fails = [e for e in entries if e.get("event") == "gate-fail"]
+        repeats = [e for e in entries if e.get("event") == "gate-fail-repeat"]
+        assert len(fails) == 1, f"the first failure is recorded in full, got {len(fails)}"
+        assert len(repeats) == 1, f"the identical re-fire is counted, got {len(repeats)}"
+        # No retry counter is lost — that is the fidelity the record actually owes.
+        assert [e["retry"] for e in fails + repeats] == [1, 2]
+        # The repeat points at the round it repeats, so the collapsed verdicts stay reachable.
+        assert repeats[0]["round"] == fails[0]["round"] != ""
+        assert repeats[0]["repeat"] == 1
+        # And the checklist verdicts themselves were written once, not twice.
+        items = [e for e in entries if e.get("event") == "checklist-item"]
+        assert len(items) == 1, f"expected the round on the chain once, got {len(items)}"
 
 
 # ---------------------------------------------------------------------------

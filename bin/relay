@@ -52,6 +52,37 @@ def control_report(entries):
     return list(final.values())
 
 
+def laundered_controls(entries):
+    """Controls whose ORACLE changed after they had already been judged, and which now read pass.
+
+    The chain records the oracle (a sha256 of the cmd / judge criterion) alongside the verdict. A
+    control can legitimately be amended — but a control that FAILED under one oracle and PASSES under
+    a different one has not been repaired; the question was changed. The chain stays intact either
+    way (nothing was tampered with), so integrity cannot catch this. Only the oracle can.
+
+    Returns [{id, verdicts, oracles}] — reported, and never certified as an auditable pass.
+    Entries with no `oracle` field predate this record format and are skipped, not guessed at.
+    """
+    seen = {}  # id -> [(verdict, oracle), ...]
+    for e in entries:
+        if e.get("event") != "checklist-item" or not e.get("oracle"):
+            continue
+        seen.setdefault(e["item"], []).append((e.get("verdict"), e["oracle"]))
+    out = []
+    for cid, hist in seen.items():
+        oracles = [o for _, o in hist]
+        if len(set(oracles)) < 2:
+            continue
+        if hist[-1][0] != "pass":
+            continue
+        if not any(v == "fail" for v, _ in hist[:-1]):
+            continue
+        out.append({"id": cid,
+                    "verdicts": [v for v, _ in hist],
+                    "oracles": [o[:12] for o in oracles]})
+    return out
+
+
 def cmd_verify(args):
     as_json = "--json" in args
     pos = [a for a in args if not a.startswith("--")]
@@ -67,6 +98,7 @@ def cmd_verify(args):
     intact = rc == 0
     entries = load_entries(path)
     controls = control_report(entries)
+    laundered = laundered_controls(entries)
 
     det = [c for c in controls if c.get("graded_by") == "deterministic"]
     det_fail = [c for c in det if c.get("verdict") == "fail"]
@@ -84,7 +116,7 @@ def cmd_verify(args):
     # exit precedence: tamper (1) dominates no-controls/truncation/failing-control (2) dominates pass (0)
     if not intact:
         code = 1
-    elif no_controls or truncated or det_fail:
+    elif no_controls or truncated or det_fail or laundered:
         code = 2
     else:
         code = 0
@@ -98,6 +130,8 @@ def cmd_verify(args):
             result = "NO-CONTROLS"
         elif det_fail:
             result = "CONTROL-FAIL"
+        elif laundered:
+            result = "ORACLE-CHANGED"
         else:
             result = "TRUNCATED"
         print(json.dumps({
@@ -111,6 +145,7 @@ def cmd_verify(args):
             "advisory": len(advisory),
             "last_event": last_event,
             "truncated": truncated,
+            "laundered_controls": laundered,
             "no_controls": no_controls,
             "result": result,
             "exit": code,
@@ -141,6 +176,12 @@ def cmd_verify(args):
     if wps:
         print(f"  run: {', '.join(wps)} · last event {last_event}")
     print()
+    if laundered:
+        print(f"  {R}ORACLE CHANGED{X} — these controls were judged under one oracle and now pass under another:")
+        for l in laundered:
+            print(f"    {l['id']:<10} verdicts {' -> '.join(l['verdicts'])}   oracle {' -> '.join(l['oracles'])}")
+        print(f"  {Y}A control that failed one check and passes a different one was not repaired.{X}")
+        print()
     if truncated:
         # Always emit a truncation WARN banner when applicable, before the final RESULT line.
         print(f"  {Y}WARN: trace ends on '{last_event}', not a terminal event (sprint-complete / escalate).{X}")
@@ -151,6 +192,9 @@ def cmd_verify(args):
         print(f"  {B}RESULT: {R}TAMPERED{X}{B} — the record cannot be trusted. Do not accept this run.{X}")
     elif no_controls:
         print(f"  {B}RESULT: {R}NO CONTROLS{X}{B} — not an auditable pass: no deterministic controls were recorded.{X}")
+    elif laundered:
+        print(f"  {B}RESULT: {R}ORACLE CHANGED{X}{B} — not an auditable pass: {', '.join(l['id'] for l in laundered)} "
+              f"passed under a different check than the one that failed.{X}")
     elif det_fail:
         print(f"  {B}RESULT: {R}CONTROL FAIL{X}{B} — a real control did not pass: {', '.join(c['item'] for c in det_fail)}.{X}")
     else:

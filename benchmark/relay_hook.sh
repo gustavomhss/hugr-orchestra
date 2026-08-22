@@ -21,10 +21,11 @@ ledger() {  # $1=event  $2=retry(optional) — a gate-level event
          --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
     '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}')"
 }
-ledger_item() {  # $1=item-id $2=assertion $3=verdict $4=graded_by — a per-checklist-item verdict
+ledger_item() {  # $1=item-id $2=assertion $3=verdict $4=graded_by $5=oracle-sha $6=origin
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" --argjson i "${i:-0}" \
          --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
-    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb}')"
+         --arg orc "${5:-}" --arg org "${6:-sprint}" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}')"
 }
 
 i=$(cat "$STATE/counter" 2>/dev/null || echo 0)
