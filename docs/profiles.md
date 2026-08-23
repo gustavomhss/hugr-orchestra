@@ -133,6 +133,7 @@ Migrated profiles live in `profiles/`, each next to its compiled `*.sprint.json`
 | profile | macros | sub-states | controls | ungated |
 |---|---|---|---|---|
 | `tdd_feature` | 2 | 5 | 7 | 0 |
+| `planning` | 4 | 16 | 56 | 0 |
 
 `tests/test_shipped_profiles.py` holds three properties for every file in that directory: the sprint
 is not stale (`--check`), the lint reports no errors, and every work package names a declared macro.
@@ -163,3 +164,97 @@ That is the shape of the work for every profile: the compiler is cheap, and deci
 template and the oracle for "the suite is green" is project-specific. Those are `relay-spec.py`'s
 existing placeholders — bind them with `relay-spec.py instantiate`. The compiler leaves any brace it
 does not own untouched, so the two stages compose.
+
+
+---
+
+## 7. `planning` — and what "ungated" turned out to mean
+
+The port measured this profile at 53 controls with **11 ungated sub-states**, every `execute`. The
+migrated version is 56 controls and **zero**, and the difference is not that eleven controls were
+invented.
+
+Under Protocol Enforcer all 52 criteria sit on the four `checklist` gates, and the eleven states that
+actually produce the artifacts carry none. But the profile's own sub-state descriptions say exactly
+which fields each state emits — *"classify every input by provenance, declare authority and the two
+decision rights, bind upstream, answer the campaign question"* is a list of five criteria by another
+name. So the migration **partitions the criteria over the states that own them**, read off those
+descriptions rather than invented:
+
+```
+frame     intake 5 · bearings 4 · terms 6          -> framed
+carve     carve 10 · size 1                        -> carved
+sequence  waits 5 · order 4 · forecast 2           -> sequenced
+dispatch  policy 2 · packets 10 · hostile_read 2 · tripwires 1  -> frozen
+```
+
+The partition is exact — every criterion of a phase is owned by precisely one state — and the
+compiler asserts that at migration time rather than trusting the arithmetic.
+
+Each gate then keeps **one** phase-level control, `plan-check --phase X`, instead of restating the
+criteria its own states already carry. That is a different assertion, not a duplicate one: the
+criteria say each field is right, the phase check says the phase hangs together. And it means a
+failure localizes to `carve.size, sizing_claims_recorded` rather than to "CARVE is wrong".
+
+### The tools came too
+
+`tools/edd/plan-check` and `plan-graph` are copied in from the frozen reference repo. They are the
+oracles: a profile whose controls point outside the repo would let `--check` and the lint pass while
+the chain fails at run time. Both are stdlib-only and read nothing but `plan/*.json` and the repo
+under test, so the copy is self-contained — the protocol documents they cite as authority stay where
+they are.
+
+`tools/edd/plan-criterion` is new: it exits 0 iff **one** named criterion is PASS. `plan-check` grades
+a whole phase, and a Relay control is finer than that. `SKIP` counts as a failure there, because
+`plan-check` skips a criterion when the inputs it needs are missing, and a control that cannot be
+evaluated has not been satisfied — the same rule the gate applies to a judge whose diff cannot be
+computed.
+
+### The cost, stated
+
+Every control shells a full `plan-check`, which re-reads and re-validates the entire plan. With
+keep-best re-running earlier controls on every later fire, that is quadratic in the number of
+controls: the port already measured 53 declared controls becoming **389 executions**, and this is
+slower still per execution.
+
+That is a deliberate trade and `plan-criterion` says so in its own docstring: the alternative is a
+phase-level control whose failure tells you "FRAME is wrong" and nothing else, which is exactly the
+localization the state machine exists to provide.
+
+The obvious mitigation — caching a phase report between controls — is **not** built, and the reason
+is worth keeping: a cache inside a verifier is a control that can pass on stale evidence, which is
+the D1 failure class in a new costume. If one is ever added it must key on the *content* of the plan
+directory, never on a timestamp.
+
+### Run 1 — it runs, and the record is real
+
+Against the frozen `plan/` the port used, driven by `relay-gate eval` with no agent and no model:
+
+```
+gate evaluations : 16          one per sub-state, in order, chain COMPLETE
+control verdicts : 56 pass / 0 fail
+chain integrity  : INTACT
+relay verify     : PASS — deterministic controls verified, auditable
+wall clock       : 381s
+```
+
+### Run 2 — the failure lands on the state, not the phase
+
+The protocol is explicit: *"A FIXES-NEEDED verdict loops DISPATCH; it does not pass."* Copy the plan,
+flip `verdict.json` from `APPROVE`, change nothing else:
+
+```
+advance    packets
+gate-fail  hostile_read     hostile_read_approved
+gate-fail  hostile_read     hostile_read_approved
+gate-fail  hostile_read     hostile_read_approved
+escalate   hostile_read     hostile_read_approved
+
+RESULT: CONTROL FAIL — a real control did not pass: hostile_read_approved.
+```
+
+Thirteen states passed on their own merits and the chain never reaches `frozen`, so the plan is never
+frozen. Note *where* it stopped: at the state that owns the criterion, naming the criterion. Under
+the profile as written, `hostile_read_approved` sits on the `frozen` gate, so the same defect would
+have surfaced one state later as "DISPATCH is wrong". That difference is the entire argument for
+partitioning.
