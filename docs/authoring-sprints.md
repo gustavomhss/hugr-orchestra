@@ -26,6 +26,8 @@ Reproduced from SPEC §3 with field-by-field commentary.
       "macro": "optional — the id of the macro this WP belongs to",
       "title": "string — short label, shown in the Map up front",
       "instructions": "string — full detail, revealed only when this WP is relayed",
+      "kind": "optional — execute (default) | gate | review | inject",
+      "file": "inject only — the file whose real bytes are delivered when this state is reached",
       "model": "optional — 'haiku' | 'sonnet' | 'opus' override for this WP",
       "self_check": ["optional — questions delivered WITH this WP's instructions; never a verdict"],
       "dod": [ { "type": "...", "...": "..." } ]
@@ -54,6 +56,37 @@ A macro carries no retry state of its own. Retry, keep-best and the compliance c
 
 Resolution tries the whole position string as a WP id before splitting on the first dot, so an arm
 that predates this notation keeps running, and a WP id that itself contains a dot stays unambiguous.
+
+### 1.2 Kinds — what a sub-state IS
+
+`kind` is optional; `execute` is the default and is left unset, so a sprint that declares nothing
+produces the ledger bytes it always produced.
+
+| kind | what the engine does |
+|---|---|
+| `execute` | the working state — instructions, then the gate. The default. |
+| `gate` | a checkpoint: controls only, nothing to work on. A **declaration** — no engine behavior of its own today. |
+| `review` | an `execute` that also carries a cold-read requirement in its reason. |
+| `inject` | **no work of its own.** The engine reads `file`, delivers its *actual bytes*, records the file's sha on the chain, and the state clears in the same fire. |
+
+Two of these are honest about their weight. `gate` changes nothing in the engine — it exists so the
+lint and the profile compiler can tell a checkpoint from a working state. `review` adds a reminder,
+not enforcement: the engine cannot spawn a fresh context, and a mechanism that claimed to would be
+worse than a sentence that says what is required.
+
+`inject` is real behavior and the one that must not be faked. A profile that says *"load protocol X,
+its MUST clauses bind"* and receives an empty injection has silently dropped the rules the Runner is
+about to be judged against. So a missing file is **never** advanced past: it is recorded as
+`inject-missing` and surfaced, the same treatment as a lost position — a plan defect the Runner
+cannot repair, where re-blocking would only cost a model turn per fire. The sha is on the chain for
+the same reason a control's oracle is: without it, a run's rules could be swapped between states with
+nothing to show for it.
+
+An `inject` WP may also declare a `checklist`, and it is still gated by it. Injection runs before the
+gate and does not replace it, so `inject` can never be a way to move a state past its controls.
+
+An **unknown** kind is refused, not run as `execute`. Silently treating a typo'd `inject` as a
+working state is exactly the failure the kinds exist to prevent.
 
 | Field | Required | Description |
 |---|---|---|

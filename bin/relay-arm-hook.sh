@@ -56,7 +56,19 @@ fails=""; reg=""
 # is built by lib/relay-gate.sh's chain append, which benchmark/relay_hook.sh also uses, and that
 # hook's historical ledger hashes must stay byte-comparable. A sprint with no macros therefore
 # produces exactly the bytes it produced before — same reasoning as the benchmark omitting `arm`.
-add_macro() { if [ -n "${wp_macro:-}" ]; then jq -c --arg m "$wp_macro" '. + {macro:$m}'; else cat; fi; }
+# Both fields are optional and both are omitted when unset, so a v1 sprint's ledger bytes — and
+# benchmark/relay_hook.sh's historical hashes — are unchanged.
+add_macro() {
+  if [ -n "${wp_macro:-}" ] && [ -n "${wp_kind:-}" ]; then
+    jq -c --arg m "$wp_macro" --arg k "$wp_kind" '. + {macro:$m, kind:$k}'
+  elif [ -n "${wp_macro:-}" ]; then
+    jq -c --arg m "$wp_macro" '. + {macro:$m}'
+  elif [ -n "${wp_kind:-}" ]; then
+    jq -c --arg k "$wp_kind" '. + {kind:$k}'
+  else
+    cat
+  fi
+}
 
 ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-count(optional)
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
@@ -211,6 +223,23 @@ if [ "$i" = "-1" ] || [ -z "$i" ]; then
 fi
 wp_id="$pos"
 wp_macro=$(jq -r ".work_packages[$i].macro // \"\"" "$SPRINT")
+# The sub-state's KIND (V6 — docs/relay-v2.md §2.3). `execute` is the default and is left UNSET so a
+# sprint that declares nothing produces the bytes it always produced. An unknown value is refused
+# rather than run as execute: silently treating a typo'd `inject` as a working state means the agent
+# is judged against rules it was never handed, which is the exact failure kinds exist to prevent.
+wp_kind=$(jq -r ".work_packages[$i].kind // \"\"" "$SPRINT")
+case "$wp_kind" in
+  ''|execute) wp_kind="" ;;
+  gate|review|inject) ;;
+  *)
+    relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$pos" \
+           --arg ev "unknown-kind" --arg k "$wp_kind" \
+      '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,kind:$k}')" || true
+    printf '[%s] arm %s: UNKNOWN KIND %s at %s\n' "$(date +%s)" "$token" "$wp_kind" "$pos" >> "$LOG"
+    printf 'relay: arm %s declares kind "%s" at %s, which this engine does not implement\n' \
+      "$token" "$wp_kind" "$pos" >&2
+    exit 0 ;;
+esac
 # Rewrite the position in canonical two-coordinate form. A pre-v2 arm carrying a bare id is migrated
 # here rather than reported as POSITION LOST — the WP it names still exists, only the notation moved.
 write_position() {  # $1 = wp array index
@@ -295,7 +324,17 @@ $ninstr"
 
 Before you finish this state, be ready to answer:
 $nself"
-  local reason="Relay gate '$wp_id' passed. Next gate: $nid. $ninstr"
+  # `review` cannot be enforced by this engine — it cannot spawn a fresh context — so it is stated as
+  # a requirement rather than pretended to be a guarantee. A reminder that says what it is beats a
+  # mechanism that claims more than it does.
+  local nkind
+  nkind=$(jq -r ".work_packages[$ni].kind // \"\"" "$SPRINT")
+  [ "$nkind" = "review" ] && ninstr="$ninstr
+
+This is a REVIEW state: it must be worked from a cold read of the frozen artifacts. If you produced
+what is under review in this context, you are disqualified from reviewing it — say so rather than
+proceeding."
+  local reason="${INJECTED}Relay gate '$wp_id' passed. Next gate: $nid. $ninstr"
   local compact_after="${RELAY_COMPACT_AFTER:-6}"
   if [ "$ni" -ge "$compact_after" ]; then
     ledger compaction-hint
@@ -304,6 +343,42 @@ $nself"
   emit_block "$reason"
   exit 0
 }
+
+# ---- inject (V6) --------------------------------------------------------------------------------
+# A state with no work of its own: the engine reads the named file and delivers its ACTUAL bytes.
+# This is the one kind that must not be faked. A profile that says "load protocol X" and receives an
+# empty injection has silently dropped the rules the agent is about to be judged against — so a
+# missing file is treated like POSITION LOST: recorded, surfaced, and never advanced past. Blocking
+# instead would cost a model turn per fire against a plan defect the agent cannot repair.
+#
+# The file's sha goes on the chain for the same reason a control's oracle does: otherwise a run's
+# rules can be swapped between states with nothing to show it, which is D1 in another costume.
+#
+# It runs BEFORE the gate and does not replace it. An inject WP that also declares a checklist is
+# still gated by it, so `inject` can never be a way to smuggle a state past its controls.
+INJECTED=""
+if [ "$wp_kind" = "inject" ]; then
+  ifile=$(jq -r ".work_packages[$i].file // \"\"" "$SPRINT")
+  ipath="$RUN_DIR/$ifile"
+  if [ -z "$ifile" ] || [ ! -f "$ipath" ]; then
+    relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$wp_id" \
+           --arg ev "inject-missing" --arg f "$ifile" \
+      '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,file:$f}')" || true
+    printf '[%s] arm %s: INJECT MISSING %s at %s\n' "$(date +%s)" "$token" "$ifile" "$wp_id" >> "$LOG"
+    printf 'relay: arm %s cannot inject "%s" at %s — the file does not exist under %s\n' \
+      "$token" "$ifile" "$wp_id" "$RUN_DIR" >&2
+    exit 0
+  fi
+  isha=$(shasum -a 256 "$ipath" | cut -d' ' -f1)
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$wp_id" \
+         --arg ev "inject" --arg f "$ifile" --arg sha "$isha" \
+    '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,file:$f,sha:$sha}')" || true
+  INJECTED="--- $ifile ---
+$(cat "$ipath")
+--- end $ifile ---
+
+"
+fi
 
 # gate evaluation: the shared checklist core (lib/relay-gate.sh) logs each verdict via ledger_item.
 fails="$(relay_run_checklist)"

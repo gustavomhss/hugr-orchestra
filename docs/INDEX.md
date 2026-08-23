@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T04:42:52Z
+- **Generated:** 2026-08-23T04:45:33Z
 - **Files:** 25
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `fc98491747a11f0efdb3012fe1d4cce8359a0128a26cd4c17d194fd9e30b4367`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `5756e2916e77a33b1ba9f7ef287277d661c797ec1f5498eafb0fb0563fd7ec17`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `CONTRIBUTING.md` | 30 | 1557 | `0ec40378b3573adeea93cc3b6ca4c2e2a9e541c5e4ec9ee779dfac4d36cb672a` |
 | `CHANGELOG.md` | 205 | 16654 | `11a3a67ed0f24ed494804758b952b1fe4e1c4f42aafb32574f8c878111e52fde` |
 | `docs/architecture.md` | 283 | 14542 | `30fec8f42bb9597cb747999c55fa9beb5e29b7313a822b5b71c1051ff01a221d` |
-| `docs/authoring-sprints.md` | 287 | 14275 | `eb898bd79cc623c1c920f02ef94dd18edaccdd034eff01b4490a82a135e60068` |
+| `docs/authoring-sprints.md` | 320 | 16461 | `7955d22e2c94499e60d80ce5bf588360f6c28f69cfaa8535bd6844fbaa222044` |
 | `docs/auto-decompose.md` | 61 | 2959 | `a72e0d02d8c632035829644a18e18a6a337c96d0a46ddc89ae0bdb140f7b735e` |
 | `docs/compaction.md` | 84 | 3781 | `63bbf7b052e31dcc90f3ba4864c83577f8a8a838fdc32ca1bf53eba8a1336b2b` |
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
