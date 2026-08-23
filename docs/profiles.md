@@ -135,6 +135,7 @@ Migrated profiles live in `profiles/`, each next to its compiled `*.sprint.json`
 | `tdd_feature` | 2 | 5 | 7 | 0 |
 | `planning` | 4 | 16 | 56 | 0 |
 | `wp-execute` | 6 | 13 | 25 | 0 |
+| `spec-decompose` | 5 | 15 | 36 | 0 |
 
 `tests/test_shipped_profiles.py` holds three properties for every file in that directory: the sprint
 is not stale (`--check`), the lint reports no errors, and every work package names a declared macro.
@@ -289,3 +290,59 @@ one state late. The rule is the same in both profiles — every state is earned 
 from whether a phase-level oracle exists.
 
 `wp-execute` also reuses the sub-state id `gate` in all six macros, so it needs `--qualify-ids`.
+
+
+---
+
+## 9. `spec-decompose` — and a second verifier
+
+This profile builds four linked registries — invariants, requirements, spec clauses, scenarios, work
+packages — and almost every one of its sixteen criteria is a **traceability** question: does each id
+exist, does each item cite a source that exists, is every upstream item covered downstream. Those are
+computable, and computing them is the whole difference between this and the presence-of-a-key gate it
+replaces.
+
+So it gets its own checker, `tools/spec/spec-check`, in the same shape as `plan-check`: `--phase`,
+`--json`, a `[{criterion, status, evidence}]` report. And because a phase-level verifier now exists,
+the criteria **partition** onto the state that produces them — `register` emits the invariants the
+`invariants` gate grades — with each gate keeping one phase-level control. Same shape as `planning`,
+for the same reason.
+
+`tools/edd/plan-criterion` is generalized to `tools/criterion`: any checker with that interface gets
+per-criterion Relay controls, so a protocol earns them by shipping a checker rather than a shim.
+
+### What the checker will not judge
+
+Whether an invariant is *well chosen*, whether a scenario is *meaningful*, whether a package is *the
+right cut*. Those are judgment, and the protocol reserves them for the cold review — which every
+macro carries, and which is graded by three controls: the verdict says APPROVE, the review is long
+enough to have engaged, and a judge checks it against the computed diff. The first two are the
+oracle; the judge is the addition.
+
+### It discriminates, and there is a test that says so
+
+A checker that only fails is useless and one that only passes is worse. `tests/test_spec_check.py`
+holds one known-good spec, then breaks it **one field at a time** and asserts each criterion catches
+its own mutation — sixteen mutations for sixteen criteria, plus a test that every declared criterion
+has a mutation behind it. Coverage says the criterion ran; mutation says it would have noticed.
+
+### Both runs
+
+```
+15 gate evaluations, chain COMPLETE, 36/36 controls, relay verify PASS — auditable
+```
+
+Then one field changed — `REQ-1` placed in two work packages, making the coverage a *covering*
+instead of a *partition*:
+
+```
+advance    goldens.gate
+gate-fail  work_packages.decompose      coverage_matrix_closed   (x3)
+escalate   work_packages.decompose      coverage_matrix_closed
+
+RESULT: CONTROL FAIL — coverage_matrix_closed.
+```
+
+Twelve states passed on their own merits and the chain never reached `work_packages.gate`. In the
+profile as written that criterion sits on the gate, so the same defect would have surfaced two states
+later.

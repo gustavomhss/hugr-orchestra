@@ -227,11 +227,17 @@ def cmd_verify(args):
     # BUG 2 fix: detect tail-truncation NOTE emitted by verify_ledger.py.
     TERMINAL = {"sprint-complete", "escalate"}
     truncated = intact and bool(entries) and last_event not in TERMINAL
+    # An ESCALATED chain did not finish. Every deterministic control it reached may well have passed,
+    # and saying "PASS — auditable" about that run is true of the controls and false of the run — a
+    # reader takes the banner, not the footnote. Found on a real chain that escalated on a blocking
+    # JUDGE control: judges are advisory by construction so `det_fail` was empty, and nothing else
+    # looked at how the chain ended.
+    escalated = last_event == "escalate"
 
     # exit precedence: tamper (1) dominates no-controls/truncation/failing-control (2) dominates pass (0)
     if not intact:
         code = 1
-    elif no_controls or truncated or det_fail or drift:
+    elif no_controls or truncated or det_fail or drift or escalated:
         code = 2
     else:
         code = 0
@@ -249,6 +255,8 @@ def cmd_verify(args):
             result = "ORACLE-CHANGED"
         elif drift:
             result = "ORACLE-DRIFT"
+        elif escalated:
+            result = "ESCALATED"
         else:
             result = "TRUNCATED"
         print(json.dumps({
@@ -265,6 +273,7 @@ def cmd_verify(args):
             "laundered_controls": laundered,
             "oracle_drift": drift,
             "no_controls": no_controls,
+            "escalated": escalated,
             "result": result,
             "exit": code,
         }, indent=2))
@@ -321,6 +330,11 @@ def cmd_verify(args):
               f"was graded under more than one oracle in this run.{X}")
     elif det_fail:
         print(f"  {B}RESULT: {R}CONTROL FAIL{X}{B} — a real control did not pass: {', '.join(c['item'] for c in det_fail)}.{X}")
+    elif escalated:
+        last = [e for e in entries if e.get("event") == "escalate"][-1]
+        print(f"  {B}RESULT: {R}ESCALATED{X}{B} — not an auditable pass: the chain stopped at "
+              f"{last.get('wp')} and was handed to a human. Still failing: "
+              f"{(last.get('fails') or '').lstrip('; ') or '(unrecorded)'}.{X}")
     else:
         # truncated and no other explicit failure — the truncation WARN above is the primary signal
         print(f"  {B}RESULT: {R}TRUNCATED{X}{B} — possible tail-truncation; cannot issue an auditable pass.{X}")

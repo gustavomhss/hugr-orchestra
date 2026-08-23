@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+"""spec-check — mechanical verifier for the spec-decompose protocol's five gates.
+
+The same job `tools/edd/plan-check` does for planning, for the other protocol that has real structure
+to check. spec-decompose builds four linked registries — invariants, requirements, spec clauses,
+scenarios, work packages — and almost every one of its sixteen criteria is a TRACEABILITY question:
+does each id exist, does each item cite a source that exists, is every upstream item covered
+downstream. Those are computable, and computing them is the whole difference between this and the
+presence-of-a-key gate it replaces.
+
+What it deliberately does NOT check: whether an invariant is *well chosen*, whether a scenario is
+*meaningful*, whether a work package is *the right cut*. Those are judgment, and the protocol reserves
+them for the cold review — which is graded separately, against the diff, by a judge.
+
+Artifacts, all under --spec-dir:
+    invariants.json   [{id: INV-1, statement, grounding, falsifier}]
+    requirements.json [{id: REQ-1, statement, source_invs: [INV-1]}]
+    spec.json         {interfaces: [{name, inputs, outputs, errors, source_reqs}], edge_cases: [...]}
+    scenarios.json    [{id: SCN-1, kind: happy|guard, given, when, then, source_req, can_fail}]
+    packages.json     [{id: WP-1, intent, source_reqs, acceptance, deps}]
+
+Usage: spec-check --phase invariants|requirements|spec|goldens|work_packages [--spec-dir DIR] [--json]
+Exit: 0 clean · 1 one or more FAIL · 2 usage/IO error.
+
+stdlib only, like plan-check. A verifier with dependencies is a verifier that stops running.
+"""
+import argparse
+import json
+import os
+import re
+import sys
+
+PASS, FAIL = "PASS", "FAIL"
+ID_RE = {"invariants": r"^INV-\d+$", "requirements": r"^REQ-\d+$",
+         "scenarios": r"^SCN-\d+$", "packages": r"^WP-\d+$"}
+
+
+def load(spec_dir, name):
+    path = os.path.join(spec_dir, name)
+    try:
+        with open(path) as f:
+            return json.load(f), None
+    except OSError:
+        return None, f"file not found: {path}"
+    except ValueError as e:
+        return None, f"{path} is not valid JSON: {e}"
+
+
+def rows(data):
+    return data if isinstance(data, list) else []
+
+
+def check_invariants(d):
+    inv, err = load(d, "invariants.json")
+    if err:
+        return [(c, FAIL, err) for c in
+                ("invariants_registered", "each_invariant_grounded", "each_invariant_falsifiable")]
+    items = rows(inv)
+    out = []
+    bad_id = [i.get("id") for i in items if not re.match(ID_RE["invariants"], str(i.get("id", "")))]
+    out.append(("invariants_registered",
+                PASS if items and not bad_id else FAIL,
+                f"{len(items)} registered" + (f", malformed ids: {bad_id}" if bad_id else "")))
+    # GROUNDED: an invariant that cites nothing is an assertion, not an invariant.
+    ungrounded = [i.get("id") for i in items if not str(i.get("grounding", "")).strip()]
+    out.append(("each_invariant_grounded", PASS if items and not ungrounded else FAIL,
+                "all grounded" if items and not ungrounded else f"ungrounded: {ungrounded or 'none registered'}"))
+    # TOOTHED: something must be able to show it false, or it cannot be violated and cannot be checked.
+    nofals = [i.get("id") for i in items if not str(i.get("falsifier", "")).strip()]
+    out.append(("each_invariant_falsifiable", PASS if items and not nofals else FAIL,
+                "all falsifiable" if items and not nofals else f"no falsifier: {nofals or 'none registered'}"))
+    return out
+
+
+def check_requirements(d):
+    inv, e1 = load(d, "invariants.json")
+    req, e2 = load(d, "requirements.json")
+    if e2:
+        return [(c, FAIL, e2) for c in
+                ("requirements_atomic", "requirements_traced_to_invariants", "ambiguity_scan_done")]
+    items, invs = rows(req), rows(inv or [])
+    inv_ids = {i.get("id") for i in invs}
+    out = []
+    # ATOMIC, in the ISO 29148 sense of Singular: one statement, one obligation. "and"/";" joining two
+    # obligations is the shape that hides a half-met requirement behind a single verdict.
+    multi = [r.get("id") for r in items
+             if len(re.findall(r"\b(?:and|;)\b", str(r.get("statement", "")).lower())) > 0]
+    out.append(("requirements_atomic", PASS if items and not multi else FAIL,
+                "all singular" if items and not multi else f"conjunctions in: {multi or 'none derived'}"))
+    # DERIVED both ways: every REQ cites a real INV, and every INV is closed by at least one REQ.
+    orphan = [r.get("id") for r in items
+              if not set(r.get("source_invs") or []) or not set(r.get("source_invs") or []) <= inv_ids]
+    uncovered = [i for i in inv_ids if not any(i in (r.get("source_invs") or []) for r in items)]
+    ok = bool(items) and not orphan and not uncovered and not e1
+    out.append(("requirements_traced_to_invariants", PASS if ok else FAIL,
+                "every REQ cites a real INV and every INV is covered" if ok
+                else f"orphan REQs: {orphan}; uncovered INVs: {uncovered}"))
+    vague = [r.get("id") for r in items if re.search(
+        r"\b(?:appropriate|reasonable|sufficient|efficient|user-friendly|as needed|etc)\b",
+        str(r.get("statement", "")).lower())]
+    out.append(("ambiguity_scan_done", PASS if items and not vague else FAIL,
+                "no unfalsifiable qualifiers" if items and not vague else f"vague wording in: {vague or 'none derived'}"))
+    return out
+
+
+def check_spec(d):
+    req, _ = load(d, "requirements.json")
+    spec, err = load(d, "spec.json")
+    if err:
+        return [(c, FAIL, err) for c in
+                ("interfaces_defined", "error_behavior_specified", "edge_cases_enumerated")]
+    ifaces = (spec or {}).get("interfaces") or []
+    req_ids = {r.get("id") for r in rows(req or [])}
+    out = []
+    incomplete = [i.get("name") for i in ifaces
+                  if not (i.get("name") and i.get("inputs") is not None and i.get("outputs") is not None)]
+    out.append(("interfaces_defined", PASS if ifaces and not incomplete else FAIL,
+                f"{len(ifaces)} interfaces" if ifaces and not incomplete
+                else f"missing name/inputs/outputs: {incomplete or 'no interfaces'}"))
+    noerr = [i.get("name") for i in ifaces if not (i.get("errors") or [])]
+    out.append(("error_behavior_specified", PASS if ifaces and not noerr else FAIL,
+                "every interface states its error behavior" if ifaces and not noerr
+                else f"no error behavior: {noerr or 'no interfaces'}"))
+    edges = (spec or {}).get("edge_cases") or []
+    # COMPLETE: a spec that covers only some requirements is a spec with a hole in it.
+    covered = set()
+    for i in ifaces:
+        covered |= set(i.get("source_reqs") or [])
+    missing = sorted(req_ids - covered)
+    out.append(("edge_cases_enumerated", PASS if edges and not missing else FAIL,
+                f"{len(edges)} edge cases, every REQ appears in the spec" if edges and not missing
+                else f"edge_cases={len(edges)}; REQs absent from the spec: {missing}"))
+    return out
+
+
+def check_goldens(d):
+    req, _ = load(d, "requirements.json")
+    scn, err = load(d, "scenarios.json")
+    names = ("happy_scenarios_written", "guard_scenarios_written",
+             "every_requirement_covered", "every_scenario_can_fail")
+    if err:
+        return [(c, FAIL, err) for c in names]
+    items = rows(scn)
+    req_ids = {r.get("id") for r in rows(req or [])}
+    happy = [s for s in items if s.get("kind") == "happy"]
+    guard = [s for s in items if s.get("kind") == "guard"]
+    out = [("happy_scenarios_written", PASS if happy else FAIL, f"{len(happy)} happy-path"),
+           ("guard_scenarios_written", PASS if guard else FAIL, f"{len(guard)} guard")]
+    # Coverage is per REQ and per KIND: a requirement with only a happy path is untested against abuse.
+    missing = sorted(r for r in req_ids
+                     if not ({s.get("kind") for s in items if s.get("source_req") == r} >= {"happy", "guard"}))
+    out.append(("every_requirement_covered", PASS if req_ids and not missing else FAIL,
+                "every REQ has happy and guard coverage" if req_ids and not missing
+                else f"REQs lacking happy+guard: {missing or 'no requirements'}"))
+    # TOOTHED: a scenario that cannot fail is documentation wearing a test's clothes.
+    toothless = [s.get("id") for s in items if not s.get("can_fail")]
+    out.append(("every_scenario_can_fail", PASS if items and not toothless else FAIL,
+                "every scenario can fail" if items and not toothless
+                else f"cannot fail: {toothless or 'no scenarios'}"))
+    return out
+
+
+def check_work_packages(d):
+    req, _ = load(d, "requirements.json")
+    pkg, err = load(d, "packages.json")
+    names = ("wp_cards_complete", "coverage_matrix_closed", "dependencies_mapped")
+    if err:
+        return [(c, FAIL, err) for c in names]
+    items = rows(pkg)
+    req_ids = {r.get("id") for r in rows(req or [])}
+    ids = {p.get("id") for p in items}
+    out = []
+    incomplete = [p.get("id") for p in items
+                  if not (p.get("intent") and (p.get("source_reqs") or []) and (p.get("acceptance") or []))]
+    out.append(("wp_cards_complete", PASS if items and not incomplete else FAIL,
+                f"{len(items)} cards complete" if items and not incomplete
+                else f"missing intent/source_reqs/acceptance: {incomplete or 'no cards'}"))
+    # CLOSED means a partition, not a covering: every REQ in EXACTLY one WP. A REQ in two packages is
+    # two agents building the same thing and a merge conflict waiting to be discovered late.
+    counts = {r: sum(1 for p in items if r in (p.get("source_reqs") or [])) for r in req_ids}
+    missing = sorted(r for r, n in counts.items() if n == 0)
+    dupes = sorted(r for r, n in counts.items() if n > 1)
+    ok = bool(req_ids) and not missing and not dupes
+    out.append(("coverage_matrix_closed", PASS if ok else FAIL,
+                "every REQ in exactly one WP" if ok else f"uncovered: {missing}; in more than one: {dupes}"))
+    dangling = sorted({dep for p in items for dep in (p.get("deps") or [])} - ids)
+    out.append(("dependencies_mapped", PASS if items and not dangling else FAIL,
+                "every dep names a real WP" if items and not dangling
+                else f"dangling deps: {dangling or 'no cards'}"))
+    return out
+
+
+PHASES = {"invariants": check_invariants, "requirements": check_requirements, "spec": check_spec,
+          "goldens": check_goldens, "work_packages": check_work_packages}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Mechanical verifier for the spec-decompose gates.")
+    ap.add_argument("--phase", required=True, choices=sorted(PHASES))
+    ap.add_argument("--spec-dir", default="spec")
+    ap.add_argument("--json", action="store_true", dest="as_json")
+    a = ap.parse_args()
+    if not os.path.isdir(a.spec_dir):
+        print(f"spec-check: --spec-dir {a.spec_dir} is not a directory", file=sys.stderr)
+        return 2
+    results = PHASES[a.phase](a.spec_dir)
+    if a.as_json:
+        print(json.dumps([{"criterion": c, "status": s, "evidence": e} for c, s, e in results], indent=2))
+    else:
+        for c, s, e in results:
+            print(f"{s} {c} — {e}")
+    return 1 if any(s == FAIL for _, s, _ in results) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -214,3 +214,30 @@ def test_entering_a_state_records_its_base_ref(tmp_path):
     adv = [e for e in _entries(arms) if e["event"] == "advance-reveal"]
     assert adv and adv[-1]["base_ref"] == head, adv
     assert (arms / "tok" / "base_wp2").read_text().strip() == head
+
+
+def test_the_model_agnostic_cli_can_supply_a_base_ref(tmp_path):
+    """`diff: true` was arm-path only: the hook stamps a base ref when it advances into a state, and
+    `bin/relay-gate` has no such moment, so every discursive control failed closed under a non-Claude
+    harness. It now reads $STATE_DIR/base_ref — whatever the driving harness recorded — so the
+    documented model-agnostic path can use the feature at all.
+    """
+    arms, work, corpus = _arm(tmp_path, [_judged_wp()], base_ref="HEAD")
+    head = _git(work, "rev-parse", "HEAD").stdout.strip()
+    (work / "impl.py").write_text("# RELAY_JUDGE_OK\n")
+    state = tmp_path / "gatestate"
+    state.mkdir()
+    (state / "counter").write_text("0")
+
+    env = dict(os.environ, RELAY_JUDGE_BACKEND="stub")
+    args = ["bash", str(ROOT / "bin" / "relay-gate"), "eval",
+            "--sprint", str(arms / "tok" / "sprint.json"),
+            "--workdir", str(work), "--state", str(state)]
+    without = subprocess.run(args, capture_output=True, text=True, env=env)
+    assert "J1" in without.stdout, "with no base_ref the control must fail closed, not pass"
+
+    (state / "base_ref").write_text(head)
+    (state / "counter").write_text("0")
+    (state / "ledger.jsonl").unlink(missing_ok=True)
+    with_ref = subprocess.run(args, capture_output=True, text=True, env=env)
+    assert json.loads(with_ref.stdout)["outcome"] in ("advance", "complete"), with_ref.stdout

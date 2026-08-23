@@ -192,3 +192,43 @@ def test_a_plan_defect_is_a_problem_too(tmp_path):
     _fire(arms, corpus)                      # unset cap -> cap-risk on the chain
     cats = {p["category"] for p in _problems(arms)[0]["problems"]}
     assert "cap-risk" in cats, _problems(arms)[0]
+
+
+def test_verify_does_not_certify_an_escalated_chain(tmp_path):
+    """Found on a real chain that escalated on a blocking JUDGE control. Judges are advisory by
+    construction, so `det_fail` was empty; nothing else looked at how the chain ENDED; and
+    `relay verify` printed "PASS — deterministic controls verified, auditable" over a run that had
+    been handed to a human. True of the controls, false of the run — and a reader takes the banner.
+
+    When a deterministic control IS the cause, CONTROL-FAIL still wins: naming the control that
+    failed is more useful than naming the disposition. This is the case where nothing else speaks.
+    """
+    arms, work, corpus = tmp_path / "arms", tmp_path / "work", tmp_path / "corpus"
+    work.mkdir(parents=True)
+    (work / "artifact.md").write_text("nothing the stub judge accepts\n")
+    d = arms / "tok"
+    d.mkdir(parents=True)
+    (d / "sprint.json").write_text(json.dumps({"brief": "x", "retry_budget": 1, "work_packages": [
+        {"id": "wp1", "instructions": "review it",
+         "checklist": [{"id": "real", "assert": "the artifact exists", "cmd": "test -s artifact.md"},
+                       {"id": "judged", "assert": "the review engages",
+                        "judge": "is it good?", "context": ["artifact.md"], "blocking": True}]}]}))
+    (d / "meta.json").write_text(json.dumps({"workdir": str(work), "token": "tok"}))
+    (d / "tr.jsonl").write_text(json.dumps({"type": "user", "content": "RELAY-ARM:tok"}) + "\n")
+
+    env = {"RELAY_ARMS_DIR": str(arms), "RELAY_CORPUS_DIR": str(corpus),
+           "PATH": os.environ["PATH"], "RELAY_JUDGE_BACKEND": "stub"}
+    for _ in range(2):
+        subprocess.run(["bash", str(HOOK)],
+                       input=json.dumps({"transcript_path": str(d / "tr.jsonl")}),
+                       capture_output=True, text=True, env=env)
+    assert _state(arms) == "awaiting-human", _state(arms)
+
+    r = subprocess.run(["python3", str(RELAY), "verify", str(d / "ledger.jsonl"), "--json"],
+                       capture_output=True, text=True)
+    out = json.loads(r.stdout)
+    assert out["escalated"] is True, out
+    assert out["deterministic_passed"] == out["deterministic_total"], \
+        "the setup is only interesting while every DETERMINISTIC control passed"
+    assert out["result"] == "ESCALATED" and r.returncode == 2, out
+    assert out["chain_intact"] is True, "the record is fine; the run is not"

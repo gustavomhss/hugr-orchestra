@@ -80,6 +80,12 @@ wp_id=$(jq -r ".work_packages[$i].id" "$SPRINT")
 # `macro` is emitted in the outcome and written into the ledger body ONLY when the WP declares one,
 # so a v1 sprint's bytes — and benchmark/relay_hook.sh's historical hashes — are unchanged.
 wp_macro=$(jq -r ".work_packages[$i].macro // \"\"" "$SPRINT")
+# The base ref a `diff: true` judge control is graded against (V5). The arm hook stamps this when it
+# advances INTO a state; this CLI has no such moment, so it reads whatever the driving harness
+# recorded — $STATE_DIR/base_ref — and leaves it empty otherwise. Empty means the control fails
+# closed, which is the same answer the arm path gives when no base ref exists: a discursive control
+# graded against a guessed artifact is worse than one that admits it could not run.
+BASE_REF=$(cat "$STATE_DIR/base_ref" 2>/dev/null || true)
 add_macro() { if [ -n "${wp_macro:-}" ]; then jq -c --arg m "$wp_macro" '. + {macro:$m}'; else cat; fi; }
 
 # ---- Ledger helpers (single-runner envelope — no `arm` field, matching benchmark/relay_hook.sh) --
