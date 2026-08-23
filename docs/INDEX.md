@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T05:49:00Z
+- **Generated:** 2026-08-23T06:00:29Z
 - **Files:** 26
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `7c8909fedd629b76be865474c7257e6a97707e440bfb0ef8a31ad134be774951`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `ffba93ddfad7876d8e2b5819779c2ffb72609ae4dac08c0c01d0960c9b3ed026`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -22,7 +22,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
 | `docs/configuration.md` | 279 | 11560 | `32f164e9d3419fe514e4e1006b375915bb15c9042cdfd94ab5b673bf1c7d27cf` |
 | `docs/control-plane.md` | 608 | 33406 | `d0bd54f18fc9d5a4fd709d2cdd9185400ac162e8950d54f45443a8c8adee4948` |
-| `docs/daemon.md` | 103 | 5919 | `1054cf7bc3627911bbe3bb99b913e4343569729ec8c37340631ed68195daab93` |
+| `docs/daemon.md` | 176 | 9663 | `7956af420e4334638b22a3e994c18d15d1495bbfdf5cc6fd19b37cb20f1a445f` |
 | `docs/enforcement-model.md` | 246 | 13338 | `c1ae62cedc26f8544a943ba0e50f704d6b18cf390ed01f1bc2f3ddd48dd59d1e` |
 | `docs/faq.md` | 166 | 7813 | `5755679e358ff6525b6f3a0c213e42f4772c3a42d87ebed683839030c4af0ef6` |
 | `docs/gates.md` | 420 | 18521 | `0e809f530471a0b9cd0d2c94d4d61fa4c6e2d363daec16f2886a19179bb33bf0` |

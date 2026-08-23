@@ -40,13 +40,19 @@ Usage:
   RELAY_DAEMON_PORT=9000 relay-daemon.py        # env-configurable port (CLI flag wins)
 """
 import argparse
+import contextlib
+import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+BIN = os.path.dirname(os.path.abspath(__file__))
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GATE = os.path.join(HERE, "relay-gate")
@@ -133,6 +139,171 @@ def handle_eval(payload):
             os.unlink(tmp.name)
 
 
+# ---- The wait channel (V10 — docs/enforcement-model.md §6c) --------------------------------------
+# A block costs a model turn; a wait costs only wall clock, so waiting is strictly cheaper. But a
+# tool call that never stops leaves the enforcement layer blind for its whole duration — no fire, no
+# round, no no-progress detection. Everything below follows from that:
+#
+#   * The METER IS HERE, server-side, on the far side of the boundary. The hook cannot meter a wait,
+#     because the hook only runs when an agent stops and a waiting agent has not stopped.
+#   * It REFUSES unless the current sub-state's checklist is failing, established by running that
+#     checklist (`relay-gate check`, which grades nothing and records nothing) rather than by
+#     believing the agent. A conditioned channel, not a rest button.
+#   * The cap is PASSIVE WITH A DEADLINE. On breach it notifies the orchestrator and keeps serving:
+#     continue means continue, stop or silence past the window means park. Passive without a deadline
+#     is decorative, because a dead orchestrator would then mean no cap at all.
+ARMS_DIR = os.environ.get("RELAY_ARMS_DIR") or os.path.expanduser("~/.relay/arms")
+ASK_ROUNDS = 3          # pokes on one ticket before it parks; the fourth round is the park
+ASK_CAP = 8             # total asks on one arm before the orchestrator is notified (passive)
+ASK_DEADLINE = 900      # seconds of orchestrator silence after a breach before the arm parks
+REFUSALS = {"no", "n", "stop", "denied", "refused", "reject", "rejected"}
+
+
+def _arm_dir(token):
+    if not token or "/" in token or ".." in token:
+        return None
+    d = os.path.join(ARMS_DIR, token)
+    return d if os.path.isfile(os.path.join(d, "sprint.json")) else None
+
+
+def _read_int(path, default):
+    try:
+        return int(open(path).read().strip())
+    except (OSError, ValueError):
+        return default
+
+
+def _note(arm, body):
+    """Append one entry to the arm's chain, through the shared core rather than a second encoding.
+
+    List values are joined: the chain's existing failure fields (`fails`, `reg`) are strings, and a
+    ledger that encodes the same idea two ways is a ledger nobody can grep. The HTTP response keeps
+    the list, because that side is an API.
+    """
+    body = {k: (", ".join(v) if isinstance(v, list) else v) for k, v in body.items()}
+    subprocess.run([os.path.join(BIN, "relay-note"), os.path.join(arm, "ledger.jsonl"),
+                    os.path.join(arm, "sprint.json"), json.dumps(body, separators=(",", ":"))],
+                   capture_output=True, text=True)
+
+
+def _park(arm, token, reason, facts):
+    """`awaiting-human` is a state a person's action leaves (R8). The runner is released; the arm is
+    not finished, and only $ARM/release with a reason moves it."""
+    with open(os.path.join(arm, "state"), "w") as fh:
+        fh.write("awaiting-human")
+    _note(arm, {"ts": int(time.time()), "arm": token, "event": "ask-parked",
+                "reason": reason, **facts})
+    return 423, {"outcome": "parked", "reason": reason, **facts}
+
+
+def _checklist_failing(arm):
+    """-> (failing_ids, wp) or None when the gate is satisfied. The SERVER runs it."""
+    meta = json.load(open(os.path.join(arm, "meta.json")))
+    r = subprocess.run([os.path.join(BIN, "relay-gate"), "check",
+                        "--sprint", os.path.join(arm, "sprint.json"),
+                        "--workdir", meta.get("workdir", "."), "--state", arm],
+                       capture_output=True, text=True)
+    try:
+        out = json.loads(r.stdout or "{}")
+    except json.JSONDecodeError:
+        return None
+    return (out.get("failing") or [], out.get("wp")) if out.get("failing") else None
+
+
+def handle_ask(payload):
+    if not isinstance(payload, dict):
+        return 400, {"error": "body must be a JSON object"}
+    token, question = payload.get("token"), (payload.get("question") or "").strip()
+    arm = _arm_dir(token)
+    if arm is None:
+        return 404, {"error": "unknown arm"}
+    if not question:
+        return 400, {"error": "a question is required"}
+
+    state = ""
+    with contextlib.suppress(OSError):
+        state = open(os.path.join(arm, "state")).read().strip()
+    if state in ("complete", "awaiting-human", "escalated"):
+        return 423, {"outcome": "parked", "reason": f"the arm is {state}"}
+
+    failing = _checklist_failing(arm)
+    if failing is None:
+        return 409, {"error": "the checklist for this state is passing — nothing is blocking you. "
+                              "Finish the state."}
+    fail_ids, wp = failing
+
+    ticket = hashlib.sha256(question.encode()).hexdigest()[:12]
+    tdir = os.path.join(arm, "asks")
+    os.makedirs(tdir, exist_ok=True)
+    poke = _read_int(os.path.join(tdir, ticket), 0) + 1
+    facts = {"wp": wp, "failing": fail_ids, "ticket": ticket}
+
+    # An answer already waiting is the cheapest outcome, and "no" is an answer: waiting out the
+    # remaining rounds after a decision has been made spends wall clock on nothing.
+    apath = os.path.join(arm, "answers", ticket + ".json")
+    if os.path.isfile(apath):
+        answer = (json.load(open(apath)).get("answer") or "").strip()
+        if answer.lower() in REFUSALS:
+            return _park(arm, token, "the orchestrator declined this request", facts)
+        _note(arm, {"ts": int(time.time()), "arm": token, "event": "ask-answered", **facts})
+        return 200, {"outcome": "answered", "answer": answer, "poke": poke, **facts}
+
+    if poke > ASK_ROUNDS:
+        return _park(arm, token, f"{ASK_ROUNDS} pokes with no answer", {**facts, "pokes": poke - 1})
+
+    # The total cap. Passive: notify and keep serving.
+    total = _read_int(os.path.join(arm, "ask_total"), 0) + 1
+    with open(os.path.join(arm, "ask_total"), "w") as fh:
+        fh.write(str(total))
+    cap = _read_int(os.path.join(arm, "ask_cap"), ASK_CAP)
+    breached = total > cap
+    if breached:
+        bpath = os.path.join(arm, "ask_breach_ts")
+        if not os.path.exists(bpath):
+            with open(bpath, "w") as fh:
+                fh.write(str(int(time.time())))
+            # FACTS, never the agent's prose. The agent's text reaching the orchestrator is a
+            # social-engineering channel, so what crosses is counts, elapsed time, and which control
+            # is still failing.
+            _note(arm, {"ts": int(time.time()), "arm": token, "event": "ask-cap-breach",
+                        "asks": total, "cap": cap, "wp": wp, "failing": fail_ids})
+        decision = ""
+        opath = os.path.join(arm, "orchestrator.json")
+        if os.path.isfile(opath):
+            with contextlib.suppress(ValueError, OSError):
+                decision = (json.load(open(opath)).get("decision") or "").strip().lower()
+        if decision in ("stop", "park"):
+            return _park(arm, token, "the orchestrator stopped this arm after a cap breach", facts)
+        if decision != "continue":
+            waited = int(time.time()) - _read_int(bpath, int(time.time()))
+            if waited >= _read_int(os.path.join(arm, "ask_deadline"), ASK_DEADLINE):
+                return _park(arm, token,
+                             "the cap was breached and the orchestrator did not answer in time", facts)
+
+    with open(os.path.join(tdir, ticket), "w") as fh:
+        fh.write(str(poke))
+    _note(arm, {"ts": int(time.time()), "arm": token, "event": "ask", "poke": poke, **facts})
+    return 200, {"outcome": "waiting", "poke": poke, "rounds": ASK_ROUNDS,
+                 "cap_breached": breached, **facts}
+
+
+def handle_answer(payload):
+    """The orchestrator's side. Deliberately not authenticated — see the security note above; this
+    daemon is localhost-only and answering is no more privileged than driving a gate."""
+    if not isinstance(payload, dict):
+        return 400, {"error": "body must be a JSON object"}
+    arm = _arm_dir(payload.get("token"))
+    if arm is None:
+        return 404, {"error": "unknown arm"}
+    ticket = payload.get("ticket")
+    if not ticket or not re.fullmatch(r"[0-9a-f]{12}", str(ticket)):
+        return 400, {"error": "a valid ticket is required"}
+    os.makedirs(os.path.join(arm, "answers"), exist_ok=True)
+    with open(os.path.join(arm, "answers", ticket + ".json"), "w") as fh:
+        json.dump({"answer": payload.get("answer", "")}, fh)
+    return 200, {"outcome": "recorded", "ticket": ticket}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "relay-daemon/0"
 
@@ -151,7 +322,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, {"error": "not found", "path": self.path})
 
     def do_POST(self):
-        if self.path != "/gate/eval":
+        if self.path not in ("/gate/eval", "/ask", "/answer"):
             self._send(404, {"error": "not found", "path": self.path})
             return
         try:
@@ -168,7 +339,8 @@ class Handler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             self._send(400, {"error": "request body is not valid JSON"})
             return
-        status, body = handle_eval(payload)
+        route = {"/gate/eval": handle_eval, "/ask": handle_ask, "/answer": handle_answer}[self.path]
+        status, body = route(payload)
         self._send(status, body)
 
     def log_message(self, fmt, *args):

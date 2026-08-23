@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# relay-note — append ONE entry to an arm's hash chain, through the shared gate core.
+#
+# The daemon's wait channel (V10) has to write to the same ledger the hook writes, and the hash
+# chain's format lives in exactly one place (lib/relay-gate.sh `relay_chain_append`). Rather than
+# reimplement prev/seq/mac in Python and let two encodings drift, the daemon shells out to this.
+#
+# Usage: relay-note <ledger.jsonl> <sprint.json> <compact-json-body>
+#
+# Locking. `relay_chain_append` reads the file tail for prev/seq with no lock, which is safe because
+# an arm has exactly one sequential writer. The daemon does not break that: it writes only while the
+# agent is WAITING inside a tool call, which is precisely when the hook cannot be firing — the hook
+# fires when an agent stops, and an agent that is waiting has not stopped. That argument is the real
+# guarantee. The mkdir below is cheap insurance against the cases it does not cover (a stray second
+# agent on the same token), and mkdir is used because flock is absent on macOS, the primary target.
+set -euo pipefail
+[ $# -eq 3 ] || { echo "usage: relay-note <ledger> <sprint> <json-body>" >&2; exit 2; }
+LEDGER="$1"; SPRINT="$2"; BODY="$3"
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HOOK_DIR/../lib/relay-gate.sh"
+
+LOCK="$(dirname "$LEDGER")/.chain.lock"
+for _ in $(seq 1 50); do
+  if mkdir "$LOCK" 2>/dev/null; then
+    trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+    relay_chain_append "$BODY"
+    exit 0
+  fi
+  sleep 0.05
+done
+# Never silently drop a chain entry: a record that loses writes is worse than one that says it did.
+echo "relay-note: could not take the chain lock for $LEDGER" >&2
+exit 1

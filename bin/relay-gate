@@ -25,12 +25,20 @@ JUDGE="${RELAY_JUDGE:-$GATE_DIR/../benchmark/judge.py}"
 # ---- Subcommand dispatch -----------------------------------------------------------------------
 
 usage() {
-  printf 'Usage: relay-gate eval --sprint <sprint.json> --workdir <dir> --state <state-dir> [--ledger <path>]\n' >&2
+  printf 'Usage: relay-gate <eval|check> --sprint <sprint.json> --workdir <dir> --state <state-dir> [--ledger <path>]\n' >&2
   exit 1
 }
 
-[ "${1:-}" = "eval" ] || usage
-shift
+# `check` is EVAL WITHOUT CONSEQUENCE: it runs the current WP's checklist and reports what is
+# failing, without advancing the position, charging a retry, or writing a verdict to the ledger.
+#
+# It exists for the wait channel (V10 — docs/enforcement-model.md §6c), which must refuse to serve an
+# agent whose gate is already satisfied and must establish that from the checklist rather than from
+# the agent's claim. Deliberately unrecorded: this is a PRECONDITION test, not a grading. Writing a
+# verdict here would put a second evaluation of the same state on the chain, by a path that never
+# decides anything — two gradings where the design promises one.
+MODE="${1:-}"
+case "$MODE" in eval|check) shift ;; *) usage ;; esac
 
 SPRINT="" WORKDIR="" STATE_DIR="" LEDGER_OPT=""
 
@@ -105,6 +113,16 @@ ledger_reg_item() {  # $1=id $2=verdict $3=oracle-sha $4=origin
 }
 
 # ---- Gate evaluation ---------------------------------------------------------------------------
+
+if [ "$MODE" = check ]; then
+  ledger_item() { :; }            # a precondition test records nothing
+  ledger() { :; }
+  fails="$(relay_run_checklist)"
+  jq -n --arg wp "$wp_id" --argjson i "$i" --arg f "${fails#; }" \
+    '{outcome:"check", i:$i, wp:$wp,
+      failing: ($f | if . == "" then [] else split("; ") end)}' | add_macro
+  [ -z "$fails" ] && exit 0 || exit 1
+fi
 
 # 1. Checklist (shared core from lib/relay-gate.sh — logs each verdict via ledger_item above)
 fails="$(relay_run_checklist)"
