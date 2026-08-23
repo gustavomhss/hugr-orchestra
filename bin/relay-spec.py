@@ -308,6 +308,134 @@ def validate_sprint(sprint, spec_id):
                     f"has neither a cmd nor a judge")
 
 
+# ---- lint (V8 — docs/relay-v2.md §3) -------------------------------------------------------------
+# Compiling profiles/planning.yaml onto Relay produced 53 controls and ELEVEN ungated sub-states —
+# every `execute` state. Under MCP those states also advanced on nothing, so the port was honest; but
+# v2's claim is that a state is EARNED, and a state with no deterministic control is not.
+#
+# Authoring those controls is the migration's real cost, and the pressure while doing it is to fill a
+# hole with something that passes. So this ships before the compiler: built after, it would grade its
+# own homework.
+#
+# It runs offline, and that bounds what it may honestly claim. It compares chain length against the
+# DOCUMENTED default cap because it cannot see the agent's environment; the hook's preflight reads
+# the live value. Every finding says what it knows, not what it guesses.
+
+# A command that cannot fail is not a control. Normalized before matching so ` : ` and `exit  0` do
+# not slip through on whitespace.
+TRIVIAL_CMDS = {"true", ":", "exit 0", "test -e .", "test -d .", "echo", "/bin/true"}
+KNOWN_KINDS = {"execute", "gate", "review", "inject", "human"}
+DEFAULT_BLOCK_CAP = 8
+
+
+def _trivial(cmd):
+    c = " ".join(str(cmd).split())
+    return c in TRIVIAL_CMDS
+
+
+def _norm(text):
+    return " ".join(str(text).lower().split()).strip(" .")
+
+
+def lint_sprint(sprint, allow_ungated=False):
+    """Findings, worst first. Each is {category, severity, wp, detail}."""
+    out = []
+    wps = sprint.get("work_packages") or []
+    declared_macros = {m.get("id") for m in (sprint.get("macros") or [])}
+    seen_control_ids = {}
+
+    for wp in wps:
+        wid = wp.get("id", "?")
+        kind = wp.get("kind") or "execute"
+        checklist = wp.get("checklist") or []
+
+        if kind not in KNOWN_KINDS:
+            out.append({"category": "unknown-kind", "severity": "error", "wp": wid,
+                        "detail": f"kind {kind!r} is not one of {sorted(KNOWN_KINDS)}"})
+        if kind == "inject" and not wp.get("file"):
+            out.append({"category": "inject-without-file", "severity": "error", "wp": wid,
+                        "detail": "an inject state with no `file` delivers nothing, and the agent is "
+                                  "then judged against rules it was never handed"})
+        if wp.get("macro") and declared_macros and wp["macro"] not in declared_macros:
+            out.append({"category": "undeclared-macro", "severity": "error", "wp": wid,
+                        "detail": f"macro {wp['macro']!r} is not in macros[], so its protocol is "
+                                  f"never injected"})
+
+        det, advisory = [], []
+        for c in checklist:
+            cid = c.get("id", "?")
+            if cid in seen_control_ids and seen_control_ids[cid] != wid:
+                out.append({"category": "duplicate-control-id", "severity": "error", "wp": wid,
+                            "detail": f"control id {cid!r} is also used in "
+                                      f"{seen_control_ids[cid]!r}; retry state, keep-best and drift "
+                                      f"detection all key on it, so one silently stands in for the other"})
+            seen_control_ids.setdefault(cid, wid)
+
+            if c.get("cmd"):
+                if _trivial(c["cmd"]):
+                    out.append({"category": "trivial-control", "severity": "error", "wp": wid,
+                                "detail": f"control {cid!r} runs {c['cmd']!r}, which cannot fail — the "
+                                          f"state reads as covered, which is worse than an admitted gap"})
+                else:
+                    det.append(c)
+            elif c.get("judge"):
+                # A judge verdict never counts as a deterministic control, blocking or not: it is
+                # non-independent by construction, and docs/enforcement-model.md §5 allows a
+                # discursive control only as an ADDITION to a real oracle. A blocking one at least
+                # stops the chain; a non-blocking one is recorded and stops nothing.
+                advisory.append(c)
+                if not c.get("blocking"):
+                    out.append({"category": "advisory-only", "severity": "warn", "wp": wid,
+                                "detail": f"control {cid!r} is a non-blocking judge: it is recorded "
+                                          f"and it never stops anything"})
+
+        # `inject` has no work of its own, so demanding a control there would train authors to add a
+        # trivial one — the lint arguing itself into the failure it exists to catch.
+        if kind not in ("inject", "human") and not det:
+            out.append({"category": "ungated", "severity": "warn" if allow_ungated else "error",
+                        "wp": wid,
+                        "detail": "no deterministic control: this state advances on nothing"})
+
+        for q in (wp.get("self_check") or []):
+            for c in checklist:
+                if c.get("assert") and _norm(q) == _norm(c["assert"]):
+                    out.append({"category": "self-check-restates-control", "severity": "warn",
+                                "wp": wid,
+                                "detail": f"self-check {q!r} asks what control {c.get('id')!r} already "
+                                          f"measures; a self-check must probe the protocol's steps"})
+
+    blocks = len(wps) + 1
+    if blocks > DEFAULT_BLOCK_CAP:
+        out.append({"category": "chain-exceeds-default-cap", "severity": "warn", "wp": None,
+                    "detail": f"this chain needs at least {blocks} hook blocks and the documented "
+                              f"default cap is {DEFAULT_BLOCK_CAP}; set "
+                              f"CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0. This lint cannot see the live "
+                              f"value — the hook's preflight reads it at run time"})
+
+    rank = {"error": 0, "warn": 1}
+    out.sort(key=lambda f: rank.get(f["severity"], 9))
+    return out
+
+
+def cmd_lint(path, allow_ungated, as_json):
+    try:
+        sprint = json.load(open(path))
+    except (OSError, ValueError) as e:
+        die(f"cannot read sprint {path!r}: {e}")
+    findings = lint_sprint(sprint, allow_ungated=allow_ungated)
+    if as_json:
+        print(json.dumps({"sprint": path, "findings": findings}, indent=2))
+    elif not findings:
+        print(f"lint clean — {path}")
+    else:
+        print(f"RELAY LINT — {path}\n")
+        for f in findings:
+            where = f" [{f['wp']}]" if f.get("wp") else ""
+            print(f"  {f['severity'].upper():<5} {f['category']}{where}\n        {f['detail']}")
+    # Only an error fails the lint. A migration in progress must be able to run its own instrument.
+    return 1 if any(f["severity"] == "error" for f in findings) else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Relay executable-spec library: list / show / instantiate.")
     ap.add_argument("--specs", default=DEFAULT_SPECS,
@@ -321,6 +449,11 @@ def main():
     sp_inst.add_argument("--param", action="append", default=[], metavar="k=v",
                          help="bind a ${k} placeholder (repeatable)")
     sp_inst.add_argument("-o", "--out", default=None, help="write sprint.json here (default: stdout)")
+    sp_lint = sub.add_parser("lint", help="report what a sprint does NOT gate")
+    sp_lint.add_argument("sprint", help="path to a sprint.json")
+    sp_lint.add_argument("--allow-ungated", action="store_true",
+                         help="downgrade ungated states to warnings (migration in progress)")
+    sp_lint.add_argument("--json", action="store_true", dest="as_json")
     a = ap.parse_args()
 
     specs = a.specs
@@ -330,6 +463,8 @@ def main():
         return cmd_show(specs, a.id)
     if a.mode == "instantiate":
         return cmd_instantiate(specs, a.id, a.param, a.out)
+    if a.mode == "lint":
+        return cmd_lint(a.sprint, a.allow_ungated, a.as_json)
     return 1
 
 

@@ -80,3 +80,46 @@ quote, `;`, `&&`, `$(...)`, or a backtick cannot break out of the control and in
 the gate's `eval`. Use them as-is, or copy one into a new `specs/<id>/` as a starting point for your
 own — and rely on the renderer for cmd quoting rather than wrapping `${params}` in single quotes
 yourself.
+
+
+---
+
+## `relay-spec lint` — what a sprint does NOT gate
+
+Compiling `profiles/planning.yaml` onto Relay produced 53 controls and **eleven ungated sub-states**
+— every `execute` state. Under MCP those states also advanced on nothing, so the port was honest;
+but the claim being made is that a state is *earned*, and a state with no deterministic control is
+not. Authoring those controls is the migration's real cost, and the pressure while doing it is to
+fill a hole with something that passes.
+
+```sh
+relay-spec.py lint sprint.json            # exit 1 on any error
+relay-spec.py lint sprint.json --json     # machine-readable findings
+relay-spec.py lint sprint.json --allow-ungated   # migration in progress
+```
+
+| category | severity | what it means |
+|---|---|---|
+| `ungated` | error | the state advances on nothing. `--allow-ungated` downgrades it |
+| `trivial-control` | error | the command cannot fail (`true`, `exit 0`, `test -e .`) |
+| `duplicate-control-id` | error | retry state, keep-best and drift detection all key on the id |
+| `unknown-kind` | error | the engine refuses it at run time |
+| `inject-without-file` | error | delivers nothing, and the Runner is judged against rules it never got |
+| `undeclared-macro` | error | the macro's protocol is never injected |
+| `advisory-only` | warn | a non-blocking judge is recorded and stops nothing |
+| `self-check-restates-control` | warn | it asks what a control already measures |
+| `chain-exceeds-default-cap` | warn | see below |
+
+Two of these are worth their reasoning.
+
+**`inject` and `human` states are not expected to be gated.** An `inject` has no work of its own, so
+demanding a control there would train authors to add a trivial one — the lint arguing itself into the
+exact failure it exists to catch.
+
+**`chain-exceeds-default-cap` is a warning, not an error, and says so honestly.** This tool runs
+offline and cannot see the agent's environment, so it compares against the *documented* default of 8.
+The hook's preflight reads the live `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` at run time. The two are not
+redundant: the lint catches an unrunnable profile at authoring time, the preflight catches a
+misconfigured session at run time.
+
+Only an **error** fails the lint. A migration in progress has to be able to run its own instrument.
