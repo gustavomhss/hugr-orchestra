@@ -27,16 +27,35 @@ JUDGE="${RELAY_JUDGE:-$HOOK_DIR/../benchmark/judge.py}"
 . "$HOOK_DIR/../lib/relay-gate.sh"   # shared gate core: relay_chain_append + relay_run_checklist
 
 payload="$(cat 2>/dev/null || true)"   # the SubagentStop JSON on stdin
-transcript="$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null || true)"
+# `agent_transcript_path` is the SUBAGENT'S OWN transcript; `transcript_path` is the SESSION's. They
+# are different files, and reading the wrong one is what broke a real fan-out: a parent dispatching
+# two armed subagents necessarily writes BOTH markers in its own text, so the session transcript held
+# 6x armA and 8x armB while each subagent's own transcript held exactly one. Binding by first
+# occurrence in the session then pushed armB's agent through armA's chain, and it dutifully created
+# the other arm's file to clear a gate that was never its own.
+#
+# The old rule — "first marker, because the orchestrator embeds it in the subagent's opening prompt"
+# — was right about the intent and wrong about the source. It survives only as the tiebreak WITHIN a
+# transcript that legitimately quotes its own marker more than once.
+transcript="$(printf '%s' "$payload" | jq -r '.agent_transcript_path // empty' 2>/dev/null || true)"
+[ -n "$transcript" ] && [ -f "$transcript" ] || \
+  transcript="$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null || true)"
+agent_id="$(printf '%s' "$payload" | jq -r '.agent_id // empty' 2>/dev/null || true)"
 
-# Resolve the arm token. Primary: scan the subagent's transcript for the marker the orchestrator
-# embedded. Fallback: an explicit RELAY_ARM_TOKEN env (useful for tests / claude -p sessions).
-token="${RELAY_ARM_TOKEN:-}"
+token="${RELAY_ARM_TOKEN:-}"   # explicit override, for tests and plain `claude -p` Stop-hook sessions
 if [ -z "$token" ] && [ -n "$transcript" ] && [ -f "$transcript" ]; then
-  # Bind to the FIRST marker: the orchestrator embeds it in the subagent's opening prompt, so the
-  # earliest occurrence is the agent's own arm. (tail-1 could bind to a token the agent merely echoed
-  # or quoted later in its output, mis-binding the gate to another agent's chain.)
-  token="$(grep -oE 'RELAY-ARM:[A-Za-z0-9_.-]+' "$transcript" 2>/dev/null | head -1 | cut -d: -f2 || true)"
+  seen="$(grep -oE 'RELAY-ARM:[A-Za-z0-9_.-]+' "$transcript" 2>/dev/null | cut -d: -f2 | sort -u || true)"
+  n=$(printf '%s' "$seen" | grep -c . || true)
+  if [ "${n:-0}" -gt 1 ]; then
+    # FAIL CLOSED. Enforcing the wrong chain is worse than enforcing none: the agent is told to
+    # satisfy work it was never given, and the ledger records another arm's verdicts under this stop.
+    printf 'relay: this transcript names %s different arms (%s) and nothing says which is this ' \
+      "$n" "$(printf '%s' "$seen" | tr '\n' ' ')" >&2
+    printf 'agent'"'"'s. Refusing to guess. Dispatch each subagent with its own marker, and let the hook\n' >&2
+    printf '      read agent_transcript_path rather than the session transcript.\n' >&2
+    exit 0
+  fi
+  token="$(printf '%s' "$seen" | head -1)"
 fi
 [ -z "$token" ] && exit 0   # not a relay-armed subagent — do not interfere
 # Reject path-traversal tokens (charset allows dots; `..` would escape the arms dir).
@@ -45,6 +64,20 @@ case "$token" in *..*|.) exit 0 ;; esac
 ARM="$ARMS_DIR/$token"
 SPRINT="$ARM/sprint.json"
 [ -f "$SPRINT" ] || exit 0   # unknown/expired token — leave the agent alone
+
+# An arm belongs to ONE agent. A second agent arriving at the same token is either a mis-dispatch or
+# a leaked marker, and both are things to stop on rather than serve — a shared arm means two agents
+# racing one position file, which is the single-writer invariant the ledger depends on.
+if [ -n "$agent_id" ]; then
+  bound=$(cat "$ARM/agent_id" 2>/dev/null || true)
+  if [ -z "$bound" ]; then
+    printf '%s' "$agent_id" > "$ARM/agent_id"
+  elif [ "$bound" != "$agent_id" ]; then
+    printf 'relay: arm %s was opened by agent %s and this stop is from %s. Refusing.\n' \
+      "$token" "$bound" "$agent_id" >&2
+    exit 0
+  fi
+fi
 
 RUN_DIR="$(jq -r '.workdir // "."' "$ARM/meta.json" 2>/dev/null)"
 [ -d "$RUN_DIR" ] || RUN_DIR="."

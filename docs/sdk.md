@@ -64,3 +64,34 @@ done
 The harness translates `gate-fail` into whatever "block and retry" means for its own loop —
 a `decision:block` for Claude, a `stop_reason` for another framework, or a plain `continue`
 in shell. `relay-gate` itself stays clean of those conventions.
+
+
+---
+
+## The loop above, run for real, on a non-Claude model · MEASURED
+
+The harness loop in this document is not a sketch. It was run with a free **Nemotron Super** behind
+an Anthropic-compatible gateway doing the work between gates — no Claude anywhere in the loop, no
+hook, no `{"decision":"block"}`, no transcript.
+
+```
+--- turn 1 [claude-openrouter-free-nemotron-super] ---   gate: advance   wp=wp1-module
+--- turn 2 ---                                           gate: advance   wp=wp2-test
+--- turn 3 ---                                           gate: advance   wp=wp3-green
+--- turn 4 ---                                           gate: complete  wp=wp4-readme
+SPRINT COMPLETE
+
+relay verify:  4/4 deterministic controls passed · chain intact
+               RESULT: PASS — auditable
+```
+
+The engine wrote `greet.py`, `test_greet.py` and `README.md`, and the suite it produced passes. The
+harness and the resulting ledger are committed:
+[`fixtures/non-claude-harness.sh`](fixtures/non-claude-harness.sh) ·
+[`fixtures/non-claude-harness.ledger.jsonl`](fixtures/non-claude-harness.ledger.jsonl)
+
+**One thing this run taught about integration, and it is not Relay's:** the first attempt failed its
+very first gate because the agent runner hardcoded its own working directory, so the file it wrote
+landed somewhere the gate did not grade. The gate was right and the harness was wrong — which is the
+division of labour this surface is for. **The agent must act in the workdir the sprint declares**,
+because that is the directory the controls run in.

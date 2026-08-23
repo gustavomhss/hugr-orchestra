@@ -91,3 +91,59 @@ The per-arm `ledger.jsonl` is the same hash chain the rest of Relay uses, so it 
 ```
 python3 benchmark/verify_ledger.py ~/.relay/arms/<token>/ledger.jsonl    # exit 0 = intact
 ```
+
+
+---
+
+## Binding: read the SUBAGENT's transcript, not the session's · MEASURED
+
+The payload carries two transcripts, and they are different files:
+
+```
+transcript_path         .../<session-id>.jsonl
+agent_transcript_path   .../<session-id>/subagents/agent-<agent-id>.jsonl
+```
+
+The hook read the first one, and a real fan-out showed why that is wrong. A parent dispatching two
+armed subagents **has to write both markers in its own text**, so the session transcript holds every
+arm's token while each subagent's own transcript holds exactly one:
+
+```
+session transcript        6 x RELAY-ARM:armA   8 x RELAY-ARM:armB   (armA first)
+agent-a7214...jsonl       RELAY-ARM:armA only
+agent-ab566...jsonl       RELAY-ARM:armB only
+```
+
+Binding by first occurrence therefore pushed armB's agent through **armA's chain**. It dutifully
+created the other arm's file to clear a gate that was never its own, and reported the bleed itself:
+*"Its stop hook then blocked it on an armA gate... cross-arm bleed."* Nothing detected it, because a
+mis-bound arm looks exactly like a working one.
+
+The old rule — *"bind to the FIRST marker, since the orchestrator embeds it in the subagent's opening
+prompt"* — was right about the intent and wrong about the source. It survives only as the tiebreak
+*within* a transcript that legitimately quotes its own marker more than once.
+
+### Two guards, because a mis-bound arm is silent
+
+- **More than one distinct token in the transcript being read → refuse.** Enforcing the wrong chain
+  is worse than enforcing none: the agent is told to satisfy work it was never given, and another
+  arm's verdicts land on this stop.
+- **An arm remembers the `agent_id` that opened it** and refuses a fire from a different one. A
+  shared arm means two agents racing one position file, which is the single-writer invariant the
+  ledger depends on.
+
+### The fan-out, after the fix
+
+Two real Task subagents, distinct `agent_id`s, one shared workdir, interleaved in time:
+
+```
+armA  wp1 OK -> wp2   wp2 OK -> wp3   wp3 OK -> CHAIN COMPLETE
+armB  wp1 OK -> wp2   wp2 OK -> wp3   wp3 OK -> CHAIN COMPLETE
+
+armA ledger: controls ['armA-c1','armA-c2','armA-c3']
+armB ledger: controls ['armB-c1','armB-c2','armB-c3']
+```
+
+Neither ledger contains a control belonging to the other. Both are committed as evidence:
+[`fixtures/fanout-armA.ledger.jsonl`](fixtures/fanout-armA.ledger.jsonl) ·
+[`fixtures/fanout-armB.ledger.jsonl`](fixtures/fanout-armB.ledger.jsonl)

@@ -77,25 +77,30 @@ def test_regression_only_does_not_escalate_current_gate(tmp_path):
     assert (arm / "counter").read_text().strip() == "1"
 
 
-def test_token_binds_to_first_marker(tmp_path):
-    """#5: a transcript citing two arm tokens binds to the FIRST (the agent's own opening prompt),
-    not the last (which could be an echoed/quoted token)."""
+def test_two_tokens_in_one_transcript_are_refused(tmp_path):
+    """This used to assert the opposite — bind to the FIRST marker, "the agent's own opening prompt".
+
+    That rule was wrong about its source and a real fan-out proved it: a parent dispatching two armed
+    subagents necessarily writes both markers in its own text, so the SESSION transcript names every
+    arm while each subagent's OWN transcript names one. Binding by first occurrence pushed the second
+    agent through the first one's chain.
+
+    The hook now reads `agent_transcript_path`, and when it only has a transcript naming two distinct
+    arms it refuses rather than guessing — enforcing the wrong chain is worse than enforcing none.
+    See tests/test_arm_binding.py for the full contract.
+    """
     arms, work, corpus = tmp_path / "arms", tmp_path / "work", tmp_path / "corpus"
     work.mkdir()
     _mk_arm(arms, work, "tokFIRST", budget=3)
     _mk_arm(arms, work, "tokSECOND", budget=3)
-    # transcript mentions tokFIRST first, then tokSECOND
     tr = tmp_path / "multi.jsonl"
     tr.write_text(json.dumps({"type": "user", "content": "work RELAY-ARM:tokFIRST"}) + "\n"
                   + json.dumps({"type": "assistant", "content": "I see RELAY-ARM:tokSECOND mentioned"}) + "\n")
     out = _fire(arms, corpus, "tokFIRST", transcript=tr)
-    # tokFIRST's wp1 fails (no file) -> block citing C1; proves it bound to tokFIRST
-    assert out and "wp1" in out["reason"]
-    # tokFIRST's retry state exists; tokSECOND untouched.
-    # Retry state keys by WP id (R6 — docs/control-plane.md §4), not by array index, so that it
-    # follows the work package rather than the slot it happened to occupy when the plan is amended.
-    assert (arms / "tokFIRST" / "retry_wp1").exists()
-    assert not list((arms / "tokSECOND").glob("retry_*")), "no cross-talk between arms"
+    assert out is None, out
+    # Neither arm is touched. Retry state keys by WP id (R6), so its absence is the proof.
+    assert not list((arms / "tokFIRST").glob("retry_*"))
+    assert not list((arms / "tokSECOND").glob("retry_*"))
 
 
 def test_path_traversal_token_rejected(tmp_path):
