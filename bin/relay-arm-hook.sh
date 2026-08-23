@@ -107,8 +107,11 @@ ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-co
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
          --arg round "${3:-}" --arg rep "${4:-0}" --arg bref "${LEDGER_BASE:-}" \
+         --argjson cost "${COST_JSON:-null}" --argjson el "${ELAPSED:-0}" \
     '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg,round:$round,repeat:($rep|tonumber)}
-     | if $bref == "" then . else . + {base_ref:$bref} end' \
+     | if $bref == "" then . else . + {base_ref:$bref} end
+     | if $cost == null then . else . + {cost:$cost} end
+     | if $el == null then . else . + {elapsed_s:$el} end' \
     | add_macro)"
 }
 
@@ -166,6 +169,55 @@ round_shape() {  # $1=fails $2=reg — sha over the verdicts AND the failure set
   # in full — collapse only ever hides a repetition.
   { cat "$ROUND_BUF"; printf '%s\n%s\n' "$1" "$2"; } | shasum -a 256 | cut -d' ' -f1
 }
+
+# ---- What this state cost -----------------------------------------------------------------------
+# The record says precisely whether a state was EARNED and nothing at all about what earning it cost.
+# Both halves are obtainable and neither was being taken: elapsed is a subtraction over `ts`, already
+# on every entry, and tokens are in the agent's transcript as `usage` per assistant turn — a file
+# this hook already opens to find the arm's marker.
+#
+# Attribution is free because of where this hook stands: it fires when a state ENDS, so every turn in
+# the transcript since the previous fire belongs to the state that was open. `$ARM/tr_cursor` is the
+# count of rows already charged, and it is the whole mechanism.
+#
+# The subagent transcript is preferred for the same reason the token binding prefers it: the session
+# transcript carries every agent's turns, and charging a state from it bills this arm for another
+# agent's work.
+#
+# A run with NO usage data records no cost fields at all, rather than zeros. A zero is a measurement;
+# an absent field is an admission — and it keeps a v1 arm's bytes, and the benchmark hook's
+# historical hashes, unchanged.
+COST_JSON=""
+if [ -n "$transcript" ] && [ -f "$transcript" ]; then
+  cur=$(cat "$ARM/tr_cursor" 2>/dev/null || echo 0); case "$cur" in ''|*[!0-9]*) cur=0 ;; esac
+  total=$(wc -l < "$transcript" | tr -d ' ')
+  # "The window was read and it was empty" is a different fact from "this run records no usage at
+  # all", and they must not collapse into the same absent field. If the transcript carries usage
+  # anywhere, an empty window is a real zero.
+  has_usage=$(jq -sc 'any(.[]?; (.message.usage? // .usage?) != null)' "$transcript" 2>/dev/null || echo false)
+  if [ "${total:-0}" -ge "$cur" ]; then
+    COST_JSON=$(tail -n +$((cur + 1)) "$transcript" 2>/dev/null | jq -sc --argjson seen "${has_usage:-false}" '
+      [ .[]? | .message.usage? // .usage? | select(. != null) ] as $u
+      | if ($u | length) == 0 then (if $seen then
+             {"in":0,"out":0,"cache_read":0,"cache_write":0,"turns":0} else empty end)
+        else { "in":          ([$u[].input_tokens // 0]              | add),
+               "out":         ([$u[].output_tokens // 0]             | add),
+               "cache_read":  ([$u[].cache_read_input_tokens // 0]   | add),
+               "cache_write": ([$u[].cache_creation_input_tokens // 0]| add),
+               "turns":       ($u | length) }
+        end' 2>/dev/null || true)
+  fi
+  printf '%s' "${total:-0}" > "$ARM/tr_cursor"
+fi
+# Entry time for the state being closed, so elapsed is the state's own and not the arm's.
+# The FIRST state has no entry stamp — the hook speaks only once an agent has stopped, and by then
+# that state has already run. So its elapsed is ABSENT rather than 0, the same rule the cost fields
+# follow and the same boundary that puts the first state's base ref and instructions with the arm
+# author. A 0 there would report "instant" over a state that took twenty turns.
+ENTERED=$(cat "$ARM/entered_at" 2>/dev/null || true)
+NOW=$(date +%s)
+case "$ENTERED" in ''|*[!0-9]*) ELAPSED="null" ;; *) ELAPSED=$((NOW - ENTERED)) ;; esac
+printf '%s' "$NOW" > "$ARM/entered_at"
 
 nwp=$(jq '.work_packages | length' "$SPRINT")
 rb=$(jq -r '.retry_budget // 3' "$SPRINT")

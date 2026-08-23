@@ -197,6 +197,94 @@ def cmd_problems(args):
     return 1 if probs else 0
 
 
+# ---- cost -----------------------------------------------------------------------------------
+# What a run SPENT, rolled up beside what it proved. The chain already said precisely whether each
+# state was earned and nothing about what earning it cost — and both halves were obtainable: elapsed
+# from the `ts` already on every entry, tokens from the `usage` in the agent's own transcript.
+#
+# Read from the chain, like every other view here. If the screen shows something the chain does not
+# say, the screen is lying.
+COST_KEYS = ("in", "out", "cache_read", "cache_write", "turns")
+
+
+def _add(acc, cost):
+    for k in COST_KEYS:
+        acc[k] = acc.get(k, 0) + (cost.get(k) or 0)
+    return acc
+
+
+def cost_report(entries):
+    """-> {total, states[], macros[]} or total=None when the run recorded no cost at all.
+
+    None, not zeros. A run driven by `relay-gate` or by a harness whose transcript carries no usage
+    has NOT spent nothing — it has not been measured, and reporting a zero would turn an absence into
+    a claim.
+    """
+    priced = [e for e in entries if isinstance(e.get("cost"), dict)]
+    states = []
+    for e in entries:
+        if e.get("event") not in ("advance-reveal", "sprint-complete", "escalate"):
+            continue
+        # `elapsed_s` is absent on the first state — the hook had nothing to subtract from — so it
+        # renders as "?" rather than 0. Reporting "instant" over a state that took twenty turns
+        # would be the same lie as reporting zero cost for an unmeasured run.
+        row = {"wp": e.get("wp"), "macro": e.get("macro"), "elapsed_s": e.get("elapsed_s")}
+        if isinstance(e.get("cost"), dict):
+            row.update({k: e["cost"].get(k, 0) for k in COST_KEYS})
+        states.append(row)
+    if not priced:
+        return {"total": None, "states": states, "macros": [],
+                "note": "this run recorded no cost data — not zero cost, unmeasured"}
+
+    total = {}
+    for e in priced:
+        _add(total, e["cost"])
+    total["elapsed_s"] = sum(s.get("elapsed_s") or 0 for s in states)
+
+    by_macro = {}
+    for s in states:
+        m = by_macro.setdefault(s.get("macro") or "_", {"macro": s.get("macro") or "_", "elapsed_s": 0})
+        m["elapsed_s"] += s.get("elapsed_s") or 0
+        _add(m, {k: s.get(k, 0) for k in COST_KEYS})
+    return {"total": total, "states": states, "macros": list(by_macro.values())}
+
+
+def cmd_cost(args):
+    as_json = "--json" in args
+    pos = [a for a in args if not a.startswith("--")]
+    if not pos:
+        print("usage: relay cost <run-dir | ledger.jsonl> [--json]", file=sys.stderr)
+        return 2
+    path = resolve_ledger(pos[0])
+    if not os.path.exists(path):
+        print(f"no ledger at {path}", file=sys.stderr)
+        return 2
+    rep = cost_report(load_entries(path))
+    if as_json:
+        print(json.dumps({"ledger": path, **rep}, indent=2))
+        return 0
+    if rep["total"] is None:
+        print(f"{Y}no cost recorded{X} — {path}")
+        print("  This run was not measured. That is not the same as having spent nothing.")
+        return 0
+    t = rep["total"]
+    print(f"{B}RELAY COST{X} — {path}\n")
+    print(f"  {'state':<26} {'in':>9} {'out':>7} {'cache r':>9} {'cache w':>9} {'turns':>6} {'secs':>6}")
+    for s in rep["states"]:
+        print(f"  {str(s['wp']):<26} {s.get('in', 0):>9} {s.get('out', 0):>7} "
+              f"{s.get('cache_read', 0):>9} {s.get('cache_write', 0):>9} "
+              f"{s.get('turns', 0):>6} "
+              f"{(s['elapsed_s'] if s.get('elapsed_s') is not None else '?'):>6}")
+    print(f"\n  {B}by macro{X}")
+    for m in rep["macros"]:
+        print(f"  {m['macro']:<26} {m.get('in', 0):>9} {m.get('out', 0):>7} "
+              f"{m.get('cache_read', 0):>9} {m.get('cache_write', 0):>9} "
+              f"{m.get('turns', 0):>6} {m.get('elapsed_s', 0):>6}")
+    print(f"\n  total: {t['in']} in · {t['out']} out · {t['cache_read']} cache-read · "
+          f"{t['cache_write']} cache-write · {t['turns']} turns · {t['elapsed_s']}s")
+    return 0
+
+
 def cmd_verify(args):
     as_json = "--json" in args
     pos = [a for a in args if not a.startswith("--")]
@@ -350,6 +438,8 @@ def main():
         return cmd_verify(rest)
     if sub == "problems":
         return cmd_problems(rest)
+    if sub == "cost":
+        return cmd_cost(rest)
     print(f"unknown subcommand: {sub}\n", file=sys.stderr)
     print(__doc__, file=sys.stderr)
     return 2

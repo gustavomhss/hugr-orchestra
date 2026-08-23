@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T19:11:47Z
+- **Generated:** 2026-08-23T19:38:20Z
 - **Files:** 26
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `abadaf608d366ff9ee99adc75f671eb253caf4cf09c44493c56051f922c9ae6c`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `a80a6f96c33260525564d974faaae56ece1d2542d3fa34e245fcbc33c4fce16d`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -33,7 +33,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/relay-v2.md` | 582 | 35622 | `4d210a91f52647325e14e0523a6c9a4d9a45a420bf5f2a827af957a07b32681d` |
 | `docs/sdk.md` | 97 | 4681 | `0643dfff7f31e5a462f3d8735776712647d15467d20e20de61b41b3ae39516a8` |
 | `docs/spec-library.md` | 125 | 6858 | `c3d528a3b3a47c0f2ee592a492954b33fcf3c7a8eeef91cb52a339f6ecd9c7af` |
-| `docs/telemetry.md` | 84 | 4491 | `3f7497754ddf6f0c331c6bb0cc18e0738c30d9fd53fa188093a3ae5ee4d4fc25` |
+| `docs/telemetry.md` | 171 | 9237 | `4a0dd40572465c3b3b600a865b11b144c195fdb766aa164c1cb5317de05325f1` |
 | `docs/trace-corpus.md` | 52 | 2500 | `06ecf57e2a0932788a241634b06c1bce8dfdf2679e813db2a6b7ad9bb13606f4` |
 
 ## Verify
