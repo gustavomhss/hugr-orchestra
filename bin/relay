@@ -21,8 +21,19 @@ G, R, Y, B, X = "\033[32m", "\033[31m", "\033[33m", "\033[1m", "\033[0m"
 
 
 def resolve_ledger(arg: str) -> str:
+    """A ledger path, or a directory holding one.
+
+    Two layouts exist and both are given by hand: a RUN dir keeps its ledger under `.relay-state/`,
+    while a per-agent ARM dir keeps it at the top level next to `sprint.json`. Accepting only the
+    first meant `relay verify <arm-dir>` reported "no ledger" for a perfectly good arm — the tool
+    disagreeing with the layout its own hook writes.
+    """
     if os.path.isdir(arg):
-        return os.path.join(arg, ".relay-state", "ledger.jsonl")
+        for cand in (os.path.join(arg, ".relay-state", "ledger.jsonl"),
+                     os.path.join(arg, "ledger.jsonl")):
+            if os.path.exists(cand):
+                return cand
+        return os.path.join(arg, ".relay-state", "ledger.jsonl")   # the one to name in the error
     return arg
 
 
@@ -94,6 +105,96 @@ def oracle_drift(entries):
                     "oracles": [o[:12] for o in oracles],
                     "laundered": hist[-1][0] == "pass" and any(v == "fail" for v, _ in hist[:-1])})
     return out
+
+
+# ---- problems (R8 — docs/control-plane.md §9) ----------------------------------------------------
+# Temporal derives a `TemporalReportedProblems` search attribute after N consecutive failures,
+# formatted `category=… cause=…`, and clears it AUTOMATICALLY on the next success. This is that,
+# per arm: a fleet console filters to the arms asking for attention instead of rendering fifteen
+# progress bars, which is the difference between a dashboard and a queue.
+#
+# Every problem is DERIVED from the chain on each call. Nothing has to remember to retract anything,
+# so a stuck gate that later advances stops being reported without anyone clearing a flag — a stored
+# field is a second source of truth that drifts, which is the failure this whole design avoids
+# elsewhere by rendering the ledger rather than mirroring it.
+#
+# Two classes, and the distinction is what a reader does next:
+#   * things the AGENT may still resolve  — gate-failing, regression
+#   * things only a PERSON can resolve    — awaiting-human, and the plan defects (cap-risk,
+#     inject-missing, position-lost, unknown-kind) which no amount of retrying escapes
+PLAN_DEFECTS = {
+    "cap-risk":      "the session's hook block cap is lower than this chain needs",
+    "inject-missing": "a state must inject a file that does not exist",
+    "position-lost": "the chain stands on a work package the plan no longer contains",
+    "unknown-kind":  "a state declares a kind this engine does not implement",
+}
+
+
+def derive_problems(entries):
+    probs = []
+    if not entries:
+        return probs
+    events = [e.get("event") for e in entries]
+
+    # Terminal-ish first: a parked arm is the headline, whatever else is true.
+    if "escalate" in events and events[-1] != "sprint-complete":
+        last = [e for e in entries if e.get("event") == "escalate"][-1]
+        probs.append({"category": "awaiting-human", "wp": last.get("wp"),
+                      "cause": f"retry budget spent at {last.get('wp')}; "
+                               f"still failing: {(last.get('fails') or '').lstrip('; ') or '(unrecorded)'}"})
+
+    for ev, cause in PLAN_DEFECTS.items():
+        hits = [e for e in entries if e.get("event") == ev]
+        if hits:
+            probs.append({"category": ev, "wp": hits[-1].get("wp"), "cause": cause})
+
+    # A gate that is currently failing, and a backslide in kept work. Both self-clear: they are read
+    # off the LAST gate event, so an advance past them simply stops matching.
+    gate_events = [e for e in entries
+                   if e.get("event") in ("gate-fail", "gate-fail-repeat", "advance-reveal",
+                                         "sprint-complete", "escalate")]
+    if gate_events and gate_events[-1].get("event") in ("gate-fail", "gate-fail-repeat"):
+        g = gate_events[-1]
+        fails = (g.get("fails") or "").lstrip("; ")
+        if fails:
+            probs.append({"category": "gate-failing", "wp": g.get("wp"),
+                          "cause": f"retry {g.get('retry')}: {fails}"})
+        reg = (g.get("reg") or "").lstrip("; ")
+        if reg:
+            probs.append({"category": "regression", "wp": g.get("wp"),
+                          "cause": f"earlier accepted controls have backslid: {reg}"})
+
+    drift = oracle_drift(entries)
+    if drift:
+        probs.append({"category": "oracle-drift", "wp": None,
+                      "cause": "graded under more than one oracle: "
+                               + ", ".join(d["id"] for d in drift)})
+    return probs
+
+
+def cmd_problems(args):
+    as_json = "--json" in args
+    pos = [a for a in args if not a.startswith("--")]
+    if not pos:
+        print("usage: relay problems <run-dir | ledger.jsonl> [--json]", file=sys.stderr)
+        return 2
+    path = resolve_ledger(pos[0])
+    if not os.path.exists(path):
+        print(f"no ledger at {path}", file=sys.stderr)
+        return 2
+    probs = derive_problems(load_entries(path))
+    if as_json:
+        print(json.dumps({"ledger": path, "problems": probs}, indent=2))
+    elif not probs:
+        print(f"{G}no problems{X} — {path}")
+    else:
+        print(f"{B}RELAY PROBLEMS{X} — {path}\n")
+        for p in probs:
+            where = f" [{p['wp']}]" if p.get("wp") else ""
+            print(f"  {R}{p['category']}{X}{where}  {p['cause']}")
+    # Exit code is the filter a fleet console actually uses; the payload is for the human who then
+    # looks. 1 = this arm wants attention.
+    return 1 if probs else 0
 
 
 def cmd_verify(args):
@@ -233,6 +334,8 @@ def main():
     sub, rest = sys.argv[1], sys.argv[2:]
     if sub == "verify":
         return cmd_verify(rest)
+    if sub == "problems":
+        return cmd_problems(rest)
     print(f"unknown subcommand: {sub}\n", file=sys.stderr)
     print(__doc__, file=sys.stderr)
     return 2

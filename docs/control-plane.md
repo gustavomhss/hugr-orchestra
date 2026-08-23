@@ -506,10 +506,25 @@ it never had the unbounded path, and its ledger is consumed by external loops th
 cadence — collapsing rounds there would change CLI ledgers for no economic gain. Same divergence
 recorded under R6, same reason: mutation and turn-cost are arm-path concerns.
 
-**R8 — `awaiting-human` + `problems`.** Owns the terminal path in `bin/relay-arm-hook.sh`,
-`bin/relay`, `tests/test_await_human.py`, `docs/gates.md` escalation section. Nothing else.
+**R8 — `awaiting-human` + `problems`. SHIPPED** (relay-v2 V7). Owns the terminal path in
+`bin/relay-arm-hook.sh`, `bin/relay`, `tests/test_await_human.py`, `docs/gates.md` escalation section.
+Nothing else.
 Frozen contract: escalation parks the arm in a state a human action leaves; the hook distinguishes
 complete from escalate in its output; `problems` is derived from the chain and self-clearing.
+
+Two things the contract did not say, settled while building:
+
+- **`release` needs a reason, and is consumed rather than standing.** It is the only thing that moves
+  a parked arm, so it is the one that must be attributable; an empty file is refused. It also clears
+  the released gate's retry counters — resuming into a spent budget is a door that opens onto a wall.
+  It resumes the gate, it does not skip it; skipping is a different verb with different consequences
+  (§7, `release`).
+- **How complete and escalate are distinguished.** Not by a new hook output shape: by `state`, which
+  R6 already made the authority and which now carries three distinct values. `counter = nwp` stays as
+  the pre-R6 mirror. Inventing a non-blocking stdout shape would have meant guessing at harness
+  semantics to solve a problem `state` already solves.
+
+`escalated` is still accepted on read, for arms written before this.
 
 **R9 — targets and verbs.** Owns a new `bin/relay-arm` (targets/mutate), `tests/test_targets.py`,
 `docs/control-plane.md`. Nothing else.

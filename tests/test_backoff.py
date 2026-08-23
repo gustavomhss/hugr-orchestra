@@ -1,5 +1,12 @@
 """R7 — stuck-gate economics (docs/control-plane.md §8).
 
+Note on the terminal state name: both assertions here read `awaiting-human`, not `escalated`. R8
+(docs/control-plane.md §9) turned escalation from an exit into a state a human's action leaves — the
+Runner is released because turns are expensive, the arm is not finished. What R7 asserts is
+unchanged: the budget bounds the path, the terminal outcome flushes its round in full, and a
+terminated arm stops re-blocking.
+
+
 Relay's retry unit is a MODEL TURN, not a worker poll. Two consequences are tested here, both
 against the real bin/relay-arm-hook.sh driven by subprocess, all state isolated in tmp_path:
 
@@ -109,7 +116,7 @@ def test_escalation_records_the_round_in_full(tmp_path):
     ev = _events(arms)
     assert ev.count("escalate") == 1
     assert ev.count("checklist-item") == 2, f"escalate carries its own round: {ev}"
-    assert (arms / "tok" / "state").read_text().strip() == "escalated"
+    assert (arms / "tok" / "state").read_text().strip() == "awaiting-human"
 
 
 # ---------------------------------------------------------------------------
@@ -131,7 +138,7 @@ def test_an_unfixable_regression_terminates(tmp_path):
     assert all("regress" in o["reason"].lower() for o in blocks), outs
     assert len(blocks) <= 2, f"budget 2 must bound the regression path, got {len(blocks)} blocks"
     assert outs[-1] is None, "a terminated arm stops re-blocking"
-    assert (arms / "tok" / "state").read_text().strip() == "escalated"
+    assert (arms / "tok" / "state").read_text().strip() == "awaiting-human"
     assert "escalate" in _events(arms)
     # the gate the runner satisfied was never charged
     r = arms / "tok" / "retry_B"

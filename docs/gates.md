@@ -226,6 +226,78 @@ if retries[runner][i] > sprint.retry_budget:
     allow_stop()
 ```
 
+### Escalation parks the arm — it does not end it
+
+The arm's `state` becomes **`awaiting-human`**. The Runner is released, because turns are expensive;
+the arm is not finished. Nothing the Runner does leaves that state — not a later fire, not the gate
+passing because the world changed underneath it. (`escalated` is still honored for arms written
+before this.)
+
+A person leaves it by writing a **reason** into `$ARM/release`:
+
+```sh
+echo "known CI flake, verified by hand — GS" > ~/.relay/arms/<token>/release
+```
+
+The next fire consumes the file, records a `human-release` event carrying the reason, clears that
+gate's retry counters, and puts the Runner back on **the same gate**. It resumes; it does not skip.
+
+Three properties, each deliberate:
+
+- **A reason is mandatory.** `release` is the only thing that moves a parked arm, so it is the one
+  that must be attributable. An empty file is refused and the arm stays parked. No layer below Relay
+  supplies this warning — DAP specifies `goto` in purely mechanical terms with no danger language at
+  all, and VS, GDB and LLDB each independently invented their own guard.
+- **The budget is restored.** Resuming into a spent counter would re-park on the very next fire — a
+  door that opens onto a wall.
+- **The release is consumed, not standing.** A file left on disk would silently un-park every future
+  escalation of that arm.
+
+### `relay problems` — the queue, not the dashboard
+
+Every problem is **derived from the chain** on each call and therefore self-clearing: a stuck gate
+that later advances stops being reported without anyone clearing a flag. A stored field would be a
+second source of truth that drifts.
+
+```
+$ relay problems ~/.relay/arms/<token>
+RELAY PROBLEMS — .../ledger.jsonl
+
+  awaiting-human [wp3-migrate]  retry budget spent at wp3-migrate; still failing: schema-reversible
+```
+
+Exit code 1 means this arm wants attention, 0 means it does not — that is the filter a fleet console
+uses; the payload is for the person who then looks. The categories split by *what a reader does next*:
+
+| the Runner may still resolve it | only a person can |
+|---|---|
+| `gate-failing`, `regression` | `awaiting-human`, `oracle-drift`, and the plan defects — `cap-risk`, `inject-missing`, `position-lost`, `unknown-kind` |
+
+No amount of retrying escapes the right-hand column.
+
+### `RELAY-BLOCKED:` — the Runner may say it is stuck
+
+A Runner that has genuinely hit a wall has exactly one honest move, and a design that does not
+provide it gets a dishonest one instead. It puts a marker in its final message:
+
+```
+RELAY-BLOCKED: the deploy token is not provisioned in this environment
+```
+
+- **Parking is not passing.** Honored only when the checklist ALSO failed, and even then the position
+  does not move. The work is still undone. A claim on a passing gate is recorded and the chain
+  advances — the controls decide, not the narration.
+- **The reason is cross-checked against the artifact**, exactly like a discursive control, using the
+  same computed diff as `diff: true`. "The checklist also failed" is content-blind on its own: the
+  Runner usually controls whether it fails, so it can under-deliver deliberately and attach a
+  plausible blocker.
+- **The marker is never silenced.** No budget closes this channel. Closing it at the moment pressure
+  peaks is the regime that produces covert shortcuts, so every claim reaches the chain — including
+  the fifth one.
+- **Recurrence accelerates to a human.** The same claim twice parks the arm immediately, bypassing
+  the retry budget rather than spending it. Saying the same thing twice is not persistence. Distinct
+  obstacles do not accelerate — progress through different walls is work, not a loop.
+
 ### Every re-blocking path is bounded
 
 A **regression-only** failure — the current WP's Gate passes, but an earlier accepted control has

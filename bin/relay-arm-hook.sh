@@ -197,7 +197,43 @@ if [ -z "$pos" ]; then
   fi
   printf '%s' "$pos" > "$ARM/position"
 fi
-case "$chain_state" in complete|escalated) exit 0 ;; esac   # terminal — leave the agent alone
+# `awaiting-human` is a state a HUMAN's action leaves (R8 — docs/control-plane.md §9). Nothing the
+# agent does clears it: not a later fire, not the gate passing because the world changed underneath
+# it. The original hardening's reasoning — "an escalated arm must not reopen and self-complete (no
+# human in the loop)" — is preserved exactly; what changes is that the loop now exists.
+#
+# A person leaves it by writing $ARM/release with a REASON. `release` is the only verb that advances
+# without a gate passing, so it is the only one that contradicts a stated invariant, and therefore
+# the one that must be attributable. An empty reason is refused. (DAP's spec describes `goto` in
+# purely mechanical terms and carries no danger language at all; VS, GDB and LLDB each independently
+# invented their own guard. No layer below relay will supply this warning.)
+#
+# `escalated` is still honored for arms written before this change.
+if [ "$chain_state" = "awaiting-human" ] || [ "$chain_state" = "escalated" ]; then
+  rel_reason=""
+  [ -f "$ARM/release" ] && rel_reason=$(tr -d '\r' < "$ARM/release" | tr '\n' ' ' | sed 's/^ *//; s/ *$//')
+  if [ -z "$rel_reason" ]; then
+    if [ -f "$ARM/release" ]; then
+      printf 'relay: arm %s has a release with no reason — a release must say who and why\n' "$token" >&2
+    fi
+    exit 0
+  fi
+  # Consumed, never standing: a release file left on disk would silently un-park every future
+  # escalation of this arm.
+  rm -f "$ARM/release"
+  # Resuming into a spent budget is a door that opens onto a wall, so the released gate's counters
+  # are cleared. It resumes the gate; it does not skip it — advancing past an unmet control would be
+  # a different verb with different consequences.
+  rel_safe=$(printf '%s' "$pos" | sed 's/^[^.]*\.//' | tr -c 'A-Za-z0-9._-' '_')
+  rm -f "$ARM/retry_$rel_safe" "$ARM/round_$rel_safe" "$ARM/repeat_$rel_safe" "$ARM/reg_retry"
+  printf 'active' > "$ARM/state"; chain_state=active
+  wp_id="$pos"
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$pos" \
+         --arg ev "human-release" --arg r "$rel_reason" \
+    '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,reason:$r}')" || true
+  printf '[%s] arm %s: RELEASED by human at %s — %s\n' "$(date +%s)" "$token" "$pos" "$rel_reason" >> "$LOG"
+fi
+case "$chain_state" in complete) exit 0 ;; esac   # finished — leave the agent alone
 
 # The position is TWO coordinates, `<macro>.<sub>` (V1 — docs/relay-v2.md §2.2). Resolution tries the
 # WHOLE string as a WP id first: that keeps a pre-v2 arm (a bare id on disk) running, and it keeps an
@@ -401,6 +437,50 @@ if [ "$i" -gt 0 ] && [ -f "$LEDGER" ]; then
   done < <(jq -r ".work_packages[range(0;$i)].checklist[]? | select(.cmd) | \"\(.id)\t\(.cmd)\"" "$SPRINT")
 fi
 
+# ---- The agent's blocked claim (V7b — docs/enforcement-model.md §6b) ----------------------------
+# An agent that has genuinely hit a wall has exactly one honest move, and a design that does not
+# provide it gets a dishonest one instead. The marker is `RELAY-BLOCKED: <why>` in its final message.
+#
+# Four rules, each a correction over an earlier draft:
+#   * Parking is NOT passing. Honored only when the checklist also failed, and even then the position
+#     does not move — the work is still undone.
+#   * The reason is CROSS-CHECKED against the artifact, like any discursive control. "The checklist
+#     also failed" is content-blind on its own: the agent usually controls whether it fails, so it
+#     can under-deliver deliberately and attach a plausible blocker.
+#   * The marker is NEVER silenced. A hard budget would close the honest channel at the exact moment
+#     pressure peaks, which is the regime that produces covert shortcuts.
+#   * Recurrence ACCELERATES to a human instead. The same wall twice is a person's problem, so the
+#     budget is bypassed rather than spent — the same rule R7 applies to identical rounds.
+claim=$(grep -oE 'RELAY-BLOCKED:[^"\\]*' "$transcript" 2>/dev/null | tail -1 | cut -d: -f2- \
+        | sed 's/^ *//; s/ *$//' || true)
+if [ -n "$claim" ]; then
+  csha=$(printf '%s' "$claim" | shasum -a 256 | cut -d' ' -f1)
+  honored=false; [ -n "$fails" ] && honored=true
+  # Graded against the diff the gate computes, never against a description the agent supplied.
+  corrob=unavailable; cgb="judge:unavailable"
+  if cdiff=$(relay_compute_diff ""); then
+    cjson=$(python3 "$JUDGE" --criterion "The agent claims it cannot complete this state for the following reason: '$claim'. Judge ONLY whether the artifact supports that claim. FAIL if the artifact shows the work was simply not attempted, or shows no trace of the obstacle described." --file "$cdiff" 2>/dev/null || true)
+    corrob=$(printf '%s' "$cjson" | jq -r '.verdict // "unavailable"' 2>/dev/null); [ -z "$corrob" ] && corrob=unavailable
+    cgb="judge:$(printf '%s' "$cjson" | jq -r '.backend // "judge"' 2>/dev/null)(non-independent)"
+  fi
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$wp_id" \
+         --arg ev "blocked-claim" --arg r "$claim" --arg sha "$csha" --argjson hon "$honored" \
+         --arg cor "$corrob" --arg gb "$cgb" \
+    '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,reason:$r,sha:$sha,honored:$hon,corroborated:$cor,graded_by:$gb}')" || true
+  printf '[%s] arm %s: BLOCKED-CLAIM at %s (honored=%s corroborated=%s) %s\n' \
+    "$(date +%s)" "$token" "$wp_id" "$honored" "$corrob" "$claim" >> "$LOG"
+  # Recorded HERE because a claim on a passing gate must still reach the chain, and that path exits
+  # through advance() before the escalation branch below exists. The repeat only raises a flag:
+  # escalate() is defined further down, and calling it early made the hook die silently under
+  # `set -e` — a gate that stops enforcing without saying so is the worst failure this file has.
+  CLAIM_REPEAT=0
+  if [ "$honored" = true ]; then
+    CLAIM_F="$ARM/blocked_$id_safe"
+    [ "$(cat "$CLAIM_F" 2>/dev/null || true)" = "$csha" ] && CLAIM_REPEAT=1
+    printf '%s' "$csha" > "$CLAIM_F"
+  fi
+fi
+
 rsha=$(round_shape "$fails" "$reg")
 ROUND_F="$ARM/round_$id_safe"     # sha of the last round RECORDED in full at this gate
 REPEAT_F="$ARM/repeat_$id_safe"   # consecutive identical rounds collapsed since then
@@ -429,10 +509,15 @@ escalate() {  # $1 = which budget was spent (for the log) — always terminal, a
   # Escalation is TERMINAL: a gate handed to a human must not silently reopen and self-resolve on a
   # later fire. The terminal fact lives in `state`, distinct from `complete` — R8 turns `escalated`
   # into `awaiting-human`, a state a person's action leaves.
-  printf 'escalated' > "$ARM/state"
+  printf 'awaiting-human' > "$ARM/state"
   echo "$nwp" > "$ARM/counter"
   exit 0
 }
+
+# The same wall twice is a person's problem, so this bypasses the retry budget rather than spending
+# it — the claim was already recorded above, and recording it a third and fourth time would only
+# defer the human it is asking for.
+[ "${CLAIM_REPEAT:-0}" = 1 ] && escalate blocked-claim-repeat
 
 # A regression-ONLY failure (current gate passes, an earlier gate backslid) is NOT a failure of the
 # current gate: it must not burn THIS gate's retry budget nor escalate it. But "not this gate's
