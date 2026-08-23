@@ -1,0 +1,214 @@
+name: design
+version: 1.0.0
+description: "DESIGN \u2014 raw idea \u2192 ratified product design (6 macros, EDD family)"
+protected: false
+settings:
+  oscillation_detection_threshold: 3
+  auto_loop_on_checklist_failure: true
+pipeline:
+- state_id: intake
+  name: "INTAKE \u2014 mine the intent"
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: unbroken_story
+    type: execute
+    name: Unbroken Story
+    criteria:
+    - narrative_captured
+  - id: deep_vein
+    type: execute
+    name: Deep Vein
+    criteria:
+    - episodes_anchored
+    - question_log_clean
+    - provenance_complete
+  - id: assay
+    type: execute
+    name: Assay
+    criteria:
+    - map_consolidated
+    - tensions_swept
+    - saturation_reached
+  - id: checklist
+    type: checklist
+    name: Clean Hands Gate
+    criteria:
+    - intake_phase_validates
+- state_id: mirror
+  name: "MIRROR \u2014 confirm the image"
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: front_page
+    type: execute
+    name: Front Page
+    criteria:
+    - front_page_written
+  - id: read_back
+    type: execute
+    name: Read Back
+    criteria:
+    - every_chunk_confirmed
+    - corrections_folded
+    - disagreements_recorded
+  - id: checklist
+    type: checklist
+    name: No Distortion Gate
+    criteria:
+    - mirror_phase_validates
+- state_id: concept
+  name: "CONCEPT \u2014 choose solution"
+  enabled: true
+  max_iterations: 3
+  sub_states:
+  - id: three_doors
+    type: execute
+    name: Three Doors
+    criteria:
+    - doors_reviewed
+  - id: distinctness
+    type: review
+    name: Distinctness
+  - id: chosen_door
+    type: execute
+    name: Chosen Door
+    criteria:
+    - choice_rationale_logged
+    - rejected_doors_recorded
+    - choice_traces_to_problem
+  - id: checklist
+    type: checklist
+    name: Committed Gate
+    criteria:
+    - concept_phase_validates
+- state_id: shape
+  name: "SHAPE \u2014 give it a body"
+  enabled: true
+  max_iterations: 3
+  sub_states:
+  - id: walking_skeleton
+    type: execute
+    name: Walking Skeleton
+    criteria:
+    - skeleton_walks_end_to_end
+  - id: touchpoints
+    type: execute
+    name: Touchpoints
+    criteria:
+    - touchpoints_per_vertebra
+    - nouns_named
+  - id: table_read
+    type: execute
+    name: Table Read
+    criteria:
+    - scenes_reviewed
+    - non_goals_explicit
+    - boundary_scenes_present
+  - id: dress_rehearsal
+    type: review
+    name: Dress Rehearsal
+  - id: checklist
+    type: checklist
+    name: End to End Gate
+    criteria:
+    - shape_phase_validates
+- state_id: risks
+  name: "RISKS \u2014 find how it dies"
+  enabled: true
+  max_iterations: 3
+  sub_states:
+  - id: obituary
+    type: execute
+    name: Obituary
+    criteria:
+    - four_axes_ranked
+  - id: minefield
+    type: execute
+    name: Minefield
+    criteria:
+    - assumptions_plotted
+    - critical_assumptions_have_probes
+    - kill_criteria_sealed_before_probes
+    - v1_still_delivers_front_page
+  - id: no_flinching
+    type: review
+    name: No Flinching
+    criteria:
+    - anti_optimism_reviewed
+  - id: checklist
+    type: checklist
+    name: Sealed Bar Gate
+    criteria:
+    - risks_phase_validates
+- state_id: ratify
+  name: "RATIFY \u2014 sign it"
+  enabled: true
+  max_iterations: 3
+  sub_states:
+  - id: for_the_record
+    type: execute
+    name: For The Record
+    criteria:
+    - memo_written
+    - dissent_solicited
+    - assumption_ledger_closed
+  - id: wet_ink
+    type: human_approval
+    name: Wet Ink
+    approver_pubkey: ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c
+    approval_prompt: "Assine o design do Finance Funnel \u2014 voc\xEA est\xE1 assinando o escopo v1 e os riscos\
+      \ aceitos."
+    criteria:
+    - owner_signed
+  - id: checklist
+    type: checklist
+    name: Case Closed Gate
+    criteria:
+    - ratify_phase_validates
+criteria_map:
+  default: ${design_tools}/../criterion ${design_tools}/design-check {macro} {criterion} --design-dir ${design_dir}
+  per_criterion:
+    intake_phase_validates: ${design_tools}/design-check --phase intake --design-dir ${design_dir}
+    mirror_phase_validates: ${design_tools}/design-check --phase mirror --design-dir ${design_dir}
+    concept_phase_validates: ${design_tools}/design-check --phase concept --design-dir ${design_dir}
+    shape_phase_validates: ${design_tools}/design-check --phase shape --design-dir ${design_dir}
+    risks_phase_validates: ${design_tools}/design-check --phase risks --design-dir ${design_dir}
+    ratify_phase_validates: ${design_tools}/design-check --phase ratify --design-dir ${design_dir}
+  per_sub:
+    concept.distinctness:
+    - id: distinctness-verdict
+      assert: the reviewer returned APPROVE
+      cmd: test "$(jq -r .verdict ${design_dir}/verdict-distinctness.json)" = APPROVE
+    - id: distinctness-is-substantive
+      assert: the review carries at least 200 characters
+      cmd: test "$(jq -r '.findings // "" | length' ${design_dir}/verdict-distinctness.json)" -ge 200
+    - id: distinctness-engages-with-the-diff
+      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
+        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      diff: true
+      blocking: true
+    shape.dress_rehearsal:
+    - id: dress_rehearsal-verdict
+      assert: the reviewer returned APPROVE
+      cmd: test "$(jq -r .verdict ${design_dir}/verdict-dress_rehearsal.json)" = APPROVE
+    - id: dress_rehearsal-is-substantive
+      assert: the review carries at least 200 characters
+      cmd: test "$(jq -r '.findings // "" | length' ${design_dir}/verdict-dress_rehearsal.json)" -ge 200
+    - id: dress_rehearsal-engages-with-the-diff
+      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
+        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      diff: true
+      blocking: true
+    risks.no_flinching:
+    - id: no_flinching-verdict
+      assert: the reviewer returned APPROVE
+      cmd: test "$(jq -r .verdict ${design_dir}/verdict-no_flinching.json)" = APPROVE
+    - id: no_flinching-is-substantive
+      assert: the review carries at least 200 characters
+      cmd: test "$(jq -r '.findings // "" | length' ${design_dir}/verdict-no_flinching.json)" -ge 200
+    - id: no_flinching-engages-with-the-diff
+      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
+        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      diff: true
+      blocking: true

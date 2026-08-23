@@ -137,6 +137,7 @@ Migrated profiles live in `profiles/`, each next to its compiled `*.sprint.json`
 | `wp-execute` | 6 | 13 | 25 | 0 |
 | `spec-decompose` | 5 | 15 | 36 | 0 |
 | `research-v2` | 3 | 12 | 16 | 0 |
+| `design` | 6 | 23 | 46 | 0 |
 
 `tests/test_shipped_profiles.py` holds three properties for every file in that directory: the sprint
 is not stale (`--check`), the lint reports no errors, and every work package names a declared macro.
@@ -400,3 +401,72 @@ control does not read the report — it re-runs the evidence.
 `report.inject` declared no payload at all. The lint calls that an error and it is: a state that
 injects nothing delivers nothing, and the agent is then judged against context it was never handed.
 The migrated profile gives it one rather than leaving it to fail at run time.
+
+
+---
+
+## 11. `design` — the last one, and the softest
+
+23 sub-states, 31 criteria, and criteria named `three_doors`, `obituary`, `no_flinching`. Nothing in
+the profile says what any state produces: unlike `planning` and `spec-decompose`, this one carries no
+sub-state descriptions at all, so the profile alone could not say who owns which criterion.
+
+The protocol could. `docs/edd/design-protocol.md` has a **state-contracts table** naming exactly what
+each state freezes, so the partition here is read from the protocol rather than inferred from the
+profile — the same rule as everywhere else, applied to a different source because the usual one was
+silent. Guessing it from the criterion names would have been the mistake the `genesis-dependency`
+lineage already taught.
+
+Better still, the protocol names its own verify hooks and says who runs them: *"Verify hooks (run by
+the harness, not claimed by the agent): `clean-hands-lint` over the question log; `intake-reconcile`
+over the map (100% provenance, quote-is-substring-of-utterance, unique ids, valid kinds, last two
+rounds recorded)"*, and at the end *"`design-reconcile` — no entry left ASSUMED/open, all trace
+fields present, ids unique, manifest complete"*. `tools/design/design-check` is those hooks.
+
+### The split is the protocol's, and it says so out loud
+
+> *"The lint is a floor, not a ceiling: pattern checks catch overt leading, stacked questions,
+> hypotheticals, and solution verbs; subtle steering is caught downstream — by the MIRROR (the owner
+> corrects a distorted image) and by cold review. **Claiming more for the lint than it does would be
+> exactly the false comfort this method exists to kill.**"*
+
+So the checker computes what is computable and stops. The three questions it cannot answer — are
+these doors genuinely different *approaches*; would each scene actually fail; is that obituary soft —
+are the protocol's own `review` states, graded by a verdict plus a judge against the diff.
+
+### The one control worth naming on its own
+
+**quote-is-substring-of-utterance.** Every fact in the intent map quotes the owner, and that quote
+must appear *literally* in a stored utterance. It is the anti-fabrication control of the entire
+protocol, and it is exact.
+
+Two more that are worth the same attention:
+
+- **`kill_criteria_sealed_before_probes`** compares timestamps. A kill criterion written *after* its
+  probe ran is a result narrated into a threshold, and the ordering is the only thing that can tell
+  the difference.
+- **`skeleton_walks_end_to_end`** checks that each vertebra consumes what the previous one produced.
+  A skeleton that assumes a step nobody wrote fails structurally rather than on someone noticing.
+
+### The runs
+
+```
+23 gate evaluations, chain COMPLETE, 46/46 controls, relay verify PASS — auditable
+```
+
+Then **one quote** was changed — a plausible paraphrase of what the owner said, attributed to them,
+nothing else touched:
+
+```
+advance    intake.unbroken_story
+gate-fail  intake.deep_vein     provenance_complete   (x5)
+escalate   intake.deep_vein     provenance_complete
+
+FAIL provenance_complete — quote not in the cited utterance: ['M-1']
+```
+
+A design document that reads perfectly, with one sentence its owner never said, stops at the second
+state and names the entry.
+
+`tests/test_design_check.py` breaks the known-good design one field at a time: **31 mutations for 31
+criteria**, plus a test that every declared criterion has one behind it.

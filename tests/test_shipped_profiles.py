@@ -26,12 +26,14 @@ SHIPPED = sorted(PROFILES.glob("*.yaml")) if PROFILES.is_dir() else []
 # Compilation options a profile needs, kept here rather than inferred: --qualify-ids is a real
 # authoring fact (this profile reuses a sub-state id across macros), not a default to guess at.
 OPTS = {"tdd_feature": ["--qualify-ids"], "wp-execute": ["--qualify-ids"],
-        "spec-decompose": ["--qualify-ids"], "research-v2": ["--qualify-ids"]}
+        "spec-decompose": ["--qualify-ids"], "research-v2": ["--qualify-ids"],
+        "design": ["--qualify-ids"]}
 
 # Profiles whose commands are parameterized templates: `${param}` is rendered by
 # `relay-spec.py instantiate` when the profile is bound to a project, so the shipped sprint is not
 # directly runnable and is not supposed to be.
-TEMPLATED = {"tdd_feature", "planning", "wp-execute", "spec-decompose", "research-v2"}
+TEMPLATED = {"tdd_feature", "planning", "wp-execute", "spec-decompose", "research-v2",
+             "design"}
 
 
 @pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
