@@ -1,239 +1,483 @@
 {
-  "brief": "research-v2 v1.0.0 \u2014 Research v2 \u2014 explore tiered, analyze verified, report audit\u00e1vel. 100% OSS, compos\u00e1vel via library, n8n-ready placeholder.",
+  "brief": "research-v2 v2.0.0 \u2014 Research \u2014 derived from ACH (competing hypotheses, diagnosticity), GRADE (certainty as arithmetic), the Admiralty code (source reliability apart from item credibility), PRISMA-S (a search someone else could run), grounded theory (constant comparison, memoing, saturation) and Zettelkasten atomicity",
   "gen": 0,
   "retry_budget": 5,
   "macros": [
     {
-      "id": "explore",
-      "title": "Explore Codebase"
+      "id": "question",
+      "title": "Bind the question"
     },
     {
-      "id": "analyze",
-      "title": "Deep Analysis"
+      "id": "survey",
+      "title": "Survey the ground"
+    },
+    {
+      "id": "evidence",
+      "title": "Establish the findings"
+    },
+    {
+      "id": "contest",
+      "title": "Contest the findings"
+    },
+    {
+      "id": "synthesis",
+      "title": "Conclude"
     },
     {
       "id": "report",
-      "title": "Report Findings"
+      "title": "Write the report"
     }
   ],
   "work_packages": [
     {
-      "id": "explore.inject",
-      "macro": "explore",
-      "kind": "inject",
-      "title": "Inject Context",
-      "instructions": "Inject codebase overview + library skill tdd",
-      "file": "tdd",
-      "checklist": []
-    },
-    {
-      "id": "explore.map",
-      "macro": "explore",
+      "id": "question.frame",
+      "macro": "question",
       "kind": "execute",
-      "title": "Map Structure",
-      "instructions": "BFS file org + dependencies, tiered",
+      "title": "Frame",
+      "instructions": "State the question and the setting; declare each answer criterion as A-<n>; list the exclusions; record the prior belief; enumerate the competing hypotheses H-<n> BEFORE weighing evidence (ACH step 1)",
       "checklist": [
         {
-          "id": "map-written",
-          "assert": "this state wrote the structure map",
-          "cmd": "test -s ${research_dir}/map.json",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "question-written",
+          "assert": "this state wrote the bound question",
+          "cmd": "test -s ${research_dir}/question.json",
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     },
     {
-      "id": "explore.patterns",
-      "macro": "explore",
-      "kind": "execute",
-      "title": "Identify Patterns",
-      "instructions": "Coding patterns, conventions, tiers per file",
-      "checklist": [
-        {
-          "id": "patterns-written",
-          "assert": "this state wrote the pattern register",
-          "cmd": "test -s ${research_dir}/patterns.json",
-          "origin": "pe-profile:research-v2@1.0.0"
-        }
-      ]
-    },
-    {
-      "id": "explore.checklist",
-      "macro": "explore",
+      "id": "question.gate",
+      "macro": "question",
       "kind": "gate",
-      "title": "Checklist Gate",
-      "instructions": "",
+      "title": "Question gate",
+      "instructions": "Tier 2 validates exit criteria",
       "checklist": [
         {
-          "id": "structure_mapped",
-          "assert": "structure_mapped",
-          "cmd": "jq -e '(.files | length) > 0 and all(.files[]; .path and .role and .tier)' ${research_dir}/map.json >/dev/null",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "question_stated",
+          "assert": "question_stated",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question question_stated --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         },
         {
-          "id": "patterns_identified",
-          "assert": "patterns_identified",
-          "cmd": "jq -e '(.patterns | length) > 0 and all(.patterns[]; (.evidence | length) > 0)' ${research_dir}/patterns.json >/dev/null",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "context_described",
+          "assert": "context_described",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question context_described --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "answer_shape_declared",
+          "assert": "answer_shape_declared",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question answer_shape_declared --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "out_of_scope_declared",
+          "assert": "out_of_scope_declared",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question out_of_scope_declared --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "prior_belief_recorded",
+          "assert": "prior_belief_recorded",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question prior_belief_recorded --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "competing_hypotheses_enumerated",
+          "assert": "competing_hypotheses_enumerated",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question competing_hypotheses_enumerated --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     },
     {
-      "id": "analyze.inject",
-      "macro": "analyze",
-      "kind": "inject",
-      "title": "Inject Context",
-      "instructions": "Inject exploration findings + impact entries",
-      "file": "",
-      "text": "Use tiered impact entries from explore phase",
-      "checklist": []
-    },
-    {
-      "id": "analyze.deep_dive",
-      "macro": "analyze",
+      "id": "survey.gather",
+      "macro": "survey",
       "kind": "execute",
-      "title": "Deep Dive",
-      "instructions": "Analyze target areas, coletar evid\u00eancia por comando",
+      "title": "Gather",
+      "instructions": "Register and freeze every source with an Admiralty reliability grade; record each search so someone else could run it; record what was found and excluded, and what was never looked at; declare the stop rule",
       "checklist": [
         {
-          "id": "analysis-written",
-          "assert": "this state wrote the analysis",
-          "cmd": "test -s ${research_dir}/analysis.json",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "sources-written",
+          "assert": "this state wrote the source register",
+          "cmd": "test -s ${research_dir}/sources.json",
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     },
     {
-      "id": "analyze.review",
-      "macro": "analyze",
-      "kind": "review",
-      "title": "Self-Review",
-      "instructions": "Verify completeness via verify",
+      "id": "survey.gate",
+      "macro": "survey",
+      "kind": "gate",
+      "title": "Survey gate",
+      "instructions": "Tier 2 validates exit criteria",
       "checklist": [
         {
-          "id": "analyze-review-verdict",
-          "assert": "the reviewer returned APPROVE",
-          "cmd": "test \"$(jq -r .verdict ${research_dir}/review-analyze.json)\" = APPROVE",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "sources_registered",
+          "assert": "sources_registered",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey sources_registered --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         },
         {
-          "id": "analyze-review-is-substantive",
-          "assert": "the review carries at least 200 characters",
-          "cmd": "test \"$(jq -r '.findings // \"\" | length' ${research_dir}/review-analyze.json)\" -ge 200",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "source_reliability_rated",
+          "assert": "source_reliability_rated",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey source_reliability_rated --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         },
         {
-          "id": "analyze-review-engages-with-the-diff",
-          "paths": [
-            "${research_dir}/analysis.json"
-          ],
+          "id": "search_record_is_reproducible",
+          "assert": "search_record_is_reproducible",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey search_record_is_reproducible --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "excluded_sources_recorded",
+          "assert": "excluded_sources_recorded",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey excluded_sources_recorded --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "not_searched_declared",
+          "assert": "not_searched_declared",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey not_searched_declared --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "retrieved_sources_are_snapshotted",
+          "assert": "retrieved_sources_are_snapshotted",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey retrieved_sources_are_snapshotted --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "saturation_is_declared",
+          "assert": "saturation_is_declared",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check survey saturation_is_declared --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
+    },
+    {
+      "id": "evidence.establish",
+      "macro": "evidence",
+      "kind": "execute",
+      "title": "Establish",
+      "instructions": "Record each finding as it is found: one claim, evidence that resolves to a frozen source, an Admiralty credibility grade, what would refute it, and where it sits against the corpus already held. Memo as you go",
+      "checklist": [
+        {
+          "id": "findings-written",
+          "assert": "this state wrote the findings register",
+          "cmd": "test -s ${research_dir}/findings.json",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "memos-written",
+          "assert": "this state wrote analytic memos as it worked",
+          "cmd": "test -s ${research_dir}/memos.json",
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
+    },
+    {
+      "id": "evidence.cold_review",
+      "macro": "evidence",
+      "kind": "review",
+      "title": "Cold review",
+      "instructions": "Apply GROUNDED (the evidence supports the claim), TOOTHED (the falsifier could actually be observed) and ATOMIC (one claim per finding \u2014 this one is judgment, not machine-checkable); verdict APPROVE or FIXES-NEEDED",
+      "checklist": [
+        {
+          "id": "evidence-review-verdict",
+          "assert": "the cold reviewer returned APPROVE",
+          "cmd": "test \"$(jq -r .verdict ${research_dir}/review-evidence.json)\" = APPROVE",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "evidence-review-is-substantive",
+          "assert": "the review carries at least 250 characters of findings",
+          "cmd": "test \"$(jq -r '.findings // \"\" | length' ${research_dir}/review-evidence.json)\" -ge 250",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "evidence-review-engages-with-the-diff",
           "context": [
-            "${research_dir}/review-analyze.json"
+            "${research_dir}/review-evidence.json"
+          ],
+          "paths": [
+            "${research_dir}/findings.json"
           ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
-          "origin": "pe-profile:research-v2@1.0.0"
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     },
     {
-      "id": "analyze.checklist",
-      "macro": "analyze",
+      "id": "evidence.gate",
+      "macro": "evidence",
       "kind": "gate",
-      "title": "Checklist Gate",
-      "instructions": "",
+      "title": "Evidence gate",
+      "instructions": "Tier 2 validates exit criteria",
       "checklist": [
         {
-          "id": "analysis_complete",
-          "assert": "analysis_complete",
-          "cmd": "jq -e '(.areas | length) > 0 and all(.areas[]; (.findings | length) > 0)' ${research_dir}/analysis.json >/dev/null",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "findings_registered",
+          "assert": "findings_registered",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence findings_registered --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         },
         {
-          "id": "findings_documented",
-          "assert": "findings_documented",
-          "cmd": "${research_tools}/replay-evidence ${research_dir}/analysis.json --cwd ${repo_root}",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "every_finding_has_a_falsifier",
+          "assert": "every_finding_has_a_falsifier",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence every_finding_has_a_falsifier --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "evidence_traces_to_a_source",
+          "assert": "evidence_traces_to_a_source",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence evidence_traces_to_a_source --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "quotes_are_verbatim",
+          "assert": "quotes_are_verbatim",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence quotes_are_verbatim --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "command_evidence_replays",
+          "assert": "command_evidence_replays",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence command_evidence_replays --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "credibility_is_earned",
+          "assert": "credibility_is_earned",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence credibility_is_earned --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "every_finding_is_compared_to_the_corpus",
+          "assert": "every_finding_is_compared_to_the_corpus",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence every_finding_is_compared_to_the_corpus --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "memos_were_written_during_the_work",
+          "assert": "memos_were_written_during_the_work",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check evidence memos_were_written_during_the_work --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     },
     {
-      "id": "report.inject",
-      "macro": "report",
-      "kind": "inject",
-      "title": "Inject Context",
-      "instructions": "Inject analysis results",
-      "file": "",
-      "text": "The analysis findings and their replayed evidence are the only admissible input to the report.",
-      "checklist": []
+      "id": "contest.challenge",
+      "macro": "contest",
+      "kind": "execute",
+      "title": "Challenge",
+      "instructions": "Score every finding against EVERY hypothesis, mark what is non-diagnostic, and record each contradiction resolved or declared open (ACH matrix)",
+      "checklist": [
+        {
+          "id": "contest-written",
+          "assert": "this state wrote the contest record",
+          "cmd": "test -s ${research_dir}/contest.json",
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
     },
     {
-      "id": "report.synthesize",
+      "id": "contest.gate",
+      "macro": "contest",
+      "kind": "gate",
+      "title": "Contest gate",
+      "instructions": "Tier 2 validates exit criteria",
+      "checklist": [
+        {
+          "id": "every_finding_contested",
+          "assert": "every_finding_contested",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check contest every_finding_contested --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "contest_records_what_was_searched",
+          "assert": "contest_records_what_was_searched",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check contest contest_records_what_was_searched --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "every_finding_scored_against_every_hypothesis",
+          "assert": "every_finding_scored_against_every_hypothesis",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check contest every_finding_scored_against_every_hypothesis --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "non_diagnostic_findings_are_marked",
+          "assert": "non_diagnostic_findings_are_marked",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check contest non_diagnostic_findings_are_marked --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "hypotheses_are_refuted_or_survival_is_declared",
+          "assert": "hypotheses_are_refuted_or_survival_is_declared",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check contest hypotheses_are_refuted_or_survival_is_declared --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "contradictions_are_resolved_or_declared_open",
+          "assert": "contradictions_are_resolved_or_declared_open",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check contest contradictions_are_resolved_or_declared_open --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
+    },
+    {
+      "id": "synthesis.conclude",
+      "macro": "synthesis",
+      "kind": "execute",
+      "title": "Conclude",
+      "instructions": "Derive each conclusion's certainty: a starting level, one downgrade per serious concern in a named GRADE domain. Say which A-<n> it discharges and what would change it",
+      "checklist": [
+        {
+          "id": "conclusions-written",
+          "assert": "this state wrote the conclusions",
+          "cmd": "test -s ${research_dir}/conclusions.json",
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
+    },
+    {
+      "id": "synthesis.cold_review",
+      "macro": "synthesis",
+      "kind": "review",
+      "title": "Cold review",
+      "instructions": "Apply DERIVED (each conclusion follows from what it cites) and CALIBRATED (the label matches the evidence); verdict APPROVE or FIXES-NEEDED",
+      "checklist": [
+        {
+          "id": "synthesis-review-verdict",
+          "assert": "the cold reviewer returned APPROVE",
+          "cmd": "test \"$(jq -r .verdict ${research_dir}/review-synthesis.json)\" = APPROVE",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "synthesis-review-is-substantive",
+          "assert": "the review carries at least 250 characters of findings",
+          "cmd": "test \"$(jq -r '.findings // \"\" | length' ${research_dir}/review-synthesis.json)\" -ge 250",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "synthesis-review-engages-with-the-diff",
+          "context": [
+            "${research_dir}/review-synthesis.json"
+          ],
+          "paths": [
+            "${research_dir}/conclusions.json"
+          ],
+          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
+    },
+    {
+      "id": "synthesis.gate",
+      "macro": "synthesis",
+      "kind": "gate",
+      "title": "Synthesis gate",
+      "instructions": "Tier 2 validates exit criteria",
+      "checklist": [
+        {
+          "id": "conclusions_cite_findings",
+          "assert": "conclusions_cite_findings",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis conclusions_cite_findings --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "calibration_is_derived",
+          "assert": "calibration_is_derived",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_is_derived --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "downgrades_name_a_grade_domain",
+          "assert": "downgrades_name_a_grade_domain",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis downgrades_name_a_grade_domain --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "calibration_matches_the_evidence",
+          "assert": "calibration_matches_the_evidence",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_matches_the_evidence --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "every_conclusion_says_what_would_change_it",
+          "assert": "every_conclusion_says_what_would_change_it",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis every_conclusion_says_what_would_change_it --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "conclusions_answer_the_question",
+          "assert": "conclusions_answer_the_question",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis conclusions_answer_the_question --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        }
+      ]
+    },
+    {
+      "id": "report.write",
       "macro": "report",
       "kind": "execute",
-      "title": "Synthesize",
-      "instructions": "Combine findings, custo por macro via artifact offload",
+      "title": "Write",
+      "instructions": "Write report.md: every conclusion with its certainty, every open contradiction, every hypothesis considered, and every retrieval date",
       "checklist": [
         {
           "id": "report-written-here",
           "assert": "this state wrote the report",
           "cmd": "test -s ${research_dir}/report.md",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     },
     {
-      "id": "report.review",
-      "macro": "report",
-      "kind": "review",
-      "title": "Review Report",
-      "instructions": "Review report quality + output_contract shape",
-      "checklist": [
-        {
-          "id": "report-review-verdict",
-          "assert": "the reviewer returned APPROVE",
-          "cmd": "test \"$(jq -r .verdict ${research_dir}/review-report.json)\" = APPROVE",
-          "origin": "pe-profile:research-v2@1.0.0"
-        },
-        {
-          "id": "report-review-is-substantive",
-          "assert": "the review carries at least 200 characters",
-          "cmd": "test \"$(jq -r '.findings // \"\" | length' ${research_dir}/review-report.json)\" -ge 200",
-          "origin": "pe-profile:research-v2@1.0.0"
-        },
-        {
-          "id": "report-review-engages-with-the-diff",
-          "paths": [
-            "${research_dir}/report.md"
-          ],
-          "context": [
-            "${research_dir}/review-report.json"
-          ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
-          "diff": true,
-          "blocking": true,
-          "origin": "pe-profile:research-v2@1.0.0"
-        }
-      ]
-    },
-    {
-      "id": "report.checklist",
+      "id": "report.gate",
       "macro": "report",
       "kind": "gate",
-      "title": "Gate \u2014 Attested",
-      "instructions": "",
+      "title": "Report gate",
+      "instructions": "Tier 2 validates exit criteria",
       "checklist": [
         {
           "id": "report_written",
           "assert": "report_written",
-          "cmd": "test \"$(wc -w < ${research_dir}/report.md)\" -ge 200 && grep -q '^## Conclusions' ${research_dir}/report.md",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_written --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         },
         {
-          "id": "conclusions_clear",
-          "assert": "conclusions_clear",
-          "cmd": "${research_tools}/cite-check ${research_dir}/report.md ${research_dir}/analysis.json",
-          "origin": "pe-profile:research-v2@1.0.0"
+          "id": "report_carries_every_conclusion",
+          "assert": "report_carries_every_conclusion",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_carries_every_conclusion --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_labels_every_conclusion_with_its_calibration",
+          "assert": "report_labels_every_conclusion_with_its_calibration",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_labels_every_conclusion_with_its_calibration --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_declares_source_age",
+          "assert": "report_declares_source_age",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_declares_source_age --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_carries_every_open_contradiction",
+          "assert": "report_carries_every_open_contradiction",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_carries_every_open_contradiction --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_states_the_rejected_hypotheses",
+          "assert": "report_states_the_rejected_hypotheses",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_states_the_rejected_hypotheses --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
         }
       ]
     }

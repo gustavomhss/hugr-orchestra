@@ -1,12 +1,20 @@
-"""tools/research — the two controls that make `research-v2` mean something.
+"""tools/research/replay-evidence — re-running the evidence rather than checking it is present.
 
-The profile's own macro description states the rule it is built on: *"cada achado provado por comando
-real"* — every finding proven by a real command. A control that checks a finding merely CARRIES a
-command is a presence check, and presence checks are what this migration exists to replace. So one
-tool re-runs them, and the other holds the report's conclusions to the findings.
+The rule the research protocol is built on: every finding proven by a real command, and the command
+run again rather than trusted. A control that checks a finding merely CARRIES a command is a presence
+check, and presence checks are what this migration exists to replace.
 
-Both are judged the same way as `spec-check`: not "does it pass the good case" alone, but "does it
-notice each specific way the case can go bad".
+The half that matters is the OUTPUT comparison. A command that still exits 0 while producing
+different output means the claim was true when it was written and is not true now — exactly the state
+a stale research report hides, and exactly what exit status alone cannot see.
+
+Judged the same way as `spec-check`: not "does it pass the good case" alone, but "does it notice each
+specific way the case can go bad".
+
+`cite-check` used to live beside this and is gone: it graded the v1 report/analysis
+shape, and `research-check`'s `conclusions_cite_findings` grades the same property on the shape
+research-v2 actually emits. A tool that grades an artifact nothing produces is a trap for whoever
+reads it next.
 """
 import json
 import subprocess
@@ -16,7 +24,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 REPLAY = ROOT / "tools" / "research" / "replay-evidence"
-CITE = ROOT / "tools" / "research" / "cite-check"
 
 
 @pytest.fixture
@@ -93,51 +100,3 @@ def test_a_hanging_command_fails_rather_than_hanging_the_gate(repo):
     r = subprocess.run(["python3", str(REPLAY), str(p), "--cwd", str(repo), "--timeout", "1"],
                        capture_output=True, text=True, timeout=20)
     assert r.returncode == 1 and "timed out" in r.stdout + r.stderr
-
-
-# ------------------------------------------------------------- cite-check: a conclusion cites, or it isn't one
-
-def _cite(repo, body, findings=GOOD):
-    (repo / "report.md").write_text(body)
-    p = _analysis(repo, findings)
-    r = subprocess.run(["python3", str(CITE), str(repo / "report.md"), str(p)],
-                       capture_output=True, text=True)
-    return r.returncode, r.stdout + r.stderr
-
-
-def test_conclusions_citing_findings_pass(repo):
-    code, out = _cite(repo, "# R\n\n## Conclusions\n\n"
-                            "- core.py defines exactly two module-level functions, so the surface is small.\n"
-                            "- no TODO markers remain, so nothing is deferred.\n")
-    assert code == 0, out
-
-
-def test_an_explicit_index_also_counts(repo):
-    code, out = _cite(repo, "# R\n\n## Conclusions\n\n- The module is small [F-1] and complete [F-2].\n")
-    assert code == 0, out
-
-
-def test_a_conclusion_citing_nothing_fails(repo):
-    """A conclusion that cites no finding is not a conclusion, it is an assertion."""
-    code, out = _cite(repo, "# R\n\n## Conclusions\n\n- The architecture is fundamentally sound.\n")
-    assert code == 1 and "cite no finding" in out, out
-
-
-def test_a_dangling_index_fails(repo):
-    code, out = _cite(repo, "# R\n\n## Conclusions\n\n- Everything checks out [F-9].\n")
-    assert code == 1, out
-
-
-def test_a_report_with_no_conclusions_section_fails(repo):
-    code, out = _cite(repo, "# R\n\nSome prose and nothing else.\n")
-    assert code == 1 and "no '## Conclusions'" in out, out
-
-
-def test_an_empty_conclusions_section_fails(repo):
-    code, out = _cite(repo, "# R\n\n## Conclusions\n\n")
-    assert code == 1 and "lists nothing" in out, out
-
-
-def test_an_analysis_with_no_findings_cannot_be_cited(repo):
-    code, out = _cite(repo, "# R\n\n## Conclusions\n\n- Something [F-1].\n", findings=[])
-    assert code == 1 and "no findings to cite" in out, out

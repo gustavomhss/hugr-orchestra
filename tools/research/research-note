@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""research-note — record a finding at the moment it is found, and verify it there.
+
+The corpus is built as the work happens. A finding written down three states later is written from
+memory, and a quote reconstructed from memory is the fabrication `quotes_are_verbatim` exists to
+catch — so this checks the quote against the frozen snapshot BEFORE the finding is admitted. A
+finding that cannot be supported is refused here, at the desk, rather than at a gate an hour later
+where the source is no longer open.
+
+    research-note --into research/ --claim "..." --source S-1 \\
+                  --quote "retries a failed job three times" \\
+                  --falsifier "a run showing a fourth automatic attempt" \\
+                  --credibility 2 --relates-to F-1:refines
+
+    research-note --into research/ --claim "..." --cmd 'grep -c def src/x.py' \\
+                  --falsifier "the count changes" --credibility 1 --corroborated-by S-2
+
+It stamps `found_at` so `memos_were_written_during_the_work` can place the memos in time, and it
+appends the constant-comparison link that `every_finding_is_compared_to_the_corpus` requires — the
+relation is mandatory once a corpus exists, because placing a note against what is already held is
+the comparison, and skipping it is how a register becomes a pile.
+
+Usage: research-note --into DIR --claim TEXT --falsifier TEXT --credibility 1-6
+                     (--source S-n --quote TEXT | --cmd CMD)
+                     [--relates-to F-n:relation ...] [--corroborated-by S-n ...]
+                     [--repo-root DIR] [--at ISO8601] [--json]
+Exit:  0 recorded · 1 the finding could not be supported · 2 usage/IO error
+"""
+import argparse
+import datetime
+import json
+import os
+import re
+import subprocess
+import sys
+
+RELATIONS = ("supports", "refines", "contradicts", "independent")
+FINDING_ID = re.compile(r"^F-(\d+)$")
+
+
+def norm(s):
+    return " ".join(str(s).split())
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Record and verify a finding as it is found.")
+    ap.add_argument("--into", required=True)
+    ap.add_argument("--claim", required=True)
+    ap.add_argument("--falsifier", required=True)
+    ap.add_argument("--credibility", type=int, required=True, choices=range(1, 7))
+    ap.add_argument("--source")
+    ap.add_argument("--quote")
+    ap.add_argument("--cmd")
+    ap.add_argument("--relates-to", action="append", default=[], metavar="F-n:relation")
+    ap.add_argument("--corroborated-by", action="append", default=[], metavar="S-n")
+    ap.add_argument("--repo-root", default=".")
+    ap.add_argument("--at")
+    ap.add_argument("--json", action="store_true", dest="as_json")
+    a = ap.parse_args()
+
+    if bool(a.cmd) == bool(a.source):
+        print("research-note: give either --cmd or --source with --quote", file=sys.stderr)
+        return 2
+    if a.source and not a.quote:
+        print("research-note: --source needs --quote; a citation without a span cannot be checked",
+              file=sys.stderr)
+        return 2
+
+    try:
+        with open(os.path.join(a.into, "sources.json")) as f:
+            reg = json.load(f)
+    except (OSError, ValueError) as e:
+        print(f"research-note: cannot read the source register: {e}", file=sys.stderr)
+        return 2
+    srcs = {str(x.get("id")): x for x in (reg.get("sources") or [])}
+
+    path = os.path.join(a.into, "findings.json")
+    try:
+        with open(path) as f:
+            findings = json.load(f)
+    except OSError:
+        findings = []
+    except ValueError as e:
+        print(f"research-note: {path} is not valid JSON: {e}", file=sys.stderr)
+        return 2
+    known = [str(x.get("id")) for x in findings]
+
+    # The comparison is the method, not the paperwork. Once a corpus exists, a new note must be placed
+    # against it — and the tool refuses rather than writing a note the gate will reject later.
+    rels = []
+    for spec in a.relates_to:
+        fid, _, rel = spec.partition(":")
+        if fid not in known or rel not in RELATIONS:
+            print(f"research-note: {spec!r} — need <existing F-n>:{'|'.join(RELATIONS)}", file=sys.stderr)
+            return 2
+        rels.append({"finding": fid, "relation": rel})
+    if findings and not rels:
+        print(f"research-note: this is finding {len(findings) + 1}; place it against the corpus with "
+              f"--relates-to F-n:{'|'.join(RELATIONS)}", file=sys.stderr)
+        return 2
+
+    if a.cmd:
+        r = subprocess.run(a.cmd, shell=True, cwd=a.repo_root, capture_output=True, text=True)
+        if r.returncode != 0:
+            print(f"research-note: the evidence command exited {r.returncode}: "
+                  f"{(r.stderr or '').strip()[:160]}", file=sys.stderr)
+            return 1
+        evidence = {"kind": "command", "cmd": a.cmd, "output": (r.stdout or "").strip()}
+    else:
+        src = srcs.get(a.source)
+        if not src:
+            print(f"research-note: {a.source} is not in the source register", file=sys.stderr)
+            return 2
+        snap = os.path.join(a.into, str(src.get("snapshot", "")))
+        try:
+            with open(snap) as f:
+                body = f.read()
+        except OSError:
+            print(f"research-note: {a.source} has no readable snapshot; capture it first",
+                  file=sys.stderr)
+            return 2
+        # The check that belongs HERE, not three states later.
+        if norm(a.quote) not in norm(body):
+            print(f"research-note: that span is not in {a.source}. The finding is not recorded.\n"
+                  f"  looked for: {norm(a.quote)[:100]!r}", file=sys.stderr)
+            return 1
+        evidence = {"kind": src.get("kind"), "source": a.source, "quote": a.quote}
+
+    if a.credibility == 1 and not [c for c in a.corroborated_by if c in srcs and c != a.source]:
+        print("research-note: credibility 1 means confirmed by another independent source — "
+              "name it with --corroborated-by S-n", file=sys.stderr)
+        return 2
+
+    used = [int(m.group(1)) for i in known for m in [FINDING_ID.match(i)] if m]
+    entry = {"id": f"F-{max(used) + 1 if used else 1}",
+             "claim": a.claim, "evidence": evidence,
+             "credibility": a.credibility, "falsifier": a.falsifier,
+             "found_at": a.at or datetime.datetime.now(datetime.timezone.utc)
+             .strftime("%Y-%m-%dT%H:%M:%SZ")}
+    if rels:
+        entry["relates_to"] = rels
+    if a.corroborated_by:
+        entry["corroborated_by"] = a.corroborated_by
+
+    findings.append(entry)
+    with open(path, "w") as f:
+        json.dump(findings, f, indent=1)
+        f.write("\n")
+
+    if a.as_json:
+        print(json.dumps(entry, indent=2))
+    else:
+        where = evidence.get("source") or "command"
+        print(f"{entry['id']}  {where}  credibility {a.credibility}  {a.claim[:60]}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

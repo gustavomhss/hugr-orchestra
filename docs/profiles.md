@@ -352,58 +352,87 @@ later.
 
 ---
 
-## 10. `research-v2` — enforcing the profile's own rule
+## 10. `research-v2` — rebuilt from the methodology, not from intuition
 
-This profile's `analyze` macro carries its doctrine in its own description: *"cada achado provado por
-comando real"* — every finding proven by a real command. Under Protocol Enforcer that was a sentence.
-Here it is a control.
+The first version of this profile was three macros — explore, analyze, report — and that is the shape
+of anything. It has been rewritten, and the point of the rewrite is that **almost nothing in it is
+mine**. Research methodology is a field with decades of work in it; a protocol that ignores that and
+substitutes an engineer's intuition is worth less than the literature it declined to read.
 
-`tools/research/replay-evidence` **re-runs every finding's evidence command** and requires it to
-still hold. A finding is `{claim, evidence_cmd, evidence_output}`, and it holds when the command
-still exits 0 *and its output still matches what was recorded*.
+Each macro mechanizes a named method, and each criterion checks the part of that method a machine can
+check. The rest — whether the question is worth asking, whether the hypothesis set is the right one,
+whether a source is any good — stays with the cold review, because that is judgment.
 
-The second half is the half that matters. A command that exits 0 while producing different output
-means the claim was true when it was written and is not true now — which is precisely the state a
-stale research report hides, and exactly what exit status alone cannot see:
+| where it comes from | what it contributes | the controls |
+|---|---|---|
+| **ACH** — Analysis of Competing Hypotheses (Heuer, *Psychology of Intelligence Analysis*) | hypotheses enumerated **before** evidence is weighed; every finding scored against **every** hypothesis; work proceeds by refutation | `competing_hypotheses_enumerated`, `every_finding_scored_against_every_hypothesis`, `non_diagnostic_findings_are_marked`, `hypotheses_are_refuted_or_survival_is_declared` |
+| **GRADE** — certainty of evidence (Cochrane) | certainty is **derived**, not chosen: a starting level, one downgrade per serious concern, in five named domains | `calibration_is_derived`, `downgrades_name_a_grade_domain`, `calibration_matches_the_evidence` |
+| **Admiralty code** — NATO AJP-2.1 / STANAG 2511 | source **reliability** (A–F) and information **credibility** (1–6) rated separately and in isolation | `source_reliability_rated`, `credibility_is_earned` |
+| **PRISMA 2020 / PRISMA-S** | a search someone else could run; and the item reviewers omit most — what was found and **excluded** | `search_record_is_reproducible`, `excluded_sources_recorded`, `not_searched_declared` |
+| **Grounded theory** (Glaser & Strauss; Charmaz) | the corpus is built **as the work happens**: constant comparison, memoing, theoretical saturation | `every_finding_is_compared_to_the_corpus`, `memos_were_written_during_the_work`, `saturation_is_declared` |
+| **Lincoln & Guba** — trustworthiness | confirmability: findings trace to data, not to the researcher's imagination. Transferability: thick description of the setting | `quotes_are_verbatim`, `context_described` |
 
-```
-FAIL core.py defines exactly two module-level functions — output drifted — recorded '2', now '3'
-```
+Fourteen states, **52 controls, 39 of them mechanical**, zero ungated — the largest profile shipped.
 
-`evidence_output: ""` checks exit status only. That is legitimate, and the report names how many
-findings were checked that way, so the weaker check cannot become the default by an omission nobody
-notices.
+### The three that carry the most weight
 
-`tools/research/cite-check` does the other half. *"Conclusions are clear"* is judgment and this does
-not claim to measure it; what it measures is that **every conclusion cites a finding that exists**.
-A conclusion citing nothing is not a conclusion, it is an assertion — and a citation must be an
-explicit `[F-n]` or a verbatim span of the claim, because a paraphrase is where a conclusion drifts
-from what its evidence supports.
+**`non_diagnostic_findings_are_marked`** is ACH's sharpest idea and the one nothing else in this repo
+had. Evidence consistent with *every* hypothesis discriminates nothing, **however true it is**. The
+contest matrix computes each row's diagnosticity from its own scores and refuses a register that
+disagrees with itself; `calibration_matches_the_evidence` then refuses a conclusion resting only on
+non-diagnostic findings. A body of true, useless facts stops being a conclusion.
 
-### The runs
+**`calibration_is_derived`** turns a confidence label into arithmetic. A conclusion records a starting
+level and a list of downgrades, each naming one of GRADE's five domains with a reason, and the final
+certainty must equal the starting level moved one step per downgrade. A certainty that is *chosen* is
+the failure GRADE exists to prevent, and the arithmetic is the part of it a machine can check.
 
-```
-12 gate evaluations, chain COMPLETE, 16/16 controls, relay verify PASS — auditable
-```
+**`memos_were_written_during_the_work`** is the one that enforces *how* rather than *what*. At least
+one dated analytic memo must **predate the last finding**. A memo written after the work is a
+write-up, and a write-up records what the author remembers deciding rather than what they decided.
 
-Then a third function was added to the code the report describes — the report itself untouched:
+### What a web-capable protocol can and cannot promise
 
-```
-gate-fail  analyze.checklist   findings_documented   (x5)
-escalate   analyze.checklist   findings_documented
-```
+It cannot verify the world. A page can lie, change, or vanish, and no control here pretends otherwise.
+What it verifies is the **report against what was actually retrieved**: `research-capture` freezes the
+retrieved bytes with a sha256 and a retrieval date, `quotes_are_verbatim` requires every quoted span
+to be present in that frozen copy, and `retrieved_sources_are_snapshotted` requires the hash to still
+match — so a snapshot edited afterwards to agree with the report is caught too. Staleness is a
+**number the reader is owed**: `report_declares_source_age` forces every retrieval date into the
+report rather than promising freshness.
 
-The report still said two. Nothing about it changed, and the gate still caught it, because the
-control does not read the report — it re-runs the evidence.
+### Building the corpus as the work happens
 
-### One thing the source profile was missing
+Three tools exist so the discipline is followable rather than merely checkable, because a control that
+is tedious to satisfy honestly is one people learn to satisfy dishonestly.
 
-`report.inject` declared no payload at all. The lint calls that an error and it is: a state that
-injects nothing delivers nothing, and the agent is then judged against context it was never handed.
-The migrated profile gives it one rather than leaving it to fail at run time.
+`research-capture` freezes and registers a source in one call. `research-note` records a finding **at
+the moment it is found and verifies it there** — the quote is checked against the snapshot *before*
+the finding is admitted, so a span that is not in the source is refused at the desk rather than at a
+gate an hour later when the source is closed. It also refuses a second finding that is not placed
+against the corpus already held, which is the constant comparative method as a command-line argument.
+`research-memo` appends a dated memo.
 
+### One criterion deliberately NOT mechanized
 
----
+Zettelkasten atomicity — one claim per finding — is a predicate of the evidence cold review, not a
+control. `tools/spec/spec-check` *can* test a requirement's atomicity because a requirement carries a
+modal; a free-form claim has no marker. *"Retried three times **and** the console shows a banner"* is
+two claims, and the same sentence with a comma is the same two claims. A check that fires on one and
+not the other measures punctuation, and a control wrong half the time teaches its reader to override
+it. `tests/test_research_check.py` pins the absence so nobody adds it back without reading why.
+
+### It discriminates, and there is a test that says so
+
+`tests/test_research_check.py` holds one known-good research directory and breaks it one field at a
+time: **39 mutations for 39 criteria**, plus a test that every declared criterion has a mutation
+behind it. Two carry more weight than the rest — a fabricated quote that reads exactly like the
+source, and a snapshot edited after registration to agree with the report.
+
+`research-v2` supersedes `research`, which stays where it is in the frozen `MCP-Statemachine` tree.
+`cite-check` was removed with the rewrite: it graded the v1 report shape, and `conclusions_cite_findings`
+grades the same property on the shape this profile actually emits.
+
 
 ## 11. `design` — the last one, and the softest
 

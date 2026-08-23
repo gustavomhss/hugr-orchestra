@@ -1,0 +1,742 @@
+#!/usr/bin/env python3
+"""research-check — mechanical verifier for the research protocol's six gates.
+
+The protocol is DERIVED, not invented. Each phase mechanizes a named method, and the criteria below
+check the part of that method a machine can check:
+
+  ACH — Analysis of Competing Hypotheses (Heuer, *Psychology of Intelligence Analysis*). Hypotheses
+        are enumerated BEFORE evidence is weighed, every finding is scored against EVERY hypothesis,
+        and the work is refutation rather than confirmation. Its sharpest idea is DIAGNOSTICITY:
+        evidence consistent with every hypothesis discriminates nothing and is worth nothing, however
+        true it is. `non_diagnostic_findings_are_marked` is that idea as a control.
+  GRADE — certainty of evidence (Cochrane / GRADE working group). Certainty is not chosen, it is
+        DERIVED: a starting level fixed by the kind of evidence, then downgraded one level per serious
+        concern across five named domains (risk of bias, inconsistency, indirectness, imprecision,
+        publication bias). `calibration_is_derived` checks the arithmetic; the domains are the only
+        vocabulary a downgrade may use.
+  Admiralty code — NATO AJP-2.1 / STANAG 2511. Source RELIABILITY (A-F) and information CREDIBILITY
+        (1-6) are rated SEPARATELY and in isolation, so a trusted source cannot launder a weak report.
+        `credibility_is_earned` makes the top grade cost something: "confirmed by other independent
+        sources" requires two independent sources to actually exist.
+  PRISMA 2020 / PRISMA-S — reporting a search so someone else could run it: where, the full query,
+        the date, the limits. And the item reviewers omit most — the characteristics of what was
+        found and EXCLUDED, which is `excluded_sources_recorded`.
+  Grounded theory (Glaser & Strauss; Charmaz) — the corpus is built AS THE WORK HAPPENS, not written
+        up afterwards. Three ideas are mechanized: the CONSTANT COMPARATIVE METHOD, where every new
+        finding is compared against the ones already held (`every_finding_is_compared_to_the_corpus`);
+        MEMOING, the dated analytic notes that bridge data and theory and become the audit trail
+        (`memos_were_written_during_the_work` — at least one memo must predate the last finding, which
+        is what separates thinking during from writing up after); and THEORETICAL SATURATION, the stop
+        rule (`saturation_is_declared`).
+  Zettelkasten (Luhmann; Ahrens) — atomicity: one idea per note, stated so it stands outside the
+        context it was found in. This one is NOT mechanized, deliberately: see the note above
+        `check_evidence`.
+  Lincoln & Guba — trustworthiness. Confirmability is the claim that findings trace to data rather
+        than to the researcher's imagination; `quotes_are_verbatim` is that claim made checkable.
+        Transferability needs thick description of the setting, which is `context_described`.
+
+What it does NOT judge: whether the question is worth asking, whether a hypothesis set is the right
+one, whether a source is any good, whether a conclusion is correct. Those are judgment, reserved for
+the cold review and graded against the diff by a judge. The split is the point.
+
+THE LIMIT WORTH STATING, because a web-capable protocol invites the opposite belief: this cannot
+verify the world. A page can lie, change, or vanish. It verifies the REPORT against what was actually
+retrieved — a quoted span must be present in the snapshot frozen when the source was read, and that
+snapshot's sha256 must still match. Staleness is reported as a number, never as a promise.
+
+Artifacts, all under --research-dir:
+    question.json    {question, context, answer_shape: [{id: A-1, must}], out_of_scope: [],
+                      prior_belief, hypotheses: [{id: H-1, statement}]}
+    sources.json     {searched: [{where, query, at, limits}], excluded: [{ref, why}],
+                      not_searched: [{what, why}],
+                      sources: [{id: S-1, kind, ref, reliability: A-F, retrieved_at, snapshot, sha256}]}
+    findings.json    [{id: F-1, claim, evidence: {...}, credibility: 1-6, falsifier}]
+    contest.json     [{finding: F-1, searched_for, searched_against: [S-1],
+                       scores: {H-1: consistent|inconsistent|neutral}, diagnostic: bool,
+                       contradictions: [...], resolution: withstood|revised|open}]
+    conclusions.json [{id: C-1, statement, cites: [F-1], answers: [A-1], hypothesis: H-1,
+                       starting_level, downgrades: [{domain, why}], calibration, would_change}]
+    report.md
+
+Usage: research-check --phase question|survey|evidence|contest|synthesis|report
+                      [--research-dir DIR] [--repo-root DIR] [--json]
+Exit:  0 clean · 1 one or more FAIL · 2 usage/IO error
+
+stdlib only. A verifier with dependencies is a verifier that stops running.
+"""
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+
+PASS, FAIL = "PASS", "FAIL"
+
+# GRADE's four levels, ordered. A downgrade moves one step right.
+LEVELS = ("high", "moderate", "low", "very-low")
+# GRADE's five downgrade domains. A downgrade outside this vocabulary is a reason invented to reach a
+# level, which is the failure the framework exists to prevent.
+GRADE_DOMAINS = ("risk-of-bias", "inconsistency", "indirectness", "imprecision", "publication-bias")
+# Admiralty: source reliability, assessed on the source alone.
+RELIABILITY = tuple("ABCDEF")
+# Admiralty: information credibility, assessed on the item alone.
+CREDIBILITY = (1, 2, 3, 4, 5, 6)
+SCORES = ("consistent", "inconsistent", "neutral")
+RESOLUTIONS = ("withstood", "revised", "open")
+
+ANSWER_ID = re.compile(r"^A-\d+$")
+SOURCE_ID = re.compile(r"^S-\d+$")
+FINDING_ID = re.compile(r"^F-\d+$")
+HYPOTHESIS_ID = re.compile(r"^H-\d+$")
+CONCLUSION_ID = re.compile(r"^C-\d+$")
+
+
+def load(d, name):
+    path = os.path.join(d, name)
+    try:
+        with open(path) as f:
+            return json.load(f), None
+    except OSError:
+        return None, f"file not found: {path}"
+    except ValueError as e:
+        return None, f"{path} is not valid JSON: {e}"
+
+
+def text_of(d, name):
+    try:
+        with open(os.path.join(d, name)) as f:
+            return f.read(), None
+    except OSError:
+        return None, f"file not found: {os.path.join(d, name)}"
+
+
+def rows(x):
+    return x if isinstance(x, list) else []
+
+
+def missing(names, err):
+    return [(c, FAIL, err) for c in names]
+
+
+def norm(s):
+    """Whitespace-insensitive comparison. A span copied out of a rendered page keeps its words and
+    loses its line breaks; byte equality would fail honest quotes and teach the author to stop
+    quoting. The word sequence is what a citation is."""
+    return " ".join(str(s).split())
+
+
+# ---------- question: ACH step 1, and Lincoln & Guba's thick description --------------------------
+
+QUESTION_CRITERIA = ("question_stated", "context_described", "answer_shape_declared",
+                     "out_of_scope_declared", "prior_belief_recorded",
+                     "competing_hypotheses_enumerated")
+
+
+def check_question(d, _repo):
+    q, err = load(d, "question.json")
+    if err:
+        return missing(QUESTION_CRITERIA, err)
+    q = q if isinstance(q, dict) else {}
+    out = []
+
+    text = str(q.get("question", "")).strip()
+    out.append(("question_stated", PASS if text.endswith("?") and len(text) > 15 else FAIL,
+                f"{text[:70]!r}" if text else "no question recorded"))
+
+    # Transferability (Lincoln & Guba): a reader can only judge whether a finding carries to their
+    # situation if the setting it was found in is described.
+    ctx = str(q.get("context", "")).strip()
+    out.append(("context_described", PASS if len(ctx) >= 80 else FAIL,
+                f"{len(ctx)} chars of setting" if ctx else "no context recorded"))
+
+    # Ids exist so `conclusions_answer_the_question` can close the loop. Without them you can bind one
+    # question, answer a different one, and pass every other control in the protocol.
+    shape = rows(q.get("answer_shape"))
+    bad_shape = [x.get("id") for x in shape
+                 if not ANSWER_ID.match(str(x.get("id", ""))) or not str(x.get("must", "")).strip()]
+    out.append(("answer_shape_declared", PASS if shape and not bad_shape else FAIL,
+                f"{len(shape)} answer criteria" if shape and not bad_shape
+                else f"malformed: {bad_shape or 'none declared'}"))
+
+    scope = [s for s in rows(q.get("out_of_scope")) if str(s).strip()]
+    out.append(("out_of_scope_declared", PASS if scope else FAIL,
+                f"{len(scope)} explicit exclusions"))
+
+    # Recorded before looking, so research that changed nobody's mind is distinguishable from research
+    # that confirmed a prior.
+    prior = str(q.get("prior_belief", "")).strip()
+    out.append(("prior_belief_recorded", PASS if len(prior) >= 20 else FAIL,
+                f"{len(prior)} chars" if prior else "no prior belief recorded"))
+
+    # ACH step 1. Enumerated BEFORE the evidence is weighed — that ordering is the countermeasure
+    # against anchoring on the first plausible explanation, and one hypothesis is not a set.
+    hyps = rows(q.get("hypotheses"))
+    bad_h = [x.get("id") for x in hyps
+             if not HYPOTHESIS_ID.match(str(x.get("id", ""))) or len(str(x.get("statement", "")).strip()) < 15]
+    out.append(("competing_hypotheses_enumerated",
+                PASS if len(hyps) >= 2 and not bad_h else FAIL,
+                f"{len(hyps)} competing hypotheses" if len(hyps) >= 2 and not bad_h
+                else f"need at least 2 well-formed; malformed={bad_h} count={len(hyps)}"))
+    return out
+
+
+# ---------- survey: PRISMA-S reporting, Admiralty source reliability -------------------------------
+
+SURVEY_CRITERIA = ("sources_registered", "source_reliability_rated", "search_record_is_reproducible",
+                   "excluded_sources_recorded", "not_searched_declared",
+                   "retrieved_sources_are_snapshotted", "saturation_is_declared")
+
+
+def check_survey(d, _repo):
+    s, err = load(d, "sources.json")
+    if err:
+        return missing(SURVEY_CRITERIA, err)
+    s = s if isinstance(s, dict) else {}
+    out = []
+
+    srcs = rows(s.get("sources"))
+    bad = [x.get("id") for x in srcs
+           if not SOURCE_ID.match(str(x.get("id", ""))) or not str(x.get("ref", "")).strip()
+           or x.get("kind") not in ("web", "file", "command")]
+    out.append(("sources_registered", PASS if srcs and not bad else FAIL,
+                f"{len(srcs)} sources" if srcs and not bad else f"malformed: {bad or 'none registered'}"))
+
+    # Admiralty A-F, on the SOURCE alone. Kept separate from a finding's credibility so a trusted
+    # source cannot launder a weak report — the separation is the whole point of the code.
+    unrated = [x.get("id") for x in srcs if str(x.get("reliability", "")) not in RELIABILITY]
+    out.append(("source_reliability_rated", PASS if srcs and not unrated else FAIL,
+                f"reliability: {sorted({str(x.get('reliability')) for x in srcs})}"
+                if srcs and not unrated else f"unrated or invalid: {unrated or 'no sources'}"))
+
+    # PRISMA-S: where, the full query, the date, the limits — enough for someone else to run it again.
+    searched = rows(s.get("searched"))
+    thin = [i for i, x in enumerate(searched)
+            if not str(x.get("where", "")).strip() or not str(x.get("query", "")).strip()
+            or not str(x.get("at", "")).strip()]
+    out.append(("search_record_is_reproducible", PASS if searched and not thin else FAIL,
+                f"{len(searched)} searches, each with where, query and date"
+                if searched and not thin else f"incomplete entries at {thin or 'none recorded'}"))
+
+    # The PRISMA item with the worst adherence in the literature, and the one a reader most needs:
+    # what was FOUND and thrown away, with the reason. Distinct from `not_searched`, which is what was
+    # never looked at.
+    excluded = [x for x in rows(s.get("excluded"))
+                if str(x.get("ref", "")).strip() and str(x.get("why", "")).strip()]
+    declared_none = s.get("excluded") == [] and isinstance(s.get("excluded_none_because"), str) \
+        and s.get("excluded_none_because", "").strip()
+    out.append(("excluded_sources_recorded", PASS if excluded or declared_none else FAIL,
+                f"{len(excluded)} sources found and excluded, each with a reason" if excluded
+                else ("nothing excluded, and why is stated" if declared_none
+                      else "no exclusions recorded and no statement that there were none")))
+
+    gaps = [x for x in rows(s.get("not_searched"))
+            if str(x.get("what", "")).strip() and str(x.get("why", "")).strip()]
+    out.append(("not_searched_declared", PASS if gaps else FAIL,
+                f"{len(gaps)} declared gaps, each with a reason"))
+
+    # A retrieved source that was not frozen cannot be quoted verbatim later: there is nothing left to
+    # check the quote against. `command` sources are exempt — their freezing is the recorded output,
+    # and replay-evidence re-runs them.
+    problems = []
+    for x in srcs:
+        if x.get("kind") == "command":
+            continue
+        snap = str(x.get("snapshot", "")).strip()
+        if not snap:
+            problems.append(f"{x.get('id')}: no snapshot")
+            continue
+        p = os.path.join(d, snap)
+        if not os.path.isfile(p):
+            problems.append(f"{x.get('id')}: snapshot missing at {snap}")
+            continue
+        want = str(x.get("sha256", "")).strip()
+        got = hashlib.sha256(open(p, "rb").read()).hexdigest()
+        if not want:
+            problems.append(f"{x.get('id')}: no sha256 recorded")
+        elif want != got:
+            problems.append(f"{x.get('id')}: snapshot changed since it was registered")
+        if not str(x.get("retrieved_at", "")).strip():
+            problems.append(f"{x.get('id')}: no retrieval date")
+    out.append(("retrieved_sources_are_snapshotted", PASS if srcs and not problems else FAIL,
+                "every retrieved source frozen and hashed" if srcs and not problems
+                else str(problems or ["no sources registered"])))
+
+    # Theoretical saturation: the stop rule. Research without one ends when the researcher gets tired,
+    # and "I looked at enough" is the claim a reader can least check. Saturation is a JUDGEMENT — no
+    # amount of tail can prove more searching would yield nothing — so this does not adjudicate it. It
+    # requires the claim to be stated and, when it is claimed as REACHED, backed by the tail of the
+    # register actually being dry. Declaring saturation was NOT reached is an equally valid outcome
+    # and passes, because an honest limit beats a manufactured one.
+    sat = s.get("saturation") if isinstance(s.get("saturation"), dict) else {}
+    reached, why = sat.get("reached"), str(sat.get("why", "")).strip()
+    if reached is None or len(why) < 30:
+        out.append(("saturation_is_declared", FAIL,
+                    "no stop rule stated: `saturation` needs {reached: bool, why: '...'}"))
+    elif reached is False:
+        out.append(("saturation_is_declared", PASS, "saturation NOT reached, and why is stated"))
+    else:
+        f, ferr = load(d, "findings.json")
+        used = []
+        for x in rows(f):
+            sid = str(((x.get("evidence") or {}).get("source", "")))
+            if sid:
+                used.append(sid)
+        order = [str(x.get("id")) for x in srcs]
+        tail = order[-int(sat.get("dry_tail", 2) or 2):]
+        productive = [t for t in tail if t in used]
+        out.append(("saturation_is_declared", PASS if not productive and not ferr else FAIL,
+                    ferr or (f"the last {len(tail)} sources produced no new finding"
+                             if not productive
+                             else f"saturation claimed, but {productive} still produced findings")))
+    return out
+
+
+# ---------- evidence: confirmability, Admiralty credibility ---------------------------------------
+
+# Zettelkasten atomicity is a predicate of the evidence COLD REVIEW, not a criterion here, and the
+# reason is worth stating rather than leaving as an omission. `tools/spec/spec-check` can test a
+# requirement's atomicity because a requirement carries a modal — "shall persist X and shall use Y"
+# has two of them, and the conjunct after "and" opens a second obligation visibly. A free-form claim
+# has no such marker: "retried three times and the console shows a banner" is two claims, and
+# "retried three times, the console shows a banner" is the same two claims with a comma. A check that
+# fires on one and not the other is measuring punctuation, not atomicity — and a control that is wrong
+# half the time teaches its reader to override it, which is worse than not having it. So the protocol
+# puts atomicity where judgment lives.
+EVIDENCE_CRITERIA = ("findings_registered", "every_finding_has_a_falsifier",
+                     "evidence_traces_to_a_source", "quotes_are_verbatim",
+                     "command_evidence_replays", "credibility_is_earned",
+                     "every_finding_is_compared_to_the_corpus", "memos_were_written_during_the_work")
+
+RELATIONS = ("supports", "refines", "contradicts", "independent")
+
+
+def _sources_by_id(d):
+    s, err = load(d, "sources.json")
+    if err:
+        return {}, err
+    return {str(x.get("id")): x for x in rows((s or {}).get("sources"))}, None
+
+
+def check_evidence(d, repo):
+    f, err = load(d, "findings.json")
+    if err:
+        return missing(EVIDENCE_CRITERIA, err)
+    items = rows(f)
+    srcs, serr = _sources_by_id(d)
+    out = []
+
+    bad = [x.get("id") for x in items
+           if not FINDING_ID.match(str(x.get("id", "")))
+           or not str(x.get("claim", "")).strip()
+           or not isinstance(x.get("evidence"), dict)]
+    out.append(("findings_registered", PASS if items and not bad else FAIL,
+                f"{len(items)} findings" if items and not bad else f"malformed: {bad or 'none registered'}"))
+
+    # Popper's line, made a field. A finding with no falsifier is a belief. The restatement check is
+    # crude on purpose: it catches the copy-paste, not the sophist.
+    nof = [x.get("id") for x in items
+           if len(str(x.get("falsifier", "")).strip()) < 15
+           or norm(x.get("falsifier", "")).lower() == norm(x.get("claim", "")).lower()]
+    out.append(("every_finding_has_a_falsifier", PASS if items and not nof else FAIL,
+                "every finding names what would refute it" if items and not nof
+                else f"missing or restated: {nof or 'no findings'}"))
+
+    untraced = []
+    for x in items:
+        ev = x.get("evidence") or {}
+        if ev.get("kind") == "command":
+            continue
+        sid = str(ev.get("source", ""))
+        if sid not in srcs:
+            untraced.append(f"{x.get('id')}: cites {sid or '(nothing)'}")
+    out.append(("evidence_traces_to_a_source", PASS if items and not untraced and not serr else FAIL,
+                serr or ("every finding resolves to a registered source" if not untraced else str(untraced))))
+
+    # Confirmability (Lincoln & Guba) made checkable, and the anti-fabrication control. Always against
+    # the SNAPSHOT, never the live source — including a file in this repo. A file changes too, and
+    # checking against the current file would silently re-point the citation at whatever it says today.
+    fabricated = []
+    for x in items:
+        ev = x.get("evidence") or {}
+        if ev.get("kind") == "command":
+            continue
+        quote = norm(ev.get("quote", ""))
+        if not quote:
+            fabricated.append(f"{x.get('id')}: no quote")
+            continue
+        src = srcs.get(str(ev.get("source", "")))
+        if not src:
+            continue                      # already reported by evidence_traces_to_a_source
+        body, e = text_of(d, str(src.get("snapshot", "")))
+        if e:
+            fabricated.append(f"{x.get('id')}: cannot read snapshot for {src.get('id')}")
+            continue
+        if quote not in norm(body):
+            fabricated.append(f"{x.get('id')}: quote not present in {src.get('id')}")
+    out.append(("quotes_are_verbatim", PASS if items and not fabricated else FAIL,
+                "every quoted span is present in what was retrieved" if items and not fabricated
+                else str(fabricated or ["no findings"])))
+
+    # Delegated so there is ONE implementation of "the command still holds".
+    here = os.path.dirname(os.path.abspath(__file__))
+    if not [x for x in items if (x.get("evidence") or {}).get("kind") == "command"]:
+        out.append(("command_evidence_replays", PASS, "no command evidence to replay"))
+    else:
+        r = subprocess.run([sys.executable, os.path.join(here, "replay-evidence"),
+                            os.path.join(d, "findings.json"), "--cwd", repo],
+                           capture_output=True, text=True)
+        tail = (r.stdout.strip() or r.stderr.strip() or "").splitlines()
+        out.append(("command_evidence_replays", PASS if r.returncode == 0 else FAIL,
+                    tail[-1] if tail else f"replay-evidence exit {r.returncode}"))
+
+    # Admiralty 1-6, on the ITEM alone — and the top grade has to cost something. "1 — confirmed by
+    # other independent sources" is a claim about corroboration, so it requires two distinct sources
+    # to actually be cited. A grade that costs nothing is decoration.
+    problems = []
+    for x in items:
+        cred = x.get("credibility")
+        if cred not in CREDIBILITY:
+            problems.append(f"{x.get('id')}: credibility {cred!r} is not 1-6")
+            continue
+        if cred == 1:
+            corr = {str(r) for r in rows(x.get("corroborated_by"))}
+            ev = x.get("evidence") or {}
+            own = str(ev.get("source", ""))
+            others = {c for c in corr if c != own and c in srcs}
+            if len(others) < 1:
+                problems.append(f"{x.get('id')}: credibility 1 claims independent confirmation "
+                                f"but corroborated_by names none")
+    out.append(("credibility_is_earned", PASS if items and not problems and not serr else FAIL,
+                serr or (f"credibility: {sorted({x.get('credibility') for x in items})}"
+                         if not problems else str(problems))))
+
+    # The constant comparative method. Every finding after the first is placed against the corpus that
+    # already exists — supports, refines, contradicts, or independent-of — which is what turns a pile
+    # of notes into a body of work. It is also the cheapest duplicate detector there is: you cannot
+    # relate a finding to the corpus without reading it.
+    ids = [str(x.get("id")) for x in items]
+    unplaced = []
+    for i, x in enumerate(items):
+        if i == 0:
+            continue                      # nothing to compare the first note against
+        rels = rows(x.get("relates_to"))
+        good = [r for r in rels
+                if str(r.get("finding")) in ids[:i] and r.get("relation") in RELATIONS]
+        if not good:
+            unplaced.append(str(x.get("id")))
+    out.append(("every_finding_is_compared_to_the_corpus",
+                PASS if items and not unplaced else FAIL,
+                f"{len(items)} findings, each placed against the corpus before it"
+                if items and not unplaced else f"never compared: {unplaced or 'no findings'}"))
+
+    # Memoing. The dated analytic notes that bridge data and theory — and the audit trail that makes
+    # the work dependable. The ordering check is the one that matters: a memo written after the last
+    # finding is a write-up, and a write-up is not a record of thinking that happened during.
+    m, merr = load(d, "memos.json")
+    memos = rows(m) if not merr else []
+    dated = [str(x.get("at", "")).strip() for x in memos if str(x.get("at", "")).strip()
+             and len(str(x.get("note", "")).strip()) >= 40]
+    found_at = [str(x.get("found_at", "")).strip() for x in items if str(x.get("found_at", "")).strip()]
+    if merr or not dated:
+        out.append(("memos_were_written_during_the_work", FAIL,
+                    merr or "no dated memos of substance recorded"))
+    elif not found_at:
+        out.append(("memos_were_written_during_the_work", FAIL,
+                    "findings carry no `found_at`, so nothing can place the memos in time"))
+    else:
+        during = [t for t in dated if t < max(found_at)]
+        out.append(("memos_were_written_during_the_work", PASS if during else FAIL,
+                    f"{len(during)} of {len(dated)} memos predate the last finding" if during
+                    else "every memo was written after the last finding — that is a write-up"))
+    return out
+
+
+# ---------- contest: the ACH matrix ---------------------------------------------------------------
+
+CONTEST_CRITERIA = ("every_finding_contested", "contest_records_what_was_searched",
+                    "every_finding_scored_against_every_hypothesis",
+                    "non_diagnostic_findings_are_marked",
+                    "hypotheses_are_refuted_or_survival_is_declared",
+                    "contradictions_are_resolved_or_declared_open")
+
+
+def check_contest(d, _repo):
+    c, err = load(d, "contest.json")
+    if err:
+        return missing(CONTEST_CRITERIA, err)
+    entries = rows(c)
+    f, ferr = load(d, "findings.json")
+    fids = {str(x.get("id")) for x in rows(f)} if not ferr else set()
+    q, qerr = load(d, "question.json")
+    hids = {str(x.get("id")) for x in rows((q or {}).get("hypotheses"))} if not qerr else set()
+    srcs, serr = _sources_by_id(d)
+    out = []
+
+    uncontested = sorted(fids - {str(x.get("finding")) for x in entries})
+    out.append(("every_finding_contested", PASS if fids and not uncontested else FAIL,
+                ferr or (f"{len(fids)} findings contested" if not uncontested
+                         else f"never contested: {uncontested}")))
+
+    # Prose length is a presence proxy — the shape this whole migration exists to replace. So a
+    # contest must also name the SOURCES it searched, by id, and they must exist.
+    thin = []
+    for x in entries:
+        if len(str(x.get("searched_for", "")).strip()) < 15:
+            thin.append(f"{x.get('finding')}: no search recorded")
+            continue
+        against = [str(r) for r in rows(x.get("searched_against"))]
+        unknown = [r for r in against if r not in srcs]
+        if not against:
+            thin.append(f"{x.get('finding')}: names no source it searched against")
+        elif unknown:
+            thin.append(f"{x.get('finding')}: cites sources that do not exist: {unknown}")
+    out.append(("contest_records_what_was_searched",
+                PASS if entries and not thin and not serr else FAIL,
+                serr or ("every contest names what it searched for and where" if not thin else str(thin))))
+
+    # ACH step 3: the matrix must be FULL. A finding scored against the favoured hypothesis alone is
+    # the confirmation-seeking the technique exists to prevent.
+    holes = []
+    for x in entries:
+        scores = x.get("scores") if isinstance(x.get("scores"), dict) else {}
+        for h in sorted(hids):
+            if scores.get(h) not in SCORES:
+                holes.append(f"{x.get('finding')}x{h}")
+    out.append(("every_finding_scored_against_every_hypothesis",
+                PASS if entries and hids and not holes and not qerr else FAIL,
+                qerr or (f"{len(entries)}x{len(hids)} matrix complete" if not holes
+                         else f"unscored cells: {holes[:8]}{'...' if len(holes) > 8 else ''}")))
+
+    # ACH's sharpest idea. Evidence consistent with EVERY hypothesis discriminates nothing, however
+    # true it is. The register must say so, and `calibration_matches_the_evidence` then refuses to let
+    # a conclusion rest on non-diagnostic findings alone.
+    mismarked = []
+    for x in entries:
+        scores = x.get("scores") if isinstance(x.get("scores"), dict) else {}
+        vals = [scores.get(h) for h in sorted(hids)]
+        if not hids or any(v not in SCORES for v in vals):
+            continue                      # already reported as a hole
+        computed = len({v for v in vals}) > 1
+        if x.get("diagnostic") is not computed:
+            mismarked.append(f"{x.get('finding')}: diagnostic={x.get('diagnostic')} "
+                             f"but the row is {'mixed' if computed else 'uniform'}")
+    out.append(("non_diagnostic_findings_are_marked",
+                PASS if entries and hids and not mismarked else FAIL,
+                "every row's diagnosticity matches its scores" if entries and hids and not mismarked
+                else str(mismarked or ["no matrix to judge"])))
+
+    # ACH proceeds by REFUTATION. Ending with every hypothesis alive is a legitimate result and a rare
+    # one — so it must be declared deliberately, in `hypotheses_surviving_because`, not arrived at by
+    # never having tried.
+    refuted = set()
+    for x in entries:
+        scores = x.get("scores") if isinstance(x.get("scores"), dict) else {}
+        refuted |= {h for h in hids if scores.get(h) == "inconsistent"}
+    declared = str((q or {}).get("hypotheses_surviving_because", "")).strip() if not qerr else ""
+    out.append(("hypotheses_are_refuted_or_survival_is_declared",
+                PASS if (refuted or len(declared) >= 30) and hids else FAIL,
+                f"{len(refuted)} of {len(hids)} hypotheses carry inconsistent evidence" if refuted
+                else ("no hypothesis refuted, and why is stated" if declared
+                      else "no hypothesis refuted and no statement of why all survive")))
+
+    bad = [x.get("finding") for x in entries if x.get("resolution") not in RESOLUTIONS]
+    unnoted = [x.get("finding") for x in entries
+               if x.get("resolution") == "revised" and not str(x.get("note", "")).strip()]
+    out.append(("contradictions_are_resolved_or_declared_open",
+                PASS if entries and not bad and not unnoted else FAIL,
+                f"resolutions: {sorted({str(x.get('resolution')) for x in entries})}"
+                if entries and not bad and not unnoted else f"bad={bad} revised-without-note={unnoted}"))
+    return out
+
+
+# ---------- synthesis: GRADE ----------------------------------------------------------------------
+
+SYNTHESIS_CRITERIA = ("conclusions_cite_findings", "calibration_is_derived",
+                      "downgrades_name_a_grade_domain", "calibration_matches_the_evidence",
+                      "every_conclusion_says_what_would_change_it", "conclusions_answer_the_question")
+
+
+def check_synthesis(d, _repo):
+    c, err = load(d, "conclusions.json")
+    if err:
+        return missing(SYNTHESIS_CRITERIA, err)
+    items = rows(c)
+    f, ferr = load(d, "findings.json")
+    findings = {str(x.get("id")): x for x in rows(f)} if not ferr else {}
+    ct, cterr = load(d, "contest.json")
+    contest = {str(x.get("finding")): x for x in rows(ct)} if not cterr else {}
+    srcs, _serr = _sources_by_id(d)
+    out = []
+
+    bad = [x.get("id") for x in items
+           if not CONCLUSION_ID.match(str(x.get("id", "")))
+           or not str(x.get("statement", "")).strip()
+           or not [r for r in rows(x.get("cites")) if str(r) in findings]]
+    out.append(("conclusions_cite_findings", PASS if items and not bad else FAIL,
+                ferr or (f"{len(items)} conclusions, every one cites a real finding" if not bad
+                         else f"uncited or bogus: {bad or 'no conclusions'}")))
+
+    # GRADE's mechanism, as arithmetic: final = starting level, one step down per serious concern.
+    # A certainty that is chosen rather than derived is the failure the framework exists to prevent,
+    # and the arithmetic is the only part of it a machine can check.
+    wrong = []
+    for x in items:
+        start, final = str(x.get("starting_level", "")), str(x.get("calibration", ""))
+        if start not in LEVELS or final not in LEVELS:
+            wrong.append(f"{x.get('id')}: levels {start!r} -> {final!r} not in {LEVELS}")
+            continue
+        n = len(rows(x.get("downgrades")))
+        expect = LEVELS[min(LEVELS.index(start) + n, len(LEVELS) - 1)]
+        if final != expect:
+            wrong.append(f"{x.get('id')}: {start} minus {n} downgrade(s) is {expect}, not {final}")
+    out.append(("calibration_is_derived", PASS if items and not wrong else FAIL,
+                "every certainty is its starting level minus its downgrades"
+                if items and not wrong else str(wrong or ["no conclusions"])))
+
+    # The five domains are the vocabulary. A downgrade outside them is a reason invented to reach a
+    # level, which is exactly what the framework forbids.
+    offvocab = []
+    for x in items:
+        for dg in rows(x.get("downgrades")):
+            if str(dg.get("domain")) not in GRADE_DOMAINS:
+                offvocab.append(f"{x.get('id')}: {dg.get('domain')!r}")
+            elif len(str(dg.get("why", "")).strip()) < 15:
+                offvocab.append(f"{x.get('id')}: {dg.get('domain')} with no reason")
+    out.append(("downgrades_name_a_grade_domain", PASS if items and not offvocab else FAIL,
+                f"domains used: {sorted({str(g.get('domain')) for x in items for g in rows(x.get('downgrades'))})}"
+                if items and not offvocab else str(offvocab)))
+
+    # Three ceilings the arithmetic cannot see, each from a different framework:
+    #   ACH        — a conclusion resting only on non-diagnostic findings has no discriminating support
+    #   the record — a finding whose contradiction is still OPEN cannot carry `high`
+    #   Admiralty  — a source rated F (reliability cannot be judged) cannot carry `high` either
+    over = []
+    for x in items:
+        cited = [str(r) for r in rows(x.get("cites")) if str(r) in findings]
+        if not cited:
+            continue
+        diag = [r for r in cited if (contest.get(r) or {}).get("diagnostic") is True]
+        if not diag and contest:
+            over.append(f"{x.get('id')}: rests only on non-diagnostic findings")
+        if x.get("calibration") == "high":
+            if [r for r in cited if (contest.get(r) or {}).get("resolution") == "open"]:
+                over.append(f"{x.get('id')}: 'high' over an open contradiction")
+            weak = [r for r in cited
+                    if str((srcs.get(str((findings[r].get('evidence') or {}).get('source'))) or {})
+                           .get("reliability", "")) == "F"]
+            if weak:
+                over.append(f"{x.get('id')}: 'high' on a source whose reliability cannot be judged")
+    out.append(("calibration_matches_the_evidence",
+                PASS if items and not over and not cterr else FAIL,
+                cterr or ("no conclusion claims more than its evidence carries" if not over else str(over))))
+
+    nochange = [x.get("id") for x in items if len(str(x.get("would_change", "")).strip()) < 15]
+    out.append(("every_conclusion_says_what_would_change_it", PASS if items and not nochange else FAIL,
+                "every conclusion names what would change it" if items and not nochange
+                else f"missing: {nochange or 'no conclusions'}"))
+
+    # The loop back to the question. Everything else grades the research against itself — findings
+    # against sources, conclusions against findings. This is the only control that grades it against
+    # what was ASKED, which is the one way a rigorous body of work can still miss.
+    q, qerr = load(d, "question.json")
+    shape = {str(x.get("id")) for x in rows((q or {}).get("answer_shape"))} if not qerr else set()
+    answered = {str(a) for x in items for a in rows(x.get("answers"))}
+    unanswered, bogus = sorted(shape - answered), sorted(answered - shape)
+    out.append(("conclusions_answer_the_question",
+                PASS if shape and not unanswered and not bogus and not qerr else FAIL,
+                qerr or (f"every one of {len(shape)} answer criteria is addressed"
+                         if not unanswered and not bogus else f"unaddressed={unanswered} unknown={bogus}")))
+    return out
+
+
+# ---------- report --------------------------------------------------------------------------------
+
+REPORT_CRITERIA = ("report_written", "report_carries_every_conclusion",
+                   "report_labels_every_conclusion_with_its_calibration", "report_declares_source_age",
+                   "report_carries_every_open_contradiction", "report_states_the_rejected_hypotheses")
+
+
+def check_report(d, _repo):
+    body, err = text_of(d, "report.md")
+    if err:
+        return missing(REPORT_CRITERIA, err)
+    c, cerr = load(d, "conclusions.json")
+    items = rows(c) if not cerr else []
+    out = []
+
+    words = len(body.split())
+    has_sections = all(re.search(rf"^##\s+{s}\s*$", body, re.M)
+                       for s in ("Conclusions", "Sources", "Hypotheses"))
+    out.append(("report_written", PASS if words >= 200 and has_sections else FAIL,
+                f"{words} words; Conclusions+Sources+Hypotheses sections: {has_sections}"))
+
+    absent = [x.get("id") for x in items if str(x.get("id")) not in body]
+    out.append(("report_carries_every_conclusion", PASS if items and not absent else FAIL,
+                cerr or (f"all {len(items)} conclusions appear" if not absent
+                         else f"missing from the report: {absent}")))
+
+    # A certainty that lives only in the JSON is one the reader never sees, and the reader is the only
+    # person the label was for.
+    unlabelled = [str(x.get("id")) for x in items
+                  if not any(str(x.get("id")) in ln and str(x.get("calibration", "")).lower() in ln.lower()
+                             for ln in body.splitlines())]
+    out.append(("report_labels_every_conclusion_with_its_calibration",
+                PASS if items and not unlabelled else FAIL,
+                "every conclusion carries its certainty where it is stated" if items and not unlabelled
+                else f"unlabelled in the report: {unlabelled or 'no conclusions'}"))
+
+    # Staleness is a number the reader is owed, not a promise the protocol can keep.
+    s, serr = load(d, "sources.json")
+    dated = [str(x.get("retrieved_at", "")).strip()
+             for x in rows((s or {}).get("sources")) if str(x.get("retrieved_at", "")).strip()]
+    shown = [x for x in dated if x[:10] in body]
+    out.append(("report_declares_source_age", PASS if dated and len(shown) == len(dated) else FAIL,
+                serr or (f"all {len(dated)} retrieval dates appear" if dated and len(shown) == len(dated)
+                         else f"{len(dated) - len(shown)} retrieval dates never reach the reader")))
+
+    # The contest is only worth running if its result survives into the artifact a person reads.
+    ct, cterr = load(d, "contest.json")
+    open_ids = [str(x.get("finding")) for x in rows(ct) if x.get("resolution") == "open"] \
+        if not cterr else []
+    buried = [f for f in open_ids if f not in body]
+    out.append(("report_carries_every_open_contradiction", PASS if not cterr and not buried else FAIL,
+                cterr or (f"{len(open_ids)} open contradictions, all named" if not buried
+                          else f"never reaches the reader: {buried}")))
+
+    # ACH's output is not the surviving hypothesis alone — it is the set that was considered and what
+    # killed each one. A report that names only the winner has hidden the method that produced it.
+    q, qerr = load(d, "question.json")
+    hids = [str(x.get("id")) for x in rows((q or {}).get("hypotheses"))] if not qerr else []
+    unnamed = [h for h in hids if h not in body]
+    out.append(("report_states_the_rejected_hypotheses",
+                PASS if hids and not unnamed and not qerr else FAIL,
+                qerr or (f"all {len(hids)} hypotheses named in the report" if hids and not unnamed
+                         else f"never named: {unnamed or 'no hypotheses'}")))
+    return out
+
+
+PHASES = {"question": check_question, "survey": check_survey, "evidence": check_evidence,
+          "contest": check_contest, "synthesis": check_synthesis, "report": check_report}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Mechanical verifier for the research protocol's gates.")
+    ap.add_argument("--phase", required=True, choices=sorted(PHASES))
+    ap.add_argument("--research-dir", default="research")
+    ap.add_argument("--repo-root", default=".")
+    ap.add_argument("--json", action="store_true", dest="as_json")
+    a = ap.parse_args()
+
+    report = PHASES[a.phase](a.research_dir, a.repo_root)
+    if a.as_json:
+        print(json.dumps([{"criterion": c, "status": s, "evidence": e} for c, s, e in report], indent=2))
+    else:
+        for c, s, e in report:
+            print(f"{s} {c} — {e}")
+    return 1 if any(s == FAIL for _, s, _ in report) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

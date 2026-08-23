@@ -39,6 +39,26 @@ def findings_of(doc):
     return out
 
 
+def evidence_of(f):
+    """The command and the recorded output, in either register shape.
+
+    v1 put them flat on the finding (`evidence_cmd` / `evidence_output`). v2 nests a TYPED evidence
+    object, because a research protocol that reads sources as well as running commands needs to say
+    which kind it is. Both are read here so one implementation of "the command still holds" serves
+    both, and a v1 register keeps replaying unchanged.
+
+    Returns (cmd, want, applicable). `applicable` is False for a finding whose evidence is a quoted
+    source rather than a command: there is nothing to re-run, and `research-check`'s
+    `quotes_are_verbatim` is what grades those.
+    """
+    ev = f.get("evidence")
+    if isinstance(ev, dict):
+        if ev.get("kind") != "command":
+            return "", "", False
+        return str(ev.get("cmd", "")).strip(), str(ev.get("output", "")).strip(), True
+    return str(f.get("evidence_cmd", "")).strip(), str(f.get("evidence_output", "")).strip(), True
+
+
 def main():
     ap = argparse.ArgumentParser(description="Re-run every finding's evidence command.")
     ap.add_argument("analysis")
@@ -64,8 +84,9 @@ def main():
     results = []
     for area, f in items:
         claim = str(f.get("claim", ""))[:80]
-        cmd = str(f.get("evidence_cmd", "")).strip()
-        want = str(f.get("evidence_output", "")).strip()
+        cmd, want, applicable = evidence_of(f)
+        if not applicable:
+            continue
         if not cmd:
             results.append({"area": area, "claim": claim, "status": "FAIL",
                             "detail": "no evidence_cmd: the claim is asserted, not proven"})
@@ -88,6 +109,12 @@ def main():
         else:
             results.append({"area": area, "claim": claim, "status": "PASS",
                             "detail": "exit-status only" if not want else "output matches"})
+
+    if not results:
+        # Every finding was source-quoted rather than command-proven. That is legitimate in v2 and is
+        # graded by research-check's `quotes_are_verbatim`; saying "0/0 replay" is the honest report.
+        print("replay-evidence: no command evidence among the findings")
+        return 0
 
     failed = [x for x in results if x["status"] == "FAIL"]
     if a.as_json:
