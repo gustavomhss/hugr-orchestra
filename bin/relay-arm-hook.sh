@@ -394,17 +394,32 @@ proceeding."
 # still gated by it, so `inject` can never be a way to smuggle a state past its controls.
 INJECTED=""
 if [ "$wp_kind" = "inject" ]; then
+  # Two shapes, both "no work of its own, deliver the bytes": a FILE (a skill, a protocol) and
+  # inline TEXT written in the plan. A file wins when both are given — an authoring mistake resolved
+  # toward the thing that can be independently inspected and whose sha means something outside this
+  # sprint. Inline text is recorded as `(inline)` with the sha of the text itself, so an injection
+  # can still be attributed even when it has no file to point at.
   ifile=$(jq -r ".work_packages[$i].file // \"\"" "$SPRINT")
+  itext=$(jq -r ".work_packages[$i].text // \"\"" "$SPRINT")
   ipath="$RUN_DIR/$ifile"
-  if [ -z "$ifile" ] || [ ! -f "$ipath" ]; then
+  if [ -z "$ifile" ] && [ -n "$itext" ]; then
+    isha=$(printf '%s' "$itext" | shasum -a 256 | cut -d' ' -f1)
+    relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$wp_id" \
+           --arg ev "inject" --arg f "(inline)" --arg sha "$isha" \
+      '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,file:$f,sha:$sha}')" || true
+    INJECTED="$itext
+
+"
+  elif [ -z "$ifile" ] || [ ! -f "$ipath" ]; then
     relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$wp_id" \
            --arg ev "inject-missing" --arg f "$ifile" \
       '{ts:($ts|tonumber),arm:$tok,wp:$wp,event:$ev,file:$f}')" || true
     printf '[%s] arm %s: INJECT MISSING %s at %s\n' "$(date +%s)" "$token" "$ifile" "$wp_id" >> "$LOG"
-    printf 'relay: arm %s cannot inject "%s" at %s — the file does not exist under %s\n' \
-      "$token" "$ifile" "$wp_id" "$RUN_DIR" >&2
+    printf 'relay: arm %s cannot inject "%s" at %s — %s\n' "$token" "${ifile:-(nothing declared)}" \
+      "$wp_id" "$([ -z "$ifile" ] && echo 'the state declares neither a file nor inline text' \
+                  || echo "the file does not exist under $RUN_DIR")" >&2
     exit 0
-  fi
+  else
   isha=$(shasum -a 256 "$ipath" | cut -d' ' -f1)
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "$wp_id" \
          --arg ev "inject" --arg f "$ifile" --arg sha "$isha" \
@@ -414,6 +429,7 @@ $(cat "$ipath")
 --- end $ifile ---
 
 "
+  fi
 fi
 
 # gate evaluation: the shared checklist core (lib/relay-gate.sh) logs each verdict via ledger_item.

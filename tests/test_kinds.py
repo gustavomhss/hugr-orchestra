@@ -156,3 +156,39 @@ def test_an_unknown_kind_is_refused_not_silently_run_as_execute(tmp_path):
     assert [e for e in _entries(arms) if e.get("event") == "unknown-kind"], _entries(arms)
     assert "excute" in err, err
     assert (arms / "tok" / "position").read_text().strip() == "wp1", "it must not advance"
+
+
+# ------------------------------------------------------------------ inline injection (V6b)
+
+def test_inject_can_carry_inline_text(tmp_path):
+    """Protocol Enforcer's `inject` has two shapes: a FILE (a skill, a protocol) and inline CONTEXT
+    written in the profile itself. Both are "no work of its own, deliver the bytes", so both belong
+    to this kind — supporting only the file shape would have forced the compiler to smuggle inline
+    context into `instructions`, where it stops being an injection and stops being recorded."""
+    arms, work, corpus = _arm(tmp_path, [
+        _wp("seed", kind="inject", gated=False,
+            text="Task: add a token-bucket rate limiter to the gateway."),
+        _wp("wp2")])
+    out, _ = _fire(arms, corpus)
+    assert out and "token-bucket rate limiter" in out["reason"], out
+    inj = [e for e in _entries(arms) if e.get("event") == "inject"]
+    assert len(inj) == 1 and inj[0]["file"] == "(inline)", inj[0]
+    assert inj[0]["sha"] == hashlib.sha256(
+        b"Task: add a token-bucket rate limiter to the gateway.").hexdigest(), inj[0]
+
+
+def test_an_inject_with_neither_file_nor_text_fails_closed(tmp_path):
+    arms, work, corpus = _arm(tmp_path, [_wp("seed", kind="inject", gated=False), _wp("wp2")])
+    out, err = _fire(arms, corpus)
+    assert [e for e in _entries(arms) if e.get("event") == "inject-missing"], _entries(arms)
+    assert (arms / "tok" / "position").read_text().strip() == "seed"
+
+
+def test_a_file_beats_inline_text_when_both_are_given(tmp_path):
+    """An authoring mistake, resolved toward the thing that can be independently inspected and whose
+    sha means something outside this sprint."""
+    arms, work, corpus = _arm(tmp_path, [
+        _wp("seed", kind="inject", gated=False, file="p.md", text="INLINE-MARKER"), _wp("wp2")])
+    (work / "p.md").write_text("FILE-MARKER\n")
+    out, _ = _fire(arms, corpus)
+    assert "FILE-MARKER" in out["reason"] and "INLINE-MARKER" not in out["reason"], out

@@ -277,3 +277,66 @@ def test_it_reproduces_the_port_s_measurement_on_the_real_planning_profile(tmp_p
     findings = json.loads(lint.stdout)["findings"]
     assert sorted(f["wp"] for f in findings if f["category"] == "ungated") == sorted(ungated)
     assert not [f for f in findings if f["category"] == "trivial-control"]
+
+
+def test_a_placeholder_meant_for_a_later_stage_survives_compilation(tmp_path):
+    """`relay-spec.py instantiate` renders `${param}` when a TEMPLATE profile is bound to a project,
+    so a criteria_map command legitimately contains braces this compiler must not touch. The first
+    version used str.format and died with KeyError on `${test_cmd}` — a compiler that chokes on a
+    placeholder addressed to someone else forbids composition."""
+    prof = PROFILE.replace('    readback_emitted: "test -s plan/{macro}/readback.md"',
+                           '    readback_emitted: "${test_cmd} --phase {macro}"')
+    sprint, r = _compile(tmp_path, prof)
+    assert r.returncode == 0, r.stderr
+    cmds = {c["id"]: c["cmd"] for c in _wp(sprint, "framed")["checklist"]}
+    assert cmds["readback_emitted"] == "${test_cmd} --phase frame", cmds
+
+
+def test_a_hand_mapped_control_may_be_a_judge(tmp_path):
+    """The shape the doctrine recommends is a real oracle PAIRED with a discursive one, so per_sub
+    has to accept a judge. Assuming a `cmd` made the compiler die on the exact pattern authors are
+    asked to write — found by migrating a real profile, not by reading the code."""
+    prof = """
+name: "t"
+version: "1.0.0"
+criteria_map:
+  per_sub:
+    m.review:
+      - id: artifact-present
+        assert: "the review artifact exists"
+        cmd: "test -s review.md"
+      - id: engages-with-the-diff
+        judge: "Does the review describe the change in the diff?"
+        diff: true
+        blocking: true
+pipeline:
+  - state_id: m
+    name: "M"
+    sub_states:
+      - id: review
+        type: review
+"""
+    sprint, r = _compile(tmp_path, prof)
+    assert r.returncode == 0, r.stderr
+    ctrls = _wp(sprint, "review")["checklist"]
+    assert [c["id"] for c in ctrls] == ["artifact-present", "engages-with-the-diff"], ctrls
+    assert ctrls[1]["diff"] is True and ctrls[1]["blocking"] is True, ctrls[1]
+
+
+def test_a_hand_mapped_control_with_neither_cmd_nor_judge_is_refused(tmp_path):
+    prof = """
+name: "t"
+version: "1.0.0"
+criteria_map:
+  per_sub:
+    m.review:
+      - id: half-written
+        note: "someone meant to put a command here"
+pipeline:
+  - state_id: m
+    sub_states:
+      - id: review
+        type: review
+"""
+    sprint, r = _compile(tmp_path, prof)
+    assert r.returncode != 0 and "neither a cmd nor a judge" in r.stderr, r.stderr

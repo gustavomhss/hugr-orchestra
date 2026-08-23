@@ -122,3 +122,44 @@ already enforces.
 
 It runs **from the test suite**, not from CI: this repo has no CI checks configured, and a check
 nobody runs is a comment.
+
+
+---
+
+## 6. Shipped profiles
+
+Migrated profiles live in `profiles/`, each next to its compiled `*.sprint.json`.
+
+| profile | macros | sub-states | controls | ungated |
+|---|---|---|---|---|
+| `tdd_feature` | 2 | 5 | 7 | 0 |
+
+`tests/test_shipped_profiles.py` holds three properties for every file in that directory: the sprint
+is not stale (`--check`), the lint reports no errors, and every work package names a declared macro.
+It runs from the test suite because this repo has no CI configured, and a check nobody runs is a
+comment.
+
+### What migrating one actually costs
+
+`tdd_feature` is the smallest real profile and it still took two authored controls. Compilation gave
+four controls from its `criteria_map` and left three states ungated — one an `inject`, which is
+correctly exempt, and two that genuinely had no oracle:
+
+- **`implement.write`** owes a *change*. Its macro's gate measures whether the suite is green, which
+  is a different question: a state that produced nothing at all reads there as a stale-green suite,
+  located at the gate rather than at the state that did nothing. Its control measures the state's own
+  outcome, so "the agent did not work" is localized where it happened.
+- **`review.self_review`** owes a review that engages with the change. The gate's `review_done` only
+  asks whether the artifact is non-empty, which a one-word file satisfies. So: a deterministic control
+  on substance (a word count is measurable) **paired with** a judge that grades the review against the
+  computed diff. The judge is the addition §5 permits, never a substitute.
+
+That is the shape of the work for every profile: the compiler is cheap, and deciding what each state
+*owes* is not.
+
+### Template profiles
+
+`tdd_feature`'s commands carry `${test_cmd}`, `${src_path}` and friends, because the profile is a
+template and the oracle for "the suite is green" is project-specific. Those are `relay-spec.py`'s
+existing placeholders — bind them with `relay-spec.py instantiate`. The compiler leaves any brace it
+does not own untouched, so the two stages compose.

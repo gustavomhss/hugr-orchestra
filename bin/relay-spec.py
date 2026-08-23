@@ -352,10 +352,11 @@ def lint_sprint(sprint, allow_ungated=False):
         if kind not in KNOWN_KINDS:
             out.append({"category": "unknown-kind", "severity": "error", "wp": wid,
                         "detail": f"kind {kind!r} is not one of {sorted(KNOWN_KINDS)}"})
-        if kind == "inject" and not wp.get("file"):
+        if kind == "inject" and not (wp.get("file") or wp.get("text")):
             out.append({"category": "inject-without-file", "severity": "error", "wp": wid,
-                        "detail": "an inject state with no `file` delivers nothing, and the agent is "
-                                  "then judged against rules it was never handed"})
+                        "detail": "an inject state with neither `file` nor inline `text` delivers "
+                                  "nothing, and the agent is then judged against rules it was never "
+                                  "handed"})
         if wp.get("macro") and declared_macros and wp["macro"] not in declared_macros:
             out.append({"category": "undeclared-macro", "severity": "error", "wp": wid,
                         "detail": f"macro {wp['macro']!r} is not in macros[], so its protocol is "

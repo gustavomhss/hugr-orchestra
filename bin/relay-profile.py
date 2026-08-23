@@ -61,6 +61,19 @@ KIND = {"execute": "execute", "checklist": "gate", "review": "review",
         "inject": "inject", "human_approval": "human"}
 
 
+def _expand(tpl, macro, sub, criterion=None):
+    """Substitute THIS compiler's placeholders and leave every other brace alone.
+
+    Not `str.format`: the template is author-supplied text that legitimately contains braces meant
+    for a LATER stage — `relay-spec.py instantiate` renders `${param}` when a template profile is
+    bound to a project. `.format()` reads `${test_cmd}` as a substitution of its own and raises
+    KeyError, so a perfectly valid profile fails to compile. A compiler that chokes on a placeholder
+    addressed to someone else is a compiler that forbids composition.
+    """
+    out = tpl.replace("{macro}", macro).replace("{sub}", sub)
+    return out if criterion is None else out.replace("{criterion}", criterion)
+
+
 def compile_profile(profile, qualify=False):
     """-> (sprint, coverage). coverage rows are (wp_id, pe_type, source, n_controls, unmapped[])."""
     name = profile.get("name", "profile")
@@ -104,14 +117,23 @@ def compile_profile(profile, qualify=False):
                 checklist.append({
                     "id": crit,
                     "assert": crit,
-                    "cmd": tpl.format(macro=mid, sub=sid, criterion=crit),
+                    "cmd": _expand(tpl, mid, sid, crit),
                     "origin": origin,
                 })
                 sources.add("per-criterion" if crit in per_crit else "default")
 
             for c in per_sub.get(f"{mid}.{sid}", []):
-                checklist.append({**c, "cmd": c["cmd"].format(macro=mid, sub=sid),
-                                  "origin": origin})
+                # A hand-mapped control may be a JUDGE rather than a command — that is the shape
+                # docs/enforcement-model.md §5 actually recommends, a real oracle paired with a
+                # discursive one. Assuming a `cmd` here made the compiler die on the very pattern the
+                # doctrine asks authors to write.
+                c = dict(c)
+                if c.get("cmd"):
+                    c["cmd"] = _expand(c["cmd"], mid, sid)
+                if not (c.get("cmd") or c.get("judge")):
+                    sys.exit(f"relay-profile: per_sub control {c.get('id')!r} on {mid}.{sid} has "
+                             f"neither a cmd nor a judge")
+                checklist.append({**c, "origin": origin})
                 sources.add("hand-mapped")
 
             wp = {"id": wid, "macro": mid, "kind": kind}
@@ -119,9 +141,20 @@ def compile_profile(profile, qualify=False):
                 wp["title"] = sub["name"]
             wp["instructions"] = (sub.get("description") or "").strip()
             if kind == "inject":
-                # A missing `file` is refused by the engine at run time and by the lint at authoring
-                # time; carried through verbatim so both can see it rather than being defaulted here.
-                wp["file"] = sub.get("file", "")
+                # Protocol Enforcer carries the payload in an `inject` block with several shapes:
+                # `skill` and `protocol` name a file the engine reads; `context` and `prompt` are
+                # inline text written in the profile. Both map onto this kind, because both are
+                # "no work of its own, deliver the bytes". Smuggling inline context into
+                # `instructions` instead would stop it being an injection and stop it being recorded.
+                #
+                # A missing payload is not defaulted here: it is carried through as declared so the
+                # lint can report it at authoring time and the engine can fail closed at run time.
+                blk = sub.get("inject") or {}
+                f = sub.get("file") or blk.get("skill") or blk.get("protocol") or ""
+                text = sub.get("text") or blk.get("context") or blk.get("prompt") or ""
+                wp["file"] = f
+                if not f and text:
+                    wp["text"] = text
             wp["checklist"] = checklist
             wps.append(wp)
             coverage.append((wid, ptype, "+".join(sorted(sources)) or "ungated",
