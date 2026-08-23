@@ -399,11 +399,44 @@ corrupt the chain.
 **Tests:** each of the four disguised-loosening shapes is rejected · an append is accepted · deleting a
 *currently failing* control is rejected (today it is legal).
 
-### V12 — The walking skeleton
+### V12 — The walking skeleton · **DONE**
 
 **Owns:** nothing new; a run and its recorded artifact.
 **Frozen contract:** §1.3's five conditions, all in one real run, on one migrated profile, with a real
 agent. This is the package that makes v2 true rather than written.
+
+**[MEASURED]** One `claude -p` session, driven by the real arm hook, through the migrated
+`wp-execute` profile — 6 macros, 13 sub-states, 25 controls — building a `slugify` function
+test-first in a scratch git repo. The ledger is committed at
+[`fixtures/v12-walking-skeleton.ledger.jsonl`](fixtures/v12-walking-skeleton.ledger.jsonl).
+
+| §1.3 condition | result |
+|---|---|
+| two coordinates on every ledger entry | **195 / 195** entries carry a macro |
+| `relay-spec lint` reports zero ungated | exit 0, only the cap warning |
+| `relay verify` INTACT, auditable, no drift | `PASS — auditable`, `oracle_drift: []` |
+| chain longer than the default cap, completes | **13 blocks** against a default cap of 8, `CHAIN COMPLETE` |
+| the whole suite still green | 274 passing |
+
+What the run showed that no test had:
+
+- **The loop closes with a model in it.** 12 advances, and one real gate failure —
+  `red.gate / tests_map_to_scenarios` — which the agent read, fixed, and passed on retry. Every
+  earlier proof drove `relay-gate eval` from a shell loop, with zero model turns.
+- **The preflight fires on its own.** Before the cap was disabled, a smoke fire produced the V2
+  warning unprompted: *"this chain needs at least 14 blocks... it will stop mid-chain"*.
+- **Keep-best is now visible.** 146 `regression-item` entries against 28 `checklist-item` ones —
+  the 7.3× keep-best cost, on the chain rather than inferred, which is exactly what V3 added.
+- **It found a defect.** The position read `seal.seal.assemble_seal`: `--qualify-ids` already emits
+  ids as `<macro>.<sub>`, and V1 prepended the macro again. It still *resolved*, because resolution
+  strips to the text after the first dot — but a position that reads wrong is a position nobody
+  trusts, and being readable is the entire point of the second coordinate. Fixed and locked.
+
+**One control was not exercised, and it matters to say so.** `gate.cold_review`'s judge ran against
+the stub with `RELAY_JUDGE_STUB=pass`, so 24 of the 25 controls were real and the discursive one was
+not. Its behavior is measured separately, over the six fixtures in
+[`fixtures/enforcement-model/`](fixtures/enforcement-model/README.md); this run does not add to that
+evidence.
 
 ---
 

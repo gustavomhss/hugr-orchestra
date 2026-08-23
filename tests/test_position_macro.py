@@ -161,3 +161,18 @@ def test_a_v1_position_file_is_migrated_not_lost(tmp_path):
     assert out and out["decision"] == "block", out
     assert "POSITION LOST" not in (out["reason"] or "")
     assert _pos(arms) == "frame.b", _pos(arms)
+
+
+def test_an_id_that_already_names_its_macro_is_not_doubled(tmp_path):
+    """`relay-profile.py --qualify-ids` emits ids as `<macro>.<sub>`, because a sub-state id can
+    repeat across macros. Prepending the macro again produced `seal.seal.assemble_seal` in a live
+    agent run. It still RESOLVED — resolution strips to the text after the first dot — but a position
+    that reads wrong is a position nobody trusts, and being readable is the entire point of the
+    second coordinate."""
+    arms, work, corpus = _arm(
+        tmp_path,
+        [_passing("seal.assemble_seal", "seal"), _passing("seal.gate", "seal")],
+        macros=[{"id": "seal", "instructions": "S"}])
+    _fire(arms, corpus)
+    assert _pos(arms) == "seal.gate", _pos(arms)
+    assert "seal.seal" not in _pos(arms)

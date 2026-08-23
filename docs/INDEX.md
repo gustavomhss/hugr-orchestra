@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T07:01:46Z
+- **Generated:** 2026-08-23T07:40:56Z
 - **Files:** 26
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `f98176ccdfc85beaa4dd38d9936383262d89a5f413d479c5db2f21a2bc38dffd`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `375fd1fd3dc4b75ac51e4427f29147b6ff117c31f2a7dd37dce6a0f938c02223`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -29,8 +29,8 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/guardrails.md` | 111 | 6214 | `3849f0a3a2b576e864f28b8f74e94cae314dae844cd3d14b5a30eb09953c6f63` |
 | `docs/per-agent-arms.md` | 93 | 4472 | `f7fad9bc29e16f60a7f1798c081093145a6122709d2d31eca98dde28c61be42c` |
-| `docs/profiles.md` | 260 | 12194 | `ece8fe55a0f1f1a66d71fba0e584c19aa876bf5a192857dd0baf95df7f64cf30` |
-| `docs/relay-v2.md` | 549 | 33375 | `e23e415e06ad2c12f9ebd86c67a3b527510f3a3f8b0d4b6d95b2a8bd4f9b38a9` |
+| `docs/profiles.md` | 291 | 13801 | `57f64065f7771434ca074c87c6f83623307fd374bdcf16c6a39ada5c9cafee25` |
+| `docs/relay-v2.md` | 582 | 35622 | `4d210a91f52647325e14e0523a6c9a4d9a45a420bf5f2a827af957a07b32681d` |
 | `docs/sdk.md` | 66 | 3120 | `77213b84ad6b4143507cf245bccaab4a9d73ee2e8f65b74ee99a6261c5a7835b` |
 | `docs/spec-library.md` | 125 | 6858 | `c3d528a3b3a47c0f2ee592a492954b33fcf3c7a8eeef91cb52a339f6ecd9c7af` |
 | `docs/telemetry.md` | 84 | 4491 | `3f7497754ddf6f0c331c6bb0cc18e0738c30d9fd53fa188093a3ae5ee4d4fc25` |

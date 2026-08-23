@@ -134,6 +134,7 @@ Migrated profiles live in `profiles/`, each next to its compiled `*.sprint.json`
 |---|---|---|---|---|
 | `tdd_feature` | 2 | 5 | 7 | 0 |
 | `planning` | 4 | 16 | 56 | 0 |
+| `wp-execute` | 6 | 13 | 25 | 0 |
 
 `tests/test_shipped_profiles.py` holds three properties for every file in that directory: the sprint
 is not stale (`--check`), the lint reports no errors, and every work package names a declared macro.
@@ -258,3 +259,33 @@ frozen. Note *where* it stopped: at the state that owns the criterion, naming th
 the profile as written, `hostile_read_approved` sits on the `frozen` gate, so the same defect would
 have surfaced one state later as "DISPATCH is wrong". That difference is the entire argument for
 partitioning.
+
+
+---
+
+## 8. `wp-execute` — and why it is NOT partitioned
+
+`planning` moves its criteria off the gates and onto the states that own them. `wp-execute` does not,
+and the difference is not inconsistency.
+
+Partitioning works for `planning` because `plan-check --phase X` exists: after the criteria move, each
+gate still has a real, *distinct* control — the phase hangs together. `wp-execute` has no such
+verifier. Move its criteria off the gates and the gates have nothing left, and the only way back is a
+control that re-runs what its own states just ran, under a second id. That is duplication wearing a
+localization costume.
+
+So the criteria stay where the profile put them, and the migration adds a control to each of the
+seven states that produce something and had none — measuring what **that state emitted**, which is a
+different question from what its gate certifies:
+
+| state | owes | its gate certifies |
+|---|---|---|
+| `green.implement` | the source changed | the suite is green |
+| `red.write_failing_tests` | the test file changed | the tests were written first, and genuinely failed |
+| `gate.cold_review` | a review of at least 40 words, plus a judge against the computed diff | the full suite and lints |
+
+A state that produced nothing would otherwise surface at its gate as a *stale-green suite*, located
+one state late. The rule is the same in both profiles — every state is earned — and the shape follows
+from whether a phase-level oracle exists.
+
+`wp-execute` also reuses the sub-state id `gate` in all six macros, so it needs `--qualify-ids`.

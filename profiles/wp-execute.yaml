@@ -1,0 +1,322 @@
+name: wp-execute
+version: 1.0.0
+description: "Governed execution of one work package \u2014 bind, red, green, refactor, gate, seal."
+protected: false
+created_at: '2026-08-19T00:00:00Z'
+settings:
+  oscillation_detection_threshold: 3
+  auto_loop_on_checklist_failure: true
+output_contract:
+  format: json
+  destination: output/wp-execute/{session_id}.json
+  schema:
+    type: object
+    additionalProperties: false
+    required:
+    - wp_id
+    - intent
+    - outputs
+    - provenance
+    - acceptance_results
+    - assurance_level
+    properties:
+      wp_id:
+        type: string
+        pattern: ^WP-[0-9]+$
+      intent:
+        type: string
+      outputs:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      provenance:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      acceptance_results:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - scn_id
+          - result
+          properties:
+            scn_id:
+              type: string
+            result:
+              type: string
+              enum:
+              - pass
+              - fail
+      assurance_level:
+        type: string
+        enum:
+        - floor
+        - property
+        - full
+pipeline:
+- state_id: bind
+  name: Bind
+  description: Ground the session in the work-package card before touching anything.
+  system_prompt: "## Phase: BIND\n\nRead the work-package card supplied as initial_context for this session \u2014\
+    \nit carries the WP id, intent, source requirements, and acceptance\nscenarios. Before touching any file, ground\
+    \ the session in that card.\n\n### Your Approach:\n1. Restate the WP's intent in ONE sentence \u2014 if you\
+    \ cannot, the card is\n   ambiguous and you must stop rather than guess.\n2. List every acceptance scenario\
+    \ (SCN id) this WP must satisfy. Do not\n   invent scenarios the card does not carry; do not drop any it does.\n\
+    3. Declare the surface you will touch \u2014 files and modules \u2014 BEFORE\n   writing anything. This declaration\
+    \ is the contract for RED and GREEN.\n\n### Rules:\n- Anything outside the declared surface is scope creep.\
+    \ If the WP turns\n  out to need more surface once work is underway, record it as an\n  explicit deviation \u2014\
+    \ never expand silently.\n- If the card is missing intent, source requirements, or acceptance\n  scenarios,\
+    \ STOP. An underspecified WP cannot be bound, and proceeding\n  on a guess only pushes the ambiguity downstream\
+    \ where it is more\n  expensive to catch.\n\n### Output:\nA one-sentence intent restatement, the full list of\
+    \ SCN ids in scope,\nand the declared file/module surface.\n"
+  enabled: true
+  max_iterations: 3
+  loop: false
+  icon: "\U0001F4CC"
+  sub_states:
+  - id: bind_scope
+    type: execute
+    name: Bind scope
+    description: Restate WP intent, list acceptance scenarios, declare the surface to be touched.
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Bind gate
+    description: Mechanical check that the WP is bound before any test or code is written.
+    enabled: true
+    criteria:
+    - wp_card_restated
+    - acceptance_scenarios_listed
+    - surface_declared
+- state_id: red
+  name: Red
+  description: Write failing tests, one per acceptance scenario, before any implementation.
+  system_prompt: "## Phase: RED\n\nWrite the test(s) for this WP BEFORE any implementation exists. Each\ntest maps\
+    \ to exactly one acceptance scenario declared at BIND \u2014 no\ntest without a scenario, no scenario without\
+    \ a test.\n\n### Your Approach:\n1. Write the failing test(s) first. Do not write a line of\n   implementation\
+    \ in this phase \u2014 not even a stub that happens to pass.\n2. Run the tests and CAPTURE the failing output\
+    \ verbatim. This output\n   is the evidence the gate checks; paraphrasing it is not sufficient.\n3. Confirm\
+    \ each test fails for the RIGHT reason \u2014 a missing behavior,\n   not a typo or a broken harness.\n\n###\
+    \ Rules:\n- A test that passes before implementation tests nothing: either the\n  behavior already exists (the\
+    \ WP may be redundant) or the test is\n  vacuous (it asserts nothing meaningful). Either case means STOP and\n\
+    \  rethink the test, not proceed to GREEN.\n- Keep the failing output verbatim \u2014 do not summarize it away.\n\
+    \n### Output:\nThe new test file(s)/cases, the scenario each maps to, and the\ncaptured failing test-run output.\n"
+  enabled: true
+  max_iterations: 3
+  loop: true
+  icon: "\U0001F534"
+  sub_states:
+  - id: write_failing_tests
+    type: execute
+    name: Write failing tests
+    description: Author test(s) mapped to acceptance scenarios and capture the failing run.
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Red gate
+    description: Mechanical check that tests were written first and genuinely fail.
+    enabled: true
+    criteria:
+    - tests_written_first
+    - failing_output_captured
+    - tests_map_to_scenarios
+- state_id: green
+  name: Green
+  description: Write the minimum implementation that makes the red tests pass.
+  system_prompt: "## Phase: GREEN\n\nWrite the MINIMUM implementation that makes the RED tests pass. This\nphase\
+    \ exists to satisfy the tests already written \u2014 not to anticipate\nfuture needs.\n\n### Your Approach:\n\
+    1. Implement only what the failing tests demand. Resist generalization\n   the tests do not require \u2014 speculative\
+    \ flexibility is scope creep,\n   the same as touching undeclared files.\n2. Run the tests and capture the passing\
+    \ output verbatim.\n3. Stay inside the surface declared at BIND.\n\n### Rules:\n- If you must leave the declared\
+    \ surface to make the tests pass, record\n  the deviation explicitly \u2014 do not expand the surface silently.\n\
+    - Do not refactor here. REFACTOR is a separate, predicate-gated phase.\n\n### Output:\nThe minimal implementation\
+    \ change(s), the captured passing test-run\noutput, and a note confirming the declared surface was respected\
+    \ (or an\nexplicit deviation record if not).\n"
+  enabled: true
+  max_iterations: 3
+  loop: true
+  icon: "\U0001F7E2"
+  sub_states:
+  - id: implement
+    type: execute
+    name: Implement minimally
+    description: Write the smallest implementation that turns the red tests green.
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Green gate
+    description: Mechanical check that tests pass and the declared surface was respected.
+    enabled: true
+    criteria:
+    - tests_pass
+    - passing_output_captured
+    - surface_respected
+- state_id: refactor
+  name: Refactor
+  description: Predicate-gated cleanup with tests as the behavior ratchet.
+  system_prompt: "## Phase: REFACTOR\n\nRefactor is predicate-gated, not automatic. Check the triggers before\n\
+    touching anything:\n- duplicated logic introduced during GREEN\n- a function or file that has outgrown its module's\
+    \ norms\n- naming that no longer reflects behavior\n\n### Your Approach:\n1. Evaluate each trigger against the\
+    \ GREEN diff. If NONE fires, record\n   \"no refactor needed\" with one line of justification \u2014 skipping\n\
+    \   honestly is compliant, skipping silently is not.\n2. If a trigger fires, refactor with tests green the whole\
+    \ time \u2014 run\n   them after every change, not just at the end.\n3. Behavior must not change. The tests\
+    \ are the ratchet: if a test needs\n   to change to keep passing, that is not a refactor, it is new\n   behavior,\
+    \ and it belongs in a new RED/GREEN cycle.\n\n### Output:\nEither the refactor diff with tests green throughout,\
+    \ or the recorded\n\"no refactor needed\" justification.\n"
+  enabled: true
+  max_iterations: 3
+  loop: true
+  icon: "\U0001F9F9"
+  sub_states:
+  - id: refactor_or_skip
+    type: execute
+    name: Refactor or record skip
+    description: Fire the refactor triggers or record an honest skip justification.
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Refactor gate
+    description: Mechanical check that a refactor decision was recorded and tests still pass.
+    enabled: true
+    criteria:
+    - refactor_decision_recorded
+    - tests_still_pass
+- state_id: gate
+  name: Verification Gate
+  description: Full-suite verification against the whole project, not just this WP's tests.
+  system_prompt: "## Phase: VERIFICATION GATE\n\nThis is full verification, not just a re-run of the WP's own tests.\n\
+    \n### Your Approach:\n1. Run the ENTIRE project test suite \u2014 a WP that breaks a neighbor is\n   not done,\
+    \ even if its own tests are green.\n2. Run the linter/formatter checks the project uses.\n3. Walk the acceptance\
+    \ scenarios from BIND one by one and record\n   pass/fail per SCN id \u2014 do not summarize this as a single\
+    \ verdict.\n4. Capture command outputs as evidence for every check above.\n\n### Rules:\n- Any single failure\
+    \ \u2014 suite, lint, or scenario \u2014 means this gate does\n  not pass. Fix and re-run the full set; do not\
+    \ cherry-pick a re-run of\n  only the failing piece.\n- The cold-review step that follows is a skeptic's pass\
+    \ over this\n  evidence: it checks that every claimed pass has captured output, and\n  that each check would\
+    \ actually fail if the code were wrong.\n\n### Output:\nFull-suite output, lint output, and a per-SCN-id pass/fail\
+    \ table.\n"
+  enabled: true
+  max_iterations: 3
+  loop: true
+  icon: "\U0001F6A6"
+  sub_states:
+  - id: verify_all
+    type: execute
+    name: Run full verification
+    description: Run the full test suite, lints, and walk acceptance scenarios per SCN id.
+    enabled: true
+  - id: cold_review
+    type: review
+    name: Cold-review verification
+    description: 'Review the evidence as a skeptic: does every claimed pass have captured output? Would each check
+      actually fail if the code were wrong? Verdict APPROVE or FIXES-NEEDED.'
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Verification gate
+    description: Mechanical check that the full suite is green, lints are clean, and every scenario was walked.
+    enabled: true
+    criteria:
+    - full_suite_green
+    - lints_clean
+    - acceptance_walked_per_scenario
+- state_id: seal
+  name: Seal
+  description: Assemble the seal record validated by the output_contract.
+  system_prompt: "## Phase: SEAL\n\nAssemble the seal record \u2014 the final JSON deliverable the profile's\noutput_contract\
+    \ validates.\n\n### Your Approach:\n1. wp_id and intent \u2014 carried from the WP card bound at BIND.\n2. outputs\
+    \ \u2014 the artifacts actually produced (file paths).\n3. provenance \u2014 the commands run in this session\
+    \ with their evidence;\n   every entry must correspond to a command actually executed here,\n   never a plausible-sounding\
+    \ placeholder.\n4. acceptance_results \u2014 one entry per SCN id from the verification\n   gate, each with\
+    \ its pass/fail result.\n5. assurance_level \u2014 \"floor\" (tests only), \"property\" (property-based\n  \
+    \ tests included), or \"full\" (tests + property + external\n   verification). Choose honestly based on what\
+    \ this session actually\n   ran.\n\n### Rules:\n- The seal is a claim you sign with evidence. Do not record\
+    \ an output,\n  a provenance entry, or a pass you cannot back with something that\n  actually happened in this\
+    \ session.\n\n### Output:\nThe complete seal record matching the output_contract schema.\n"
+  enabled: true
+  max_iterations: 3
+  loop: false
+  icon: "\U0001F50F"
+  sub_states:
+  - id: assemble_seal
+    type: execute
+    name: Assemble seal record
+    description: Build the wp_id/intent/outputs/provenance/acceptance_results/assurance_level record.
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Seal gate
+    description: Mechanical check that outputs, provenance, and acceptance results are all recorded.
+    enabled: true
+    criteria:
+    - outputs_recorded
+    - provenance_recorded
+    - acceptance_results_complete
+criteria_map:
+  per_criterion:
+    wp_card_restated: python3 -c "import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if d.get('intent','').strip()
+      else 1)"
+    acceptance_scenarios_listed: python3 -c "import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0
+      if len(d.get('scenarios') or [])>0 else 1)"
+    surface_declared: python3 -c "import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if len(d.get('surface')
+      or [])>0 else 1)"
+    tests_written_first: test -s ${test_path}
+    failing_output_captured: grep -qE 'fail|error|FAILED' ${wp_dir}/red.txt
+    tests_map_to_scenarios: python3 -c "import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if all(any(s.get('test')
+      in open('${test_path}').read() for _ in [0]) for s in (d.get('scenarios') or [])) else 1)"
+    tests_pass: ${test_cmd}
+    passing_output_captured: test -s ${wp_dir}/green.txt
+    surface_respected: test -s ${src_path}
+    refactor_decision_recorded: python3 -c "import json,sys;d=json.load(open('${wp_dir}/refactor.json'));sys.exit(0
+      if d.get('decision') in ('refactored','skipped') else 1)"
+    tests_still_pass: ${test_cmd}
+    full_suite_green: ${test_cmd}
+    lints_clean: ${lint_cmd}
+    acceptance_walked_per_scenario: python3 -c "import json,sys;d=json.load(open('${wp_dir}/verify.json'));sys.exit(0
+      if len(d.get('acceptance') or [])>0 and all(a.get('result')=='pass' for a in d['acceptance']) else 1)"
+    outputs_recorded: python3 -c "import json,sys;d=json.load(open('${wp_dir}/seal.json'));sys.exit(0 if len(d.get('outputs')
+      or [])>0 else 1)"
+    provenance_recorded: python3 -c "import json,sys;d=json.load(open('${wp_dir}/seal.json'));sys.exit(0 if d.get('provenance',{}).get('commit')
+      else 1)"
+    acceptance_results_complete: python3 -c "import json,sys;d=json.load(open('${wp_dir}/seal.json'));sys.exit(0
+      if len(d.get('acceptance_results') or [])>0 else 1)"
+  per_sub:
+    bind.bind_scope:
+    - id: bind-artifact-written
+      assert: this state wrote wp/bind.json
+      cmd: test -s ${wp_dir}/bind.json
+    red.write_failing_tests:
+    - id: red-changed-the-tests
+      assert: this state changed the test file
+      cmd: git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard
+        -- ${test_path} | grep -q .
+    green.implement:
+    - id: green-changed-the-source
+      assert: this state changed the source file
+      cmd: git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard
+        -- ${src_path} | grep -q .
+    refactor.refactor_or_skip:
+    - id: refactor-decision-written
+      assert: this state recorded a decision, refactor or honest skip
+      cmd: test -s ${wp_dir}/refactor.json
+    gate.verify_all:
+    - id: verify-evidence-written
+      assert: this state captured the full-suite evidence
+      cmd: test -s ${wp_dir}/verify.json
+    gate.cold_review:
+    - id: review-is-substantive
+      assert: the review carries at least 40 words
+      cmd: test "$(wc -w < ${wp_dir}/review.md)" -ge 40
+    - id: review-engages-with-the-diff
+      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
+        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      diff: true
+      blocking: true
+    seal.assemble_seal:
+    - id: seal-written
+      assert: this state assembled the seal record
+      cmd: test -s ${wp_dir}/seal.json

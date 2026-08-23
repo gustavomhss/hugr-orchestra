@@ -25,12 +25,12 @@ pytest.importorskip("yaml", reason="the compiler reads real YAML")
 SHIPPED = sorted(PROFILES.glob("*.yaml")) if PROFILES.is_dir() else []
 # Compilation options a profile needs, kept here rather than inferred: --qualify-ids is a real
 # authoring fact (this profile reuses a sub-state id across macros), not a default to guess at.
-OPTS = {"tdd_feature": ["--qualify-ids"]}
+OPTS = {"tdd_feature": ["--qualify-ids"], "wp-execute": ["--qualify-ids"]}
 
 # Profiles whose commands are parameterized templates: `${param}` is rendered by
 # `relay-spec.py instantiate` when the profile is bound to a project, so the shipped sprint is not
 # directly runnable and is not supposed to be.
-TEMPLATED = {"tdd_feature", "planning"}
+TEMPLATED = {"tdd_feature", "planning", "wp-execute"}
 
 
 @pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)

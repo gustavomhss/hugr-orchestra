@@ -282,8 +282,16 @@ write_position() {  # $1 = wp array index
   local pid pmac
   pid=$(jq -r ".work_packages[$1].id" "$SPRINT")
   pmac=$(jq -r ".work_packages[$1].macro // \"\"" "$SPRINT")
-  if [ -n "$pmac" ]; then printf '%s.%s' "$pmac" "$pid" > "$ARM/position"
-  else                    printf '%s' "$pid" > "$ARM/position"; fi
+  # `relay-profile.py --qualify-ids` already emits ids as `<macro>.<sub>`, because a sub-state id can
+  # repeat across macros and the WP id has to be unique. Prepending the macro again produced
+  # `seal.seal.assemble_seal` in a live run — it still RESOLVED, because resolution strips to the
+  # text after the first dot, but a position that reads wrong is a position nobody trusts, and the
+  # whole point of the second coordinate is that a human can read where the chain stands.
+  if [ -n "$pmac" ] && [ "$pid" = "${pid#"$pmac".}" ]; then
+    printf '%s.%s' "$pmac" "$pid" > "$ARM/position"
+  else
+    printf '%s' "$pid" > "$ARM/position"
+  fi
 }
 write_position "$i"
 # retry state keys by id too, so it follows the WP rather than the slot it happened to occupy.
