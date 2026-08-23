@@ -52,20 +52,36 @@ def control_report(entries):
     return list(final.values())
 
 
-def laundered_controls(entries):
-    """Controls whose ORACLE changed after they had already been judged, and which now read pass.
+GRADED_EVENTS = ("checklist-item", "regression-item")
 
-    The chain records the oracle (a sha256 of the cmd / judge criterion) alongside the verdict. A
-    control can legitimately be amended — but a control that FAILED under one oracle and PASSES under
-    a different one has not been repaired; the question was changed. The chain stays intact either
-    way (nothing was tampered with), so integrity cannot catch this. Only the oracle can.
 
-    Returns [{id, verdicts, oracles}] — reported, and never certified as an auditable pass.
-    Entries with no `oracle` field predate this record format and are skipped, not guessed at.
+def oracle_drift(entries):
+    """Controls whose ORACLE changed mid-run — the question was changed, whatever the verdicts say.
+
+    The chain records the oracle (a sha256 of the cmd / judge criterion) alongside every verdict. A
+    control can legitimately be amended, but the chain stays intact either way — nothing is tampered
+    with when a command is swapped — so integrity cannot catch it. Only the oracle can.
+
+    The original rule here was narrower: report only a control that FAILED under one oracle and now
+    PASSES under another. That misses the attack that was actually reproduced against shipped code —
+    swapping the cmd of a control that had ALREADY PASSED. It never fails, so it never matched, and
+    `relay verify` certified the run while the violation the control existed to catch sat on disk.
+    So the rule is now: ANY change of oracle for one control within one run is drift.
+
+    No exemption is carved out for a legitimate amendment, because no signed-amendment record exists
+    yet (relay-v2 V11 introduces one). Until it does, every drift is reported — the correct failure
+    direction, since a false positive costs a human one look and a false negative certifies a
+    fabricated pass.
+
+    `laundered` marks the loud subset (a prior fail, now passing) that the earlier rule caught, so the
+    stronger claim is still stated when it applies. Entries with no `oracle` field predate this record
+    format and are skipped, never guessed at.
+
+    Returns [{id, verdicts, oracles, laundered}].
     """
-    seen = {}  # id -> [(verdict, oracle), ...]
+    seen = {}  # id -> [(verdict, oracle), ...] in chain order, across gate and regression re-runs
     for e in entries:
-        if e.get("event") != "checklist-item" or not e.get("oracle"):
+        if e.get("event") not in GRADED_EVENTS or not e.get("oracle"):
             continue
         seen.setdefault(e["item"], []).append((e.get("verdict"), e["oracle"]))
     out = []
@@ -73,13 +89,10 @@ def laundered_controls(entries):
         oracles = [o for _, o in hist]
         if len(set(oracles)) < 2:
             continue
-        if hist[-1][0] != "pass":
-            continue
-        if not any(v == "fail" for v, _ in hist[:-1]):
-            continue
         out.append({"id": cid,
                     "verdicts": [v for v, _ in hist],
-                    "oracles": [o[:12] for o in oracles]})
+                    "oracles": [o[:12] for o in oracles],
+                    "laundered": hist[-1][0] == "pass" and any(v == "fail" for v, _ in hist[:-1])})
     return out
 
 
@@ -98,7 +111,8 @@ def cmd_verify(args):
     intact = rc == 0
     entries = load_entries(path)
     controls = control_report(entries)
-    laundered = laundered_controls(entries)
+    drift = oracle_drift(entries)
+    laundered = [d for d in drift if d["laundered"]]
 
     det = [c for c in controls if c.get("graded_by") == "deterministic"]
     det_fail = [c for c in det if c.get("verdict") == "fail"]
@@ -116,7 +130,7 @@ def cmd_verify(args):
     # exit precedence: tamper (1) dominates no-controls/truncation/failing-control (2) dominates pass (0)
     if not intact:
         code = 1
-    elif no_controls or truncated or det_fail or laundered:
+    elif no_controls or truncated or det_fail or drift:
         code = 2
     else:
         code = 0
@@ -132,6 +146,8 @@ def cmd_verify(args):
             result = "CONTROL-FAIL"
         elif laundered:
             result = "ORACLE-CHANGED"
+        elif drift:
+            result = "ORACLE-DRIFT"
         else:
             result = "TRUNCATED"
         print(json.dumps({
@@ -146,6 +162,7 @@ def cmd_verify(args):
             "last_event": last_event,
             "truncated": truncated,
             "laundered_controls": laundered,
+            "oracle_drift": drift,
             "no_controls": no_controls,
             "result": result,
             "exit": code,
@@ -176,11 +193,14 @@ def cmd_verify(args):
     if wps:
         print(f"  run: {', '.join(wps)} · last event {last_event}")
     print()
-    if laundered:
-        print(f"  {R}ORACLE CHANGED{X} — these controls were judged under one oracle and now pass under another:")
-        for l in laundered:
-            print(f"    {l['id']:<10} verdicts {' -> '.join(l['verdicts'])}   oracle {' -> '.join(l['oracles'])}")
-        print(f"  {Y}A control that failed one check and passes a different one was not repaired.{X}")
+    if drift:
+        print(f"  {R}ORACLE DRIFT{X} — these controls were graded under more than one oracle in this run:")
+        for d in drift:
+            tag = f"  {R}(laundered){X}" if d["laundered"] else ""
+            print(f"    {d['id']:<10} verdicts {' -> '.join(d['verdicts'])}   oracle {' -> '.join(d['oracles'])}{tag}")
+        print(f"  {Y}The chain is intact — nothing was tampered with. The question was changed.{X}")
+        if laundered:
+            print(f"  {Y}A control that failed one check and passes a different one was not repaired.{X}")
         print()
     if truncated:
         # Always emit a truncation WARN banner when applicable, before the final RESULT line.
@@ -195,6 +215,9 @@ def cmd_verify(args):
     elif laundered:
         print(f"  {B}RESULT: {R}ORACLE CHANGED{X}{B} — not an auditable pass: {', '.join(l['id'] for l in laundered)} "
               f"passed under a different check than the one that failed.{X}")
+    elif drift:
+        print(f"  {B}RESULT: {R}ORACLE DRIFT{X}{B} — not an auditable pass: {', '.join(d['id'] for d in drift)} "
+              f"was graded under more than one oracle in this run.{X}")
     elif det_fail:
         print(f"  {B}RESULT: {R}CONTROL FAIL{X}{B} — a real control did not pass: {', '.join(c['item'] for c in det_fail)}.{X}")
     else:

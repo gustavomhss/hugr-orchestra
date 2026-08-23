@@ -79,6 +79,22 @@ ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=orig
     '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}' \
     >> "$ROUND_BUF"
 }
+# A regression re-run IS a verdict — it re-executes a real control and its result changes the
+# decision — but it used to be recorded nowhere: only the failing ids reached the chain, inside the
+# gate-fail entry's `reg` string, and a re-run that PASSED left no trace at all. That is the gap that
+# let a swapped control launder itself: `relay verify` saw one oracle for the control (from the fire
+# that first passed it) and had nothing to compare against. It is a DISTINCT event from
+# `checklist-item` so that "the final verdict for this control" (bin/relay control_report, the corpus
+# exporter, the dash) keeps meaning "as graded at its own gate" — a re-run reports on kept work, not
+# on a gate being cleared. It goes through the same buffer so `round_shape` sees it: a re-run whose
+# oracle changed must yield a different round sha, or collapse would hide exactly what this records.
+ledger_reg_item() {  # $1=id $2=verdict $3=oracle-sha $4=origin
+  jq -nc --arg tok "$token" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "regression-item" --arg id "$1" --arg v "$2" \
+         --arg orc "${3:-}" --arg org "${4:-sprint}" \
+    '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,verdict:$v,graded_by:"deterministic",oracle:$orc,origin:$org}' \
+    >> "$ROUND_BUF"
+}
 round_flush() {  # append the buffered round to the chain, stamping each entry at flush time
   local b
   while IFS= read -r b; do
@@ -200,7 +216,8 @@ if [ "$i" -gt 0 ] && [ -f "$LEDGER" ]; then
   while IFS=$'\t' read -r rid rcmd; do
     [ -z "$rcmd" ] && continue
     printf '%s\n' "$accepted" | grep -qxF "$rid" || continue   # never accepted -> not a regression
-    ( cd "$RUN_DIR" && eval "$rcmd" >/dev/null 2>&1 ) || reg="$reg; $rid"
+    if ( cd "$RUN_DIR" && eval "$rcmd" >/dev/null 2>&1 ); then rverd=pass; else rverd=fail; reg="$reg; $rid"; fi
+    ledger_reg_item "$rid" "$rverd" "$(relay_oracle_sha "$rcmd")" "regression"
   done < <(jq -r ".work_packages[range(0;$i)].checklist[]? | select(.cmd) | \"\(.id)\t\(.cmd)\"" "$SPRINT")
 fi
 

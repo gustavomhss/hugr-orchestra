@@ -70,6 +70,14 @@ exactly the same position and was not noticed.
 
 **Fix:** the evaluated oracle enters the hashed body. See §5.
 
+**Residual, found later by reproducing rather than reasoning** (relay-v2 V3, `docs/gates.md` §5):
+recording the oracle was necessary but not sufficient. D1's shape is fail-then-pass, and that is what
+`relay verify` was taught to look for. Swapping the `cmd` of a control that had **already passed**
+never produces a fail, so it never matched — and there was nothing to match against anyway, because
+the only path that re-executes an earlier control, the keep-best regression guard, recorded nothing
+at all. The chain therefore held one oracle per control and the swap was invisible. Fixed by
+recording re-runs (`regression-item`) and by reporting *any* oracle change within a run.
+
 ### D2 — position is an array index, so mutation before the cursor livelocks · MEASURED
 
 Advancement state is a bare integer (`bin/relay-arm-hook.sh:66,90`). `docs/faq.md:126` warns "Avoid

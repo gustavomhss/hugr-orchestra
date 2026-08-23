@@ -85,6 +85,19 @@ ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=orig
     '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}')"
 }
 
+# A regression re-run is a verdict and belongs on the chain (see bin/relay-arm-hook.sh for the full
+# reasoning). Recorded under its own event so the "final verdict per control" readers are unaffected.
+# NOTE: this CLI deliberately keeps its own regression loop rather than sharing the arm hook's. The
+# two filter differently on purpose — the arm hook re-runs only controls with a recorded pass (R6
+# keep-best), this one re-runs every earlier control — and unifying them would silently change what
+# the measurement harness enforces. Only the RECORDING is made common, via relay_oracle_sha.
+ledger_reg_item() {  # $1=id $2=verdict $3=oracle-sha $4=origin
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "regression-item" --arg id "$1" --arg v "$2" \
+         --arg orc "${3:-}" --arg org "${4:-sprint}" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,verdict:$v,graded_by:"deterministic",oracle:$orc,origin:$org}')"
+}
+
 # ---- Gate evaluation ---------------------------------------------------------------------------
 
 # 1. Checklist (shared core from lib/relay-gate.sh — logs each verdict via ledger_item above)
@@ -106,7 +119,8 @@ dod_fails="$(run_dods ".work_packages[$i].dod[].cmd")"
 if [ "$i" -gt 0 ]; then
   while IFS=$'\t' read -r rid rcmd; do
     [ -z "$rcmd" ] && continue
-    ( cd "$RUN_DIR" && eval "$rcmd" >/dev/null 2>&1 ) || reg="$reg; $rid"
+    if ( cd "$RUN_DIR" && eval "$rcmd" >/dev/null 2>&1 ); then rverd=pass; else rverd=fail; reg="$reg; $rid"; fi
+    ledger_reg_item "$rid" "$rverd" "$(relay_oracle_sha "$rcmd")" "regression"
   done < <(jq -r ".work_packages[range(0;$i)].checklist[]? | select(.cmd) | \"\(.id)\t\(.cmd)\"" "$SPRINT" 2>/dev/null || true)
   # also regression-guard dod[] cmds from earlier WPs
   reg_dod="$(run_dods ".work_packages[range(0;$i)].dod[].cmd")"

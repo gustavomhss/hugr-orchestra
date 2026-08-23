@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T03:31:01Z
+- **Generated:** 2026-08-23T03:56:11Z
 - **Files:** 25
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `fa970c498054a896a0df59cca17dbc28448d88a117c886a85f325bfc95ebb2f1`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `0a9b8973abb85e76fc288a704d1b004946a127de1b87dd2a2f7949dc4da54b7b`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -21,11 +21,11 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/compaction.md` | 84 | 3781 | `63bbf7b052e31dcc90f3ba4864c83577f8a8a838fdc32ca1bf53eba8a1336b2b` |
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
 | `docs/configuration.md` | 237 | 9484 | `085cbab8598bfe9ff5e2aec7629e25b7889b7ec7fc62d6dad7bf129a3dcbfd4e` |
-| `docs/control-plane.md` | 532 | 28612 | `41b7021fd204165b38b6d74f7c6a2f5505ea890cf47691dabdf57b8fe6180c43` |
+| `docs/control-plane.md` | 540 | 29297 | `732ce3202d64833a8fec3a9b6eb5d20ecdf475888f8bf2ba6cd2f6abcba0b958` |
 | `docs/daemon.md` | 103 | 5919 | `1054cf7bc3627911bbe3bb99b913e4343569729ec8c37340631ed68195daab93` |
 | `docs/enforcement-model.md` | 246 | 13338 | `c1ae62cedc26f8544a943ba0e50f704d6b18cf390ed01f1bc2f3ddd48dd59d1e` |
 | `docs/faq.md` | 166 | 7813 | `5755679e358ff6525b6f3a0c213e42f4772c3a42d87ebed683839030c4af0ef6` |
-| `docs/gates.md` | 259 | 9373 | `5f2e4ca16607afa85c546a71b239008f8e9882485cb1a3f88876fc7d7304175f` |
+| `docs/gates.md` | 294 | 11486 | `b2178b70b73250dd03bdcd289d8d96507511b3cac2364313127b45e81ac5a891` |
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/guardrails.md` | 111 | 6214 | `3849f0a3a2b576e864f28b8f74e94cae314dae844cd3d14b5a30eb09953c6f63` |
 | `docs/per-agent-arms.md` | 93 | 4472 | `f7fad9bc29e16f60a7f1798c081093145a6122709d2d31eca98dde28c61be42c` |

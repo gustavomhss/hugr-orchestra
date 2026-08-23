@@ -183,6 +183,41 @@ spends indefinitely (docs/control-plane.md §8).
 Note this is a *turn* budget, not a wall-clock backoff. The Gate fires only when the Runner has
 stopped, so there is no timer to ration — sleeping would add latency and save no turns.
 
+### A re-run is a verdict, and the oracle it ran under is on the chain
+
+Keep-best re-executes earlier controls on every later fire. Those re-runs are recorded as
+`regression-item` entries, each carrying the sha of the command that actually ran — not just the
+failing ids, which is all that used to reach the chain. A re-run that *passed* left no trace at all,
+and that omission is what made the following attack work.
+
+**Why it matters.** A control's `id` and `assert` are what a reader sees; the `cmd` is what was
+measured. Swap the `cmd` of a control that has ALREADY PASSED — leaving `id` and `assert`
+byte-identical — and nothing is tampered with, so the hash chain stays INTACT. Before this, the
+chain held exactly one oracle for that control, `relay verify` had nothing to compare against, and
+it printed `RESULT: PASS — auditable` while the violation the control existed to catch sat on disk.
+
+`relay verify` now reports **any** control graded under more than one oracle within a single run:
+
+```
+  ORACLE DRIFT — these controls were graded under more than one oracle in this run:
+    C1         verdicts pass -> pass   oracle 4b710f6cc8f7 -> b5bea41b6c62
+  The chain is intact — nothing was tampered with. The question was changed.
+
+  RESULT: ORACLE DRIFT — not an auditable pass.
+```
+
+The older, narrower rule — a control that **failed** one check and passes a different one — survives
+as a labelled subset and still reports as `ORACLE CHANGED`, because it supports the stronger claim:
+that control was not repaired, its question was.
+
+No exemption exists yet for a legitimate amendment, so amending a control mid-run reports as drift.
+That is the correct failure direction while relay-v2 V11 is unbuilt: a false positive costs a human
+one look, a false negative certifies a fabricated pass.
+
+A `regression-item` is deliberately **not** a `checklist-item`. "The final verdict for this control"
+keeps meaning *as graded at its own gate* — a re-run reports on kept work, not on a gate being
+cleared — so `relay verify`'s control list, the corpus exporter and the dash are unchanged.
+
 ---
 
 ## 6. Example DoDs
