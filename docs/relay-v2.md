@@ -232,9 +232,22 @@ the entry survives `relay verify`.
 **Owns:** `bin/relay` (`laundered_controls`), `tests/test_ledger_provenance.py`, `docs/gates.md`.
 **Frozen contract:** today only `fail → (new oracle) → pass` is reported. The measured attack is
 `pass → (new oracle) → pass`: swap an already-passed control's `cmd` and `relay verify` prints
-`INTACT / PASS — auditable` with the artifact absent. **The oracle change is already on the chain**
-(R5) — only the report misses it. Add a distinct `ORACLE-DRIFT` class for **any** control whose oracle
-changed mid-run, and refuse to print `auditable` when it is present.
+`INTACT / PASS — auditable` with the artifact absent. Add a distinct `ORACLE-DRIFT` class for **any**
+control whose oracle changed mid-run, and refuse to print `auditable` when it is present.
+
+> **This package's premise was wrong, and reproducing it is what showed that.** The plan said the
+> oracle change was already on the chain from R5 and only the report missed it. It was not on the
+> chain at all: the only path that re-executes an earlier control — the keep-best regression guard —
+> recorded **nothing**, so a re-run that failed reached the chain only as an id inside a gate-fail
+> string and a re-run that passed left no trace. So V3 is two changes, not one: the regression guard
+> records what it re-ran (`regression-item`, carrying the oracle sha), and only then can the report
+> compare anything. Kept here as written-then-corrected, because "the data is already there, just
+> report it" is the intuitive and wrong version.
+
+`regression-item` is deliberately a distinct event from `checklist-item`: "the final verdict for this
+control" keeps meaning *as graded at its own gate*, so the control list, corpus exporter and dash are
+unchanged. The entries go through the round buffer so R7's collapse cannot drop an oracle change as
+"the same round".
 
 No exemption is carved out for legitimate amendments, because no signed-amendment record exists yet —
 **V11** introduces one. Until then every drift is reported, which is the correct failure direction: a
