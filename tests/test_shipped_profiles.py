@@ -10,6 +10,7 @@ compiler. A migrated profile that quietly lost a control would otherwise look ex
 never had it.
 """
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -92,3 +93,55 @@ def test_no_control_command_is_empty_after_compilation(profile):
         for c in wp.get("checklist", []):
             if "cmd" in c:
                 assert c["cmd"].strip(), (wp["id"], c["id"])
+
+
+def test_a_diff_control_sees_files_git_does_not_track_yet(tmp_path):
+    """Found by the first LIVE agent run of `tdd_feature`, not by any test here.
+
+    The agent did the ordinary TDD thing — wrote its tests in a NEW file — and `tests_written`
+    reported that no tests had been written, because `git diff <base>` only shows files git already
+    tracks. `write-produced-a-change` had carried the untracked fallback since V5 and the two
+    per-criterion controls beside it had not, so the same profile answered the same question two
+    different ways depending on which control asked it.
+
+    Asserted over every control that diffs against a base ref, in every shipped profile: a change that
+    exists only as an untracked file must still count as a change.
+    """
+    import re
+    import subprocess
+    base_env = {k: v for k, v in os.environ.items() if not k.startswith("RELAY_")}
+
+    work = tmp_path / "repo"
+    (work / "src").mkdir(parents=True)
+    (work / "tests").mkdir()
+    (work / "README").write_text("seed\n")
+    git = ["git", "-C", str(work)]
+    subprocess.run(git + ["init", "-q"], check=True, env=base_env)
+    subprocess.run(git + ["add", "-A"], check=True, env=base_env)
+    subprocess.run(git + ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "seed"],
+                   check=True, env=base_env)
+    base = subprocess.run(git + ["rev-parse", "HEAD"], capture_output=True, text=True,
+                          check=True, env=base_env).stdout.strip()
+    # The whole point: these exist only in the working tree.
+    (work / "tests" / "test_new.py").write_text("def test_x():\n    assert True\n")
+    (work / "src" / "new.py").write_text("VALUE = 1\n")
+
+    params = {"base_ref": base, "src_path": "src", "test_path": "tests"}
+    checked = 0
+    for profile in SHIPPED:
+        sprint = json.loads(profile.with_suffix(".sprint.json").read_text())
+        for wp in sprint["work_packages"]:
+            for c in wp.get("checklist", []):
+                cmd = c.get("cmd", "")
+                if "git diff --name-only ${base_ref}" not in cmd:
+                    continue
+                names = set(re.findall(r"\$\{([a-z_][a-z0-9_]*)\}", cmd))
+                if not names <= set(params):
+                    continue      # parameterised on something this fixture does not model
+                env = dict(base_env, **params)
+                r = subprocess.run(["bash", "-c", cmd], cwd=work, env=env,
+                                   capture_output=True, text=True)
+                assert r.returncode == 0, (
+                    f"{profile.stem}:{wp['id']}:{c['id']} does not see an untracked change\n{cmd}")
+                checked += 1
+    assert checked >= 4, f"expected the diff-based controls to be exercised, saw {checked}"

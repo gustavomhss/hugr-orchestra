@@ -130,6 +130,46 @@ fails verification identically to a tampered line (by design). Keep the key out 
 mode defends against tail-truncation on its own; anchor the latest chain head out-of-band if that is
 in scope (SPEC §7).
 
+### RELAY_JUDGE_* — pointing the discursive judge at a real model
+
+A `judge` control is graded by `benchmark/judge.py`, which picks its backend as: forced
+`RELAY_JUDGE_BACKEND` > `api` when a key is present > `stub`. The stub is a TEST double — it passes
+only when every context file contains `RELAY_JUDGE_OK` — and is never a compliance control.
+
+```bash
+export RELAY_JUDGE_BACKEND=api
+export RELAY_JUDGE_MODEL=claude-sonnet-4-6
+export ANTHROPIC_API_KEY=...                       # or RELAY_JUDGE_API_KEY for another endpoint
+export RELAY_JUDGE_BASE_URL=http://127.0.0.1:8787  # any Messages-API-compatible endpoint
+export RELAY_JUDGE_MAX_TOKENS=8192                 # default; a cap, not a spend
+```
+
+| variable | what it does |
+|---|---|
+| `RELAY_JUDGE_BACKEND` | `api` or `stub`, forced |
+| `RELAY_JUDGE_MODEL` | the model — and it lands on the ledger, as `judge:llm:<model>(non-independent)` |
+| `RELAY_JUDGE_BASE_URL` | a Messages-API-compatible endpoint instead of `api.anthropic.com` |
+| `RELAY_JUDGE_API_KEY` | that endpoint's key; falls back to `ANTHROPIC_API_KEY` |
+| `RELAY_JUDGE_MAX_TOKENS` | reply budget, default 8192 |
+| `RELAY_JUDGE_STUB` | `pass`/`fail`, forces the stub's verdict — demos and CI only |
+
+Read the three verdicts a judge can put on a chain as three different statements:
+
+| ledger tag | what it means |
+|---|---|
+| `judge:llm:<model>(non-independent)` | the model answered. Advisory unless the control is `blocking` |
+| `judge:llm:<model>(no-verdict)` | the model was reached and never answered. Fails the control, but it is **not** a judgment about the artifact |
+| `judge:api-error(non-independent)` | the endpoint was not reached at all |
+| `judge:unavailable(no-diff)` | a `diff: true` control had no base ref to grade against |
+
+The last three are infrastructure, not opinion. `docs/profiles.md` §12 records what happened when
+they were not distinguishable: a live model burned its whole token budget thinking and returned an
+empty reply, and the resulting `fail` was indistinguishable from a considered rejection.
+
+Why 8192 rather than something tight: `max_tokens` bounds the reply, it does not reserve it. A model
+that answers in forty tokens costs forty. A model that reasons first and is cut off mid-thought
+returns nothing at all — measured, twice, at 512 and at 2048.
+
 ### CLAUDE_CODE_STOP_HOOK_BLOCK_CAP — the cap that bounds a whole chain
 
 **Set it to `0` for any chain longer than about eight states.** This is not a tuning knob; it is a

@@ -48,13 +48,13 @@
         {
           "id": "tests_written",
           "assert": "tests_written",
-          "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q .",
+          "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
           "origin": "pe-profile:tdd_feature@1.0.0"
         },
         {
           "id": "implementation_done",
           "assert": "implementation_done",
-          "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q .",
+          "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
           "origin": "pe-profile:tdd_feature@1.0.0"
         },
         {

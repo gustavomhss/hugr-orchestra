@@ -52,8 +52,10 @@ pipeline:
     - review_done
 criteria_map:
   per_criterion:
-    tests_written: git diff --name-only ${base_ref} -- ${test_path} | grep -q .
-    implementation_done: git diff --name-only ${base_ref} -- ${src_path} | grep -q .
+    tests_written: git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files
+      --others --exclude-standard -- ${test_path} | grep -q .
+    implementation_done: git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files
+      --others --exclude-standard -- ${src_path} | grep -q .
     suite_green: ${test_cmd}
     review_done: test -s ${review_artifact}
   per_sub:

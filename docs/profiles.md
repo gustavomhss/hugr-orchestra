@@ -470,3 +470,88 @@ state and names the entry.
 
 `tests/test_design_check.py` breaks the known-good design one field at a time: **31 mutations for 31
 criteria**, plus a test that every declared criterion has one behind it.
+
+
+---
+
+## 12. `tdd_feature` — the first live agent run, and the two defects it found
+
+Every profile above was driven by a harness: the sprint was real, the gate was real, the artifacts
+were written to satisfy it. `tdd_feature` is the first one driven by a **real Claude subagent** given
+the task and nothing else — `add a token-bucket rate limiter to the gateway`, in a small git repo
+with an existing `src/gateway.py` and one passing test. The agent chose what to write. Two defects
+turned up in the first four minutes, and neither was reachable from a test in this repo.
+
+### Defect 1 — the profile could not see files git does not track yet
+
+The agent did the ordinary TDD thing: it put its eleven new tests in a **new file**,
+`tests/test_rate_limit.py`. The gate answered:
+
+```
+gate-fail  implement.checklist   failing: ["tests_written"]
+```
+
+`tests_written` was `git diff --name-only ${base_ref} -- ${test_path} | grep -q .`, and `git diff`
+against a base ref shows **tracked files only**. This is the V5 lesson — the one that produced
+`relay_compute_diff`'s `--no-index` append — never applied to the compiled per-criterion controls.
+Worse, it was inconsistent *within one profile*: `write-produced-a-change`, hand-mapped on the state
+above, had carried the untracked fallback all along, and `wp-execute` carried it on both of its
+equivalents. The same profile answered the same question two different ways depending on which
+control asked it, and the stricter answer was the wrong one.
+
+The fix is the form the other three already used. `tests/test_shipped_profiles.py` now asserts it
+over **every** control in **every** shipped profile that diffs against a base ref: a change that
+exists only as an untracked file must still count as a change.
+
+### Defect 2 — the judge had never actually run
+
+`review-engages-with-the-diff` is the campaign's only blocking discursive control, and every agent
+run before this one stubbed it (`RELAY_JUDGE_STUB=pass`). Pointing it at a live model — through a
+local Messages-API-compatible gateway, via the new `RELAY_JUDGE_BASE_URL` — surfaced three failures
+in a row, and **every one produced a FAIL that a reader could not distinguish from a judgment about
+the artifact**:
+
+| what happened | what the ledger said |
+|---|---|
+| the endpoint streamed by default, so the body parsed as no verdict | `fail` |
+| a reasoning model spent the whole 512-token budget thinking and returned an **empty** content list with `stop_reason: max_tokens` | `fail` |
+| asked to end with `VERDICT: PASS`, the same model emitted the line sometimes and not others for the **same** artifact and criterion | `fail`, then `pass`, then `fail` |
+
+The third is the one worth staring at: the control's verdict was moving with the model's mood rather
+than with the artifact. The fix is not a firmer prompt. The verdict now comes from a **forced tool
+call** (`tool_choice`), `max_tokens` defaults to 8192 (a cap, not a spend), `stream: false` is
+explicit — and a judge that never answered is tagged **`(no-verdict)`**, so the chain records *the
+check could not run* rather than *the check disagreed*. That is the same admission
+`judge:unavailable(no-diff)` already makes on the other side of the gate.
+
+The backend tag now carries the **model**: `judge:llm:claude-mistral-medium(non-independent)`.
+`judge:llm` on a ledger says an LLM said so; which LLM is the first thing a reader asks, and the
+ledger is the only place that can still answer a year later.
+
+### It discriminates — measured on two independent live models
+
+The same criterion, the same diff, two artifacts: the agent's actual 760-word review of the change,
+and a 84-word review of generic praise that would fit any change at all.
+
+```
+claude-gemini-3-flash    generic-review.md   fail      REVIEW.md   pass
+claude-mistral-medium    generic-review.md   fail      REVIEW.md   pass
+```
+
+### The run
+
+```
+5 gate evaluations, chain COMPLETE, 6/6 deterministic controls, 1 advisory (live judge)
+relay verify PASS — auditable
+```
+
+Ledger: `docs/fixtures/tdd-feature-live.ledger.jsonl`. The chain from before the fix —
+`tests_written` failing on a repo that had just gained eleven tests — is kept beside it as
+`tdd-feature-untracked-defect.ledger.jsonl`.
+
+### One thing this run does not prove
+
+The loop was driven by the gate CLI, not by the `SubagentStop` hook: a real agent produced the
+artifacts and the real gate judged them, but nothing **blocked** the agent from stopping. Hook-side
+enforcement is proven separately and is profile-independent — see the V12 walking skeleton and the
+fan-out ledgers in the same directory.

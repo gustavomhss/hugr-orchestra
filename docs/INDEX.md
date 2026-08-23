@@ -3,13 +3,13 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T19:38:20Z
+- **Generated:** 2026-08-23T21:07:42Z
 - **Files:** 26
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `a80a6f96c33260525564d974faaae56ece1d2542d3fa34e245fcbc33c4fce16d`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `dcd745d938090a44f8f7f21b646affbedd5e65691daef14c85ca2df567cdbd19`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
-| `README.md` | 113 | 6983 | `89f93c5cd2c470f3bc06b65c4bc69a43c4a1b374297a7bf68657a3ea5d47c89f` |
+| `README.md` | 116 | 7293 | `fc0a26b896cad1ee125865591663cd936520e37cf081a4fefa9365d9b6a82337` |
 | `WHITEPAPER.md` | 276 | 34262 | `ec73d23a11a2479fccfeba5755498075920547dd267f4331e0eb8cf10b228368` |
 | `PRODUCT.md` | 452 | 41985 | `d506df7971338dc45d566c7afba9bdacc836a23b31066fd68a83e7a14b594d71` |
 | `SPEC.md` | 312 | 18430 | `89a6028568ed2b53b0f9ffcbacc89dbebbe20dfe6c4ed159b65937933bec3ee3` |
@@ -20,16 +20,16 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/auto-decompose.md` | 61 | 2959 | `a72e0d02d8c632035829644a18e18a6a337c96d0a46ddc89ae0bdb140f7b735e` |
 | `docs/compaction.md` | 84 | 3781 | `63bbf7b052e31dcc90f3ba4864c83577f8a8a838fdc32ca1bf53eba8a1336b2b` |
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
-| `docs/configuration.md` | 279 | 11560 | `32f164e9d3419fe514e4e1006b375915bb15c9042cdfd94ab5b673bf1c7d27cf` |
+| `docs/configuration.md` | 319 | 13887 | `b1204b0a8ba2d907e4c2dd538597a4da5a11089f4b09b1baa3790532edcba3aa` |
 | `docs/control-plane.md` | 608 | 33406 | `d0bd54f18fc9d5a4fd709d2cdd9185400ac162e8950d54f45443a8c8adee4948` |
 | `docs/daemon.md` | 176 | 9663 | `7956af420e4334638b22a3e994c18d15d1495bbfdf5cc6fd19b37cb20f1a445f` |
-| `docs/enforcement-model.md` | 246 | 13338 | `c1ae62cedc26f8544a943ba0e50f704d6b18cf390ed01f1bc2f3ddd48dd59d1e` |
+| `docs/enforcement-model.md` | 266 | 14716 | `cb9a26f7f740e4430c209d1ff902128ea97c4a90f302f26d9e54adc385f26ad9` |
 | `docs/faq.md` | 166 | 7813 | `5755679e358ff6525b6f3a0c213e42f4772c3a42d87ebed683839030c4af0ef6` |
-| `docs/gates.md` | 420 | 18521 | `0e809f530471a0b9cd0d2c94d4d61fa4c6e2d363daec16f2886a19179bb33bf0` |
+| `docs/gates.md` | 426 | 18985 | `61f6ba2160959b985cddc4664bff6a410be3ab19cd7dd71f0aca0dde3c719efa` |
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/guardrails.md` | 111 | 6214 | `3849f0a3a2b576e864f28b8f74e94cae314dae844cd3d14b5a30eb09953c6f63` |
 | `docs/per-agent-arms.md` | 149 | 6940 | `711eb139ce13eff2875d3c67ba4413cc756b68ca89fb5bd06bf80bccca55e3eb` |
-| `docs/profiles.md` | 472 | 22448 | `b36334d167fa16ff804261a11474cca0d98353fc645775b0de740405f993f156` |
+| `docs/profiles.md` | 557 | 27071 | `dc95c14b6307b415ca1cdcef834898dfa2776e8a211cd5e9341368b0d7361544` |
 | `docs/relay-v2.md` | 582 | 35622 | `4d210a91f52647325e14e0523a6c9a4d9a45a420bf5f2a827af957a07b32681d` |
 | `docs/sdk.md` | 97 | 4681 | `0643dfff7f31e5a462f3d8735776712647d15467d20e20de61b41b3ae39516a8` |
 | `docs/spec-library.md` | 125 | 6858 | `c3d528a3b3a47c0f2ee592a492954b33fcf3c7a8eeef91cb52a339f6ecd9c7af` |
