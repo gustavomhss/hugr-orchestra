@@ -259,6 +259,22 @@ it; the options are to amend the plan so the history *is* producible, or leave t
 is. That is the rule, and R6 already applies it to the keep-best guard: a control the chain never
 accepted cannot regress.
 
+### Granularity: a recorded verdict binds, not an open macro · CORRECTED (V11)
+
+The table above is written for a **linear** chain, and on a two-coordinate position it gives two
+opposite answers to the same question. With the cursor at `macro2.sub3`, amending `macro2.sub2` is
+simultaneously *"under the cursor"* — macro2 is open, so the change region rule postpones it — and
+*"already passed"* — sub2 has a recorded pass, so the never rule rejects it.
+
+**The rule that resolves it: a recorded verdict is what binds. The enclosing macro being open is
+irrelevant.** A macro is a scope, not a unit of compliance; it holds no verdict of its own, so there
+is nothing about it for the ledger to be a trace of. Read every row above as "state" = *the thing
+with a recorded verdict*, which is a sub-state.
+
+The keep-best guard already implements exactly this — *"a control with no recorded pass on this chain
+was never accepted, so there is nothing to regress"* — so this correction brings the doctrine into
+line with the code rather than the other way round.
+
 ### The mechanism: enumerate, never name
 
 Borrowed directly from DAP. `goto` does not take a line — it takes a `targetId` obtained from a prior
@@ -295,9 +311,46 @@ so the UI cannot offer an action the machine will refuse.
 | `splice-after` | strictly after the cursor | none — MEASURED safe |
 | `amend` | a WP not yet reached | recorded |
 | `fork` | at or before the cursor | see below |
-| `release` | force past a failed gate | human only, `reason` required |
+| `release` | force past a failed gate | human only, `reason` required · **SHIPPED (V7)** |
 | `wind-down` | the chain | graceful |
 | `abort` | the chain | forceful |
+
+### Loosening is defined by effect, not by act type · CORRECTED (V11)
+
+The guards above are written per **act**, and that is the wrong axis. Deleting a control was the
+signed act; everything filed as an "addition" was free. But all of these shrink what must pass, and
+every one of them was free under the act-type rule:
+
+- rerouting so a control becomes **unreachable**
+- **moving** a control behind the effective exit — the act reads as a reorder, the effect is a removal
+- splitting one hard control into **two weak ones**, as "decomposition": the count goes *up* and the
+  control that actually had to pass is gone
+- turning a blocking judge **advisory**, or replacing a `cmd` with a `judge` under the same id:
+  nothing moved, nothing was deleted, it simply stopped being able to stop anything
+- adding a state that **bypasses** a control's consequence
+
+So the rule is the set:
+
+> **Loosening = the set of controls that must pass to reach a terminal state shrinks.**
+
+That set is comparable mechanically, before and after, with nobody judging intent. Adding work that
+does not shrink it is free; anything that shrinks it is a signed act requiring a human. Granting more
+*time* does not shrink it, so it stays legitimate orchestrator authority.
+
+```sh
+relay-spec.py amend-check before.json after.json --cursor wp3
+relay-spec.py amend-check before.json after.json --signed-by "GS: c2 duplicated c1, verified by hand"
+```
+
+Findings are `control-removed`, `oracle-downgraded`, `control-disarmed`, `moved-behind-cursor`. Exit
+1 unless signed, and an empty signature is refused — shrinking the set is not forbidden, it is
+attributable. An override that does not exist gets replaced by an operator editing the plan out of
+band, which loses the record entirely.
+
+**What it will not claim:** it cannot rank two commands by strength, so the same id under a different
+command is reported as a note, not a finding. That case is an *oracle* change, and `relay verify`
+reports it from the live chain as ORACLE DRIFT (V3) — where the evidence actually is. A check that
+guesses gets ignored.
 
 ### fork, not in-place rewrite
 

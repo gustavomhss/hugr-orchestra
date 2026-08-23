@@ -436,6 +436,137 @@ def cmd_lint(path, allow_ungated, as_json):
     return 1 if any(f["severity"] == "error" for f in findings) else 0
 
 
+# ---- amend-check (V11 — docs/relay-v2.md §3) -----------------------------------------------------
+# An amendment may add work; it may not quietly shrink what must pass. Two corrections to shipped
+# doctrine, both wrong in the intuitive direction, which is why this is a tool and not a paragraph.
+#
+# LOOSENING IS DEFINED BY EFFECT, NOT ACT TYPE. The original wording made deletion a signed act and
+# left "additions" free — but rerouting a control out of reach, moving it behind the cursor,
+# splitting one hard control into two weak ones as "decomposition", and adding a state that bypasses
+# a control's consequence all shrink the set that must pass, and every one was free under act-type.
+# So the rule is the SET:
+#
+#     loosening = the set of controls that must pass to reach a terminal state shrinks
+#
+# comparable mechanically, before and after, without anyone judging intent.
+#
+# COMPLIANCE GRANULARITY IS WHATEVER HAS A RECORDED VERDICT. With the cursor at `m1.sub3`, amending
+# `m1.sub2` is both "under the cursor" (m1 is open) and "already passed" (sub2 has a pass). The
+# linear criterion answers both ways. A recorded verdict binds; the enclosing macro is irrelevant.
+#
+# WHAT THIS DOES NOT CLAIM. It cannot rank two commands by strength. The same id under a different
+# command is an ORACLE change, which `relay verify` reports from the live chain (V3) — claiming it
+# here would be guessing, and a check that guesses gets ignored.
+
+
+def control_index(sprint):
+    """id -> {wp, index, blocking, has_cmd, must_pass}, over EVERY declared control.
+
+    `must_pass` is the membership that matters: a control is in the must-pass set when it has a `cmd`
+    or is a blocking judge. A non-blocking judge is recorded and stops nothing, so it was never in
+    the set and removing it takes nothing out.
+
+    Indexed over all controls rather than only the members, so that a control which is still declared
+    but has DROPPED OUT of the set is diagnosed as disarmed rather than as removed. Both are
+    loosening; only the accurate one tells the reader what actually happened.
+    """
+    out = {}
+    for n, wp in enumerate(sprint.get("work_packages") or []):
+        for c in (wp.get("checklist") or []):
+            if not c.get("id"):
+                continue
+            out[c["id"]] = {"wp": wp.get("id"), "index": n,
+                            "blocking": bool(c.get("blocking")), "has_cmd": bool(c.get("cmd")),
+                            "must_pass": bool(c.get("cmd") or c.get("blocking"))}
+    return out
+
+
+def amend_check(before, after, cursor=None):
+    """-> (loosening[], notes[]). Each finding is {kind, control, detail}."""
+    b, a = control_index(before), control_index(after)
+    ids = [w.get("id") for w in (after.get("work_packages") or [])]
+    cursor_ix = ids.index(cursor) if cursor in ids else None
+    findings, notes = [], []
+
+    for cid, was in b.items():
+        if not was["must_pass"]:
+            continue                     # it was never in the set; nothing to take out of it
+        now = a.get(cid)
+        if now is None:
+            findings.append({"kind": "control-removed", "control": cid,
+                             "detail": f"it had to pass in {was['wp']!r} and is now in no work "
+                                       f"package. Splitting it into differently-named controls counts "
+                                       f"here too: the control that had to pass is gone."})
+            continue
+        if was["has_cmd"] and not now["has_cmd"]:
+            findings.append({"kind": "oracle-downgraded", "control": cid,
+                             "detail": "a deterministic command became a judge — a real oracle "
+                                       "replaced by a non-independent opinion under the same name"})
+        elif not now["must_pass"]:
+            findings.append({"kind": "control-disarmed", "control": cid,
+                             "detail": "a blocking judge became advisory: nothing moved and nothing "
+                                       "was deleted, it simply stopped being able to stop anything"})
+        # A recorded verdict binds. Moving a control BEHIND the cursor means it is never evaluated at
+        # a gate again — the act reads as a reorder, the effect is a removal. Moving it FORWARD still
+        # requires it to pass, so that is free.
+        if cursor_ix is not None and now["index"] < cursor_ix <= was["index"]:
+            findings.append({"kind": "moved-behind-cursor", "control": cid,
+                             "detail": f"moved from {was['wp']!r} to {now['wp']!r}, which the chain "
+                                       f"has already left; it will not be evaluated at a gate again"})
+
+    changed = [cid for cid in set(b) & set(a)
+               if _control_cmd(before, cid) != _control_cmd(after, cid)]
+    if changed:
+        notes.append(f"{len(changed)} control(s) kept their id under a different command "
+                     f"({', '.join(sorted(changed))}). Ranking two commands by strength is not "
+                     f"mechanically decidable, so it is not claimed here — `relay verify` reports a "
+                     f"mid-run change of oracle as ORACLE DRIFT, from the chain rather than the plan.")
+    return findings, notes
+
+
+def _control_cmd(sprint, cid):
+    for wp in (sprint.get("work_packages") or []):
+        for c in (wp.get("checklist") or []):
+            if c.get("id") == cid:
+                return c.get("cmd") or c.get("judge")
+    return None
+
+
+def cmd_amend_check(before_path, after_path, cursor, signed_by, as_json):
+    try:
+        before = json.load(open(before_path))
+        after = json.load(open(after_path))
+    except (OSError, ValueError) as e:
+        die(f"cannot read both sprints: {e}")
+    findings, notes = amend_check(before, after, cursor=cursor)
+    signed = (signed_by or "").strip()
+
+    if as_json:
+        print(json.dumps({"before": before_path, "after": after_path, "cursor": cursor,
+                          "loosening": findings, "notes": notes, "signed_by": signed}, indent=2))
+    elif not findings:
+        print(f"amendment adds work and removes none — {after_path}")
+        for n in notes:
+            print(f"  note: {n}")
+    else:
+        print(f"LOOSENING — {after_path}\n")
+        for f in findings:
+            print(f"  {f['kind']}  {f['control']}\n        {f['detail']}")
+        for n in notes:
+            print(f"\n  note: {n}")
+        if signed:
+            print(f"\n  signed by: {signed}")
+
+    if not findings:
+        return 0
+    # Shrinking the set is not forbidden — it is a SIGNED act. The job here is to make sure it cannot
+    # happen by accident, not to make it impossible; an override that does not exist gets replaced by
+    # an operator editing the plan out of band, which loses the record entirely.
+    if signed_by is not None and not signed:
+        die("--signed-by was given with no reason: an unattributed signature is not a signature")
+    return 0 if signed else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description="Relay executable-spec library: list / show / instantiate.")
     ap.add_argument("--specs", default=DEFAULT_SPECS,
@@ -454,6 +585,12 @@ def main():
     sp_lint.add_argument("--allow-ungated", action="store_true",
                          help="downgrade ungated states to warnings (migration in progress)")
     sp_lint.add_argument("--json", action="store_true", dest="as_json")
+    sp_am = sub.add_parser("amend-check", help="does an amended plan shrink what must pass?")
+    sp_am.add_argument("before"); sp_am.add_argument("after")
+    sp_am.add_argument("--cursor", default=None, help="the WP id the chain currently stands on")
+    sp_am.add_argument("--signed-by", default=None, metavar="REASON",
+                       help="accept a loosening as a signed act, recording who and why")
+    sp_am.add_argument("--json", action="store_true", dest="am_json")
     a = ap.parse_args()
 
     specs = a.specs
@@ -465,6 +602,8 @@ def main():
         return cmd_instantiate(specs, a.id, a.param, a.out)
     if a.mode == "lint":
         return cmd_lint(a.sprint, a.allow_ungated, a.as_json)
+    if a.mode == "amend-check":
+        return cmd_amend_check(a.before, a.after, a.cursor, a.signed_by, a.am_json)
     return 1
 
 
