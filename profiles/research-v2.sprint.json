@@ -123,6 +123,9 @@
         },
         {
           "id": "analyze-review-engages-with-the-diff",
+          "context": [
+            "${research_dir}/review-analyze.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -197,6 +200,9 @@
         },
         {
           "id": "report-review-engages-with-the-diff",
+          "context": [
+            "${research_dir}/review-report.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,

@@ -66,6 +66,27 @@ relay_chain_append() {  # $1 = compact JSON body
 # failing item ids; logs every verdict through the caller's ledger_item().
 # sha256 of a string, bare hex. Used to put the ORACLE on the chain without putting the command
 # itself there: a `cmd` can carry absolute paths or secrets, and sameness is all an audit needs.
+# Expand ${name} placeholders from the ENVIRONMENT, by substitution and never by `eval`. A `cmd` is
+# run through `eval` by construction — it is a command — but a context PATH is data, and running a
+# path through the shell would turn `${wp_dir}` in a sprint into an execution site. Unset names are
+# left verbatim so a missing parameter surfaces as a missing file rather than as a silently empty
+# path that resolves to the workdir root.
+relay_expand_params() {  # $1 = text with ${name} placeholders
+  local text="$1" name val out=""
+  while [[ "$text" =~ ^(.*)\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}(.*)$ ]]; do
+    name="${BASH_REMATCH[2]}"
+    val="${!name-}"
+    if [ -z "${!name+x}" ]; then
+      out="${BASH_REMATCH[3]}$out"; text="${BASH_REMATCH[1]}\${$name}"
+      # Leave it in place and stop rewriting this one: prepend the literal and continue leftward.
+      out="\${$name}$out"; text="${BASH_REMATCH[1]}"
+    else
+      out="$val${BASH_REMATCH[3]}$out"; text="${BASH_REMATCH[1]}"
+    fi
+  done
+  printf '%s%s' "$text" "$out"
+}
+
 relay_oracle_sha() {  # $1 = the oracle text (a cmd, or a judge criterion)
   printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1
 }
@@ -146,7 +167,11 @@ relay_run_checklist() {
       # and V3 reports a mid-run change of it as drift.
       oracle=$(relay_oracle_sha "$crit${scope:+ :: $scope}")
       ctxargs=()
-      while IFS= read -r cf; do [ -n "$cf" ] && ctxargs+=(--file "$RUN_DIR/$cf"); done < <(
+      while IFS= read -r cf; do
+        [ -n "$cf" ] || continue
+        cf=$(relay_expand_params "$cf")
+        ctxargs+=(--file "$RUN_DIR/$cf")
+      done < <(
         jq -r ".work_packages[$i].checklist[$j].context // empty | if type==\"array\" then .[] else . end" "$SPRINT")
       if [ "$wantdiff" = "true" ]; then
         if dfile=$(relay_compute_diff "$scope"); then

@@ -555,3 +555,66 @@ The loop was driven by the gate CLI, not by the `SubagentStop` hook: a real agen
 artifacts and the real gate judged them, but nothing **blocked** the agent from stopping. Hook-side
 enforcement is proven separately and is profile-independent — see the V12 walking skeleton and the
 fan-out ledgers in the same directory.
+
+
+---
+
+## 13. `wp-execute` — live, and the defect that made five profiles judge blind
+
+Thirteen states, six macros, driven by a **real Claude subagent per state** on a real work package:
+add exponential-backoff retry to an HTTP client. Each state got only its own instructions — bind the
+scope, write the failing tests, implement, refactor-or-skip, verify, cold-review, seal — and the gate
+decided whether it had earned the next one.
+
+The protocol did what it is for. `bind.json` declared five scenarios with the exact test names the
+RED state would have to write, and `tests_map_to_scenarios` checks the names actually appear. The
+refactor state fired its triggers and found a real one — `retry()` defaulted `retryable=Exception`,
+so any caller omitting it would replay a deterministic `TypeError` through the whole budget with
+backoff sleeps between attempts — refactored it to a required keyword-only argument, and rejected the
+other four triggers with reasons rather than waving them off. The cold reviewer, which wrote none of
+it, mutation-probed the implementation three ways before approving, and its seal recorded
+`assurance_level: "high-within-contract, low-outside-contract"` with four things the tests do **not**
+cover named underneath.
+
+```
+13 gate evaluations, chain COMPLETE, 24/24 deterministic controls, 1 advisory (live judge)
+relay verify PASS — auditable
+```
+
+### The defect: the judge was never handed the review
+
+`review-engages-with-the-diff` asks *"does this review describe the change in the diff?"*. The
+control declared `diff: true` and **no `context`** — so the judge received the diff and nothing else.
+It was being asked about a review it had never seen.
+
+The tell is not that it answered wrong. It is that the answer was **arbitrary**. With the review
+withheld, on the same criterion:
+
+```
+wp-execute diff, no review    claude-mistral-medium  fail    claude-gemini-3-flash  fail
+tdd_feature diff, no review   claude-mistral-medium  PASS  ← the run shipped in §12
+```
+
+The same blindness produced a pass in one run and a failure in another. A control whose verdict moves
+with nothing is not a control, and the §12 fixture had to be regenerated: the advisory pass recorded
+there was reached without the artifact.
+
+With the review supplied, both models agree in both directions — the real 845-word review passes, and
+the same models fail it when it is withheld.
+
+**Five of the six shipped profiles had it**: `tdd_feature`, `wp-execute`, `spec-decompose`,
+`research-v2` and `design`, ten judge controls in total. All ten now name their artifact.
+
+### Two things had to change for that fix to be possible
+
+A context path is written once in a profile and only the run knows where `${wp_dir}` points, so the
+gate now **expands `${...}` in context paths** — by substitution, never through `eval`. A `cmd` goes
+through the shell by construction, because it is a command. A path is data, and expanding it through
+the shell would turn every profile that writes `${wp_dir}` into an execution site;
+`tests/test_judge_context.py` fires a `$(touch …)` canary through a context path and asserts nothing
+ran. An unset parameter is left verbatim rather than collapsing to an empty string, so a missing
+parameter surfaces as a missing file instead of a path that quietly resolves to the workdir root.
+
+The rule itself is now a test: **a judge control on a `review` state must declare `context`.** It runs
+against every shipped profile, which is how the other four were found — the live run only exposed
+the one it happened to walk through.

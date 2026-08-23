@@ -80,6 +80,9 @@
         },
         {
           "id": "review-engages-with-the-diff",
+          "context": [
+            "${review_artifact}"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,

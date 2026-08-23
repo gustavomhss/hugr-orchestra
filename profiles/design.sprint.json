@@ -206,6 +206,9 @@
         },
         {
           "id": "distinctness-engages-with-the-diff",
+          "context": [
+            "${design_dir}/verdict-distinctness.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -339,6 +342,9 @@
         },
         {
           "id": "dress_rehearsal-engages-with-the-diff",
+          "context": [
+            "${design_dir}/verdict-dress_rehearsal.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -436,6 +442,9 @@
         },
         {
           "id": "no_flinching-engages-with-the-diff",
+          "context": [
+            "${design_dir}/verdict-no_flinching.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,

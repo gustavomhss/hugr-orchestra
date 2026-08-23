@@ -312,6 +312,8 @@ criteria_map:
       assert: the review carries at least 40 words
       cmd: test "$(wc -w < ${wp_dir}/review.md)" -ge 40
     - id: review-engages-with-the-diff
+      context:
+      - ${wp_dir}/review.md
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
         if it is generic enough to apply to any change, or if it omits a material part of the diff.
       diff: true

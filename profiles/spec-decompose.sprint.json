@@ -78,6 +78,9 @@
         },
         {
           "id": "invariants-review-engages-with-the-diff",
+          "context": [
+            "${spec_dir}/review-invariants.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -148,6 +151,9 @@
         },
         {
           "id": "requirements-review-engages-with-the-diff",
+          "context": [
+            "${spec_dir}/review-requirements.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -218,6 +224,9 @@
         },
         {
           "id": "spec-review-engages-with-the-diff",
+          "context": [
+            "${spec_dir}/review-spec.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -294,6 +303,9 @@
         },
         {
           "id": "goldens-review-engages-with-the-diff",
+          "context": [
+            "${spec_dir}/review-goldens.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,
@@ -364,6 +376,9 @@
         },
         {
           "id": "work_packages-review-engages-with-the-diff",
+          "context": [
+            "${spec_dir}/review-work_packages.json"
+          ],
           "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
           "diff": true,
           "blocking": true,

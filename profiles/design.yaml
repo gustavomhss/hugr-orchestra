@@ -184,6 +184,8 @@ criteria_map:
       assert: the review carries at least 200 characters
       cmd: test "$(jq -r '.findings // "" | length' ${design_dir}/verdict-distinctness.json)" -ge 200
     - id: distinctness-engages-with-the-diff
+      context:
+      - ${design_dir}/verdict-distinctness.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
         if it is generic enough to apply to any change, or if it omits a material part of the diff.
       diff: true
@@ -196,6 +198,8 @@ criteria_map:
       assert: the review carries at least 200 characters
       cmd: test "$(jq -r '.findings // "" | length' ${design_dir}/verdict-dress_rehearsal.json)" -ge 200
     - id: dress_rehearsal-engages-with-the-diff
+      context:
+      - ${design_dir}/verdict-dress_rehearsal.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
         if it is generic enough to apply to any change, or if it omits a material part of the diff.
       diff: true
@@ -208,6 +212,8 @@ criteria_map:
       assert: the review carries at least 200 characters
       cmd: test "$(jq -r '.findings // "" | length' ${design_dir}/verdict-no_flinching.json)" -ge 200
     - id: no_flinching-engages-with-the-diff
+      context:
+      - ${design_dir}/verdict-no_flinching.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
         if it is generic enough to apply to any change, or if it omits a material part of the diff.
       diff: true
