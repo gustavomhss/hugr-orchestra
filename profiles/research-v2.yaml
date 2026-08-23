@@ -1,0 +1,190 @@
+name: research-v2
+version: 1.0.0
+description: "Research v2 \u2014 explore tiered, analyze verified, report audit\xE1vel. 100% OSS, compos\xE1vel\
+  \ via library, n8n-ready placeholder."
+protected: false
+created_at: '2026-08-21T21:48:00Z'
+cloned_from: research
+settings:
+  oscillation_detection_threshold: 3
+  auto_loop_on_checklist_failure: false
+  global_timeout_seconds: 3600
+output_contract:
+  format: json
+  schema:
+    type: object
+    required:
+    - report_written
+    - conclusions_clear
+    properties:
+      report_written:
+        type: boolean
+      conclusions_clear:
+        type: boolean
+      findings:
+        type: array
+        items:
+          type: string
+  destination: ./out/{session_id}/research-report.json
+pipeline:
+- state_id: explore
+  name: Explore Codebase
+  description: "Tiered impact \u2014 T1 cargo graph, T2 LSP, T3 lexical fallback \u2014 max 5 caps 10-25 per-macro\
+    \ owed not built"
+  enabled: true
+  max_iterations: 5
+  icon: "\U0001F52D"
+  sub_states:
+  - id: inject
+    type: inject
+    name: Inject Context
+    description: Inject codebase overview + library skill tdd
+    enabled: true
+    inject:
+      prompt: Map the codebase structure focusing on profile and manifest crates.
+      skill: tdd
+  - id: map
+    type: execute
+    name: Map Structure
+    description: BFS file org + dependencies, tiered
+    enabled: true
+  - id: patterns
+    type: execute
+    name: Identify Patterns
+    description: Coding patterns, conventions, tiers per file
+    enabled: true
+  - id: checklist
+    type: checklist
+    name: Checklist Gate
+    enabled: true
+    criteria:
+    - structure_mapped
+    - patterns_identified
+    verify:
+    - criterion: structure_mapped
+      command: test -f crates/types/src/profile.rs && test -f profiles/research.yaml
+    - criterion: patterns_identified
+      command: grep -q "SubStateType" crates/types/src/profile.rs
+- state_id: analyze
+  name: Deep Analysis
+  description: "Verify gates \u2014 cada achado provado por comando real \u2014 max 5 caps 10-25 per-macro owed"
+  enabled: true
+  max_iterations: 5
+  icon: "\U0001F52C"
+  sub_states:
+  - id: inject
+    type: inject
+    name: Inject Context
+    description: Inject exploration findings + impact entries
+    enabled: true
+    inject:
+      context: Use tiered impact entries from explore phase
+  - id: deep_dive
+    type: execute
+    name: Deep Dive
+    description: "Analyze target areas, coletar evid\xEAncia por comando"
+    enabled: true
+  - id: review
+    type: review
+    name: Self-Review
+    description: Verify completeness via verify
+    enabled: true
+  - id: checklist
+    type: checklist
+    name: Checklist Gate
+    enabled: true
+    criteria:
+    - analysis_complete
+    - findings_documented
+    verify:
+    - criterion: analysis_complete
+      command: test -f crates/manifest/src/profile_validator.rs
+    - criterion: findings_documented
+      command: ls crates/orchestrator/src/driver.rs
+- state_id: report
+  name: Report Findings
+  description: "S\xEDntese audit\xE1vel \u2014 output_contract + transcript por macro"
+  enabled: true
+  max_iterations: 2
+  icon: "\U0001F4CA"
+  sub_states:
+  - id: inject
+    type: inject
+    name: Inject Context
+    description: Inject analysis results
+    enabled: true
+    inject:
+      context: The analysis findings and their replayed evidence are the only admissible input to the report.
+  - id: synthesize
+    type: execute
+    name: Synthesize
+    description: Combine findings, custo por macro via artifact offload
+    enabled: true
+  - id: review
+    type: review
+    name: Review Report
+    description: Review report quality + output_contract shape
+    enabled: true
+  - id: checklist
+    type: checklist
+    name: "Gate \u2014 Attested"
+    enabled: true
+    criteria:
+    - report_written
+    - conclusions_clear
+    verify:
+    - criterion: report_written
+      command: 'test -s out/research-v2-real-001/research-report.json && grep -q ''"report_written": true'' out/research-v2-real-001/research-report.json
+        && echo report_ok'
+criteria_map:
+  per_criterion:
+    structure_mapped: jq -e '(.files | length) > 0 and all(.files[]; .path and .role and .tier)' ${research_dir}/map.json
+      >/dev/null
+    patterns_identified: jq -e '(.patterns | length) > 0 and all(.patterns[]; (.evidence | length) > 0)' ${research_dir}/patterns.json
+      >/dev/null
+    analysis_complete: jq -e '(.areas | length) > 0 and all(.areas[]; (.findings | length) > 0)' ${research_dir}/analysis.json
+      >/dev/null
+    findings_documented: ${research_tools}/replay-evidence ${research_dir}/analysis.json --cwd ${repo_root}
+    report_written: test "$(wc -w < ${research_dir}/report.md)" -ge 200 && grep -q '^## Conclusions' ${research_dir}/report.md
+    conclusions_clear: ${research_tools}/cite-check ${research_dir}/report.md ${research_dir}/analysis.json
+  per_sub:
+    explore.map:
+    - id: map-written
+      assert: this state wrote the structure map
+      cmd: test -s ${research_dir}/map.json
+    explore.patterns:
+    - id: patterns-written
+      assert: this state wrote the pattern register
+      cmd: test -s ${research_dir}/patterns.json
+    analyze.deep_dive:
+    - id: analysis-written
+      assert: this state wrote the analysis
+      cmd: test -s ${research_dir}/analysis.json
+    analyze.review:
+    - id: analyze-review-verdict
+      assert: the reviewer returned APPROVE
+      cmd: test "$(jq -r .verdict ${research_dir}/review-analyze.json)" = APPROVE
+    - id: analyze-review-is-substantive
+      assert: the review carries at least 200 characters
+      cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-analyze.json)" -ge 200
+    - id: analyze-review-engages-with-the-diff
+      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
+        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      diff: true
+      blocking: true
+    report.synthesize:
+    - id: report-written-here
+      assert: this state wrote the report
+      cmd: test -s ${research_dir}/report.md
+    report.review:
+    - id: report-review-verdict
+      assert: the reviewer returned APPROVE
+      cmd: test "$(jq -r .verdict ${research_dir}/review-report.json)" = APPROVE
+    - id: report-review-is-substantive
+      assert: the review carries at least 200 characters
+      cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-report.json)" -ge 200
+    - id: report-review-engages-with-the-diff
+      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
+        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      diff: true
+      blocking: true

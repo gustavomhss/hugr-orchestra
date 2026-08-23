@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""replay-evidence — re-run every finding's evidence command and require it to still hold.
+
+The research protocol's own macro description states the rule: *"cada achado provado por comando
+real"* — every finding proven by a real command. A control that merely checks the finding CARRIES a
+command is a presence check, and presence checks are what this whole migration exists to replace. So
+this runs them.
+
+A finding is:
+
+    {"claim": "...", "evidence_cmd": "grep -c 'def ' src/x.py", "evidence_output": "12"}
+
+and it holds when the command still exits 0 and its output still MATCHES what was recorded. The
+second half is the part that matters: a command that exits 0 while producing different output means
+the claim was true when it was written and is not true now, which is exactly the state a stale
+research report hides.
+
+Comparison is on stripped text. An `evidence_output` of "" means only the exit status is checked —
+declared explicitly so a finding cannot get the weaker check by omission going unnoticed; the report
+says which findings were checked that way.
+
+Usage:  replay-evidence <analysis.json> [--cwd DIR] [--json] [--timeout SECONDS]
+Exit:   0 every finding replays · 1 at least one does not · 2 usage/IO error
+"""
+import argparse
+import json
+import subprocess
+import sys
+
+
+def findings_of(doc):
+    """Accepts either a flat list of findings or the {areas: [{findings: [...]}]} shape."""
+    if isinstance(doc, list):
+        return [(None, f) for f in doc]
+    out = []
+    for area in doc.get("areas") or []:
+        for f in area.get("findings") or []:
+            out.append((area.get("name"), f))
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Re-run every finding's evidence command.")
+    ap.add_argument("analysis")
+    ap.add_argument("--cwd", default=".")
+    ap.add_argument("--timeout", type=float, default=30.0)
+    ap.add_argument("--json", action="store_true", dest="as_json")
+    a = ap.parse_args()
+
+    try:
+        with open(a.analysis) as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError) as e:
+        print(f"replay-evidence: cannot read {a.analysis}: {e}", file=sys.stderr)
+        return 2
+
+    items = findings_of(doc)
+    if not items:
+        # No findings is not "all findings replayed". An empty analysis passing here would let an
+        # unworked state clear its gate, which is the failure the ungated states had in the first place.
+        print("replay-evidence: no findings to replay", file=sys.stderr)
+        return 1
+
+    results = []
+    for area, f in items:
+        claim = str(f.get("claim", ""))[:80]
+        cmd = str(f.get("evidence_cmd", "")).strip()
+        want = str(f.get("evidence_output", "")).strip()
+        if not cmd:
+            results.append({"area": area, "claim": claim, "status": "FAIL",
+                            "detail": "no evidence_cmd: the claim is asserted, not proven"})
+            continue
+        try:
+            r = subprocess.run(cmd, shell=True, cwd=a.cwd, capture_output=True, text=True,
+                               timeout=a.timeout)
+        except subprocess.TimeoutExpired:
+            results.append({"area": area, "claim": claim, "status": "FAIL",
+                            "detail": f"evidence command timed out after {a.timeout}s"})
+            continue
+        got = (r.stdout or "").strip()
+        if r.returncode != 0:
+            results.append({"area": area, "claim": claim, "status": "FAIL",
+                            "detail": f"evidence command exited {r.returncode}: "
+                                      f"{(r.stderr or '').strip()[:120]}"})
+        elif want and got != want:
+            results.append({"area": area, "claim": claim, "status": "FAIL",
+                            "detail": f"output drifted — recorded {want[:60]!r}, now {got[:60]!r}"})
+        else:
+            results.append({"area": area, "claim": claim, "status": "PASS",
+                            "detail": "exit-status only" if not want else "output matches"})
+
+    failed = [x for x in results if x["status"] == "FAIL"]
+    if a.as_json:
+        print(json.dumps({"findings": len(results), "failed": len(failed), "results": results},
+                         indent=2))
+    else:
+        for x in results:
+            print(f"{x['status']} {x['claim']} — {x['detail']}")
+        weak = sum(1 for x in results if x["detail"] == "exit-status only")
+        print(f"\n{len(results) - len(failed)}/{len(results)} findings replay"
+              + (f" ({weak} checked on exit status alone)" if weak else ""))
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

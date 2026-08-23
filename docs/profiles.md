@@ -136,6 +136,7 @@ Migrated profiles live in `profiles/`, each next to its compiled `*.sprint.json`
 | `planning` | 4 | 16 | 56 | 0 |
 | `wp-execute` | 6 | 13 | 25 | 0 |
 | `spec-decompose` | 5 | 15 | 36 | 0 |
+| `research-v2` | 3 | 12 | 16 | 0 |
 
 `tests/test_shipped_profiles.py` holds three properties for every file in that directory: the sprint
 is not stale (`--check`), the lint reports no errors, and every work package names a declared macro.
@@ -346,3 +347,56 @@ RESULT: CONTROL FAIL — coverage_matrix_closed.
 Twelve states passed on their own merits and the chain never reached `work_packages.gate`. In the
 profile as written that criterion sits on the gate, so the same defect would have surfaced two states
 later.
+
+
+---
+
+## 10. `research-v2` — enforcing the profile's own rule
+
+This profile's `analyze` macro carries its doctrine in its own description: *"cada achado provado por
+comando real"* — every finding proven by a real command. Under Protocol Enforcer that was a sentence.
+Here it is a control.
+
+`tools/research/replay-evidence` **re-runs every finding's evidence command** and requires it to
+still hold. A finding is `{claim, evidence_cmd, evidence_output}`, and it holds when the command
+still exits 0 *and its output still matches what was recorded*.
+
+The second half is the half that matters. A command that exits 0 while producing different output
+means the claim was true when it was written and is not true now — which is precisely the state a
+stale research report hides, and exactly what exit status alone cannot see:
+
+```
+FAIL core.py defines exactly two module-level functions — output drifted — recorded '2', now '3'
+```
+
+`evidence_output: ""` checks exit status only. That is legitimate, and the report names how many
+findings were checked that way, so the weaker check cannot become the default by an omission nobody
+notices.
+
+`tools/research/cite-check` does the other half. *"Conclusions are clear"* is judgment and this does
+not claim to measure it; what it measures is that **every conclusion cites a finding that exists**.
+A conclusion citing nothing is not a conclusion, it is an assertion — and a citation must be an
+explicit `[F-n]` or a verbatim span of the claim, because a paraphrase is where a conclusion drifts
+from what its evidence supports.
+
+### The runs
+
+```
+12 gate evaluations, chain COMPLETE, 16/16 controls, relay verify PASS — auditable
+```
+
+Then a third function was added to the code the report describes — the report itself untouched:
+
+```
+gate-fail  analyze.checklist   findings_documented   (x5)
+escalate   analyze.checklist   findings_documented
+```
+
+The report still said two. Nothing about it changed, and the gate still caught it, because the
+control does not read the report — it re-runs the evidence.
+
+### One thing the source profile was missing
+
+`report.inject` declared no payload at all. The lint calls that an error and it is: a state that
+injects nothing delivers nothing, and the agent is then judged against context it was never handed.
+The migrated profile gives it one rather than leaving it to fail at run time.
