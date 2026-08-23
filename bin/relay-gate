@@ -68,13 +68,18 @@ if [ "$i" -ge "$nwp" ]; then
 fi
 
 wp_id=$(jq -r ".work_packages[$i].id" "$SPRINT")
+# The position is two coordinates when the sprint declares macros (V1 — docs/relay-v2.md §2.2).
+# `macro` is emitted in the outcome and written into the ledger body ONLY when the WP declares one,
+# so a v1 sprint's bytes — and benchmark/relay_hook.sh's historical hashes — are unchanged.
+wp_macro=$(jq -r ".work_packages[$i].macro // \"\"" "$SPRINT")
+add_macro() { if [ -n "${wp_macro:-}" ]; then jq -c --arg m "$wp_macro" '. + {macro:$m}'; else cat; fi; }
 
 # ---- Ledger helpers (single-runner envelope — no `arm` field, matching benchmark/relay_hook.sh) --
 ledger() {  # $1=event  $2=retry(optional)
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" \
          --arg fails "$fails" --arg reg "$reg" \
-    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}')"
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}' | add_macro)"
 }
 
 ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin
@@ -82,7 +87,7 @@ ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=orig
          --argjson i "${i:-0}" --arg ev "checklist-item" \
          --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
          --arg orc "${5:-}" --arg org "${6:-sprint}" \
-    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}')"
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}' | add_macro)"
 }
 
 # A regression re-run is a verdict and belongs on the chain (see bin/relay-arm-hook.sh for the full
@@ -95,7 +100,7 @@ ledger_reg_item() {  # $1=id $2=verdict $3=oracle-sha $4=origin
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "regression-item" --arg id "$1" --arg v "$2" \
          --arg orc "${3:-}" --arg org "${4:-sprint}" \
-    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,verdict:$v,graded_by:"deterministic",oracle:$orc,origin:$org}')"
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,verdict:$v,graded_by:"deterministic",oracle:$orc,origin:$org}' | add_macro)"
 }
 
 # ---- Gate evaluation ---------------------------------------------------------------------------
@@ -135,14 +140,14 @@ _advance() {
   if [ "$ni" -ge "$nwp" ]; then
     ledger sprint-complete
     jq -n --arg wp "$wp_id" --argjson i "$i" \
-      '{"outcome":"complete","i":$i,"wp":$wp}'
+      '{"outcome":"complete","i":$i,"wp":$wp}' | add_macro
     exit 0
   fi
   local nid
   nid=$(jq -r ".work_packages[$ni].id" "$SPRINT")
   ledger advance-reveal
   jq -n --arg wp "$wp_id" --argjson i "$i" --arg next "$nid" \
-    '{"outcome":"advance","i":$i,"wp":$wp,"next":$next}'
+    '{"outcome":"advance","i":$i,"wp":$wp,"next":$next}' | add_macro
   exit 0
 }
 
@@ -173,7 +178,7 @@ failing_json="$(_failing_ids "${fails}${reg}")"
 if [ "$r" -ge "$rb" ]; then
   ledger escalate "$rb"
   jq -n --argjson i "$i" --arg wp "$wp_id" --argjson failing "$failing_json" \
-    '{"outcome":"escalate","i":$i,"wp":$wp,"failing":$failing}'
+    '{"outcome":"escalate","i":$i,"wp":$wp,"failing":$failing}' | add_macro
   exit 2
 fi
 
@@ -182,5 +187,5 @@ ledger gate-fail "$((r+1))"
 
 reason="gate '${wp_id}' is NOT satisfied. Still failing:${fails:- (none)}${reg:+ ; regressions:${reg}}"
 jq -n --argjson i "$i" --arg wp "$wp_id" --argjson failing "$failing_json" --arg reason "$reason" \
-  '{"outcome":"gate-fail","i":$i,"wp":$wp,"failing":$failing,"reason":$reason}'
+  '{"outcome":"gate-fail","i":$i,"wp":$wp,"failing":$failing,"reason":$reason}' | add_macro
 exit 1

@@ -15,9 +15,15 @@ Reproduced from SPEC §3 with field-by-field commentary.
 {
   "brief": "string — the overall goal, given to the Runner at spawn",
   "retry_budget": 3,
+  "macros": [
+    { "id": "string — stable id, e.g. frame",
+      "title": "string — short label",
+      "instructions": "string — injected ONCE, when the chain first enters this macro" }
+  ],
   "work_packages": [
     {
       "id": "string — stable id, e.g. wp1-impl",
+      "macro": "optional — the id of the macro this WP belongs to",
       "title": "string — short label, shown in the Map up front",
       "instructions": "string — full detail, revealed only when this WP is relayed",
       "model": "optional — 'haiku' | 'sonnet' | 'opus' override for this WP",
@@ -26,6 +32,27 @@ Reproduced from SPEC §3 with field-by-field commentary.
   ]
 }
 ```
+
+### 1.1 Macros — the second coordinate
+
+`macros` and `work_packages[].macro` are **optional**. A sprint that declares neither behaves exactly
+as it did before, down to the ledger bytes: the `macro` field is written only when a WP declares one,
+so historical hashes stay comparable.
+
+When they are declared, the chain's position is two coordinates — `<macro>.<sub>` — and that is what
+`$ARM/position` holds. This is what makes a failure localize to `frame.terms, control C7` instead of
+to a work package and no further.
+
+**A macro is a scope, not a loop.** It says which set of WPs is active; it does not run them. Each
+fire still resolves exactly one WP. Its `instructions` are injected **once**, when the chain first
+enters it — the natural home for "load protocol X, its MUST clauses bind" — and its sub-states do not
+each pay for that context again.
+
+A macro carries no retry state of its own. Retry, keep-best and the compliance criterion all key on a
+**recorded verdict**, and only a WP has one; whether the enclosing macro is still open is irrelevant.
+
+Resolution tries the whole position string as a WP id before splitting on the first dot, so an arm
+that predates this notation keeps running, and a WP id that itself contains a dot stays unambiguous.
 
 | Field | Required | Description |
 |---|---|---|

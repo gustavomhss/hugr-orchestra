@@ -109,6 +109,23 @@ The hook maintains two pieces of per-Runner state:
 Because `sprint.json` is read fresh on every fire, the sprint definition itself is stateless
 from the hook's perspective.
 
+**The position is a WP id, and may be two coordinates.** The table above describes the original
+integer counter, which `bin/relay-gate` and `benchmark/relay_hook.sh` still use. The production arm
+hook moved past it twice, for reasons worth keeping in view:
+
+- **R6** replaced the index with the WP **id**. `sprint.json` is re-read on every fire, so an index
+  silently re-aims at a different WP the moment anything is inserted ahead of it, and the hook then
+  demands work the runner was never given. `$ARM/counter` survives only as a derived mirror for
+  pre-R6 readers.
+- **V1** made it two coordinates, `<macro>.<sub>`, when the sprint declares macros
+  (`docs/relay-v2.md` §2.2). Without the first coordinate a failure localizes to a work package and
+  no further; with it, to `frame.terms, control C7`. Resolution tries the whole string as an id
+  before splitting on the first dot, so a pre-v2 arm is migrated rather than reported lost.
+
+A macro is a **scope**, not a loop: one fire still resolves exactly one WP, and a macro holds no
+retry state of its own — retry, keep-best and the compliance criterion all key on a recorded verdict,
+which only a WP has.
+
 **Why `agent_id` is the stable key:** the `SubagentStop` payload provides a stable
 `agent_id` that is consistent across all stops for the same Runner. It is not a session ID
 (one session can spawn multiple Runners) and not a timestamp. Using `agent_id` as the

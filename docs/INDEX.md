@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-23T03:56:11Z
+- **Generated:** 2026-08-23T04:10:25Z
 - **Files:** 25
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `0a9b8973abb85e76fc288a704d1b004946a127de1b87dd2a2f7949dc4da54b7b`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `2a1ee3bae8a4a1b10669206bc90e53ed2f9efcf4502da9704f1f48ce92c7ba91`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -15,12 +15,12 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `SPEC.md` | 312 | 18430 | `89a6028568ed2b53b0f9ffcbacc89dbebbe20dfe6c4ed159b65937933bec3ee3` |
 | `CONTRIBUTING.md` | 30 | 1557 | `0ec40378b3573adeea93cc3b6ca4c2e2a9e541c5e4ec9ee779dfac4d36cb672a` |
 | `CHANGELOG.md` | 205 | 16654 | `11a3a67ed0f24ed494804758b952b1fe4e1c4f42aafb32574f8c878111e52fde` |
-| `docs/architecture.md` | 266 | 13374 | `33bc3f4a592ad429d8afaa78edfdf917b8313d2dfc410af6d76908bc5a209d21` |
-| `docs/authoring-sprints.md` | 246 | 12105 | `785dabbc1545c1b36789464d90df12c3a6a5f8f5046fac218e57ac5f620eb986` |
+| `docs/architecture.md` | 283 | 14542 | `30fec8f42bb9597cb747999c55fa9beb5e29b7313a822b5b71c1051ff01a221d` |
+| `docs/authoring-sprints.md` | 273 | 13644 | `5b95b8104b72bdffbc7b18e20b99990a623bb5659b2a9e1173f46a37f85da245` |
 | `docs/auto-decompose.md` | 61 | 2959 | `a72e0d02d8c632035829644a18e18a6a337c96d0a46ddc89ae0bdb140f7b735e` |
 | `docs/compaction.md` | 84 | 3781 | `63bbf7b052e31dcc90f3ba4864c83577f8a8a838fdc32ca1bf53eba8a1336b2b` |
 | `docs/concepts.md` | 121 | 5309 | `cca3f0b80023fbe7d673ace6a25bdaeb54e4352268a5171ca0b096616451b2bc` |
-| `docs/configuration.md` | 237 | 9484 | `085cbab8598bfe9ff5e2aec7629e25b7889b7ec7fc62d6dad7bf129a3dcbfd4e` |
+| `docs/configuration.md` | 279 | 11560 | `32f164e9d3419fe514e4e1006b375915bb15c9042cdfd94ab5b673bf1c7d27cf` |
 | `docs/control-plane.md` | 540 | 29297 | `732ce3202d64833a8fec3a9b6eb5d20ecdf475888f8bf2ba6cd2f6abcba0b958` |
 | `docs/daemon.md` | 103 | 5919 | `1054cf7bc3627911bbe3bb99b913e4343569729ec8c37340631ed68195daab93` |
 | `docs/enforcement-model.md` | 246 | 13338 | `c1ae62cedc26f8544a943ba0e50f704d6b18cf390ed01f1bc2f3ddd48dd59d1e` |

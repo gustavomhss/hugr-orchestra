@@ -52,11 +52,18 @@ LOG="$ARM/relay.log"; LEDGER="$ARM/ledger.jsonl"
 fails=""; reg=""
 
 # ---- per-arm tamper-evident ledger (hash chain from lib/relay-gate.sh; envelope carries the token) ----
+# `macro` is added ONLY when the current WP declares one (V1 — docs/relay-v2.md §2.2). The envelope
+# is built by lib/relay-gate.sh's chain append, which benchmark/relay_hook.sh also uses, and that
+# hook's historical ledger hashes must stay byte-comparable. A sprint with no macros therefore
+# produces exactly the bytes it produced before — same reasoning as the benchmark omitting `arm`.
+add_macro() { if [ -n "${wp_macro:-}" ]; then jq -c --arg m "$wp_macro" '. + {macro:$m}'; else cat; fi; }
+
 ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-count(optional)
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
          --arg round "${3:-}" --arg rep "${4:-0}" \
-    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg,round:$round,repeat:($rep|tonumber)}')"
+    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg,round:$round,repeat:($rep|tonumber)}' \
+    | add_macro)"
 }
 
 # ---- Round collapse (R7 — docs/control-plane.md §8) ---------------------------------------------
@@ -77,7 +84,7 @@ ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=orig
          --argjson i "${i:-0}" --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
          --arg orc "${5:-}" --arg org "${6:-sprint}" \
     '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}' \
-    >> "$ROUND_BUF"
+    | add_macro >> "$ROUND_BUF"
 }
 # A regression re-run IS a verdict — it re-executes a real control and its result changes the
 # decision — but it used to be recorded nowhere: only the failing ids reached the chain, inside the
@@ -93,7 +100,7 @@ ledger_reg_item() {  # $1=id $2=verdict $3=oracle-sha $4=origin
          --argjson i "${i:-0}" --arg ev "regression-item" --arg id "$1" --arg v "$2" \
          --arg orc "${3:-}" --arg org "${4:-sprint}" \
     '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,verdict:$v,graded_by:"deterministic",oracle:$orc,origin:$org}' \
-    >> "$ROUND_BUF"
+    | add_macro >> "$ROUND_BUF"
 }
 round_flush() {  # append the buffered round to the chain, stamping each entry at flush time
   local b
@@ -113,6 +120,42 @@ round_shape() {  # $1=fails $2=reg — sha over the verdicts AND the failure set
 
 nwp=$(jq '.work_packages | length' "$SPRINT")
 rb=$(jq -r '.retry_budget // 3' "$SPRINT")
+
+# ---- Block-cap preflight (V2 — docs/relay-v2.md §2.5) --------------------------------------------
+# MEASURED: the harness caps consecutive hook blocks (10 fires with a varying reason, 9 with an
+# identical one, 20 with CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0). Advancement is itself a block — same
+# channel, different reason — so the cap bounds a whole CHAIN, not a retry loop, and the default of 8
+# kills any chain past roughly eight states silently, in the middle of the work.
+#
+# This hook runs inside the agent's process, so it is the only thing that can read the LIVE value; an
+# offline linter can only compare against the documented default. It reads it once per arm and
+# refuses to proceed silently.
+#
+# `chain_min` is an honest LOWER BOUND: nwp+1 assumes every gate passes first try, and each retry,
+# regression re-block and park costs another block on top. A chain that merely fits can still die.
+CAP_WARN=""
+if [ ! -f "$ARM/preflight" ]; then
+  : > "$ARM/preflight"
+  cap="${CLAUDE_CODE_STOP_HOOK_BLOCK_CAP:-8}"
+  # Junk must read as the default, never as "uncapped" — failing open here would silence the warning
+  # in exactly the misconfigured sessions it exists for.
+  case "$cap" in ''|*[!0-9]*) cap=8 ;; esac
+  chain_min=$((nwp + 1))
+  if [ "$cap" -ne 0 ] && [ "$cap" -lt "$chain_min" ]; then
+    relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg ev "cap-risk" \
+           --argjson cap "$cap" --argjson cm "$chain_min" --argjson n "$nwp" \
+      '{ts:($ts|tonumber),arm:$tok,event:$ev,cap:$cap,chain_min:$cm,work_packages:$n}')" || true
+    printf '[%s] arm %s: CAP RISK — block cap %s, chain needs at least %s\n' \
+      "$(date +%s)" "$token" "$cap" "$chain_min" >> "$LOG"
+    CAP_WARN="Relay: this session's hook block cap is $cap, and this chain needs at least $chain_min blocks to finish (${nwp} gates plus completion; retries cost more). It will stop mid-chain. Set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0 to disable the cap. "
+  fi
+fi
+
+# Every block leaves through here, so the preflight warning rides the first one out without being
+# threaded through each exit path.
+emit_block() {  # $1 = reason
+  jq -n --arg r "${CAP_WARN}$1" '{decision:"block", reason:$r}'
+}
 
 # ---- Position (R6 — docs/control-plane.md §4) ---------------------------------------------------
 # The chain's position is a WP **id**, not an array index. sprint.json is re-read fresh on every fire,
@@ -140,7 +183,16 @@ if [ -z "$pos" ]; then
 fi
 case "$chain_state" in complete|escalated) exit 0 ;; esac   # terminal — leave the agent alone
 
+# The position is TWO coordinates, `<macro>.<sub>` (V1 — docs/relay-v2.md §2.2). Resolution tries the
+# WHOLE string as a WP id first: that keeps a pre-v2 arm (a bare id on disk) running, and it keeps an
+# id that itself contains a dot unambiguous. Only if that misses do we read the text after the FIRST
+# dot as the sub coordinate. The macro half is never used to look anything up — the sub id is unique
+# in the sprint and is what carries retry state, per R6.
 i=$(jq -r --arg p "$pos" '[.work_packages[].id] | index($p) // -1' "$SPRINT")
+if { [ "$i" = "-1" ] || [ -z "$i" ]; } && [ "$pos" != "${pos#*.}" ]; then
+  pos="${pos#*.}"
+  i=$(jq -r --arg p "$pos" '[.work_packages[].id] | index($p) // -1' "$SPRINT")
+fi
 if [ "$i" = "-1" ] || [ -z "$i" ]; then
   # The plan no longer contains the WP this arm is standing on. Under an index this was invisible
   # (it just pointed somewhere else); named, it is a plan/position mismatch. Fail loudly and let the
@@ -154,6 +206,17 @@ if [ "$i" = "-1" ] || [ -z "$i" ]; then
   exit 0
 fi
 wp_id="$pos"
+wp_macro=$(jq -r ".work_packages[$i].macro // \"\"" "$SPRINT")
+# Rewrite the position in canonical two-coordinate form. A pre-v2 arm carrying a bare id is migrated
+# here rather than reported as POSITION LOST — the WP it names still exists, only the notation moved.
+write_position() {  # $1 = wp array index
+  local pid pmac
+  pid=$(jq -r ".work_packages[$1].id" "$SPRINT")
+  pmac=$(jq -r ".work_packages[$1].macro // \"\"" "$SPRINT")
+  if [ -n "$pmac" ]; then printf '%s.%s' "$pmac" "$pid" > "$ARM/position"
+  else                    printf '%s' "$pid" > "$ARM/position"; fi
+}
+write_position "$i"
 # retry state keys by id too, so it follows the WP rather than the slot it happened to occupy.
 id_safe=$(printf '%s' "$wp_id" | tr -c 'A-Za-z0-9._-' '_')
 RETRY_F="$ARM/retry_$id_safe"
@@ -184,10 +247,25 @@ advance() {  # current gate passed: reveal the next, or finish the chain
     printf '[%s] arm %s: gate %s OK -> CHAIN COMPLETE\n' "$(date +%s)" "$token" "$wp_id" >> "$LOG"
     ledger sprint-complete; archive_trace complete; exit 0
   fi
-  local nid ninstr
+  local nid ninstr nmacro
   nid=$(jq -r ".work_packages[$ni].id" "$SPRINT")
-  printf '%s' "$nid" > "$ARM/position"
+  write_position "$ni"
+  nmacro=$(jq -r ".work_packages[$ni].macro // \"\"" "$SPRINT")
   ninstr=$(jq -r ".work_packages[$ni].instructions // \"\"" "$SPRINT")
+  # A macro is a SCOPE, not a loop: entering it costs one injection of its protocol, and its
+  # sub-states do not each pay for it again. "First entry" is tracked by a marker file rather than
+  # inferred from the position, because once amendments can reorder, position alone cannot say
+  # whether this macro has been entered before.
+  if [ -n "$nmacro" ]; then
+    local mmark minstr
+    mmark="$ARM/macro_$(printf '%s' "$nmacro" | tr -c 'A-Za-z0-9._-' '_')"
+    if [ ! -f "$mmark" ]; then
+      minstr=$(jq -r --arg m "$nmacro" '(.macros // []) | map(select(.id == $m)) | .[0].instructions // ""' "$SPRINT")
+      : > "$mmark"
+      [ -n "$minstr" ] && ninstr="$minstr
+$ninstr"
+    fi
+  fi
   printf '[%s] arm %s: gate %s OK -> reveal %s\n' "$(date +%s)" "$token" "$wp_id" "$nid" >> "$LOG"
   ledger advance-reveal
   local reason="Relay gate '$wp_id' passed. Next gate: $nid. $ninstr"
@@ -196,7 +274,7 @@ advance() {  # current gate passed: reveal the next, or finish the chain
     ledger compaction-hint
     reason="$reason (checkpoint: $ni gates cleared — summarize progress and drop now-stale detail before continuing)"
   fi
-  jq -n --arg r "$reason" '{decision:"block", reason:$r}'
+  emit_block "$reason"
   exit 0
 }
 
@@ -270,7 +348,7 @@ if [ -z "$fails" ] && [ -n "$reg" ]; then
   emit_round
   if [ "$collapsed" = 1 ]; then ledger gate-fail-repeat "$((rr+1))" "$rsha" "$rep"
   else                          ledger gate-fail        "$((rr+1))" "$rsha" "$rep"; fi
-  jq -n --arg r "Relay: an earlier gate regressed — restore these before finishing: ${reg#; }. (Current gate '$wp_id' is satisfied; this is a backslide in prior work.)" '{decision:"block", reason:$r}'
+  emit_block "Relay: an earlier gate regressed — restore these before finishing: ${reg#; }. (Current gate '$wp_id' is satisfied; this is a backslide in prior work.)"
   exit 0
 fi
 
@@ -290,5 +368,5 @@ if [ "$r" -ge 1 ]; then
 else
   msg="Relay gate '$wp_id' is NOT satisfied. Still failing:${fails:- (none)}${reg:+ ; regressions:${reg}}. Address these, then finish.${instr:+ Instructions: $instr}"
 fi
-jq -n --arg r "$msg" '{decision:"block", reason:$r}'
+emit_block "$msg"
 exit 0

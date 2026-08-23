@@ -130,6 +130,48 @@ fails verification identically to a tampered line (by design). Keep the key out 
 mode defends against tail-truncation on its own; anchor the latest chain head out-of-band if that is
 in scope (SPEC §7).
 
+### CLAUDE_CODE_STOP_HOOK_BLOCK_CAP — the cap that bounds a whole chain
+
+**Set it to `0` for any chain longer than about eight states.** This is not a tuning knob; it is a
+precondition.
+
+The harness caps consecutive hook blocks. Measured across three real `claude -p` runs against an
+always-blocking Stop hook:
+
+| session | fires before release |
+|---|---|
+| varying block reason | 10 |
+| identical block reason | 9 |
+| `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0` | 20 — that run's own release limit, never the harness's |
+
+The trap is that **advancement is itself a block** — Relay reveals the next gate through the same
+`{"decision":"block"}` channel, with a different reason and the position moved. So the cap does not
+bound retries; it bounds the *chain*. A default cap of 8 stops any sprint past roughly eight work
+packages, silently, in the middle of the work.
+
+```sh
+export CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0
+```
+
+Disabling it removes the harness's only runaway protection, so Relay carries its own: every
+re-blocking path is bounded by a turn budget (`retry_budget`, `$ARM/reg_retry`, no-progress
+detection). See `docs/gates.md` §5 and `docs/relay-v2.md` §2.5 for the full table.
+
+**Relay checks this for you, once per arm.** The hook runs inside the agent's process, so it is the
+only thing that can read the live value. If the cap is lower than the chain needs it appends a
+`cap-risk` entry to the ledger and prepends a warning to that fire's block reason:
+
+```
+Relay: this session's hook block cap is 8, and this chain needs at least 13 blocks to finish
+(12 gates plus completion; retries cost more). It will stop mid-chain.
+Set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0 to disable the cap.
+```
+
+The number is a **lower bound**, not a prediction: it assumes every gate passes on the first try, and
+each retry, regression re-block and park costs another block. A chain that merely fits under the cap
+can still die. A malformed value reads as the default of 8, never as uncapped — failing open would
+silence the warning in exactly the misconfigured sessions it exists for.
+
 ### Context compaction for long sprints
 
 A single continuous Runner accumulates context across all WPs (SPEC §7 design decision).
