@@ -335,6 +335,8 @@ criteria_map:
       assert: the review carries at least 40 words of findings
       cmd: test "$(jq -r '.findings // "" | length' ${spec_dir}/review-invariants.json)" -ge 200
     - id: invariants-review-engages-with-the-diff
+      paths:
+      - ${spec_dir}/invariants.json
       context:
       - ${spec_dir}/review-invariants.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
@@ -349,6 +351,8 @@ criteria_map:
       assert: the review carries at least 40 words of findings
       cmd: test "$(jq -r '.findings // "" | length' ${spec_dir}/review-requirements.json)" -ge 200
     - id: requirements-review-engages-with-the-diff
+      paths:
+      - ${spec_dir}/requirements.json
       context:
       - ${spec_dir}/review-requirements.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
@@ -363,6 +367,8 @@ criteria_map:
       assert: the review carries at least 40 words of findings
       cmd: test "$(jq -r '.findings // "" | length' ${spec_dir}/review-spec.json)" -ge 200
     - id: spec-review-engages-with-the-diff
+      paths:
+      - ${spec_dir}/spec.json
       context:
       - ${spec_dir}/review-spec.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
@@ -377,6 +383,8 @@ criteria_map:
       assert: the review carries at least 40 words of findings
       cmd: test "$(jq -r '.findings // "" | length' ${spec_dir}/review-goldens.json)" -ge 200
     - id: goldens-review-engages-with-the-diff
+      paths:
+      - ${spec_dir}/scenarios.json
       context:
       - ${spec_dir}/review-goldens.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
@@ -391,6 +399,8 @@ criteria_map:
       assert: the review carries at least 40 words of findings
       cmd: test "$(jq -r '.findings // "" | length' ${spec_dir}/review-work_packages.json)" -ge 200
     - id: work_packages-review-engages-with-the-diff
+      paths:
+      - ${spec_dir}/packages.json
       context:
       - ${spec_dir}/review-work_packages.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,

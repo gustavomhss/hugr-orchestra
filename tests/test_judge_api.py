@@ -148,3 +148,45 @@ def test_base_url_is_honoured_and_absent_key_still_fails_safe_on_anthropic():
                        capture_output=True, text=True, env=e)
     r = json.loads(p.stdout)
     assert r["verdict"] == "fail" and "error" in r["backend"]
+
+
+def test_a_cut_artifact_is_announced_to_the_model_and_to_the_ledger(endpoint, tmp_path):
+    """Silent truncation is the third way a FAIL came from transport rather than from the artifact.
+
+    Measured on the `spec-decompose` live run: a 24k-character diff met a 16k cap, the judge was shown
+    two thirds of the change it was asked about, and it failed a review for claims the visible part
+    did not support. The artifact was right.
+
+    So a cut is announced twice — in the prompt, so the model can say the evidence is incomplete, and
+    in the backend tag, so a verdict on a partial artifact is never read as a verdict on the artifact.
+    """
+    big = tmp_path / "big.diff"
+    big.write_text("x" * 5000)
+    _Handler.reply = _tool_reply("pass")
+    r = _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=1000)
+    assert r["backend"] == "llm:test-model(truncated:big.diff)"
+    sent = "".join(b.get("text", "") for b in [{"text": _Handler.seen["messages"][0]["content"]}])
+    assert "[TRUNCATED at 1000 characters" in sent
+    assert "big.diff was NOT shown to you" in sent
+
+    r = _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=100000)
+    assert r["backend"] == "llm:test-model", "an artifact that fits must not be tagged"
+
+
+def test_truncation_is_recorded_even_when_the_model_answers_in_prose(endpoint, tmp_path):
+    big = tmp_path / "big.diff"
+    big.write_text("y" * 5000)
+    _Handler.reply = {"content": [{"type": "text", "text": "VERDICT: FAIL"}]}
+    assert _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=1000)["backend"] == \
+        "llm:test-model(truncated:big.diff)"
+
+
+def test_the_default_context_cap_is_generous(endpoint, tmp_path):
+    """16000 characters is under one page of a real diff. The measured failure was a conservative cap,
+    not an extravagant one."""
+    from importlib.machinery import SourceFileLoader
+    from importlib.util import module_from_spec, spec_from_loader
+    ldr = SourceFileLoader("judgemod", str(JUDGE))
+    mod = module_from_spec(spec_from_loader("judgemod", ldr))
+    ldr.exec_module(mod)
+    assert mod.MAX_CTX >= 100000

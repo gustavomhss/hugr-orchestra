@@ -618,3 +618,96 @@ parameter surfaces as a missing file instead of a path that quietly resolves to 
 The rule itself is now a test: **a judge control on a `review` state must declare `context`.** It runs
 against every shipped profile, which is how the other four were found — the live run only exposed
 the one it happened to walk through.
+
+
+---
+
+## 14. `spec-decompose` — live, and the third way a judge fails for the wrong reason
+
+Fifteen states, five macros, a **real Claude subagent per state**, decomposing a frozen intent: an
+offline license check for a desktop app, with five constraints the owner had already agreed to. The
+agent never saw the invariants it would later have to satisfy — each state got its own instructions
+and the artifacts the previous states had produced.
+
+```
+15 gate evaluations, chain COMPLETE, 31/31 deterministic controls, 5 advisory (live judge)
+relay verify PASS — auditable
+```
+
+### What the protocol caught, which is the point of running it
+
+The cold review is a separate agent that wrote none of the artifact, and **it went five rounds on the
+spec before approving.** Not five rounds of polish — five rounds of finding something real:
+
+| round | what the reviewer refused |
+|---|---|
+| 1 | `effective_time` returned "license expired" when the clock store was unreadable — a fifth cause smuggled into a closed four-variant enum, derived from no requirement |
+| 2 | the repair saturated effective time to the maximum instant instead: **papered over**, because nothing observed that value, and a freshly issued license then also reads as expired — a remedy message that is actionable in form and false in substance |
+| 3 | the bootstrap moved upstream into new requirements, but the remedy path still said a restored store is "initialised from the clock", which is the exact rollback the new requirement forbids |
+| 4 | the store was still **app-writable**: edit it to epoch, set the clock back, restart. The two closed routes were delete and corrupt; the cheapest one was untouched, and an edge case still claimed the falsifier was unreachable |
+| 5 | APPROVE — the store moved behind a privilege boundary, with the conceded threat model stated rather than overclaimed |
+
+Round 2 is the one worth keeping. A reviewer that accepts a repair because a repair was made is
+decoration; this one read the repair against the requirement it was supposed to discharge and said
+so. Rounds 3 and 4 each found a defect the previous round's fix introduced.
+
+The requirements phase behaved the same way: the reviewer found a stale cross-reference left by a
+renumbering (`REQ-12` citing `REQ-7` for a signature rule) and an enumerated refusal cause that no
+requirement could ever produce.
+
+### The defect: a phase review was graded against every phase's diff
+
+`requirements-review-engages-with-the-diff` failed. Ten consecutive judgments across two models, all
+FAIL — and they were **right**. The criterion fails a review that *"omits a material part of the
+diff"*, and by the second phase the cumulative diff already carried the invariants register, the
+requirements register and the first review. The requirements review described the requirements. It
+had "omitted" three artifacts it was never about.
+
+`paths` — the scope that has been part of the judge's oracle since V3 — is the fix, and no profile
+was using it. Each phase review now scopes its diff to the artifact it reviews. The rule is a test:
+**a profile with more than one review state must scope every `diff: true` judge control**, which is
+how `research-v2` and `design` were fixed without a live run of their own. A single-review profile is
+exempt — there is nothing else in the diff for it to omit.
+
+Two supporting changes. `paths` expands `${...}` like `context` does — and the oracle and the ledger
+both record it **unexpanded**, because `${spec_dir}/x.json` is the same question in every run and
+hashing `/tmp/run-4711/x.json` would make two identical runs read as oracle drift.
+
+### The other silent failure: the artifact was being cut
+
+The same run met a 24 000-character diff against a 16 000-character context cap. The judge was shown
+two thirds of the change it was asked about and failed the review for claims the visible part did not
+support. Third time the same shape: **a FAIL that came from transport, indistinguishable from a
+judgment.**
+
+A cut is now announced twice — inside the prompt, so the model can say the evidence is incomplete,
+and in the backend tag, `judge:llm:<model>(truncated:<file>)`, so a verdict on a partial artifact can
+never be read as a verdict on the artifact. The default cap is 120 000 characters: `max_tokens` and a
+context cap are both ceilings, not spends, and a conservative one turned out to be the dangerous
+choice.
+
+### And one control that was crying wolf
+
+`requirements_atomic` flagged any `and` or `;` anywhere in a requirement. On the agent's 18
+requirements it fired four times and was **right twice** — it also flagged
+*"(including expiry timestamp and customer identity)"* and *"no private signing key and no other
+secret value"*, noun lists inside one obligation. A check wrong half the time teaches its reader to
+override it.
+
+It now flags a conjunction only where the conjunct after it opens a **second obligation** — carrying
+its own modal, or starting with something other than a closed list of function words. Parenthetical
+asides are stripped first. The same fix exposed that `\b(?:and|;)\b` could never match a semicolon —
+`;` is not a word character — so every semicolon-joined pair of obligations had passed silently, and
+the agent's register had one.
+
+The limit is stated rather than hidden: swap the conjunction for a comma and two obligations pass.
+Atomicity is not decidable from prose, which is why `requirements.cold_review` carries the predicate
+as judgment and this catches the careless case, not the determined one.
+
+### One thing this run did not do
+
+The requirements register was amended by a **later** state — the spec phase added REQ-22 through
+REQ-32 — after `requirements.gate` had already passed. Nothing on the chain notices: `SPRINT
+DIVERGED` compares the ledger against the *sprint*, not against the artifacts a state was graded on.
+An upstream verdict can therefore describe an artifact that no longer exists in that form. That is
+recorded here, not fixed.

@@ -206,6 +206,9 @@
         },
         {
           "id": "distinctness-engages-with-the-diff",
+          "paths": [
+            "${design_dir}/doors.json"
+          ],
           "context": [
             "${design_dir}/verdict-distinctness.json"
           ],
@@ -342,6 +345,9 @@
         },
         {
           "id": "dress_rehearsal-engages-with-the-diff",
+          "paths": [
+            "${design_dir}/skeleton.json"
+          ],
           "context": [
             "${design_dir}/verdict-dress_rehearsal.json"
           ],
@@ -442,6 +448,9 @@
         },
         {
           "id": "no_flinching-engages-with-the-diff",
+          "paths": [
+            "${design_dir}/risks.json"
+          ],
           "context": [
             "${design_dir}/verdict-no_flinching.json"
           ],

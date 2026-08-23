@@ -168,6 +168,8 @@ criteria_map:
       assert: the review carries at least 200 characters
       cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-analyze.json)" -ge 200
     - id: analyze-review-engages-with-the-diff
+      paths:
+      - ${research_dir}/analysis.json
       context:
       - ${research_dir}/review-analyze.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
@@ -186,6 +188,8 @@ criteria_map:
       assert: the review carries at least 200 characters
       cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-report.json)" -ge 200
     - id: report-review-engages-with-the-diff
+      paths:
+      - ${research_dir}/report.md
       context:
       - ${research_dir}/review-report.json
       judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,

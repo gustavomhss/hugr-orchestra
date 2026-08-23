@@ -166,6 +166,11 @@ relay_run_checklist() {
       # scope belongs in the oracle. Same criterion over a narrower artifact is a different question,
       # and V3 reports a mid-run change of it as drift.
       oracle=$(relay_oracle_sha "$crit${scope:+ :: $scope}")
+      # The oracle above hashes the RAW scope, and so does the ledger below: `${spec_dir}/x.json` is
+      # the same question in every run, and recording the expanded path would make two identical runs
+      # read as oracle drift. The expansion lives in its own variable, used only where a real path is
+      # needed to compute the diff.
+      scope_real=$(relay_expand_params "$scope")
       ctxargs=()
       while IFS= read -r cf; do
         [ -n "$cf" ] || continue
@@ -174,7 +179,7 @@ relay_run_checklist() {
       done < <(
         jq -r ".work_packages[$i].checklist[$j].context // empty | if type==\"array\" then .[] else . end" "$SPRINT")
       if [ "$wantdiff" = "true" ]; then
-        if dfile=$(relay_compute_diff "$scope"); then
+        if dfile=$(relay_compute_diff "$scope_real"); then
           ctxargs+=(--file "$dfile")
         else
           # FAIL CLOSED. No base ref, or not a git workdir: the control cannot be evaluated, so it

@@ -160,3 +160,40 @@ def test_criterion_exits_zero_only_for_a_passing_criterion(tmp_path):
     absent = subprocess.run(["python3", str(CRIT), str(CHECK), "invariants", "no_such_criterion",
                              "--spec-dir", str(d)], capture_output=True, text=True)
     assert absent.returncode == 1 and "not a criterion" in absent.stderr, absent.stderr
+
+
+# ---------- atomicity: a conjunction is only a defect when it joins two OBLIGATIONS -------------
+
+def _atomic(statement):
+    from importlib.machinery import SourceFileLoader
+    from importlib.util import module_from_spec, spec_from_loader
+    ldr = SourceFileLoader("speccheck", str(CHECK))
+    mod = module_from_spec(spec_from_loader("speccheck", ldr))
+    ldr.exec_module(mod)
+    return mod._joins_two_obligations(statement)
+
+
+ATOMICITY = [
+    # (statement, joins_two_obligations)
+    ("The app shall refuse an expired license.", False),
+    # Two obligations, one modal — the shape the first version caught correctly.
+    ("The app shall complete start-up and enable every feature.", True),
+    ("The app shall persist a mark and shall use it.", True),
+    # A semicolon joining two obligations. `\b(?:and|;)\b` could NEVER match one — `;` is not a word
+    # character — so every semicolon-joined pair passed silently until the split was fixed.
+    ("The app shall log the reason; it shall exit non-zero.", True),
+    # Noun lists inside ONE obligation. Both were flagged by the first version, on a real agent's
+    # register: half its findings were wrong, which is how a check teaches its reader to override it.
+    ("The artifact shall contain no private key and no other secret.", False),
+    ("Verification shall cover every field (including expiry and identity).", False),
+    ("The message shall name the cause and the remedy.", False),
+    # Documented limit, not an oversight: swap the conjunction for a comma and two obligations pass.
+    # `requirements.cold_review` carries the predicate as judgment for exactly this reason.
+    ("The app shall refuse the license, it shall exit non-zero.", False),
+]
+
+
+@pytest.mark.parametrize("statement,expected", ATOMICITY,
+                         ids=[s[:38] for s, _ in ATOMICITY])
+def test_atomicity_flags_obligations_not_conjunctions(statement, expected):
+    assert _atomic(statement) is expected

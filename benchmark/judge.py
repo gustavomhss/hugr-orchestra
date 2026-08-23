@@ -26,7 +26,11 @@ Output: one JSON line {"verdict":"pass|fail","reason":"...","backend":"..."}  (e
 import sys, os, json, argparse
 
 MODEL = os.environ.get("RELAY_JUDGE_MODEL", "claude-sonnet-4-6")
-MAX_CTX = 16000  # chars of context per file handed to the judge
+# Chars of context per file. 16000 silently cut a 24k-char diff in half on a live run: the judge was
+# asked whether a review described a change, shown the first two thirds of that change, and failed the
+# review for claims the visible part did not support. The artifact was right and the FAIL was
+# transport. Modern context windows make a conservative cap the more dangerous choice.
+MAX_CTX = int(os.environ.get("RELAY_JUDGE_MAX_CTX", "120000"))
 # Reply budget. `max_tokens` is a cap, not a spend, so a generous default costs nothing on a model
 # that answers briefly and fixes a real failure on one that does not. Measured on a live run: at 512
 # and at 2048 a reasoning model burned the whole budget on internal thinking and returned an EMPTY
@@ -44,15 +48,30 @@ SYSTEM = (
 )
 
 
+TRUNCATED = []   # basenames cut by MAX_CTX on the last read_ctx call
+
+
 def read_ctx(files):
+    """Read the artifacts, and never cut one silently.
+
+    A judge shown two thirds of a diff answers about two thirds of a diff, and its FAIL is
+    indistinguishable from one about the artifact. So a cut is announced twice: to the model, which
+    can then say the evidence is incomplete, and to the caller, which tags the verdict."""
+    del TRUNCATED[:]
     parts = []
     for f in files:
         try:
             with open(f) as fh:
-                body = fh.read(MAX_CTX)
+                body = fh.read(MAX_CTX + 1)
         except OSError:
             body = "(file not found)"
-        parts.append(f"--- {os.path.basename(f)} ---\n{body}")
+        name = os.path.basename(f)
+        if len(body) > MAX_CTX:
+            body = body[:MAX_CTX] + (
+                f"\n\n[TRUNCATED at {MAX_CTX} characters — the rest of {name} was NOT shown to you. "
+                "If the criterion cannot be decided from what is here, return FAIL and say so.]")
+            TRUNCATED.append(name)
+        parts.append(f"--- {name} ---\n{body}")
     return "\n\n".join(parts) if parts else "(no artifact provided)"
 
 
@@ -129,7 +148,10 @@ def judge_api(criterion, files):
             got = (b.get("input") or {}).get("verdict", "")
             if got in ("pass", "fail"):
                 reason = str((b.get("input") or {}).get("reason", ""))[:300]
-                return got, reason or "(no reason given)", f"llm:{MODEL}"
+                tag = f"llm:{MODEL}"
+                if TRUNCATED:
+                    tag += f"(truncated:{','.join(TRUNCATED)})"
+                return got, reason or "(no reason given)", tag
     verdict, answered = "fail", False
     for line in reversed(text.strip().splitlines()):
         u = line.strip().upper()
@@ -142,6 +164,9 @@ def judge_api(criterion, files):
     # `judge:unavailable(no-diff)` already makes on the other side of the gate: the check could not
     # run, rather than ran and disagreed.
     tag = f"llm:{MODEL}" if answered else f"llm:{MODEL}(no-verdict)"
+    if TRUNCATED:
+        # The ledger must not read a verdict on a partial artifact as a verdict on the artifact.
+        tag += f"(truncated:{','.join(TRUNCATED)})"
     if not answered:
         reason = f"no VERDICT line in {len(text)} chars of reply (truncated at max_tokens?): {reason}"
     return verdict, reason[:300], tag

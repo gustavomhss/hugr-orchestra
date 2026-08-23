@@ -50,6 +50,36 @@ def rows(data):
     return data if isinstance(data, list) else []
 
 
+# Function words that cannot begin a new obligation: a conjunct starting with one of these is
+# continuing a noun phrase ("... no private signing key AND no other secret value"), not opening a
+# second demand ("... shall complete start-up AND enable every feature").
+_CONTINUATION = {
+    "a", "an", "the", "no", "not", "nor", "any", "every", "all", "each", "both", "other", "another",
+    "its", "their", "his", "her", "our", "your", "my", "this", "that", "these", "those",
+    "of", "to", "from", "by", "in", "on", "at", "for", "with", "without", "into", "over", "under",
+    "which", "whose", "where", "when", "than", "then",
+}
+_MODAL = re.compile(r"\b(?:shall|must|will)\b")
+
+
+def _joins_two_obligations(statement):
+    """True when a conjunction in `statement` joins a SECOND obligation, not a second noun.
+
+    Parenthetical asides are stripped first: an aside enumerating fields is part of the one
+    obligation that reads them, and scanning inside it is what produced the measured false positive.
+    """
+    text = re.sub(r"\([^)]*\)", " ", statement.lower())
+    # `;` is not a word character, so the original `\b(?:and|;)\b` could never match one: every
+    # semicolon-joined pair of obligations passed silently. Split the two separators separately.
+    for conjunct in re.split(r"\band\b|;", text)[1:]:
+        words = conjunct.split()
+        if not words:
+            continue
+        if _MODAL.search(conjunct) or words[0] not in _CONTINUATION:
+            return True
+    return False
+
+
 def check_invariants(d):
     inv, err = load(d, "invariants.json")
     if err:
@@ -81,10 +111,20 @@ def check_requirements(d):
     items, invs = rows(req), rows(inv or [])
     inv_ids = {i.get("id") for i in invs}
     out = []
-    # ATOMIC, in the ISO 29148 sense of Singular: one statement, one obligation. "and"/";" joining two
-    # obligations is the shape that hides a half-met requirement behind a single verdict.
-    multi = [r.get("id") for r in items
-             if len(re.findall(r"\b(?:and|;)\b", str(r.get("statement", "")).lower())) > 0]
+    # ATOMIC, in the ISO 29148 sense of Singular: one statement, one obligation. A conjunction joining
+    # two OBLIGATIONS is the shape that hides a half-met requirement behind a single verdict.
+    #
+    # The first version of this flagged every "and" and ";" anywhere in the statement. Measured
+    # against a real agent's 18 requirements, it fired four times and was right twice: it also
+    # flagged "(including expiry timestamp and customer identity)" and "no private signing key and no
+    # other secret value" — noun lists inside ONE obligation. A check that cries wolf on half its
+    # findings teaches the reader to override it, which is worse than not having it.
+    #
+    # State the limit plainly: atomicity is not decidable from prose, and this remains a heuristic.
+    # A writer who replaces "and" with a comma keeps two obligations and passes. That evasion is why
+    # `requirements.cold_review` carries the predicate as judgment; this catches the careless case,
+    # not the determined one.
+    multi = [r.get("id") for r in items if _joins_two_obligations(str(r.get("statement", "")))]
     out.append(("requirements_atomic", PASS if items and not multi else FAIL,
                 "all singular" if items and not multi else f"conjunctions in: {multi or 'none derived'}"))
     # DERIVED both ways: every REQ cites a real INV, and every INV is closed by at least one REQ.

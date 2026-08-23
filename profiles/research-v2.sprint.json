@@ -123,6 +123,9 @@
         },
         {
           "id": "analyze-review-engages-with-the-diff",
+          "paths": [
+            "${research_dir}/analysis.json"
+          ],
           "context": [
             "${research_dir}/review-analyze.json"
           ],
@@ -200,6 +203,9 @@
         },
         {
           "id": "report-review-engages-with-the-diff",
+          "paths": [
+            "${research_dir}/report.md"
+          ],
           "context": [
             "${research_dir}/review-report.json"
           ],

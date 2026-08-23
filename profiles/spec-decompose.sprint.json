@@ -78,6 +78,9 @@
         },
         {
           "id": "invariants-review-engages-with-the-diff",
+          "paths": [
+            "${spec_dir}/invariants.json"
+          ],
           "context": [
             "${spec_dir}/review-invariants.json"
           ],
@@ -151,6 +154,9 @@
         },
         {
           "id": "requirements-review-engages-with-the-diff",
+          "paths": [
+            "${spec_dir}/requirements.json"
+          ],
           "context": [
             "${spec_dir}/review-requirements.json"
           ],
@@ -224,6 +230,9 @@
         },
         {
           "id": "spec-review-engages-with-the-diff",
+          "paths": [
+            "${spec_dir}/spec.json"
+          ],
           "context": [
             "${spec_dir}/review-spec.json"
           ],
@@ -303,6 +312,9 @@
         },
         {
           "id": "goldens-review-engages-with-the-diff",
+          "paths": [
+            "${spec_dir}/scenarios.json"
+          ],
           "context": [
             "${spec_dir}/review-goldens.json"
           ],
@@ -376,6 +388,9 @@
         },
         {
           "id": "work_packages-review-engages-with-the-diff",
+          "paths": [
+            "${spec_dir}/packages.json"
+          ],
           "context": [
             "${spec_dir}/review-work_packages.json"
           ],
