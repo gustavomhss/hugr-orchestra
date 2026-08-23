@@ -82,6 +82,47 @@ relay_control_origin() {  # $1 = jq path to the control
   printf 'sprint'
 }
 
+# ---- The artifact a discursive control is graded against (V5 — docs/relay-v2.md §3) --------------
+# A judge item may set `diff: true`. The gate then computes `git diff <base_ref>` ITSELF and hands
+# the result to the judge, instead of grading whatever static paths the plan happened to list. Two
+# holes closed, both named in docs/enforcement-model.md §5: the base ref / moment / author of the
+# artifact was undefined, so the control was undefined; and artifact selection sat in a plan field,
+# which moved the scope-narrowing attack out of the agent's prose and into the orchestrator's.
+#
+# `git diff <base>` covers committed and uncommitted work alike, so an agent that commits is not
+# invisible to the control. Narrowing via `paths` stays legal — sometimes it is right — but it is
+# folded into the ORACLE (below) and written onto the chain, so it is visible and a narrowing
+# introduced mid-run reads as ORACLE DRIFT.
+#
+# The caller supplies $BASE_REF, resolved from its own state: the ref recorded when this state was
+# ENTERED. Echoes the path to the computed diff, or returns non-zero — never a partial artifact and
+# never an empty one silently, because a judge handed nothing at all would grade the absence.
+relay_compute_diff() {  # $1 = space-separated pathspec (may be empty = everything)
+  [ -n "${BASE_REF:-}" ] || return 1
+  git -C "$RUN_DIR" rev-parse --git-dir >/dev/null 2>&1 || return 1
+  git -C "$RUN_DIR" cat-file -e "${BASE_REF}^{commit}" 2>/dev/null || return 1
+  local dir out
+  dir=$(mktemp -d "${TMPDIR:-/tmp}/relay-diff.XXXXXX") || return 1
+  out="$dir/computed.diff"   # the basename is what the judge sees as the artifact's label
+  # shellcheck disable=SC2086 — $1 is an intentional pathspec split
+  git -C "$RUN_DIR" diff "$BASE_REF" -- $1 > "$out" 2>/dev/null || { rm -rf "$dir"; return 1; }
+  # `git diff` shows TRACKED changes only, and a brand-new file is the most common shape of new work
+  # — so without this an agent that creates a file is invisible to the very control meant to see what
+  # it did. Appended as no-index diffs against /dev/null.
+  #
+  # Deliberately NOT `git add -N`: intent-to-add would make one command do it, at the cost of the
+  # gate writing into the index of the workspace it is judging. A checker that mutates its own
+  # subject is the confused-deputy shape this whole design exists to avoid, and the agent would
+  # inherit a dirtied index it never asked for. Read-only is worth four extra lines.
+  # shellcheck disable=SC2086
+  git -C "$RUN_DIR" ls-files --others --exclude-standard -- $1 2>/dev/null | while IFS= read -r u; do
+    [ -n "$u" ] || continue
+    # --no-index exits 1 when the files differ, which is the normal case here.
+    git -C "$RUN_DIR" diff --no-index -- /dev/null "$u" >> "$out" 2>/dev/null || true
+  done
+  printf '%s' "$out"
+}
+
 relay_run_checklist() {
   local out="" n j id as cmd verdict oracle origin
   n=$(jq ".work_packages[$i].checklist // [] | length" "$SPRINT")
@@ -95,18 +136,37 @@ relay_run_checklist() {
       if ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ); then verdict=pass; else verdict=fail; out="$out; $id"; fi
       ledger_item "$id" "$as" "$verdict" "deterministic" "$oracle" "$origin"
     else
-      local crit block jout jverd jback ctxargs cf
+      local crit block jout jverd jback ctxargs cf wantdiff scope dfile
       crit=$(jq -r ".work_packages[$i].checklist[$j].judge" "$SPRINT")
-      oracle=$(relay_oracle_sha "$crit")
       block=$(jq -r ".work_packages[$i].checklist[$j].blocking // false" "$SPRINT")
+      wantdiff=$(jq -r ".work_packages[$i].checklist[$j].diff // false" "$SPRINT")
+      scope=$(jq -r ".work_packages[$i].checklist[$j].paths // [] | join(\" \")" "$SPRINT")
+      # What a control MEASURES is the criterion AND the artifact it measures it against, so the
+      # scope belongs in the oracle. Same criterion over a narrower artifact is a different question,
+      # and V3 reports a mid-run change of it as drift.
+      oracle=$(relay_oracle_sha "$crit${scope:+ :: $scope}")
       ctxargs=()
       while IFS= read -r cf; do [ -n "$cf" ] && ctxargs+=(--file "$RUN_DIR/$cf"); done < <(
         jq -r ".work_packages[$i].checklist[$j].context // empty | if type==\"array\" then .[] else . end" "$SPRINT")
+      if [ "$wantdiff" = "true" ]; then
+        if dfile=$(relay_compute_diff "$scope"); then
+          ctxargs+=(--file "$dfile")
+        else
+          # FAIL CLOSED. No base ref, or not a git workdir: the control cannot be evaluated, so it
+          # did not pass. `judge:unavailable` marks it as an infrastructure failure rather than a
+          # judgment — and note this still only BLOCKS if the item is blocking. An advisory control
+          # that cannot run is still only advisory, which is exactly why docs/enforcement-model.md §5
+          # never lets a discursive control stand alone.
+          [ "$block" = "true" ] && out="$out; $id"
+          ledger_item "$id" "$as" "fail" "judge:unavailable(no-diff)" "$oracle" "$origin" "$scope"
+          continue
+        fi
+      fi
       jout=$(python3 "$JUDGE" --criterion "$crit" "${ctxargs[@]}" 2>/dev/null || true)
       jverd=$(printf '%s' "$jout" | jq -r '.verdict // "advisory"' 2>/dev/null); [ -z "$jverd" ] && jverd=advisory
       jback=$(printf '%s' "$jout" | jq -r '.backend // "judge"' 2>/dev/null); [ -z "$jback" ] && jback=judge
       [ "$block" = "true" ] && [ "$jverd" = "fail" ] && out="$out; $id"
-      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)" "$oracle" "$origin"
+      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)" "$oracle" "$origin" "$scope"
     fi
   done
   printf '%s' "$out"

@@ -27,6 +27,7 @@ Reproduced from SPEC §3 with field-by-field commentary.
       "title": "string — short label, shown in the Map up front",
       "instructions": "string — full detail, revealed only when this WP is relayed",
       "model": "optional — 'haiku' | 'sonnet' | 'opus' override for this WP",
+      "self_check": ["optional — questions delivered WITH this WP's instructions; never a verdict"],
       "dod": [ { "type": "...", "...": "..." } ]
     }
   ]
@@ -111,6 +112,19 @@ negotiate; "done" is either true or false.
 1. **Prefer mechanical checks.** `file_exists`, `grep`, `min_count`, `shell`, `test` are
    deterministic and free. Reserve `llm` checks for criteria that genuinely cannot be
    expressed mechanically (tone, coherence, design quality).
+
+   A discursive control is an **addition**, never a substitute: pair it with a real oracle.
+
+   ```json
+   "checklist": [
+     { "id": "suite-green",  "cmd": "pytest -q" },
+     { "id": "knows-what-it-did", "diff": true, "blocking": true,
+       "judge": "Does the description match the diff? FAIL any claim the diff does not support." }
+   ]
+   ```
+
+   The first proves it works; the second proves the Runner knows what it did. See `docs/gates.md` §4
+   for `diff`, `paths` and what happens when the diff cannot be computed.
 
 2. **Be unambiguous.** The check either passes or fails with a clear reason the Runner can act
    on. Vague DoDs produce unhelpful gap messages and wasted retries.

@@ -138,6 +138,60 @@ not just that it failed.
 On pass, the WP is locked via keep-best (see §5) and the Gate relays the next WP's
 instructions into the same Runner.
 
+### The self-check ships with the next state's instructions
+
+A WP may declare `self_check`, a list of questions:
+
+```json
+{ "id": "wp2-carve", "instructions": "...",
+  "self_check": ["Which requirement does each package close, and where is that recorded?",
+                 "What did the packet ask for that you did not do?"] }
+```
+
+They are delivered on the **advance into that WP**, alongside its instructions — never after a
+failure, where the Runner needs the gap rather than a questionnaire. Asked in advance, a self-check
+is a forcing function: an agent that knows what it will be asked works toward it while it still can.
+Asked only once the gate has failed, it is a remedy, and unaided self-correction is known to plateau
+or hurt. What makes it work is that it is anchored to a check that runs whatever the Runner says.
+
+A self-check is **text**. It produces no verdict and no ledger entry — a chain that recorded it as
+one would be certifying the Runner's own account of its work. Write it to probe the *protocol's
+steps* while the deterministic control measures the *outcome*; if both ask the same question, the
+self-check is decoration.
+
+The first WP's self-check is not the Gate's to deliver: the hook speaks only once the Runner has
+stopped, so the first state's context — instructions, macro protocol, self-check — belongs in the
+opening prompt the arm author writes.
+
+### `diff: true` — the artifact is computed, not supplied
+
+A `judge` item may set `diff: true`. The Gate then computes `git diff <base_ref>` **itself** and
+hands the result to the judge, instead of grading whatever static paths the plan listed in `context`:
+
+```json
+{ "id": "described-what-changed",
+  "judge": "Does the description match the diff? FAIL any claim the diff does not support.",
+  "diff": true, "blocking": true }
+```
+
+- **`base_ref` is the workdir's HEAD when the state was entered**, captured by the advance out of the
+  previous state and written onto the chain with it. The first state has no such moment, so its base
+  ref goes in the arm's `meta.json` — the arm author's job, like its instructions.
+- **Committed and uncommitted work are both covered**, and so are **untracked files** — a brand-new
+  file is the most common shape of new work. Untracked content is appended as a `--no-index` diff
+  rather than through `git add -N`, because the Gate must not write into the index of the workspace
+  it is judging.
+- **Narrowing with `paths` is legal but never free.** It is folded into the control's oracle and
+  recorded as `scope` on the entry, so a narrowing introduced mid-run reads as ORACLE DRIFT. This
+  matters because artifact selection is an *oracle* decision living in a *plan* field: narrowing it
+  to omit the file where the problem lives makes the judge dutifully cross-check an incomplete
+  artifact and pass — the scope-narrowing attack, moved out of the agent's prose and into the
+  orchestrator's.
+- **It fails closed.** No base ref, or not a git workdir, records `fail` with
+  `graded_by: judge:unavailable` — an infrastructure failure, not a judgment. Note that it still only
+  *blocks* if the item is `blocking`: an advisory control that cannot run is still only advisory,
+  which is exactly why a discursive control is never allowed to stand alone.
+
 ---
 
 ## 5. Keep-best, retry budget, and escalation

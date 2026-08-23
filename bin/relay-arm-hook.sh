@@ -61,8 +61,9 @@ add_macro() { if [ -n "${wp_macro:-}" ]; then jq -c --arg m "$wp_macro" '. + {ma
 ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-count(optional)
   relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" --arg fails "$fails" --arg reg "$reg" \
-         --arg round "${3:-}" --arg rep "${4:-0}" \
-    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg,round:$round,repeat:($rep|tonumber)}' \
+         --arg round "${3:-}" --arg rep "${4:-0}" --arg bref "${LEDGER_BASE:-}" \
+    '{ts:($ts|tonumber),arm:$tok,wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg,round:$round,repeat:($rep|tonumber)}
+     | if $bref == "" then . else . + {base_ref:$bref} end' \
     | add_macro)"
 }
 
@@ -79,11 +80,14 @@ ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-co
 # substitution, so it runs in a subshell and any in-memory append it made would be discarded with it.
 ROUND_BUF="$(mktemp "${TMPDIR:-/tmp}/relay-round.XXXXXX")"
 trap 'rm -f "$ROUND_BUF"' EXIT
-ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin
+ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin $7=scope(optional)
+  # `scope` records the artifact a judge control was narrowed to (V5). Emitted only when set, so a
+  # deterministic control's entry is byte-identical to what it always was.
   jq -nc --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
-         --arg orc "${5:-}" --arg org "${6:-sprint}" \
-    '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}' \
+         --arg orc "${5:-}" --arg org "${6:-sprint}" --arg scope "${7:-}" \
+    '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}
+     | if $scope == "" then . else . + {scope:$scope} end' \
     | add_macro >> "$ROUND_BUF"
 }
 # A regression re-run IS a verdict — it re-executes a real control and its result changes the
@@ -220,6 +224,13 @@ write_position "$i"
 # retry state keys by id too, so it follows the WP rather than the slot it happened to occupy.
 id_safe=$(printf '%s' "$wp_id" | tr -c 'A-Za-z0-9._-' '_')
 RETRY_F="$ARM/retry_$id_safe"
+# The base ref a discursive control is graded against (V5 — docs/relay-v2.md §3). It is the workdir's
+# HEAD at the moment this state was ENTERED, captured by the advance out of the previous state — the
+# only moment the engine runs before the work happens. The FIRST state has no such moment: this hook
+# speaks only once the agent has stopped, by which time the work is done. So the first state's base
+# ref is the ARM AUTHOR's to record in meta.json, exactly like the first state's instructions and its
+# macro's protocol. Absent, a `diff` control fails closed rather than grading a guessed artifact.
+BASE_REF=$(cat "$ARM/base_$id_safe" 2>/dev/null || jq -r '.base_ref // empty' "$ARM/meta.json" 2>/dev/null)
 [ -f "$RETRY_F" ] || { [ -f "$ARM/retry_$i" ] && cp "$ARM/retry_$i" "$RETRY_F"; } 2>/dev/null || true
 
 # Retain the finished trace in a durable corpus (the verified-trace data flywheel). Per-arm state
@@ -247,9 +258,13 @@ advance() {  # current gate passed: reveal the next, or finish the chain
     printf '[%s] arm %s: gate %s OK -> CHAIN COMPLETE\n' "$(date +%s)" "$token" "$wp_id" >> "$LOG"
     ledger sprint-complete; archive_trace complete; exit 0
   fi
-  local nid ninstr nmacro
+  local nid ninstr nmacro nsafe
   nid=$(jq -r ".work_packages[$ni].id" "$SPRINT")
   write_position "$ni"
+  # Stamp the next state's base ref NOW: this fire is that state's entry.
+  nsafe=$(printf '%s' "$nid" | tr -c 'A-Za-z0-9._-' '_')
+  LEDGER_BASE=$(git -C "$RUN_DIR" rev-parse HEAD 2>/dev/null || true)
+  [ -n "$LEDGER_BASE" ] && printf '%s' "$LEDGER_BASE" > "$ARM/base_$nsafe"
   nmacro=$(jq -r ".work_packages[$ni].macro // \"\"" "$SPRINT")
   ninstr=$(jq -r ".work_packages[$ni].instructions // \"\"" "$SPRINT")
   # A macro is a SCOPE, not a loop: entering it costs one injection of its protocol, and its
@@ -268,6 +283,18 @@ $ninstr"
   fi
   printf '[%s] arm %s: gate %s OK -> reveal %s\n' "$(date +%s)" "$token" "$wp_id" "$nid" >> "$LOG"
   ledger advance-reveal
+  # The self-check ships WITH the next state's instructions (V4 — docs/relay-v2.md §3), never after
+  # a failure. Asked in advance it is a forcing function — an agent that knows what it will be asked
+  # works toward it while it still can; asked only once the gate has failed it is a remedy, and
+  # unaided self-correction is known to plateau or hurt. It is TEXT: no verdict, no ledger entry.
+  # Recording it as one would put the agent's own account of its work on the chain, which is the one
+  # thing the chain exists not to do. What grades the outcome is the gate; this probes the steps.
+  local nself
+  nself=$(jq -r ".work_packages[$ni].self_check // [] | map(\"  - \" + .) | join(\"\n\")" "$SPRINT")
+  [ -n "$nself" ] && ninstr="$ninstr
+
+Before you finish this state, be ready to answer:
+$nself"
   local reason="Relay gate '$wp_id' passed. Next gate: $nid. $ninstr"
   local compact_after="${RELAY_COMPACT_AFTER:-6}"
   if [ "$ni" -ge "$compact_after" ]; then
