@@ -231,7 +231,25 @@ The engine and the agent run as the **same OS user with no privilege boundary**.
 reproduced against the shipped code **[MEASURED]**: overwrite the hook script (documented as a
 feature); write `complete` to the arm's state file; redirect the workdir to a decoy; delete the
 sprint; and swap an already-passed control's command with **no ledger trace at all** — after which
-`relay verify` reports `INTACT / PASS — auditable` with the artifact absent.
+`relay verify` reported `INTACT / PASS — auditable` with the artifact absent.
+
+Four of those five are still open, and each of them leaves a **loud** trace: a hook that no longer
+matches the repo, a state file with no chain behind it, a workdir that is not the one the run
+declared, a missing sprint. The fifth was the only **silent** one, and it is now closed
+**[MEASURED]** — `relay verify` recomputes every control's oracle from the sprint on disk and
+compares it to what the ledger recorded (`oracle_recheck`, `tests/test_sprint_diverged.py`):
+
+```
+  SPRINT DIVERGED — the spec on disk no longer asks what the ledger answered:
+    F-REAL     oracle a99a633e8103 -> b5bea41b6c62 (changed after grading)
+  The chain is intact and nothing on it was touched. The QUESTION was rewritten after it was answered.
+```
+
+Be exact about what that buys. It is a **comparison, not a boundary**: an attacker who can rewrite
+the sprint can rewrite the ledger too, and then integrity catches it — the two together mean there
+is no longer an edit that produces a clean `PASS`. It does nothing about the other four, and it
+would not survive an attacker who is willing to be seen. What it removes is the case where the
+record and the spec disagree and **nothing says so**.
 
 The repo already wrote the verdict: *"A control plane whose participants can write each other's
 state has no invariants at all."*
@@ -240,7 +258,9 @@ So the ordering is not "security first". It is:
 
 1. **Controls that measure outcomes, not proxies.** Free, it is checklist design, and it addresses
    the common failure — an agent that stops believing it is done.
-2. **The boundary** — the checker running where the agent cannot write. Expensive, it is
+2. **Comparisons that make a forgery loud.** Cheap — chain integrity and the oracle re-check above
+   are both a few dozen lines. They do not prevent an edit; they cost the attacker silence.
+3. **The boundary** — the checker running where the agent cannot write. Expensive, it is
    infrastructure, and it addresses the rare failure. Its justification does not depend on frequency:
    a fabricated pass is indistinguishable from a real one, so rare-and-invisible costs you more than
    common-and-loud. Build it when not knowing costs more than the infrastructure does.

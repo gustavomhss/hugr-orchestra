@@ -332,6 +332,12 @@ it printed `RESULT: PASS — auditable` while the violation the control existed 
   RESULT: ORACLE DRIFT — not an auditable pass.
 ```
 
+This catches the swap **while the run is still going**, because the regression guard re-grades the
+control and the chain then holds two oracles for it. It cannot catch the same swap made **after** the
+run ends — the control was graded once, so there is one oracle and nothing to compare. That case is
+`SPRINT DIVERGED`, which compares the recorded oracle against the sprint on disk rather than against
+another ledger entry; see `docs/enforcement-model.md` §9.
+
 The older, narrower rule — a control that **failed** one check and passes a different one — survives
 as a labelled subset and still reports as `ORACLE CHANGED`, because it supports the stronger claim:
 that control was not repaired, its question was.

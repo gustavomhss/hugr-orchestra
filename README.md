@@ -69,10 +69,13 @@ never silently passed off as verified.
 The one command you hand to compliance — verifies the chain **and** reports every control's verdict:
 
 ```bash
-bin/relay verify <run-dir>        # exit 0 = intact + controls passed · 1 = tampered · 2 = a control failed
+bin/relay verify <run-dir>        # exit 0 = intact + controls passed · 1 = tampered · 2 = not an auditable pass
 ```
 
 A tampered chain forces a fail **even if every control reads green** — a forged "pass" is worthless.
+Exit 2 covers every other way a run fails to be auditable: a control failed, the chain escalated or
+ends mid-run, no deterministic control was recorded at all, or the sprint on disk no longer asks what
+the ledger says was answered (`SPRINT DIVERGED` — pass `--sprint` when auditing a bare ledger file).
 
 ## Quick start
 
