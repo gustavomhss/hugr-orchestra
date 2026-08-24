@@ -14,7 +14,7 @@ CD   = os.path.join(HERE, "judge_cases")
 # (label, criterion-key, review-file, diff-file, expected)  expected: "pass"|"fail"
 CASES = [
  ("ev/real-approve",      "evidence",  f"{CORP}/review-evidence.json",   f"{CORP}/findings.json",    "pass"),
- ("ev/engaged-fixes",     "evidence",  f"{CD}/ev_good_fixesneeded.json", f"{CORP}/findings.json",    "pass"),
+ ("ev/engaged-fixes",     "evidence",  f"{CD}/ev_good_fixesneeded.json", f"{CORP}/findings-prefix.json", "pass"),
  ("ev/generic",           "evidence",  f"{CD}/ev_bad_generic.json",      f"{CORP}/findings.json",    "fail"),
  ("ev/partial",           "evidence",  f"{CD}/ev_bad_partial.json",      f"{CORP}/findings.json",    "fail"),
  ("ev/fabricated",        "evidence",  f"{CD}/ev_bad_fabricated.json",   f"{CORP}/findings.json",    "fail"),

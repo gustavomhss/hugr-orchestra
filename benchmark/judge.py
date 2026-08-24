@@ -202,6 +202,59 @@ def _judge_api_once(criterion, files):
     return verdict, reason[:300], tag
 
 
+def judge_cli(criterion, files):
+    """One verdict from the `claude` CLI, authenticated by the local session (no API key).
+
+    The gate runs the judge as a SUBPROCESS, so it cannot reach an in-process agent tool. When the
+    judge must be a strong model rather than whatever a gateway will serve for free, this is the
+    bridge. Same voting contract as judge_api: VOTES independent samples, majority wins, and a CLI
+    or transport failure is NOT a vote — it aborts the ballot rather than letting the plumbing
+    outvote the evidence."""
+    if VOTES == 1:
+        return _judge_cli_once(criterion, files)
+    tally, reasons, tags = [], [], []
+    for _ in range(VOTES):
+        v, why, tag = _judge_cli_once(criterion, files)
+        if tag.startswith("cli-error") or tag.endswith("(no-verdict)"):
+            return v, why, tag
+        tally.append(v); reasons.append(why); tags.append(tag)
+    passes = tally.count("pass")
+    verdict = "pass" if passes * 2 > len(tally) else "fail"
+    base = tags[0].split("(")[0]
+    extra = "".join(sorted({t[t.index("("):] for t in tags if "(" in t}))
+    reason = f"{passes}/{len(tally)} passed \u00b7 " + (reasons[tally.index(verdict)] if verdict in tally
+                                                   else reasons[0])
+    return verdict, reason[:300], f"{base}(votes:{passes}/{len(tally)}){extra}"
+
+
+def _judge_cli_once(criterion, files):
+    import subprocess
+    prompt = (f"CRITERION:\n{criterion}\n\nARTIFACT UNDER REVIEW:\n{read_ctx(files)}\n\n"
+              "Does the artifact satisfy the criterion? Reason briefly, then give the VERDICT line.")
+    try:
+        r = subprocess.run(["claude", "-p", prompt, "--model", MODEL,
+                            "--append-system-prompt", SYSTEM],
+                           capture_output=True, text=True, timeout=300)
+    except Exception as e:
+        return "fail", f"cli error: {e}", "cli-error"
+    if r.returncode != 0:
+        return "fail", f"cli exit {r.returncode}: {(r.stderr or '').strip()[:160]}", "cli-error"
+    text = (r.stdout or "").strip()
+    verdict, answered = "fail", False
+    for line in reversed(text.splitlines()):
+        u = line.strip().upper()
+        if u.startswith("VERDICT:") or u.endswith("VERDICT: PASS") or u.endswith("VERDICT: FAIL"):
+            verdict, answered = ("pass" if "PASS" in u else "fail"), True
+            break
+    reason = (text.splitlines()[-1] if text else "no response")
+    tag = f"cli:{MODEL}" if answered else f"cli:{MODEL}(no-verdict)"
+    if TRUNCATED:
+        tag += f"(truncated:{','.join(TRUNCATED)})"
+    if not answered:
+        reason = f"no VERDICT line in {len(text)} chars of CLI reply: {reason}"
+    return verdict, reason[:300], tag
+
+
 def main():
     ap = argparse.ArgumentParser(add_help=False)
     ap.add_argument("--criterion", required=True)
@@ -212,6 +265,8 @@ def main():
     if backend == "stub":
         verdict, reason = judge_stub(args.criterion, args.file)
         tag = "stub"
+    elif backend == "cli":
+        verdict, reason, tag = judge_cli(args.criterion, args.file)
     else:
         verdict, reason, tag = judge_api(args.criterion, args.file)
     print(json.dumps({"verdict": verdict, "reason": reason, "backend": tag}))
