@@ -1,0 +1,4 @@
+{
+ "evidence": "Does this review apply GROUNDED (the evidence really supports the claim), TOOTHED (the falsifier is a concrete observation) and ATOMIC (one claim per finding) to the findings in the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+ "synthesis": "Does this review check each conclusion in the diff against the findings it cites AND against its GRADE derivation \u2014 the starting level and every downgrade \u2014 by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged."
+}
