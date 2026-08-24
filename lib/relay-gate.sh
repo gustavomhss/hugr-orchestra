@@ -21,8 +21,33 @@
 
 # Append one compact JSON body (no prev/seq/h) onto the chain. Same algorithm both hooks always used:
 # prev = previous line's h (GENESIS first), seq = running 0-based index, h = MAC over the body.
+# Serialize the read-tail-then-append. Without it two writers read the same `prev` and both append,
+# the chain FORKS, and `verify_ledger.py` reports TAMPERED — an honest run producing the banner that
+# means "do not accept this run". The old comment here argued concurrency was not a normal path and
+# called the spurious TAMPERED an acceptable fail-closed. Both halves were wrong, and a live run
+# proved it: a harness driving `relay-gate` twice over one state dir raced within seconds, and a
+# transport failure that reads as tampering is exactly the class of defect the judge work removed
+# three times over — worse here, because integrity is the one signal that has no second opinion.
+#
+# mkdir, not flock: flock is absent on macOS, the primary target. mkdir is atomic on every filesystem
+# that matters. Held only across the append, which is milliseconds, never across a gate evaluation.
+relay_chain_lock() {  # $1 = ledger path; echoes the lock dir on success, empty on failure
+  local lock="$(dirname "$1")/.chain.lock" i
+  for i in $(seq 1 200); do
+    if mkdir "$lock" 2>/dev/null; then printf '%s' "$lock"; return 0; fi
+    sleep 0.05
+  done
+  return 1
+}
+
 relay_chain_append() {  # $1 = compact JSON body
-  local last prev seq macalg body h
+  local last prev seq macalg body h lock
+  if ! lock=$(relay_chain_lock "$LEDGER"); then
+    # Never silently drop a chain entry: a record that loses writes is worse than one that says so.
+    printf 'relay: could not take the chain lock for %s — a verdict was not recorded\n' "$LEDGER" >&2
+    return 1
+  fi
+
   # `gen` — the sprint generation this entry was evaluated under. sprint.json is re-read fresh on
   # every fire, so without this a verdict cannot be attributed to a version of the plan and a mutated
   # chain is indistinguishable from a static one. Resolved once per process (a fire evaluates exactly
@@ -41,7 +66,8 @@ relay_chain_append() {  # $1 = compact JSON body
   # the entry count explicit so tail-truncation is detectable.
   if [ -n "${RELAY_LEDGER_KEY:-}" ]; then macalg="hmac-sha256"; else macalg="sha256"; fi
   body=$(printf '%s' "$1" | jq -c --arg p "$prev" --argjson s "$seq" --arg m "$macalg" \
-           --argjson g "$RELAY_GEN" '. + {gen:$g, prev:$p, seq:$s, mac:$m}') || return 0
+           --argjson g "$RELAY_GEN" '. + {gen:$g, prev:$p, seq:$s, mac:$m}') || {
+    rmdir "$lock" 2>/dev/null || true; return 0; }
   if [ -n "${RELAY_LEDGER_KEY:-}" ]; then
     h=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$RELAY_LEDGER_KEY" | sed -E 's/.* //')
   else
@@ -49,14 +75,17 @@ relay_chain_append() {  # $1 = compact JSON body
   fi
   # Do NOT swallow a failed append: a verdict silently dropped from the chain weakens "every verdict is
   # on the chain". If the write fails (disk full, perms), record it loudly to the log + stderr so the
-  # loss is visible rather than masked. (No flock: it is absent on macOS, the primary target; a per-token
-  # ledger is written by one sequential subagent, so concurrent appends to the same file are not a normal
-  # path — a rare double-stop fails CLOSED as a spurious TAMPERED, never as an accepted forgery.)
+  # loss is visible rather than masked.
+  # The lock is released on EVERY path, by hand rather than by a RETURN trap: a RETURN trap set inside
+  # a function leaks to later function returns in the same shell, and `set -u` then kills the run on a
+  # `$lock` that is out of scope. Found the first time this lock ran.
   if ! printf '%s' "$body" | jq -c --arg h "$h" '. + {h:$h}' >> "$LEDGER" 2>/dev/null; then
+    rmdir "$lock" 2>/dev/null || true
     printf '[%s] RELAY LEDGER APPEND FAILED for %s\n' "$(date +%s)" "$LEDGER" >> "${LOG:-/dev/stderr}" 2>/dev/null || true
     printf 'relay: ledger append failed (%s) — a verdict was not recorded\n' "$LEDGER" >&2
     return 1
   fi
+  rmdir "$lock" 2>/dev/null || true
 }
 
 # Evaluate the current WP's checklist. Each item with a `cmd` is DETERMINISTIC (a real check is the

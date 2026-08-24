@@ -58,6 +58,22 @@ done
 
 mkdir -p "$STATE_DIR"
 
+# One evaluation at a time per state dir. The chain lock in relay_chain_append protects the LEDGER;
+# this protects the COUNTER, which is the other half of the same live-run failure: two evaluations
+# read the same `i`, both graded the same state, and the position advanced twice for one state's work.
+# A busy state dir is reported as busy (exit 3) rather than queued, because a harness that fired twice
+# by mistake wants to know, and one that meant it can retry — a silent queue would turn an
+# orchestration bug into an invisible double-grade.
+RUN_LOCK="$STATE_DIR/.run.lock"
+if ! mkdir "$RUN_LOCK" 2>/dev/null; then
+  # A crashed evaluation leaves the directory behind. Rather than pick a staleness timeout that is
+  # wrong for a judge-bearing gate, say what is holding it and let the operator decide.
+  printf 'relay-gate: another evaluation holds %s\n' "$RUN_LOCK" >&2
+  printf 'relay-gate: if no evaluation is running, remove that directory and retry.\n' >&2
+  exit 3
+fi
+trap 'rmdir "$RUN_LOCK" 2>/dev/null || true' EXIT
+
 # ---- State resolution --------------------------------------------------------------------------
 
 RUN_DIR="$WORKDIR"
