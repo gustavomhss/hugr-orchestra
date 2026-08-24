@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-24T01:51:59Z
-- **Files:** 26
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `65dec3fc9d780e3fd14335ab38eba06f07133fda1818cd92e63914e61711a2f1`
+- **Generated:** 2026-08-24T20:31:37Z
+- **Files:** 27
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `df752e6b9120444f8c2dd7b3a7bfe08639fa093b0809c4c66c68aa4344874333`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -14,7 +14,8 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `PRODUCT.md` | 452 | 41985 | `d506df7971338dc45d566c7afba9bdacc836a23b31066fd68a83e7a14b594d71` |
 | `SPEC.md` | 312 | 18430 | `89a6028568ed2b53b0f9ffcbacc89dbebbe20dfe6c4ed159b65937933bec3ee3` |
 | `CONTRIBUTING.md` | 30 | 1557 | `0ec40378b3573adeea93cc3b6ca4c2e2a9e541c5e4ec9ee779dfac4d36cb672a` |
-| `CHANGELOG.md` | 205 | 16654 | `11a3a67ed0f24ed494804758b952b1fe4e1c4f42aafb32574f8c878111e52fde` |
+| `CHANGELOG.md` | 238 | 19643 | `921c3917136564104fc05ca77652f6b2acb382034942b127146f7dbb9d6095da` |
+| `docs/FINDING-self-graded-review-verdicts.md` | 96 | 5080 | `6722f60cdaf3bbc4f6735154facbc9f93118e2569d1eb99ef2d44362c846bbb4` |
 | `docs/architecture.md` | 283 | 14542 | `30fec8f42bb9597cb747999c55fa9beb5e29b7313a822b5b71c1051ff01a221d` |
 | `docs/authoring-sprints.md` | 320 | 16461 | `7955d22e2c94499e60d80ce5bf588360f6c28f69cfaa8535bd6844fbaa222044` |
 | `docs/auto-decompose.md` | 61 | 2959 | `a72e0d02d8c632035829644a18e18a6a337c96d0a46ddc89ae0bdb140f7b735e` |
@@ -29,7 +30,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/guardrails.md` | 111 | 6214 | `3849f0a3a2b576e864f28b8f74e94cae314dae844cd3d14b5a30eb09953c6f63` |
 | `docs/per-agent-arms.md` | 149 | 6940 | `711eb139ce13eff2875d3c67ba4413cc756b68ca89fb5bd06bf80bccca55e3eb` |
-| `docs/profiles.md` | 826 | 45816 | `857727261728c8ae0ec0619ea81928708229f481a9258b0995f8c8c2f480fdc1` |
+| `docs/profiles.md` | 877 | 50415 | `59e1fe7f5fa8485ac8bc8796ca0e240b85a8d1959d39974c00e5c1e68a5247a0` |
 | `docs/relay-v2.md` | 582 | 35622 | `4d210a91f52647325e14e0523a6c9a4d9a45a420bf5f2a827af957a07b32681d` |
 | `docs/sdk.md` | 97 | 4681 | `0643dfff7f31e5a462f3d8735776712647d15467d20e20de61b41b3ae39516a8` |
 | `docs/spec-library.md` | 125 | 6858 | `c3d528a3b3a47c0f2ee592a492954b33fcf3c7a8eeef91cb52a339f6ecd9c7af` |

@@ -372,7 +372,21 @@ whether a source is any good — stays with the cold review, because that is jud
 | **Grounded theory** (Glaser & Strauss; Charmaz) | the corpus is built **as the work happens**: constant comparison, memoing, theoretical saturation | `every_finding_is_compared_to_the_corpus`, `memos_were_written_during_the_work`, `saturation_is_declared` |
 | **Lincoln & Guba** — trustworthiness | confirmability: findings trace to data, not to the researcher's imagination. Transferability: thick description of the setting | `quotes_are_verbatim`, `context_described` |
 
-Fourteen states, **56 controls, 43 of them mechanical**, zero ungated — the largest profile shipped.
+Fourteen states, **56 controls, 52 of them mechanical and 4 judge**, zero ungated — the largest
+profile shipped.
+
+Both cold-review states changed shape after the live run. They used to carry a control of the form
+`test "$(jq -r .verdict review-evidence.json)" = APPROVE` — a command run by the gate, over a file
+written by the **executor**. That is the agent's own claim advancing the chain, which
+[`enforcement-model.md`](enforcement-model.md) §4 forbids outright, wearing a `jq` as a disguise. It
+cost 21 reviewer clones and 11.16M tokens on one state, none of it visible on the ledger, because the
+executor re-spawned reviewers locally until one said APPROVE and only then fired the gate. The verdict
+controls are replaced by `evidence-withstands-cold-review` and `conclusions-withstand-cold-review`:
+blocking judge controls that read the artifact itself and are run **by the gate**, so the reviewer is
+on the far side of the boundary the executor cannot reach. The executor still writes its review — the
+`*-is-substantive` and `*-engages-with-the-diff` controls are unchanged — it just no longer declares
+the outcome. Full account and the status of the nine controls elsewhere that still have the defect:
+[`FINDING-self-graded-review-verdicts.md`](FINDING-self-graded-review-verdicts.md).
 
 ### The ones that carry the most weight
 

@@ -37,7 +37,14 @@ def _env(extra=None):
 @pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
 def test_a_judge_on_a_review_state_is_given_the_review(profile):
     """A `review` state exists to produce an artifact and have it judged. A judge control sitting on
-    one with no `context` is grading the void."""
+    one that is handed NOTHING is grading the void.
+
+    Two shapes satisfy this, and the difference is which side of the gate the reviewer sits on.
+    `context` hands the judge the executor's written review, so the judge grades that review against
+    the artifact. `diff: true` makes the gate compute the artifact's own diff and hand it over, so
+    the judge IS the reviewer — the shape `docs/FINDING-self-graded-review-verdicts.md` moved
+    research-v2's cold reviews to, precisely so the executor cannot manufacture the verdict. Either
+    is fed; neither is the void. Requiring `context` specifically would forbid the fix."""
     sprint = json.loads(profile.with_suffix(".sprint.json").read_text())
     for wp in sprint["work_packages"]:
         if wp.get("kind") != "review":
@@ -45,8 +52,9 @@ def test_a_judge_on_a_review_state_is_given_the_review(profile):
         for c in wp.get("checklist", []):
             if "judge" not in c:
                 continue
-            assert c.get("context"), (
-                f"{profile.stem}:{wp['id']}:{c['id']} judges an artifact it is never handed")
+            assert c.get("context") or c.get("diff") is True, (
+                f"{profile.stem}:{wp['id']}:{c['id']} judges an artifact it is never handed: "
+                "no `context` and no `diff: true`")
 
 
 def _run_gate(tmp_path, context_value, marker_in_file):

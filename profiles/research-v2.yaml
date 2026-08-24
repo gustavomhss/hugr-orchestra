@@ -146,7 +146,9 @@ pipeline:
     type: review
     name: Cold review
     description: Apply GROUNDED (the evidence supports the claim), TOOTHED (the falsifier could actually be observed)
-      and ATOMIC (one claim per finding — this one is judgment, not machine-checkable); verdict APPROVE or FIXES-NEEDED
+      and ATOMIC (one claim per finding — this one is judgment, not machine-checkable). Write the review; the gate
+      runs its OWN cold reviewer over findings.json and that one decides. Your verdict is not what opens the gate,
+      so record what you actually found rather than what you need it to say
     enabled: true
   - id: gate
     type: checklist
@@ -209,7 +211,9 @@ pipeline:
       floor_disclosure say what the tied labels no longer say? — then apply DERIVED (each conclusion follows
       from what it cites) and CALIBRATED (the label matches the evidence) to each conclusion AGAINST that
       policy. The starting level and the arithmetic are settled mechanically by the gate; do not propose a
-      different scheme, review the declared one. Verdict APPROVE or FIXES-NEEDED
+      different scheme, review the declared one. Write the review; the gate runs its OWN cold reviewer over
+      conclusions.json and that one decides. Your verdict is not what opens the gate, so record what you actually
+      found rather than what you need it to say
     enabled: true
   - id: gate
     type: checklist
@@ -359,9 +363,18 @@ criteria_map:
       assert: this state wrote analytic memos as it worked
       cmd: test -s ${research_dir}/memos.json
     evidence.cold_review:
-    - id: evidence-review-verdict
-      assert: the cold reviewer returned APPROVE
-      cmd: test "$(jq -r .verdict ${research_dir}/review-evidence.json)" = APPROVE
+    - id: evidence-withstands-cold-review
+      paths:
+      - ${research_dir}/findings.json
+      judge: >-
+        Read the findings in the diff and judge them yourself; you are the cold reviewer, not a grader of one.
+        Apply GROUNDED (the recorded evidence really supports the claim, and the quoted span covers every
+        qualifier, comparison, subject and connector the claim uses), TOOTHED (the falsifier is a concrete
+        observation someone could make) and ATOMIC (one claim per finding). PASS only if every finding in the
+        diff satisfies all three. FAIL and name the finding ids if any does not. Do not consider whether a
+        review file approved them.
+      diff: true
+      blocking: true
     - id: evidence-review-is-substantive
       assert: the review carries at least 250 characters of findings
       cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-evidence.json)" -ge 250
@@ -385,9 +398,19 @@ criteria_map:
       assert: this state wrote the conclusions
       cmd: test -s ${research_dir}/conclusions.json
     synthesis.cold_review:
-    - id: synthesis-review-verdict
-      assert: the cold reviewer returned APPROVE
-      cmd: test "$(jq -r .verdict ${research_dir}/review-synthesis.json)" = APPROVE
+    - id: conclusions-withstand-cold-review
+      paths:
+      - ${research_dir}/conclusions.json
+      judge: >-
+        Read the conclusions in the diff and judge them yourself; you are the cold reviewer, not a grader of
+        one. For each conclusion, ask three questions. Does it follow from the findings it cites, or does it
+        reach past them? Does the declared calibration_policy justify its starting level as a property of the
+        KIND of evidence rather than of the claim? Is each downgrade a real concern in the domain it names?
+        PASS only if every conclusion in the diff holds. FAIL and name the conclusion ids if any does not. The
+        GRADE arithmetic is already checked mechanically by the gate — do not re-derive it, and do not propose
+        a different calibration scheme. Do not consider whether a review file approved them.
+      diff: true
+      blocking: true
     - id: synthesis-review-is-substantive
       assert: the review carries at least 250 characters of findings
       cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-synthesis.json)" -ge 250

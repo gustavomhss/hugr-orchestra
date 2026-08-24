@@ -5,6 +5,39 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Fixed — 2026-08-24 (research-v2: two GRADE defects and one self-graded review verdict)
+Three defects found by RUNNING the `research-v2` profile agent-driven end to end, not by reading it.
+All three were visible in the same live run (52 sources, 41 findings, 8 conclusions, 199 min).
+- **The GRADE starting level was an unchecked free parameter.** `calibration_is_derived` verified
+  `final = start − downgrades` but never the `start`, so the agent picked `low` for all eight
+  conclusions by fiat and the arithmetic ratified it — GRADE's own failure mode, one level upstream of
+  where it was being caught. GRADE fixes the starting level by the KIND of evidence, so the rule is
+  now declared once over kinds: `calibration_policy_is_declared` + `starting_level_is_derived`.
+  `conclusions.json` becomes `{calibration_policy, conclusions}` so a level cannot be revised without
+  the rule that produced it appearing in the same diff.
+- **The four-level scale bottomed out and the label kept implying a distinction.** `very-low` absorbs,
+  and all eight conclusions landed there. The scale is kept faithful to GRADE; what is added is
+  disclosure. `the_certainty_floor_is_disclosed` fires when the arithmetic runs off the end of the
+  scale or every label ties, and requires `floor_disclosure` to name what the reader should read
+  instead; `report_discloses_the_certainty_floor` requires that substitute — the downgrade domains,
+  beside each conclusion — to reach the reader. Being very-low about everything is not a defect;
+  letting the label imply a distinction it has stopped making is. The report control FAILS on the very
+  corpus it was derived from, and that artifact is left failing rather than edited to agree with it.
+- **A review verdict the executor writes is self-graded evidence.**
+  `test "$(jq -r .verdict review-synthesis.json)" = APPROVE` is a command run by the gate over a file
+  written by the executor — the agent's own claim advancing the chain, which `enforcement-model.md` §4
+  forbids, wearing a `jq` as a disguise. Because the executor knows the gate wants APPROVE, it
+  re-spawned reviewers locally until one gave it: **21 clones, 21 of 21 rounds changing the artifact,
+  `conclusions.json` growing 11,365 → 35,664 chars, 11.16M tokens, ~2h — and 3 rows on the ledger, all
+  `pass`, one gate fire.** A justification ratchet, invisible to audit, and `retry_budget` never
+  applied because the gate never re-fired. Both verdict controls are replaced by blocking judge
+  controls run BY THE GATE over the artifact itself (`evidence-withstands-cold-review`,
+  `conclusions-withstand-cold-review`). The executor still writes its review and is still graded
+  against the diff; it no longer declares the outcome. Nine controls of the same shape remain in
+  `design`, `spec-decompose` and `planning` — see `docs/FINDING-self-graded-review-verdicts.md`.
+
+research-v2: 52 → 56 controls (52 mechanical, 4 judge), zero ungated. Suite 497 → 501.
+
 ### Added — 2026-08-22 (control plane, R5–R7: an orchestrator may mutate a live chain)
 `docs/control-plane.md` designs how an orchestrator amends a **running** chain and how a human watches
 and intervenes. R5–R7 build the record that has to carry it. Three defects were reproduced first, then
