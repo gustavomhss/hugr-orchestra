@@ -396,11 +396,23 @@ mechanism, which fixes the starting level by the **kind** of evidence before any
 looked at: `calibration_policy_is_declared` requires one rule, written over kinds, and
 `starting_level_is_derived` reads each conclusion's level out of it.
 
-That declaration also ended a review pathology. `synthesis.cold_review` on that run took **21 rounds,
-16 of them oscillating between calibration schemes** — with no declared rule, the reviewer had to invent
-a scheme to review against, and each round invented a different one. It converged only once the
-researcher wrote the policy down. The profile now requires that up front, and the cold review's
-instruction says to review *the declared policy*, not to propose another.
+That declaration is also **half** of what `synthesis.cold_review` needed, and it is worth stating which
+half, because the obvious reading is wrong. That state took **21 rounds** on the live run, and the
+tempting story is oscillation — reviewers proposing a different calibration scheme each time. The
+transcripts refute it: all 21 rounds *changed* the artifact and it grew monotonically from 11,365 to
+35,664 characters, and the only round that **shrank** it is the one that returned APPROVE. It is a
+justification RATCHET, not a loop spinning in place — each reviewer demands more justification, the
+artifact grows, and the next reviewer has more surface to attack. Round 20's review already had a
+`calibration_policy` in front of it while the ratchet kept running.
+
+So declaring the policy removes one thing the reviewer would otherwise have had to invent, and nothing
+more. The ratchet itself is a **stopping-rule** defect and is still open: the control demands
+`verdict == APPROVE` in a file, so the executor re-spawns reviewers until one approves, nothing counts
+or bounds the spawns, and none of it reaches the ledger — which records one fire for the work package
+and reads to an auditor as a clean pass. `retry_budget` does not protect this; it bounds gate re-fires,
+and the gate never re-fired. The fixes that would are structural — a fixed-N fan-out review with a
+majority verdict in one round, a size cap on the artifact, and the artifact hash recorded per round so
+the ratchet is visible on the ledger at all.
 
 **`the_certainty_floor_is_disclosed`** is the second half. GRADE's scale is four levels wide and
 `very-low` **absorbs**: a fifth serious concern cannot move the label. On clinical evidence that ceiling
