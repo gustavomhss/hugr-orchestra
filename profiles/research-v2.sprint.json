@@ -191,7 +191,7 @@
           "paths": [
             "${research_dir}/findings.json"
           ],
-          "judge": "Does this review apply GROUNDED (the evidence really supports the claim), TOOTHED (the falsifier is a concrete observation) and ATOMIC (one claim per finding) to the findings in the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged. Judge the review's ENGAGEMENT with the diff, not its verdict: a well-supported FIXES-NEEDED that names specific items and checks them against the diff SATISFIES this criterion, and a glowing APPROVE that names nothing does not.",
+          "judge": "Does this review apply GROUNDED (the evidence really supports the claim), TOOTHED (the falsifier is a concrete observation) and ATOMIC (one claim per finding) to the findings in the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:research-v2@2.0.0"
@@ -320,7 +320,7 @@
       "macro": "synthesis",
       "kind": "execute",
       "title": "Conclude",
-      "instructions": "Derive each conclusion's certainty: a starting level, one downgrade per serious concern in a named GRADE domain. Say which A-<n> it discharges and what would change it",
+      "instructions": "Declare the calibration policy FIRST \u2014 one rule, over kinds of evidence, fixing the starting level before any conclusion is looked at \u2014 then derive each conclusion's certainty from it: its kind's starting level, one downgrade per serious concern in a named GRADE domain. Where the four-level scale absorbs a concern or every label ties, say so in floor_disclosure and name what the reader should read instead. Say which A-<n> each conclusion discharges and what would change it",
       "checklist": [
         {
           "id": "conclusions-written",
@@ -335,7 +335,7 @@
       "macro": "synthesis",
       "kind": "review",
       "title": "Cold review",
-      "instructions": "Apply DERIVED (each conclusion follows from what it cites) and CALIBRATED (the label matches the evidence); verdict APPROVE or FIXES-NEEDED",
+      "instructions": "Review the calibration POLICY once \u2014 is one rule over kinds of evidence sound, and does its floor_disclosure say what the tied labels no longer say? \u2014 then apply DERIVED (each conclusion follows from what it cites) and CALIBRATED (the label matches the evidence) to each conclusion AGAINST that policy. The starting level and the arithmetic are settled mechanically by the gate; do not propose a different scheme, review the declared one. Verdict APPROVE or FIXES-NEEDED",
       "checklist": [
         {
           "id": "synthesis-review-verdict",
@@ -357,7 +357,7 @@
           "paths": [
             "${research_dir}/conclusions.json"
           ],
-          "judge": "Does this review check each conclusion in the diff against the findings it cites AND against its GRADE derivation \u2014 the starting level and every downgrade \u2014 by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged. Judge the review's ENGAGEMENT with the diff, not its verdict: a well-supported FIXES-NEEDED that names specific items and checks them against the diff SATISFIES this criterion, and a glowing APPROVE that names nothing does not.",
+          "judge": "Does this review check the declared calibration_policy AND each conclusion in the diff against the findings it cites and against its downgrades, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:research-v2@2.0.0"
@@ -378,6 +378,18 @@
           "origin": "pe-profile:research-v2@2.0.0"
         },
         {
+          "id": "calibration_policy_is_declared",
+          "assert": "calibration_policy_is_declared",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_policy_is_declared --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "starting_level_is_derived",
+          "assert": "starting_level_is_derived",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis starting_level_is_derived --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
           "id": "calibration_is_derived",
           "assert": "calibration_is_derived",
           "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_is_derived --research-dir ${research_dir} --repo-root ${repo_root}",
@@ -393,6 +405,12 @@
           "id": "calibration_matches_the_evidence",
           "assert": "calibration_matches_the_evidence",
           "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_matches_the_evidence --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "the_certainty_floor_is_disclosed",
+          "assert": "the_certainty_floor_is_disclosed",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check synthesis the_certainty_floor_is_disclosed --research-dir ${research_dir} --repo-root ${repo_root}",
           "origin": "pe-profile:research-v2@2.0.0"
         },
         {
@@ -465,6 +483,12 @@
           "id": "report_states_the_rejected_hypotheses",
           "assert": "report_states_the_rejected_hypotheses",
           "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_states_the_rejected_hypotheses --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_discloses_the_certainty_floor",
+          "assert": "report_discloses_the_certainty_floor",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_discloses_the_certainty_floor --research-dir ${research_dir} --repo-root ${repo_root}",
           "origin": "pe-profile:research-v2@2.0.0"
         },
         {

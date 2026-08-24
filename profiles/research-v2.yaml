@@ -196,14 +196,20 @@ pipeline:
   - id: conclude
     type: execute
     name: Conclude
-    description: 'Derive each conclusion''s certainty: a starting level, one downgrade per serious concern in a
-      named GRADE domain. Say which A-<n> it discharges and what would change it'
+    description: 'Declare the calibration policy FIRST — one rule, over kinds of evidence, fixing the starting
+      level before any conclusion is looked at — then derive each conclusion''s certainty from it: its kind''s
+      starting level, one downgrade per serious concern in a named GRADE domain. Where the four-level scale
+      absorbs a concern or every label ties, say so in floor_disclosure and name what the reader should read
+      instead. Say which A-<n> each conclusion discharges and what would change it'
     enabled: true
   - id: cold_review
     type: review
     name: Cold review
-    description: Apply DERIVED (each conclusion follows from what it cites) and CALIBRATED (the label matches the
-      evidence); verdict APPROVE or FIXES-NEEDED
+    description: Review the calibration POLICY once — is one rule over kinds of evidence sound, and does its
+      floor_disclosure say what the tied labels no longer say? — then apply DERIVED (each conclusion follows
+      from what it cites) and CALIBRATED (the label matches the evidence) to each conclusion AGAINST that
+      policy. The starting level and the arithmetic are settled mechanically by the gate; do not propose a
+      different scheme, review the declared one. Verdict APPROVE or FIXES-NEEDED
     enabled: true
   - id: gate
     type: checklist
@@ -212,9 +218,12 @@ pipeline:
     enabled: true
     criteria:
     - conclusions_cite_findings
+    - calibration_policy_is_declared
+    - starting_level_is_derived
     - calibration_is_derived
     - downgrades_name_a_grade_domain
     - calibration_matches_the_evidence
+    - the_certainty_floor_is_disclosed
     - every_conclusion_says_what_would_change_it
     - conclusions_answer_the_question
 - state_id: report
@@ -242,6 +251,7 @@ pipeline:
     - report_declares_source_age
     - report_carries_every_open_contradiction
     - report_states_the_rejected_hypotheses
+    - report_discloses_the_certainty_floor
     - report_states_the_setting
     - report_confronts_the_prior_belief
 criteria_map:
@@ -298,12 +308,18 @@ criteria_map:
       contest contradictions_are_resolved_or_declared_open --research-dir ${research_dir} --repo-root ${repo_root}
     conclusions_cite_findings: ${research_tools}/../criterion ${research_tools}/research-check synthesis conclusions_cite_findings
       --research-dir ${research_dir} --repo-root ${repo_root}
+    calibration_policy_is_declared: ${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_policy_is_declared
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    starting_level_is_derived: ${research_tools}/../criterion ${research_tools}/research-check synthesis starting_level_is_derived
+      --research-dir ${research_dir} --repo-root ${repo_root}
     calibration_is_derived: ${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_is_derived
       --research-dir ${research_dir} --repo-root ${repo_root}
     downgrades_name_a_grade_domain: ${research_tools}/../criterion ${research_tools}/research-check synthesis downgrades_name_a_grade_domain
       --research-dir ${research_dir} --repo-root ${repo_root}
     calibration_matches_the_evidence: ${research_tools}/../criterion ${research_tools}/research-check synthesis
       calibration_matches_the_evidence --research-dir ${research_dir} --repo-root ${repo_root}
+    the_certainty_floor_is_disclosed: ${research_tools}/../criterion ${research_tools}/research-check synthesis the_certainty_floor_is_disclosed
+      --research-dir ${research_dir} --repo-root ${repo_root}
     every_conclusion_says_what_would_change_it: ${research_tools}/../criterion ${research_tools}/research-check
       synthesis every_conclusion_says_what_would_change_it --research-dir ${research_dir} --repo-root ${repo_root}
     conclusions_answer_the_question: ${research_tools}/../criterion ${research_tools}/research-check synthesis conclusions_answer_the_question
@@ -320,6 +336,8 @@ criteria_map:
       report_carries_every_open_contradiction --research-dir ${research_dir} --repo-root ${repo_root}
     report_states_the_rejected_hypotheses: ${research_tools}/../criterion ${research_tools}/research-check report
       report_states_the_rejected_hypotheses --research-dir ${research_dir} --repo-root ${repo_root}
+    report_discloses_the_certainty_floor: ${research_tools}/../criterion ${research_tools}/research-check report report_discloses_the_certainty_floor
+      --research-dir ${research_dir} --repo-root ${repo_root}
     report_states_the_setting: ${research_tools}/../criterion ${research_tools}/research-check report report_states_the_setting
       --research-dir ${research_dir} --repo-root ${repo_root}
     report_confronts_the_prior_belief: ${research_tools}/../criterion ${research_tools}/research-check report report_confronts_the_prior_belief
@@ -378,8 +396,8 @@ criteria_map:
       - ${research_dir}/review-synthesis.json
       paths:
       - ${research_dir}/conclusions.json
-      judge: Does this review check each conclusion in the diff against the findings it cites AND against its GRADE
-        derivation — the starting level and every downgrade — by id? FAIL if it approves or rejects without naming
+      judge: Does this review check the declared calibration_policy AND each conclusion in the diff
+        against the findings it cites and against its downgrades, by id? FAIL if it approves or rejects without naming
         specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to
         apply to any artifact of this kind, or if it leaves part of the diff unjudged.
       diff: true

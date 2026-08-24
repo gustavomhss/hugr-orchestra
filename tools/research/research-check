@@ -13,7 +13,12 @@ check the part of that method a machine can check:
         DERIVED: a starting level fixed by the kind of evidence, then downgraded one level per serious
         concern across five named domains (risk of bias, inconsistency, indirectness, imprecision,
         publication bias). `calibration_is_derived` checks the arithmetic; the domains are the only
-        vocabulary a downgrade may use.
+        vocabulary a downgrade may use; and because the STARTING level is fixed by the kind of
+        evidence rather than by the claim, it is declared once as a rule over kinds
+        (`calibration_policy_is_declared`) and read from there (`starting_level_is_derived`) rather
+        than chosen per conclusion. The scale is four levels wide and very-low absorbs, so
+        `the_certainty_floor_is_disclosed` makes the register say when the label has stopped
+        discriminating instead of letting it imply a distinction it is no longer making.
   Admiralty code — NATO AJP-2.1 / STANAG 2511. Source RELIABILITY (A-F) and information CREDIBILITY
         (1-6) are rated SEPARATELY and in isolation, so a trusted source cannot launder a weak report.
         `credibility_is_earned` makes the top grade cost something: "confirmed by other independent
@@ -54,8 +59,10 @@ Artifacts, all under --research-dir:
     contest.json     [{finding: F-1, searched_for, searched_against: [S-1],
                        scores: {H-1: consistent|inconsistent|neutral}, diagnostic: bool,
                        contradictions: [...], resolution: withstood|revised|open}]
-    conclusions.json [{id: C-1, statement, cites: [F-1], answers: [A-1], hypothesis: H-1,
-                       starting_level, downgrades: [{domain, why}], calibration, would_change}]
+    conclusions.json {calibration_policy: {rule, starting_levels: {kind: level}, floor_disclosure},
+                      conclusions: [{id: C-1, statement, cites: [F-1], answers: [A-1],
+                                     hypothesis: H-1, evidence_kind, starting_level,
+                                     downgrades: [{domain, why}], calibration, would_change}]}
     report.md
 
 Usage: research-check --phase question|survey|evidence|contest|synthesis|report
@@ -76,6 +83,12 @@ PASS, FAIL = "PASS", "FAIL"
 
 # GRADE's four levels, ordered. A downgrade moves one step right.
 LEVELS = ("high", "moderate", "low", "very-low")
+# ...and stops. very-low ABSORBS: a fifth serious concern cannot move the label. On clinical evidence
+# that ceiling is rarely reached. On a corpus assembled from documentation and theorems it is the
+# common case — a live run put all eight of its conclusions on very-low, and the label then made no
+# distinction at all while still reading like one. The scale is kept faithful to GRADE. What is added
+# is that the floor must be DECLARED, and the discriminator that replaces the label has to reach the
+# reader: see `the_certainty_floor_is_disclosed`.
 # GRADE's five downgrade domains. A downgrade outside this vocabulary is a reason invented to reach a
 # level, which is the failure the framework exists to prevent.
 GRADE_DOMAINS = ("risk-of-bias", "inconsistency", "indirectness", "imprecision", "publication-bias")
@@ -545,10 +558,38 @@ def check_contest(d, _repo):
     return out
 
 
+def split_conclusions(c):
+    """conclusions.json is `{calibration_policy, conclusions}`.
+
+    The policy lives WITH the conclusions it governs, in one artifact, so a certainty cannot be
+    revised without the rule that produced it appearing in the same diff. A bare list is the older
+    shape and is still readable — it simply has no policy, and the policy controls then say so
+    rather than the file failing to parse."""
+    if isinstance(c, dict):
+        return c.get("calibration_policy") or {}, rows(c.get("conclusions"))
+    return {}, rows(c)
+
+
+def floor_reached(items):
+    """Where the certainty label has stopped carrying information: either the arithmetic ran off the
+    end of the scale and was absorbed, or every conclusion landed on the same level. Returns the
+    clamped ids and whether the floor is in play at all."""
+    clamped = []
+    for x in items:
+        start = str(x.get("starting_level", ""))
+        if start in LEVELS and LEVELS.index(start) + len(rows(x.get("downgrades"))) > len(LEVELS) - 1:
+            clamped.append(str(x.get("id")))
+    labels = {str(x.get("calibration")) for x in items}
+    return clamped, bool(clamped) or (len(items) > 1 and len(labels) == 1)
+
+
+
 # ---------- synthesis: GRADE ----------------------------------------------------------------------
 
-SYNTHESIS_CRITERIA = ("conclusions_cite_findings", "calibration_is_derived",
+SYNTHESIS_CRITERIA = ("conclusions_cite_findings", "calibration_policy_is_declared",
+                      "starting_level_is_derived", "calibration_is_derived",
                       "downgrades_name_a_grade_domain", "calibration_matches_the_evidence",
+                      "the_certainty_floor_is_disclosed",
                       "every_conclusion_says_what_would_change_it", "conclusions_answer_the_question")
 
 
@@ -556,7 +597,7 @@ def check_synthesis(d, _repo):
     c, err = load(d, "conclusions.json")
     if err:
         return missing(SYNTHESIS_CRITERIA, err)
-    items = rows(c)
+    policy, items = split_conclusions(c)
     f, ferr = load(d, "findings.json")
     findings = {str(x.get("id")): x for x in rows(f)} if not ferr else {}
     ct, cterr = load(d, "contest.json")
@@ -571,6 +612,40 @@ def check_synthesis(d, _repo):
     out.append(("conclusions_cite_findings", PASS if items and not bad else FAIL,
                 ferr or (f"{len(items)} conclusions, every one cites a real finding" if not bad
                          else f"uncited or bogus: {bad or 'no conclusions'}")))
+
+    # GRADE fixes the STARTING level by the KIND of evidence, before any particular conclusion is
+    # looked at. The arithmetic below is only worth checking if that starting point is a rule rather
+    # than a choice — `low` picked per conclusion is very-low chosen first and justified backwards,
+    # which is the exact failure GRADE exists to prevent, one level upstream of where it is caught.
+    # It is also what a cold review cannot settle: with no declared rule the reviewer has to invent a
+    # scheme to review against, and a live run spent 16 of its 21 review rounds oscillating between
+    # schemes. Declaring the rule once gives the review an object instead of an argument.
+    rule = str(policy.get("rule", "")).strip()
+    by_kind = policy.get("starting_levels")
+    badpol = []
+    if len(rule) < 200:
+        badpol.append(f"the rule is {len(rule)} chars; a rule that governs every conclusion needs 200")
+    if not isinstance(by_kind, dict) or not by_kind:
+        badpol.append("starting_levels is not a non-empty map of evidence kind -> starting level")
+        by_kind = {}
+    else:
+        for k, v in by_kind.items():
+            if not str(k).strip() or str(v) not in LEVELS:
+                badpol.append(f"starting_levels[{k!r}] = {v!r} is not one of {LEVELS}")
+    out.append(("calibration_policy_is_declared", PASS if not badpol else FAIL,
+                f"one rule over {len(by_kind)} evidence kind(s)" if not badpol else str(badpol)))
+
+    chosen = []
+    for x in items:
+        kind = str(x.get("evidence_kind", ""))
+        if kind not in by_kind:
+            chosen.append(f"{x.get('id')}: evidence_kind {kind!r} is not a kind the policy grades")
+        elif str(x.get("starting_level")) != str(by_kind[kind]):
+            chosen.append(f"{x.get('id')}: kind {kind!r} starts at {by_kind[kind]!r}, "
+                          f"not {x.get('starting_level')!r}")
+    out.append(("starting_level_is_derived", PASS if items and not chosen else FAIL,
+                "every starting level comes from the policy, not from the conclusion"
+                if items and not chosen else str(chosen or ["no conclusions"])))
 
     # GRADE's mechanism, as arithmetic: final = starting level, one step down per serious concern.
     # A certainty that is chosen rather than derived is the failure the framework exists to prevent,
@@ -626,6 +701,20 @@ def check_synthesis(d, _repo):
                 PASS if items and not over and not cterr else FAIL,
                 cterr or ("no conclusion claims more than its evidence carries" if not over else str(over))))
 
+    # Being very-low about everything is not a defect; letting the label imply a distinction it has
+    # stopped making is. Where the scale absorbed a concern, or where every conclusion carries the
+    # same level, the register has to name what the reader should read INSTEAD of the label — the
+    # downgrade domains, the source grades, whatever actually still separates them.
+    clamped, floor = floor_reached(items)
+    disclosure = str(policy.get("floor_disclosure", "")).strip()
+    ok_floor = bool(items) and (not floor or len(disclosure) >= 120)
+    out.append(("the_certainty_floor_is_disclosed", PASS if ok_floor else FAIL,
+                (("the label still discriminates; nothing absorbed" if not floor
+                  else f"floor declared; absorbed at {clamped or 'no single conclusion'}")
+                 if ok_floor else
+                 f"absorbed={clamped}, distinct labels={sorted({str(x.get('calibration')) for x in items})}, "
+                 f"floor_disclosure is {len(disclosure)} chars")))
+
     nochange = [x.get("id") for x in items if len(str(x.get("would_change", "")).strip()) < 15]
     out.append(("every_conclusion_says_what_would_change_it", PASS if items and not nochange else FAIL,
                 "every conclusion names what would change it" if items and not nochange
@@ -650,6 +739,7 @@ def check_synthesis(d, _repo):
 REPORT_CRITERIA = ("report_written", "report_carries_every_conclusion",
                    "report_labels_every_conclusion_with_its_calibration", "report_declares_source_age",
                    "report_carries_every_open_contradiction", "report_states_the_rejected_hypotheses",
+                   "report_discloses_the_certainty_floor",
                    "report_states_the_setting", "report_confronts_the_prior_belief")
 
 
@@ -658,7 +748,7 @@ def check_report(d, _repo):
     if err:
         return missing(REPORT_CRITERIA, err)
     c, cerr = load(d, "conclusions.json")
-    items = rows(c) if not cerr else []
+    _policy, items = split_conclusions(c) if not cerr else ({}, [])
     out = []
 
     words = len(body.split())
@@ -709,6 +799,25 @@ def check_report(d, _repo):
                 PASS if hids and not unnamed and not qerr else FAIL,
                 qerr or (f"all {len(hids)} hypotheses named in the report" if hids and not unnamed
                          else f"never named: {unnamed or 'no hypotheses'}")))
+
+    # The synthesis half of this pairs with `the_certainty_floor_is_disclosed`: once the label has
+    # stopped discriminating, the thing that still does — which domains each conclusion was downgraded
+    # on — has to be visible where the conclusion is stated, not only in the register. Checked per
+    # PARAGRAPH rather than per line, because reports wrap and a conclusion is rarely one line.
+    clamped, floor = floor_reached(items)
+    blocks = re.split(r"\n\s*\n", body)
+    thin = []
+    if floor:
+        for x in items:
+            cid = str(x.get("id"))
+            near = " ".join(b for b in blocks if cid in b)
+            thin += [f"{cid}: {dg.get('domain')}" for dg in rows(x.get("downgrades"))
+                     if str(dg.get("domain")) not in near]
+    out.append(("report_discloses_the_certainty_floor", PASS if not thin else FAIL,
+                (("the certainty label still discriminates; there is no floor to disclose" if not floor
+                  else f"absorbed at {clamped or 'no single conclusion'}; every conclusion shows the "
+                       "domains that separate it from the others")
+                 if not thin else f"the label ties, and these never reach the reader: {thin}")))
 
     # Transferability (Lincoln & Guba). The setting a finding was found in is what lets a reader judge
     # whether it carries to theirs — and a setting recorded in a JSON file the reader never opens has

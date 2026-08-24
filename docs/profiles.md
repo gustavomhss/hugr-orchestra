@@ -366,15 +366,15 @@ whether a source is any good — stays with the cold review, because that is jud
 | where it comes from | what it contributes | the controls |
 |---|---|---|
 | **ACH** — Analysis of Competing Hypotheses (Heuer, *Psychology of Intelligence Analysis*) | hypotheses enumerated **before** evidence is weighed; every finding scored against **every** hypothesis; work proceeds by refutation | `competing_hypotheses_enumerated`, `every_finding_scored_against_every_hypothesis`, `non_diagnostic_findings_are_marked`, `hypotheses_are_refuted_or_survival_is_declared` |
-| **GRADE** — certainty of evidence (Cochrane) | certainty is **derived**, not chosen: a starting level, one downgrade per serious concern, in five named domains | `calibration_is_derived`, `downgrades_name_a_grade_domain`, `calibration_matches_the_evidence` |
+| **GRADE** — certainty of evidence (Cochrane) | certainty is **derived**, not chosen: a starting level fixed by the *kind* of evidence, one downgrade per serious concern, in five named domains — and a four-level scale whose bottom **absorbs** | `calibration_policy_is_declared`, `starting_level_is_derived`, `calibration_is_derived`, `downgrades_name_a_grade_domain`, `calibration_matches_the_evidence`, `the_certainty_floor_is_disclosed`, `report_discloses_the_certainty_floor` |
 | **Admiralty code** — NATO AJP-2.1 / STANAG 2511 | source **reliability** (A–F) and information **credibility** (1–6) rated separately and in isolation | `source_reliability_rated`, `credibility_is_earned` |
 | **PRISMA 2020 / PRISMA-S** | a search someone else could run; and the item reviewers omit most — what was found and **excluded** | `search_record_is_reproducible`, `excluded_sources_recorded`, `not_searched_declared` |
 | **Grounded theory** (Glaser & Strauss; Charmaz) | the corpus is built **as the work happens**: constant comparison, memoing, theoretical saturation | `every_finding_is_compared_to_the_corpus`, `memos_were_written_during_the_work`, `saturation_is_declared` |
 | **Lincoln & Guba** — trustworthiness | confirmability: findings trace to data, not to the researcher's imagination. Transferability: thick description of the setting | `quotes_are_verbatim`, `context_described` |
 
-Fourteen states, **52 controls, 39 of them mechanical**, zero ungated — the largest profile shipped.
+Fourteen states, **56 controls, 43 of them mechanical**, zero ungated — the largest profile shipped.
 
-### The three that carry the most weight
+### The ones that carry the most weight
 
 **`non_diagnostic_findings_are_marked`** is ACH's sharpest idea and the one nothing else in this repo
 had. Evidence consistent with *every* hypothesis discriminates nothing, **however true it is**. The
@@ -386,6 +386,31 @@ non-diagnostic findings. A body of true, useless facts stops being a conclusion.
 level and a list of downgrades, each naming one of GRADE's five domains with a reason, and the final
 certainty must equal the starting level moved one step per downgrade. A certainty that is *chosen* is
 the failure GRADE exists to prevent, and the arithmetic is the part of it a machine can check.
+
+**`starting_level_is_derived`** closes the hole `calibration_is_derived` left open, and it was found
+by running the profile rather than by reading it. The arithmetic control checks *final = start −
+downgrades* but never checks the start, so a researcher can pick `low` for every conclusion and let the
+arithmetic ratify it — GRADE's own failure mode, one level upstream of where it was being caught. A live
+run did exactly that: all eight conclusions started at `low` by fiat. The fix is GRADE's actual
+mechanism, which fixes the starting level by the **kind** of evidence before any particular claim is
+looked at: `calibration_policy_is_declared` requires one rule, written over kinds, and
+`starting_level_is_derived` reads each conclusion's level out of it.
+
+That declaration also ended a review pathology. `synthesis.cold_review` on that run took **21 rounds,
+16 of them oscillating between calibration schemes** — with no declared rule, the reviewer had to invent
+a scheme to review against, and each round invented a different one. It converged only once the
+researcher wrote the policy down. The profile now requires that up front, and the cold review's
+instruction says to review *the declared policy*, not to propose another.
+
+**`the_certainty_floor_is_disclosed`** is the second half. GRADE's scale is four levels wide and
+`very-low` **absorbs**: a fifth serious concern cannot move the label. On clinical evidence that ceiling
+is rarely reached; on a corpus of documentation and theorems it is the common case, and that same run
+put all eight conclusions on `very-low` — a label that made no distinction while still reading like one.
+The scale is kept faithful. What is added is that when the arithmetic runs off the end of the scale, or
+when every conclusion ties, the register must say so and name what the reader should read **instead**,
+and `report_discloses_the_certainty_floor` requires the substitute — the downgrade domains, beside each
+conclusion — to actually reach the reader. Being very-low about everything is not a defect; letting the
+label imply a distinction it has stopped making is.
 
 **`memos_were_written_during_the_work`** is the one that enforces *how* rather than *what*. At least
 one dated analytic memo must **predate the last finding**. A memo written after the work is a

@@ -25,6 +25,13 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 CHECK = ROOT / "tools" / "research" / "research-check"
+# GRADE's five downgrade domains, restated here only so a mutation can exhaust the scale.
+GRADE_DOMAINS = ("risk-of-bias", "inconsistency", "indirectness", "imprecision",
+                 "publication-bias")
+FLOOR_DISCLOSURE = (
+    "Both conclusions land on very-low, so the label alone separates nothing. What "
+    "separates them is the set of downgrade domains recorded against each and the "
+    "reliability grade of the sources they cite; read those, not the label.")
 CRIT = ROOT / "tools" / "criterion"
 
 PAGE = ("Release notes 4.2\n"
@@ -100,18 +107,30 @@ GOOD = {
      "searched_against": ["S-1", "S-3"],
      "scores": {"H-1": "consistent", "H-2": "inconsistent"}, "diagnostic": True,
      "contradictions": [{"source": "S-3", "quote": "gives up immediately"}], "resolution": "open"}],
-  "conclusions.json": [
-    {"id": "C-1", "statement": "Failing jobs stop after three automatic attempts",
-     "cites": ["F-1"], "answers": ["A-1"], "hypothesis": "H-1",
-     "starting_level": "high", "downgrades": [], "calibration": "high",
-     "would_change": "a release note after 4.2 changing the retry count"},
-    {"id": "C-2", "statement": "Recovery of a parked job requires a person",
-     "cites": ["F-3", "F-2"], "answers": ["A-2"], "hypothesis": "H-1",
-     "starting_level": "high",
-     "downgrades": [{"domain": "inconsistency",
-                     "why": "one source contradicts the count and the contradiction is unresolved"}],
-     "calibration": "moderate",
-     "would_change": "any documented automatic drain path"}],
+  "conclusions.json": {
+    "calibration_policy": {
+      "rule": "The starting level is fixed by what KIND of record a conclusion rests on, decided "
+              "once here and read from this map, never picked while writing a conclusion. A vendor "
+              "statement about the vendor's own product is the strongest record available to us and "
+              "starts at high; a second-hand account of that behaviour starts at low, because the "
+              "party reporting it is not the party that decides it. Nothing here starts anywhere "
+              "because of what the conclusion happens to say.",
+      "starting_levels": {"vendor-statement": "high", "second-hand-report": "low"},
+      "floor_disclosure": ""},
+    "conclusions": [
+      {"id": "C-1", "statement": "Failing jobs stop after three automatic attempts",
+       "cites": ["F-1"], "answers": ["A-1"], "hypothesis": "H-1",
+       "evidence_kind": "vendor-statement",
+       "starting_level": "high", "downgrades": [], "calibration": "high",
+       "would_change": "a release note after 4.2 changing the retry count"},
+      {"id": "C-2", "statement": "Recovery of a parked job requires a person",
+       "cites": ["F-3", "F-2"], "answers": ["A-2"], "hypothesis": "H-1",
+       "evidence_kind": "vendor-statement",
+       "starting_level": "high",
+       "downgrades": [{"domain": "inconsistency",
+                       "why": "one source contradicts the count and the contradiction is unresolved"}],
+       "calibration": "moderate",
+       "would_change": "any documented automatic drain path"}]},
 }
 REPORT = """# Scheduler retry behaviour
 
@@ -289,20 +308,30 @@ MUTATIONS = {
 
   # synthesis — GRADE
   "conclusions_cite_findings":
-    lambda d, _s: d["conclusions.json"][0].__setitem__("cites", ["F-42"]),
+    lambda d, _s: d["conclusions.json"]["conclusions"][0].__setitem__("cites", ["F-42"]),
   # the arithmetic: a starting level minus its downgrades
   "calibration_is_derived":
-    lambda d, _s: d["conclusions.json"][1].__setitem__("calibration", "high"),
+    lambda d, _s: d["conclusions.json"]["conclusions"][1].__setitem__("calibration", "high"),
   "downgrades_name_a_grade_domain":
-    lambda d, _s: d["conclusions.json"][1]["downgrades"][0].__setitem__("domain", "gut-feel"),
+    lambda d, _s: d["conclusions.json"]["conclusions"][1]["downgrades"][0].__setitem__("domain", "gut-feel"),
   # `high` over an open contradiction
   "calibration_matches_the_evidence":
-    lambda d, _s: (d["conclusions.json"][1].__setitem__("downgrades", []),
-                   d["conclusions.json"][1].__setitem__("calibration", "high")),
+    lambda d, _s: (d["conclusions.json"]["conclusions"][1].__setitem__("downgrades", []),
+                   d["conclusions.json"]["conclusions"][1].__setitem__("calibration", "high")),
   "every_conclusion_says_what_would_change_it":
-    lambda d, _s: d["conclusions.json"][0].__setitem__("would_change", ""),
+    lambda d, _s: d["conclusions.json"]["conclusions"][0].__setitem__("would_change", ""),
   "conclusions_answer_the_question":
-    lambda d, _s: d["conclusions.json"][1].__setitem__("answers", []),
+    lambda d, _s: d["conclusions.json"]["conclusions"][1].__setitem__("answers", []),
+  # the starting level declared once, over kinds, before any conclusion is looked at
+  "calibration_policy_is_declared":
+    lambda d, _s: d["conclusions.json"]["calibration_policy"].__setitem__("rule", "start low"),
+  # a kind the policy never grades: the level is back to being chosen per conclusion
+  "starting_level_is_derived":
+    lambda d, _s: d["conclusions.json"]["conclusions"][0].__setitem__(
+        "evidence_kind", "felt-about-right"),
+  # the scale absorbs a fifth concern, and the register says nothing about the label having tied
+  "the_certainty_floor_is_disclosed":
+    lambda d, _s: _bottom_out(d, disclose=False),
 
   # report — what has to reach the reader
   "report_written": lambda d, _s: "# short\n\n## Hypotheses\n\n## Conclusions\n- C-1\n\n## Sources\n- S-1\n",
@@ -315,12 +344,29 @@ MUTATIONS = {
   "report_states_the_rejected_hypotheses":
     lambda d, _s: re.sub(r"\bH-2\b", "the other one", REPORT),
   # recorded in the register, never shown to the reader — which is the whole failure
+  # the label ties at the floor, and the domains that still separate the two never reach the reader
+  "report_discloses_the_certainty_floor":
+    lambda d, _s: (_bottom_out(d), REPORT.replace("(high)", "(very-low)")
+                                         .replace("(moderate)", "(very-low)")
+                                         .replace("Downgraded once for inconsistency: F-3",
+                                                  "Downgraded: F-3"))[1],
   "report_states_the_setting":
     lambda d, _s: REPORT.replace("A single-tenant 4.2 deployment run by the platform team, with the "
                                  "vendor's release notes and our own\nops runbook", "Some deployment"),
   "report_confronts_the_prior_belief":
     lambda d, _s: re.sub(r"## Prior belief.*?confirming it\.\n", "", REPORT, flags=re.S),
 }
+
+
+def _bottom_out(data, disclose=True):
+    """Push every conclusion past the end of the scale: five serious concerns against a four-level
+    scale, so very-low absorbs the fifth and both conclusions carry the same label."""
+    for c in data["conclusions.json"]["conclusions"]:
+        c["downgrades"] = [{"domain": g, "why": "a serious concern in this domain, stated in full"}
+                           for g in GRADE_DOMAINS]
+        c["calibration"] = "very-low"
+    data["conclusions.json"]["calibration_policy"]["floor_disclosure"] = (
+        FLOOR_DISCLOSURE if disclose else "")
 
 
 @pytest.mark.parametrize("criterion,mutate", sorted(MUTATIONS.items()), ids=sorted(MUTATIONS))
@@ -386,7 +432,7 @@ def test_non_diagnostic_evidence_cannot_carry_a_conclusion_alone(tmp_path):
     """ACH's sharpest idea, as a control. F-2 is consistent with BOTH hypotheses, so it discriminates
     nothing however true it is — a conclusion resting only on it has no support that bears on the
     question."""
-    d = _dir(tmp_path, lambda data, _s: data["conclusions.json"][1].__setitem__("cites", ["F-2"]))
+    d = _dir(tmp_path, lambda data, _s: data["conclusions.json"]["conclusions"][1].__setitem__("cites", ["F-2"]))
     rep, code = _report(d, "synthesis")
     assert code == 1 and rep["calibration_matches_the_evidence"] == "FAIL"
 
