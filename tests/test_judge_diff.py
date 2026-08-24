@@ -241,3 +241,51 @@ def test_the_model_agnostic_cli_can_supply_a_base_ref(tmp_path):
     (state / "ledger.jsonl").unlink(missing_ok=True)
     with_ref = subprocess.run(args, capture_output=True, text=True, env=env)
     assert json.loads(with_ref.stdout)["outcome"] in ("advance", "complete"), with_ref.stdout
+
+
+# ------------------------------------------------------- the STATE of the artifact reaches the chain
+
+def test_the_artifact_digest_is_recorded_beside_the_scope(tmp_path):
+    """`oracle` records what was asked and `scope` records where. Neither records what was THERE.
+
+    Two fires of the same control over a file that grew between them were byte-identical on the
+    chain — which is how a measured run grew `conclusions.json` 3.1x across 21 review rounds and
+    still read as a clean first-try pass (docs/FINDING-self-graded-review-verdicts.md)."""
+    arms, work, corpus = _arm(tmp_path, [_judged_wp(paths=["impl.py"])], base_ref="HEAD")
+    (work / "impl.py").write_text("# RELAY_JUDGE_OK\n")
+    _fire(arms, corpus)
+    e = _item(arms, "J1")
+    assert e["verdict"] == "pass", e
+    assert len(e.get("artifact", "")) == 64, f"no artifact digest on the entry: {e}"
+
+
+def test_the_digest_moves_when_the_artifact_does_and_not_otherwise(tmp_path):
+    """The property that makes it worth recording: same bytes, same digest; changed bytes, changed
+    digest — under an unchanged criterion and an unchanged scope."""
+    def digest(n, body):
+        arms, work, corpus = _arm(tmp_path / f"run{n}", [_judged_wp(paths=["impl.py"])],
+                                  base_ref="HEAD")
+        (work / "impl.py").write_text(body)
+        _fire(arms, corpus)
+        e = _item(arms, "J1")
+        return e["artifact"], e["oracle"], e["scope"]
+
+    a, oa, sa = digest(1, "# RELAY_JUDGE_OK\n")
+    b, ob, sb = digest(2, "# RELAY_JUDGE_OK\n" + "justification. " * 200)
+    c, _, _ = digest(3, "# RELAY_JUDGE_OK\n")
+    assert (oa, sa) == (ob, sb), "criterion and scope must be unchanged for this to mean anything"
+    assert a != b, "an artifact that grew 200x left the same digest"
+    assert a == c, "identical bytes produced different digests"
+
+
+def test_a_deterministic_entry_is_byte_identical_to_what_it_always_was(tmp_path):
+    """The digest is emitted only where there is a scope to digest. A `cmd` control's entry must not
+    gain a field, or every historical chain reads as having changed shape."""
+    wp = {"id": "wp1", "instructions": "work",
+          "checklist": [{"id": "D1", "assert": "it is there", "cmd": "test -f impl.py"}]}
+    arms, work, corpus = _arm(tmp_path, [wp], base_ref="HEAD")
+    (work / "impl.py").write_text("x\n")
+    _fire(arms, corpus)
+    e = _item(arms, "D1")
+    assert e["verdict"] == "pass", e
+    assert "artifact" not in e and "scope" not in e, e

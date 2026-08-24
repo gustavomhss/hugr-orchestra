@@ -3,9 +3,9 @@
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-08-24T20:31:37Z
+- **Generated:** 2026-08-24T20:56:45Z
 - **Files:** 27
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `df752e6b9120444f8c2dd7b3a7bfe08639fa093b0809c4c66c68aa4344874333`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `69b1520ca278cd412ecb67d2f2fbb2ce1cf6337c77bd191146c41785bf1759e9`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -14,8 +14,8 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `PRODUCT.md` | 452 | 41985 | `d506df7971338dc45d566c7afba9bdacc836a23b31066fd68a83e7a14b594d71` |
 | `SPEC.md` | 312 | 18430 | `89a6028568ed2b53b0f9ffcbacc89dbebbe20dfe6c4ed159b65937933bec3ee3` |
 | `CONTRIBUTING.md` | 30 | 1557 | `0ec40378b3573adeea93cc3b6ca4c2e2a9e541c5e4ec9ee779dfac4d36cb672a` |
-| `CHANGELOG.md` | 238 | 19643 | `921c3917136564104fc05ca77652f6b2acb382034942b127146f7dbb9d6095da` |
-| `docs/FINDING-self-graded-review-verdicts.md` | 96 | 5080 | `6722f60cdaf3bbc4f6735154facbc9f93118e2569d1eb99ef2d44362c846bbb4` |
+| `CHANGELOG.md` | 251 | 20755 | `86ca7a1f0527b44d7f7c31eb41cf46b8275ec306f491ea1e2e943c517fa97885` |
+| `docs/FINDING-self-graded-review-verdicts.md` | 120 | 6727 | `513e84ea66968659ae3e6197b79ff1e3a9d3245e4a4c39d6217dda7f7e21fb13` |
 | `docs/architecture.md` | 283 | 14542 | `30fec8f42bb9597cb747999c55fa9beb5e29b7313a822b5b71c1051ff01a221d` |
 | `docs/authoring-sprints.md` | 320 | 16461 | `7955d22e2c94499e60d80ce5bf588360f6c28f69cfaa8535bd6844fbaa222044` |
 | `docs/auto-decompose.md` | 61 | 2959 | `a72e0d02d8c632035829644a18e18a6a337c96d0a46ddc89ae0bdb140f7b735e` |
@@ -26,7 +26,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/daemon.md` | 176 | 9663 | `7956af420e4334638b22a3e994c18d15d1495bbfdf5cc6fd19b37cb20f1a445f` |
 | `docs/enforcement-model.md` | 266 | 14716 | `cb9a26f7f740e4430c209d1ff902128ea97c4a90f302f26d9e54adc385f26ad9` |
 | `docs/faq.md` | 166 | 7813 | `5755679e358ff6525b6f3a0c213e42f4772c3a42d87ebed683839030c4af0ef6` |
-| `docs/gates.md` | 426 | 18985 | `61f6ba2160959b985cddc4664bff6a410be3ab19cd7dd71f0aca0dde3c719efa` |
+| `docs/gates.md` | 434 | 19807 | `91d9854697e2aaf91123711d6768ba9acbf0876c5fd53e493a14fb9551f4141f` |
 | `docs/getting-started.md` | 201 | 7560 | `430fca84bc40dd272df2cbc35b8f5d371c2c3235ff8a08f27645e296241ec360` |
 | `docs/guardrails.md` | 111 | 6214 | `3849f0a3a2b576e864f28b8f74e94cae314dae844cd3d14b5a30eb09953c6f63` |
 | `docs/per-agent-arms.md` | 149 | 6940 | `711eb139ce13eff2875d3c67ba4413cc756b68ca89fb5bd06bf80bccca55e3eb` |

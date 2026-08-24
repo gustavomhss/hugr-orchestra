@@ -36,7 +36,20 @@ All three were visible in the same live run (52 sources, 41 findings, 8 conclusi
   against the diff; it no longer declares the outcome. Nine controls of the same shape remain in
   `design`, `spec-decompose` and `planning` — see `docs/FINDING-self-graded-review-verdicts.md`.
 
-research-v2: 52 → 56 controls (52 mechanical, 4 judge), zero ungated. Suite 497 → 501.
+### Added — 2026-08-24 (a judge entry records the artifact's STATE, not just its address)
+`oracle` records what was asked, `scope` records where. Neither recorded what was **there**, so two
+fires of the same control over a file that tripled in size between them were byte-identical on the
+chain — which is how the ratchet above stayed invisible. Judge entries now carry `artifact`: the
+sha-256 of the contents at the scoped paths at the moment of grading, each path contributing its name
+as well as its bytes (so a rename with identical content still moves the digest) and `absent` where
+there is no readable file. Emitted only where there is a scope to digest, so a deterministic
+control's entry is byte-identical to what it always was and legacy chains still verify — the verifier
+recomputes the MAC from stored bytes, so additive fields stay backward-compatible.
+sha-256 and not a faster hash, for consistency rather than speed: the chain is sha-256 end to end,
+`shasum` is already a dependency of `lib/relay-gate.sh`, and at kilobyte artifacts hashed once per
+gate fire the difference does not exist.
+
+research-v2: 52 → 56 controls (52 mechanical, 4 judge), zero ungated. Suite 497 → 504.
 
 ### Added — 2026-08-22 (control plane, R5–R7: an orchestrator may mutate a live chain)
 `docs/control-plane.md` designs how an orchestrator amends a **running** chain and how a human watches

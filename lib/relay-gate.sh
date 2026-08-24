@@ -120,6 +120,39 @@ relay_oracle_sha() {  # $1 = the oracle text (a cmd, or a judge criterion)
   printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1
 }
 
+# The STATE of the artifact a discursive control was graded against, as one sha256.
+#
+# `oracle` records WHAT was asked and `scope` records WHERE it was asked, but neither records what
+# was actually there when the question was put. Two fires of the same control over a file that
+# tripled in size between them are byte-identical on the chain. That is not hypothetical: a measured
+# run grew `conclusions.json` from 11,365 to 35,664 characters across 21 review rounds and the chain
+# recorded a clean first-try pass, reconstructable afterwards only because the dead reviewer clones'
+# transcripts happened to still be on disk (docs/FINDING-self-graded-review-verdicts.md). This is the
+# field that makes that growth a fact on the record instead of archaeology.
+#
+# sha256 rather than a faster hash, and the reason is not speed. The chain is sha256 end to end
+# (relay_chain_append, relay_oracle_sha, and hmac-sha256 when keyed), `shasum` is already a
+# dependency of this file, and a second algorithm in the same record is one more thing a verifier has
+# to know. At kilobyte artifacts hashed once per gate fire — inside a fire that already spends
+# seconds on an LLM call — the difference does not exist.
+#
+# Each path contributes its own NAME as well as its contents, so a rename with identical bytes still
+# moves the digest; a path that is not a readable file contributes the marker `absent` rather than
+# nothing, so a control graded against a file that disappeared is distinguishable from one graded
+# against an empty file. Order follows the declared `paths` order, which is part of the oracle.
+relay_artifact_sha() {  # $1 = space-separated paths, relative to $RUN_DIR (may be empty)
+  [ -n "${1:-}" ] || return 1
+  local p acc=""
+  for p in $1; do
+    if [ -f "$RUN_DIR/$p" ]; then
+      acc="$acc$p:$(shasum -a 256 < "$RUN_DIR/$p" | cut -d' ' -f1)\n"
+    else
+      acc="$acc$p:absent\n"
+    fi
+  done
+  printf '%b' "$acc" | shasum -a 256 | cut -d' ' -f1
+}
+
 # Where a control came from. `origin` is explicit if the author set it (an orchestrator injecting a
 # control stamps `injected:<actor>`); otherwise the policy bundle that prepended it
 # (bin/relay-policy.py already writes `.policy` — until now nothing read it); otherwise the sprint.
@@ -186,7 +219,7 @@ relay_run_checklist() {
       if ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ); then verdict=pass; else verdict=fail; out="$out; $id"; fi
       ledger_item "$id" "$as" "$verdict" "deterministic" "$oracle" "$origin"
     else
-      local crit block jout jverd jback ctxargs cf wantdiff scope dfile
+      local crit block jout jverd jback ctxargs cf wantdiff scope dfile artsha
       crit=$(jq -r ".work_packages[$i].checklist[$j].judge" "$SPRINT")
       block=$(jq -r ".work_packages[$i].checklist[$j].blocking // false" "$SPRINT")
       wantdiff=$(jq -r ".work_packages[$i].checklist[$j].diff // false" "$SPRINT")
@@ -200,6 +233,7 @@ relay_run_checklist() {
       # read as oracle drift. The expansion lives in its own variable, used only where a real path is
       # needed to compute the diff.
       scope_real=$(relay_expand_params "$scope")
+      artsha=$(relay_artifact_sha "$scope_real" 2>/dev/null || true)
       ctxargs=()
       while IFS= read -r cf; do
         [ -n "$cf" ] || continue
@@ -217,7 +251,7 @@ relay_run_checklist() {
           # that cannot run is still only advisory, which is exactly why docs/enforcement-model.md §5
           # never lets a discursive control stand alone.
           [ "$block" = "true" ] && out="$out; $id"
-          ledger_item "$id" "$as" "fail" "judge:unavailable(no-diff)" "$oracle" "$origin" "$scope"
+          ledger_item "$id" "$as" "fail" "judge:unavailable(no-diff)" "$oracle" "$origin" "$scope" "$artsha"
           continue
         fi
       fi
@@ -225,7 +259,7 @@ relay_run_checklist() {
       jverd=$(printf '%s' "$jout" | jq -r '.verdict // "advisory"' 2>/dev/null); [ -z "$jverd" ] && jverd=advisory
       jback=$(printf '%s' "$jout" | jq -r '.backend // "judge"' 2>/dev/null); [ -z "$jback" ] && jback=judge
       [ "$block" = "true" ] && [ "$jverd" = "fail" ] && out="$out; $id"
-      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)" "$oracle" "$origin" "$scope"
+      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)" "$oracle" "$origin" "$scope" "$artsha"
     fi
   done
   printf '%s' "$out"

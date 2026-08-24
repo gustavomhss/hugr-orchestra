@@ -87,10 +87,34 @@ still graded against the diff. What is removed is only the executor's power to d
 `tdd_feature` and `wp-execute` were already clean: their review states ship no verdict control at
 all, only `*-is-substantive` and `*-engages-with-the-diff`.
 
-## Still not fixed by this
+## Making the ratchet visible on the chain — done
 
-The **artifact hash is not recorded per gate fire.** The ratchet above was only reconstructable
-because the dead reviewer clones' transcripts happened to still be on disk. A judge control records
-its `scope` (the raw path list) but not a digest of what was at those paths when it graded, so two
-fires of the same control over a file that tripled in size are indistinguishable on the chain.
-Bounding the loop makes the growth cheaper; recording the digest is what would make it **visible**.
+The ratchet above was only reconstructable because the dead reviewer clones' transcripts happened to
+still be on disk. A judge control recorded its `scope` (the raw path list) but not a digest of what
+was **at** those paths when it graded, so two fires of the same control over a file that tripled in
+size were indistinguishable on the chain.
+
+Judge entries now carry `artifact`: the sha-256 of the contents at the scoped paths at the moment of
+grading, each path contributing its name as well as its bytes so a rename with identical content
+still moves the digest, and `absent` where there is no readable file. It is emitted only where there
+is a scope to digest, so a deterministic control's entry is byte-identical to what it always was and
+legacy chains still verify (the verifier recomputes the MAC from stored bytes, so additive fields are
+backward-compatible).
+
+sha-256 and not a faster hash, and the reason is not speed: the chain is sha-256 end to end
+(`relay_chain_append`, `relay_oracle_sha`, `hmac-sha256` when keyed), `shasum` is already a dependency
+of `lib/relay-gate.sh`, and a second algorithm in the same record is one more thing a verifier has to
+know. At kilobyte artifacts hashed once per gate fire — inside a fire that already spends seconds on
+an LLM call — the difference does not exist.
+
+Bounding the loop made the growth cheaper. This is what makes it **visible**.
+
+## The sweep is deferred on purpose
+
+The nine controls listed above are not being converted yet. `research-v2` is the profile the defect
+was measured on and the only one where the new shape has a corpus to be proven against; none of
+`design`, `spec-decompose` or `planning` has an agent-driven run to show that a gate-side reviewer
+actually converges there. Converting them now would trade a measured defect for an unmeasured one,
+and each conversion turns a deterministic control into an LLM judge — cheap next to the 11.16M tokens
+the ratchet cost, but not free. The order is: run `research-v2` agent-driven under the new shape,
+confirm the rounds appear on the ledger and that `retry_budget` bites, then sweep.

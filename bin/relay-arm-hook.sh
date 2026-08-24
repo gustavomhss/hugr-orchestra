@@ -128,14 +128,16 @@ ledger() {  # $1=event  $2=retry(optional)  $3=round-sha(optional)  $4=repeat-co
 # substitution, so it runs in a subshell and any in-memory append it made would be discarded with it.
 ROUND_BUF="$(mktemp "${TMPDIR:-/tmp}/relay-round.XXXXXX")"
 trap 'rm -f "$ROUND_BUF"' EXIT
-ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin $7=scope(optional)
-  # `scope` records the artifact a judge control was narrowed to (V5). Emitted only when set, so a
+ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin $7=scope(optional) $8=artifact-sha(optional)
+  # `scope` records the artifact a judge control was narrowed to (V5) and `artifact` records the
+  # sha256 of what was AT those paths when it was graded. Both are emitted only when set, so a
   # deterministic control's entry is byte-identical to what it always was.
   jq -nc --arg tok "$token" --arg wp "${wp_id:-?}" \
          --argjson i "${i:-0}" --arg ev "checklist-item" --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
-         --arg orc "${5:-}" --arg org "${6:-sprint}" --arg scope "${7:-}" \
+         --arg orc "${5:-}" --arg org "${6:-sprint}" --arg scope "${7:-}" --arg art "${8:-}" \
     '{arm:$tok,wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}
-     | if $scope == "" then . else . + {scope:$scope} end' \
+     | if $scope == "" then . else . + {scope:$scope} end
+     | if $art == "" then . else . + {artifact:$art} end' \
     | add_macro >> "$ROUND_BUF"
 }
 # A regression re-run IS a verdict — it re-executes a real control and its result changes the

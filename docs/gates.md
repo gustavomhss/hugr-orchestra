@@ -187,6 +187,14 @@ hands the result to the judge, instead of grading whatever static paths the plan
   to omit the file where the problem lives makes the judge dutifully cross-check an incomplete
   artifact and pass — the scope-narrowing attack, moved out of the agent's prose and into the
   orchestrator's.
+- **The artifact's own state is recorded, not just its address.** `oracle` says what was asked and
+  `scope` says where; neither says what was *there*. So a judge entry also carries `artifact`, the
+  sha-256 of the contents at those paths at the moment it was graded (each path contributing its name
+  as well as its bytes, and `absent` where there is no readable file). Without it, two fires of the
+  same control over a file that tripled in size between them are byte-identical on the chain — which
+  is exactly how a measured run grew `conclusions.json` 3.1× across 21 review rounds and still read as
+  a clean first-try pass ([`FINDING-self-graded-review-verdicts.md`](FINDING-self-graded-review-verdicts.md)).
+  It is emitted only where there is a scope to digest, so a deterministic control's entry is unchanged.
 - **It fails closed.** No base ref, or not a git workdir, records `fail` with
   `graded_by: judge:unavailable` — an infrastructure failure, not a judgment. Note that it still only
   *blocks* if the item is `blocking`: an advisory control that cannot run is still only advisory,
