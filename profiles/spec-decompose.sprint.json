@@ -84,7 +84,7 @@
           "context": [
             "${spec_dir}/review-invariants.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review apply GROUNDED (each invariant's grounding is really in the frozen intent) and TOOTHED (each falsifier is a concrete observable, not a restatement) to the invariants in the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:spec-decompose@1.0.0"
@@ -160,7 +160,7 @@
           "context": [
             "${spec_dir}/review-requirements.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review apply GROUNDED, DERIVED (each requirement follows from the invariants it cites) and COMPLETE (every invariant is discharged by at least one requirement) to the register in the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:spec-decompose@1.0.0"
@@ -236,7 +236,7 @@
           "context": [
             "${spec_dir}/review-spec.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review apply DERIVED (every spec clause traces to a requirement that exists) and COMPLETE (every requirement is genuinely addressed, not merely cited) to the spec in the diff, by interface and by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:spec-decompose@1.0.0"
@@ -318,7 +318,7 @@
           "context": [
             "${spec_dir}/review-goldens.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review apply COMPLETE (every requirement has both happy and guard coverage) and TOOTHED (every scenario names a concrete wrong implementation it would catch) to the scenarios in the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:spec-decompose@1.0.0"
@@ -394,7 +394,7 @@
           "context": [
             "${spec_dir}/review-work_packages.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review apply DERIVED (each package's intent follows from the requirements it owns) and COMPLETE (the coverage matrix is a partition \u2014 every requirement in exactly one package) to the diff, by id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:spec-decompose@1.0.0"

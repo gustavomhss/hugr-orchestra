@@ -38,6 +38,13 @@ MAX_CTX = int(os.environ.get("RELAY_JUDGE_MAX_CTX", "120000"))
 # failed control, and the failure came from the transport, not from the artifact. At 8192 the same
 # model, artifact and criterion answered correctly in both directions.
 MAX_TOKENS = int(os.environ.get("RELAY_JUDGE_MAX_TOKENS", "8192"))
+# How many independent samples to take before returning a verdict. A discursive control is NOISY —
+# measured on a live run: the same model, the same criterion and the same artifact returned pass and
+# fail on repeat, and a control that flips on identical input is not fit to BLOCK a chain on one draw.
+# The answer is to sample it, not to weaken the criterion or to demote the control. Majority wins; a
+# tie fails, because an unproven control is a failed control. The tally goes in the backend tag so the
+# ledger records how close the call was rather than hiding it behind a single word.
+VOTES = max(1, int(os.environ.get("RELAY_JUDGE_VOTES", "1")))
 
 SYSTEM = (
     "You are an INDEPENDENT compliance auditor. You did NOT write the artifact under review. "
@@ -99,6 +106,29 @@ def judge_stub(criterion, files):
 
 
 def judge_api(criterion, files):
+    """One verdict, from VOTES independent samples."""
+    if VOTES == 1:
+        return _judge_api_once(criterion, files)
+    tally, reasons, tags = [], [], []
+    for _ in range(VOTES):
+        v, why, tag = _judge_api_once(criterion, files)
+        if tag.startswith("api-error") or tag.endswith("(no-verdict)"):
+            # Not a vote. A transport failure or a reply that never reached a verdict says nothing
+            # about the artifact, and counting it would let the plumbing outvote the evidence — the
+            # failure mode this whole tagging effort exists to remove. Truncation is NOT in this list:
+            # a cut artifact still yields a real judgment on what was shown, and the tag records that.
+            return v, why, tag
+        tally.append(v); reasons.append(why); tags.append(tag)
+    passes = tally.count("pass")
+    verdict = "pass" if passes * 2 > len(tally) else "fail"
+    base = tags[0].split("(")[0]
+    extra = "".join(sorted({t[t.index("("):] for t in tags if "(" in t}))
+    reason = f"{passes}/{len(tally)} passed · " + (reasons[tally.index(verdict)] if verdict in tally
+                                                  else reasons[0])
+    return verdict, reason[:300], f"{base}(votes:{passes}/{len(tally)}){extra}"
+
+
+def _judge_api_once(criterion, files):
     import urllib.request
     base = os.environ.get("RELAY_JUDGE_BASE_URL", "").rstrip("/")
     key = os.environ.get("RELAY_JUDGE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")

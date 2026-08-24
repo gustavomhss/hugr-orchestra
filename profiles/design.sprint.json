@@ -212,7 +212,7 @@
           "context": [
             "${design_dir}/verdict-distinctness.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review judge whether the doors in the diff are genuinely DIFFERENT approaches rather than one approach in three costumes, naming each door and what distinguishes it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:design@1.0.0"
@@ -351,7 +351,7 @@
           "context": [
             "${design_dir}/verdict-dress_rehearsal.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review walk the skeleton in the diff as a rehearsal \u2014 naming the steps, where it would break, and what it does not yet cover? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:design@1.0.0"
@@ -454,7 +454,7 @@
           "context": [
             "${design_dir}/verdict-no_flinching.json"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review confront the risks in the diff without flinching \u2014 naming each one and whether the response is a mitigation or a hope? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:design@1.0.0"

@@ -758,3 +758,69 @@ REQ-32 — after `requirements.gate` had already passed. Nothing on the chain no
 DIVERGED` compares the ledger against the *sprint*, not against the artifacts a state was graded on.
 An upstream verdict can therefore describe an artifact that no longer exists in that form. That is
 recorded here, not fixed.
+
+
+---
+
+## 15. Every profile was asking the judge the same question
+
+Five profiles, twelve discursive controls, and **one criterion string** between them:
+
+> *"Does this review describe the change in the diff? FAIL if it makes claims the diff does not
+> support, if it is generic enough to apply to any change, or if it omits a material part of the diff."*
+
+Written for a code review, and reused unchanged for a register of invariants, a spec, a set of golden
+scenarios, a findings register and a GRADE derivation. Meanwhile every review state **already declared
+its own predicates in prose** — *"Apply GROUNDED and TOOTHED"*, *"Apply DERIVED and COMPLETE"*,
+*"Apply GROUNDED, TOOTHED and ATOMIC"* — and the control ignored them.
+
+The repo's own rule says where a profile states a rule in prose, that prose becomes the control. It
+was applied everywhere except to the judge criterion itself.
+
+### How it surfaced
+
+The live `research-v2` run stopped at `synthesis.cold_review`. The cold review under judgment was
+5 772 characters, covered all six conclusions by id, and checked each one's GRADE derivation. The
+judge failed it — and the tag said `judge:llm:claude-mistral-medium(non-independent)`, clean: no
+`(no-verdict)`, no `(truncated:…)`, no `api-error`. **A real judgment, not the plumbing** — which is
+the whole reason those tags exist.
+
+Sampled, the old criterion turns out to be a coin toss on this artifact:
+
+| criterion | real review (2 models × 2 draws) | a deliberately generic review |
+|---|---|---|
+| the shared code-review one | **1 / 4 pass** | — |
+| derived from the state's own predicates | **3 / 4 pass** | **0 / 2 pass** |
+
+Better, and still not stable. Which is the finding underneath the finding.
+
+### A noisy control gets sampled, not weakened
+
+The same model, the same criterion and the same artifact returned pass and fail on repeat. A control
+that flips on identical input is not fit to **block** a chain on one draw — and the two tempting fixes
+are both wrong. Loosening the criterion until it passes is swapping the control when it fails.
+Demoting it to advisory throws away the teeth that caught a generic review in §12 and §13.
+
+So `RELAY_JUDGE_VOTES` samples it: N independent draws, majority wins, **a tie fails** — an unproven
+control is a failed control — and the tally goes on the chain as
+`judge:llm:<model>(votes:2/3)`, because a unanimous call and a 2–1 call are different facts about the
+same verdict and the ledger is the only place that can still tell them apart later. One vote stays the
+default: three calls per control is a real cost, and a profile that does not need it should not pay it.
+
+A transport failure is **not a vote**. An `api-error` or a reply that never reached a verdict aborts
+the ballot and is reported as itself, so a flaky network can never outvote the artifact. Truncation is
+deliberately not in that list: a cut artifact still yields a real judgment on what was shown, and the
+tag already records the cut.
+
+### What the run produced, stated as it is
+
+`docs/fixtures/research-v2-live-escalated.ledger.jsonl` — the chain reached `synthesis.cold_review`
+and stopped there. It is **not** an auditable pass and is shipped as what it is.
+
+`docs/fixtures/gate-race-forked-chain.ledger.jsonl` — the forked chain from §14's concurrency defect,
+kept because a `TAMPERED` produced by an honest race is the artifact that argues for the lock.
+
+The measured cost of this profile's density is in the same run: by `contest.gate` a single fire grades
+**32 controls of which 26 are regression re-runs** of already-accepted ones, each spawning its own
+checker process. A control added to a profile does not cost one control — it costs one control times
+every fire that comes after it.

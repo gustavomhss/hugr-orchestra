@@ -83,7 +83,7 @@
           "context": [
             "${review_artifact}"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review describe the specific change in the diff \u2014 the functions, behaviours and edge cases it introduces \u2014 and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:tdd_feature@1.0.0"

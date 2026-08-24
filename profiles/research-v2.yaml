@@ -352,8 +352,10 @@ criteria_map:
       - ${research_dir}/review-evidence.json
       paths:
       - ${research_dir}/findings.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review apply GROUNDED (the evidence really supports the claim), TOOTHED (the falsifier is
+        a concrete observation) and ATOMIC (one claim per finding) to the findings in the diff, by id? FAIL if it
+        approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support,
+        if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.
       diff: true
       blocking: true
     contest.challenge:
@@ -376,8 +378,10 @@ criteria_map:
       - ${research_dir}/review-synthesis.json
       paths:
       - ${research_dir}/conclusions.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review check each conclusion in the diff against the findings it cites AND against its GRADE
+        derivation — the starting level and every downgrade — by id? FAIL if it approves or rejects without naming
+        specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to
+        apply to any artifact of this kind, or if it leaves part of the diff unjudged.
       diff: true
       blocking: true
     report.write:

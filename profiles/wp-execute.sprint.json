@@ -230,7 +230,7 @@
           "context": [
             "${wp_dir}/review.md"
           ],
-          "judge": "Does this review describe the change in the diff? FAIL if it makes claims the diff does not support, if it is generic enough to apply to any change, or if it omits a material part of the diff.",
+          "judge": "Does this review interrogate the evidence as a skeptic: does every claimed pass have captured output behind it, and would each check actually fail if the code in the diff were wrong? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
           "diff": true,
           "blocking": true,
           "origin": "pe-profile:wp-execute@1.0.0"

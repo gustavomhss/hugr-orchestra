@@ -1,6 +1,6 @@
 name: spec-decompose
 version: 1.0.0
-description: "Governed decomposition \u2014 frozen intent to work packages through five gated phases"
+description: Governed decomposition — frozen intent to work packages through five gated phases
 protected: false
 created_at: '2026-08-19T00:00:00Z'
 settings:
@@ -94,24 +94,23 @@ pipeline:
   description: Extract and register the properties that must always hold for the product to be correct
   system_prompt: "## Phase 1: INVARIANT REGISTER\n\nThe frozen product intent arrives as `initial_context` at session\
     \ start.\nRead it in full before writing anything.\n\n### Your task:\nExtract the properties that must ALWAYS\
-    \ hold for the product to be\ncorrect \u2014 not features, not tasks, PROPERTIES. Register each as\n`INV-<n>:\
-    \ <statement>`, numbered from 1, no gaps.\n\n### Rules:\n- An invariant must be GROUNDED in the stated intent.\
-    \ If you find\n  yourself inventing scope the intent does not mention, stop \u2014 do not\n  register it. Mark\
-    \ it as an open question instead and move on.\n- Invariants are properties of the system, not features of it.\
-    \ \"Users\n  can reset their password\" is a feature; \"an account is never left in\n  a state with no valid\
-    \ credential path\" is an invariant.\n- Every invariant must be FALSIFIABLE: state it so that a concrete\n \
-    \ violation is describable. If no violation could ever be pointed at,\n  it is not an invariant \u2014 rewrite\
-    \ it or drop it.\n- Do not merge two properties into one INV. One statement, one property.\n- Prefer fewer,\
-    \ sharper invariants over a padded list.\n\n### Cold self-review (before the gate):\nRe-read the register cold,\
-    \ against GROUNDED and TOOTHED:\n- GROUNDED: does every invariant trace to something actually stated in\n  the\
-    \ intent? Strike or flag anything invented.\n- TOOTHED: can every invariant actually fail? Strike or rewrite\
-    \ any\n  that are vacuous truisms.\nEmit a verdict: APPROVE or FIXES-NEEDED. On FIXES-NEEDED, apply the\nfixes\
-    \ before attempting the gate \u2014 do not carry known defects forward.\n\n### Output:\nThe invariant register:\
-    \ a list of `INV-<n>` id/statement pairs.\n"
+    \ hold for the product to be\ncorrect — not features, not tasks, PROPERTIES. Register each as\n`INV-<n>: <statement>`,\
+    \ numbered from 1, no gaps.\n\n### Rules:\n- An invariant must be GROUNDED in the stated intent. If you find\n\
+    \  yourself inventing scope the intent does not mention, stop — do not\n  register it. Mark it as an open question\
+    \ instead and move on.\n- Invariants are properties of the system, not features of it. \"Users\n  can reset\
+    \ their password\" is a feature; \"an account is never left in\n  a state with no valid credential path\" is\
+    \ an invariant.\n- Every invariant must be FALSIFIABLE: state it so that a concrete\n  violation is describable.\
+    \ If no violation could ever be pointed at,\n  it is not an invariant — rewrite it or drop it.\n- Do not merge\
+    \ two properties into one INV. One statement, one property.\n- Prefer fewer, sharper invariants over a padded\
+    \ list.\n\n### Cold self-review (before the gate):\nRe-read the register cold, against GROUNDED and TOOTHED:\n\
+    - GROUNDED: does every invariant trace to something actually stated in\n  the intent? Strike or flag anything\
+    \ invented.\n- TOOTHED: can every invariant actually fail? Strike or rewrite any\n  that are vacuous truisms.\n\
+    Emit a verdict: APPROVE or FIXES-NEEDED. On FIXES-NEEDED, apply the\nfixes before attempting the gate — do not\
+    \ carry known defects forward.\n\n### Output:\nThe invariant register: a list of `INV-<n>` id/statement pairs.\n"
   enabled: true
   max_iterations: 3
   loop: true
-  icon: "\U0001F9ED"
+  icon: 🧭
   sub_states:
   - id: register
     type: execute
@@ -143,21 +142,21 @@ pipeline:
     \ requirement per atomic, testable normative statement:\n`REQ-<n>: When <trigger>, the system shall <response>`.\
     \ Number from 1,\nno gaps. Attach the `INV-<n>` id(s) each REQ derives from.\n\n### Rules:\n- ATOMIC: one requirement,\
     \ one behavior. If the normative clause\n  contains \"and\" joining two distinct responses, that is a smell\
-    \ \u2014\n  split it into two requirements.\n- DERIVED: every requirement must cite the invariant(s) it serves.\
-    \ A\n  requirement with no source invariant does not belong in this phase \u2014\n  either find its invariant\
-    \ or push it back to Phase 1.\n- COMPLETE: every invariant in the register must be served by at least\n  one\
-    \ requirement. An invariant with zero requirements is a gap.\n- Run an explicit ambiguity scan over the drafted\
-    \ set: flag vague terms\n  (fast, robust, user-friendly, appropriate, reasonable, efficient) and\n  replace\
-    \ each with a measurable condition, or state why none applies.\n- Do not restate an invariant verbatim as a\
-    \ requirement \u2014 a requirement\n  is the invariant's testable, triggered consequence, not a copy.\n\n###\
-    \ Cold self-review (before the gate):\n- GROUNDED: does every REQ trace to language actually in the invariant\n\
-    \  register?\n- DERIVED: does every REQ cite real INV ids, and do those ids exist?\n- COMPLETE: does every INV\
-    \ have at least one REQ?\nEmit a verdict: APPROVE or FIXES-NEEDED, and fix before the gate.\n\n### Output:\n\
-    The requirement set: `REQ-<n>` id/statement/source_invariants triples.\n"
+    \ —\n  split it into two requirements.\n- DERIVED: every requirement must cite the invariant(s) it serves. A\n\
+    \  requirement with no source invariant does not belong in this phase —\n  either find its invariant or push\
+    \ it back to Phase 1.\n- COMPLETE: every invariant in the register must be served by at least\n  one requirement.\
+    \ An invariant with zero requirements is a gap.\n- Run an explicit ambiguity scan over the drafted set: flag\
+    \ vague terms\n  (fast, robust, user-friendly, appropriate, reasonable, efficient) and\n  replace each with\
+    \ a measurable condition, or state why none applies.\n- Do not restate an invariant verbatim as a requirement\
+    \ — a requirement\n  is the invariant's testable, triggered consequence, not a copy.\n\n### Cold self-review\
+    \ (before the gate):\n- GROUNDED: does every REQ trace to language actually in the invariant\n  register?\n\
+    - DERIVED: does every REQ cite real INV ids, and do those ids exist?\n- COMPLETE: does every INV have at least\
+    \ one REQ?\nEmit a verdict: APPROVE or FIXES-NEEDED, and fix before the gate.\n\n### Output:\nThe requirement\
+    \ set: `REQ-<n>` id/statement/source_invariants triples.\n"
   enabled: true
   max_iterations: 3
   loop: true
-  icon: "\U0001F4CB"
+  icon: 📋
   sub_states:
   - id: derive
     type: execute
@@ -184,25 +183,25 @@ pipeline:
   name: Behavioral Spec
   description: Specify interfaces, inputs/outputs, error behavior, and edge cases derived from the requirements
   system_prompt: "## Phase 3: BEHAVIORAL SPEC\n\nTurn the requirement set into a behavioral specification. Describe\n\
-    WHAT the system does at each boundary \u2014 never HOW it is implemented.\n\n### Your task:\n- Name the interfaces/boundaries\
-    \ the requirements imply (API, CLI,\n  UI surface, message contract \u2014 whatever applies).\n- For each interface,\
+    WHAT the system does at each boundary — never HOW it is implemented.\n\n### Your task:\n- Name the interfaces/boundaries\
+    \ the requirements imply (API, CLI,\n  UI surface, message contract — whatever applies).\n- For each interface,\
     \ state: inputs, outputs, and error behavior.\n- Enumerate edge cases explicitly wherever they apply: empty\
     \ input,\n  boundary values, concurrent access, failure of a dependency, partial\n  failure, timeout. Do not\
-    \ assume a case is \"obviously covered\" \u2014\n  write it down or it is not covered.\n\n### Rules:\n- A behavior\
-    \ not written into the spec does not exist. Silence is not\n  permission for an implementer to guess \u2014\
-    \ if a REQ implies behavior\n  you have not pinned down, pin it down now.\n- Keep the spec implementation-free.\
-    \ No data structures, no algorithms,\n  no framework/library names \u2014 only observable behavior at the\n\
-    \  boundary.\n- DERIVED: every clause in the spec must trace back to a specific REQ.\n  A spec clause with no\
-    \ REQ behind it is scope creep \u2014 cut it or send\n  it back to Phase 2 as a missing requirement.\n- COMPLETE:\
-    \ every REQ must appear in the spec in some form.\n\n### Cold self-review (before the gate):\n- DERIVED: pick\
-    \ spec clauses at random and re-derive which REQ demands\n  them; flag any that don't trace.\n- COMPLETE: walk\
-    \ the REQ list and confirm each has spec coverage.\nEmit a verdict: APPROVE or FIXES-NEEDED, and fix before\
-    \ the gate.\n\n### Output:\nThe behavioral spec: interfaces with inputs/outputs/error behavior and\nan explicit\
-    \ edge-case list, each traceable to REQ ids.\n"
+    \ assume a case is \"obviously covered\" —\n  write it down or it is not covered.\n\n### Rules:\n- A behavior\
+    \ not written into the spec does not exist. Silence is not\n  permission for an implementer to guess — if a\
+    \ REQ implies behavior\n  you have not pinned down, pin it down now.\n- Keep the spec implementation-free. No\
+    \ data structures, no algorithms,\n  no framework/library names — only observable behavior at the\n  boundary.\n\
+    - DERIVED: every clause in the spec must trace back to a specific REQ.\n  A spec clause with no REQ behind it\
+    \ is scope creep — cut it or send\n  it back to Phase 2 as a missing requirement.\n- COMPLETE: every REQ must\
+    \ appear in the spec in some form.\n\n### Cold self-review (before the gate):\n- DERIVED: pick spec clauses\
+    \ at random and re-derive which REQ demands\n  them; flag any that don't trace.\n- COMPLETE: walk the REQ list\
+    \ and confirm each has spec coverage.\nEmit a verdict: APPROVE or FIXES-NEEDED, and fix before the gate.\n\n\
+    ### Output:\nThe behavioral spec: interfaces with inputs/outputs/error behavior and\nan explicit edge-case list,\
+    \ each traceable to REQ ids.\n"
   enabled: true
   max_iterations: 3
   loop: true
-  icon: "\U0001F4D0"
+  icon: 📐
   sub_states:
   - id: specify
     type: execute
@@ -230,25 +229,25 @@ pipeline:
   name: Acceptance Scenarios
   description: Write Given/When/Then acceptance scenarios that will be the implementation's contract
   system_prompt: "## Phase 4: ACCEPTANCE SCENARIOS\n\nWrite acceptance scenarios in Given/When/Then form, numbered\
-    \ `SCN-<n>`\nfrom 1, no gaps. These scenarios are the contract the implementation\nwill be judged against \u2014\
+    \ `SCN-<n>`\nfrom 1, no gaps. These scenarios are the contract the implementation\nwill be judged against —\
     \ write them as if you were the one who has to\naccept or reject a delivered work package against them.\n\n\
     ### Your task:\n- Every REQ gets at least one HAPPY-PATH scenario (the behavior working\n  as specified) AND\
-    \ at least one GUARD scenario (the rejection/failure\n  side \u2014 invalid input, violated precondition, denied\
+    \ at least one GUARD scenario (the rejection/failure\n  side — invalid input, violated precondition, denied\
     \ access, whatever\n  the REQ's failure mode is).\n- Write each scenario as Given (starting state) / When (trigger)\
     \ / Then\n  (observable outcome).\n\n### Rules:\n- TOOTHED: for every scenario, state explicitly what observable\
-    \ outcome\n  would make it FAIL. A scenario that cannot fail proves nothing \u2014\n  rewrite it until a concrete\
+    \ outcome\n  would make it FAIL. A scenario that cannot fail proves nothing —\n  rewrite it until a concrete\
     \ counter-observation is describable.\n- COMPLETE: walk the REQ list; confirm each has both a happy and a\n\
     \  guard scenario before moving on.\n- Keep Then-clauses observable (a return value, a state change, an\n  error\
-    \ code) \u2014 never an implementation detail.\n- Do not write a scenario that duplicates another under a new\
-    \ number;\n  each SCN must exercise a distinct case.\n\n### Cold self-review (before the gate):\n- COMPLETE:\
-    \ build the REQ x {happy, guard} coverage table and confirm\n  every cell is filled.\n- TOOTHED: for each scenario,\
-    \ confirm the stated failure condition is\n  real and distinguishable from the pass condition.\nEmit a verdict:\
-    \ APPROVE or FIXES-NEEDED, and fix before the gate.\n\n### Output:\nThe acceptance scenario set: `SCN-<n>` Given/When/Then\
+    \ code) — never an implementation detail.\n- Do not write a scenario that duplicates another under a new number;\n\
+    \  each SCN must exercise a distinct case.\n\n### Cold self-review (before the gate):\n- COMPLETE: build the\
+    \ REQ x {happy, guard} coverage table and confirm\n  every cell is filled.\n- TOOTHED: for each scenario, confirm\
+    \ the stated failure condition is\n  real and distinguishable from the pass condition.\nEmit a verdict: APPROVE\
+    \ or FIXES-NEEDED, and fix before the gate.\n\n### Output:\nThe acceptance scenario set: `SCN-<n>` Given/When/Then\
     \ entries, each\ntagged happy or guard and linked to its REQ id.\n"
   enabled: true
   max_iterations: 3
   loop: true
-  icon: "\U0001F947"
+  icon: 🥇
   sub_states:
   - id: write_scenarios
     type: execute
@@ -280,22 +279,21 @@ pipeline:
     Each WP card carries exactly:\n- `intent`: one sentence stating what the WP delivers.\n- `source_reqs`: the\
     \ REQ ids it implements.\n- `acceptance`: the SCN ids that must pass to seal it.\n- `deps`: WP ids it depends\
     \ on (empty list if parallel-safe).\n\n### Rules:\n- SIZE: if an implementer cannot finish and verify a WP in\
-    \ one sitting,\n  it is not one WP \u2014 split it into two.\n- COVERAGE MATRIX: every REQ must land in exactly\
-    \ one WP's\n  `source_reqs`. No REQ may be orphaned (in zero WPs) or duplicated\n  (in more than one WP) \u2014\
-    \ pick the WP where it belongs and put it\n  there once.\n- Every WP's `acceptance` list must cite real SCN\
-    \ ids that actually\n  exercise the REQs it claims to implement \u2014 no WP ships without a\n  way to check\
-    \ it.\n- `deps` must reference only WP ids that exist in this same set; a WP\n  may not depend on itself, directly\
-    \ or transitively (no cycles).\n- Do not invent a WP with no REQ behind it \u2014 if you find work with no\n\
-    \  requirement driving it, that is scope creep; drop it or send the\n  missing requirement back through the\
-    \ earlier phases.\n\n### Cold self-review (before the gate):\n- DERIVED: does every WP trace cleanly to the\
-    \ REQs and SCNs it cites?\n- COMPLETE: build the coverage matrix (REQ -> WP) and confirm it\n  closes \u2014\
-    \ every REQ in exactly one WP, no orphans, no duplicates.\nEmit a verdict: APPROVE or FIXES-NEEDED, and fix\
-    \ before the gate.\n\n### Final output:\nEmit the complete deliverable validated by the profile's\noutput_contract:\
-    \ `intent` (the frozen intent restated), `invariants`,\n`requirements`, and `work_packages`, fully populated\
-    \ from the prior\nphases.\n"
+    \ one sitting,\n  it is not one WP — split it into two.\n- COVERAGE MATRIX: every REQ must land in exactly one\
+    \ WP's\n  `source_reqs`. No REQ may be orphaned (in zero WPs) or duplicated\n  (in more than one WP) — pick\
+    \ the WP where it belongs and put it\n  there once.\n- Every WP's `acceptance` list must cite real SCN ids that\
+    \ actually\n  exercise the REQs it claims to implement — no WP ships without a\n  way to check it.\n- `deps`\
+    \ must reference only WP ids that exist in this same set; a WP\n  may not depend on itself, directly or transitively\
+    \ (no cycles).\n- Do not invent a WP with no REQ behind it — if you find work with no\n  requirement driving\
+    \ it, that is scope creep; drop it or send the\n  missing requirement back through the earlier phases.\n\n###\
+    \ Cold self-review (before the gate):\n- DERIVED: does every WP trace cleanly to the REQs and SCNs it cites?\n\
+    - COMPLETE: build the coverage matrix (REQ -> WP) and confirm it\n  closes — every REQ in exactly one WP, no\
+    \ orphans, no duplicates.\nEmit a verdict: APPROVE or FIXES-NEEDED, and fix before the gate.\n\n### Final output:\n\
+    Emit the complete deliverable validated by the profile's\noutput_contract: `intent` (the frozen intent restated),\
+    \ `invariants`,\n`requirements`, and `work_packages`, fully populated from the prior\nphases.\n"
   enabled: true
   max_iterations: 3
-  icon: "\U0001F4E6"
+  icon: 📦
   sub_states:
   - id: decompose
     type: execute
@@ -339,8 +337,11 @@ criteria_map:
       - ${spec_dir}/invariants.json
       context:
       - ${spec_dir}/review-invariants.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review apply GROUNDED (each invariant's grounding is really in the frozen intent) and TOOTHED
+        (each falsifier is a concrete observable, not a restatement) to the invariants in the diff, by id? FAIL
+        if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does
+        not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the
+        diff unjudged.
       diff: true
       blocking: true
     requirements.cold_review:
@@ -355,8 +356,11 @@ criteria_map:
       - ${spec_dir}/requirements.json
       context:
       - ${spec_dir}/review-requirements.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review apply GROUNDED, DERIVED (each requirement follows from the invariants it cites) and
+        COMPLETE (every invariant is discharged by at least one requirement) to the register in the diff, by id?
+        FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff
+        does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of
+        the diff unjudged.
       diff: true
       blocking: true
     spec.cold_review:
@@ -371,8 +375,11 @@ criteria_map:
       - ${spec_dir}/spec.json
       context:
       - ${spec_dir}/review-spec.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review apply DERIVED (every spec clause traces to a requirement that exists) and COMPLETE
+        (every requirement is genuinely addressed, not merely cited) to the spec in the diff, by interface and by
+        id? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the
+        diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part
+        of the diff unjudged.
       diff: true
       blocking: true
     goldens.cold_review:
@@ -387,8 +394,11 @@ criteria_map:
       - ${spec_dir}/scenarios.json
       context:
       - ${spec_dir}/review-goldens.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review apply COMPLETE (every requirement has both happy and guard coverage) and TOOTHED (every
+        scenario names a concrete wrong implementation it would catch) to the scenarios in the diff, by id? FAIL
+        if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does
+        not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the
+        diff unjudged.
       diff: true
       blocking: true
     work_packages.cold_review:
@@ -403,7 +413,10 @@ criteria_map:
       - ${spec_dir}/packages.json
       context:
       - ${spec_dir}/review-work_packages.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review apply DERIVED (each package's intent follows from the requirements it owns) and COMPLETE
+        (the coverage matrix is a partition — every requirement in exactly one package) to the diff, by id? FAIL
+        if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does
+        not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the
+        diff unjudged.
       diff: true
       blocking: true

@@ -52,18 +52,18 @@ pipeline:
     - review_done
 criteria_map:
   per_criterion:
-    tests_written: git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files
-      --others --exclude-standard -- ${test_path} | grep -q .
-    implementation_done: git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files
-      --others --exclude-standard -- ${src_path} | grep -q .
+    tests_written: git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard
+      -- ${test_path} | grep -q .
+    implementation_done: git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard
+      -- ${src_path} | grep -q .
     suite_green: ${test_cmd}
     review_done: test -s ${review_artifact}
   per_sub:
     implement.write:
     - id: write-produced-a-change
       assert: this state changed something under the declared source or test paths
-      cmd: git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others
-        --exclude-standard -- ${src_path} ${test_path} | grep -q .
+      cmd: git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard
+        -- ${src_path} ${test_path} | grep -q .
     review.self_review:
     - id: review-is-substantive
       assert: the review artifact carries at least 50 words
@@ -71,8 +71,9 @@ criteria_map:
     - id: review-engages-with-the-diff
       context:
       - ${review_artifact}
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not
-        support, if it is generic enough to apply to any change, or if it omits a material part of the
-        diff.
+      judge: Does this review describe the specific change in the diff — the functions, behaviours and edge cases
+        it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific
+        items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to
+        any artifact of this kind, or if it leaves part of the diff unjudged.
       diff: true
       blocking: true

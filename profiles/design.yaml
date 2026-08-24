@@ -1,13 +1,13 @@
 name: design
 version: 1.0.0
-description: "DESIGN \u2014 raw idea \u2192 ratified product design (6 macros, EDD family)"
+description: DESIGN — raw idea → ratified product design (6 macros, EDD family)
 protected: false
 settings:
   oscillation_detection_threshold: 3
   auto_loop_on_checklist_failure: true
 pipeline:
 - state_id: intake
-  name: "INTAKE \u2014 mine the intent"
+  name: INTAKE — mine the intent
   enabled: true
   max_iterations: 5
   sub_states:
@@ -36,7 +36,7 @@ pipeline:
     criteria:
     - intake_phase_validates
 - state_id: mirror
-  name: "MIRROR \u2014 confirm the image"
+  name: MIRROR — confirm the image
   enabled: true
   max_iterations: 5
   sub_states:
@@ -58,7 +58,7 @@ pipeline:
     criteria:
     - mirror_phase_validates
 - state_id: concept
-  name: "CONCEPT \u2014 choose solution"
+  name: CONCEPT — choose solution
   enabled: true
   max_iterations: 3
   sub_states:
@@ -83,7 +83,7 @@ pipeline:
     criteria:
     - concept_phase_validates
 - state_id: shape
-  name: "SHAPE \u2014 give it a body"
+  name: SHAPE — give it a body
   enabled: true
   max_iterations: 3
   sub_states:
@@ -114,7 +114,7 @@ pipeline:
     criteria:
     - shape_phase_validates
 - state_id: risks
-  name: "RISKS \u2014 find how it dies"
+  name: RISKS — find how it dies
   enabled: true
   max_iterations: 3
   sub_states:
@@ -142,7 +142,7 @@ pipeline:
     criteria:
     - risks_phase_validates
 - state_id: ratify
-  name: "RATIFY \u2014 sign it"
+  name: RATIFY — sign it
   enabled: true
   max_iterations: 3
   sub_states:
@@ -157,8 +157,7 @@ pipeline:
     type: human_approval
     name: Wet Ink
     approver_pubkey: ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c
-    approval_prompt: "Assine o design do Finance Funnel \u2014 voc\xEA est\xE1 assinando o escopo v1 e os riscos\
-      \ aceitos."
+    approval_prompt: Assine o design do Finance Funnel — você está assinando o escopo v1 e os riscos aceitos.
     criteria:
     - owner_signed
   - id: checklist
@@ -188,8 +187,10 @@ criteria_map:
       - ${design_dir}/doors.json
       context:
       - ${design_dir}/verdict-distinctness.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review judge whether the doors in the diff are genuinely DIFFERENT approaches rather than
+        one approach in three costumes, naming each door and what distinguishes it? FAIL if it approves or rejects
+        without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic
+        enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.
       diff: true
       blocking: true
     shape.dress_rehearsal:
@@ -204,8 +205,10 @@ criteria_map:
       - ${design_dir}/skeleton.json
       context:
       - ${design_dir}/verdict-dress_rehearsal.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review walk the skeleton in the diff as a rehearsal — naming the steps, where it would break,
+        and what it does not yet cover? FAIL if it approves or rejects without naming specific items from the diff,
+        if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this
+        kind, or if it leaves part of the diff unjudged.
       diff: true
       blocking: true
     risks.no_flinching:
@@ -220,7 +223,9 @@ criteria_map:
       - ${design_dir}/risks.json
       context:
       - ${design_dir}/verdict-no_flinching.json
-      judge: Does this review describe the change in the diff? FAIL if it makes claims the diff does not support,
-        if it is generic enough to apply to any change, or if it omits a material part of the diff.
+      judge: Does this review confront the risks in the diff without flinching — naming each one and whether the
+        response is a mitigation or a hope? FAIL if it approves or rejects without naming specific items from the
+        diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of
+        this kind, or if it leaves part of the diff unjudged.
       diff: true
       blocking: true

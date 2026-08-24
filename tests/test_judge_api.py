@@ -31,12 +31,19 @@ JUDGE = ROOT / "benchmark" / "judge.py"
 
 class _Handler(BaseHTTPRequestHandler):
     reply = {}          # set per test
+    replies = None      # or a list, consumed one per request — used to model a flapping judge
     seen = {}           # last request body
+    calls = 0
 
     def do_POST(self):
         n = int(self.headers.get("content-length", 0))
         _Handler.seen = json.loads(self.rfile.read(n) or b"{}")
-        body = json.dumps(_Handler.reply).encode()
+        if _Handler.replies:
+            reply = _Handler.replies[min(_Handler.calls, len(_Handler.replies) - 1)]
+        else:
+            reply = _Handler.reply
+        _Handler.calls += 1
+        body = json.dumps(reply).encode()
         self.send_response(200)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(body)))
@@ -49,6 +56,8 @@ class _Handler(BaseHTTPRequestHandler):
 
 @pytest.fixture()
 def endpoint():
+    _Handler.replies = None
+    _Handler.calls = 0
     srv = HTTPServer(("127.0.0.1", 0), _Handler)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
     t.start()
@@ -190,3 +199,55 @@ def test_the_default_context_cap_is_generous(endpoint, tmp_path):
     mod = module_from_spec(spec_from_loader("judgemod", ldr))
     ldr.exec_module(mod)
     assert mod.MAX_CTX >= 100000
+
+
+# ---------- sampling a noisy control ------------------------------------------------------------
+# Measured on a live run: the same model, the same criterion and the same artifact returned pass and
+# fail on repeat. A control that flips on identical input is not fit to block a chain on one draw —
+# and the answer is to SAMPLE it, not to weaken the criterion or to demote the control to advisory.
+
+
+def test_a_flapping_judge_is_decided_by_majority(endpoint):
+    _Handler.replies = [_tool_reply("pass"), _tool_reply("fail"), _tool_reply("pass")]
+    r = _judge(endpoint, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "pass"
+    assert r["backend"] == "llm:test-model(votes:2/3)"
+    assert r["reason"].startswith("2/3 passed")
+    assert _Handler.calls == 3
+
+
+def test_the_minority_does_not_win(endpoint):
+    _Handler.replies = [_tool_reply("fail"), _tool_reply("pass"), _tool_reply("fail")]
+    r = _judge(endpoint, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail" and r["backend"] == "llm:test-model(votes:1/3)"
+
+
+def test_a_tie_fails(endpoint):
+    """An unproven control is a failed control — the same rule the rest of the gate applies."""
+    _Handler.replies = [_tool_reply("pass"), _tool_reply("fail")]
+    r = _judge(endpoint, RELAY_JUDGE_VOTES=2)
+    assert r["verdict"] == "fail" and r["backend"] == "llm:test-model(votes:1/2)"
+
+
+def test_the_tally_reaches_the_ledger(endpoint):
+    """A unanimous call and a 2-1 call are different facts about the same verdict, and the ledger is
+    the only place that can still tell them apart later."""
+    _Handler.replies = [_tool_reply("pass")] * 3
+    assert _judge(endpoint, RELAY_JUDGE_VOTES=3)["backend"] == "llm:test-model(votes:3/3)"
+
+
+def test_a_transport_failure_is_not_a_vote(endpoint):
+    """A flaky network must never outvote the artifact. One api-error aborts the ballot and is
+    reported as itself — the same separation the (no-verdict) and (truncated:) tags make."""
+    _Handler.replies = [_tool_reply("pass"), {"content": []}, _tool_reply("pass")]
+    r = _judge(endpoint, RELAY_JUDGE_VOTES=3)
+    assert r["backend"].endswith("(no-verdict)") and r["verdict"] == "fail"
+
+
+def test_one_vote_is_the_default_and_costs_one_call(endpoint):
+    """Sampling is opt-in: three calls per control is a real cost, and a profile that does not need it
+    should not pay it."""
+    _Handler.replies = [_tool_reply("pass")]
+    r = _judge(endpoint)
+    assert r["backend"] == "llm:test-model" and "votes" not in r["backend"]
+    assert _Handler.calls == 1
