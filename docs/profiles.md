@@ -413,6 +413,24 @@ gate an hour later when the source is closed. It also refuses a second finding t
 against the corpus already held, which is the constant comparative method as a command-line argument.
 `research-memo` appends a dated memo.
 
+### Two controls that were overengineering, and what replaced them
+
+`context_described` required 80 characters and `prior_belief_recorded` required 20. Eighty characters
+of anything passed: proof-of-presence wearing a methodology hat, and the same defect — gate friction
+that cannot fail for the right reason — that the presence-of-a-key gate this whole migration replaced
+had. Both are gone from the question gate.
+
+Their teeth moved to the report, where the question stops being *"did you write something"* and
+becomes *"did it reach the reader"*. `report_states_the_setting` requires the setting to survive into
+the artifact, because transferability is worth nothing while the context sits in a JSON file nobody
+opens. `report_confronts_the_prior_belief` requires the prior to be stated **and answered** — research
+that quietly confirmed a prior reads exactly like research that tested one, unless the prior is put in
+front of the reader.
+
+Same count, two fewer proxies. The remaining length thresholds are floors under a control whose teeth
+are elsewhere — the memo's 40 characters sits under an ORDERING check, and `report_written`'s 200
+words sits beside a required-sections check.
+
 ### One criterion deliberately NOT mechanized
 
 Zettelkasten atomicity — one claim per finding — is a predicate of the evidence cold review, not a

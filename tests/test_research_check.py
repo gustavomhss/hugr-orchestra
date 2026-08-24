@@ -138,6 +138,18 @@ absence of an alternative.
 - S-3 forum thread, reliability F (cannot be judged), retrieved 2026-08-23T10:20:00Z, excluded from
   the findings and recorded only because it is the source of the open contradiction above.
 
+## Setting
+
+A single-tenant 4.2 deployment run by the platform team, with the vendor's release notes and our own
+ops runbook as the only written sources; the scheduler's source code is not available to us. A reader
+on a multi-tenant or self-built deployment should not carry these conclusions across without checking.
+
+## Prior belief
+
+Going in I expected an unbounded retry loop with exponential backoff and no parking. That was wrong:
+the bound is documented and parking is explicit, so both conclusions moved off the prior rather than
+confirming it.
+
 ## What this does not cover
 
 The scheduler's own source was never read and is not available to us, so everything above is what the
@@ -220,10 +232,8 @@ def _src(k, v, i=0):
 MUTATIONS = {
   # question — ACH step 1, thick description, the bound scope
   "question_stated": _q("question", "scheduler stuff"),
-  "context_described": _q("context", "a deployment"),
   "answer_shape_declared": _q("answer_shape", [{"id": "first", "must": "names the retry count"}]),
   "out_of_scope_declared": _q("out_of_scope", []),
-  "prior_belief_recorded": _q("prior_belief", ""),
   # one hypothesis is not a set: the anchoring countermeasure is the plural
   "competing_hypotheses_enumerated":
     lambda d, _s: d["question.json"]["hypotheses"].pop(),
@@ -304,6 +314,12 @@ MUTATIONS = {
     lambda d, _s: REPORT.replace("F-3", "one finding"),
   "report_states_the_rejected_hypotheses":
     lambda d, _s: re.sub(r"\bH-2\b", "the other one", REPORT),
+  # recorded in the register, never shown to the reader — which is the whole failure
+  "report_states_the_setting":
+    lambda d, _s: REPORT.replace("A single-tenant 4.2 deployment run by the platform team, with the "
+                                 "vendor's release notes and our own\nops runbook", "Some deployment"),
+  "report_confronts_the_prior_belief":
+    lambda d, _s: re.sub(r"## Prior belief.*?confirming it\.\n", "", REPORT, flags=re.S),
 }
 
 

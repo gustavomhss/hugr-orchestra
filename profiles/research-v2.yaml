@@ -100,10 +100,8 @@ pipeline:
     enabled: true
     criteria:
     - question_stated
-    - context_described
     - answer_shape_declared
     - out_of_scope_declared
-    - prior_belief_recorded
     - competing_hypotheses_enumerated
 - state_id: survey
   name: Survey the ground
@@ -244,17 +242,15 @@ pipeline:
     - report_declares_source_age
     - report_carries_every_open_contradiction
     - report_states_the_rejected_hypotheses
+    - report_states_the_setting
+    - report_confronts_the_prior_belief
 criteria_map:
   per_criterion:
     question_stated: ${research_tools}/../criterion ${research_tools}/research-check question question_stated --research-dir
       ${research_dir} --repo-root ${repo_root}
-    context_described: ${research_tools}/../criterion ${research_tools}/research-check question context_described
-      --research-dir ${research_dir} --repo-root ${repo_root}
     answer_shape_declared: ${research_tools}/../criterion ${research_tools}/research-check question answer_shape_declared
       --research-dir ${research_dir} --repo-root ${repo_root}
     out_of_scope_declared: ${research_tools}/../criterion ${research_tools}/research-check question out_of_scope_declared
-      --research-dir ${research_dir} --repo-root ${repo_root}
-    prior_belief_recorded: ${research_tools}/../criterion ${research_tools}/research-check question prior_belief_recorded
       --research-dir ${research_dir} --repo-root ${repo_root}
     competing_hypotheses_enumerated: ${research_tools}/../criterion ${research_tools}/research-check question competing_hypotheses_enumerated
       --research-dir ${research_dir} --repo-root ${repo_root}
@@ -324,6 +320,10 @@ criteria_map:
       report_carries_every_open_contradiction --research-dir ${research_dir} --repo-root ${repo_root}
     report_states_the_rejected_hypotheses: ${research_tools}/../criterion ${research_tools}/research-check report
       report_states_the_rejected_hypotheses --research-dir ${research_dir} --repo-root ${repo_root}
+    report_states_the_setting: ${research_tools}/../criterion ${research_tools}/research-check report report_states_the_setting
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    report_confronts_the_prior_belief: ${research_tools}/../criterion ${research_tools}/research-check report report_confronts_the_prior_belief
+      --research-dir ${research_dir} --repo-root ${repo_root}
   per_sub:
     question.frame:
     - id: question-written

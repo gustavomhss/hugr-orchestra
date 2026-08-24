@@ -58,12 +58,6 @@
           "origin": "pe-profile:research-v2@2.0.0"
         },
         {
-          "id": "context_described",
-          "assert": "context_described",
-          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question context_described --research-dir ${research_dir} --repo-root ${repo_root}",
-          "origin": "pe-profile:research-v2@2.0.0"
-        },
-        {
           "id": "answer_shape_declared",
           "assert": "answer_shape_declared",
           "cmd": "${research_tools}/../criterion ${research_tools}/research-check question answer_shape_declared --research-dir ${research_dir} --repo-root ${repo_root}",
@@ -73,12 +67,6 @@
           "id": "out_of_scope_declared",
           "assert": "out_of_scope_declared",
           "cmd": "${research_tools}/../criterion ${research_tools}/research-check question out_of_scope_declared --research-dir ${research_dir} --repo-root ${repo_root}",
-          "origin": "pe-profile:research-v2@2.0.0"
-        },
-        {
-          "id": "prior_belief_recorded",
-          "assert": "prior_belief_recorded",
-          "cmd": "${research_tools}/../criterion ${research_tools}/research-check question prior_belief_recorded --research-dir ${research_dir} --repo-root ${repo_root}",
           "origin": "pe-profile:research-v2@2.0.0"
         },
         {
@@ -477,6 +465,18 @@
           "id": "report_states_the_rejected_hypotheses",
           "assert": "report_states_the_rejected_hypotheses",
           "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_states_the_rejected_hypotheses --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_states_the_setting",
+          "assert": "report_states_the_setting",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_states_the_setting --research-dir ${research_dir} --repo-root ${repo_root}",
+          "origin": "pe-profile:research-v2@2.0.0"
+        },
+        {
+          "id": "report_confronts_the_prior_belief",
+          "assert": "report_confronts_the_prior_belief",
+          "cmd": "${research_tools}/../criterion ${research_tools}/research-check report report_confronts_the_prior_belief --research-dir ${research_dir} --repo-root ${repo_root}",
           "origin": "pe-profile:research-v2@2.0.0"
         }
       ]

@@ -129,9 +129,15 @@ def norm(s):
 
 # ---------- question: ACH step 1, and Lincoln & Guba's thick description --------------------------
 
-QUESTION_CRITERIA = ("question_stated", "context_described", "answer_shape_declared",
-                     "out_of_scope_declared", "prior_belief_recorded",
-                     "competing_hypotheses_enumerated")
+# `context` and `prior_belief` are REQUIRED fields and are NOT graded here. Both were length checks —
+# 80 characters of anything passed — which is proof-of-presence wearing a methodology hat: gate
+# friction that cannot fail for the right reason. Their teeth moved to the report phase, where the
+# question is not "did you write something" but "did it reach the reader":
+# `report_states_the_setting` (transferability is worth nothing if the setting stays in a JSON file)
+# and `report_confronts_the_prior_belief` (research that quietly confirms a prior reads identically
+# to research that tested one, unless the prior is put in front of the reader).
+QUESTION_CRITERIA = ("question_stated", "answer_shape_declared",
+                     "out_of_scope_declared", "competing_hypotheses_enumerated")
 
 
 def check_question(d, _repo):
@@ -145,12 +151,6 @@ def check_question(d, _repo):
     out.append(("question_stated", PASS if text.endswith("?") and len(text) > 15 else FAIL,
                 f"{text[:70]!r}" if text else "no question recorded"))
 
-    # Transferability (Lincoln & Guba): a reader can only judge whether a finding carries to their
-    # situation if the setting it was found in is described.
-    ctx = str(q.get("context", "")).strip()
-    out.append(("context_described", PASS if len(ctx) >= 80 else FAIL,
-                f"{len(ctx)} chars of setting" if ctx else "no context recorded"))
-
     # Ids exist so `conclusions_answer_the_question` can close the loop. Without them you can bind one
     # question, answer a different one, and pass every other control in the protocol.
     shape = rows(q.get("answer_shape"))
@@ -163,12 +163,6 @@ def check_question(d, _repo):
     scope = [s for s in rows(q.get("out_of_scope")) if str(s).strip()]
     out.append(("out_of_scope_declared", PASS if scope else FAIL,
                 f"{len(scope)} explicit exclusions"))
-
-    # Recorded before looking, so research that changed nobody's mind is distinguishable from research
-    # that confirmed a prior.
-    prior = str(q.get("prior_belief", "")).strip()
-    out.append(("prior_belief_recorded", PASS if len(prior) >= 20 else FAIL,
-                f"{len(prior)} chars" if prior else "no prior belief recorded"))
 
     # ACH step 1. Enumerated BEFORE the evidence is weighed — that ordering is the countermeasure
     # against anchoring on the first plausible explanation, and one hypothesis is not a set.
@@ -655,7 +649,8 @@ def check_synthesis(d, _repo):
 
 REPORT_CRITERIA = ("report_written", "report_carries_every_conclusion",
                    "report_labels_every_conclusion_with_its_calibration", "report_declares_source_age",
-                   "report_carries_every_open_contradiction", "report_states_the_rejected_hypotheses")
+                   "report_carries_every_open_contradiction", "report_states_the_rejected_hypotheses",
+                   "report_states_the_setting", "report_confronts_the_prior_belief")
 
 
 def check_report(d, _repo):
@@ -714,6 +709,29 @@ def check_report(d, _repo):
                 PASS if hids and not unnamed and not qerr else FAIL,
                 qerr or (f"all {len(hids)} hypotheses named in the report" if hids and not unnamed
                          else f"never named: {unnamed or 'no hypotheses'}")))
+
+    # Transferability (Lincoln & Guba). The setting a finding was found in is what lets a reader judge
+    # whether it carries to theirs — and a setting recorded in a JSON file the reader never opens has
+    # not been described to anyone. This is the field's presence made consequential: it must survive
+    # into the artifact, in its own words.
+    ctx = str((q or {}).get("context", "")).strip() if not qerr else ""
+    ctx_shown = bool(ctx) and any(norm(seg) and norm(seg) in norm(body)
+                                  for seg in [ctx[:120]])
+    out.append(("report_states_the_setting", PASS if ctx_shown else FAIL,
+                qerr or ("the setting the work was done in reaches the reader" if ctx_shown
+                         else "the context is recorded but never stated in the report")))
+
+    # The anti-confirmation control. Research that quietly confirmed a prior reads exactly like
+    # research that tested one — unless the prior is put in front of the reader and answered. Checked
+    # as: the prior appears in the report, and the report says what happened to it.
+    prior = str((q or {}).get("prior_belief", "")).strip() if not qerr else ""
+    verdict_words = ("survived", "confirmed", "was wrong", "did not survive", "overturned",
+                     "unchanged", "changed", "moved off", "refuted", "held")
+    prior_shown = bool(prior) and norm(prior[:120]) in norm(body)
+    answered = any(w in body.lower() for w in verdict_words)
+    out.append(("report_confronts_the_prior_belief", PASS if prior_shown and answered else FAIL,
+                qerr or ("the prior belief is stated and answered" if prior_shown and answered
+                         else f"prior in the report: {prior_shown}; its fate stated: {answered}")))
     return out
 
 
