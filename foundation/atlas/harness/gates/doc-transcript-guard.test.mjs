@@ -218,8 +218,8 @@ describe("doc-transcript-guard — every declaration is EARNED", () => {
     // One gate copy with EVERY declaration emptied: whatever still passes was never unverifiable.
     const stripped = join(dir, "all-verified.mjs")
     const empty = src
-      .replace(/const FROZEN = \{[\s\S]*?\n\};/, "const FROZEN = {};")
-      .replace(/const UNVERIFIABLE = \{[\s\S]*?\n\};/, "const UNVERIFIABLE = {};")
+      .replace(/const FROZEN = \{[\s\S]*?\n\};?/, "const FROZEN = {};")
+      .replace(/const UNVERIFIABLE = \{[\s\S]*?\n\};?/, "const UNVERIFIABLE = {};")
     expect(empty, "the declaration maps were not emptied — this test would be vacuous").toMatch(
       /const FROZEN = \{\};[\s\S]*const UNVERIFIABLE = \{\};/,
     )
