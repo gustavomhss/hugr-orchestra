@@ -1,5 +1,7 @@
 # Orchestra — migração visual integral
 
+> **Codex: [COMECE AQUI](START-HERE.md).** Para localizar qualquer ticket, WP, task ou entrada de código: [INDEX.md](INDEX.md). Este é um guia de navegação; EXECUTE.md e PLAN.json continuam sendo o contrato.
+
 **Épico principal: [#215](https://github.com/gmhelmold/HuGR-Orchestra/issues/215). Entrada executável: [EXECUTE.md](EXECUTE.md).**
 
 Este checkout contém todas as especificações, o grafo completo, os cinco axiomas em cada unidade, as ferramentas, a referência aprovada e o kit HuGR. Não depende de anexos do chat. O pacote original de 430 arquivos foi importado e conferido no commit 9b65a109eba3cf182d11ef5a13302915b6c7636f. Os arquivos operacionais de publicação foram posteriormente reconciliados; a proveniência por arquivo está em publication/SOURCE-PACKAGE.json e o estado atual em PUBLICATION.json.

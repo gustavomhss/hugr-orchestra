@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "plan",
+      "command": [
+        "python3",
+        "tools/validate_plan.py"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "publication/navigation/plan.log"
+    },
+    {
+      "name": "maps",
+      "command": [
+        "python3",
+        "tools/render_maps.py",
+        "--check"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "publication/navigation/maps.log"
+    },
+    {
+      "name": "issues",
+      "command": [
+        "python3",
+        "tools/render_issues.py",
+        "--check"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "publication/navigation/issues.log"
+    },
+    {
+      "name": "brand",
+      "command": [
+        "python3",
+        "tools/verify_brand.py"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "publication/navigation/brand.log"
+    },
+    {
+      "name": "tools",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "publication/navigation/tools.log"
+    }
+  ],
+  "product_execution": "NOT_RUN"
+}
