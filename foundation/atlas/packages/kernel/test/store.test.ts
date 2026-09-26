@@ -44,6 +44,21 @@ describe("KERNEL-3 — the single content-addressed store (visible goldens)", ()
     expect(store.put(N)).toBe(hN)
   })
 
+  it("SCN-KERNEL-3a-1: NFC/NFD aliases retain first raw object at shared hash", () => {
+    const store = createStore()
+    const nfc = { kind: "fact", subject: "caf\u00e9", predicate: "aliases", object: "first" }
+    const nfd = { kind: "fact", subject: "cafe\u0301", predicate: "aliases", object: "first" }
+
+    const h = store.put(nfc)
+    expect(store.put(nfd)).toBe(h)
+    expect(store.get(h)).toEqual(nfc)
+
+    const reverseStore = createStore()
+    const reverseHash = reverseStore.put(nfd)
+    expect(reverseStore.put(nfc)).toBe(reverseHash)
+    expect(reverseStore.get(reverseHash)).toEqual(nfd)
+  })
+
   it("SCN-KERNEL-3b-1: exactly one store exists across all kinds — no second store", () => {
     const store = createStore()
     store.put(N)
