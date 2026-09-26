@@ -1,0 +1,130 @@
+name: Orchestra complete package import
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-package-import.yml]
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: orchestra-visual-package-publication
+  cancel-in-progress: false
+jobs:
+  import-package:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: visual-migration-plan
+          fetch-depth: 1
+      - name: Transfer exact authorized package and verify all archive bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, json, os, pathlib, stat, urllib.request, urllib.parse, zipfile
+          repo = 'gmhelmold/HuGR-Orchestra'
+          comment_id = 5850269104
+          expected = 'c8653cc7a2dc3f2e1e0f9b85ae0b9eaac0de77b2c100bac87c1eb45161b4599a'
+          marker = '<!-- orchestra-visual:one-time-package-transfer -->'
+          def api(method, suffix):
+              request = urllib.request.Request('https://api.github.com/repos/' + repo + suffix, method=method,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2026-03-10'})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  content = response.read()
+                  return json.loads(content) if content else None
+          comment = api('GET', '/issues/comments/' + str(comment_id))
+          assert comment['issue_url'].endswith('/issues/215')
+          assert comment['user']['login'] == 'gmhelmold'
+          lines = comment['body'].splitlines()
+          assert lines[0] == marker
+          source = json.loads(lines[1])
+          assert source['archive_sha256'] == expected
+          parsed = urllib.parse.urlparse(source['url'])
+          assert parsed.scheme == 'https' and parsed.hostname.endswith('.oaiusercontent.com')
+          print('::add-mask::' + source['url'])
+          try:
+              with urllib.request.urlopen(source['url'], timeout=120) as response:
+                  archive = response.read(25_000_001)
+              assert len(archive) == 14838957, 'Unexpected archive size'
+              assert hashlib.sha256(archive).hexdigest() == expected, 'Archive SHA mismatch'
+          finally:
+              api('DELETE', '/issues/comments/' + str(comment_id))
+          target = pathlib.Path('specs/orchestra-visual')
+          source_files = []
+          with zipfile.ZipFile(io.BytesIO(archive)) as package:
+              assert len(package.infolist()) == 430, 'Unexpected member count'
+              assert sum(x.file_size for x in package.infolist()) <= 25_000_000
+              names = set()
+              for member in package.infolist():
+                  path = pathlib.PurePosixPath(member.filename)
+                  assert path.parts[0] == 'orchestra-execution-plan'
+                  assert not path.is_absolute() and '..' not in path.parts
+                  assert stat.S_IFMT(member.external_attr >> 16) != stat.S_IFLNK
+                  assert not member.is_dir()
+                  relative = pathlib.PurePosixPath(*path.parts[1:])
+                  assert relative.as_posix() not in names
+                  names.add(relative.as_posix())
+                  assert relative.suffix.lower() not in {'.ttf','.otf','.woff','.woff2','.ttc'}, 'Font redistribution prohibited'
+                  data = package.read(member)
+                  destination = target / relative.as_posix()
+                  if destination.exists() and destination.read_bytes() != data:
+                      assert relative.as_posix() == 'EXECUTE.md', 'Conflicting existing artifact: ' + str(relative)
+                      old = destination.read_bytes()
+                      blob = hashlib.sha1(b'blob ' + str(len(old)).encode() + b'\0' + old).hexdigest()
+                      assert blob == 'bccaa14332f192bc5ebc4a3864fcf11910a2844c', 'Bootstrap changed concurrently'
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  destination.write_bytes(data)
+                  assert destination.read_bytes() == data
+                  source_files.append({'path': str(relative), 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)})
+          for line in (target / 'MANIFEST.sha256').read_text().splitlines():
+              digest, name = line.split('  ', 1)
+              assert hashlib.sha256((target/name).read_bytes()).hexdigest() == digest, 'Manifest mismatch: ' + name
+          provenance = target / 'publication/SOURCE-PACKAGE.json'
+          provenance.parent.mkdir(parents=True, exist_ok=True)
+          provenance.write_text(json.dumps({'schema_version':1,'archive_sha256':expected,'archive_bytes':len(archive),'file_count':len(source_files),'files':source_files,'product_execution':'NOT_RUN'}, indent=2) + '\n')
+          print(json.dumps({'archive':'VERIFIED','files':len(source_files),'brand_files':sum(x['path'].startswith('vendor/HuGR-Brand-Kit-v1.0/') for x in source_files),'product_execution':'NOT_RUN'}))
+          PY
+      - name: Verify package tools without running the product
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        working-directory: specs/orchestra-visual
+        run: |
+          python3 tools/verify_brand.py
+          python3 vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py --json
+          python3 tools/validate_plan.py
+          python3 tools/render_maps.py --check
+          python3 tools/render_issues.py --check
+          python3 -m unittest discover -s tools -p 'test_*.py' -v
+      - name: Commit verified package only to the planning branch
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f -- specs/orchestra-visual
+          python3 - <<'PY'
+          import subprocess
+          files = subprocess.check_output(['git','diff','--cached','--name-only','-z']).decode().split('\0')
+          assert all(not p or p.startswith('specs/orchestra-visual/') for p in files)
+          assert not any('__pycache__' in p or p.endswith('.pyc') for p in files)
+          PY
+          git commit -m 'docs(app): publish all visual specs tools mock and official HuGR kit'
+          git push origin HEAD:refs/heads/visual-migration-plan
+          git rev-parse HEAD
+      - name: Verify committed bytes from Git objects
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          base='specs/orchestra-visual/'
+          source=json.loads(pathlib.Path(base+'publication/SOURCE-PACKAGE.json').read_text())
+          for item in source['files']:
+              data=subprocess.check_output(['git','show','HEAD:'+base+item['path']])
+              assert hashlib.sha256(data).hexdigest()==item['sha256'],item['path']
+          print(json.dumps({'committed_original_files_verified':len(source['files']),'head':subprocess.check_output(['git','rev-parse','HEAD']).decode().strip(),'product_execution':'NOT_RUN'}))
+          PY
