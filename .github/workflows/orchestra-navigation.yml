@@ -1,0 +1,194 @@
+name: Orchestra navigation publication
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-navigation.yml]
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: orchestra-visual-navigation
+  cancel-in-progress: false
+jobs:
+  publish-navigation:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: visual-migration-plan
+          fetch-depth: 1
+      - name: Generate index from unchanged canonical contracts and verify links
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, re, subprocess, sys
+          root = pathlib.Path('specs/orchestra-visual')
+          expected = {
+            'PLAN.json': 'b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2',
+            'START-HERE.md': 'dfedfbc233db24135139b6a641baf09b230391ad7ad5a3495c0ee19b22bc6d1d',
+            'tools/render_navigation.py': '1dc9efd690a22e32f2fadaf2505abede00c98bf3ba3447102949e1770bdb756a',
+            'tools/test_navigation.py': 'ea5ce8c58683266dc28da90b4b75161d7ee299070b0a4a328fbfb282e2c5c3cc'
+          }
+          for name, digest in expected.items():
+            assert hashlib.sha256((root/name).read_bytes()).hexdigest() == digest, name
+          subprocess.run(['python3','tools/render_navigation.py','--write','--repo',str(pathlib.Path.cwd())], cwd=root, check=True)
+          subprocess.run(['python3','tools/render_navigation.py','--check','--repo',str(pathlib.Path.cwd())], cwd=root, check=True)
+          sys.path.insert(0,str(root/'tools'))
+          import render_navigation
+          text=(root/'INDEX.md').read_text()
+          anchors=set(re.findall(r'<a id="([^"]+)"',text))
+          start=(root/'START-HERE.md').read_text()
+          for target in re.findall(r'\]\(([^)]+)\)', start):
+            if target.startswith('https://'): continue
+            file, _, fragment=target.partition('#')
+            assert (root/file).exists(), target
+            if file=='INDEX.md' and fragment: assert fragment in anchors, target
+          # Parse all documented shell blocks without executing writes/worktrees.
+          for block in re.findall(r'```sh\n(.*?)\n```',start,re.S):
+            subprocess.run(['bash','-n'],input=block,text=True,check=True)
+          readme=root/'README.md'
+          old=readme.read_text()
+          banner='> **Codex: [COMECE AQUI](START-HERE.md).** Para localizar qualquer ticket, WP, task ou entrada de código: [INDEX.md](INDEX.md). Este é um guia de navegação; EXECUTE.md e PLAN.json continuam sendo o contrato.\n\n'
+          if banner not in old:
+            lines=old.split('\n',1)
+            readme.write_text(lines[0]+'\n\n'+banner+lines[1].lstrip('\n'))
+          print(json.dumps({'status':'PASS','nodes':len(anchors),'shell_blocks':'syntax-checked-not-executed','product_execution':'NOT_RUN'}))
+          PY
+      - name: Run full package tooling suite and unchanged-contract checks
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('specs/orchestra-visual'); log=root/'publication/navigation'; log.mkdir(parents=True,exist_ok=True)
+          commands=[('plan',['python3','tools/validate_plan.py']),('maps',['python3','tools/render_maps.py','--check']),('issues',['python3','tools/render_issues.py','--check']),('brand',['python3','tools/verify_brand.py']),('tools',['python3','-m','unittest','discover','-s','tools','-p','test_*.py','-v'])]
+          results=[]
+          for name,command in commands:
+            p=subprocess.run(command,cwd=root,capture_output=True,text=True)
+            (log/(name+'.log')).write_text(p.stdout+p.stderr)
+            results.append({'name':name,'command':command,'cwd':str(root),'exit_code':p.returncode,'log':'publication/navigation/'+name+'.log'})
+            assert p.returncode==0, name+' failed; see recorded output'
+          (log/'CHECKS.json').write_text(json.dumps({'status':'PASS','checks':results,'product_execution':'NOT_RUN'},indent=2)+'\n')
+          print(json.dumps(results))
+          PY
+      - name: Publish navigation artifacts before linking tickets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add specs/orchestra-visual/INDEX.md specs/orchestra-visual/README.md specs/orchestra-visual/publication/navigation
+          git diff --cached --quiet || git commit -m 'docs(app): publish exact migration navigation and verified command guide'
+          git push origin HEAD:visual-migration-plan
+          git rev-parse HEAD > /tmp/orchestra-navigation-commit
+      - name: Add navigation to 39 existing tickets and root without changing axioms
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, re, time, urllib.request, sys
+          root=pathlib.Path('specs/orchestra-visual')
+          sys.path.insert(0,str(root/'tools'))
+          import render_navigation as nav
+          plan,nodes,tickets,surfaces=nav.read_contracts(root)
+          repo='gmhelmold/HuGR-Orchestra'; prefix='https://github.com/'+repo+'/blob/visual-migration-plan/specs/orchestra-visual/'
+          begin='<!-- orchestra-navigation:begin -->'; end='<!-- orchestra-navigation:end -->'
+          def api(method,path,data=None):
+            request=urllib.request.Request('https://api.github.com/repos/'+repo+path,method=method,data=None if data is None else json.dumps(data).encode(),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json','X-GitHub-Api-Version':'2026-03-10'})
+            with urllib.request.urlopen(request,timeout=60) as response: return json.load(response)
+          def strip(body):
+            if begin in body:
+              assert body.count(begin)==1 and body.count(end)==1, 'Ambiguous previous navigation'
+              return re.sub(re.escape(begin)+'.*?'+re.escape(end)+r'\n*','',body,count=1,flags=re.S)
+            return body
+          inputs=[]
+          # Preflight every ticket before the first mutation. Refuse divergence in canonical text.
+          for ident,record in tickets.items():
+            current=api('GET','/issues/'+str(record['number']))
+            canonical=(root/'issues'/(ident+'.md')).read_text()
+            marker='<!-- orchestra-visual:'+ident+' -->'
+            assert current['body'].count(marker)==1, ident
+            assert current['body'][current['body'].index(marker):].rstrip()==canonical.rstrip(), 'Canonical issue changed: '+ident
+            inputs.append((ident,record,current,canonical))
+          root_issue=api('GET','/issues/215')
+          assert '<!-- orchestra-visual:ROOT -->' in root_issue['body']
+          records=[]
+          for ident,record,current,canonical in inputs:
+            node=nodes[ident]
+            units=[x for x in nodes.values() if x['kind'] in {'wp','task'} and nav.containing_ticket(nodes,x['id'])==ident]
+            tasks=[x for x in units if x['kind']=='task']
+            route=' → '.join(nav.ticket_link(i,tickets) for i in nav.chain(nodes,ident) if i in tickets)
+            lines=[begin,'## Codex — localização e entrada deste ticket','',
+              '**Comece:** [START-HERE.md]('+prefix+'START-HERE.md). **Atalho desta frente:** [INDEX.md#'+ident.lower()+']('+prefix+'INDEX.md#'+ident.lower()+').',
+              '**Rota:** [épico #215](https://github.com/'+repo+'/issues/215) → '+route,
+              '**Arquivo local:** `specs/orchestra-visual/issues/'+ident+'.md`. O corpo completo com os cinco axiomas está abaixo e nesse arquivo.',
+              '**Onde está o código / o que pode editar / quais fontes usar:** veja a seção desta frente no INDEX e confirme `read_paths`, `write_paths`, `exclude_paths` e leases da task em PLAN.json. Leitura não concede escrita.',
+              '**Raiz dos comandos:** `$PLAN_ROOT = $REPO/specs/orchestra-visual`; `REPO` deve apontar para o worktree real desta execução, conforme START-HERE.']
+            if units:
+              lines+=['','| Unidade deste ticket | Onde abrir |','|---|---|']
+              for unit in units:
+                u=unit['id']; lines+=['| `'+u+'` | [Seção exata]('+prefix+'INDEX.md#'+u.lower()+') → heading `## '+u+'` de `issues/'+ident+'.md` |']
+            else:
+              lines+=['**Entrar pelos tickets filhos:** '+' · '.join(nav.ticket_link(c,tickets) for c in node['children'] if c in tickets)]
+            if tasks:
+              lines+=['','**Detalhar uma unidade deste ticket (não significa que já está desbloqueada):**','```sh','# CWD: $PLAN_ROOT, definido no START-HERE.md','python3 tools/select_work.py --show '+tasks[0]['id'],'python3 tools/select_work.py --repo "$REPO" --jobs 4','```','**Onde salvar as provas:** `evidence/'+ident+'/W*-T*/attempt-NN/` dentro de `$PLAN_ROOT`. Template e validação: passo 5 do START-HERE. Não sobrescreva tentativas e não preencha PASS sem executar/verificar.']
+            lines+=['','Os insumos já estão no GitHub. A implantação continua pendente. Este bloco só acrescenta navegação: **não altera axiomas, dependências, ownership, estados ou permissões**.',end,'','']
+            body='\n'.join(lines)+strip(current['body'])
+            assert len(body)<65000 and body.endswith(canonical.rstrip()) or len(body)<65000 and body.endswith(canonical)
+            # Refuse an intervening edit rather than silently replacing it.
+            fresh=api('GET','/issues/'+str(record['number']))
+            assert fresh['body']==current['body'], 'Concurrent issue edit: '+ident
+            if body!=current['body']:
+              api('PATCH','/issues/'+str(record['number']),{'body':body})
+            verified=api('GET','/issues/'+str(record['number']))
+            assert verified['body']==body and verified['state']==current['state'],ident
+            assert verified['body'][verified['body'].index('<!-- orchestra-visual:'+ident+' -->'):].rstrip()==canonical.rstrip(),ident
+            records.append({'node':ident,'issue':record['number'],'body_sha256':hashlib.sha256(body.encode()).hexdigest(),'canonical_sha256':hashlib.sha256(canonical.encode()).hexdigest(),'state':verified['state'],'readback':'PASS'})
+            time.sleep(0.35)
+          block='\n'.join([begin,'## Codex — comece por este caminho','',
+            '**1. [START-HERE.md]('+prefix+'START-HERE.md):** localizar o checkout/branch, definir CWD, ler os insumos e executar uma unidade com provas.',
+            '**2. [INDEX.md]('+prefix+'INDEX.md):** mapa de todos os tickets e IDs, links para WPs/tasks, entradas de código, fontes e saídas.',
+            '**3. [S01 / #144]('+prefix+'INDEX.md#s01):** primeira frente no estado inicial publicado; `S01-W1-T1` é a primeira task, salvo progresso posterior verificado.',
+            'Tudo está em `specs/orchestra-visual/`, na branch `visual-migration-plan`. Não depende de ZIP/chat. Os cinco axiomas e o DAG existentes permanecem intactos.',end,'',''])
+          fresh=api('GET','/issues/215'); assert fresh['body']==root_issue['body'],'Concurrent root edit'
+          body=block+strip(root_issue['body'])
+          api('PATCH','/issues/215',{'body':body})
+          verified=api('GET','/issues/215'); assert verified['body']==body and verified['state']==root_issue['state']
+          report={'schema_version':1,'status':'VERIFIED','kind':'navigation-not-product','root_epic':215,'root_readback':'PASS','root_body_sha256':hashlib.sha256(body.encode()).hexdigest(),'tickets':records,'ticket_count':len(records),'nodes_indexed':len(nodes),'wps':sum(n['kind']=='wp' for n in nodes.values()),'tasks':sum(n['kind']=='task' for n in nodes.values()),'artifacts_commit':pathlib.Path('/tmp/orchestra-navigation-commit').read_text().strip(),'plan_sha256':hashlib.sha256((root/'PLAN.json').read_bytes()).hexdigest(),'run_url':'https://github.com/'+repo+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'contract_changes':False,'product_execution':'NOT_RUN'}
+          (root/'publication/navigation/REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          publication=json.loads((root/'PUBLICATION.json').read_text())
+          publication['ticket_body_sha256']={str(r['issue']):r['body_sha256'] for r in records}
+          publication['navigation']={k:report[k] for k in ('status','ticket_count','nodes_indexed','wps','tasks','artifacts_commit','run_url','contract_changes','product_execution')}
+          publication['navigation']['entry']='START-HERE.md'; publication['navigation']['index']='INDEX.md'; publication['navigation']['report']='publication/navigation/REPORT.json'
+          (root/'PUBLICATION.json').write_text(json.dumps(publication,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({'tickets_verified':len(records),'root_verified':True,'axioms_changed':False,'product_execution':'NOT_RUN'}))
+          PY
+      - name: Reconcile manifest and verify final documentation checkout
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,subprocess
+          root=pathlib.Path('specs/orchestra-visual')
+          assert hashlib.sha256((root/'PLAN.json').read_bytes()).hexdigest()=='b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2'
+          files=sorted(p for p in root.rglob('*') if p.is_file() and p.name!='MANIFEST.sha256' and '__pycache__' not in p.parts)
+          (root/'MANIFEST.sha256').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(root).as_posix()+'\n' for p in files))
+          subprocess.run(['python3','tools/render_navigation.py','--check','--repo',str(pathlib.Path.cwd())],cwd=root,check=True)
+          PY
+          git add specs/orchestra-visual/PUBLICATION.json specs/orchestra-visual/MANIFEST.sha256 specs/orchestra-visual/publication/navigation
+          git diff --cached --quiet || git commit -m 'docs(app): record verified navigation across migration tickets'
+          git push origin HEAD:visual-migration-plan
+          python3 - <<'PY'
+          import hashlib,pathlib,subprocess
+          root=pathlib.Path('specs/orchestra-visual')
+          count=0
+          for line in (root/'MANIFEST.sha256').read_text().splitlines():
+            expected,name=line.split('  ',1)
+            data=subprocess.check_output(['git','show','HEAD:specs/orchestra-visual/'+name])
+            assert hashlib.sha256(data).hexdigest()==expected,name
+            count+=1
+          assert not subprocess.check_output(['git','status','--porcelain']).strip(),'Dirty publication checkout'
+          print('Verified committed navigation manifest:',count,'files. No product tests claimed.')
+          PY
