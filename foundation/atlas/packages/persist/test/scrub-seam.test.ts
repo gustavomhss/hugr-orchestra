@@ -377,7 +377,7 @@ describe("PERSIST-10a seam — REACHABILITY CALIBRATION (this seam has no produc
   it("the probe SEES a caller when there is one (mutant on the real door), and there is none", () => {
     const door = src("transcript-store.ts")
     const mutant = door.replace(
-      "const admitted = scrub(body);",
+      "const admitted = scrub(body)",
       "const admitted = admitToBuffer(new Uint8Array(0), body);",
     )
     // teeth (breaks-on "the probe is a comment/definition match, so it would report 'no caller' forever"):
@@ -391,7 +391,7 @@ describe("PERSIST-10a seam — REACHABILITY CALIBRATION (this seam has no produc
     expect(callsSeam("  buffer = admitToBuffer(buffer, chunk);")).toBe(true) // a real call, indented
     expect(callsSeam("  const out = store.admitToBuffer(a, b);")).toBe(false) // a METHOD of something else
     // the shipped door: `put` admits `scrub(body)` — the WHOLE-BUFFER path
-    expect(door).toContain("const admitted = scrub(body);")
+    expect(door).toContain("const admitted = scrub(body)")
     expect(callsSeam(door)).toBe(false)
   })
 
