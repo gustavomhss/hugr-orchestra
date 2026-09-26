@@ -52,6 +52,11 @@ describe("KERNEL-3 — the single content-addressed store (visible goldens)", ()
     const h = store.put(nfc)
     expect(store.put(nfd)).toBe(h)
     expect(store.get(h)).toEqual(nfc)
+
+    const reverseStore = createStore()
+    const reverseHash = reverseStore.put(nfd)
+    expect(reverseStore.put(nfc)).toBe(reverseHash)
+    expect(reverseStore.get(reverseHash)).toEqual(nfd)
   })
 
   it("SCN-KERNEL-3b-1: exactly one store exists across all kinds — no second store", () => {
