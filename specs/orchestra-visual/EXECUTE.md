@@ -2,6 +2,10 @@
 
 Você é o Codex no checkout local de `gmhelmold/HuGR-Orchestra`. Execute a migração desktop/web completa. Não produza outro plano, outra identidade ou um aplicativo demonstrativo separado. Leia este arquivo e a task selecionada; carregue somente os contratos pertinentes nos subagentes.
 
+## Entrada no GitHub
+
+Épico principal: [#215](https://github.com/gmhelmold/HuGR-Orchestra/issues/215). Todas as especificações, ferramentas, projeções de tickets, imagem aprovada e o kit HuGR estão nesta pasta. Consulte [PUBLICATION.json](PUBLICATION.json) para proveniência e verificação. A branch publica o planejamento, não uma implementação concluída nem um merge em dev.
+
 ## Autoridade e insumos
 
 `PLAN.json`: hierarquia, cinco axiomas por nó, dependências, scopes, estágios e gates. `SURFACES.json`: capacidades, classificação, owners e estados a cobrir. `CENSUS.json`: censo concreto de arquivos do checkout, ainda UNRESOLVED nesta entrega; S01 deve completá-lo. `MAP.md`, `OWNERSHIP.md` e `issues/*.md` são projeções, não uma segunda fonte. `SPEC.md`, `CONTRACTS.md`, `PERFORMANCE.md`, `BUDGETS.json`, `COVERAGE.json`, `fixture.json` e master são normativos.
@@ -18,7 +22,7 @@ Antes de executar S05, leia `BRAND-INTEGRATION.md`, `BRAND-ASSETS.json`, `vendor
 
 ## Inicialização verificável
 
-Coloque o pacote em `specs/orchestra-visual/` apenas depois de comparar o destino e mesclar sem sobrescrever trabalho diferente. Os caminhos de prova nos recibos são relativos à raiz do pacote. Execute dali:
+O pacote completo já está versionado nesta pasta da branch `visual-migration-plan`. Não é necessário obter ZIP ou anexos do chat. Se transportar o plano para outro worktree, compare o destino e mescle sem sobrescrever trabalho diferente. Os caminhos de prova nos recibos são relativos à raiz do pacote. Execute dali:
 
 ```sh
 python3 tools/verify_brand.py
@@ -96,6 +100,6 @@ Sem backend verdadeiro: estado indisponível, não botão cenográfico. Atlas é
 
 ## Entregar
 
-Código no aplicativo existente, comparação ao master, cobertura de telas/estados, medições reproduzíveis, comandos de execução e rollback, SHA e limitações reais. Nenhuma task do produto vem aprovada neste ZIP. Não terminar em documentação, mock ou só Storybook; não forçar push/merge/release e não fechar com gate reprovado.
+Código no aplicativo existente, comparação ao master, cobertura de telas/estados, medições reproduzíveis, comandos de execução e rollback, SHA e limitações reais. Nenhuma task do produto vem aprovada pela publicação do plano. Não terminar em documentação, mock ou só Storybook; não forçar push/merge/release e não fechar com gate reprovado.
 
-Consulte RECEIPTS-v4.md para formatos e tools/README.md para comandos. GITHUB.json distingue o que foi publicado do que permanece no pacote; não recrie os 39 tickets. A projeção nativa de dependências não substitui o DAG fino.
+Consulte RECEIPTS-v4.md para formatos e tools/README.md para comandos. O épico principal é #215. GITHUB.json e PUBLICATION.json registram os 39 tickets subordinados reconciliados e as relações nativas verificadas; não recrie tickets. Os documentos de QA anteriores registram o estado histórico de cada revisão, não a situação atual de publicação. A projeção nativa de dependências não substitui o DAG fino.

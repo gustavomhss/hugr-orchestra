@@ -1,3 +1,5 @@
+> Nota histórica de incorporação da marca. A publicação integral foi concluída posteriormente; consulte README.md, BRAND-INTEGRATION.md e PUBLICATION.json.
+
 # HuGR fornecida — atualização de marca do plano 4.1
 
 O usuário forneceu o logo HuGR e o arquivo HuGR-Brand-Kit-v1.0-Handoff (1).zip. A marca está aprovada: integrar arquivos existentes, não reconstruí-los. Este documento remoto é um índice; o contrato completo BRAND-INTEGRATION.md, BRAND-ASSETS.json, o kit íntegro e as ferramentas estão no pacote Orchestra_Codex_Execution_Plan_v4.1.zip entregue no chat.

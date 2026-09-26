@@ -1,0 +1,15 @@
+{
+  "kind": "brand-input-and-copy-check",
+  "status": "PASS",
+  "product_integration_tested": false,
+  "errors": [],
+  "source_files_checked": 304,
+  "mapped_assets_checked": 14,
+  "required_initial_assets": [
+    "symbol-light",
+    "symbol-dark"
+  ],
+  "repo_copies_checked": [],
+  "conditional_assets_absent": [],
+  "destination_checked": false
+}

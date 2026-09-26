@@ -1,0 +1,775 @@
+{
+  "schema_version": 1,
+  "status": "VERIFIED",
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36275407725",
+  "root_epic": 215,
+  "root_relationships": [
+    {
+      "parent": 215,
+      "child": 130
+    },
+    {
+      "parent": 215,
+      "child": 131
+    },
+    {
+      "parent": 215,
+      "child": 132
+    },
+    {
+      "parent": 215,
+      "child": 133
+    }
+  ],
+  "program_parent_relationships": [
+    {
+      "parent": 130,
+      "child": 134,
+      "node": "I01"
+    },
+    {
+      "parent": 130,
+      "child": 135,
+      "node": "I02"
+    },
+    {
+      "parent": 131,
+      "child": 136,
+      "node": "I03"
+    },
+    {
+      "parent": 131,
+      "child": 137,
+      "node": "I04"
+    },
+    {
+      "parent": 131,
+      "child": 138,
+      "node": "I05"
+    },
+    {
+      "parent": 132,
+      "child": 139,
+      "node": "I06"
+    },
+    {
+      "parent": 132,
+      "child": 140,
+      "node": "I07"
+    },
+    {
+      "parent": 132,
+      "child": 141,
+      "node": "I08"
+    },
+    {
+      "parent": 133,
+      "child": 142,
+      "node": "I09"
+    },
+    {
+      "parent": 133,
+      "child": 143,
+      "node": "I10"
+    },
+    {
+      "parent": 134,
+      "child": 144,
+      "node": "S01"
+    },
+    {
+      "parent": 134,
+      "child": 145,
+      "node": "S02"
+    },
+    {
+      "parent": 135,
+      "child": 146,
+      "node": "S03"
+    },
+    {
+      "parent": 135,
+      "child": 147,
+      "node": "S04"
+    },
+    {
+      "parent": 135,
+      "child": 148,
+      "node": "S05"
+    },
+    {
+      "parent": 136,
+      "child": 149,
+      "node": "S06"
+    },
+    {
+      "parent": 136,
+      "child": 150,
+      "node": "S07"
+    },
+    {
+      "parent": 136,
+      "child": 151,
+      "node": "S08"
+    },
+    {
+      "parent": 137,
+      "child": 152,
+      "node": "S09"
+    },
+    {
+      "parent": 137,
+      "child": 153,
+      "node": "S10"
+    },
+    {
+      "parent": 137,
+      "child": 154,
+      "node": "S11"
+    },
+    {
+      "parent": 138,
+      "child": 155,
+      "node": "S12"
+    },
+    {
+      "parent": 138,
+      "child": 156,
+      "node": "S13"
+    },
+    {
+      "parent": 138,
+      "child": 157,
+      "node": "S14"
+    },
+    {
+      "parent": 139,
+      "child": 158,
+      "node": "S15"
+    },
+    {
+      "parent": 139,
+      "child": 159,
+      "node": "S16"
+    },
+    {
+      "parent": 140,
+      "child": 160,
+      "node": "S17"
+    },
+    {
+      "parent": 140,
+      "child": 161,
+      "node": "S18"
+    },
+    {
+      "parent": 141,
+      "child": 162,
+      "node": "S19"
+    },
+    {
+      "parent": 141,
+      "child": 163,
+      "node": "S20"
+    },
+    {
+      "parent": 141,
+      "child": 164,
+      "node": "S21"
+    },
+    {
+      "parent": 142,
+      "child": 165,
+      "node": "S22"
+    },
+    {
+      "parent": 142,
+      "child": 166,
+      "node": "S23"
+    },
+    {
+      "parent": 142,
+      "child": 167,
+      "node": "S24"
+    },
+    {
+      "parent": 143,
+      "child": 168,
+      "node": "S25"
+    }
+  ],
+  "dependencies": [
+    {
+      "issue": 145,
+      "blocked_by": 144
+    },
+    {
+      "issue": 146,
+      "blocked_by": 145
+    },
+    {
+      "issue": 147,
+      "blocked_by": 146
+    },
+    {
+      "issue": 148,
+      "blocked_by": 145
+    },
+    {
+      "issue": 149,
+      "blocked_by": 148
+    },
+    {
+      "issue": 149,
+      "blocked_by": 165
+    },
+    {
+      "issue": 150,
+      "blocked_by": 165
+    },
+    {
+      "issue": 151,
+      "blocked_by": 148
+    },
+    {
+      "issue": 151,
+      "blocked_by": 165
+    },
+    {
+      "issue": 152,
+      "blocked_by": 165
+    },
+    {
+      "issue": 153,
+      "blocked_by": 165
+    },
+    {
+      "issue": 154,
+      "blocked_by": 152
+    },
+    {
+      "issue": 155,
+      "blocked_by": 165
+    },
+    {
+      "issue": 156,
+      "blocked_by": 165
+    },
+    {
+      "issue": 157,
+      "blocked_by": 159
+    },
+    {
+      "issue": 157,
+      "blocked_by": 165
+    },
+    {
+      "issue": 158,
+      "blocked_by": 159
+    },
+    {
+      "issue": 158,
+      "blocked_by": 165
+    },
+    {
+      "issue": 159,
+      "blocked_by": 145
+    },
+    {
+      "issue": 160,
+      "blocked_by": 145
+    },
+    {
+      "issue": 161,
+      "blocked_by": 160
+    },
+    {
+      "issue": 161,
+      "blocked_by": 165
+    },
+    {
+      "issue": 162,
+      "blocked_by": 108
+    },
+    {
+      "issue": 162,
+      "blocked_by": 109
+    },
+    {
+      "issue": 162,
+      "blocked_by": 112
+    },
+    {
+      "issue": 162,
+      "blocked_by": 114
+    },
+    {
+      "issue": 162,
+      "blocked_by": 165
+    },
+    {
+      "issue": 163,
+      "blocked_by": 106
+    },
+    {
+      "issue": 163,
+      "blocked_by": 113
+    },
+    {
+      "issue": 163,
+      "blocked_by": 114
+    },
+    {
+      "issue": 163,
+      "blocked_by": 165
+    },
+    {
+      "issue": 164,
+      "blocked_by": 165
+    },
+    {
+      "issue": 165,
+      "blocked_by": 147
+    },
+    {
+      "issue": 166,
+      "blocked_by": 149
+    },
+    {
+      "issue": 166,
+      "blocked_by": 150
+    },
+    {
+      "issue": 166,
+      "blocked_by": 151
+    },
+    {
+      "issue": 166,
+      "blocked_by": 153
+    },
+    {
+      "issue": 166,
+      "blocked_by": 154
+    },
+    {
+      "issue": 166,
+      "blocked_by": 155
+    },
+    {
+      "issue": 166,
+      "blocked_by": 156
+    },
+    {
+      "issue": 166,
+      "blocked_by": 157
+    },
+    {
+      "issue": 166,
+      "blocked_by": 158
+    },
+    {
+      "issue": 166,
+      "blocked_by": 161
+    },
+    {
+      "issue": 166,
+      "blocked_by": 164
+    },
+    {
+      "issue": 167,
+      "blocked_by": 149
+    },
+    {
+      "issue": 167,
+      "blocked_by": 150
+    },
+    {
+      "issue": 167,
+      "blocked_by": 151
+    },
+    {
+      "issue": 167,
+      "blocked_by": 153
+    },
+    {
+      "issue": 167,
+      "blocked_by": 154
+    },
+    {
+      "issue": 167,
+      "blocked_by": 155
+    },
+    {
+      "issue": 167,
+      "blocked_by": 156
+    },
+    {
+      "issue": 167,
+      "blocked_by": 157
+    },
+    {
+      "issue": 167,
+      "blocked_by": 158
+    },
+    {
+      "issue": 167,
+      "blocked_by": 161
+    },
+    {
+      "issue": 167,
+      "blocked_by": 164
+    },
+    {
+      "issue": 168,
+      "blocked_by": 166
+    },
+    {
+      "issue": 168,
+      "blocked_by": 167
+    }
+  ],
+  "fine_grained_only": [
+    {
+      "node": "S01-W1-T2",
+      "prerequisite": "S01-W1-T1"
+    },
+    {
+      "node": "S02-W1-T2",
+      "prerequisite": "S02-W1-T1"
+    },
+    {
+      "node": "S03-W1-T2",
+      "prerequisite": "S03-W1-T1"
+    },
+    {
+      "node": "S04-W1-T2",
+      "prerequisite": "S04-W1-T1"
+    },
+    {
+      "node": "S05-W1-T2",
+      "prerequisite": "S05-W1-T1"
+    },
+    {
+      "node": "S06-W1-T2",
+      "prerequisite": "S06-W1-T1"
+    },
+    {
+      "node": "S06-W1-T2",
+      "prerequisite": "S25-W0-T1"
+    },
+    {
+      "node": "S07",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S07-W1-T2",
+      "prerequisite": "S07-W1-T1"
+    },
+    {
+      "node": "S08",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S08-W1-T2",
+      "prerequisite": "S08-W1-T1"
+    },
+    {
+      "node": "S09-W1-T2",
+      "prerequisite": "S09-W1-T1"
+    },
+    {
+      "node": "S10-W1-T2",
+      "prerequisite": "S10-W1-T1"
+    },
+    {
+      "node": "S11-W1-T2",
+      "prerequisite": "S11-W1-T1"
+    },
+    {
+      "node": "S12",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S12-W1-T2",
+      "prerequisite": "S12-W1-T1"
+    },
+    {
+      "node": "S13",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S13-W1-T2",
+      "prerequisite": "S13-W1-T1"
+    },
+    {
+      "node": "S14",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S14-W1-T1",
+      "prerequisite": "S16-W1-T1"
+    },
+    {
+      "node": "S14-W1-T2",
+      "prerequisite": "S14-W1-T1"
+    },
+    {
+      "node": "S15",
+      "prerequisite": "PR#12 (advisory; not a required issue dependency)"
+    },
+    {
+      "node": "S15",
+      "prerequisite": "S06-W1-T1"
+    },
+    {
+      "node": "S15-W1",
+      "prerequisite": "S06-W1-T1"
+    },
+    {
+      "node": "S15-W1-T1",
+      "prerequisite": "S06-W1-T1"
+    },
+    {
+      "node": "S15-W1-T1",
+      "prerequisite": "S16-W1-T1"
+    },
+    {
+      "node": "S15-W1-T2",
+      "prerequisite": "S15-W1-T1"
+    },
+    {
+      "node": "S15-W1-T2",
+      "prerequisite": "S25-W0-T1"
+    },
+    {
+      "node": "S16-W1-T2",
+      "prerequisite": "S16-W1-T1"
+    },
+    {
+      "node": "S17-W1-T2",
+      "prerequisite": "S17-W1-T1"
+    },
+    {
+      "node": "S18-W1-T2",
+      "prerequisite": "S18-W1-T1"
+    },
+    {
+      "node": "S19-W1",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S19-W1-T2",
+      "prerequisite": "S19-W1-T1"
+    },
+    {
+      "node": "S19-W2",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S19-W2-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S19-W2-T2",
+      "prerequisite": "S19-W2-T1"
+    },
+    {
+      "node": "S20-W1",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S20-W1-T2",
+      "prerequisite": "S20-W1-T1"
+    },
+    {
+      "node": "S20-W2",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S20-W2-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S20-W2-T2",
+      "prerequisite": "S20-W2-T1"
+    },
+    {
+      "node": "S21",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S21-W1-T2",
+      "prerequisite": "S21-W1-T1"
+    },
+    {
+      "node": "S22-W1-T2",
+      "prerequisite": "S22-W1-T1"
+    },
+    {
+      "node": "S23",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S23",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S23",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S23-W1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S23-W1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S23-W1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S23-W1-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S23-W1-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S23-W1-T1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S23-W1-T2",
+      "prerequisite": "S23-W1-T1"
+    },
+    {
+      "node": "S24",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S24",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S24",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S24-W1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S24-W1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S24-W1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S24-W1-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S24-W1-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S24-W1-T1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S24-W1-T2",
+      "prerequisite": "S24-W1-T1"
+    },
+    {
+      "node": "S25-W0",
+      "prerequisite": "S06-W1-T1"
+    },
+    {
+      "node": "S25-W0",
+      "prerequisite": "S15-W1-T1"
+    },
+    {
+      "node": "S25-W0",
+      "prerequisite": "S16-W1-T1"
+    },
+    {
+      "node": "S25-W0-T2",
+      "prerequisite": "S25-W0-T1"
+    },
+    {
+      "node": "S25-W1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S25-W1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S25-W1-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S25-W1-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S25-W1-T1",
+      "prerequisite": "S25-W0-T2"
+    },
+    {
+      "node": "S25-W1-T2",
+      "prerequisite": "S25-W1-T1"
+    }
+  ],
+  "missing_native_relationships": [],
+  "ticket_bodies_sha256": {
+    "130": "df168c237f0d5c820d9e900cd1cb4759fd815e94bb6374ce45a5df12c1d9c819",
+    "131": "4ba48dc98eb5418b41098aa39ea1ce7a38c88e0167c6155a78117c0631479526",
+    "132": "938ea6160d0802caa8e8cf1401e934e296add98c0fa213f49b9093a7628d10d5",
+    "133": "66f99c862d45d6cef281880a08724eae63d48166366f242eafb736a0a398ecc9",
+    "134": "ea19b3eecde0e2ceb8eef08b9f82c65181a4c7607a310d188faebb2a9da65fb1",
+    "135": "db3a254809f909f90b5bc8dce75b11a0e45867e3ee9984a49cccc4fc71bff7d9",
+    "136": "19813efea5bfcd14bf5a658cf6cd4e45a050d1d8083b01f3d9ed0efcb3090486",
+    "137": "de7878509bea3e1f5643e3406626d72f670ea85d436a8b1ae60168f85846722e",
+    "138": "e4eda633b970148897f6de6038849ada0c90e7c93d0af5587898491fad990572",
+    "139": "627c2ac81cc67d28a9816cd2a0df2350aa8643710bb3085580d673439848b1ab",
+    "140": "dadb8e2b1ed333bf00ac622a45f656f952173e818c22c334e36b402cb127df09",
+    "141": "72a5255bc29b4ed7836fd15af82e480f5b47655fa57f5117964302f724874bc3",
+    "142": "45721e11bb2ce9319df8424edb21efdab56b328d520319563943733852b95079",
+    "143": "b41aae635ef707141ce19d2af5c04e4cab33a622f037598b3ce1af9c713f0c98",
+    "144": "8be6192d1092655ecc938c66880c6615e00083dcaca07d2f62dc6e91541c66d8",
+    "145": "fb5fb67d53676cbecadb1e3a66294ca67e559222115a384ee98abdd6f9644f87",
+    "146": "59cd529563c2e2f0fc76bb1c081ae64baabb56e7e003735270dba9d6db1d106c",
+    "147": "a68c1f2e60cdffea1e1bc9f07ab09232d482e39134e5e7e816fd999725f45437",
+    "148": "e349aa885c20fec359692d2bb337af37d660e70ff1b0690b4dc57cf95cd313c3",
+    "149": "553d48dee3f09421eacf23356aafbac11e5fae438f8de0b764c254bcd06373c9",
+    "150": "2e0df021d1d170d4a8b959b6bef3f14e8842b8ed29356e3225caad7f67fe13af",
+    "151": "4677b0365d1c33bc9fca93e7768722c3e390fe3cc2ff41efc4c10b7f0395e5ad",
+    "152": "49aa5d3f928e9e560bb8dbb162b64cbce0e33c4befe42c55cff392063708ba3d",
+    "153": "42a0aeb375ea2a63e8cbf10ed3574fcddf76dae78231bb30a8299f6e71035d6b",
+    "154": "2a0ddf5d3039c6e1d59e7a9ba084459f24cd0f624f5f51ebaad55876a2cf77ac",
+    "155": "853eebbfae2a557e53d70d8aca52d28ecdcd85d66f42cb2ee3db189461a682ef",
+    "156": "389732e3921006001718f7417f26f354baad627297b97fb4567b3fc4d7bd0fb1",
+    "157": "185e400c49d9f90054d9daa95e48a44e9546d7fb3cfb35256765b66e5c513bfe",
+    "158": "9fdc969ac695fd4c029c33ddadacfc08ad25b4f2064869a47de5ecac0400dedb",
+    "159": "dd2acf52aaaa77f5e165b29c7f8fff87897fde9896f75ede383c81f1baf2a350",
+    "160": "0a278b70b8fc1f50a62ef3ad7775749f3fcd598c381ffdd4deebc60dca01058b",
+    "161": "da5e98adf3ae04ac3850965abd012ba11be6911ee787d4442002515a917dc732",
+    "162": "9ec96ab1dffa24bf223d8c8e002fa2dbf07ea22f06a2ecb504ad14e09b154349",
+    "163": "7ff6ee55312f57f05530460fa177d2240355c1f89a841ca6e504d4baf7b287a2",
+    "164": "66de536fe7552d3ec42ea9cff9af68efa6d0b7ebdf06a002ce7be0fb4b3c1c8c",
+    "165": "b3f0e1ae327b3bc3538dc5964e870880bab70678fefce41448f91499da746315",
+    "166": "1c33f440286d948ce97ace820cd06290419a97eb91cec679e8f33d97797cb1bc",
+    "167": "c60eb66a810ab457dcc979d0f0e4d3ecbeed29a64ee2083726c82fb689718806",
+    "168": "b59cebac3642b6ca549d76c98afc152475fb3f3bb4fe1a9da1a16b5cf78ea5bf"
+  },
+  "original_package_commit": "9b65a109eba3cf182d11ef5a13302915b6c7636f",
+  "original_package_files_verified": 430,
+  "brand_files_verified": 304,
+  "product_execution": "NOT_RUN"
+}

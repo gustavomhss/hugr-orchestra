@@ -2,11 +2,11 @@
   "schema_version": 1,
   "repo": "gmhelmold/HuGR-Orchestra",
   "plan_branch": "visual-migration-plan",
-  "entry_commit": "100d8e4a1745724a08d20b934df9e509dab78676",
-  "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/100d8e4a1745724a08d20b934df9e509dab78676/specs/orchestra-visual/EXECUTE.md",
-  "publication": "39 tickets were created in earlier turns. This revision updated the v4 entrypoint and added a supersession comment on epic #130; full v4 ticket bodies were not synchronized.",
-  "native_relationships_applied_by_this_session": false,
-  "native_relationships_note": "No native relationships applied or exhaustively reaudited by v4. The packaged gh tool computes desired links and must perform fresh preflight/readback before any write.",
+  "entry_commit": "9b65a109eba3cf182d11ef5a13302915b6c7636f",
+  "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/EXECUTE.md",
+  "publication": "COMPLETE: all 430 original package files published, all 39 child ticket bodies verified, native hierarchy and dependencies verified. Publication does not complete product tasks.",
+  "native_relationships_applied_by_this_session": true,
+  "native_relationships_note": "Verified by https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36275407725",
   "issues": {
     "E1": {
       "number": 130,
@@ -327,52 +327,61 @@
   ],
   "api_version": "2026-03-10",
   "contract_revision": "4.1",
-  "desired_projection_v3": {
-    "parents": 35,
-    "coarse_edges_before_reduction": 118,
-    "dependencies_after_reduction": 55,
-    "fine_grained_only": 56
-  },
-  "review_publication": {
-    "commit": "0eef764981450b57a04d42985d94e033fd49e080",
-    "branch": "visual-migration-plan",
-    "paths": [
-      "specs/orchestra-visual/EXECUTE.md",
-      "specs/orchestra-visual/REVIEW-v3.md",
-      "specs/orchestra-visual/RECEIPTS-v3.md"
-    ],
-    "issue_bodies_updated": [
-      159,
-      160
-    ],
-    "review_comment": {
-      "issue": 130,
-      "id": 5843257599
-    },
-    "full_plan_tools_reference_on_github": false,
-    "full_package_delivery": "Orchestra_Codex_Execution_Plan_v3.zip"
-  },
   "package_version": "4.1",
-  "v4_published_files": [
-    "specs/orchestra-visual/EXECUTE.md"
-  ],
-  "v4_complete_package_published_to_repo": false,
-  "v4_ticket_bodies_synchronized": false,
-  "v4_epic_comment_id": 5847958589,
+  "v4_complete_package_published_to_repo": true,
+  "v4_ticket_bodies_synchronized": true,
   "v4_local_ticket_projections_verified": 39,
-  "brand_revision_publication": {
-    "version": "4.1",
-    "entry_commit": "100d8e4a1745724a08d20b934df9e509dab78676",
-    "brand_note_commit": "86e02726c239971735fa2025e32418d6c8320004",
-    "paths": [
-      "specs/orchestra-visual/EXECUTE.md",
-      "specs/orchestra-visual/BRAND-INPUT.md"
+  "historical_publication_reports": {
+    "publication": "39 tickets were created in earlier turns. This revision updated the v4 entrypoint and added a supersession comment on epic #130; full v4 ticket bodies were not synchronized.",
+    "native_relationships_note": "No native relationships applied or exhaustively reaudited by v4. The packaged gh tool computes desired links and must perform fresh preflight/readback before any write.",
+    "desired_projection_v3": {
+      "parents": 35,
+      "coarse_edges_before_reduction": 118,
+      "dependencies_after_reduction": 55,
+      "fine_grained_only": 56
+    },
+    "review_publication": {
+      "commit": "0eef764981450b57a04d42985d94e033fd49e080",
+      "branch": "visual-migration-plan",
+      "paths": [
+        "specs/orchestra-visual/EXECUTE.md",
+        "specs/orchestra-visual/REVIEW-v3.md",
+        "specs/orchestra-visual/RECEIPTS-v3.md"
+      ],
+      "issue_bodies_updated": [
+        159,
+        160
+      ],
+      "review_comment": {
+        "issue": 130,
+        "id": 5843257599
+      },
+      "full_plan_tools_reference_on_github": false,
+      "full_package_delivery": "Orchestra_Codex_Execution_Plan_v3.zip"
+    },
+    "v4_published_files": [
+      "specs/orchestra-visual/EXECUTE.md"
     ],
-    "issue_bodies_updated": [
-      148
-    ],
-    "full_plan_and_assets_published": false,
-    "all_39_bodies_synchronized": false,
-    "native_relationships_applied": false
-  }
+    "v4_epic_comment_id": 5847958589,
+    "brand_revision_publication": {
+      "version": "4.1",
+      "entry_commit": "100d8e4a1745724a08d20b934df9e509dab78676",
+      "brand_note_commit": "86e02726c239971735fa2025e32418d6c8320004",
+      "paths": [
+        "specs/orchestra-visual/EXECUTE.md",
+        "specs/orchestra-visual/BRAND-INPUT.md"
+      ],
+      "issue_bodies_updated": [
+        148
+      ],
+      "full_plan_and_assets_published": false,
+      "all_39_bodies_synchronized": false,
+      "native_relationships_applied": false
+    }
+  },
+  "root_epic": {
+    "number": 215,
+    "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/215"
+  },
+  "current_publication_report": "PUBLICATION.json"
 }
