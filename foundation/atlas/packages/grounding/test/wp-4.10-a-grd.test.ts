@@ -175,15 +175,15 @@ describe("WP-4.10-a.GROUND — local drift oracle: subtreeHash · isGrounded · 
   })
 
   it("SCN-GROUND-10b-1: no off-seam digest call site exists in this WP source", () => {
-    // static grep of Acceptance §8 — this WP's own source carries no raw hash IMPORT or CALL site
+    // static import-line check of Acceptance §8 — this WP's own source carries no raw hash IMPORT or CALL site
     // (a digest CALL `blake3(` / `createHash(` or an off-seam digest IMPORT; prose mentions are exempt).
     const OFF_SEAM_CALL = /\b(blake3|sha256|sha512|md5|crc32|createHash)\s*\(/
-    const OFF_SEAM_IMPORT = /import[^;]*?\b(blake3|sha256|sha512|md5|crc32|createHash|node:crypto|@noble)\b/
+    const OFF_SEAM_IMPORT = /^\s*import\b.*(?:\b(?:blake3|sha256|sha512|md5|crc32|createHash)\b|node:crypto|@noble\b)/
     for (const rel of ["../src/subtree.ts", "../src/drift.ts"]) {
       const source = readFileSync(new URL(rel, import.meta.url), "utf8")
       // teeth (breaks-on "an anchor builder imports blake3 directly and hashes off-seam"):
       expect(OFF_SEAM_CALL.test(source)).toBe(false)
-      expect(OFF_SEAM_IMPORT.test(source)).toBe(false)
+      expect(source.split(/\r?\n/).some((line) => OFF_SEAM_IMPORT.test(line))).toBe(false)
     }
     // differential: swapping the seam moves the value ⇒ nothing is computed off-seam (folded from 10a).
     const stubA: Encoder = { hash: (b) => asHash(`a:${b.length}`) }

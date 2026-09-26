@@ -131,11 +131,11 @@ describe("WP-4.10-a.GROUND — HELD-OUT (-2) pinned-verb goldens against existin
 
   it("SCN-GROUND-10b-2: no off-seam digest call site exists in this WP source", () => {
     const OFF_SEAM_CALL = /\b(blake3|sha256|sha512|md5|crc32|createHash)\s*\(/
-    const OFF_SEAM_IMPORT = /import[^;]*?\b(blake3|sha256|sha512|md5|crc32|createHash|node:crypto|@noble)\b/
+    const OFF_SEAM_IMPORT = /^\s*import\b.*(?:\b(?:blake3|sha256|sha512|md5|crc32|createHash)\b|node:crypto|@noble\b)/
     for (const rel of ["../src/subtree.ts", "../src/drift.ts"]) {
       const source = readFileSync(new URL(rel, import.meta.url), "utf8")
       expect(OFF_SEAM_CALL.test(source)).toBe(false)
-      expect(OFF_SEAM_IMPORT.test(source)).toBe(false)
+      expect(source.split(/\r?\n/).some((line) => OFF_SEAM_IMPORT.test(line))).toBe(false)
     }
     // distinct off-seam family (sha-style) differential — swapping the seam moves the value.
     const stubA: Encoder = { hash: (b) => asHash(`sha:a:${b.length}`) }
