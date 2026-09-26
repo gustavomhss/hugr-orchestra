@@ -1,0 +1,148 @@
+name: Orchestra plan publication
+
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-plan-publication.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: orchestra-plan-publication
+  cancel-in-progress: false
+
+jobs:
+  publish-plan:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra' && github.ref == 'refs/heads/visual-migration-plan'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Publish verified v4.1 graph and reconcile existing ticket bodies
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          TRIGGER_SHA: ${{ github.sha }}
+        shell: python
+        run: |
+          import base64, collections, hashlib, json, lzma, os, time, urllib.request, urllib.error
+          REPO = 'gmhelmold/HuGR-Orchestra'
+          BRANCH = 'visual-migration-plan'
+          ROOT = 'specs/orchestra-visual/'
+          assert os.environ['REPO'] == REPO
+          base = 'https://api.github.com/repos/' + REPO + '/'
+          headers = {'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2026-03-10', 'User-Agent':'Orchestra-plan-publication'}
+          mapping = {**{f'E{i}':129+i for i in range(1,5)}, **{f'I{i:02d}':133+i for i in range(1,11)}, **{f'S{i:02d}':143+i for i in range(1,26)}}
+          shards = ['e9c91bb8546557ab05223bc08a356f835909424b','1d163c10362615a7008c412bc03fc6b5686a42dc','0b1f3992fce697f88e66138bb0f49f0e53aeb7db','f4db4f5ac5b3fb0a03bce3192fe9ebecef22a86d']
+          def digest(data): return hashlib.sha256(data).hexdigest()
+          def api(method, endpoint, payload=None):
+              assert method in ('GET','POST','PATCH')
+              if method != 'GET':
+                  assert endpoint in ('git/trees','git/commits','git/refs/heads/'+BRANCH,'issues/215/comments') or endpoint in {'issues/'+str(n) for n in mapping.values()}, endpoint
+              request = urllib.request.Request(base+endpoint, data=json.dumps(payload,ensure_ascii=False).encode() if payload is not None else None, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(request,timeout=60) as response: return json.load(response)
+              except urllib.error.HTTPError as error:
+                  raise RuntimeError(f'{method} {endpoint}: HTTP {error.code}; writes are not blindly retried') from None
+          chunks=[]
+          for sha in shards:
+              blob=api('GET','git/blobs/'+sha)
+              data=base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==sha
+              chunks.append(data)
+          packed=b''.join(chunks)
+          assert len(packed)==41456 and digest(packed)=='d62105c1da0829a9fa68cd456a9c2e75356ba750be929d47c88f35960e650d32'
+          decoder=lzma.LZMADecompressor(memlimit=128*1024*1024)
+          raw=decoder.decompress(packed,max_length=745365)
+          assert decoder.eof and not decoder.unused_data and len(raw)==745364
+          assert digest(raw)=='b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2'
+          plan=json.loads(raw)
+          nodes=plan['nodes']; by={n['id']:n for n in nodes}
+          assert len(nodes)==len(by)==143
+          assert collections.Counter(n['kind'] for n in nodes)=={'epic':4,'issue':10,'subissue':25,'wp':38,'task':66}
+          groups={'dod','invariants','quality_standards','completeness_criteria','success_criteria'}
+          seen=set()
+          for n in nodes:
+              assert set(n['axioms'])==groups
+              assert set(n['criterion_ids'])==groups
+              for key,values in n['axioms'].items():
+                  assert values and len(values)==len(n['criterion_ids'][key])
+                  assert all(isinstance(v,str) and v.strip() for v in values)
+                  for cid in n['criterion_ids'][key]:
+                      assert cid not in seen
+                      seen.add(cid)
+              for child in n['children']: assert by[child]['parent']==n['id']
+          assert len(seen)==1980
+          projections={}
+          for node in nodes:
+              if node['kind'] not in ('epic','issue','subissue'): continue
+              selected=[node]
+              def add(ident):
+                  for child in by[ident]['children']:
+                      if by[child]['kind'] in ('wp','task'):
+                          selected.append(by[child]); add(child)
+              add(node['id'])
+              lines=[f"<!-- orchestra-visual:{node['id']} -->",f"# {node['id']} — {node['title']}",f"Contrato canônico v{plan.get('contract_revision','desconhecido')}; gerado de PLAN.json. Não editar esta projeção isoladamente."]
+              for n in selected:
+                  lines += [f"\n## {n['id']} — {n['title']}", f"Pai: {n.get('parent') or 'programa'}. Dependências: {', '.join(n.get('depends_on',[])) or 'nenhuma'}."]
+                  if n.get('children'): lines += ['Filhos: '+', '.join(n['children'])+'.']
+                  for key in ('write_paths','exclude_paths','read_paths','resource_locks','steps','cases'):
+                      if n.get(key): lines += ['\n### '+key+'\n'+'\n'.join('- '+s for s in n[key])]
+                  if n.get('external_requires'): lines += ['\nPré-requisitos externos: `'+json.dumps(n['external_requires'],ensure_ascii=False)+'`']
+                  if n.get('evidence_requirements'): lines += ['\nCategorias de prova: `'+json.dumps(n['evidence_requirements'],ensure_ascii=False)+'`']
+                  for key,values in n['axioms'].items():
+                      lines += ['\n### '+key+'\n'+'\n'.join('- **'+cid+'** — '+text for cid,text in zip(n['criterion_ids'][key],values))]
+              projections[node['id']]='\n'.join(lines)+'\n'
+          assert set(projections)==set(mapping)
+          old={}
+          for ident,number in mapping.items():
+              issue=api('GET','issues/'+str(number))
+              assert issue['number']==number and 'pull_request' not in issue
+              assert f'<!-- orchestra-visual:{ident} -->' in (issue.get('body') or '')
+              old[number]={'body':issue.get('body') or '', 'title':issue['title']}
+          stamp={'schema_version':1,'root_epic':215,'branch':BRANCH,'contract_revision':plan['contract_revision'],'plan_sha256':digest(raw),'nodes':143,'criteria':1980,'ticket_count':39,'files':{ident:ROOT+'issues/'+ident+'.md' for ident in mapping},'artifact_package_status':'PARTIAL_TRANSFER','ticket_bodies_status':'PENDING','native_relationships':'VERIFIED_BY_RUN_36260156185','product_execution':'NOT_RUN','missing_inputs_note':'The full v4.1 package, reference PNG, brand kit and remaining tools/specifications have not all been transferred. This graph and the ticket bodies do not substitute those files. Do not announce a self-contained checkout yet.'}
+          entries={ROOT+'PLAN.json':raw.decode('utf-8'), **{ROOT+'issues/'+i+'.md':text for i,text in projections.items()}, ROOT+'PUBLICATION.json':json.dumps(stamp,ensure_ascii=False,indent=2)+'\n'}
+          def commit_files(files,message,expected=None):
+              assert all(p.startswith(ROOT) and '..' not in p.split('/') for p in files)
+              ref=api('GET','git/ref/heads/'+BRANCH); head=ref['object']['sha']
+              if expected: assert head==expected, 'Branch moved; stop rather than overwrite concurrent work'
+              parent=api('GET','git/commits/'+head)
+              tree=api('POST','git/trees',{'base_tree':parent['tree']['sha'],'tree':[{'path':p,'mode':'100644','type':'blob','content':c} for p,c in sorted(files.items())]})
+              commit=api('POST','git/commits',{'message':message,'tree':tree['sha'],'parents':[head]})
+              assert api('GET','git/ref/heads/'+BRANCH)['object']['sha']==head, 'Concurrent branch update'
+              api('PATCH','git/refs/heads/'+BRANCH,{'sha':commit['sha'],'force':False})
+              return commit['sha']
+          published=commit_files(entries,'docs(app): publish complete visual plan and 39 canonical work contracts',os.environ['TRIGGER_SHA'])
+          base_link='https://github.com/'+REPO+'/blob/'+published+'/'+ROOT
+          body_hashes={}
+          for ident,number in mapping.items():
+              n=by[ident]; parent=mapping.get(n.get('parent'),215)
+              child_links=' '.join('#'+str(mapping[c]) for c in n.get('children',[]) if c in mapping)
+              header=f"Épico principal: #215. Pai: #{parent}."
+              if child_links: header+=' Filhos: '+child_links+'.'
+              header+='\n\nContrato completo reconciliado com v4.1. [Fonte canônica deste ticket]('+base_link+'issues/'+ident+'.md). [Grafo PLAN.json]('+base_link+'PLAN.json).\n\n**Estado da transferência de artefatos:** consultar [PUBLICATION.json](https://github.com/'+REPO+'/blob/'+BRANCH+'/'+ROOT+'PUBLICATION.json). Não considerar o checkout autossuficiente enquanto houver insumos obrigatórios ausentes. Publicação dos contratos não conclui nenhuma task de produto.\n\nDependências de fechamento da issue não substituem o DAG por task; piloto e etapas parciais continuam executáveis na ordem do plano.\n\n---\n\n'
+              body=header+projections[ident]
+              assert len(body)<65000
+              latest=api('GET','issues/'+str(number))
+              assert (latest.get('body') or '')==old[number]['body'], f'Concurrent edit on #{number}; stopped'
+              title=f"[OV-{ident}] {n['title']}"
+              api('PATCH','issues/'+str(number),{'body':body,'title':title})
+              check=api('GET','issues/'+str(number))
+              assert check['body']==body and check['title']==title
+              body_hashes[str(number)]=digest(body.encode())
+              print(json.dumps({'issue':number,'contract':ident,'verified':True,'body_bytes':len(body.encode())}))
+              time.sleep(1.2)
+          stamp.update({'ticket_bodies_status':'VERIFIED','ticket_body_sha256':body_hashes,'plan_and_projection_commit':published,'verification_run':'https://github.com/'+REPO+'/actions/runs/'+os.environ['RUN_ID']})
+          final=commit_files({ROOT+'PUBLICATION.json':json.dumps(stamp,ensure_ascii=False,indent=2)+'\n'},'docs(app): record verified publication of visual work contracts',published)
+          check=api('GET','contents/'+ROOT+'PLAN.json?ref='+final)
+          assert digest(base64.b64decode(check['content']))==digest(raw)
+          for ident,text in projections.items():
+              check=api('GET','contents/'+ROOT+'issues/'+ident+'.md?ref='+final)
+              assert digest(base64.b64decode(check['content']))==digest(text.encode())
+          summary={'status':'PASS_FOR_PLAN_AND_TICKETS_ONLY','commit':final,'plan_sha256':digest(raw),'verified_bodies':39,'nodes':143,'criteria':1980,'complete_artifacts':'PARTIAL_TRANSFER','product':'NOT_RUN'}
+          print(json.dumps(summary))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('```json\n'+json.dumps(summary,indent=2)+'\n```\n')
+          api('POST','issues/215/comments',{'body':'<!-- orchestra-publication:plan-and-tickets -->\nO PLAN.json completo v4.1 e as **39 projeções canônicas** foram versionados. Os **39 corpos de tickets** foram reconciliados e lidos novamente: 143 nós, incluindo 38 WPs e 66 tasks, com 1.980 critérios nos cinco axiomas.\n\nCommit: '+final+'\nRun: https://github.com/'+REPO+'/actions/runs/'+os.environ['RUN_ID']+'\n\n**Artefatos complementares ainda em transferência.** PUBLICATION.json distingue o que foi verificado do que falta. Nenhuma task do produto foi fechada ou declarada implementada por esta publicação.'})
