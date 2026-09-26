@@ -203,13 +203,13 @@ describe("doc-transcript-guard — the gate can be falsified", () => {
 describe("doc-transcript-guard — every declaration is EARNED", () => {
   it("no FROZEN/UNVERIFIABLE block reproduces byte-exactly against the real fixture", () => {
     const src = readFileSync(GATE, "utf8")
-    // Every SINGLE-QUOTED block key in the gate: the FROZEN map's `'key':` and the UNVERIFIABLE groups'
+    // Every quoted block key in the gate: the FROZEN map's `'key':` and the UNVERIFIABLE groups'
     // `'key',`. The header names keys in BACKTICKS, so prose is not swept in. The shape is
     // `<file>.md#<invocation slug>#<ordinal>` — the middle segment was added when the file-wide ordinal was
     // replaced, and this pattern is why the change could not land quietly: it takes the WHOLE key, so a
     // pattern still matching only the old `#<digits>` tail extracts ZERO and this test's own anti-vacuity
     // guard fires rather than passing over an empty list.
-    const declared = [...new Set([...src.matchAll(/'([^']+\.md#[^']*#\d+)'/g)].map((m) => m[1]))]
+    const declared = [...new Set([...src.matchAll(/(['"])([^'"]+\.md#[^'"]*#\d+)\1/g)].map((m) => m[2]))]
     expect(declared.length, "the declaration list was not extracted — this test would be vacuous").toBeGreaterThan(10)
 
     const dir = mkdtempSync(join(tmpdir(), "atlas-doctrans-earned-"))
