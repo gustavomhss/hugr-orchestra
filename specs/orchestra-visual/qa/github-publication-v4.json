@@ -1,0 +1,15 @@
+{
+  "kind": "remote-mutation-readback",
+  "repository": "gmhelmold/HuGR-Orchestra",
+  "branch": "visual-migration-plan",
+  "commit": "6811ba76c10173b2685480b0ca944c5858e2ba17",
+  "file": "specs/orchestra-visual/EXECUTE.md",
+  "content_blob_sha": "ee730c329c6f8a9e3cb465d0ed6d94d1255254bb",
+  "read_back": true,
+  "comment_issue": 130,
+  "comment_id": 5847958589,
+  "full_package_upload": false,
+  "issue_body_updates": false,
+  "native_relationship_writes": false,
+  "product_code_modified": false
+}

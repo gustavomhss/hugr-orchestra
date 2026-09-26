@@ -1,0 +1,355 @@
+{
+  "id": "orchestra-cockpit-visual-fixture-v2",
+  "version": "1.0.0",
+  "mode": "demo-only",
+  "warning": "Presentation fixture only. Adapt to existing view models in test code. Never seed a live database, call a model provider, navigate externally, or execute the named commands from this data.",
+  "viewport": {
+    "width": 1672,
+    "height": 941,
+    "deviceScaleFactor": 1,
+    "zoom": 1
+  },
+  "theme": "orchestra-graphite",
+  "locale": "en",
+  "clock": "2026-09-25T20:00:00-03:00",
+  "selection": {
+    "navigation": "Chat",
+    "file": "src/agents/approval.ts",
+    "rail": "dock",
+    "testTab": "results"
+  },
+  "session": {
+    "id": "visual-demo-001",
+    "title": "Approval flow refactor",
+    "subtitle": "Simplify the approval flow, add better error handling, and update tests.",
+    "project": "Orchestra / core",
+    "branch": "demo/approval-flow",
+    "status": "awaiting-review"
+  },
+  "user": {
+    "displayName": "You",
+    "initials": "H",
+    "avatarSource": null
+  },
+  "model": {
+    "label": "Configured model",
+    "providerLabel": "Demo provider",
+    "credentialLabel": "Demo profile",
+    "secret": null
+  },
+  "messages": [
+    {
+      "id": "m1",
+      "origin": "user",
+      "label": "You",
+      "age": "12m ago",
+      "text": "Refactor the approval flow to use a single buildApproval function, add proper error handling, and update the tests. Keep the API the same. Also check for any missing edge cases."
+    },
+    {
+      "id": "m2",
+      "origin": "agent",
+      "label": "Maestro",
+      "age": "11m ago",
+      "text": "Analyzing the current approval system and preparing a refactor plan."
+    },
+    {
+      "id": "m3",
+      "origin": "tool",
+      "label": "Test runner",
+      "age": "6m ago",
+      "text": "Test output from the isolated demonstration fixture."
+    },
+    {
+      "id": "m4",
+      "origin": "agent",
+      "label": "Maestro",
+      "age": "4m ago",
+      "text": "The demonstration changes are ready for review."
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/agents/approval.ts",
+      "additions": 48,
+      "deletions": 32
+    },
+    {
+      "path": "src/core/approval/validator.ts",
+      "additions": 22,
+      "deletions": 8
+    },
+    {
+      "path": "src/types/approval.ts",
+      "additions": 6,
+      "deletions": 2
+    },
+    {
+      "path": "tests/approval.test.ts",
+      "additions": 74,
+      "deletions": 0
+    },
+    {
+      "path": "tests/approval.edge-cases.test.ts",
+      "additions": 62,
+      "deletions": 0
+    },
+    {
+      "path": "docs/approval-flow.md",
+      "additions": 18,
+      "deletions": 4
+    }
+  ],
+  "diff": {
+    "path": "src/agents/approval.ts",
+    "synthetic": true,
+    "language": "typescript",
+    "lines": [
+      {
+        "kind": "context",
+        "line": 12,
+        "text": "export async function buildApproval("
+      },
+      {
+        "kind": "context",
+        "line": 13,
+        "text": "  session: Session,"
+      },
+      {
+        "kind": "context",
+        "line": 14,
+        "text": "  message: Message,"
+      },
+      {
+        "kind": "context",
+        "line": 15,
+        "text": "  context: ApprovalContext"
+      },
+      {
+        "kind": "context",
+        "line": 16,
+        "text": "): Promise<ApprovalResult> {"
+      },
+      {
+        "kind": "add",
+        "line": 17,
+        "text": "  try {"
+      },
+      {
+        "kind": "add",
+        "line": 18,
+        "text": "    return await createApproval(session, {"
+      },
+      {
+        "kind": "add",
+        "line": 19,
+        "text": "      message,"
+      },
+      {
+        "kind": "add",
+        "line": 20,
+        "text": "      context,"
+      },
+      {
+        "kind": "add",
+        "line": 21,
+        "text": "    });"
+      }
+    ]
+  },
+  "testEvidence": {
+    "synthetic": true,
+    "status": "passed",
+    "filesPassed": 12,
+    "testsPassed": 186,
+    "durationSeconds": 2.3,
+    "exitCode": 0,
+    "command": "demo-test-runner",
+    "source": "fixture-only; no actual product test run",
+    "rawOutput": "Test run complete\nTest Files  12 passed (12)\nTests       186 passed (186)\nTime        2.3s\nIsolated visual fixture; not a product test result."
+  },
+  "dock": {
+    "mode": "non-navigating-fixture",
+    "pageTitle": "Approval Flow",
+    "displayAddress": "https://demo.invalid/approval",
+    "profileLabel": "Demo profile",
+    "networkEnabled": false,
+    "note": "Do not relax production navigation policy to render this fixture.",
+    "pagePreview": {
+      "brand": "Orchestra",
+      "title": "Approval Flow",
+      "subtitle": "Review and approve pending changes",
+      "selectedTab": "Pending",
+      "tabs": [
+        {
+          "label": "Pending",
+          "count": 2
+        },
+        {
+          "label": "Approved"
+        },
+        {
+          "label": "Rejected"
+        }
+      ],
+      "items": [
+        {
+          "path": "core/approval.ts",
+          "description": "Refactor approval logic",
+          "age": "2m ago"
+        },
+        {
+          "path": "tests/approval.test.ts",
+          "description": "Add edge case coverage",
+          "age": "4m ago"
+        }
+      ],
+      "actions": [
+        "Review",
+        "Diff"
+      ],
+      "execution": "test-local state changes only; no network or host approval authority"
+    }
+  },
+  "tasks": [
+    {
+      "id": "task-a",
+      "title": "Refactor approval flow",
+      "agent": "Maestro",
+      "status": "completed",
+      "progress": null
+    },
+    {
+      "id": "task-b",
+      "title": "Run test suite",
+      "agent": "Test worker",
+      "status": "completed",
+      "progress": null
+    },
+    {
+      "id": "task-c",
+      "title": "Review documentation",
+      "agent": "Review worker",
+      "status": "needs-input",
+      "progress": null
+    }
+  ],
+  "activity": [
+    {
+      "entity": "Maestro",
+      "kind": "agent",
+      "state": "idle",
+      "detail": "Ready for review"
+    },
+    {
+      "entity": "Test worker",
+      "kind": "agent",
+      "state": "completed",
+      "detail": "Test result available"
+    },
+    {
+      "entity": "Dock",
+      "kind": "browser",
+      "state": "open",
+      "detail": "Demonstration preview"
+    },
+    {
+      "entity": "Janitor",
+      "kind": "scanner",
+      "state": "idle",
+      "detail": "No synthetic cleanup action"
+    }
+  ],
+  "controls": {
+    "sideEffects": "disabled-by-fixture-adapter",
+    "network": "blocked",
+    "publish": "unavailable",
+    "stop": "local-fixture-only"
+  },
+  "documentedSemanticExceptionsForReview": [
+    "Corrected author types: Atlas is not presented as a coding agent.",
+    "No arbitrary progress percentages.",
+    "No assumption about current model product/version.",
+    "No user identity inferred from generated avatar.",
+    "No real HTTP navigation or policy change."
+  ],
+  "checklist": [
+    {
+      "text": "Reviewed existing implementation (src/agents/approval.ts)",
+      "state": "completed"
+    },
+    {
+      "text": "Identified duplication in approval logic",
+      "state": "completed"
+    },
+    {
+      "text": "Found 4 edge cases not handled (timeout, cancel, invalid state, missing context)",
+      "state": "completed"
+    },
+    {
+      "text": "Implemented refactor",
+      "state": "completed"
+    },
+    {
+      "text": "Updated tests and validated the changes",
+      "state": "completed"
+    }
+  ],
+  "variants": {
+    "awaiting-review": {
+      "isDefault": true,
+      "sessionStatus": "awaiting-review",
+      "notes": "Default task and test states above."
+    },
+    "running": {
+      "sessionStatus": "running",
+      "testEvidenceStatus": "running",
+      "testEvidenceCounts": null,
+      "taskStates": [
+        "running",
+        "running",
+        "pending"
+      ],
+      "checklistStates": [
+        "completed",
+        "completed",
+        "completed",
+        "running",
+        "pending"
+      ]
+    },
+    "needs-input": {
+      "sessionStatus": "needs-input",
+      "pendingPermission": {
+        "id": "fixture-permission-1",
+        "description": "Allow the isolated test action?",
+        "reply": "test-local only"
+      },
+      "taskStates": [
+        "completed",
+        "needs-input",
+        "pending"
+      ]
+    },
+    "error": {
+      "sessionStatus": "error",
+      "testEvidenceStatus": "failed",
+      "testEvidenceExitCode": 1,
+      "taskStates": [
+        "completed",
+        "failed",
+        "pending"
+      ]
+    },
+    "empty": {
+      "taskCount": 0,
+      "changeCount": 0,
+      "testEvidenceStatus": "not-run"
+    },
+    "unavailable-dock": {
+      "dockStatus": "unavailable"
+    },
+    "long-content": {
+      "description": "Use long paths, a multiline message, and large tool output without changing view-model contracts."
+    }
+  }
+}

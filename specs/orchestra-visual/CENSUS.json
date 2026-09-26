@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "UNRESOLVED",
+  "source_sha": "30d951fcc4a09e708768551c7c6fd38a0efe3da8",
+  "files": [],
+  "scan_roots": [
+    "packages/app/src",
+    "packages/ui/src",
+    "packages/session-ui/src",
+    "packages/desktop/src/renderer"
+  ],
+  "extensions": [
+    ".tsx",
+    ".css"
+  ],
+  "rule": "Every discovered non-test file must have an explicit disposition and owner or inherited-by evidence. No silent filename exclusions for production UI."
+}

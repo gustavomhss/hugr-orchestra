@@ -1,0 +1,2159 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "c8653cc7a2dc3f2e1e0f9b85ae0b9eaac0de77b2c100bac87c1eb45161b4599a",
+  "archive_bytes": 14838957,
+  "file_count": 430,
+  "files": [
+    {
+      "path": "BRAND-ASSETS.json",
+      "sha256": "8057e05081e8a0047aa998a6e88b4f870ecd6dbb2ae68837766f668e217b1dcc",
+      "bytes": 65344
+    },
+    {
+      "path": "BRAND-INTEGRATION-REVIEW.md",
+      "sha256": "158ad69f79eee38c2def974f1406725ab0564685d719ccbbba18f67555d68548",
+      "bytes": 8777
+    },
+    {
+      "path": "BRAND-INTEGRATION.md",
+      "sha256": "a8917f675b4fcaf3040d329bc2cf793920f48bfaa2909e2cfd24ee5d8091a6d1",
+      "bytes": 15131
+    },
+    {
+      "path": "BUDGETS.json",
+      "sha256": "954d30bed2e2dcb61c1190241344fb360eff938c6f672e96759d7d3611889df8",
+      "bytes": 11016
+    },
+    {
+      "path": "CENSUS.json",
+      "sha256": "3546d17e7ed78ebed7fe8ea67a00a50280644b0360f3164d6434e482158f2b93",
+      "bytes": 473
+    },
+    {
+      "path": "CONTRACTS.md",
+      "sha256": "72aa79de5da9b5b98d250dcdf14a972026902ba035fe31b1b5445e6401945a29",
+      "bytes": 14940
+    },
+    {
+      "path": "COVERAGE.json",
+      "sha256": "464b5d82578df0676ed5bb9fa915b72853d1bc3525a8f48e4f6de5b6976f2813",
+      "bytes": 995
+    },
+    {
+      "path": "EXECUTE.md",
+      "sha256": "90d76e80ad964d22ae5e392f32a7c6bf1291ec372fe88456461ae75f50139f2d",
+      "bytes": 10131
+    },
+    {
+      "path": "FINDINGS-RESOLUTION.json",
+      "sha256": "83a4d9bf400eee03e228883bf12afc15f66e31518bd5908977e62a14c9d52399",
+      "bytes": 50741
+    },
+    {
+      "path": "GITHUB.json",
+      "sha256": "ebfcd784b7f7639e01459e2d56ef34b888c318ec32c59999c6159059e4c313e2",
+      "bytes": 12953
+    },
+    {
+      "path": "MANIFEST.sha256",
+      "sha256": "fe04b5c2b19030016eeb42ee3868549d221cdfa8fd839cc112440a5d28244fde",
+      "bytes": 51751
+    },
+    {
+      "path": "MAP.md",
+      "sha256": "46f5a2e0a976b23e78332715e41a3f6ebfbd3bfb76e36c1b7d4d12fcfc3ad57d",
+      "bytes": 6664
+    },
+    {
+      "path": "OWNERSHIP.md",
+      "sha256": "5d81b427f7a68ceebad83f2d88000cddac07c84b51a5097ff0107f97f816271d",
+      "bytes": 11548
+    },
+    {
+      "path": "PERFORMANCE.md",
+      "sha256": "3c7fd463150ac8b6a9fd6a721968e85ba5f6c74a8704dd28fc35c37067a4fe28",
+      "bytes": 9058
+    },
+    {
+      "path": "PLAN.json",
+      "sha256": "b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2",
+      "bytes": 745364
+    },
+    {
+      "path": "QA_REPORT.md",
+      "sha256": "24bfcd2578e0d4234ee100736a6297053b7070498841a5df001a7ebcaf3cf571",
+      "bytes": 4199
+    },
+    {
+      "path": "README.md",
+      "sha256": "76f6b635e674aa7e46b8f0cf9b93cbe68b006f1ad9559e2ad301466bab75bb06",
+      "bytes": 670
+    },
+    {
+      "path": "RECEIPTS-v4.md",
+      "sha256": "2a59041b6ae1571a3785ff125010ef442a4e084db08436589915ecece0524c84",
+      "bytes": 8656
+    },
+    {
+      "path": "REVIEW-v4.md",
+      "sha256": "03b3cdc876ce7bafa528bba0dd1af58f3940fee9a038165506f705709f620017",
+      "bytes": 7390
+    },
+    {
+      "path": "SPEC.md",
+      "sha256": "9eacfa9d01300f683a9da95595144537487a1ae380e05db77f8696ec995dd7fb",
+      "bytes": 20333
+    },
+    {
+      "path": "SURFACES.json",
+      "sha256": "fc8d2a9dbaa94bf5cef6f2775457e5e139bcf5847f2969f4468e7bd0ead34657",
+      "bytes": 64989
+    },
+    {
+      "path": "fixture.json",
+      "sha256": "f722bf414082c9df271ef23b054c8872110457fe1de8efb5c3c2f18f0fcf7016",
+      "bytes": 8742
+    },
+    {
+      "path": "issues/E1.md",
+      "sha256": "3b45a96b85ba57565f85c1a5b46346df902bf3865c44e7177de1730063bf36f0",
+      "bytes": 1805
+    },
+    {
+      "path": "issues/E2.md",
+      "sha256": "c424fd5343e8e2e1438103a58723e407f678265fc1c6cee368e9a24e5fdb49af",
+      "bytes": 1591
+    },
+    {
+      "path": "issues/E3.md",
+      "sha256": "0f5a8367c135a68754e79f402668441795174681b76557e8ee85ef3652568df4",
+      "bytes": 1571
+    },
+    {
+      "path": "issues/E4.md",
+      "sha256": "7b4d6820fc8041b443ebfdd8ebdc27d627c0473fe9696dd271637cf5fc512c45",
+      "bytes": 1575
+    },
+    {
+      "path": "issues/I01.md",
+      "sha256": "5fa879ad5e095e943887321c2f45131af9b1ed787ac2133b69b0390b22ff8772",
+      "bytes": 4772
+    },
+    {
+      "path": "issues/I02.md",
+      "sha256": "4f1e663b25424e6848d8caf5803c4d20ae00e7ae4bf7a907ecbbe2706f2b4dec",
+      "bytes": 4991
+    },
+    {
+      "path": "issues/I03.md",
+      "sha256": "ed09e3ec9a5c2c82dff9efe411893466e22e15d65f46d6791cac58181689e299",
+      "bytes": 4762
+    },
+    {
+      "path": "issues/I04.md",
+      "sha256": "ebc1718c02051c5d5d4b18224ba67c83d10d31b632d9481f4cc52c195ca68fb6",
+      "bytes": 4737
+    },
+    {
+      "path": "issues/I05.md",
+      "sha256": "2d8d67c135b8f7b2535257719830bfb2448bd05d3d2bf4d87bc9d3e1855d18e6",
+      "bytes": 4792
+    },
+    {
+      "path": "issues/I06.md",
+      "sha256": "65104fa467c769bf4d3c8e1c83dbba88cad1bd3889448881cec63905ebb8f911",
+      "bytes": 4747
+    },
+    {
+      "path": "issues/I07.md",
+      "sha256": "c811232d4aa2a1a20d7696f5c1b5763b73b377d636443b16419b3ba6c7fbaea8",
+      "bytes": 4752
+    },
+    {
+      "path": "issues/I08.md",
+      "sha256": "b2537f21eb7981b4e1a8a819f0afe4b0bb986c7d0fb9d514f127a6da0fd47f63",
+      "bytes": 4732
+    },
+    {
+      "path": "issues/I09.md",
+      "sha256": "323c1af59731a9e2da8043a6a35ed4b951fdbdbfeb5d1966728db1b4adc5ceec",
+      "bytes": 4822
+    },
+    {
+      "path": "issues/I10.md",
+      "sha256": "2c265deb69b29daf8bdeb6a9a1ca1039b49781004f5cda40a55e78f9831d9f59",
+      "bytes": 4742
+    },
+    {
+      "path": "issues/S01.md",
+      "sha256": "a9f310a18b43e8b5f30d66b4751ecdffdd51b97d1298a72cd7b52f8bae852ec0",
+      "bytes": 16167
+    },
+    {
+      "path": "issues/S02.md",
+      "sha256": "550d280046bb25bf4f920dd2631b467498a1379888f420b97822df0985aba1dc",
+      "bytes": 14164
+    },
+    {
+      "path": "issues/S03.md",
+      "sha256": "0354c746f58f4b5828e3f9ccd4d2acfed9ec3378c0e73ad2bf4bb953e33eabdf",
+      "bytes": 13379
+    },
+    {
+      "path": "issues/S04.md",
+      "sha256": "228a3d5427e281f044246c62e07fbe7d2c620555c6a35f744744e220bbe682e9",
+      "bytes": 13181
+    },
+    {
+      "path": "issues/S05.md",
+      "sha256": "5eeaf21d78e29aca1e00987caee290bed279cd6d08bc89c843fb6f3ade5708e9",
+      "bytes": 22951
+    },
+    {
+      "path": "issues/S06.md",
+      "sha256": "7a0c5992bdbe1315c4f845c7db2e2a23fb7697203528018a2ff271e43e8c0760",
+      "bytes": 15134
+    },
+    {
+      "path": "issues/S07.md",
+      "sha256": "5e6abca8f910b017388e4282d83ee2a3a8d6bd5c00db79712a166977ba7bfb75",
+      "bytes": 12639
+    },
+    {
+      "path": "issues/S08.md",
+      "sha256": "afcf14cd7d9e58af1ffa6a332f3a7e09b85973741cc76adeeecb194c76d84b6d",
+      "bytes": 14225
+    },
+    {
+      "path": "issues/S09.md",
+      "sha256": "7581cbc3a62f1068eeff37a0abf05bebb23aa9754b831b421f1544a6bcabfa6b",
+      "bytes": 15003
+    },
+    {
+      "path": "issues/S10.md",
+      "sha256": "25f3a22ffba5301c9af3f99560ed74a19d419481ba776165da714adc9e956f96",
+      "bytes": 13323
+    },
+    {
+      "path": "issues/S11.md",
+      "sha256": "ea9e3c79ab694422c858a256f6f8b74ae227bef7dd5feed81a750da659023e33",
+      "bytes": 16589
+    },
+    {
+      "path": "issues/S12.md",
+      "sha256": "26c1025a74b284beaae8d192f1534c2b48dd9bd753436bb772d90ac477bcba59",
+      "bytes": 13382
+    },
+    {
+      "path": "issues/S13.md",
+      "sha256": "a3e7c42b71c355b9199288b46d451d8426065597be6615fd2b41a6794fcbce00",
+      "bytes": 13814
+    },
+    {
+      "path": "issues/S14.md",
+      "sha256": "025d14ea06dc51cdc92944f8c9a1e3ffb51b49f3c9be415b7866e9c183730263",
+      "bytes": 14962
+    },
+    {
+      "path": "issues/S15.md",
+      "sha256": "2dffe5636ad9a73efa72e10f82f7d65fef67648768c78e0e67aee5a306d62e07",
+      "bytes": 13710
+    },
+    {
+      "path": "issues/S16.md",
+      "sha256": "2e4d73f10f5e6ecb845ee7caab9b680b0e7108b774c2b7e49097663f9fd820d4",
+      "bytes": 13980
+    },
+    {
+      "path": "issues/S17.md",
+      "sha256": "aa0c9a27c0e9be70c9434e455a7416acdb3a5d01e9909293e8cf5a95e139ebbd",
+      "bytes": 13339
+    },
+    {
+      "path": "issues/S18.md",
+      "sha256": "949bd266c17112faf3bceed3667c94843d49c8397bd5be6390bed7f204d70802",
+      "bytes": 13392
+    },
+    {
+      "path": "issues/S19.md",
+      "sha256": "335bd097f2cd432fd3dd973ccda454ada6a384264d429c65e0d136e793a13180",
+      "bytes": 26265
+    },
+    {
+      "path": "issues/S20.md",
+      "sha256": "b87608a9f74a5692b280ed4b95491fb33e650f471d69c107a7578f0da283c8a1",
+      "bytes": 25485
+    },
+    {
+      "path": "issues/S21.md",
+      "sha256": "204200f40585e465559f57088b0474a5342aaa3e8a3eed291e2f925bfbb35a69",
+      "bytes": 12438
+    },
+    {
+      "path": "issues/S22.md",
+      "sha256": "690de53d3af6bb34f4512341fb3fc52c646c6319a7c1ce22091fb98b6d9947ce",
+      "bytes": 13058
+    },
+    {
+      "path": "issues/S23.md",
+      "sha256": "f31339321c47f1b91faca95d2cdb1e522e0d745681894646e429d82686b73a86",
+      "bytes": 13285
+    },
+    {
+      "path": "issues/S24.md",
+      "sha256": "d1b68dc07f4861008c83ac038878a951b32beda8d4e17d0042cc877b8c16bae7",
+      "bytes": 14576
+    },
+    {
+      "path": "issues/S25.md",
+      "sha256": "1dd01db3de6883d4507e31e958fe1c393f9197565ba734958496360c29c93874",
+      "bytes": 26210
+    },
+    {
+      "path": "progress.json",
+      "sha256": "046c45384e13bf29eb6b32ebe08706ccc7f6016b80dc76ef7626257cd6f15ef7",
+      "bytes": 46
+    },
+    {
+      "path": "qa/brand-integration-audit.json",
+      "sha256": "4e26d2c15625ad901e40049642b6b83f22cef108a76fd60ffc377739e8f41a86",
+      "bytes": 4444
+    },
+    {
+      "path": "qa/brand-kit-verification.json",
+      "sha256": "92bb873dcc01ab2c4ffdf54fe4e8cdc4db595bb80daf0eace976ade919859534",
+      "bytes": 477
+    },
+    {
+      "path": "qa/brand-map-verification.json",
+      "sha256": "57943ab2f7e864849ab492ec407da6570c984727993c9d3f919cb9839152cddc",
+      "bytes": 350
+    },
+    {
+      "path": "qa/brand-tests.log",
+      "sha256": "a1b5e0bd4f9eebea436a478910144289efd0f527108c0e8fd34d8547e2c2690f",
+      "bytes": 2347
+    },
+    {
+      "path": "qa/github-desired-links-v4.json",
+      "sha256": "87d5160880e95b65a281c66f1eaa2de3af8d0b99315ac2020a830458ab13f80b",
+      "bytes": 11376
+    },
+    {
+      "path": "qa/github-publication-v4.json",
+      "sha256": "7966144eb86bae50c581006b455d68b285caa5f6e2c4fcc9f1fafbceb9691e6c",
+      "bytes": 500
+    },
+    {
+      "path": "qa/history/rejected-v3/FINDINGS.json",
+      "sha256": "e3017a5c751cf8454a918c26f07358e1500d9ca2a88ff05ac491a75031c09e66",
+      "bytes": 37566
+    },
+    {
+      "path": "qa/history/rejected-v3/REVIEW-ADVERSARIAL-v3.md",
+      "sha256": "9412fa1feb32eec4f1f0ebf8a6c31192fcede98bd782bdceb0f21d5a664bdda6",
+      "bytes": 46696
+    },
+    {
+      "path": "qa/history/rejected-v3/evidence/adversarial-probes.json",
+      "sha256": "945213fd2229358771d9b6a97fec48d05775d88f5ba9b7ed684e7d790e1f5931",
+      "bytes": 21232
+    },
+    {
+      "path": "qa/history/v3/QA_REPORT.md",
+      "sha256": "b8cd3e586860fb47e47aad149b2459a82e5496aa7f351adca09544e7158c0c43",
+      "bytes": 4339
+    },
+    {
+      "path": "qa/history/v3/RECEIPTS-v3.md",
+      "sha256": "8f8a5af70b7c718513477ab6ff148bd0becfe33bd0d735ade4048a6a043e7553",
+      "bytes": 5272
+    },
+    {
+      "path": "qa/history/v3/REVIEW-v3.md",
+      "sha256": "4f2fef6370acba4bf088a2e871d96f5ebffc954dfad83595525725b321996fbb",
+      "bytes": 4329
+    },
+    {
+      "path": "qa/history/v3/baseline-negative-probes.json",
+      "sha256": "71b077b4f660b4e9be9c7cf238e9ab9f88481f678ff3a117737bfff0f665a233",
+      "bytes": 243
+    },
+    {
+      "path": "qa/history/v3/github-desired-links-v3.json",
+      "sha256": "b1806c17bd671f4da5b8d4ce9567e8b1352f093927ded6d9183c28240a531332",
+      "bytes": 9972
+    },
+    {
+      "path": "qa/history/v3/github-desired-links.json",
+      "sha256": "f583033fff660c2ac73201ad8b4c51aea5d853792777bb37641b38fed94ffcc5",
+      "bytes": 13637
+    },
+    {
+      "path": "qa/history/v3/initial-readiness.json",
+      "sha256": "dd174356c1e0fdd44a4ae9d6315648ecb94709629aac18d65654da1f947bd77e",
+      "bytes": 591
+    },
+    {
+      "path": "qa/history/v3/issue-projection-v3.json",
+      "sha256": "84f9bef37af2476fbb61486b747d1525d7de330d608f6ad599e3882c882703be",
+      "bytes": 84
+    },
+    {
+      "path": "qa/history/v3/package-audit.json",
+      "sha256": "a640f57ceeeb8314d62c4f4430b572d4007509b69844fdaf61baaedc3ec64491",
+      "bytes": 1725
+    },
+    {
+      "path": "qa/history/v3/plan-validation-v3.json",
+      "sha256": "1f2ea45ae5670f111e2978666cbbbd1810c5e8e731dd1a6cf454f2d3e3983cb4",
+      "bytes": 293
+    },
+    {
+      "path": "qa/history/v3/readiness-v3.json",
+      "sha256": "036bfd5a43494fcfd5a7d048f2fd9be35789a6f82a00c82b3db33f28ed5c7b3c",
+      "bytes": 678
+    },
+    {
+      "path": "qa/history/v3/tool-tests.log",
+      "sha256": "ff51b18a5d897f1bdac340007f36107b0cd6b22b3eed03fc789ce03e978a0a8c",
+      "bytes": 9230
+    },
+    {
+      "path": "qa/history/v3/unmodified-baseline83.log",
+      "sha256": "84eeaffbf286ce7c19be8d15cb7665c89b80a958f92a62920e923013dac0d6be",
+      "bytes": 9230
+    },
+    {
+      "path": "qa/history/v3/v2-baseline-tests.log",
+      "sha256": "a5f75d30fafcf9bf0560b8f1194d2707865060f11780a7c89002c20b8ca77f38",
+      "bytes": 3932
+    },
+    {
+      "path": "qa/history/v3/validation.json",
+      "sha256": "8b65c20bc3d1c3a9fb03a736eef34e56ae266cef8641a82a9c3ebf6e5a39dd89",
+      "bytes": 293
+    },
+    {
+      "path": "qa/issue-projection-v4.json",
+      "sha256": "84f9bef37af2476fbb61486b747d1525d7de330d608f6ad599e3882c882703be",
+      "bytes": 84
+    },
+    {
+      "path": "qa/map-projection-v4.json",
+      "sha256": "1b25843340011fec14c430340b7a2a00fea4f9a15dde8934270bb5408b746177",
+      "bytes": 37
+    },
+    {
+      "path": "qa/plan-validation-v4.json",
+      "sha256": "4040228a3b65583cca93a28e5d0fcc2d0c73d52355091a1015f78147efc8199b",
+      "bytes": 293
+    },
+    {
+      "path": "qa/readiness-v4.json",
+      "sha256": "6a27390845e1a37a3aa9301de55913c324c8ace2087634b7879dc4acbe19560c",
+      "bytes": 1136
+    },
+    {
+      "path": "qa/test-inventory.json",
+      "sha256": "4bad53361b6d81ebb389f5cc4aadc94636b808d3555426ab79b2e7d61aa205b7",
+      "bytes": 10967
+    },
+    {
+      "path": "qa/tool-tests-v4.log",
+      "sha256": "82bb5285d29726cc83ad40b2a98796ddadc1a0ce7942431283df19aac057e5d8",
+      "bytes": 15824
+    },
+    {
+      "path": "qa/v4-before-brand-tests.log",
+      "sha256": "72b0a043e8c4125067d305166475aae8dc9a4c5116d6d03b470d0809a06ab9c0",
+      "bytes": 234
+    },
+    {
+      "path": "qa/v4-original-QA_REPORT.md",
+      "sha256": "c6f9cc15fadeb0044b73ceeceac197ab459cc87a02439b60abd54a60d2fcbc22",
+      "bytes": 2343
+    },
+    {
+      "path": "qa/v4.1-all-tests.log",
+      "sha256": "59d03c25dffd245a55d74d76b989c85118c6c6699ec8de9d341b4620aeb953ba",
+      "bytes": 18091
+    },
+    {
+      "path": "qa/v4.1-first-run-scope-finding.log",
+      "sha256": "3986ebb629382bbdfebfc7a629aec6ff0221d504657ad5c6ed9c5968ba338e42",
+      "bytes": 18711
+    },
+    {
+      "path": "qa/v4.1-github-offline.json",
+      "sha256": "87d5160880e95b65a281c66f1eaa2de3af8d0b99315ac2020a830458ab13f80b",
+      "bytes": 11376
+    },
+    {
+      "path": "qa/v4.1-issue-check.json",
+      "sha256": "84f9bef37af2476fbb61486b747d1525d7de330d608f6ad599e3882c882703be",
+      "bytes": 84
+    },
+    {
+      "path": "qa/v4.1-map-check.json",
+      "sha256": "1b25843340011fec14c430340b7a2a00fea4f9a15dde8934270bb5408b746177",
+      "bytes": 37
+    },
+    {
+      "path": "qa/v4.1-plan-check.json",
+      "sha256": "9e557e12318bcb0e40514c896a5794491cc84156225bdd8fde807c1dbbf8449c",
+      "bytes": 293
+    },
+    {
+      "path": "qa/v4.1-pre-final-scope-test-run.json",
+      "sha256": "3f3345588a5e6bc34460a8156f97380d35bf968518467974326db1dc8442bfd8",
+      "bytes": 278
+    },
+    {
+      "path": "qa/v4.1-readiness.json",
+      "sha256": "1b641705a4e643b17224b18d029b4fa2ab2af56b0c2bab96f55bad55b1c9bf6d",
+      "bytes": 1243
+    },
+    {
+      "path": "qa/v4.1-test-run.json",
+      "sha256": "c3ffdd967920dba3915a61a47fd677523bc3b18b5b9e408ffb6f6f5b2bfa0582",
+      "bytes": 278
+    },
+    {
+      "path": "reference/approved.png",
+      "sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+      "bytes": 1597489
+    },
+    {
+      "path": "tools/README.md",
+      "sha256": "5987847d0ca58b66f6204a6eb1c84b7461d9afc259229c2ee1f6de9b69cc29c1",
+      "bytes": 4024
+    },
+    {
+      "path": "tools/capture_scope.py",
+      "sha256": "6d3c01b7015f3464d1358c3a222fc21e443963b50d83813a45e514c7a1bd4163",
+      "bytes": 823
+    },
+    {
+      "path": "tools/census.py",
+      "sha256": "69c1226ab16c2d17c9939bccab7719e3f7a77aec78627df391c5b1a2d80756e8",
+      "bytes": 3470
+    },
+    {
+      "path": "tools/effective_contract.py",
+      "sha256": "79e1603a76c161ec00204f3456478ccf971f172f16df349ac5db56f2990f257c",
+      "bytes": 2610
+    },
+    {
+      "path": "tools/evaluate_performance.py",
+      "sha256": "5736bb0e69eb218a465696993e7a1fe6a86f4d4c81e7c67b7af941a4d62bf413",
+      "bytes": 7849
+    },
+    {
+      "path": "tools/github_sync.py",
+      "sha256": "4e37071bcad8c07c8eec7544ca82c1160b6db24948fd43022f2557594b38ae19",
+      "bytes": 13062
+    },
+    {
+      "path": "tools/png_check.py",
+      "sha256": "ab5de7d6395735c5492212c8bd1e45279ee5261b4b2977101d63da8dceea6828",
+      "bytes": 2905
+    },
+    {
+      "path": "tools/receipt_template.py",
+      "sha256": "2d61162c080b163728d465a8d11d3369188620e757f44978082751a277718158",
+      "bytes": 2403
+    },
+    {
+      "path": "tools/render_issues.py",
+      "sha256": "8566e901db4d9f9ef2f1f665f1841dc85946a85f35cc3a2e23413281773008b5",
+      "bytes": 2790
+    },
+    {
+      "path": "tools/render_maps.py",
+      "sha256": "5f7c69ce9c07be7d0c8f847bf4ffc70635ade34d363b4b80466dedcc279a7424",
+      "bytes": 2582
+    },
+    {
+      "path": "tools/seal_receipt.py",
+      "sha256": "fc2070af5755cf1c3f5e8cf445e13274e4fa73e5b1a2ba88fa67a2851b4eebc6",
+      "bytes": 3050
+    },
+    {
+      "path": "tools/select_work.py",
+      "sha256": "77fe40baa234016cd91a2501e86339d806eacb2cd64fc57f93ce43dcb7fea228",
+      "bytes": 15041
+    },
+    {
+      "path": "tools/source_proof.py",
+      "sha256": "03e04ec9a46d601a55a960c6acd8ed53fe948d94e9d113e197e44e4f711fcca9",
+      "bytes": 11355
+    },
+    {
+      "path": "tools/test_adversarial.py",
+      "sha256": "4d31e7f4c2367501a02353a4017f87642df0a59c50903df9d82d2c99203ffb63",
+      "bytes": 12270
+    },
+    {
+      "path": "tools/test_brand.py",
+      "sha256": "a760e52b42da18b9455e082da10dce7eb72a7c6b7020fc234b419c71954d4ccb",
+      "bytes": 7139
+    },
+    {
+      "path": "tools/test_contract.py",
+      "sha256": "266dd50cc0a63e61f3a4935e20da8e4f120792b8b2c77a2a8991f4b1352c734d",
+      "bytes": 14324
+    },
+    {
+      "path": "tools/test_repairs.py",
+      "sha256": "16b56f1e737d68ef044ba57c454ba61c7a0b9cbaf779ba7b1fdb2740360af1de",
+      "bytes": 22749
+    },
+    {
+      "path": "tools/test_support.py",
+      "sha256": "4c732f0a2e232bdda65fbc30f87d8b4b0e3be60ad7eaa6322b29c5659282266e",
+      "bytes": 4118
+    },
+    {
+      "path": "tools/validate_evidence.py",
+      "sha256": "317fe6e9183469897acac47edde3938797c3eb3c6f028c60253d4a3abea8f6db",
+      "bytes": 14898
+    },
+    {
+      "path": "tools/validate_plan.py",
+      "sha256": "11298bcf82c36b0b11fb0c6e278bbc0fe31f76c2af7e730de7d992ae53efd255",
+      "bytes": 15966
+    },
+    {
+      "path": "tools/verify_brand.py",
+      "sha256": "bb0109f031398688ee5cac46cc6b86515dc3b890ff5197d20ff0e17cdae00cd8",
+      "bytes": 6508
+    },
+    {
+      "path": "tools/visual_coverage.py",
+      "sha256": "91b3e707ca8601b050cc42404d2ee3b82d3298e19527e061e2eb25ac32d27de7",
+      "bytes": 4092
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/eps/hugr-horizontal-compact-mono-dark.eps",
+      "sha256": "887fbd31c48e91f787bafa6aca019a0bac1b13d60710414fa49cd5ff401cebb4",
+      "bytes": 4889
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/eps/hugr-horizontal-mono-dark.eps",
+      "sha256": "2832e17f6e587239a9502a7cb840b9ab1c3c9b99404d7765859597eef45c9cfc",
+      "bytes": 15374
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/eps/hugr-stacked-compact-mono-dark.eps",
+      "sha256": "e7a4d40e3adf6a7168dd649b7d88e974f1198c15eecba5af1dc34cc764558aa0",
+      "bytes": 4957
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/eps/hugr-stacked-mono-dark.eps",
+      "sha256": "0c3f5c8ab9525b638549fa03a6ab5683a022cd7a0b218541a66394a021053ffb",
+      "bytes": 15241
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/eps/hugr-symbol-mono-dark.eps",
+      "sha256": "b21a7e6f0dbfed98f14aa6f076637a1e9c86156bef88b384b8c38fe3b22910dd",
+      "bytes": 3631
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/eps/hugr-wordmark-mono-dark.eps",
+      "sha256": "a1111f4662b9b62df96ba71700f3c78ec9b2f9d774b5aaf8dc343d9cdfb1701c",
+      "bytes": 3670
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-horizontal-compact-inverse.pdf",
+      "sha256": "bceb172456a901a71987ea0fd2393ed00662398ef258ab72c19663a9dc63c654",
+      "bytes": 8077
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-horizontal-compact-mono-dark.pdf",
+      "sha256": "3b487d4a1ea665f7334338fa1cf40fe20bcac44afe1ea13f9aacffcf92f60b60",
+      "bytes": 1871
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-horizontal-compact-primary.pdf",
+      "sha256": "083adc35daaf24a7acddf9876653b4f9a13cf344cc340e6000c8b50f6a5fd661",
+      "bytes": 26840
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-horizontal-inverse.pdf",
+      "sha256": "9ed69ec7df87dd2b9fee06d027d4a175fd06902348cda6d23072a8f957b6f30e",
+      "bytes": 12240
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-horizontal-mono-dark.pdf",
+      "sha256": "2112bdf109117c1517ae342d46528d98540e2d4c0fc5202e73c01cc386afe905",
+      "bytes": 5998
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-horizontal-primary.pdf",
+      "sha256": "916431475794516f6aa12046457aac66a030989ca9d60b880cf269f667e40020",
+      "bytes": 31025
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-stacked-compact-inverse.pdf",
+      "sha256": "b66f5547949bbeef97b6829d7aac4fc8b9024ac54165e0de82fad332de56a282",
+      "bytes": 7978
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-stacked-compact-mono-dark.pdf",
+      "sha256": "f72ab7658249b293cae74b40f71268102399201bbb5004f42ed51d385c4ea51c",
+      "bytes": 1837
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-stacked-compact-primary.pdf",
+      "sha256": "870f0a3f064b113b6cdf130906c8e9087fed225e18fcd7dce60325fe518bc396",
+      "bytes": 26717
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-stacked-inverse.pdf",
+      "sha256": "54d9eccc35b5e1a0270c331d80ba89dde96ebc6b74d891fe74d5eb92c2ddbb5f",
+      "bytes": 12050
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-stacked-mono-dark.pdf",
+      "sha256": "a8ac7fb16b4c2691cce445272cbbcfafc52445d0ffa2af340c2cc5b80212b578",
+      "bytes": 5885
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-stacked-primary.pdf",
+      "sha256": "a5a8c0bf1edd5814135a07c38a73e4e02ed94c05d74ef97011847b4c7b7e8dff",
+      "bytes": 30812
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-symbol-inverse.pdf",
+      "sha256": "1198b1d4807fca4c12ac58a7195ae305d4b15b91e966e7a9041f3dc32c3fa17b",
+      "bytes": 7179
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-symbol-mono-dark.pdf",
+      "sha256": "69babd7a22af926ecfec45bad8ba9a5fc4dd7b8dea0752e2fa24d8e5c3d6876d",
+      "bytes": 1449
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-symbol-primary.pdf",
+      "sha256": "69eb4530523faf20497dccfd35f51dc4763c2be6380fb0ad4302843d21e155a0",
+      "bytes": 24302
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-wordmark-inverse.pdf",
+      "sha256": "d597f5e8078ccc02178c588e5615ab9cdc1388fa782558bf5ba1b7a3c43107ea",
+      "bytes": 1793
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-wordmark-mono-dark.pdf",
+      "sha256": "a75be6d4c535f04ec50e751058b2a55279ce410e0c3e8d457c59be5a6c797576",
+      "bytes": 1402
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/pdf/hugr-wordmark-primary.pdf",
+      "sha256": "2ab7ab1ce1141c0d88a7d420057d5db8879aaf4310fe361dff0c471b38a56d66",
+      "bytes": 3391
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-flat-1024w.png",
+      "sha256": "0d1a22270d9131f98e3126042ca4464f672fb61b057f7c845b161ffe4731abf5",
+      "bytes": 21149
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-flat-2048w.png",
+      "sha256": "81d11b94ae14f08923f877837c21eb4eaa73f28c70d323f9b984fa78ed5564c4",
+      "bytes": 44794
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-flat-512w.png",
+      "sha256": "68c891af0c798cb5ad17acd5a34fb2492830c5cd75e9cbc7428a92663159e3ea",
+      "bytes": 10060
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-inverse-1024w.png",
+      "sha256": "4de0d92256c75d9fad9b63d1d270f3c5727e267295f579ceabe11f2792ccee9b",
+      "bytes": 33927
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-inverse-2048w.png",
+      "sha256": "4ac9e3f9651c767367b59baff32526a7092e8d18699cbe7fe9f83696640b388e",
+      "bytes": 81475
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-inverse-512w.png",
+      "sha256": "ee3647eb7728cbab9e6c7ebc7eb705a0cfb74562dc928dee7fb4ec9e0a12313d",
+      "bytes": 14226
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-mono-dark-1024w.png",
+      "sha256": "36b31b788f689e69981d34005c79583492ab78a5ed43deb29fb0510c26d6296d",
+      "bytes": 15760
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-mono-dark-2048w.png",
+      "sha256": "bd2bc23bf07aaa711cbd5d171a57449014816e1400e0796429a81fdd65761385",
+      "bytes": 33934
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-mono-dark-512w.png",
+      "sha256": "8bb686464b2fb01a5bfcbf7a5c642f97fed8f73d1c6247f46996ea235dd9d212",
+      "bytes": 7647
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-mono-white-1024w.png",
+      "sha256": "fa601a658d6b437ca0ab910f586c172ff144d5683f08416ec9993107709c2e16",
+      "bytes": 12431
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-mono-white-2048w.png",
+      "sha256": "e48662da037794aed2bf5f21cc5f4faf09a3c48db2328da271c19d595e04bcc6",
+      "bytes": 27167
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-mono-white-512w.png",
+      "sha256": "c70b1f4fd2f2e696dcbaf382c259363c2a992800c01b3c1b9e5e1b3d8e9cd841",
+      "bytes": 5818
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-primary-1024w.png",
+      "sha256": "d198c57e5e6327a1c3932f43f9367f36a6476f251cb96adc1d7941ced506732c",
+      "bytes": 44351
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-primary-2048w.png",
+      "sha256": "c1115482a2a4d19c8681a51bd2bfd1a15e8853d91399a2069d6124b460f48a4a",
+      "bytes": 113071
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-compact-primary-512w.png",
+      "sha256": "b20b326b3ca5b48f72fb481e2deb8cf78a6c5e861cafd203a5523e24840f3e46",
+      "bytes": 17592
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-flat-1024w.png",
+      "sha256": "fea4720de511834098b85297f448d56f6b47b53f3ce140462540e55628697bb1",
+      "bytes": 33406
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-flat-2048w.png",
+      "sha256": "77df1de02c88938c966ab2d1c4d42e10873c4139b0122c607a867acacb0049b7",
+      "bytes": 69498
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-flat-512w.png",
+      "sha256": "fbce6025c5bbbb90db20995d03c3c39af6487e79dd8e12698c4c8da15f290d23",
+      "bytes": 15819
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-inverse-1024w.png",
+      "sha256": "aa321afe43d2a21df62bd968dbd9e7f77d1680378729687a57711b6a78f24f05",
+      "bytes": 49526
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-inverse-2048w.png",
+      "sha256": "57ef0db07222beb723f232de12a32393aa3df685650d20268563a2f698d8ae10",
+      "bytes": 116449
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-inverse-512w.png",
+      "sha256": "0b64984f95e6475fd13417919f0bd8c771398f5c97e7f345f4f06c92b700887e",
+      "bytes": 21388
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-mono-dark-1024w.png",
+      "sha256": "2f166b9d454298da40d75b5d4247fc9a1a801b2e2e373c604717942ad3e365d8",
+      "bytes": 26741
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-mono-dark-2048w.png",
+      "sha256": "8bd837bab7062385a3874d6500c059c5062c55cec958feb11791deeb8f14a802",
+      "bytes": 56881
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-mono-dark-512w.png",
+      "sha256": "75771379d6415cc9a79eef1e57b155c01ca5d66a1485b45750b784a60b34b634",
+      "bytes": 12789
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-mono-white-1024w.png",
+      "sha256": "e85ee0be50b55bad62e1089a79f275e3d845bd98c36e51969da7b7cc999524ca",
+      "bytes": 20370
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-mono-white-2048w.png",
+      "sha256": "61b7ef6a0658b6ceaea39229a84bf61a671575489fec0da01d9be3c30ae992df",
+      "bytes": 43733
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-mono-white-512w.png",
+      "sha256": "642d91223e6e7a1fd25ca99bd86b06ba6b4213652bc75c0844c6f84e25af074c",
+      "bytes": 9475
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-primary-1024w.png",
+      "sha256": "e1fff5d688a24adceaae39bc1f181e34a991d4ca6c349e2ff0c4b9d0ad617654",
+      "bytes": 63790
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-primary-2048w.png",
+      "sha256": "eea2415cfe4cdb6c2a7765eb90f2413f142de10add5858788942163deba67531",
+      "bytes": 158482
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-horizontal-primary-512w.png",
+      "sha256": "21a5d11d7bf05be24155b4f905a1d2b6e6c4c764a85e457e339a67b541800700",
+      "bytes": 25583
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-flat-1024w.png",
+      "sha256": "fe9f547bed785290f66299b90d426cf96f34873e641e79d53493c9f970902f77",
+      "bytes": 56184
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-flat-2048w.png",
+      "sha256": "b4684ecbb27a2312cce3655a6b8ada2192683118a1f6848e96a26ecac144b42b",
+      "bytes": 120237
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-flat-512w.png",
+      "sha256": "466039a64fa08665e6b40427617cea9b3840049a969e7f0aceb500c5e62a435b",
+      "bytes": 26217
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-inverse-1024w.png",
+      "sha256": "fa83c85bbb597d5a3d5a0bb1b0588479343544de3b534327d554c2633f1fb958",
+      "bytes": 126538
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-inverse-2048w.png",
+      "sha256": "fc1ef77de754bc79e48d4d22737faf741000bcf0b2d11d90298f14267c31c18a",
+      "bytes": 314988
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-inverse-512w.png",
+      "sha256": "1012006a67a23142eabe197f83cb698756011d4efa90f2871cb00d08c0b2db17",
+      "bytes": 48825
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-mono-dark-1024w.png",
+      "sha256": "137e4feaa70659e8c95339a8f8bdb2bd2c0b5d46d03f6edd79e2c03caffa39a5",
+      "bytes": 38201
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-mono-dark-2048w.png",
+      "sha256": "84a3fb477761d80d2f19209bfba2762a256caac7ca4a0f2aab15bbac58e67a4d",
+      "bytes": 84558
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-mono-dark-512w.png",
+      "sha256": "1bebeb41a3ad3884453d8528a41df14c1c479f93dd3cdc60424e8d3884da7171",
+      "bytes": 17821
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-mono-white-1024w.png",
+      "sha256": "5866eade8077223cf147137b895ad78211b4c6cb9f5efd200852eedff28359fc",
+      "bytes": 30904
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-mono-white-2048w.png",
+      "sha256": "5b11cb874eb78bf9c07a551279b82407b408cb2fe79071bbe904f9b2daae4fdf",
+      "bytes": 69926
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-mono-white-512w.png",
+      "sha256": "8e83a7151eba8e17a270fd8749dd1cb5f57bbb8b25902d09cee32f52c1cf1a34",
+      "bytes": 14034
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-primary-1024w.png",
+      "sha256": "061227b4a744acb03a96e0db97bab9673f171c88cf0197fad715a86f4dbc6383",
+      "bytes": 193854
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-primary-2048w.png",
+      "sha256": "3b8a03dba1678dd9ee4f616a43959b10a4477816fdb5fabd31e7e265b7cbe71d",
+      "bytes": 492859
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-compact-primary-512w.png",
+      "sha256": "4016d8d9cc36c199842ad546cc57703af7c53a070a4da72cf3d90fa32d8b0c81",
+      "bytes": 72755
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-flat-1024w.png",
+      "sha256": "8ca08c8f9008054e88c468fad0fa36b6dc09e708b1e829f49da203862da61ac9",
+      "bytes": 70999
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-flat-2048w.png",
+      "sha256": "bc7663a6b0829febd489a7d7921f866b4baaa4ae9290585ae4ab1a3aa16282bd",
+      "bytes": 150417
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-flat-512w.png",
+      "sha256": "8f852a4b27c989df433bf32ccb9b86541deafe68c98b1022a06da58be768a9d1",
+      "bytes": 33386
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-inverse-1024w.png",
+      "sha256": "f0d08e6722d5c6210d981b5ee1c9d4721674120f8d07629b79a66da6671c0437",
+      "bytes": 141062
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-inverse-2048w.png",
+      "sha256": "75d6e76259239ab7f2b03c929c6a28003d08eb3b36764e5655bfbd77f828a632",
+      "bytes": 344916
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-inverse-512w.png",
+      "sha256": "6848f8cd3c947680d48664784a36343a3941ae0094b8736457da735d6926c46d",
+      "bytes": 55724
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-mono-dark-1024w.png",
+      "sha256": "5b54245476162b1450b3baf5a9d016485c199de5d5c61a89c7a02a46a5404abc",
+      "bytes": 52368
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-mono-dark-2048w.png",
+      "sha256": "ce8c18fe73ec28940ba3c4a6385d167655206ac7e607c63ed66c384ae95337a7",
+      "bytes": 114362
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-mono-dark-512w.png",
+      "sha256": "4d18c5232057c547d56a0464f6e39a01832ac339ef3b651a5f56afb719dcab85",
+      "bytes": 24431
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-mono-white-1024w.png",
+      "sha256": "57e4eb840822fde8612d05540e56fc1074431db4de9e22debb8c37ea213131b2",
+      "bytes": 41110
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-mono-white-2048w.png",
+      "sha256": "8e14045c05464ba3cc7c57c94dce36c91f3fa56d875d95e5e64596417d2b8e0a",
+      "bytes": 92128
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-mono-white-512w.png",
+      "sha256": "a62a75ae8bb0d0ee0fd785859917902548bfbc68534121150a2580c2be32f035",
+      "bytes": 18867
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-primary-1024w.png",
+      "sha256": "e78f90ee9ec5022b895b67cd1a0fb4ffbd8906e43fde30d4075c9772b63b5714",
+      "bytes": 208512
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-primary-2048w.png",
+      "sha256": "924f14e3c5366d527112c283bd6a8bbcbd40b277803c939004b626274fa84f85",
+      "bytes": 523123
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-stacked-primary-512w.png",
+      "sha256": "b8ed6c34e3971b7f170f3ddaec09494db59d9a60a216447d95b2218f99d0c36e",
+      "bytes": 79665
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-flat-1024w.png",
+      "sha256": "a4bf5c76fa6d137743d2e0a1f14d81554a36fff3d111bc74ca7caf4bb51e8844",
+      "bytes": 56422
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-flat-256w.png",
+      "sha256": "08e2ef4236c56d8fa8e186554c7f4b22ac79c0b9cbe97274a2b45b2d186ffc47",
+      "bytes": 12957
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-flat-512w.png",
+      "sha256": "d6472fb85e2ab1c32788920a286d97c567ba129b39a966b6380ff04a11901018",
+      "bytes": 26102
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-inverse-1024w.png",
+      "sha256": "448cb96cf600117967a1f8f0c0a870f1845167907e28cceba81455b902773b38",
+      "bytes": 157435
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-inverse-256w.png",
+      "sha256": "2e558a9122689282421fe18d776554e6fd2ca0bebedfd4c8ea87dff20acc0d7f",
+      "bytes": 25201
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-inverse-512w.png",
+      "sha256": "674483fac1d6888dae7a776e34361c9cb189ac2f76d5bd178de14f21cbef1cda",
+      "bytes": 58225
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-mono-dark-1024w.png",
+      "sha256": "4583d16204d7d933184aeea485b3b325950d941ca038a98d9adc4ebf8e8444f5",
+      "bytes": 34251
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-mono-dark-256w.png",
+      "sha256": "bd78bf8166131df44e5bc4391a706ffa3251ec10bb6800b8a1dbf6c31e0ebb2f",
+      "bytes": 7690
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-mono-dark-512w.png",
+      "sha256": "adf1b5f9f0f8ea0a0fccb1ab7ffaeb782ed551f02b41d53fdd479d3a8a14392c",
+      "bytes": 15601
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-mono-white-1024w.png",
+      "sha256": "2650f2688cef4ea028dd4abe3b78a17bbdc9b855fa8e21665cbf45f43d29f416",
+      "bytes": 28686
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-mono-white-256w.png",
+      "sha256": "00fe1e7de094b53ea29c65ed1f5e364052d4c402c9853a25d83b4bf1d78f516a",
+      "bytes": 6033
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-mono-white-512w.png",
+      "sha256": "6efd5efbe2b313c32af178b40a7c557a36f620c4fefd2c7f602f4a85d087eeb2",
+      "bytes": 12597
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-primary-1024w.png",
+      "sha256": "0b6cb538aad6f62c34e71380b224d6a8943e04f8967a62c4b10e99b072ef971a",
+      "bytes": 261964
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-primary-256w.png",
+      "sha256": "ef1ea77ed5dec166dfffa4a856205d2e0db3357baf7a52cbfda54d3ad952d24c",
+      "bytes": 37053
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-symbol-primary-512w.png",
+      "sha256": "e49be60f032f3a0634d8752c7a8d17e1f22cbcf1e3483960e166d612b6af6e52",
+      "bytes": 96413
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-flat-1024w.png",
+      "sha256": "a975e233372f3438366e16147435a06f91cec0da776acd7b95900dfe967e4d0f",
+      "bytes": 12700
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-flat-2048w.png",
+      "sha256": "9fa645052cdea553204f84a39e813f167e58f25757b6c4c46b3e39d8c7735823",
+      "bytes": 27506
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-flat-512w.png",
+      "sha256": "5e0ab6a2bf0a73d59824546b98fe1d18c3a28650fbe89a6a21e9757993415b74",
+      "bytes": 6212
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-inverse-1024w.png",
+      "sha256": "4a2a79fe351843be4ea573eec781f1c8748663130c7b48eb7b4f476d699d7be7",
+      "bytes": 13535
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-inverse-2048w.png",
+      "sha256": "ee60bb588c0ace8412e07969fc57ce930f1ba3a0fbd5731c0cbef0936a9ac292",
+      "bytes": 28218
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-inverse-512w.png",
+      "sha256": "fe1a1c0777b50fa97bbb44803626ba4c09640dd6f495823ef6b0ee8ebeb774cf",
+      "bytes": 6695
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-mono-dark-1024w.png",
+      "sha256": "7d71399314dfb3626c556d1e6389b76b714504be6cb26c41f5333c1d1e141abd",
+      "bytes": 12547
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-mono-dark-2048w.png",
+      "sha256": "46dab548b737a0d4c8a9d9a9198e9030164f3e4d13df123037765183d4196202",
+      "bytes": 27150
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-mono-dark-512w.png",
+      "sha256": "6707860269bb80e5715fe2eeecc68f34a0d123c8f8271aa54189ca352438bdf3",
+      "bytes": 6129
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-mono-white-1024w.png",
+      "sha256": "cdb72baf746e3d9a23349b0d0bc821c23caa134b2f8513a8266e941e35d5a2a0",
+      "bytes": 9995
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-mono-white-2048w.png",
+      "sha256": "8dd43decc38b46aec56aabba977241641096148ce028e3033a012259a3d78d04",
+      "bytes": 22033
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-mono-white-512w.png",
+      "sha256": "27149834ab148ef7151052de35d8e297a99f7509886d687e8b7a1fa23be19c7f",
+      "bytes": 4779
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-primary-1024w.png",
+      "sha256": "6e9cf2410da32e44fee9c7a32878796cc858b6cd2a5bb5bef5d84aef5bd3c638",
+      "bytes": 14504
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-primary-2048w.png",
+      "sha256": "df3b269dea10981ef5da3cfcda7505dae99b385d313cd01b1202051084174a06",
+      "bytes": 30356
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/png/hugr-wordmark-primary-512w.png",
+      "sha256": "64a8b9c41c4ab0ef7c0d0d2d17060966dc1012a05eeaba2138414bd50f0006c0",
+      "bytes": 7157
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-flat-inverse.svg",
+      "sha256": "9444569864f41858b8af7f81622f36452abd64cf5d15d47fc4eae9d1076f2b21",
+      "bytes": 3056
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-flat.svg",
+      "sha256": "e2113cc47864d89c74bb4dd145b63a733fdff22bd2d60020995ffa399f5119be",
+      "bytes": 3048
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-inverse.svg",
+      "sha256": "c236a1b9b198be20efb76ea1cc10044288036af5783f6a0c84b661437a9a9251",
+      "bytes": 5233
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-mono-current.svg",
+      "sha256": "2426514573755fb8ec4410ed88cb0aaec371f96f84658da73700067e6a7e9e81",
+      "bytes": 1692
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-mono-dark.svg",
+      "sha256": "22f72130cf40d972919d0895f946b708fc8e5c524d0751dd998a7b19741140f5",
+      "bytes": 1674
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-mono-white.svg",
+      "sha256": "5ffc81bb1188e2948c843127d1fb216d6044af710ecd87e3ed80ebe291bd8e1d",
+      "bytes": 1675
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-compact-primary.svg",
+      "sha256": "4efd3719f8f2e0bbfb9604f05f996bc8fdec950d7364bcda6415b4fd2c433810",
+      "bytes": 16731
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-flat-inverse.svg",
+      "sha256": "902b39e1be438abf3ee76fc50ea28a853e39fef6705e9ac4f419bbeed9ff9715",
+      "bytes": 13137
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-flat.svg",
+      "sha256": "1b68f2ed906e334126dfa9245f84f27a00d57fd9209bb41748dc2e7ed8eecd9f",
+      "bytes": 13129
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-inverse.svg",
+      "sha256": "9c57d9ecfb83f46ee38279d5026dc74c49be57a2a4993e9baa7dbc9e1998cdbc",
+      "bytes": 15314
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-mono-current.svg",
+      "sha256": "c0de48add5623945ae8db8df8e8180707691f816b6af6b640dd8fab73e626fda",
+      "bytes": 11778
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-mono-dark.svg",
+      "sha256": "ad55ebff049296a7bf6b32a917a4e0b05bcb633a47ed5dce4ff346f0e4b9888d",
+      "bytes": 11755
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-mono-white.svg",
+      "sha256": "3e8bd1a312918ace0f3eed258190d19e75d3b5811152493c70fa9fd56d88a27f",
+      "bytes": 11756
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-horizontal-primary.svg",
+      "sha256": "453b869a5e5365eedd835490c3fca20770842efdad5923e3972088b13c4fd2f6",
+      "bytes": 26812
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-flat-inverse.svg",
+      "sha256": "571957aab0c814a5e4002b69490d7f20a46c98443cd74a633910850488de1c9f",
+      "bytes": 2977
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-flat.svg",
+      "sha256": "bf726ab7aff24a08e263103caedd3b6f4875568db3c9100ca0be60f6d9c9300c",
+      "bytes": 2969
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-inverse.svg",
+      "sha256": "bcb2a3ab2738cfd8f56296adf097fb90eae22d717052593b72342d6906a9934c",
+      "bytes": 5154
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-mono-current.svg",
+      "sha256": "c16451ae00358da377bf408dd84e178a5edfda56289e85b5a71e3952a3f849d4",
+      "bytes": 1613
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-mono-dark.svg",
+      "sha256": "a4ca66479c9848da7b215c00648ad33dfa601e00e9aa77bb46037080e096562f",
+      "bytes": 1595
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-mono-white.svg",
+      "sha256": "e6904d9d708fb9c6d1c7dc55e4b9e5764baebc07ece60e172d08a4570685276f",
+      "bytes": 1596
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-compact-primary.svg",
+      "sha256": "24669fa0556330cd79935bbb6e01c23dba39eb8b8b35330dd28d367090dc02c9",
+      "bytes": 16652
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-flat-inverse.svg",
+      "sha256": "93216456bf462b6c812dbbbdfd764a07fed0811c3a54fd3a9eafc0dbe51aff80",
+      "bytes": 13061
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-flat.svg",
+      "sha256": "7d7eae5025fa5b458584b87e26b13c942a270b959869a359fb7a5d31ce646364",
+      "bytes": 13053
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-inverse.svg",
+      "sha256": "b468920e063bf3021e0e3cd7a34455af24f2004dac02ab4fcaab4833129cc254",
+      "bytes": 15238
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-mono-current.svg",
+      "sha256": "a5bb383675284aa969ed723e9cc735afa28f83a97afb63e3c6c125ac1c1658ac",
+      "bytes": 11702
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-mono-dark.svg",
+      "sha256": "82b385bda859ea81da215a73a8ff8eb31b15a5cc50a1598ccbcaa8e477192ec8",
+      "bytes": 11679
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-mono-white.svg",
+      "sha256": "e7a75f59a8bfcd6f72c95de7f3c3fabd9fc15bba89d3c6daca943095073fc443",
+      "bytes": 11680
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-stacked-primary.svg",
+      "sha256": "9485d485b0ab79e310ab2726546ae30db89a5e08e4f495de425107fb0fb24374",
+      "bytes": 26736
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-flat-inverse.svg",
+      "sha256": "e7cd1cb019fd383b9e9f98a9e645aa3f30e9d1c80a1306d82cd6bf8a6f6baa70",
+      "bytes": 2348
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-flat.svg",
+      "sha256": "03b78d6f4354f3366cf0e76089f0b2b8b4b9f8e384353eb7bae4f3195027545a",
+      "bytes": 2340
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-inverse.svg",
+      "sha256": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca",
+      "bytes": 4317
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-mono-current.svg",
+      "sha256": "ee2808e5d101202e3f9c93a867810023a9e64c429e34cb26199561e5603ccf02",
+      "bytes": 974
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-mono-dark.svg",
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577",
+      "bytes": 966
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-mono-white.svg",
+      "sha256": "e58ce5ec87da42b18f53c80f5bfc21d5ef7e0bf53b47a331c04490400a5f34c8",
+      "bytes": 967
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-symbol-primary.svg",
+      "sha256": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1",
+      "bytes": 15295
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-flat-inverse.svg",
+      "sha256": "5b1a93327e0e74dea3d9b399f4496ec200145b6f6ec5fb6034b4949962b079cc",
+      "bytes": 1024
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-flat.svg",
+      "sha256": "33d93e0a86b348c681bd29eb924c38cd39ee97f1ded6bbaa5e5b6e2d084b4a2f",
+      "bytes": 1016
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-inverse.svg",
+      "sha256": "8074340fdce7d2a92868845849a9c53d4a34553c23e8160c06496343f88d9463",
+      "bytes": 1240
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-mono-current.svg",
+      "sha256": "b74c88e33dd8a0b48bc9d152dbd37ba2f7cdb32a1ea705a1195387d782b084b2",
+      "bytes": 1034
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-mono-dark.svg",
+      "sha256": "31fa78a74d604610287ea5c8fd6622443329ae0b55112363c42a50f268788310",
+      "bytes": 1021
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-mono-white.svg",
+      "sha256": "dd8c8a6bc0e20ff6dfd4efdd08a19506a9fbf580b2a826b75aafda322bbfefcd",
+      "bytes": 1022
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/svg/hugr-wordmark-primary.svg",
+      "sha256": "7bc41d2517fcc31a821328e9a3e02a645d515e6100364bd2ae9410e3dbc27008",
+      "bytes": 1760
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-compact-inverse-1024w.webp",
+      "sha256": "18d239d01d04c7cb70d7f671e18dfdd56a5c4fd58721fdace10a3bd316f08914",
+      "bytes": 19046
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-compact-inverse-512w.webp",
+      "sha256": "086249fd5abcf135d337722d0b3d470ef78e6be510f74ef2d718b0a201287428",
+      "bytes": 9220
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-compact-primary-1024w.webp",
+      "sha256": "b1253b1f096a5ada83b91e349a44b6dfa38ee3bb02199acb8614566fc407ebc1",
+      "bytes": 26768
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-compact-primary-512w.webp",
+      "sha256": "66e282ce2adae350332dbef75019ad4ad98a5e5beecadbd22f102e5c061cf885",
+      "bytes": 11828
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-inverse-1024w.webp",
+      "sha256": "a156495c235377505e799e69bd13818bfbc32eeaffb5e66503c4b179c2e1faef",
+      "bytes": 28724
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-inverse-512w.webp",
+      "sha256": "ca5f7d2b144003fb56ded3103fa3cb34f1878260b3122f9be4c718b375230218",
+      "bytes": 14094
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-primary-1024w.webp",
+      "sha256": "98ddd86d617e9521363cc2135c8e8f4f01d5cc5b73e848a78b5e957ba562aae2",
+      "bytes": 38914
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-horizontal-primary-512w.webp",
+      "sha256": "c3fa2d13d7331fbf8905389bf3ab7e79118f5366cfdbfdabdb115bf83506b5f9",
+      "bytes": 17736
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-compact-inverse-1024w.webp",
+      "sha256": "1a4addba63d8e899b71358df7ea643c2fa376ba247fef63aec876311c1043a56",
+      "bytes": 55876
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-compact-inverse-512w.webp",
+      "sha256": "7ce399ad0b75ee943e8b3581ea9241a3ef0a47d3196e5b6e66c8d8c9307851db",
+      "bytes": 26708
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-compact-primary-1024w.webp",
+      "sha256": "d4ef586d28e4ef93cdf4b4fdbe5fde538a5cae63fce076db48f8041df91e9538",
+      "bytes": 96606
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-compact-primary-512w.webp",
+      "sha256": "a1c4c5af23c7980c020eb5af3a4927ed6a9756bb3bb8bf3fa160361f9170e473",
+      "bytes": 44792
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-inverse-1024w.webp",
+      "sha256": "cbac3ad5212265b152c12c19930ef9cc8c74f37f758e4fa6641b521be89bc23b",
+      "bytes": 66186
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-inverse-512w.webp",
+      "sha256": "9dcdbf5d4ab7c66f2512b04789e014bf8591a3feeabacc5625a31ae5e60b1db1",
+      "bytes": 30794
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-primary-1024w.webp",
+      "sha256": "91181744f636c7be71aacd0d2c8d82e3e33c46da6705b1f22949b0bf1341f226",
+      "bytes": 106572
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-stacked-primary-512w.webp",
+      "sha256": "ad752ef1353048ab79b4ab1853fbceb9a0e3e29c98b3231a8e66851c73fcea5d",
+      "bytes": 49560
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-symbol-inverse-1024w.webp",
+      "sha256": "fdb758da2dd0a68e91a3659681f2323241a6e55704a5866aa1e6f03b2524a98b",
+      "bytes": 62894
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-symbol-inverse-512w.webp",
+      "sha256": "80dd9e20fce0a5b4a38c5627d3177a8e48250fde9dc6840aa31f5b3b64932ccb",
+      "bytes": 30468
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-symbol-primary-1024w.webp",
+      "sha256": "ad3d320be0c31ab989d6b9587ff8bd06b5475b5635f637d2272a607edf5e61db",
+      "bytes": 122978
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-symbol-primary-512w.webp",
+      "sha256": "629d20bf720224b9f59e12846b9a4f68caa7039350793bf9c80085bc528e1aad",
+      "bytes": 58606
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-wordmark-inverse-1024w.webp",
+      "sha256": "d90c7e00cc8318779718c36172be6c8e4de070aa8c23f931a8af8ce9676a995b",
+      "bytes": 7294
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-wordmark-inverse-512w.webp",
+      "sha256": "da5316d70c595ef7268e0266fc8521e17a29f481584eb8e965dfc2e21fcb6eb9",
+      "bytes": 4262
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-wordmark-primary-1024w.webp",
+      "sha256": "89db486cecd9489c4be5e5100dc632f5f4a4150181b85ce072b50dfe1d8c99bb",
+      "bytes": 8208
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/01-logos/webp/hugr-wordmark-primary-512w.webp",
+      "sha256": "5dfb82a2145e6188740b0472d87e435ec3420d06347545f9aaa0b528c443669a",
+      "bytes": 4672
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/android-chrome-192x192.png",
+      "sha256": "9d87ea47f2928159db2a05cbcb6e2f8cf23cf7365504a9156e51d681c460d840",
+      "bytes": 16976
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/android-chrome-512x512.png",
+      "sha256": "5b1a8dabb7a3d5473716ee2c5c2d12e5301f74a4d188dbd223df1b52f28c0fd8",
+      "bytes": 68938
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/app-icon-1024.png",
+      "sha256": "75bfcbcffa503ce5f1c99047fca6629d89e3b4a804a5864f4860de8604a5a66b",
+      "bytes": 193595
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/app-icon-dark-1024.png",
+      "sha256": "d03c6a09afd59d1b1c7ace5542fbc9618e8c3d28c67740f741a310664aa5a313",
+      "bytes": 125691
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/app-icon-dark.svg",
+      "sha256": "0e72db2875c860fc52f88b8c61edf63f9a3ddd542c87700547b352991cc6229b",
+      "bytes": 4349
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/app-icon.icns",
+      "sha256": "89fc42a78f55e70550ab8e270e1a49cf20747d4f081b381e2c51a1caf429dc3a",
+      "bytes": 425952
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/apple-touch-icon.png",
+      "sha256": "ff21578c7a5241bb50e4f499b871e26398780f4f6893dbefed2df07e77aa8861",
+      "bytes": 15527
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-128x128.png",
+      "sha256": "286d9d61c092ae8d80d62bf93171a44961045d8ec79ee4cecb70ba9cd8c7cd55",
+      "bytes": 5349
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-16x16.png",
+      "sha256": "018ed1ed53d06182b039f2830c0730216a41aead57cb24a43ddcbfe3a1e7d2eb",
+      "bytes": 618
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-24x24.png",
+      "sha256": "c9116ce7deda2d5391126dfd0f7890af9979a3b87a42920e282a5966cc2f1496",
+      "bytes": 931
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-256x256.png",
+      "sha256": "f7a3c01cf50e082b3c3b1201afa2f64aa01cac041ee57849a861562b93e74961",
+      "bytes": 11146
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-32x32.png",
+      "sha256": "4dcc0ac759598ac0385e7e999f7b8a1a2aa5754aefb946d174801072a0791117",
+      "bytes": 1315
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-48x48.png",
+      "sha256": "c3033c360a40aa0bbacd3463893c37b3f0660cc5fb09fc37c10f944e14c226b9",
+      "bytes": 1933
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-64x64.png",
+      "sha256": "8971210cac06d65b97a95649a134e4796c7adeb39e56333abfb37e197cc44b8a",
+      "bytes": 2553
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon-96x96.png",
+      "sha256": "18f8f4961fb1d82d517a504a81d21e9dd298acbf5b9e359d25e11f255ae7ae4c",
+      "bytes": 4005
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon.ico",
+      "sha256": "d2492b1e4c41d69d0943cc2b9c8fddb5caad6a6778277d340c6c99a3ecc43321",
+      "bytes": 33787
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon.svg",
+      "sha256": "7be1f3891bee87a398a26519444ee30ddefaef75ae13d93bfeaacfe02b132f47",
+      "bytes": 2375
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/maskable-192x192.png",
+      "sha256": "57769aae4e5ee226541314b89b0f86ab6bbb4eb2781807f1361e5d58608a3c24",
+      "bytes": 11150
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/maskable-512x512.png",
+      "sha256": "a02d30936ce35b18c299cf4a62ee6495cf2870fc8ba26983e272694524778edf",
+      "bytes": 44453
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/maskable-master.svg",
+      "sha256": "1e93bc7059929c1752e3363699f41c6fadca65f1bc5ad2d5b8c650616d3d9cd3",
+      "bytes": 15329
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/safari-pinned-tab.svg",
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577",
+      "bytes": 966
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/02-icons/site.webmanifest",
+      "sha256": "de8d97b484aec68486f41b315d6234fae2ca4897a447f4dbc40209cafc64b262",
+      "bytes": 763
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/avatar-dark-1024.png",
+      "sha256": "1d376e77998cff705abea1ce507f2f5930085f8360d0798b1b1f39f334d9ebb5",
+      "bytes": 89864
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/avatar-dark.svg",
+      "sha256": "7da019dc51bf86299812b81a841c061efdcf7be6dc64099ab584dad298fd87fc",
+      "bytes": 4349
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/avatar-light-1024.png",
+      "sha256": "03ae4b4748124dfaaa3ab2260e34ea3aec083bfd5e8393d2d99a7c1d916f9015",
+      "bytes": 136707
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/avatar-light.svg",
+      "sha256": "85b3f9b98ea6abf1d4f6579540c7c0bd60d48bb81889a5351ff7251b02298f23",
+      "bytes": 15327
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/brand-card-square.png",
+      "sha256": "1f081ae0fe8a066697fe4e23b78ac329af42ef3867c090bd98e1e6ffc8b6fe23",
+      "bytes": 117216
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/brand-card-square.svg",
+      "sha256": "9160857d705af4a29f4bc7340472d85f33df3b484d53b545929ac2d14502c4b3",
+      "bytes": 27197
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/cover-1500x500.png",
+      "sha256": "c138cbe67a4d32ee382b553864a172a9c40204ba9533ce094ac1b4384892912b",
+      "bytes": 74600
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/cover-1500x500.svg",
+      "sha256": "dc4a44db33be51d3deb1fdc77ce92b0ac2527332b885ddde14ec8d90a5877327",
+      "bytes": 15844
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/cover-wide-dark.png",
+      "sha256": "521bea4e399719a9da514bbd8e75152922a788232f52fa3e1c450b2ac923ac36",
+      "bytes": 62447
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/cover-wide-dark.svg",
+      "sha256": "599147bae96308ef2a7fae2cf2c43938d53760c228310c975c8f8ae6a283e950",
+      "bytes": 15880
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/cover-wide-light.png",
+      "sha256": "863e7eb31028c802d110a11069ab382eeda60e47a4dc289c10a8567801064318",
+      "bytes": 70695
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/cover-wide-light.svg",
+      "sha256": "25647709f081a3dca66f013756fa355a792338acf68ae3be0076203c937c2e22",
+      "bytes": 27378
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/opengraph-dark.png",
+      "sha256": "16cd83ac90ced6ef2030e0c3012a49c4c75ab148badf67cd016b33d111167980",
+      "bytes": 91436
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/opengraph-dark.svg",
+      "sha256": "c238299d4344e6454d6700b39e07b314d02de420ddeaf558f55b666243eb6af5",
+      "bytes": 15847
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/opengraph-light.png",
+      "sha256": "f96beb28a3547c64f8d9172f69f3f530207c01fdc13a628cb8f84b9d0b1e9c15",
+      "bytes": 113547
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/opengraph-light.svg",
+      "sha256": "b1b642051a4aa6fc3739f68e9fee07437160ff7d5f6554aab6259580ea622b47",
+      "bytes": 27345
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/repository-social.png",
+      "sha256": "4ba788ee247212fdbf32cd47c0895c8a568b6ebd78498e1f96d9d1593ab399e2",
+      "bytes": 117480
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/03-social/repository-social.svg",
+      "sha256": "dd4298a6af1a7a93faf24cada9530a39b6dd385123557aaa8619ae8de94218fa",
+      "bytes": 27344
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/04-graphic-elements/background-arcs-dark-1920.png",
+      "sha256": "f01d3bf95c2f2350711f9c93c5948d53236886d13374be645a4865bf1e0aaa93",
+      "bytes": 51953
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/04-graphic-elements/background-arcs-dark.svg",
+      "sha256": "1da9d6f0cf54a20ab069d9ee7d638a2820c08b6f23ef378ac99d99baff6e8b80",
+      "bytes": 791
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/04-graphic-elements/background-arcs-light-1920.png",
+      "sha256": "b35f45742cd3b11975cb6f56ebce3e4b4ae65d373adf724e93c375669bd15629",
+      "bytes": 40664
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/04-graphic-elements/background-arcs-light.svg",
+      "sha256": "2e9b6ce2edf8ff34eecd44a5c4a3181d94be482d0590caf9f63c35da921caf79",
+      "bytes": 791
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/04-graphic-elements/pattern-tile-dark.svg",
+      "sha256": "a31624bd371c7decf9b74286223575ff50c6590d447e371ea3967f734a7ba2d0",
+      "bytes": 475
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/04-graphic-elements/pattern-tile-light.svg",
+      "sha256": "bd56aeebd96623bfe032a4c60cc839df26b5c221986492ef36a667caf228c304",
+      "bytes": 475
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/HuGR-Letterhead-Template.docx",
+      "sha256": "b56f593372db3a6be0201ab1bcd89181f7bf55e8d49b116f7d06d7c32e058f9f",
+      "bytes": 82805
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/HuGR-Presentation-Template.pptx",
+      "sha256": "0c249019b6606f158d22c4d1c8cf132efa97168c978b23cebd6007893bcf45ba",
+      "bytes": 370022
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/TEMPLATES-README.md",
+      "sha256": "204f9373d38a4abcb1879932ed6322597db0de4e1800a2acfdb7581cde9d676e",
+      "bytes": 1361
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/business-card-back.pdf",
+      "sha256": "617303432d8b14e7f0c60ed6ad2129a09d4a31f2a62c420217e0c5420af646b3",
+      "bytes": 13075
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/business-card-back.svg",
+      "sha256": "0d6db2e9960cf1c6d8830d09e8794522434a4531a68eae1294ef62bb4154d393",
+      "bytes": 2559
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/business-card-front.pdf",
+      "sha256": "690bcc5ae3f52df64e6137a3f5f399d704ca47fe62936c211637b65f5a060d2b",
+      "bytes": 30513
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/business-card-front.svg",
+      "sha256": "dcdf293cfe5a1e16d02ab9cfc6ae461d07574dc23ab3a0d35ffc1dee587bac20",
+      "bytes": 27078
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/email-signature-preview.html",
+      "sha256": "ec4b7d8315bef0b4836ff0d84d0d24564d5e5e750cb550e47325da2f14b263c4",
+      "bytes": 889
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/05-templates/make-email-signature.py",
+      "sha256": "562cd0cb97036f110b6ef96ad14b9f9ca4d2ed3f2af4e5b5bbc5790c8938ae93",
+      "bytes": 1932
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/06-tokens/hugr-palette.ase",
+      "sha256": "11fc3d4e389066b6fd30704f97954c91202a831dbc92b1a12db4d3432b835ab3",
+      "bytes": 294
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/06-tokens/hugr-palette.gpl",
+      "sha256": "dcee3bc11b66a822c10d703ddcb101552bd8a303394ff369326c30e39271b970",
+      "bytes": 189
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/06-tokens/hugr.tokens.css",
+      "sha256": "86a76ce51e6fd5dc6e2cd98aefb4f245b2f9d6e3ddceeac88be1b0ed78a2c478",
+      "bytes": 1947
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/06-tokens/hugr.tokens.json",
+      "sha256": "ecce49a8e3a0933791b55c9db057aee070c8a5423940d1418e434ab94c0df755",
+      "bytes": 2284
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/android-chrome-192x192.png",
+      "sha256": "9d87ea47f2928159db2a05cbcb6e2f8cf23cf7365504a9156e51d681c460d840",
+      "bytes": 16976
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/android-chrome-512x512.png",
+      "sha256": "5b1a8dabb7a3d5473716ee2c5c2d12e5301f74a4d188dbd223df1b52f28c0fd8",
+      "bytes": 68938
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/apple-touch-icon.png",
+      "sha256": "ff21578c7a5241bb50e4f499b871e26398780f4f6893dbefed2df07e77aa8861",
+      "bytes": 15527
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/favicon.ico",
+      "sha256": "d2492b1e4c41d69d0943cc2b9c8fddb5caad6a6778277d340c6c99a3ecc43321",
+      "bytes": 33787
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/favicon.svg",
+      "sha256": "7be1f3891bee87a398a26519444ee30ddefaef75ae13d93bfeaacfe02b132f47",
+      "bytes": 2375
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/maskable-192x192.png",
+      "sha256": "57769aae4e5ee226541314b89b0f86ab6bbb4eb2781807f1361e5d58608a3c24",
+      "bytes": 11150
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/maskable-512x512.png",
+      "sha256": "a02d30936ce35b18c299cf4a62ee6495cf2870fc8ba26983e272694524778edf",
+      "bytes": 44453
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/safari-pinned-tab.svg",
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577",
+      "bytes": 966
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/icons/site.webmanifest",
+      "sha256": "de8d97b484aec68486f41b315d6234fae2ca4897a447f4dbc40209cafc64b262",
+      "bytes": 763
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-compact-flat.svg",
+      "sha256": "e2113cc47864d89c74bb4dd145b63a733fdff22bd2d60020995ffa399f5119be",
+      "bytes": 3048
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-compact-inverse.svg",
+      "sha256": "c236a1b9b198be20efb76ea1cc10044288036af5783f6a0c84b661437a9a9251",
+      "bytes": 5233
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-compact-mono-dark.svg",
+      "sha256": "22f72130cf40d972919d0895f946b708fc8e5c524d0751dd998a7b19741140f5",
+      "bytes": 1674
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-compact-mono-white.svg",
+      "sha256": "5ffc81bb1188e2948c843127d1fb216d6044af710ecd87e3ed80ebe291bd8e1d",
+      "bytes": 1675
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-compact-primary.svg",
+      "sha256": "4efd3719f8f2e0bbfb9604f05f996bc8fdec950d7364bcda6415b4fd2c433810",
+      "bytes": 16731
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-flat.svg",
+      "sha256": "1b68f2ed906e334126dfa9245f84f27a00d57fd9209bb41748dc2e7ed8eecd9f",
+      "bytes": 13129
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-inverse.svg",
+      "sha256": "9c57d9ecfb83f46ee38279d5026dc74c49be57a2a4993e9baa7dbc9e1998cdbc",
+      "bytes": 15314
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-mono-dark.svg",
+      "sha256": "ad55ebff049296a7bf6b32a917a4e0b05bcb633a47ed5dce4ff346f0e4b9888d",
+      "bytes": 11755
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-mono-white.svg",
+      "sha256": "3e8bd1a312918ace0f3eed258190d19e75d3b5811152493c70fa9fd56d88a27f",
+      "bytes": 11756
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-horizontal-primary.svg",
+      "sha256": "453b869a5e5365eedd835490c3fca20770842efdad5923e3972088b13c4fd2f6",
+      "bytes": 26812
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-stacked-flat.svg",
+      "sha256": "7d7eae5025fa5b458584b87e26b13c942a270b959869a359fb7a5d31ce646364",
+      "bytes": 13053
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-stacked-inverse.svg",
+      "sha256": "b468920e063bf3021e0e3cd7a34455af24f2004dac02ab4fcaab4833129cc254",
+      "bytes": 15238
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-stacked-mono-dark.svg",
+      "sha256": "82b385bda859ea81da215a73a8ff8eb31b15a5cc50a1598ccbcaa8e477192ec8",
+      "bytes": 11679
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-stacked-mono-white.svg",
+      "sha256": "e7a75f59a8bfcd6f72c95de7f3c3fabd9fc15bba89d3c6daca943095073fc443",
+      "bytes": 11680
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-stacked-primary.svg",
+      "sha256": "9485d485b0ab79e310ab2726546ae30db89a5e08e4f495de425107fb0fb24374",
+      "bytes": 26736
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-flat.svg",
+      "sha256": "03b78d6f4354f3366cf0e76089f0b2b8b4b9f8e384353eb7bae4f3195027545a",
+      "bytes": 2340
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-inverse.svg",
+      "sha256": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca",
+      "bytes": 4317
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-mono-dark.svg",
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577",
+      "bytes": 966
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-mono-white.svg",
+      "sha256": "e58ce5ec87da42b18f53c80f5bfc21d5ef7e0bf53b47a331c04490400a5f34c8",
+      "bytes": 967
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-primary.svg",
+      "sha256": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1",
+      "bytes": 15295
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-wordmark-flat.svg",
+      "sha256": "33d93e0a86b348c681bd29eb924c38cd39ee97f1ded6bbaa5e5b6e2d084b4a2f",
+      "bytes": 1016
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-wordmark-inverse.svg",
+      "sha256": "8074340fdce7d2a92868845849a9c53d4a34553c23e8160c06496343f88d9463",
+      "bytes": 1240
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-wordmark-mono-dark.svg",
+      "sha256": "31fa78a74d604610287ea5c8fd6622443329ae0b55112363c42a50f268788310",
+      "bytes": 1021
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-wordmark-mono-white.svg",
+      "sha256": "dd8c8a6bc0e20ff6dfd4efdd08a19506a9fbf580b2a826b75aafda322bbfefcd",
+      "bytes": 1022
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-wordmark-primary.svg",
+      "sha256": "7bc41d2517fcc31a821328e9a3e02a645d515e6100364bd2ae9410e3dbc27008",
+      "bytes": 1760
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/opengraph.png",
+      "sha256": "f96beb28a3547c64f8d9172f69f3f530207c01fdc13a628cb8f84b9d0b1e9c15",
+      "bytes": 113547
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/tokens.css",
+      "sha256": "86a76ce51e6fd5dc6e2cd98aefb4f245b2f9d6e3ddceeac88be1b0ed78a2c478",
+      "bytes": 1947
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/components/HuGRLogo.tsx",
+      "sha256": "95c5792aed8fa807bf55a12b610f8afd8b649b391cfd121715ca62466d74dda8",
+      "bytes": 1633
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/demo.html",
+      "sha256": "24fb6d1759057985ac6c3540365188a16ca5f524f95ba2e1f1f691260860012d",
+      "bytes": 3530
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/head.html",
+      "sha256": "664621e7e31aa1209dae666e1821aef4a40f3a606818124e4acdba8129c5f812",
+      "bytes": 779
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/07-web/install-brand.mjs",
+      "sha256": "30c0921ca33c065d7f6bbbe67ac95b683de59975acd0d7be992a459a2099ee4a",
+      "bytes": 1831
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/08-guidelines/HuGR-Brand-Guidelines.pdf",
+      "sha256": "6d0f28c9b9f4a5227db40d486ff33101fbe0f2f9b65ac9518fc3ab8180a55351",
+      "bytes": 2051741
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/08-guidelines/brand-overview.png",
+      "sha256": "c00536ece377660f6baac09ae9167b306d75da5bdfc6f42f5cae8758c59d4aa0",
+      "bytes": 262472
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/08-guidelines/implementation-notes.md",
+      "sha256": "d34d05474f4106ff013779c448a3c6a94b3d55647a58470b7a2cd54e74591db5",
+      "bytes": 2727
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/09-source/geometry.json",
+      "sha256": "3be241d16eb6c988c8c3e00995b4e96d52f4263e6f381208091ab118dd62346a",
+      "bytes": 12339
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/09-source/gradient-definitions.txt",
+      "sha256": "d85cd4c68cd50b83ab11ec667a1effac01ca60358892faa7037f8bd2956aae37",
+      "bytes": 14229
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/09-source/hugr-master-layered.svg",
+      "sha256": "42ebdd9782f8fe53fd2734357c85608c75db3d5e9393d47c1e116b255d4b5031",
+      "bytes": 26722
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/10-quality/QA-REPORT.md",
+      "sha256": "e91cca7742e15c20d917d52b5dff237213a7baef6c2cf9c2c4e59717f43a7c07",
+      "bytes": 4637
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/10-quality/contrast-report.json",
+      "sha256": "a17622bd4e7212ac71eeeb293173a4604b620bc5ff28ae383c1916b0c6b6b0ec",
+      "bytes": 2324
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/10-quality/reference-vs-vector.jpg",
+      "sha256": "f6c23947e2b495fc1b693583010375da8e9a3d658464ab3c30bda5790f0adf64",
+      "bytes": 139250
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/10-quality/validation.json",
+      "sha256": "4f9dae9e9055bf42d2ded0b18fa51f6845b8ff4deb70364842e806f1fe64c672",
+      "bytes": 1373
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/ASSET-MAP.json",
+      "sha256": "eb1397b51bb3875e2047b52ecdb66e5049ede35a9f8fffe13587ac0137f8422b",
+      "bytes": 102677
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/INTEGRATION-RUNBOOK.md",
+      "sha256": "16db2a212ff08beb123fa9e27f9015a14760a93f22f4aeccd727d9bd9f1cc4de",
+      "bytes": 16584
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/PROMPT-NOVA-SESSAO.md",
+      "sha256": "e8dae1f77024b6a4c5aa9764f1dcff9160c33850e1afeb660feed4af29966fce",
+      "bytes": 2966
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/SESSION-STATE.template.md",
+      "sha256": "7bc269bdd187d902d4165d1c322af17f3e814248c490bdf851026b4d3ccf6624",
+      "bytes": 3841
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/STATUS-AND-EVIDENCE.md",
+      "sha256": "c4eabd881e4a63e814b88f4c5d123780bd148f658eb7562511ba87715528c44c",
+      "bytes": 5326
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verification.json",
+      "sha256": "187b20ba87b33b3f12805d60ef2d79e54b11a125c26cd713b1ba657beaf0480a",
+      "bytes": 3503
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py",
+      "sha256": "9890b1bd7ddb5037d40c8028e519302a7cbd4ea20e7f81d70e9400b452a81fd8",
+      "bytes": 9530
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/AGENT-START-HERE.md",
+      "sha256": "7c4d5e4d57e5fc5a41766d461db45228dbc8044d5a80d875f9cca4775a10d53e",
+      "bytes": 5057
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/CHANGELOG.md",
+      "sha256": "7ec055eac96cebf8be9d2c148886358336653aa151b713c7c1d356644a6aaeab",
+      "bytes": 495
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/CHECKSUMS.sha256",
+      "sha256": "75f7149cf4b436ae5762c5a4e972504c89fa51d5ef2c1a3cae5cea3cc5dd7125",
+      "bytes": 31690
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/HANDOFF-CHECKSUMS.sha256",
+      "sha256": "b4315283584272b74550d8f80b3aa321c1b93bd0ccd59537260cf7f5df2060f9",
+      "bytes": 770
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/README.md",
+      "sha256": "a6a2536428d08bf5d110d1aad0b8ff4560a34b07f0b5abd319dfa43eefeb0a00",
+      "bytes": 5025
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/START-HERE.html",
+      "sha256": "4122d1b2f18fa12525e9479d9330577daa03f05dd938cddf501fa3f696913ee5",
+      "bytes": 25488
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/assets.json",
+      "sha256": "85051d3d0f6688975f4c8a0794b8af5f1222a4d95dec7e27ced57222bf8905fa",
+      "bytes": 11684
+    },
+    {
+      "path": "vendor/HuGR-Brand-Kit-v1.0/reference/approved-reference.png",
+      "sha256": "c3814ae0c5ce85145fb937ce8f2d5ddc27d06672fa79ea0d7af273ac3e608745",
+      "bytes": 1144009
+    }
+  ],
+  "product_execution": "NOT_RUN"
+}

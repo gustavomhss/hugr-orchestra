@@ -1,0 +1,616 @@
+{
+  "audit_kind": "counterexamples-to-v3-contract-not-product-results",
+  "generated_at": "2026-09-26T05:33:57.386527+00:00",
+  "package_plan_sha256": "495ed83ce992a4347527cae63fc1c82d3ba798bfaa7c2862c5a47879a394644c",
+  "results": [
+    {
+      "id": "AP01",
+      "title": "Acyclic declared graph, cyclic acceptance obligation",
+      "expected": "Producer task must not require consumer final gates before PASS",
+      "observed": {
+        "plan_errors": [],
+        "criterion_id": "S25-W1-T1-COMPLETENESS_CRITERIA-05",
+        "criterion": "Concluir e provar o passo 5: Passe builds/testes por package, cold-review, performance S23 e visual S24 no SHA integrado; não feche rollout antes desses gates.",
+        "consumer_dependencies": {
+          "S23-W1-T1": [
+            "S02",
+            "S06",
+            "S07",
+            "S08",
+            "S09",
+            "S10",
+            "S11",
+            "S12",
+            "S13",
+            "S14",
+            "S15",
+            "S16",
+            "S17",
+            "S18",
+            "S19-W1",
+            "S20-W1",
+            "S21",
+            "S25-W1-T1"
+          ],
+          "S24-W1-T1": [
+            "S06",
+            "S07",
+            "S08",
+            "S09",
+            "S10",
+            "S11",
+            "S12",
+            "S13",
+            "S14",
+            "S15",
+            "S16",
+            "S18",
+            "S19-W1",
+            "S20-W1",
+            "S21",
+            "S22",
+            "S25-W1-T1"
+          ]
+        }
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP02",
+      "title": "Existing sidebar paths have no authorized writer",
+      "expected": "Reachable UI paths require one owner or an explicit no-change disposition",
+      "observed": {
+        "packages/app/src/pages/layout/inline-editor.tsx": [],
+        "packages/app/src/pages/layout/session-tab-avatar.tsx": [],
+        "packages/app/src/pages/layout/sidebar-items.tsx": [],
+        "packages/app/src/pages/layout/sidebar-project.tsx": [],
+        "packages/app/src/pages/layout/sidebar-shell.tsx": [],
+        "packages/app/src/pages/layout/sidebar-workspace.tsx": []
+      },
+      "counterexample_reproduced": true,
+      "details": {
+        "source": "GitHub directory + layout.tsx imports at source_sha; no execution inferred"
+      }
+    },
+    {
+      "id": "AP03",
+      "title": "--repo validator does not reject unowned tracked UI",
+      "expected": "Fail for unclassified reachable UI",
+      "observed": {
+        "kind": "plan-validation-not-product-tests",
+        "status": "PASS",
+        "nodes": 140,
+        "axiom_groups": 700,
+        "criterion_count": 1898,
+        "surfaces": 68,
+        "reference_verified": true,
+        "errors": [],
+        "scope_overlaps": [],
+        "read_anchor_not_write_owner": [],
+        "repo_scope_expanded": true
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP04",
+      "title": "Invalid write-owner assignment remains PASS",
+      "expected": "Fail or formal read-only classification; never a silent coverage success",
+      "observed": {
+        "kind": "plan-validation-not-product-tests",
+        "status": "PASS",
+        "nodes": 140,
+        "axiom_groups": 700,
+        "criterion_count": 1898,
+        "surfaces": 69,
+        "reference_verified": true,
+        "errors": [],
+        "scope_overlaps": [],
+        "read_anchor_not_write_owner": [
+          {
+            "surface": "UI999",
+            "read_anchor": "packages/app/src/pages/layout/inline-editor.tsx",
+            "owner": "S06"
+          }
+        ],
+        "repo_scope_expanded": true
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP05",
+      "title": "Census remap has no executable feedback path",
+      "expected": "Census output feeds canonical graph and selectors through an authorized update",
+      "observed": {
+        "outputs_not_read_by_tools": [
+          "source-map.json",
+          "surface-map.json",
+          "capabilities.json",
+          "ownership.json"
+        ],
+        "canonical_write_owners": {
+          "specs/orchestra-visual/PLAN.json": [],
+          "specs/orchestra-visual/SURFACES.json": [],
+          "specs/orchestra-visual/tools/validate_plan.py": []
+        }
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP06",
+      "title": "--jobs ignores workers already RUNNING",
+      "expected": "running + selected <= jobs",
+      "observed": {
+        "jobs": 4,
+        "running": [
+          "S06-W1-T1",
+          "S07-W1-T1",
+          "S08-W1-T1"
+        ],
+        "selected": [
+          "I01-W1-T1",
+          "I02-W1-T1",
+          "S09-W1-T1",
+          "S10-W1-T1"
+        ],
+        "total": 7
+      },
+      "counterexample_reproduced": true,
+      "details": {
+        "evidence_validation": "disabled only to isolate scheduling; no product PASS claimed"
+      }
+    },
+    {
+      "id": "AP07",
+      "title": "Task digest omits inherited axioms",
+      "expected": "Change to applicable parent invariant invalidates child evidence",
+      "observed": {
+        "parent_changed": true,
+        "plan_errors": [],
+        "old_digest": "3b57061b3f43ca21c41eabfb2422a8512403bede8a80e549be6f899cfe549234",
+        "new_digest": "3b57061b3f43ca21c41eabfb2422a8512403bede8a80e549be6f899cfe549234"
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP08-PERFORMANCE.md",
+      "title": "Final source freshness omits PERFORMANCE.md",
+      "expected": "Normative contract, fixture or master change invalidates applicable release evidence",
+      "observed": [],
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP08-SPEC.md",
+      "title": "Final source freshness omits SPEC.md",
+      "expected": "Normative contract, fixture or master change invalidates applicable release evidence",
+      "observed": [],
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP08-CONTRACTS.md",
+      "title": "Final source freshness omits CONTRACTS.md",
+      "expected": "Normative contract, fixture or master change invalidates applicable release evidence",
+      "observed": [],
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP08-SURFACES.json",
+      "title": "Final source freshness omits SURFACES.json",
+      "expected": "Normative contract, fixture or master change invalidates applicable release evidence",
+      "observed": [],
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP08-fixture.json",
+      "title": "Final source freshness omits fixture.json",
+      "expected": "Normative contract, fixture or master change invalidates applicable release evidence",
+      "observed": [],
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP08-reference_approved.png",
+      "title": "Final source freshness omits reference/approved.png",
+      "expected": "Normative contract, fixture or master change invalidates applicable release evidence",
+      "observed": [],
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP09",
+      "title": "Actual Git write set is not checked against declared paths",
+      "expected": "Reject undisclosed out-of-owner changes in the verified candidate diff",
+      "observed": {
+        "git_diff": [
+          "packages/core/src/credential.ts"
+        ],
+        "declared_paths": [],
+        "validator_errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP10",
+      "title": "Normal final integration invalidates entire discovery-root program",
+      "expected": "A bounded census refresh should not mandate replay of all already-reviewed tasks",
+      "observed": {
+        "source_errors": [
+          "STALE: relevant source changed since verification: packages/app/src/app.tsx"
+        ],
+        "invalidated_nodes": 140,
+        "invalidated_tasks": 64,
+        "total_nodes": 140
+      },
+      "counterexample_reproduced": true,
+      "details": {
+        "interpretation": "staleness itself is correct; missing distinction discovery record vs invariant invalidates all claims"
+      }
+    },
+    {
+      "id": "AP11",
+      "title": "One stale receipt aborts scheduling globally",
+      "expected": "Return localized STALE with repair-ready task and independent work preserved",
+      "observed": {
+        "status": "FAIL",
+        "errors": [
+          "S01-W1-T1: STALE: relevant source changed since verification: packages/app/src/app.tsx"
+        ],
+        "selected": []
+      },
+      "counterexample_reproduced": true,
+      "details": {
+        "manual_recovery_documented": true,
+        "limitation": "Requires manual progress edits; no automatic recovery boundary"
+      }
+    },
+    {
+      "id": "AP12",
+      "title": "External authority source not in checkout ancestry still releases live task",
+      "expected": "Reject external receipt with source not present in the candidate and no executed proof",
+      "observed": {
+        "status": "PASS",
+        "source_revision_verified": true,
+        "external_head": "cccccccccccccccccccccccccccccccccccccccc",
+        "checkout_ancestors": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "target_blockers": [],
+        "target_deferred": [
+          {
+            "id": "S19-W2-T1",
+            "reason": "parallelism limit"
+          }
+        ],
+        "selected": [
+          {
+            "id": "I01-W1-T1",
+            "title": "Conferir entregas e emitir recibo I01",
+            "write_paths": [
+              "specs/orchestra-visual/evidence/I01/integration.json"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S05-W1-T1",
+            "title": "Implementar marca e paisagem limpas, leves e fiéis",
+            "write_paths": [
+              "packages/app/src/assets/orchestra/**",
+              "packages/desktop/resources/orchestra/**",
+              "packages/ui/src/components/logo.tsx",
+              "specs/orchestra-visual/evidence/S05/**"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S07-W1-T1",
+            "title": "Implementar home, nova sessão, onboarding e erros",
+            "write_paths": [
+              "packages/app/src/pages/home.tsx",
+              "packages/app/src/pages/home/**",
+              "packages/app/src/pages/new-session*",
+              "packages/app/src/pages/error*",
+              "packages/app/src/components/session/session-new-view.tsx",
+              "specs/orchestra-visual/evidence/S07/**"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S09-W1-T1",
+            "title": "Implementar timeline, mensagens e ferramentas sem rerender global",
+            "write_paths": [
+              "packages/app/src/pages/session/timeline/**",
+              "packages/session-ui/src/components/message*",
+              "packages/session-ui/src/components/tool*",
+              "packages/session-ui/src/styles/message*",
+              "packages/session-ui/src/styles/tool*",
+              "packages/session-ui/src/v2/components/message*",
+              "packages/session-ui/src/v2/styles/message*",
+              "packages/session-ui/src/components/markdown*",
+              "packages/session-ui/src/components/session-turn*",
+              "packages/session-ui/src/styles/markdown*",
+              "packages/session-ui/src/styles/session-turn*",
+              "packages/session-ui/src/v2/components/session-turn*",
+              "specs/orchestra-visual/evidence/S09/**"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S10-W1-T1",
+            "title": "Implementar composer, anexos e seleção de execução",
+            "write_paths": [
+              "packages/app/src/components/prompt-input*",
+              "packages/app/src/pages/session/composer/**",
+              "packages/app/src/pages/session/use-composer-commands.tsx",
+              "packages/session-ui/src/v2/components/prompt-input/**",
+              "packages/app/src/components/dialog-subagent-models.tsx",
+              "packages/app/src/components/draft-subagent-models*",
+              "packages/app/src/components/subagent-model-rules*",
+              "specs/orchestra-visual/evidence/S10/**"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S12-W1-T1",
+            "title": "Implementar configurações gerais, teclas e conexões",
+            "write_paths": [
+              "packages/app/src/components/settings-v2/**",
+              "packages/app/src/components/settings-*.tsx",
+              "packages/app/src/components/settings-dialog.tsx",
+              "packages/app/src/components/dialog-settings.tsx",
+              "specs/orchestra-visual/evidence/S12/**"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S13-W1-T1",
+            "title": "Implementar providers, credenciais, modelos e mcp",
+            "write_paths": [
+              "packages/app/src/components/settings-v2/providers.tsx",
+              "packages/app/src/components/settings-v2/models.tsx",
+              "packages/app/src/components/settings-providers.tsx",
+              "packages/app/src/components/settings-models.tsx",
+              "packages/app/src/components/dialog-connect-provider*",
+              "packages/app/src/components/dialog-custom-provider*",
+              "packages/app/src/components/dialog-manage-models.tsx",
+              "packages/app/src/components/dialog-select-model*",
+              "packages/app/src/components/dialog-select-mcp.tsx",
+              "packages/app/src/components/model-tooltip.tsx",
+              "specs/orchestra-visual/evidence/S13/**"
+            ],
+            "resource_locks": []
+          },
+          {
+            "id": "S14-W1-T1",
+            "title": "Implementar command palette, busca, pickers e popovers",
+            "write_paths": [
+              "packages/app/src/components/dialog-command-palette-v2*",
+              "packages/app/src/components/command-palette.ts",
+              "packages/app/src/components/dialog-select-directory*",
+              "packages/app/src/components/dialog-select-file.tsx",
+              "packages/app/src/components/dialog-select-server.tsx",
+              "packages/app/src/components/dialog-edit-project*",
+              "packages/app/src/components/dialog-fork.tsx",
+              "packages/app/src/components/directory-picker.tsx",
+              "packages/app/src/components/prompt-project-selector.tsx",
+              "packages/app/src/components/prompt-workspace-selector.tsx",
+              "packages/app/src/components/status-popover*",
+              "packages/app/src/components/dialog-usage-exceeded.tsx",
+              "packages/app/src/utils/toast*",
+              "specs/orchestra-visual/evidence/S14/**"
+            ],
+            "resource_locks": []
+          }
+        ],
+        "errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP13",
+      "title": "External receipt content is not hashed like normal receipts",
+      "expected": "Changed external proof must invalidate its approval",
+      "observed": {
+        "status": "PASS",
+        "errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP14",
+      "title": "One 1x1 PNG satisfies final visual gate",
+      "expected": "Final release must have required surface/state/viewport coverage, not an arbitrary positive-sized PNG",
+      "observed": {
+        "screenshot_dimensions": [
+          1,
+          1
+        ],
+        "screenshots": [
+          "shot.png"
+        ],
+        "validator_errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP15",
+      "title": "A truncated non-decodable 24-byte PNG passes",
+      "expected": "Reject incomplete image; header only is not a render artifact",
+      "observed": {
+        "bytes": 24,
+        "validator_errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP16",
+      "title": "Overbudget raw timing can coexist with accepted PASS report",
+      "expected": "Numeric evaluator and coverage/sample schema must prevent inconsistent mechanical release",
+      "observed": {
+        "p95": 9999,
+        "samples": 1,
+        "budget": 50,
+        "validator_errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": {
+        "scope": "v3 validator is structural; S02 must implement actual evaluator; not claiming live benchmark was run"
+      }
+    },
+    {
+      "id": "AP17",
+      "title": "Instrumentation review may waive all three evidence categories",
+      "expected": "Instrumentation acceptance needs its own mandatory positive and overbudget machine-evaluation proof",
+      "observed": {
+        "requirements": {
+          "performance": "scoped",
+          "visual": "scoped",
+          "native": "scoped"
+        },
+        "decisions": {
+          "performance": "NOT_APPLICABLE",
+          "visual": "NOT_APPLICABLE",
+          "native": "NOT_APPLICABLE"
+        },
+        "errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP18-None",
+      "title": "required_performance_gates schema/closure can be invalid",
+      "expected": "Reject malformed or missing mandatory final performance gate IDs",
+      "observed": {
+        "value": null,
+        "errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP18-[]",
+      "title": "required_performance_gates schema/closure can be invalid",
+      "expected": "Reject malformed or missing mandatory final performance gate IDs",
+      "observed": {
+        "value": [],
+        "errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP18-['UNKNOWN_GATE']",
+      "title": "required_performance_gates schema/closure can be invalid",
+      "expected": "Reject malformed or missing mandatory final performance gate IDs",
+      "observed": {
+        "value": [
+          "UNKNOWN_GATE"
+        ],
+        "errors": []
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    },
+    {
+      "id": "AP19",
+      "title": "Codegen/registry obligations exceed allowed write sets",
+      "expected": "Every output required by W2 has a recorded writer or explicit delegated integration step",
+      "observed": {
+        "packages/client/src/generated/client.ts": [],
+        "packages/client/src/generated-effect/client.ts": [],
+        "packages/server/src/api.ts": [],
+        "packages/ui/package.json": [],
+        "packages/session-ui/package.json": [],
+        "bun.lock": []
+      },
+      "counterexample_reproduced": true,
+      "details": {
+        "paths": "generated directory prefixes are repository AGENTS documented; individual client.ts names are illustrative test paths, not fetched filenames"
+      }
+    },
+    {
+      "id": "AP20",
+      "title": "Early functional pilot is scheduled after 44 prerequisites",
+      "expected": "An early real application slice is available before widening the UI migration",
+      "observed": {
+        "prerequisite_task_count": 44,
+        "tasks": [
+          "S01-W1-T1",
+          "S01-W1-T2",
+          "S02-W1-T1",
+          "S02-W1-T2",
+          "S03-W1-T1",
+          "S03-W1-T2",
+          "S04-W1-T1",
+          "S04-W1-T2",
+          "S05-W1-T1",
+          "S05-W1-T2",
+          "S06-W1-T1",
+          "S06-W1-T2",
+          "S07-W1-T1",
+          "S07-W1-T2",
+          "S08-W1-T1",
+          "S08-W1-T2",
+          "S09-W1-T1",
+          "S09-W1-T2",
+          "S10-W1-T1",
+          "S10-W1-T2",
+          "S11-W1-T1",
+          "S11-W1-T2",
+          "S12-W1-T1",
+          "S12-W1-T2",
+          "S13-W1-T1",
+          "S13-W1-T2",
+          "S14-W1-T1",
+          "S14-W1-T2",
+          "S15-W1-T1",
+          "S15-W1-T2",
+          "S16-W1-T1",
+          "S16-W1-T2",
+          "S17-W1-T1",
+          "S17-W1-T2",
+          "S18-W1-T1",
+          "S18-W1-T2",
+          "S19-W1-T1",
+          "S19-W1-T2",
+          "S20-W1-T1",
+          "S20-W1-T2",
+          "S21-W1-T1",
+          "S21-W1-T2",
+          "S22-W1-T1",
+          "S22-W1-T2"
+        ],
+        "hotspot_owners": {
+          "packages/app/src/app.tsx": [
+            "S25"
+          ],
+          "packages/app/src/pages/session.tsx": [
+            "S25"
+          ],
+          "packages/app/src/pages/session/session-side-panel.tsx": [
+            "S25"
+          ]
+        }
+      },
+      "counterexample_reproduced": true,
+      "details": null
+    }
+  ],
+  "probe_count": 27,
+  "counterexamples_reproduced": 27,
+  "remote_mutations": 0,
+  "product_tests_run": false
+}

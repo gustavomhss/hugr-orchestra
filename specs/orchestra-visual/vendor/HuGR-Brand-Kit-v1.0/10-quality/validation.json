@@ -1,0 +1,73 @@
+{
+  "svg_count": 89,
+  "master_svg_count": 42,
+  "svg_xml_integrity": true,
+  "logo_png_count": 90,
+  "vector_pdf_count": 18,
+  "ico_sizes": [
+    [
+      16,
+      16
+    ],
+    [
+      24,
+      24
+    ],
+    [
+      32,
+      32
+    ],
+    [
+      48,
+      48
+    ],
+    [
+      64,
+      64
+    ],
+    [
+      128,
+      128
+    ],
+    [
+      256,
+      256
+    ]
+  ],
+  "maskable_max_radius_px": 181.814,
+  "maskable_safe_radius_px": 204.8,
+  "browser": {
+    "engine": "Chromium",
+    "version": "144.0.7559.96",
+    "gallery_all_variants": true,
+    "desktop_width": 1440,
+    "mobile_width": 390,
+    "demo_theme_and_action": true,
+    "javascript_errors": [],
+    "transport": "Local resources inlined as data URIs for browser test because file/http navigation is restricted by the test environment"
+  },
+  "font_binaries": [],
+  "guide_pages": 16,
+  "guide_text_outside_page": [],
+  "errors": [],
+  "installer": {
+    "initial_copy": true,
+    "copied_files": 36,
+    "refuse_overwrite_exit": 2,
+    "explicit_overwrite": true
+  },
+  "typescript": {
+    "syntax_transpile_diagnostics": [],
+    "full_react_typecheck": false
+  },
+  "email_generator": {
+    "executed": true,
+    "html_escaping": true,
+    "live_email_clients_tested": false
+  },
+  "templates": {
+    "docx_rendered_pages": 1,
+    "pptx_rendered_slides": 6,
+    "final_render_review": true
+  }
+}

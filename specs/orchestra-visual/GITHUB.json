@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "repo": "gmhelmold/HuGR-Orchestra",
+  "plan_branch": "visual-migration-plan",
+  "entry_commit": "100d8e4a1745724a08d20b934df9e509dab78676",
+  "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/100d8e4a1745724a08d20b934df9e509dab78676/specs/orchestra-visual/EXECUTE.md",
+  "publication": "39 tickets were created in earlier turns. This revision updated the v4 entrypoint and added a supersession comment on epic #130; full v4 ticket bodies were not synchronized.",
+  "native_relationships_applied_by_this_session": false,
+  "native_relationships_note": "No native relationships applied or exhaustively reaudited by v4. The packaged gh tool computes desired links and must perform fresh preflight/readback before any write.",
+  "issues": {
+    "E1": {
+      "number": 130,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/130",
+      "kind": "epic",
+      "title": "Fundação visual, contratos e orçamentos",
+      "parent": null,
+      "marker": "<!-- orchestra-visual:E1 -->"
+    },
+    "E2": {
+      "number": 131,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/131",
+      "kind": "epic",
+      "title": "Aplicação inteira e cockpit de sessão",
+      "parent": null,
+      "marker": "<!-- orchestra-visual:E2 -->"
+    },
+    "E3": {
+      "number": 132,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/132",
+      "kind": "epic",
+      "title": "Dock, tarefas e capacidades reais",
+      "parent": null,
+      "marker": "<!-- orchestra-visual:E3 -->"
+    },
+    "E4": {
+      "number": 133,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/133",
+      "kind": "epic",
+      "title": "Performance, microacabamento e entrega",
+      "parent": null,
+      "marker": "<!-- orchestra-visual:E4 -->"
+    },
+    "I01": {
+      "number": 134,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/134",
+      "kind": "issue",
+      "title": "Baseline, inventário e contratos executáveis",
+      "parent": "E1",
+      "marker": "<!-- orchestra-visual:I01 -->"
+    },
+    "I02": {
+      "number": 135,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/135",
+      "kind": "issue",
+      "title": "Tema, primitives e assets definitivos",
+      "parent": "E1",
+      "marker": "<!-- orchestra-visual:I02 -->"
+    },
+    "I03": {
+      "number": 136,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/136",
+      "kind": "issue",
+      "title": "Shell, navegação e telas de entrada",
+      "parent": "E2",
+      "marker": "<!-- orchestra-visual:I03 -->"
+    },
+    "I04": {
+      "number": 137,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/137",
+      "kind": "issue",
+      "title": "Conversa, composer e evidências",
+      "parent": "E2",
+      "marker": "<!-- orchestra-visual:I04 -->"
+    },
+    "I05": {
+      "number": 138,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/138",
+      "kind": "issue",
+      "title": "Configurações e superfícies transversais",
+      "parent": "E2",
+      "marker": "<!-- orchestra-visual:I05 -->"
+    },
+    "I06": {
+      "number": 139,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/139",
+      "kind": "issue",
+      "title": "Dock: composição visual e bridge nativa",
+      "parent": "E3",
+      "marker": "<!-- orchestra-visual:I06 -->"
+    },
+    "I07": {
+      "number": 140,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/140",
+      "kind": "issue",
+      "title": "Tasks e atividade: dados incrementais e UI",
+      "parent": "E3",
+      "marker": "<!-- orchestra-visual:I07 -->"
+    },
+    "I08": {
+      "number": 141,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/141",
+      "kind": "issue",
+      "title": "Contexto, governança e Janitor",
+      "parent": "E3",
+      "marker": "<!-- orchestra-visual:I08 -->"
+    },
+    "I09": {
+      "number": 142,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/142",
+      "kind": "issue",
+      "title": "Gates de acessibilidade, performance e acabamento",
+      "parent": "E4",
+      "marker": "<!-- orchestra-visual:I09 -->"
+    },
+    "I10": {
+      "number": 143,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/143",
+      "kind": "issue",
+      "title": "Integração final, ativação e transferência",
+      "parent": "E4",
+      "marker": "<!-- orchestra-visual:I10 -->"
+    },
+    "S01": {
+      "number": 144,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/144",
+      "kind": "subissue",
+      "title": "Censo de superfícies e contratos de capacidade",
+      "parent": "I01",
+      "marker": "<!-- orchestra-visual:S01 -->"
+    },
+    "S02": {
+      "number": 145,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/145",
+      "kind": "subissue",
+      "title": "Fixture, medição e budgets que realmente reprovam",
+      "parent": "I01",
+      "marker": "<!-- orchestra-visual:S02 -->"
+    },
+    "S03": {
+      "number": 146,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/146",
+      "kind": "subissue",
+      "title": "Tema Graphite em V1/V2 e primeiro paint",
+      "parent": "I02",
+      "marker": "<!-- orchestra-visual:S03 -->"
+    },
+    "S04": {
+      "number": 147,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/147",
+      "kind": "subissue",
+      "title": "Primitives, estados e tipografia de toda a UI",
+      "parent": "I02",
+      "marker": "<!-- orchestra-visual:S04 -->"
+    },
+    "S05": {
+      "number": 148,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/148",
+      "kind": "subissue",
+      "title": "Marca e paisagem limpas, leves e fiéis",
+      "parent": "I02",
+      "marker": "<!-- orchestra-visual:S05 -->"
+    },
+    "S06": {
+      "number": 149,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/149",
+      "kind": "subissue",
+      "title": "Shell e navegação da composição aprovada",
+      "parent": "I03",
+      "marker": "<!-- orchestra-visual:S06 -->"
+    },
+    "S07": {
+      "number": 150,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/150",
+      "kind": "subissue",
+      "title": "Home, nova sessão, onboarding e erros",
+      "parent": "I03",
+      "marker": "<!-- orchestra-visual:S07 -->"
+    },
+    "S08": {
+      "number": 151,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/151",
+      "kind": "subissue",
+      "title": "Chrome desktop, startup, updater e plataformas",
+      "parent": "I03",
+      "marker": "<!-- orchestra-visual:S08 -->"
+    },
+    "S09": {
+      "number": 152,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/152",
+      "kind": "subissue",
+      "title": "Timeline, mensagens e ferramentas sem rerender global",
+      "parent": "I04",
+      "marker": "<!-- orchestra-visual:S09 -->"
+    },
+    "S10": {
+      "number": 153,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/153",
+      "kind": "subissue",
+      "title": "Composer, anexos e seleção de execução",
+      "parent": "I04",
+      "marker": "<!-- orchestra-visual:S10 -->"
+    },
+    "S11": {
+      "number": 154,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/154",
+      "kind": "subissue",
+      "title": "Arquivos, diff, terminal e evidência verificável",
+      "parent": "I04",
+      "marker": "<!-- orchestra-visual:S11 -->"
+    },
+    "S12": {
+      "number": 155,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/155",
+      "kind": "subissue",
+      "title": "Configurações gerais, teclas e conexões",
+      "parent": "I05",
+      "marker": "<!-- orchestra-visual:S12 -->"
+    },
+    "S13": {
+      "number": 156,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/156",
+      "kind": "subissue",
+      "title": "Providers, credenciais, modelos e MCP",
+      "parent": "I05",
+      "marker": "<!-- orchestra-visual:S13 -->"
+    },
+    "S14": {
+      "number": 157,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/157",
+      "kind": "subissue",
+      "title": "Command palette, busca, pickers e popovers",
+      "parent": "I05",
+      "marker": "<!-- orchestra-visual:S14 -->"
+    },
+    "S15": {
+      "number": 158,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/158",
+      "kind": "subissue",
+      "title": "Dock visual no rail simultâneo",
+      "parent": "I06",
+      "marker": "<!-- orchestra-visual:S15 -->"
+    },
+    "S16": {
+      "number": 159,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/159",
+      "kind": "subissue",
+      "title": "Bounds, overlays e lifecycle nativo do Dock",
+      "parent": "I06",
+      "marker": "<!-- orchestra-visual:S16 -->"
+    },
+    "S17": {
+      "number": 160,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/160",
+      "kind": "subissue",
+      "title": "Projeção incremental e identidade de Tasks",
+      "parent": "I07",
+      "marker": "<!-- orchestra-visual:S17 -->"
+    },
+    "S18": {
+      "number": 161,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/161",
+      "kind": "subissue",
+      "title": "Tasks resumidas, drill-down e atividade",
+      "parent": "I07",
+      "marker": "<!-- orchestra-visual:S18 -->"
+    },
+    "S19": {
+      "number": 162,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/162",
+      "kind": "subissue",
+      "title": "Contexto, recursos e Own com read boundary explícita",
+      "parent": "I08",
+      "marker": "<!-- orchestra-visual:S19 -->"
+    },
+    "S20": {
+      "number": 163,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/163",
+      "kind": "subissue",
+      "title": "Maestro: status, input e aprovação sem autoridade fictícia",
+      "parent": "I08",
+      "marker": "<!-- orchestra-visual:S20 -->"
+    },
+    "S21": {
+      "number": 164,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/164",
+      "kind": "subissue",
+      "title": "Janitor: widget, pocket e diagnósticos contextualizados",
+      "parent": "I08",
+      "marker": "<!-- orchestra-visual:S21 -->"
+    },
+    "S22": {
+      "number": 165,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/165",
+      "kind": "subissue",
+      "title": "Localização, acessibilidade e matriz de estados",
+      "parent": "I09",
+      "marker": "<!-- orchestra-visual:S22 -->"
+    },
+    "S23": {
+      "number": 166,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/166",
+      "kind": "subissue",
+      "title": "Performance de produto e soak no hardware-alvo",
+      "parent": "I09",
+      "marker": "<!-- orchestra-visual:S23 -->"
+    },
+    "S24": {
+      "number": 167,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/167",
+      "kind": "subissue",
+      "title": "Inspeção visual integral e microacabamento",
+      "parent": "I09",
+      "marker": "<!-- orchestra-visual:S24 -->"
+    },
+    "S25": {
+      "number": 168,
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/issues/168",
+      "kind": "subissue",
+      "title": "Integração, ativação reversível e entrega completa",
+      "parent": "I10",
+      "marker": "<!-- orchestra-visual:S25 -->"
+    }
+  },
+  "sources": [
+    "https://docs.github.com/en/rest/issues/sub-issues",
+    "https://docs.github.com/en/rest/issues/issue-dependencies"
+  ],
+  "api_version": "2026-03-10",
+  "contract_revision": "4.1",
+  "desired_projection_v3": {
+    "parents": 35,
+    "coarse_edges_before_reduction": 118,
+    "dependencies_after_reduction": 55,
+    "fine_grained_only": 56
+  },
+  "review_publication": {
+    "commit": "0eef764981450b57a04d42985d94e033fd49e080",
+    "branch": "visual-migration-plan",
+    "paths": [
+      "specs/orchestra-visual/EXECUTE.md",
+      "specs/orchestra-visual/REVIEW-v3.md",
+      "specs/orchestra-visual/RECEIPTS-v3.md"
+    ],
+    "issue_bodies_updated": [
+      159,
+      160
+    ],
+    "review_comment": {
+      "issue": 130,
+      "id": 5843257599
+    },
+    "full_plan_tools_reference_on_github": false,
+    "full_package_delivery": "Orchestra_Codex_Execution_Plan_v3.zip"
+  },
+  "package_version": "4.1",
+  "v4_published_files": [
+    "specs/orchestra-visual/EXECUTE.md"
+  ],
+  "v4_complete_package_published_to_repo": false,
+  "v4_ticket_bodies_synchronized": false,
+  "v4_epic_comment_id": 5847958589,
+  "v4_local_ticket_projections_verified": 39,
+  "brand_revision_publication": {
+    "version": "4.1",
+    "entry_commit": "100d8e4a1745724a08d20b934df9e509dab78676",
+    "brand_note_commit": "86e02726c239971735fa2025e32418d6c8320004",
+    "paths": [
+      "specs/orchestra-visual/EXECUTE.md",
+      "specs/orchestra-visual/BRAND-INPUT.md"
+    ],
+    "issue_bodies_updated": [
+      148
+    ],
+    "full_plan_and_assets_published": false,
+    "all_39_bodies_synchronized": false,
+    "native_relationships_applied": false
+  }
+}

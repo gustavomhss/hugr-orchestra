@@ -1,0 +1,23 @@
+{
+  "kind": "readiness-not-execution",
+  "status": "PASS",
+  "errors": [],
+  "selected": [
+    {
+      "id": "S01-W1-T1",
+      "title": "Implementar censo de superfícies e contratos de capacidade",
+      "write_paths": [
+        "specs/orchestra-visual/source-map.json",
+        "specs/orchestra-visual/surface-map.json",
+        "specs/orchestra-visual/capabilities.json",
+        "specs/orchestra-visual/ownership.json"
+      ],
+      "resource_locks": []
+    }
+  ],
+  "ready_total": 1,
+  "deferred": [],
+  "completed_tasks": 0,
+  "source_scope_expanded": false,
+  "blocked_count": 63
+}

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/opt/pyvenv/bin/python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tools",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "cwd": "/mnt/data/orchestra-execution-plan-v4.1",
+  "exit_code": 0,
+  "elapsed_seconds": 31.363,
+  "product_test": false
+}

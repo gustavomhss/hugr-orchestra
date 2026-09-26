@@ -1,0 +1,1792 @@
+{
+  "schema_version": 1,
+  "integration_version": "4.1",
+  "repository": "gmhelmold/HuGR-Orchestra",
+  "brand_name": "HuGR",
+  "product_name": "Orchestra",
+  "kit_root": "vendor/HuGR-Brand-Kit-v1.0",
+  "source_archive": {
+    "filename": "HuGR-Brand-Kit-v1.0-Handoff (1).zip",
+    "sha256": "9c75596e259593c7b6e2ac9818c6358f207f7e4f9129fec3b93dbf3042fdd115",
+    "archive_not_repacked_into_source": true
+  },
+  "authorities": {
+    "brand": "Supplied HuGR kit, visual bytes frozen",
+    "layout": "reference/approved.png",
+    "layout_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+    "ui_tokens": "SPEC.md; HuGR theme tokens do not override the Orchestra theme"
+  },
+  "policy": {
+    "preserve_kit_bytes": true,
+    "redraw_brand": false,
+    "optimize_brand_svg": false,
+    "global_theme_replacement": false,
+    "react_runtime_dependency": false,
+    "product_rename": false,
+    "full_kit_in_public": false,
+    "landscape_supplied_by_this_brandkit": false
+  },
+  "required_asset_ids": [
+    "symbol-light",
+    "symbol-dark"
+  ],
+  "assets": [
+    {
+      "id": "symbol-light",
+      "source": "07-web/brand/logos/hugr-symbol-primary.svg",
+      "destination": "packages/app/src/assets/orchestra/hugr/hugr-symbol-primary.svg",
+      "owner": "S05",
+      "role": "HuGR mark on light surface; product name Orchestra remains separate",
+      "required_for_initial_brand_integration": true,
+      "conditions": [],
+      "bytes": 15295,
+      "sha256": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1",
+      "visual_bytes_immutable": true,
+      "viewBox": "0 0 512 512",
+      "gzip_bytes_local_level9": 2301
+    },
+    {
+      "id": "symbol-dark",
+      "source": "07-web/brand/logos/hugr-symbol-inverse.svg",
+      "destination": "packages/app/src/assets/orchestra/hugr/hugr-symbol-inverse.svg",
+      "owner": "S05",
+      "role": "HuGR mark on dark surface; product name Orchestra remains separate",
+      "required_for_initial_brand_integration": true,
+      "conditions": [],
+      "bytes": 4317,
+      "sha256": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca",
+      "visual_bytes_immutable": true,
+      "viewBox": "0 0 512 512",
+      "gzip_bytes_local_level9": 1380
+    },
+    {
+      "id": "corporate-compact-primary",
+      "source": "07-web/brand/logos/hugr-horizontal-compact-primary.svg",
+      "destination": "packages/app/src/assets/orchestra/hugr/hugr-horizontal-compact-primary.svg",
+      "owner": "S05",
+      "role": "Corporate attribution only, not a replacement for the Orchestra product label",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "Existing about/attribution consumer mapped by S01",
+        "Width at least 180 CSS px",
+        "No new page solely to display brand"
+      ],
+      "bytes": 16731,
+      "sha256": "4efd3719f8f2e0bbfb9604f05f996bc8fdec950d7364bcda6415b4fd2c433810",
+      "visual_bytes_immutable": true,
+      "viewBox": "0 0 484 128",
+      "gzip_bytes_local_level9": 2778
+    },
+    {
+      "id": "corporate-compact-inverse",
+      "source": "07-web/brand/logos/hugr-horizontal-compact-inverse.svg",
+      "destination": "packages/app/src/assets/orchestra/hugr/hugr-horizontal-compact-inverse.svg",
+      "owner": "S05",
+      "role": "Corporate attribution only, not a replacement for the Orchestra product label",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "Existing about/attribution consumer mapped by S01",
+        "Width at least 180 CSS px",
+        "No new page solely to display brand"
+      ],
+      "bytes": 5233,
+      "sha256": "c236a1b9b198be20efb76ea1cc10044288036af5783f6a0c84b661437a9a9251",
+      "visual_bytes_immutable": true,
+      "viewBox": "0 0 484 128",
+      "gzip_bytes_local_level9": 1759
+    },
+    {
+      "id": "favicon-svg",
+      "source": "02-icons/favicon.svg",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/favicon.svg",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 2375,
+      "sha256": "7be1f3891bee87a398a26519444ee30ddefaef75ae13d93bfeaacfe02b132f47",
+      "visual_bytes_immutable": true,
+      "viewBox": "0 0 512 512",
+      "gzip_bytes_local_level9": 938
+    },
+    {
+      "id": "favicon-ico",
+      "source": "02-icons/favicon.ico",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/favicon.ico",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 33787,
+      "sha256": "d2492b1e4c41d69d0943cc2b9c8fddb5caad6a6778277d340c6c99a3ecc43321",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "favicon16",
+      "source": "02-icons/favicon-16x16.png",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/favicon-16x16.png",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 618,
+      "sha256": "018ed1ed53d06182b039f2830c0730216a41aead57cb24a43ddcbfe3a1e7d2eb",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "apple-touch",
+      "source": "02-icons/apple-touch-icon.png",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/apple-touch-icon.png",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 15527,
+      "sha256": "ff21578c7a5241bb50e4f499b871e26398780f4f6893dbefed2df07e77aa8861",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "pwa192",
+      "source": "02-icons/android-chrome-192x192.png",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/android-chrome-192x192.png",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 16976,
+      "sha256": "9d87ea47f2928159db2a05cbcb6e2f8cf23cf7365504a9156e51d681c460d840",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "pwa512",
+      "source": "02-icons/android-chrome-512x512.png",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/android-chrome-512x512.png",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 68938,
+      "sha256": "5b1a8dabb7a3d5473716ee2c5c2d12e5301f74a4d188dbd223df1b52f28c0fd8",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "mask192",
+      "source": "02-icons/maskable-192x192.png",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/maskable-192x192.png",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 11150,
+      "sha256": "57769aae4e5ee226541314b89b0f86ab6bbb4eb2781807f1361e5d58608a3c24",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "mask512",
+      "source": "02-icons/maskable-512x512.png",
+      "destination": "packages/app/src/assets/orchestra/hugr/icons/maskable-512x512.png",
+      "owner": "S05",
+      "role": "Conditional small-size or installed-app asset; head/manifest wiring is not performed by copying",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S01 confirms an existing consumer and build/public URL mechanism",
+        "S25 owns app/head wiring; do not change manifest/app identity",
+        "Record actual destination if packaging requires another path"
+      ],
+      "bytes": 44453,
+      "sha256": "a02d30936ce35b18c299cf4a62ee6495cf2870fc8ba26983e272694524778edf",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "native-icns",
+      "source": "02-icons/app-icon.icns",
+      "destination": "packages/desktop/resources/orchestra/app-icon.icns",
+      "owner": "S05",
+      "role": "Conditional macOS packaging input, not proof of native installation",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S08/S25 map existing packaging configuration",
+        "Do not change appId/bundleId/update channel/signing",
+        "Native installation validation required before claiming ready"
+      ],
+      "bytes": 425952,
+      "sha256": "89fc42a78f55e70550ab8e270e1a49cf20747d4f081b381e2c51a1caf429dc3a",
+      "visual_bytes_immutable": true
+    },
+    {
+      "id": "native-png",
+      "source": "02-icons/app-icon-1024.png",
+      "destination": "packages/desktop/resources/orchestra/app-icon-1024.png",
+      "owner": "S05",
+      "role": "Conditional native packaging input, not a startup illustration",
+      "required_for_initial_brand_integration": false,
+      "conditions": [
+        "S08/S25 map existing packaging requirements",
+        "Use exact supplied representation, no new icon design",
+        "Report installer weight separately from first-view network transfer"
+      ],
+      "bytes": 193595,
+      "sha256": "75bfcbcffa503ce5f1c99047fca6629d89e3b4a804a5864f4860de8604a5a66b",
+      "visual_bytes_immutable": true
+    }
+  ],
+  "kit_file_count": 304,
+  "original_asset_file_count": 295,
+  "kit_files": [
+    {
+      "path": "01-logos/eps/hugr-horizontal-compact-mono-dark.eps",
+      "bytes": 4889,
+      "sha256": "887fbd31c48e91f787bafa6aca019a0bac1b13d60710414fa49cd5ff401cebb4"
+    },
+    {
+      "path": "01-logos/eps/hugr-horizontal-mono-dark.eps",
+      "bytes": 15374,
+      "sha256": "2832e17f6e587239a9502a7cb840b9ab1c3c9b99404d7765859597eef45c9cfc"
+    },
+    {
+      "path": "01-logos/eps/hugr-stacked-compact-mono-dark.eps",
+      "bytes": 4957,
+      "sha256": "e7a4d40e3adf6a7168dd649b7d88e974f1198c15eecba5af1dc34cc764558aa0"
+    },
+    {
+      "path": "01-logos/eps/hugr-stacked-mono-dark.eps",
+      "bytes": 15241,
+      "sha256": "0c3f5c8ab9525b638549fa03a6ab5683a022cd7a0b218541a66394a021053ffb"
+    },
+    {
+      "path": "01-logos/eps/hugr-symbol-mono-dark.eps",
+      "bytes": 3631,
+      "sha256": "b21a7e6f0dbfed98f14aa6f076637a1e9c86156bef88b384b8c38fe3b22910dd"
+    },
+    {
+      "path": "01-logos/eps/hugr-wordmark-mono-dark.eps",
+      "bytes": 3670,
+      "sha256": "a1111f4662b9b62df96ba71700f3c78ec9b2f9d774b5aaf8dc343d9cdfb1701c"
+    },
+    {
+      "path": "01-logos/pdf/hugr-horizontal-compact-inverse.pdf",
+      "bytes": 8077,
+      "sha256": "bceb172456a901a71987ea0fd2393ed00662398ef258ab72c19663a9dc63c654"
+    },
+    {
+      "path": "01-logos/pdf/hugr-horizontal-compact-mono-dark.pdf",
+      "bytes": 1871,
+      "sha256": "3b487d4a1ea665f7334338fa1cf40fe20bcac44afe1ea13f9aacffcf92f60b60"
+    },
+    {
+      "path": "01-logos/pdf/hugr-horizontal-compact-primary.pdf",
+      "bytes": 26840,
+      "sha256": "083adc35daaf24a7acddf9876653b4f9a13cf344cc340e6000c8b50f6a5fd661"
+    },
+    {
+      "path": "01-logos/pdf/hugr-horizontal-inverse.pdf",
+      "bytes": 12240,
+      "sha256": "9ed69ec7df87dd2b9fee06d027d4a175fd06902348cda6d23072a8f957b6f30e"
+    },
+    {
+      "path": "01-logos/pdf/hugr-horizontal-mono-dark.pdf",
+      "bytes": 5998,
+      "sha256": "2112bdf109117c1517ae342d46528d98540e2d4c0fc5202e73c01cc386afe905"
+    },
+    {
+      "path": "01-logos/pdf/hugr-horizontal-primary.pdf",
+      "bytes": 31025,
+      "sha256": "916431475794516f6aa12046457aac66a030989ca9d60b880cf269f667e40020"
+    },
+    {
+      "path": "01-logos/pdf/hugr-stacked-compact-inverse.pdf",
+      "bytes": 7978,
+      "sha256": "b66f5547949bbeef97b6829d7aac4fc8b9024ac54165e0de82fad332de56a282"
+    },
+    {
+      "path": "01-logos/pdf/hugr-stacked-compact-mono-dark.pdf",
+      "bytes": 1837,
+      "sha256": "f72ab7658249b293cae74b40f71268102399201bbb5004f42ed51d385c4ea51c"
+    },
+    {
+      "path": "01-logos/pdf/hugr-stacked-compact-primary.pdf",
+      "bytes": 26717,
+      "sha256": "870f0a3f064b113b6cdf130906c8e9087fed225e18fcd7dce60325fe518bc396"
+    },
+    {
+      "path": "01-logos/pdf/hugr-stacked-inverse.pdf",
+      "bytes": 12050,
+      "sha256": "54d9eccc35b5e1a0270c331d80ba89dde96ebc6b74d891fe74d5eb92c2ddbb5f"
+    },
+    {
+      "path": "01-logos/pdf/hugr-stacked-mono-dark.pdf",
+      "bytes": 5885,
+      "sha256": "a8ac7fb16b4c2691cce445272cbbcfafc52445d0ffa2af340c2cc5b80212b578"
+    },
+    {
+      "path": "01-logos/pdf/hugr-stacked-primary.pdf",
+      "bytes": 30812,
+      "sha256": "a5a8c0bf1edd5814135a07c38a73e4e02ed94c05d74ef97011847b4c7b7e8dff"
+    },
+    {
+      "path": "01-logos/pdf/hugr-symbol-inverse.pdf",
+      "bytes": 7179,
+      "sha256": "1198b1d4807fca4c12ac58a7195ae305d4b15b91e966e7a9041f3dc32c3fa17b"
+    },
+    {
+      "path": "01-logos/pdf/hugr-symbol-mono-dark.pdf",
+      "bytes": 1449,
+      "sha256": "69babd7a22af926ecfec45bad8ba9a5fc4dd7b8dea0752e2fa24d8e5c3d6876d"
+    },
+    {
+      "path": "01-logos/pdf/hugr-symbol-primary.pdf",
+      "bytes": 24302,
+      "sha256": "69eb4530523faf20497dccfd35f51dc4763c2be6380fb0ad4302843d21e155a0"
+    },
+    {
+      "path": "01-logos/pdf/hugr-wordmark-inverse.pdf",
+      "bytes": 1793,
+      "sha256": "d597f5e8078ccc02178c588e5615ab9cdc1388fa782558bf5ba1b7a3c43107ea"
+    },
+    {
+      "path": "01-logos/pdf/hugr-wordmark-mono-dark.pdf",
+      "bytes": 1402,
+      "sha256": "a75be6d4c535f04ec50e751058b2a55279ce410e0c3e8d457c59be5a6c797576"
+    },
+    {
+      "path": "01-logos/pdf/hugr-wordmark-primary.pdf",
+      "bytes": 3391,
+      "sha256": "2ab7ab1ce1141c0d88a7d420057d5db8879aaf4310fe361dff0c471b38a56d66"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-flat-1024w.png",
+      "bytes": 21149,
+      "sha256": "0d1a22270d9131f98e3126042ca4464f672fb61b057f7c845b161ffe4731abf5"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-flat-2048w.png",
+      "bytes": 44794,
+      "sha256": "81d11b94ae14f08923f877837c21eb4eaa73f28c70d323f9b984fa78ed5564c4"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-flat-512w.png",
+      "bytes": 10060,
+      "sha256": "68c891af0c798cb5ad17acd5a34fb2492830c5cd75e9cbc7428a92663159e3ea"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-inverse-1024w.png",
+      "bytes": 33927,
+      "sha256": "4de0d92256c75d9fad9b63d1d270f3c5727e267295f579ceabe11f2792ccee9b"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-inverse-2048w.png",
+      "bytes": 81475,
+      "sha256": "4ac9e3f9651c767367b59baff32526a7092e8d18699cbe7fe9f83696640b388e"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-inverse-512w.png",
+      "bytes": 14226,
+      "sha256": "ee3647eb7728cbab9e6c7ebc7eb705a0cfb74562dc928dee7fb4ec9e0a12313d"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-mono-dark-1024w.png",
+      "bytes": 15760,
+      "sha256": "36b31b788f689e69981d34005c79583492ab78a5ed43deb29fb0510c26d6296d"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-mono-dark-2048w.png",
+      "bytes": 33934,
+      "sha256": "bd2bc23bf07aaa711cbd5d171a57449014816e1400e0796429a81fdd65761385"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-mono-dark-512w.png",
+      "bytes": 7647,
+      "sha256": "8bb686464b2fb01a5bfcbf7a5c642f97fed8f73d1c6247f46996ea235dd9d212"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-mono-white-1024w.png",
+      "bytes": 12431,
+      "sha256": "fa601a658d6b437ca0ab910f586c172ff144d5683f08416ec9993107709c2e16"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-mono-white-2048w.png",
+      "bytes": 27167,
+      "sha256": "e48662da037794aed2bf5f21cc5f4faf09a3c48db2328da271c19d595e04bcc6"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-mono-white-512w.png",
+      "bytes": 5818,
+      "sha256": "c70b1f4fd2f2e696dcbaf382c259363c2a992800c01b3c1b9e5e1b3d8e9cd841"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-primary-1024w.png",
+      "bytes": 44351,
+      "sha256": "d198c57e5e6327a1c3932f43f9367f36a6476f251cb96adc1d7941ced506732c"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-primary-2048w.png",
+      "bytes": 113071,
+      "sha256": "c1115482a2a4d19c8681a51bd2bfd1a15e8853d91399a2069d6124b460f48a4a"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-compact-primary-512w.png",
+      "bytes": 17592,
+      "sha256": "b20b326b3ca5b48f72fb481e2deb8cf78a6c5e861cafd203a5523e24840f3e46"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-flat-1024w.png",
+      "bytes": 33406,
+      "sha256": "fea4720de511834098b85297f448d56f6b47b53f3ce140462540e55628697bb1"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-flat-2048w.png",
+      "bytes": 69498,
+      "sha256": "77df1de02c88938c966ab2d1c4d42e10873c4139b0122c607a867acacb0049b7"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-flat-512w.png",
+      "bytes": 15819,
+      "sha256": "fbce6025c5bbbb90db20995d03c3c39af6487e79dd8e12698c4c8da15f290d23"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-inverse-1024w.png",
+      "bytes": 49526,
+      "sha256": "aa321afe43d2a21df62bd968dbd9e7f77d1680378729687a57711b6a78f24f05"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-inverse-2048w.png",
+      "bytes": 116449,
+      "sha256": "57ef0db07222beb723f232de12a32393aa3df685650d20268563a2f698d8ae10"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-inverse-512w.png",
+      "bytes": 21388,
+      "sha256": "0b64984f95e6475fd13417919f0bd8c771398f5c97e7f345f4f06c92b700887e"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-mono-dark-1024w.png",
+      "bytes": 26741,
+      "sha256": "2f166b9d454298da40d75b5d4247fc9a1a801b2e2e373c604717942ad3e365d8"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-mono-dark-2048w.png",
+      "bytes": 56881,
+      "sha256": "8bd837bab7062385a3874d6500c059c5062c55cec958feb11791deeb8f14a802"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-mono-dark-512w.png",
+      "bytes": 12789,
+      "sha256": "75771379d6415cc9a79eef1e57b155c01ca5d66a1485b45750b784a60b34b634"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-mono-white-1024w.png",
+      "bytes": 20370,
+      "sha256": "e85ee0be50b55bad62e1089a79f275e3d845bd98c36e51969da7b7cc999524ca"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-mono-white-2048w.png",
+      "bytes": 43733,
+      "sha256": "61b7ef6a0658b6ceaea39229a84bf61a671575489fec0da01d9be3c30ae992df"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-mono-white-512w.png",
+      "bytes": 9475,
+      "sha256": "642d91223e6e7a1fd25ca99bd86b06ba6b4213652bc75c0844c6f84e25af074c"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-primary-1024w.png",
+      "bytes": 63790,
+      "sha256": "e1fff5d688a24adceaae39bc1f181e34a991d4ca6c349e2ff0c4b9d0ad617654"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-primary-2048w.png",
+      "bytes": 158482,
+      "sha256": "eea2415cfe4cdb6c2a7765eb90f2413f142de10add5858788942163deba67531"
+    },
+    {
+      "path": "01-logos/png/hugr-horizontal-primary-512w.png",
+      "bytes": 25583,
+      "sha256": "21a5d11d7bf05be24155b4f905a1d2b6e6c4c764a85e457e339a67b541800700"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-flat-1024w.png",
+      "bytes": 56184,
+      "sha256": "fe9f547bed785290f66299b90d426cf96f34873e641e79d53493c9f970902f77"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-flat-2048w.png",
+      "bytes": 120237,
+      "sha256": "b4684ecbb27a2312cce3655a6b8ada2192683118a1f6848e96a26ecac144b42b"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-flat-512w.png",
+      "bytes": 26217,
+      "sha256": "466039a64fa08665e6b40427617cea9b3840049a969e7f0aceb500c5e62a435b"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-inverse-1024w.png",
+      "bytes": 126538,
+      "sha256": "fa83c85bbb597d5a3d5a0bb1b0588479343544de3b534327d554c2633f1fb958"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-inverse-2048w.png",
+      "bytes": 314988,
+      "sha256": "fc1ef77de754bc79e48d4d22737faf741000bcf0b2d11d90298f14267c31c18a"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-inverse-512w.png",
+      "bytes": 48825,
+      "sha256": "1012006a67a23142eabe197f83cb698756011d4efa90f2871cb00d08c0b2db17"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-mono-dark-1024w.png",
+      "bytes": 38201,
+      "sha256": "137e4feaa70659e8c95339a8f8bdb2bd2c0b5d46d03f6edd79e2c03caffa39a5"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-mono-dark-2048w.png",
+      "bytes": 84558,
+      "sha256": "84a3fb477761d80d2f19209bfba2762a256caac7ca4a0f2aab15bbac58e67a4d"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-mono-dark-512w.png",
+      "bytes": 17821,
+      "sha256": "1bebeb41a3ad3884453d8528a41df14c1c479f93dd3cdc60424e8d3884da7171"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-mono-white-1024w.png",
+      "bytes": 30904,
+      "sha256": "5866eade8077223cf147137b895ad78211b4c6cb9f5efd200852eedff28359fc"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-mono-white-2048w.png",
+      "bytes": 69926,
+      "sha256": "5b11cb874eb78bf9c07a551279b82407b408cb2fe79071bbe904f9b2daae4fdf"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-mono-white-512w.png",
+      "bytes": 14034,
+      "sha256": "8e83a7151eba8e17a270fd8749dd1cb5f57bbb8b25902d09cee32f52c1cf1a34"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-primary-1024w.png",
+      "bytes": 193854,
+      "sha256": "061227b4a744acb03a96e0db97bab9673f171c88cf0197fad715a86f4dbc6383"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-primary-2048w.png",
+      "bytes": 492859,
+      "sha256": "3b8a03dba1678dd9ee4f616a43959b10a4477816fdb5fabd31e7e265b7cbe71d"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-compact-primary-512w.png",
+      "bytes": 72755,
+      "sha256": "4016d8d9cc36c199842ad546cc57703af7c53a070a4da72cf3d90fa32d8b0c81"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-flat-1024w.png",
+      "bytes": 70999,
+      "sha256": "8ca08c8f9008054e88c468fad0fa36b6dc09e708b1e829f49da203862da61ac9"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-flat-2048w.png",
+      "bytes": 150417,
+      "sha256": "bc7663a6b0829febd489a7d7921f866b4baaa4ae9290585ae4ab1a3aa16282bd"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-flat-512w.png",
+      "bytes": 33386,
+      "sha256": "8f852a4b27c989df433bf32ccb9b86541deafe68c98b1022a06da58be768a9d1"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-inverse-1024w.png",
+      "bytes": 141062,
+      "sha256": "f0d08e6722d5c6210d981b5ee1c9d4721674120f8d07629b79a66da6671c0437"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-inverse-2048w.png",
+      "bytes": 344916,
+      "sha256": "75d6e76259239ab7f2b03c929c6a28003d08eb3b36764e5655bfbd77f828a632"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-inverse-512w.png",
+      "bytes": 55724,
+      "sha256": "6848f8cd3c947680d48664784a36343a3941ae0094b8736457da735d6926c46d"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-mono-dark-1024w.png",
+      "bytes": 52368,
+      "sha256": "5b54245476162b1450b3baf5a9d016485c199de5d5c61a89c7a02a46a5404abc"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-mono-dark-2048w.png",
+      "bytes": 114362,
+      "sha256": "ce8c18fe73ec28940ba3c4a6385d167655206ac7e607c63ed66c384ae95337a7"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-mono-dark-512w.png",
+      "bytes": 24431,
+      "sha256": "4d18c5232057c547d56a0464f6e39a01832ac339ef3b651a5f56afb719dcab85"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-mono-white-1024w.png",
+      "bytes": 41110,
+      "sha256": "57e4eb840822fde8612d05540e56fc1074431db4de9e22debb8c37ea213131b2"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-mono-white-2048w.png",
+      "bytes": 92128,
+      "sha256": "8e14045c05464ba3cc7c57c94dce36c91f3fa56d875d95e5e64596417d2b8e0a"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-mono-white-512w.png",
+      "bytes": 18867,
+      "sha256": "a62a75ae8bb0d0ee0fd785859917902548bfbc68534121150a2580c2be32f035"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-primary-1024w.png",
+      "bytes": 208512,
+      "sha256": "e78f90ee9ec5022b895b67cd1a0fb4ffbd8906e43fde30d4075c9772b63b5714"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-primary-2048w.png",
+      "bytes": 523123,
+      "sha256": "924f14e3c5366d527112c283bd6a8bbcbd40b277803c939004b626274fa84f85"
+    },
+    {
+      "path": "01-logos/png/hugr-stacked-primary-512w.png",
+      "bytes": 79665,
+      "sha256": "b8ed6c34e3971b7f170f3ddaec09494db59d9a60a216447d95b2218f99d0c36e"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-flat-1024w.png",
+      "bytes": 56422,
+      "sha256": "a4bf5c76fa6d137743d2e0a1f14d81554a36fff3d111bc74ca7caf4bb51e8844"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-flat-256w.png",
+      "bytes": 12957,
+      "sha256": "08e2ef4236c56d8fa8e186554c7f4b22ac79c0b9cbe97274a2b45b2d186ffc47"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-flat-512w.png",
+      "bytes": 26102,
+      "sha256": "d6472fb85e2ab1c32788920a286d97c567ba129b39a966b6380ff04a11901018"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-inverse-1024w.png",
+      "bytes": 157435,
+      "sha256": "448cb96cf600117967a1f8f0c0a870f1845167907e28cceba81455b902773b38"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-inverse-256w.png",
+      "bytes": 25201,
+      "sha256": "2e558a9122689282421fe18d776554e6fd2ca0bebedfd4c8ea87dff20acc0d7f"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-inverse-512w.png",
+      "bytes": 58225,
+      "sha256": "674483fac1d6888dae7a776e34361c9cb189ac2f76d5bd178de14f21cbef1cda"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-mono-dark-1024w.png",
+      "bytes": 34251,
+      "sha256": "4583d16204d7d933184aeea485b3b325950d941ca038a98d9adc4ebf8e8444f5"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-mono-dark-256w.png",
+      "bytes": 7690,
+      "sha256": "bd78bf8166131df44e5bc4391a706ffa3251ec10bb6800b8a1dbf6c31e0ebb2f"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-mono-dark-512w.png",
+      "bytes": 15601,
+      "sha256": "adf1b5f9f0f8ea0a0fccb1ab7ffaeb782ed551f02b41d53fdd479d3a8a14392c"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-mono-white-1024w.png",
+      "bytes": 28686,
+      "sha256": "2650f2688cef4ea028dd4abe3b78a17bbdc9b855fa8e21665cbf45f43d29f416"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-mono-white-256w.png",
+      "bytes": 6033,
+      "sha256": "00fe1e7de094b53ea29c65ed1f5e364052d4c402c9853a25d83b4bf1d78f516a"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-mono-white-512w.png",
+      "bytes": 12597,
+      "sha256": "6efd5efbe2b313c32af178b40a7c557a36f620c4fefd2c7f602f4a85d087eeb2"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-primary-1024w.png",
+      "bytes": 261964,
+      "sha256": "0b6cb538aad6f62c34e71380b224d6a8943e04f8967a62c4b10e99b072ef971a"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-primary-256w.png",
+      "bytes": 37053,
+      "sha256": "ef1ea77ed5dec166dfffa4a856205d2e0db3357baf7a52cbfda54d3ad952d24c"
+    },
+    {
+      "path": "01-logos/png/hugr-symbol-primary-512w.png",
+      "bytes": 96413,
+      "sha256": "e49be60f032f3a0634d8752c7a8d17e1f22cbcf1e3483960e166d612b6af6e52"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-flat-1024w.png",
+      "bytes": 12700,
+      "sha256": "a975e233372f3438366e16147435a06f91cec0da776acd7b95900dfe967e4d0f"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-flat-2048w.png",
+      "bytes": 27506,
+      "sha256": "9fa645052cdea553204f84a39e813f167e58f25757b6c4c46b3e39d8c7735823"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-flat-512w.png",
+      "bytes": 6212,
+      "sha256": "5e0ab6a2bf0a73d59824546b98fe1d18c3a28650fbe89a6a21e9757993415b74"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-inverse-1024w.png",
+      "bytes": 13535,
+      "sha256": "4a2a79fe351843be4ea573eec781f1c8748663130c7b48eb7b4f476d699d7be7"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-inverse-2048w.png",
+      "bytes": 28218,
+      "sha256": "ee60bb588c0ace8412e07969fc57ce930f1ba3a0fbd5731c0cbef0936a9ac292"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-inverse-512w.png",
+      "bytes": 6695,
+      "sha256": "fe1a1c0777b50fa97bbb44803626ba4c09640dd6f495823ef6b0ee8ebeb774cf"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-mono-dark-1024w.png",
+      "bytes": 12547,
+      "sha256": "7d71399314dfb3626c556d1e6389b76b714504be6cb26c41f5333c1d1e141abd"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-mono-dark-2048w.png",
+      "bytes": 27150,
+      "sha256": "46dab548b737a0d4c8a9d9a9198e9030164f3e4d13df123037765183d4196202"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-mono-dark-512w.png",
+      "bytes": 6129,
+      "sha256": "6707860269bb80e5715fe2eeecc68f34a0d123c8f8271aa54189ca352438bdf3"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-mono-white-1024w.png",
+      "bytes": 9995,
+      "sha256": "cdb72baf746e3d9a23349b0d0bc821c23caa134b2f8513a8266e941e35d5a2a0"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-mono-white-2048w.png",
+      "bytes": 22033,
+      "sha256": "8dd43decc38b46aec56aabba977241641096148ce028e3033a012259a3d78d04"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-mono-white-512w.png",
+      "bytes": 4779,
+      "sha256": "27149834ab148ef7151052de35d8e297a99f7509886d687e8b7a1fa23be19c7f"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-primary-1024w.png",
+      "bytes": 14504,
+      "sha256": "6e9cf2410da32e44fee9c7a32878796cc858b6cd2a5bb5bef5d84aef5bd3c638"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-primary-2048w.png",
+      "bytes": 30356,
+      "sha256": "df3b269dea10981ef5da3cfcda7505dae99b385d313cd01b1202051084174a06"
+    },
+    {
+      "path": "01-logos/png/hugr-wordmark-primary-512w.png",
+      "bytes": 7157,
+      "sha256": "64a8b9c41c4ab0ef7c0d0d2d17060966dc1012a05eeaba2138414bd50f0006c0"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-flat-inverse.svg",
+      "bytes": 3056,
+      "sha256": "9444569864f41858b8af7f81622f36452abd64cf5d15d47fc4eae9d1076f2b21"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-flat.svg",
+      "bytes": 3048,
+      "sha256": "e2113cc47864d89c74bb4dd145b63a733fdff22bd2d60020995ffa399f5119be"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-inverse.svg",
+      "bytes": 5233,
+      "sha256": "c236a1b9b198be20efb76ea1cc10044288036af5783f6a0c84b661437a9a9251"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-mono-current.svg",
+      "bytes": 1692,
+      "sha256": "2426514573755fb8ec4410ed88cb0aaec371f96f84658da73700067e6a7e9e81"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-mono-dark.svg",
+      "bytes": 1674,
+      "sha256": "22f72130cf40d972919d0895f946b708fc8e5c524d0751dd998a7b19741140f5"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-mono-white.svg",
+      "bytes": 1675,
+      "sha256": "5ffc81bb1188e2948c843127d1fb216d6044af710ecd87e3ed80ebe291bd8e1d"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-compact-primary.svg",
+      "bytes": 16731,
+      "sha256": "4efd3719f8f2e0bbfb9604f05f996bc8fdec950d7364bcda6415b4fd2c433810"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-flat-inverse.svg",
+      "bytes": 13137,
+      "sha256": "902b39e1be438abf3ee76fc50ea28a853e39fef6705e9ac4f419bbeed9ff9715"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-flat.svg",
+      "bytes": 13129,
+      "sha256": "1b68f2ed906e334126dfa9245f84f27a00d57fd9209bb41748dc2e7ed8eecd9f"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-inverse.svg",
+      "bytes": 15314,
+      "sha256": "9c57d9ecfb83f46ee38279d5026dc74c49be57a2a4993e9baa7dbc9e1998cdbc"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-mono-current.svg",
+      "bytes": 11778,
+      "sha256": "c0de48add5623945ae8db8df8e8180707691f816b6af6b640dd8fab73e626fda"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-mono-dark.svg",
+      "bytes": 11755,
+      "sha256": "ad55ebff049296a7bf6b32a917a4e0b05bcb633a47ed5dce4ff346f0e4b9888d"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-mono-white.svg",
+      "bytes": 11756,
+      "sha256": "3e8bd1a312918ace0f3eed258190d19e75d3b5811152493c70fa9fd56d88a27f"
+    },
+    {
+      "path": "01-logos/svg/hugr-horizontal-primary.svg",
+      "bytes": 26812,
+      "sha256": "453b869a5e5365eedd835490c3fca20770842efdad5923e3972088b13c4fd2f6"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-flat-inverse.svg",
+      "bytes": 2977,
+      "sha256": "571957aab0c814a5e4002b69490d7f20a46c98443cd74a633910850488de1c9f"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-flat.svg",
+      "bytes": 2969,
+      "sha256": "bf726ab7aff24a08e263103caedd3b6f4875568db3c9100ca0be60f6d9c9300c"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-inverse.svg",
+      "bytes": 5154,
+      "sha256": "bcb2a3ab2738cfd8f56296adf097fb90eae22d717052593b72342d6906a9934c"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-mono-current.svg",
+      "bytes": 1613,
+      "sha256": "c16451ae00358da377bf408dd84e178a5edfda56289e85b5a71e3952a3f849d4"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-mono-dark.svg",
+      "bytes": 1595,
+      "sha256": "a4ca66479c9848da7b215c00648ad33dfa601e00e9aa77bb46037080e096562f"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-mono-white.svg",
+      "bytes": 1596,
+      "sha256": "e6904d9d708fb9c6d1c7dc55e4b9e5764baebc07ece60e172d08a4570685276f"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-compact-primary.svg",
+      "bytes": 16652,
+      "sha256": "24669fa0556330cd79935bbb6e01c23dba39eb8b8b35330dd28d367090dc02c9"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-flat-inverse.svg",
+      "bytes": 13061,
+      "sha256": "93216456bf462b6c812dbbbdfd764a07fed0811c3a54fd3a9eafc0dbe51aff80"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-flat.svg",
+      "bytes": 13053,
+      "sha256": "7d7eae5025fa5b458584b87e26b13c942a270b959869a359fb7a5d31ce646364"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-inverse.svg",
+      "bytes": 15238,
+      "sha256": "b468920e063bf3021e0e3cd7a34455af24f2004dac02ab4fcaab4833129cc254"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-mono-current.svg",
+      "bytes": 11702,
+      "sha256": "a5bb383675284aa969ed723e9cc735afa28f83a97afb63e3c6c125ac1c1658ac"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-mono-dark.svg",
+      "bytes": 11679,
+      "sha256": "82b385bda859ea81da215a73a8ff8eb31b15a5cc50a1598ccbcaa8e477192ec8"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-mono-white.svg",
+      "bytes": 11680,
+      "sha256": "e7a75f59a8bfcd6f72c95de7f3c3fabd9fc15bba89d3c6daca943095073fc443"
+    },
+    {
+      "path": "01-logos/svg/hugr-stacked-primary.svg",
+      "bytes": 26736,
+      "sha256": "9485d485b0ab79e310ab2726546ae30db89a5e08e4f495de425107fb0fb24374"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-flat-inverse.svg",
+      "bytes": 2348,
+      "sha256": "e7cd1cb019fd383b9e9f98a9e645aa3f30e9d1c80a1306d82cd6bf8a6f6baa70"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-flat.svg",
+      "bytes": 2340,
+      "sha256": "03b78d6f4354f3366cf0e76089f0b2b8b4b9f8e384353eb7bae4f3195027545a"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-inverse.svg",
+      "bytes": 4317,
+      "sha256": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-mono-current.svg",
+      "bytes": 974,
+      "sha256": "ee2808e5d101202e3f9c93a867810023a9e64c429e34cb26199561e5603ccf02"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-mono-dark.svg",
+      "bytes": 966,
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-mono-white.svg",
+      "bytes": 967,
+      "sha256": "e58ce5ec87da42b18f53c80f5bfc21d5ef7e0bf53b47a331c04490400a5f34c8"
+    },
+    {
+      "path": "01-logos/svg/hugr-symbol-primary.svg",
+      "bytes": 15295,
+      "sha256": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-flat-inverse.svg",
+      "bytes": 1024,
+      "sha256": "5b1a93327e0e74dea3d9b399f4496ec200145b6f6ec5fb6034b4949962b079cc"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-flat.svg",
+      "bytes": 1016,
+      "sha256": "33d93e0a86b348c681bd29eb924c38cd39ee97f1ded6bbaa5e5b6e2d084b4a2f"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-inverse.svg",
+      "bytes": 1240,
+      "sha256": "8074340fdce7d2a92868845849a9c53d4a34553c23e8160c06496343f88d9463"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-mono-current.svg",
+      "bytes": 1034,
+      "sha256": "b74c88e33dd8a0b48bc9d152dbd37ba2f7cdb32a1ea705a1195387d782b084b2"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-mono-dark.svg",
+      "bytes": 1021,
+      "sha256": "31fa78a74d604610287ea5c8fd6622443329ae0b55112363c42a50f268788310"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-mono-white.svg",
+      "bytes": 1022,
+      "sha256": "dd8c8a6bc0e20ff6dfd4efdd08a19506a9fbf580b2a826b75aafda322bbfefcd"
+    },
+    {
+      "path": "01-logos/svg/hugr-wordmark-primary.svg",
+      "bytes": 1760,
+      "sha256": "7bc41d2517fcc31a821328e9a3e02a645d515e6100364bd2ae9410e3dbc27008"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-compact-inverse-1024w.webp",
+      "bytes": 19046,
+      "sha256": "18d239d01d04c7cb70d7f671e18dfdd56a5c4fd58721fdace10a3bd316f08914"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-compact-inverse-512w.webp",
+      "bytes": 9220,
+      "sha256": "086249fd5abcf135d337722d0b3d470ef78e6be510f74ef2d718b0a201287428"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-compact-primary-1024w.webp",
+      "bytes": 26768,
+      "sha256": "b1253b1f096a5ada83b91e349a44b6dfa38ee3bb02199acb8614566fc407ebc1"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-compact-primary-512w.webp",
+      "bytes": 11828,
+      "sha256": "66e282ce2adae350332dbef75019ad4ad98a5e5beecadbd22f102e5c061cf885"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-inverse-1024w.webp",
+      "bytes": 28724,
+      "sha256": "a156495c235377505e799e69bd13818bfbc32eeaffb5e66503c4b179c2e1faef"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-inverse-512w.webp",
+      "bytes": 14094,
+      "sha256": "ca5f7d2b144003fb56ded3103fa3cb34f1878260b3122f9be4c718b375230218"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-primary-1024w.webp",
+      "bytes": 38914,
+      "sha256": "98ddd86d617e9521363cc2135c8e8f4f01d5cc5b73e848a78b5e957ba562aae2"
+    },
+    {
+      "path": "01-logos/webp/hugr-horizontal-primary-512w.webp",
+      "bytes": 17736,
+      "sha256": "c3fa2d13d7331fbf8905389bf3ab7e79118f5366cfdbfdabdb115bf83506b5f9"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-compact-inverse-1024w.webp",
+      "bytes": 55876,
+      "sha256": "1a4addba63d8e899b71358df7ea643c2fa376ba247fef63aec876311c1043a56"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-compact-inverse-512w.webp",
+      "bytes": 26708,
+      "sha256": "7ce399ad0b75ee943e8b3581ea9241a3ef0a47d3196e5b6e66c8d8c9307851db"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-compact-primary-1024w.webp",
+      "bytes": 96606,
+      "sha256": "d4ef586d28e4ef93cdf4b4fdbe5fde538a5cae63fce076db48f8041df91e9538"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-compact-primary-512w.webp",
+      "bytes": 44792,
+      "sha256": "a1c4c5af23c7980c020eb5af3a4927ed6a9756bb3bb8bf3fa160361f9170e473"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-inverse-1024w.webp",
+      "bytes": 66186,
+      "sha256": "cbac3ad5212265b152c12c19930ef9cc8c74f37f758e4fa6641b521be89bc23b"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-inverse-512w.webp",
+      "bytes": 30794,
+      "sha256": "9dcdbf5d4ab7c66f2512b04789e014bf8591a3feeabacc5625a31ae5e60b1db1"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-primary-1024w.webp",
+      "bytes": 106572,
+      "sha256": "91181744f636c7be71aacd0d2c8d82e3e33c46da6705b1f22949b0bf1341f226"
+    },
+    {
+      "path": "01-logos/webp/hugr-stacked-primary-512w.webp",
+      "bytes": 49560,
+      "sha256": "ad752ef1353048ab79b4ab1853fbceb9a0e3e29c98b3231a8e66851c73fcea5d"
+    },
+    {
+      "path": "01-logos/webp/hugr-symbol-inverse-1024w.webp",
+      "bytes": 62894,
+      "sha256": "fdb758da2dd0a68e91a3659681f2323241a6e55704a5866aa1e6f03b2524a98b"
+    },
+    {
+      "path": "01-logos/webp/hugr-symbol-inverse-512w.webp",
+      "bytes": 30468,
+      "sha256": "80dd9e20fce0a5b4a38c5627d3177a8e48250fde9dc6840aa31f5b3b64932ccb"
+    },
+    {
+      "path": "01-logos/webp/hugr-symbol-primary-1024w.webp",
+      "bytes": 122978,
+      "sha256": "ad3d320be0c31ab989d6b9587ff8bd06b5475b5635f637d2272a607edf5e61db"
+    },
+    {
+      "path": "01-logos/webp/hugr-symbol-primary-512w.webp",
+      "bytes": 58606,
+      "sha256": "629d20bf720224b9f59e12846b9a4f68caa7039350793bf9c80085bc528e1aad"
+    },
+    {
+      "path": "01-logos/webp/hugr-wordmark-inverse-1024w.webp",
+      "bytes": 7294,
+      "sha256": "d90c7e00cc8318779718c36172be6c8e4de070aa8c23f931a8af8ce9676a995b"
+    },
+    {
+      "path": "01-logos/webp/hugr-wordmark-inverse-512w.webp",
+      "bytes": 4262,
+      "sha256": "da5316d70c595ef7268e0266fc8521e17a29f481584eb8e965dfc2e21fcb6eb9"
+    },
+    {
+      "path": "01-logos/webp/hugr-wordmark-primary-1024w.webp",
+      "bytes": 8208,
+      "sha256": "89db486cecd9489c4be5e5100dc632f5f4a4150181b85ce072b50dfe1d8c99bb"
+    },
+    {
+      "path": "01-logos/webp/hugr-wordmark-primary-512w.webp",
+      "bytes": 4672,
+      "sha256": "5dfb82a2145e6188740b0472d87e435ec3420d06347545f9aaa0b528c443669a"
+    },
+    {
+      "path": "02-icons/android-chrome-192x192.png",
+      "bytes": 16976,
+      "sha256": "9d87ea47f2928159db2a05cbcb6e2f8cf23cf7365504a9156e51d681c460d840"
+    },
+    {
+      "path": "02-icons/android-chrome-512x512.png",
+      "bytes": 68938,
+      "sha256": "5b1a8dabb7a3d5473716ee2c5c2d12e5301f74a4d188dbd223df1b52f28c0fd8"
+    },
+    {
+      "path": "02-icons/app-icon-1024.png",
+      "bytes": 193595,
+      "sha256": "75bfcbcffa503ce5f1c99047fca6629d89e3b4a804a5864f4860de8604a5a66b"
+    },
+    {
+      "path": "02-icons/app-icon-dark-1024.png",
+      "bytes": 125691,
+      "sha256": "d03c6a09afd59d1b1c7ace5542fbc9618e8c3d28c67740f741a310664aa5a313"
+    },
+    {
+      "path": "02-icons/app-icon-dark.svg",
+      "bytes": 4349,
+      "sha256": "0e72db2875c860fc52f88b8c61edf63f9a3ddd542c87700547b352991cc6229b"
+    },
+    {
+      "path": "02-icons/app-icon.icns",
+      "bytes": 425952,
+      "sha256": "89fc42a78f55e70550ab8e270e1a49cf20747d4f081b381e2c51a1caf429dc3a"
+    },
+    {
+      "path": "02-icons/apple-touch-icon.png",
+      "bytes": 15527,
+      "sha256": "ff21578c7a5241bb50e4f499b871e26398780f4f6893dbefed2df07e77aa8861"
+    },
+    {
+      "path": "02-icons/favicon-128x128.png",
+      "bytes": 5349,
+      "sha256": "286d9d61c092ae8d80d62bf93171a44961045d8ec79ee4cecb70ba9cd8c7cd55"
+    },
+    {
+      "path": "02-icons/favicon-16x16.png",
+      "bytes": 618,
+      "sha256": "018ed1ed53d06182b039f2830c0730216a41aead57cb24a43ddcbfe3a1e7d2eb"
+    },
+    {
+      "path": "02-icons/favicon-24x24.png",
+      "bytes": 931,
+      "sha256": "c9116ce7deda2d5391126dfd0f7890af9979a3b87a42920e282a5966cc2f1496"
+    },
+    {
+      "path": "02-icons/favicon-256x256.png",
+      "bytes": 11146,
+      "sha256": "f7a3c01cf50e082b3c3b1201afa2f64aa01cac041ee57849a861562b93e74961"
+    },
+    {
+      "path": "02-icons/favicon-32x32.png",
+      "bytes": 1315,
+      "sha256": "4dcc0ac759598ac0385e7e999f7b8a1a2aa5754aefb946d174801072a0791117"
+    },
+    {
+      "path": "02-icons/favicon-48x48.png",
+      "bytes": 1933,
+      "sha256": "c3033c360a40aa0bbacd3463893c37b3f0660cc5fb09fc37c10f944e14c226b9"
+    },
+    {
+      "path": "02-icons/favicon-64x64.png",
+      "bytes": 2553,
+      "sha256": "8971210cac06d65b97a95649a134e4796c7adeb39e56333abfb37e197cc44b8a"
+    },
+    {
+      "path": "02-icons/favicon-96x96.png",
+      "bytes": 4005,
+      "sha256": "18f8f4961fb1d82d517a504a81d21e9dd298acbf5b9e359d25e11f255ae7ae4c"
+    },
+    {
+      "path": "02-icons/favicon.ico",
+      "bytes": 33787,
+      "sha256": "d2492b1e4c41d69d0943cc2b9c8fddb5caad6a6778277d340c6c99a3ecc43321"
+    },
+    {
+      "path": "02-icons/favicon.svg",
+      "bytes": 2375,
+      "sha256": "7be1f3891bee87a398a26519444ee30ddefaef75ae13d93bfeaacfe02b132f47"
+    },
+    {
+      "path": "02-icons/maskable-192x192.png",
+      "bytes": 11150,
+      "sha256": "57769aae4e5ee226541314b89b0f86ab6bbb4eb2781807f1361e5d58608a3c24"
+    },
+    {
+      "path": "02-icons/maskable-512x512.png",
+      "bytes": 44453,
+      "sha256": "a02d30936ce35b18c299cf4a62ee6495cf2870fc8ba26983e272694524778edf"
+    },
+    {
+      "path": "02-icons/maskable-master.svg",
+      "bytes": 15329,
+      "sha256": "1e93bc7059929c1752e3363699f41c6fadca65f1bc5ad2d5b8c650616d3d9cd3"
+    },
+    {
+      "path": "02-icons/safari-pinned-tab.svg",
+      "bytes": 966,
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577"
+    },
+    {
+      "path": "02-icons/site.webmanifest",
+      "bytes": 763,
+      "sha256": "de8d97b484aec68486f41b315d6234fae2ca4897a447f4dbc40209cafc64b262"
+    },
+    {
+      "path": "03-social/avatar-dark-1024.png",
+      "bytes": 89864,
+      "sha256": "1d376e77998cff705abea1ce507f2f5930085f8360d0798b1b1f39f334d9ebb5"
+    },
+    {
+      "path": "03-social/avatar-dark.svg",
+      "bytes": 4349,
+      "sha256": "7da019dc51bf86299812b81a841c061efdcf7be6dc64099ab584dad298fd87fc"
+    },
+    {
+      "path": "03-social/avatar-light-1024.png",
+      "bytes": 136707,
+      "sha256": "03ae4b4748124dfaaa3ab2260e34ea3aec083bfd5e8393d2d99a7c1d916f9015"
+    },
+    {
+      "path": "03-social/avatar-light.svg",
+      "bytes": 15327,
+      "sha256": "85b3f9b98ea6abf1d4f6579540c7c0bd60d48bb81889a5351ff7251b02298f23"
+    },
+    {
+      "path": "03-social/brand-card-square.png",
+      "bytes": 117216,
+      "sha256": "1f081ae0fe8a066697fe4e23b78ac329af42ef3867c090bd98e1e6ffc8b6fe23"
+    },
+    {
+      "path": "03-social/brand-card-square.svg",
+      "bytes": 27197,
+      "sha256": "9160857d705af4a29f4bc7340472d85f33df3b484d53b545929ac2d14502c4b3"
+    },
+    {
+      "path": "03-social/cover-1500x500.png",
+      "bytes": 74600,
+      "sha256": "c138cbe67a4d32ee382b553864a172a9c40204ba9533ce094ac1b4384892912b"
+    },
+    {
+      "path": "03-social/cover-1500x500.svg",
+      "bytes": 15844,
+      "sha256": "dc4a44db33be51d3deb1fdc77ce92b0ac2527332b885ddde14ec8d90a5877327"
+    },
+    {
+      "path": "03-social/cover-wide-dark.png",
+      "bytes": 62447,
+      "sha256": "521bea4e399719a9da514bbd8e75152922a788232f52fa3e1c450b2ac923ac36"
+    },
+    {
+      "path": "03-social/cover-wide-dark.svg",
+      "bytes": 15880,
+      "sha256": "599147bae96308ef2a7fae2cf2c43938d53760c228310c975c8f8ae6a283e950"
+    },
+    {
+      "path": "03-social/cover-wide-light.png",
+      "bytes": 70695,
+      "sha256": "863e7eb31028c802d110a11069ab382eeda60e47a4dc289c10a8567801064318"
+    },
+    {
+      "path": "03-social/cover-wide-light.svg",
+      "bytes": 27378,
+      "sha256": "25647709f081a3dca66f013756fa355a792338acf68ae3be0076203c937c2e22"
+    },
+    {
+      "path": "03-social/opengraph-dark.png",
+      "bytes": 91436,
+      "sha256": "16cd83ac90ced6ef2030e0c3012a49c4c75ab148badf67cd016b33d111167980"
+    },
+    {
+      "path": "03-social/opengraph-dark.svg",
+      "bytes": 15847,
+      "sha256": "c238299d4344e6454d6700b39e07b314d02de420ddeaf558f55b666243eb6af5"
+    },
+    {
+      "path": "03-social/opengraph-light.png",
+      "bytes": 113547,
+      "sha256": "f96beb28a3547c64f8d9172f69f3f530207c01fdc13a628cb8f84b9d0b1e9c15"
+    },
+    {
+      "path": "03-social/opengraph-light.svg",
+      "bytes": 27345,
+      "sha256": "b1b642051a4aa6fc3739f68e9fee07437160ff7d5f6554aab6259580ea622b47"
+    },
+    {
+      "path": "03-social/repository-social.png",
+      "bytes": 117480,
+      "sha256": "4ba788ee247212fdbf32cd47c0895c8a568b6ebd78498e1f96d9d1593ab399e2"
+    },
+    {
+      "path": "03-social/repository-social.svg",
+      "bytes": 27344,
+      "sha256": "dd4298a6af1a7a93faf24cada9530a39b6dd385123557aaa8619ae8de94218fa"
+    },
+    {
+      "path": "04-graphic-elements/background-arcs-dark-1920.png",
+      "bytes": 51953,
+      "sha256": "f01d3bf95c2f2350711f9c93c5948d53236886d13374be645a4865bf1e0aaa93"
+    },
+    {
+      "path": "04-graphic-elements/background-arcs-dark.svg",
+      "bytes": 791,
+      "sha256": "1da9d6f0cf54a20ab069d9ee7d638a2820c08b6f23ef378ac99d99baff6e8b80"
+    },
+    {
+      "path": "04-graphic-elements/background-arcs-light-1920.png",
+      "bytes": 40664,
+      "sha256": "b35f45742cd3b11975cb6f56ebce3e4b4ae65d373adf724e93c375669bd15629"
+    },
+    {
+      "path": "04-graphic-elements/background-arcs-light.svg",
+      "bytes": 791,
+      "sha256": "2e9b6ce2edf8ff34eecd44a5c4a3181d94be482d0590caf9f63c35da921caf79"
+    },
+    {
+      "path": "04-graphic-elements/pattern-tile-dark.svg",
+      "bytes": 475,
+      "sha256": "a31624bd371c7decf9b74286223575ff50c6590d447e371ea3967f734a7ba2d0"
+    },
+    {
+      "path": "04-graphic-elements/pattern-tile-light.svg",
+      "bytes": 475,
+      "sha256": "bd56aeebd96623bfe032a4c60cc839df26b5c221986492ef36a667caf228c304"
+    },
+    {
+      "path": "05-templates/HuGR-Letterhead-Template.docx",
+      "bytes": 82805,
+      "sha256": "b56f593372db3a6be0201ab1bcd89181f7bf55e8d49b116f7d06d7c32e058f9f"
+    },
+    {
+      "path": "05-templates/HuGR-Presentation-Template.pptx",
+      "bytes": 370022,
+      "sha256": "0c249019b6606f158d22c4d1c8cf132efa97168c978b23cebd6007893bcf45ba"
+    },
+    {
+      "path": "05-templates/TEMPLATES-README.md",
+      "bytes": 1361,
+      "sha256": "204f9373d38a4abcb1879932ed6322597db0de4e1800a2acfdb7581cde9d676e"
+    },
+    {
+      "path": "05-templates/business-card-back.pdf",
+      "bytes": 13075,
+      "sha256": "617303432d8b14e7f0c60ed6ad2129a09d4a31f2a62c420217e0c5420af646b3"
+    },
+    {
+      "path": "05-templates/business-card-back.svg",
+      "bytes": 2559,
+      "sha256": "0d6db2e9960cf1c6d8830d09e8794522434a4531a68eae1294ef62bb4154d393"
+    },
+    {
+      "path": "05-templates/business-card-front.pdf",
+      "bytes": 30513,
+      "sha256": "690bcc5ae3f52df64e6137a3f5f399d704ca47fe62936c211637b65f5a060d2b"
+    },
+    {
+      "path": "05-templates/business-card-front.svg",
+      "bytes": 27078,
+      "sha256": "dcdf293cfe5a1e16d02ab9cfc6ae461d07574dc23ab3a0d35ffc1dee587bac20"
+    },
+    {
+      "path": "05-templates/email-signature-preview.html",
+      "bytes": 889,
+      "sha256": "ec4b7d8315bef0b4836ff0d84d0d24564d5e5e750cb550e47325da2f14b263c4"
+    },
+    {
+      "path": "05-templates/make-email-signature.py",
+      "bytes": 1932,
+      "sha256": "562cd0cb97036f110b6ef96ad14b9f9ca4d2ed3f2af4e5b5bbc5790c8938ae93"
+    },
+    {
+      "path": "06-tokens/hugr-palette.ase",
+      "bytes": 294,
+      "sha256": "11fc3d4e389066b6fd30704f97954c91202a831dbc92b1a12db4d3432b835ab3"
+    },
+    {
+      "path": "06-tokens/hugr-palette.gpl",
+      "bytes": 189,
+      "sha256": "dcee3bc11b66a822c10d703ddcb101552bd8a303394ff369326c30e39271b970"
+    },
+    {
+      "path": "06-tokens/hugr.tokens.css",
+      "bytes": 1947,
+      "sha256": "86a76ce51e6fd5dc6e2cd98aefb4f245b2f9d6e3ddceeac88be1b0ed78a2c478"
+    },
+    {
+      "path": "06-tokens/hugr.tokens.json",
+      "bytes": 2284,
+      "sha256": "ecce49a8e3a0933791b55c9db057aee070c8a5423940d1418e434ab94c0df755"
+    },
+    {
+      "path": "07-web/brand/icons/android-chrome-192x192.png",
+      "bytes": 16976,
+      "sha256": "9d87ea47f2928159db2a05cbcb6e2f8cf23cf7365504a9156e51d681c460d840"
+    },
+    {
+      "path": "07-web/brand/icons/android-chrome-512x512.png",
+      "bytes": 68938,
+      "sha256": "5b1a8dabb7a3d5473716ee2c5c2d12e5301f74a4d188dbd223df1b52f28c0fd8"
+    },
+    {
+      "path": "07-web/brand/icons/apple-touch-icon.png",
+      "bytes": 15527,
+      "sha256": "ff21578c7a5241bb50e4f499b871e26398780f4f6893dbefed2df07e77aa8861"
+    },
+    {
+      "path": "07-web/brand/icons/favicon.ico",
+      "bytes": 33787,
+      "sha256": "d2492b1e4c41d69d0943cc2b9c8fddb5caad6a6778277d340c6c99a3ecc43321"
+    },
+    {
+      "path": "07-web/brand/icons/favicon.svg",
+      "bytes": 2375,
+      "sha256": "7be1f3891bee87a398a26519444ee30ddefaef75ae13d93bfeaacfe02b132f47"
+    },
+    {
+      "path": "07-web/brand/icons/maskable-192x192.png",
+      "bytes": 11150,
+      "sha256": "57769aae4e5ee226541314b89b0f86ab6bbb4eb2781807f1361e5d58608a3c24"
+    },
+    {
+      "path": "07-web/brand/icons/maskable-512x512.png",
+      "bytes": 44453,
+      "sha256": "a02d30936ce35b18c299cf4a62ee6495cf2870fc8ba26983e272694524778edf"
+    },
+    {
+      "path": "07-web/brand/icons/safari-pinned-tab.svg",
+      "bytes": 966,
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577"
+    },
+    {
+      "path": "07-web/brand/icons/site.webmanifest",
+      "bytes": 763,
+      "sha256": "de8d97b484aec68486f41b315d6234fae2ca4897a447f4dbc40209cafc64b262"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-compact-flat.svg",
+      "bytes": 3048,
+      "sha256": "e2113cc47864d89c74bb4dd145b63a733fdff22bd2d60020995ffa399f5119be"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-compact-inverse.svg",
+      "bytes": 5233,
+      "sha256": "c236a1b9b198be20efb76ea1cc10044288036af5783f6a0c84b661437a9a9251"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-compact-mono-dark.svg",
+      "bytes": 1674,
+      "sha256": "22f72130cf40d972919d0895f946b708fc8e5c524d0751dd998a7b19741140f5"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-compact-mono-white.svg",
+      "bytes": 1675,
+      "sha256": "5ffc81bb1188e2948c843127d1fb216d6044af710ecd87e3ed80ebe291bd8e1d"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-compact-primary.svg",
+      "bytes": 16731,
+      "sha256": "4efd3719f8f2e0bbfb9604f05f996bc8fdec950d7364bcda6415b4fd2c433810"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-flat.svg",
+      "bytes": 13129,
+      "sha256": "1b68f2ed906e334126dfa9245f84f27a00d57fd9209bb41748dc2e7ed8eecd9f"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-inverse.svg",
+      "bytes": 15314,
+      "sha256": "9c57d9ecfb83f46ee38279d5026dc74c49be57a2a4993e9baa7dbc9e1998cdbc"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-mono-dark.svg",
+      "bytes": 11755,
+      "sha256": "ad55ebff049296a7bf6b32a917a4e0b05bcb633a47ed5dce4ff346f0e4b9888d"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-mono-white.svg",
+      "bytes": 11756,
+      "sha256": "3e8bd1a312918ace0f3eed258190d19e75d3b5811152493c70fa9fd56d88a27f"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-horizontal-primary.svg",
+      "bytes": 26812,
+      "sha256": "453b869a5e5365eedd835490c3fca20770842efdad5923e3972088b13c4fd2f6"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-stacked-flat.svg",
+      "bytes": 13053,
+      "sha256": "7d7eae5025fa5b458584b87e26b13c942a270b959869a359fb7a5d31ce646364"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-stacked-inverse.svg",
+      "bytes": 15238,
+      "sha256": "b468920e063bf3021e0e3cd7a34455af24f2004dac02ab4fcaab4833129cc254"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-stacked-mono-dark.svg",
+      "bytes": 11679,
+      "sha256": "82b385bda859ea81da215a73a8ff8eb31b15a5cc50a1598ccbcaa8e477192ec8"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-stacked-mono-white.svg",
+      "bytes": 11680,
+      "sha256": "e7a75f59a8bfcd6f72c95de7f3c3fabd9fc15bba89d3c6daca943095073fc443"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-stacked-primary.svg",
+      "bytes": 26736,
+      "sha256": "9485d485b0ab79e310ab2726546ae30db89a5e08e4f495de425107fb0fb24374"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-symbol-flat.svg",
+      "bytes": 2340,
+      "sha256": "03b78d6f4354f3366cf0e76089f0b2b8b4b9f8e384353eb7bae4f3195027545a"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-symbol-inverse.svg",
+      "bytes": 4317,
+      "sha256": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-symbol-mono-dark.svg",
+      "bytes": 966,
+      "sha256": "d5a84ef933a1d27c10ece49fac124000905915e8c29259b220687825aaa98577"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-symbol-mono-white.svg",
+      "bytes": 967,
+      "sha256": "e58ce5ec87da42b18f53c80f5bfc21d5ef7e0bf53b47a331c04490400a5f34c8"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-symbol-primary.svg",
+      "bytes": 15295,
+      "sha256": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-wordmark-flat.svg",
+      "bytes": 1016,
+      "sha256": "33d93e0a86b348c681bd29eb924c38cd39ee97f1ded6bbaa5e5b6e2d084b4a2f"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-wordmark-inverse.svg",
+      "bytes": 1240,
+      "sha256": "8074340fdce7d2a92868845849a9c53d4a34553c23e8160c06496343f88d9463"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-wordmark-mono-dark.svg",
+      "bytes": 1021,
+      "sha256": "31fa78a74d604610287ea5c8fd6622443329ae0b55112363c42a50f268788310"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-wordmark-mono-white.svg",
+      "bytes": 1022,
+      "sha256": "dd8c8a6bc0e20ff6dfd4efdd08a19506a9fbf580b2a826b75aafda322bbfefcd"
+    },
+    {
+      "path": "07-web/brand/logos/hugr-wordmark-primary.svg",
+      "bytes": 1760,
+      "sha256": "7bc41d2517fcc31a821328e9a3e02a645d515e6100364bd2ae9410e3dbc27008"
+    },
+    {
+      "path": "07-web/brand/opengraph.png",
+      "bytes": 113547,
+      "sha256": "f96beb28a3547c64f8d9172f69f3f530207c01fdc13a628cb8f84b9d0b1e9c15"
+    },
+    {
+      "path": "07-web/brand/tokens.css",
+      "bytes": 1947,
+      "sha256": "86a76ce51e6fd5dc6e2cd98aefb4f245b2f9d6e3ddceeac88be1b0ed78a2c478"
+    },
+    {
+      "path": "07-web/components/HuGRLogo.tsx",
+      "bytes": 1633,
+      "sha256": "95c5792aed8fa807bf55a12b610f8afd8b649b391cfd121715ca62466d74dda8"
+    },
+    {
+      "path": "07-web/demo.html",
+      "bytes": 3530,
+      "sha256": "24fb6d1759057985ac6c3540365188a16ca5f524f95ba2e1f1f691260860012d"
+    },
+    {
+      "path": "07-web/head.html",
+      "bytes": 779,
+      "sha256": "664621e7e31aa1209dae666e1821aef4a40f3a606818124e4acdba8129c5f812"
+    },
+    {
+      "path": "07-web/install-brand.mjs",
+      "bytes": 1831,
+      "sha256": "30c0921ca33c065d7f6bbbe67ac95b683de59975acd0d7be992a459a2099ee4a"
+    },
+    {
+      "path": "08-guidelines/HuGR-Brand-Guidelines.pdf",
+      "bytes": 2051741,
+      "sha256": "6d0f28c9b9f4a5227db40d486ff33101fbe0f2f9b65ac9518fc3ab8180a55351"
+    },
+    {
+      "path": "08-guidelines/brand-overview.png",
+      "bytes": 262472,
+      "sha256": "c00536ece377660f6baac09ae9167b306d75da5bdfc6f42f5cae8758c59d4aa0"
+    },
+    {
+      "path": "08-guidelines/implementation-notes.md",
+      "bytes": 2727,
+      "sha256": "d34d05474f4106ff013779c448a3c6a94b3d55647a58470b7a2cd54e74591db5"
+    },
+    {
+      "path": "09-source/geometry.json",
+      "bytes": 12339,
+      "sha256": "3be241d16eb6c988c8c3e00995b4e96d52f4263e6f381208091ab118dd62346a"
+    },
+    {
+      "path": "09-source/gradient-definitions.txt",
+      "bytes": 14229,
+      "sha256": "d85cd4c68cd50b83ab11ec667a1effac01ca60358892faa7037f8bd2956aae37"
+    },
+    {
+      "path": "09-source/hugr-master-layered.svg",
+      "bytes": 26722,
+      "sha256": "42ebdd9782f8fe53fd2734357c85608c75db3d5e9393d47c1e116b255d4b5031"
+    },
+    {
+      "path": "10-quality/QA-REPORT.md",
+      "bytes": 4637,
+      "sha256": "e91cca7742e15c20d917d52b5dff237213a7baef6c2cf9c2c4e59717f43a7c07"
+    },
+    {
+      "path": "10-quality/contrast-report.json",
+      "bytes": 2324,
+      "sha256": "a17622bd4e7212ac71eeeb293173a4604b620bc5ff28ae383c1916b0c6b6b0ec"
+    },
+    {
+      "path": "10-quality/reference-vs-vector.jpg",
+      "bytes": 139250,
+      "sha256": "f6c23947e2b495fc1b693583010375da8e9a3d658464ab3c30bda5790f0adf64"
+    },
+    {
+      "path": "10-quality/validation.json",
+      "bytes": 1373,
+      "sha256": "4f9dae9e9055bf42d2ded0b18fa51f6845b8ff4deb70364842e806f1fe64c672"
+    },
+    {
+      "path": "11-handoff/ASSET-MAP.json",
+      "bytes": 102677,
+      "sha256": "eb1397b51bb3875e2047b52ecdb66e5049ede35a9f8fffe13587ac0137f8422b"
+    },
+    {
+      "path": "11-handoff/INTEGRATION-RUNBOOK.md",
+      "bytes": 16584,
+      "sha256": "16db2a212ff08beb123fa9e27f9015a14760a93f22f4aeccd727d9bd9f1cc4de"
+    },
+    {
+      "path": "11-handoff/PROMPT-NOVA-SESSAO.md",
+      "bytes": 2966,
+      "sha256": "e8dae1f77024b6a4c5aa9764f1dcff9160c33850e1afeb660feed4af29966fce"
+    },
+    {
+      "path": "11-handoff/SESSION-STATE.template.md",
+      "bytes": 3841,
+      "sha256": "7bc269bdd187d902d4165d1c322af17f3e814248c490bdf851026b4d3ccf6624"
+    },
+    {
+      "path": "11-handoff/STATUS-AND-EVIDENCE.md",
+      "bytes": 5326,
+      "sha256": "c4eabd881e4a63e814b88f4c5d123780bd148f658eb7562511ba87715528c44c"
+    },
+    {
+      "path": "11-handoff/verification.json",
+      "bytes": 3503,
+      "sha256": "187b20ba87b33b3f12805d60ef2d79e54b11a125c26cd713b1ba657beaf0480a"
+    },
+    {
+      "path": "11-handoff/verify_handoff.py",
+      "bytes": 9530,
+      "sha256": "9890b1bd7ddb5037d40c8028e519302a7cbd4ea20e7f81d70e9400b452a81fd8"
+    },
+    {
+      "path": "AGENT-START-HERE.md",
+      "bytes": 5057,
+      "sha256": "7c4d5e4d57e5fc5a41766d461db45228dbc8044d5a80d875f9cca4775a10d53e"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 495,
+      "sha256": "7ec055eac96cebf8be9d2c148886358336653aa151b713c7c1d356644a6aaeab"
+    },
+    {
+      "path": "CHECKSUMS.sha256",
+      "bytes": 31690,
+      "sha256": "75f7149cf4b436ae5762c5a4e972504c89fa51d5ef2c1a3cae5cea3cc5dd7125"
+    },
+    {
+      "path": "HANDOFF-CHECKSUMS.sha256",
+      "bytes": 770,
+      "sha256": "b4315283584272b74550d8f80b3aa321c1b93bd0ccd59537260cf7f5df2060f9"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5025,
+      "sha256": "a6a2536428d08bf5d110d1aad0b8ff4560a34b07f0b5abd319dfa43eefeb0a00"
+    },
+    {
+      "path": "START-HERE.html",
+      "bytes": 25488,
+      "sha256": "4122d1b2f18fa12525e9479d9330577daa03f05dd938cddf501fa3f696913ee5"
+    },
+    {
+      "path": "assets.json",
+      "bytes": 11684,
+      "sha256": "85051d3d0f6688975f4c8a0794b8af5f1222a4d95dec7e27ced57222bf8905fa"
+    },
+    {
+      "path": "reference/approved-reference.png",
+      "bytes": 1144009,
+      "sha256": "c3814ae0c5ce85145fb937ce8f2d5ddc27d06672fa79ea0d7af273ac3e608745"
+    }
+  ],
+  "integration_status": "NOT_RUN",
+  "new_uploaded_image": {
+    "sha256": "9eaf2fdd10cbbf9e9ec311d4480219d1bf7d97c2c34d7d249242613d71fcb65c",
+    "kit_reference_sha256": "c3814ae0c5ce85145fb937ce8f2d5ddc27d06672fa79ea0d7af273ac3e608745",
+    "same_decoded_rgba_pixels_verified": true,
+    "note": "Container encodings differ; same 1254x1254 RGBA pixels. Do not use either raster as production UI."
+  }
+}

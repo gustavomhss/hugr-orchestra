@@ -1,0 +1,106 @@
+{
+  "version": "1.0",
+  "brand": {
+    "name": "HuGR",
+    "descriptor": "Human Guardrail",
+    "palette": {
+      "midnight-navy": "#0B1423",
+      "deep-slate": "#223A5B",
+      "electric-blue": "#1266F6",
+      "sky-blue": "#69D2FF",
+      "ice-blue": "#DCEEFF",
+      "white": "#FFFFFF"
+    }
+  },
+  "themes": {
+    "light": {
+      "background": "#FFFFFF",
+      "surface": "#F5F9FF",
+      "surface-raised": "#FFFFFF",
+      "text": "#0B1423",
+      "text-muted": "#52647B",
+      "border": "#D4DEEB",
+      "primary": "#1266F6",
+      "primary-hover": "#0641C3",
+      "on-primary": "#FFFFFF",
+      "focus": "#1266F6",
+      "success": "#137333",
+      "warning": "#8C5700",
+      "danger": "#B42318"
+    },
+    "dark": {
+      "background": "#0B1423",
+      "surface": "#132239",
+      "surface-raised": "#1B2F4B",
+      "text": "#F3F7FF",
+      "text-muted": "#B7C6DB",
+      "border": "#3D5472",
+      "primary": "#69D2FF",
+      "primary-hover": "#9FE3FF",
+      "on-primary": "#0B1423",
+      "focus": "#69D2FF",
+      "success": "#72D99C",
+      "warning": "#FFD080",
+      "danger": "#FFAAA4"
+    }
+  },
+  "typography": {
+    "headingFamily": "Inter Display, Inter, system-ui, sans-serif",
+    "bodyFamily": "Inter, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+    "monoFamily": "ui-monospace, SFMono-Regular, Consolas, monospace",
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "scalePx": {
+      "caption": 12,
+      "small": 14,
+      "body": 16,
+      "lead": 20,
+      "h3": 24,
+      "h2": 32,
+      "h1": 48,
+      "display": 64
+    },
+    "bodyLineHeight": 1.55,
+    "headingLineHeight": 1.12
+  },
+  "spacingPx": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32,
+    48,
+    64,
+    96
+  ],
+  "radiiPx": {
+    "small": 6,
+    "medium": 12,
+    "large": 20
+  },
+  "motionMs": {
+    "fast": 120,
+    "normal": 180,
+    "deliberate": 260
+  },
+  "minimumWidthsPx": {
+    "symbol": 24,
+    "micro-icon": 16,
+    "wordmark": 96,
+    "stacked": 320,
+    "stacked-compact": 160,
+    "horizontal": 480,
+    "horizontal-compact": 180
+  },
+  "clearSpace": {
+    "unit": "diameter of the blue head",
+    "symbolProportion": 0.238,
+    "preferred": 1,
+    "compactUIException": 0.5
+  }
+}

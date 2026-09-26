@@ -1,0 +1,10 @@
+GIMP Palette
+Name: HuGR
+Columns: 6
+# HuGR v1.0 / sRGB
+ 11  20  35	midnight-navy
+ 34  58  91	deep-slate
+ 18 102 246	electric-blue
+105 210 255	sky-blue
+220 238 255	ice-blue
+255 255 255	white

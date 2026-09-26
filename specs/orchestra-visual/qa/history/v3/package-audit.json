@@ -1,0 +1,49 @@
+{
+  "kind": "planning-package-validation-not-product-acceptance",
+  "contract_revision": "3.0",
+  "source_sha": "30d951fcc4a09e708768551c7c6fd38a0efe3da8",
+  "reference_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "node_counts": {
+    "epic": 4,
+    "issue": 10,
+    "wp": 37,
+    "task": 64,
+    "subissue": 25
+  },
+  "total_nodes": 140,
+  "explicit_axiom_groups": 700,
+  "criterion_count": 1898,
+  "initial_inventory_records": 68,
+  "inventory_class_counts": {
+    "ui-surface": 55,
+    "read-anchor": 9,
+    "capability-gap": 1,
+    "measurement-anchor": 2,
+    "visual-reference": 1
+  },
+  "tool_tests": {
+    "status": "PASS",
+    "count": 83,
+    "log": "qa/tool-tests.log",
+    "python": "3.13.5",
+    "host": "Linux container; not user Mac",
+    "scope": "Contract, evidence integrity, readiness, local synthetic Git and FakeGitHub tests only"
+  },
+  "github_tickets_existing": 39,
+  "github_tickets_created_in_this_revision": 0,
+  "github_documentation_commit": "0eef764981450b57a04d42985d94e033fd49e080",
+  "github_native_relationships": {
+    "status": "NOT_APPLIED_BY_THIS_REVISION",
+    "desired_parent_links": 35,
+    "coarse_edges_before_reduction": 118,
+    "desired_dependency_links": 55,
+    "fine_grained_constraints": 56
+  },
+  "product_implementation": "NOT_EXECUTED",
+  "product_benchmarks": "NOT_RUN",
+  "native_desktop_tests": "NOT_RUN",
+  "full_local_checkout_scope_expansion": "NOT_RUN",
+  "source_revision_verified_against_user_checkout": false,
+  "github_full_package_uploaded": false,
+  "source_inspection_scope": "Historical focused reads plus inventory; v3 reviews planning tools and selected GitHub state. S01 still resolves current checkout reachability."
+}

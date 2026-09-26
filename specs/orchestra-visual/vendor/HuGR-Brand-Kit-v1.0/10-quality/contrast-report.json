@@ -1,0 +1,103 @@
+{
+  "method": "WCAG relative luminance / sRGB",
+  "source": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
+  "scope": "Solid UI text pairs, not full-product certification and not logo-gradient testing",
+  "pairs": [
+    {
+      "theme": "light",
+      "foreground": "#0B1423",
+      "background": "#FFFFFF",
+      "role": "text",
+      "ratio": 18.444,
+      "normalTextAA": true
+    },
+    {
+      "theme": "light",
+      "foreground": "#52647B",
+      "background": "#FFFFFF",
+      "role": "text-muted",
+      "ratio": 6.056,
+      "normalTextAA": true
+    },
+    {
+      "theme": "light",
+      "foreground": "#137333",
+      "background": "#FFFFFF",
+      "role": "success",
+      "ratio": 5.953,
+      "normalTextAA": true
+    },
+    {
+      "theme": "light",
+      "foreground": "#8C5700",
+      "background": "#FFFFFF",
+      "role": "warning",
+      "ratio": 6.037,
+      "normalTextAA": true
+    },
+    {
+      "theme": "light",
+      "foreground": "#B42318",
+      "background": "#FFFFFF",
+      "role": "danger",
+      "ratio": 6.574,
+      "normalTextAA": true
+    },
+    {
+      "theme": "light",
+      "foreground": "#FFFFFF",
+      "background": "#1266F6",
+      "role": "button-text",
+      "ratio": 4.933,
+      "normalTextAA": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "#F3F7FF",
+      "background": "#0B1423",
+      "role": "text",
+      "ratio": 17.179,
+      "normalTextAA": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "#B7C6DB",
+      "background": "#0B1423",
+      "role": "text-muted",
+      "ratio": 10.64,
+      "normalTextAA": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "#72D99C",
+      "background": "#0B1423",
+      "role": "success",
+      "ratio": 10.646,
+      "normalTextAA": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "#FFD080",
+      "background": "#0B1423",
+      "role": "warning",
+      "ratio": 12.811,
+      "normalTextAA": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "#FFAAA4",
+      "background": "#0B1423",
+      "role": "danger",
+      "ratio": 10.134,
+      "normalTextAA": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "#0B1423",
+      "background": "#69D2FF",
+      "role": "button-text",
+      "ratio": 10.771,
+      "normalTextAA": true
+    }
+  ]
+}

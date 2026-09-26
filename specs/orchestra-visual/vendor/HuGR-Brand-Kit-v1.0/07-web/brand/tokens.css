@@ -1,0 +1,60 @@
+/* HuGR v1.0. No font downloads, runtime libraries, or external network calls. */
+:root {
+  --hugr-midnight-navy: #0B1423;
+  --hugr-deep-slate: #223A5B;
+  --hugr-electric-blue: #1266F6;
+  --hugr-sky-blue: #69D2FF;
+  --hugr-ice-blue: #DCEEFF;
+  --hugr-white: #FFFFFF;
+  --hugr-color-background: #FFFFFF;
+  --hugr-color-surface: #F5F9FF;
+  --hugr-color-surface-raised: #FFFFFF;
+  --hugr-color-text: #0B1423;
+  --hugr-color-text-muted: #52647B;
+  --hugr-color-border: #D4DEEB;
+  --hugr-color-primary: #1266F6;
+  --hugr-color-primary-hover: #0641C3;
+  --hugr-color-on-primary: #FFFFFF;
+  --hugr-color-focus: #1266F6;
+  --hugr-color-success: #137333;
+  --hugr-color-warning: #8C5700;
+  --hugr-color-danger: #B42318;
+  --hugr-font-heading: "Inter Display", "Inter", system-ui, sans-serif;
+  --hugr-font-body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --hugr-font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --hugr-radius-sm: 6px;
+  --hugr-radius-md: 12px;
+  --hugr-radius-lg: 20px;
+  --hugr-duration-fast: 120ms;
+  --hugr-duration-normal: 180ms;
+  --hugr-ease: cubic-bezier(.2,.7,.2,1);
+  --hugr-space-4: 4px;
+  --hugr-space-8: 8px;
+  --hugr-space-12: 12px;
+  --hugr-space-16: 16px;
+  --hugr-space-24: 24px;
+  --hugr-space-32: 32px;
+  --hugr-space-48: 48px;
+  --hugr-space-64: 64px;
+  --hugr-space-96: 96px;
+}
+
+[data-hugr-theme="dark"] {
+  --hugr-color-background: #0B1423;
+  --hugr-color-surface: #132239;
+  --hugr-color-surface-raised: #1B2F4B;
+  --hugr-color-text: #F3F7FF;
+  --hugr-color-text-muted: #B7C6DB;
+  --hugr-color-border: #3D5472;
+  --hugr-color-primary: #69D2FF;
+  --hugr-color-primary-hover: #9FE3FF;
+  --hugr-color-on-primary: #0B1423;
+  --hugr-color-focus: #69D2FF;
+  --hugr-color-success: #72D99C;
+  --hugr-color-warning: #FFD080;
+  --hugr-color-danger: #FFAAA4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --hugr-duration-fast: 0ms; --hugr-duration-normal: 0ms; }
+}

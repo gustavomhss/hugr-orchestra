@@ -1,0 +1,112 @@
+{
+  "status": "PASS",
+  "date": "2026-09-26",
+  "scope": "handoff packaging, original file preservation and isolated local checks; no product integration",
+  "source_archive": "HuGR-Brand-Kit-v1.0.zip",
+  "source_archive_sha256": "dba2786e6323bc08d0cc966b151b16c9b7e895b354128549920beb672ab1f0c9",
+  "visual_changes": 0,
+  "original_files_preserved": 295,
+  "local_verifier": {
+    "scope": "local_package_integrity_and_relationships_only",
+    "visual_change_requested": false,
+    "product_integration_tested": false,
+    "counts": {
+      "original_files_checked": 295,
+      "original_checksum_entries_checked": 294,
+      "web_copy_pairs_checked": 36,
+      "svg_xml_parsed": 89,
+      "logo_master_svgs_checked": 42,
+      "usage_routes_checked": 15,
+      "manifest_icon_references_checked": 4,
+      "handoff_files_checked": 8
+    },
+    "errors": [],
+    "status": "PASS"
+  },
+  "verifier_negative_tests": [
+    {
+      "case": "modified original SVG",
+      "expected_exit_code": 1,
+      "actual_exit_code": 1,
+      "status": "PASS",
+      "detected_error_count": 4
+    },
+    {
+      "case": "missing original SVG",
+      "expected_exit_code": 1,
+      "actual_exit_code": 1,
+      "status": "PASS",
+      "detected_error_count": 6
+    },
+    {
+      "case": "symlink substituted for original SVG",
+      "expected_exit_code": 1,
+      "actual_exit_code": 1,
+      "status": "PASS",
+      "detected_error_count": 6
+    },
+    {
+      "case": "modified handoff map",
+      "expected_exit_code": 1,
+      "actual_exit_code": 1,
+      "status": "PASS",
+      "detected_error_count": 1
+    }
+  ],
+  "installer_smoke_tests": {
+    "initial_copy": {
+      "status": "PASS",
+      "exit_code": 0,
+      "file_count": 36,
+      "files_match_source": true
+    },
+    "conflict_refusal": {
+      "status": "PASS",
+      "exit_code": 2,
+      "destination_unchanged": true,
+      "stderr": "No files copied. 36 destination files already exist. Use --overwrite deliberately."
+    },
+    "explicit_overwrite_fixture_only": {
+      "status": "PASS",
+      "exit_code": 0,
+      "files_match_source": true,
+      "unrelated_project_file_preserved": true
+    },
+    "scope": "isolated temporary directory; no user repository, no deployment",
+    "command_template": "node 07-web/install-brand.mjs ${TEMP_PUBLIC} [--overwrite only in explicit fixture test]"
+  },
+  "documentation_checks": {
+    "explicit_path_references_checked": 37,
+    "missing_path_references": [],
+    "work_packages": 4,
+    "axiom_counts": {
+      "Completeness criteria": 4,
+      "Success criteria": 4,
+      "Definition of Done": 4,
+      "Invariants": 4,
+      "Quality standards": 4
+    },
+    "font_binary_files_added": 0
+  },
+  "environment": {
+    "python": "3.13.5",
+    "node": "v22.16.0",
+    "os": "Linux"
+  },
+  "not_run_in_this_pass": [
+    "integration into a user project",
+    "full React typecheck",
+    "browser rendering of the product over HTTP",
+    "new rendering or aesthetic revision of logos and templates",
+    "native Safari/Figma/Illustrator/Office/email-client validation",
+    "physical-device PWA/macOS installation",
+    "print proof or color-profile conversion",
+    "push, merge, deployment or external publication"
+  ],
+  "historical_reports_preserved": [
+    "10-quality/QA-REPORT.md",
+    "10-quality/validation.json",
+    "10-quality/contrast-report.json"
+  ],
+  "integrity_note": "SHA-256 compares this delivery with the retained baseline. It is not a digital signature or ownership proof."
+}

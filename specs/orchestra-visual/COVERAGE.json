@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "theme": "orchestra-graphite",
+  "flags": {
+    "orchestraCockpit": true
+  },
+  "master_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "fixture_path": "fixture.json",
+  "primary_viewport": [
+    1672,
+    941
+  ],
+  "viewports": [
+    [
+      1672,
+      941
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1366,
+      768
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "extra_profiles": [
+    {
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 2,
+      "zoom": 100
+    },
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "dpr": 1,
+      "zoom": 200
+    }
+  ],
+  "rule": "All UI states at primary viewport; default per UI at other viewports and extra profiles. Host-native required for Dock/native surfaces. No Cartesian duplication of every state at every size.",
+  "pilot_surface_ids": [
+    "UI06",
+    "UI07",
+    "UI08",
+    "UI19",
+    "UI23",
+    "UI28",
+    "UI50",
+    "UI55"
+  ]
+}

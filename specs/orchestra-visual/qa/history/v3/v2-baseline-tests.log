@@ -1,0 +1,42 @@
+test_cycle_including_aggregate (test_contract.ContractTests.test_cycle_including_aggregate) ... ok
+test_duplicate_id (test_contract.ContractTests.test_duplicate_id) ... ok
+test_empty_axiom (test_contract.ContractTests.test_empty_axiom) ... ok
+test_exclusive_known_hotspots (test_contract.ContractTests.test_exclusive_known_hotspots) ... ok
+test_missing_axiom (test_contract.ContractTests.test_missing_axiom) ... ok
+test_reference_hash_is_verified (test_contract.ContractTests.test_reference_hash_is_verified) ... ok
+test_unknown_dependency (test_contract.ContractTests.test_unknown_dependency) ... ok
+test_unsafe_write_path (test_contract.ContractTests.test_unsafe_write_path) ... ok
+test_valid_contract (test_contract.ContractTests.test_valid_contract) ... ok
+test_wrong_surface_owner (test_contract.ContractTests.test_wrong_surface_owner) ... ok
+test_complete_receipt_shape (test_contract.EvidenceTests.test_complete_receipt_shape) ... ok
+test_criterion_omission_rejected (test_contract.EvidenceTests.test_criterion_omission_rejected) ... ok
+test_empty_commands_rejected (test_contract.EvidenceTests.test_empty_commands_rejected) ... ok
+test_evidence_path_escape_rejected (test_contract.EvidenceTests.test_evidence_path_escape_rejected) ... ok
+test_final_release_requires_both_gates (test_contract.EvidenceTests.test_final_release_requires_both_gates) ... ok
+test_noninteger_exit_code_rejected (test_contract.EvidenceTests.test_noninteger_exit_code_rejected) ... ok
+test_not_applicable_requires_reason (test_contract.EvidenceTests.test_not_applicable_requires_reason) ... ok
+test_not_run_never_passes (test_contract.EvidenceTests.test_not_run_never_passes) ... ok
+test_pass_metrics_without_file_rejected (test_contract.EvidenceTests.test_pass_metrics_without_file_rejected) ... ok
+test_pass_visual_without_captures_rejected (test_contract.EvidenceTests.test_pass_visual_without_captures_rejected) ... ok
+test_apply_and_rerun_are_idempotent (test_contract.GitHubSyncTests.test_apply_and_rerun_are_idempotent) ... ok
+test_dry_run_no_writes (test_contract.GitHubSyncTests.test_dry_run_no_writes) ... ok
+test_fixed_repository_boundary (test_contract.GitHubSyncTests.test_fixed_repository_boundary) ... ok
+test_foreign_parent_refused_before_post (test_contract.GitHubSyncTests.test_foreign_parent_refused_before_post) ... ok
+test_marker_mismatch_refused (test_contract.GitHubSyncTests.test_marker_mismatch_refused) ... ok
+test_no_fine_grained_dependency_collapsed_into_cycle (test_contract.GitHubSyncTests.test_no_fine_grained_dependency_collapsed_into_cycle) ... ok
+test_partial_failure_is_not_success (test_contract.GitHubSyncTests.test_partial_failure_is_not_success) ... ok
+test_final_gates_do_not_need_whole_S25 (test_contract.ReadinessTests.test_final_gates_do_not_need_whole_S25) ... ok
+test_integration_precedes_final_gates (test_contract.ReadinessTests.test_integration_precedes_final_gates) ... ok
+test_live_blocker_not_bypassed_by_parent_claim (test_contract.ReadinessTests.test_live_blocker_not_bypassed_by_parent_claim) ... ok
+test_only_first_task_ready (test_contract.ReadinessTests.test_only_first_task_ready) ... ok
+test_own_and_governance_codegen_serialize (test_contract.ReadinessTests.test_own_and_governance_codegen_serialize) ... ok
+test_pass_without_receipt_rejected (test_contract.ReadinessTests.test_pass_without_receipt_rejected) ... ok
+test_rework_invalidates_dependent_release_claims (test_contract.ReadinessTests.test_rework_invalidates_dependent_release_claims) ... ok
+test_unknown_progress_node_fails (test_contract.ReadinessTests.test_unknown_progress_node_fails) ... ok
+test_template_rejects_non_task (test_contract.TemplateTests.test_template_rejects_non_task) ... ok
+test_template_starts_not_run_with_exact_criteria (test_contract.TemplateTests.test_template_starts_not_run_with_exact_criteria) ... ok
+
+----------------------------------------------------------------------
+Ran 37 tests in 0.086s
+
+OK

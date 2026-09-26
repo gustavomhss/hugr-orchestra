@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "scope": "Brand-input integration into planning package; not product validation",
+  "contract_revision": "4.1",
+  "status": "PASS",
+  "inputs": {
+    "brand_zip": {
+      "name": "HuGR-Brand-Kit-v1.0-Handoff (1).zip",
+      "sha256": "9c75596e259593c7b6e2ac9818c6358f207f7e4f9129fec3b93dbf3042fdd115",
+      "files": 304
+    },
+    "base_plan": {
+      "version": "4",
+      "zip_sha256": "8b28f885f746847e40d22d3a7becaf9f9cd74b6d20b80f82483c3abacd107df4"
+    },
+    "interface_reference": {
+      "sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    "new_logo": {
+      "sha256": "9eaf2fdd10cbbf9e9ec311d4480219d1bf7d97c2c34d7d249242613d71fcb65c",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "same_decoded_RGBA_as_kit_reference": true,
+      "same_PNG_bytes_as_kit_reference": false
+    }
+  },
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py",
+        "--json"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.828,
+      "stdout": "qa/brand-kit-verification.json",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/verify_brand.py"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.684,
+      "stdout": "qa/brand-map-verification.json",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/validate_plan.py"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.833,
+      "stdout": "qa/v4.1-plan-check.json",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/render_issues.py",
+        "--check"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.567,
+      "stdout": "qa/v4.1-issue-check.json",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/render_maps.py",
+        "--check"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.585,
+      "stdout": "qa/v4.1-map-check.json",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/select_work.py"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.857,
+      "stdout": "qa/v4.1-readiness.json",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/github_sync.py",
+        "--offline"
+      ],
+      "cwd": "package-root",
+      "exit_code": 0,
+      "elapsed_seconds": 1.668,
+      "stdout": "qa/v4.1-github-offline.json",
+      "stderr": ""
+    }
+  ],
+  "counts": {
+    "nodes": 143,
+    "node_kinds": {
+      "epic": 4,
+      "issue": 10,
+      "wp": 38,
+      "task": 66,
+      "subissue": 25
+    },
+    "axiom_groups": 715,
+    "criteria": 1980,
+    "surface_records": 74,
+    "asset_bindings": 14,
+    "required_copies": 2,
+    "vendor_files": 304,
+    "unit_tests": 151,
+    "new_brand_tests": 18
+  },
+  "unchanged": {
+    "reference/approved.png": true,
+    "BUDGETS.json": true,
+    "PERFORMANCE.md": true,
+    "COVERAGE.json": true,
+    "fixture.json": true,
+    "progress.json": true
+  },
+  "graph_fields_unchanged": true,
+  "vendor_bytes_match_original_zip": true,
+  "no_font_files_distributed": true,
+  "product_tasks_marked_pass": 0,
+  "checks_are_not_product_tests": true,
+  "not_executed": [
+    "frontend implementation",
+    "asset installation in product",
+    "product typecheck or build",
+    "real UI or Electron rendering",
+    "product performance benchmark",
+    "native icon installation",
+    "native GitHub hierarchy synchronization"
+  ],
+  "publication": {
+    "branch": "visual-migration-plan",
+    "latest_commit": "100d8e4a1745724a08d20b934df9e509dab78676",
+    "note_commit": "86e02726c239971735fa2025e32418d6c8320004",
+    "updated_issues": [
+      148
+    ],
+    "full_kit_or_plan_uploaded_to_repository": false
+  },
+  "limitations": [
+    "151 tests exercise planning tools and synthetic data, not the Orchestra app.",
+    "Local production census remains pending S01.",
+    "Brand-file integrity does not certify visual fidelity or successful URL/variant use.",
+    "The landscape is still an independent delivery in S05.",
+    "Final checks and repair review are by the same assistant, not an independent external auditor."
+  ]
+}

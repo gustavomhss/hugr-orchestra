@@ -1,0 +1,890 @@
+{
+  "kind": "github-desired-links-only",
+  "status": "NOT_APPLIED",
+  "native_writes_performed": 0,
+  "parents": [
+    {
+      "parent": 130,
+      "child": 134,
+      "node": "I01"
+    },
+    {
+      "parent": 130,
+      "child": 135,
+      "node": "I02"
+    },
+    {
+      "parent": 131,
+      "child": 136,
+      "node": "I03"
+    },
+    {
+      "parent": 131,
+      "child": 137,
+      "node": "I04"
+    },
+    {
+      "parent": 131,
+      "child": 138,
+      "node": "I05"
+    },
+    {
+      "parent": 132,
+      "child": 139,
+      "node": "I06"
+    },
+    {
+      "parent": 132,
+      "child": 140,
+      "node": "I07"
+    },
+    {
+      "parent": 132,
+      "child": 141,
+      "node": "I08"
+    },
+    {
+      "parent": 133,
+      "child": 142,
+      "node": "I09"
+    },
+    {
+      "parent": 133,
+      "child": 143,
+      "node": "I10"
+    },
+    {
+      "parent": 134,
+      "child": 144,
+      "node": "S01"
+    },
+    {
+      "parent": 134,
+      "child": 145,
+      "node": "S02"
+    },
+    {
+      "parent": 135,
+      "child": 146,
+      "node": "S03"
+    },
+    {
+      "parent": 135,
+      "child": 147,
+      "node": "S04"
+    },
+    {
+      "parent": 135,
+      "child": 148,
+      "node": "S05"
+    },
+    {
+      "parent": 136,
+      "child": 149,
+      "node": "S06"
+    },
+    {
+      "parent": 136,
+      "child": 150,
+      "node": "S07"
+    },
+    {
+      "parent": 136,
+      "child": 151,
+      "node": "S08"
+    },
+    {
+      "parent": 137,
+      "child": 152,
+      "node": "S09"
+    },
+    {
+      "parent": 137,
+      "child": 153,
+      "node": "S10"
+    },
+    {
+      "parent": 137,
+      "child": 154,
+      "node": "S11"
+    },
+    {
+      "parent": 138,
+      "child": 155,
+      "node": "S12"
+    },
+    {
+      "parent": 138,
+      "child": 156,
+      "node": "S13"
+    },
+    {
+      "parent": 138,
+      "child": 157,
+      "node": "S14"
+    },
+    {
+      "parent": 139,
+      "child": 158,
+      "node": "S15"
+    },
+    {
+      "parent": 139,
+      "child": 159,
+      "node": "S16"
+    },
+    {
+      "parent": 140,
+      "child": 160,
+      "node": "S17"
+    },
+    {
+      "parent": 140,
+      "child": 161,
+      "node": "S18"
+    },
+    {
+      "parent": 141,
+      "child": 162,
+      "node": "S19"
+    },
+    {
+      "parent": 141,
+      "child": 163,
+      "node": "S20"
+    },
+    {
+      "parent": 141,
+      "child": 164,
+      "node": "S21"
+    },
+    {
+      "parent": 142,
+      "child": 165,
+      "node": "S22"
+    },
+    {
+      "parent": 142,
+      "child": 166,
+      "node": "S23"
+    },
+    {
+      "parent": 142,
+      "child": 167,
+      "node": "S24"
+    },
+    {
+      "parent": 143,
+      "child": 168,
+      "node": "S25"
+    }
+  ],
+  "dependencies": [
+    {
+      "issue": 145,
+      "blocked_by": 144
+    },
+    {
+      "issue": 146,
+      "blocked_by": 145
+    },
+    {
+      "issue": 147,
+      "blocked_by": 146
+    },
+    {
+      "issue": 148,
+      "blocked_by": 145
+    },
+    {
+      "issue": 149,
+      "blocked_by": 146
+    },
+    {
+      "issue": 149,
+      "blocked_by": 147
+    },
+    {
+      "issue": 149,
+      "blocked_by": 148
+    },
+    {
+      "issue": 149,
+      "blocked_by": 165
+    },
+    {
+      "issue": 150,
+      "blocked_by": 146
+    },
+    {
+      "issue": 150,
+      "blocked_by": 147
+    },
+    {
+      "issue": 150,
+      "blocked_by": 165
+    },
+    {
+      "issue": 151,
+      "blocked_by": 146
+    },
+    {
+      "issue": 151,
+      "blocked_by": 147
+    },
+    {
+      "issue": 151,
+      "blocked_by": 148
+    },
+    {
+      "issue": 151,
+      "blocked_by": 165
+    },
+    {
+      "issue": 152,
+      "blocked_by": 146
+    },
+    {
+      "issue": 152,
+      "blocked_by": 147
+    },
+    {
+      "issue": 152,
+      "blocked_by": 165
+    },
+    {
+      "issue": 153,
+      "blocked_by": 146
+    },
+    {
+      "issue": 153,
+      "blocked_by": 147
+    },
+    {
+      "issue": 153,
+      "blocked_by": 165
+    },
+    {
+      "issue": 154,
+      "blocked_by": 146
+    },
+    {
+      "issue": 154,
+      "blocked_by": 147
+    },
+    {
+      "issue": 154,
+      "blocked_by": 152
+    },
+    {
+      "issue": 154,
+      "blocked_by": 165
+    },
+    {
+      "issue": 155,
+      "blocked_by": 146
+    },
+    {
+      "issue": 155,
+      "blocked_by": 147
+    },
+    {
+      "issue": 155,
+      "blocked_by": 165
+    },
+    {
+      "issue": 156,
+      "blocked_by": 146
+    },
+    {
+      "issue": 156,
+      "blocked_by": 147
+    },
+    {
+      "issue": 156,
+      "blocked_by": 165
+    },
+    {
+      "issue": 157,
+      "blocked_by": 146
+    },
+    {
+      "issue": 157,
+      "blocked_by": 147
+    },
+    {
+      "issue": 157,
+      "blocked_by": 159
+    },
+    {
+      "issue": 157,
+      "blocked_by": 165
+    },
+    {
+      "issue": 158,
+      "blocked_by": 146
+    },
+    {
+      "issue": 158,
+      "blocked_by": 147
+    },
+    {
+      "issue": 158,
+      "blocked_by": 149
+    },
+    {
+      "issue": 158,
+      "blocked_by": 159
+    },
+    {
+      "issue": 158,
+      "blocked_by": 165
+    },
+    {
+      "issue": 159,
+      "blocked_by": 144
+    },
+    {
+      "issue": 159,
+      "blocked_by": 145
+    },
+    {
+      "issue": 159,
+      "blocked_by": 165
+    },
+    {
+      "issue": 160,
+      "blocked_by": 144
+    },
+    {
+      "issue": 160,
+      "blocked_by": 145
+    },
+    {
+      "issue": 160,
+      "blocked_by": 165
+    },
+    {
+      "issue": 161,
+      "blocked_by": 146
+    },
+    {
+      "issue": 161,
+      "blocked_by": 147
+    },
+    {
+      "issue": 161,
+      "blocked_by": 160
+    },
+    {
+      "issue": 161,
+      "blocked_by": 165
+    },
+    {
+      "issue": 162,
+      "blocked_by": 108
+    },
+    {
+      "issue": 162,
+      "blocked_by": 109
+    },
+    {
+      "issue": 162,
+      "blocked_by": 112
+    },
+    {
+      "issue": 162,
+      "blocked_by": 114
+    },
+    {
+      "issue": 162,
+      "blocked_by": 144
+    },
+    {
+      "issue": 162,
+      "blocked_by": 146
+    },
+    {
+      "issue": 162,
+      "blocked_by": 147
+    },
+    {
+      "issue": 162,
+      "blocked_by": 165
+    },
+    {
+      "issue": 163,
+      "blocked_by": 106
+    },
+    {
+      "issue": 163,
+      "blocked_by": 113
+    },
+    {
+      "issue": 163,
+      "blocked_by": 114
+    },
+    {
+      "issue": 163,
+      "blocked_by": 144
+    },
+    {
+      "issue": 163,
+      "blocked_by": 146
+    },
+    {
+      "issue": 163,
+      "blocked_by": 147
+    },
+    {
+      "issue": 163,
+      "blocked_by": 165
+    },
+    {
+      "issue": 164,
+      "blocked_by": 146
+    },
+    {
+      "issue": 164,
+      "blocked_by": 147
+    },
+    {
+      "issue": 164,
+      "blocked_by": 165
+    },
+    {
+      "issue": 165,
+      "blocked_by": 144
+    },
+    {
+      "issue": 165,
+      "blocked_by": 146
+    },
+    {
+      "issue": 165,
+      "blocked_by": 147
+    },
+    {
+      "issue": 166,
+      "blocked_by": 145
+    },
+    {
+      "issue": 166,
+      "blocked_by": 149
+    },
+    {
+      "issue": 166,
+      "blocked_by": 150
+    },
+    {
+      "issue": 166,
+      "blocked_by": 151
+    },
+    {
+      "issue": 166,
+      "blocked_by": 152
+    },
+    {
+      "issue": 166,
+      "blocked_by": 153
+    },
+    {
+      "issue": 166,
+      "blocked_by": 154
+    },
+    {
+      "issue": 166,
+      "blocked_by": 155
+    },
+    {
+      "issue": 166,
+      "blocked_by": 156
+    },
+    {
+      "issue": 166,
+      "blocked_by": 157
+    },
+    {
+      "issue": 166,
+      "blocked_by": 158
+    },
+    {
+      "issue": 166,
+      "blocked_by": 159
+    },
+    {
+      "issue": 166,
+      "blocked_by": 160
+    },
+    {
+      "issue": 166,
+      "blocked_by": 161
+    },
+    {
+      "issue": 166,
+      "blocked_by": 164
+    },
+    {
+      "issue": 167,
+      "blocked_by": 149
+    },
+    {
+      "issue": 167,
+      "blocked_by": 150
+    },
+    {
+      "issue": 167,
+      "blocked_by": 151
+    },
+    {
+      "issue": 167,
+      "blocked_by": 152
+    },
+    {
+      "issue": 167,
+      "blocked_by": 153
+    },
+    {
+      "issue": 167,
+      "blocked_by": 154
+    },
+    {
+      "issue": 167,
+      "blocked_by": 155
+    },
+    {
+      "issue": 167,
+      "blocked_by": 156
+    },
+    {
+      "issue": 167,
+      "blocked_by": 157
+    },
+    {
+      "issue": 167,
+      "blocked_by": 158
+    },
+    {
+      "issue": 167,
+      "blocked_by": 159
+    },
+    {
+      "issue": 167,
+      "blocked_by": 161
+    },
+    {
+      "issue": 167,
+      "blocked_by": 164
+    },
+    {
+      "issue": 167,
+      "blocked_by": 165
+    },
+    {
+      "issue": 168,
+      "blocked_by": 146
+    },
+    {
+      "issue": 168,
+      "blocked_by": 147
+    },
+    {
+      "issue": 168,
+      "blocked_by": 148
+    },
+    {
+      "issue": 168,
+      "blocked_by": 149
+    },
+    {
+      "issue": 168,
+      "blocked_by": 150
+    },
+    {
+      "issue": 168,
+      "blocked_by": 151
+    },
+    {
+      "issue": 168,
+      "blocked_by": 152
+    },
+    {
+      "issue": 168,
+      "blocked_by": 153
+    },
+    {
+      "issue": 168,
+      "blocked_by": 154
+    },
+    {
+      "issue": 168,
+      "blocked_by": 155
+    },
+    {
+      "issue": 168,
+      "blocked_by": 156
+    },
+    {
+      "issue": 168,
+      "blocked_by": 157
+    },
+    {
+      "issue": 168,
+      "blocked_by": 158
+    },
+    {
+      "issue": 168,
+      "blocked_by": 159
+    },
+    {
+      "issue": 168,
+      "blocked_by": 160
+    },
+    {
+      "issue": 168,
+      "blocked_by": 161
+    },
+    {
+      "issue": 168,
+      "blocked_by": 164
+    },
+    {
+      "issue": 168,
+      "blocked_by": 165
+    },
+    {
+      "issue": 168,
+      "blocked_by": 166
+    },
+    {
+      "issue": 168,
+      "blocked_by": 167
+    }
+  ],
+  "fine_grained_only": [
+    {
+      "node": "S01-W1-T2",
+      "prerequisite": "S01-W1-T1"
+    },
+    {
+      "node": "S02-W1-T2",
+      "prerequisite": "S02-W1-T1"
+    },
+    {
+      "node": "S03-W1-T2",
+      "prerequisite": "S03-W1-T1"
+    },
+    {
+      "node": "S04-W1-T2",
+      "prerequisite": "S04-W1-T1"
+    },
+    {
+      "node": "S05-W1-T2",
+      "prerequisite": "S05-W1-T1"
+    },
+    {
+      "node": "S06-W1-T2",
+      "prerequisite": "S06-W1-T1"
+    },
+    {
+      "node": "S07-W1-T2",
+      "prerequisite": "S07-W1-T1"
+    },
+    {
+      "node": "S08-W1-T2",
+      "prerequisite": "S08-W1-T1"
+    },
+    {
+      "node": "S09-W1-T2",
+      "prerequisite": "S09-W1-T1"
+    },
+    {
+      "node": "S10-W1-T2",
+      "prerequisite": "S10-W1-T1"
+    },
+    {
+      "node": "S11-W1-T2",
+      "prerequisite": "S11-W1-T1"
+    },
+    {
+      "node": "S12-W1-T2",
+      "prerequisite": "S12-W1-T1"
+    },
+    {
+      "node": "S13-W1-T2",
+      "prerequisite": "S13-W1-T1"
+    },
+    {
+      "node": "S14-W1-T2",
+      "prerequisite": "S14-W1-T1"
+    },
+    {
+      "node": "S15",
+      "prerequisite": "PR#12 (advisory; not a required issue dependency)"
+    },
+    {
+      "node": "S15-W1-T2",
+      "prerequisite": "S15-W1-T1"
+    },
+    {
+      "node": "S16-W1-T2",
+      "prerequisite": "S16-W1-T1"
+    },
+    {
+      "node": "S17-W1-T2",
+      "prerequisite": "S17-W1-T1"
+    },
+    {
+      "node": "S18-W1-T2",
+      "prerequisite": "S18-W1-T1"
+    },
+    {
+      "node": "S19-W1-T2",
+      "prerequisite": "S19-W1-T1"
+    },
+    {
+      "node": "S19-W2",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S19-W2-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S19-W2-T2",
+      "prerequisite": "S19-W2-T1"
+    },
+    {
+      "node": "S20-W1-T2",
+      "prerequisite": "S20-W1-T1"
+    },
+    {
+      "node": "S20-W2",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S20-W2-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S20-W2-T2",
+      "prerequisite": "S20-W2-T1"
+    },
+    {
+      "node": "S21-W1-T2",
+      "prerequisite": "S21-W1-T1"
+    },
+    {
+      "node": "S22-W1-T2",
+      "prerequisite": "S22-W1-T1"
+    },
+    {
+      "node": "S23",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S23",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S23",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S23-W1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S23-W1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S23-W1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S23-W1-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S23-W1-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S23-W1-T1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S23-W1-T2",
+      "prerequisite": "S23-W1-T1"
+    },
+    {
+      "node": "S24",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S24",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S24",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S24-W1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S24-W1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S24-W1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S24-W1-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S24-W1-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S24-W1-T1",
+      "prerequisite": "S25-W1-T1"
+    },
+    {
+      "node": "S24-W1-T2",
+      "prerequisite": "S24-W1-T1"
+    },
+    {
+      "node": "S25",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S25",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S25-W1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S25-W1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S25-W1-T1",
+      "prerequisite": "S19-W1"
+    },
+    {
+      "node": "S25-W1-T1",
+      "prerequisite": "S20-W1"
+    },
+    {
+      "node": "S25-W1-T2",
+      "prerequisite": "S25-W1-T1"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "kind": "readiness-not-execution",
+  "status": "PASS",
+  "errors": [],
+  "invalid_claims": {},
+  "external_errors": {},
+  "running_count": 0,
+  "slots_available": 4,
+  "over_capacity": false,
+  "verified_sources": [],
+  "selected": [
+    {
+      "id": "S01-W1-T1",
+      "title": "Implementar censo de superfícies e contratos de capacidade",
+      "write_paths": [
+        "specs/orchestra-visual/PLAN.json",
+        "specs/orchestra-visual/SURFACES.json",
+        "specs/orchestra-visual/CENSUS.json",
+        "specs/orchestra-visual/MAP.md",
+        "specs/orchestra-visual/OWNERSHIP.md",
+        "specs/orchestra-visual/issues/*.md",
+        "specs/orchestra-visual/evidence/S01/**",
+        "specs/orchestra-visual/coverage-manifest.json",
+        "specs/orchestra-visual/BRAND-ASSETS.json",
+        "specs/orchestra-visual/BRAND-INTEGRATION.md"
+      ],
+      "resource_locks": []
+    }
+  ],
+  "ready_total": 1,
+  "deferred": [],
+  "completed_tasks": 0,
+  "source_scope_expanded": false,
+  "source_revision_verified": false,
+  "source_verification_scope": "candidate ancestry, attributed writes, effective contracts and declared output scopes; historical milestones are not current whole-product acceptance",
+  "blocked_count": 65
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "probe": "missing visual/performance",
+    "should_reject": true,
+    "actual_errors": [],
+    "accepted": true
+  },
+  {
+    "probe": "invented statuses",
+    "should_reject": true,
+    "actual_errors": [],
+    "accepted": true
+  }
+]

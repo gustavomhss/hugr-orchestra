@@ -1,0 +1,23 @@
+test_01_source_complete_is_valid_not_product_proof (test_brand.BrandContractTests.test_01_source_complete_is_valid_not_product_proof) ... ok
+test_02_altered_kit_bytes_fail (test_brand.BrandContractTests.test_02_altered_kit_bytes_fail) ... ok
+test_03_two_required_copies_pass_optional_not_installed (test_brand.BrandContractTests.test_03_two_required_copies_pass_optional_not_installed) ... ok
+test_04_missing_required_copy_fails (test_brand.BrandContractTests.test_04_missing_required_copy_fails) ... ok
+test_05_variant_swapped_at_destination_fails (test_brand.BrandContractTests.test_05_variant_swapped_at_destination_fails) ... ok
+test_06_required_destination_symlink_fails (test_brand.BrandContractTests.test_06_required_destination_symlink_fails) ... ok
+test_07_source_path_escape_fails (test_brand.BrandContractTests.test_07_source_path_escape_fails) ... ok
+test_08_destination_outside_scope_fails (test_brand.BrandContractTests.test_08_destination_outside_scope_fails) ... ok
+test_09_brand_contract_changes_invalidate_receipt_digest (test_brand.BrandContractTests.test_09_brand_contract_changes_invalidate_receipt_digest) ... ok
+test_10_no_legacy_redraw_instruction_in_s05 (test_brand.BrandContractTests.test_10_no_legacy_redraw_instruction_in_s05) ... ok
+test_11_new_wrapper_has_exactly_one_owner (test_brand.BrandContractTests.test_11_new_wrapper_has_exactly_one_owner) ... ok
+test_12_extra_source_file_fails (test_brand.BrandContractTests.test_12_extra_source_file_fails) ... ok
+test_13_changed_layout_reference_fails (test_brand.BrandContractTests.test_13_changed_layout_reference_fails) ... ok
+test_14_duplicate_map_entry_fails (test_brand.BrandContractTests.test_14_duplicate_map_entry_fails) ... ok
+test_15_full_plan_inspection_refuses_brand_corruption (test_brand.BrandContractTests.test_15_full_plan_inspection_refuses_brand_corruption) ... ok
+test_16_projection_uses_actual_version (test_brand.BrandContractTests.test_16_projection_uses_actual_version) ... ok
+test_17_no_fonts_added_to_source_kit (test_brand.BrandContractTests.test_17_no_fonts_added_to_source_kit) ... ok
+test_18_conditional_asset_cannot_be_copied_with_wrong_bytes (test_brand.BrandContractTests.test_18_conditional_asset_cannot_be_copied_with_wrong_bytes) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 2.761s
+
+OK

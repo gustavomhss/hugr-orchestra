@@ -1,0 +1,825 @@
+{
+  "schema_version": 1,
+  "version": "4.0",
+  "method": "self-cold-review plus adversarial synthetic regression tests",
+  "approved_visual_changed": false,
+  "findings": [
+    {
+      "id": "R01",
+      "title": "O grafo é acíclico, mas os axiomas criam um ciclo de aceite",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Estágios e axiomas de produtor/gates/encerramento separados; T1 não exige S23/S24 futuros; criterion_evaluation_stage e acceptance_requires verificados.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_R01_R02_complete_graph_including_failed_gate_and_retry",
+        "test_repairs.ContractRepairs.test_R01_producer_has_no_final_gate_obligation",
+        "test_repairs.ContractRepairs.test_R01_wrong_evaluation_stage_is_rejected"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R01",
+        "title": "O grafo é acíclico, mas os axiomas criam um ciclo de aceite",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S25-W1-T1",
+          "#168",
+          "S23",
+          "#166",
+          "S24",
+          "#167"
+        ],
+        "probe_ids": [
+          "AP01"
+        ],
+        "source": [
+          "PLAN.json: S25-W1-T1-COMPLETENESS_CRITERIA-05",
+          "PLAN.json: S23.depends_on e S24.depends_on"
+        ],
+        "observation": "O critério S25-W1-T1-COMPLETENESS_CRITERIA-05 exige concluir e provar o passo “Passe builds/testes por package, cold-review, performance S23 e visual S24 no SHA integrado”. Entretanto, S23 e S24 dependem de S25-W1-T1. O validador estrutural retorna PASS porque só percorre depends_on/children: a dependência invertida está escrita dentro do critério.",
+        "impact": "Um executor que respeite literalmente todos os axiomas não consegue concluir T1. Um executor que marque T1 como PASS para destravar os gates precisa ignorar o critério. A mesma task contém também o invariante correto, de produzir o build antes dos gates; portanto, há duas instruções contraditórias, não apenas uma frase pouco elegante.",
+        "correction": [
+          "Separar “build candidato utilizável” de “release aprovado” nos critérios, não só nas arestas.",
+          "Remover de T1 a obrigação de aprovação por S23/S24. Manter builds, smoke e provas locais do candidato. A aprovação dos gates pertence a T2.",
+          "Revisar todas as frases geradas de passos do pai para filhos: uma obrigação do programa não deve aparecer antecipada em um produtor.",
+          "Registrar pré-condições/artefatos verificáveis por etapa. Não tentar resolver o conflito mandando o Codex interpretar a intenção contra o texto."
+        ],
+        "qualification": "PC07 e PC11 confirmam que não existe um ciclo no grafo declarado. O defeito é semântico, nos critérios; seria incorreto anunciar que o algoritmo topológico está quebrado.",
+        "repair_axioms": {
+          "dod": [
+            "T1 é concluível com um candidato e provas locais, sem resultados ainda inexistentes de S23/S24."
+          ],
+          "invariants": [
+            "T2 continua impossível sem os gates finais do mesmo candidato."
+          ],
+          "quality_standards": [
+            "Cada critério tem uma etapa de avaliação e uma fonte produzida antes ou durante essa etapa."
+          ],
+          "completeness_criteria": [
+            "Simular produtor → gates → encerramento, incluindo um gate falho e correção posterior."
+          ],
+          "success_criteria": [
+            "Nenhuma task precisa declarar como concluído um consumidor que depende dela."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R02",
+      "title": "O primeiro piloto funcional ficou depois de 44 tasks",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Adicionado S25-W0 com duas tasks do mesmo integrador; piloto tem15 pré-requisitos e precede home/settings/providers/Janitor completos.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_R01_R02_complete_graph_including_failed_gate_and_retry",
+        "test_repairs.ContractRepairs.test_R02_pilot_before_broad_migration"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R02",
+        "title": "O primeiro piloto funcional ficou depois de 44 tasks",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S06",
+          "#149",
+          "S25-W1-T1",
+          "#168"
+        ],
+        "probe_ids": [
+          "AP20"
+        ],
+        "source": [
+          "PLAN.json: dependências transitivas de S25-W1-T1",
+          "OWNERSHIP.md: writer único dos hotspots",
+          "EXECUTE.md: piloto como primeira fatia vertical"
+        ],
+        "observation": "S25 é o único owner de app.tsx, session.tsx e session-side-panel.tsx. Sua primeira task de integração depende de 44 tasks: inclusive settings, providers, diálogos, contexto e Janitor. Essas frentes são exigidas antes de ligar a composição ao aplicativo real.",
+        "impact": "O plano promete validar cedo a reprodução aprovada, mas o DAG adia a primeira integração funcional para depois de quase toda a construção das frentes. O Codex pode produzir vários componentes isolados antes de descobrir que a disposição, o lifecycle nativo ou a densidade não funcionam juntos. Isso cria precisamente o retrabalho que o usuário quis evitar.",
+        "correction": [
+          "Criar uma etapa de integração antecipada no mesmo owner S25, sem adicionar outro épico ou um segundo writer.",
+          "Essa etapa deve depender apenas da fundação e da fatia mínima de shell, conversa, composer, evidência e rail necessária ao piloto; dividir entregas desses owners em contratos mínimos quando necessário.",
+          "Conectar o piloto aos controllers reais e comparar seu render ao master antes da propagação ampla. Storybook pode auxiliar, mas não satisfaz esse gate.",
+          "Manter integração incremental e o gate final posterior. “Não parar no piloto” não significa “não ter um piloto cedo”."
+        ],
+        "qualification": "O número 44 é a contagem exata dos pré-requisitos executáveis na v3, não uma estimativa de duração ou esforço.",
+        "repair_axioms": {
+          "dod": [
+            "Há uma task de piloto funcional desbloqueável antes de settings/providers/Janitor completos."
+          ],
+          "invariants": [
+            "Um único owner continua controlando os hotspots; nenhum cenário separado finge ser o aplicativo."
+          ],
+          "quality_standards": [
+            "A fatia é pequena, reversível e permite validar geometria, foco, rolagem e custo inicial."
+          ],
+          "completeness_criteria": [
+            "DAG, tarefas, critérios, slots e ordem de leitura descrevem a mesma sequência."
+          ],
+          "success_criteria": [
+            "Um erro de disposição é detectado antes de contaminar a migração das demais telas."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R03",
+      "title": "Censo e ownership não fecham o ciclo com o plano executável",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "PLAN/SURFACES/CENSUS canônicos, mapas/projeções derivados; escopo de sidebar e classificações migrate/inherit/out-of-scope; censo --repo strict reprova arquivo novo não classificado.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_R03_sidebar_has_single_writer",
+        "test_repairs.ContractRepairs.test_R03_wrong_surface_write_owner_rejected",
+        "test_repairs.GitRepairs.test_R03_actual_new_ui_requires_classification",
+        "test_repairs.GitRepairs.test_R03_inherited_ui_valid_with_coverage_and_wrong_owner_rejected"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R03",
+        "title": "Censo e ownership não fecham o ciclo com o plano executável",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S01",
+          "#144",
+          "S06",
+          "#149",
+          "tools/validate_plan.py",
+          "tools/select_work.py"
+        ],
+        "probe_ids": [
+          "AP02",
+          "AP03",
+          "AP04",
+          "AP05"
+        ],
+        "source": [
+          "PLAN.json: write_paths de S01/S06",
+          "tools/validate_plan.py: owners_for e inspect",
+          "tools/select_work.py: leitura de PLAN.json",
+          "MAP.md e SURFACES.json",
+          "Código remoto: pages/layout.tsx e pages/layout/sidebar-shell.tsx"
+        ],
+        "observation": "Confirmei seis caminhos reais em pages/layout/ sem owner de escrita na v3, incluindo sidebar-shell.tsx, sidebar-items.tsx, sidebar-project.tsx e sidebar-workspace.tsx. layout.tsx importa componentes dessa pasta. Em um repositório temporário com esses nomes, validate_plan --repo retorna PASS. A inclusão de uma surface UI999 com owner S06 que não pode escrever no arquivo também permanece PASS, apenas como aviso. Além disso, S01 produz source-map.json, surface-map.json, capabilities.json e ownership.json; os seletores/validadores continuam lendo PLAN.json e SURFACES.json, sem consumir esses quatro outputs. Nenhum owner do plano autoriza atualizar os canônicos PLAN.json/SURFACES.json.",
+        "impact": "O executor encontra arquivos alcançáveis e descobre que não pode modificá-los; mesmo que atualize os quatro mapas previstos em S01, o scheduler não aprende a nova atribuição. O censo pode parecer encerrado e o problema continuar intacto. Recriar a sidebar em arquivos permitidos seria um atalho especialmente ruim: duplicaria o trabalho existente para contornar uma falha do planejamento.",
+        "correction": [
+          "Escolher uma única representação canônica para superfície, reachability, ação, estados e owner. Os demais mapas devem ser projeções verificadas dessa fonte.",
+          "Autorizar uma atualização delimitada de PLAN/SURFACES em S01 ou em uma task explícita de manutenção do contrato; regenerar projeções e recalcular apenas os consumidores afetados.",
+          "Classificar cada superfície alcançável como migrar, herdar tema sem alteração local, ou fora de escopo com razão verificável. Não exigir edição de todo arquivo.",
+          "Fazer o gate falhar para UI alcançável não classificada e para atribuição de escrita incompatível. Separar formalmente read-anchor de UI a migrar."
+        ],
+        "qualification": "Os seis arquivos não provam que todos precisem de edição; podem herdar parte do tema. A falha é a ausência de classificação/owner e de feedback executável. A prova --repo usa um índice Git sintético com caminhos confirmados no GitHub, não um clone completo do produto.",
+        "repair_axioms": {
+          "dod": [
+            "Censo atualizado é efetivamente lido pelo seletor e pelo validador; arquivos de sidebar têm disposition explícita."
+          ],
+          "invariants": [
+            "Não há segundo mapa de ownership com autoridade divergente nem duplicação de UI como workaround."
+          ],
+          "quality_standards": [
+            "Cada UI a migrar possui writer único; no-change/inherited e read-anchor são classificações explícitas."
+          ],
+          "completeness_criteria": [
+            "Adicionar uma UI órfã, um owner incorreto e um arquivo novo alcançável deve reprovar o gate; os controles classificados corretamente passam."
+          ],
+          "success_criteria": [
+            "Codex consegue passar do censo à implementação sem violar write_paths nem ignorar arquivos reais."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R04",
+      "title": "O codegen exigido não tem autorização de escrita compatível",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Lease serial com paths de registro e os dois prefixes generated, comando oficial e idempotência. Live exige confirmação do footprint local por S01; saída fora do grant não passa.",
+      "regression_tests": [
+        "test_repairs.GitRepairs.test_R04_codegen_lease_covers_actual_prefixes_and_serializes",
+        "test_repairs.GitRepairs.test_R04_codegen_requires_grant_command_and_recorded_outputs"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R04",
+        "title": "O codegen exigido não tem autorização de escrita compatível",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S19-W2-T1",
+          "#162",
+          "S20-W2-T1",
+          "#163",
+          "S25",
+          "#168"
+        ],
+        "probe_ids": [
+          "AP19"
+        ],
+        "source": [
+          "PLAN.json: write_paths de S19-W2-T1/S20-W2-T1/S25",
+          "CONTRACTS.md C-07",
+          "OWNERSHIP.md: lease de APIs tardias",
+          "AGENTS.md do repositório: geração oficial do Client"
+        ],
+        "observation": "O repositório determina regenerar o Client após mudanças na API pública e proíbe editar src/generated e src/generated-effect manualmente. S19/S20 mandam executar essa geração e registrar todos os outputs. Porém, nenhum owner cobre os diretórios gerados. O lease public-api-registration-and-client-codegen serializa as tasks, mas não lhes concede esses write_paths. Vários registradores/manifests compartilhados também precisam ser mapeados antes de permitir a alteração pública.",
+        "impact": "Uma implementação correta da API pode ser rejeitada pelo recibo por ter gerado os arquivos necessários. O executor fica pressionado a omitir outputs de paths_changed, não gerar o cliente ou expandir o escopo informalmente. Isso contradiz tanto a disciplina do host quanto a rastreabilidade prometida.",
+        "correction": [
+          "Mapear o comando real e seu footprint de saída antes de concluir a fase de contrato.",
+          "Dar ao único integrador uma task aditiva de registro/codegen, ou autorizar explicitamente o footprint gerado na task sob lease. A exclusividade deve ser por etapa, sem dois writers simultâneos.",
+          "Distinguir modificação gerada por comando autorizado de edição manual; registrar comando, versão, inputs e diff real.",
+          "A API live só fecha depois de geração, consumidor efetivo e regressões correspondentes."
+        ],
+        "qualification": "As sondas usam nomes exemplificativos dentro dos prefixos generated documentados; não alegam que client.ts seja um arquivo real específico do checkout. O problema comprovado é que nenhum caminho nesses prefixos recebe owner.",
+        "repair_axioms": {
+          "dod": [
+            "O comando oficial roda e todos os outputs necessários têm owner/autorização declarados."
+          ],
+          "invariants": [
+            "Nada em generated é editado manualmente; nenhuma geração paralela disputa o mesmo diretório."
+          ],
+          "quality_standards": [
+            "Footprint concreto, regeneração reproduzível e diff mínimo; nenhum silêncio em paths_changed."
+          ],
+          "completeness_criteria": [
+            "Testar geração legítima, output inesperado, execução concorrente e client desatualizado."
+          ],
+          "success_criteria": [
+            "Adicionar a projeção pública pode ser feito corretamente sem contornar o próprio plano."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "S01 must verify the real local generator footprint before W2; this revision did not run bun run generate on the Orchestra checkout."
+    },
+    {
+      "id": "R05",
+      "title": "Recibos não vinculam o contrato efetivo completo",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Manifesto efetivo inclui task, regras contínuas dos ancestrais, normas, cobertura, fixture/master e leases; notas não normativas e outros owners não invalidam automaticamente.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_R05_ancestor_change_invalidates_receipt",
+        "test_repairs.ContractRepairs.test_R05_every_normative_input_binds_release",
+        "test_repairs.ContractRepairs.test_R05_unrelated_notes_and_other_owner_do_not_invalidate"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R05",
+        "title": "Recibos não vinculam o contrato efetivo completo",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "tools/validate_evidence.py",
+          "tools/select_work.py",
+          "todas as tasks que consomem SPEC/PERFORMANCE"
+        ],
+        "probe_ids": [
+          "AP07",
+          "AP08-PERFORMANCE.md",
+          "AP08-SPEC.md",
+          "AP08-CONTRACTS.md",
+          "AP08-SURFACES.json",
+          "AP08-fixture.json",
+          "AP08-reference_approved.png"
+        ],
+        "source": [
+          "tools/validate_evidence.py: contract_digest",
+          "tools/select_work.py: source_errors",
+          "RECEIPTS-v3.md",
+          "PLAN.json: critérios e ancestors"
+        ],
+        "observation": "O digest considera os campos do nó local, mas não os axiomas aplicáveis dos ancestrais nem o conteúdo dos documentos normativos. Alterei o invariante de S17: o digest de S17-W1-T2 permaneceu idêntico. Alterações em PERFORMANCE.md, SPEC.md, CONTRACTS.md, SURFACES.json e fixture.json também não tornam o recibo final stale no teste de source_errors.",
+        "impact": "Um resultado obtido contra uma especificação anterior pode permanecer estruturalmente aceito depois de mudar o orçamento, a cobertura ou a regra visual. Isso não é a impossibilidade de automatizar beleza: são dependências normativas conhecidas que não entram na identidade da prova.",
+        "correction": [
+          "Vincular o recibo a um manifesto pequeno do contrato efetivo: task, axiomas herdados aplicáveis, versão/hash dos contratos P/Q, fixture, cobertura e referência.",
+          "Definir quais mudanças invalidam quais provas. Não usar indiscriminadamente o hash de todo PLAN para derrubar tudo.",
+          "Verificar esses vínculos antes de liberar o consumidor ou aceitar o gate final, inclusive em --repo.",
+          "Quando mudar uma regra, exigir nova avaliação; recalcular um hash sem repetir a prova não é revalidação."
+        ],
+        "qualification": "PC02 confirma que a inspeção completa do pacote rejeita um master corrompido. AP08 da imagem mostra uma lacuna no frescor do recibo, não um bypass de todos os comandos do pacote. PC04 confirma que alterações diretas no nó da task já são recusadas.",
+        "repair_axioms": {
+          "dod": [
+            "Mudança em um invariante herdado ou budget efetivo invalida as provas afetadas."
+          ],
+          "invariants": [
+            "Mudança de documentação sem efeito normativo não invalida automaticamente o produto inteiro."
+          ],
+          "quality_standards": [
+            "Identidades derivadas deterministicamente de fontes canônicas, sem digest fornecido só pela narrativa do executor."
+          ],
+          "completeness_criteria": [
+            "Cobrir alteração de task, ancestral, P/Q, fixture e cobertura; incluir controle de mudança realmente irrelevante."
+          ],
+          "success_criteria": [
+            "PASS significa que a prova corresponde às regras que estão sendo usadas agora."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R06",
+      "title": "A integração normal invalida a raiz e contamina as 64 tasks",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Descoberta e piloto são milestones históricos; provas locais observam outputs; gates finais observam todo produto. Cone potencial não é reset global e reparos continuam selecionáveis.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_R06_discovery_and_pilot_are_historical_not_current_acceptance",
+        "test_repairs.ContractRepairs.test_R06_final_delivery_document_does_not_erase_pilot",
+        "test_repairs.ContractRepairs.test_R06_invalid_receipt_selects_repair_not_global_deadlock",
+        "test_repairs.ContractRepairs.test_R06_owned_output_and_final_gate_changes_still_invalidate"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R06",
+        "title": "A integração normal invalida a raiz e contamina as 64 tasks",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S01-W1-T1",
+          "#144",
+          "S25-W1-T1",
+          "#168",
+          "tools/select_work.py"
+        ],
+        "probe_ids": [
+          "AP10",
+          "AP11"
+        ],
+        "source": [
+          "PLAN.json: read_paths de S01-W1-T1",
+          "tools/select_work.py: source_errors, invalidated_closure e select",
+          "OWNERSHIP.md: invalidação por rework"
+        ],
+        "observation": "S01-W1-T1 observa app.tsx, session.tsx e outros arquivos que a integração final deve modificar. Quando S25 faz uma alteração prevista em app.tsx, o recibo do censo se torna STALE. Aplicar a regra documentada de invalidação transitiva a S01-W1-T1 alcança os 140 nós e todas as 64 tasks. A presença de um recibo stale também faz select retornar FAIL sem selecionar nem a tarefa de reparo.",
+        "impact": "O plano não separa “observação histórica usada para mapear a base” de “invariante atual do produto”. Se seguido mecanicamente, o avanço normal da implementação obriga invalidar todo o trabalho e percorrer novamente a cadeia. Um censo pode e deve ser reavaliado quando o código muda, mas essa reavaliação não deveria destruir provas que continuam válidas contra interfaces inalteradas.",
+        "correction": [
+          "Distinguir milestone de descoberta, contrato estável produzido e prova do estado atual. Consumidores devem depender do contrato pertinente, não de que a fotografia antiga dos arquivos nunca mude.",
+          "Classificar a mudança contra o mapa: alteração planejada que preserva a interface versus nova superfície ou alteração de contrato que exige revalidação.",
+          "Propagar STALE apenas pelas dependências semanticamente afetadas e oferecer uma task de remapeamento/reparo sem reiniciar todo o programa.",
+          "Preservar a reprovação forte para alterações relevantes não verificadas. O objetivo não é aceitar recibo stale, mas tornar a recuperação executável."
+        ],
+        "qualification": "A v3 já documenta editar progress.json manualmente para marcar STALE. Por isso, AP11 não é apresentado como um deadlock algorítmico inevitável: é um agravante operacional. O bloqueador é o cone de invalidação global aplicado ao progresso normal.",
+        "repair_axioms": {
+          "dod": [
+            "Modificar app.tsx pela task autorizada não exige refazer indiscriminadamente as 64 tasks."
+          ],
+          "invariants": [
+            "Mudanças que de fato quebram um contrato ainda invalidam os consumidores e o aceite final."
+          ],
+          "quality_standards": [
+            "Histórico e prova atual têm papéis distintos; recomputação limitada e rastreável."
+          ],
+          "completeness_criteria": [
+            "Simular censo → algumas frentes → integração → reparo → gates, incluindo alteração fora do contrato."
+          ],
+          "success_criteria": [
+            "A execução converge para um candidato verificado em vez de recomeçar por efeito do próprio trabalho."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R07",
+      "title": "Ownership é conferido contra o que o recibo declara, não o diff real",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Baseline pré-task, faixa Git completa e diff real; dirty/index preexistentes preservados; imports do integrador exigem receipts e versão exata do produtor.",
+      "regression_tests": [
+        "test_repairs.GitRepairs.test_R07_interleaved_foreign_commit_rejected",
+        "test_repairs.GitRepairs.test_R07_preexisting_dirty_is_preserved_not_attributed",
+        "test_repairs.GitRepairs.test_R07_preexisting_index_is_preserved",
+        "test_repairs.GitRepairs.test_R07_real_out_of_scope_omission_rejected",
+        "test_repairs.GitRepairs.test_R07_rename_checks_both_paths",
+        "test_repairs.GitRepairs.test_R07_valid_owned_commit_and_declared_extra",
+        "test_repairs.GitRepairs.test_R07_verified_import_merge_allowed_but_conflict_rewrite_rejected"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R07",
+        "title": "Ownership é conferido contra o que o recibo declara, não o diff real",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "tools/validate_evidence.py",
+          "tools/select_work.py",
+          "todas as tasks de escrita"
+        ],
+        "probe_ids": [
+          "AP09"
+        ],
+        "source": [
+          "tools/validate_evidence.py: validação de paths_changed",
+          "tools/select_work.py: git_snapshot e source_errors"
+        ],
+        "observation": "Criei um repositório Git temporário, fiz um commit contendo uma alteração fora do escopo da task, e gerei um recibo no HEAD desse commit com paths_changed vazio. validate_receipt e source_errors não apontaram erro. O primeiro percorre somente a lista declarada; o segundo compara mudanças posteriores ao HEAD alegado, sem recompor o footprint da task.",
+        "impact": "Um arquivo esquecido no recibo — não necessariamente uma falsificação intencional — escapa do controle de ownership. A exclusividade de escrita parece mecanicamente garantida, mas depende de o executor descrever corretamente tudo o que fez.",
+        "correction": [
+          "Registrar baseline da unidade e commits/patch efetivamente produzidos, incluindo o estado dirty anterior sem sobrescrevê-lo.",
+          "Derivar o footprint pelo Git e comparar com paths_changed e write/exclude_paths.",
+          "Separar alterações preexistentes do usuário de alterações da task; não exigir limpar o worktree para facilitar a auditoria.",
+          "Recusar omissão, path extra e alteração não atribuída; autorizar exceção somente por procedimento explícito de ownership."
+        ],
+        "qualification": "Isso não demonstra que o produto sofreu uma alteração indevida; o contraexemplo ocorreu somente no repositório sintético da auditoria.",
+        "repair_axioms": {
+          "dod": [
+            "Alterações efetivas fora do owner são detectadas mesmo com paths_changed vazio ou incompleto."
+          ],
+          "invariants": [
+            "O trabalho preexistente do usuário não é atribuído falsamente à task nem removido."
+          ],
+          "quality_standards": [
+            "Footprint derivado do candidato/patch verificável, não apenas de um array autodeclarado."
+          ],
+          "completeness_criteria": [
+            "Testar omissão de arquivo, arquivo extra, rename, mudança legítima, worktree inicialmente dirty e commits de outros owners."
+          ],
+          "success_criteria": [
+            "“Escopo exclusivo” é verificável no código alterado, não apenas no formulário."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R08",
+      "title": "O teto de paralelismo ignora tasks já em execução",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Vagas=max(0,jobs-running); não cancelar excesso anterior, reportar over_capacity e não alocar; preservar conflitos/host quieto.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_R08_benchmark_requires_quiet_host",
+        "test_repairs.ContractRepairs.test_R08_total_concurrency_zero_to_oversubscribed"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R08",
+        "title": "O teto de paralelismo ignora tasks já em execução",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "tools/select_work.py",
+          "política de quatro frentes"
+        ],
+        "probe_ids": [
+          "AP06"
+        ],
+        "source": [
+          "tools/select_work.py: construção de running e laço chosen/deferred",
+          "OWNERSHIP.md: waves e limite operacional"
+        ],
+        "observation": "Com jobs=4 e três T1 disjuntas já RUNNING, o seletor devolveu mais quatro tasks. O total potencial foi sete, não quatro. O algoritmo limita len(chosen), sem descontar len(running).",
+        "impact": "A configuração anunciada como teto operacional deixa de limitar a concorrência real. Em uma máquina compartilhada com builds, testes e browser nativo, isso pode agravar contenção, uso de memória e instabilidade das medições. Não medi o custo no Mac; demonstrei a falha determinística do escalonamento.",
+        "correction": [
+          "Calcular vagas como max(0, jobs - running_count), além das verificações de arquivos e leases.",
+          "Se a intenção for limitar somente novas alocações, renomear a opção e introduzir separadamente o limite total; a documentação e o executor não podem confundir os dois.",
+          "Preservar a reserva exclusiva de hardware para benchmarks e a regra de coordenador único."
+        ],
+        "qualification": "",
+        "repair_axioms": {
+          "dod": [
+            "running + selected nunca ultrapassa o limite total solicitado."
+          ],
+          "invariants": [
+            "Nenhuma task já em execução é cancelada automaticamente para satisfazer o limite."
+          ],
+          "quality_standards": [
+            "Contagem determinística, conflitos/leases preservados e diagnóstico claro de falta de vagas."
+          ],
+          "completeness_criteria": [
+            "Cobrir 0, 1, jobs-1, jobs e mais de jobs tarefas RUNNING; incluir benchmark e conflitos de arquivo."
+          ],
+          "success_criteria": [
+            "O Codex respeita o grau de paralelismo que o plano promete."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R09",
+      "title": "Pré-requisitos externos usam um protocolo de prova mais fraco",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Prova externa atual vinculada a fonte ancestral ou artefato instalado+lockfile, logs públicos positivos/negativos, revisão e hashes; --repo obrigatório.",
+      "regression_tests": [
+        "test_repairs.GitRepairs.test_R09_current_ancestry_public_proof_valid",
+        "test_repairs.GitRepairs.test_R09_installed_artifact_valid_and_changed_or_removed_fails",
+        "test_repairs.GitRepairs.test_R09_missing_public_test_and_candidate_drift_rejected",
+        "test_repairs.GitRepairs.test_R09_unrelated_source_and_changed_receipt_rejected"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R09",
+        "title": "Pré-requisitos externos usam um protocolo de prova mais fraco",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S19-W2-T1",
+          "#162",
+          "S20-W2-T1",
+          "#163",
+          "tools/select_work.py"
+        ],
+        "probe_ids": [
+          "AP12",
+          "AP13"
+        ],
+        "source": [
+          "tools/select_work.py: bloco ext_ok e git_snapshot",
+          "PLAN.json: external_requires",
+          "CONTRACTS.md C-07"
+        ],
+        "observation": "Os pré-requisitos de Own/governança foram aceitos com JSON contendo somente ref, head e status PASS, além de verified_public_path como string não vazia no progresso. Não há exigência equivalente de hashes, logs de execução ou recibo de caminho público. O teste aceitou um head externo fora da ancestralidade fornecida para o checkout, enquanto source_revision_verified era true. Alterar conteúdo adicional do arquivo de prova externo também não foi detectado por hash.",
+        "impact": "A fronteira mais sensível do plano — liberar integração live a partir de autoridade existente — tem menos proteção que uma task de apresentação. O scheduler pode considerar disponível uma implementação não presente no candidato ou uma alegação sem teste do caminho público. Isso não contorna a segurança do backend real; pode liberar a fase errada e sustentar uma declaração falsa de prontidão.",
+        "correction": [
+          "Definir recibo externo verificável com repositório/artefato, revisão, relação com o candidato, caminho público exercitado, comandos, hashes e resultado.",
+          "Verificar presença no checkout ou vínculo explícito a uma dependência instalada e identificada; não usar somente issue fechada ou string de caminho.",
+          "Invalidar a prova quando fonte, candidato ou artefato externo mudar. Estados unavailable/HOLD continuam independentes.",
+          "Garantir que source_revision_verified descreva exatamente o conjunto de provas realmente verificado."
+        ],
+        "qualification": "Ancestralidade não é universalmente suficiente nem necessária para uma biblioteca instalada: nesse caso o vínculo deve ser pela identidade do artefato. O problema é não verificar nenhum desses vínculos.",
+        "repair_axioms": {
+          "dod": [
+            "Uma implementação externa ausente do candidato não libera W2 live."
+          ],
+          "invariants": [
+            "A UI segura unavailable/HOLD não fica bloqueada pela ausência dessa autoridade."
+          ],
+          "quality_standards": [
+            "Protocolo de integridade e proveniência no mínimo tão rigoroso quanto o das tasks locais."
+          ],
+          "completeness_criteria": [
+            "Testar fonte divergente, artefato removido/alterado, caminho não executado, prova válida e dependência instalada legítima."
+          ],
+          "success_criteria": [
+            "W2 só avança quando a capacidade autoritativa realmente consumida está demonstrada."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "R10",
+      "title": "O aceite visual não verifica a cobertura formal exigida",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Manifesto canônico de superfície/estado/viewport/DPR/zoom/host/build/fixture/master; dimensões e cobertura completa conferidas antes da revisão estética.",
+      "regression_tests": [
+        "test_repairs.CaptureRepairs.test_R10_duplicate_capture_rejected",
+        "test_repairs.CaptureRepairs.test_R10_full_synthetic_matrix_passes_structure_only",
+        "test_repairs.CaptureRepairs.test_R10_missing_settings_error_viewport_or_native_is_rejected",
+        "test_repairs.CaptureRepairs.test_R10_one_pixel_is_rejected",
+        "test_repairs.CaptureRepairs.test_R10_wrong_build_and_master_rejected",
+        "test_repairs.CaptureRepairs.test_R10_wrong_native_producer_rejected"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "R10",
+        "title": "O aceite visual não verifica a cobertura formal exigida",
+        "priority": "BLOCKER",
+        "status": "OPEN",
+        "approval_blocking": true,
+        "affected_nodes": [
+          "S24",
+          "#167",
+          "S25-W1-T2",
+          "#168",
+          "tools/validate_evidence.py"
+        ],
+        "probe_ids": [
+          "AP14"
+        ],
+        "source": [
+          "tools/validate_evidence.py: ramo visual",
+          "SPEC.md: Q01–Q16 e viewports",
+          "SURFACES.json",
+          "PLAN.json: recibo final"
+        ],
+        "observation": "O validador estrutural de S25-W1-T2 aceitou uma única imagem PNG válida de 1×1 pixel como screenshots do gate visual. Não existe no recibo uma matriz obrigatória de surface/state/viewport, vínculo ao master ou verificação de dimensões esperadas. O restante da prova foi preenchido de forma explicitamente sintética para testar a estrutura.",
+        "impact": "A ferramenta não precisa decidir se a interface é bonita. Mas pode e deve distinguir “uma imagem qualquer existe” de “as telas, estados e tamanhos obrigatórios foram capturados”. Hoje a completude visual pedida pelo usuário depende inteiramente da narrativa de revisão.",
+        "correction": [
+          "Adicionar manifesto de capturas com surface_id, state_id, viewport, DPR, plataforma, tema/flags, fixture/master e identidade de build.",
+          "Derivar a cobertura obrigatória dos registros reais de UI, não de todos os 68 registros mistos de fonte/medida/lacuna.",
+          "Verificar campos, dimensões e pares obrigatórios; manter julgamento visual e desvios semânticos explicitamente revisados.",
+          "Separar captura do host web de prova nativa do Dock. Não mascarar colunas inteiras nem aceitar imagem gerada como captura do aplicativo."
+        ],
+        "qualification": "A v3 já avisa que hashes não provam qualidade e que a revisão humana/agêntica é indispensável. O achado não repete essa limitação: cobra a cobertura objetiva que os próprios requisitos enumeram.",
+        "repair_axioms": {
+          "dod": [
+            "O gate final recusa imagem 1×1 e cobertura incompleta, mesmo com hashes e PASS declarados."
+          ],
+          "invariants": [
+            "O validador não se apresenta como juiz automático de beleza, autenticidade ou equivalência perceptiva."
+          ],
+          "quality_standards": [
+            "Cobertura canônica, imagens decodificáveis, identidade de build e revisão por estado."
+          ],
+          "completeness_criteria": [
+            "Omitir settings, um estado de erro, um viewport e a prova nativa necessária deve reprovar; a matriz completa passa."
+          ],
+          "success_criteria": [
+            "Não é possível chamar de migração integral apenas a fotografia de um cockpit."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "H01",
+      "title": "O resultado numérico ainda depende de um avaliador futuro sem contrato fechado",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Avaliador determinístico de observações A/B implementado e recalculado pelo validador; budgets, mínimo de amostras, ambiente, unidades e estados inconclusivos controlados.",
+      "regression_tests": [
+        "test_repairs.CaptureRepairs.test_H01_manual_PASS_over_bad_observations_rejected",
+        "test_repairs.PerformanceRepairs.test_H01_NaN_and_negative",
+        "test_repairs.PerformanceRepairs.test_H01_environment_workload_and_capabilities_mismatch",
+        "test_repairs.PerformanceRepairs.test_H01_insufficient_samples",
+        "test_repairs.PerformanceRepairs.test_H01_malformed_budget_rule_rejected",
+        "test_repairs.PerformanceRepairs.test_H01_missing_baseline_environment_or_observation",
+        "test_repairs.PerformanceRepairs.test_H01_numeric_positive_control",
+        "test_repairs.PerformanceRepairs.test_H01_one_noisy_pair_is_inconclusive_not_PASS",
+        "test_repairs.PerformanceRepairs.test_H01_overbudget",
+        "test_repairs.PerformanceRepairs.test_H01_unknown_or_untyped_gate_rejected"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "H01",
+        "title": "O resultado numérico ainda depende de um avaliador futuro sem contrato fechado",
+        "priority": "HARDENING",
+        "status": "OPEN",
+        "approval_blocking": false,
+        "affected_nodes": [
+          "S02",
+          "#145",
+          "S23",
+          "#166",
+          "tools/validate_evidence.py"
+        ],
+        "probe_ids": [
+          "AP16",
+          "AP17"
+        ],
+        "source": [
+          "PERFORMANCE.md: formato de prova v3",
+          "tools/validate_evidence.py: relatório performance-evaluation",
+          "PLAN.json: S02-W1-T2"
+        ],
+        "observation": "Uma observação sintética com p95=9999 ms, limite=50 ms e somente uma amostra coexistiu com um relatório manual de gates PASS aceito pelo validador de recibos. A checagem confere IDs/status/arquivos, não calcula os percentis. O pacote reconhece essa limitação e delega o produtor/avaliador a S02, ainda não implementado.",
+        "impact": "Não é prova de que um benchmark real incorreto passaria por um avaliador S02 já pronto: esse avaliador ainda não existe. É um ponto de contrato que deve ficar fechado para que a futura execução quantitativa não termine em preenchimento manual de PASS. Também não considerei a possibilidade de NOT_APPLICABLE em S02, isoladamente, uma falha: testar a instrumentação não é medir o desempenho final do produto.",
+        "correction": [
+          "Definir o formato mínimo de amostras, unidade, relógio, janela, perfil, candidato/base, amostragem e configuração imutável dos budgets.",
+          "Definir produtor → avaliador determinístico → recibo, incluindo versão/identidade do avaliador e comando de avaliação.",
+          "Em S02-T2, exigir demonstração positiva e negativa do avaliador. A categoria “performance do produto” pode ser não aplicável nessa etapa, mas a prova de funcionamento do avaliador não pode ser omitida.",
+          "Em S23, exigir recálculo a partir das amostras e rejeição de inconclusivo, não confiar exclusivamente em rótulos fornecidos."
+        ],
+        "qualification": "Classificado como reforço de contrato e condição de S02, não como descoberta de uma regressão do Orchestra. Não houve benchmark do aplicativo nesta auditoria.",
+        "repair_axioms": {
+          "dod": [
+            "S02 entrega um avaliador que reprova automaticamente o registro contraditório utilizado na sonda."
+          ],
+          "invariants": [
+            "Nenhum ajuste automático de workload/threshold para obter PASS; a mesma build é medida e renderizada."
+          ],
+          "quality_standards": [
+            "Unidades, denominadores, versões e incerteza explícitos; P1/soak/idle independentes de rede/modelo remoto."
+          ],
+          "completeness_criteria": [
+            "Abaixo/acima do limite, insuficiência de amostra, ambiente diferente, base ausente, NaN e resultado inconclusivo."
+          ],
+          "success_criteria": [
+            "Performance é uma conclusão recalculável, não um adjetivo nem um campo preenchido."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "H02",
+      "title": "Os arrays de gates obrigatórios não são validados como contrato fechado",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "Arrays fechados de gates, identidade do release, tipos, duplicatas e cobertura obrigatória verificados no plano.",
+      "regression_tests": [
+        "test_repairs.ContractRepairs.test_H02_invalid_gate_shapes_fail_early",
+        "test_repairs.ContractRepairs.test_H02_registry_and_final_shape_fail_early"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "H02",
+        "title": "Os arrays de gates obrigatórios não são validados como contrato fechado",
+        "priority": "HARDENING",
+        "status": "OPEN",
+        "approval_blocking": false,
+        "affected_nodes": [
+          "tools/validate_plan.py",
+          "PLAN.json: required_performance_gates/required_native_gates"
+        ],
+        "probe_ids": [
+          "AP18-None",
+          "AP18-[]",
+          "AP18-['UNKNOWN_GATE']"
+        ],
+        "source": [
+          "tools/validate_plan.py: validação de tasks",
+          "tools/validate_evidence.py: required_ids"
+        ],
+        "observation": "O validador do plano aceitou required_performance_gates de S25-W1-T2 como null, array vazio ou [UNKNOWN_GATE]. O resultado pode ser uma falha tardia de tipo ou uma exigência de gates diferente da especificação. O teste não removeu axiomas nem deformou as demais estruturas.",
+        "impact": "Uma edição acidental do contrato pode atravessar a verificação inicial e aparecer apenas na etapa de recibos, ou reduzir silenciosamente a cobertura esperada. Não é possível tornar um plano arbitrariamente editável imune a fraude do seu próprio autor; a proteção relevante aqui é consistência e tipagem.",
+        "correction": [
+          "Exigir arrays de strings únicas reconhecidas; validar a relação entre evidence_requirements e seus gates.",
+          "Expressar a cobertura final de P/Q/nativo em um registro canônico e verificar que a task de release a consome.",
+          "Recusar null, tipos incorretos, IDs desconhecidos e remoções incompatíveis com a política final."
+        ],
+        "qualification": "",
+        "repair_axioms": {
+          "dod": [
+            "As três mutações testadas são rejeitadas na validação inicial do plano."
+          ],
+          "invariants": [
+            "Gates não podem desaparecer por omissão de campo ou conversão implícita de tipo."
+          ],
+          "quality_standards": [
+            "Diagnósticos com nó/campo/ID e sem traceback como interface normal de erro."
+          ],
+          "completeness_criteria": [
+            "Null, número, string, duplicatas, desconhecidos, vazio indevido e configuração válida."
+          ],
+          "success_criteria": [
+            "Uma v4 mal editada não parece validada para só falhar no final."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    },
+    {
+      "id": "H03",
+      "title": "Cabeçalho PNG não garante um arquivo de captura utilizável",
+      "status": "CORRECTED_IN_CONTRACT_AND_TOOLING",
+      "repair": "PNG verificado por CRC/chunks/IDAT/IEND, zlib completo e scanlines dentro de limites; truncamento/payload/CRC/filter inválidos recusados.",
+      "regression_tests": [
+        "test_repairs.PNGRepairs.test_H03_truncated_missing_payload_CRC_dimension_and_filter",
+        "test_repairs.PNGRepairs.test_H03_valid_png_decodes"
+      ],
+      "test_log": "qa/tool-tests-v4.log",
+      "original_finding": {
+        "id": "H03",
+        "title": "Cabeçalho PNG não garante um arquivo de captura utilizável",
+        "priority": "HARDENING",
+        "status": "OPEN",
+        "approval_blocking": false,
+        "affected_nodes": [
+          "tools/validate_evidence.py"
+        ],
+        "probe_ids": [
+          "AP15"
+        ],
+        "source": [
+          "tools/validate_evidence.py: leitura de 24 bytes",
+          "QA_REPORT.md v3: limite declarado da checagem PNG"
+        ],
+        "observation": "Truncar uma captura sintética aos primeiros 24 bytes, preservando assinatura, IHDR e dimensões positivas, continua aceito. O arquivo não contém dados de imagem suficientes para abrir uma captura.",
+        "impact": "A limitação de verificar apenas o cabeçalho já estava explicitada na v3. Ainda assim, um arquivo corrompido deveria ser recusado antes de ser encaminhado para uma revisão visual. Esse reforço não substitui o manifesto de cobertura de R10.",
+        "correction": [
+          "Validar a decodificação/integridade do arquivo de imagem no tooling de auditoria ou captura.",
+          "Rejeitar truncamento, dimensão incoerente, payload ausente ou checksum inválido; impor limites razoáveis para evitar arquivos absurdos.",
+          "Não adicionar dependência ao runtime do aplicativo para resolver uma checagem de arquivos de prova."
+        ],
+        "qualification": "",
+        "repair_axioms": {
+          "dod": [
+            "A captura truncada de 24 bytes é rejeitada, enquanto o PNG completo é aceito."
+          ],
+          "invariants": [
+            "Decodificar não significa autenticar a origem nem aprovar a aparência."
+          ],
+          "quality_standards": [
+            "Validação limitada e segura, restrita ao tooling."
+          ],
+          "completeness_criteria": [
+            "PNG válido, truncado, payload ausente, CRC inválido e tamanho fora dos limites."
+          ],
+          "success_criteria": [
+            "O revisor recebe imagens que de fato podem ser inspecionadas."
+          ]
+        }
+      },
+      "product_execution_claim": false,
+      "remaining_execution_precondition": "No product acceptance implied; perform the task-specific real execution and inspection."
+    }
+  ]
+}
