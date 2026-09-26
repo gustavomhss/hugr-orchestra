@@ -27,12 +27,19 @@
 
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
+import ts from "typescript"
 import { asHash, asSubtreeHash, canonicalForm, defaultEncoder } from "@atlas/kernel"
 import type { CasObject, Encoder } from "@atlas/kernel"
 import type { Axes, IndexNode } from "@atlas/index"
 import type { Grounding, GroundingEntry } from "../src/types.js"
 import { bindSubtree } from "../src/subtree.js"
 import { driftDetect, isGrounded } from "../src/drift.js"
+
+const OFF_SEAM_IMPORT = /\b(blake3|sha256|sha512|md5|crc32|createHash)\b|node:crypto|@noble\b/
+const hasOffSeamImport = (source: string): boolean => {
+  const file = ts.createSourceFile("source.ts", source, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS)
+  return file.statements.some((statement) => ts.isImportDeclaration(statement) && OFF_SEAM_IMPORT.test(statement.getText(file)))
+}
 
 // ── fixture builders ─────────────────────────────────────────────────────────────────────────────────
 const node = (key: string, sh: string, children: IndexNode[] = []): IndexNode => ({
@@ -175,20 +182,24 @@ describe("WP-4.10-a.GROUND — local drift oracle: subtreeHash · isGrounded · 
   })
 
   it("SCN-GROUND-10b-1: no off-seam digest call site exists in this WP source", () => {
-    // static import-line check of Acceptance §8 — this WP's own source carries no raw hash IMPORT or CALL site
+    // static ESM declaration check of Acceptance §8 — this WP's own source carries no raw hash IMPORT or CALL site
     // (a digest CALL `blake3(` / `createHash(` or an off-seam digest IMPORT; prose mentions are exempt).
     const OFF_SEAM_CALL = /\b(blake3|sha256|sha512|md5|crc32|createHash)\s*\(/
-    const OFF_SEAM_IMPORT = /^\s*import\b.*(?:\b(?:blake3|sha256|sha512|md5|crc32|createHash)\b|node:crypto|@noble\b)/
     for (const rel of ["../src/subtree.ts", "../src/drift.ts"]) {
       const source = readFileSync(new URL(rel, import.meta.url), "utf8")
       // teeth (breaks-on "an anchor builder imports blake3 directly and hashes off-seam"):
       expect(OFF_SEAM_CALL.test(source)).toBe(false)
-      expect(source.split(/\r?\n/).some((line) => OFF_SEAM_IMPORT.test(line))).toBe(false)
+      expect(hasOffSeamImport(source)).toBe(false)
     }
     // differential: swapping the seam moves the value ⇒ nothing is computed off-seam (folded from 10a).
     const stubA: Encoder = { hash: (b) => asHash(`a:${b.length}`) }
     const stubB: Encoder = { hash: (b) => asHash(`b:${b.length}`) }
     const u: CasObject = { kind: "item", name: "x", body: "return 1" }
     expect(bindSubtree(stubA).subtreeHash(u)).not.toBe(bindSubtree(stubB).subtreeHash(u))
+  })
+
+  it("SCN-GROUND-10b-1: rejects multiline direct @noble digest imports without reading trailing comments", () => {
+    expect(hasOffSeamImport('import {\n  blake3,\n} from "@noble/hashes/blake3"')).toBe(true)
+    expect(hasOffSeamImport('import { asHash } from "@atlas/kernel"\n// @noble is prose')).toBe(false)
   })
 })
