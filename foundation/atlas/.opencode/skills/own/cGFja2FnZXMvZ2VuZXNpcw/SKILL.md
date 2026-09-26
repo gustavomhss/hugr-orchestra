@@ -4,9 +4,7 @@ description: Atlas ownership context for packages/genesis.
 ---
 
 <!-- own-receipt:begin -->
-
-{"schemaVersion":1,"unit":"packages/genesis","skillName":"own_cGFja2FnZXMvZ2VuZXNpcw","snapshot":"genesis-own-v1","sourceRevision":"e03736f521aa7064c8b9bef59e70bfc1eb6f631b","graphCoverage":"COMPLETE","sourceBlobs":{"packages/genesis/src/extract.ts":"e6eef86a095cb1f59c24450d701215d415704d14","packages/genesis/src/index.ts":"aaf1be6da91ee3594ab7a5208077a24957ea372f","packages/genesis/src/types.ts":"4141743edcff40a8033acea005787e60841f61a7"},"factIds":["genesis:deterministic-bootstrap"],"drillUnits":[],"contentHash":"4d492e003e93fb84a23e95666fdb5633f8bf4704649339d92296bbe1c70670c1"}
-
+{"schemaVersion":1,"unit":"packages/genesis","skillName":"own_cGFja2FnZXMvZ2VuZXNpcw","snapshot":"genesis-own-v1","sourceRevision":"508f7770901d8ba950ee403e198249140491e421","graphCoverage":"COMPLETE","sourceBlobs":{"packages/genesis/src/extract.ts":"c75db0d612150c48e9d1b032347f6803adbc09f6","packages/genesis/src/index.ts":"c875104925bcfff0c59261691ca03a09011c9410","packages/genesis/src/types.ts":"7a5534c10aa5153bb8b5ea3e73fc8993f04f9d73"},"factIds":["genesis:deterministic-bootstrap"],"drillUnits":[],"contentHash":"fbd31d6b27875aa9694d3517be5b8328e116b74beaeccda662ebf289c86d5b9d"}
 <!-- own-receipt:end -->
 
 # own_cGFja2FnZXMvZ2VuZXNpcw
@@ -29,6 +27,8 @@ Genesis owns deterministic bootstrap and governed fact seeding.
 
 ## Advisory Facts
 
+
 ## Relations
+
 
 ## Drill

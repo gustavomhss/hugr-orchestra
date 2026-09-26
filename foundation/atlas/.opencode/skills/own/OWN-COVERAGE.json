@@ -1,6 +1,1 @@
-{
-  "schemaVersion": 1,
-  "snapshot": "genesis-own-v1",
-  "sourceRevision": "e03736f521aa7064c8b9bef59e70bfc1eb6f631b",
-  "units": ["packages/genesis"]
-}
+{"schemaVersion":1,"snapshot":"genesis-own-v1","sourceRevision":"508f7770901d8ba950ee403e198249140491e421","units":["packages/genesis"]}
