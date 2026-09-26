@@ -51,7 +51,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join, dirname, normalize, relative } from "node:path"
 import { fileURLToPath } from "node:url"
-import { KNOWN_ENTRIES } from "./id-integrity-known.mjs"
+import { KNOWN_ENTRIES } from "../lib/id-integrity-known.mjs"
 
 // Repo root, OVERRIDABLE so the gate's own test can point it at a fixture tree. Without this the gate could
 // only ever be mutation-tested by hand — precisely the "trust me" the gate exists to abolish.
