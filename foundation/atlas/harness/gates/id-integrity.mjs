@@ -51,6 +51,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join, dirname, normalize, relative } from "node:path"
 import { fileURLToPath } from "node:url"
+import { KNOWN_ENTRIES } from "./id-integrity-known.mjs"
 
 // Repo root, OVERRIDABLE so the gate's own test can point it at a fixture tree. Without this the gate could
 // only ever be mutation-tested by hand — precisely the "trust me" the gate exists to abolish.
@@ -67,18 +68,7 @@ const DOCS = join(ROOT, "docs")
 const KNOWN = new Map(
   process.env.ID_INTEGRITY_ROOT !== undefined
     ? Object.entries(JSON.parse(process.env.ID_INTEGRITY_KNOWN ?? "{}"))
-    : [
-        // (An ID-5 entry lived here: wp-campaign-8.md cited `../../reference/atlas-ground.md` twice when the
-        // file is `atlas-grounding.md`. It was a two-character typo, i.e. fully mechanical to fix, and
-        // "files this gate's author does not own" — the fair reason for the five ID-3 orphans below, each of
-        // which needs a WP card AUTHORED — was never a reason to ratchet it. Fixed at the source; the gate
-        // then reported the entry STALE on its own, which is the ledger proving it cannot rot into a
-        // permanent exemption.)
-        // (An ID-3 entry for `REQ-TOOLS-6d` lived here — "added after S4, carried by no WP card". It is now
-        // carried by `work-packages/wp-per-fact-freshness.md`, the WP that amends its prohibition clause,
-        // so the ledger reported it STALE on its own. Removed at the source: the shrink-only rule working
-        // exactly as designed, and the second entry this ledger has proved cannot rot into an exemption.)
-      ],
+     : KNOWN_ENTRIES,
 )
 
 /**
