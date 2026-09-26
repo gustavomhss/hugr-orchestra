@@ -43,10 +43,10 @@
 //  e) NON-MARKDOWN CARRIERS. Ids referenced from `packages/**` source, tests, or skills are out of scope.
 //
 // ── RATCHET ──────────────────────────────────────────────────────────────────────────────────────────
-// Six real violations exist on the corpus TODAY (see KNOWN below). They are pre-existing defects in files
-// this gate's author does not own, so they are recorded rather than fixed — and recorded LOUDLY: the gate
-// prints them on every successful run, fails on any NEW violation, and fails when a KNOWN entry stops
-// violating (so the ledger can only shrink and cannot rot into a permanent exemption).
+// 1453 pre-existing violations exist on the corpus TODAY (see static ledger module below). They are recorded
+// rather than fixed — and recorded LOUDLY: the gate prints them on every successful run, fails on any NEW
+// violation, and fails when a KNOWN entry stops violating (so the ledger can only shrink and cannot rot into
+// a permanent exemption).
 
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join, dirname, normalize, relative } from "node:path"
