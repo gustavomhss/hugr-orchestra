@@ -12,12 +12,13 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHONDONTWRITEBYTECODE: '1'
-      OUT: ${{ runner.temp }}/orchestra-execution-repairs
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
           ref: visual-migration-plan
+      - name: Resolve runner-local evidence path
+        run: echo "OUT=$RUNNER_TEMP/orchestra-execution-repairs" >> "$GITHUB_ENV"
       - name: Apply exactly the reviewed repair bytes
         env:
           GH_TOKEN: ${{ github.token }}
