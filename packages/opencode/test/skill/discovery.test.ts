@@ -1,11 +1,11 @@
-import { describe, expect, beforeAll, afterAll } from "bun:test"
+import { describe, expect, beforeAll, afterAll, beforeEach, afterEach } from "bun:test"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Effect } from "effect"
 import { Discovery } from "../../src/skill/discovery"
 import { Global } from "@opencode-ai/core/global"
 import { Filesystem } from "@/util/filesystem"
-import { rm } from "fs/promises"
+import { mkdtemp, rm } from "fs/promises"
 import path from "path"
 import { testEffect } from "../lib/effect"
 
@@ -16,14 +16,16 @@ let mutableVersion = "1"
 let mutableContent = "# Old"
 let mutableDownloadCount = 0
 let mutableFiles = ["SKILL.md"]
+let catalogAVersion = "1"
+let catalogAContent = "# A"
+let catalogBContent = "# B"
 
 const fixturePath = path.join(import.meta.dir, "../fixture/skills")
-const cacheDir = path.join(Global.Path.cache, "skills")
+let cacheDir: string
+let previousCache: string
 const it = testEffect(LayerNode.compile(LayerNode.group([Discovery.node, FSUtil.node])))
 
 beforeAll(async () => {
-  await rm(cacheDir, { recursive: true, force: true })
-
   server = Bun.serve({
     port: 0,
     async fetch(req) {
@@ -37,6 +39,14 @@ beforeAll(async () => {
         return new Response(mutableContent)
       }
       if (url.pathname === "/mutable/mutable/old.md") return new Response("old reference")
+      if (url.pathname === "/catalog-a/index.json") {
+        return Response.json({ skills: [{ name: "shared", version: catalogAVersion, files: ["SKILL.md"] }] })
+      }
+      if (url.pathname === "/catalog-a/shared/SKILL.md") return new Response(catalogAContent)
+      if (url.pathname === "/catalog-b/index.json") {
+        return Response.json({ skills: [{ name: "shared", version: "1", files: ["SKILL.md"] }] })
+      }
+      if (url.pathname === "/catalog-b/shared/SKILL.md") return new Response(catalogBContent)
 
       // route /.well-known/skills/* to the fixture directory
       if (url.pathname.startsWith("/.well-known/skills/")) {
@@ -60,6 +70,16 @@ beforeAll(async () => {
 
 afterAll(async () => {
   void server?.stop()
+})
+
+beforeEach(async () => {
+  previousCache = Global.Path.cache
+  cacheDir = await mkdtemp(path.join(Global.Path.tmp, "skill-discovery-"))
+  ;(Global.Path as { cache: string }).cache = cacheDir
+})
+
+afterEach(async () => {
+  ;(Global.Path as { cache: string }).cache = previousCache
   await rm(cacheDir, { recursive: true, force: true })
 })
 
@@ -181,6 +201,28 @@ describe("Discovery.pull", () => {
 
       yield* discovery.pull(url)
       expect(mutableDownloadCount).toBe(3)
+    }),
+  )
+
+  it.live("keeps same-named skills isolated by catalog", () =>
+    Effect.gen(function* () {
+      catalogAVersion = "1"
+      catalogAContent = "# A"
+      catalogBContent = "# B"
+      const discovery = yield* Discovery.Service
+      const catalogA = `http://localhost:${server.port}/catalog-a/`
+      const catalogB = `http://localhost:${server.port}/catalog-b/`
+
+      const [aV1] = yield* discovery.pull(catalogA)
+      const [bV1] = yield* discovery.pull(catalogB)
+      catalogAVersion = "2"
+      catalogAContent = "# New"
+      const [aV2] = yield* discovery.pull(catalogA)
+
+      expect(aV2).toBe(aV1)
+      expect(aV2).not.toBe(bV1)
+      expect(yield* Effect.promise(() => Bun.file(path.join(aV2, "SKILL.md")).text())).toBe("# New")
+      expect(yield* Effect.promise(() => Bun.file(path.join(bV1, "SKILL.md")).text())).toBe("# B")
     }),
   )
 })

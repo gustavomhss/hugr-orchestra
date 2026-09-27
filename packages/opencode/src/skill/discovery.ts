@@ -32,8 +32,6 @@ const layer: Layer.Layer<Service, never, FSUtil.Service | Path.Path | HttpClient
     const fs = yield* FSUtil.Service
     const path = yield* Path.Path
     const http = HttpClient.filterStatusOk(withTransientReadRetry(yield* HttpClient.HttpClient))
-    const cache = path.join(Global.Path.cache, "skills")
-
     const download = Effect.fn("Discovery.download")(function* (url: string, dest: string) {
       if (yield* fs.exists(dest).pipe(Effect.orDie)) return true
 
@@ -50,6 +48,7 @@ const layer: Layer.Layer<Service, never, FSUtil.Service | Path.Path | HttpClient
       const base = url.endsWith("/") ? url : `${url}/`
       const index = new URL("index.json", base).href
       const host = base.slice(0, -1)
+      const cache = path.join(Global.Path.cache, "skills", Bun.hash(base).toString(16))
 
       yield* Effect.logInfo("fetching index", { url: index })
 
