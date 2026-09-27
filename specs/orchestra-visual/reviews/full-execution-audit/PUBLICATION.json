@@ -1,0 +1,24 @@
+{
+  "kind": "adversarial-audit-reproduction-not-product-approval",
+  "status": "AUDIT_REPRODUCED",
+  "audited_plan_commit": "3c97621681b119105be8b7982ba663b0d701fd83",
+  "publication_input_commit": "51aac12f2a6e28a4b9b61d4112f61a3519500b2d",
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36302861278",
+  "unchanged_tooling_tests": 248,
+  "probes_reproduced": [
+    "census_boundary",
+    "census_cli",
+    "ancestor_stage_metadata",
+    "receipt_freshness_boundary",
+    "explicit_synthetic_evidence",
+    "widget_hash_granularity",
+    "regression_control",
+    "package_integrity"
+  ],
+  "canonical_inputs_unchanged": true,
+  "findings_resolved": false,
+  "product_execution": "NOT_RUN",
+  "merge_approved": false,
+  "suite_log_sha256": "95b9756360626efca9a18d9d966b636ed8f1c8ac77070ded8780e58157ec76a9",
+  "actual_ci_failure_run": 36301102952
+}
