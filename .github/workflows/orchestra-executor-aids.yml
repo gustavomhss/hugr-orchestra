@@ -1,0 +1,118 @@
+name: Orchestra executor aids verification
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-executor-aids.yml]
+permissions:
+  contents: write
+concurrency:
+  group: orchestra-executor-aids
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: visual-migration-plan
+          fetch-depth: 1
+      - name: Verify existing suite and exercise read-only bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess,sys,tempfile
+          repo=pathlib.Path.cwd();root=repo/'specs/orchestra-visual'
+          out=pathlib.Path(tempfile.mkdtemp(prefix='orchestra-executor-',dir=os.environ['RUNNER_TEMP']))
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+          expected={'tools/executor.py':'92e02e2882ee0450a856c60d7e57b0f1c707d69ca99f02727984938750edab49','tools/test_executor.py':'bfe5d1c9f3f92e050cc39a4d3039694896a339b4f370524605fcdf9cfc5e87e4'}
+          for name,value in expected.items():assert sha(root/name)==value,('Uploaded bytes differ',name)
+          before_head=git('rev-parse','HEAD');before_status=git('status','--porcelain=v1');before_index=sha(repo/'.git/index')
+          protected=['PLAN.json','SURFACES.json','CENSUS.json','CONTRACTS.md','SPEC.md','PERFORMANCE.md','BUDGETS.json','COVERAGE.json','fixture.json','progress.json','reference/approved.png','WIDGETS.md']
+          protected_hashes={name:sha(root/name) for name in protected}
+          checks=[]
+          def check(name,args,expected_code=0):
+              r=subprocess.run(args,cwd=root,capture_output=True,text=True,timeout=300)
+              (out/(name+'.log')).write_text(r.stdout+r.stderr)
+              checks.append({'name':name,'argv':args,'cwd':'specs/orchestra-visual','exit_code':r.returncode,'expected_exit_code':expected_code,'stdout_sha256':hashlib.sha256(r.stdout.encode()).hexdigest()})
+              if r.returncode!=expected_code:
+                  print((r.stdout+r.stderr)[-18000:]);raise RuntimeError(name+' failed')
+              return r
+          check('suite',['python3','-m','unittest','discover','-s','tools','-p','test_*.py','-v'])
+          match=re.search(r'Ran (\d+) tests',(out/'suite.log').read_text());assert match
+          count=int(match.group(1));assert count>=248
+          for name,args in [('brand',['tools/verify_brand.py']),('plan',['tools/validate_plan.py']),('maps',['tools/render_maps.py','--check']),('issues',['tools/render_issues.py','--check']),('navigation',['tools/render_navigation.py','--check','--repo',str(repo)])]:
+              check(name,['python3',*args])
+          observed=json.loads(check('doctor',['python3','tools/executor.py','doctor','--repo',str(repo)]).stdout)
+          resumed=json.loads(check('resume',['python3','tools/executor.py','resume','--repo',str(repo),'--jobs','4']).stdout)
+          assert resumed['readiness']['completed_tasks']==0
+          assert [x['id'] for x in resumed['readiness']['selected']]==['S01-W1-T1']
+          text=check('packet-first',['python3','tools/executor.py','packet','S01-W1-T1','--repo',str(repo)]).stdout
+          assert 'SELECTED_BY_EXISTING_POLICY' in text
+          check('capture-baseline',['python3','tools/capture_scope.py','--repo',str(repo),'--out',str(out/'baseline.json')])
+          check('receipt-template',['python3','tools/receipt_template.py','S01-W1-T1','--out',str(out/'receipt.draft.json')])
+          draft=json.loads((out/'receipt.draft.json').read_text());assert draft['status']=='NOT_RUN'
+          assert all(x['result']=='NOT_RUN' for group in draft['axioms'].values() for x in group)
+          check('census-discovery',['python3','tools/census.py','--repo',str(repo),'--out',str(out/'census-candidate.json')])
+          census=json.loads((out/'census-candidate.json').read_text());assert census['status']=='CANDIDATE_REQUIRES_REVIEW'
+          # A real template must be refused as proof; no product claim is created.
+          check('reject-unexecuted-receipt',['python3','tools/validate_evidence.py','S01-W1-T1',str(out/'receipt.draft.json'),'--repo',str(repo)],1)
+          sys.path.insert(0,str(root/'tools'));import executor as ex
+          plan,by,registry=ex.contracts(root);_,state,tracked=ex.checkout(root,repo)
+          readiness,progress=ex.readiness(plan,root,repo,tracked,4)
+          sizes={}
+          for ident,node in by.items():
+              if node['kind']!='task':continue
+              packet=ex.packet(plan,by,registry,root,repo,state,readiness,progress,ident)
+              for ancestor in ex.chain(by,ident):
+                  for values in by[ancestor]['criterion_ids'].values():
+                      for criterion in values:assert criterion in packet,(ident,criterion)
+              sizes[ident]=len(packet.encode())
+          assert len(sizes)==66
+          assert git('rev-parse','HEAD')==before_head and git('status','--porcelain=v1')==before_status
+          assert sha(repo/'.git/index')==before_index,'Read-only bootstrap changed index'
+          assert {name:sha(root/name) for name in protected}==protected_hashes
+          target=root/'reviews/executor-aids';target.mkdir(parents=True,exist_ok=False)
+          (target/'tests.log').write_bytes((out/'suite.log').read_bytes())
+          report={'kind':'executor-aids-and-bootstrap-not-product','status':'VERIFIED','tested_commit':before_head,'run_url':f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}','tests_passed':count,'new_tests':24,'packets_checked':len(sizes),'packet_sizes_bytes':sizes,'checks':checks,'readonly_checkout_and_index_preserved':True,'protected_contract_sha256':protected_hashes,'doctor':observed,'selected_tasks':[x['id'] for x in readiness['selected']],'census_discovered_files':len(census['files']),'census_completed':False,'receipt_status':'NOT_RUN','task_execution':'NOT_RUN','product_build':'NOT_RUN','native_test':'NOT_RUN','performance':'NOT_RUN','machine':'GitHub hosted runner, not user Mac','limitations':['Packet is a derived view; non-widget normative docs remain line-addressed readings.','This smoke traverses discovery, context, baseline and NOT_RUN template, not a completed S01 task.','No package script was run; Bun version and file presence do not prove dependencies/build/native readiness.','No new task, scheduler, state store, runtime dependency or automatic approval.']}
+          (target/'REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          note='\n\n<!-- orchestra-executor-aids -->\n**Entrada curta para executar ou retomar:** [RUN.md](RUN.md) — `executor.py doctor`, `resume` e `packet TASK`. Reutiliza seletor/recibos existentes; não altera axiomas nem autoriza uma task bloqueada.\n'
+          for name in ['START-HERE.md','README.md']:
+              p=root/name;s=p.read_text();assert '<!-- orchestra-executor-aids -->' not in s
+              first,rest=s.split('\n',1);p.write_text(first+note+'\n'+rest)
+          p=root/'tools/README.md';s=p.read_text();assert '<!-- orchestra-executor-aids -->' not in s
+          s+='\n\n<!-- orchestra-executor-aids -->\n## Entrada curta e pacote por task\n\nLeia [RUN.md](../RUN.md). `python3 tools/executor.py doctor --repo REPO` observa ambiente; `resume --repo REPO --jobs 4` usa o seletor existente; `packet TASK --repo REPO` reúne task/axiomas/WIDGETS e índices normativos. Comandos executados da raiz do plano. Sem escrita por padrão; `--out` cria somente arquivo novo em pasta existente. Não instala, executa scripts de package, muda progresso nem produz PASS.\n'
+          p.write_text(s)
+          p=root/'PUBLICATION.json';data=json.loads(p.read_text());data['executor_aids']={'entry':'RUN.md','report':'reviews/executor-aids/REPORT.json','tests_passed':count,'plan_and_ticket_contracts_changed':False,'product_execution':'NOT_RUN'};p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+          paths=sorted(p for p in root.rglob('*') if p.is_file() and p.name!='MANIFEST.sha256' and '__pycache__' not in p.parts)
+          (root/'MANIFEST.sha256').write_text(''.join(sha(p)+'  '+p.relative_to(root).as_posix()+'\n' for p in paths))
+          assert {name:sha(root/name) for name in protected}==protected_hashes
+          assert not git('diff','--name-only','--','packages','AGENTS.md','package.json','bun.lock')
+          print(json.dumps({'status':'VERIFIED','tests':count,'packets':66,'source_work_approved':False}))
+          PY
+      - name: Publish only verified documentation and tooling records
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add specs/orchestra-visual/START-HERE.md specs/orchestra-visual/README.md specs/orchestra-visual/tools/README.md specs/orchestra-visual/PUBLICATION.json specs/orchestra-visual/MANIFEST.sha256 specs/orchestra-visual/reviews/executor-aids
+          git commit -m 'docs(app): publish verified executor entry and bootstrap observations'
+          git push origin HEAD:visual-migration-plan
+          python3 - <<'PY'
+          import hashlib,pathlib,subprocess
+          root=pathlib.Path('specs/orchestra-visual')
+          for line in (root/'MANIFEST.sha256').read_text().splitlines():
+              expected,path=line.split('  ',1)
+              blob=subprocess.check_output(['git','show','HEAD:specs/orchestra-visual/'+path])
+              assert hashlib.sha256(blob).hexdigest()==expected,path
+          assert not subprocess.check_output(['git','status','--porcelain=v1']).strip()
+          print('Committed manifest verified; checkout clean. Product execution NOT_RUN.')
+          PY
