@@ -1,0 +1,104 @@
+name: Orchestra execution adversarial audit snapshot
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-audit-snapshot.yml]
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  actions: read
+concurrency:
+  group: orchestra-execution-adversarial-audit
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PLAN_SHA: 3c97621681b119105be8b7982ba663b0d701fd83
+      SOURCE_SHA: 1a235323361717d13a44d3c184bad13649f59e60
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: 3c97621681b119105be8b7982ba663b0d701fd83
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Collect exact plan and source text without executing product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$SOURCE_SHA" 30d951fcc4a09e708768551c7c6fd38a0efe3da8
+          mkdir -p /tmp/orchestra-execution-audit
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,urllib.request,zipfile
+          root=pathlib.Path('/tmp/orchestra-execution-audit')
+          plan=os.environ['PLAN_SHA']; source=os.environ['SOURCE_SHA']
+          def git(*args):return subprocess.check_output(['git',*args])
+          def tree(sha):
+              result=[]
+              for row in git('ls-tree','-rz','--long',sha).split(b'\0'):
+                  if not row:continue
+                  meta,path=row.split(b'\t',1);mode,kind,blob,size=meta.decode().split()
+                  result.append({'path':path.decode(),'mode':mode,'type':kind,'blob':blob,'size':int(size) if size!='-' else None})
+              return result
+          pt,st=tree(plan),tree(source)
+          text_suffix={'.md','.mdx','.ts','.tsx','.js','.jsx','.mjs','.cjs','.css','.scss','.json','.jsonc','.yml','.yaml','.toml','.html','.sh','.py','.rs','.txt'}
+          fingerprints={}
+          with zipfile.ZipFile(root/'snapshot.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for entry in pt:
+                  path=entry['path']
+                  if entry['type']!='blob' or not path.startswith('specs/orchestra-visual/'):continue
+                  data=git('show',plan+':'+path);target='plan/'+path.removeprefix('specs/orchestra-visual/')
+                  z.writestr(target,data);fingerprints[target]=hashlib.sha256(data).hexdigest()
+              for entry in st:
+                  path=entry['path'];p=pathlib.PurePosixPath(path)
+                  include=(p.suffix in text_suffix or p.name in ('package.json','bun.lock','AGENTS.md','Dockerfile'))
+                  if entry['type']!='blob' or not include or entry['mode']=='120000':continue
+                  if not (path.startswith(('packages/','.github/','specs/hugr-maestro/')) or '/' not in path):continue
+                  data=git('show',source+':'+path)
+                  try:data.decode('utf-8')
+                  except UnicodeDecodeError:continue
+                  target='source/'+path;z.writestr(target,data);fingerprints[target]=hashlib.sha256(data).hexdigest()
+              z.writestr('plan-tree.json',json.dumps(pt));z.writestr('source-tree.json',json.dumps(st))
+              z.writestr('snapshot-manifest.json',json.dumps({'plan_sha':plan,'source_sha':source,'file_sha256':fingerprints,'source_is_selected_utf8_text':True,'product_execution':'NOT_RUN'}))
+          def api(path):
+              req=urllib.request.Request('https://api.github.com/repos/gmhelmold/HuGR-Orchestra/'+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'Orchestra-read-only-audit'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          def pages(path):
+              out=[];page=1
+              while True:
+                  xs=api(path+('?' if '?' not in path else '&')+'per_page=100&page='+str(page))
+                  assert isinstance(xs,list),path
+                  out+=xs
+                  if len(xs)<100:return out
+                  page+=1
+          numbers=[215]+list(range(130,169));issues={}
+          for number in numbers:
+              issue=api('issues/'+str(number))
+              issues[str(number)]={k:issue.get(k) for k in ('number','title','body','state','updated_at','id')}
+              issues[str(number)]['sub_issues']=[x['number'] for x in pages('issues/'+str(number)+'/sub_issues')]
+              issues[str(number)]['blocked_by']=[x['number'] for x in pages('issues/'+str(number)+'/dependencies/blocked_by')]
+          readback={'issues':issues,'pr':api('pulls/232'),'pr_files':pages('pulls/232/files'),'checks':api('commits/'+plan+'/check-runs?per_page=100'),'status':api('commits/'+plan+'/status'),'plan_sha':plan,'source_sha':source,'product_execution':'NOT_RUN'}
+          (root/'github-readback.json').write_text(json.dumps(readback,ensure_ascii=False,indent=2))
+          print(json.dumps({'files':len(fingerprints),'issues_read':len(issues),'plan_sha':plan,'source_sha':source,'snapshot_bytes':(root/'snapshot.zip').stat().st_size,'product_execution':'NOT_RUN'}))
+          PY
+      - name: Rerun planning tools, not product tests
+        run: |
+          set -uo pipefail
+          cd specs/orchestra-visual
+          python3 -m unittest discover -s tools -p 'test_*.py' -v > /tmp/orchestra-execution-audit/tools-tests.log 2>&1
+          status=$?
+          printf '{"exit_code":%s,"kind":"planning-tool-tests-not-product"}\n' "$status" > /tmp/orchestra-execution-audit/tools-result.json
+          tail -6 /tmp/orchestra-execution-audit/tools-tests.log
+          exit "$status"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: orchestra-execution-audit-snapshot
+          path: /tmp/orchestra-execution-audit/
+          retention-days: 3
+          if-no-files-found: error
