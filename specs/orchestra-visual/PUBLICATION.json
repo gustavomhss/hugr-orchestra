@@ -3,7 +3,7 @@
   "root_epic": 215,
   "branch": "visual-migration-plan",
   "contract_revision": "4.3",
-  "plan_sha256": "1735d28ddd2dfc51a935b473694fd829adf5ae1c092986efe5e57ce6213e5734",
+  "plan_sha256": "45159c61d0cd1a67d22e8d35149a2f4567855db9325870cfcf1dc472c4211b1f",
   "nodes": 143,
   "criteria": 1974,
   "ticket_count": 39,
@@ -49,53 +49,53 @@
     "S25": "specs/orchestra-visual/issues/S25.md"
   },
   "artifact_package_status": "COMPLETE",
-  "ticket_bodies_status": "RECONCILING_4.3",
+  "ticket_bodies_status": "VERIFIED",
   "native_relationships": "VERIFIED",
   "product_execution": "NOT_RUN",
   "missing_inputs_note": null,
   "ticket_body_sha256": {
-    "130": "3ff582bdc70bfef4fac78b5460960475f2ad3a5939768c29c7e7f8a6c7eac53f",
-    "131": "e163bc366156dd03288d86e3e9119ecab2222f7697404e534ae3e4ec106059ca",
-    "132": "ac6a38495b3fc230089dd38c09e2accb65f6320cce8c7c8da63d776e6c0ea4ed",
-    "133": "48378e02d24f81f83c5f5e4f25b61523ff6c33feb0b284c368095f6e5f19e981",
-    "134": "a3fe0bd048e21c2c49db4fc4867bb9f8ba45a67b30ed7df83e118809c0053aa7",
-    "135": "6a1dba466a89ccfc2e06602d4460b3290789fb894063dfa834c75ceabc884286",
-    "136": "a6b010bfe4f8805813392ae85ba79532124ba9d93923d2e49bec12f4bfd3bd1c",
-    "137": "ecfc17ef0fd96e640313d88928f146379a807f3e75d30deeb5e8791b49ce5004",
-    "138": "79cd1eace9cc6413636da097cbc364767058c1bde21c568df165514ed7ad40f9",
-    "139": "4fa4ad2210fd138b4c2f540eaea68e690e3b9af5ddb815eaa60ffe1553f7be04",
-    "140": "a10e3565b5f3cb88be4da5485a703225168e53d2314fce003edf46d61d860afd",
-    "141": "9ab4fa3c9a47163c2b510ea2b5307c6ffffc55837511705ddfac11092e7d0d74",
-    "142": "59d8e0cfe4043125b3e1a6b35379290bc275443f5deaec3434ec7747a0d8108b",
-    "143": "dd53ea839de7b1c1b27151980cdead22783db61a6250b2a946fadd7de893024d",
-    "144": "34bb2cb9cabdf625f3cd5ce1c3403b6bdb030348657bb99d3b37d5b574c2fa91",
-    "145": "b40ba4b40f4a419298b84e251a61310c3bb680c98e4470c6d38217be961111b4",
-    "146": "9732c6d255fcc3a6f55dd71664cad67144f9a364c1dfc0e57c71da5a14e18968",
-    "147": "cc985e38954d398d1ef6cf4039bcf1e2a036ad991dbe997d29f99626b9502e3a",
-    "148": "9d14c51411745f31b8f20909be7b35ad1be028170e71ff3fa5e6ae4d32834073",
-    "149": "b874171b2a1bd2bd3c2f3472c40d0e85bbdb9888b2b7c4fc8cb3926e0818ab0c",
-    "150": "2139125f81e246b49cf3d271a48a2088c31d0e060d9ae9b753e09788fed33bb4",
-    "151": "d732a8391e9cd98c36142d49bf081eb81fbea198aead1567d23bb0ed48df3098",
-    "152": "e97b82d997816c6da39e792e6b6a8435afa8649427c8b666b7b70da7a3bdf253",
-    "153": "3f978fa7a657afff1a3b1bd60beb0b10eb4912ee4715da416f17db20e39cd92a",
-    "154": "b6c6145ccf8473938871d7f76b55dc407b5dcf28773d62699bde350f3fc6e2b0",
-    "155": "1362bee816bf50477600ba696349b3cadba63221dffcad7fba6c2c30515aec1e",
-    "156": "ce937fbba98146bf73f7c1f6e43dab4b6049795fe469eec3a200410b4ad1cc49",
-    "157": "4f23758b73fd14e2d83df734fb5e648f4b03e0cd475c03cfc29cbdfe89b36ad4",
-    "158": "af9c30d7ac4f1c5010438d891048baa6ff114d8809cc21a7c1edbb97bc686798",
-    "159": "1a4cee7a05256b1096ca2e65358b527d6517ca22d3e86a0363b3dea9447b5ccd",
-    "160": "8eeee6473f71a64aa846f2f3d831eda34f66a37a642b730e18445d44bd566795",
-    "161": "af93d58a11750903d605a446d1724ba1ae3e855bac7bca959886be3a8e137136",
-    "162": "e36b26fe6a2e4ba4a8560821faf25dee2216a9f8c80ab9d13106cbc8c5f05c00",
-    "163": "a065c8bf98a77c24416e7ea385170efbeeab7cd5791a394f2aca8ef97ced75de",
-    "164": "f798fb78b104b5e0dffe8f822d5344cbfd330a8a85ce7bee75450319fe693a7a",
-    "165": "b7be42780840c7764601af586a26ac16668a8e8e90bca7ca9bb1c8964d710f33",
-    "166": "cc689dd853e14fd421fbdcdafa6ca1469d33d280199ddb8b3d4aab98b8f0dc3c",
-    "167": "cecb4f4d6bd39264c52cf4b1e83cb0cecb37961ff34d70bbf8cf281080db1a95",
-    "168": "5d17b215eb1a2275f3647c9ff161a2c5a28645f4a3c809ad7aab0161a8e51bd1"
+    "130": "da3ac21b8886b9c733524d30deee7ea30c7b52a7b61c5a15866bc0a99cdd8b33",
+    "131": "bc0fff326fdc129dd71dc608c2f29f74f417954fa6d2ab5a6b5e9e62b46e1a2b",
+    "132": "9dbb6cfbc0544d173fbb1cb14a98ab8fd51d75c64cb9e156a4a40ca2a421bbe7",
+    "133": "2fcc8e65db002ba8dd84e02934903295d729561e9dcbadcf59434749f1ee4e7b",
+    "134": "a25dc8454a98cf67d850627314ccc2a231fbae7c69c12c66696e066466760604",
+    "135": "b6ec14e21a9bf6d11af81bd3e71577bded6d88047b1594c5c99acde4a4cc2c05",
+    "136": "0ddd768e634a8b77cfe55e583a808bffed8c351af9e8caedd781c3c7beb31d04",
+    "137": "0e8934fbaca7ce2fabdf05ea95341e53d7fb3d4a3bb66499b5c98ac1d1219fda",
+    "138": "bdc8090ea40c2787f8dc9f4f902289e22458630c1926f3f6006e80a4a6dc6e48",
+    "139": "503e7dc7876cbca6cceffd17e224bed75f44a79f7748ef242ee888d1d8de8c80",
+    "140": "b111a1356ad9f9ab941738df15c156459b8c14dc012f4315fb10108fa240efbe",
+    "141": "d6e6054bd806f97196a52748e104f72df5114c20d91ac9f3aabdb274386eb56f",
+    "142": "5b1f0ff27bddfb18bdf0a9ff4a695d1dc5406192d912971f77f4bcecc170d7bf",
+    "143": "a58cae797614a95e962eb42dbf2235688c93b85c4f2a12a614d304ac673e95c6",
+    "144": "d8e9591839a01baa7dc091d03d4c68749f7715d847954df136e0c65d9701a50d",
+    "145": "454a9c6ff6a9bed8b1241482a6ff6c910e48afc11b7e7b8bf46c9fd7e02e9835",
+    "146": "5d2526879593b34df213d4e2e41a1200ee0a8d41d024521dfe9ccfc114409fd7",
+    "147": "b288785d372d0b7a76ccb3b323583244801b843ca1e6b209944cff4ca719abbb",
+    "148": "44505d7461379acb97ca9967c0811a03477b280d8714593e2d6b9c1a0dc681a4",
+    "149": "1ba1ed0e4e6de365f341e619d0c916e5f7e7407f99c4a8668bf0727a2ee6fa51",
+    "150": "b28cee78b9cebc09f6f2ccb27ca29a59837f124ff8ce832921067f36c806ecf5",
+    "151": "e32914528e990bf765d260d7e78c44cb8cb59abffe1442009d0fed2370ac0818",
+    "152": "e39dc583e0a64304ef0b417eb6ebacbbff1bb02fc4cd0125434b6e9afc23e533",
+    "153": "b32df4a1af3d429ae764e34061d86373e809bf1ec72d06835499c420c7f0f238",
+    "154": "2c82e46fde52d719e32170781e6ce3a039cfb1050cf868fd3f2c5939e7d00466",
+    "155": "c552efc7a1ea7dd467d582cd53d4e8a54bc6bf32c1a9fc11c666ae37d5749ad7",
+    "156": "d148e999ac71c184878d74086eb03b48d8db242bf040c477666ae73e3b322e11",
+    "157": "fd92e38e68d1aa76c42482c6924ed0ffde4efb72c774c75267483507249720b1",
+    "158": "1065735578a07a5c5b9c52710a1f28901830ebda4d6ccb5fabc2586ee9e0cb37",
+    "159": "e74aabc0f636c508699b53e45f66e546f180d967ddc8440ce44cf88c47f4533a",
+    "160": "56293e29c843e1b988008e3f0b9c7bd593c929d8c638a70e58e364e0bf22db10",
+    "161": "6a4e7d3c6c30e9ee4ca6106e626954f892ab97bbed246e864e4d6bf5905f161f",
+    "162": "ab7ce1a26c96a9b5b5add2d2746aefffc943574ac19061d61fc1644dc1491c15",
+    "163": "3a5f93dab33cc6f461ca78c48d09f86224a2a8cc334539e571e6135c5a734235",
+    "164": "f775b2697a4190a69c6a84ba811154fbf90184683a91cea041ee867d5a5ff94a",
+    "165": "698ba6ae2102184ece3039e5c373bea2a3aeee0d369834586547501ae79b4b62",
+    "166": "04b9379190b8b5fdaca3c9a8f0d9ef8f070c8fb9f96a2b3a4b5e10e8906b14e0",
+    "167": "3533f3d5281ccbc7d226aca9505d3cbe8c0b19524f22107e381e3773cfe39e6d",
+    "168": "1542c36c9c8120687c4f9968e8a0b0edfbce2e9c722aad179b05d297b07ac75e"
   },
-  "plan_and_projection_commit": "d627eaf1518ef9fba8b3db5ee9baee6c49e75021",
-  "verification_run": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36283487121",
+  "plan_and_projection_commit": "a68f122b973d6fd0b40d602f9aed637fae309bde",
+  "verification_run": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36286680951",
   "native_relationships_report": "publication/NATIVE-AND-TICKETS.json",
   "original_package_files_verified": 430,
   "brand_files_verified": 304,
@@ -112,72 +112,78 @@
     "MANIFEST.sha256"
   ],
   "source_archive_sha256": "c8653cc7a2dc3f2e1e0f9b85ae0b9eaac0de77b2c100bac87c1eb45161b4599a",
-  "tooling_tests_passed": 202,
+  "tooling_tests_passed": 224,
   "checks": [
     {
       "name": "brand",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "tools/verify_brand.py"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/brand-github.log"
+      "log": "reviews/widget-contracts/brand-github.log"
     },
     {
       "name": "original-brand",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py",
         "--json"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/original-brand-github.log"
+      "log": "reviews/widget-contracts/original-brand-github.log"
     },
     {
       "name": "plan",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "tools/validate_plan.py"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/plan-github.log"
+      "log": "reviews/widget-contracts/plan-github.log"
     },
     {
       "name": "maps",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "tools/render_maps.py",
         "--check"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/maps-github.log"
+      "log": "reviews/widget-contracts/maps-github.log"
     },
     {
       "name": "issues",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "tools/render_issues.py",
         "--check"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/issues-github.log"
+      "log": "reviews/widget-contracts/issues-github.log"
     },
     {
       "name": "navigation",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "tools/render_navigation.py",
         "--check",
         "--repo",
         "/home/runner/work/HuGR-Orchestra/HuGR-Orchestra"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/navigation-github.log"
+      "log": "reviews/widget-contracts/navigation-github.log"
     },
     {
       "name": "tools-tests",
       "command": [
-        "python3",
+        "/usr/bin/python3",
         "-m",
         "unittest",
         "discover",
@@ -187,8 +193,9 @@
         "test_*.py",
         "-v"
       ],
+      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/parallelism-performance/repairs/tools-tests-github.log"
+      "log": "reviews/widget-contracts/tools-tests-github.log"
     }
   ],
   "navigation": {
@@ -208,5 +215,7 @@
   "repair_review": "reviews/parallelism-performance/repairs/REVIEW.md",
   "repair_report": "reviews/parallelism-performance/repairs/PUBLICATION.json",
   "widget_contract": "WIDGETS.md",
-  "widget_review": "reviews/widget-contracts/REVIEW.md"
+  "widget_review": "reviews/widget-contracts/REVIEW.md",
+  "surfaces": 82,
+  "widget_publication": "reviews/widget-contracts/PUBLICATION.json"
 }
