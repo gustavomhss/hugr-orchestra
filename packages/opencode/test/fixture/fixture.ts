@@ -54,13 +54,6 @@ function sanitizePath(p: string): string {
   return p.replace(/\0/g, "")
 }
 
-function exists(dir: string) {
-  return fs
-    .stat(dir)
-    .then(() => true)
-    .catch(() => false)
-}
-
 function clean(dir: string) {
   return fs.rm(dir, {
     recursive: true,
@@ -68,11 +61,6 @@ function clean(dir: string) {
     maxRetries: 5,
     retryDelay: 100,
   })
-}
-
-async function stop(dir: string) {
-  if (!(await exists(dir))) return
-  await $`git fsmonitor--daemon stop`.cwd(dir).quiet().nothrow()
 }
 
 type TmpDirOptions<T> = {
@@ -108,7 +96,6 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
       try {
         await options?.dispose?.(realpath)
       } finally {
-        if (options?.git) await stop(realpath).catch(() => undefined)
         await clean(realpath).catch(() => undefined)
       }
     },
@@ -132,7 +119,6 @@ export function tmpdirScoped<E = never, R = never>(options?: {
 
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
-        if (options?.git) await stop(dir).catch(() => undefined)
         await clean(dir).catch(() => undefined)
       }),
     )
