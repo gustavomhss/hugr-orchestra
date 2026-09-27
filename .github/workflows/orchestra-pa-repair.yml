@@ -1,0 +1,131 @@
+name: Orchestra parallelism repairs
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-pa-repair.yml]
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: orchestra-visual-pa-repairs
+  cancel-in-progress: false
+jobs:
+  repair:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: visual-migration-plan
+          fetch-depth: 0
+      - name: Apply exact reviewed delta with optimistic file checks
+        run: |
+          python3 - <<'PY'
+          import hashlib,io,json,os,pathlib,stat,time,urllib.request,urllib.error,urllib.parse,zipfile
+          repo='gmhelmold/HuGR-Orchestra';comment_id=5851371418
+          expected='c429c58ec375542e4f028fddfb85e184d639bc6a9dc55c17a3d5bf9eef89ac69'
+          def api(method):
+              req=urllib.request.Request(f'https://api.github.com/repos/{repo}/issues/comments/{comment_id}',method=method,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2026-03-10'})
+              with urllib.request.urlopen(req,timeout=60) as r:data=r.read()
+              return json.loads(data) if data else None
+          c=api('GET');assert c['issue_url'].endswith('/issues/215') and c['user']['login']=='gmhelmold'
+          lines=c['body'].splitlines();assert lines[0]=='<!-- orchestra-pa42:temporary-transfer -->'
+          src=json.loads(lines[1]);assert src['sha256']==expected
+          u=urllib.parse.urlparse(src['url']);assert u.scheme=='https' and u.hostname.endswith('.oaiusercontent.com')
+          print('::add-mask::'+src['url'])
+          try:
+              for attempt in range(3):
+                  try:
+                      req=urllib.request.Request(src['url'],headers={'User-Agent':'Mozilla/5.0','Accept':'application/octet-stream'})
+                      with urllib.request.urlopen(req,timeout=90) as r:data=r.read(1000001)
+                      break
+                  except urllib.error.HTTPError as e:
+                      print('Transport status:',e.code)
+                      if attempt==2:raise RuntimeError('Scoped transfer failed') from None
+                      time.sleep(3)
+              assert len(data)==265882 and hashlib.sha256(data).hexdigest()==expected,'Transfer integrity mismatch'
+          finally:
+              api('DELETE')
+          root=pathlib.Path('specs/orchestra-visual');pending=[]
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              assert len(z.infolist())==66 and sum(i.file_size for i in z.infolist())<5000000
+              manifest=json.loads(z.read('PATCH.json'));assert manifest['repo']==repo and manifest['target_branch']=='visual-migration-plan'
+              assert manifest['base_commit']=='a45f6e60a27d6ad1e148d7394e61e11556c4fd23'
+              names={i.filename for i in z.infolist()};assert len(names)==len(z.infolist())
+              assert names=={'PATCH.json'}|{'files/'+r['path'] for r in manifest['files']}
+              for row in manifest['files']:
+                  rel=pathlib.PurePosixPath(row['path']);assert not rel.is_absolute() and '..' not in rel.parts and '\\' not in str(rel)
+                  assert rel.parts[0] not in ('vendor','reference','publication','qa') and rel.suffix not in ('.ttf','.otf','.woff','.woff2','.ttc')
+                  info=z.getinfo('files/'+str(rel));assert stat.S_IFMT(info.external_attr>>16)!=stat.S_IFLNK
+                  payload=z.read(info);assert len(payload)==row['bytes'] and hashlib.sha256(payload).hexdigest()==row['sha256']
+                  p=root/rel;assert not p.is_symlink()
+                  if row['before_sha256'] is None:assert not p.exists(),'New path exists: '+str(rel)
+                  else:assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==row['before_sha256'],'Concurrent change: '+str(rel)
+                  pending.append((p,payload))
+          for p,payload in pending:p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(payload)
+          print(json.dumps({'delta_files':len(pending),'sha256':expected,'product_execution':'NOT_RUN'}))
+          PY
+      - name: Regenerate current GitHub entrypoints and canonical projections
+        run: |
+          cd specs/orchestra-visual
+          python3 reviews/parallelism-performance/repairs/publish.py prepare
+          python3 tools/render_issues.py
+          python3 tools/render_maps.py
+          python3 tools/render_navigation.py --write --repo "$GITHUB_WORKSPACE"
+      - name: Validate contracts, brand, navigation and complete tooling suite
+        run: |
+          cd specs/orchestra-visual
+          python3 - <<'PY'
+          import json,pathlib,re,subprocess,sys,os
+          out=pathlib.Path('reviews/parallelism-performance/repairs');checks=[]
+          commands=[('brand',['python3','tools/verify_brand.py']),('original-brand',['python3','vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py','--json']),('plan',['python3','tools/validate_plan.py']),('maps',['python3','tools/render_maps.py','--check']),('issues',['python3','tools/render_issues.py','--check']),('navigation',['python3','tools/render_navigation.py','--check','--repo',os.environ['GITHUB_WORKSPACE']]),('tools-tests',['python3','-m','unittest','discover','-s','tools','-p','test_*.py','-v'])]
+          count=0
+          for name,cmd in commands:
+              r=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=600);log=out/(name+'-github.log');log.write_text(r.stdout)
+              checks.append({'name':name,'command':cmd,'exit_code':r.returncode,'log':str(log)})
+              print(name,r.returncode)
+              if r.returncode:print(r.stdout);sys.exit(r.returncode)
+              if name=='tools-tests':count=int(re.search(r'Ran (\d+) tests',r.stdout).group(1))
+          report={'status':'PASS','kind':'planning-tools-not-product','tooling_tests_passed':count,'checks':checks,'run_url':os.environ['RUN_URL'],'product_execution':'NOT_RUN'}
+          (out/'QA-GITHUB.json').write_text(json.dumps(report,indent=2)+'\n')
+          pub=json.loads(pathlib.Path('PUBLICATION.json').read_text());pub['tooling_tests_passed']=count;pub['checks']=checks
+          pathlib.Path('PUBLICATION.json').write_text(json.dumps(pub,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({'tests_passed':count,'product_execution':'NOT_RUN'}))
+          PY
+          python3 reviews/parallelism-performance/repairs/publish.py manifest
+      - name: Commit repaired contracts before linking tickets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- specs/orchestra-visual
+          git diff --cached --name-only | grep -v '^specs/orchestra-visual/' > /tmp/unexpected || true
+          test ! -s /tmp/unexpected
+          git commit -m 'docs(app): repair parallel execution and performance acceptance'
+          git push origin HEAD:visual-migration-plan
+      - name: Reconcile all existing ticket bodies and owned dependency links
+        run: |
+          cd specs/orchestra-visual
+          python3 reviews/parallelism-performance/repairs/publish.py sync
+          python3 tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE"
+          python3 reviews/parallelism-performance/repairs/publish.py manifest
+      - name: Publish verification metadata and check committed integrity
+        run: |
+          git add -- specs/orchestra-visual
+          git commit -m 'docs(app): record verified PA repair publication and native relations'
+          git push origin HEAD:visual-migration-plan
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          root=pathlib.Path('specs/orchestra-visual');count=0
+          for line in (root/'MANIFEST.sha256').read_text().splitlines():
+              expected,name=line.split('  ',1);p=root/name
+              data=subprocess.check_output(['git','show','HEAD:'+str(p)])
+              assert hashlib.sha256(data).hexdigest()==expected,str(p)
+              count+=1
+          assert not subprocess.check_output(['git','status','--porcelain']).strip(),'Publication checkout dirty'
+          print(json.dumps({'committed_files_verified':count,'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'product_execution':'NOT_RUN'}))
+          PY
