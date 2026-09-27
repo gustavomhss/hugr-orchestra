@@ -6,6 +6,7 @@ on:
 permissions:
   contents: read
   actions: read
+  checks: read
 concurrency:
   group: orchestra-execution-adversarial-audit
   cancel-in-progress: false
@@ -15,17 +16,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read pinned Atlas job log and annotations
+      - name: Read existing Atlas failure with safe cross-host redirects
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
-          import hashlib,json,os,pathlib,re,urllib.request
+          import hashlib,json,os,pathlib,re,urllib.request,urllib.parse
           root=pathlib.Path('/tmp/orchestra-ci-audit');root.mkdir()
           base='https://api.github.com/repos/gmhelmold/HuGR-Orchestra/'
+          class SafeRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  new=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if new is not None and urllib.parse.urlsplit(req.full_url).netloc!=urllib.parse.urlsplit(newurl).netloc:
+                      new.remove_header('Authorization')
+                  return new
+          opener=urllib.request.build_opener(SafeRedirect())
           def read(path):
               req=urllib.request.Request(base+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'Orchestra-Read-Only-Audit'})
-              with urllib.request.urlopen(req,timeout=60) as r:return r.read()
+              with opener.open(req,timeout=60) as r:return r.read()
           job=108568928270
           log=read('actions/jobs/'+str(job)+'/logs')
           (root/'atlas-job.log').write_bytes(log)
@@ -35,13 +43,13 @@ jobs:
           (root/'annotations.json').write_text(json.dumps(ann,indent=2))
           lines=log.decode('utf-8-sig').splitlines();hits=[i for i,s in enumerate(lines) if re.search(r'::error|##\[error\]|AssertionError| FAIL|Failed|failed|Error:|✗',s)]
           visible=set()
-          for i in hits:
-              visible.update(range(max(0,i-4),min(len(lines),i+5)))
+          for i in hits:visible.update(range(max(0,i-4),min(len(lines),i+5)))
           (root/'failure-excerpts.txt').write_text('\n'.join(str(i+1)+': '+lines[i] for i in sorted(visible))+'\n')
           (root/'summary.json').write_text(json.dumps({'kind':'existing-CI-readback-not-new-product-run','job_id':job,'run_id':metadata['run_id'],'conclusion':metadata['conclusion'],'head_sha':metadata['head_sha'],'log_sha256':hashlib.sha256(log).hexdigest(),'steps':metadata['steps'],'annotations':ann},indent=2))
           print(json.dumps({'read_existing_job':job,'run':metadata['run_id'],'conclusion':metadata['conclusion'],'error_matches':len(hits)}))
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
           name: orchestra-audit-ci-evidence
           path: /tmp/orchestra-ci-audit/
