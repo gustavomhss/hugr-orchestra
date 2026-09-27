@@ -4,7 +4,7 @@
 
 Índice de navegação, não nova especificação. Axiomas, permissões e desbloqueio vêm de PLAN.json/EXECUTE.md. As relações abaixo não marcam trabalho como concluído. Nenhuma nova task foi criada.
 
-Contrato: `4.3`; SHA-256 de PLAN.json: `45159c61d0cd1a67d22e8d35149a2f4567855db9325870cfcf1dc472c4211b1f`. Snapshot do código: `links conferidos no checkout fornecido; base histórica das âncoras 30d951fcc4a09e708768551c7c6fd38a0efe3da8`.
+Contrato: `4.3`; SHA-256 de PLAN.json: `9059703f0e03a3cac56435b71dd09f9124cb8f5a28f1854a9c26ca307b8b4e78`. Snapshot do código: `links conferidos no checkout fornecido; base histórica das âncoras 30d951fcc4a09e708768551c7c6fd38a0efe3da8`.
 
 **Raízes:** caminhos `packages/...` partem de `$REPO`; links para specs, tools e provas partem de `$PLAN_ROOT = $REPO/specs/orchestra-visual`. Um caminho de leitura não concede escrita. Um padrão com `*` não é um arquivo existente. Presença não prova reachability, backend live ou runtime testado.
 
@@ -796,6 +796,8 @@ Provas: `evidence/S08/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 - [`packages/opencode/src/session/todo.ts`](../../packages/opencode/src/session/todo.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/context/directory-sync.ts`](../../packages/app/src/context/directory-sync.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/session-ui/src/components/message-part.tsx`](../../packages/session-ui/src/components/message-part.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/utils/session-message.ts`](../../packages/app/src/utils/session-message.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/context/server-session-v2-reducer.ts`](../../packages/app/src/context/server-session-v2-reducer.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/timeline/message-timeline.tsx`](../../packages/app/src/pages/session/timeline/message-timeline.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/session-ui/package.json`](../../packages/session-ui/package.json) — presente no snapshot; raiz `$REPO`
 - [`packages/opencode/src/plugin/hugr-composer/tools.ts`](../../packages/opencode/src/plugin/hugr-composer/tools.ts) — presente no snapshot; raiz `$REPO`
@@ -925,6 +927,8 @@ Provas: `evidence/S10/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 - [`packages/opencode/src/tool/shell.ts`](../../packages/opencode/src/tool/shell.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/v2/review-panel-v2.tsx`](../../packages/app/src/pages/session/v2/review-panel-v2.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/prompt-input/submit.ts`](../../packages/app/src/components/prompt-input/submit.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/utils/session-message.ts`](../../packages/app/src/utils/session-message.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/context/server-session-v2-reducer.ts`](../../packages/app/src/context/server-session-v2-reducer.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/file-tree-v2.tsx`](../../packages/app/src/components/file-tree-v2.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/review-tab.tsx`](../../packages/app/src/pages/session/review-tab.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/terminal.tsx`](../../packages/app/src/components/terminal.tsx) — presente no snapshot; raiz `$REPO`
@@ -1291,6 +1295,9 @@ Provas: `evidence/S16/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 - [`packages/app/src/context/server-sync.tsx`](../../packages/app/src/context/server-sync.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/context/janitor.tsx`](../../packages/app/src/context/janitor.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/apps-panel.tsx`](../../packages/app/src/pages/session/apps-panel.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/utils/session-message.ts`](../../packages/app/src/utils/session-message.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/use-session-hash-scroll.ts`](../../packages/app/src/pages/session/use-session-hash-scroll.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/utils/session-route.ts`](../../packages/app/src/utils/session-route.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/tasks-data.ts`](../../packages/app/src/pages/session/tasks-data.ts) — presente no snapshot; raiz `$REPO`
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
@@ -1341,6 +1348,9 @@ Provas: `evidence/S17/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 - [`packages/app/src/pages/session/tasks-data.ts`](../../packages/app/src/pages/session/tasks-data.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/session-side-panel.tsx`](../../packages/app/src/pages/session/session-side-panel.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/use-session-commands.tsx`](../../packages/app/src/pages/session/use-session-commands.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/use-session-hash-scroll.ts`](../../packages/app/src/pages/session/use-session-hash-scroll.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/message-id-from-hash.ts`](../../packages/app/src/pages/session/message-id-from-hash.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/utils/session-route.ts`](../../packages/app/src/utils/session-route.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/tasks-panel.tsx`](../../packages/app/src/pages/session/tasks-panel.tsx) — presente no snapshot; raiz `$REPO`
 - `packages/app/src/pages/session/orchestra-activity.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
 
@@ -1747,6 +1757,10 @@ Provas: `evidence/S24/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - `packages/app/src/pages/session/orchestra-*` — **padrão de caminho**, não um arquivo literal
 - [`CENSUS.json`](CENSUS.json) — arquivo/pasta do plano; raiz `$PLAN_ROOT`
+- [`packages/app/src/utils/session-message.ts`](../../packages/app/src/utils/session-message.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/use-session-hash-scroll.ts`](../../packages/app/src/pages/session/use-session-hash-scroll.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/message-id-from-hash.ts`](../../packages/app/src/pages/session/message-id-from-hash.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/utils/session-route.ts`](../../packages/app/src/utils/session-route.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/app.tsx`](../../packages/app/src/app.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/desktop/src/main/index.ts`](../../packages/desktop/src/main/index.ts) — presente no snapshot; raiz `$REPO`
 

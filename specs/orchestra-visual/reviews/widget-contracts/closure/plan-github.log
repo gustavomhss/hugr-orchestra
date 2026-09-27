@@ -1,0 +1,13 @@
+{
+  "kind": "plan-validation-not-product-tests",
+  "status": "PASS",
+  "nodes": 143,
+  "axiom_groups": 715,
+  "criterion_count": 1974,
+  "surfaces": 82,
+  "reference_verified": true,
+  "errors": [],
+  "scope_overlaps": [],
+  "read_anchor_not_write_owner": [],
+  "repo_scope_expanded": false
+}

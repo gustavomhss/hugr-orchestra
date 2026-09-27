@@ -18,11 +18,29 @@
 | [W08](#w08) | Entradas Tasks / Agents / Maestro / Atlas / Dock / Janitor | S06 / #149: navegação; S19–S21: domínio | S25 é writer único dos comandos compartilhados |
 | [W09](#w09) | Microinterações, estados, limites e prova integrada | Cada owner em sua fatia; S22 copy; S23 performance; S24 visual | S25 produz candidato antes dos gates finais |
 
+### Onde implementar — destinos, não um segundo plano
+
+Todos os caminhos desta tabela partem da raiz do repositório. **Novo** significa componente/adaptação frontend a implementar no escopo indicado, não arquivo já existente. As tarefas T1 implementam e provam sua fatia; T2 verificam essa fatia. S25 conecta os componentes no candidato; S23/S24 avaliam esse candidato; nenhuma T1 exige aprovação de um consumidor futuro.
+
+| Elemento | Fonte/componente existente | Destino decidido | Task de entrega → verificação |
+|---|---|---|---|
+| Checklist W01 | todowrite + timeline atual | Novo `packages/app/src/pages/session/timeline/orchestra-checklist.tsx`, apresentado pelo `message-timeline.tsx` existente | `S09-W1-T1` → `S09-W1-T2` |
+| Alterações/diff W02 e testes W03 | ReviewPanelV2 + ToolPart normalizado + mensagem-fonte real | Novo `packages/app/src/pages/session/orchestra-evidence.tsx`; adaptadores/ações/testes no cone `orchestra-evidence*` | `S11-W1-T1` → `S11-W1-T2`; seam da timeline em S09 |
+| Dock W04 | AppsPanel + appDock* | Modificar `packages/app/src/pages/session/apps-panel.tsx` e `.css`; bridge no owner S16 | `S15-W1-T1` → `S15-W1-T2`; nativo `S16-W1-T1` → `S16-W1-T2` |
+| Files / Docs / Terminal em W04 | file context, reader, file renderer e terminal atuais | Novos `packages/app/src/pages/session/orchestra-evidence-files.tsx` e `orchestra-evidence-docs.tsx`; reusar `terminal-panel.tsx` | S11 entrega panes; S25 conecta; S15 não escreve nesses arquivos |
+| Dados de Tasks/Atividade W05/W06 | stores sincronizados + snapshots pequenos existentes | Modificar `packages/app/src/pages/session/tasks-data.ts`; novo `orchestra-activity-data.ts` no mesmo diretório se a projeção separada for necessária | `S17-W1-T1` → `S17-W1-T2` |
+| Cards Tasks/Atividade W05/W06 | um read model compartilhado | Modificar `packages/app/src/pages/session/tasks-panel.tsx`; novo `orchestra-activity.tsx` e seu teste | `S18-W1-T1` → `S18-W1-T2` |
+| Faixa de ações W07 | shell transport, prompt store, open-in-app e share atuais | Novo `packages/app/src/pages/session/orchestra-evidence-actions.tsx`; callbacks de draft/execução no cone de composer de S10 | S11 entrega UI; S10 entrega callbacks; S25 conecta |
+| Atalhos W08 | shell, comandos da sessão e consumers S19–S21 | S06 apresenta navegação; somente S25 modifica `packages/app/src/pages/session/use-session-commands.tsx` | S06/S19/S20/S21 entregam; `S25-W1-T1` conecta |
+| Acabamento/prova W09 | aplicativo integrado, não outra demo | Comparação visual e métricas sobre o mesmo build; evidências nos owners atuais | `S23-W1-T2` / `S24-W1-T2` → `S25-W1-T2` |
+
+Sufixo `*` é um cone de escrita, não ordem para criar arquivos desnecessários. Não criar um componente para cada célula desta tabela nem um registry genérico de widgets. Adaptadores pequenos podem ficar no arquivo do componente quando não são reutilizados. A árvore de providers, a persistência e os backends atuais continuam sendo a fonte de verdade.
+
 ### Interfaces locais propostas — nomes e efeitos, não APIs já existentes
 
 | Ligação | Contrato mínimo decidido | Regra de implementação |
 |---|---|---|
-| Timeline S09 → renderer S11 | `renderExecutionEvidence({serverKey, sessionID, messageID, part}) => JSX.Element | undefined` | S25 fornece o callback; `part` usa ToolPart do SDK já importado. undefined mantém renderer atual. Não visitar outros parts dentro do callback. |
+| Timeline S09 → renderer S11 | `renderExecutionEvidence({serverKey, sessionID, messageID, part, sourceMessage}) => JSX.Element | undefined` | S25 fornece o callback; `part` usa ToolPart do SDK já importado; `sourceMessage` é opcional e usa o tipo SessionMessageInfo atual, sem um schema paralelo. undefined mantém renderer atual. Não visitar outros parts dentro do callback. |
 | Dock S15 → panes S11 | `files: () => JSX.Element`, `docs: () => JSX.Element`, `terminal: () => JSX.Element`, com `activePane` e `onPaneChange` locais | Três props/factories fixas; avaliar só a escolhida. Nenhum registry/dynamic loader genérico. |
 | AppsPanel S15 → Atividade | `onActivitySnapshot(snapshot | undefined)` com os campos listados em W06 | Uma emissão por mudança real relevante do controller existente. undefined limpa a fonte; não replay do histórico. |
 | S11 → S10 | `onReplayExecution(source)` e `onPreparePullRequest(context)` | source/context carregam a identidade capturada descrita em W07. S25 fornece callbacks; não são métodos novos do SDK. |
@@ -52,6 +70,13 @@ Snapshot lido: `bde9005056e17d6495ce1270a2f25ca811b69e43`. Os links abaixo são 
 | [open-in-app-v2.tsx](https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/components/session/open-in-app-v2.tsx) | `useOpenInApp`, canOpen/opening/openDir/current; abre **diretório**, não garante linha/arquivo selecionado |
 | [janitor.tsx](https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/context/janitor.tsx) e [janitor-widget.tsx](https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/components/janitor-widget.tsx) | `useJanitor().store.report/source/expanded`, expand/collapse/dismiss/snooze; null não prova health; PocketChat só por ação do usuário |
 
+**Bindings adicionais conferidos em `1a235323361717d13a44d3c184bad13649f59e60`:**
+- `packages/app/src/utils/session-message.ts`: `normalizeSessionMessages`, `shellMessages` e `shellPart`; preservar status/tempo da mensagem-fonte.
+- `packages/app/src/context/server-session-v2-reducer.ts`: `session.shell.started`/`session.shell.ended` alimentam a origem real de replay.
+- `packages/app/src/pages/session/use-session-hash-scroll.ts` e `message-id-from-hash.ts`: navegação por UserMessage e hash `#message-<id>`.
+- `packages/app/src/utils/session-route.ts`: `sessionHref(serverKey, sessionID)` qualifica a rota de servidor/sessão.
+Esses caminhos são **fontes de leitura**, não nova permissão de escrita. W03 e W05 explicam exatamente como usar suas saídas sem modificar o contrato público.
+
 **Escolha de implementação:** todos os itens W01–W08 usam frontend e contratos existentes. Não criar endpoint de “widgets”, storage de atividade, API de teste ou login GitHub. Own/governança live continuam exclusivamente nas W2 já existentes, com autoridade comprovada. “Implementação ausente” não é um estado de capability: uma fonte presente mas não ligada reprova a task; ausência real de fonte usa somente o comportamento de indisponibilidade definido abaixo.
 
 <a id="w01"></a>
@@ -63,7 +88,7 @@ Snapshot lido: `bde9005056e17d6495ce1270a2f25ca811b69e43`. Os links abaixo são 
 
 **Fonte e identidade:** para uma mensagem histórica, usar somente a lista `metadata.todos` de um tool part `todowrite` concluído naquela mensagem. Identidade do snapshot: `(serverKey, sessionID, messageID, partID)`; identidade local de linha: posição **dentro desse snapshot**. Não deduplicar duas linhas iguais por content, inventar ID durável ou associar itens de snapshots diferentes por índice. O schema atual não permite essa promessa.
 
-**Posição:** abaixo do texto/resultado a que o part pertence, na ordem real da timeline. Não mover um plano de outra mensagem para imitar a história ilustrativa. Se só existir a lista sincronizada atual, mostrar no máximo um disclosure “Plano atual da sessão”, separado do histórico, sem atribuir autoria/horário de uma mensagem antiga. Não montar ambos para o mesmo snapshot confirmado. Fonte corrente só é usada quando não há snapshot concluído correspondente na história carregada; o mesmo reader de sessão existente faz a hidratação, sem novo polling.
+**Posição:** abaixo do texto/resultado a que o part pertence, na ordem real da timeline. Não mover um plano de outra mensagem para imitar a história ilustrativa. Se só existir a lista sincronizada atual, mostrar no máximo um disclosure “Plano atual da sessão”, separado do histórico, sem atribuir autoria/horário de uma mensagem antiga. Não montar ambos para o mesmo snapshot confirmado. Regra exata de fallback: mostrar a lista corrente somente se não existir nenhum part todowrite concluído com lista válida no histórico carregado da sessão. Havendo snapshot histórico carregado, mostrar somente os snapshots em seus lugares; não tentar provar correspondência da lista corrente por igualdade de conteúdo ou índice. O mesmo reader de sessão existente faz a hidratação, sem novo polling.
 
 | Entrada | Render / comportamento |
 |---|---|
@@ -114,6 +139,21 @@ Mostrar cinco linhas no resumo, com altura mínima 24px/linha e texto que pode q
 | revisão validada | somente vínculo autoritativo da execução com a revisão. Sem ele: “Execução desta sessão; revisão não vinculada” |
 
 Aceitar aliases legados `bash`/`shell` somente quando o adapter de protocolo confirme os mesmos campos; nome da ferramenta sozinho não garante equivalência. Demais ferramentas usam renderer original.
+
+### Duas origens de execução, uma apresentação
+
+O frontend atual normaliza mensagens pelo `packages/app/src/utils/session-message.ts`. **O adapter de evidência deve preservar a origem, não converter a forma normalizada em autoridade nova.** A normalização pode gerar `state.status="completed"` para uma shell interrompida e preencher um fim ausente com o início. Esses valores de apresentação não comprovam sucesso nem duração zero.
+
+| Origem | Binding decidido | Regra de resultado |
+|---|---|---|
+| Tool do agente | ToolPart + mensagem assistant correspondente, no mesmo servidor/sessão | Usar estado real e metadata de execução. Erro/cancelamento explícito prevalece sobre texto/rodapé; ausente continua desconhecido |
+| Comando direto/repetido por `session.shell` | `SessionMessageInfo` de tipo shell → `normalizeSessionMessages` / `shellPart`; `message.shellID` corresponde ao callID; IDs sintéticos são usados somente na projeção existente | Preferir `source.status`, `source.exit`, `source.output?.output`, `source.output?.truncated` e `source.time` da mensagem real. No shape observado, running é ativa; exited com exit inteiro usa esse código. Outro status exige o discriminante real do host ou resultado desconhecido. Interrupção/falha explicitamente reportada não vira sucesso por `part.state.status=completed`, rodapé positivo ou exit0 contraditório |
+
+S09 fornece ao callback `sourceMessage` quando a mensagem bruta correspondente está carregada. Para assistant, o ID é o da mensagem-fonte; para shell direta, é a origem que a normalização converte em `<id>:assistant` e `<id>:tool`. **Não inventar outro ID nem inferir parentesco pelo texto do comando.** S11 consome essa informação; S25 liga o seam. Reusar a projeção/lookup já existente e qualificar por servidor/sessão; não varrer todas as mensagens de todas as sessões a cada render.
+
+Sem estado/fim autoritativo: resultado não confirmado, duração `—`, motivo disponível no disclosure. Para shell direta, `time.completed` ausente não se transforma em zero por causa do fallback do normalizador. Quando o shape de output não expõe outputPath, oferecer só o output retido; não fabricar caminho de arquivo a partir do texto. O contrato não exige editar o normalizador compartilhado ou ampliar o backend para esses casos.
+
+**Owner do adapter W03: S11.** O adaptador deve preservar a projeção existente para outros consumidores. O teste `WK07` inclui shell direta interrompida/failed, exit contraditório e fim ausente, além dos casos de log já definidos. O teste `WK19` confirma que repetir cria nova execução e novo card sem sobrescrever o resultado anterior.
 
 ### Formato reconhecido, decidido
 
@@ -170,9 +210,19 @@ Output inline mostra preview até16KiB com marcador explícito de trecho. “Ver
 
 **Resumo:** até3 rows, mínimo44px/row, duas linhas (título; tipo/agente/modelo/tempo/estado). Header “Tarefas” + contador derivado da mesma coleção: running + needs-input como ativas, com needs-input indicado separadamente. Contagem não depende de quantas linhas foram truncadas. Percentual fica **fora desta versão**: os producers atuais não expõem total confiável. Não implementar cálculo por tokens/tempo e não inventar barra78%. A ausência de percentual é decisão final, não feature pendente.
 
-**Ordenação:** needs-input, failed, running, demais; dentro do grupo, maior timestamp de origem conhecido, desempate key lexical. Ticker não muda essa ordem. Resumo pode incluir encerradas recentes quando há <3 ativas. Detalhe “Ver todas (N)” é expansão inline do próprio card, não rota inventada: seções ativas/encerradas, mesmas rows, janela virtual existente acima de30. No máximo64 entidades ativas visíveis sob virtualização; encerradas limitadas às12 já retidas no read model. Sem inventar histórico ilimitado: informar “12 encerradas recentes”. Expandir não remonta o Dock.
+**Ordenação e resumo:** primeiro compor a coleção de ativas (`needs-input`, depois `running`); em cada grupo, ordenar por timestamp real decrescente quando conhecido e depois pela key lexical. Timestamp desconhecido fica depois dos conhecidos no mesmo grupo. O ticker não muda a ordem. Mostrar até3 ativas; somente se houver menos de3, preencher as vagas com encerradas recentes, priorizando failed antes das demais. Se houver falhas recentes fora do resumo, o header mostra contagem/link para o detalhe, sem deslocar uma ativa ou inventar status. Este algoritmo substitui a ordenação genérica que colocava failed antes de running no mesmo pool.
+
+**Detalhe:** “Ver todas (N)” expande o próprio card, com seções ativas/encerradas e as mesmas rows; usar o virtualizer existente acima de30 itens. **64 é carga de referência, não teto da coleção.** Todas as entidades ativas já sincronizadas continuam acessíveis, inclusive65 ou mais; limitar DOM montado/overscan e caches derivados, nunca aplicar slice(0,64) às ativas. Encerradas continuam limitadas às12retidas pelo read model, explicitamente rotuladas “12 encerradas recentes”. Se o backend só carregou parte da coleção, exibir a quantidade carregada e o mecanismo atual de carregar mais; não prometer o total global. Expandir não remonta o Dock. WK13 inclui 65+ ativas e WK15 verifica DOM limitado sem perda de entidade/intervenção.
 
 **Abrir:** agente com childID usa `sessionHref(serverKey, childID)`; shell abre a sessão/mensagem/callID correspondente pela navegação atual da timeline (não cria child). Callback valida o servidor e a entidade capturados. **Stop:** somente child agent com endpoint de interrupção existente; `sdk.api.session.interrupt({sessionID:childID})`, nunca fallback para parent nem stop-all. Estado pending no botão, erro legível/retry explícito; não swallowing catch. Shell sem cancelamento granular não ganha botãoStop: “Abrir execução” encaminha ao controle real disponível, sem interromper o pai por engano.
+
+### Abrir a origem — contrato exato de navegação
+
+S17 acrescenta ao read model somente referências frontend opcionais já observadas: `sourceMessageID`, `sourcePartID`, `callID` e `originUserMessageID`. Não muda schema de servidor. A mensagem normalizada assistant carrega `parentID`; confirmar que esse parent identifica uma mensagem user projetada na mesma sessão. Para shell direta, a normalização existente produz o par user/assistant com a origem shell. Não escolher “a mensagem anterior mais próxima” nem deduzir o parent por timestamp.
+
+O hook `useSessionHashScroll` recebe **UserMessage**, e o hash reconhecido é `#message-<id>`. Não criar `#message-<callID>` nem passar ToolPart ao hook. S25 recebe `onOpenItem(source)` de S18, usa `sessionHref(serverKey, sessionID)` para a sessão real e o ID de user confirmado para revelar o turno pelo fluxo de hash/scroll existente; respeita reduced-motion e carregamento histórico atual. A seleção/exibição do output permanece vinculada ao part/callID de W03, não à label da row.
+
+Se a origem user não puder ser resolvida, o botão se chama **“Abrir sessão”**, não “Abrir execução exata”. Mostrar “Origem da execução não disponível no histórico carregado” e preservar o output retido quando disponível. Não iniciar varredura/polling ilimitado nem rolar para uma mensagem escolhida por aproximação. A troca de servidor/sessão enquanto a origem carrega invalida o callback antigo. `WK14` cobre parent válido, origem ausente, hash de callID recusado e callback obsoleto.
 
 **Dismiss:** apenas encerradas, local à mesma sessão/key; não remove histórico/child no backend. **Auto-open:** real necessidade de intervenção expande/destaca o resumo conforme snooze; nunca troca de pane/servidor/modelo ou rouba foco. Um único ticker1Hz para tempos visíveis ativos; zero quando offscreen, recolhido ou sem atividade. Textos de tempo usam tabular-nums e largura reservada, sem criar métrica start com Date.now quando falta timestamp.
 
@@ -194,7 +244,7 @@ Output inline mostra preview até16KiB com marcador explícito de trecho. “Ver
 
 **Janitor:** reportnull significa “sem relatório disponível”, não healthy/idle. Não mostrar row de sucesso sempre ligada. Se source=null legado sem vinculação comprovada, não atribuir a esta sessão/servidor: menu do Janitor explica que não há relatório vinculado. Montar o resumo não monta `JanitorPocketChat`, não cria sessão e não chama modelo. Row de relatório presente mostra findings/severidade do parser já existente; abrir usa expand; dismiss/snooze continuam em S21. Se não há fonte Janitor válida, sua ausência não reduz para um “0 problemas” fabricado.
 
-**Apresentação:** até4 rows no resumo. Ordenar por necessidade de intervenção/erro, depois execução ativa, depois eventos recentes com tempo conhecido; desempate por tipo/key. `observedAt` do Dock não supera uma permissão pendente. Contador é de itens de atividade, não de pessoas online; tooltip discrimina fonte/escopo. Tempo ausente = `—`. Tipo textual acompanha ícone. “Ver todas” expande inline até a coleção já retida, no máximo64rows virtualizadas; sem buscar transcript inteiro. Filtro “Agentes” mostra apenas agent, sem novas cópias da coleção. Header/filtro não multiplica subscriptions.
+**Apresentação:** até4 rows no resumo. Ordenar por necessidade de intervenção/erro, depois execução ativa, depois eventos recentes com tempo conhecido; desempate por tipo/key. `observedAt` do Dock não supera uma permissão pendente. Contador é de itens de atividade, não de pessoas online; tooltip discrimina fonte/escopo. Tempo ausente = `—`. Tipo textual acompanha ícone. “Ver todas” expande inline a coleção já retida, com virtualização; não limita as entidades ativas a64 nem oculta a65ª intervenção. Encerradas seguem a retenção W05, e fontes Dock/Janitor não consomem uma cota artificial das tarefas. Sem buscar transcript inteiro. Filtro “Agentes” mostra apenas agent, sem novas cópias da coleção. Header/filtro não multiplica subscriptions.
 
 **Estados:** sem itens: “Nenhuma atividade observada nesta sessão”; dados carregando: skeleton de altura estável; desconectado: preservar último snapshot claramente desatualizado e desabilitar ações de mutação; troca de servidor elimina vínculos anteriores; nunca requalificar IDs velhos pelo servidor novo. Se erro de fonte, indicar qual, não esconder todas as outras rows válidas.
 
@@ -222,6 +272,8 @@ S10 reutiliza `sdk.api.session.shell({sessionID,id,command,agent,model})` no flu
 **Condição do diretório:** aceitar apenas origem no mesmo session directory, com workdir ausente (portanto implícito confirmado) ou workdir absoluto/canônico igual ao diretório que o host resolve para essa sessão. O request atual não transporta workdir. Se a origem declara outro workdir, workdir relativo não resolvido ou localização desconhecida, **não executar** e não prefixar `cd`, modificar quoting/comando/env ou adicionar flags para fazer caber. Copiar comando e abrir terminal são alternativas explícitas, não sucesso da repetição. A expansão de suporte a workdir seria mudança pública de protocolo e fica fora desta migração, não oculta como tarefa “futura necessária”.
 
 Confirmar trava a ação até resposta. Double click não dispara duas requests. Falha de rede com resultado incerto mostra “Estado da solicitação desconhecido — confira as execuções”, sem retry automático nem alegação de exatamente-uma-execução no servidor. Novo resultado usa novo card W03; resultado antigo não é sobrescrito. Cancelar o modal depois de enviado não mata processo; interrupção permanece no controle autoritativo existente. Chamada respeita autenticação/permissões do host; nunca executar via PTY injecção/CLI local ou usar API de outro servidor para contornar falha.
+
+**Preservação do composer ao repetir:** reusar o transporte e a captura de ownership, **não chamar o submit normal que limpa o input**. O callback de replay não chama `clearInput`, `prompt.reset`, `context.clear`, não altera o modo do composer e não muda o texto, cursor, anexos ou contextos do rascunho. Isso vale no sucesso, erro, cancelamento antes do envio e resposta incerta. O resultado aparece no fluxo real da sessão; o rascunho continua aguardando envio normal. `WK19` inclui rascunho não vazio com anexos antes/depois do replay; `WK20` confirma que respostas antigas não restauram um snapshot sobre edições mais novas.
 
 ### Criar PR: handoff explícito, sem publicação disfarçada
 

@@ -1,0 +1,84 @@
+{
+  "kind": "static-contract-analysis-not-product",
+  "baseline_plan_commit": "d7ba1cb2ecb51395a5d2a6282286a1484e6d5b4d",
+  "inspected_source_commit": "1a235323361717d13a44d3c184bad13649f59e60",
+  "nodes": 143,
+  "tasks": 66,
+  "work_packages": 38,
+  "criterion_ids": 1974,
+  "unordered_task_pairs": 1009,
+  "declared_write_conflicts": [
+    {
+      "tasks": [
+        "S19-W2-T1",
+        "S20-W2-T1"
+      ],
+      "common_locks": [
+        "public-api-registration-and-client-codegen"
+      ]
+    }
+  ],
+  "protected_input_sha256": {
+    "SURFACES.json": "d6100b43ff7289ba3fb71f2080b9a295f41688c5e97d3117ea0487162124f434",
+    "COVERAGE.json": "5a11374ff085a415f46d9a2943e6b7be2db3e46336b0e9f8ae06e839e79b85c0",
+    "BUDGETS.json": "694c764cd15ff85697f8dc4ee93852f106cf14cb00c06a472ccab7078f05230f",
+    "progress.json": "046c45384e13bf29eb6b32ebe08706ccc7f6016b80dc76ef7626257cd6f15ef7",
+    "reference/approved.png": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+    "fixture.json": "9717d21e88f937959ace6c341c5b14d8a40a4931955ad53803b3102d039e06db",
+    "CONTRACTS.md": "89ee60553009247c6623ea78ea6d84dcbf252de8cbe9f2ab2ca987b06deba286"
+  },
+  "source_read_anchors": {
+    "packages/app/src/utils/session-message.ts": {
+      "sha256": "4067c83359538a01f5affeb3cf9c509e2776a028bb68cc36977c62f7ccc8ae4a",
+      "git_blob": "eef9f4e6dfbfa9a14fc97a5a351226c24629f199"
+    },
+    "packages/app/src/context/server-session-v2-reducer.ts": {
+      "sha256": "de86cd31cab152a71d9461339b06d7ff2c3fcb57f173f950d2938e9fa6500156",
+      "git_blob": "b34ab3985ec1a9fccfeefd3928e313fb95620dba"
+    },
+    "packages/app/src/pages/session/use-session-hash-scroll.ts": {
+      "sha256": "b54a78136bcbce86d81db0192ff6bc5209e62498e330961842311cc212dcc2ef",
+      "git_blob": "65577abae2291b91b5c3cb0b6fce6e3f9e39d288"
+    },
+    "packages/app/src/pages/session/message-id-from-hash.ts": {
+      "sha256": "d1526b9c216911ff9fe483e9893c13a6b48a368ac9bfc91947bf90ec11026604",
+      "git_blob": "2857f4b01d6bd10ff4f3362a71b284e1e7395948"
+    },
+    "packages/app/src/utils/session-route.ts": {
+      "sha256": "db2947bd7f84732a7ce4085c321d782464c51ef6154c982633ef1e010683ccca",
+      "git_blob": "4721611d2eae4143b564c69105267eecc7d33d17"
+    },
+    "packages/app/src/components/prompt-input/submit.ts": {
+      "sha256": "5c9f26eeeb4392e15e90269a81fe2e1df6210c49b17d49beda8f1670ab202235",
+      "git_blob": "04adcd5e679bdf63e8fd09807728613fbd7bbefe"
+    }
+  },
+  "sample_new_destination_owners": {
+    "packages/app/src/pages/session/timeline/orchestra-checklist.tsx": [
+      "S09"
+    ],
+    "packages/app/src/pages/session/orchestra-evidence.tsx": [
+      "S11"
+    ],
+    "packages/app/src/pages/session/orchestra-evidence-files.tsx": [
+      "S11"
+    ],
+    "packages/app/src/pages/session/orchestra-evidence-docs.tsx": [
+      "S11"
+    ],
+    "packages/app/src/pages/session/orchestra-evidence-actions.tsx": [
+      "S11"
+    ],
+    "packages/app/src/pages/session/orchestra-activity-data.ts": [
+      "S17"
+    ],
+    "packages/app/src/pages/session/orchestra-activity.tsx": [
+      "S18"
+    ],
+    "packages/app/src/pages/session/use-session-commands.tsx": [
+      "S25"
+    ]
+  },
+  "dag_and_write_scopes_unchanged": true,
+  "product_execution": "NOT_RUN"
+}

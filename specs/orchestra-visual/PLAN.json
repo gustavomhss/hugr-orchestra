@@ -5,7 +5,7 @@
   "source_sha": "30d951fcc4a09e708768551c7c6fd38a0efe3da8",
   "reference_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
   "reference_path": "reference/approved.png",
-  "status": "widget-semantics-and-bindings-decided; product implementation, local census and hardware gates NOT_RUN",
+  "status": "widget-bindings-closed-and-source-rechecked; product implementation and measurements NOT_RUN",
   "nodes": [
     {
       "id": "E1",
@@ -6753,7 +6753,9 @@
         "packages/opencode/src/tool/todo.ts",
         "packages/opencode/src/session/todo.ts",
         "packages/app/src/context/directory-sync.ts",
-        "packages/session-ui/src/components/message-part.tsx"
+        "packages/session-ui/src/components/message-part.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ],
       "steps": [
         "Preserve createVirtualizer, projeção, measurement cache e scroll anchoring; mude apresentação no renderer existente.",
@@ -6787,27 +6789,27 @@
       "axioms": {
         "dod": [
           "Transcript operacional fiel, selecionável e leve. Casos e limites medidos; commits no escopo e evidence/S09/result.json.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade. Seam W03 entrega sourceMessage quando carregada; W01 usa fallback atual apenas sem snapshot histórico concluído carregado."
         ],
         "invariants": [
           "Um delta de part não remonta mensagens não afetadas, não rescaneia o histórico inteiro e não rouba foco/scroll.",
           "Cada mensagem mantém origem e identidade; texto plausível não se transforma em execução ou evidência de ferramenta.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos. Não tratar estado/duração sintéticos da normalização como prova de sucesso ou tempo real."
         ],
         "quality_standards": [
           "P03/P04/P05/P07/P10: custo por delta proporcional a partes alteradas; DOM virtualizado e sem crescimento de cache sem limite.",
           "Alinhamento texto/avatar/meta, markdown/code no mesmo ritmo; nenhum flash no streaming.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova. Reusar a projeção de mensagens; sem lookup global por token ou novo registro de tools."
         ],
         "completeness_criteria": [
           "10k messages/50k parts, conteúdo misto, retry e compactação.",
           "Uma atualização não remonta mensagens não alteradas.",
           "Scroll manual não pula ao fim; novas atividades indicadas.",
-          "Cada WP de S09 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos."
+          "Cada WP de S09 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos. WK02/WK07 verificam o passthrough de origem e proposta não confirmada; parser e UI de resultado são responsabilidade S11, não duplicação em S09."
         ],
         "success_criteria": [
           "Transcript operacional fiel, selecionável e leve. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S09 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas."
+          "Os cenários de S09 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas. O consumidor distingue a origem do resultado e não precisa adivinhar o significado de completed."
         ]
       },
       "criterion_ids": {
@@ -6850,7 +6852,8 @@
       "widget_cases": [
         "WK01",
         "WK02",
-        "WK03"
+        "WK03",
+        "WK07"
       ]
     },
     {
@@ -6887,27 +6890,27 @@
       "axioms": {
         "dod": [
           "S09-W1-T1 e S09-W1-T2 completos; output conectado ao contrato sem placeholder aprovado.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade. Seam W03 entrega sourceMessage quando carregada; W01 usa fallback atual apenas sem snapshot histórico concluído carregado."
         ],
         "invariants": [
           "Um delta de part não remonta mensagens não afetadas, não rescaneia o histórico inteiro e não rouba foco/scroll.",
           "Cada mensagem mantém origem e identidade; texto plausível não se transforma em execução ou evidência de ferramenta.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos. Não tratar estado/duração sintéticos da normalização como prova de sucesso ou tempo real."
         ],
         "quality_standards": [
           "P03/P04/P05/P07/P10: custo por delta proporcional a partes alteradas; DOM virtualizado e sem crescimento de cache sem limite.",
           "Alinhamento texto/avatar/meta, markdown/code no mesmo ritmo; nenhum flash no streaming.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova. Reusar a projeção de mensagens; sem lookup global por token ou novo registro de tools."
         ],
         "completeness_criteria": [
           "10k messages/50k parts, conteúdo misto, retry e compactação.",
           "Uma atualização não remonta mensagens não alteradas.",
           "Scroll manual não pula ao fim; novas atividades indicadas.",
-          "Todas as tasks S09-W1-T1, S09-W1-T2 estão verificadas e a saída Transcript operacional fiel, selecionável e leve. é consumida pelo caminho especificado. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos."
+          "Todas as tasks S09-W1-T1, S09-W1-T2 estão verificadas e a saída Transcript operacional fiel, selecionável e leve. é consumida pelo caminho especificado. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos. WK02/WK07 verificam o passthrough de origem e proposta não confirmada; parser e UI de resultado são responsabilidade S11, não duplicação em S09."
         ],
         "success_criteria": [
           "Transcript operacional fiel, selecionável e leve. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S09-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas."
+          "Os cenários de S09-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas. O consumidor distingue a origem do resultado e não precisa adivinhar o significado de completed."
         ]
       },
       "status": "planned",
@@ -6951,14 +6954,17 @@
       "widget_cases": [
         "WK01",
         "WK02",
-        "WK03"
+        "WK03",
+        "WK07"
       ],
       "read_paths": [
         "packages/schema/src/session-todo.ts",
         "packages/opencode/src/tool/todo.ts",
         "packages/opencode/src/session/todo.ts",
         "packages/app/src/context/directory-sync.ts",
-        "packages/session-ui/src/components/message-part.tsx"
+        "packages/session-ui/src/components/message-part.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ]
     },
     {
@@ -6997,7 +7003,9 @@
         "packages/opencode/src/tool/todo.ts",
         "packages/opencode/src/session/todo.ts",
         "packages/app/src/context/directory-sync.ts",
-        "packages/session-ui/src/components/message-part.tsx"
+        "packages/session-ui/src/components/message-part.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ],
       "steps": [
         "Preserve createVirtualizer, projeção, measurement cache e scroll anchoring; mude apresentação no renderer existente.",
@@ -7013,17 +7021,17 @@
       "axioms": {
         "dod": [
           "Produzir a entrega Transcript operacional fiel, selecionável e leve. no write scope de S09-W1-T1 e verificar o caminho local sem declarar integração global prematura.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade. Seam W03 entrega sourceMessage quando carregada; W01 usa fallback atual apenas sem snapshot histórico concluído carregado."
         ],
         "invariants": [
           "Um delta de part não remonta mensagens não afetadas, não rescaneia o histórico inteiro e não rouba foco/scroll.",
           "Cada mensagem mantém origem e identidade; texto plausível não se transforma em execução ou evidência de ferramenta.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos. Não tratar estado/duração sintéticos da normalização como prova de sucesso ou tempo real."
         ],
         "quality_standards": [
           "P03/P04/P05/P07/P10: custo por delta proporcional a partes alteradas; DOM virtualizado e sem crescimento de cache sem limite.",
           "Alinhamento texto/avatar/meta, markdown/code no mesmo ritmo; nenhum flash no streaming.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova. Reusar a projeção de mensagens; sem lookup global por token ou novo registro de tools."
         ],
         "completeness_criteria": [
           "Concluir e provar o passo 1: Preserve createVirtualizer, projeção, measurement cache e scroll anchoring; mude apresentação no renderer existente.",
@@ -7031,11 +7039,11 @@
           "Concluir e provar o passo 3: Agrupe ferramentas por identidade sem ocultar falhas/permissões; HuGR Composer e read continuam tools, não novos agentes.",
           "Concluir e provar o passo 4: Atualize só mensagem/part dirty durante streaming; nunca parse/stringify/clone do transcript completo por delta.",
           "Concluir e provar o passo 5: Suporte markdown, tabelas, code, links, anexos, compactações/retry/revert/partial output e histórico carregado incrementalmente.",
-          "Concluir e provar o passo 6: Exponha slots de evidência para S11; preserve selection/focus, mensagens fora do viewport não mantêm efeitos ativos. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos."
+          "Concluir e provar o passo 6: Exponha slots de evidência para S11; preserve selection/focus, mensagens fora do viewport não mantêm efeitos ativos. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos. WK02/WK07 verificam o passthrough de origem e proposta não confirmada; parser e UI de resultado são responsabilidade S11, não duplicação em S09."
         ],
         "success_criteria": [
           "Transcript operacional fiel, selecionável e leve. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S09-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas."
+          "Os cenários de S09-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas. O consumidor distingue a origem do resultado e não precisa adivinhar o significado de completed."
         ]
       },
       "status": "planned",
@@ -7143,7 +7151,8 @@
       "widget_cases": [
         "WK01",
         "WK02",
-        "WK03"
+        "WK03",
+        "WK07"
       ]
     },
     {
@@ -7173,7 +7182,9 @@
         "packages/opencode/src/tool/todo.ts",
         "packages/opencode/src/session/todo.ts",
         "packages/app/src/context/directory-sync.ts",
-        "packages/session-ui/src/components/message-part.tsx"
+        "packages/session-ui/src/components/message-part.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ],
       "steps": [
         "Execute os casos: 10k messages/50k parts, conteúdo misto, retry e compactação.; Uma atualização não remonta mensagens não alteradas.; Scroll manual não pula ao fim; novas atividades indicadas.",
@@ -7186,27 +7197,27 @@
       "axioms": {
         "dod": [
           "Emitir recibo íntegro de S09-W1-T2 com IDs exatos, hashes dos artefatos, build/SHA correto e resultados dos cenários desta unidade.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W01 e o ponto de render W03 estão entregues no estágio desta unidade. Seam W03 entrega sourceMessage quando carregada; W01 usa fallback atual apenas sem snapshot histórico concluído carregado."
         ],
         "invariants": [
           "Um delta de part não remonta mensagens não afetadas, não rescaneia o histórico inteiro e não rouba foco/scroll.",
           "Cada mensagem mantém origem e identidade; texto plausível não se transforma em execução ou evidência de ferramenta.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Snapshot todowrite não é prova de execução; input proposto e snapshot histórico nunca são confundidos. Não tratar estado/duração sintéticos da normalização como prova de sucesso ou tempo real."
         ],
         "quality_standards": [
           "P03/P04/P05/P07/P10: custo por delta proporcional a partes alteradas; DOM virtualizado e sem crescimento de cache sem limite.",
           "Alinhamento texto/avatar/meta, markdown/code no mesmo ritmo; nenhum flash no streaming.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Checklist compacto não revarre transcript nem usa timer; renderer duplicado do mesmo part reprova. Reusar a projeção de mensagens; sem lookup global por token ou novo registro de tools."
         ],
         "completeness_criteria": [
           "Evidência do cenário: 10k messages/50k parts, conteúdo misto, retry e compactação.",
           "Evidência do cenário: Uma atualização não remonta mensagens não alteradas.",
           "Evidência do cenário: Scroll manual não pula ao fim; novas atividades indicadas.",
-          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S09-W1-T2; ausência de medição não é PASS. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos."
+          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S09-W1-T2; ausência de medição não é PASS. Cobrir WK01–WK03 e o contrato de callback W03, com tipos reais e estados desconhecidos. WK02/WK07 verificam o passthrough de origem e proposta não confirmada; parser e UI de resultado são responsabilidade S11, não duplicação em S09."
         ],
         "success_criteria": [
           "Transcript operacional fiel, selecionável e leve. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S09-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas."
+          "Os cenários de S09-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O plano do agente é legível e fiel à origem, sem criar outro sistema de tarefas. O consumidor distingue a origem do resultado e não precisa adivinhar o significado de completed."
         ]
       },
       "status": "planned",
@@ -7336,7 +7347,8 @@
       "widget_cases": [
         "WK01",
         "WK02",
-        "WK03"
+        "WK03",
+        "WK07"
       ]
     },
     {
@@ -7394,27 +7406,27 @@
       "axioms": {
         "dod": [
           "Composer real polido com todas as funções existentes. Casos e limites medidos; commits no escopo e evidence/S10/result.json.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada. Callback de replay preserva integralmente o rascunho normal nos estados desta etapa."
         ],
         "invariants": [
           "Um gesto de envio produz uma única admissão; drafts, IME e anexos sobrevivem a falha e troca de painel.",
           "Seleção de modelo/credencial e allowlist continuam vinculadas à sessão; interrupção não significa apagar ou encerrar sessão.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback. Replay não chama clearInput/reset/context.clear nem restaura snapshot sobre edições mais novas."
         ],
         "quality_standards": [
           "P03/P04: input até paint p95<=50ms sob carga; sem derivar transcript inteiro para placeholder.",
           "Altura de ícones, baseline do texto, botão enviar e focus ring não mudam geometria.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa. Capturar e revalidar identidade; nenhuma segunda execução por double click ou retry automático."
         ],
         "completeness_criteria": [
           "IME não envia prematuramente; duplo Enter não duplica execução.",
           "Switch tabs salva draft/anexos segundo host.",
           "Conta/modelo/allowlist mantidos ao tema e first prompt.",
-          "Cada WP de S10 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior."
+          "Cada WP de S10 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior. WK19/WK20 verificam texto/cursor/anexos preservados, cancelamento e resposta incerta."
         ],
         "success_criteria": [
           "Composer real polido com todas as funções existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S10 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada."
+          "Os cenários de S10 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada. Repetir um comando não custa ao usuário seu rascunho ou troca o alvo da execução."
         ]
       },
       "criterion_ids": {
@@ -7486,27 +7498,27 @@
       "axioms": {
         "dod": [
           "S10-W1-T1 e S10-W1-T2 completos; output conectado ao contrato sem placeholder aprovado.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada. Callback de replay preserva integralmente o rascunho normal nos estados desta etapa."
         ],
         "invariants": [
           "Um gesto de envio produz uma única admissão; drafts, IME e anexos sobrevivem a falha e troca de painel.",
           "Seleção de modelo/credencial e allowlist continuam vinculadas à sessão; interrupção não significa apagar ou encerrar sessão.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback. Replay não chama clearInput/reset/context.clear nem restaura snapshot sobre edições mais novas."
         ],
         "quality_standards": [
           "P03/P04: input até paint p95<=50ms sob carga; sem derivar transcript inteiro para placeholder.",
           "Altura de ícones, baseline do texto, botão enviar e focus ring não mudam geometria.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa. Capturar e revalidar identidade; nenhuma segunda execução por double click ou retry automático."
         ],
         "completeness_criteria": [
           "IME não envia prematuramente; duplo Enter não duplica execução.",
           "Switch tabs salva draft/anexos segundo host.",
           "Conta/modelo/allowlist mantidos ao tema e first prompt.",
-          "Todas as tasks S10-W1-T1, S10-W1-T2 estão verificadas e a saída Composer real polido com todas as funções existentes. é consumida pelo caminho especificado. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior."
+          "Todas as tasks S10-W1-T1, S10-W1-T2 estão verificadas e a saída Composer real polido com todas as funções existentes. é consumida pelo caminho especificado. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior. WK19/WK20 verificam texto/cursor/anexos preservados, cancelamento e resposta incerta."
         ],
         "success_criteria": [
           "Composer real polido com todas as funções existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S10-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada."
+          "Os cenários de S10-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada. Repetir um comando não custa ao usuário seu rascunho ou troca o alvo da execução."
         ]
       },
       "status": "planned",
@@ -7599,28 +7611,28 @@
       "axioms": {
         "dod": [
           "Produzir a entrega Composer real polido com todas as funções existentes. no write scope de S10-W1-T1 e verificar o caminho local sem declarar integração global prematura.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada. Callback de replay preserva integralmente o rascunho normal nos estados desta etapa."
         ],
         "invariants": [
           "Um gesto de envio produz uma única admissão; drafts, IME e anexos sobrevivem a falha e troca de painel.",
           "Seleção de modelo/credencial e allowlist continuam vinculadas à sessão; interrupção não significa apagar ou encerrar sessão.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback. Replay não chama clearInput/reset/context.clear nem restaura snapshot sobre edições mais novas."
         ],
         "quality_standards": [
           "P03/P04: input até paint p95<=50ms sob carga; sem derivar transcript inteiro para placeholder.",
           "Altura de ícones, baseline do texto, botão enviar e focus ring não mudam geometria.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa. Capturar e revalidar identidade; nenhuma segunda execução por double click ou retry automático."
         ],
         "completeness_criteria": [
           "Concluir e provar o passo 1: Uma entrada no rodapé do centro, min46px/max180px; respiro e reserva inferior, sem sobrepor último resultado.",
           "Concluir e provar o passo 2: Reuse submit/controller/queued/steer semantics, IME, Enter/ShiftEnter, paste, file attachments, slash and mention.",
           "Concluir e provar o passo 3: Modelo/agent/reasoning e credential label não se misturam; retain draft-model allowlist before first prompt.",
           "Concluir e provar o passo 4: Estado running exibe interrupt normal, não delete/end-session; erro mantém texto editável.",
-          "Concluir e provar o passo 5: Proteja input fast-path de atualizações de Tasks/Dock; medidas só em resize ou conteúdo alterado. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior."
+          "Concluir e provar o passo 5: Proteja input fast-path de atualizações de Tasks/Dock; medidas só em resize ou conteúdo alterado. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior. WK19/WK20 verificam texto/cursor/anexos preservados, cancelamento e resposta incerta."
         ],
         "success_criteria": [
           "Composer real polido com todas as funções existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S10-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada."
+          "Os cenários de S10-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada. Repetir um comando não custa ao usuário seu rascunho ou troca o alvo da execução."
         ]
       },
       "status": "planned",
@@ -7761,27 +7773,27 @@
       "axioms": {
         "dod": [
           "Emitir recibo íntegro de S10-W1-T2 com IDs exatos, hashes dos artefatos, build/SHA correto e resultados dos cenários desta unidade.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Os callbacks W07 preservam draft e executam somente após a confirmação explícita adequada. Callback de replay preserva integralmente o rascunho normal nos estados desta etapa."
         ],
         "invariants": [
           "Um gesto de envio produz uma única admissão; drafts, IME e anexos sobrevivem a falha e troca de painel.",
           "Seleção de modelo/credencial e allowlist continuam vinculadas à sessão; interrupção não significa apagar ou encerrar sessão.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. PR prefill não envia; replay não muda cwd/agent/modelo/servidor nem executa no pai por fallback. Replay não chama clearInput/reset/context.clear nem restaura snapshot sobre edições mais novas."
         ],
         "quality_standards": [
           "P03/P04: input até paint p95<=50ms sob carga; sem derivar transcript inteiro para placeholder.",
           "Altura de ícones, baseline do texto, botão enviar e focus ring não mudam geometria.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Double click, erro incerto e falta de workdir suportado não disparam retry invisível ou rotina alternativa. Capturar e revalidar identidade; nenhuma segunda execução por double click ou retry automático."
         ],
         "completeness_criteria": [
           "Evidência do cenário: IME não envia prematuramente; duplo Enter não duplica execução.",
           "Evidência do cenário: Switch tabs salva draft/anexos segundo host.",
           "Evidência do cenário: Conta/modelo/allowlist mantidos ao tema e first prompt.",
-          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S10-W1-T2; ausência de medição não é PASS. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior."
+          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S10-W1-T2; ausência de medição não é PASS. Exercitar WK19–WK21 no controller local; wiring real pertence à integração posterior. WK19/WK20 verificam texto/cursor/anexos preservados, cancelamento e resposta incerta."
         ],
         "success_criteria": [
           "Composer real polido com todas as funções existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S10-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada."
+          "Os cenários de S10-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. A ação faz o efeito anunciado sem perder texto/anexos ou iniciar publicação não confirmada. Repetir um comando não custa ao usuário seu rascunho ou troca o alvo da execução."
         ]
       },
       "status": "planned",
@@ -7935,7 +7947,9 @@
         "packages/app/src/components/session/open-in-app-v2.tsx",
         "packages/opencode/src/tool/shell.ts",
         "packages/app/src/pages/session/v2/review-panel-v2.tsx",
-        "packages/app/src/components/prompt-input/submit.ts"
+        "packages/app/src/components/prompt-input/submit.ts",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ],
       "steps": [
         "Lista de alterações e diff selecionado paralelos 1:1 no centro, gap8; em width insuficiente empilhe sem perder seleção.",
@@ -7970,28 +7984,28 @@
       "axioms": {
         "dod": [
           "Inspeção real e evidência acionável integradas à conversa. Casos e limites medidos; commits no escopo e evidence/S11/result.json.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25. W03 distingue resultado da fonte shell e estado sintético do part; W07 não limpa o composer."
         ],
         "invariants": [
           "O diff apresentado corresponde à seleção e revisão atuais; respostas de revisões anteriores são ignoradas ou canceladas.",
           "Exit code e output não comprovam testes de uma revisão sem vínculo; ausência de parser exibe evidência bruta, nunca contagem inventada.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa. Interrupted/failed explícitos nunca viram sucesso; fim ausente permanece duração desconhecida."
         ],
         "quality_standards": [
           "P04/P06/P07/P10: fetch/highlight lazy, zero parse de logs completos por frame; PTY não remonta por tema.",
           "Gutters, syntax, barras de diff, cabeçalhos e whitespace homogêneos; estados vazio/no-git também refinados.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final. Adapter limitado aos dois shapes documentados; sem parser universal ou endpoint novo."
         ],
         "completeness_criteria": [
           "Diff alterado enquanto visualizando sinaliza revisão.",
           "Teste antigo, comando não-teste ou output parcial nunca declara all tests pass.",
           "1000 arquivos/100k linhas não travam ou montam todos.",
           "Stop terminal não interrompe outra sessão.",
-          "Cada WP de S11 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1."
+          "Cada WP de S11 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1. WK07/WK19 cobrem shell direta normalizada, exit contraditório, fim ausente e novo card."
         ],
         "success_criteria": [
           "Inspeção real e evidência acionável integradas à conversa. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S11 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos."
+          "Os cenários de S11 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos. O card continua útil sem inventar sucesso, duração, contagens ou bytes não retidos."
         ]
       },
       "criterion_ids": {
@@ -8081,28 +8095,28 @@
       "axioms": {
         "dod": [
           "S11-W1-T1 e S11-W1-T2 completos; output conectado ao contrato sem placeholder aprovado.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25. W03 distingue resultado da fonte shell e estado sintético do part; W07 não limpa o composer."
         ],
         "invariants": [
           "O diff apresentado corresponde à seleção e revisão atuais; respostas de revisões anteriores são ignoradas ou canceladas.",
           "Exit code e output não comprovam testes de uma revisão sem vínculo; ausência de parser exibe evidência bruta, nunca contagem inventada.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa. Interrupted/failed explícitos nunca viram sucesso; fim ausente permanece duração desconhecida."
         ],
         "quality_standards": [
           "P04/P06/P07/P10: fetch/highlight lazy, zero parse de logs completos por frame; PTY não remonta por tema.",
           "Gutters, syntax, barras de diff, cabeçalhos e whitespace homogêneos; estados vazio/no-git também refinados.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final. Adapter limitado aos dois shapes documentados; sem parser universal ou endpoint novo."
         ],
         "completeness_criteria": [
           "Diff alterado enquanto visualizando sinaliza revisão.",
           "Teste antigo, comando não-teste ou output parcial nunca declara all tests pass.",
           "1000 arquivos/100k linhas não travam ou montam todos.",
           "Stop terminal não interrompe outra sessão.",
-          "Todas as tasks S11-W1-T1, S11-W1-T2 estão verificadas e a saída Inspeção real e evidência acionável integradas à conversa. é consumida pelo caminho especificado. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1."
+          "Todas as tasks S11-W1-T1, S11-W1-T2 estão verificadas e a saída Inspeção real e evidência acionável integradas à conversa. é consumida pelo caminho especificado. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1. WK07/WK19 cobrem shell direta normalizada, exit contraditório, fim ausente e novo card."
         ],
         "success_criteria": [
           "Inspeção real e evidência acionável integradas à conversa. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S11-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos."
+          "Os cenários de S11-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos. O card continua útil sem inventar sucesso, duração, contagens ou bytes não retidos."
         ]
       },
       "status": "planned",
@@ -8161,7 +8175,9 @@
         "packages/opencode/src/tool/shell.ts",
         "packages/app/src/pages/session/v2/review-panel-v2.tsx",
         "packages/app/src/components/session/open-in-app-v2.tsx",
-        "packages/app/src/components/prompt-input/submit.ts"
+        "packages/app/src/components/prompt-input/submit.ts",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ]
     },
     {
@@ -8200,7 +8216,9 @@
         "packages/app/src/components/session/open-in-app-v2.tsx",
         "packages/opencode/src/tool/shell.ts",
         "packages/app/src/pages/session/v2/review-panel-v2.tsx",
-        "packages/app/src/components/prompt-input/submit.ts"
+        "packages/app/src/components/prompt-input/submit.ts",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ],
       "steps": [
         "Usar C-05 de CONTRACTS.md e os readers/handlers existentes congelados em S01. Preparar arquivos/diff/terminal sem esperar S09 completa; não inventar schema. S11-T2 verifica a integração com a entrega S09-T1.",
@@ -8219,17 +8237,17 @@
       "axioms": {
         "dod": [
           "Produzir a entrega Inspeção real e evidência acionável integradas à conversa. no write scope de S11-W1-T1 e verificar o caminho local sem declarar integração global prematura.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25. W03 distingue resultado da fonte shell e estado sintético do part; W07 não limpa o composer."
         ],
         "invariants": [
           "O diff apresentado corresponde à seleção e revisão atuais; respostas de revisões anteriores são ignoradas ou canceladas.",
           "Exit code e output não comprovam testes de uma revisão sem vínculo; ausência de parser exibe evidência bruta, nunca contagem inventada.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa. Interrupted/failed explícitos nunca viram sucesso; fim ausente permanece duração desconhecida."
         ],
         "quality_standards": [
           "P04/P06/P07/P10: fetch/highlight lazy, zero parse de logs completos por frame; PTY não remonta por tema.",
           "Gutters, syntax, barras de diff, cabeçalhos e whitespace homogêneos; estados vazio/no-git também refinados.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final. Adapter limitado aos dois shapes documentados; sem parser universal ou endpoint novo."
         ],
         "completeness_criteria": [
           "Concluir e provar o passo 1: Lista de alterações e diff selecionado paralelos 1:1 no centro, gap8; em width insuficiente empilhe sem perder seleção.",
@@ -8237,11 +8255,11 @@
           "Concluir e provar o passo 3: Evidência de testes é projeção de tool result concluído, comando/exit/timestamps/source message. Contagens só de resultado estruturado reconhecido; raw log é fallback explícito.",
           "Concluir e provar o passo 4: Preserve terminal real PTY e lifecycle/scroll/resize/selection; não deixe terminal criado só para preencher screenshot.",
           "Concluir e provar o passo 5: Exponha ações review/open/output/retry existentes; Create PR/Share somente com handler real e permissões.",
-          "Concluir e provar o passo 6: Carregue diff e highlight por seleção/visibilidade, cancele stale request e limite caches; binário/diff gigante têm fallback. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1."
+          "Concluir e provar o passo 6: Carregue diff e highlight por seleção/visibilidade, cancele stale request e limite caches; binário/diff gigante têm fallback. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1. WK07/WK19 cobrem shell direta normalizada, exit contraditório, fim ausente e novo card."
         ],
         "success_criteria": [
           "Inspeção real e evidência acionável integradas à conversa. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S11-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos."
+          "Os cenários de S11-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos. O card continua útil sem inventar sucesso, duração, contagens ou bytes não retidos."
         ]
       },
       "status": "planned",
@@ -8398,7 +8416,9 @@
         "packages/opencode/src/tool/shell.ts",
         "packages/app/src/pages/session/v2/review-panel-v2.tsx",
         "packages/app/src/components/session/open-in-app-v2.tsx",
-        "packages/app/src/components/prompt-input/submit.ts"
+        "packages/app/src/components/prompt-input/submit.ts",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/context/server-session-v2-reducer.ts"
       ],
       "steps": [
         "Execute os casos: Diff alterado enquanto visualizando sinaliza revisão.; Teste antigo, comando não-teste ou output parcial nunca declara all tests pass.; 1000 arquivos/100k linhas não travam ou montam todos.; Stop terminal não interrompe outra sessão.",
@@ -8411,28 +8431,28 @@
       "axioms": {
         "dod": [
           "Emitir recibo íntegro de S11-W1-T2 com IDs exatos, hashes dos artefatos, build/SHA correto e resultados dos cenários desta unidade.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. W02/W03/W04-panes/W07 são utilizáveis localmente com contratos para S25. W03 distingue resultado da fonte shell e estado sintético do part; W07 não limpa o composer."
         ],
         "invariants": [
           "O diff apresentado corresponde à seleção e revisão atuais; respostas de revisões anteriores são ignoradas ou canceladas.",
           "Exit code e output não comprovam testes de uma revisão sem vínculo; ausência de parser exibe evidência bruta, nunca contagem inventada.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Output parcial/preview não sustenta contagens; editor abre diretório; PR é handoff explícito, não publicação falsa. Interrupted/failed explícitos nunca viram sucesso; fim ausente permanece duração desconhecida."
         ],
         "quality_standards": [
           "P04/P06/P07/P10: fetch/highlight lazy, zero parse de logs completos por frame; PTY não remonta por tema.",
           "Gutters, syntax, barras de diff, cabeçalhos e whitespace homogêneos; estados vazio/no-git também refinados.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Reusar diff/file/PTY existentes; parsing Bun bounded após término, raw fallback tem acabamento final. Adapter limitado aos dois shapes documentados; sem parser universal ou endpoint novo."
         ],
         "completeness_criteria": [
           "Evidência do cenário: Diff alterado enquanto visualizando sinaliza revisão.",
           "Evidência do cenário: Teste antigo, comando não-teste ou output parcial nunca declara all tests pass.",
           "Evidência do cenário: 1000 arquivos/100k linhas não travam ou montam todos.",
           "Evidência do cenário: Stop terminal não interrompe outra sessão.",
-          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S11-W1-T2; ausência de medição não é PASS. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1."
+          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S11-W1-T2; ausência de medição não é PASS. Cobrir WK04–WK08/WK10/WK19/WK20/WK22 e estados dos consumers; não exigir ligação futura em T1. WK07/WK19 cobrem shell direta normalizada, exit contraditório, fim ausente e novo card."
         ],
         "success_criteria": [
           "Inspeção real e evidência acionável integradas à conversa. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S11-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos."
+          "Os cenários de S11-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Inspeção, output e panes locais são operáveis e ações possuem destinos inequívocos. O card continua útil sem inventar sucesso, duração, contagens ou bytes não retidos."
         ]
       },
       "status": "planned",
@@ -11239,7 +11259,10 @@
         "packages/app/src/context/sync.tsx",
         "packages/app/src/context/server-sync.tsx",
         "packages/app/src/context/janitor.tsx",
-        "packages/app/src/pages/session/apps-panel.tsx"
+        "packages/app/src/pages/session/apps-panel.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Reuse child session ID e callID; tipar projeção de atividade sem construir nova store de execução.",
@@ -11271,28 +11294,28 @@
       "axioms": {
         "dod": [
           "Read model leve de Tasks/Atividade usando dados existentes. Casos e limites medidos; commits no escopo e evidence/S17/result.json.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional. Projeção mantém referências de origem opcionais e todas as entidades ativas já sincronizadas."
         ],
         "invariants": [
           "Child, tool e orphan convergem em uma entidade qualificada por servidor; erro não se perde quando a sessão fica idle.",
           "Um delta só invalida derivados afetados; nenhum novo histórico persistente, polling ou percentual calculado de tempo/tokens.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy. 64 é carga de teste, não teto de dados; parent de origem nunca é inferido por ordem ou timestamp."
         ],
         "quality_standards": [
           "P05/P07/P08/P10: atualização incremental, cardinalidade limitada e um ticker apenas quando há linha live visível.",
           "Dados sustentam estados honestos e estáveis sem flicker/zero momentâneo fabricado.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card. Limitar DOM/cache adicional, não descartar intervenções ativas para cumprir budget."
         ],
         "completeness_criteria": [
           "Child+tool+orphan e arrival fora de ordem não duplicam.",
           "Erro concluído/needs-input preservados.",
           "8sessions×8children e100events/s não fazem O(historyTotal) por evento.",
           "Mesmo childID em server diferente não mistura.",
-          "Cada WP de S17 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25."
+          "Cada WP de S17 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25. WK13/WK15 incluem 65+ ativas; em WK14 S17 prova somente referências de origem qualificada/ausência. Stop e navegação renderizada pertencem a S18/S25."
         ],
         "success_criteria": [
           "Read model leve de Tasks/Atividade usando dados existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S17 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias."
+          "Os cenários de S17 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias. Contagem, expansão e navegação da origem concordam sem truncamento silencioso."
         ]
       },
       "criterion_ids": {
@@ -11330,6 +11353,7 @@
       ],
       "widget_cases": [
         "WK13",
+        "WK14",
         "WK15",
         "WK16",
         "WK17",
@@ -11358,28 +11382,28 @@
       "axioms": {
         "dod": [
           "S17-W1-T1 e S17-W1-T2 completos; output conectado ao contrato sem placeholder aprovado.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional. Projeção mantém referências de origem opcionais e todas as entidades ativas já sincronizadas."
         ],
         "invariants": [
           "Child, tool e orphan convergem em uma entidade qualificada por servidor; erro não se perde quando a sessão fica idle.",
           "Um delta só invalida derivados afetados; nenhum novo histórico persistente, polling ou percentual calculado de tempo/tokens.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy. 64 é carga de teste, não teto de dados; parent de origem nunca é inferido por ordem ou timestamp."
         ],
         "quality_standards": [
           "P05/P07/P08/P10: atualização incremental, cardinalidade limitada e um ticker apenas quando há linha live visível.",
           "Dados sustentam estados honestos e estáveis sem flicker/zero momentâneo fabricado.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card. Limitar DOM/cache adicional, não descartar intervenções ativas para cumprir budget."
         ],
         "completeness_criteria": [
           "Child+tool+orphan e arrival fora de ordem não duplicam.",
           "Erro concluído/needs-input preservados.",
           "8sessions×8children e100events/s não fazem O(historyTotal) por evento.",
           "Mesmo childID em server diferente não mistura.",
-          "Todas as tasks S17-W1-T1, S17-W1-T2 estão verificadas e a saída Read model leve de Tasks/Atividade usando dados existentes. é consumida pelo caminho especificado. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25."
+          "Todas as tasks S17-W1-T1, S17-W1-T2 estão verificadas e a saída Read model leve de Tasks/Atividade usando dados existentes. é consumida pelo caminho especificado. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25. WK13/WK15 incluem 65+ ativas; em WK14 S17 prova somente referências de origem qualificada/ausência. Stop e navegação renderizada pertencem a S18/S25."
         ],
         "success_criteria": [
           "Read model leve de Tasks/Atividade usando dados existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S17-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias."
+          "Os cenários de S17-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias. Contagem, expansão e navegação da origem concordam sem truncamento silencioso."
         ]
       },
       "status": "planned",
@@ -11418,6 +11442,7 @@
       ],
       "widget_cases": [
         "WK13",
+        "WK14",
         "WK15",
         "WK16",
         "WK17",
@@ -11425,7 +11450,10 @@
       ],
       "read_paths": [
         "packages/app/src/context/janitor.tsx",
-        "packages/app/src/pages/session/apps-panel.tsx"
+        "packages/app/src/pages/session/apps-panel.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/utils/session-route.ts"
       ]
     },
     {
@@ -11450,7 +11478,10 @@
         "packages/app/src/context/sync.tsx",
         "packages/app/src/context/server-sync.tsx",
         "packages/app/src/context/janitor.tsx",
-        "packages/app/src/pages/session/apps-panel.tsx"
+        "packages/app/src/pages/session/apps-panel.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Reuse child session ID e callID; tipar projeção de atividade sem construir nova store de execução.",
@@ -11465,28 +11496,28 @@
       "axioms": {
         "dod": [
           "Produzir a entrega Read model leve de Tasks/Atividade usando dados existentes. no write scope de S17-W1-T1 e verificar o caminho local sem declarar integração global prematura.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional. Projeção mantém referências de origem opcionais e todas as entidades ativas já sincronizadas."
         ],
         "invariants": [
           "Child, tool e orphan convergem em uma entidade qualificada por servidor; erro não se perde quando a sessão fica idle.",
           "Um delta só invalida derivados afetados; nenhum novo histórico persistente, polling ou percentual calculado de tempo/tokens.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy. 64 é carga de teste, não teto de dados; parent de origem nunca é inferido por ordem ou timestamp."
         ],
         "quality_standards": [
           "P05/P07/P08/P10: atualização incremental, cardinalidade limitada e um ticker apenas quando há linha live visível.",
           "Dados sustentam estados honestos e estáveis sem flicker/zero momentâneo fabricado.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card. Limitar DOM/cache adicional, não descartar intervenções ativas para cumprir budget."
         ],
         "completeness_criteria": [
           "Concluir e provar o passo 1: Reuse child session ID e callID; tipar projeção de atividade sem construir nova store de execução.",
           "Concluir e provar o passo 2: Revise orphan card/dedup e consistência running/failed/completed: uma entidade em um card mesmo com child+tool.",
           "Concluir e provar o passo 3: Evite rescans de todos os transcripts por mudança de um part; indexe derivados por session/message version e invalide apenas afetados.",
           "Concluir e provar o passo 4: Metrics não disponíveis são null/unknown; progresso numérico só se producer fornece total mensurável; não derive de tempo/tokens.",
-          "Concluir e provar o passo 5: Desinscreva fontes ao unmount/server switch; cache bounded/LRU com ownership explícito e sem ID collision entre servers. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25."
+          "Concluir e provar o passo 5: Desinscreva fontes ao unmount/server switch; cache bounded/LRU com ownership explícito e sem ID collision entre servers. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25. WK13/WK15 incluem 65+ ativas; em WK14 S17 prova somente referências de origem qualificada/ausência. Stop e navegação renderizada pertencem a S18/S25."
         ],
         "success_criteria": [
           "Read model leve de Tasks/Atividade usando dados existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S17-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias."
+          "Os cenários de S17-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias. Contagem, expansão e navegação da origem concordam sem truncamento silencioso."
         ]
       },
       "status": "planned",
@@ -11577,6 +11608,7 @@
       ],
       "widget_cases": [
         "WK13",
+        "WK14",
         "WK15",
         "WK16",
         "WK17",
@@ -11600,7 +11632,10 @@
         "packages/app/src/pages/session/tasks-data.test.ts",
         "packages/app/src/pages/session/orchestra-activity-data*",
         "packages/app/src/context/janitor.tsx",
-        "packages/app/src/pages/session/apps-panel.tsx"
+        "packages/app/src/pages/session/apps-panel.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Execute os casos: Child+tool+orphan e arrival fora de ordem não duplicam.; Erro concluído/needs-input preservados.; 8sessions×8children e100events/s não fazem O(historyTotal) por evento.; Mesmo childID em server diferente não mistura.",
@@ -11613,28 +11648,28 @@
       "axioms": {
         "dod": [
           "Emitir recibo íntegro de S17-W1-T2 com IDs exatos, hashes dos artefatos, build/SHA correto e resultados dos cenários desta unidade.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Read model W05 e projeção W06 fornecidos sem store de eventos adicional. Projeção mantém referências de origem opcionais e todas as entidades ativas já sincronizadas."
         ],
         "invariants": [
           "Child, tool e orphan convergem em uma entidade qualificada por servidor; erro não se perde quando a sessão fica idle.",
           "Um delta só invalida derivados afetados; nenhum novo histórico persistente, polling ou percentual calculado de tempo/tokens.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Cada entidade usa server/session/type/key; idle/reportnull não provam completed/healthy. 64 é carga de teste, não teto de dados; parent de origem nunca é inferido por ordem ou timestamp."
         ],
         "quality_standards": [
           "P05/P07/P08/P10: atualização incremental, cardinalidade limitada e um ticker apenas quando há linha live visível.",
           "Dados sustentam estados honestos e estáveis sem flicker/zero momentâneo fabricado.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Delta local, coleção limitada, clocks ausentes explícitos e nenhum segundo subscriber por card. Limitar DOM/cache adicional, não descartar intervenções ativas para cumprir budget."
         ],
         "completeness_criteria": [
           "Evidência do cenário: Child+tool+orphan e arrival fora de ordem não duplicam.",
           "Evidência do cenário: Erro concluído/needs-input preservados.",
           "Evidência do cenário: 8sessions×8children e100events/s não fazem O(historyTotal) por evento.",
           "Evidência do cenário: Mesmo childID em server diferente não mistura.",
-          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S17-W1-T2; ausência de medição não é PASS. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25."
+          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S17-W1-T2; ausência de medição não é PASS. Cobrir WK13/WK15–WK18 em dados; UI/ligação final permanecem com S18/S25. WK13/WK15 incluem 65+ ativas; em WK14 S17 prova somente referências de origem qualificada/ausência. Stop e navegação renderizada pertencem a S18/S25."
         ],
         "success_criteria": [
           "Read model leve de Tasks/Atividade usando dados existentes. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S17-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias."
+          "Os cenários de S17-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. Resumo, detalhe e Atividade concordam porque leem a mesma origem, não por sincronizar cópias. Contagem, expansão e navegação da origem concordam sem truncamento silencioso."
         ]
       },
       "status": "planned",
@@ -11731,6 +11766,7 @@
       ],
       "widget_cases": [
         "WK13",
+        "WK14",
         "WK15",
         "WK16",
         "WK17",
@@ -11757,7 +11793,10 @@
       "read_paths": [
         "packages/app/src/pages/session/tasks-data.ts",
         "packages/app/src/pages/session/session-side-panel.tsx",
-        "packages/app/src/pages/session/use-session-commands.tsx"
+        "packages/app/src/pages/session/use-session-commands.tsx",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/pages/session/message-id-from-hash.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Renderize cards Tasks e Atividade abaixo do Dock, separados e compactos. Task resumo e detalhado compartilham o read model.",
@@ -11791,28 +11830,28 @@
       "axioms": {
         "dod": [
           "Painéis de execução úteis, fiéis e verdadeiros. Casos e limites medidos; commits no escopo e evidence/S18/result.json.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas. Resumo e detalhe preservam todas as ativas carregadas e a prioridade ativa definida em W05."
         ],
         "invariants": [
           "Resumo e detalhe consomem a mesma projeção; atualização concorrente nunca altera foco ou navegação do usuário.",
           "Agentes lista somente executores reais; Atividade identifica ferramentas/sistema sem presença online fictícia.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online. Encerradas não deslocam ativas no resumo; origem incerta só oferece Abrir sessão."
         ],
         "quality_standards": [
           "P03/P07/P08: ticker compartilhado <=1Hz visível, zero em idle; render rows por mudanças locais.",
           "Card titles/counts/tempo alinhados e sinais semânticos discretos; sem tabs exclusivas substituindo rail.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open. Virtualizar rows e estabilizar foco/ordem; 64 não limita o total da coleção."
         ],
         "completeness_criteria": [
           "0/1/64children; needs-input e failed destacados.",
           "Expand/collapse mantém sessão e seleção.",
           "Stop atua na child correta e não reinicia pai.",
           "Sem percentuais fake.",
-          "Cada WP de S18 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card."
+          "Cada WP de S18 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card. WK13/WK14/WK16 cobrem 65+ ativas, falhas recentes, origem ausente e View all sem omissões."
         ],
         "success_criteria": [
           "Painéis de execução úteis, fiéis e verdadeiros. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S18 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado."
+          "Os cenários de S18 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado. O usuário vê trabalho urgente e chega à origem real, sem ação enganosa."
         ]
       },
       "criterion_ids": {
@@ -11887,28 +11926,28 @@
       "axioms": {
         "dod": [
           "S18-W1-T1 e S18-W1-T2 completos; output conectado ao contrato sem placeholder aprovado.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas. Resumo e detalhe preservam todas as ativas carregadas e a prioridade ativa definida em W05."
         ],
         "invariants": [
           "Resumo e detalhe consomem a mesma projeção; atualização concorrente nunca altera foco ou navegação do usuário.",
           "Agentes lista somente executores reais; Atividade identifica ferramentas/sistema sem presença online fictícia.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online. Encerradas não deslocam ativas no resumo; origem incerta só oferece Abrir sessão."
         ],
         "quality_standards": [
           "P03/P07/P08: ticker compartilhado <=1Hz visível, zero em idle; render rows por mudanças locais.",
           "Card titles/counts/tempo alinhados e sinais semânticos discretos; sem tabs exclusivas substituindo rail.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open. Virtualizar rows e estabilizar foco/ordem; 64 não limita o total da coleção."
         ],
         "completeness_criteria": [
           "0/1/64children; needs-input e failed destacados.",
           "Expand/collapse mantém sessão e seleção.",
           "Stop atua na child correta e não reinicia pai.",
           "Sem percentuais fake.",
-          "Todas as tasks S18-W1-T1, S18-W1-T2 estão verificadas e a saída Painéis de execução úteis, fiéis e verdadeiros. é consumida pelo caminho especificado. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card."
+          "Todas as tasks S18-W1-T1, S18-W1-T2 estão verificadas e a saída Painéis de execução úteis, fiéis e verdadeiros. é consumida pelo caminho especificado. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card. WK13/WK14/WK16 cobrem 65+ ativas, falhas recentes, origem ausente e View all sem omissões."
         ],
         "success_criteria": [
           "Painéis de execução úteis, fiéis e verdadeiros. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S18-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado."
+          "Os cenários de S18-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado. O usuário vê trabalho urgente e chega à origem real, sem ação enganosa."
         ]
       },
       "status": "planned",
@@ -11982,7 +12021,10 @@
       "read_paths": [
         "packages/app/src/pages/session/tasks-data.ts",
         "packages/app/src/pages/session/session-side-panel.tsx",
-        "packages/app/src/pages/session/use-session-commands.tsx"
+        "packages/app/src/pages/session/use-session-commands.tsx",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/pages/session/message-id-from-hash.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Renderize cards Tasks e Atividade abaixo do Dock, separados e compactos. Task resumo e detalhado compartilham o read model.",
@@ -11999,17 +12041,17 @@
       "axioms": {
         "dod": [
           "Produzir a entrega Painéis de execução úteis, fiéis e verdadeiros. no write scope de S18-W1-T1 e verificar o caminho local sem declarar integração global prematura.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas. Resumo e detalhe preservam todas as ativas carregadas e a prioridade ativa definida em W05."
         ],
         "invariants": [
           "Resumo e detalhe consomem a mesma projeção; atualização concorrente nunca altera foco ou navegação do usuário.",
           "Agentes lista somente executores reais; Atividade identifica ferramentas/sistema sem presença online fictícia.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online. Encerradas não deslocam ativas no resumo; origem incerta só oferece Abrir sessão."
         ],
         "quality_standards": [
           "P03/P07/P08: ticker compartilhado <=1Hz visível, zero em idle; render rows por mudanças locais.",
           "Card titles/counts/tempo alinhados e sinais semânticos discretos; sem tabs exclusivas substituindo rail.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open. Virtualizar rows e estabilizar foco/ordem; 64 não limita o total da coleção."
         ],
         "completeness_criteria": [
           "Concluir e provar o passo 1: Renderize cards Tasks e Atividade abaixo do Dock, separados e compactos. Task resumo e detalhado compartilham o read model.",
@@ -12017,11 +12059,11 @@
           "Concluir e provar o passo 3: Atividade pode misturar ferramenta/sistema apenas com tipo explícito; Agents somente sessões agentes reais.",
           "Concluir e provar o passo 4: Interrupt usa ação da entidade correta e pedidos de permissão mantêm IDs; nunca stop all implícito.",
           "Concluir e provar o passo 5: Auto-open/snooze antigo torna destaque/expansão de Tasks no cockpit sem roubar o Dock/foco; preservar comportamento legado.",
-          "Concluir e provar o passo 6: Cancele ticking de linhas offscreen e terminal tools sem trabalho; listas extensas virtualizadas ou paginação host. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card."
+          "Concluir e provar o passo 6: Cancele ticking de linhas offscreen e terminal tools sem trabalho; listas extensas virtualizadas ou paginação host. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card. WK13/WK14/WK16 cobrem 65+ ativas, falhas recentes, origem ausente e View all sem omissões."
         ],
         "success_criteria": [
           "Painéis de execução úteis, fiéis e verdadeiros. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S18-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado."
+          "Os cenários de S18-W1-T1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado. O usuário vê trabalho urgente e chega à origem real, sem ação enganosa."
         ]
       },
       "status": "planned",
@@ -12146,7 +12188,10 @@
         "packages/app/src/pages/session/tasks-panel.tsx",
         "packages/app/src/pages/session/orchestra-tasks*",
         "packages/app/src/pages/session/orchestra-activity.tsx",
-        "packages/app/src/pages/session/orchestra-activity.test.tsx"
+        "packages/app/src/pages/session/orchestra-activity.test.tsx",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/pages/session/message-id-from-hash.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Execute os casos: 0/1/64children; needs-input e failed destacados.; Expand/collapse mantém sessão e seleção.; Stop atua na child correta e não reinicia pai.; Sem percentuais fake.",
@@ -12159,28 +12204,28 @@
       "axioms": {
         "dod": [
           "Emitir recibo íntegro de S18-W1-T2 com IDs exatos, hashes dos artefatos, build/SHA correto e resultados dos cenários desta unidade.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. Consumers W05 e W06 têm resumo/expansão, filtros e ações locais verificadas. Resumo e detalhe preservam todas as ativas carregadas e a prioridade ativa definida em W05."
         ],
         "invariants": [
           "Resumo e detalhe consomem a mesma projeção; atualização concorrente nunca altera foco ou navegação do usuário.",
           "Agentes lista somente executores reais; Atividade identifica ferramentas/sistema sem presença online fictícia.",
-          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online."
+          "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário. Stop somente child; source Janitor incompatível, shell e Dock não viram agentes online. Encerradas não deslocam ativas no resumo; origem incerta só oferece Abrir sessão."
         ],
         "quality_standards": [
           "P03/P07/P08: ticker compartilhado <=1Hz visível, zero em idle; render rows por mudanças locais.",
           "Card titles/counts/tempo alinhados e sinais semânticos discretos; sem tabs exclusivas substituindo rail.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. Uma projeção/ticker, row actions acessíveis, error/retry legível e nenhuma navegação por auto-open. Virtualizar rows e estabilizar foco/ordem; 64 não limita o total da coleção."
         ],
         "completeness_criteria": [
           "Evidência do cenário: 0/1/64children; needs-input e failed destacados.",
           "Evidência do cenário: Expand/collapse mantém sessão e seleção.",
           "Evidência do cenário: Stop atua na child correta e não reinicia pai.",
           "Evidência do cenário: Sem percentuais fake.",
-          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S18-W1-T2; ausência de medição não é PASS. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card."
+          "Cobrir explicitamente cada categoria visual/performance/nativa exigida para S18-W1-T2; ausência de medição não é PASS. WK13–WK18 e UI78 explicitamente cobertos; source TypeScript não conta como screenshot do card. WK13/WK14/WK16 cobrem 65+ ativas, falhas recentes, origem ausente e View all sem omissões."
         ],
         "success_criteria": [
           "Painéis de execução úteis, fiéis e verdadeiros. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S18-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado."
+          "Os cenários de S18-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O usuário distingue trabalho, intervenção e ferramentas sem estados fabricados ou ações no alvo errado. O usuário vê trabalho urgente e chega à origem real, sem ação enganosa."
         ]
       },
       "status": "planned",
@@ -15584,7 +15629,11 @@
       ],
       "read_paths": [
         "packages/app/src/pages/session/orchestra-*",
-        "specs/orchestra-visual/CENSUS.json"
+        "specs/orchestra-visual/CENSUS.json",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/pages/session/message-id-from-hash.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Único integrador dos hotspots: aplique slots/controller patches preparados pelas lanes. Não alterar protocolo de sessão ou criar store.",
@@ -15619,29 +15668,29 @@
       "axioms": {
         "dod": [
           "Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente. Casos e limites medidos; commits no escopo e evidence/S25/result.json.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates. No estágio de integração nomeado, os bindings W03/W05/W07 estão conectados ao source real."
         ],
         "invariants": [
           "Integração é o único writer dos hotspots; nenhum segundo provider, store, engine ou browser é criado para conectar slots.",
           "S25-W1-T1 produz o build antes dos gates; S25-W1-T2 só encerra após performance, visual e nativo no mesmo build.",
           "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário.",
-          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova."
+          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova. Hook de hash recebe user confirmado, não callID; replay não chama o submit destrutivo do draft."
         ],
         "quality_standards": [
           "Separar candidato, avaliação e encerramento: T1 prova build/smoke; S23/S24 produzem gates; somente S25-W1-T2 exige aprovação integral no mesmo candidato.",
           "Aplicar geometria, marca oficial e qualidade de código desde a alteração local. Nenhuma evidência futura é exigida do produtor para destravar seus próprios avaliadores.",
-          "Revisão fria identifica sua independência real; agregadores validam a prova já produzida sem campanhas duplicadas. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica."
+          "Revisão fria identifica sua independência real; agregadores validam a prova já produzida sem campanhas duplicadas. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica. Reusar controllers/normalização existentes, sem segundo estado de histórico ou runtime."
         ],
         "completeness_criteria": [
           "Aplicativo real envia/interrompe/revisa/navega; não apenas Storybook.",
           "Rollback de preferência não apaga dados.",
           "8sessions e native Dock após integração passam gates.",
           "Zero debug/mock data no bundle produção.",
-          "Cada WP de S25 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros."
+          "Cada WP de S25 possui seus cinco axiomas avaliados; ausências de capacidade têm estado e dependência explícitos. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros. WK25/WK27 incluem abertura de origem, replay com draft e shell interrompida; gates globais só no fechamento."
         ],
         "success_criteria": [
           "Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S25 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts."
+          "Os cenários de S25 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts. O cockpit conectado respeita os efeitos decididos mesmo com origem ausente ou respostas atrasadas."
         ]
       },
       "criterion_ids": {
@@ -15745,29 +15794,29 @@
       "axioms": {
         "dod": [
           "S25-W1-T1 e S25-W1-T2 completos; output conectado ao contrato sem placeholder aprovado.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates. No estágio de integração nomeado, os bindings W03/W05/W07 estão conectados ao source real."
         ],
         "invariants": [
           "Integração é o único writer dos hotspots; nenhum segundo provider, store, engine ou browser é criado para conectar slots.",
           "S25-W1-T1 produz o build antes dos gates; S25-W1-T2 só encerra após performance, visual e nativo no mesmo build.",
           "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário.",
-          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova."
+          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova. Hook de hash recebe user confirmado, não callID; replay não chama o submit destrutivo do draft."
         ],
         "quality_standards": [
           "Separar candidato, avaliação e encerramento: T1 prova build/smoke; S23/S24 produzem gates; somente S25-W1-T2 exige aprovação integral no mesmo candidato.",
           "Aplicar geometria, marca oficial e qualidade de código desde a alteração local. Nenhuma evidência futura é exigida do produtor para destravar seus próprios avaliadores.",
-          "Revisão fria identifica sua independência real; agregadores validam a prova já produzida sem campanhas duplicadas. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica."
+          "Revisão fria identifica sua independência real; agregadores validam a prova já produzida sem campanhas duplicadas. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica. Reusar controllers/normalização existentes, sem segundo estado de histórico ou runtime."
         ],
         "completeness_criteria": [
           "Aplicativo real envia/interrompe/revisa/navega; não apenas Storybook.",
           "Rollback de preferência não apaga dados.",
           "8sessions e native Dock após integração passam gates.",
           "Zero debug/mock data no bundle produção.",
-          "Todas as tasks S25-W1-T1, S25-W1-T2 estão verificadas e a saída Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente. é consumida pelo caminho especificado. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros."
+          "Todas as tasks S25-W1-T1, S25-W1-T2 estão verificadas e a saída Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente. é consumida pelo caminho especificado. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros. WK25/WK27 incluem abertura de origem, replay com draft e shell interrompida; gates globais só no fechamento."
         ],
         "success_criteria": [
           "Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S25-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts."
+          "Os cenários de S25-W1 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts. O cockpit conectado respeita os efeitos decididos mesmo com origem ausente ou respostas atrasadas."
         ]
       },
       "status": "planned",
@@ -15870,7 +15919,11 @@
       "exclude_paths": [],
       "read_paths": [
         "packages/app/src/pages/session/orchestra-*",
-        "specs/orchestra-visual/CENSUS.json"
+        "specs/orchestra-visual/CENSUS.json",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/pages/session/message-id-from-hash.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Integrar os componentes e contratos de todas as lanes concluídas, incluindo o piloto já verificado, nos hotspots exclusivos de S25.",
@@ -15885,29 +15938,29 @@
       "axioms": {
         "dod": [
           "Produzir candidato integrado utilizável para avaliação, com build, smoke local e capabilities verdadeiras. A entrega aprovada só ocorre em S25-W1-T2 após os gates finais.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates. No estágio de integração nomeado, os bindings W03/W05/W07 estão conectados ao source real."
         ],
         "invariants": [
           "Integração é o único writer dos hotspots; nenhum segundo provider, store, engine ou browser é criado para conectar slots.",
           "S25-W1-T1 produz o build antes dos gates; S25-W1-T2 só encerra após performance, visual e nativo no mesmo build.",
           "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário.",
-          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova."
+          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova. Hook de hash recebe user confirmado, não callID; replay não chama o submit destrutivo do draft."
         ],
         "quality_standards": [
           "Build de produção e smoke local por package passam; identidade dos artefatos e coletores disponíveis são entregues aos avaliadores.",
           "A composição local respeita SPEC/marca, identidade e permissões; relatório P01–P12 e Q01–Q16 integral ainda não é requisito desta task produtora.",
-          "O recibo limita sua alegação ao candidato integrável; não declara release nem aprovação de S23/S24. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica."
+          "O recibo limita sua alegação ao candidato integrável; não declara release nem aprovação de S23/S24. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica. Reusar controllers/normalização existentes, sem segundo estado de histórico ou runtime."
         ],
         "completeness_criteria": [
           "Executar e verificar: Integrar os componentes e contratos de todas as lanes concluídas, incluindo o piloto já verificado, nos hotspots exclusivos de S25.",
           "Executar e verificar: Ligar handlers/stores reais, tema e setting reversível; preservar drafts/credenciais/light, sem fixtures no build de produção.",
           "Executar e verificar: Executar builds e smoke por package no candidato; registrar build hash, código e payload dos slots. Não há requisito de aceite final nesta etapa.",
           "Executar e verificar: Emitir recibo de candidato integrável e liberar os avaliadores finais. Não declarar release, performance final ou aceite visual integral; tais decisões pertencem ao encerramento posterior.",
-          "Projeções W2 opcionais têm recibo de origem; entrada ausente mantém unavailable/HOLD. Consumer live não é afirmado antes da T2 correspondente. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros."
+          "Projeções W2 opcionais têm recibo de origem; entrada ausente mantém unavailable/HOLD. Consumer live não é afirmado antes da T2 correspondente. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros. WK25/WK27 incluem abertura de origem, replay com draft e shell interrompida; gates globais só no fechamento."
         ],
         "success_criteria": [
           "S23 e S24 conseguem avaliar o candidato real, reproduzível e identificado sem depender de resultados futuros para obter esse candidato.",
-          "Smoke local e estados de capacidade são verdadeiros; nenhum aceite global é antecipado. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts."
+          "Smoke local e estados de capacidade são verdadeiros; nenhum aceite global é antecipado. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts. O cockpit conectado respeita os efeitos decididos mesmo com origem ausente ou respostas atrasadas."
         ]
       },
       "status": "planned",
@@ -16055,7 +16108,11 @@
         "packages/storybook/.storybook/**",
         "specs/orchestra-visual/DELIVERY.md",
         "packages/app/src/pages/session/use-session-commands.tsx",
-        "packages/app/src/pages/session/use-session-commands.test.tsx"
+        "packages/app/src/pages/session/use-session-commands.test.tsx",
+        "packages/app/src/utils/session-message.ts",
+        "packages/app/src/pages/session/use-session-hash-scroll.ts",
+        "packages/app/src/pages/session/message-id-from-hash.ts",
+        "packages/app/src/utils/session-route.ts"
       ],
       "steps": [
         "Verificar e referenciar os artefatos brutos e recibos de S23/S24 do MESMO candidato, workload, ambiente, fixture e contrato; revalidar hashes e métricas sem recapturar nem refazer o soak por ser agregador.",
@@ -16067,28 +16124,28 @@
       "axioms": {
         "dod": [
           "Emitir recibo íntegro de S25-W1-T2 com IDs exatos, hashes dos artefatos, build/SHA correto e resultados dos cenários desta unidade.",
-          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates."
+          "Evidência com SHA, comando, exit code e revisão fria; zero falha conhecida ocultada. A composição W01–W08 é conectada e provada somente até o estágio nomeado; fechamento final permanece após gates. No estágio de integração nomeado, os bindings W03/W05/W07 estão conectados ao source real."
         ],
         "invariants": [
           "Integração é o único writer dos hotspots; nenhum segundo provider, store, engine ou browser é criado para conectar slots.",
           "S25-W1-T1 produz o build antes dos gates; S25-W1-T2 só encerra após performance, visual e nativo no mesmo build.",
           "Respeitar write_paths/exclude_paths desta unidade e preservar alterações não relacionadas do usuário.",
-          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova."
+          "Aplicar BRAND-INTEGRATION.md: HuGR é a marca fornecida e Orchestra continua o produto; SVGs oficiais intactos, tema/layout grafite preservados e nenhuma renomeação técnica ou mudança de conta/modelo. Único writer dos comandos/hotspots; uma projeção/PTY/browser, sem requalificar callbacks pela sessão nova. Hook de hash recebe user confirmado, não callID; replay não chama o submit destrutivo do draft."
         ],
         "quality_standards": [
           "Evidência P01–P12 no SHA final; nenhuma regressão empurrada para depois.",
           "GateQ01–Q16 em todo app, marca/assets finais e todos estados; código mínimo sem looseends.",
-          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica."
+          "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real. O mesmo build ligado é capturado e medido; navegação não dispara shell/modelo/PR ou coleta periódica. Reusar controllers/normalização existentes, sem segundo estado de histórico ou runtime."
         ],
         "completeness_criteria": [
           "Executar e verificar nesta etapa: Verificar e referenciar os artefatos brutos e recibos de S23/S24 do MESMO candidato, workload, ambiente, fixture e contrato; revalidar hashes e métricas sem recapturar nem refazer o soak por ser agregador.",
           "Executar e verificar nesta etapa: Executar smoke de entrega/run/rollback e conferir native gates faltantes; coleta adicional somente quando a prova requerida estiver ausente ou stale, com reserva limitada à amostragem.",
           "Executar e verificar nesta etapa: Conferir IDs dos cinco axiomas desta task, capabilities verdadeiras, autorização de release e ausência de mocks/debug no bundle; não encerrar com qualquer gate falho ou ausente.",
-          "Executar e verificar nesta etapa: Registrar o resultado e a revisão. Mudança posterior de código/build invalida as provas atingidas; nunca recalcular hashes para reaproveitar uma medição antiga como nova. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros."
+          "Executar e verificar nesta etapa: Registrar o resultado e a revisão. Mudança posterior de código/build invalida as provas atingidas; nunca recalcular hashes para reaproveitar uma medição antiga como nova. Fechamento cobre WK25–WK28 e contratos de panes/intents/fontes; piloto mínimo não exige widgets futuros. WK25/WK27 incluem abertura de origem, replay com draft e shell interrompida; gates globais só no fechamento."
         ],
         "success_criteria": [
           "Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente. fica utilizável pelo consumidor indicado, com estados e identidade corretos.",
-          "Os cenários de S25-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts."
+          "Os cenários de S25-W1-T2 não apresentam os defeitos listados em cases e não usam métricas ou dados fictícios como prova. O cockpit inteiro segue os efeitos decididos, não uma coleção de placeholders ou toasts. O cockpit conectado respeita os efeitos decididos mesmo com origem ausente ou respostas atrasadas."
         ]
       },
       "status": "planned",
