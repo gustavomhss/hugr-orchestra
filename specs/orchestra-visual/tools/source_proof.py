@@ -140,3 +140,48 @@ def external_proof(ref,record,root,repo):
         if inventory.get(proof['review_file'])!=file_hash(review):raise ValueError('external review evidence missing/altered')
     except (ValueError,OSError,TypeError,KeyError,subprocess.SubprocessError) as e:errors.append(str(e))
     return errors
+
+
+def source_errors(node, receipt, snapshot):
+    """Read-only Git compatibility check. Does not treat old unrelated commits as stale."""
+    head = receipt.get('head')
+    if head not in snapshot.get('ancestors', []):
+        return ['receipt source is absent or not an ancestor of current checkout']
+    if node['id'].startswith('S25-W0-') and node.get('source_watch_mode')=='historical':
+        return []  # Pilot milestone; the effective contract is checked separately.
+    changes = snapshot.get('changed_since', {}).get(head, []) + snapshot.get('dirty', [])
+    # Receipts are written after the measured source commit. Their integrity is
+    # checked by hashes above; writing them is not a product-source mutation.
+    # Source maps, fixtures, contracts and DELIVERY.md are NOT excluded here.
+    changes = [p for p in changes if not p.startswith('specs/orchestra-visual/evidence/')
+               and p != 'specs/orchestra-visual/progress.json']
+    if node.get('source_watch_mode')=='historical':
+        # Discovery observes a revision; future planned product edits do not alter
+        # that observation. Canonical contract digests and per-file census checks
+        # still run before admitting consumers.
+        changes=[p for p in changes if p.startswith('specs/orchestra-visual/')]
+    patterns = node.get('source_watch_paths',node.get('read_paths',[])+node.get('write_paths',[]))
+    affected = [p for p in changes if any(fnmatch.fnmatchcase(p, pat) for pat in patterns)]
+    if node['id'] in ('S23-W1-T2', 'S24-W1-T2', 'S25-W1-T2'):
+        affected += [p for p in changes if p.startswith('packages/') or p in ('bun.lock', 'package.json', 'turbo.json')]
+    if affected:
+        return ['STALE: relevant source changed since verification: ' + ', '.join(sorted(set(affected))[:12])]
+    return []
+
+
+def git_snapshot(repo, progress):
+    def git(*args):
+        return subprocess.check_output(['git', '-C', str(repo), *args], text=True, timeout=30)
+    current = git('rev-parse', 'HEAD').strip()
+    heads = {r['head'] for r in progress.get('tasks', {}).values()
+             if isinstance(r, dict) and r.get('status') == 'PASS' and isinstance(r.get('head'), str)
+             and re.fullmatch(r'[0-9a-f]{40}', r['head'])}
+    dirty = set(filter(None, (git('diff', '--name-only', '--no-renames', '-z', 'HEAD') + git('ls-files', '--others', '--exclude-standard', '-z')).split('\0')))
+    result = {'head': current, 'repo':str(repo.resolve()), 'ancestors': [], 'changed_since': {}, 'dirty': sorted(dirty)}
+    for head in sorted(heads):
+        check = subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', head, current],
+                               capture_output=True, timeout=30)
+        if check.returncode == 0:
+            result['ancestors'].append(head)
+            result['changed_since'][head] = list(filter(None, git('diff', '--name-only','--no-renames', '-z', head, current).split('\0')))
+    return result

@@ -1,0 +1,976 @@
+{
+  "kind": "execution-tooling-repair-verification-not-product-approval",
+  "status": "VERIFIED",
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36306500976",
+  "workflow_input_sha": "b748d4efda7bebf4f3e49a97f101b3f4cb146f71",
+  "canonical_plan_sha256": "9059703f0e03a3cac56435b71dd09f9124cb8f5a28f1854a9c26ca307b8b4e78",
+  "effective_manifest_schema": 2,
+  "unique_tests": 280,
+  "new_regression_tests": 32,
+  "previous_tests_retained": 248,
+  "tests_log_sha256": "aa2a325c005f006f333a2618614f7db4d8664dbb821a231729adc3b9563b9107",
+  "bootstrap": {
+    "discovered_files": 382,
+    "tasks_packeted": 66,
+    "unexecuted_receipt_rejected": true,
+    "unclassified_census_rejected": true,
+    "checkout_index_preserved": true,
+    "product_tasks_accepted": 0
+  },
+  "relationships": {
+    "kind": "github-relationship-sync",
+    "mode": "dry-run",
+    "status": "PLANNED",
+    "native_writes_performed": 0,
+    "already_present": 94,
+    "planned_operations": [],
+    "fine_grained_only": [
+      {
+        "node": "S01-W1-T2",
+        "prerequisite": "S01-W1-T1"
+      },
+      {
+        "node": "S02-W1-T2",
+        "prerequisite": "S02-W1-T1"
+      },
+      {
+        "node": "S03-W1-T2",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S04",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S04-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S04-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S04-W1-T2",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S05-W1-T2",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S06",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S06",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S06",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S06",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S06-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S06-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S06-W1",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S06-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S06-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S06-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S06-W1-T1",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S06-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S06-W1-T2",
+        "prerequisite": "S06-W1-T1"
+      },
+      {
+        "node": "S06-W1-T2",
+        "prerequisite": "S25-W0-T1"
+      },
+      {
+        "node": "S07",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S07",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S07",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S07",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S07-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S07-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S07-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S07-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S07-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S07-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S07-W1-T2",
+        "prerequisite": "S07-W1-T1"
+      },
+      {
+        "node": "S08",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S08",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S08",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S08",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S08",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S08-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S08-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S08-W1",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S08-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S08-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S08-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S08-W1-T1",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S08-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S08-W1-T2",
+        "prerequisite": "S08-W1-T1"
+      },
+      {
+        "node": "S09",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S09",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S09",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S09-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S09-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S09-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S09-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S09-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S09-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S09-W1-T2",
+        "prerequisite": "S09-W1-T1"
+      },
+      {
+        "node": "S10",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S10",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S10",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S10-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S10-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S10-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S10-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S10-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S10-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S10-W1-T2",
+        "prerequisite": "S10-W1-T1"
+      },
+      {
+        "node": "S11",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S11",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S11",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S11-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S11-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S11-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S11-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S11-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S11-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S11-W1-T2",
+        "prerequisite": "S09-W1-T1"
+      },
+      {
+        "node": "S11-W1-T2",
+        "prerequisite": "S11-W1-T1"
+      },
+      {
+        "node": "S12",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S12",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S12",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S12",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S12-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S12-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S12-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S12-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S12-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S12-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S12-W1-T2",
+        "prerequisite": "S12-W1-T1"
+      },
+      {
+        "node": "S13",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S13",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S13",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S13",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S13-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S13-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S13-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S13-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S13-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S13-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S13-W1-T2",
+        "prerequisite": "S13-W1-T1"
+      },
+      {
+        "node": "S14",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S14",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S14",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S14",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S14-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S14-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S14-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S14-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S14-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S14-W1-T1",
+        "prerequisite": "S16-W1-T1"
+      },
+      {
+        "node": "S14-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S14-W1-T2",
+        "prerequisite": "S14-W1-T1"
+      },
+      {
+        "node": "S15",
+        "prerequisite": "PR#12 (advisory; not a required issue dependency)"
+      },
+      {
+        "node": "S15",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S15",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S15",
+        "prerequisite": "S06-W1-T1"
+      },
+      {
+        "node": "S15",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S15-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S15-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S15-W1",
+        "prerequisite": "S06-W1-T1"
+      },
+      {
+        "node": "S15-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S15-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S15-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S15-W1-T1",
+        "prerequisite": "S06-W1-T1"
+      },
+      {
+        "node": "S15-W1-T1",
+        "prerequisite": "S16-W1-T1"
+      },
+      {
+        "node": "S15-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S15-W1-T2",
+        "prerequisite": "S15-W1-T1"
+      },
+      {
+        "node": "S15-W1-T2",
+        "prerequisite": "S25-W0-T1"
+      },
+      {
+        "node": "S16-W1-T2",
+        "prerequisite": "S16-W1-T1"
+      },
+      {
+        "node": "S17-W1-T2",
+        "prerequisite": "S17-W1-T1"
+      },
+      {
+        "node": "S18",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S18",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S18",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S18-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S18-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S18-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S18-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S18-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S18-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S18-W1-T2",
+        "prerequisite": "S18-W1-T1"
+      },
+      {
+        "node": "S19",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S19",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S19",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S19-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S19-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S19-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S19-W1",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S19-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S19-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S19-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S19-W1-T2",
+        "prerequisite": "S19-W1-T1"
+      },
+      {
+        "node": "S19-W2",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S19-W2-T1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S19-W2-T2",
+        "prerequisite": "S19-W2-T1"
+      },
+      {
+        "node": "S20",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S20",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S20",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S20-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S20-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S20-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S20-W1",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S20-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S20-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S20-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S20-W1-T2",
+        "prerequisite": "S20-W1-T1"
+      },
+      {
+        "node": "S20-W2",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S20-W2-T1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S20-W2-T2",
+        "prerequisite": "S20-W2-T1"
+      },
+      {
+        "node": "S21",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S21",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S21",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S21",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S21-W1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S21-W1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S21-W1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S21-W1-T1",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S21-W1-T1",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S21-W1-T1",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S21-W1-T2",
+        "prerequisite": "S21-W1-T1"
+      },
+      {
+        "node": "S22-W1-T2",
+        "prerequisite": "S22-W1-T1"
+      },
+      {
+        "node": "S23",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S23",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S23",
+        "prerequisite": "S25-W1-T1"
+      },
+      {
+        "node": "S23-W1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S23-W1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S23-W1",
+        "prerequisite": "S25-W1-T1"
+      },
+      {
+        "node": "S23-W1-T1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S23-W1-T1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S23-W1-T1",
+        "prerequisite": "S25-W1-T1"
+      },
+      {
+        "node": "S23-W1-T2",
+        "prerequisite": "S23-W1-T1"
+      },
+      {
+        "node": "S24",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S24",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S24",
+        "prerequisite": "S25-W1-T1"
+      },
+      {
+        "node": "S24-W1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S24-W1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S24-W1",
+        "prerequisite": "S25-W1-T1"
+      },
+      {
+        "node": "S24-W1-T1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S24-W1-T1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S24-W1-T1",
+        "prerequisite": "S25-W1-T1"
+      },
+      {
+        "node": "S24-W1-T2",
+        "prerequisite": "S24-W1-T1"
+      },
+      {
+        "node": "S25-W0",
+        "prerequisite": "S03-W1-T1"
+      },
+      {
+        "node": "S25-W0",
+        "prerequisite": "S04-W1-T1"
+      },
+      {
+        "node": "S25-W0",
+        "prerequisite": "S05-W1-T1"
+      },
+      {
+        "node": "S25-W0",
+        "prerequisite": "S06-W1-T1"
+      },
+      {
+        "node": "S25-W0",
+        "prerequisite": "S15-W1-T1"
+      },
+      {
+        "node": "S25-W0",
+        "prerequisite": "S16-W1-T1"
+      },
+      {
+        "node": "S25-W0-T2",
+        "prerequisite": "S25-W0-T1"
+      },
+      {
+        "node": "S25-W1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S25-W1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S25-W1-T1",
+        "prerequisite": "S19-W1"
+      },
+      {
+        "node": "S25-W1-T1",
+        "prerequisite": "S20-W1"
+      },
+      {
+        "node": "S25-W1-T1",
+        "prerequisite": "S25-W0-T2"
+      },
+      {
+        "node": "S25-W1-T2",
+        "prerequisite": "S25-W1-T1"
+      }
+    ],
+    "applied": [],
+    "errors": []
+  },
+  "protected_files_unchanged": 501,
+  "repair_files": [
+    {
+      "path": "specs/orchestra-visual/RUN.md",
+      "before_sha256": "1dd8b9eda34847aa12a840d27f67d5f305478ae664f04e7c9f17f91d7069d155",
+      "after_sha256": "0d6d6df29cf174f837b1329d3e862d750731988ebb8e49c632223aee5200ea52"
+    },
+    {
+      "path": "specs/orchestra-visual/reviews/full-execution-audit/repairs/REVIEW.md",
+      "before_sha256": null,
+      "after_sha256": "38fb3a27a3380f93edba6b0f89c96d6f775ff01b03186aec3fabcb23e730f2dc",
+      "transferred_sha256": "38fb3a27a3380f93edba6b0f89c96d6f775ff01b03186aec3fabcb23e730f2dc"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/README.md",
+      "before_sha256": "d9ef3430425015c92ac687d5145ca0b1959d7e25049b039f314230072daa75f2",
+      "after_sha256": "1d521c0b9cc584c03d841ce0bcfc8b9fa7145fbb2f6a07593c54ca6b268b0ca8"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/census.py",
+      "before_sha256": "69c1226ab16c2d17c9939bccab7719e3f7a77aec78627df391c5b1a2d80756e8",
+      "after_sha256": "6c1096fea293ae2bb3beca3672b7297712e260fb64da48d059cb5d51cf746335"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/effective_contract.py",
+      "before_sha256": "e441be30584424de53122cb0ffe272b036efbd605d78e23921c11e240e541806",
+      "after_sha256": "732414eb1bd9ad3901b2cdad93bd7aa4bfd5539d56a34b9fd80874622011b6b9"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/select_work.py",
+      "before_sha256": "440a6cba2f3c7c1f42bf69ef558e0b2b7ef634dbca5c845cd62ba574f40811d2",
+      "after_sha256": "eef64eb01fcb7674d39fda87a748c0a0faf7a9c46dda45740bd70b50c30695be"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/source_proof.py",
+      "before_sha256": "03e04ec9a46d601a55a960c6acd8ed53fe948d94e9d113e197e44e4f711fcca9",
+      "after_sha256": "cd4f042caaf84e4d7b11f6d178fbd7aab2c7d80307ec3b17fb7033339300e066",
+      "transferred_sha256": "7594327cc61e4e6579ca36eb894cc1e60fa0a6101eeb2f8f529a45c24c4308f9"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/test_contract.py",
+      "before_sha256": "266dd50cc0a63e61f3a4935e20da8e4f120792b8b2c77a2a8991f4b1352c734d",
+      "after_sha256": "7ed4a484d6f6b23de8dc7a426c749926d19cafaa6912c9db6ac96262aed54c2b"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/test_execution_repairs.py",
+      "before_sha256": null,
+      "after_sha256": "2bf5f4ca8869de02eeae944faac435040fbc5b3ff91e17d70e2b8eeffaa5f3d9"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/test_repairs.py",
+      "before_sha256": "cfc1cf24041ef71f5b1e1a23fd9929db9f5197080b4c9c185c5701519bdc0b1d",
+      "after_sha256": "5bc8a18c28bf8500b8212536ad2f31f275f875ae9910d34b1b53d54264b3d9d4"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/validate_evidence.py",
+      "before_sha256": "317fe6e9183469897acac47edde3938797c3eb3c6f028c60253d4a3abea8f6db",
+      "after_sha256": "8fa34d12633696df4ba537922483709843be3ed1b79d2188f874bda00dc51020"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/validate_plan.py",
+      "before_sha256": "804127c16c5a4347e79335fbbae112b0bd1105e33d4a925142a0bf9955aa1c1b",
+      "after_sha256": "a1202cd6c9fbce39369a7c2ce98548e1ed4bfa36d3bbf3fc9debfe9cdbcd4cb4"
+    }
+  ],
+  "whitespace_repairs": [
+    {
+      "path": "specs/orchestra-visual/reviews/full-execution-audit/repairs/REVIEW.md",
+      "operation": "trailing whitespace only in new audit prose",
+      "before": "38fb3a27a3380f93edba6b0f89c96d6f775ff01b03186aec3fabcb23e730f2dc",
+      "after": "38fb3a27a3380f93edba6b0f89c96d6f775ff01b03186aec3fabcb23e730f2dc"
+    },
+    {
+      "path": "specs/orchestra-visual/tools/source_proof.py",
+      "operation": "remove one empty line at EOF; Python AST unchanged",
+      "before": "7594327cc61e4e6579ca36eb894cc1e60fa0a6101eeb2f8f529a45c24c4308f9",
+      "after": "cd4f042caaf84e4d7b11f6d178fbd7aab2c7d80307ec3b17fb7033339300e066"
+    }
+  ],
+  "findings": {
+    "EX-01": "REPAIRED",
+    "EX-02": "REPAIRED",
+    "EX-03": "REPAIRED",
+    "H-01": "REPAIRED_DECLARED_ORIGIN_BOUNDARY_ONLY",
+    "E-01": "CONTRACT_FREEZE_NO_NEW_INVALIDATION_ENGINE",
+    "CI-01": "SEPARATE_PR_234_CURRENT_CI_REQUIRED"
+  },
+  "product_execution": "NOT_RUN",
+  "product_tasks_accepted": 0,
+  "frontend_electron_performance_approved": false,
+  "review_method": "same-assistant-adversarial-pass-not-external-auditor",
+  "auxiliary_attempt_notes": "Earlier helper attempts failed before publication on runner context, command arguments, metadata or whitespace guards. The last failed staged check identified one extra EOF blank in source_proof.py; it is removed with before/after SHA and equal Python AST verified. All checks are repeated; no guard disabled."
+}

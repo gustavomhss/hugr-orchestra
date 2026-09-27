@@ -15,7 +15,7 @@ Python 3.9+ e Git. Somente biblioteca padrão; nenhuma dependência nova no runt
 | python3 tools/capture_scope.py --repo REPO --out evidence/OWNER/source-before.json | Baseline ANTES da escrita; grava novo arquivo e preserva dirty/index. |
 | python3 tools/receipt_template.py ID --out evidence/OWNER/receipt.draft.json | Template NOT_RUN do esquema3. |
 | python3 tools/seal_receipt.py DRAFT --out RECEIPT | Catalogação SHA dos artefatos; não muda resultados ou verifica conteúdo semântico. |
-| python3 tools/validate_evidence.py ID RECEIPT --repo REPO | Valida critérios, footprint Git, contrato, prova externa quando pertinente via seletor e categorias. Sem --repo só estrutura, não fonte verificada. |
+| python3 tools/validate_evidence.py ID RECEIPT --repo REPO | Submissão: critérios, footprint, atualidade no candidato, censo S01 e origem declarada das provas. O seletor ainda confere pré-requisitos/autoridade externa. `--integrity-only` confere estrutura/atribuição histórica e nunca autoriza aceite. |
 | python3 tools/evaluate_performance.py RAW --gates P03 P08 --out RESULT | Calcula resultados contra BUDGETS.json; novo arquivo, não coleta. O recibo recalcula novamente. |
 | python3 tools/github_sync.py --offline | Relações desejadas, sem consultar ou alterar GitHub. |
 | python3 tools/github_sync.py | Preflight/dry-run real com gh; não escreve. |

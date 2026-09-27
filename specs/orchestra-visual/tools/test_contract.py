@@ -151,7 +151,7 @@ class EvidenceTests(unittest.TestCase):
         install(root)
         (root / 'proof.txt').write_text('Synthetic evidence for a schema test. NOT product proof.')
         value = template(PLAN, ident)
-        value.update({'head': 'a'*40, 'status': 'PASS'})
+        value.update({'head': 'a'*40, 'status': 'PASS', 'synthetic': True})
         value['axioms'] = {k: [{'criterion_id': c, 'result': 'PASS', 'evidence': ['proof.txt']}
                                for c in BY[ident]['criterion_ids'][k]] for k in AX}
         value['commands'] = [{'cwd': 'isolated-fixture', 'command': 'synthetic-schema-test', 'exit_code': 0, 'log': 'proof.txt'}]

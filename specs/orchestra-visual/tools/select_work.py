@@ -9,7 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 from validate_plan import ROOT, validate
-from validate_evidence import local_file, validate_receipt
+from validate_evidence import local_file, validate_submission
+from source_proof import source_errors, git_snapshot
 
 STATUSES = {'PENDING', 'RUNNING', 'PASS', 'FAIL', 'NOT_RUN', 'BLOCKED_EXTERNAL', 'STALE'}
 
@@ -140,14 +141,7 @@ def select(data, progress, root=ROOT, jobs=4, tracked=None, check_evidence=True,
                 found=[]
                 path = local_file(root, record.get('evidence'))
                 receipt = json.loads(path.read_text())
-                found = validate_receipt(by[ident], receipt, root, record.get('head'), repo=source_snapshot.get('repo') if source_snapshot else None, plan=data)
-                if source_snapshot is None:
-                    found.append('source attribution not verified; --repo required to consume PASS')
-                if source_snapshot is not None:
-                    found += source_errors(by[ident], receipt, source_snapshot)
-                    if ident.startswith('S01-') and source_snapshot.get('repo'):
-                        from census import check
-                        found += check(data,surfaces,json.loads((root/'CENSUS.json').read_text()),source_snapshot['repo'])
+                found = validate_submission(by[ident], receipt, root, record.get('head'), repo=source_snapshot.get('repo') if source_snapshot else None, plan=data, source_snapshot=source_snapshot)
                 if found:invalid_claims[ident]=found
                 elif source_snapshot is not None:verified_sources.append(ident)
             except (OSError, ValueError, TypeError) as exc:
@@ -223,50 +217,6 @@ def select(data, progress, root=ROOT, jobs=4, tracked=None, check_evidence=True,
             'completed_tasks': sum(completed(n['id']) for n in data['nodes'] if n['kind'] == 'task'),
             'source_scope_expanded': tracked is not None, 'source_revision_verified': source_snapshot is not None and bool(source_snapshot.get('repo')) and not invalid_claims and not external_errors, 'source_verification_scope':'candidate ancestry, attributed writes, effective contracts and declared output scopes; historical milestones are not current whole-product acceptance'}
 
-
-def source_errors(node, receipt, snapshot):
-    """Read-only Git compatibility check. Does not treat old unrelated commits as stale."""
-    head = receipt.get('head')
-    if head not in snapshot.get('ancestors', []):
-        return ['receipt source is absent or not an ancestor of current checkout']
-    if node['id'].startswith('S25-W0-') and node.get('source_watch_mode')=='historical':
-        return []  # Pilot milestone; the effective contract is checked separately.
-    changes = snapshot.get('changed_since', {}).get(head, []) + snapshot.get('dirty', [])
-    # Receipts are written after the measured source commit. Their integrity is
-    # checked by hashes above; writing them is not a product-source mutation.
-    # Source maps, fixtures, contracts and DELIVERY.md are NOT excluded here.
-    changes = [p for p in changes if not p.startswith('specs/orchestra-visual/evidence/')
-               and p != 'specs/orchestra-visual/progress.json']
-    if node.get('source_watch_mode')=='historical':
-        # Discovery observes a revision; future planned product edits do not alter
-        # that observation. Canonical contract digests and per-file census checks
-        # still run before admitting consumers.
-        changes=[p for p in changes if p.startswith('specs/orchestra-visual/')]
-    patterns = node.get('source_watch_paths',node.get('read_paths',[])+node.get('write_paths',[]))
-    affected = [p for p in changes if any(fnmatch.fnmatchcase(p, pat) for pat in patterns)]
-    if node['id'] in ('S23-W1-T2', 'S24-W1-T2', 'S25-W1-T2'):
-        affected += [p for p in changes if p.startswith('packages/') or p in ('bun.lock', 'package.json', 'turbo.json')]
-    if affected:
-        return ['STALE: relevant source changed since verification: ' + ', '.join(sorted(set(affected))[:12])]
-    return []
-
-
-def git_snapshot(repo, progress):
-    def git(*args):
-        return subprocess.check_output(['git', '-C', str(repo), *args], text=True, timeout=30)
-    current = git('rev-parse', 'HEAD').strip()
-    heads = {r['head'] for r in progress.get('tasks', {}).values()
-             if isinstance(r, dict) and r.get('status') == 'PASS' and isinstance(r.get('head'), str)
-             and re.fullmatch(r'[0-9a-f]{40}', r['head'])}
-    dirty = set(filter(None, (git('diff', '--name-only', '--no-renames', '-z', 'HEAD') + git('ls-files', '--others', '--exclude-standard', '-z')).split('\0')))
-    result = {'head': current, 'repo':str(repo.resolve()), 'ancestors': [], 'changed_since': {}, 'dirty': sorted(dirty)}
-    for head in sorted(heads):
-        check = subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', head, current],
-                               capture_output=True, timeout=30)
-        if check.returncode == 0:
-            result['ancestors'].append(head)
-            result['changed_since'][head] = list(filter(None, git('diff', '--name-only','--no-renames', '-z', head, current).split('\0')))
-    return result
 
 
 def main():

@@ -128,6 +128,8 @@ class GitRepairs(Temp):
   git(self.repo,'init','-q');git(self.repo,'config','user.email','synthetic@example.invalid');git(self.repo,'config','user.name','Synthetic Test')
   self.put('packages/app/src/pages/session/tasks-data.ts','initial')
   self.put('packages/app/src/app.tsx','initial');self.put('user.txt','saved')
+  from census import REQUIRED_ROOTS
+  for root in REQUIRED_ROOTS:(self.repo/root).mkdir(parents=True,exist_ok=True)
   self.commit();self.base=git(self.repo,'rev-parse','HEAD').strip()
  def put(self,p,t):
   path=self.repo/p;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(t)

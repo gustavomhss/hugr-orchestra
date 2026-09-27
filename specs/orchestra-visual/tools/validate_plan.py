@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AX = {'dod', 'invariants', 'quality_standards', 'completeness_criteria', 'success_criteria'}
 KINDS = {'epic', 'issue', 'subissue', 'wp', 'task'}
+from effective_contract import AXIOM_APPLICATION
 
 
 def safe_pattern(path):
@@ -77,6 +78,14 @@ def validate(data, surfaces=None):
                 errors.append(ident + ': invalid ' + field)
             elif len(arr) != len(set(arr)):
                 errors.append(ident + ': duplicate ' + field)
+        if n.get('axiom_application') != AXIOM_APPLICATION:
+            errors.append(ident + ': axiom application must preserve the published stage policy')
+        if kind != 'task' and 'criterion_evaluation_stage' in n:
+            stages = n['criterion_evaluation_stage']
+            expected = {c for values in ids.values() if isinstance(values, list)
+                        for c in values if isinstance(c, str)}
+            if not isinstance(stages, dict) or set(stages) != expected or any(v != ident for v in stages.values()):
+                errors.append(ident + ': aggregate criteria must be evaluated at its own closure')
         parent = n.get('parent')
         if kind == 'epic':
             if parent is not None:

@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 import struct
+import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 from validate_plan import AX, ROOT
@@ -257,19 +258,111 @@ def validate_receipt(node, receipt, root=ROOT, expected_head=None, repo=None, pl
     return errors
 
 
+def evidence_origin_errors(receipt, root):
+    """Reject declared fabricated evidence, not synthetic workload data or test inputs.
+
+    Deliberately not an authenticity detector. Inspect typed evidence envelopes only;
+    raw logs and nested scenario payloads may legitimately quote negative examples.
+    """
+    if not isinstance(receipt, dict):
+        return []  # Shape errors belong to validate_receipt.
+    errors = []
+    roles = [('receipt', receipt)]
+    for category, names in [('visual', ('manifest_file',)),
+                            ('performance', ('metrics_file', 'observations_file')),
+                            ('native', ('report_file',))]:
+        section = receipt.get(category, {})
+        if not isinstance(section, dict) or section.get('status') != 'PASS':
+            continue
+        roles.append((category, section))
+        for name in names:
+            try:
+                ref = section.get(name)
+                roles.append((str(ref), load(local_file(root, ref))))
+            except (OSError, ValueError, TypeError) as exc:
+                errors.append(str(exc))
+    imports = receipt.get('source', {}).get('imported_receipts', []) if isinstance(receipt.get('source'), dict) else []
+    if isinstance(imports, list):
+        for ref in imports:
+            try:
+                proof = load(local_file(root, ref))
+                if isinstance(proof, dict) and proof.get('source', {}).get('imported_receipts'):
+                    errors.append('nested imported evidence is not supported')
+                else:
+                    errors += evidence_origin_errors(proof, root)
+            except (OSError, ValueError, TypeError, AttributeError) as exc:
+                errors.append(str(exc))
+    for role, envelope in roles:
+        if not isinstance(envelope, dict):
+            errors.append('evidence envelope must be an object: ' + role)
+            continue
+        containers = [envelope, envelope.get('provenance', {}), envelope.get('environment', {})]
+        for item in containers:
+            if not isinstance(item, dict):
+                continue
+            declared = any(item.get(key) is True for key in ('synthetic', 'fabricated', 'test_only', 'demo', 'example'))
+            origin = item.get('evidence_origin')
+            if declared or (isinstance(origin, str) and origin in ('synthetic', 'fabricated', 'test', 'test-fixture', 'demo', 'example')):
+                errors.append('declared test/demo evidence cannot be submitted as product proof: ' + role)
+                break
+    return errors
+
+
+def validate_submission(node, receipt, root=ROOT, expected_head=None, repo=None, plan=None, source_snapshot=None):
+    """Candidate acceptance entry shared by the CLI and selector; never a semantic seal."""
+    from validate_plan import validate
+    try:
+        plan = plan if plan is not None else load(root/'PLAN.json')
+        errors = validate(plan, load(root/'SURFACES.json'))
+        if node.get('kind') != 'task' or node not in plan['nodes']:
+            errors.append('submission must use the canonical task contract')
+        if errors:
+            return errors
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return [str(exc)]
+    errors = validate_receipt(node, receipt, root, expected_head, repo=repo, plan=plan)
+    errors += evidence_origin_errors(receipt, root)
+    if repo is None:
+        return errors + ['candidate submission requires --repo; integrity-only is not acceptance']
+    if not isinstance(receipt, dict):
+        return errors
+    try:
+        from source_proof import source_errors, git_snapshot
+        snapshot = source_snapshot if source_snapshot is not None else git_snapshot(
+            Path(repo), {'tasks': {node['id']: {'status': 'PASS', 'head': receipt.get('head')}}})
+        if not snapshot.get('repo') or Path(snapshot['repo']).resolve() != Path(repo).resolve():
+            errors.append('candidate snapshot belongs to another repository')
+        else:
+            errors += source_errors(node, receipt, snapshot)
+        if node['id'].startswith('S01-'):
+            from census import check
+            errors += check(plan if plan is not None else load(root/'PLAN.json'),
+                            load(root/'SURFACES.json'), load(root/'CENSUS.json'), repo)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        errors.append(str(exc))
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('task')
     parser.add_argument('receipt', type=Path)
     parser.add_argument('--repo',type=Path)
+    parser.add_argument('--integrity-only', action='store_true', help='Historical/fixture integrity only; never candidate acceptance.')
     args = parser.parse_args()
     try:
         plan = json.loads((ROOT / 'PLAN.json').read_text())
         node = next(n for n in plan['nodes'] if n['id'] == args.task)
-        errors = validate_receipt(node, json.loads(args.receipt.read_text()),repo=args.repo)
-    except (OSError, ValueError, StopIteration, KeyError, TypeError) as exc:
+        validator = validate_receipt if args.integrity_only else validate_submission
+        errors = validator(node, load(args.receipt), repo=args.repo, plan=plan)
+    except (OSError, ValueError, StopIteration, KeyError, TypeError, subprocess.SubprocessError) as exc:
         errors = [str(exc)]
-    print(json.dumps({'kind': 'receipt-integrity-not-semantic-proof', 'status': 'FAIL' if errors else 'PASS', 'errors': errors, 'source_revision_verified': args.repo is not None and not errors}, indent=2))
+    print(json.dumps({'kind': 'receipt-integrity-only' if args.integrity_only else 'candidate-receipt-validation',
+        'status': 'FAIL' if errors else 'INTEGRITY_VALID' if args.integrity_only else 'PASS',
+        'errors': errors, 'candidate_compatible': not errors and not args.integrity_only,
+        'historical_attribution_verified': args.repo is not None and not errors,
+        'source_revision_verified': args.repo is not None and not errors and not args.integrity_only,
+        'semantic_truth_verified': False}, indent=2))
     return int(bool(errors))
 
 

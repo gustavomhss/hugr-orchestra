@@ -46,3 +46,9 @@ Retomada: rode `resume` e gere o pacote da task em andamento. A vista usa Git + 
 ## Limites desta entrega
 
 Esta camada facilita descoberta/contexto/retomada. Não implementa um coletor genérico de comandos, não copia toda a especificação em cada subagente e não executa automaticamente o aplicativo. O ensaio de publicação usa checkout real do GitHub para doctor, seleção, pacote, baseline e template NOT_RUN; não conclui S01, não mede o Mac e não prova frontend ou Electron. Resultados efetivos: [reviews/executor-aids/REPORT.json](reviews/executor-aids/REPORT.json).
+
+## Aceite e estabilidade do contrato
+
+`validate_evidence.py TASK RECEIPT --repo REPO` e o seletor usam a mesma entrada de submissão: contrato, atribuição Git, compatibilidade com o candidato atual, censo S01 e recusa de evidência declaradamente sintética. `--integrity-only` é exclusivamente diagnóstico histórico/fixture e retorna `INTEGRITY_VALID`, nunca autorização de fechamento. PASS do recibo não dispensa os pré-requisitos, a autoridade externa, a revisão semântica e o aceite do nó no seletor.
+
+Concluir os bindings do censo S01 e congelar as normas antes do fan-out. Uma alteração necessária deve indicar seções, consumidores e provas potencialmente afetados; regenerar pacotes e revalidar pelo seletor. Não alterar WIDGETS/SPEC/CONTRACTS por estética durante a execução, nem dar reset indiscriminado em progresso: o hashing integral continua deliberadamente conservador. O congelamento é uma regra de coordenação, não outro lock, daemon ou nova fonte de verdade.
