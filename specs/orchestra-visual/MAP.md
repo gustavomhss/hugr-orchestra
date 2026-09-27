@@ -1,4 +1,4 @@
-# MAP — projeção canônica v4.2
+# MAP — projeção canônica v4.3
 
 Fonte: SURFACES.json. Não editar esta tabela; alterar o canônico e regenerar. Nenhum registro prova execução do produto.
 
@@ -80,3 +80,9 @@ Fonte: SURFACES.json. Não editar esta tabela; alterar o canônico e regenerar. 
 | UI74 | S06 | migrate | ui-surface | packages/app/src/pages/layout/session-tab-avatar.tsx |
 | UI75 | S03 | inherit | ui-surface | packages/app/src/pages/layout-new.tsx |
 | UI76 | S20 | migrate | ui-surface | packages/app/src/pages/session/orchestra-governance.tsx |
+| UI77 | S09 | migrate | ui-surface | packages/app/src/pages/session/timeline/orchestra-checklist.tsx |
+| UI78 | S18 | migrate | ui-surface | packages/app/src/pages/session/orchestra-activity.tsx |
+| UI79 | S11 | migrate | ui-surface | packages/app/src/pages/session/orchestra-evidence-files.tsx |
+| UI80 | S11 | migrate | ui-surface | packages/app/src/pages/session/orchestra-evidence-docs.tsx |
+| UI81 | S11 | migrate | ui-surface | packages/app/src/pages/session/terminal-panel.tsx |
+| UI82 | S11 | migrate | ui-surface | packages/app/src/pages/session/orchestra-evidence-actions.tsx |

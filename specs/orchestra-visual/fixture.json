@@ -1,6 +1,6 @@
 {
   "id": "orchestra-cockpit-visual-fixture-v2",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "mode": "demo-only",
   "warning": "Presentation fixture only. Adapt to existing view models in test code. Never seed a live database, call a model provider, navigate externally, or execute the named commands from this data.",
   "viewport": {
@@ -159,13 +159,17 @@
   "testEvidence": {
     "synthetic": true,
     "status": "passed",
-    "filesPassed": 12,
     "testsPassed": 186,
     "durationSeconds": 2.3,
     "exitCode": 0,
-    "command": "demo-test-runner",
-    "source": "fixture-only; no actual product test run",
-    "rawOutput": "Test run complete\nTest Files  12 passed (12)\nTests       186 passed (186)\nTime        2.3s\nIsolated visual fixture; not a product test result."
+    "command": "bun test",
+    "source": "fixture-only; counts are visual data, not an actual Bun run; S02 captures real parser examples",
+    "rawOutput": "SYNTHETIC VISUAL FIXTURE - DO NOT EXECUTE\n186 pass\n0 fail\n186 expect() calls\nRan 186 tests across 12 files. [2.30s]",
+    "filesExecuted": 12,
+    "testsFailed": 0,
+    "runner": "bun",
+    "truncated": false,
+    "revisionBinding": null
   },
   "dock": {
     "mode": "non-navigating-fixture",
@@ -208,7 +212,14 @@
         "Diff"
       ],
       "execution": "test-local state changes only; no network or host approval authority"
-    }
+    },
+    "activePane": "browser",
+    "panes": [
+      "browser",
+      "files",
+      "docs",
+      "terminal"
+    ]
   },
   "tasks": [
     {
@@ -237,8 +248,8 @@
     {
       "entity": "Maestro",
       "kind": "agent",
-      "state": "idle",
-      "detail": "Ready for review"
+      "state": "result-unknown",
+      "detail": "Execution ended; result not reported"
     },
     {
       "entity": "Test worker",
@@ -251,47 +262,52 @@
       "kind": "browser",
       "state": "open",
       "detail": "Demonstration preview"
-    },
-    {
-      "entity": "Janitor",
-      "kind": "scanner",
-      "state": "idle",
-      "detail": "No synthetic cleanup action"
     }
   ],
   "controls": {
     "sideEffects": "disabled-by-fixture-adapter",
     "network": "blocked",
     "publish": "unavailable",
-    "stop": "local-fixture-only"
+    "stop": "local-fixture-only",
+    "createPR": "prefill-only; no submission or network in fixture"
   },
   "documentedSemanticExceptionsForReview": [
     "Corrected author types: Atlas is not presented as a coding agent.",
     "No arbitrary progress percentages.",
     "No assumption about current model product/version.",
     "No user identity inferred from generated avatar.",
-    "No real HTTP navigation or policy change."
+    "No real HTTP navigation or policy change.",
+    "Checklist completion is reported by the agent, not verified test success.",
+    "Files executed is not files passed; Bun footer is a synthetic visual sample only.",
+    "No Janitor success row without a bound report.",
+    "Create PR prepares a reviewable draft and never publishes on click.",
+    "Result/Output tabs are execution evidence; only Dock Terminal uses the existing PTY."
   ],
   "checklist": [
     {
-      "text": "Reviewed existing implementation (src/agents/approval.ts)",
-      "state": "completed"
+      "content": "Reviewed existing implementation (src/agents/approval.ts)",
+      "status": "completed",
+      "priority": "medium"
     },
     {
-      "text": "Identified duplication in approval logic",
-      "state": "completed"
+      "content": "Identified duplication in approval logic",
+      "status": "completed",
+      "priority": "medium"
     },
     {
-      "text": "Found 4 edge cases not handled (timeout, cancel, invalid state, missing context)",
-      "state": "completed"
+      "content": "Found 4 edge cases not handled (timeout, cancel, invalid state, missing context)",
+      "status": "completed",
+      "priority": "medium"
     },
     {
-      "text": "Implemented refactor",
-      "state": "completed"
+      "content": "Implemented refactor",
+      "status": "completed",
+      "priority": "medium"
     },
     {
-      "text": "Updated tests and validated the changes",
-      "state": "completed"
+      "content": "Updated tests and validated the changes",
+      "status": "completed",
+      "priority": "medium"
     }
   ],
   "variants": {
@@ -313,7 +329,7 @@
         "completed",
         "completed",
         "completed",
-        "running",
+        "in_progress",
         "pending"
       ]
     },
@@ -351,5 +367,17 @@
     "long-content": {
       "description": "Use long paths, a multiline message, and large tool output without changing view-model contracts."
     }
-  }
+  },
+  "widget_contract": "WIDGETS.md",
+  "serverKey": "fixture-server-only",
+  "checklistSource": {
+    "synthetic": true,
+    "tool": "todowrite",
+    "status": "completed",
+    "sessionID": "visual-demo-001",
+    "messageID": "m2",
+    "partID": "fixture-todo-part",
+    "label": "Plan reported by agent"
+  },
+  "janitorReport": null
 }

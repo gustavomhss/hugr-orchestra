@@ -1,4 +1,15 @@
-# EXECUTE — Orchestra / contrato de execução v4.2
+# EXECUTE — Orchestra / contrato de execução v4.3
+
+<!-- orchestra-widgets43:begin -->
+## Widgets fechados — contrato 4.3
+
+**Antes de implementar um widget, abra [WIDGETS.md](WIDGETS.md).** W01 checklist/todowrite; W02 diff; W03 testes/output; W04 Browser/Files/Docs/Terminal; W05 Tasks; W06 Atividade; W07 ações; W08 atalhos das features; W09 microacabamento e custo integrado. Os IDs Wxx e casos WKxx aparecem diretamente no corpo da sua issue/WP/task.
+
+As seções indicam fontes e campos reais, paths de implementação, callbacks e efeitos exatos, estados, limites e testes. Docs é documentação local; Criar PR… prepara draft revisável sem publicar; repetir testes exige comando/contexto compatível e confirmação. Inputs de todowrite não são prova e metadata.output não é log completo. Nenhuma omissão de binding é aprovada como capability ausente.
+
+DAG, 38 WPs/66 tasks, piloto antecipado, fronteiras de escrita e budgets 4.2 preservados. A fixture é sintética e foi alinhada aos campos reais; produto ainda NOT_RUN. A avaliação da publicação está em [reviews/widget-contracts/PUBLICATION.json](reviews/widget-contracts/PUBLICATION.json), e os limites da revisão em [reviews/widget-contracts/REVIEW.md](reviews/widget-contracts/REVIEW.md).
+<!-- orchestra-widgets43:end -->
+
 
 Você é o Codex no checkout local de `gmhelmold/HuGR-Orchestra`. Execute a migração desktop/web completa. Não produza outro plano, outra identidade ou um aplicativo demonstrativo separado. Leia este arquivo e a task selecionada; carregue somente os contratos pertinentes nos subagentes.
 

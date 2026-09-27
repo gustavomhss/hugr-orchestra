@@ -1,0 +1,17 @@
+{
+  "scope": "local_package_integrity_and_relationships_only",
+  "visual_change_requested": false,
+  "product_integration_tested": false,
+  "counts": {
+    "original_files_checked": 295,
+    "original_checksum_entries_checked": 294,
+    "web_copy_pairs_checked": 36,
+    "svg_xml_parsed": 89,
+    "logo_master_svgs_checked": 42,
+    "usage_routes_checked": 15,
+    "manifest_icon_references_checked": 4,
+    "handoff_files_checked": 8
+  },
+  "errors": [],
+  "status": "PASS"
+}

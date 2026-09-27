@@ -2,7 +2,7 @@
   "schema_version": 1,
   "root_epic": 215,
   "branch": "visual-migration-plan",
-  "contract_revision": "4.2",
+  "contract_revision": "4.3",
   "plan_sha256": "1735d28ddd2dfc51a935b473694fd829adf5ae1c092986efe5e57ce6213e5734",
   "nodes": 143,
   "criteria": 1974,
@@ -49,7 +49,7 @@
     "S25": "specs/orchestra-visual/issues/S25.md"
   },
   "artifact_package_status": "COMPLETE",
-  "ticket_bodies_status": "VERIFIED",
+  "ticket_bodies_status": "RECONCILING_4.3",
   "native_relationships": "VERIFIED",
   "product_execution": "NOT_RUN",
   "missing_inputs_note": null,
@@ -206,5 +206,7 @@
     "report": "publication/navigation/REPORT.json"
   },
   "repair_review": "reviews/parallelism-performance/repairs/REVIEW.md",
-  "repair_report": "reviews/parallelism-performance/repairs/PUBLICATION.json"
+  "repair_report": "reviews/parallelism-performance/repairs/PUBLICATION.json",
+  "widget_contract": "WIDGETS.md",
+  "widget_review": "reviews/widget-contracts/REVIEW.md"
 }

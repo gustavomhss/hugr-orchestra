@@ -138,7 +138,7 @@ def validate(data, surfaces=None):
                 errors.append(ident+': mandatory category lacks gates '+cat)
         for dep in n.get('acceptance_requires',[]):
             if dep not in by: errors.append(ident+': unknown acceptance producer '+str(dep))
-    if data.get('contract_revision') == '4.2':
+    if data.get('contract_revision') in ('4.2', '4.3'):
         policy = data.get('scheduling_policy', {})
         if policy.get('priority_targets') != ['S25-W0-T1', 'S25-W0-T2']:
             errors.append('explicit pilot priority policy missing or invalid')
@@ -153,6 +153,26 @@ def validate(data, surfaces=None):
                 errors.append(ident + ': use collection phase, not task-wide machine reservation')
             if n.get('verification_tier') in ('local', 'focused') and 'P10' in n.get('required_performance_gates', []):
                 errors.append(ident + ': full soak belongs to release/aggregate, not ordinary local verification')
+
+    if data.get('contract_revision') == '4.3':
+        if data.get('widget_contract_file') != 'WIDGETS.md':
+            errors.append('widget contract file missing')
+        allowed_widgets = {f'W{i:02}' for i in range(1, 10)}
+        allowed_cases = {f'WK{i:02}' for i in range(1, 29)}
+        for ident, n in by.items():
+            for field, allowed in [('widget_contracts', allowed_widgets), ('widget_cases', allowed_cases)]:
+                values = n.get(field, [])
+                if not isinstance(values, list) or any(not isinstance(x, str) or x not in allowed for x in values) or len(values) != len(set(values)):
+                    errors.append(ident + ': invalid ' + field)
+            if n.get('widget_contracts') and n.get('kind') == 'task' and 'WIDGETS.md' not in n.get('normative_files', []):
+                errors.append(ident + ': widget contract must bind effective evidence')
+        if surfaces is not None:
+            entries = surfaces.get('surfaces') if isinstance(surfaces, dict) else None
+            catalog = {r['id']: r for r in entries if isinstance(r, dict) and isinstance(r.get('id'), str)} if isinstance(entries, list) else {}
+            for sid, owner in [('UI77','S09'), ('UI78','S18'), ('UI79','S11'), ('UI80','S11'), ('UI81','S11'), ('UI82','S11')]:
+                row = catalog.get(sid, {})
+                if row.get('owner') != owner or row.get('inventory_class') != 'ui-surface' or not row.get('widget_contracts'):
+                    errors.append(sid + ': required widget consumer/owner missing')
 
     final=data.get('final_gate_policy',{})
     if not isinstance(final,dict):return errors+['final_gate_policy must be an object']
@@ -249,11 +269,23 @@ def inspect(root=ROOT, repo=None, census_strict=False):
     for name in ('EXECUTE.md', 'SPEC.md', 'PERFORMANCE.md', 'MAP.md', 'OWNERSHIP.md'):
         if not (root / name).is_file():
             errors.append('missing ' + name)
-    if data.get('contract_revision') in ('4.1', '4.2'):
+    if data.get('contract_revision') == '4.3':
+        widgets = root / 'WIDGETS.md'
+        if not widgets.is_file():
+            errors.append('missing WIDGETS.md')
+        else:
+            text = widgets.read_text(encoding='utf-8')
+            for wid in [f'w{i:02}' for i in range(1,10)]:
+                if text.count('<a id="'+wid+'"></a>') != 1:
+                    errors.append('widget anchor missing/duplicate: '+wid)
+            for case in [f'WK{i:02}' for i in range(1,29)]:
+                if '`'+case+'`' not in text:
+                    errors.append('widget behavior case missing: '+case)
+    if data.get('contract_revision') in ('4.1', '4.2', '4.3'):
         from verify_brand import verify
         brand_report = verify(root)
         errors.extend('brand: ' + err for err in brand_report['errors'])
-    if not errors and data.get('contract_revision') == '4.2':
+    if not errors and data.get('contract_revision') in ('4.2', '4.3'):
         from visual_coverage import required_captures
         for n in data['nodes']:
             if n.get('kind') == 'task' and n.get('evidence_requirements', {}).get('visual') == 'required':

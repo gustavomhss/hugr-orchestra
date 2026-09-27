@@ -139,3 +139,10 @@ UI75 é inspeção do tema no shell existente (S03 herda o consumidor; S06 conti
 COVERAGE.task_consumer_states define os estados específicos de S03-T2, S20-W1-T2 e S20-W2-T2. Obrigação visual com zero alvos reprova. Uma captura que não corresponde ao consumidor/estado/perfil esperado é recusada. W2 testa estados live somente com a autoridade real exigida no DAG; isso não bloqueia a UI indisponível de W1. S24/release seguem a cobertura comum do candidato; nenhuma capacidade live pode ser declarada sem W2-T2 no candidato conectado e os gates afetados repetidos.
 
 Capturas podem compartilhar um arquivo somente quando os consumidores estão de fato visíveis no mesmo estado/render. Reaproveitar pixels não dispensa revisão por critério. Não produzir um produto cartesiano desnecessário de todas as telas em todos os tamanhos: estados relevantes no viewport principal, mais os perfis definidos.
+
+
+## C-WIDGETS — decisões específicas e interfaces locais
+
+[WIDGETS.md](WIDGETS.md) fecha W01–W09 e WK01–WK28. S09 renderiza o checklist de todowrite e oferece um callback estreito de evidência; S11 fornece diff/test-output/panes locais/actionbar; S10 fornece os handlers de shell-confirmado e PR-draft; S15 preserva o controller Browser e injeta apenas snapshot readonly; S17 projeta Tasks/Atividade, S18 apresenta, S21 oferece report/source existentes. S25 é único integrador e writer de use-session-commands.tsx. Nenhum desses callbacks é uma API genérica de widgets.
+
+Implementar fornecedores e consumidores em paralelo contra essas fronteiras; integração posterior prova os bindings. Não acrescentar dependências de feature inteira, runtime, store, worker ou task extra para transportar três slots/callbacks. Nenhum arquivo de backend desta tabela é autorizado para escrita por ser fonte. W2 de Own/governança preserva suas dependências reais.

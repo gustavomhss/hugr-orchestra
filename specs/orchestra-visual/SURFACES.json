@@ -466,7 +466,11 @@
       "reachability_verified_in_this_revision": false,
       "disposition": "migrate",
       "classification_reason": "Migrar a superfície existente, preservando o contrato do host.",
-      "coverage_host": "web"
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W01",
+        "W03"
+      ]
     },
     {
       "id": "UI20",
@@ -747,14 +751,22 @@
         "loading",
         "error",
         "keyboard",
-        "long-content"
+        "long-content",
+        "runner-summary",
+        "output-only",
+        "partial-output",
+        "zero-tests",
+        "unlinked-revision"
       ],
       "source_url": null,
       "inventory_class": "ui-surface",
       "reachability_verified_in_this_revision": false,
       "disposition": "migrate",
       "classification_reason": "Migrar a superfície existente, preservando o contrato do host.",
-      "coverage_host": "web"
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W03"
+      ]
     },
     {
       "id": "UI32",
@@ -1210,7 +1222,10 @@
       "reachability_verified_in_this_revision": false,
       "disposition": "migrate",
       "classification_reason": "Composição do browser nativo exige captura Electron; fallback web coberto separadamente no shell UI49.",
-      "coverage_host": "electron"
+      "coverage_host": "electron",
+      "widget_contracts": [
+        "W04"
+      ]
     },
     {
       "id": "UI51",
@@ -1323,18 +1338,26 @@
         "loading",
         "error",
         "keyboard",
-        "long-content"
+        "long-content",
+        "needs-input",
+        "failed",
+        "result-unknown",
+        "expanded",
+        "stop-error"
       ],
       "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/30d951fcc4a09e708768551c7c6fd38a0efe3da8/packages/app/src/pages/session/tasks-panel.tsx",
       "inventory_class": "ui-surface",
       "reachability_verified_in_this_revision": false,
       "disposition": "migrate",
       "classification_reason": "Migrar a superfície existente, preservando o contrato do host.",
-      "coverage_host": "web"
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W05"
+      ]
     },
     {
       "id": "UI56",
-      "title": "Mixed activity card",
+      "title": "Typed activity read model source",
       "owner": "S17",
       "path": "packages/app/src/pages/session/tasks-data.ts",
       "evidence_level": "content",
@@ -1354,7 +1377,10 @@
       "reachability_verified_in_this_revision": false,
       "disposition": "read-anchor",
       "classification_reason": "Fonte/configuração/bridge; cobertura visual pertence ao consumer real, não a este arquivo.",
-      "coverage_host": "web"
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W06"
+      ]
     },
     {
       "id": "UI57",
@@ -1818,6 +1844,172 @@
         "approved",
         "declined",
         "stale-denied"
+      ]
+    },
+    {
+      "id": "UI77",
+      "title": "Compact todowrite checklist consumer",
+      "owner": "S09",
+      "path": "packages/app/src/pages/session/timeline/orchestra-checklist.tsx",
+      "evidence_level": "planned-binding-after-source-read",
+      "host": "web+desktop",
+      "current_capability": "needs-adapter",
+      "required_change": "Implement the concrete consumer/behavior in WIDGETS.md, reuse existing source and renderer",
+      "states": [
+        "default",
+        "pending-proposal",
+        "historical-snapshot",
+        "unknown-status",
+        "expanded",
+        "empty",
+        "error",
+        "keyboard"
+      ],
+      "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/opencode/src/tool/todo.ts",
+      "inventory_class": "ui-surface",
+      "reachability_verified_in_this_revision": false,
+      "disposition": "migrate",
+      "classification_reason": "Consumer contract to implement; filename is planned unless already present. Source existence does not prove live integration.",
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W01"
+      ]
+    },
+    {
+      "id": "UI78",
+      "title": "Typed Activity card consumer",
+      "owner": "S18",
+      "path": "packages/app/src/pages/session/orchestra-activity.tsx",
+      "evidence_level": "planned-binding-after-source-read",
+      "host": "web+desktop",
+      "current_capability": "needs-adapter",
+      "required_change": "Implement the concrete consumer/behavior in WIDGETS.md, reuse existing source and renderer",
+      "states": [
+        "default",
+        "empty",
+        "mixed-scopes",
+        "source-mismatch",
+        "expanded",
+        "error",
+        "keyboard"
+      ],
+      "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/pages/session/tasks-data.ts",
+      "inventory_class": "ui-surface",
+      "reachability_verified_in_this_revision": false,
+      "disposition": "migrate",
+      "classification_reason": "Consumer contract to implement; filename is planned unless already present. Source existence does not prove live integration.",
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W06"
+      ]
+    },
+    {
+      "id": "UI79",
+      "title": "Dock Files local pane",
+      "owner": "S11",
+      "path": "packages/app/src/pages/session/orchestra-evidence-files.tsx",
+      "evidence_level": "planned-binding-after-source-read",
+      "host": "web+desktop",
+      "current_capability": "needs-adapter",
+      "required_change": "Implement the concrete consumer/behavior in WIDGETS.md, reuse existing source and renderer",
+      "states": [
+        "default",
+        "empty",
+        "loading",
+        "error",
+        "keyboard",
+        "long-content"
+      ],
+      "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/pages/session/session-side-panel.tsx",
+      "inventory_class": "ui-surface",
+      "reachability_verified_in_this_revision": false,
+      "disposition": "migrate",
+      "classification_reason": "Consumer contract to implement; filename is planned unless already present. Source existence does not prove live integration.",
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W04"
+      ]
+    },
+    {
+      "id": "UI80",
+      "title": "Dock Docs local pane",
+      "owner": "S11",
+      "path": "packages/app/src/pages/session/orchestra-evidence-docs.tsx",
+      "evidence_level": "planned-binding-after-source-read",
+      "host": "web+desktop",
+      "current_capability": "needs-adapter",
+      "required_change": "Implement the concrete consumer/behavior in WIDGETS.md, reuse existing source and renderer",
+      "states": [
+        "default",
+        "no-docs",
+        "denied-path",
+        "mdx-as-text",
+        "loading",
+        "error",
+        "keyboard"
+      ],
+      "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/pages/session/session-side-panel.tsx",
+      "inventory_class": "ui-surface",
+      "reachability_verified_in_this_revision": false,
+      "disposition": "migrate",
+      "classification_reason": "Consumer contract to implement; filename is planned unless already present. Source existence does not prove live integration.",
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W04"
+      ]
+    },
+    {
+      "id": "UI81",
+      "title": "Dock Terminal existing-PTY pane",
+      "owner": "S11",
+      "path": "packages/app/src/pages/session/terminal-panel.tsx",
+      "evidence_level": "planned-binding-after-source-read",
+      "host": "web+desktop",
+      "current_capability": "needs-adapter",
+      "required_change": "Implement the concrete consumer/behavior in WIDGETS.md, reuse existing source and renderer",
+      "states": [
+        "default",
+        "no-terminal",
+        "existing-terminal",
+        "error",
+        "keyboard"
+      ],
+      "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/pages/session/session-side-panel.tsx",
+      "inventory_class": "ui-surface",
+      "reachability_verified_in_this_revision": false,
+      "disposition": "migrate",
+      "classification_reason": "Consumer contract to implement; filename is planned unless already present. Source existence does not prove live integration.",
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W04"
+      ]
+    },
+    {
+      "id": "UI82",
+      "title": "Completion action strip and confirmation",
+      "owner": "S11",
+      "path": "packages/app/src/pages/session/orchestra-evidence-actions.tsx",
+      "evidence_level": "planned-binding-after-source-read",
+      "host": "web+desktop",
+      "current_capability": "needs-adapter",
+      "required_change": "Implement the concrete consumer/behavior in WIDGETS.md, reuse existing source and renderer",
+      "states": [
+        "default",
+        "replay-confirm",
+        "unsupported-workdir",
+        "request-uncertain",
+        "pr-draft-review",
+        "capability-unavailable",
+        "keyboard"
+      ],
+      "source_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/bde9005056e17d6495ce1270a2f25ca811b69e43/packages/app/src/components/prompt-input/submit.ts",
+      "inventory_class": "ui-surface",
+      "reachability_verified_in_this_revision": false,
+      "disposition": "migrate",
+      "classification_reason": "Consumer contract to implement; filename is planned unless already present. Source existence does not prove live integration.",
+      "coverage_host": "web",
+      "widget_contracts": [
+        "W07"
       ]
     }
   ],

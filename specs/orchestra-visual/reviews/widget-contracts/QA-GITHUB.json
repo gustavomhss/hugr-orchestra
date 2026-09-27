@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "kind": "planning-tools-not-product",
+  "contract_revision": "4.3",
+  "tooling_tests_passed": 224,
+  "checks": [
+    {
+      "name": "brand",
+      "command": [
+        "/usr/bin/python3",
+        "tools/verify_brand.py"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/brand-github.log"
+    },
+    {
+      "name": "original-brand",
+      "command": [
+        "/usr/bin/python3",
+        "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py",
+        "--json"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/original-brand-github.log"
+    },
+    {
+      "name": "plan",
+      "command": [
+        "/usr/bin/python3",
+        "tools/validate_plan.py"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/plan-github.log"
+    },
+    {
+      "name": "maps",
+      "command": [
+        "/usr/bin/python3",
+        "tools/render_maps.py",
+        "--check"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/maps-github.log"
+    },
+    {
+      "name": "issues",
+      "command": [
+        "/usr/bin/python3",
+        "tools/render_issues.py",
+        "--check"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/issues-github.log"
+    },
+    {
+      "name": "navigation",
+      "command": [
+        "/usr/bin/python3",
+        "tools/render_navigation.py",
+        "--check",
+        "--repo",
+        "/home/runner/work/HuGR-Orchestra/HuGR-Orchestra"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/navigation-github.log"
+    },
+    {
+      "name": "tools-tests",
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "cwd": "specs/orchestra-visual",
+      "exit_code": 0,
+      "log": "reviews/widget-contracts/tools-tests-github.log"
+    }
+  ],
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36286680951",
+  "product_execution": "NOT_RUN"
+}

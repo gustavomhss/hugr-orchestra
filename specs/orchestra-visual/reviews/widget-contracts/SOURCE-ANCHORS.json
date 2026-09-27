@@ -1,0 +1,23 @@
+{
+  "kind": "pinned-source-read-identities-not-runtime-test",
+  "source_commit": "bde9005056e17d6495ce1270a2f25ca811b69e43",
+  "files": {
+    "packages/schema/src/session-todo.ts": "7f6a72bf000617eb14ee8bedebd9dc0800260510",
+    "packages/opencode/src/tool/todo.ts": "69fb0550e8ca071b7e1ac3b791160746dfdb380f",
+    "packages/opencode/src/session/todo.ts": "cd80828de6f05ad159a3c56065662a6070bb25d6",
+    "packages/app/src/context/directory-sync.ts": "befd5b61e0954d0b13ecf8f2706ebc3d764e4f1b",
+    "packages/session-ui/src/components/message-part.tsx": "d2a00b9d44c0bb1eba045ed3aa7eb00e45688ce4",
+    "packages/app/src/pages/session/v2/review-panel-v2.tsx": "fcd6bbb79feb256120db31bccf8b196b09741e0c",
+    "packages/opencode/src/tool/shell.ts": "1e4423e017740617bc6e0df36ad9dcdb0197bccb",
+    "packages/app/src/pages/session/tasks-panel.tsx": "2b10ff4db89a2e1a5090a477977d27b66148b78e",
+    "packages/app/src/pages/session/apps-panel.tsx": "36a49947929555a49e7127a38fc02e6c6f422d11",
+    "packages/app/src/pages/session/use-session-commands.tsx": "2a7581b4105c51d3024951c4a38385836142e521",
+    "packages/app/src/components/prompt-input/submit.ts": "04adcd5e679bdf63e8fd09807728613fbd7bbefe",
+    "packages/app/src/components/session/open-in-app-v2.tsx": "b5291dcc32cd0270fa9fc65f77406358508afc78",
+    "packages/app/src/context/janitor.tsx": "47e04fa655f8272107f4cd6f0784ee79e4af6400",
+    "packages/app/src/components/janitor-widget.tsx": "c91f5daee10d95a6a0a3ef106cfbf82cbf3e2262",
+    "packages/app/src/context/command.tsx": "054b99e806bda9f20efa195dbeff8b091babd2a4",
+    "packages/app/src/context/prompt.tsx": "41a99f3b67e1333a5ba8890ac6379c93ddf93160"
+  },
+  "product_execution": "NOT_RUN"
+}

@@ -5,7 +5,7 @@ from effective_contract import load,digest,file_hash
 ROOT=Path(__file__).resolve().parents[1]
 
 def install(root):
-    for rel in ['RECEIPTS-v4.md','PLAN.json','SURFACES.json','CENSUS.json','CONTRACTS.md','SPEC.md','PERFORMANCE.md','BUDGETS.json','COVERAGE.json','fixture.json','reference/approved.png','BRAND-ASSETS.json','BRAND-INTEGRATION.md']:
+    for rel in ['RECEIPTS-v4.md','PLAN.json','SURFACES.json','CENSUS.json','CONTRACTS.md','SPEC.md','PERFORMANCE.md','BUDGETS.json','COVERAGE.json','fixture.json','reference/approved.png','BRAND-ASSETS.json','BRAND-INTEGRATION.md','WIDGETS.md']:
         dest=root/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/rel,dest)
 
 def png(w,h):

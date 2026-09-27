@@ -94,7 +94,351 @@
           "keyboard"
         ]
       }
+    ],
+    "S09-W1-T2": [
+      {
+        "surface_id": "UI19",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI77",
+        "states": [
+          "default",
+          "pending-proposal",
+          "historical-snapshot",
+          "unknown-status",
+          "expanded",
+          "empty",
+          "error",
+          "keyboard"
+        ]
+      }
+    ],
+    "S11-W1-T2": [
+      {
+        "surface_id": "UI27",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI28",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI29",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI30",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI31",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content",
+          "runner-summary",
+          "output-only",
+          "partial-output",
+          "zero-tests",
+          "unlinked-revision"
+        ]
+      },
+      {
+        "surface_id": "UI79",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI80",
+        "states": [
+          "default",
+          "no-docs",
+          "denied-path",
+          "mdx-as-text",
+          "loading",
+          "error",
+          "keyboard"
+        ]
+      },
+      {
+        "surface_id": "UI81",
+        "states": [
+          "default",
+          "no-terminal",
+          "existing-terminal",
+          "error",
+          "keyboard"
+        ]
+      },
+      {
+        "surface_id": "UI82",
+        "states": [
+          "default",
+          "replay-confirm",
+          "unsupported-workdir",
+          "request-uncertain",
+          "pr-draft-review",
+          "capability-unavailable",
+          "keyboard"
+        ]
+      }
+    ],
+    "S18-W1-T2": [
+      {
+        "surface_id": "UI55",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content",
+          "needs-input",
+          "failed",
+          "result-unknown",
+          "expanded",
+          "stop-error"
+        ]
+      },
+      {
+        "surface_id": "UI78",
+        "states": [
+          "default",
+          "empty",
+          "mixed-scopes",
+          "source-mismatch",
+          "expanded",
+          "error",
+          "keyboard"
+        ]
+      }
+    ],
+    "S25-W0-T1": [
+      {
+        "surface_id": "UI06",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI07",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI08",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI19",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI23",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI28",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI50",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI55",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      }
+    ],
+    "S25-W0-T2": [
+      {
+        "surface_id": "UI06",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI07",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI08",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI19",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI23",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI28",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI50",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      },
+      {
+        "surface_id": "UI55",
+        "states": [
+          "default",
+          "empty",
+          "loading",
+          "error",
+          "keyboard",
+          "long-content"
+        ]
+      }
     ]
   },
-  "conditional_state_note": "Live S20-W2 states are tested only by the W2 verification after authoritative prerequisites; release never claims live availability without that receipt for its connected candidate. W1/unavailable remains independent. Reuse one capture only for consumers actually visible in that state."
+  "conditional_state_note": "Live S20-W2 states are tested only by the W2 verification after authoritative prerequisites; release never claims live availability without that receipt for its connected candidate. W1/unavailable remains independent. Reuse one capture only for consumers actually visible in that state.",
+  "widget_case_note": "WK01–WK28 in WIDGETS.md are product behavior scenarios, not automated successes. Newly added consumers are required at local verification and final release, not prerequisites of pilot W0. Native pane lifecycle is also verified in Electron under S16/S25."
 }

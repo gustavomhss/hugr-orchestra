@@ -25,6 +25,11 @@ def render(plan):
             if n.get('children'): lines += ['Filhos: '+', '.join(n['children'])+'.']
             for key in ('write_paths','exclude_paths','read_paths','resource_locks','steps','cases'):
                 if n.get(key):lines += ['\n### '+key+'\n'+'\n'.join('- '+s for s in n[key])]
+            if n.get('widget_contracts'):
+                base='https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/WIDGETS.md'
+                lines += ['\nWidgets decididos: ' + ' · '.join('['+wid+']('+base+'#'+wid.lower()+')' for wid in n['widget_contracts']) + '. Fonte, ações, estados e limites estão nessas seções; manter os cinco axiomas abaixo.']
+            if n.get('widget_cases'):
+                lines += ['Casos de produto atribuídos: ' + ', '.join('`'+case+'`' for case in n['widget_cases']) + '. Verificar na fatia/estágio desta unidade; testes do plano não contam como execução desses cenários.']
             if n.get('verification_tier'):
                 lines += ['\nNível de verificação: **'+n['verification_tier']+'**. Reserva de hardware somente na fase `collect`; preparo/revisão não reservam a máquina.']
             if n.get('dependency_inputs'):

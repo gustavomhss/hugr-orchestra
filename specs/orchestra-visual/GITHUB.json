@@ -4,7 +4,7 @@
   "plan_branch": "visual-migration-plan",
   "entry_commit": "d627eaf1518ef9fba8b3db5ee9baee6c49e75021",
   "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/EXECUTE.md",
-  "publication": "PA-01–PA-06 repaired in existing contracts; reconcile/readback is recorded in PUBLICATION.json.",
+  "publication": "Widget contracts closed in WIDGETS.md; current complete readback recorded in PUBLICATION.json.",
   "native_relationships_applied_by_this_session": true,
   "native_relationships_note": "Verified PA repair readback: https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36283487121",
   "issues": {
@@ -326,7 +326,7 @@
     "https://docs.github.com/en/rest/issues/issue-dependencies"
   ],
   "api_version": "2026-03-10",
-  "contract_revision": "4.2",
+  "contract_revision": "4.3",
   "package_version": "4.1",
   "v4_complete_package_published_to_repo": true,
   "v4_ticket_bodies_synchronized": true,

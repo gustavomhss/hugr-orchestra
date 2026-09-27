@@ -1,0 +1,27 @@
+{
+  "kind": "declared-contract-analysis-not-product",
+  "contract_revision": "4.3",
+  "nodes": 143,
+  "tasks": 66,
+  "criteria": 1974,
+  "surfaces": 82,
+  "unordered_pairs": 1009,
+  "conflicts": [
+    {
+      "tasks": [
+        "S19-W2-T1",
+        "S20-W2-T1"
+      ],
+      "common_locks": [
+        "public-api-registration-and-client-codegen"
+      ]
+    }
+  ],
+  "first_ready": [
+    "S01-W1-T1"
+  ],
+  "product_tasks_approved": 0,
+  "runtime_dependency_changes": 0,
+  "product_execution": "NOT_RUN",
+  "limits": "Scopes are declared; no complete codebase reachability, runtime build or benchmark was executed."
+}

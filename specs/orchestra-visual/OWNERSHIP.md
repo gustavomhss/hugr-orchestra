@@ -1,4 +1,4 @@
-# OWNERSHIP — projeção canônica v4.2
+# OWNERSHIP — projeção canônica v4.3
 
 Fonte única: PLAN.json. Cada task herda seu write scope explicitamente; grants de codegen são condicionais a lease serial.
 
@@ -20,6 +20,7 @@ Escrita:
 - `specs/orchestra-visual/coverage-manifest.json`
 - `specs/orchestra-visual/BRAND-ASSETS.json`
 - `specs/orchestra-visual/BRAND-INTEGRATION.md`
+- `specs/orchestra-visual/WIDGETS.md`
 
 ## S02 — Fixture, medição e budgets que realmente reprovam
 Escrita:
@@ -207,6 +208,7 @@ Escrita:
 - `packages/app/src/pages/session/orchestra-tasks*`
 - `packages/app/src/pages/session/orchestra-activity.tsx`
 - `specs/orchestra-visual/evidence/S18/**`
+- `packages/app/src/pages/session/orchestra-activity.test.tsx`
 
 ## S19 — Contexto, recursos e Own com read boundary explícita
 Escrita:
@@ -270,6 +272,8 @@ Escrita:
 - `packages/storybook/.storybook/**`
 - `specs/orchestra-visual/DELIVERY.md`
 - `specs/orchestra-visual/evidence/S25/**`
+- `packages/app/src/pages/session/use-session-commands.tsx`
+- `packages/app/src/pages/session/use-session-commands.test.tsx`
 
 ## Grants compartilhados serializados
 - public-api-registration-and-client-codegen: S19-W2-T1, S20-W2-T1; status remote-paths-confirmed-local-footprint-pending

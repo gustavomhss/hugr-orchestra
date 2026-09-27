@@ -1,6 +1,6 @@
 # SPEC — aparência e comportamento normativos
 
-Versão do pacote: **4.1**. Layout, tema e acabamento aprovados permanecem intactos. A marca HuGR agora usa o kit oficial fornecido; a substituição é localizada ao símbolo ilustrativo, conforme BRAND-INTEGRATION.md.
+Versão do contrato: **4.3**. Layout, tema e acabamento aprovados permanecem intactos. A marca HuGR agora usa o kit oficial fornecido; a substituição é localizada ao símbolo ilustrativo, conforme BRAND-INTEGRATION.md.
 
 Referência de layout: `reference/approved.png`, 1672×941, SHA-256 `e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d`. Aparência aprovada pelo usuário; medidas/tokens são defaults de engenharia derivados do raster. Não voltar às explorações Claude/Replit nem regenerar o master. Não são camadas Figma ou CSS original.
 
@@ -11,6 +11,10 @@ Escopo: toda UI desktop/web do Orchestra. Conteúdo web do Dock, console/site/ma
 `BRAND-INTEGRATION.md` e `BRAND-ASSETS.json` são normativos. O kit íntegro está em `vendor/HuGR-Brand-Kit-v1.0/`. Use seus SVGs aprovados, sem reconstruir o elo ilustrativo do mock. O master da interface permanece intacto; o novo símbolo é a única exceção de marca registrada para a comparação. Não mascarar a sidebar inteira.
 
 O nome do produto continua **Orchestra**, em texto separado do símbolo HuGR. Não criar um lockup vetorial nem modificar o wordmark HuGR. Tema, fontes, espaçamentos de conteúdo e contraste da Orchestra continuam nesta SPEC; não importar globalmente os tokens de tema do kit. A paisagem de montanhas não foi fornecida como asset independente por esse kit.
+
+## Widgets: semântica e integração fechadas
+
+Leia [WIDGETS.md](WIDGETS.md) para W01–W09: fonte/campos/identidade, handlers, panes, estados, limites e WK01–WK28. Esse contrato especifica o comportamento resumido em U01–U14 abaixo; não altera o master, os tokens ou os budgets. Checklist é plano informado pelo agente; testes usam output real; Docs é local; PR é handoff explícito revisável no composer. Nenhum fallback genérico autoriza omitir um consumer obrigatório.
 
 ## 3. Alvo visual implementável
 

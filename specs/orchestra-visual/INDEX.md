@@ -4,7 +4,7 @@
 
 Índice de navegação, não nova especificação. Axiomas, permissões e desbloqueio vêm de PLAN.json/EXECUTE.md. As relações abaixo não marcam trabalho como concluído. Nenhuma nova task foi criada.
 
-Contrato: `4.2`; SHA-256 de PLAN.json: `1735d28ddd2dfc51a935b473694fd829adf5ae1c092986efe5e57ce6213e5734`. Snapshot do código: `links conferidos no checkout fornecido; base histórica das âncoras 30d951fcc4a09e708768551c7c6fd38a0efe3da8`.
+Contrato: `4.3`; SHA-256 de PLAN.json: `45159c61d0cd1a67d22e8d35149a2f4567855db9325870cfcf1dc472c4211b1f`. Snapshot do código: `links conferidos no checkout fornecido; base histórica das âncoras 30d951fcc4a09e708768551c7c6fd38a0efe3da8`.
 
 **Raízes:** caminhos `packages/...` partem de `$REPO`; links para specs, tools e provas partem de `$PLAN_ROOT = $REPO/specs/orchestra-visual`. Um caminho de leitura não concede escrita. Um padrão com `*` não é um arquivo existente. Presença não prova reachability, backend live ou runtime testado.
 
@@ -345,7 +345,7 @@ Provas: `evidence/I10/W1-T1/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E1 / #130](https://github.com/gmhelmold/HuGR-Orchestra/issues/130) → [I01 / #134](https://github.com/gmhelmold/HuGR-Orchestra/issues/134) → [S01 / #144](https://github.com/gmhelmold/HuGR-Orchestra/issues/144)
 **Dependências de entrada declaradas:** nenhuma neste nó. Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Inventário auditável e bindings de capacidade usados por todos os implementadores.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`AGENTS.md`](../../AGENTS.md) — presente no snapshot; raiz `$REPO`
@@ -367,6 +367,7 @@ specs/orchestra-visual/evidence/S01/**
 specs/orchestra-visual/coverage-manifest.json
 specs/orchestra-visual/BRAND-ASSETS.json
 specs/orchestra-visual/BRAND-INTEGRATION.md
+specs/orchestra-visual/WIDGETS.md
 ```
 **Registros de cobertura:** consulte SURFACES.json; não deduzir cobertura só por nome de arquivo
 **Provas da frente:** `evidence/S01/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
@@ -403,7 +404,7 @@ Provas: `evidence/S01/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E1 / #130](https://github.com/gmhelmold/HuGR-Orchestra/issues/130) → [I01 / #134](https://github.com/gmhelmold/HuGR-Orchestra/issues/134) → [S02 / #145](https://github.com/gmhelmold/HuGR-Orchestra/issues/145)
 **Dependências de entrada declaradas:** [S01](#s01). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Harness de regressão e fixture reutilizável; sem novo runtime de benchmark.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/e2e/performance/README.md`](../../packages/app/e2e/performance/README.md) — presente no snapshot; raiz `$REPO`
@@ -610,7 +611,7 @@ Provas: `evidence/S05/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I03 / #136](https://github.com/gmhelmold/HuGR-Orchestra/issues/136) → [S06 / #149](https://github.com/gmhelmold/HuGR-Orchestra/issues/149)
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S05-W1-T1](#s05-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Shell reutilizável, sem alteração do modelo de sessão.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/app.tsx`](../../packages/app/src/app.tsx) — presente no snapshot; raiz `$REPO`
@@ -785,15 +786,21 @@ Provas: `evidence/S08/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I04 / #137](https://github.com/gmhelmold/HuGR-Orchestra/issues/137) → [S09 / #152](https://github.com/gmhelmold/HuGR-Orchestra/issues/152)
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Transcript operacional fiel, selecionável e leve.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/pages/session.tsx`](../../packages/app/src/pages/session.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/session-ui/src/components/session-turn.tsx`](../../packages/session-ui/src/components/session-turn.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/schema/src/session-todo.ts`](../../packages/schema/src/session-todo.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/opencode/src/tool/todo.ts`](../../packages/opencode/src/tool/todo.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/opencode/src/session/todo.ts`](../../packages/opencode/src/session/todo.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/context/directory-sync.ts`](../../packages/app/src/context/directory-sync.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/session-ui/src/components/message-part.tsx`](../../packages/session-ui/src/components/message-part.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/timeline/message-timeline.tsx`](../../packages/app/src/pages/session/timeline/message-timeline.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/session-ui/package.json`](../../packages/session-ui/package.json) — presente no snapshot; raiz `$REPO`
 - [`packages/opencode/src/plugin/hugr-composer/tools.ts`](../../packages/opencode/src/plugin/hugr-composer/tools.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/opencode/src/tool/read.ts`](../../packages/opencode/src/tool/read.ts) — presente no snapshot; raiz `$REPO`
+- `packages/app/src/pages/session/timeline/orchestra-checklist.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
 ```text
@@ -815,7 +822,7 @@ specs/orchestra-visual/evidence/S09/**
 ```text
 packages/session-ui/src/components/message-file*
 ```
-**Registros de cobertura:** `UI19` Timeline virtualizada [ui-surface], `UI20` Message/tool render [read-anchor], `UI21` HuGR Composer resultados [read-anchor], `UI22` Read tool resultados [read-anchor], `UI66` Shared session styles [read-anchor]
+**Registros de cobertura:** `UI19` Timeline virtualizada [ui-surface], `UI20` Message/tool render [read-anchor], `UI21` HuGR Composer resultados [read-anchor], `UI22` Read tool resultados [read-anchor], `UI66` Shared session styles [read-anchor], `UI77` Compact todowrite checklist consumer [ui-surface]
 **Provas da frente:** `evidence/S09/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
 
 <a id="s09-w1"></a>
@@ -850,11 +857,14 @@ Provas: `evidence/S09/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I04 / #137](https://github.com/gmhelmold/HuGR-Orchestra/issues/137) → [S10 / #153](https://github.com/gmhelmold/HuGR-Orchestra/issues/153)
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Composer real polido com todas as funções existentes.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/context/prompt.tsx`](../../packages/app/src/context/prompt.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session.tsx`](../../packages/app/src/pages/session.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/components/prompt-input/submit.ts`](../../packages/app/src/components/prompt-input/submit.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/components/prompt-input/contracts.ts`](../../packages/app/src/components/prompt-input/contracts.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/session-ownership.ts`](../../packages/app/src/pages/session/session-ownership.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/prompt-input.tsx`](../../packages/app/src/components/prompt-input.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/prompt-input-v2.tsx`](../../packages/app/src/components/prompt-input-v2.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/dialog-subagent-models.tsx`](../../packages/app/src/components/dialog-subagent-models.tsx) — presente no snapshot; raiz `$REPO`
@@ -906,17 +916,23 @@ Provas: `evidence/S10/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I04 / #137](https://github.com/gmhelmold/HuGR-Orchestra/issues/137) → [S11 / #154](https://github.com/gmhelmold/HuGR-Orchestra/issues/154)
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Inspeção real e evidência acionável integradas à conversa.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/context/file.tsx`](../../packages/app/src/context/file.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/context/terminal.tsx`](../../packages/app/src/context/terminal.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/session/open-in-app-v2.tsx`](../../packages/app/src/components/session/open-in-app-v2.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/opencode/src/tool/shell.ts`](../../packages/opencode/src/tool/shell.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/v2/review-panel-v2.tsx`](../../packages/app/src/pages/session/v2/review-panel-v2.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/components/prompt-input/submit.ts`](../../packages/app/src/components/prompt-input/submit.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/file-tree-v2.tsx`](../../packages/app/src/components/file-tree-v2.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/review-tab.tsx`](../../packages/app/src/pages/session/review-tab.tsx) — presente no snapshot; raiz `$REPO`
-- [`packages/app/src/pages/session/v2/review-panel-v2.tsx`](../../packages/app/src/pages/session/v2/review-panel-v2.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/components/terminal.tsx`](../../packages/app/src/components/terminal.tsx) — presente no snapshot; raiz `$REPO`
 - `packages/app/src/pages/session/orchestra-evidence.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
+- `packages/app/src/pages/session/orchestra-evidence-files.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
+- `packages/app/src/pages/session/orchestra-evidence-docs.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
+- [`packages/app/src/pages/session/terminal-panel.tsx`](../../packages/app/src/pages/session/terminal-panel.tsx) — presente no snapshot; raiz `$REPO`
+- `packages/app/src/pages/session/orchestra-evidence-actions.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
 ```text
@@ -937,7 +953,7 @@ packages/app/src/pages/session/v2/session-file-browser*
 packages/app/src/components/session/open-in-app*
 specs/orchestra-visual/evidence/S11/**
 ```
-**Registros de cobertura:** `UI27` Lista de arquivos/tree [ui-surface], `UI28` Review diff [ui-surface], `UI29` Review V2/no-git/empty [ui-surface], `UI30` Terminal e PTY [ui-surface], `UI31` Evidência de testes [ui-surface]
+**Registros de cobertura:** `UI27` Lista de arquivos/tree [ui-surface], `UI28` Review diff [ui-surface], `UI29` Review V2/no-git/empty [ui-surface], `UI30` Terminal e PTY [ui-surface], `UI31` Evidência de testes [ui-surface], `UI79` Dock Files local pane [ui-surface], `UI80` Dock Docs local pane [ui-surface], `UI81` Dock Terminal existing-PTY pane [ui-surface], `UI82` Completion action strip and confirmation [ui-surface]
 **Provas da frente:** `evidence/S11/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
 
 <a id="s11-w1"></a>
@@ -1162,7 +1178,7 @@ Provas: `evidence/S14/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S06-W1-T1](#s06-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Dock no lugar aprovado com UI real.
 **Fronteiras externas registradas:** `[{"ref": "PR#12", "type": "integration-review", "hard": false, "rule": "A base já tem createAppDock; revisar diferenças da PR sem exigir ou efetuar merge integral."}]`. Não presumir prontidão pelo título da issue.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/desktop/src/preload/types.ts`](../../packages/desktop/src/preload/types.ts) — presente no snapshot; raiz `$REPO`
@@ -1213,7 +1229,7 @@ Provas: `evidence/S15/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I06 / #139](https://github.com/gmhelmold/HuGR-Orchestra/issues/139) → [S16 / #159](https://github.com/gmhelmold/HuGR-Orchestra/issues/159)
 **Dependências de entrada declaradas:** [S01](#s01), [S02](#s02). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Bridge nativa mínima, segura e testada para o novo rail.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/pages/session/apps-panel.tsx`](../../packages/app/src/pages/session/apps-panel.tsx) — presente no snapshot; raiz `$REPO`
@@ -1267,12 +1283,14 @@ Provas: `evidence/S16/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I07 / #140](https://github.com/gmhelmold/HuGR-Orchestra/issues/140) → [S17 / #160](https://github.com/gmhelmold/HuGR-Orchestra/issues/160)
 **Dependências de entrada declaradas:** [S01](#s01), [S02](#s02). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Read model leve de Tasks/Atividade usando dados existentes.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/opencode/src/tool/task.ts`](../../packages/opencode/src/tool/task.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/context/sync.tsx`](../../packages/app/src/context/sync.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/context/server-sync.tsx`](../../packages/app/src/context/server-sync.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/context/janitor.tsx`](../../packages/app/src/context/janitor.tsx) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/session/apps-panel.tsx`](../../packages/app/src/pages/session/apps-panel.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/tasks-data.ts`](../../packages/app/src/pages/session/tasks-data.ts) — presente no snapshot; raiz `$REPO`
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
@@ -1282,7 +1300,7 @@ packages/app/src/pages/session/tasks-data.test.ts
 packages/app/src/pages/session/orchestra-activity-data*
 specs/orchestra-visual/evidence/S17/**
 ```
-**Registros de cobertura:** `UI54` Tasks data [read-anchor], `UI56` Mixed activity card [read-anchor]
+**Registros de cobertura:** `UI54` Tasks data [read-anchor], `UI56` Typed activity read model source [read-anchor]
 **Provas da frente:** `evidence/S17/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
 
 <a id="s17-w1"></a>
@@ -1317,13 +1335,14 @@ Provas: `evidence/S17/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I07 / #140](https://github.com/gmhelmold/HuGR-Orchestra/issues/140) → [S18 / #161](https://github.com/gmhelmold/HuGR-Orchestra/issues/161)
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S17](#s17), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Painéis de execução úteis, fiéis e verdadeiros.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/pages/session/tasks-data.ts`](../../packages/app/src/pages/session/tasks-data.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/session-side-panel.tsx`](../../packages/app/src/pages/session/session-side-panel.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/use-session-commands.tsx`](../../packages/app/src/pages/session/use-session-commands.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/app/src/pages/session/tasks-panel.tsx`](../../packages/app/src/pages/session/tasks-panel.tsx) — presente no snapshot; raiz `$REPO`
+- `packages/app/src/pages/session/orchestra-activity.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
 ```text
@@ -1331,8 +1350,9 @@ packages/app/src/pages/session/tasks-panel.tsx
 packages/app/src/pages/session/orchestra-tasks*
 packages/app/src/pages/session/orchestra-activity.tsx
 specs/orchestra-visual/evidence/S18/**
+packages/app/src/pages/session/orchestra-activity.test.tsx
 ```
-**Registros de cobertura:** `UI55` Tasks panel [ui-surface]
+**Registros de cobertura:** `UI55` Tasks panel [ui-surface], `UI78` Typed Activity card consumer [ui-surface]
 **Provas da frente:** `evidence/S18/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
 
 <a id="s18-w1"></a>
@@ -1368,7 +1388,7 @@ Provas: `evidence/S18/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S01](#s01), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Contexto polido + read-boundary planejada/implementada onde suportada; bloqueio live explícito.
 **Fronteiras externas registradas:** `[{"ref": "#109", "type": "read-boundary", "hard": true, "rule": "Exigida para Own live; unavailable UI independe."}, {"ref": "#112", "type": "catalog", "hard": true, "rule": "Catálogo instalado para unidade canônica."}, {"ref": "#108", "type": "context", "hard": true, "rule": "ContextRecord verificado."}, {"ref": "#114", "type": "durable-records", "hard": true, "rule": "Leitura durável; não inferir de texto."}]`. Não presumir prontidão pelo título da issue.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`specs/hugr-maestro/own-protocol.md`](../../specs/hugr-maestro/own-protocol.md) — presente no snapshot; raiz `$REPO`
@@ -1447,7 +1467,7 @@ Provas: `evidence/S19/W2-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S01](#s01), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Governança exposta com status real e fronteiras preservadas.
 **Fronteiras externas registradas:** `[{"ref": "#106", "type": "approval-authority", "hard": true, "rule": "Exigida para enablement, não para UI unavailable."}, {"ref": "#114", "type": "durable-records", "hard": true, "rule": "Exact durable reader."}, {"ref": "#113", "type": "hardening", "hard": true, "rule": "Fechar hardening aplicável antes de habilitar."}]`. Não presumir prontidão pelo título da issue.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/opencode/src/tool/maestro-approval.ts`](../../packages/opencode/src/tool/maestro-approval.ts) — presente no snapshot; raiz `$REPO`
@@ -1523,7 +1543,7 @@ Provas: `evidence/S20/W2-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I08 / #141](https://github.com/gmhelmold/HuGR-Orchestra/issues/141) → [S21 / #164](https://github.com/gmhelmold/HuGR-Orchestra/issues/164)
 **Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Janitor íntegro visualmente integrado.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/opencode/src/janitor/scan.ts`](../../packages/opencode/src/janitor/scan.ts) — presente no snapshot; raiz `$REPO`
@@ -1574,7 +1594,7 @@ Provas: `evidence/S21/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E4 / #133](https://github.com/gmhelmold/HuGR-Orchestra/issues/133) → [I09 / #142](https://github.com/gmhelmold/HuGR-Orchestra/issues/142) → [S22 / #165](https://github.com/gmhelmold/HuGR-Orchestra/issues/165)
 **Dependências de entrada declaradas:** [S01](#s01). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Todos os fluxos e estados legíveis, localizados e acessíveis.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/src/context/language.tsx`](../../packages/app/src/context/language.tsx) — presente no snapshot; raiz `$REPO`
@@ -1624,7 +1644,7 @@ Provas: `evidence/S22/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E4 / #133](https://github.com/gmhelmold/HuGR-Orchestra/issues/133) → [I09 / #142](https://github.com/gmhelmold/HuGR-Orchestra/issues/142) → [S23 / #166](https://github.com/gmhelmold/HuGR-Orchestra/issues/166)
 **Dependências de entrada declaradas:** [S02](#s02), [S06](#s06), [S07](#s07), [S08](#s08), [S09](#s09), [S10](#s10), [S11](#s11), [S12](#s12), [S13](#s13), [S14](#s14), [S15](#s15), [S16](#s16), [S17](#s17), [S18](#s18), [S19-W1](#s19-w1), [S20-W1](#s20-w1), [S21](#s21), [S25-W1-T1](#s25-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Relatório reproduzível de leveza e fluidez; nenhuma promessa sem medição.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`packages/app/e2e/performance/README.md`](../../packages/app/e2e/performance/README.md) — presente no snapshot; raiz `$REPO`
@@ -1673,7 +1693,7 @@ Provas: `evidence/S23/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E4 / #133](https://github.com/gmhelmold/HuGR-Orchestra/issues/133) → [I09 / #142](https://github.com/gmhelmold/HuGR-Orchestra/issues/142) → [S24 / #167](https://github.com/gmhelmold/HuGR-Orchestra/issues/167)
 **Dependências de entrada declaradas:** [S06](#s06), [S07](#s07), [S08](#s08), [S09](#s09), [S10](#s10), [S11](#s11), [S12](#s12), [S13](#s13), [S14](#s14), [S15](#s15), [S16](#s16), [S18](#s18), [S19-W1](#s19-w1), [S20-W1](#s20-w1), [S21](#s21), [S22](#s22), [S25-W1-T1](#s25-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Acabamento examinado em todas as superfícies; feedback do usuário não reinventa a direção.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - [`SURFACES.json`](SURFACES.json) — arquivo/pasta do plano; raiz `$PLAN_ROOT`
@@ -1722,7 +1742,7 @@ Provas: `evidence/S24/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 **Caminho:** #215 → [E4 / #133](https://github.com/gmhelmold/HuGR-Orchestra/issues/133) → [I10 / #143](https://github.com/gmhelmold/HuGR-Orchestra/issues/143) → [S25 / #168](https://github.com/gmhelmold/HuGR-Orchestra/issues/168)
 **Dependências de entrada declaradas:** nenhuma neste nó. Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Migração integrada e reproduzível, pronta para uso com estado de capacidades transparente.
-**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
+**Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json) · [`WIDGETS.md`](WIDGETS.md)
 
 **Entradas mapeadas de código / fontes (não são todas permissões de edição):**
 - `packages/app/src/pages/session/orchestra-*` — **padrão de caminho**, não um arquivo literal
@@ -1743,6 +1763,8 @@ packages/desktop/package.json
 packages/storybook/.storybook/**
 specs/orchestra-visual/DELIVERY.md
 specs/orchestra-visual/evidence/S25/**
+packages/app/src/pages/session/use-session-commands.tsx
+packages/app/src/pages/session/use-session-commands.test.tsx
 ```
 **Registros de cobertura:** `UI14` ConnectionGate/offline/startup [ui-surface], `UI15` Router e server identity [ui-surface], `UI16` Chrome da janela [ui-surface], `UI67` Preferences/wiring [ui-surface]
 **Provas da frente:** `evidence/S25/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
