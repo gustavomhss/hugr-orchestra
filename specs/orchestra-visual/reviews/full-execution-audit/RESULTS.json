@@ -1,0 +1,110 @@
+{
+  "kind": "adversarial-tooling-audit-NOT-product-evidence",
+  "audited_plan_commit": "3c97621681b119105be8b7982ba663b0d701fd83",
+  "findings_not_fixes": true,
+  "canonical_mutations": false,
+  "results": {
+    "census_boundary": {
+      "normal_unclassified_errors": ["unclassified discovered UI packages/app/src/app.tsx"],
+      "empty_scan_roots_errors": [],
+      "nonexistent_scan_root_errors": [],
+      "trailing_slash_scan_roots_errors": [],
+      "valid_classification_errors": [],
+      "kind": "isolated-Git-negative-controls"
+    },
+    "ancestor_stage_metadata": {
+      "parent_mutation": {"id": "S25", "criterion_id": "S25-QUALITY_STANDARDS-01", "stage": "NOT-A-VALID-STAGE", "axiom_application": "All parent acceptance is required immediately, before producer work."},
+      "plan_errors": [],
+      "producer_effective_digest_unchanged": true,
+      "wrong_task_stage_rejected": true,
+      "qualification": "Contradictory metadata in mutated fixture; no current textual dependency cycle alleged."
+    },
+    "receipt_freshness_boundary": {
+      "initial_direct_errors": [],
+      "later_clean_commit_direct_errors": [],
+      "later_selector_source_errors": ["STALE: relevant source changed since verification: packages/app/src/pages/session/tasks-data.ts"],
+      "selector_invalid_claim": true,
+      "qualification": "Direct validator verifies historical attribution but labels source verified; resume/select correctly refuse freshness. No end-to-end stale approval bypass."
+    },
+    "explicit_synthetic_evidence": {
+      "receipt_id": "S25-W1-T2",
+      "with_real_isolated_git_check_errors": [],
+      "raw_synthetic": true,
+      "capture_manifest_synthetic": true,
+      "proof_log": "Synthetic evidence for a schema test. NOT product proof.",
+      "qualification": "Submission-boundary hardening, not discovery of real falsified product evidence. Low-level evaluators must still support synthetic unit fixtures; reject test-only markers only in product acceptance mode."
+    },
+    "widget_hash_granularity": {
+      "changed_tasks": ["S01-W1-T1","S01-W1-T2","S02-W1-T1","S02-W1-T2","S06-W1-T1","S06-W1-T2","S09-W1-T1","S09-W1-T2","S10-W1-T1","S10-W1-T2","S11-W1-T1","S11-W1-T2","S15-W1-T1","S15-W1-T2","S16-W1-T1","S16-W1-T2","S17-W1-T1","S17-W1-T2","S18-W1-T1","S18-W1-T2","S19-W1-T1","S19-W1-T2","S20-W1-T1","S20-W1-T2","S21-W1-T1","S21-W1-T2","S22-W1-T1","S22-W1-T2","S23-W1-T1","S23-W1-T2","S24-W1-T1","S24-W1-T2","S25-W1-T1","S25-W1-T2","S19-W2-T1","S19-W2-T2","S20-W2-T1","S20-W2-T2","S25-W0-T1","S25-W0-T2"],
+      "changed_count": 40,
+      "unrelated_declared_widget_tasks": ["S02-W1-T1","S02-W1-T2","S06-W1-T1","S06-W1-T2","S09-W1-T1","S09-W1-T2","S15-W1-T1","S15-W1-T2","S16-W1-T1","S16-W1-T2","S17-W1-T1","S17-W1-T2","S18-W1-T1","S18-W1-T2","S19-W1-T1","S19-W1-T2","S20-W1-T1","S20-W1-T2","S21-W1-T1","S21-W1-T2","S23-W1-T1","S23-W1-T2","S19-W2-T1","S19-W2-T2","S20-W2-T1","S20-W2-T2","S25-W0-T1","S25-W0-T2"],
+      "unrelated_count": 28,
+      "qualification": "Conservative invalidation not a security bypass. Comment-only mutation tests identity; semantic edit to W07 has the same cone. No claim all receipts need tests rerun."
+    },
+    "regression_control": {"input_8_to_49ms": "FAIL"},
+    "package_integrity": {"listed_files": 505, "hash_mismatches": [], "unlisted_files": [], "master_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d"}
+  },
+  "inventory": {
+    "kind": "read-only-publication-and-declared-contract-audit",
+    "issue_count": 40,
+    "canonical_body_mismatches": [],
+    "parent_links": 39,
+    "parent_difference": [],
+    "dependency_links": 59,
+    "dependency_difference": [],
+    "nodes": 143,
+    "tasks": 66,
+    "wps": 38,
+    "criteria": 1974,
+    "unordered_pairs_checked_against_source_tree": 1009,
+    "declared_conflicts": [{"tasks": ["S19-W2-T1", "S20-W2-T1"], "locks": ["public-api-registration-and-client-codegen"]}],
+    "pilot_prerequisite_tasks": ["S01-W1-T1","S01-W1-T2","S02-W1-T1","S02-W1-T2","S03-W1-T1","S04-W1-T1","S05-W1-T1","S06-W1-T1","S15-W1-T1","S16-W1-T1","S22-W1-T1"],
+    "graph_walk": {"with_failure_and_retry": true, "all_tasks_traversed": true, "rounds_equal_duration": 23, "not_a_delivery_estimate": true},
+    "packet_size_bytes": {"min": 22398, "median": 60493.0, "max": 101397, "source": "Pinned earlier executor-aids report; no new token measurement"},
+    "files_in_pr": 507,
+    "files_outside_specs": [".github/workflows/orchestra-audit-snapshot.yml"],
+    "worktree_product_checks": "NOT_RUN",
+    "proofs_are_synthetic": true,
+    "pr_readback_head": "b6c31d6a9c7dca084b9e4bfc55d588dfb07046e2",
+    "temporary_audit_workflow_note": "Readback included the temporary audit snapshot workflow created after the audited pinned revision; this is removed before delivery."
+  },
+  "existing_ci": {
+    "job_id": 108568928270,
+    "run_id": 36301102952,
+    "head_sha": "3c97621681b119105be8b7982ba663b0d701fd83",
+    "conclusion": "failure",
+    "log_sha256": "ec49b97607c8d02fdbe4ced54aaed4411e343a002150955a6ae1cd7e77e9d74b",
+    "decisive_log_lines": [
+      {"line": 36, "text": "2026-09-27T06:48:03.0737087Z   fetch-depth: 0"},
+      {"line": 5099, "text": "2026-09-27T06:48:43.1520197Z own-snapshot-guard: FAIL"},
+      {"line": 5101, "text": "2026-09-27T06:48:43.1521230Z   ✗ snapshot sourceRevision is not a Git commit reachable from HEAD: 508f7770901d8ba950ee403e198249140491e421"},
+      {"line": 5102, "text": "2026-09-27T06:48:43.1622586Z ##[error]Process completed with exit code 1."}
+    ],
+    "base_own_snapshot_source_revision": "508f7770901d8ba950ee403e198249140491e421",
+    "base_source_commit": "1a235323361717d13a44d3c184bad13649f59e60",
+    "qualification": "Same OWN sourceRevision is present in dev; no Atlas/Genesis source file changed by the visual-plan PR. Not an interface regression. Failed guard ran with fetch-depth 0."
+  },
+  "testing": {
+    "unchanged_suite_tests": 248,
+    "github_existing_suite_run": 36301357365,
+    "github_suite_exit": 0,
+    "local_suite_exit": 0,
+    "local_log_sha256": "0a7dc7eaa16f3e332f38ba92ef698afed49d5e6a637b5d67c0de583b4c9639bc",
+    "diagnostics_are_separate_from_suite": true,
+    "new_product_tests": 0
+  },
+  "source_fingerprints": {
+    "PLAN.json": "9059703f0e03a3cac56435b71dd09f9124cb8f5a28f1854a9c26ca307b8b4e78",
+    "SURFACES.json": "d6100b43ff7289ba3fb71f2080b9a295f41688c5e97d3117ea0487162124f434",
+    "CENSUS.json": "3546d17e7ed78ebed7fe8ea67a00a50280644b0360f3164d6434e482158f2b93",
+    "BUDGETS.json": "694c764cd15ff85697f8dc4ee93852f106cf14cb00c06a472ccab7078f05230f",
+    "WIDGETS.md": "ce86195eed813291aad0840b4300a5afc0348ef56a374e20ed3c0ae57cc5da3f",
+    "COVERAGE.json": "5a11374ff085a415f46d9a2943e6b7be2db3e46336b0e9f8ae06e839e79b85c0",
+    "tools/census.py": "69c1226ab16c2d17c9939bccab7719e3f7a77aec78627df391c5b1a2d80756e8",
+    "tools/validate_evidence.py": "317fe6e9183469897acac47edde3938797c3eb3c6f028c60253d4a3abea8f6db",
+    "tools/source_proof.py": "03e04ec9a46d601a55a960c6acd8ed53fe948d94e9d113e197e44e4f711fcca9",
+    "tools/select_work.py": "440a6cba2f3c7c1f42bf69ef558e0b2b7ef634dbca5c845cd62ba574f40811d2",
+    "tools/effective_contract.py": "e441be30584424de53122cb0ffe272b036efbd605d78e23921c11e240e541806",
+    "tools/executor.py": "92e02e2882ee0450a856c60d7e57b0f1c707d69ca99f02727984938750edab49"
+  }
+}
