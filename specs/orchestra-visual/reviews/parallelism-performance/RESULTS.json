@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "adversarial-review-not-replacement-plan",
+  "verdict": "REVISE_BEFORE_BROAD_PARALLEL_ROLLOUT",
+  "audited_plan_commit": "d022ec1e281b51a6c8afa5740c6781c01efefb37",
+  "inspected_product_commit": "bde9005056e17d6495ce1270a2f25ca811b69e43",
+  "plan_contract_revision": "4.1",
+  "plan_sha256": "b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2",
+  "source_archive_sha256": "c8653cc7a2dc3f2e1e0f9b85ae0b9eaac0de77b2c100bac87c1eb45161b4599a",
+  "review_independence": "Same assistant, distinct adversarial pass; not an independent external audit.",
+  "product_implementation_changed": false,
+  "canonical_plan_changed": false,
+  "product_build": false,
+  "product_benchmarks": false,
+  "scope": {
+    "core_tests_rerun": 151,
+    "core_test_failures": 0,
+    "navigation_tests_not_rerun": 13,
+    "all_declared_task_nodes_examined": 66,
+    "full_product_checkout": false
+  },
+  "input_fingerprints": {
+    "PLAN.json": "a258676eef3d5f79c15f26728a2558a89e0a4174",
+    "SURFACES.json": "c327c4266390dec5b296b14e5686cc9d8d2bc5d3",
+    "BUDGETS.json": "5d67e4b477dadc299b972502902558fb665c9e6d",
+    "COVERAGE.json": "00906249948e96a40f16e0de8ee489b102483c0b",
+    "tools/select_work.py": "1438ec81032fb7ad18a526606bf618f88efd37f5",
+    "tools/evaluate_performance.py": "b9b3d9128d77283dcb73b8d39fdfd6767b174e88",
+    "tools/visual_coverage.py": "7bba589058b0808447318e1b47de4ea0c8b22433"
+  },
+  "disjointness": {
+    "unordered_task_pairs": 927,
+    "declared_write_conflicts": [
+      {
+        "tasks": [
+          "S19-W2-T1",
+          "S20-W2-T1"
+        ],
+        "common_locks": [
+          "public-api-registration-and-client-codegen"
+        ]
+      }
+    ],
+    "unprotected_declared_write_conflicts_found": 0,
+    "pairs_conflicting_by_scheduler_function": 108,
+    "qualification": "Declared path cones only; not complete checked-out reachability or behavioral independence."
+  },
+  "scheduling": {
+    "host_exclusive_tasks": [
+      "S02-W1-T2",
+      "S03-W1-T2",
+      "S04-W1-T2",
+      "S05-W1-T2",
+      "S06-W1-T2",
+      "S07-W1-T2",
+      "S08-W1-T2",
+      "S09-W1-T2",
+      "S10-W1-T2",
+      "S11-W1-T2",
+      "S12-W1-T2",
+      "S13-W1-T2",
+      "S14-W1-T2",
+      "S15-W1-T2",
+      "S16-W1-T2",
+      "S17-W1-T2",
+      "S18-W1-T2",
+      "S21-W1-T2",
+      "S23-W1-T1",
+      "S23-W1-T2",
+      "S25-W1-T2",
+      "S25-W0-T2"
+    ],
+    "jobs4_rounds_equal_duration": 42,
+    "unlimited_precedence_only_waves": 21,
+    "pilot_prerequisite_tasks": 15,
+    "pilot_selection_round": 19,
+    "pilot_review_round": 25,
+    "assumptions": [
+      "Every task takes one identical unit.",
+      "All external requirements are synthetically satisfied.",
+      "No product PASS is written.",
+      "Not a time, utilization, speedup or delivery estimate."
+    ]
+  },
+  "granularity": {
+    "static_P01_rules": [
+      {
+        "id": "initial_js",
+        "mode": "delta",
+        "min_samples": 5,
+        "min_pairs": 5
+      },
+      {
+        "id": "initial_css",
+        "mode": "delta",
+        "min_samples": 5,
+        "min_pairs": 5
+      },
+      {
+        "id": "new_runtime_dependencies",
+        "mode": "absolute",
+        "min_samples": 5,
+        "min_pairs": 5
+      },
+      {
+        "id": "decoration_transfer",
+        "mode": "absolute",
+        "min_samples": 5,
+        "min_pairs": 5
+      },
+      {
+        "id": "decoration_decode",
+        "mode": "absolute",
+        "min_samples": 5,
+        "min_pairs": 5
+      }
+    ],
+    "P10_consumers": [
+      "S11-W1-T2",
+      "S15-W1-T2",
+      "S16-W1-T2",
+      "S17-W1-T2",
+      "S21-W1-T2",
+      "S23-W1-T2",
+      "S25-W1-T2"
+    ]
+  },
+  "candidate_producer": {
+    "id": "S25-W1-T1",
+    "quality_standards": [
+      "Evidência P01–P12 no SHA final; nenhuma regressão empurrada para depois.",
+      "GateQ01–Q16 em todo app, marca/assets finais e todos estados; código mínimo sem looseends.",
+      "O conjunto de provas identifica a revisão do contrato e o build verificado; revisão fria declara sua independência real."
+    ],
+    "evaluation_stage": {
+      "S25-W1-T1-QUALITY_STANDARDS-01": "S25-W1-T1",
+      "S25-W1-T1-QUALITY_STANDARDS-02": "S25-W1-T1",
+      "S25-W1-T1-QUALITY_STANDARDS-03": "S25-W1-T1"
+    }
+  },
+  "synthetic_performance_probes": {
+    "p03_all_gates": "PASS",
+    "input_p95_ms": {
+      "baseline": 8,
+      "candidate": 49,
+      "ratio": 6.125,
+      "result": "PASS",
+      "classification": "Policy gap, not an arithmetic violation of the current absolute-only budget."
+    },
+    "hot_tab_ms": {
+      "baseline": 10,
+      "candidate": 90,
+      "result": "PASS"
+    },
+    "feedback_ms": {
+      "baseline": 8,
+      "candidate": 40,
+      "result": "PASS"
+    },
+    "input_51ms_overbudget_control": "FAIL",
+    "residual_slope": {
+      "configured_unit": "bytes/minute",
+      "accepted_signed_units_in_code": [
+        "MiB/min",
+        "bytes/min"
+      ],
+      "candidate_values": {
+        "-1000": {
+          "overall": "FAIL",
+          "errors": [
+            "negative measurement invalid for nonnegative unit",
+            "negative measurement invalid for nonnegative unit",
+            "negative measurement invalid for nonnegative unit",
+            "negative measurement invalid for nonnegative unit",
+            "negative measurement invalid for nonnegative unit"
+          ]
+        },
+        "0": {
+          "overall": "PASS",
+          "errors": []
+        },
+        "1": {
+          "overall": "FAIL",
+          "errors": []
+        }
+      },
+      "classification": "Signed-unit mismatch in evaluator; not measured Orchestra memory growth."
+    }
+  },
+  "capture_coverage": {
+    "required_rows_by_task": {
+      "S03-W1-T2": 0,
+      "S04-W1-T2": 11,
+      "S05-W1-T2": 14,
+      "S06-W1-T2": 93,
+      "S07-W1-T2": 55,
+      "S08-W1-T2": 22,
+      "S09-W1-T2": 11,
+      "S10-W1-T2": 33,
+      "S11-W1-T2": 55,
+      "S12-W1-T2": 44,
+      "S13-W1-T2": 55,
+      "S14-W1-T2": 88,
+      "S15-W1-T2": 22,
+      "S18-W1-T2": 11,
+      "S19-W1-T2": 11,
+      "S20-W1-T2": 0,
+      "S21-W1-T2": 11,
+      "S24-W1-T2": 580,
+      "S25-W1-T2": 580,
+      "S19-W2-T2": 11,
+      "S20-W2-T2": 0,
+      "S25-W0-T2": 56
+    },
+    "required_category_with_zero_rows": [
+      "S03-W1-T2",
+      "S20-W1-T2",
+      "S20-W2-T2"
+    ],
+    "S20_unrelated_128px_manifest_errors": [],
+    "S24_same_manifest_negative_control": [
+      "visual coverage incomplete: 580 required captures missing"
+    ]
+  },
+  "findings": [
+    {
+      "id": "PA-01",
+      "severity": "HIGH",
+      "topic": "Task-wide exclusive hardware plus overly broad measurement tiers",
+      "status": "OPEN",
+      "existing_owners": ["S02", "S23", "S25"]
+    },
+    {
+      "id": "PA-02",
+      "severity": "HIGH",
+      "topic": "Whole-stage readiness dependencies and pilot priority",
+      "status": "OPEN",
+      "existing_owners": ["S03", "S04", "S06", "S09", "S11", "S22", "S25"]
+    },
+    {
+      "id": "PA-03",
+      "severity": "BLOCKER",
+      "topic": "Residual producer/final-acceptance contradiction in quality criteria",
+      "status": "OPEN",
+      "existing_owners": ["S25"]
+    },
+    {
+      "id": "PA-04",
+      "severity": "BLOCKER",
+      "topic": "Negative memory slope incorrectly rejected by unit spelling",
+      "status": "OPEN",
+      "existing_owners": ["S02", "S23"]
+    },
+    {
+      "id": "PA-05",
+      "severity": "HIGH",
+      "topic": "Absolute-only interactive latency accepts severe regression",
+      "status": "OPEN",
+      "existing_owners": ["S02", "S23"]
+    },
+    {
+      "id": "PA-06",
+      "severity": "MEDIUM",
+      "topic": "Required visual category with no expected consumer surface",
+      "status": "OPEN",
+      "existing_owners": ["S01", "S03", "S20", "S24"]
+    }
+  ],
+  "reproduction": {
+    "script": "audit.py",
+    "command": "python3 reviews/parallelism-performance/audit.py --package . --out /tmp/orchestra-parallelism-review-new.json",
+    "cwd": "specs/orchestra-visual",
+    "synthetic_fixtures_only": true,
+    "after_repairs": "The script records/expects the audited behavior. Convert the findings into corrected regression expectations; do not change the historical report.",
+    "output_contains": [
+      "unordered pair count and all scheduler-conflicting task pairs",
+      "all 42 scheduler rounds",
+      "transitive prerequisite task IDs for selected key tasks",
+      "per-metric synthetic results",
+      "capture coverage counts and controls",
+      "input fingerprints"
+    ]
+  },
+  "evidence_sha256": {
+    "core-tests.log": "1f13e88627279f520e5b17256f6a423136382f1540f1dc807c9854b666c9d1c9",
+    "full-probes.json": "f3486927a6dba8209f12006f063619cff84819e6844d5a196cce481b71913301"
+  },
+  "limitations": [
+    "No Orchestra build, Electron run or runtime benchmark.",
+    "No full product checkout in this container; declared scopes and selected connector reads only.",
+    "Scheduling rounds assume all tasks take one unit and all external prerequisites exist; not a delivery estimate.",
+    "128px probe tests capture coverage only, not every source/receipt/census gate."
+  ]
+}
