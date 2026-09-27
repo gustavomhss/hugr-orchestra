@@ -1,0 +1,50 @@
+name: Orchestra widget contract audit
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-widget-audit.yml]
+permissions:
+  contents: read
+concurrency:
+  group: orchestra-widget-contract-audit
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    if: github.repository == 'gmhelmold/HuGR-Orchestra'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: d7ba1cb2ecb51395a5d2a6282286a1484e6d5b4d
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Snapshot scoped plan and widget source without executing product
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin 1a235323361717d13a44d3c184bad13649f59e60
+          python3 - <<'PY'
+          import hashlib, json, pathlib, subprocess, zipfile
+          source='1a235323361717d13a44d3c184bad13649f59e60'
+          dest=pathlib.Path('/tmp/orchestra-widget-audit');dest.mkdir()
+          paths=subprocess.check_output(['git','ls-tree','-r','--name-only',source,'packages/app/src','packages/session-ui/src','packages/schema/src','packages/opencode/src/tool','packages/opencode/src/session','packages/desktop/src','packages/protocol/src','packages/server/src','AGENTS.md','package.json'],text=True).splitlines()
+          paths=[p for p in paths if pathlib.PurePosixPath(p).suffix in ('.ts','.tsx','.css','.json','.md','.js')]
+          report={'plan_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'source_commit':source,'source_files':{},'product_execution':'NOT_RUN'}
+          with zipfile.ZipFile(dest/'snapshot.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(pathlib.Path('specs/orchestra-visual').rglob('*')):
+                  if p.is_file() and p.suffix.lower() not in ('.ttf','.ttc','.otf','.woff','.woff2'):
+                      z.write(p,'plan/'+p.relative_to('specs/orchestra-visual').as_posix())
+              for p in paths:
+                  data=subprocess.check_output(['git','show',source+':'+p])
+                  z.writestr('source/'+p,data)
+                  report['source_files'][p]=hashlib.sha256(data).hexdigest()
+              z.writestr('SNAPSHOT.json',json.dumps(report,indent=2)+'\n')
+          print(json.dumps({'source_files':len(paths),'archive_bytes':(dest/'snapshot.zip').stat().st_size,'product_execution':'NOT_RUN'}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: orchestra-widget-audit-snapshot
+          path: /tmp/orchestra-widget-audit/snapshot.zip
+          retention-days: 3
+          if-no-files-found: error
