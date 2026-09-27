@@ -1,0 +1,45 @@
+name: Orchestra plan contracts
+on:
+  pull_request:
+    paths:
+      - "specs/orchestra-visual/**"
+      - ".github/workflows/orchestra-plan.yml"
+      - ".prettierignore"
+  push:
+    branches: [dev]
+    paths:
+      - "specs/orchestra-visual/**"
+      - ".github/workflows/orchestra-plan.yml"
+      - ".prettierignore"
+permissions:
+  contents: read
+concurrency:
+  group: orchestra-plan-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      GIT_OPTIONAL_LOCKS: "0"
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run tooling regressions without product dependencies
+        working-directory: specs/orchestra-visual
+        run: python3 -m unittest discover -s tools -p 'test_*.py' -v
+      - name: Check plan, brand, projections and package integrity
+        working-directory: specs/orchestra-visual
+        run: |
+          set -euo pipefail
+          python3 tools/validate_plan.py
+          python3 tools/verify_brand.py
+          python3 tools/render_maps.py --check
+          python3 tools/render_issues.py --check
+          python3 tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE"
+          sha256sum --check MANIFEST.sha256
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"

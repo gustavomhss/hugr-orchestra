@@ -113,7 +113,7 @@ source_reqs: # ptr+digest
   uncommitted work):
   R1 SURGICAL — the pre-fix bound (`atLeastT1`) reinstated at the one line it now lives on in
   `own-bands.ts`: 4 of 6 tests fail, the first with `expected [ 'k:T0', 'k:T1' ] to deeply equal
-   [ 'k:T2', 'k:T2g' ]` — the defect's exact signature. Restored, `diff -q` clean, 6/6 green.
+[ 'k:T2', 'k:T2g' ]` — the defect's exact signature. Restored, `diff -q` clean, 6/6 green.
   R2 WHOLE-FILE — `own-source.ts` restored to its `d41aff4` bytes: 4 of 6 fail, now with BOTH bands empty
   (`expected [] to deeply equal …`), because the missing `advisory` axis makes the composer throw and
   RETR-9 returns the empty briefing. A different failure mode from R1, stated rather than blurred.

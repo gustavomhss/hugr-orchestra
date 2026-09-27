@@ -73,7 +73,7 @@ describe("KNOW-11 actor — a CLAIM, not an identity (the model is advisory, and
       const composed = composeRuntime(root)
       expect(composed).toBeDefined()
       // The resolution rule itself, asserted where it is written: env wins outright over the git fallback.
-      expect(src(COMPOSE_SRC)).toContain("process.env.ATLAS_ACTOR ?? gitUserEmail(repoPath) ?? ''")
+      expect(src(COMPOSE_SRC)).toContain('process.env.ATLAS_ACTOR ?? gitUserEmail(repoPath) ?? ""')
     } finally {
       if (prev === undefined) delete process.env.ATLAS_ACTOR
       else process.env.ATLAS_ACTOR = prev

@@ -59,7 +59,7 @@ describe("PERSIST-10a — the redact-at-the-door control is ENFORCED, not docume
     // and would keep reporting zero forever while the module was rewritten underneath it. So: prove it goes
     // red when the ONE thing it is looking for is renamed out from under it.
     const noMap = mutate(
-      "const objects = new Map<Hash, Uint8Array>();",
+      "const objects = new Map<Hash, Uint8Array>()",
       "const objects = makeStore<Hash, Uint8Array>();",
     )
     expect(rules(auditTranscriptDoor(noMap))).toContain("NO-ESCAPE")
@@ -69,7 +69,7 @@ describe("PERSIST-10a — the redact-at-the-door control is ENFORCED, not docume
   it("MUTANT — `put` stores the RAW body (the T0 this control exists for)", () => {
     // The regression `transcript-store-redaction.test.ts` already catches behaviourally. Included so the two
     // controls are known to overlap on the case they SHARE, and to differ only on the ones below.
-    const raw = mutate("const admitted = scrub(body);", "const admitted = body;")
+    const raw = mutate("const admitted = scrub(body)", "const admitted = body;")
     const found = auditTranscriptDoor(raw)
     expect(rules(found)).toEqual(["SCRUB-DOMINATES"])
     expect(found[0]!.detail).toContain("not provably derived from `scrub(...)`")
@@ -131,7 +131,7 @@ describe("PERSIST-10a — the redact-at-the-door control is ENFORCED, not docume
     // `flowsFromRedactor` chases const initializers, so the obvious dodge — rename the raw body once on the
     // way in — must not work. This is the fail-closed direction being exercised deliberately.
     const laundered = mutate(
-      "const admitted = scrub(body);",
+      "const admitted = scrub(body)",
       "const passthrough = body;\n      const admitted = passthrough;",
     )
     expect(rules(auditTranscriptDoor(laundered))).toEqual(["SCRUB-DOMINATES"])
@@ -141,13 +141,13 @@ describe("PERSIST-10a — the redact-at-the-door control is ENFORCED, not docume
     // A gate that says no to the honest case is a gate that gets routed around. Rewriting the redaction into
     // a differently-named intermediate, or inlining it at the call site, must both stay green.
     const renamed = mutate(
-      "const admitted = scrub(body);",
+      "const admitted = scrub(body)",
       "const redacted = scrub(body);\n      const admitted = redacted;",
     )
     expect(auditTranscriptDoor(renamed)).toEqual([])
 
     const inlined = mutate(
-      "if (!objects.has(h)) objects.set(h, Uint8Array.from(admitted));",
+      "if (!objects.has(h)) objects.set(h, Uint8Array.from(admitted))",
       "if (!objects.has(h)) objects.set(h, Uint8Array.from(scrub(body)));",
     )
     expect(auditTranscriptDoor(inlined)).toEqual([])
@@ -170,7 +170,7 @@ describe("PERSIST-10a — the redact-at-the-door control is ENFORCED, not docume
     },
     fetch(ref: TranscriptRef): Transcript {`,
     )
-    expect(withRestore).toContain("const admitted = scrub(body);") // `put` is untouched…
+    expect(withRestore).toContain("const admitted = scrub(body)") // `put` is untouched…
     expect(auditTranscriptDoor(withRestore)).not.toEqual([]) // …and the door control still fires
   })
 })

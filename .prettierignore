@@ -2,5 +2,7 @@ sst-env.d.ts
 packages/desktop/src/bindings.ts
 packages/client/src/generated/
 packages/client/src/generated-effect/
+# Exact-byte projections belong to own-snapshot-materialize, not the general formatter.
+foundation/atlas/.opencode/skills/own/
 # Hash-bound visual contracts and official vendor assets use their own generators/validators.
 specs/orchestra-visual/

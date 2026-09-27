@@ -1,7 +1,7 @@
 {
   "fixture": "semantic-bench-fixture.json",
   "algo": "md5",
-  "digest": "daa42ed88403e13b8ab1197adab9f0d3",
+  "digest": "e802439e78470dd957cf7f46b84ad0c3",
   "why": "AC-7 (#196b WP-1). The synthetic self-proof fixture is content-hashed (inv-text-pins discipline). semantic-bench.test.ts recomputes this digest over the committed bytes and FAILS if it diverges — so the numbers the instrument proves itself against cannot be edited without a same-commit re-pin naming the ratifier. Records what is IN THE TREE, not an owner ratification.",
   "substrate": {
     "rev": "e35dcce",
