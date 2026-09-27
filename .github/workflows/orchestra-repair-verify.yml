@@ -1,0 +1,147 @@
+name: Orchestra execution repair verification
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-repair-verify.yml]
+permissions:
+  contents: write
+  issues: read
+jobs:
+  repairs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      OUT: ${{ runner.temp }}/orchestra-execution-repairs
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          ref: visual-migration-plan
+      - name: Apply exactly the reviewed repair bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,json,os,pathlib,subprocess,zlib
+          out=pathlib.Path(os.environ['OUT']);out.mkdir()
+          blobs=['70662b233273dd8a9866e82bce528b93879aa8e8','41e61e1dc89179dbb1b3277667ad7825c59575bd','a991e20e1eb360da8793e99ae2c202f63536e056','810a0136dd02f7550f6fdf8722f3efd848a6bb42']
+          compressed=b''
+          for sha in blobs:
+              data=json.loads(subprocess.check_output(['gh','api','repos/gmhelmold/HuGR-Orchestra/git/blobs/'+sha],text=True))
+              chunk=base64.b64decode(data['content'])
+              assert hashlib.sha1(b'blob '+str(len(chunk)).encode()+b'\0'+chunk).hexdigest()==sha
+              compressed+=chunk
+          raw=zlib.decompress(compressed)
+          assert len(raw)==58820 and hashlib.sha256(raw).hexdigest()=='40de9a7a3069d6faa85b896ff997fb798c1df520e6fe18ccdc09e5e36d98baca'
+          data=json.loads(raw)
+          allowed={'RUN.md','tools/README.md','tools/census.py','tools/effective_contract.py','tools/select_work.py','tools/source_proof.py','tools/test_contract.py','tools/test_execution_repairs.py','tools/test_repairs.py','tools/validate_evidence.py','tools/validate_plan.py','reviews/full-execution-audit/repairs/REVIEW.md'}
+          root=pathlib.Path('specs/orchestra-visual')
+          paths={str(root/p) for p in allowed}
+          assert {row['path'] for row in data['files']}==paths
+          original={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and str(p) not in paths and p.name!='MANIFEST.sha256'}
+          for row in data['files']:
+              path=pathlib.Path(row['path']);assert not path.is_symlink()
+              actual=hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+              assert actual==row['before_sha256'], 'Concurrent file change: '+str(path)
+          patch=out/'reviewed.patch';patch.write_text(data['patch'])
+          subprocess.run(['git','apply','--check',str(patch)],check=True)
+          subprocess.run(['git','apply',str(patch)],check=True)
+          for row in data['files']:
+              assert hashlib.sha256(pathlib.Path(row['path']).read_bytes()).hexdigest()==row['after_sha256']
+          ignore=pathlib.Path('.prettierignore');text=ignore.read_text()
+          assert 'specs/orchestra-visual/' not in text.splitlines(), 'Concurrent formatter policy change'
+          ignore.write_text(text.rstrip()+'\n# Hash-bound visual contracts and official vendor assets use their own generators/validators.\nspecs/orchestra-visual/\n')
+          (out/'transfer.json').write_text(json.dumps({'files':data['files'],'raw_sha256':hashlib.sha256(raw).hexdigest()},indent=2)+'\n')
+          (out/'protected-before.json').write_text(json.dumps(original,indent=2)+'\n')
+          print('Applied 12 exact reviewed files; preserved protected inputs; formatter ownership explicit.')
+          PY
+      - name: Execute the complete tooling suite and existing contract checks
+        working-directory: specs/orchestra-visual
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tools -p 'test_*.py' -v > "$OUT/tests.log" 2>&1
+          tail -5 "$OUT/tests.log"
+          python3 tools/validate_plan.py > "$OUT/plan.json"
+          python3 tools/verify_brand.py > "$OUT/brand.json"
+          python3 tools/render_maps.py --check > "$OUT/maps.log"
+          python3 tools/render_issues.py --check > "$OUT/issues.log"
+          python3 tools/render_navigation.py --check > "$OUT/navigation.log"
+      - name: Exercise real checkout bootstrap without accepting S01
+        working-directory: specs/orchestra-visual
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd();repo=root.parents[1];out=pathlib.Path(os.environ['OUT'])
+          def git(*args):return subprocess.check_output(['git','-C',str(repo),*args])
+          before=git('diff','--binary','HEAD');index=git('ls-files','--stage','-z')
+          def run(argv,name,expected=0):
+              p=subprocess.run(argv,capture_output=True,text=True)
+              (out/name).write_text(p.stdout+p.stderr)
+              assert p.returncode==expected,(name,p.returncode,p.stdout[-1000:],p.stderr[-1000:])
+              return p.stdout
+          run(['python3','tools/executor.py','doctor','--repo',str(repo)],'doctor.json')
+          resumed=json.loads(run(['python3','tools/executor.py','resume','--repo',str(repo),'--jobs','4'],'resume.json'))
+          plan=json.loads((root/'PLAN.json').read_text());stats=[]
+          for node in plan['nodes']:
+              if node['kind']!='task':continue
+              p=subprocess.run(['python3','tools/executor.py','packet',node['id'],'--repo',str(repo)],capture_output=True,text=True)
+              assert p.returncode==0,(node['id'],p.stderr)
+              stats.append({'task':node['id'],'bytes':len(p.stdout.encode()),'sha256':hashlib.sha256(p.stdout.encode()).hexdigest()})
+          assert len(stats)==66
+          (out/'packets.json').write_text(json.dumps(stats,indent=2)+'\n')
+          run(['python3','tools/capture_scope.py','--repo',str(repo),'--out',str(out/'source-before.json')],'capture.log')
+          census=json.loads(run(['python3','tools/census.py','--repo',str(repo)],'census-candidate.json'))
+          assert census['files'] and all(x['disposition']=='UNCLASSIFIED' for x in census['files'])
+          run(['python3','tools/validate_plan.py','--repo',str(repo),'--census-strict'],'census-strict.json',1)
+          run(['python3','tools/receipt_template.py','S01-W1-T1','--out',str(out/'receipt.draft.json')],'template.log')
+          run(['python3','tools/validate_evidence.py','S01-W1-T1',str(out/'receipt.draft.json'),'--repo',str(repo)],'draft-rejected.json',1)
+          assert before==git('diff','--binary','HEAD') and index==git('ls-files','--stage','-z'), 'Bootstrap mutated checkout/index'
+          assert json.loads((root/'progress.json').read_text())['tasks']=={}
+          (out/'bootstrap.json').write_text(json.dumps({'discovered_files':len(census['files']),'tasks_packeted':66,'unexecuted_receipt_rejected':True,'unclassified_census_rejected':True,'checkout_index_preserved':True,'product_tasks_accepted':0},indent=2)+'\n')
+          print('66 packets generated; strict census and unexecuted receipt correctly held.')
+          PY
+      - name: Read back published relationships without modifying tickets
+        working-directory: specs/orchestra-visual
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/github_sync.py > "$OUT/relationships.json"
+      - name: Publish bounded repair code and factual verification report
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess
+          root=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT'])
+          old=json.loads((out/'protected-before.json').read_text())
+          assert all(pathlib.Path(p).is_file() and hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==h for p,h in old.items())
+          tests=(out/'tests.log').read_text();assert re.search(r'Ran 280 tests in ',tests) and tests.rstrip().endswith('OK')
+          expected={x['path'] for x in json.loads((out/'transfer.json').read_text())['files']}|{'.prettierignore'}
+          changed=set(filter(None,subprocess.check_output(['git','diff','--name-only','--no-renames','HEAD'],text=True).splitlines()))|set(filter(None,subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines()))
+          assert changed==expected, (changed-expected,expected-changed)
+          report={'kind':'execution-tooling-repair-verification-not-product-approval','status':'VERIFIED','run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'workflow_input_sha':os.environ['GITHUB_SHA'],'contract_revision':json.loads((root/'PLAN.json').read_text())['contract_revision'],'effective_manifest_schema':2,'unique_tests':280,'new_regression_tests':32,'previous_tests_retained':248,'tests_log_sha256':hashlib.sha256(tests.encode()).hexdigest(),'bootstrap':json.loads((out/'bootstrap.json').read_text()),'relationships':json.loads((out/'relationships.json').read_text()),'protected_files_unchanged':len(old),'repair_files':json.loads((out/'transfer.json').read_text())['files'],'findings':{'EX-01':'REPAIRED','EX-02':'REPAIRED','EX-03':'REPAIRED','H-01':'REPAIRED_DECLARED_ORIGIN_BOUNDARY_ONLY','E-01':'COORDINATION_FREEZE_AND_FORMATTER_OWNERSHIP_NO_NEW_ENGINE','CI-01':'SEPARATE_PR_234_CURRENT_CI_REQUIRED'},'product_execution':'NOT_RUN','product_tasks_accepted':0,'frontend_electron_performance_approved':False,'review_method':'same-assistant-adversarial-pass-not-external-auditor'}
+          dest=root/'reviews/full-execution-audit/repairs/VERIFICATION.json';dest.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          files=sorted(p for p in root.rglob('*') if p.is_file() and p.name!='MANIFEST.sha256' and '__pycache__' not in p.parts)
+          (root/'MANIFEST.sha256').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(root))+'\n' for p in files))
+          subprocess.run(['git','diff','--check'],check=True)
+          for p in sorted(expected|{str(dest),str(root/'MANIFEST.sha256')}):subprocess.run(['git','add','--',p],check=True)
+          remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/visual-migration-plan'],text=True).split()[0]
+          assert remote==os.environ['GITHUB_SHA'], 'Remote advanced; do not overwrite concurrent changes'
+          subprocess.run(['git','-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m','fix(tooling): enforce census and candidate evidence boundaries'],check=True)
+          subprocess.run(['git','push','origin','HEAD:refs/heads/visual-migration-plan'],check=True)
+          (out/'repair-head.txt').write_bytes(subprocess.check_output(['git','rev-parse','HEAD']))
+          PY
+      - name: Repeat the suite on the committed repair tree
+        working-directory: specs/orchestra-visual
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tools -p 'test_*.py' -v > "$OUT/committed-tests.log" 2>&1
+          tail -5 "$OUT/committed-tests.log"
+          python3 tools/validate_plan.py > "$OUT/committed-plan.json"
+          python3 tools/verify_brand.py > "$OUT/committed-brand.json"
+          sha256sum --check MANIFEST.sha256 > "$OUT/manifest-check.log"
+          test -z "$(git status --porcelain)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: orchestra-execution-repairs
+          path: ${{ runner.temp }}/orchestra-execution-repairs
+          retention-days: 14
