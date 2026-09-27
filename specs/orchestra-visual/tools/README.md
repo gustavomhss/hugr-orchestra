@@ -1,4 +1,4 @@
-# Ferramentas / uso operacional v4.1
+# Ferramentas / uso operacional v4.2
 
 Python 3.9+ e Git. Somente biblioteca padrão; nenhuma dependência nova no runtime do Orchestra. gh já autenticado somente para sincronização GitHub explicitamente aplicada. Não instalam pacotes, não compilam o produto, não escrevem código de UI e não simulam subagentes.
 
@@ -33,3 +33,17 @@ Nunca use as fixtures sintéticas de test_support como resultado de produto. Rev
 `python3 tools/verify_brand.py` confere o kit imutável, os bindings e a referência do cockpit. Com `--repo /caminho/do/worktree`, também confere as duas cópias obrigatórias e as condicionais que existirem. Não escreve arquivos nem testa recursos HTTP, frontend, acessibilidade ou desempenho do aplicativo.
 
 Leia BRAND-INTEGRATION.md antes de copiar. Os arquivos React do kit são exemplos, não dependência para a Orchestra Solid. Não executar todo o kit em public nem reexportar o logo. S01 pode ajustar bindings/consumidores nos contratos BRAND sem redefinir as fontes imutáveis; S05 cuida da cópia e adaptação local.
+
+## Paralelismo e coleta 4.2
+
+`verification_tier` diferencia local, focused, pilot, release e aggregate. A seleção favorece os pré-requisitos do piloto sem ignorar qualquer dependência. `phase` em records RUNNING admite somente work/collect/review. Preparação e revisão não reservam hardware pela duração inteira da task.
+
+```sh
+# CWD: $PLAN_ROOT. Task já RUNNING sob um coordenador único.
+python3 tools/select_work.py --progress progress.json --collect S23-W1-T2
+# Somente se READY_TO_RESERVE: registrar phase=collect e verificar processos reais.
+# Medir. Encerrar a coleta, registrar phase=review e liberar o host.
+python3 tools/select_work.py --repo "$REPO" --jobs 4
+```
+
+Preflight WAIT não autoriza coleta. READ_ONLY não é mutex de SO; o script não inicia, pausa ou mata processos. Um review concurrente não pode lançar ferramentas locais durante a amostragem. P01 usa manifests estáticos; P10/soak só é coletado pela campanha integrada e validado pelo fechamento, sem repetição pelo agregador.

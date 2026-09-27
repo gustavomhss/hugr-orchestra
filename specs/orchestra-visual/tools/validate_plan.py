@@ -138,6 +138,22 @@ def validate(data, surfaces=None):
                 errors.append(ident+': mandatory category lacks gates '+cat)
         for dep in n.get('acceptance_requires',[]):
             if dep not in by: errors.append(ident+': unknown acceptance producer '+str(dep))
+    if data.get('contract_revision') == '4.2':
+        policy = data.get('scheduling_policy', {})
+        if policy.get('priority_targets') != ['S25-W0-T1', 'S25-W0-T2']:
+            errors.append('explicit pilot priority policy missing or invalid')
+        for ident, n in by.items():
+            if n.get('kind') != 'task':
+                continue
+            if n.get('verification_tier') not in ('local', 'focused', 'pilot', 'release', 'aggregate'):
+                errors.append(ident + ': verification tier invalid')
+            if type(n.get('sampling_requires_quiet_host')) is not bool:
+                errors.append(ident + ': sampling policy must be explicit')
+            if 'exclusive-benchmark-hardware' in n.get('resource_locks', []):
+                errors.append(ident + ': use collection phase, not task-wide machine reservation')
+            if n.get('verification_tier') in ('local', 'focused') and 'P10' in n.get('required_performance_gates', []):
+                errors.append(ident + ': full soak belongs to release/aggregate, not ordinary local verification')
+
     final=data.get('final_gate_policy',{})
     if not isinstance(final,dict):return errors+['final_gate_policy must be an object']
     release=by.get(final.get('task'),{})
@@ -233,10 +249,19 @@ def inspect(root=ROOT, repo=None, census_strict=False):
     for name in ('EXECUTE.md', 'SPEC.md', 'PERFORMANCE.md', 'MAP.md', 'OWNERSHIP.md'):
         if not (root / name).is_file():
             errors.append('missing ' + name)
-    if data.get('contract_revision') == '4.1':
+    if data.get('contract_revision') in ('4.1', '4.2'):
         from verify_brand import verify
         brand_report = verify(root)
         errors.extend('brand: ' + err for err in brand_report['errors'])
+    if not errors and data.get('contract_revision') == '4.2':
+        from visual_coverage import required_captures
+        for n in data['nodes']:
+            if n.get('kind') == 'task' and n.get('evidence_requirements', {}).get('visual') == 'required':
+                try:
+                    if not required_captures(n, root):
+                        errors.append(n['id'] + ': mandatory visual category has no consumer coverage')
+                except (KeyError, TypeError, ValueError) as exc:
+                    errors.append(n['id'] + ': invalid visual consumer binding: ' + str(exc))
     scope, unmatched = [], []
     if repo:
         files = subprocess.check_output(['git', '-C', str(repo), 'ls-files', '-z'], text=True).split('\0')

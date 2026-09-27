@@ -56,5 +56,45 @@
     "UI28",
     "UI50",
     "UI55"
-  ]
+  ],
+  "task_consumer_states": {
+    "S03-W1-T2": [
+      {
+        "surface_id": "UI75",
+        "states": [
+          "first-paint-dark",
+          "theme-light",
+          "theme-switch",
+          "reload-preserved",
+          "unknown-theme-fallback"
+        ]
+      }
+    ],
+    "S20-W1-T2": [
+      {
+        "surface_id": "UI76",
+        "states": [
+          "default",
+          "unavailable",
+          "HOLD",
+          "error",
+          "keyboard"
+        ]
+      }
+    ],
+    "S20-W2-T2": [
+      {
+        "surface_id": "UI76",
+        "states": [
+          "presented",
+          "approved",
+          "declined",
+          "stale-denied",
+          "error",
+          "keyboard"
+        ]
+      }
+    ]
+  },
+  "conditional_state_note": "Live S20-W2 states are tested only by the W2 verification after authoritative prerequisites; release never claims live availability without that receipt for its connected candidate. W1/unavailable remains independent. Reuse one capture only for consumers actually visible in that state."
 }

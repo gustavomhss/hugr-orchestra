@@ -62,3 +62,13 @@ Binding same-repository exige repo gmhelmold/HuGR-Orchestra e head ancestral. Bi
 ## 6. Confiança e limites
 
 Estas ferramentas evitam erros de estrutura, omissão e frescor conhecidos. Não são uma raiz de confiança contra um executor malicioso capaz de alterar contrato, testes e logs juntos. O ciclo de execução, inspeção real e revisão continua obrigatório. Não adicionar essas ferramentas ao runtime/bundle do Orchestra. Nenhum cenário do produto foi executado na preparação deste pacote.
+
+## Delta 4.2 — esquema 3 preservado
+
+O formato de recibo continua esquema 3, mas o contrato efetivo mudou. Recibos anteriores não recebem PASS pela troca do hash. PLAN inclui verification_tier, sampling_requires_quiet_host, proof_reuse e dependency_inputs. Os axiomas de produtor exigem apenas sua etapa, e a política de prioridade é vinculada à verificação.
+
+P01 é calculado de `artifact_manifests` no bruto, no formato definido em PERFORMANCE.md. A categoria performance do recibo aponta ao resultado recalculado e aos manifests/logs reais. Não criar cinco pares de números estáticos. Para as demais métricas continuam amostras/pares, clocks, denominadores e host quieto.
+
+Coleta registra início/fim, build, carga, ambiente e processos verificados. `select_work.py --collect ID` é preflight read-only; o coordenador registra phase=collect antes da coleta e phase=review ao terminar. Não existe lock de OS ou execução automática. Nenhuma revisão pode usar processos locais enquanto compartilhar o host com collect.
+
+S25-T2 pode apontar diretamente aos arquivos reais de S23/S24, incluindo hashes no seu inventário. A validação recalcula o que é quantitativo e confere cobertura e identidade do mesmo build; não existe import cego de um rótulo PASS. Não reutilizar prova de outro build, outro estado de capacidades ou contrato antigo.

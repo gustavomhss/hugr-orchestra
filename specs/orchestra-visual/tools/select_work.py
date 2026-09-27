@@ -74,6 +74,38 @@ def conflict(a, b, tracked=None):
     return False
 
 
+
+def collection_preflight(data, progress, ident):
+    """Read-only coordinator check, not an OS/process lock or a claim of quiet hardware."""
+    by = {n['id']: n for n in data['nodes']}
+    records = progress.get('tasks', {}) if isinstance(progress, dict) else None
+    if not isinstance(records, dict) or any(not isinstance(rec, dict) for rec in records.values()):
+        return {'status': 'FAIL', 'errors': ['invalid progress task records'], 'may_record_collect': False}
+    if any(rec.get('phase', 'work') not in ('work', 'collect', 'review') for rec in records.values()):
+        return {'status': 'FAIL', 'errors': ['invalid progress phase'], 'may_record_collect': False}
+    if ident not in by or by[ident].get('kind') != 'task' or not by[ident].get('sampling_requires_quiet_host'):
+        return {'status': 'FAIL', 'errors': ['task is not eligible for collection'], 'may_record_collect': False}
+    if records.get(ident, {}).get('status') != 'RUNNING':
+        return {'status': 'FAIL', 'errors': ['start/claim the ready task before requesting collection'], 'may_record_collect': False}
+    blockers = [i for i, rec in records.items() if i != ident and rec.get('status') == 'RUNNING' and rec.get('phase', 'work') != 'review']
+    return {'status': 'WAIT' if blockers else 'READY_TO_RESERVE', 'may_record_collect': not blockers,
+            'blocking_tasks': sorted(blockers), 'mutation_performed': False,
+            'instruction': 'Single coordinator records phase=collect BEFORE starting measurement. Verify actual processes/energy. Review phase permits no local build/test/render/write during sampling. Set phase=review when collection ends; no service/OS lock is acquired here.'}
+
+
+def priority_ready(by, ready, completed, policy):
+    """One explicit milestone priority; stable plan order otherwise, no optimizer."""
+    target = next((i for i in policy.get('priority_targets', []) if not completed(i)), None)
+    wanted, pending = set(), [target] if target else []
+    while pending:
+        ident = pending.pop()
+        if ident in wanted:
+            continue
+        wanted.add(ident)
+        pending.extend(dependencies(by, ident))
+    return sorted(ready, key=lambda n: 0 if n['id'] in wanted else 1)
+
+
 def select(data, progress, root=ROOT, jobs=4, tracked=None, check_evidence=True, source_snapshot=None):
     surfaces=json.loads((root/'SURFACES.json').read_text()) if (root/'SURFACES.json').exists() else None
     errors = validate(data,surfaces)
@@ -95,6 +127,12 @@ def select(data, progress, root=ROOT, jobs=4, tracked=None, check_evidence=True,
         if not isinstance(record, dict) or record.get('status') not in STATUSES:
             errors.append('invalid task state: ' + ident)
             continue
+        phase = record.get('phase', 'work')
+        if phase not in ('work', 'collect', 'review'):
+            errors.append(ident + ': phase must be work, collect or review')
+            continue
+        if record.get('status') == 'RUNNING' and phase == 'collect' and not by[ident].get('sampling_requires_quiet_host'):
+            errors.append(ident + ': collection is not permitted by the task')
         if record.get('status') == 'PASS' and check_evidence:
             if not isinstance(record.get('head'), str) or not re.fullmatch(r'[0-9a-f]{40}', record['head']):
                 errors.append(ident + ': progress requires full source HEAD')
@@ -124,6 +162,13 @@ def select(data, progress, root=ROOT, jobs=4, tracked=None, check_evidence=True,
             found=external_proof(ref,record,root,source_snapshot.get('repo') if source_snapshot else None)
             if found:external_errors[ref]=found;okay=False
         ext_ok[ref]=okay
+    collecting = [i for i, rec in records.items() if isinstance(rec,dict) and rec.get('status') == 'RUNNING' and rec.get('phase') == 'collect']
+    if len(collecting) > 1:
+        errors.append('multiple collection reservations on the same host')
+    if collecting:
+        check = collection_preflight(data, progress, collecting[0])
+        if not check.get('may_record_collect'):
+            errors.append('collection overlaps active local work: ' + ', '.join(check.get('blocking_tasks', [])))
     if errors:
         return {'kind': 'readiness-not-execution', 'status': 'FAIL', 'errors': errors, 'selected': []}
     cache = {}
@@ -156,9 +201,12 @@ def select(data, progress, root=ROOT, jobs=4, tracked=None, check_evidence=True,
             blocked.append({'id': n['id'], 'prerequisites': unmet, 'external': ext, 'contract_setup':setup})
         else:
             ready.append(n)
+    ready = priority_ready(by, ready, completed, data.get('scheduling_policy', {}))
     chosen, deferred = [], []
     for n in ready:
-        if len(chosen) >= max(0,jobs-len(running)):
+        if collecting:
+            deferred.append({'id': n['id'], 'reason': 'host reserved only during active collection'})
+        elif len(chosen) >= max(0,jobs-len(running)):
             deferred.append({'id': n['id'], 'reason': 'parallelism limit'})
         elif any(conflict(n, other, tracked) for other in chosen + running):
             deferred.append({'id': n['id'], 'reason': 'write-scope or resource lease conflict'})
@@ -226,6 +274,7 @@ def main():
     parser.add_argument('--progress', type=Path, default=ROOT / 'progress.json')
     parser.add_argument('--repo', type=Path)
     parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--collect', help='Read-only preflight to reserve collection for a RUNNING task.')
     parser.add_argument('--show', help='Print this task and ancestor axioms only.')
     parser.add_argument('--affected-by', nargs='+', help='Read-only list of claims to mark STALE after changes.')
     parser.add_argument('--all', action='store_true', help='Include all blocked/deferred task reasons.')
@@ -236,7 +285,10 @@ def main():
         if errors:
             raise ValueError('; '.join(errors))
         by = {n['id']: n for n in data['nodes']}
-        if args.show:
+        if args.collect:
+            progress = json.loads(args.progress.read_text()) if args.progress.exists() else {'tasks': {}}
+            result = collection_preflight(data, progress, args.collect)
+        elif args.show:
             if args.show not in by:
                 raise ValueError('unknown node ' + args.show)
             ancestors, ident = [], by[args.show].get('parent')
@@ -260,7 +312,7 @@ def main():
             if not args.all:
                 result['blocked_count'] = len(result.pop('blocked', []))
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        return 1 if result.get('status') == 'FAIL' else 0
+        return 1 if result.get('status') == 'FAIL' else 2 if result.get('status') == 'WAIT' else 0
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         print(json.dumps({'status': 'FAIL', 'errors': [str(exc)]}, ensure_ascii=False))
         return 1

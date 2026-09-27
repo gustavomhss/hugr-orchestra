@@ -4,7 +4,7 @@
   "plan_branch": "visual-migration-plan",
   "entry_commit": "9b65a109eba3cf182d11ef5a13302915b6c7636f",
   "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/EXECUTE.md",
-  "publication": "COMPLETE: all 430 original package files published, all 39 child ticket bodies verified, native hierarchy and dependencies verified. Publication does not complete product tasks.",
+  "publication": "PA-01–PA-06 repaired in existing contracts; reconcile/readback is recorded in PUBLICATION.json.",
   "native_relationships_applied_by_this_session": true,
   "native_relationships_note": "Verified by https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36275407725",
   "issues": {
@@ -326,7 +326,7 @@
     "https://docs.github.com/en/rest/issues/issue-dependencies"
   ],
   "api_version": "2026-03-10",
-  "contract_revision": "4.1",
+  "contract_revision": "4.2",
   "package_version": "4.1",
   "v4_complete_package_published_to_repo": true,
   "v4_ticket_bodies_synchronized": true,

@@ -1,4 +1,4 @@
-# EXECUTE — Orchestra / contrato de execução v4.1
+# EXECUTE — Orchestra / contrato de execução v4.2
 
 Você é o Codex no checkout local de `gmhelmold/HuGR-Orchestra`. Execute a migração desktop/web completa. Não produza outro plano, outra identidade ou um aplicativo demonstrativo separado. Leia este arquivo e a task selecionada; carregue somente os contratos pertinentes nos subagentes.
 
@@ -50,7 +50,7 @@ Cada TSX/CSS pertinente descoberto deve ter disposição `migrate`, `inherit` ou
 
 1. S01: censo e fronteiras; S02: fixture e coleta real sobre a suíte existente. O avaliador determinístico já está neste pacote; não o substitua por PASS preenchido à mão.
 2. S03/S04/S05: tema, primitives e assets. S22: copy/locales/testes iniciais. S16/S17 não esperam tradução.
-3. **S25-W0-T1**: primeiro candidato funcional usando shell S06, Dock S15/bridge S16 e controllers de conversa, input, review e Tasks que já existem. Tem 15 pré-requisitos de task, não os 44 da v3. **S25-W0-T2** verifica macrocomposição, foco, scroll e custos locais antes da migração ampla. Não é aceite final de microacabamento.
+3. **S25-W0-T1**: primeiro candidato funcional usando shell S06, Dock S15/bridge S16 e controllers de conversa, input, review e Tasks que já existem. Tem 11 pré-requisitos de task, não os 44 da v3. **S25-W0-T2** verifica macrocomposição, foco, scroll e custos locais antes da migração ampla. Não é aceite final de microacabamento.
 4. Continuar pelas frentes disjuntas: home/settings/providers/diálogos/Janitor não são pré-requisitos desse piloto. O piloto não é motivo para parar ou perguntar a paleta novamente.
 5. **S25-W1-T1** integra o restante e entrega candidato com builds/smoke locais. Não exige o resultado futuro de S23/S24. S23 mede, S24 revisa; **S25-W1-T2** só fecha com os gates do mesmo candidato.
 6. S19/S20-W1 entregam estados verdadeiros, inclusive unavailable/HOLD. W2 local só começa com fonte autoritativa comprovada e codegen autorizado. A T1 entrega adapter/consumer local; S25 pode importar essa entrega; T2 prova o caminho live conectado. Ausência de W2 não impede a migração visual honesta, mas impede declarar a capacidade live entregue.
@@ -79,7 +79,7 @@ Só após examinar resultados reais, o coordenador atualiza `progress.json` com 
 
 ## Paralelismo, imports e reparo
 
-Um coordenador escreve `progress.json`. `--jobs 4` limita RUNNING + novas seleções; excesso já em execução não é cancelado automaticamente. Cada frente usa worktree/branch própria. Benchmark reserva hardware e não disputa recursos com builds ou capturas pesadas. O seletor é read-only e não é um serviço de locks concorrentes.
+Um coordenador escreve `progress.json`. `--jobs 4` limita RUNNING + novas seleções. O seletor prioriza os pré-requisitos do próximo marco do piloto, sem ignorar dependências. Cada frente usa worktree/branch própria. Somente `phase=collect` reserva o host durante amostragem; `work` e `review` não retêm a reserva inteira. Antes da coleta, `select_work.py --collect ID` precisa retornar READY_TO_RESERVE; WAIT (exit 2) não autoriza medir. O coordenador registra collect e confere processos/energia reais; ao terminar registra review. Reviews concorrentes não podem usar ferramentas locais durante coleta. O seletor é read-only, não um serviço de locks de SO.
 
 S25 é único integrador de app.tsx, session.tsx, session-side-panel.tsx, settings context e wiring native. Imports de outros owners devem constar em `source.imported_receipts`; cada recibo de origem é verificado e precisa ser ancestral do candidato. Uma alteração fora do scope de S25 só é aceita se o blob/modo final corresponder ao produtor verificado. Conflito que modifica o conteúdo volta ao owner. Não há import recursivo de recibos nem permissão de escrita irrestrita.
 
@@ -103,3 +103,13 @@ Sem backend verdadeiro: estado indisponível, não botão cenográfico. Atlas é
 Código no aplicativo existente, comparação ao master, cobertura de telas/estados, medições reproduzíveis, comandos de execução e rollback, SHA e limitações reais. Nenhuma task do produto vem aprovada pela publicação do plano. Não terminar em documentação, mock ou só Storybook; não forçar push/merge/release e não fechar com gate reprovado.
 
 Consulte RECEIPTS-v4.md para formatos e tools/README.md para comandos. O épico principal é #215. GITHUB.json e PUBLICATION.json registram os 39 tickets subordinados reconciliados e as relações nativas verificadas; não recrie tickets. Os documentos de QA anteriores registram o estado histórico de cada revisão, não a situação atual de publicação. A projeção nativa de dependências não substitui o DAG fino.
+
+<!-- orchestra-pa-42:begin -->
+## Execução proporcional e paralela — 4.2
+
+As correções de PA-01–PA-06 estão em [reviews/parallelism-performance/repairs/REVIEW.md](reviews/parallelism-performance/repairs/REVIEW.md). O grafo preserva os mesmos 38 WPs/66 tasks. Use `verification_tier` e `dependency_inputs` da unidade: implementar consome a entrega T1 local; a auditoria cruzada completa fica no aceite. S22-T1 fornece copy/parity cedo; o piloto S25-W0 tem prioridade e 11 pré-requisitos.
+
+P01 usa dois manifests reais, não cinco repetições de valores estáticos. S23-T2 coleta a campanha completa; S25-T2 valida/reutiliza artefatos do mesmo candidato sem repetir o soak. P03 exige teto absoluto e proteção contra regressão. Tendência de memória é assinada, com ruído inconclusivo não aprovado. Os consumidores de tema e governança estão explicitamente na matriz de capturas.
+
+Para coletar: task já RUNNING → `python3 tools/select_work.py --collect ID` → se READY_TO_RESERVE, registrar phase=collect e conferir processos reais → medir → registrar phase=review e liberar o host. Nenhum processo é iniciado, pausado ou morto automaticamente. Não medir durante compilação/captura concorrente. Provas e axiomas continuam obrigatórios; a reforma visual ainda não está implementada.
+<!-- orchestra-pa-42:end -->

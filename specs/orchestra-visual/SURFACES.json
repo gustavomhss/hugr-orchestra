@@ -1775,6 +1775,50 @@
       "current_capability": "existing",
       "required_change": "theme/navigation polish",
       "reachability_verified_in_this_revision": false
+    },
+    {
+      "id": "UI75",
+      "title": "Tema aplicado ao shell existente: primeiro paint e troca",
+      "owner": "S03",
+      "path": "packages/app/src/pages/layout-new.tsx",
+      "inventory_class": "ui-surface",
+      "disposition": "inherit",
+      "evidence_level": "consumer-contract; local verification pending",
+      "current_capability": "Existing shell consumes ThemeProvider; inspect actual consumer in S01. No new theme provider or new screen.",
+      "states": [
+        "first-paint-dark",
+        "theme-light",
+        "theme-switch",
+        "reload-preserved",
+        "unknown-theme-fallback"
+      ],
+      "classification_reason": "Visual consumer of S03 theme, inherited through the existing layout; S06 remains the sole writer of layout-new.tsx.",
+      "coverage_host": "web"
+    },
+    {
+      "id": "UI76",
+      "title": "Governança no consumidor visual: estados seguros e decisões",
+      "owner": "S20",
+      "path": "packages/app/src/pages/session/orchestra-governance.tsx",
+      "inventory_class": "ui-surface",
+      "disposition": "migrate",
+      "evidence_level": "planned-consumer; NOT_IMPLEMENTED",
+      "current_capability": "Planned S20 frontend adapter. W1 proves unavailable/HOLD/error. W2 live requires authoritative external capabilities and connected consumer; no authority inferred from prompt text.",
+      "states": [
+        "default",
+        "unavailable",
+        "HOLD",
+        "error",
+        "keyboard"
+      ],
+      "classification_reason": "Concrete planned frontend delivery within S20 scope; existing backend source files are not visual surfaces. No capability is claimed implemented.",
+      "coverage_host": "web",
+      "conditional_states": [
+        "presented",
+        "approved",
+        "declined",
+        "stale-denied"
+      ]
     }
   ],
   "schema_version": 2

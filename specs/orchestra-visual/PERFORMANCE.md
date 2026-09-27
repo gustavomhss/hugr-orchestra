@@ -7,7 +7,7 @@ Status: objetivos de engenharia propostos em resposta à exigência explícita d
 - Medir build de produção. Vite dev/HMR e tracing invasivo não são o baseline de release.
 - Usar a suite `packages/app/e2e/performance` existente. Hoje ela é diagnóstica, manual e não reprova por budgets de máquina; S02 adiciona comparação/threshold no escopo Orchestra. Não alterar os benchmarks atuais para chamá-los falsamente de gates.
 - Comparar base/head no mesmo hardware, energia, runtime, viewport, fixture, cache profile e capacidade. Rede/modelo remoto não entram na latência da UI.
-- Guardar JSON bruto e denominador; p95/p99 de amostras, não “média parece boa”. Alternar A/B e repetir 5 pares de runs; startup pelo menos20 observações por variante e latência de interação pelo menos200. Identificar cold/hot separadamente.
+- Guardar JSON bruto e denominador; p95/p99 de amostras, não “média parece boa”. Para séries temporais, alternar A/B e repetir 5 pares; startup pelo menos20 observações por variante e latência de interação pelo menos200. P01 é estático: comparar dois manifests reais, sem ensaios repetidos artificiais. Identificar cold/hot separadamente.
 - Não apagar outliers sem causa documentada. Ambiente ruidoso invalida a rodada, não muda o budget. Regra relativa considera a dispersão: usar margem de confiança bootstrap ou mediana dos deltas pareados; não escolher o melhor run.
 - Nada de “60 fps comprovado” a partir de RAF gaps. São sinais do main thread, não dropped frames do compositor. Usar tracing nativo quando a afirmação exigir compositor/processos.
 - Uma regressão dentro do cone desta migração deve ser corrigida. Baseline já ruim não aprova UX ruim: SLO absoluto continua FAIL; registre/remedeie o hotspot com dono, sem ampliar silenciosamente o projeto inteiro.
@@ -27,14 +27,14 @@ Status: objetivos de engenharia propostos em resposta à exigência explícita d
 |---|---|---|---|
 | P01 | Peso incremental | JS inicial gzip<=+60KiB; CSS<=+12KiB; nenhuma nova dependency runtime; assets decorativos<=300KiB total; decode de decoração<=4MiB/janela | Manifest de bundle/asset sizes comparado à base |
 | P02 | Startup | Primeira UI estável do renderer p95<=1500ms em cold local e regressão pareada<=5% ou50ms, o maior; boot nativo separado<=5% ou100ms | Cold/hot em build release; rede/provider separada |
-| P03 | Resposta local | Keydown->paint p95<=50ms/p99<=100ms P1; hot-session-tab->conteúdo correto p95<=100ms; menu/input feedback<=50ms | Timing de evento e marcador de paint, identidade do conteúdo validada |
+| P03 | Resposta local | Keydown->paint p95<=50ms/p99<=100ms P1; hot-session-tab->conteúdo correto p95<=100ms; menu/input feedback<=50ms; simultaneamente regressão pareada<=max(5%, 2ms para input-p95/feedback; 5ms para input-p99/hot-tab) | Timing de evento e marcador de paint, identidade do conteúdo validada |
 | P04 | Streaming/main-thread | p95 callback RAF gap<=20ms e p99<=50ms no perfil60Hz; zero nova long task>100ms atribuível à camada visual em janela10s; scripting<=8ms/frame p95 | Chrome trace e coleta longa; rotular RAF como diagnóstico |
 | P05 | Custo incremental | Um delta não rescaneia transcript completo ou todas sessões; nenhuma remontagem de mensagem não alterada; limite de recomputações instrumentado por ID | Probe de dirty keys e contador de renders/projeções |
 | P06 | Trabalho pesado | Diff/markdown/highlight/network snapshot só por alteração/seleção; cancelar stale request e não aplicar resultado de revisão anterior | Profiler + teste de inversão de resposta e artefato grande |
 | P07 | DOM/caches | Montar só janela visível+overscan; aumento10× de histórico não aumenta DOM montado>20%; caches bounded com eviction explícita, nenhum Map sem lifecycle novo | DOM counts/heap/read-model inspection em P1/P2 |
 | P08 | Idle | Zero polling/timers/processos novos para cosmética; ticker único<=1Hz somente com item live visível; listeners/observers removidos no unmount; CPU incremental P0<=1 ponto percentual de um core | Inventário timers/listeners e cpu attribution com engine idle |
 | P09 | Dock/native | Nenhuma view/browser session extra por card, tema ou layout; sem snapshots/capturas periódicas; bounds<=1 update efetivo/frame e apenas em mudança; cap20inativas não cresce | Electron process/view counters, resize/overlay native tests |
-| P10 | Memória | Heap estabilizado incremental<=20MiB e RSS do grupo shell<=+32MiB ou+10%, o maior; após50ciclos crescimento residual<=5MiB e sem tendência crescente; páginas externas contabilizadas separadamente | Heap/RSS before-after e slope; não somar memória de site como tema |
+| P10 | Memória | Heap estabilizado incremental<=20MiB e RSS do grupo shell<=+32MiB ou+10%, o maior; após50ciclos crescimento residual<=5MiB e sem tendência sustentada crescente; slope assinado em bytes/min, mistura de sinais é INCONCLUSIVE; páginas externas contabilizadas separadamente | Heap/RSS before-after e slope; não somar memória de site como tema |
 | P11 | Observabilidade | Medição ausente, ambiente incompatível ou sample insuficiente produz NOT_RUN/FAIL; nunca PASS; comandos sem screenshot/proof não comprovam polish | Mutação dos registros e gate de schema |
 | P12 | Igualdade do produto testado | Mesmos assets, efeitos, funções e build na comparação visual e no benchmark; sem benchmark-only fast path | SHA/bundle hash + revisão de flags |
 
@@ -57,11 +57,11 @@ Percentuais relativos não substituem SLO absoluto. Os limites são defaults do 
 
 Nenhum desses fatos prova que os budgets acima já são atendidos.
 
-## Avaliador quantitativo v4
+## Avaliador quantitativo v4.2
 
 BUDGETS.json é o registro quantitativo usado pelo tooling. tools/evaluate_performance.py já implementa avaliação determinística; S02 implementa a COLETA sobre a suíte do aplicativo, não outro avaliador manual. tools/validate_evidence.py recalcula o relatório de cada categoria performance PASS.
 
-Método: percentil nearest-rank no conjunto de observações; limites relativos sobre mediana dos deltas pareados; cada par guarda ordem AB/BA e amostras de ambas variantes. Exigir cinco pares, vinte observações de startup por variante e duzentas de interação por variante. Nenhum resultado acima do teto ou par discordante é aprovado: discordância que impedir conclusão vira INCONCLUSIVE dentro da métrica e reprova o gate até nova rodada. Não alegar intervalo de confiança estatístico calculado quando só houve essa regra conservadora.
+Método: percentil nearest-rank no conjunto de observações; limites relativos sobre mediana dos deltas pareados; cada par guarda ordem AB/BA e amostras de ambas variantes. Nas métricas temporais, exigir cinco pares, vinte observações de startup por variante e duzentas de interação por variante. As cinco métricas P01 são derivadas de `artifact_manifests.baseline/candidate`, sem arrays de timing; o avaliador rejeita pares artificiais para elas. Nenhum resultado acima do teto ou par discordante é aprovado: discordância que impedir conclusão vira INCONCLUSIVE dentro da métrica e reprova o gate até nova rodada. Não alegar intervalo de confiança estatístico calculado quando só houve essa regra conservadora.
 
 O registro contém unidades, janela/perfil, ambiente, versão do avaliador, hash de budgets, baseline/candidato e manifesto de build. Registrar OS/arquitetura/CPU/RAM/runtime/DPR/viewport/energia/cache/tracing. Rede e modelo remoto não entram na medida da interface. Bruto ausente, NaN/Infinity, ambiente diferente, perfis alterados ou pouca amostra reprovam.
 
@@ -70,3 +70,21 @@ Hash de build deve ser calculado pelo produtor a partir dos artefatos de produç
 Memória separa heap JS, RSS shell/main e páginas externas. Registrar memória compartilhada, settle e GC instrumentado; incluir observação sem GC forçado para não esconder crescimento normal. CPU idle usa denominador explícito de um core. RAF gaps são diagnóstico do main thread, não prova de frames apresentados.
 
 Fixtures de tools/test_support.py são sintéticas e servem somente aos testes do avaliador. Não as registrar como benchmark do produto. O exemplo exato do formato e os comandos estão em RECEIPTS-v4.md e tools/README.md.
+
+## Escopo e custo da verificação — PA-01 / PA-05
+
+`verification_tier` em PLAN define o custo pertinente: local = manifests P01/P12, unit/typecheck e inspeção dos estados; focused = métricas do hotspot declarado, sem soak integral; pilot = composição real e input/idle/bounds; release = campanha completa S23; aggregate = validar/referenciar provas existentes. Os cinco axiomas continuam obrigatórios. O pai não repete uma campanha apenas por ser pai.
+
+T2s locais não precisam medir startup/idle/soak do aplicativo inteiro a cada cor ou ícone. Seus invariantes de lifecycle, foco, timers e identidade continuam em testes determinísticos e revisão. Mudança de hotspot exige medição focalizada documentada; não pode ser disfarçada como ajuste cosmético. S23-T2 executa P01–P12 no candidato final. S25-T2 revalida os mesmos artefatos sem repetir coleta se SHA/build, recursos habilitados, fixture, ambiente e contratos forem idênticos.
+
+A margem P03 de 5%/2ms/5ms é um alvo de engenharia, não ruído medido. S02 coleta repetições do mesmo build para avaliar a resolução; dispersão maior que a margem torna o resultado inconclusivo. Melhorar coleta/ambiente, não elevar automaticamente o piso. 8→49ms, 10→90ms e 8→40ms são regressões reprovadas mesmo abaixo dos tetos absolutos.
+
+`residual_slope` é uma grandeza assinada, em **bytes/min**. Estimativas não positivas satisfazem o limite zero; positivas consistentes reprovam. Estimativas com sinais mistos permanecem INCONCLUSIVE, bloqueando PASS, até estender settle/janela ou repetir uma rodada válida. A regra não equivale a um intervalo de confiança e não prova estabilidade estatística; não arredondar para zero nem eliminar outliers. O limite de 5MiB residual e os limites heap/RSS não mudaram.
+
+### Reserva somente durante coleta
+
+O coordenador controla `phase` de cada task RUNNING em progress.json: `work` (preparo/implementação), `collect` (amostragem) ou `review` (análise sem processos locais concorrentes). Antes de coletar, executar `select_work.py --collect ID`, suspender/terminar trabalho local apontado e registrar collect. Durante collect não iniciar builds, testes, capturas, gravações ou agentes com ferramentas locais concorrentes. Reviews já em andamento só podem analisar resultados sem usar o host. Depois, registrar review e liberar a máquina. Se houver outra coleta, a seleção reprova; não é um mutex de sistema operacional nem executa/cancela processos. Verificar também processos reais/energia e anotar a janela no log bruto. O quiet_host do JSON não autentica essa condição.
+
+### P01: dois manifests de artefatos, não cinco pares
+
+`artifact_manifests` no bruto contém `baseline` e `candidate`, cada um com `kind: build-cost-manifest`, `build_sha256`, `initial_chunks` (`path`, `kind: js|css`, `gzip_bytes`, `sha256`), `runtime_dependencies` (nomes únicos) e `decorations` (`path`, `transfer_bytes`, `decode_bytes`, `sha256`). O coletor S02 extrai os dados dos builds servidos e suas dependências transitivas. O avaliador soma os tamanhos e conta os nomes novos; não aceita a palavra PASS como entrada. Arquivos originais/logs do comando precisam constar da evidência. Hash identifica conteúdo, não garante honestidade do produtor.

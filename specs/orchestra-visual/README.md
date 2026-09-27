@@ -26,3 +26,13 @@ Este checkout contém todas as especificações, o grafo completo, os cinco axio
 Leia EXECUTE.md, abra o master e comece por S01-W1-T1. Preserve o checkout atual. Depois do censo/fundação, faça o piloto conectado S25-W0; continue pelas frentes disjuntas e pelos gates reais. Performance e microacabamento são obrigatórios no mesmo build.
 
 **Publicação completa não é implementação pronta.** CENSUS local e tasks de produto continuam pendentes; não houve build, benchmark ou teste Electron do Orchestra nesta publicação. Relatórios anteriores de revisão são históricos; o estado atual está em PUBLICATION.json.
+
+<!-- orchestra-pa-42:begin -->
+## Execução proporcional e paralela — 4.2
+
+As correções de PA-01–PA-06 estão em [reviews/parallelism-performance/repairs/REVIEW.md](reviews/parallelism-performance/repairs/REVIEW.md). O grafo preserva os mesmos 38 WPs/66 tasks. Use `verification_tier` e `dependency_inputs` da unidade: implementar consome a entrega T1 local; a auditoria cruzada completa fica no aceite. S22-T1 fornece copy/parity cedo; o piloto S25-W0 tem prioridade e 11 pré-requisitos.
+
+P01 usa dois manifests reais, não cinco repetições de valores estáticos. S23-T2 coleta a campanha completa; S25-T2 valida/reutiliza artefatos do mesmo candidato sem repetir o soak. P03 exige teto absoluto e proteção contra regressão. Tendência de memória é assinada, com ruído inconclusivo não aprovado. Os consumidores de tema e governança estão explicitamente na matriz de capturas.
+
+Para coletar: task já RUNNING → `python3 tools/select_work.py --collect ID` → se READY_TO_RESERVE, registrar phase=collect e conferir processos reais → medir → registrar phase=review e liberar o host. Nenhum processo é iniciado, pausado ou morto automaticamente. Não medir durante compilação/captura concorrente. Provas e axiomas continuam obrigatórios; a reforma visual ainda não está implementada.
+<!-- orchestra-pa-42:end -->

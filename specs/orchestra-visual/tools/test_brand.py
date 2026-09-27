@@ -137,7 +137,7 @@ class BrandContractTests(unittest.TestCase):
 
     def test_16_projection_uses_actual_version(self):
         values = render(load(self.root / 'PLAN.json'))
-        self.assertIn('Contrato canônico v4.1', values['S05'])
+        self.assertIn('Contrato canônico v' + load(self.root / 'PLAN.json')['contract_revision'], values['S05'])
         self.assertEqual(len(values), 39)
 
     def test_17_no_fonts_added_to_source_kit(self):

@@ -1,0 +1,141 @@
+{
+  "kind": "synthetic-contract-analysis-not-product",
+  "tasks": 66,
+  "nodes": 143,
+  "criteria": 1974,
+  "unordered_pairs": 1009,
+  "write_conflicts": [
+    {
+      "tasks": [
+        "S19-W2-T1",
+        "S20-W2-T1"
+      ],
+      "common_locks": [
+        "public-api-registration-and-client-codegen"
+      ]
+    }
+  ],
+  "whole_task_benchmark_locks": 0,
+  "pilot_prerequisites": 11,
+  "synthetic_rounds": 22,
+  "pilot_round": 9,
+  "pilot_check_round": 10,
+  "rounds": [
+    [
+      "S01-W1-T1"
+    ],
+    [
+      "S01-W1-T2"
+    ],
+    [
+      "S02-W1-T1",
+      "S22-W1-T1"
+    ],
+    [
+      "S02-W1-T2"
+    ],
+    [
+      "S03-W1-T1",
+      "S05-W1-T1",
+      "S16-W1-T1",
+      "I01-W1-T1"
+    ],
+    [
+      "S04-W1-T1",
+      "S03-W1-T2",
+      "S05-W1-T2",
+      "S16-W1-T2"
+    ],
+    [
+      "S06-W1-T1",
+      "S04-W1-T2",
+      "S09-W1-T1",
+      "S10-W1-T1"
+    ],
+    [
+      "S15-W1-T1",
+      "I02-W1-T1",
+      "S11-W1-T1",
+      "S17-W1-T1"
+    ],
+    [
+      "S25-W0-T1",
+      "S17-W1-T2",
+      "S22-W1-T2"
+    ],
+    [
+      "S25-W0-T2",
+      "S06-W1-T2",
+      "S09-W1-T2",
+      "S10-W1-T2"
+    ],
+    [
+      "S07-W1-T1",
+      "S08-W1-T1",
+      "S11-W1-T2",
+      "S12-W1-T1"
+    ],
+    [
+      "I04-W1-T1",
+      "S07-W1-T2",
+      "S08-W1-T2",
+      "S12-W1-T2"
+    ],
+    [
+      "I03-W1-T1",
+      "S13-W1-T1",
+      "S14-W1-T1",
+      "S15-W1-T2"
+    ],
+    [
+      "I06-W1-T1",
+      "S13-W1-T2",
+      "S14-W1-T2",
+      "S18-W1-T1"
+    ],
+    [
+      "I05-W1-T1",
+      "S18-W1-T2",
+      "S19-W1-T1",
+      "S20-W1-T1"
+    ],
+    [
+      "I07-W1-T1",
+      "S19-W1-T2",
+      "S20-W1-T2",
+      "S21-W1-T1"
+    ],
+    [
+      "S21-W1-T2",
+      "S19-W2-T1"
+    ],
+    [
+      "S25-W1-T1",
+      "S20-W2-T1"
+    ],
+    [
+      "S23-W1-T1",
+      "S24-W1-T1",
+      "S19-W2-T2",
+      "S20-W2-T2"
+    ],
+    [
+      "I08-W1-T1",
+      "S23-W1-T2",
+      "S24-W1-T2"
+    ],
+    [
+      "I09-W1-T1",
+      "S25-W1-T2"
+    ],
+    [
+      "I10-W1-T1"
+    ]
+  ],
+  "native_parent_edges": 35,
+  "native_dependency_edges": 59,
+  "fine_edges": 213,
+  "constraints": [
+    "Equal duration per task, all external prerequisites synthetically satisfied, collection windows not assigned duration. Not a speedup, performance benchmark or delivery estimate."
+  ]
+}

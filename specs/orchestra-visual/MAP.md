@@ -1,4 +1,4 @@
-# MAP — projeção canônica v4.1
+# MAP — projeção canônica v4.2
 
 Fonte: SURFACES.json. Não editar esta tabela; alterar o canônico e regenerar. Nenhum registro prova execução do produto.
 
@@ -78,3 +78,5 @@ Fonte: SURFACES.json. Não editar esta tabela; alterar o canônico e regenerar. 
 | UI72 | S06 | migrate | ui-surface | packages/app/src/pages/layout/sidebar-workspace.tsx |
 | UI73 | S06 | migrate | ui-surface | packages/app/src/pages/layout/inline-editor.tsx |
 | UI74 | S06 | migrate | ui-surface | packages/app/src/pages/layout/session-tab-avatar.tsx |
+| UI75 | S03 | inherit | ui-surface | packages/app/src/pages/layout-new.tsx |
+| UI76 | S20 | migrate | ui-surface | packages/app/src/pages/session/orchestra-governance.tsx |

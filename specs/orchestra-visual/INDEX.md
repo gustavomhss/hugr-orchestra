@@ -4,7 +4,7 @@
 
 Índice de navegação, não nova especificação. Axiomas, permissões e desbloqueio vêm de PLAN.json/EXECUTE.md. As relações abaixo não marcam trabalho como concluído. Nenhuma nova task foi criada.
 
-Contrato: `4.1`; SHA-256 de PLAN.json: `b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2`. Snapshot do código: `links conferidos no checkout fornecido; base histórica das âncoras 30d951fcc4a09e708768551c7c6fd38a0efe3da8`.
+Contrato: `4.2`; SHA-256 de PLAN.json: `1735d28ddd2dfc51a935b473694fd829adf5ae1c092986efe5e57ce6213e5734`. Snapshot do código: `links conferidos no checkout fornecido; base histórica das âncoras 30d951fcc4a09e708768551c7c6fd38a0efe3da8`.
 
 **Raízes:** caminhos `packages/...` partem de `$REPO`; links para specs, tools e provas partem de `$PLAN_ROOT = $REPO/specs/orchestra-visual`. Um caminho de leitura não concede escrita. Um padrão com `*` não é um arquivo existente. Presença não prova reachability, backend live ou runtime testado.
 
@@ -461,6 +461,7 @@ Provas: `evidence/S02/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 - [`packages/ui/src/theme/context.tsx`](../../packages/ui/src/theme/context.tsx) — presente no snapshot; raiz `$REPO`
 - [`packages/ui/src/theme/v2/resolve.ts`](../../packages/ui/src/theme/v2/resolve.ts) — presente no snapshot; raiz `$REPO`
 - [`packages/ui/src/theme/default-themes.ts`](../../packages/ui/src/theme/default-themes.ts) — presente no snapshot; raiz `$REPO`
+- [`packages/app/src/pages/layout-new.tsx`](../../packages/app/src/pages/layout-new.tsx) — presente no snapshot; raiz `$REPO`
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
 ```text
@@ -469,7 +470,7 @@ packages/app/index.html
 packages/app/src/index.css
 specs/orchestra-visual/evidence/S03/**
 ```
-**Registros de cobertura:** `UI01` ThemeProvider V1/V2 [read-anchor], `UI02` Tokens e schema de tema [read-anchor]
+**Registros de cobertura:** `UI01` ThemeProvider V1/V2 [read-anchor], `UI02` Tokens e schema de tema [read-anchor], `UI75` Tema aplicado ao shell existente: primeiro paint e troca [ui-surface]
 **Provas da frente:** `evidence/S03/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
 
 <a id="s03-w1"></a>
@@ -502,7 +503,7 @@ Provas: `evidence/S03/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S04 / #147](https://github.com/gmhelmold/HuGR-Orchestra/issues/147) · **Contrato completo:** [`issues/S04.md`](issues/S04.md)
 **Caminho:** #215 → [E1 / #130](https://github.com/gmhelmold/HuGR-Orchestra/issues/130) → [I02 / #135](https://github.com/gmhelmold/HuGR-Orchestra/issues/135) → [S04 / #147](https://github.com/gmhelmold/HuGR-Orchestra/issues/147)
-**Dependências de entrada declaradas:** [S03](#s03). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Primitives reutilizadas consistentes; sem biblioteca paralela.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -607,7 +608,7 @@ Provas: `evidence/S05/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S06 / #149](https://github.com/gmhelmold/HuGR-Orchestra/issues/149) · **Contrato completo:** [`issues/S06.md`](issues/S06.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I03 / #136](https://github.com/gmhelmold/HuGR-Orchestra/issues/136) → [S06 / #149](https://github.com/gmhelmold/HuGR-Orchestra/issues/149)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S05](#s05), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S05-W1-T1](#s05-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Shell reutilizável, sem alteração do modelo de sessão.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -671,7 +672,7 @@ Provas: `evidence/S06/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S07 / #150](https://github.com/gmhelmold/HuGR-Orchestra/issues/150) · **Contrato completo:** [`issues/S07.md`](issues/S07.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I03 / #136](https://github.com/gmhelmold/HuGR-Orchestra/issues/136) → [S07 / #150](https://github.com/gmhelmold/HuGR-Orchestra/issues/150)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Entradas e estados de falha coerentes com cockpit.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -726,7 +727,7 @@ Provas: `evidence/S07/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S08 / #151](https://github.com/gmhelmold/HuGR-Orchestra/issues/151) · **Contrato completo:** [`issues/S08.md`](issues/S08.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I03 / #136](https://github.com/gmhelmold/HuGR-Orchestra/issues/136) → [S08 / #151](https://github.com/gmhelmold/HuGR-Orchestra/issues/151)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S05](#s05), [S22](#s22), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S05-W1-T1](#s05-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Chrome e estados de inicialização com acabamento consistente.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -782,7 +783,7 @@ Provas: `evidence/S08/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S09 / #152](https://github.com/gmhelmold/HuGR-Orchestra/issues/152) · **Contrato completo:** [`issues/S09.md`](issues/S09.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I04 / #137](https://github.com/gmhelmold/HuGR-Orchestra/issues/137) → [S09 / #152](https://github.com/gmhelmold/HuGR-Orchestra/issues/152)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Transcript operacional fiel, selecionável e leve.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -847,7 +848,7 @@ Provas: `evidence/S09/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S10 / #153](https://github.com/gmhelmold/HuGR-Orchestra/issues/153) · **Contrato completo:** [`issues/S10.md`](issues/S10.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I04 / #137](https://github.com/gmhelmold/HuGR-Orchestra/issues/137) → [S10 / #153](https://github.com/gmhelmold/HuGR-Orchestra/issues/153)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Composer real polido com todas as funções existentes.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -903,7 +904,7 @@ Provas: `evidence/S10/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S11 / #154](https://github.com/gmhelmold/HuGR-Orchestra/issues/154) · **Contrato completo:** [`issues/S11.md`](issues/S11.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I04 / #137](https://github.com/gmhelmold/HuGR-Orchestra/issues/137) → [S11 / #154](https://github.com/gmhelmold/HuGR-Orchestra/issues/154)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S09](#s09), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Inspeção real e evidência acionável integradas à conversa.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -969,7 +970,7 @@ Provas: `evidence/S11/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S12 / #155](https://github.com/gmhelmold/HuGR-Orchestra/issues/155) · **Contrato completo:** [`issues/S12.md`](issues/S12.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I05 / #138](https://github.com/gmhelmold/HuGR-Orchestra/issues/138) → [S12 / #155](https://github.com/gmhelmold/HuGR-Orchestra/issues/155)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Settings completos no novo padrão, não só aba principal.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -1029,7 +1030,7 @@ Provas: `evidence/S12/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S13 / #156](https://github.com/gmhelmold/HuGR-Orchestra/issues/156) · **Contrato completo:** [`issues/S13.md`](issues/S13.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I05 / #138](https://github.com/gmhelmold/HuGR-Orchestra/issues/138) → [S13 / #156](https://github.com/gmhelmold/HuGR-Orchestra/issues/156)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Seletores e credenciais com identidade segura e acabamento único.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -1091,7 +1092,7 @@ Provas: `evidence/S13/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S14 / #157](https://github.com/gmhelmold/HuGR-Orchestra/issues/157) · **Contrato completo:** [`issues/S14.md`](issues/S14.md)
 **Caminho:** #215 → [E2 / #131](https://github.com/gmhelmold/HuGR-Orchestra/issues/131) → [I05 / #138](https://github.com/gmhelmold/HuGR-Orchestra/issues/138) → [S14 / #157](https://github.com/gmhelmold/HuGR-Orchestra/issues/157)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Todas as superfícies transitórias com acabamento Raycast discreto, sem copiar novo layout.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -1158,7 +1159,7 @@ Provas: `evidence/S14/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S15 / #158](https://github.com/gmhelmold/HuGR-Orchestra/issues/158) · **Contrato completo:** [`issues/S15.md`](issues/S15.md)
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I06 / #139](https://github.com/gmhelmold/HuGR-Orchestra/issues/139) → [S15 / #158](https://github.com/gmhelmold/HuGR-Orchestra/issues/158)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S06-W1-T1](#s06-w1-t1), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S06-W1-T1](#s06-w1-t1), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Dock no lugar aprovado com UI real.
 **Fronteiras externas registradas:** `[{"ref": "PR#12", "type": "integration-review", "hard": false, "rule": "A base já tem createAppDock; revisar diferenças da PR sem exigir ou efetuar merge integral."}]`. Não presumir prontidão pelo título da issue.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
@@ -1314,7 +1315,7 @@ Provas: `evidence/S17/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S18 / #161](https://github.com/gmhelmold/HuGR-Orchestra/issues/161) · **Contrato completo:** [`issues/S18.md`](issues/S18.md)
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I07 / #140](https://github.com/gmhelmold/HuGR-Orchestra/issues/140) → [S18 / #161](https://github.com/gmhelmold/HuGR-Orchestra/issues/161)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S17](#s17), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S17](#s17), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Painéis de execução úteis, fiéis e verdadeiros.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -1364,7 +1365,7 @@ Provas: `evidence/S18/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S19 / #162](https://github.com/gmhelmold/HuGR-Orchestra/issues/162) · **Contrato completo:** [`issues/S19.md`](issues/S19.md)
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I08 / #141](https://github.com/gmhelmold/HuGR-Orchestra/issues/141) → [S19 / #162](https://github.com/gmhelmold/HuGR-Orchestra/issues/162)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S01](#s01), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S01](#s01), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Contexto polido + read-boundary planejada/implementada onde suportada; bloqueio live explícito.
 **Fronteiras externas registradas:** `[{"ref": "#109", "type": "read-boundary", "hard": true, "rule": "Exigida para Own live; unavailable UI independe."}, {"ref": "#112", "type": "catalog", "hard": true, "rule": "Catálogo instalado para unidade canônica."}, {"ref": "#108", "type": "context", "hard": true, "rule": "ContextRecord verificado."}, {"ref": "#114", "type": "durable-records", "hard": true, "rule": "Leitura durável; não inferir de texto."}]`. Não presumir prontidão pelo título da issue.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
@@ -1443,7 +1444,7 @@ Provas: `evidence/S19/W2-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S20 / #163](https://github.com/gmhelmold/HuGR-Orchestra/issues/163) · **Contrato completo:** [`issues/S20.md`](issues/S20.md)
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I08 / #141](https://github.com/gmhelmold/HuGR-Orchestra/issues/141) → [S20 / #163](https://github.com/gmhelmold/HuGR-Orchestra/issues/163)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S01](#s01), [S22](#s22). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S01](#s01), [S22-W1-T1](#s22-w1-t1). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Governança exposta com status real e fronteiras preservadas.
 **Fronteiras externas registradas:** `[{"ref": "#106", "type": "approval-authority", "hard": true, "rule": "Exigida para enablement, não para UI unavailable."}, {"ref": "#114", "type": "durable-records", "hard": true, "rule": "Exact durable reader."}, {"ref": "#113", "type": "hardening", "hard": true, "rule": "Fechar hardening aplicável antes de habilitar."}]`. Não presumir prontidão pelo título da issue.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
@@ -1454,6 +1455,7 @@ Provas: `evidence/S19/W2-T2/attempt-NN/`. Template/selagem/validação: [passo a
 - [`packages/schema/src/maestro-event.ts`](../../packages/schema/src/maestro-event.ts) — presente no snapshot; raiz `$REPO`
 - [`specs/hugr-maestro/SESSION-STATE.md`](../../specs/hugr-maestro/SESSION-STATE.md) — presente no snapshot; raiz `$REPO`
 - [`packages/opencode/src/agent/prompt/maestro.txt`](../../packages/opencode/src/agent/prompt/maestro.txt) — presente no snapshot; raiz `$REPO`
+- `packages/app/src/pages/session/orchestra-governance.tsx` — entrada mapeada; **existência/consumer a conferir em S01**
 
 **Escrita autorizada no nível da subissue — a task pode ser mais restrita:**
 ```text
@@ -1463,7 +1465,7 @@ packages/protocol/src/orchestra-governance-read/**
 packages/client/src/orchestra-governance-read/**
 specs/orchestra-visual/evidence/S20/**
 ```
-**Registros de cobertura:** `UI59` Maestro normal [read-anchor], `UI60` Maestro governed approval [read-anchor]
+**Registros de cobertura:** `UI59` Maestro normal [read-anchor], `UI60` Maestro governed approval [read-anchor], `UI76` Governança no consumidor visual: estados seguros e decisões [ui-surface]
 **Provas da frente:** `evidence/S20/`; só crie arquivos das suas tentativas. Não há provas de produto preaprovadas.
 
 <a id="s20-w1"></a>
@@ -1519,7 +1521,7 @@ Provas: `evidence/S20/W2-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S21 / #164](https://github.com/gmhelmold/HuGR-Orchestra/issues/164) · **Contrato completo:** [`issues/S21.md`](issues/S21.md)
 **Caminho:** #215 → [E3 / #132](https://github.com/gmhelmold/HuGR-Orchestra/issues/132) → [I08 / #141](https://github.com/gmhelmold/HuGR-Orchestra/issues/141) → [S21 / #164](https://github.com/gmhelmold/HuGR-Orchestra/issues/164)
-**Dependências de entrada declaradas:** [S03](#s03), [S04](#s04), [S22](#s22), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S03-W1-T1](#s03-w1-t1), [S04-W1-T1](#s04-w1-t1), [S22-W1-T1](#s22-w1-t1), [S25-W0-T2](#s25-w0-t2). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Janitor íntegro visualmente integrado.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 
@@ -1570,7 +1572,7 @@ Provas: `evidence/S21/W1-T2/attempt-NN/`. Template/selagem/validação: [passo a
 
 **Ticket:** [S22 / #165](https://github.com/gmhelmold/HuGR-Orchestra/issues/165) · **Contrato completo:** [`issues/S22.md`](issues/S22.md)
 **Caminho:** #215 → [E4 / #133](https://github.com/gmhelmold/HuGR-Orchestra/issues/133) → [I09 / #142](https://github.com/gmhelmold/HuGR-Orchestra/issues/142) → [S22 / #165](https://github.com/gmhelmold/HuGR-Orchestra/issues/165)
-**Dependências de entrada declaradas:** [S01](#s01), [S03](#s03), [S04](#s04). Leia também as dependências herdadas/finas da task.
+**Dependências de entrada declaradas:** [S01](#s01). Leia também as dependências herdadas/finas da task.
 **Entrega esperada:** Todos os fluxos e estados legíveis, localizados e acessíveis.
 **Contratos usados pelas tasks (leitura seletiva por categoria):** [`CONTRACTS.md`](CONTRACTS.md) · [`SPEC.md`](SPEC.md) · [`PERFORMANCE.md`](PERFORMANCE.md) · [`BUDGETS.json`](BUDGETS.json) · [`COVERAGE.json`](COVERAGE.json) · [`fixture.json`](fixture.json) · [`RECEIPTS-v4.md`](RECEIPTS-v4.md) · [`BRAND-INTEGRATION.md`](BRAND-INTEGRATION.md) · [`BRAND-ASSETS.json`](BRAND-ASSETS.json)
 

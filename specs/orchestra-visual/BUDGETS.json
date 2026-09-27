@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "evaluator_version": "4.0",
+  "evaluator_version": "4.2",
   "profiles": {
     "P0": {
       "settle_s": 60,
@@ -56,10 +56,12 @@
       "mode": "delta",
       "stat": "max",
       "limit": 61440,
-      "min_samples": 5,
-      "min_pairs": 5,
+      "min_samples": 1,
+      "min_pairs": 1,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "artifact",
+      "domain": "nonnegative"
     },
     {
       "id": "initial_css",
@@ -69,10 +71,12 @@
       "mode": "delta",
       "stat": "max",
       "limit": 12288,
-      "min_samples": 5,
-      "min_pairs": 5,
+      "min_samples": 1,
+      "min_pairs": 1,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "artifact",
+      "domain": "nonnegative"
     },
     {
       "id": "new_runtime_dependencies",
@@ -82,10 +86,12 @@
       "mode": "absolute",
       "stat": "max",
       "limit": 0,
-      "min_samples": 5,
-      "min_pairs": 5,
+      "min_samples": 1,
+      "min_pairs": 1,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "artifact",
+      "domain": "nonnegative"
     },
     {
       "id": "decoration_transfer",
@@ -95,10 +101,12 @@
       "mode": "absolute",
       "stat": "max",
       "limit": 307200,
-      "min_samples": 5,
-      "min_pairs": 5,
+      "min_samples": 1,
+      "min_pairs": 1,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "artifact",
+      "domain": "nonnegative"
     },
     {
       "id": "decoration_decode",
@@ -108,10 +116,12 @@
       "mode": "absolute",
       "stat": "max",
       "limit": 4194304,
-      "min_samples": 5,
-      "min_pairs": 5,
+      "min_samples": 1,
+      "min_pairs": 1,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "artifact",
+      "domain": "nonnegative"
     },
     {
       "id": "renderer_cold",
@@ -124,7 +134,9 @@
       "min_samples": 20,
       "min_pairs": 5,
       "delta_floor": 50,
-      "relative": 0.05
+      "relative": 0.05,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "native_boot",
@@ -137,59 +149,69 @@
       "min_samples": 20,
       "min_pairs": 5,
       "delta_floor": 100,
-      "relative": 0.05
+      "relative": 0.05,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "input_paint_p95",
       "gate": "P03",
       "unit": "ms",
       "profile": "P1",
-      "mode": "absolute",
+      "mode": "absolute_and_delta",
       "stat": "p95",
       "limit": 50,
       "min_samples": 200,
       "min_pairs": 5,
-      "delta_floor": 0,
-      "relative": 0
+      "delta_floor": 2,
+      "relative": 0.05,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "input_paint_p99",
       "gate": "P03",
       "unit": "ms",
       "profile": "P1",
-      "mode": "absolute",
+      "mode": "absolute_and_delta",
       "stat": "p99",
       "limit": 100,
       "min_samples": 200,
       "min_pairs": 5,
-      "delta_floor": 0,
-      "relative": 0
+      "delta_floor": 5,
+      "relative": 0.05,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "hot_tab",
       "gate": "P03",
       "unit": "ms",
       "profile": "P1",
-      "mode": "absolute",
+      "mode": "absolute_and_delta",
       "stat": "p95",
       "limit": 100,
       "min_samples": 200,
       "min_pairs": 5,
-      "delta_floor": 0,
-      "relative": 0
+      "delta_floor": 5,
+      "relative": 0.05,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "feedback",
       "gate": "P03",
       "unit": "ms",
       "profile": "P1",
-      "mode": "absolute",
+      "mode": "absolute_and_delta",
       "stat": "p95",
       "limit": 50,
       "min_samples": 200,
       "min_pairs": 5,
-      "delta_floor": 0,
-      "relative": 0
+      "delta_floor": 2,
+      "relative": 0.05,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "raf_gap_p95",
@@ -202,7 +224,9 @@
       "min_samples": 200,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "raf_gap_p99",
@@ -215,7 +239,9 @@
       "min_samples": 200,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "new_visual_longtasks_gt100ms",
@@ -228,7 +254,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "scripting_per_frame",
@@ -241,7 +269,9 @@
       "min_samples": 200,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "full_transcript_rescans",
@@ -254,7 +284,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "unaffected_message_remounts",
@@ -267,7 +299,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "stale_result_applications",
@@ -280,7 +314,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "hidden_highlight_runs",
@@ -293,7 +329,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "uncancelled_obsolete_requests",
@@ -306,7 +344,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "dom_10x_history",
@@ -319,7 +359,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "unbounded_new_caches",
@@ -332,7 +374,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "cosmetic_pollers",
@@ -345,7 +389,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "leaked_listeners",
@@ -358,7 +404,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "hidden_live_tickers",
@@ -371,7 +419,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "live_ticker_hz",
@@ -384,7 +434,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "idle_cpu",
@@ -397,7 +449,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "extra_views",
@@ -410,7 +464,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "periodic_snapshots",
@@ -423,7 +479,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "idle_bounds_updates",
@@ -436,7 +494,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "bounds_updates_per_frame",
@@ -449,7 +509,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "inactive_view_cap",
@@ -462,7 +524,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "settled_heap",
@@ -475,7 +539,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "shell_rss",
@@ -488,7 +554,9 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 33554432,
-      "relative": 0.1
+      "relative": 0.1,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "residual_heap_50cycles",
@@ -501,20 +569,25 @@
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "nonnegative"
     },
     {
       "id": "residual_slope",
       "gate": "P10",
-      "unit": "bytes/minute",
+      "unit": "bytes/min",
       "profile": "P3",
       "mode": "absolute",
-      "stat": "max",
+      "stat": "median",
       "limit": 0,
       "min_samples": 5,
       "min_pairs": 5,
       "delta_floor": 0,
-      "relative": 0
+      "relative": 0,
+      "observation_kind": "paired",
+      "domain": "signed",
+      "noise_policy": "mixed-signs-inconclusive"
     }
   ],
   "computed_gates": [
@@ -522,5 +595,10 @@
     "P12"
   ],
   "aggregation": "nearest-rank quantiles; paired run statistic deltas; worst per-run boundary crossing is INCONCLUSIVE rather than a false PASS. No outlier removal.",
-  "note": "Targets, not product measurements. Counter metrics require real instrumented sources and review; numbers are recalculated, not authenticated."
+  "note": "Targets, not product measurements. Counter metrics require real instrumented sources and review; numbers are recalculated, not authenticated.",
+  "policy_notes": [
+    "P01 uses two actual build manifests, not repeated fabricated timing pairs.",
+    "P03 must satisfy its unchanged absolute SLO AND <=max(5% baseline, 2ms input-p95/feedback or 5ms input-p99/hot-tab). These are engineering limits, not measured noise. S02 tests repeatability; excessive noise is inconclusive, never a license to widen budgets.",
+    "residual_slope is signed bytes/min. Nonpositive estimates pass the zero-growth limit; mixed signs are INCONCLUSIVE, sustained positive estimates FAIL. No rounding to zero or outlier removal; extend settle/window to resolve noise. Residual byte ceiling remains unchanged."
+  ]
 }

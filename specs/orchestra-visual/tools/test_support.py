@@ -15,8 +15,9 @@ def png(w,h):
 def raw_fixture(root,gates,head='a'*40,build='b'*64):
     b=load(root/'BUDGETS.json');env={k:'synthetic-isolated-test' for k in b['environment_keys']}
     raw={'kind':'paired-performance-observations','synthetic':True,'budget_sha256':digest(b),'environment':env,'baseline_environment':copy.deepcopy(env),'candidate_head':head,'baseline_head':'c'*40,'candidate_build_sha256':build,'baseline_build_sha256':'d'*64,'fixture_sha256':file_hash(root/'fixture.json'),'candidate_features_sha256':'e'*64,'baseline_features_sha256':'e'*64,'build_mode':'production','quiet_host':True,'profiles':copy.deepcopy(b['profiles']),'observations':[]}
+    raw['artifact_manifests'] = {label: {'kind': 'build-cost-manifest', 'build_sha256': raw[label + '_build_sha256'], 'initial_chunks': [], 'decorations': [], 'runtime_dependencies': []} for label in ('baseline', 'candidate')}
     for rule in b['metrics']:
-        if rule['gate'] not in gates:continue
+        if rule['gate'] not in gates or rule.get('observation_kind') == 'artifact':continue
         value=0 if rule['limit'] is None else max(0,rule['limit']/2)
         base=value
         if rule['mode'] in ('delta','relative_delta'):base=value=100

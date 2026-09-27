@@ -91,7 +91,7 @@ Microestados mínimos por componente interativo: default, hover, pressed, select
 
 PLAN.json é a fonte de nós, axiomas, dependencies, acceptance_requires, scopes e gates. SURFACES.json é fonte de superfícies, capacidades, estados e owners. CENSUS.json representa arquivos concretos do checkout. S01 atualiza esses canônicos e regenera MAP/OWNERSHIP/issues; nenhuma segunda família source-map/surface-map/ownership mantém autoridade paralela.
 
-Invariantes e padrões de qualidade do pai continuam aplicáveis. DoD/completude/sucesso do pai são verificados no fechamento do pai; não impor o fechamento antes de produzir seus filhos. Cada critério informa criterion_evaluation_stage. S25-W0 produz e verifica um piloto cedo; S25-W1-T1 produz o candidato final; S23/S24 medem/revisam; S25-W1-T2 encerra. Fonte de dados, integração, evidência e aceite não são o mesmo estágio.
+Invariantes do pai são contínuos. Padrões de qualidade se aplicam à etapa nomeada: preparação/candidato não precisam do resultado de consumidores futuros. Regras de aceite integral são avaliadas somente no encerramento correspondente. DoD/completude/sucesso do pai são verificados no fechamento do pai; não impor o fechamento antes de produzir seus filhos. Cada critério informa criterion_evaluation_stage. S25-W0 produz e verifica um piloto cedo; S25-W1-T1 produz o candidato final; S23/S24 medem/revisam; S25-W1-T2 encerra. Fonte de dados, integração, evidência e aceite não são o mesmo estágio.
 
 Em S12, exports atuais de provider/model bastam para desenvolver o container; integração com S13 é verificada em I05. S15-T1 expõe slots/bridge; S25-W0 conecta; S15-T2 verifica composição real. S19/S20-W2-T1 entregam readers/consumers locais com código atribuível; S25 importa quando disponíveis; T2 prova enablement público e gates afetados são repetidos. Não criar ciclos de aceite dentro da prosa.
 
@@ -109,10 +109,33 @@ A autoridade externa precisa estar no candidato (ancestralidade) ou em artefato 
 
 ## C-12 — capacidade de execução e provas formais
 
-Quando running<=jobs, o coordenador respeita running+selected<=jobs. Se já existir excesso, selected=[] e over_capacity=true; não cancela trabalho nem aloca mais. Scope e lease se aplicam a tarefas em andamento e novas. Benchmark requer host quieto exclusivo. Um seletor read-only não adquire locks concorrentes: coordenador único e worktrees são parte do procedimento.
+Quando running<=jobs, o coordenador respeita running+selected<=jobs. Se já existir excesso, selected=[] e over_capacity=true; não cancela trabalho nem aloca mais. Scope e lease se aplicam a tarefas em andamento e novas. Amostragem requer host quieto: phase=collect reserva só sua janela; work/review não retêm uma reserva da task inteira. Use o preflight --collect, o coordenador único e verifique também processos reais. Um seletor read-only não adquire locks concorrentes: coordenador único e worktrees são parte do procedimento.
 
 Cobertura visual formal e avaliações numéricas são recalculadas por ferramentas; aparência, causalidade de métricas e comportamento continuam precisando de revisão. Uma imagem decodificável não prova beleza; um JSON íntegro não prova execução real. Este tooling permanece fora do runtime.
 
 ## C-BRAND — HuGR fornecida, produto Orchestra preservado
 
 Contrato detalhado em BRAND-INTEGRATION.md/BRAND-ASSETS.json. O input HuGR é imutável; o único owner de cópias de assets e wrapper app-local é S05. S06 integra o slot visual, S03 preserva o tema, S08 coordena native icons e S25 é writer de entrypoints/head/packaging. Brandkit não adiciona owners, WPs, tasks ou backend. Sobrescreve somente ordens históricas de desenhar/vetorizar/otimizar a marca e não altera a tarefa de paisagem. Condicionais de plataforma exigem consumidor e configuração reais; as cópias não mudam identidade instalada, appId, escopo, updater ou preferências.
+
+## C-13 — entregas pequenas e paralelismo sem nova plataforma
+
+| Entrega de entrada | Consumidor pode começar quando | Aceite cruzado |
+|---|---|---|
+| Tema S03-T1 | ThemeProvider/tokens existentes implementados e smoke/typecheck locais | T2 do fornecedor/consumidor e gates finais |
+| Primitives S04-T1 | Props/exports existentes preservados, estilos da fatia disponíveis | S04-T2 não bloqueia preparo de layout |
+| Marca S05-T1 | Assets e wrapper oficiais disponíveis, hashes e uso local conferidos | S05-T2 valida render/custo; marca não é redesenhada |
+| Copy S22-T1 | copy.json/dicionários com chaves/interpolação/fallback e parity | S22-T2 audita componentes; S24 candidato integrado |
+| Evidência C-05, conferida em S01 | S11 prepara arquivos/diff/terminal usando readers/handlers existentes | S11-T2 consome S09-T1 para verificar ligação da timeline |
+| Shell S06-T1 e Dock S15/S16-T1 | Composição e controllers locais publicados pelo owner | S25-W0 conecta cedo; T2s fazem verificação cruzada |
+
+Nenhuma linha autoriza API inventada, segundo provider/store, slots universais ou edição concorrente dos mesmos arquivos. T1 já precisa de prova local; apenas a auditoria mais ampla é adiada. Mudança posterior de contrato é integrada pelo owner e invalida os consumidores pertinentes. S17/read-model antes de S18 e autoridade antes de W2 live permanecem dependências reais.
+
+O seletor prioriza os pré-requisitos prontos de S25-W0-T1, depois S25-W0-T2, e preserva ordem estável nos demais. Isso não ignora dependências, scopes, leases ou limite total RUNNING+selected. Uma reserva collect exige host realmente quieto apenas durante medição; não existe serviço novo de agendamento.
+
+## C-14 — cobertura de consumidor, não de arquivo de backend
+
+UI75 é inspeção do tema no shell existente (S03 herda o consumidor; S06 continua writer do layout). UI76 é o adapter visual **planejado**, no escopo S20, com ausência/HOLD/error seguros. Os registros não alegam que o frontend já foi implementado.
+
+COVERAGE.task_consumer_states define os estados específicos de S03-T2, S20-W1-T2 e S20-W2-T2. Obrigação visual com zero alvos reprova. Uma captura que não corresponde ao consumidor/estado/perfil esperado é recusada. W2 testa estados live somente com a autoridade real exigida no DAG; isso não bloqueia a UI indisponível de W1. S24/release seguem a cobertura comum do candidato; nenhuma capacidade live pode ser declarada sem W2-T2 no candidato conectado e os gates afetados repetidos.
+
+Capturas podem compartilhar um arquivo somente quando os consumidores estão de fato visíveis no mesmo estado/render. Reaproveitar pixels não dispensa revisão por critério. Não produzir um produto cartesiano desnecessário de todas as telas em todos os tamanhos: estados relevantes no viewport principal, mais os perfis definidos.

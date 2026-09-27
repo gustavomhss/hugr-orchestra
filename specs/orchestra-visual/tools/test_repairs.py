@@ -98,7 +98,13 @@ class ContractRepairs(Temp):
  def test_R08_benchmark_requires_quiet_host(self):
   p={'tasks':{n['id']:{'status':'PASS'} for n in PLAN['nodes'] if n['kind']=='task'},'external':{}}
   p['tasks']['S23-W1-T1']={'status':'PENDING'};p['tasks']['S24-W1-T1']={'status':'RUNNING'}
-  r=select(PLAN,p,check_evidence=False);self.assertNotIn('S23-W1-T1',[n['id'] for n in r['selected']])
+  # Preparation is no longer a host reservation; actual sampling still is.
+  from select_work import collection_preflight
+  r=select(PLAN,p,check_evidence=False);self.assertIn('S23-W1-T1',[n['id'] for n in r['selected']])
+  p['tasks']['S23-W1-T2']={'status':'RUNNING','phase':'work'}
+  self.assertFalse(collection_preflight(PLAN,p,'S23-W1-T2')['may_record_collect'])
+  p['tasks']['S24-W1-T1']['phase']='review'
+  self.assertTrue(collection_preflight(PLAN,p,'S23-W1-T2')['may_record_collect'])
  def test_R06_discovery_and_pilot_are_historical_not_current_acceptance(self):
   snap={'ancestors':['a'*40],'changed_since':{'a'*40:['packages/app/src/app.tsx']},'dirty':[]}
   self.assertEqual(source_errors(BY['S01-W1-T1'],{'head':'a'*40},snap),[])

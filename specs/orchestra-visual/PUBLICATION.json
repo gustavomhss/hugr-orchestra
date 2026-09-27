@@ -2,7 +2,7 @@
   "schema_version": 1,
   "root_epic": 215,
   "branch": "visual-migration-plan",
-  "contract_revision": "4.1",
+  "contract_revision": "4.2",
   "plan_sha256": "b7775a4fee972168b01b42ab209f4aa8d4e02c0a0337e6359cc6c3436b7e94d2",
   "nodes": 143,
   "criteria": 1980,
@@ -49,8 +49,8 @@
     "S25": "specs/orchestra-visual/issues/S25.md"
   },
   "artifact_package_status": "COMPLETE",
-  "ticket_bodies_status": "VERIFIED",
-  "native_relationships": "VERIFIED",
+  "ticket_bodies_status": "RECONCILING_4.2",
+  "native_relationships": "RECONCILING_4.2",
   "product_execution": "NOT_RUN",
   "missing_inputs_note": null,
   "ticket_body_sha256": {
@@ -112,7 +112,7 @@
     "MANIFEST.sha256"
   ],
   "source_archive_sha256": "c8653cc7a2dc3f2e1e0f9b85ae0b9eaac0de77b2c100bac87c1eb45161b4599a",
-  "tooling_tests_passed": 151,
+  "tooling_tests_passed": 202,
   "checks": [
     {
       "name": "brand",
@@ -120,9 +120,8 @@
         "python3",
         "tools/verify_brand.py"
       ],
-      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "publication/brand.log"
+      "log": "reviews/parallelism-performance/repairs/brand-github.log"
     },
     {
       "name": "original-brand",
@@ -131,9 +130,8 @@
         "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py",
         "--json"
       ],
-      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "publication/original-brand.log"
+      "log": "reviews/parallelism-performance/repairs/original-brand-github.log"
     },
     {
       "name": "plan",
@@ -141,9 +139,8 @@
         "python3",
         "tools/validate_plan.py"
       ],
-      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "publication/plan.log"
+      "log": "reviews/parallelism-performance/repairs/plan-github.log"
     },
     {
       "name": "maps",
@@ -152,20 +149,30 @@
         "tools/render_maps.py",
         "--check"
       ],
-      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "publication/maps.log"
+      "log": "reviews/parallelism-performance/repairs/maps-github.log"
     },
     {
-      "name": "issue-projections",
+      "name": "issues",
       "command": [
         "python3",
         "tools/render_issues.py",
         "--check"
       ],
-      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "publication/issue-projections.log"
+      "log": "reviews/parallelism-performance/repairs/issues-github.log"
+    },
+    {
+      "name": "navigation",
+      "command": [
+        "python3",
+        "tools/render_navigation.py",
+        "--check",
+        "--repo",
+        "/home/runner/work/HuGR-Orchestra/HuGR-Orchestra"
+      ],
+      "exit_code": 0,
+      "log": "reviews/parallelism-performance/repairs/navigation-github.log"
     },
     {
       "name": "tools-tests",
@@ -180,9 +187,8 @@
         "test_*.py",
         "-v"
       ],
-      "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "publication/tools-tests.log"
+      "log": "reviews/parallelism-performance/repairs/tools-tests-github.log"
     }
   ],
   "navigation": {
@@ -198,5 +204,6 @@
     "entry": "START-HERE.md",
     "index": "INDEX.md",
     "report": "publication/navigation/REPORT.json"
-  }
+  },
+  "repair_review": "reviews/parallelism-performance/repairs/REVIEW.md"
 }

@@ -19,7 +19,7 @@ def file_hash(path):
 def manifest(node,root=ROOT,plan=None):
     plan=plan if plan is not None else load(root/'PLAN.json')
     by={n['id']:n for n in plan['nodes']}
-    fields=('id','kind','depends_on','acceptance_requires','external_requires','write_paths','leased_write_paths','exclude_paths','read_paths','steps','axioms','criterion_ids','evidence_requirements','required_performance_gates','required_visual_gates','required_native_gates','resource_locks','proof_mode','source_watch_mode','normative_files','contract_surface_scope','criterion_evaluation_stage','source_watch_paths','proof_claim','optional_inputs')
+    fields=('id','kind','depends_on','acceptance_requires','external_requires','write_paths','leased_write_paths','exclude_paths','read_paths','steps','axioms','criterion_ids','evidence_requirements','required_performance_gates','required_visual_gates','required_native_gates','resource_locks','proof_mode','source_watch_mode','normative_files','contract_surface_scope','criterion_evaluation_stage','source_watch_paths','proof_claim','optional_inputs','verification_tier','sampling_requires_quiet_host','proof_reuse','dependency_inputs')
     chain=[];ident=node.get('parent');seen=set()
     while ident:
         if ident in seen or ident not in by:raise ValueError('invalid ancestor chain')
@@ -34,6 +34,6 @@ def manifest(node,root=ROOT,plan=None):
     for rel in node.get('normative_files',[]):
         path=(root/rel).resolve();path.relative_to(root.resolve())
         files[rel]=file_hash(path)
-    return {'schema_version':1,'task':{k:node.get(k) for k in fields},'ancestors':chain,'surface_contract':selected,'normative_files':files,'gate_registry':plan['gate_registry'],'final_gate_policy':plan['final_gate_policy'] if node['id']==plan['final_gate_policy']['task'] else None,'leases':[x for x in plan.get('shared_write_leases',[]) if node['id'] in x['tasks']]}
+    return {'schema_version':1,'task':{k:node.get(k) for k in fields},'scheduling_policy':plan.get('scheduling_policy',{}),'ancestors':chain,'surface_contract':selected,'normative_files':files,'gate_registry':plan['gate_registry'],'final_gate_policy':plan['final_gate_policy'] if node['id']==plan['final_gate_policy']['task'] else None,'leases':[x for x in plan.get('shared_write_leases',[]) if node['id'] in x['tasks']]}
 
 def contract_digest(node,root=ROOT,plan=None):return digest(manifest(node,root,plan))

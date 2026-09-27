@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "kind": "planning-tooling-repairs-not-product-acceptance",
+  "revision": "4.2",
+  "base_commit": "a45f6e60a27d6ad1e148d7394e61e11556c4fd23",
+  "reviewed_contract_commit": "d022ec1e281b51a6c8afa5740c6781c01efefb37",
+  "plan_sha256": "1735d28ddd2dfc51a935b473694fd829adf5ae1c092986efe5e57ce6213e5734",
+  "same_hierarchy": true,
+  "nodes": 143,
+  "tasks": 66,
+  "wps": 38,
+  "criteria": 1974,
+  "local_tool_tests": 189,
+  "local_new_regressions": 38,
+  "navigation_tests": "Not in original ZIP; full GitHub checkout suite required in publication.",
+  "product_execution": "NOT_RUN",
+  "independence": "Same assistant, distinct correction and cold-review pass.",
+  "findings": [
+    {
+      "id": "PA-01",
+      "title": "Collection-only host reservation and proportional evidence",
+      "status": "IMPLEMENTED_AND_LOCALLY_TESTED",
+      "regressions": "tools/test_parallelism_repairs.py::PA01_*",
+      "repair_axioms": {
+        "dod": "Reserva só durante collect; checks estáticos usam manifests e soak fica na campanha integrada.",
+        "invariants": "Coleta real continua exigindo host quieto; nenhum gate final é dispensado.",
+        "quality_standards": "Prova proporcional ao fenômeno medido, sem repetições estáticas nem serviço de locks.",
+        "completeness_criteria": "Preflight READY/WAIT/erro, revisão não reservada, coleta simultânea recusada e reuso do mesmo build.",
+        "success_criteria": "Frentes disjuntas avançam fora da janela de coleta sem disputar seus arquivos."
+      }
+    },
+    {
+      "id": "PA-02",
+      "title": "Early local contract inputs and explicit pilot priority",
+      "status": "IMPLEMENTED_AND_LOCALLY_TESTED",
+      "regressions": "tools/test_parallelism_repairs.py::PA02_*",
+      "repair_axioms": {
+        "dod": "Implementadores consomem T1 local verificada e piloto tem prioridade explícita.",
+        "invariants": "Não inventar API nem apagar dependência real de autoridade/identidade; writer único mantido.",
+        "quality_standards": "Usar C-02/C-05/C-08 existentes, sem sistema universal de slots.",
+        "completeness_criteria": "Contrato ausente bloqueia, piloto pronto prioriza, mudança normativa invalida e caminhada termina.",
+        "success_criteria": "Composição é validada antes da migração ampla e não espera auditorias alheias desnecessárias."
+      }
+    },
+    {
+      "id": "PA-03",
+      "title": "Producer/aggregate quality standards allocated to actual stage",
+      "status": "IMPLEMENTED_AND_LOCALLY_TESTED",
+      "regressions": "tools/test_parallelism_repairs.py::PA03_*",
+      "repair_axioms": {
+        "dod": "Candidato é concluível com build/smoke locais, sem resultado futuro S23/S24.",
+        "invariants": "Fechamento continua bloqueado sem gates do mesmo candidato.",
+        "quality_standards": "Obrigações dos ancestrais nomeiam os estágios e não exigem fechamento antecipado.",
+        "completeness_criteria": "Revisar cinco grupos, IDs/stages e executar produtor→gates→falha→reparo→aceite sintético.",
+        "success_criteria": "O executor não precisa violar um axioma para seguir o grafo."
+      }
+    },
+    {
+      "id": "PA-04",
+      "title": "Signed memory slope and inconclusive noisy trends",
+      "status": "IMPLEMENTED_AND_LOCALLY_TESTED",
+      "regressions": "tools/test_parallelism_repairs.py::PA04_*",
+      "repair_axioms": {
+        "dod": "Memória decrescente válida não falha pela unidade; bytes/min e domínio assinado são explícitos.",
+        "invariants": "Crescimento sustentado reprova; limites de heap/RSS/residual não aumentam.",
+        "quality_standards": "Sinais mistos ficam inconclusivos, sem arredondar ou apagar ruído.",
+        "completeness_criteria": "Negativo, zero, positivo, NaN, unidade errada, sinais mistos e pouca amostra.",
+        "success_criteria": "O avaliador distingue redução válida de crescimento e de evidência inconclusiva."
+      }
+    },
+    {
+      "id": "PA-05",
+      "title": "Absolute and paired-regression latency limits together",
+      "status": "IMPLEMENTED_AND_LOCALLY_TESTED",
+      "regressions": "tools/test_parallelism_repairs.py::PA05_*",
+      "repair_axioms": {
+        "dod": "Regressões materiais abaixo do teto absoluto reprovam na comparação pareada.",
+        "invariants": "Baseline lenta não autoriza UX lenta; pisos não são ajustados automaticamente para passar.",
+        "quality_standards": "Mesmo workload/build/ambiente; margens de engenharia explícitas, calibração real pendente S02.",
+        "completeness_criteria": "Melhoria, ruído pequeno, regressão abaixo do teto, violação absoluta, dispersão e insuficiência.",
+        "success_criteria": "A velocidade prévia é preservada, não apenas colocada sob um teto amplo."
+      }
+    },
+    {
+      "id": "PA-06",
+      "title": "Explicit theme/governance visual consumers",
+      "status": "IMPLEMENTED_AND_LOCALLY_TESTED",
+      "regressions": "tools/test_parallelism_repairs.py::PA06_*",
+      "repair_axioms": {
+        "dod": "Toda categoria visual obrigatória tem consumidores/casos e binding verificável.",
+        "invariants": "Backend fonte não é superfície, arquivo planejado não é capacidade live, screenshot gerado não é produto.",
+        "quality_standards": "Capturas correspondem a consumidores/estados; reuso só quando realmente visíveis.",
+        "completeness_criteria": "Consumidor/estado removido, matriz vazia e imagem não relacionada reprovam; cenário íntegro passa.",
+        "success_criteria": "Cobertura correta sem expansão cartesiana indiscriminada."
+      }
+    }
+  ]
+}

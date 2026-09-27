@@ -25,6 +25,12 @@ def render(plan):
             if n.get('children'): lines += ['Filhos: '+', '.join(n['children'])+'.']
             for key in ('write_paths','exclude_paths','read_paths','resource_locks','steps','cases'):
                 if n.get(key):lines += ['\n### '+key+'\n'+'\n'.join('- '+s for s in n[key])]
+            if n.get('verification_tier'):
+                lines += ['\nNível de verificação: **'+n['verification_tier']+'**. Reserva de hardware somente na fase `collect`; preparo/revisão não reservam a máquina.']
+            if n.get('dependency_inputs'):
+                lines += ['\nContratos de entrada:\n'+'\n'.join('- `'+k+'`: '+v for k,v in n['dependency_inputs'].items())]
+            if n.get('proof_reuse'):
+                lines += ['\nReuso de provas: '+n['proof_reuse']]
             if n.get('external_requires'):lines += ['\nPré-requisitos externos: `'+json.dumps(n['external_requires'],ensure_ascii=False)+'`']
             if n.get('evidence_requirements'):lines += ['\nCategorias de prova: `'+json.dumps(n['evidence_requirements'],ensure_ascii=False)+'`']
             for key,values in n['axioms'].items():

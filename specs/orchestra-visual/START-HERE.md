@@ -86,7 +86,7 @@ Cada worktree paralelo tem seu próprio `$REPO`. O coordenador reconcilia provas
 | Logo e integração da marca | [BRAND-INTEGRATION.md](BRAND-INTEGRATION.md) + [BRAND-ASSETS.json](BRAND-ASSETS.json) | Usar os assets intactos; preservar nome Orchestra e tema grafite. |
 | O brand kit completo | [vendor/HuGR-Brand-Kit-v1.0/AGENT-START-HERE.md](vendor/HuGR-Brand-Kit-v1.0/AGENT-START-HERE.md) | Insumo de integração. Não copiar 304 arquivos para `public/`. |
 | Progresso da implementação | [progress.json](progress.json) | Estado por **task**, com evidência; não concluir pais manualmente. |
-| Formato de prova | [RECEIPTS-v4.md](RECEIPTS-v4.md) | O nome v4 continua correto: o recibo da v4.1 usa esquema 3. |
+| Formato de prova | [RECEIPTS-v4.md](RECEIPTS-v4.md) | O nome v4 continua correto: o recibo da v4.2 usa esquema 3. |
 | Ferramentas e parâmetros exatos | [tools/README.md](tools/README.md) | Scripts locais; não executam a migração sozinhos. |
 | O que de fato foi publicado | [PUBLICATION.json](PUBLICATION.json) e [publication/](publication/) | Prova da publicação, não aprovação do produto. |
 | Revisões anteriores | `REVIEW-*.md`, `QA_REPORT.md`, `qa/` | Histórico. Afirmações antigas de publicação parcial não substituem PUBLICATION atual. |
@@ -175,3 +175,13 @@ O piloto S25-W0 é cedo e conectado; S25-W1-T1 produz candidato; S23/S24 avaliam
 ## 8. Prompt de transferência
 
 > Execute o épico #215 de gmhelmold/HuGR-Orchestra. Comece por specs/orchestra-visual/START-HERE.md na branch visual-migration-plan. Use INDEX.md para localizar o ticket, seus WPs/tasks e entradas de código. Confira o checkout e siga EXECUTE.md/PLAN.json com o seletor. Preserve o mock e os assets HuGR. Implemente e verifique cada unidade pelos cinco axiomas, com performance e microacabamento no mesmo build; não entregue outro planejamento. Preserve meu trabalho e registre provas reais antes de concluir.
+
+<!-- orchestra-pa-42:begin -->
+## Execução proporcional e paralela — 4.2
+
+As correções de PA-01–PA-06 estão em [reviews/parallelism-performance/repairs/REVIEW.md](reviews/parallelism-performance/repairs/REVIEW.md). O grafo preserva os mesmos 38 WPs/66 tasks. Use `verification_tier` e `dependency_inputs` da unidade: implementar consome a entrega T1 local; a auditoria cruzada completa fica no aceite. S22-T1 fornece copy/parity cedo; o piloto S25-W0 tem prioridade e 11 pré-requisitos.
+
+P01 usa dois manifests reais, não cinco repetições de valores estáticos. S23-T2 coleta a campanha completa; S25-T2 valida/reutiliza artefatos do mesmo candidato sem repetir o soak. P03 exige teto absoluto e proteção contra regressão. Tendência de memória é assinada, com ruído inconclusivo não aprovado. Os consumidores de tema e governança estão explicitamente na matriz de capturas.
+
+Para coletar: task já RUNNING → `python3 tools/select_work.py --collect ID` → se READY_TO_RESERVE, registrar phase=collect e conferir processos reais → medir → registrar phase=review e liberar o host. Nenhum processo é iniciado, pausado ou morto automaticamente. Não medir durante compilação/captura concorrente. Provas e axiomas continuam obrigatórios; a reforma visual ainda não está implementada.
+<!-- orchestra-pa-42:end -->

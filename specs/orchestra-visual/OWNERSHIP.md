@@ -1,8 +1,8 @@
-# OWNERSHIP — projeção canônica v4.1
+# OWNERSHIP — projeção canônica v4.2
 
 Fonte única: PLAN.json. Cada task herda seu write scope explicitamente; grants de codegen são condicionais a lease serial.
 
-Um coordenador mantém progress.json. --jobs limita RUNNING + novas alocações. Benchmark reserva o host; nenhum processo é cancelado automaticamente.
+Um coordenador mantém progress.json. --jobs limita RUNNING + novas alocações. Reserva do host apenas na fase collect; preparo/review não reservam. O seletor prioriza os pré-requisitos do próximo marco do piloto; nenhum processo é cancelado automaticamente.
 
 Use worktrees de execução isoladas; capture baseline antes de escrever. Não resetar/limpar o checkout pessoal. Integrações podem importar commits de lanes somente com recibos íntegros e atribuição de paths verificada.
 
