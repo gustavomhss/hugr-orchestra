@@ -37,8 +37,7 @@ jobs:
           assert len(raw)==58820 and hashlib.sha256(raw).hexdigest()=='40de9a7a3069d6faa85b896ff997fb798c1df520e6fe18ccdc09e5e36d98baca'
           data=json.loads(raw)
           allowed={'RUN.md','tools/README.md','tools/census.py','tools/effective_contract.py','tools/select_work.py','tools/source_proof.py','tools/test_contract.py','tools/test_execution_repairs.py','tools/test_repairs.py','tools/validate_evidence.py','tools/validate_plan.py','reviews/full-execution-audit/repairs/REVIEW.md'}
-          root=pathlib.Path('specs/orchestra-visual')
-          paths={str(root/p) for p in allowed}
+          root=pathlib.Path('specs/orchestra-visual');paths={str(root/p) for p in allowed}
           assert {row['path'] for row in data['files']}==paths
           original={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and str(p) not in paths and p.name!='MANIFEST.sha256'}
           for row in data['files']:
@@ -50,12 +49,16 @@ jobs:
           subprocess.run(['git','apply',str(patch)],check=True)
           for row in data['files']:
               assert hashlib.sha256(pathlib.Path(row['path']).read_bytes()).hexdigest()==row['after_sha256']
+          review=root/'reviews/full-execution-audit/repairs/REVIEW.md'
+          review.write_text('\n'.join(line.rstrip() for line in review.read_text().splitlines())+'\n')
+          assert hashlib.sha256(review.read_bytes()).hexdigest()=='38fb3a27a3380f93edba6b0f89c96d6f775ff01b03186aec3fabcb23e730f2dc'
           ignore=pathlib.Path('.prettierignore');text=ignore.read_text()
           assert 'specs/orchestra-visual/' not in text.splitlines(), 'Concurrent formatter policy change'
           ignore.write_text(text.rstrip()+'\n# Hash-bound visual contracts and official vendor assets use their own generators/validators.\nspecs/orchestra-visual/\n')
           (out/'transfer.json').write_text(json.dumps({'files':data['files'],'raw_sha256':hashlib.sha256(raw).hexdigest()},indent=2)+'\n')
           (out/'protected-before.json').write_text(json.dumps(original,indent=2)+'\n')
-          print('Applied 12 exact reviewed files; preserved protected inputs; formatter ownership explicit.')
+          subprocess.run(['git','diff','--check'],check=True)
+          print('Applied 12 exact reviewed files; protected inputs unchanged.')
           PY
       - name: Execute the complete tooling suite and existing contract checks
         working-directory: specs/orchestra-visual
@@ -100,7 +103,6 @@ jobs:
           assert before==git('diff','--binary','HEAD') and index==git('ls-files','--stage','-z'), 'Bootstrap mutated checkout/index'
           assert json.loads((root/'progress.json').read_text())['tasks']=={}
           (out/'bootstrap.json').write_text(json.dumps({'discovered_files':len(census['files']),'tasks_packeted':66,'unexecuted_receipt_rejected':True,'unclassified_census_rejected':True,'checkout_index_preserved':True,'product_tasks_accepted':0},indent=2)+'\n')
-          print('66 packets generated; strict census and unexecuted receipt correctly held.')
           PY
       - name: Read back published relationships without modifying tickets
         working-directory: specs/orchestra-visual
@@ -109,7 +111,7 @@ jobs:
         run: python3 tools/github_sync.py > "$OUT/relationships.json"
       - name: Publish bounded repair code and factual verification report
         run: |
-          python3 - <<'PY'
+          python3 - <<'PY' > "$OUT/publication.log" 2>&1
           import hashlib,json,os,pathlib,re,subprocess
           root=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT'])
           old=json.loads((out/'protected-before.json').read_text())
@@ -121,12 +123,14 @@ jobs:
           assert changed==expected, (changed-expected,expected-changed)
           plan_hash=hashlib.sha256((root/'PLAN.json').read_bytes()).hexdigest()
           assert plan_hash=='9059703f0e03a3cac56435b71dd09f9124cb8f5a28f1854a9c26ca307b8b4e78', 'Canonical plan changed'
-          report={'kind':'execution-tooling-repair-verification-not-product-approval','status':'VERIFIED','run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'workflow_input_sha':os.environ['GITHUB_SHA'],'canonical_plan_sha256':plan_hash,'effective_manifest_schema':2,'unique_tests':280,'new_regression_tests':32,'previous_tests_retained':248,'tests_log_sha256':hashlib.sha256(tests.encode()).hexdigest(),'bootstrap':json.loads((out/'bootstrap.json').read_text()),'relationships':json.loads((out/'relationships.json').read_text()),'protected_files_unchanged':len(old),'repair_files':transfer['files'],'findings':{'EX-01':'REPAIRED','EX-02':'REPAIRED','EX-03':'REPAIRED','H-01':'REPAIRED_DECLARED_ORIGIN_BOUNDARY_ONLY','E-01':'COORDINATION_FREEZE_AND_FORMATTER_OWNERSHIP_NO_NEW_ENGINE','CI-01':'SEPARATE_PR_234_CURRENT_CI_REQUIRED'},'product_execution':'NOT_RUN','product_tasks_accepted':0,'frontend_electron_performance_approved':False,'review_method':'same-assistant-adversarial-pass-not-external-auditor','auxiliary_attempt_notes':['First helper definition rejected runner context before jobs; moved output resolution into a step.','Second helper passed 280 tests, maps and issues but navigation check lacked --repo; corrected the command without weakening the check.','Third helper passed the suite, bootstrap and relationship readback but failed during metadata publication. This report binds directly to the independently checked canonical PLAN byte hash instead of duplicating a version lookup.']}
+          for row in transfer['files']:
+              assert hashlib.sha256(pathlib.Path(row['path']).read_bytes()).hexdigest()==row['after_sha256'],row['path']
+          report={'kind':'execution-tooling-repair-verification-not-product-approval','status':'VERIFIED','run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'workflow_input_sha':os.environ['GITHUB_SHA'],'canonical_plan_sha256':plan_hash,'effective_manifest_schema':2,'unique_tests':280,'new_regression_tests':32,'previous_tests_retained':248,'tests_log_sha256':hashlib.sha256(tests.encode()).hexdigest(),'bootstrap':json.loads((out/'bootstrap.json').read_text()),'relationships':json.loads((out/'relationships.json').read_text()),'protected_files_unchanged':len(old),'repair_files':transfer['files'],'findings':{'EX-01':'REPAIRED','EX-02':'REPAIRED','EX-03':'REPAIRED','H-01':'REPAIRED_DECLARED_ORIGIN_BOUNDARY_ONLY','E-01':'COORDINATION_FREEZE_AND_FORMATTER_OWNERSHIP_NO_NEW_ENGINE','CI-01':'SEPARATE_PR_234_CURRENT_CI_REQUIRED'},'product_execution':'NOT_RUN','product_tasks_accepted':0,'frontend_electron_performance_approved':False,'review_method':'same-assistant-adversarial-pass-not-external-auditor','auxiliary_attempt_notes':['First helper definition rejected runner context before jobs; output resolution moved into a step.','Second helper passed 280 tests but navigation command lacked --repo; command corrected.','Third helper failed in metadata publication after successful checks; report now binds the independently verified canonical PLAN hash.','Fourth helper publication failed diff whitespace validation. The reviewed report is normalized and exact file hashes are rechecked before staging; the diff guard remains enabled.']}
           dest=root/'reviews/full-execution-audit/repairs/VERIFICATION.json';dest.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
           files=sorted(p for p in root.rglob('*') if p.is_file() and p.name!='MANIFEST.sha256' and '__pycache__' not in p.parts)
           (root/'MANIFEST.sha256').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(root))+'\n' for p in files))
-          subprocess.run(['git','diff','--check'],check=True)
           for p in sorted(expected|{str(dest),str(root/'MANIFEST.sha256')}):subprocess.run(['git','add','--',p],check=True)
+          subprocess.run(['git','diff','--cached','--check'],check=True)
           remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/visual-migration-plan'],text=True).split()[0]
           assert remote==os.environ['GITHUB_SHA'], 'Remote advanced; do not overwrite concurrent changes'
           subprocess.run(['git','-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m','fix(tooling): enforce census and candidate evidence boundaries'],check=True)
