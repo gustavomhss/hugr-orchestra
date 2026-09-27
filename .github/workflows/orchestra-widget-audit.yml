@@ -1,50 +1,173 @@
-name: Orchestra widget contract audit
+name: Orchestra widget binding closure
 on:
   push:
     branches: [visual-migration-plan]
     paths: [.github/workflows/orchestra-widget-audit.yml]
 permissions:
-  contents: read
+  contents: write
+  issues: write
 concurrency:
   group: orchestra-widget-contract-audit
   cancel-in-progress: false
 jobs:
-  snapshot:
+  close-contract:
     if: github.repository == 'gmhelmold/HuGR-Orchestra'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
-          ref: d7ba1cb2ecb51395a5d2a6282286a1484e6d5b4d
-          persist-credentials: false
+          ref: visual-migration-plan
           fetch-depth: 1
-      - name: Snapshot scoped plan and widget source without executing product
+      - name: Apply source-checked decisions without changing product or DAG
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --depth=1 origin 1a235323361717d13a44d3c184bad13649f59e60
+          git fetch --depth=1 origin d7ba1cb2ecb51395a5d2a6282286a1484e6d5b4d 1a235323361717d13a44d3c184bad13649f59e60
+          python3 specs/orchestra-visual/reviews/widget-contracts/closure/apply.py --root specs/orchestra-visual
           python3 - <<'PY'
-          import hashlib, json, pathlib, subprocess, zipfile
-          source='1a235323361717d13a44d3c184bad13649f59e60'
-          dest=pathlib.Path('/tmp/orchestra-widget-audit');dest.mkdir()
-          paths=subprocess.check_output(['git','ls-tree','-r','--name-only',source,'packages/app/src','packages/session-ui/src','packages/schema/src','packages/opencode/src/tool','packages/opencode/src/session','packages/desktop/src','packages/protocol/src','packages/server/src','AGENTS.md','package.json'],text=True).splitlines()
-          paths=[p for p in paths if pathlib.PurePosixPath(p).suffix in ('.ts','.tsx','.css','.json','.md','.js')]
-          report={'plan_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'source_commit':source,'source_files':{},'product_execution':'NOT_RUN'}
-          with zipfile.ZipFile(dest/'snapshot.zip','w',zipfile.ZIP_DEFLATED) as z:
-              for p in sorted(pathlib.Path('specs/orchestra-visual').rglob('*')):
-                  if p.is_file() and p.suffix.lower() not in ('.ttf','.ttc','.otf','.woff','.woff2'):
-                      z.write(p,'plan/'+p.relative_to('specs/orchestra-visual').as_posix())
-              for p in paths:
-                  data=subprocess.check_output(['git','show',source+':'+p])
-                  z.writestr('source/'+p,data)
-                  report['source_files'][p]=hashlib.sha256(data).hexdigest()
-              z.writestr('SNAPSHOT.json',json.dumps(report,indent=2)+'\n')
-          print(json.dumps({'source_files':len(paths),'archive_bytes':(dest/'snapshot.zip').stat().st_size,'product_execution':'NOT_RUN'}))
+          import hashlib, json, pathlib, subprocess, sys
+          root=pathlib.Path('specs/orchestra-visual');base='d7ba1cb2ecb51395a5d2a6282286a1484e6d5b4d';source='1a235323361717d13a44d3c184bad13649f59e60'
+          def prior(path):return subprocess.check_output(['git','show',base+':specs/orchestra-visual/'+path])
+          protected=['SURFACES.json','COVERAGE.json','BUDGETS.json','progress.json','reference/approved.png','fixture.json','CONTRACTS.md']
+          for p in protected:assert (root/p).read_bytes()==prior(p),'Protected input changed '+p
+          plan=json.loads((root/'PLAN.json').read_text());old=json.loads(prior('PLAN.json'))
+          fields=('id','kind','parent','children','depends_on','acceptance_requires','write_paths','leased_write_paths','exclude_paths','resource_locks','criterion_ids','criterion_evaluation_stage','required_performance_gates','required_visual_gates','required_native_gates','verification_tier','sampling_requires_quiet_host')
+          assert [{k:n.get(k) for k in fields} for n in plan['nodes']]==[{k:n.get(k) for k in fields} for n in old['nodes']]
+          sys.path.insert(0,str(root/'tools'))
+          from validate_plan import owners_for, validate
+          from test_widget_contracts import predecessors
+          from select_work import conflict
+          assert not validate(plan,json.loads((root/'SURFACES.json').read_text()))
+          tasks=[n for n in plan['nodes'] if n['kind']=='task'];assert len(tasks)==66
+          by={n['id']:n for n in plan['nodes']};assert len(by)==143
+          expected={
+              'packages/app/src/pages/session/timeline/orchestra-checklist.tsx':'S09',
+              'packages/app/src/pages/session/orchestra-evidence.tsx':'S11',
+              'packages/app/src/pages/session/orchestra-evidence-files.tsx':'S11',
+              'packages/app/src/pages/session/orchestra-evidence-docs.tsx':'S11',
+              'packages/app/src/pages/session/orchestra-evidence-actions.tsx':'S11',
+              'packages/app/src/pages/session/orchestra-activity-data.ts':'S17',
+              'packages/app/src/pages/session/orchestra-activity.tsx':'S18',
+              'packages/app/src/pages/session/use-session-commands.tsx':'S25'}
+          owners=owners_for(list(expected),plan['nodes'])
+          for p,o in expected.items():assert owners[p]==[o],(p,owners[p],o)
+          before={t['id']:predecessors(t['id']) for t in tasks}
+          conflicts=[];unordered=0
+          for i,a in enumerate(tasks):
+              for b in tasks[i+1:]:
+                  if a['id'] in before[b['id']] or b['id'] in before[a['id']]:continue
+                  unordered+=1
+                  if conflict(a,b):
+                      locks=sorted(set(a.get('resource_locks',[]))&set(b.get('resource_locks',[])))
+                      conflicts.append({'tasks':[a['id'],b['id']],'common_locks':locks})
+                      assert locks,('Unprotected declared conflict',a['id'],b['id'])
+          assert unordered==1009
+          assert len(conflicts)==1 and set(conflicts[0]['tasks'])=={'S19-W2-T1','S20-W2-T1'}
+          source_paths=['packages/app/src/utils/session-message.ts','packages/app/src/context/server-session-v2-reducer.ts','packages/app/src/pages/session/use-session-hash-scroll.ts','packages/app/src/pages/session/message-id-from-hash.ts','packages/app/src/utils/session-route.ts','packages/app/src/components/prompt-input/submit.ts']
+          sources={}
+          for p in source_paths:
+              data=subprocess.check_output(['git','show',source+':'+p])
+              sources[p]={'sha256':hashlib.sha256(data).hexdigest(),'git_blob':subprocess.check_output(['git','rev-parse',source+':'+p],text=True).strip()}
+          text=(root/'WIDGETS.md').read_text()
+          for literal in ['sourceMessage','originUserMessageID','64 é carga de referência, não teto da coleção','não chama `clearInput`','Onde implementar','não há snapshot todowrite concluído']:
+              assert literal in text,'Missing closed decision '+literal
+          assigned={c for t in tasks for c in t.get('widget_cases',[])};assert assigned=={f'WK{i:02}' for i in range(1,29)}
+          report={'kind':'static-contract-analysis-not-product','baseline_plan_commit':base,'inspected_source_commit':source,'nodes':len(by),'tasks':len(tasks),'work_packages':sum(n['kind']=='wp' for n in plan['nodes']),'criterion_ids':sum(len(v) for n in plan['nodes'] for v in n['criterion_ids'].values()),'unordered_task_pairs':unordered,'declared_write_conflicts':conflicts,'protected_input_sha256':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in protected},'source_read_anchors':sources,'sample_new_destination_owners':owners,'dag_and_write_scopes_unchanged':True,'product_execution':'NOT_RUN'}
+          (root/'reviews/widget-contracts/closure/ANALYSIS.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          path=root/'START-HERE.md';text=path.read_text();marker='<!-- orchestra-widget-closure:entry -->'
+          if marker not in text:
+              first,rest=text.split('\n',1)
+              text=first+'\n\n'+marker+'\n**Localize sua implementação:** [WIDGETS.md — tabela Onde implementar](WIDGETS.md) informa arquivo existente, destino novo, dados, ações e task T1/T2 de cada widget. [Fechamento dos bindings](reviews/widget-contracts/closure/REVIEW.md) explica origem da execução, navegação por mensagem, preservação do draft e limites sem omitir tarefas ativas. Os axiomas continuam na task; não crie outro plano.\n\n'+rest
+              path.write_text(text)
+          print(json.dumps({'status':'PASS','nodes':143,'tasks':66,'unordered_pairs':unordered,'kind':'contract-not-product'}))
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: orchestra-widget-audit-snapshot
-          path: /tmp/orchestra-widget-audit/snapshot.zip
-          retention-days: 3
-          if-no-files-found: error
+      - name: Regenerate projections and run complete tooling checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, re, subprocess
+          root=pathlib.Path('specs/orchestra-visual');out=root/'reviews/widget-contracts/closure'
+          subprocess.run(['python3','tools/render_maps.py'],cwd=root,check=True)
+          subprocess.run(['python3','tools/render_issues.py'],cwd=root,check=True)
+          subprocess.run(['python3','tools/render_navigation.py','--write','--repo',os.getcwd()],cwd=root,check=True)
+          checks=[('brand',['python3','tools/verify_brand.py']),('original-brand',['python3','vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py','--json']),('plan',['python3','tools/validate_plan.py']),('maps',['python3','tools/render_maps.py','--check']),('issues',['python3','tools/render_issues.py','--check']),('navigation',['python3','tools/render_navigation.py','--check','--repo',os.getcwd()]),('tools',['python3','-m','unittest','discover','-s','tools','-p','test_*.py','-v'])]
+          results=[];count=0
+          for name,cmd in checks:
+              result=subprocess.run(cmd,cwd=root,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=180)
+              (out/(name+'-github.log')).write_text(result.stdout)
+              results.append({'name':name,'command':cmd,'cwd':'specs/orchestra-visual','exit_code':result.returncode,'log':'reviews/widget-contracts/closure/'+name+'-github.log'})
+              if result.returncode:print(result.stdout);raise SystemExit(result.returncode)
+              if name=='tools':
+                  match=re.search(r'Ran (\d+) tests',result.stdout);assert match and int(match[1])==224
+                  count=int(match[1])
+          (out/'QA-GITHUB.json').write_text(json.dumps({'status':'PASS','kind':'planning-tools-not-product','tooling_tests_passed':count,'checks':results,'run_url':os.environ['RUN_URL'],'product_execution':'NOT_RUN'},ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({'status':'PASS','tooling_tests':count,'product_execution':'NOT_RUN'}))
+          PY
+      - name: Commit verified plan-only changes before linking tickets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 specs/orchestra-visual/reviews/widget-contracts/publish.py manifest
+          python3 - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','status','--porcelain','-z'],text=True).split('\0')
+          for entry in filter(None,paths):assert entry[3:].startswith('specs/orchestra-visual/'),entry
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- specs/orchestra-visual
+          git commit -m 'docs(app): close widget navigation output and draft semantics'
+          git push origin HEAD:visual-migration-plan
+      - name: Reconcile 39 existing tickets and read back unchanged native hierarchy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util, json, os, pathlib, re
+          path=pathlib.Path('specs/orchestra-visual/reviews/widget-contracts/publish.py')
+          spec=importlib.util.spec_from_file_location('widget_publish',path);pub=importlib.util.module_from_spec(spec);spec.loader.exec_module(pub)
+          pub.BASE='d7ba1cb2ecb51395a5d2a6282286a1484e6d5b4d'
+          pub.synchronize()
+          root=pub.api('GET','/issues/215');old=root['body'];text=old;begin='<!-- orchestra-widget-closure:begin -->';end='<!-- orchestra-widget-closure:end -->'
+          note=begin+'\n## Widgets: decisões, arquivos e efeitos fechados\n\nLeia [WIDGETS.md](https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/WIDGETS.md): a tabela **Onde implementar** liga cada widget ao componente existente, destino novo e tasks. As seções fecham dados, callbacks, efeitos, estados e WK01–WK28; os cinco axiomas permanecem em cada unidade.\n\nBindings conferidos: estado real da execução prevalece sobre completed sintético; Abrir origem usa mensagem user confirmada, não callID; repetir comando preserva o rascunho; 64 é carga de teste, não limite de tarefas ativas. Docs é local; Criar PR… prepara pedido revisável no composer e não publica ao clicar. Nenhum novo backend, scheduler, épico, WP ou task.\n\n[Revisão e limites](https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/reviews/widget-contracts/closure/REVIEW.md) · [Verificação desta publicação](https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/reviews/widget-contracts/closure/PUBLICATION.json). Produto ainda NOT_RUN; os224testes verificam ferramentas, não a interface implementada.\n'+end+'\n\n'
+          if begin in text:
+              assert end in text
+              text=re.sub(re.escape(begin)+r'.*?'+re.escape(end)+r'\n*',lambda m:note,text,count=1,flags=re.S)
+          else:text=note+text
+          text=re.sub(r'O último commit de organização desta publicação é `[0-9a-f]{40}`',lambda m:'O último commit de organização desta publicação é `'+pub.git('rev-parse','HEAD')+'`',text)
+          assert pub.api('GET','/issues/215')['body']==old,'Root changed concurrently'
+          if text!=old:pub.api('PATCH','/issues/215',{'body':text})
+          current=pub.api('GET','/issues/215');assert current['body']==text and current['state']==root['state']
+          report=pub.load(pub.ROOT/'reviews/widget-contracts/PUBLICATION.json')
+          report.update(kind='widget-binding-closure-not-product',root_readback='PASS',root_body_sha256=pub.sha(text),tooling_tests_passed=224,review='reviews/widget-contracts/closure/REVIEW.md',qa='reviews/widget-contracts/closure/QA-GITHUB.json')
+          pub.write(pub.ROOT/'reviews/widget-contracts/closure/PUBLICATION.json',report)
+          registry=pub.load(pub.ROOT/'PUBLICATION.json');registry.update(widget_closure='reviews/widget-contracts/closure/PUBLICATION.json',widget_closure_review='reviews/widget-contracts/closure/REVIEW.md',tooling_tests_passed=224,checks=pub.load(pub.ROOT/'reviews/widget-contracts/closure/QA-GITHUB.json')['checks'])
+          pub.write(pub.ROOT/'PUBLICATION.json',registry)
+          pub.manifest_files()
+          print(json.dumps({'status':'VERIFIED','tickets':len(report['ticket_bodies']),'root':215,'parents':report['native_parent_links'],'dependencies':report['native_dependency_links'],'product_execution':'NOT_RUN'}))
+          PY
+      - name: Commit readbacks and verify all published bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 specs/orchestra-visual/tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE"
+          git add -- specs/orchestra-visual
+          git commit -m 'docs(app): record widget closure ticket and source verification'
+          git push origin HEAD:visual-migration-plan
+          python3 - <<'PY'
+          import hashlib, json, pathlib, subprocess
+          root=pathlib.Path('specs/orchestra-visual');checked=0
+          for line in (root/'MANIFEST.sha256').read_text().splitlines():
+              expected,path=line.split('  ',1)
+              actual=subprocess.check_output(['git','show','HEAD:specs/orchestra-visual/'+path])
+              assert hashlib.sha256(actual).hexdigest()==expected,path
+              checked+=1
+          status=subprocess.check_output(['git','status','--porcelain'],text=True).strip();assert not status,status
+          print(json.dumps({'status':'VERIFIED','manifest_files':checked,'commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'product_execution':'NOT_RUN'}))
+          PY
