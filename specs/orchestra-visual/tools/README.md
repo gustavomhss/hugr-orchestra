@@ -47,3 +47,9 @@ python3 tools/select_work.py --repo "$REPO" --jobs 4
 ```
 
 Preflight WAIT não autoriza coleta. READ_ONLY não é mutex de SO; o script não inicia, pausa ou mata processos. Um review concurrente não pode lançar ferramentas locais durante a amostragem. P01 usa manifests estáticos; P10/soak só é coletado pela campanha integrada e validado pelo fechamento, sem repetição pelo agregador.
+
+
+<!-- orchestra-executor-aids -->
+## Entrada curta e pacote por task
+
+Leia [RUN.md](../RUN.md). `python3 tools/executor.py doctor --repo REPO` observa ambiente; `resume --repo REPO --jobs 4` usa o seletor existente; `packet TASK --repo REPO` reúne task/axiomas/WIDGETS e índices normativos. Comandos executados da raiz do plano. Sem escrita por padrão; `--out` cria somente arquivo novo em pasta existente. Não instala, executa scripts de package, muda progresso nem produz PASS.

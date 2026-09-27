@@ -219,5 +219,12 @@
   "surfaces": 82,
   "widget_publication": "reviews/widget-contracts/PUBLICATION.json",
   "widget_closure": "reviews/widget-contracts/closure/PUBLICATION.json",
-  "widget_closure_review": "reviews/widget-contracts/closure/REVIEW.md"
+  "widget_closure_review": "reviews/widget-contracts/closure/REVIEW.md",
+  "executor_aids": {
+    "entry": "RUN.md",
+    "report": "reviews/executor-aids/REPORT.json",
+    "tests_passed": 248,
+    "plan_and_ticket_contracts_changed": false,
+    "product_execution": "NOT_RUN"
+  }
 }

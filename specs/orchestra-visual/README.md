@@ -1,5 +1,9 @@
 # Orchestra — migração visual integral
 
+<!-- orchestra-executor-aids -->
+**Entrada curta para executar ou retomar:** [RUN.md](RUN.md) — `executor.py doctor`, `resume` e `packet TASK`. Reutiliza seletor/recibos existentes; não altera axiomas nem autoriza uma task bloqueada.
+
+
 <!-- orchestra-widgets43:begin -->
 ## Widgets fechados — contrato 4.3
 

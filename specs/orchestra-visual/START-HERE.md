@@ -1,5 +1,9 @@
 # COMECE AQUI — execução da migração visual pelo Codex
 
+<!-- orchestra-executor-aids -->
+**Entrada curta para executar ou retomar:** [RUN.md](RUN.md) — `executor.py doctor`, `resume` e `packet TASK`. Reutiliza seletor/recibos existentes; não altera axiomas nem autoriza uma task bloqueada.
+
+
 <!-- orchestra-widget-closure:entry -->
 **Localize sua implementação:** [WIDGETS.md — tabela Onde implementar](WIDGETS.md) informa arquivo existente, destino novo, dados, ações e task T1/T2 de cada widget. [Fechamento dos bindings](reviews/widget-contracts/closure/REVIEW.md) explica origem da execução, navegação por mensagem, preservação do draft e limites sem omitir tarefas ativas. Os axiomas continuam na task; não crie outro plano.
 
