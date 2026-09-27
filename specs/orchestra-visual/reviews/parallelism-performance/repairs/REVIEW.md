@@ -49,3 +49,8 @@ python3 tools/select_work.py --repo /caminho/real/do/worktree --jobs 4
 ```
 
 O primeiro trabalho continua S01-W1-T1. Os logs locais são de fixtures sintéticas; os logs da publicação registram a execução das ferramentas no checkout do GitHub. O grafo nativo de issues é reconciliado sem duplicar tickets; dependências finas não viram bloqueio de issue inteira.
+
+<!-- pa42-github-verified -->
+## Verificação publicada
+
+Os 202 testes únicos passaram no checkout do GitHub (151 anteriores adaptados, 13 de navegação e 38 regressões PA). Os 39 corpos subordinados, 39 vínculos de hierarquia e 59 dependências nativas foram conferidos por leitura posterior. Consulte [QA-GITHUB.json](QA-GITHUB.json) e [PUBLICATION.json](PUBLICATION.json). Os 189 testes locais relatados anteriormente são uma passagem anterior, não outro conjunto a somar. Produto continua NOT_RUN.

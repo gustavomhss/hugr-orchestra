@@ -94,5 +94,13 @@
         "success_criteria": "Cobertura correta sem expansão cartesiana indiscriminada."
       }
     }
-  ]
+  ],
+  "github_verification": {
+    "status": "PASS",
+    "tests": 202,
+    "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36283487121",
+    "report": "QA-GITHUB.json",
+    "native_report": "PUBLICATION.json",
+    "product_execution": "NOT_RUN"
+  }
 }

@@ -2,11 +2,11 @@
   "schema_version": 1,
   "repo": "gmhelmold/HuGR-Orchestra",
   "plan_branch": "visual-migration-plan",
-  "entry_commit": "9b65a109eba3cf182d11ef5a13302915b6c7636f",
+  "entry_commit": "d627eaf1518ef9fba8b3db5ee9baee6c49e75021",
   "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/EXECUTE.md",
   "publication": "PA-01–PA-06 repaired in existing contracts; reconcile/readback is recorded in PUBLICATION.json.",
   "native_relationships_applied_by_this_session": true,
-  "native_relationships_note": "Verified by https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36275407725",
+  "native_relationships_note": "Verified PA repair readback: https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36283487121",
   "issues": {
     "E1": {
       "number": 130,
