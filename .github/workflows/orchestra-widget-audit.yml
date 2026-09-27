@@ -74,7 +74,7 @@ jobs:
               data=subprocess.check_output(['git','show',source+':'+p])
               sources[p]={'sha256':hashlib.sha256(data).hexdigest(),'git_blob':subprocess.check_output(['git','rev-parse',source+':'+p],text=True).strip()}
           text=(root/'WIDGETS.md').read_text()
-          for literal in ['sourceMessage','originUserMessageID','64 é carga de referência, não teto da coleção','não chama `clearInput`','Onde implementar','não há snapshot todowrite concluído']:
+          for literal in ['sourceMessage','originUserMessageID','64 é carga de referência, não teto da coleção','não chama `clearInput`','Onde implementar','não existir nenhum part todowrite concluído com lista válida']:
               assert literal in text,'Missing closed decision '+literal
           assigned={c for t in tasks for c in t.get('widget_cases',[])};assert assigned=={f'WK{i:02}' for i in range(1,29)}
           report={'kind':'static-contract-analysis-not-product','baseline_plan_commit':base,'inspected_source_commit':source,'nodes':len(by),'tasks':len(tasks),'work_packages':sum(n['kind']=='wp' for n in plan['nodes']),'criterion_ids':sum(len(v) for n in plan['nodes'] for v in n['criterion_ids'].values()),'unordered_task_pairs':unordered,'declared_write_conflicts':conflicts,'protected_input_sha256':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in protected},'source_read_anchors':sources,'sample_new_destination_owners':owners,'dag_and_write_scopes_unchanged':True,'product_execution':'NOT_RUN'}
@@ -106,7 +106,7 @@ jobs:
               if name=='tools':
                   match=re.search(r'Ran (\d+) tests',result.stdout);assert match and int(match[1])==224
                   count=int(match[1])
-          (out/'QA-GITHUB.json').write_text(json.dumps({'status':'PASS','kind':'planning-tools-not-product','tooling_tests_passed':count,'checks':results,'run_url':os.environ['RUN_URL'],'product_execution':'NOT_RUN'},ensure_ascii=False,indent=2)+'\n')
+          (out/'QA-GITHUB.json').write_text(json.dumps({'status':'PASS','kind':'planning-tools-not-product','tooling_tests_passed':count,'checks':results,'prior_publication_attempt':{'run':36298407627,'result':'FAIL_BEFORE_PLAN_COMMIT','reason':'Literal checklist assertion used a paraphrase rather than the actual decided wording; corrected assertion, no acceptance rule removed.'},'run_url':os.environ['RUN_URL'],'product_execution':'NOT_RUN'},ensure_ascii=False,indent=2)+'\n')
           print(json.dumps({'status':'PASS','tooling_tests':count,'product_execution':'NOT_RUN'}))
           PY
       - name: Commit verified plan-only changes before linking tickets
