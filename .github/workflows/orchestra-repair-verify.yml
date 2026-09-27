@@ -21,12 +21,12 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/orchestra-execution-repairs"
           echo "OUT=$RUNNER_TEMP/orchestra-execution-repairs" >> "$GITHUB_ENV"
-      - name: Apply byte-verified code and record report-only whitespace normalization
+      - name: Apply byte-verified code and documented whitespace repairs
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY' > "$OUT/apply.log" 2>&1
-          import base64,hashlib,json,os,pathlib,subprocess,zlib
+          import ast,base64,hashlib,json,os,pathlib,subprocess,zlib
           out=pathlib.Path(os.environ['OUT']);root=pathlib.Path('specs/orchestra-visual')
           def sha(data): return hashlib.sha256(data).hexdigest()
           def save(name,value): (out/name).write_text(json.dumps(value,indent=2)+'\n')
@@ -56,19 +56,26 @@ jobs:
               actual=sha(pathlib.Path(row['path']).read_bytes());observed.append({'path':row['path'],'expected':row['after_sha256'],'actual':actual})
           save('applied-identities.json',observed)
           assert all(row['expected']==row['actual'] for row in observed), 'Applied bytes differ from reviewed transfer'
+          normalizations=[]
           review=root/'reviews/full-execution-audit/repairs/REVIEW.md';before=review.read_bytes()
-          clean=b'\n'.join(line.rstrip(b' \t\r') for line in before.splitlines())+b'\n'
-          review.write_bytes(clean)
+          clean=b'\n'.join(line.rstrip(b' \t\r') for line in before.splitlines())+b'\n';review.write_bytes(clean)
           (out/'review-before.md').write_bytes(before);(out/'review-after.md').write_bytes(clean)
-          save('report-normalization.json',{'operation':'trailing whitespace only in newly added audit prose','before':sha(before),'after':sha(clean)})
+          normalizations.append({'path':str(review),'operation':'trailing whitespace only in new audit prose','before':sha(before),'after':sha(clean)})
+          source=root/'tools/source_proof.py';before_source=source.read_bytes();clean_source=before_source.rstrip(b'\r\n')+b'\n'
+          assert sha(before_source)=='7594327cc61e4e6579ca36eb894cc1e60fa0a6101eeb2f8f529a45c24c4308f9'
+          assert sha(clean_source)=='cd4f042caaf84e4d7b11f6d178fbd7aab2c7d80307ec3b17fb7033339300e066'
+          assert ast.dump(ast.parse(before_source))==ast.dump(ast.parse(clean_source))
+          source.write_bytes(clean_source)
+          normalizations.append({'path':str(source),'operation':'remove one empty line at EOF; Python AST unchanged','before':sha(before_source),'after':sha(clean_source)})
+          save('whitespace-repairs.json',normalizations)
           for row in data['files']:
-              if row['path']==str(review):
-                  row['transferred_sha256']=row['after_sha256'];row['after_sha256']=sha(clean)
+              if row['path'] in (str(review),str(source)):
+                  row['transferred_sha256']=row['after_sha256'];row['after_sha256']=sha(pathlib.Path(row['path']).read_bytes())
           ignore=pathlib.Path('.prettierignore');text=ignore.read_text()
           assert 'specs/orchestra-visual/' not in text.splitlines(), 'Concurrent formatter policy change'
           ignore.write_text(text.rstrip()+'\n# Hash-bound visual contracts and official vendor assets use their own generators/validators.\nspecs/orchestra-visual/\n')
           save('transfer.json',{'files':data['files'],'raw_sha256':sha(raw)})
-          print('Applied reviewed code bytes; report normalization separately recorded.')
+          print('Applied reviewed bytes and separately verified whitespace repairs.')
           PY
       - name: Test the existing tools and all repair regressions
         working-directory: specs/orchestra-visual
@@ -132,7 +139,7 @@ jobs:
           assert changed==expected,(changed-expected,expected-changed)
           assert sha(root/'PLAN.json')=='9059703f0e03a3cac56435b71dd09f9124cb8f5a28f1854a9c26ca307b8b4e78'
           assert all(sha(pathlib.Path(r['path']))==r['after_sha256'] for r in transfer['files'])
-          report={'kind':'execution-tooling-repair-verification-not-product-approval','status':'VERIFIED','run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'workflow_input_sha':os.environ['GITHUB_SHA'],'canonical_plan_sha256':sha(root/'PLAN.json'),'effective_manifest_schema':2,'unique_tests':280,'new_regression_tests':32,'previous_tests_retained':248,'tests_log_sha256':sha(out/'tests.log'),'bootstrap':json.loads((out/'bootstrap.json').read_text()),'relationships':json.loads((out/'relationships.json').read_text()),'protected_files_unchanged':len(protected),'repair_files':transfer['files'],'report_whitespace_normalization':json.loads((out/'report-normalization.json').read_text()),'findings':{'EX-01':'REPAIRED','EX-02':'REPAIRED','EX-03':'REPAIRED','H-01':'REPAIRED_DECLARED_ORIGIN_BOUNDARY_ONLY','E-01':'CONTRACT_FREEZE_NO_NEW_INVALIDATION_ENGINE','CI-01':'SEPARATE_PR_234_CURRENT_CI_REQUIRED'},'product_execution':'NOT_RUN','product_tasks_accepted':0,'frontend_electron_performance_approved':False,'review_method':'same-assistant-adversarial-pass-not-external-auditor','auxiliary_attempt_notes':'Earlier publication helpers failed in runner-context resolution, navigation command arguments, report metadata or report whitespace/digest handling. These are helper failures, not product regression or approval. All required checks are repeated in this run; original code transport identities remain enforced.'}
+          report={'kind':'execution-tooling-repair-verification-not-product-approval','status':'VERIFIED','run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'workflow_input_sha':os.environ['GITHUB_SHA'],'canonical_plan_sha256':sha(root/'PLAN.json'),'effective_manifest_schema':2,'unique_tests':280,'new_regression_tests':32,'previous_tests_retained':248,'tests_log_sha256':sha(out/'tests.log'),'bootstrap':json.loads((out/'bootstrap.json').read_text()),'relationships':json.loads((out/'relationships.json').read_text()),'protected_files_unchanged':len(protected),'repair_files':transfer['files'],'whitespace_repairs':json.loads((out/'whitespace-repairs.json').read_text()),'findings':{'EX-01':'REPAIRED','EX-02':'REPAIRED','EX-03':'REPAIRED','H-01':'REPAIRED_DECLARED_ORIGIN_BOUNDARY_ONLY','E-01':'CONTRACT_FREEZE_NO_NEW_INVALIDATION_ENGINE','CI-01':'SEPARATE_PR_234_CURRENT_CI_REQUIRED'},'product_execution':'NOT_RUN','product_tasks_accepted':0,'frontend_electron_performance_approved':False,'review_method':'same-assistant-adversarial-pass-not-external-auditor','auxiliary_attempt_notes':'Earlier helper attempts failed before publication on runner context, command arguments, metadata or whitespace guards. The last failed staged check identified one extra EOF blank in source_proof.py; it is removed with before/after SHA and equal Python AST verified. All checks are repeated; no guard disabled.'}
           dest=root/'reviews/full-execution-audit/repairs/VERIFICATION.json';dest.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
           files=sorted(p for p in root.rglob('*') if p.is_file() and p.name!='MANIFEST.sha256' and '__pycache__' not in p.parts)
           (root/'MANIFEST.sha256').write_text(''.join(sha(p)+'  '+str(p.relative_to(root))+'\n' for p in files))
