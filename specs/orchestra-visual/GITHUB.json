@@ -2,11 +2,11 @@
   "schema_version": 1,
   "repo": "gmhelmold/HuGR-Orchestra",
   "plan_branch": "visual-migration-plan",
-  "entry_commit": "a68f122b973d6fd0b40d602f9aed637fae309bde",
+  "entry_commit": "6444c90dde18874006f782cb3eb5376b4cc4c733",
   "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/START-HERE.md",
   "publication": "Widget contracts closed in WIDGETS.md; current complete readback recorded in PUBLICATION.json.",
   "native_relationships_applied_by_this_session": true,
-  "native_relationships_note": "Read back without changes by https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36286680951",
+  "native_relationships_note": "Read back without changes by https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36298512850",
   "issues": {
     "E1": {
       "number": 130,

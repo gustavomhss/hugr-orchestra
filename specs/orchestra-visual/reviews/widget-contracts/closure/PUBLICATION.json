@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "VERIFIED",
-  "kind": "widget-contract-publication-not-product",
+  "kind": "widget-binding-closure-not-product",
   "contract_revision": "4.3",
   "code_commit": "6444c90dde18874006f782cb3eb5376b4cc4c733",
   "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36298512850",
@@ -287,5 +287,10 @@
   "unrelated_relationships_preserved": [],
   "widget_sections": 9,
   "product_cases": 28,
-  "product_execution": "NOT_RUN"
+  "product_execution": "NOT_RUN",
+  "root_readback": "PASS",
+  "root_body_sha256": "a287535dbaff66a1a2baf27f5af7f286ca6982d633da47eb8ea5a2c9d79f3cc6",
+  "tooling_tests_passed": 224,
+  "review": "reviews/widget-contracts/closure/REVIEW.md",
+  "qa": "reviews/widget-contracts/closure/QA-GITHUB.json"
 }

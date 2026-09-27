@@ -3,7 +3,7 @@
   "root_epic": 215,
   "branch": "visual-migration-plan",
   "contract_revision": "4.3",
-  "plan_sha256": "45159c61d0cd1a67d22e8d35149a2f4567855db9325870cfcf1dc472c4211b1f",
+  "plan_sha256": "9059703f0e03a3cac56435b71dd09f9124cb8f5a28f1854a9c26ca307b8b4e78",
   "nodes": 143,
   "criteria": 1974,
   "ticket_count": 39,
@@ -54,48 +54,48 @@
   "product_execution": "NOT_RUN",
   "missing_inputs_note": null,
   "ticket_body_sha256": {
-    "130": "da3ac21b8886b9c733524d30deee7ea30c7b52a7b61c5a15866bc0a99cdd8b33",
-    "131": "bc0fff326fdc129dd71dc608c2f29f74f417954fa6d2ab5a6b5e9e62b46e1a2b",
-    "132": "9dbb6cfbc0544d173fbb1cb14a98ab8fd51d75c64cb9e156a4a40ca2a421bbe7",
-    "133": "2fcc8e65db002ba8dd84e02934903295d729561e9dcbadcf59434749f1ee4e7b",
-    "134": "a25dc8454a98cf67d850627314ccc2a231fbae7c69c12c66696e066466760604",
-    "135": "b6ec14e21a9bf6d11af81bd3e71577bded6d88047b1594c5c99acde4a4cc2c05",
-    "136": "0ddd768e634a8b77cfe55e583a808bffed8c351af9e8caedd781c3c7beb31d04",
-    "137": "0e8934fbaca7ce2fabdf05ea95341e53d7fb3d4a3bb66499b5c98ac1d1219fda",
-    "138": "bdc8090ea40c2787f8dc9f4f902289e22458630c1926f3f6006e80a4a6dc6e48",
-    "139": "503e7dc7876cbca6cceffd17e224bed75f44a79f7748ef242ee888d1d8de8c80",
-    "140": "b111a1356ad9f9ab941738df15c156459b8c14dc012f4315fb10108fa240efbe",
-    "141": "d6e6054bd806f97196a52748e104f72df5114c20d91ac9f3aabdb274386eb56f",
-    "142": "5b1f0ff27bddfb18bdf0a9ff4a695d1dc5406192d912971f77f4bcecc170d7bf",
-    "143": "a58cae797614a95e962eb42dbf2235688c93b85c4f2a12a614d304ac673e95c6",
-    "144": "d8e9591839a01baa7dc091d03d4c68749f7715d847954df136e0c65d9701a50d",
-    "145": "454a9c6ff6a9bed8b1241482a6ff6c910e48afc11b7e7b8bf46c9fd7e02e9835",
-    "146": "5d2526879593b34df213d4e2e41a1200ee0a8d41d024521dfe9ccfc114409fd7",
-    "147": "b288785d372d0b7a76ccb3b323583244801b843ca1e6b209944cff4ca719abbb",
-    "148": "44505d7461379acb97ca9967c0811a03477b280d8714593e2d6b9c1a0dc681a4",
-    "149": "1ba1ed0e4e6de365f341e619d0c916e5f7e7407f99c4a8668bf0727a2ee6fa51",
-    "150": "b28cee78b9cebc09f6f2ccb27ca29a59837f124ff8ce832921067f36c806ecf5",
-    "151": "e32914528e990bf765d260d7e78c44cb8cb59abffe1442009d0fed2370ac0818",
-    "152": "e39dc583e0a64304ef0b417eb6ebacbbff1bb02fc4cd0125434b6e9afc23e533",
-    "153": "b32df4a1af3d429ae764e34061d86373e809bf1ec72d06835499c420c7f0f238",
-    "154": "2c82e46fde52d719e32170781e6ce3a039cfb1050cf868fd3f2c5939e7d00466",
-    "155": "c552efc7a1ea7dd467d582cd53d4e8a54bc6bf32c1a9fc11c666ae37d5749ad7",
-    "156": "d148e999ac71c184878d74086eb03b48d8db242bf040c477666ae73e3b322e11",
-    "157": "fd92e38e68d1aa76c42482c6924ed0ffde4efb72c774c75267483507249720b1",
-    "158": "1065735578a07a5c5b9c52710a1f28901830ebda4d6ccb5fabc2586ee9e0cb37",
-    "159": "e74aabc0f636c508699b53e45f66e546f180d967ddc8440ce44cf88c47f4533a",
-    "160": "56293e29c843e1b988008e3f0b9c7bd593c929d8c638a70e58e364e0bf22db10",
-    "161": "6a4e7d3c6c30e9ee4ca6106e626954f892ab97bbed246e864e4d6bf5905f161f",
-    "162": "ab7ce1a26c96a9b5b5add2d2746aefffc943574ac19061d61fc1644dc1491c15",
-    "163": "3a5f93dab33cc6f461ca78c48d09f86224a2a8cc334539e571e6135c5a734235",
-    "164": "f775b2697a4190a69c6a84ba811154fbf90184683a91cea041ee867d5a5ff94a",
-    "165": "698ba6ae2102184ece3039e5c373bea2a3aeee0d369834586547501ae79b4b62",
-    "166": "04b9379190b8b5fdaca3c9a8f0d9ef8f070c8fb9f96a2b3a4b5e10e8906b14e0",
-    "167": "3533f3d5281ccbc7d226aca9505d3cbe8c0b19524f22107e381e3773cfe39e6d",
-    "168": "1542c36c9c8120687c4f9968e8a0b0edfbce2e9c722aad179b05d297b07ac75e"
+    "130": "57d10c69726cd0b38bfe1043f80f85f99a6084b4b2352af8e412090eb07c55da",
+    "131": "e683492f374219d433feea91fad37008788d18df621ea5f45d10c96922726da6",
+    "132": "8097d9e926ca9df280028f630bee581bf287cbb90c6d18f69ebafe2bbe2c1bbc",
+    "133": "5a73c6351c58916c778a503382bfc4517938620b06fa6637b9601ca2bdbdc540",
+    "134": "0bfa69a55869fe3e827733573a2e2f88c61b3443f97f6f36681e5415585b74d3",
+    "135": "534500f61d05e37f2e164a5d55ecf41c2c86ca143c1de1a93bc1e8ef632cb147",
+    "136": "b7f5c29d773af674cfb78aeb3a1fc4568452b6e96ca993f5c509a225c8e620a9",
+    "137": "fd8af8ed828cc4cace83f05f7deb51a7cc298603b65fec878427e498719a6f0e",
+    "138": "00106ec4969930c2b3fc683a819a6a14a1520835399e5989c4efdd9fafee1d6a",
+    "139": "dfa713d603ce9a2326bc27fbae5fab185238c16f6fd0a1a7f8cc6f56162c4036",
+    "140": "937e038af19c95f60a00c16d8fcb5500b3a1ac2591521667ee3776fb86be1db6",
+    "141": "c6f69050a0d938d7e1ea2a3f0f04ccead952a6a56f30cec6733d41643f2ff829",
+    "142": "d0169dbbfd0414db06ec6070d31b02d2f77dc4b4cbffebe56ad80e1ed26d0bd4",
+    "143": "a801d0238f6862688f0577205fe2d8960e89ea73306972a92c03270483914b9d",
+    "144": "c5da1fa199b5cd3e64001d6bd3907e40665a285a545419a0fec0f70b06b941f0",
+    "145": "dd56fcb9014a1b38a0783a0e65fc7ac3155b73ad0aba67cba7d5d1e83651fb73",
+    "146": "72a594b53690ef14f0be2ecdd9cca3132e31e544aae094f3a1c6ff5591471123",
+    "147": "fd22f49040e0fd40976cba08a10eaf8548ed178a021a4c95a6c13a1a7116cc22",
+    "148": "4af972c19edcfc3a42f6a3fd71bf4bf4d329c770140094fa92e43ad9067a4d81",
+    "149": "af948411caab480b5a426ce10ad5549063ba7a39ed348d8db82ffc989272161c",
+    "150": "7877c3c1749ed517b1f0b7dd42669c94778ee690866f55852b1876b01e630690",
+    "151": "20eb49dbe13d8a37ca367e87885f53bfbc1680cfeca7b3aee00ac6dfad5145ab",
+    "152": "324d523d15d890be532297c54a8d4964e06ac5e0b5d0a77d5e5665be6b319ed1",
+    "153": "da469212930d552116d675cfd67d890ab011b7b0267eb4a07db0f7e7004e40d6",
+    "154": "21f8a820a61dee7dc08c03a9d9c56e333f6d1bf2ccbe0daa31e57cc7e875263d",
+    "155": "9b4272e4ae5c177a4d3c29c34d9ea8d8fb5b3c482f31403e663545534d8819d9",
+    "156": "317366f2e2675fc71f36dbcc6bb10a7584c9a1d6203aae66455ff3d3200e1266",
+    "157": "ed2319e552775b2988dcd14553366510ab47a16ea329176054d3b33667a08c4b",
+    "158": "a3b2dc8a4349b85e773c13bf478c2c5b67bab74dc581323f578abef53a77aa17",
+    "159": "66bf24a52c6e65caf99959a066647a7c16842e7b051ef3af9d25f3ec1ba62f17",
+    "160": "4c98a7fc1c9ce78bff28ba7137dde23e985c212be330c54ad45b9d52bf42dfea",
+    "161": "f352b40ffb895d7cef1715e6ea1dd1ee917ff38fca55dc6acc94695372720c19",
+    "162": "41244417787d9d63e39b12d523a0a28f8b3831404436a62bb055892ddab7b445",
+    "163": "c4db166c6e40d8113bda73561d988756f51aae4e2c8b4059ca9ab783d1ae0b9b",
+    "164": "7b7067b9704eee9a6897c015805da86c8cbb9325e3315b8a14618b49556b091f",
+    "165": "fd2c4ab7a99ce234dc95f4acfb977bb40c66b49104baf3c6c64e25d2dc3cabb4",
+    "166": "642b02fcd832678c58abacdaebcec40c9ca9872e80763182dd33f81cd187299c",
+    "167": "0b33af11a1816b80726c8ca8d11b4103ce790dae74c55cb2575da18d9463a94e",
+    "168": "b115f7f4898d8b2e353fa91bffae66c24834ba0e8603c8f2f300195f6f5384a1"
   },
-  "plan_and_projection_commit": "a68f122b973d6fd0b40d602f9aed637fae309bde",
-  "verification_run": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36286680951",
+  "plan_and_projection_commit": "6444c90dde18874006f782cb3eb5376b4cc4c733",
+  "verification_run": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36298512850",
   "native_relationships_report": "publication/NATIVE-AND-TICKETS.json",
   "original_package_files_verified": 430,
   "brand_files_verified": 304,
@@ -117,60 +117,60 @@
     {
       "name": "brand",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "tools/verify_brand.py"
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/brand-github.log"
+      "log": "reviews/widget-contracts/closure/brand-github.log"
     },
     {
       "name": "original-brand",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "vendor/HuGR-Brand-Kit-v1.0/11-handoff/verify_handoff.py",
         "--json"
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/original-brand-github.log"
+      "log": "reviews/widget-contracts/closure/original-brand-github.log"
     },
     {
       "name": "plan",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "tools/validate_plan.py"
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/plan-github.log"
+      "log": "reviews/widget-contracts/closure/plan-github.log"
     },
     {
       "name": "maps",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "tools/render_maps.py",
         "--check"
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/maps-github.log"
+      "log": "reviews/widget-contracts/closure/maps-github.log"
     },
     {
       "name": "issues",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "tools/render_issues.py",
         "--check"
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/issues-github.log"
+      "log": "reviews/widget-contracts/closure/issues-github.log"
     },
     {
       "name": "navigation",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "tools/render_navigation.py",
         "--check",
         "--repo",
@@ -178,12 +178,12 @@
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/navigation-github.log"
+      "log": "reviews/widget-contracts/closure/navigation-github.log"
     },
     {
-      "name": "tools-tests",
+      "name": "tools",
       "command": [
-        "/usr/bin/python3",
+        "python3",
         "-m",
         "unittest",
         "discover",
@@ -195,7 +195,7 @@
       ],
       "cwd": "specs/orchestra-visual",
       "exit_code": 0,
-      "log": "reviews/widget-contracts/tools-tests-github.log"
+      "log": "reviews/widget-contracts/closure/tools-github.log"
     }
   ],
   "navigation": {
@@ -217,5 +217,7 @@
   "widget_contract": "WIDGETS.md",
   "widget_review": "reviews/widget-contracts/REVIEW.md",
   "surfaces": 82,
-  "widget_publication": "reviews/widget-contracts/PUBLICATION.json"
+  "widget_publication": "reviews/widget-contracts/PUBLICATION.json",
+  "widget_closure": "reviews/widget-contracts/closure/PUBLICATION.json",
+  "widget_closure_review": "reviews/widget-contracts/closure/REVIEW.md"
 }
