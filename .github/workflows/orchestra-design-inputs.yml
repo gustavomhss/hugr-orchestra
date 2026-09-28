@@ -1,0 +1,39 @@
+name: Orchestra executor design inputs
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-design-inputs.yml]
+permissions:
+  contents: read
+jobs:
+  inputs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Export reviewed inputs without credentials or Git configuration
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,zipfile
+          root=pathlib.Path.cwd();out=pathlib.Path(os.environ['RUNNER_TEMP'])/'executor-design-inputs.zip'
+          roots=['specs/orchestra-visual/','packages/ui/src/','packages/app/src/','packages/desktop/src/','packages/desktop/resources/','packages/opencode/src/tool/','packages/opencode/src/maestro/']
+          exact={'AGENTS.md','package.json','bun.lock','.prettierignore','.github/workflows/orchestra-plan.yml','packages/app/package.json','packages/ui/package.json','packages/desktop/package.json','packages/client/package.json','packages/app/AGENTS.md','packages/ui/AGENTS.md','packages/desktop/AGENTS.md'}
+          files=subprocess.check_output(['git','ls-files','-z']).decode().split('\0');manifest={}
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
+              for name in files:
+                  if not name or not (name in exact or any(name.startswith(p) for p in roots)):continue
+                  p=root/name
+                  if not p.is_file() or p.is_symlink():continue
+                  data=p.read_bytes();z.writestr(name,data);manifest[name]=hashlib.sha256(data).hexdigest()
+              z.writestr('SNAPSHOT-METADATA.json',json.dumps({'commit':os.environ['GITHUB_SHA'],'files':manifest,'purpose':'design planning input; not application execution proof'},indent=2))
+              z.writestr('SOURCE-TREE.txt',subprocess.check_output(['git','ls-tree','-r','HEAD']))
+          print('Exported',len(manifest),'tracked files; no .git directory.')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: orchestra-executor-design-inputs
+          path: ${{ runner.temp }}/executor-design-inputs.zip
+          retention-days: 7
