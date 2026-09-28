@@ -1,7 +1,7 @@
 {
   "kind": "design-reference-review-closure-not-product-approval",
-  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36372522241",
-  "input_sha": "02b55a6c91214394b149f0bc3aeea89ce94dd76f",
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36372888046",
+  "input_sha": "674b3339f572551291d71ffd6ac3ad5a3c1ecdc8",
   "contract_revision": "4.4",
   "tooling_tests": 296,
   "rendered_state_boundary_checks": 23,
@@ -10,7 +10,8 @@
     "Native window-control illustration remains at OS side in RTL; code output retains LTR alignment.",
     "Collapsed search and new-session controls have explicit accessible names.",
     "Generic dialog versus settings/file-picker width exceptions are explicit.",
-    "Fractional sample medians are retained; integer/hex flooring documented; adopted colors unchanged."
+    "Fractional sample medians are retained; integer/hex flooring documented; adopted colors unchanged.",
+    "Signed diff counts, keyboard shortcuts and timestamps retain LTR data order inside the RTL layout."
   ],
   "inspection": "Assistant viewed the original master, all 22 design states in contact sheets, baseline and native compact at full size, and the landscape; corrections respond to specific observed defects. Not an independent external auditor. Final images remain subject to actual product integration review.",
   "original_master_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
@@ -156,7 +157,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -242,7 +335,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -328,7 +513,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -414,7 +691,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -500,7 +869,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -586,7 +1047,29 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "now",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -672,7 +1155,29 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "now",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -704,7 +1209,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -790,7 +1387,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -876,7 +1565,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -962,7 +1743,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1048,7 +1921,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1134,7 +2099,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1220,7 +2277,94 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1252,7 +2396,19 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1284,7 +2440,19 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1370,7 +2538,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1456,7 +2716,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1542,7 +2894,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1628,7 +3072,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1714,7 +3250,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1800,7 +3428,119 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ ,",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1886,9 +3626,102 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "⌘ K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "⌘ N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−32",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−8",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−2",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−0",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "−4",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     }
-  ]
+  ],
+  "previous_reference_run": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36372522241"
 }

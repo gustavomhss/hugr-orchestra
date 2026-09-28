@@ -43,6 +43,9 @@ def check_reference_boundaries(page, state):
     if r['collapsed']:assert r['sidebar']['width']==56, (state,'compact width',r)
     if r['outputDirection'] is not None:assert r['outputDirection']=='ltr' and r['outputAlign']=='left', (state,'output direction',r)
     assert r['searchName'] and r['newName'], (state,'missing compact accessible name')
+    r['ltr_islands']=page.evaluate("""() => [...document.querySelectorAll('.file-row .add,.file-row .del,.ov-shortcut,.author time')].map(e=>({text:e.textContent,direction:getComputedStyle(e).direction,bidi:getComputedStyle(e).unicodeBidi}))""")
+    assert all(x['direction']=='ltr' and x['bidi']=='isolate' for x in r['ltr_islands']), (state,'signed data mirrored',r)
+    if r['stateRTL']:assert len(r['ltr_islands'])>=12, (state,'missing RTL signed-data coverage')
     return {'state':state,'geometry':r,'kind':'design-reference-dom-check-not-product-proof'}
 
 with sync_playwright() as p:

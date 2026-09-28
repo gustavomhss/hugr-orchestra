@@ -14,3 +14,6 @@
 .ov-window[dir=rtl] .window-controls { position:fixed; top:25px; left:26px; width:auto; padding:0; direction:ltr; z-index:7; pointer-events:none; }
 .ov-window[dir=rtl] .ov-sidebar-content { padding-block-start:22px; }
 .ov-window[dir=rtl] .ov-topbar { padding-inline-end:96px; }
+
+/* Signed diff counts, native shortcuts and timestamps are LTR data islands. */
+.file-row .add,.file-row .del,.ov-shortcut,.author time { direction:ltr; unicode-bidi:isolate; }

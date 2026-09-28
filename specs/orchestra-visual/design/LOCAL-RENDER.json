@@ -529,7 +529,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -615,7 +707,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -701,7 +885,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -787,7 +1063,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -873,7 +1241,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -959,7 +1419,29 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "now",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1045,7 +1527,29 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "now",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1077,7 +1581,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1163,7 +1759,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1249,7 +1937,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1335,7 +2115,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1421,7 +2293,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1507,7 +2471,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1593,7 +2649,94 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1625,7 +2768,19 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1657,7 +2812,19 @@
         "outputDirection": null,
         "outputAlign": null,
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1743,7 +2910,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1829,7 +3088,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -1915,7 +3266,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -2001,7 +3444,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -2087,7 +3622,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -2173,7 +3800,119 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 ,",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     },
@@ -2259,7 +3998,99 @@
         "outputDirection": "ltr",
         "outputAlign": "left",
         "searchName": "Search",
-        "newName": "New session"
+        "newName": "New session",
+        "ltr_islands": [
+          {
+            "text": "\u2318 K",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u2318 N",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "12m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "11m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+48",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u221232",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+22",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22128",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+6",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22122",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+74",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+62",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22120",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "+18",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "\u22124",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "6m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          },
+          {
+            "text": "4m ago",
+            "direction": "ltr",
+            "bidi": "isolate"
+          }
+        ]
       },
       "kind": "design-reference-dom-check-not-product-proof"
     }
