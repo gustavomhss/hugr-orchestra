@@ -1,0 +1,249 @@
+name: Orchestra design complement publication
+on:
+  push:
+    branches: [visual-migration-plan]
+    paths: [.github/workflows/orchestra-design-publish.yml]
+permissions:
+  contents: write
+  issues: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+      - name: Resolve isolated authoring and evidence directories
+        run: |
+          echo "OUT=$RUNNER_TEMP/orchestra-design-complement" >> "$GITHUB_ENV"
+          mkdir "$RUNNER_TEMP/orchestra-design-complement"
+      - name: Apply only the byte-verified reviewed source delta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,json,lzma,os,pathlib,subprocess
+          root=pathlib.Path.cwd();p=root/'specs/orchestra-visual';out=pathlib.Path(os.environ['OUT'])
+          shas=['f36ccbec255f9c3a41717fc08565c06bd5fe499a','5f02ff37ad7cc2895488e5d6bbdc72c828c261e2','7556c1522094788a8bbbf82867e31c9a1fb610ba','f3e70c3a74f382567fc2226a502c1d37d823b7b6','6194737065846cd40b10ba37aedc98f60093102a','7eb6700f6c52b6a7532f432bbdda30ce7f0c4387','767ab7b7f52795a58163187a17c66b2ec998053e','b45212c58b0fede8c3bfe1645292ade7b7bc42ab','413bceebeede9b1ccec166d589813fd23cd5976a','3257ce3f8e24a1fef60977bb8d63e5cda35b2172','8a64e5a6347f39564f071bb11f10e3615e8a9f99','bd95da02947649870a9483189e1cd6e77893a1e1','f2aefc56d6644fad6ea5a54bf748aa646fb92be0','9c6d412fd3521b092a631ee59c80e11942e533ca']
+          compressed=b''
+          for sha in shas:
+              obj=json.loads(subprocess.check_output(['gh','api','repos/gmhelmold/HuGR-Orchestra/git/blobs/'+sha],text=True))
+              chunk=base64.b64decode(obj['content'])
+              assert hashlib.sha1(b'blob '+str(len(chunk)).encode()+b'\0'+chunk).hexdigest()==sha
+              compressed+=chunk
+          assert len(compressed)==62944
+          raw=lzma.decompress(compressed)
+          assert len(raw)==496217 and hashlib.sha256(raw).hexdigest()=='ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4'
+          data=json.loads(raw);assert len(data['files'])==40
+          names={f['path'] for f in data['files']}
+          assert all(n.startswith('specs/orchestra-visual/') or n=='.github/workflows/orchestra-plan.yml' for n in names)
+          assert all('..' not in pathlib.PurePosixPath(n).parts for n in names)
+          def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+          for f in data['files']:
+              path=root/f['path'];assert not path.is_symlink()
+              assert (sha(path) if path.exists() else None)==f['before_sha256'], 'Concurrent source change: '+f['path']
+          original=json.loads((p/'PLAN.json').read_text());(out/'plan-before.json').write_text(json.dumps(original))
+          generated={'MAP.md','OWNERSHIP.md','INDEX.md','MANIFEST.sha256'}
+          protected={str(f.relative_to(root)):sha(f) for f in p.rglob('*') if f.is_file() and str(f.relative_to(root)) not in names and f.name not in generated and 'issues' not in f.relative_to(p).parts and 'design' not in f.relative_to(p).parts}
+          (out/'protected.json').write_text(json.dumps(protected,indent=2))
+          (out/'old-issues.json').write_text(json.dumps({f.stem:f.read_text() for f in (p/'issues').glob('*.md')},ensure_ascii=False))
+          # difflib transport omitted two explicit EOF markers. Restore markers only;
+          # every resulting source file must still match its reviewed SHA-256.
+          patch=data['patch']
+          lines=['-Somente esta nota, o bootstrap e a issue #148 foram atualizados remotamente. O ZIP é a entrega completa; não presumir sincronização integral dos 39 corpos ou aplicação de vínculos nativos.','+6. **Copy de todos os estados novos**\u00a0(S22 é writer único de tradução) — se tu tem o texto em PT/EN, entrega antes, senão eu redijo e tu revisa.']
+          for line in lines:
+              assert patch.count(line)==1
+              patch=patch.replace(line,line+'\n\\ No newline at end of file\n')
+          patchfile=out/'reviewed.patch';patchfile.write_text(patch)
+          subprocess.run(['git','apply','--check',str(patchfile)],check=True)
+          subprocess.run(['git','apply',str(patchfile)],check=True)
+          plan=json.loads((p/'PLAN.json').read_text())
+          for edit in data['plan_edits']:
+              obj=plan
+              for key in edit['path'][:-1]:obj=obj[key]
+              key=edit['path'][-1];op=edit['op'];value=edit['value']
+              if op=='set':obj[key]=value
+              elif op in ('append_text','append_items'):obj[key]+=value
+              elif op=='prepend_items':obj[key]=value+obj[key]
+              else:raise AssertionError(op)
+          (p/'PLAN.json').write_text(json.dumps(plan,ensure_ascii=False,indent=2)+'\n')
+          assert plan['contract_revision']=='4.4' and len(plan['nodes'])==143
+          for f in data['files']:assert sha(root/f['path'])==f['after_sha256'],f['path']
+          for old,new in zip(original['nodes'],plan['nodes']):
+              for key in set(old)|set(new):
+                  if key not in {'axioms','steps','normative_files','design_sections','design_contract_file'}:assert old.get(key)==new.get(key),(old['id'],key)
+              assert set(old['axioms'])==set(new['axioms']) and all(len(old['axioms'][k])==len(new['axioms'][k]) for k in old['axioms'])
+          assert all(sha(root/n)==h for n,h in protected.items())
+          (out/'transfer.json').write_text(json.dumps({'source_files':data['files'],'payload_sha256':hashlib.sha256(raw).hexdigest(),'patch_eof_markers_restored':2},indent=2))
+          subprocess.run(['git','diff','--check'],check=True)
+          print('40 reviewed source files applied; unchanged scopes, DAG, criterion IDs and original assets.')
+          PY
+      - name: Install isolated reference-authoring tools, not product dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/design-author"
+          "$RUNNER_TEMP/design-author/bin/pip" install --disable-pip-version-check Pillow==12.3.0 numpy==2.3.5 opencv-python-headless==4.13.0.92 playwright==1.57.0 > "$OUT/authoring-install.log" 2>&1
+          "$RUNNER_TEMP/design-author/bin/pip" freeze > "$OUT/authoring-versions.txt"
+          command -v google-chrome
+          google-chrome --version > "$OUT/browser.txt"
+      - name: Produce separated assets and actual interface design references
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/design-author/bin/python" specs/orchestra-visual/tools/build_design_assets.py --repo "$GITHUB_WORKSPACE" > "$OUT/assets.log"
+          "$RUNNER_TEMP/design-author/bin/python" specs/orchestra-visual/tools/render_design_references.py --repo "$GITHUB_WORKSPACE" --browser "$(command -v google-chrome)" > "$OUT/render.log"
+          python3 - <<'PY'
+          import json,pathlib
+          d=pathlib.Path('specs/orchestra-visual/design')
+          r=json.loads((d/'LOCAL-RENDER.json').read_text())
+          assert r['states']==22 and r['elements']==19 and not r['page_errors']
+          assert all(x['images_loaded'] for x in r['geometry'])
+          assert not [f for f in d.rglob('*') if f.suffix.lower() in {'.ttf','.otf','.woff','.woff2'}]
+          assert 'data:font/' not in (d/'reference.html').read_text()
+          print('22 state PNGs, native compact reference and 19 element references; no font redistributed.')
+          PY
+      - name: Regenerate projections and exercise every existing regression
+        working-directory: specs/orchestra-visual
+        run: |
+          set -euo pipefail
+          python3 tools/render_maps.py > "$OUT/render-maps.log"
+          python3 tools/render_issues.py > "$OUT/render-issues.log"
+          python3 tools/render_navigation.py --repo "$GITHUB_WORKSPACE" > "$OUT/render-navigation.log"
+          python3 -m unittest discover -s tools -p 'test_*.py' -v > "$OUT/tests.log" 2>&1
+          tail -5 "$OUT/tests.log"
+          python3 tools/validate_plan.py > "$OUT/plan.json"
+          python3 tools/verify_brand.py > "$OUT/brand.json"
+          python3 tools/validate_design_inputs.py > "$OUT/design.json"
+          python3 tools/render_maps.py --check > "$OUT/maps.log"
+          python3 tools/render_issues.py --check > "$OUT/issues.log"
+          python3 tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE" > "$OUT/navigation.log"
+      - name: Verify 66 task packets and read-only native relationships
+        working-directory: specs/orchestra-visual
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          p=pathlib.Path.cwd();out=pathlib.Path(os.environ['OUT']);rows=[]
+          for n in json.loads((p/'PLAN.json').read_text())['nodes']:
+              if n['kind']!='task':continue
+              r=subprocess.run(['python3','tools/executor.py','packet',n['id'],'--repo',os.environ['GITHUB_WORKSPACE']],capture_output=True,text=True)
+              assert r.returncode==0,(n['id'],r.stderr)
+              assert 'EXECUTOR-DECISIONS.md' in r.stdout and all(a in r.stdout for a in n['design_sections'])
+              rows.append({'task':n['id'],'bytes':len(r.stdout.encode()),'sha256':hashlib.sha256(r.stdout.encode()).hexdigest()})
+          assert len(rows)==66;assert json.loads((p/'progress.json').read_text())['tasks']=={}
+          (out/'packets.json').write_text(json.dumps(rows,indent=2))
+          PY
+          python3 tools/github_sync.py > "$OUT/relationships.json"
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path(os.environ['OUT']);r=json.loads((out/'relationships.json').read_text());assert r['planned_operations']==[]
+          children=json.loads(subprocess.check_output(['gh','api','repos/gmhelmold/HuGR-Orchestra/issues/215/sub_issues?per_page=100'],text=True))
+          assert {x['number'] for x in children}=={130,131,132,133}
+          (out/'root-children.json').write_text(json.dumps([x['number'] for x in children]))
+          PY
+      - name: Commit the verified design complement without touching product code
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess
+          root=pathlib.Path.cwd();p=root/'specs/orchestra-visual';out=pathlib.Path(os.environ['OUT'])
+          def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
+          protected=json.loads((out/'protected.json').read_text());assert all(sha(root/n)==h for n,h in protected.items())
+          log=(out/'tests.log').read_text();assert re.search(r'Ran 296 tests in ',log) and log.rstrip().endswith('OK')
+          changed=set(subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines())|set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
+          assert all(x.startswith('specs/orchestra-visual/') or x=='.github/workflows/orchestra-plan.yml' for x in changed)
+          report={'kind':'design-input-verification-not-product-approval','status':'VERIFIED','contract_revision':'4.4','workflow_input_sha':os.environ['GITHUB_SHA'],'run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'tests':296,'previous_tests':280,'new_regressions':16,'states_1672x941':22,'additional_native_compact':[1152,768],'isolated_elements':19,'existing_icon_exports':33,'master_crops':11,'copy_pt_en_keys':113,'sampled_material_colors':3,'packets_generated':66,'original_protected_files_unchanged':len(protected),'original_master_sha256':sha(p/'reference/approved.png'),'plan_sha256':sha(p/'PLAN.json'),'render':json.loads((p/'design/LOCAL-RENDER.json').read_text()),'checks':{'plan':True,'brand':True,'design':True,'maps':True,'issues':True,'navigation':True,'native_relationships_unchanged':True},'product_tasks_accepted':0,'frontend_electron_benchmarks':'NOT_RUN','new_state_reference_approval':'planner-defined supplemental direction; original user-approved master unchanged','source_payload_sha256':'ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4','review':'same assistant, separate adversarial passes and source inspection; not external auditor','limitations':['No original Figma was supplied; HTML/CSS is a new editable design reference.','Hidden sky pixels are reconstructed and documented; no invented high-resolution original.','Synthetic design images are not valid product evidence.','Light palette remains preserved; functional states still need implementation.']}
+          dest=p/'reviews/design-complement';dest.mkdir(parents=True,exist_ok=True)
+          (dest/'VERIFICATION.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          files=sorted(f for f in p.rglob('*') if f.is_file() and f.name!='MANIFEST.sha256' and '__pycache__' not in f.parts)
+          (p/'MANIFEST.sha256').write_text(''.join(sha(f)+'  '+str(f.relative_to(p))+'\n' for f in files))
+          subprocess.run(['git','diff','--check'],check=True)
+          remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/visual-migration-plan'],text=True).split()[0]
+          assert remote==os.environ['GITHUB_SHA'],'Concurrent branch advance; refuse overwrite'
+          subprocess.run(['git','add','--','specs/orchestra-visual','.github/workflows/orchestra-plan.yml'],check=True)
+          subprocess.run(['git','-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m','docs(app): provide separated design assets and executor decisions'],check=True)
+          subprocess.run(['git','push','origin','HEAD:refs/heads/visual-migration-plan'],check=True)
+          (out/'source-commit.txt').write_bytes(subprocess.check_output(['git','rev-parse','HEAD']))
+          PY
+      - name: Reconcile the 39 existing ticket bodies, preserving hierarchy and progress
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess
+          p=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT']);repo='gmhelmold/HuGR-Orchestra';base='repos/'+repo
+          def api(path,body=None):
+              args=['gh','api',base+'/'+path]
+              if body is not None:args+=['--method','PATCH','--input','-']
+              r=subprocess.run(args,input=json.dumps(body,ensure_ascii=False) if body is not None else None,text=True,capture_output=True,check=True)
+              return json.loads(r.stdout)
+          old=json.loads((out/'old-issues.json').read_text());registry=json.loads((p/'GITHUB.json').read_text());commit=(out/'source-commit.txt').read_text().strip();rows=[];work=[]
+          for ident,item in registry['issues'].items():
+              path=p/'issues'/(ident+'.md');current=api('issues/'+str(item['number']));text=current['body'];marker=item['marker'];projection=path.read_text()
+              assert marker in text and text[text.index(marker):].strip()==old[ident].strip(), 'Concurrent or unknown issue body: '+ident
+              nav=re.search(r'<!-- orchestra-navigation:begin -->.*?<!-- orchestra-navigation:end -->',text,re.S)
+              assert nav,'Missing navigation: '+ident
+              parent='#'+str(registry['issues'][item['parent']]['number']) if item['parent'] else '#215'
+              url='https://github.com/'+repo+'/blob/'+commit+'/specs/orchestra-visual/'
+              intro='\n\nÉpico principal: #215. Pai: '+parent+'.\n\nContrato completo **v4.4**, incluindo os pedidos A1–A11/B1–B10/C1 da sessão executora. [Fonte deste ticket]('+url+'issues/'+ident+'.md) · [Assets separados]('+url+'design/README.md) · [Peças Zen-inspired]('+url+'design/zen/README.md) · [22 estados de interface]('+url+'design/gallery.html).\n\nOs cinco axiomas e as tasks estão abaixo. As referências DS são direção de design, não capturas do produto; nenhuma task foi concluída por esta publicação. Scopes, DAG, dependências e budgets permanecem. Use RUN.md e o seletor antes de executar.\n\n---\n\n'
+              work.append((ident,item,current,nav.group(0)+intro+projection))
+          assert len(work)==39
+          for ident,item,before,body in work:
+              now=api('issues/'+str(item['number']));assert now['body']==before['body'],'Concurrent edit: '+ident
+              result=api('issues/'+str(item['number']),{'body':body});assert result['body']==body
+              final=api('issues/'+str(item['number']));assert final['body']==body and final['state']==before['state']
+              rows.append({'node':ident,'number':item['number'],'body_sha256':hashlib.sha256(body.encode()).hexdigest(),'state_preserved':True})
+              print(ident,item['number'],'read back',flush=True)
+          root=api('issues/215');note='<!-- orchestra-design-complement:begin -->\n## Insumos visuais separados e decisões do executor — v4.4\n\n[COMECE PELOS ASSETS]('+url+'design/README.md) · [ZEN: CSS/tokens/peças]('+url+'design/zen/README.md) · [Pedidos atendidos item a item]('+url+'design/REQUESTS.md).\n\n22 referências de interface em 1672×941, 19 elementos isolados, 33 ícones existentes, HuGR oficial, paisagem limpa WebP/PNG, fonte HTML/CSS editável e 113 chaves PT-BR/EN. Os 39 tickets subordinados foram reconciliados com os cinco axiomas. Nenhuma task de produto foi marcada PASS; o master aprovado, scopes, DAG e budgets permanecem.\n<!-- orchestra-design-complement:end -->\n\n'
+          assert '<!-- orchestra-design-complement:begin -->' not in root['body']
+          api('issues/215',{'body':note+root['body']});assert api('issues/215')['body']==note+root['body']
+          publication={'kind':'design-complement-github-publication','status':'PUBLISHED_AND_READ_BACK','contract_revision':'4.4','source_commit':commit,'root_epic':215,'root_body_updated':True,'ticket_bodies':rows,'native_relationships':'unchanged; existing synchronizer dry-run plus four root children verified','product_tasks_accepted':0,'run_url':'https://github.com/'+repo+'/actions/runs/'+os.environ['GITHUB_RUN_ID']}
+          (out/'publication.json').write_text(json.dumps(publication,ensure_ascii=False,indent=2)+'\n')
+          (p/'reviews/design-complement/PUBLICATION.json').write_text(json.dumps(publication,ensure_ascii=False,indent=2)+'\n')
+          registry['entry_commit']=commit;registry['publication']='Design complement 4.4 published; design/REQUESTS.md maps executor requests; reviews/design-complement/PUBLICATION.json records current readback.'
+          (p/'GITHUB.json').write_text(json.dumps(registry,ensure_ascii=False,indent=2)+'\n')
+          main=json.loads((p/'PUBLICATION.json').read_text());main['design_complement']={'contract_revision':'4.4','source_commit':commit,'report':'reviews/design-complement/PUBLICATION.json','ticket_bodies_reconciled':39,'product_tasks_accepted':0}
+          (p/'PUBLICATION.json').write_text(json.dumps(main,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Seal readback metadata and verify the committed package again
+        working-directory: specs/orchestra-visual
+        run: |
+          set -euo pipefail
+          python3 tools/render_navigation.py --repo "$GITHUB_WORKSPACE" > "$OUT/navigation-final-render.log"
+          python3 - <<'PY'
+          import hashlib,pathlib
+          p=pathlib.Path.cwd();files=sorted(f for f in p.rglob('*') if f.is_file() and f.name!='MANIFEST.sha256' and '__pycache__' not in f.parts)
+          (p/'MANIFEST.sha256').write_text(''.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+str(f.relative_to(p))+'\n' for f in files))
+          PY
+          git diff --check
+          git add GITHUB.json PUBLICATION.json INDEX.md MANIFEST.sha256 reviews/design-complement/PUBLICATION.json
+          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com commit -m 'docs(app): record reconciled visual tickets and asset locations'
+          git push origin HEAD:refs/heads/visual-migration-plan
+          python3 -m unittest discover -s tools -p 'test_*.py' -v > "$OUT/committed-tests.log" 2>&1
+          tail -5 "$OUT/committed-tests.log"
+          python3 tools/validate_plan.py > "$OUT/committed-plan.json"
+          python3 tools/validate_design_inputs.py > "$OUT/committed-design.json"
+          python3 tools/verify_brand.py > "$OUT/committed-brand.json"
+          python3 tools/render_maps.py --check
+          python3 tools/render_issues.py --check
+          python3 tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE"
+          sha256sum --check MANIFEST.sha256 > "$OUT/manifest.log"
+          test -z "$(git status --porcelain)"
+          git rev-parse HEAD > "$OUT/final-head.txt"
+      - name: Package only reusable design inputs, never fonts or product credentials
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,zipfile
+          p=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT']);items=[f for f in (p/'design').rglob('*') if f.is_file()]+[p/'copy.json',p/'reference/approved.png',p/'reviews/design-complement/VERIFICATION.json',p/'reviews/design-complement/PUBLICATION.json']
+          assert not any(f.suffix.lower() in {'.ttf','.otf','.woff','.woff2'} for f in items)
+          with zipfile.ZipFile(out/'Orchestra_Separated_Visual_Assets.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for f in items:z.write(f,'orchestra-visual/'+str(f.relative_to(p)))
+          print('Packaged',len(items),'design files without fonts. Not a replacement for the repository plan.')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: orchestra-design-complement
+          path: ${{ runner.temp }}/orchestra-design-complement
+          retention-days: 14
