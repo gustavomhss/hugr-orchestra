@@ -37,6 +37,7 @@ jobs:
           set -euo pipefail
           python3 tools/validate_plan.py
           python3 tools/verify_brand.py
+          python3 tools/validate_design_inputs.py
           python3 tools/render_maps.py --check
           python3 tools/render_issues.py --check
           python3 tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE"
