@@ -72,15 +72,17 @@ O espaço de 12–14px fora da janela é apresentação do mock. Pode existir ap
 
 Para comparação normalizada, recorte o master em `[13,12,1659,929]` (`1646 × 917`). Compare à mesma área útil da implementação, registrando diferenças de decoração nativa. Não estique capturas para esconder larguras incorretas.
 
-### 3.3 Tokens iniciais
+### 3.3 Tokens reconciliados — valores e proveniência
+
+Os três fundos canvas/shell/surface foram amostrados do master em `design/zen/MEASUREMENTS.json`. Os demais valores são decisões explícitas de engenharia/material/contraste, não CSS original inferido. A fonte estruturada e o binding existente ficam em `design/zen/tokens.json` e `token-bindings.json`. Os estados, compacto e RTL estão fechados em `design/EXECUTOR-DECISIONS.md` e nos PNGs DS; eles complementam o master intacto.
 
 Mapeie estes papéis aos tokens V1/V2 existentes; use aliases locais apenas onde faltar um papel. Não cole overrides globais indiscriminados nem `!important` em cascata.
 
 ```yaml
 colors:
-  canvas: '#10161D'
-  shell: '#131A23'
-  surface: '#18212A'
+  canvas: '#131A22' # mediana da caixa canvas registrada
+  shell: '#121A22' # mediana da caixa shell registrada
+  surface: '#19222B' # mediana da caixa surface registrada
   surfaceRaised: '#1B2531'
   surfaceSunken: '#0E151C'
   input: '#1B232E'
@@ -127,6 +129,8 @@ motionMs: {hover: 120, panel: 180, tooltipDelay: 350, reducedMotion: 0}
 Use a sans e a mono já distribuídas pelo repo. Na ausência delas, use `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` e `ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace`. Não baixe fontes proprietárias. Ajuste métricas somente após comparar as quebras de linha.
 
 Mantenha fundos estáveis atrás do texto. Gradiente discreto somente se necessário para reproduzir o shell; nenhum fundo animado. A paisagem fica apenas na porção inferior da sidebar. Nada de imagem atrás de código, diff ou conversa.
+
+A paisagem é `design/landscape/sidebar-mountains.webp`, com máscara/proveniência ao lado; não espelhar em RTL e ocultar no modo compacto/claro. O set de ícones é o sprite existente com viewBoxes 16/20, não uma biblioteca nova de 24px.
 
 ### 3.4 Regras por superfície
 

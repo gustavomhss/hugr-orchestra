@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "source_commit": "4fd88201131fcccc64d5c2cc49e9323c042836f8",
+  "approved_master_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "fonts": "No fonts copied or redistributed; refer to existing repo font files.",
+  "assets": [
+    {
+      "id": "hugr-symbol-primary",
+      "file": "design/brand/hugr-symbol-primary.svg",
+      "source": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-primary.svg",
+      "sha256": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1",
+      "bytes": 15295,
+      "role": "runtime-copy",
+      "owner": "S05",
+      "destination": "packages/app/src/assets/orchestra/hugr/hugr-symbol-primary.svg",
+      "immutable": true
+    },
+    {
+      "id": "hugr-symbol-inverse",
+      "file": "design/brand/hugr-symbol-inverse.svg",
+      "source": "vendor/HuGR-Brand-Kit-v1.0/07-web/brand/logos/hugr-symbol-inverse.svg",
+      "sha256": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca",
+      "bytes": 4317,
+      "role": "runtime-copy",
+      "owner": "S05",
+      "destination": "packages/app/src/assets/orchestra/hugr/hugr-symbol-inverse.svg",
+      "immutable": true
+    },
+    {
+      "id": "favicon",
+      "file": "design/brand/favicon.svg",
+      "source": "vendor/HuGR-Brand-Kit-v1.0/02-icons/favicon.svg",
+      "sha256": "7be1f3891bee87a398a26519444ee30ddefaef75ae13d93bfeaacfe02b132f47",
+      "bytes": 2375,
+      "role": "conditional-runtime-copy",
+      "owner": "S05",
+      "destination": "confirmed existing favicon consumer only",
+      "immutable": true
+    },
+    {
+      "id": "sidebar-mountains",
+      "file": "design/landscape/sidebar-mountains.webp",
+      "source": "reference/approved.png",
+      "sha256": "10cdc446e814da396c583b6cc38eca26000200f2c800c592e29b3e7547aeeb24",
+      "bytes": 47318,
+      "role": "runtime-copy",
+      "owner": "S05",
+      "destination": "packages/app/src/assets/orchestra/sidebar-mountains.webp",
+      "immutable": false,
+      "width": 227,
+      "height": 254,
+      "decoded_rgba_bytes": 230632
+    }
+  ],
+  "ui_images": "design/states and design/elements are synthetic design references, not app evidence or runtime controls.",
+  "zen": "design/zen/ has scoped source CSS and measured tokens, not imported Zen browser internals or trademarks."
+}

@@ -1,4 +1,4 @@
-# OWNERSHIP — projeção canônica v4.3
+# OWNERSHIP — projeção canônica v4.4
 
 Fonte única: PLAN.json. Cada task herda seu write scope explicitamente; grants de codegen são condicionais a lease serial.
 

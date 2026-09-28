@@ -25,6 +25,9 @@ def render(plan):
             if n.get('children'): lines += ['Filhos: '+', '.join(n['children'])+'.']
             for key in ('write_paths','exclude_paths','read_paths','resource_locks','steps','cases'):
                 if n.get(key):lines += ['\n### '+key+'\n'+'\n'.join('- '+s for s in n[key])]
+            if n.get('design_sections'):
+                base='https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/design/'
+                lines += ['\nInsumos visuais separados: [índice](%sREADME.md) · [peças Zen-inspired](%szen/README.md) · [estados](%sSTATES.json) · [resposta aos pedidos](%sREQUESTS.md).' % (base,base,base,base), 'Decisões atribuídas: ' + ' · '.join('['+v+']('+base+'EXECUTOR-DECISIONS.md#'+v.lower()+')' for v in n['design_sections']) + '. Aplicar os cinco axiomas no estágio correto; capturas de design não encerram a task.']
             if n.get('widget_contracts'):
                 base='https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/WIDGETS.md'
                 lines += ['\nWidgets decididos: ' + ' · '.join('['+wid+']('+base+'#'+wid.lower()+')' for wid in n['widget_contracts']) + '. Fonte, ações, estados e limites estão nessas seções; manter os cinco axiomas abaixo.']

@@ -1,5 +1,12 @@
 # EXECUTE — Orchestra / contrato de execução v4.3
 
+<!-- executor-design-complement -->
+## Assets e decisões para começar sem inventar aparência
+
+**[design/README.md](design/README.md)** localiza as peças reutilizáveis. **[design/zen/README.md](design/zen/README.md)** separa materiais, chrome, controles, sidebar e estados inspirados no Zen. **[design/REQUESTS.md](design/REQUESTS.md)** responde A1–A11, B1–B10 e C1; **[design/gallery.html](design/gallery.html)** indexa as 22 referências PNG de interface. Abra localmente o HTML ou os PNGs individuais no GitHub.
+
+Tokens medidos/decididos, SVGs oficiais, paisagem limpa, 33 ícones de inspeção, copy PT-BR/EN e fonte HTML/CSS estão disponíveis; os blocos Axx pertinentes aparecem no pacote da sua task e nos cinco axiomas. `PLAN.json` é 4.4; DAG, owners, 38 WPs/66 tasks e budgets permanecem. S01 ainda precisa ser executada; não use as imagens de design como evidência de produto.
+
 <!-- orchestra-widgets43:begin -->
 ## Widgets fechados — contrato 4.3
 

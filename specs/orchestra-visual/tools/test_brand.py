@@ -23,6 +23,8 @@ class BrandContractTests(unittest.TestCase):
             target = self.root / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, target)
+        from test_support import install
+        install(self.root)
         shutil.copytree(ROOT / 'vendor', self.root / 'vendor')
         self.map = load(self.root / 'BRAND-ASSETS.json')
         self.repo = Path(self.temp.name) / 'repo'

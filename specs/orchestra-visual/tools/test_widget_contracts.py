@@ -45,7 +45,7 @@ class WidgetContractTests(unittest.TestCase):
     def test_01_valid_plan_includes_closed_widget_contract(self):
         self.assertEqual(validate(PLAN, SURFACES), [])
         self.assertEqual(PLAN['widget_contract_file'], 'WIDGETS.md')
-        self.assertEqual(PLAN['contract_revision'], '4.3')
+        self.assertEqual(PLAN['contract_revision'], '4.4')
 
     def test_02_unknown_widget_rejected(self):
         p = copy.deepcopy(PLAN)

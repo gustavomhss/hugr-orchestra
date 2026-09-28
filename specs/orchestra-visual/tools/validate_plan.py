@@ -48,6 +48,12 @@ def validate(data, surfaces=None):
             errors.append(ident + ': invalid kind')
         if not isinstance(n.get('title'), str) or not n['title'].strip():
             errors.append(ident + ': nonempty title required')
+        if data.get('design_contract_file'):
+            design = n.get('design_sections')
+            if not isinstance(design, list) or not design or any(not isinstance(x, str) or x not in {f'A{i:02}' for i in range(1, 12)} for x in design) or len(design) != len(set(design)):
+                errors.append(ident + ': invalid design section assignment')
+            if n.get('design_contract_file') != 'design/EXECUTOR-DECISIONS.md':
+                errors.append(ident + ': wrong design contract source')
         axes, ids = n.get('axioms'), n.get('criterion_ids')
         if not isinstance(axes, dict) or set(axes) != AX:
             errors.append(ident + ': five explicit axioms required')
@@ -147,7 +153,7 @@ def validate(data, surfaces=None):
                 errors.append(ident+': mandatory category lacks gates '+cat)
         for dep in n.get('acceptance_requires',[]):
             if dep not in by: errors.append(ident+': unknown acceptance producer '+str(dep))
-    if data.get('contract_revision') in ('4.2', '4.3'):
+    if data.get('contract_revision') in ('4.2', '4.3', '4.4'):
         policy = data.get('scheduling_policy', {})
         if policy.get('priority_targets') != ['S25-W0-T1', 'S25-W0-T2']:
             errors.append('explicit pilot priority policy missing or invalid')
@@ -163,7 +169,7 @@ def validate(data, surfaces=None):
             if n.get('verification_tier') in ('local', 'focused') and 'P10' in n.get('required_performance_gates', []):
                 errors.append(ident + ': full soak belongs to release/aggregate, not ordinary local verification')
 
-    if data.get('contract_revision') == '4.3':
+    if data.get('contract_revision') in ('4.3', '4.4'):
         if data.get('widget_contract_file') != 'WIDGETS.md':
             errors.append('widget contract file missing')
         allowed_widgets = {f'W{i:02}' for i in range(1, 10)}
@@ -278,7 +284,7 @@ def inspect(root=ROOT, repo=None, census_strict=False):
     for name in ('EXECUTE.md', 'SPEC.md', 'PERFORMANCE.md', 'MAP.md', 'OWNERSHIP.md'):
         if not (root / name).is_file():
             errors.append('missing ' + name)
-    if data.get('contract_revision') == '4.3':
+    if data.get('contract_revision') in ('4.3', '4.4'):
         widgets = root / 'WIDGETS.md'
         if not widgets.is_file():
             errors.append('missing WIDGETS.md')
@@ -290,11 +296,11 @@ def inspect(root=ROOT, repo=None, census_strict=False):
             for case in [f'WK{i:02}' for i in range(1,29)]:
                 if '`'+case+'`' not in text:
                     errors.append('widget behavior case missing: '+case)
-    if data.get('contract_revision') in ('4.1', '4.2', '4.3'):
+    if data.get('contract_revision') in ('4.1', '4.2', '4.3', '4.4'):
         from verify_brand import verify
         brand_report = verify(root)
         errors.extend('brand: ' + err for err in brand_report['errors'])
-    if not errors and data.get('contract_revision') in ('4.2', '4.3'):
+    if not errors and data.get('contract_revision') in ('4.2', '4.3', '4.4'):
         from visual_coverage import required_captures
         for n in data['nodes']:
             if n.get('kind') == 'task' and n.get('evidence_requirements', {}).get('visual') == 'required':

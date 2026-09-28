@@ -1,0 +1,32 @@
+/* These class recipes are scoped examples, not a replacement shared component library. */
+.ov-icon { display:inline-flex; inline-size:20px; block-size:20px; align-items:center; justify-content:center; flex:none; color:inherit; }
+.ov-icon svg,.ov-icon img { inline-size:100%; block-size:100%; }
+.ov-icon.small { inline-size:16px; block-size:16px; }
+.ov-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--ov-border-subtle); background:var(--ov-input); color:var(--ov-text-secondary); border-radius:6px; block-size:30px; padding-inline:12px; font:500 12px/16px var(--ov-font); white-space:nowrap; transition:background-color 120ms,color 120ms; }
+.ov-button:hover:not(:disabled) { background:var(--ov-selected); color:var(--ov-text-primary); }
+.ov-button:active:not(:disabled) { background:var(--ov-surface-sunken); }
+.ov-button.primary { background:var(--ov-primary-fill); border-color:var(--ov-primary-fill); color:var(--ov-on-primary); }
+.ov-button.danger { color:var(--ov-error); }
+.ov-button.icon-only { inline-size:30px; padding:0; }
+.ov-button:disabled,.ov-button[aria-disabled="true"] { color:var(--ov-text-muted); background:var(--ov-surface-sunken); cursor:not-allowed; }
+.ov-button[aria-disabled="true"] { opacity:.8; }
+.ov-button:focus-visible,.ov-navitem:focus-visible,.ov-input:focus-visible,.ov-tab:focus-visible { outline:2px solid var(--ov-focus); outline-offset:2px; }
+.ov-shortcut { font:400 11px/16px var(--ov-font); color:var(--ov-text-muted); padding:0 5px; border:1px solid var(--ov-border-subtle); border-radius:4px; margin-inline-start:auto; }
+.ov-tabs { display:flex; background:var(--ov-input); border-radius:6px; margin:0 8px 8px; block-size:32px; overflow:hidden; }
+.ov-tab { border:1px solid transparent; background:transparent; color:var(--ov-text-secondary); font:400 12px/16px var(--ov-font); flex:1; border-radius:4px; }
+.ov-tab[aria-selected="true"] { background:var(--ov-selected); border-color:#29415A; color:var(--ov-text-primary); }
+.ov-input { display:flex; align-items:center; gap:8px; min-inline-size:0; block-size:36px; padding-inline:10px; border:1px solid var(--ov-control-boundary); background:var(--ov-surface-sunken); color:var(--ov-text-primary); border-radius:6px; font:400 14px/20px var(--ov-font); }
+.ov-input::placeholder { color:var(--ov-text-muted); }
+.ov-badge { display:inline-flex; gap:5px; align-items:center; font:400 11px/16px var(--ov-font); border-radius:4px; padding:1px 6px; color:var(--ov-accent-text); background:var(--ov-selected); }
+.ov-badge.warning { color:var(--ov-warning); background:#30291E; }
+.ov-badge.error { color:var(--ov-error); background:#302024; }
+.ov-avatar { inline-size:40px; block-size:40px; background:#26384C; border-radius:12px; display:grid; place-items:center; color:var(--ov-accent-text); flex:none; }
+.ov-avatar.person { border-radius:50%; font-size:14px; }
+.ov-tooltip { position:absolute; z-index:6; border:1px solid var(--ov-border-subtle); box-shadow:var(--ov-shadow-floating); background:var(--ov-surface-raised); color:var(--ov-text-primary); font:400 12px/16px var(--ov-font); padding:6px 8px; border-radius:6px; }
+.ov-link { color:var(--ov-accent-text); background:transparent; border:0; padding:0; text-decoration:none; font:400 12px/16px var(--ov-font); }
+.ov-link:focus-visible { outline:2px solid var(--ov-focus); outline-offset:3px; }
+.ov-mono { font:400 12px/16px var(--ov-mono); font-variant-numeric:tabular-nums; font-synthesis:none; direction:ltr; unicode-bidi:isolate; text-align:start; }
+.ov-dot { inline-size:6px; block-size:6px; border-radius:50%; background:currentColor; flex:none; }
+.ov-muted { color:var(--ov-text-muted); } .ov-success { color:var(--ov-success); } .ov-warning { color:var(--ov-warning); } .ov-error { color:var(--ov-error); }
+:dir(rtl) .ov-icon[data-directional="true"] { transform:scaleX(-1); }
+@media (prefers-reduced-motion: reduce) { .ov-button { transition:none; } }

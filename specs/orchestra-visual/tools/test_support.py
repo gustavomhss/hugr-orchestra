@@ -5,7 +5,12 @@ from effective_contract import load,digest,file_hash
 ROOT=Path(__file__).resolve().parents[1]
 
 def install(root):
-    for rel in ['RECEIPTS-v4.md','PLAN.json','SURFACES.json','CENSUS.json','CONTRACTS.md','SPEC.md','PERFORMANCE.md','BUDGETS.json','COVERAGE.json','fixture.json','reference/approved.png','BRAND-ASSETS.json','BRAND-INTEGRATION.md','WIDGETS.md']:
+    # The fixture includes every normative input referenced by the current plan.
+    # Do not weaken contract checks when a new design input is introduced.
+    required={'RECEIPTS-v4.md','PLAN.json','SURFACES.json','CENSUS.json','CONTRACTS.md','SPEC.md','PERFORMANCE.md','BUDGETS.json','COVERAGE.json','fixture.json','reference/approved.png','BRAND-ASSETS.json','BRAND-INTEGRATION.md','WIDGETS.md'}
+    plan=load(ROOT/'PLAN.json')
+    required.update(rel for n in plan['nodes'] for rel in n.get('normative_files',[]))
+    for rel in sorted(required):
         dest=root/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/rel,dest)
 
 def png(w,h):

@@ -1,0 +1,706 @@
+{
+  "schema_version": 1,
+  "authority": "Explicit planner-authored supplemental state direction, not additional user-approved masters",
+  "source": "reference.html + reference.css + zen/*.css + copy.json; same viewport requested",
+  "master": "reference/approved.png",
+  "states": [
+    {
+      "id": "DS01",
+      "slug": "baseline",
+      "title": "Full cockpit; current data / no fictitious percentages",
+      "owner": "S25",
+      "consumer_hints": [
+        "UI06",
+        "UI19",
+        "UI49",
+        "UI55",
+        "UI78"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS01-baseline.png",
+      "renderer": "design/reference.html?state=baseline&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI06",
+          "name": "Shell novo e legado",
+          "owner": "S06"
+        },
+        {
+          "id": "UI19",
+          "name": "Timeline virtualizada",
+          "owner": "S09"
+        },
+        {
+          "id": "UI49",
+          "name": "Dock front shell",
+          "owner": "S15"
+        },
+        {
+          "id": "UI55",
+          "name": "Tasks panel",
+          "owner": "S18"
+        },
+        {
+          "id": "UI78",
+          "name": "Typed Activity card consumer",
+          "owner": "S18"
+        }
+      ],
+      "implementation_task": "S25-W0-T1",
+      "verification_task": "S25-W0-T2"
+    },
+    {
+      "id": "DS02",
+      "slug": "tasks-empty",
+      "title": "Task summary empty",
+      "owner": "S18",
+      "consumer_hints": [
+        "UI55"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS02-tasks-empty.png",
+      "renderer": "design/reference.html?state=tasks-empty&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI55",
+          "name": "Tasks panel",
+          "owner": "S18"
+        }
+      ],
+      "implementation_task": "S18-W1-T1",
+      "verification_task": "S18-W1-T2"
+    },
+    {
+      "id": "DS03",
+      "slug": "tasks-loading",
+      "title": "Task summary static loading placeholders",
+      "owner": "S18",
+      "consumer_hints": [
+        "UI55"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS03-tasks-loading.png",
+      "renderer": "design/reference.html?state=tasks-loading&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI55",
+          "name": "Tasks panel",
+          "owner": "S18"
+        }
+      ],
+      "implementation_task": "S18-W1-T1",
+      "verification_task": "S18-W1-T2"
+    },
+    {
+      "id": "DS04",
+      "slug": "tasks-error",
+      "title": "Local task retrieval error",
+      "owner": "S18",
+      "consumer_hints": [
+        "UI55"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS04-tasks-error.png",
+      "renderer": "design/reference.html?state=tasks-error&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI55",
+          "name": "Tasks panel",
+          "owner": "S18"
+        }
+      ],
+      "implementation_task": "S18-W1-T1",
+      "verification_task": "S18-W1-T2"
+    },
+    {
+      "id": "DS05",
+      "slug": "composer-disabled",
+      "title": "Draft retained; model required; no send",
+      "owner": "S10",
+      "consumer_hints": [
+        "UI23",
+        "UI24"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS05-composer-disabled.png",
+      "renderer": "design/reference.html?state=composer-disabled&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI23",
+          "name": "Composer V1",
+          "owner": "S10"
+        },
+        {
+          "id": "UI24",
+          "name": "Composer V2",
+          "owner": "S10"
+        }
+      ],
+      "implementation_task": "S10-W1-T1",
+      "verification_task": "S10-W1-T2"
+    },
+    {
+      "id": "DS06",
+      "slug": "permission",
+      "title": "Identity-bound permission request",
+      "owner": "S09",
+      "consumer_hints": [
+        "UI20"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS06-permission.png",
+      "renderer": "design/reference.html?state=permission&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI20",
+          "name": "Message/tool render",
+          "owner": "S09"
+        }
+      ],
+      "implementation_task": "S09-W1-T1",
+      "verification_task": "S09-W1-T2"
+    },
+    {
+      "id": "DS07",
+      "slug": "needs-input",
+      "title": "Identity-bound question; not an approval",
+      "owner": "S09",
+      "consumer_hints": [
+        "UI20"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS07-needs-input.png",
+      "renderer": "design/reference.html?state=needs-input&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI20",
+          "name": "Message/tool render",
+          "owner": "S09"
+        }
+      ],
+      "implementation_task": "S09-W1-T1",
+      "verification_task": "S09-W1-T2"
+    },
+    {
+      "id": "DS08",
+      "slug": "dock-unavailable",
+      "title": "Web host without native browser; local panes preserved",
+      "owner": "S15",
+      "consumer_hints": [
+        "UI49",
+        "UI50"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS08-dock-unavailable.png",
+      "renderer": "design/reference.html?state=dock-unavailable&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI49",
+          "name": "Dock front shell",
+          "owner": "S15"
+        },
+        {
+          "id": "UI50",
+          "name": "Dock renderer/component",
+          "owner": "S15"
+        }
+      ],
+      "implementation_task": "S15-W1-T1",
+      "verification_task": "S15-W1-T2"
+    },
+    {
+      "id": "DS09",
+      "slug": "settings-dialog",
+      "title": "Appearance dialog over cockpit",
+      "owner": "S12",
+      "consumer_hints": [
+        "UI32",
+        "UI33"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS09-settings-dialog.png",
+      "renderer": "design/reference.html?state=settings-dialog&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI32",
+          "name": "Settings shell",
+          "owner": "S12"
+        },
+        {
+          "id": "UI33",
+          "name": "Settings general",
+          "owner": "S12"
+        }
+      ],
+      "implementation_task": "S12-W1-T1",
+      "verification_task": "S12-W1-T2"
+    },
+    {
+      "id": "DS10",
+      "slug": "model-popover",
+      "title": "Account-qualified model picker",
+      "owner": "S13",
+      "consumer_hints": [
+        "UI39"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS10-model-popover.png",
+      "renderer": "design/reference.html?state=model-popover&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI39",
+          "name": "Models/manage/unpaid",
+          "owner": "S13"
+        }
+      ],
+      "implementation_task": "S13-W1-T1",
+      "verification_task": "S13-W1-T2"
+    },
+    {
+      "id": "DS11",
+      "slug": "file-picker",
+      "title": "Project file selector",
+      "owner": "S14",
+      "consumer_hints": [
+        "UI43"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS11-file-picker.png",
+      "renderer": "design/reference.html?state=file-picker&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI43",
+          "name": "File picker",
+          "owner": "S14"
+        }
+      ],
+      "implementation_task": "S14-W1-T1",
+      "verification_task": "S14-W1-T2"
+    },
+    {
+      "id": "DS12",
+      "slug": "toast-success",
+      "title": "Completed settings persistence notification",
+      "owner": "S04",
+      "consumer_hints": [
+        "UI48"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS12-toast-success.png",
+      "renderer": "design/reference.html?state=toast-success&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI48",
+          "name": "Toasts",
+          "owner": "S14"
+        }
+      ],
+      "implementation_task": "S04-W1-T1",
+      "verification_task": "S04-W1-T2"
+    },
+    {
+      "id": "DS13",
+      "slug": "toast-error",
+      "title": "Failed settings persistence; previous values active",
+      "owner": "S04",
+      "consumer_hints": [
+        "UI48"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS13-toast-error.png",
+      "renderer": "design/reference.html?state=toast-error&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI48",
+          "name": "Toasts",
+          "owner": "S14"
+        }
+      ],
+      "implementation_task": "S04-W1-T1",
+      "verification_task": "S04-W1-T2"
+    },
+    {
+      "id": "DS14",
+      "slug": "offline",
+      "title": "Disconnected; stale view explicit; draft retained",
+      "owner": "S06",
+      "consumer_hints": [
+        "UI14"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS14-offline.png",
+      "renderer": "design/reference.html?state=offline&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI14",
+          "name": "ConnectionGate/offline/startup",
+          "owner": "S25"
+        }
+      ],
+      "implementation_task": "S06-W1-T1",
+      "verification_task": "S06-W1-T2"
+    },
+    {
+      "id": "DS15",
+      "slug": "no-session",
+      "title": "New-session state",
+      "owner": "S07",
+      "consumer_hints": [
+        "UI11",
+        "UI12"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS15-no-session.png",
+      "renderer": "design/reference.html?state=no-session&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI11",
+          "name": "Nova sessão/draft",
+          "owner": "S07"
+        },
+        {
+          "id": "UI12",
+          "name": "Sessão vazia",
+          "owner": "S07"
+        }
+      ],
+      "implementation_task": "S07-W1-T1",
+      "verification_task": "S07-W1-T2"
+    },
+    {
+      "id": "DS16",
+      "slug": "no-workspace",
+      "title": "No workspace selected",
+      "owner": "S07",
+      "consumer_hints": [
+        "UI09"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS16-no-workspace.png",
+      "renderer": "design/reference.html?state=no-workspace&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI09",
+          "name": "Home projetos/sessões",
+          "owner": "S07"
+        }
+      ],
+      "implementation_task": "S07-W1-T1",
+      "verification_task": "S07-W1-T2"
+    },
+    {
+      "id": "DS17",
+      "slug": "task-failed",
+      "title": "Failed child task with true scope",
+      "owner": "S18",
+      "consumer_hints": [
+        "UI55"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS17-task-failed.png",
+      "renderer": "design/reference.html?state=task-failed&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI55",
+          "name": "Tasks panel",
+          "owner": "S18"
+        }
+      ],
+      "implementation_task": "S18-W1-T1",
+      "verification_task": "S18-W1-T2"
+    },
+    {
+      "id": "DS18",
+      "slug": "diff-loading",
+      "title": "Selection retained while diff loads",
+      "owner": "S11",
+      "consumer_hints": [
+        "UI28"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS18-diff-loading.png",
+      "renderer": "design/reference.html?state=diff-loading&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI28",
+          "name": "Review diff",
+          "owner": "S11"
+        }
+      ],
+      "implementation_task": "S11-W1-T1",
+      "verification_task": "S11-W1-T2"
+    },
+    {
+      "id": "DS19",
+      "slug": "output-partial",
+      "title": "Log preview truncated; no invented pass count",
+      "owner": "S11",
+      "consumer_hints": [
+        "UI31"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS19-output-partial.png",
+      "renderer": "design/reference.html?state=output-partial&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI31",
+          "name": "Evidência de testes",
+          "owner": "S11"
+        }
+      ],
+      "implementation_task": "S11-W1-T1",
+      "verification_task": "S11-W1-T2"
+    },
+    {
+      "id": "DS20",
+      "slug": "sidebar-collapsed",
+      "title": "Manual collapsed state at1672; native1152 proof separate",
+      "owner": "S06",
+      "consumer_hints": [
+        "UI06",
+        "UI69"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS20-sidebar-collapsed.png",
+      "renderer": "design/reference.html?state=sidebar-collapsed&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI06",
+          "name": "Shell novo e legado",
+          "owner": "S06"
+        },
+        {
+          "id": "UI69",
+          "name": "sidebar-shell.tsx",
+          "owner": "S06"
+        }
+      ],
+      "implementation_task": "S06-W1-T1",
+      "verification_task": "S06-W1-T2"
+    },
+    {
+      "id": "DS21",
+      "slug": "rtl",
+      "title": "RTL shell with LTR code/address islands; texture not mirrored",
+      "owner": "S22",
+      "consumer_hints": [
+        "UI06",
+        "UI63"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS21-rtl.png",
+      "renderer": "design/reference.html?state=rtl&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI06",
+          "name": "Shell novo e legado",
+          "owner": "S06"
+        },
+        {
+          "id": "UI63",
+          "name": "Localização/parity",
+          "owner": "S22"
+        }
+      ],
+      "implementation_task": "S22-W1-T1",
+      "verification_task": "S22-W1-T2"
+    },
+    {
+      "id": "DS22",
+      "slug": "command-palette",
+      "title": "Keyboard-first command search",
+      "owner": "S14",
+      "consumer_hints": [
+        "UI41"
+      ],
+      "viewport": [
+        1672,
+        941
+      ],
+      "dpr": 1,
+      "zoom": 100,
+      "file": "design/states/DS22-command-palette.png",
+      "renderer": "design/reference.html?state=command-palette&lang=en",
+      "evidence_origin": "design-reference",
+      "synthetic": true,
+      "is_product_evidence": false,
+      "consumers": [
+        {
+          "id": "UI41",
+          "name": "Command palette",
+          "owner": "S14"
+        }
+      ],
+      "implementation_task": "S14-W1-T1",
+      "verification_task": "S14-W1-T2"
+    }
+  ]
+}

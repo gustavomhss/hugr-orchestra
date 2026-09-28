@@ -1,0 +1,74 @@
+{
+  "role": "reference-only-never-runtime",
+  "source": "reference/approved.png",
+  "source_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "coordinate_system": "full 1672x941 half-open [x0,y0,x1,y1]; display master preserved",
+  "regions": {
+    "sidebar": [
+      14,
+      13,
+      243,
+      928
+    ],
+    "topbar": [
+      243,
+      13,
+      1658,
+      58
+    ],
+    "session-header": [
+      270,
+      72,
+      1182,
+      143
+    ],
+    "checklist": [
+      342,
+      262,
+      1165,
+      381
+    ],
+    "changes-list": [
+      345,
+      388,
+      751,
+      598
+    ],
+    "diff": [
+      759,
+      388,
+      1175,
+      603
+    ],
+    "test-evidence": [
+      345,
+      662,
+      1175,
+      779
+    ],
+    "composer": [
+      272,
+      871,
+      1184,
+      917
+    ],
+    "dock": [
+      1220,
+      66,
+      1650,
+      519
+    ],
+    "tasks": [
+      1220,
+      527,
+      1650,
+      726
+    ],
+    "activity": [
+      1220,
+      736,
+      1650,
+      918
+    ]
+  }
+}

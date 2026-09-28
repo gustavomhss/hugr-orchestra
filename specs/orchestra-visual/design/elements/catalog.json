@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "note": "PNG references to inspect per element. Reuse CSS and existing Solid components; do not put these PNG controls in runtime.",
+  "elements": [
+    {
+      "id": "sidebar",
+      "file": "design/elements/sidebar.png",
+      "state": "baseline",
+      "selector": "[data-element=\"sidebar\"]",
+      "css_box": {
+        "x": 14,
+        "y": 13,
+        "width": 230,
+        "height": 915
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "4980c74ccd119406c7265dd4b74c725dc0ba44bf02378e6c9798aa41a3e1d387"
+    },
+    {
+      "id": "sidebar-collapsed",
+      "file": "design/elements/sidebar-collapsed.png",
+      "state": "sidebar-collapsed",
+      "selector": "[data-element=\"sidebar\"]",
+      "css_box": {
+        "x": 14,
+        "y": 13,
+        "width": 56,
+        "height": 915
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "b085f47758aecb5fba6560d2c135b5056ee8b6b179dba4785f8918fff94aa6c0"
+    },
+    {
+      "id": "topbar",
+      "file": "design/elements/topbar.png",
+      "state": "baseline",
+      "selector": "[data-element=\"topbar\"]",
+      "css_box": {
+        "x": 244,
+        "y": 13,
+        "width": 1414,
+        "height": 44
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "4187227f8a1f6015b243b62bdb3982dcd53e3207cdad6e394d59cc808df555ce"
+    },
+    {
+      "id": "brand",
+      "file": "design/elements/brand.png",
+      "state": "baseline",
+      "selector": "[data-element=\"brand\"]",
+      "css_box": {
+        "x": 14,
+        "y": 35,
+        "width": 229,
+        "height": 88
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "e7dfd921d69a41dec33d4a67ca2953a45e56cc19af12aa68d2d4afc603302ca6"
+    },
+    {
+      "id": "workspace-switch",
+      "file": "design/elements/workspace-switch.png",
+      "state": "baseline",
+      "selector": "[data-element=\"workspace-switch\"]",
+      "css_box": {
+        "x": 22,
+        "y": 734,
+        "width": 213,
+        "height": 54
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "44cfc915ae894f52394e0c86e8beeef024d2fc16e9d4e23c5b56cadde761b056"
+    },
+    {
+      "id": "checklist",
+      "file": "design/elements/checklist.png",
+      "state": "baseline",
+      "selector": "[data-element=\"checklist\"]",
+      "css_box": {
+        "x": 332,
+        "y": 269,
+        "width": 850,
+        "height": 104
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "9a2ad30cd6a7acd060b725ba4b7f9ab794c60a69dc576ad20f150ddc7e5e4bed"
+    },
+    {
+      "id": "changes",
+      "file": "design/elements/changes.png",
+      "state": "baseline",
+      "selector": "[data-element=\"changes\"]",
+      "css_box": {
+        "x": 332,
+        "y": 381,
+        "width": 421,
+        "height": 202
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "04016e6b729dbd8546f796e2063a28696c663b7fb970b14b3b9aeca9be3fdc09"
+    },
+    {
+      "id": "diff",
+      "file": "design/elements/diff.png",
+      "state": "baseline",
+      "selector": "[data-element=\"diff\"]",
+      "css_box": {
+        "x": 761,
+        "y": 381,
+        "width": 421,
+        "height": 202
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "f198b5b1cdf9b73512acf361c61cfc4557162ab0dd91729cc2608a1b5b741791"
+    },
+    {
+      "id": "test-evidence",
+      "file": "design/elements/test-evidence.png",
+      "state": "baseline",
+      "selector": "[data-element=\"test-evidence\"]",
+      "css_box": {
+        "x": 332,
+        "y": 646,
+        "width": 850,
+        "height": 111
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "4308540db17ddbbdae9a316927970eae93a94c30962a7fb474ee69a937478d5d"
+    },
+    {
+      "id": "composer",
+      "file": "design/elements/composer.png",
+      "state": "baseline",
+      "selector": "[data-element=\"composer\"]",
+      "css_box": {
+        "x": 272,
+        "y": 872,
+        "width": 910,
+        "height": 46
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "73b90ece1bafb9bbdf6efbacaf5a18036708b19ae473753b42018864f111367d"
+    },
+    {
+      "id": "dock",
+      "file": "design/elements/dock.png",
+      "state": "baseline",
+      "selector": "[data-element=\"dock\"]",
+      "css_box": {
+        "x": 1219,
+        "y": 65,
+        "width": 431,
+        "height": 454
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "559de9fc3b1fc2d3eb364c58a67ac1be0470dcdbc662065a1bdb8ae6e5ff586e"
+    },
+    {
+      "id": "tasks",
+      "file": "design/elements/tasks.png",
+      "state": "baseline",
+      "selector": "[data-element=\"tasks\"]",
+      "css_box": {
+        "x": 1219,
+        "y": 527,
+        "width": 431,
+        "height": 200
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "e0db2e85a9231b0b55ba2c115eec3a420de51961e8e39c80a3c01fcad84bfdf3"
+    },
+    {
+      "id": "activity",
+      "file": "design/elements/activity.png",
+      "state": "baseline",
+      "selector": "[data-element=\"activity\"]",
+      "css_box": {
+        "x": 1219,
+        "y": 735,
+        "width": 431,
+        "height": 185
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "f3f8daea6866b055fcce1f81d1b8b732cc559279850a7d709fc3cc20e4c02c7a"
+    },
+    {
+      "id": "tabs",
+      "file": "design/elements/tabs.png",
+      "state": "baseline",
+      "selector": "[data-element=\"tabs\"]",
+      "css_box": {
+        "x": 1228,
+        "y": 104,
+        "width": 413,
+        "height": 32
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "89bab25559d972b7c541b6e044c582c85252061a64b6928d7db888b5734d2069"
+    },
+    {
+      "id": "address-bar",
+      "file": "design/elements/address-bar.png",
+      "state": "baseline",
+      "selector": "[data-element=\"address-bar\"]",
+      "css_box": {
+        "x": 1228,
+        "y": 144,
+        "width": 413,
+        "height": 30
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "a66ecf785c447e7cba9b2a243ac18e002bca902818fa82c28bc87b4c677af2a7"
+    },
+    {
+      "id": "dialog",
+      "file": "design/elements/dialog.png",
+      "state": "settings-dialog",
+      "selector": "[data-element=\"dialog\"]",
+      "css_box": {
+        "x": 456,
+        "y": 298.5,
+        "width": 760,
+        "height": 344
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "e52f0cc37e7bd74cc95ee247c5dccc2f76d276f10ca8a54197eabccd7335016e"
+    },
+    {
+      "id": "popover",
+      "file": "design/elements/popover.png",
+      "state": "model-popover",
+      "selector": "[data-element=\"popover\"]",
+      "css_box": {
+        "x": 808,
+        "y": 580,
+        "width": 360,
+        "height": 282
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "ff713a50ba1e718e2b8f1c70837fcf01eabb36bd9495c2781f62d165bccd89e1"
+    },
+    {
+      "id": "tooltip",
+      "file": "design/elements/tooltip.png",
+      "state": "sidebar-collapsed",
+      "selector": "[data-element=\"tooltip\"]",
+      "css_box": {
+        "x": 77,
+        "y": 241,
+        "width": 44.53125,
+        "height": 30
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "940410d14ce26426bf6b9b39741ba8774fd2d0e1b06c7a994c8f366aa25f3f0f"
+    },
+    {
+      "id": "toast",
+      "file": "design/elements/toast.png",
+      "state": "toast-error",
+      "selector": "[data-element=\"toast\"]",
+      "css_box": {
+        "x": 1252,
+        "y": 831,
+        "width": 380,
+        "height": 71
+      },
+      "kind": "design-reference-not-runtime",
+      "synthetic": true,
+      "source": "design/reference.html",
+      "sha256": "e40dfe278b1cd4853f41bfddd6089290bed38971a81f86f2dd766ff994e851f0"
+    }
+  ]
+}

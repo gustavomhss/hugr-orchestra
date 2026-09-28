@@ -1,0 +1,26 @@
+{
+  "kind": "decorative-material-extracted-from-approved-raster",
+  "source": "reference/approved.png",
+  "source_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "source_crop": [
+    15,
+    480,
+    242,
+    734
+  ],
+  "native_size": [
+    227,
+    254
+  ],
+  "mask": "reconstruction-mask.png",
+  "method": "OpenCV Telea radius 5 removes only known foreground UI in sky; top36/bottom20 alpha feather. Native mountain pixels outside mask unchanged before alpha. Reconstructed hidden sky is inferred, not recovered original layers.",
+  "runtime_file": "sidebar-mountains.webp",
+  "png_role": "editable lossless fallback",
+  "mirrored_in_rtl": false,
+  "light_mode": "hidden; preserve previous light treatment",
+  "collapsed": "hidden",
+  "display_width_css_px": 230,
+  "display_height_css_px": 257,
+  "upscale_policy": "No claimed 2x/4x original; only proportional CSS scaling to the 230px sidebar. Decorative source is native227px.",
+  "product_validation": "Requires S05 actual URL/alpha/size render and S24 visual review; this extraction does not approve product."
+}

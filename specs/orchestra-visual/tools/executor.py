@@ -178,8 +178,10 @@ def headings(text):
     return found
 
 
-def widget_extract(text, requested):
-    markers = list(re.finditer(r'^<a id="(w\d{2})"></a>\s*$', text, re.M))
+def widget_extract(text, requested, prefix="w"):
+    if prefix not in ("w", "a"):
+        raise ValueError("unsupported section namespace")
+    markers = list(re.finditer(r'^<a id="(' + prefix + r'\d{2})"></a>\s*$', text, re.M))
     available = [match.group(1).upper() for match in markers]
     if len(available) != len(set(available)) or not set(requested) <= set(available):
         raise ValueError('Widget section missing or ambiguous; refusing partial packet')
@@ -266,6 +268,9 @@ def packet(plan, by, registry, root, repo, state, ready, progress, ident):
     widgets = node.get('widget_contracts', [])
     if widgets:
         body += ['## Trechos literais de WIDGETS.md', '', widget_extract(inside(root, 'WIDGETS.md').read_text(encoding='utf-8'), widgets)]
+    design = node.get('design_sections', [])
+    if design:
+        body += ['## Decisões literais de design atribuídas', '', widget_extract(inside(root, 'design/EXECUTOR-DECISIONS.md').read_text(encoding='utf-8'), design, prefix='a')]
     return '\n'.join(body) + '\n'
 
 

@@ -1,0 +1,27 @@
+.ov-empty { min-block-size:144px; padding:24px 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; }
+.ov-empty h2 { font:500 14px/20px var(--ov-font); margin:0; }
+.ov-empty p { color:var(--ov-text-secondary); max-inline-size:320px; margin:0; font:400 12px/18px var(--ov-font); }
+.ov-empty .ov-actions { margin-block-start:8px; }
+.ov-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.ov-skeleton { background:var(--ov-selected); block-size:8px; border-radius:4px; }
+.ov-skeleton-line { padding:14px 16px; display:flex; gap:12px; align-items:center; }
+.ov-skeleton-avatar { inline-size:32px; block-size:32px; background:var(--ov-selected); border-radius:6px; flex:none; }
+.ov-state-card { border:1px solid var(--ov-border-subtle); border-inline-start:2px solid var(--ov-warning); border-radius:8px; padding:14px 16px; background:var(--ov-surface); }
+.ov-state-card h2 { font:500 14px/20px var(--ov-font); margin:0 0 6px; }
+.ov-state-card p { margin:0 0 12px; font-size:12px; color:var(--ov-text-secondary); }
+.ov-state-card.error { border-inline-start-color:var(--ov-error); }
+.ov-scrim { position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center; background:rgb(4 8 13 / 64%); }
+.ov-dialog { inline-size:560px; max-inline-size:calc(100% - 48px); max-block-size:80%; overflow:auto; border:1px solid var(--ov-border-subtle); border-radius:12px; box-shadow:var(--ov-shadow-floating); background:var(--ov-surface-raised); padding:24px; }
+.ov-dialog h2 { margin:0 0 8px; font:600 20px/26px var(--ov-font); }
+.ov-dialog p { color:var(--ov-text-secondary); margin:0 0 20px; }
+.ov-dialog label { display:block; font-size:12px; margin:16px 0 6px; color:var(--ov-text-secondary); }
+.ov-dialog .ov-input { inline-size:100%; }
+.ov-dialog-footer { display:flex; justify-content:flex-end; gap:8px; padding-block-start:24px; }
+.ov-popover { position:absolute; z-index:7; inline-size:360px; border:1px solid var(--ov-border-subtle); border-radius:8px; background:var(--ov-surface-raised); box-shadow:var(--ov-shadow-floating); padding:8px; }
+.ov-menu-row { min-block-size:36px; padding:8px 10px; display:flex; gap:10px; align-items:center; border-radius:4px; color:var(--ov-text-secondary); }
+.ov-menu-row.selected { background:var(--ov-selected); color:var(--ov-text-primary); }
+.ov-toast { position:absolute; z-index:7; inset-block-end:26px; inset-inline-end:26px; inline-size:380px; display:flex; align-items:flex-start; gap:10px; padding:14px; border:1px solid var(--ov-border-subtle); border-radius:8px; background:var(--ov-surface-raised); box-shadow:var(--ov-shadow-floating); }
+.ov-toast p { margin:0; } .ov-toast small { color:var(--ov-text-secondary); }
+.ov-offline { display:flex; gap:10px; align-items:center; padding:10px 12px; margin-block:10px; border:1px solid var(--ov-border-subtle); background:var(--ov-surface-raised); border-radius:6px; color:var(--ov-warning); font-size:12px; }
+/* Progress placeholders are static shapes; runtime status text carries meaning. No infinite shimmer. */
+@media (prefers-reduced-motion: reduce) { .ov-scrim,.ov-popover,.ov-toast { animation:none; transition:none; } }

@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "kind": "raster-measurements-not-original-design-source",
+  "master_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "viewport": [
+    1672,
+    941
+  ],
+  "method": "RGB channel medians of declared half-open pixel boxes; spread retained. Raster includes noise/gradients/antialias. No OCR or guessed exact font extraction.",
+  "samples": {
+    "canvas": {
+      "box": [
+        850,
+        270,
+        1090,
+        310
+      ],
+      "pixels": 9600,
+      "median_rgb": [
+        19,
+        26,
+        34
+      ],
+      "median_hex": "#131A22",
+      "p10_rgb": [
+        16.0,
+        23.0,
+        30.0
+      ],
+      "p90_rgb": [
+        21.0,
+        29.0,
+        37.0
+      ]
+    },
+    "shell": {
+      "box": [
+        150,
+        106,
+        223,
+        123
+      ],
+      "pixels": 1241,
+      "median_rgb": [
+        18,
+        26,
+        34
+      ],
+      "median_hex": "#121A22",
+      "p10_rgb": [
+        17.0,
+        25.0,
+        33.0
+      ],
+      "p90_rgb": [
+        19.0,
+        26.0,
+        35.0
+      ]
+    },
+    "surface": {
+      "box": [
+        555,
+        571,
+        720,
+        588
+      ],
+      "pixels": 2805,
+      "median_rgb": [
+        25,
+        34,
+        43
+      ],
+      "median_hex": "#19222B",
+      "p10_rgb": [
+        24.0,
+        33.0,
+        42.0
+      ],
+      "p90_rgb": [
+        26.0,
+        34.0,
+        44.0
+      ]
+    },
+    "surfaceRaised": {
+      "box": [
+        1245,
+        510,
+        1605,
+        514
+      ],
+      "pixels": 1440,
+      "median_rgb": [
+        21,
+        28,
+        37
+      ],
+      "median_hex": "#151C25",
+      "p10_rgb": [
+        12.0,
+        17.0,
+        25.0
+      ],
+      "p90_rgb": [
+        25.0,
+        34.0,
+        43.0
+      ]
+    },
+    "surfaceSunken": {
+      "box": [
+        770,
+        458,
+        788,
+        494
+      ],
+      "pixels": 648,
+      "median_rgb": [
+        15,
+        22,
+        31
+      ],
+      "median_hex": "#0F161F",
+      "p10_rgb": [
+        9.0,
+        13.0,
+        20.0
+      ],
+      "p90_rgb": [
+        55.2,
+        66.3,
+        84.6
+      ]
+    },
+    "input": {
+      "box": [
+        300,
+        901,
+        700,
+        910
+      ],
+      "pixels": 3600,
+      "median_rgb": [
+        25,
+        33,
+        43
+      ],
+      "median_hex": "#19212B",
+      "p10_rgb": [
+        20.0,
+        27.0,
+        35.0
+      ],
+      "p90_rgb": [
+        27.0,
+        36.0,
+        46.0
+      ]
+    },
+    "selected": {
+      "box": [
+        110,
+        249,
+        210,
+        267
+      ],
+      "pixels": 1800,
+      "median_rgb": [
+        30,
+        42,
+        58
+      ],
+      "median_hex": "#1E2A3A",
+      "p10_rgb": [
+        28.0,
+        39.0,
+        53.0
+      ],
+      "p90_rgb": [
+        34.0,
+        46.0,
+        61.0
+      ]
+    },
+    "borderSubtle": {
+      "box": [
+        460,
+        388,
+        690,
+        389
+      ],
+      "pixels": 230,
+      "median_rgb": [
+        34,
+        42,
+        53
+      ],
+      "median_hex": "#222A35",
+      "p10_rgb": [
+        32.0,
+        41.0,
+        52.0
+      ],
+      "p90_rgb": [
+        35.0,
+        44.0,
+        55.0
+      ]
+    },
+    "divider": {
+      "box": [
+        244,
+        144,
+        1179,
+        145
+      ],
+      "pixels": 935,
+      "median_rgb": [
+        20,
+        27,
+        35
+      ],
+      "median_hex": "#141B23",
+      "p10_rgb": [
+        15.0,
+        21.0,
+        27.0
+      ],
+      "p90_rgb": [
+        23.0,
+        31.0,
+        41.0
+      ]
+    }
+  },
+  "policy": "Only canvas/shell/surface medians become material colors. Other samples are observations, not a license to set text/border contrast from antialias. Geometry measured at full image size; type scale retained as explicit engineering decisions."
+}

@@ -20,7 +20,7 @@ def file_hash(path):
 def manifest(node,root=ROOT,plan=None):
     plan=plan if plan is not None else load(root/'PLAN.json')
     by={n['id']:n for n in plan['nodes']}
-    fields=('id','kind','depends_on','acceptance_requires','external_requires','write_paths','leased_write_paths','exclude_paths','read_paths','steps','axioms','criterion_ids','evidence_requirements','required_performance_gates','required_visual_gates','required_native_gates','resource_locks','proof_mode','source_watch_mode','normative_files','contract_surface_scope','criterion_evaluation_stage','source_watch_paths','proof_claim','optional_inputs','verification_tier','sampling_requires_quiet_host','proof_reuse','dependency_inputs','axiom_application','widget_contracts','widget_cases')
+    fields=('id','kind','depends_on','acceptance_requires','external_requires','write_paths','leased_write_paths','exclude_paths','read_paths','steps','axioms','criterion_ids','evidence_requirements','required_performance_gates','required_visual_gates','required_native_gates','resource_locks','proof_mode','source_watch_mode','normative_files','contract_surface_scope','criterion_evaluation_stage','source_watch_paths','proof_claim','optional_inputs','verification_tier','sampling_requires_quiet_host','proof_reuse','dependency_inputs','axiom_application','widget_contracts','widget_cases','design_sections','design_contract_file')
     chain=[];ident=node.get('parent');seen=set()
     while ident:
         if ident in seen or ident not in by:raise ValueError('invalid ancestor chain')

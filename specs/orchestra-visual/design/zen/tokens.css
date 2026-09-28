@@ -1,0 +1,56 @@
+/* Explicit Orchestra design input; not Firefox/Zen chrome CSS. Opt-in only. */
+[data-orchestra-visual="graphite"] {
+  color-scheme: dark;
+  --ov-canvas: #131A22;
+  --ov-shell: #121A22;
+  --ov-surface: #19222B;
+  --ov-surface-raised: #1B2531;
+  --ov-surface-sunken: #0E151C;
+  --ov-input: #1B232E;
+  --ov-selected: #1F2B3A;
+  --ov-border-subtle: #2A3745;
+  --ov-divider: #202B36;
+  --ov-text-primary: #E4EAF2;
+  --ov-text-secondary: #B4C0CF;
+  --ov-text-muted: #8C9DB2;
+  --ov-text-decorative: #607187;
+  --ov-accent-text: #78ADE8;
+  --ov-primary-fill: #285DC7;
+  --ov-on-primary: #F5F8FC;
+  --ov-success: #75CFA4;
+  --ov-warning: #DAB579;
+  --ov-error: #F18C93;
+  --ov-diff-add-bg: #152724;
+  --ov-diff-delete-bg: #302024;
+  --ov-focus: #78ADE8;
+  --ov-control-boundary: #6A7D94;
+  --ov-window-inset: 13px;
+  --ov-sidebar: 230px;
+  --ov-sidebar-medium: 208px;
+  --ov-sidebar-collapsed: 56px;
+  --ov-topbar: 44px;
+  --ov-rail: 448px;
+  --ov-rail-medium: 340px;
+  --ov-rail-compact: 320px;
+  --ov-main-padding: 28px;
+  --ov-message-gutter: 62px;
+  --ov-card-gap: 8px;
+  --ov-card-padding: 12px;
+  --ov-nav-row: 34px;
+  --ov-button-height: 30px;
+  --ov-icon-glyph: 16px;
+  --ov-icon-hit-area: 28px;
+  --ov-avatar: 40px;
+  --ov-composer-min: 46px;
+  --ov-composer-max: 180px;
+  --ov-border: 1px;
+  --ov-radius-window: 12px;
+  --ov-radius-panel: 8px;
+  --ov-radius-control: 6px;
+  --ov-radius-chip: 4px;
+  --ov-shadow-panel: 0 1px 2px rgb(0 0 0 / 16%);
+  --ov-shadow-floating: 0 10px 32px rgb(0 0 0 / 28%);
+  --ov-font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ov-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+@media (prefers-reduced-motion: reduce) { [data-orchestra-visual="graphite"] { --ov-motion: 0ms; } }

@@ -57,6 +57,8 @@ Bounding box usa a conversão existente entre CSS viewport e bounds nativos. Inp
 
 Overlay que intercepte a região do browser deve obter oclusão/visibilidade pelo mecanismo nativo; z-index CSS não resolve. Fechar overlay restaura a mesma view e foco apropriado, sem recriar login/tab. Overlays aninhados precisam de contagem/token por owner para que o fechamento do primeiro não revele a página atrás do segundo. Reutilize o protocolo equivalente se o host já o fornece.
 
+Decisão fechada em `design/EXECUTOR-DECISIONS.md#a09` (âncora `a09`): o novo cockpit usa Dock ancorado no topo, Tasks/Atividade rolando abaixo. Resize/Hide do novo consumidor carregam tabID+generation; S16 estende o protocolo existente de forma compatível, sem segundo browser ou provider.
+
 Scroll do rail não pode deixar a view fora do retângulo visual ou vazando sobre cards. Preserve clipping real do host; caso indisponível, mantenha o Dock ancorado no topo e permita scroll do grupo Tasks/Atividade abaixo. Essa adaptação limitada conserva ordem, largura e aspecto do master; não reduzir tudo a abas exclusivas. Toda mudança de scroll/resize deve ser comprovada no Electron, não apenas no DOM.
 
 Fechar uma aba passa explicitamente seu tabID. A base inspecionada fecha todas sem esse ID. Não chamar close-all para trocar visual de painel. Esconder painel não é destruir perfil. Restore após crash usa o lifecycle existente, não novo browser.
@@ -146,3 +148,7 @@ Capturas podem compartilhar um arquivo somente quando os consumidores estão de 
 [WIDGETS.md](WIDGETS.md) fecha W01–W09 e WK01–WK28. S09 renderiza o checklist de todowrite e oferece um callback estreito de evidência; S11 fornece diff/test-output/panes locais/actionbar; S10 fornece os handlers de shell-confirmado e PR-draft; S15 preserva o controller Browser e injeta apenas snapshot readonly; S17 projeta Tasks/Atividade, S18 apresenta, S21 oferece report/source existentes. S25 é único integrador e writer de use-session-commands.tsx. Nenhum desses callbacks é uma API genérica de widgets.
 
 Implementar fornecedores e consumidores em paralelo contra essas fronteiras; integração posterior prova os bindings. Não acrescentar dependências de feature inteira, runtime, store, worker ou task extra para transportar três slots/callbacks. Nenhum arquivo de backend desta tabela é autorizado para escrita por ser fonte. W2 de Own/governança preserva suas dependências reais.
+
+## C-DESIGN — peças separadas e estados decididos
+
+`design/README.md` e `design/ASSETS.json` separam runtime, receita CSS e referência. `design/EXECUTOR-DECISIONS.md` fecha A01–A11; `design/STATES.json` liga 22 designs aos consumers; `copy.json` é input de S22, que reconcilia aliases e instala os dicionários. Não alterar contratos entre owners porque o preview usa HTML simples. Os valores Axx são consumidos pelas tasks já existentes, com cinco axiomas e estágio de fechamento preservados. Light não recebe uma nova identidade; compacto e RTL não podem ser deixados para interpretação do executor. Referências sintéticas nunca entram como prova real nos recibos.

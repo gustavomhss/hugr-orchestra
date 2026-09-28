@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "owner": "S03",
+  "implementation": "existing DesktopTheme dark.overrides and dark.v2Overrides; no second ThemeProvider",
+  "source_files": [
+    "packages/ui/src/theme/resolve.ts",
+    "packages/ui/src/theme/types.ts",
+    "packages/ui/src/theme/v2/mapping.ts",
+    "packages/ui/src/v2/styles/theme.css"
+  ],
+  "bindings": [
+    {
+      "role": "canvas",
+      "value": "#131A22",
+      "V1_overrides": [
+        "background-base"
+      ],
+      "V2_overrides": [
+        "v2-background-bg-base"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "surface",
+      "value": "#19222B",
+      "V1_overrides": [
+        "surface-base"
+      ],
+      "V2_overrides": [
+        "v2-background-bg-layer-01"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "surfaceRaised",
+      "value": "#1B2531",
+      "V1_overrides": [
+        "surface-raised-base"
+      ],
+      "V2_overrides": [
+        "v2-background-bg-layer-02"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "surfaceSunken",
+      "value": "#0E151C",
+      "V1_overrides": [
+        "surface-inset-base"
+      ],
+      "V2_overrides": [
+        "v2-background-bg-deep"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "input",
+      "value": "#1B232E",
+      "V1_overrides": [
+        "input-base"
+      ],
+      "V2_overrides": [],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "borderSubtle",
+      "value": "#2A3745",
+      "V1_overrides": [
+        "border-base"
+      ],
+      "V2_overrides": [
+        "v2-border-border-base"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "divider",
+      "value": "#202B36",
+      "V1_overrides": [
+        "border-weak-base"
+      ],
+      "V2_overrides": [
+        "v2-border-border-muted"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "controlBoundary",
+      "value": "#6A7D94",
+      "V1_overrides": [
+        "border-strong-base"
+      ],
+      "V2_overrides": [
+        "v2-border-border-strong"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "focus",
+      "value": "#78ADE8",
+      "V1_overrides": [
+        "border-focus",
+        "border-interactive-focus"
+      ],
+      "V2_overrides": [
+        "v2-border-border-focus"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "primaryFill",
+      "value": "#285DC7",
+      "V1_overrides": [
+        "surface-interactive-base"
+      ],
+      "V2_overrides": [
+        "v2-background-bg-accent"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "onPrimary",
+      "value": "#F5F8FC",
+      "V1_overrides": [
+        "text-on-interactive-base"
+      ],
+      "V2_overrides": [
+        "v2-text-text-contrast"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "textPrimary",
+      "value": "#E4EAF2",
+      "V1_overrides": [
+        "text-base",
+        "text-strong"
+      ],
+      "V2_overrides": [
+        "v2-text-text-base"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "textSecondary",
+      "value": "#B4C0CF",
+      "V1_overrides": [
+        "text-weak"
+      ],
+      "V2_overrides": [
+        "v2-text-text-muted"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "textMuted",
+      "value": "#8C9DB2",
+      "V1_overrides": [
+        "text-weaker"
+      ],
+      "V2_overrides": [
+        "v2-text-text-faint"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "accentText",
+      "value": "#78ADE8",
+      "V1_overrides": [
+        "text-interactive-base"
+      ],
+      "V2_overrides": [
+        "v2-text-text-accent"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "success",
+      "value": "#75CFA4",
+      "V1_overrides": [
+        "icon-success-base"
+      ],
+      "V2_overrides": [
+        "v2-state-fg-success"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "warning",
+      "value": "#DAB579",
+      "V1_overrides": [
+        "icon-warning-base"
+      ],
+      "V2_overrides": [
+        "v2-state-fg-warning"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "error",
+      "value": "#F18C93",
+      "V1_overrides": [
+        "icon-critical-base"
+      ],
+      "V2_overrides": [
+        "v2-state-fg-danger"
+      ],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "diffAddBg",
+      "value": "#152724",
+      "V1_overrides": [
+        "surface-diff-add-base"
+      ],
+      "V2_overrides": [],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    },
+    {
+      "role": "diffDeleteBg",
+      "value": "#302024",
+      "V1_overrides": [
+        "surface-diff-delete-base"
+      ],
+      "V2_overrides": [],
+      "scope": "only the selected orchestra-graphite dark theme",
+      "notes": "Aliases for slot consumers are local; semantic text and background are not interchangeable."
+    }
+  ],
+  "local_roles": [
+    "shell",
+    "selected",
+    "textDecorative"
+  ],
+  "preserve": [
+    "existing light values",
+    "existing non-Orchestra themes",
+    "provider persistence and portal theme propagation",
+    "syntax/markdown distinct semantics",
+    "no rule outside the opt-in theme"
+  ],
+  "notes": [
+    "Empty V2 mappings use the owner-local slot alias, not a fabricated global token.",
+    "The subtle border is decorative; meaningful field boundaries use controlBoundary or another tested contrast cue.",
+    "Do not install reference.js/reference.css or a second runtime stylesheet stack. Port roles to the existing theme and component CSS."
+  ]
+}

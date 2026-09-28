@@ -1,0 +1,543 @@
+{
+  "source_commit": "4fd88201131fcccc64d5c2cc49e9323c042836f8",
+  "family": "existing Orchestra icon sprite, mixed stroked/filled paths by design",
+  "native_sizes": [
+    16,
+    20
+  ],
+  "glyph_css_px": [
+    16,
+    20
+  ],
+  "hit_area_css_px": 28,
+  "icons": [
+    {
+      "role": "search",
+      "icon_name": "magnifying-glass",
+      "viewBox": "0 0 16 16",
+      "file": "design/icons/search.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "e88a0f84052842efce1159fa5f6ee16e04682eabbf2431877769104533ad6d5e",
+      "runtime_use": "<Icon name=\"magnifying-glass\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "new-session",
+      "icon_name": "new-session",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/new-session.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "0edd23a092db277ae6e53820e1deb992f2284dc3f37ed3bc894ed7119751bb26",
+      "runtime_use": "<Icon name=\"new-session\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "home",
+      "icon_name": "layout-left",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/home.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "a68d335e1124969713413c8465555555743124d9fd41507efc452f16bc9b97c0",
+      "runtime_use": "<Icon name=\"layout-left\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "chat",
+      "icon_name": "speech-bubble",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/chat.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "c384b88b942a62583dfc2be2ce292930c38ccdd343c6d7b213d1ecc96da78718",
+      "runtime_use": "<Icon name=\"speech-bubble\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "tasks",
+      "icon_name": "task",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/tasks.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "fd83137c22f7bc4975efbec4b0fb4f3a2c79f99a279017828699fb2ec2464f86",
+      "runtime_use": "<Icon name=\"task\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "agents",
+      "icon_name": "subagent",
+      "viewBox": "0 0 16 16",
+      "file": "design/icons/agents.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "8315138ac481d986810469f6795e2cf20765e8068f75fa4d8d7d6b14191da2cc",
+      "runtime_use": "<Icon name=\"subagent\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "maestro",
+      "icon_name": "brain",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/maestro.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "95f0c10b8c6fda1adedc740b7071aeac4f5a1a6b52d7e050a5f1a09e6e706217",
+      "runtime_use": "<Icon name=\"brain\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "atlas",
+      "icon_name": "glasses",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/atlas.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "f7d9ededf1ad3b5c01d4c0354ffe2e9f9639cf877a4706dd1da1985cc42eb322",
+      "runtime_use": "<Icon name=\"glasses\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "dock",
+      "icon_name": "window-cursor",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/dock.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "5be689e74ff086629ef5df9dc45e089276ca977015185fc2688f48fadf423196",
+      "runtime_use": "<Icon name=\"window-cursor\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "janitor",
+      "icon_name": "shield",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/janitor.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "a9c77dfaa3a320d414f4e1b69be83969bec04c6a9bbceb22c6f14222a3651d1a",
+      "runtime_use": "<Icon name=\"shield\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "projects",
+      "icon_name": "folder",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/projects.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "8573986cf1cdc1fdc20ade10cb74259fd65a78c4126835e65d5c5015e5cd8805",
+      "runtime_use": "<Icon name=\"folder\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "workspaces",
+      "icon_name": "dot-grid",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/workspaces.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "ddf8e7445828f4b5a2d9c280f5692c6c1cb2208849cd6f8916933be8539239cf",
+      "runtime_use": "<Icon name=\"dot-grid\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "settings",
+      "icon_name": "settings-gear",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/settings.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "78e1399712c72cde3cdad8ddabef1af0df0d212e90d238c21b88c9ce21d357a1",
+      "runtime_use": "<Icon name=\"settings-gear\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "chevron",
+      "icon_name": "chevron-down",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/chevron.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "8484403de9d2e5b32b4d5a5983ca5f0106be0c073494a4253c0fce009ec8f1b8",
+      "runtime_use": "<Icon name=\"chevron-down\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "back",
+      "icon_name": "arrow-left",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/back.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "3e1e1d8ac9fc480762f9cf150c93d5b74fd01e4508bf67fed2209a5229a43d90",
+      "runtime_use": "<Icon name=\"arrow-left\" size=\"small\" />",
+      "directional": true,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "forward",
+      "icon_name": "arrow-right",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/forward.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "501eaa60245e2fa98538d20310c2f8336751871b8378251555dc6aeeccc1593d",
+      "runtime_use": "<Icon name=\"arrow-right\" size=\"small\" />",
+      "directional": true,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "reload",
+      "icon_name": "reset",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/reload.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "84f2df41a9dcd9977329e5d1548e851e87ccf630352aab1df1655bc9d5ac3986",
+      "runtime_use": "<Icon name=\"reset\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "external",
+      "icon_name": "square-arrow-top-right",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/external.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "847a103335d4912e75b0de4cbed21267ba3073f45d5735331b4ef3d05cfae1cb",
+      "runtime_use": "<Icon name=\"square-arrow-top-right\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "files",
+      "icon_name": "file-tree",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/files.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "1a75e42a67308cbf0f6182817bfdbfe0a6e09a772b58500a190687729150c12a",
+      "runtime_use": "<Icon name=\"file-tree\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "document",
+      "icon_name": "open-file",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/document.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "899bee86917f663e3caf8c6b598bcf476407b20e163875f1861c701cb5cf5aff",
+      "runtime_use": "<Icon name=\"open-file\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "terminal",
+      "icon_name": "terminal",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/terminal.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "d7063847a1e2764cb64e1b7601c914cf5a6e95f64778b5783ad1adad7d616d43",
+      "runtime_use": "<Icon name=\"terminal\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "success",
+      "icon_name": "circle-check",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/success.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "b835be050fa1dee2a17e01137183dc3715f4ac5af2ac11bd3ce5511695a38686",
+      "runtime_use": "<Icon name=\"circle-check\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "error",
+      "icon_name": "circle-x",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/error.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "c542851eceb5a6ab48a704777084a1b4cd63a3d62abadc1e6510646c570803e4",
+      "runtime_use": "<Icon name=\"circle-x\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "warning",
+      "icon_name": "warning",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/warning.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "6f1d77c0fb97bc91129df13a37cd45a138208824aaba8e8f8e6eba2070eaef30",
+      "runtime_use": "<Icon name=\"warning\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "close",
+      "icon_name": "close",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/close.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "d891b87edcefc7dd58a68d63745746cc9b3cf3122fd25c57a1f27e98fe424687",
+      "runtime_use": "<Icon name=\"close\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "more",
+      "icon_name": "menu",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/more.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "da82c6c41aff5d704823e76232e4e2dbecd059325831065ba67a77fe8cfb0c11",
+      "runtime_use": "<Icon name=\"menu\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "send",
+      "icon_name": "arrow-up",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/send.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "8db6fccd0b704f6e83298e5c439abf4313697856449f54a528dbfc6c512b7c90",
+      "runtime_use": "<Icon name=\"arrow-up\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "stop",
+      "icon_name": "stop",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/stop.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "348cc85fc1eed316efaa9b264bc545a0ff57039a381ac95ad31f6e78a2ff0bc7",
+      "runtime_use": "<Icon name=\"stop\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "attach",
+      "icon_name": "plus-small",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/attach.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "df78def646fb07b843101a5ebe0a819f3ab7efac943a3665baee893aef0f4935",
+      "runtime_use": "<Icon name=\"plus-small\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "copy",
+      "icon_name": "copy",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/copy.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "ccc1121492ae5db354386e8de313c1f739e39103f31368ca214bbc8193006bfd",
+      "runtime_use": "<Icon name=\"copy\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "branch",
+      "icon_name": "branch",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/branch.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "63ca5db7f1f3df247a4c5aa1b1b26d8181a10cd007e328ba2013b709dfbefe84",
+      "runtime_use": "<Icon name=\"branch\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "help",
+      "icon_name": "help",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/help.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "804c92990edc9a28f4e0f91b7c1fbefdd4862097524efd6862539e3e6ca413fc",
+      "runtime_use": "<Icon name=\"help\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    },
+    {
+      "role": "check",
+      "icon_name": "check-small",
+      "viewBox": "0 0 20 20",
+      "file": "design/icons/check.svg",
+      "source": "packages/ui/src/components/icon.tsx",
+      "source_sha256": "d4090c90731f4cc802b7a21e3bc71b6cb489a7e9182985a1ffc57295d0ee4dbb",
+      "svg_path_sha256": "e4fab78220143f8f9d837b0573fe920f385ab63005ca7af6727ae40052487c93",
+      "runtime_use": "<Icon name=\"check-small\" size=\"small\" />",
+      "directional": false,
+      "optical_offset_px": [
+        0,
+        0
+      ],
+      "offset_policy": "Default 0,0. Optical adjustment only after rendered bbox/baseline proof, maximum 1 CSS px in wrapper; do not mutate shared path."
+    }
+  ]
+}
