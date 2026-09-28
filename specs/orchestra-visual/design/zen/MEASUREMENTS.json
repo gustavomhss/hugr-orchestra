@@ -6,7 +6,7 @@
     1672,
     941
   ],
-  "method": "RGB channel medians of declared half-open pixel boxes; spread retained. Raster includes noise/gradients/antialias. No OCR or guessed exact font extraction.",
+  "method": "RGB channel medians of declared half-open pixel boxes; median_rgb_raw preserves exact fractional medians; median_rgb and median_hex floor channels to an 8-bit representative. Spread retained. No OCR or original vector/font extraction.",
   "samples": {
     "canvas": {
       "box": [
@@ -31,6 +31,11 @@
         21.0,
         29.0,
         37.0
+      ],
+      "median_rgb_raw": [
+        19.0,
+        26.0,
+        34.0
       ]
     },
     "shell": {
@@ -56,6 +61,11 @@
         19.0,
         26.0,
         35.0
+      ],
+      "median_rgb_raw": [
+        18,
+        26,
+        34
       ]
     },
     "surface": {
@@ -81,6 +91,11 @@
         26.0,
         34.0,
         44.0
+      ],
+      "median_rgb_raw": [
+        25,
+        34,
+        43
       ]
     },
     "surfaceRaised": {
@@ -106,6 +121,11 @@
         25.0,
         34.0,
         43.0
+      ],
+      "median_rgb_raw": [
+        21.0,
+        28.5,
+        37.5
       ]
     },
     "surfaceSunken": {
@@ -131,6 +151,11 @@
         55.2,
         66.3,
         84.6
+      ],
+      "median_rgb_raw": [
+        15.0,
+        22.0,
+        31.0
       ]
     },
     "input": {
@@ -156,6 +181,11 @@
         27.0,
         36.0,
         46.0
+      ],
+      "median_rgb_raw": [
+        25.0,
+        33.0,
+        43.0
       ]
     },
     "selected": {
@@ -181,6 +211,11 @@
         34.0,
         46.0,
         61.0
+      ],
+      "median_rgb_raw": [
+        30.0,
+        42.0,
+        58.0
       ]
     },
     "borderSubtle": {
@@ -206,6 +241,11 @@
         35.0,
         44.0,
         55.0
+      ],
+      "median_rgb_raw": [
+        34.0,
+        42.0,
+        53.0
       ]
     },
     "divider": {
@@ -231,6 +271,11 @@
         23.0,
         31.0,
         41.0
+      ],
+      "median_rgb_raw": [
+        20,
+        27,
+        35
       ]
     }
   },

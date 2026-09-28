@@ -1,452 +1,79 @@
 {
-  "kind": "design-render-not-product-proof",
-  "browser": "153.0.8010.52",
-  "renderer": "Chromium via Playwright 1.57.0; in-memory set_content; no network",
-  "states": 22,
-  "elements": 19,
-  "additional_native_viewport": [
-    1152,
-    768
+  "kind": "design-reference-review-closure-not-product-approval",
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36372522241",
+  "input_sha": "02b55a6c91214394b149f0bc3aeea89ce94dd76f",
+  "contract_revision": "4.4",
+  "tooling_tests": 296,
+  "rendered_state_boundary_checks": 23,
+  "fixes": [
+    "Compact URL wraps its own truncation span; navigation controls retain 28x28 hitboxes.",
+    "Native window-control illustration remains at OS side in RTL; code output retains LTR alignment.",
+    "Collapsed search and new-session controls have explicit accessible names.",
+    "Generic dialog versus settings/file-picker width exceptions are explicit.",
+    "Fractional sample medians are retained; integer/hex flooring documented; adopted colors unchanged."
   ],
-  "page_errors": [],
-  "geometry": [
-    {
-      "id": "DS01",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS02",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS03",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS04",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS05",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS06",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS07",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS08",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS09",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS10",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS11",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS12",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS13",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS14",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS15",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 391,
-        "y": 547,
-        "width": 672,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS16",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": null,
-      "images_loaded": true
-    },
-    {
-      "id": "DS17",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS18",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS19",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS20",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 98,
-        "y": 872,
-        "width": 1084,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS21",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 490,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    },
-    {
-      "id": "DS22",
-      "viewport": [
-        1672,
-        941
-      ],
-      "window": {
-        "x": 13,
-        "y": 12,
-        "width": 1646,
-        "height": 917
-      },
-      "composer": {
-        "x": 272,
-        "y": 872,
-        "width": 910,
-        "height": 46
-      },
-      "images_loaded": true
-    }
+  "inspection": "Assistant viewed the original master, all 22 design states in contact sheets, baseline and native compact at full size, and the landscape; corrections respond to specific observed defects. Not an independent external auditor. Final images remain subject to actual product integration review.",
+  "original_master_sha256": "e839b759e0f93beca37b10cd45700725020a840fee6e97da1e67556b2ffb128d",
+  "unchanged": [
+    "PLAN.json",
+    "SURFACES.json",
+    "COVERAGE.json",
+    "BUDGETS.json",
+    "copy.json",
+    "progress.json",
+    "brand bytes",
+    "landscape bytes",
+    "scopes and DAG",
+    "39 ticket contracts"
   ],
-  "reference_boundary_checks": [
+  "ticket_readback": {
+    "tickets": [
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168
+    ],
+    "contracts_unchanged": true,
+    "native_operations_needed": 0
+  },
+  "product_tasks_accepted": 0,
+  "product_electron_benchmarks": "NOT_RUN",
+  "checks": [
     {
       "state": "DS01",
       "geometry": {
@@ -2263,8 +1890,5 @@
       },
       "kind": "design-reference-dom-check-not-product-proof"
     }
-  ],
-  "synthetic": true,
-  "font_source": "existing repository assets; no font redistributed",
-  "product_execution": "NOT_RUN"
+  ]
 }

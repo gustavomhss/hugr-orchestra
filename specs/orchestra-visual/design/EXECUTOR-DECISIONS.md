@@ -63,7 +63,7 @@ O vocabulário é o mesmo em todas as superfícies, com escopo local. Prioridade
 | ST08 offline/stale | aviso local persistente; dados anteriores rotulados | reconectar pela conexão existente; draft mantido | não reexecutar comando nem disparar modelo na reconexão; DS14 |
 | ST09 partial result | badge warning “Saída parcial”, output disponível | abrir a fonte original; code/exit desconhecidos não viram 0 | truncamento não é sucesso; DS19 |
 
-Dialog: max 560×80dvh, padding 24, raio 12, foco inicial no primeiro campo/ação seguro; Escape devolve foco; fechar não salva. Picker max 680/760 conforme SPEC; popover 360 px inicial com max 560 e max 60vh; tooltips 350 ms e Escape, não interferem no tab order. Toast usa resultado observado, título 14/20 + helper 12/18, max 380; erro não desaparece antes de ser lido, não é única apresentação de uma falha. Veja DS09–DS13/DS22 e CSS correspondente.
+Dialog genérico: max 560 px de largura e 80dvh de altura; settings é a exceção explícita de 760 px e file picker de 680 px, sempre limitados ao viewport; padding 24, raio 12, foco inicial no primeiro campo/ação seguro; Escape devolve foco; fechar não salva. Picker max 680/760 conforme SPEC; popover 360 px inicial com max 560 e max 60vh; tooltips 350 ms e Escape, não interferem no tab order. Toast usa resultado observado, título 14/20 + helper 12/18, max 380; erro não desaparece antes de ser lido, não é única apresentação de uma falha. Veja DS09–DS13/DS22 e CSS correspondente.
 
 <a id="a05"></a>
 ## A05 — Primitives V1/V2 sem regressão compartilhada

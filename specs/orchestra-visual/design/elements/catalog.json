@@ -176,7 +176,7 @@
       "kind": "design-reference-not-runtime",
       "synthetic": true,
       "source": "design/reference.html",
-      "sha256": "559de9fc3b1fc2d3eb364c58a67ac1be0470dcdbc662065a1bdb8ae6e5ff586e"
+      "sha256": "c0b84b2f68dd3ef32b1de210ffd62ad7a4918459f58617b6c5398be39b9301ea"
     },
     {
       "id": "tasks",
@@ -240,7 +240,7 @@
       "kind": "design-reference-not-runtime",
       "synthetic": true,
       "source": "design/reference.html",
-      "sha256": "a66ecf785c447e7cba9b2a243ac18e002bca902818fa82c28bc87b4c677af2a7"
+      "sha256": "4fb3b5e99dea5194f2f108ac677f2a4b3742a9b7ccb891281c784d99358c526e"
     },
     {
       "id": "dialog",
