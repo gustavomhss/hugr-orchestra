@@ -50,8 +50,6 @@ jobs:
           protected={str(f.relative_to(root)):sha(f) for f in p.rglob('*') if f.is_file() and str(f.relative_to(root)) not in names and f.name not in generated and 'issues' not in f.relative_to(p).parts and 'design' not in f.relative_to(p).parts}
           (out/'protected.json').write_text(json.dumps(protected,indent=2))
           (out/'old-issues.json').write_text(json.dumps({f.stem:f.read_text() for f in (p/'issues').glob('*.md')},ensure_ascii=False))
-          # difflib transport omitted two explicit EOF markers. Restore markers only;
-          # every resulting source file must still match its reviewed SHA-256.
           patch=data['patch']
           lines=['-Somente esta nota, o bootstrap e a issue #148 foram atualizados remotamente. O ZIP é a entrega completa; não presumir sincronização integral dos 39 corpos ou aplicação de vínculos nativos.','+6. **Copy de todos os estados novos**\u00a0(S22 é writer único de tradução) — se tu tem o texto em PT/EN, entrega antes, senão eu redijo e tu revisa.']
           for line in lines:
@@ -95,8 +93,7 @@ jobs:
           "$RUNNER_TEMP/design-author/bin/python" specs/orchestra-visual/tools/render_design_references.py --repo "$GITHUB_WORKSPACE" --browser "$(command -v google-chrome)" > "$OUT/render.log"
           python3 - <<'PY'
           import json,pathlib
-          d=pathlib.Path('specs/orchestra-visual/design')
-          r=json.loads((d/'LOCAL-RENDER.json').read_text())
+          d=pathlib.Path('specs/orchestra-visual/design');r=json.loads((d/'LOCAL-RENDER.json').read_text())
           assert r['states']==22 and r['elements']==19 and not r['page_errors']
           assert all(x['images_loaded'] for x in r['geometry'])
           assert not [f for f in d.rglob('*') if f.suffix.lower() in {'.ttf','.otf','.woff','.woff2'}]
@@ -109,7 +106,7 @@ jobs:
           set -euo pipefail
           python3 tools/render_maps.py > "$OUT/render-maps.log"
           python3 tools/render_issues.py > "$OUT/render-issues.log"
-          python3 tools/render_navigation.py --repo "$GITHUB_WORKSPACE" > "$OUT/render-navigation.log"
+          python3 tools/render_navigation.py --write --repo "$GITHUB_WORKSPACE" > "$OUT/render-navigation.log"
           python3 -m unittest discover -s tools -p 'test_*.py' -v > "$OUT/tests.log" 2>&1
           tail -5 "$OUT/tests.log"
           python3 tools/validate_plan.py > "$OUT/plan.json"
@@ -153,7 +150,7 @@ jobs:
           log=(out/'tests.log').read_text();assert re.search(r'Ran 296 tests in ',log) and log.rstrip().endswith('OK')
           changed=set(subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines())|set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
           assert all(x.startswith('specs/orchestra-visual/') or x=='.github/workflows/orchestra-plan.yml' for x in changed)
-          report={'kind':'design-input-verification-not-product-approval','status':'VERIFIED','contract_revision':'4.4','workflow_input_sha':os.environ['GITHUB_SHA'],'run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'tests':296,'previous_tests':280,'new_regressions':16,'states_1672x941':22,'additional_native_compact':[1152,768],'isolated_elements':19,'existing_icon_exports':33,'master_crops':11,'copy_pt_en_keys':113,'sampled_material_colors':3,'packets_generated':66,'original_protected_files_unchanged':len(protected),'original_master_sha256':sha(p/'reference/approved.png'),'plan_sha256':sha(p/'PLAN.json'),'render':json.loads((p/'design/LOCAL-RENDER.json').read_text()),'checks':{'plan':True,'brand':True,'design':True,'maps':True,'issues':True,'navigation':True,'native_relationships_unchanged':True},'product_tasks_accepted':0,'frontend_electron_benchmarks':'NOT_RUN','new_state_reference_approval':'planner-defined supplemental direction; original user-approved master unchanged','source_payload_sha256':'ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4','review':'same assistant, separate adversarial passes and source inspection; not external auditor','limitations':['No original Figma was supplied; HTML/CSS is a new editable design reference.','Hidden sky pixels are reconstructed and documented; no invented high-resolution original.','Synthetic design images are not valid product evidence.','Light palette remains preserved; functional states still need implementation.']}
+          report={'kind':'design-input-verification-not-product-approval','status':'VERIFIED','contract_revision':'4.4','workflow_input_sha':os.environ['GITHUB_SHA'],'run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'tests':296,'previous_tests':280,'new_regressions':16,'states_1672x941':22,'additional_native_compact':[1152,768],'isolated_elements':19,'existing_icon_exports':33,'master_crops':11,'copy_pt_en_keys':113,'sampled_material_colors':3,'packets_generated':66,'original_protected_files_unchanged':len(protected),'original_master_sha256':sha(p/'reference/approved.png'),'plan_sha256':sha(p/'PLAN.json'),'render':json.loads((p/'design/LOCAL-RENDER.json').read_text()),'checks':{'plan':True,'brand':True,'design':True,'maps':True,'issues':True,'navigation':True,'native_relationships_unchanged':True},'product_tasks_accepted':0,'frontend_electron_benchmarks':'NOT_RUN','new_state_reference_approval':'planner-defined supplemental direction; original user-approved master unchanged','source_payload_sha256':'ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4','review':'automated contract and render checks; separate visual inspection required, not external auditor','limitations':['No original Figma was supplied; HTML/CSS is a new editable design reference.','Hidden sky pixels are reconstructed and documented; no invented high-resolution original.','Synthetic design images are not valid product evidence.','Light palette remains preserved; functional states still need implementation.'],'publication_attempt_note':'The first run passed 296 tests and rendered all references, but did not write INDEX because --write was omitted. This run fixes the invocation and retains the exact comparison.'}
           dest=p/'reviews/design-complement';dest.mkdir(parents=True,exist_ok=True)
           (dest/'VERIFICATION.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
           files=sorted(f for f in p.rglob('*') if f.is_file() and f.name!='MANIFEST.sha256' and '__pycache__' not in f.parts)
@@ -210,7 +207,7 @@ jobs:
         working-directory: specs/orchestra-visual
         run: |
           set -euo pipefail
-          python3 tools/render_navigation.py --repo "$GITHUB_WORKSPACE" > "$OUT/navigation-final-render.log"
+          python3 tools/render_navigation.py --write --repo "$GITHUB_WORKSPACE" > "$OUT/navigation-final-render.log"
           python3 - <<'PY'
           import hashlib,pathlib
           p=pathlib.Path.cwd();files=sorted(f for f in p.rglob('*') if f.is_file() and f.name!='MANIFEST.sha256' and '__pycache__' not in f.parts)
@@ -231,15 +228,21 @@ jobs:
           sha256sum --check MANIFEST.sha256 > "$OUT/manifest.log"
           test -z "$(git status --porcelain)"
           git rev-parse HEAD > "$OUT/final-head.txt"
-      - name: Package only reusable design inputs, never fonts or product credentials
+      - name: Package reusable inputs and source for inspection without font files
+        if: always()
         run: |
           python3 - <<'PY'
-          import json,os,pathlib,zipfile
-          p=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT']);items=[f for f in (p/'design').rglob('*') if f.is_file()]+[p/'copy.json',p/'reference/approved.png',p/'reviews/design-complement/VERIFICATION.json',p/'reviews/design-complement/PUBLICATION.json']
+          import os,pathlib,zipfile
+          p=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT'])
+          if not (p/'design').exists():raise SystemExit(0)
+          items=[f for f in (p/'design').rglob('*') if f.is_file()]+[p/'copy.json',p/'reference/approved.png']+[f for f in (p/'reviews/design-complement').glob('*') if f.is_file()]
           assert not any(f.suffix.lower() in {'.ttf','.otf','.woff','.woff2'} for f in items)
           with zipfile.ZipFile(out/'Orchestra_Separated_Visual_Assets.zip','w',zipfile.ZIP_DEFLATED) as z:
               for f in items:z.write(f,'orchestra-visual/'+str(f.relative_to(p)))
-          print('Packaged',len(items),'design files without fonts. Not a replacement for the repository plan.')
+          with zipfile.ZipFile(out/'plan-source-review.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for f in p.rglob('*'):
+                  if f.is_file() and f.suffix.lower() in {'.json','.md','.py','.html','.css','.js'} and 'vendor' not in f.parts:z.write(f,str(f))
+          print('Packaged design references and source for inspection, no fonts. No product approval.')
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
