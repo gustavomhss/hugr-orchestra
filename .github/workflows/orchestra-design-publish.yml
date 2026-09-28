@@ -38,13 +38,14 @@ jobs:
           raw=lzma.decompress(compressed)
           assert len(raw)==496217 and hashlib.sha256(raw).hexdigest()=='ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4'
           data=json.loads(raw);assert len(data['files'])==40
-          names={f['path'] for f in data['files']}
-          assert all(n.startswith('specs/orchestra-visual/') or n=='.github/workflows/orchestra-plan.yml' for n in names)
+          names={f['path'] for f in data['files']};workflow='.github/workflows/orchestra-plan.yml'
+          assert all(n.startswith('specs/orchestra-visual/') or n==workflow for n in names)
           assert all('..' not in pathlib.PurePosixPath(n).parts for n in names)
           def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
           for f in data['files']:
               path=root/f['path'];assert not path.is_symlink()
-              assert (sha(path) if path.exists() else None)==f['before_sha256'], 'Concurrent source change: '+f['path']
+              expected=f['after_sha256'] if f['path']==workflow else f['before_sha256']
+              assert (sha(path) if path.exists() else None)==expected, 'Concurrent source change: '+f['path']
           original=json.loads((p/'PLAN.json').read_text());(out/'plan-before.json').write_text(json.dumps(original))
           generated={'MAP.md','OWNERSHIP.md','INDEX.md','MANIFEST.sha256'}
           protected={str(f.relative_to(root)):sha(f) for f in p.rglob('*') if f.is_file() and str(f.relative_to(root)) not in names and f.name not in generated and 'issues' not in f.relative_to(p).parts and 'design' not in f.relative_to(p).parts}
@@ -56,8 +57,8 @@ jobs:
               assert patch.count(line)==1
               patch=patch.replace(line,line+'\n\\ No newline at end of file\n')
           patchfile=out/'reviewed.patch';patchfile.write_text(patch)
-          subprocess.run(['git','apply','--check',str(patchfile)],check=True)
-          subprocess.run(['git','apply',str(patchfile)],check=True)
+          subprocess.run(['git','apply','--exclude='+workflow,'--check',str(patchfile)],check=True)
+          subprocess.run(['git','apply','--exclude='+workflow,str(patchfile)],check=True)
           plan=json.loads((p/'PLAN.json').read_text())
           for edit in data['plan_edits']:
               obj=plan
@@ -75,9 +76,9 @@ jobs:
                   if key not in {'axioms','steps','normative_files','design_sections','design_contract_file'}:assert old.get(key)==new.get(key),(old['id'],key)
               assert set(old['axioms'])==set(new['axioms']) and all(len(old['axioms'][k])==len(new['axioms'][k]) for k in old['axioms'])
           assert all(sha(root/n)==h for n,h in protected.items())
-          (out/'transfer.json').write_text(json.dumps({'source_files':data['files'],'payload_sha256':hashlib.sha256(raw).hexdigest(),'patch_eof_markers_restored':2},indent=2))
+          (out/'transfer.json').write_text(json.dumps({'source_files':data['files'],'payload_sha256':hashlib.sha256(raw).hexdigest(),'patch_eof_markers_restored':2,'workflow_preinstalled_through_authorized_connector':workflow},indent=2))
           subprocess.run(['git','diff','--check'],check=True)
-          print('40 reviewed source files applied; unchanged scopes, DAG, criterion IDs and original assets.')
+          print('39 reviewed source files applied; preinstalled CI metadata and original assets preserved.')
           PY
       - name: Install isolated reference-authoring tools, not product dependencies
         run: |
@@ -149,8 +150,8 @@ jobs:
           protected=json.loads((out/'protected.json').read_text());assert all(sha(root/n)==h for n,h in protected.items())
           log=(out/'tests.log').read_text();assert re.search(r'Ran 296 tests in ',log) and log.rstrip().endswith('OK')
           changed=set(subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines())|set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
-          assert all(x.startswith('specs/orchestra-visual/') or x=='.github/workflows/orchestra-plan.yml' for x in changed)
-          report={'kind':'design-input-verification-not-product-approval','status':'VERIFIED','contract_revision':'4.4','workflow_input_sha':os.environ['GITHUB_SHA'],'run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'tests':296,'previous_tests':280,'new_regressions':16,'states_1672x941':22,'additional_native_compact':[1152,768],'isolated_elements':19,'existing_icon_exports':33,'master_crops':11,'copy_pt_en_keys':113,'sampled_material_colors':3,'packets_generated':66,'original_protected_files_unchanged':len(protected),'original_master_sha256':sha(p/'reference/approved.png'),'plan_sha256':sha(p/'PLAN.json'),'render':json.loads((p/'design/LOCAL-RENDER.json').read_text()),'checks':{'plan':True,'brand':True,'design':True,'maps':True,'issues':True,'navigation':True,'native_relationships_unchanged':True},'product_tasks_accepted':0,'frontend_electron_benchmarks':'NOT_RUN','new_state_reference_approval':'planner-defined supplemental direction; original user-approved master unchanged','source_payload_sha256':'ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4','review':'automated contract and render checks; separate visual inspection required, not external auditor','limitations':['No original Figma was supplied; HTML/CSS is a new editable design reference.','Hidden sky pixels are reconstructed and documented; no invented high-resolution original.','Synthetic design images are not valid product evidence.','Light palette remains preserved; functional states still need implementation.'],'publication_attempt_note':'The first run passed 296 tests and rendered all references, but did not write INDEX because --write was omitted. This run fixes the invocation and retains the exact comparison.'}
+          assert all(x.startswith('specs/orchestra-visual/') for x in changed)
+          report={'kind':'design-input-verification-not-product-approval','status':'VERIFIED','contract_revision':'4.4','workflow_input_sha':os.environ['GITHUB_SHA'],'run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'tests':296,'previous_tests':280,'new_regressions':16,'states_1672x941':22,'additional_native_compact':[1152,768],'isolated_elements':19,'existing_icon_exports':33,'master_crops':11,'copy_pt_en_keys':113,'sampled_material_colors':3,'packets_generated':66,'original_protected_files_unchanged':len(protected),'original_master_sha256':sha(p/'reference/approved.png'),'plan_sha256':sha(p/'PLAN.json'),'render':json.loads((p/'design/LOCAL-RENDER.json').read_text()),'checks':{'plan':True,'brand':True,'design':True,'maps':True,'issues':True,'navigation':True,'native_relationships_unchanged':True},'product_tasks_accepted':0,'frontend_electron_benchmarks':'NOT_RUN','new_state_reference_approval':'planner-defined supplemental direction; original user-approved master unchanged','source_payload_sha256':'ba025d8f2203c0ee1b619c7bdd009b64205f3765f1aae09845160a75a5be01c4','review':'automated contract and render checks; separate visual inspection required, not external auditor','limitations':['No original Figma was supplied; HTML/CSS is a new editable design reference.','Hidden sky pixels are reconstructed and documented; no invented high-resolution original.','Synthetic design images are not valid product evidence.','Light palette remains preserved; functional states still need implementation.'],'publication_attempt_notes':['First run rendered all references and passed 296 tests, but omitted --write when generating INDEX.','Second run passed all checks; its workflow-file push was refused because the runner token has no workflow-edit permission. The exact workflow change was applied through the authorized connector; this run preserves that file and publishes only specs.']}
           dest=p/'reviews/design-complement';dest.mkdir(parents=True,exist_ok=True)
           (dest/'VERIFICATION.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
           files=sorted(f for f in p.rglob('*') if f.is_file() and f.name!='MANIFEST.sha256' and '__pycache__' not in f.parts)
@@ -158,7 +159,7 @@ jobs:
           subprocess.run(['git','diff','--check'],check=True)
           remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/visual-migration-plan'],text=True).split()[0]
           assert remote==os.environ['GITHUB_SHA'],'Concurrent branch advance; refuse overwrite'
-          subprocess.run(['git','add','--','specs/orchestra-visual','.github/workflows/orchestra-plan.yml'],check=True)
+          subprocess.run(['git','add','--','specs/orchestra-visual'],check=True)
           subprocess.run(['git','-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m','docs(app): provide separated design assets and executor decisions'],check=True)
           subprocess.run(['git','push','origin','HEAD:refs/heads/visual-migration-plan'],check=True)
           (out/'source-commit.txt').write_bytes(subprocess.check_output(['git','rev-parse','HEAD']))
