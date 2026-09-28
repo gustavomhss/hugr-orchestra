@@ -1,97 +1,43 @@
-name: Orchestra design reference inspection closure
+name: Orchestra final reference verification
 on:
   push:
     branches: [visual-migration-plan]
     paths: [.github/workflows/orchestra-design-publish.yml]
 permissions:
   contents: write
-  issues: read
 jobs:
   references:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 8
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
-      - name: Apply bounded corrections found in the rendered design references
+      - name: Isolate signed values without mirroring their semantics
         run: |
-          echo "OUT=$RUNNER_TEMP/orchestra-reference-closure" >> "$GITHUB_ENV"
-          mkdir "$RUNNER_TEMP/orchestra-reference-closure"
+          echo "OUT=$RUNNER_TEMP/orchestra-final-reference" >> "$GITHUB_ENV"
+          mkdir "$RUNNER_TEMP/orchestra-final-reference"
           python3 - <<'PY'
-          import hashlib,json,pathlib
-          p=pathlib.Path('specs/orchestra-visual');d=p/'design'
-          expected={'design/reference.css':'66bf4b758dd532f4b72b2b46fb93e9b7d7db0e8bfc5ad9ed2f3b5acdf5884d2d','design/reference.js':'37e87d3b5de484b1e92a3c9d8cdf450f28b59de0eedc829ed1418db909ec9e62','design/EXECUTOR-DECISIONS.md':'1f0b602ef3025cb1f6565d2c2132ec9f48ce26efb1affcbcad0e31fa76dd060f','tools/render_design_references.py':'f14571793be5a63ce586f6705684f6eb457f87fb74dba98a241c8a14b90eadc8'}
-          for f,h in expected.items():assert hashlib.sha256((p/f).read_bytes()).hexdigest()==h,'Concurrent edit: '+f
-          assert json.loads((p/'PLAN.json').read_text())['contract_revision']=='4.4'
-          css='''
-          /* Design-reference QA: contain URLs and retain OS control placement in RTL. */
-          .dock-address .ov-input { overflow:hidden; }
-          .dock-address .address-url { flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-          .dock-address .ov-button { width:28px; min-width:28px; flex:none; padding:0; }
-          .test-output { direction:ltr; unicode-bidi:isolate; text-align:left; }
-          .ov-window[dir=rtl] .test-output .ov-link { left:auto; right:12px; }
-          .ov-window[dir=rtl] .window-controls { position:fixed; top:25px; left:26px; width:auto; padding:0; direction:ltr; z-index:7; pointer-events:none; }
-          .ov-window[dir=rtl] .ov-sidebar-content { padding-block-start:22px; }
-          .ov-window[dir=rtl] .ov-topbar { padding-inline-end:96px; }
+          import hashlib,pathlib
+          p=pathlib.Path('specs/orchestra-visual');f=p/'design/reference.css'
+          assert hashlib.sha256(f.read_bytes()).hexdigest()=='f4bec09b051f12bfbe8acddb25c590cf1bbec31522084525f4a81891a189eece'
+          f.write_text(f.read_text()+'\n/* Signed diff counts, native shortcuts and timestamps are LTR data islands. */\n.file-row .add,.file-row .del,.ov-shortcut,.author time { direction:ltr; unicode-bidi:isolate; }\n')
+          f=p/'tools/render_design_references.py';s=f.read_text();needle="    return {'state':state,'geometry':r,'kind':'design-reference-dom-check-not-product-proof'}";assert s.count(needle)==1
+          check='''    r['ltr_islands']=page.evaluate("""() => [...document.querySelectorAll('.file-row .add,.file-row .del,.ov-shortcut,.author time')].map(e=>({text:e.textContent,direction:getComputedStyle(e).direction,bidi:getComputedStyle(e).unicodeBidi}))""")
+              assert all(x['direction']=='ltr' and x['bidi']=='isolate' for x in r['ltr_islands']), (state,'signed data mirrored',r)
+              if r['stateRTL']:assert len(r['ltr_islands'])>=12, (state,'missing RTL signed-data coverage')
           '''
-          f=d/'reference.css';f.write_text(f.read_text()+css)
-          f=d/'reference.js';s=f.read_text()
-          edits=[("${icon('search',true)}https://preview.invalid/approval</div>","${icon('search',true)}<span class=\"address-url\" title=\"https://preview.invalid/approval\">https://preview.invalid/approval</span></div>"),('<button class="ov-navitem ov-nav-search">','<button class="ov-navitem ov-nav-search" aria-label="${e(t(\'nav.search\'))}">'),('<button class="ov-navitem">${icon(\'new-session\')}','<button class="ov-navitem" aria-label="${e(t(\'nav.newSession\'))}">${icon(\'new-session\')}')]
-          for before,after in edits:assert s.count(before)==1;s=s.replace(before,after)
-          f.write_text(s)
-          f=d/'EXECUTOR-DECISIONS.md';s=f.read_text();old='Dialog: max 560×80dvh,';assert s.count(old)==1
-          s=s.replace(old,'Dialog genérico: max 560 px de largura e 80dvh de altura; settings é a exceção explícita de 760 px e file picker de 680 px, sempre limitados ao viewport;');f.write_text(s)
-          f=p/'tools/render_design_references.py';s=f.read_text()
-          checker='''def check_reference_boundaries(page, state):
-              """DOM checks of authored references, never product or Electron approval."""
-              r=page.evaluate("""() => {
-                const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};
-                const bar=document.querySelector('.dock-address'), input=bar?.querySelector('.ov-input'), url=bar?.querySelector('.address-url'), output=document.querySelector('.test-output');
-                return {stateRTL:document.querySelector('#app').dir==='rtl',collapsed:document.querySelector('#app').classList.contains('ov-collapsed'),sidebar:box(document.querySelector('.ov-sidebar')),native:box(document.querySelector('.window-controls')),bar:bar?box(bar):null,input:input?box(input):null,url:url?box(url):null,buttons:bar?[...bar.querySelectorAll('button')].map(box):[],outputDirection:output?getComputedStyle(output).direction:null,outputAlign:output?getComputedStyle(output).textAlign:null,searchName:document.querySelector('.ov-nav-search').getAttribute('aria-label'),newName:document.querySelector('.ov-navitem[aria-label]:not(.ov-nav-search)').getAttribute('aria-label')};
-              }""")
-              if r['bar']:
-                  assert r['url'] and r['url']['width']>0 and r['url']['x']>=r['input']['x'] and r['url']['right']<=r['input']['right'], (state,'URL overflow',r)
-                  assert all(b['width']>=28 and b['height']>=28 and b['x']>=r['bar']['x']-1 and b['right']<=r['bar']['right']+1 for b in r['buttons']), (state,'address hitbox',r)
-              if r['stateRTL']:assert r['native']['x']==26 and r['native']['y']==25, (state,'native controls mirrored',r)
-              if r['collapsed']:assert r['sidebar']['width']==56, (state,'compact width',r)
-              if r['outputDirection'] is not None:assert r['outputDirection']=='ltr' and r['outputAlign']=='left', (state,'output direction',r)
-              assert r['searchName'] and r['newName'], (state,'missing compact accessible name')
-              return {'state':state,'geometry':r,'kind':'design-reference-dom-check-not-product-proof'}
-          '''
-          assert s.count('with sync_playwright() as p:')==1;s=s.replace('with sync_playwright() as p:',checker+'\nwith sync_playwright() as p:')
-          assert s.count('errors=[];geometry=[];')==1;s=s.replace('errors=[];geometry=[];','errors=[];geometry=[];boundaries=[];')
-          needle="page.screenshot(path=str(R/'specs/orchestra-visual'/s['file']))";assert s.count(needle)==1;s=s.replace(needle,"boundaries.append(check_reference_boundaries(page,s['id']));"+needle)
-          needle="page.screenshot(path=str(D/'states/DS20-native-1152x768.png'))";assert s.count(needle)==1;s=s.replace(needle,"boundaries.append(check_reference_boundaries(page,'DS20-native'));"+needle)
-          needle="'geometry':geometry,'synthetic':True";assert s.count(needle)==1;s=s.replace(needle,"'geometry':geometry,'reference_boundary_checks':boundaries,'synthetic':True")
-          f.write_text(s)
+          s=s.replace(needle,check+needle);f.write_text(s)
           PY
-      - name: Set up isolated reference renderer
+      - name: Render actual design references with existing repository fonts
         run: |
-          python3 -m venv "$RUNNER_TEMP/reference-author"
-          "$RUNNER_TEMP/reference-author/bin/pip" install --disable-pip-version-check playwright==1.57.0 Pillow==12.3.0 > "$OUT/install.log" 2>&1
-      - name: Retain exact fractional sample medians and regenerate inspected references
-        run: |
-          "$RUNNER_TEMP/reference-author/bin/python" - <<'PY'
-          from PIL import Image
-          from pathlib import Path
-          import json,statistics
-          p=Path('specs/orchestra-visual');f=p/'design/zen/MEASUREMENTS.json';m=json.loads(f.read_text());im=Image.open(p/'reference/approved.png').convert('RGB')
-          for row in m['samples'].values():
-              pixels=list(im.crop(tuple(row['box'])).getdata());assert len(pixels)==row['pixels']
-              raw=[statistics.median(v[c] for v in pixels) for c in range(3)]
-              assert [int(v) for v in raw]==row['median_rgb']
-              row['median_rgb_raw']=raw
-          m['method']='RGB channel medians of declared half-open pixel boxes; median_rgb_raw preserves exact fractional medians; median_rgb and median_hex floor channels to an 8-bit representative. Spread retained. No OCR or original vector/font extraction.'
-          f.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
-          PY
-          "$RUNNER_TEMP/reference-author/bin/python" specs/orchestra-visual/tools/render_design_references.py --repo "$GITHUB_WORKSPACE" --browser "$(command -v google-chrome)" > "$OUT/render.log"
-      - name: Verify contracts, preserved product boundaries and ticket readback
+          python3 -m venv "$RUNNER_TEMP/final-reference-author"
+          "$RUNNER_TEMP/final-reference-author/bin/pip" install --disable-pip-version-check playwright==1.57.0 > "$OUT/install.log" 2>&1
+          "$RUNNER_TEMP/final-reference-author/bin/python" specs/orchestra-visual/tools/render_design_references.py --repo "$GITHUB_WORKSPACE" --browser "$(command -v google-chrome)" > "$OUT/render.log"
+      - name: Verify the full contract suite and unchanged product plan
         working-directory: specs/orchestra-visual
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python3 -m unittest discover -s tools -p 'test_*.py' -v > "$OUT/tests.log" 2>&1
@@ -102,61 +48,39 @@ jobs:
           python3 tools/render_maps.py --check
           python3 tools/render_issues.py --check
           python3 tools/render_navigation.py --check --repo "$GITHUB_WORKSPACE"
-          python3 tools/github_sync.py > "$OUT/relationships.json"
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,subprocess
-          p=pathlib.Path.cwd();out=pathlib.Path(os.environ['OUT']);r=json.loads((p/'design/LOCAL-RENDER.json').read_text());assert len(r['reference_boundary_checks'])==23
-          assert not r['page_errors'] and all(x['images_loaded'] for x in r['geometry'])
-          assert json.loads((p/'progress.json').read_text())['tasks']=={}
-          assert json.loads((out/'relationships.json').read_text())['planned_operations']==[]
-          old=json.loads((p/'reviews/design-complement/PUBLICATION.json').read_text());rows=[]
-          for row in old['ticket_bodies']:
-              issue=json.loads(subprocess.check_output(['gh','api','repos/gmhelmold/HuGR-Orchestra/issues/'+str(row['number'])],text=True))
-              assert hashlib.sha256(issue['body'].encode()).hexdigest()==row['body_sha256']
-              rows.append(row['number'])
-          assert len(rows)==39
-          (out/'readback.json').write_text(json.dumps({'tickets':rows,'contracts_unchanged':True,'native_operations_needed':0}))
-          PY
-      - name: Publish only reviewed reference corrections and updated captures
+      - name: Publish the verified correction and preserve previous inspection history
         run: |
           python3 - <<'PY'
-          import hashlib,json,os,pathlib,re,subprocess
-          p=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT']);r=json.loads((p/'design/LOCAL-RENDER.json').read_text());log=(out/'tests.log').read_text()
+          import hashlib,json,os,pathlib,re,subprocess,zipfile
+          p=pathlib.Path('specs/orchestra-visual');out=pathlib.Path(os.environ['OUT']);log=(out/'tests.log').read_text()
           assert re.search(r'Ran 296 tests in ',log) and log.rstrip().endswith('OK')
-          changed=subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines()
-          fixed={'design/reference.css','design/reference.js','design/EXECUTOR-DECISIONS.md','design/zen/MEASUREMENTS.json','tools/render_design_references.py','design/LOCAL-RENDER.json'}
-          for name in changed:
-              assert name.startswith(str(p)+'/');relative=name[len(str(p))+1:]
-              assert relative in fixed or relative.startswith(('design/states/','design/elements/')),relative
-          dest=p/'reviews/design-complement';report={'kind':'design-reference-review-closure-not-product-approval','run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],'input_sha':os.environ['GITHUB_SHA'],'contract_revision':'4.4','tooling_tests':296,'rendered_state_boundary_checks':23,'fixes':['Compact URL wraps its own truncation span; navigation controls retain 28x28 hitboxes.','Native window-control illustration remains at OS side in RTL; code output retains LTR alignment.','Collapsed search and new-session controls have explicit accessible names.','Generic dialog versus settings/file-picker width exceptions are explicit.','Fractional sample medians are retained; integer/hex flooring documented; adopted colors unchanged.'],'inspection':'Assistant viewed the original master, all 22 design states in contact sheets, baseline and native compact at full size, and the landscape; corrections respond to specific observed defects. Not an independent external auditor. Final images remain subject to actual product integration review.','original_master_sha256':hashlib.sha256((p/'reference/approved.png').read_bytes()).hexdigest(),'unchanged':['PLAN.json','SURFACES.json','COVERAGE.json','BUDGETS.json','copy.json','progress.json','brand bytes','landscape bytes','scopes and DAG','39 ticket contracts'],'ticket_readback':json.loads((out/'readback.json').read_text()),'product_tasks_accepted':0,'product_electron_benchmarks':'NOT_RUN','checks':r['reference_boundary_checks']}
-          (dest/'REFERENCE-REVIEW.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-          (dest/'REFERENCE-REVIEW.md').write_text('# Fechamento da inspeção das referências\n\nOs pedidos estão integrados em design/REQUESTS.md e nos 39 tickets subordinados. Esta inspeção corrige a fonte HTML/CSS dos estados, não implementa o frontend.\n\nForam corrigidos URL fora do campo no compacto, espelhamento indevido dos controles ilustrativos do sistema em RTL, alinhamento dos logs em LTR e nomes acessíveis de dois botões compactos. As exceções de largura de dialogs e a quantização das amostras de cor ficaram explícitas.\n\nO renderer verifica 23 configurações: 22 estados e o compacto nativo 1152×768. Os 296 testes existentes foram repetidos, sem mudar owners, DAG, budgets, marca, master ou progresso. O mesmo assistente realizou a inspeção; não é auditoria externa nem prova de Electron. Resultados: REFERENCE-REVIEW.json.\n\nAs imagens continuam complementos de design. Somente approved.png é o master aprovado pelo usuário. Nenhuma porcentagem de fidelidade ou performance do produto é alegada. A implementação segue RUN.md e começa pelo censo real.\n')
+          r=json.loads((p/'design/LOCAL-RENDER.json').read_text());assert len(r['reference_boundary_checks'])==23 and not r['page_errors']
+          assert all(x['images_loaded'] for x in r['geometry'])
+          assert json.loads((p/'progress.json').read_text())['tasks']=={}
+          changes=subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines()
+          for name in changes:
+              assert name.startswith(str(p)+'/');n=name[len(str(p))+1:]
+              assert n in {'design/reference.css','tools/render_design_references.py','design/LOCAL-RENDER.json'} or n.startswith(('design/states/','design/elements/')),n
+          f=p/'reviews/design-complement/REFERENCE-REVIEW.json';report=json.loads(f.read_text());report['previous_reference_run']=report['run_url'];report['run_url']='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'];report['input_sha']=os.environ['GITHUB_SHA'];report['checks']=r['reference_boundary_checks'];report['fixes'].append('Signed diff counts, keyboard shortcuts and timestamps retain LTR data order inside the RTL layout.');f.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          f=p/'reviews/design-complement/REFERENCE-REVIEW.md';f.write_text(f.read_text()+'\nA inspeção final também isolou contagens com sinal, atalhos e timestamps em LTR, evitando apresentar `+48` como `48+`. O renderer verifica essas ilhas de dados em cada estado pertinente.\n')
           files=sorted(f for f in p.rglob('*') if f.is_file() and f.name!='MANIFEST.sha256' and '__pycache__' not in f.parts)
           (p/'MANIFEST.sha256').write_text(''.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+str(f.relative_to(p))+'\n' for f in files))
           subprocess.run(['git','diff','--check'],check=True)
           assert subprocess.check_output(['git','ls-remote','origin','refs/heads/visual-migration-plan'],text=True).split()[0]==os.environ['GITHUB_SHA'],'Concurrent branch advance'
           subprocess.run(['git','add','--',str(p)],check=True)
-          subprocess.run(['git','-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m','fix(docs): align compact and RTL reference behavior with contracts'],check=True)
+          subprocess.run(['git','-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m','fix(docs): preserve LTR data inside RTL state references'],check=True)
           subprocess.run(['git','push','origin','HEAD:refs/heads/visual-migration-plan'],check=True)
           (out/'final-head.txt').write_bytes(subprocess.check_output(['git','rev-parse','HEAD']))
-          PY
-      - name: Check committed package and export inspection material without fonts
-        working-directory: specs/orchestra-visual
-        run: |
-          set -euo pipefail
-          python3 tools/validate_design_inputs.py > "$OUT/committed-design.json"
-          sha256sum --check MANIFEST.sha256 > "$OUT/manifest.log"
-          test -z "$(git status --porcelain)"
-          python3 - <<'PY'
-          import os,pathlib,zipfile
-          p=pathlib.Path.cwd();out=pathlib.Path(os.environ['OUT']);files=[f for f in (p/'design').rglob('*') if f.is_file()]+[p/'copy.json',p/'reference/approved.png']+list((p/'reviews/design-complement').glob('*'))
-          assert not any(f.suffix.lower() in {'.ttf','.otf','.woff','.woff2'} for f in files)
+          subprocess.run(['sha256sum','--check','MANIFEST.sha256'],cwd=p,check=True,stdout=open(out/'manifest.log','w'))
+          assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+          design=[f for f in (p/'design').rglob('*') if f.is_file()]+[p/'copy.json',p/'reference/approved.png']+list((p/'reviews/design-complement').glob('*'))
+          assert not any(f.suffix.lower() in {'.ttf','.otf','.woff','.woff2'} for f in design)
           with zipfile.ZipFile(out/'Orchestra_Separated_Visual_Assets.zip','w',zipfile.ZIP_DEFLATED) as z:
-              for f in files:z.write(f,'orchestra-visual/'+str(f.relative_to(p)))
+              for f in design:z.write(f,'orchestra-visual/'+str(f.relative_to(p)))
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: orchestra-reference-closure
-          path: ${{ runner.temp }}/orchestra-reference-closure
+          name: orchestra-final-reference
+          path: ${{ runner.temp }}/orchestra-final-reference
           retention-days: 14
