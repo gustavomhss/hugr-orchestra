@@ -1,0 +1,247 @@
+{
+  "kind": "design-complement-github-publication",
+  "status": "PUBLISHED_AND_READ_BACK",
+  "contract_revision": "4.4",
+  "source_commit": "194777338a395d38aeccdd99cb9a11724c243220",
+  "root_epic": 215,
+  "root_body_updated": true,
+  "ticket_bodies": [
+    {
+      "node": "E1",
+      "number": 130,
+      "body_sha256": "e8b9b410ad6c3c3e81b3c9a1a89786b1f85eff438d39f56c1304558eb7c988e5",
+      "state_preserved": true
+    },
+    {
+      "node": "E2",
+      "number": 131,
+      "body_sha256": "1296e2f07c8303d3544ddf249f1adcc43aa0eb0c5f7bc2ba078f0f5f534f19b4",
+      "state_preserved": true
+    },
+    {
+      "node": "E3",
+      "number": 132,
+      "body_sha256": "5137969fb90164108fe24c6e504d4b42742ab5851471129b1ead94c95e3bd822",
+      "state_preserved": true
+    },
+    {
+      "node": "E4",
+      "number": 133,
+      "body_sha256": "053bbc63bb56d5735fa773c4324fe0693029a5c53a7929c7c303a74c4869339a",
+      "state_preserved": true
+    },
+    {
+      "node": "I01",
+      "number": 134,
+      "body_sha256": "4e5978579761368a3d3bf347619292df549aa0a0d98bbb4d735863ec20067159",
+      "state_preserved": true
+    },
+    {
+      "node": "I02",
+      "number": 135,
+      "body_sha256": "f811d83b838a137e62031e9341d921a06c8f935b5a6a0ef3588d07f65c1d9483",
+      "state_preserved": true
+    },
+    {
+      "node": "I03",
+      "number": 136,
+      "body_sha256": "7ad3bc309d9a801ce3d24b7b1a213f3546ae5c05ecb0c81e0614180a869005a3",
+      "state_preserved": true
+    },
+    {
+      "node": "I04",
+      "number": 137,
+      "body_sha256": "3579944f33da5fd948f3b1099a10915f4baaa8ebd277592fa334ebd7897c43d0",
+      "state_preserved": true
+    },
+    {
+      "node": "I05",
+      "number": 138,
+      "body_sha256": "b65edee162f0cc33a42801aceae32a78b8718748dda9a04a40fbb8621c79a253",
+      "state_preserved": true
+    },
+    {
+      "node": "I06",
+      "number": 139,
+      "body_sha256": "43adb31748f0e7666477db4e46f0aa3045e29647af52b86407adf32297c4ac3b",
+      "state_preserved": true
+    },
+    {
+      "node": "I07",
+      "number": 140,
+      "body_sha256": "3cbf4f723a6dc9b06c84f1b26597bd96476d91f37083f1e5999a5a29d292950d",
+      "state_preserved": true
+    },
+    {
+      "node": "I08",
+      "number": 141,
+      "body_sha256": "8a45eb397adc181462b07177a398fd8473795a593895e883d6d1384dede6876d",
+      "state_preserved": true
+    },
+    {
+      "node": "I09",
+      "number": 142,
+      "body_sha256": "4abf28b3ed68ef6aea8d1b18df6c70fee7ffd0625785551ab42d5b5f725f1b00",
+      "state_preserved": true
+    },
+    {
+      "node": "I10",
+      "number": 143,
+      "body_sha256": "2e959f8ecddc66b29883b6134926a35bba63a4c0e046fea5102504af5c1a422b",
+      "state_preserved": true
+    },
+    {
+      "node": "S01",
+      "number": 144,
+      "body_sha256": "7569ae54d2fca02f2b1703160b4cfd10735a6c7f4f11a76ccc22ddf4d6c36f41",
+      "state_preserved": true
+    },
+    {
+      "node": "S02",
+      "number": 145,
+      "body_sha256": "de410ccb969713e339f9c2a02a7f5c724a714c7ecf8c4fb9f978a2f1e7ba7deb",
+      "state_preserved": true
+    },
+    {
+      "node": "S03",
+      "number": 146,
+      "body_sha256": "c1f75807f82b3eedea5d127bfba2dca068c963f9ec985c023d35e244a98ef505",
+      "state_preserved": true
+    },
+    {
+      "node": "S04",
+      "number": 147,
+      "body_sha256": "e68f8ab42468599a8230909b3263627440cea51c8fbc4431ebfce627449afd97",
+      "state_preserved": true
+    },
+    {
+      "node": "S05",
+      "number": 148,
+      "body_sha256": "51dd15e24e7d3cd4b951818230f163a70d9e728decf589605a6876ab3057954d",
+      "state_preserved": true
+    },
+    {
+      "node": "S06",
+      "number": 149,
+      "body_sha256": "9d61b6de0f927c0839e0816b1c77fac03578b682b36ba8d6bf9b496cfd6edbcf",
+      "state_preserved": true
+    },
+    {
+      "node": "S07",
+      "number": 150,
+      "body_sha256": "7d687f16811bfbc5d146e1a90f39a5d0e8e8e32411603f522b9cd11f8659cf1b",
+      "state_preserved": true
+    },
+    {
+      "node": "S08",
+      "number": 151,
+      "body_sha256": "e5ce39257f0ed132962ed5c006bb0797cf6e5f08805790fa0805237b88c97b1a",
+      "state_preserved": true
+    },
+    {
+      "node": "S09",
+      "number": 152,
+      "body_sha256": "7e4b5395833c3974c519b5f1e0848f84b8cc303e831a9dfb389b6555f6911327",
+      "state_preserved": true
+    },
+    {
+      "node": "S10",
+      "number": 153,
+      "body_sha256": "4d40724a3de6ae7fd15b3eeb7b1447cc8495956c76228c65a83411264e1dcef9",
+      "state_preserved": true
+    },
+    {
+      "node": "S11",
+      "number": 154,
+      "body_sha256": "afe2e0ad7308c01a104ca9d490cd1933595738241b416cf682172d930a317be1",
+      "state_preserved": true
+    },
+    {
+      "node": "S12",
+      "number": 155,
+      "body_sha256": "f67ce6581d4f112129c2304aa3e0fff7db8c34b370da76844639b0fa1ad8fb34",
+      "state_preserved": true
+    },
+    {
+      "node": "S13",
+      "number": 156,
+      "body_sha256": "50c543bbaad4aac02850ca37ad81adb2966a15f09b7b0a453b3f617f1f777877",
+      "state_preserved": true
+    },
+    {
+      "node": "S14",
+      "number": 157,
+      "body_sha256": "a64ba831f968f5971a5d2355cc309c6b1e80734905be594162b05df034fceb8f",
+      "state_preserved": true
+    },
+    {
+      "node": "S15",
+      "number": 158,
+      "body_sha256": "40cdef494b7be11d5f941b99d0544d7b71d2137837858ff86148d0c37c6d007d",
+      "state_preserved": true
+    },
+    {
+      "node": "S16",
+      "number": 159,
+      "body_sha256": "c2cbe9feb85e9fb505df62a9612d80e1d01daaad211152b67ab8cbbfdf8df7c1",
+      "state_preserved": true
+    },
+    {
+      "node": "S17",
+      "number": 160,
+      "body_sha256": "40945146c50029e4d26ea260a12f12a202ff57d048aea4d31674fcb5b7623a37",
+      "state_preserved": true
+    },
+    {
+      "node": "S18",
+      "number": 161,
+      "body_sha256": "2778a1b9bf28eb010daab2f3f2b1416b8f22645ed46beb80e33121bc8fd98bd2",
+      "state_preserved": true
+    },
+    {
+      "node": "S19",
+      "number": 162,
+      "body_sha256": "23acef84d950f9272b84df98f522fe625a567a6b6cca0866d3e8caa323506d2d",
+      "state_preserved": true
+    },
+    {
+      "node": "S20",
+      "number": 163,
+      "body_sha256": "c6bdc4c6d79f8b8edc133ade3b4c1562ad222f132f9852b46aca47c4982f0d99",
+      "state_preserved": true
+    },
+    {
+      "node": "S21",
+      "number": 164,
+      "body_sha256": "395696d2ec2a07a671161e957b54e0efbd9c08413be1f33995cd905162549c65",
+      "state_preserved": true
+    },
+    {
+      "node": "S22",
+      "number": 165,
+      "body_sha256": "c89e675bde7f2a4262179cb31618add5ad7acc5516e6b318df35c560f06d0d1a",
+      "state_preserved": true
+    },
+    {
+      "node": "S23",
+      "number": 166,
+      "body_sha256": "58a789042b48634369209aeef386e0a98e14c04b10399bcf5a79ea5b0ff19f4a",
+      "state_preserved": true
+    },
+    {
+      "node": "S24",
+      "number": 167,
+      "body_sha256": "8d9cdda4d1c3eec5bdd7cc5f8f1b9b6500d73412bca49ca434e2852bd8a48f79",
+      "state_preserved": true
+    },
+    {
+      "node": "S25",
+      "number": 168,
+      "body_sha256": "93eddf9d2cc6fd88afa37b786085a37ff973a4adb1e9d3a93337d68003d5d06d",
+      "state_preserved": true
+    }
+  ],
+  "native_relationships": "unchanged; existing synchronizer dry-run plus four root children verified",
+  "product_tasks_accepted": 0,
+  "run_url": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36371915619"
+}

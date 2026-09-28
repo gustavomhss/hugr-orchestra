@@ -2,9 +2,9 @@
   "schema_version": 1,
   "repo": "gmhelmold/HuGR-Orchestra",
   "plan_branch": "visual-migration-plan",
-  "entry_commit": "6444c90dde18874006f782cb3eb5376b4cc4c733",
+  "entry_commit": "194777338a395d38aeccdd99cb9a11724c243220",
   "entry_url": "https://github.com/gmhelmold/HuGR-Orchestra/blob/visual-migration-plan/specs/orchestra-visual/START-HERE.md",
-  "publication": "Widget contracts closed in WIDGETS.md; current complete readback recorded in PUBLICATION.json.",
+  "publication": "Design complement 4.4 published; design/REQUESTS.md maps executor requests; reviews/design-complement/PUBLICATION.json records current readback.",
   "native_relationships_applied_by_this_session": true,
   "native_relationships_note": "Read back without changes by https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36298512850",
   "issues": {

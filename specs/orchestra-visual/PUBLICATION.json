@@ -226,5 +226,12 @@
     "tests_passed": 248,
     "plan_and_ticket_contracts_changed": false,
     "product_execution": "NOT_RUN"
+  },
+  "design_complement": {
+    "contract_revision": "4.4",
+    "source_commit": "194777338a395d38aeccdd99cb9a11724c243220",
+    "report": "reviews/design-complement/PUBLICATION.json",
+    "ticket_bodies_reconciled": 39,
+    "product_tasks_accepted": 0
   }
 }
