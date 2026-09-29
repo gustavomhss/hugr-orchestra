@@ -70,7 +70,7 @@ jobs:
 
       - name: Install Electron binary
         working-directory: packages/desktop
-        run: node "$(node -p \"require.resolve('electron/install.js')\")"
+        run: env -u ELECTRON_SKIP_BINARY_DOWNLOAD node "$(node -p \"require.resolve('electron/install.js')\")"
 
       - name: Run live harness
         working-directory: packages/desktop
