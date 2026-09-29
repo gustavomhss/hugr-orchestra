@@ -68,6 +68,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      - name: Install Electron binary
+        working-directory: packages/desktop
+        run: node "$(node -p \"require.resolve('electron/install.js')\")"
+
       - name: Run live harness
         working-directory: packages/desktop
         run: bun run prebuild && bun run build && perl -e 'alarm 300; exec @ARGV' bun run src/main/app-dock-live.test.ts
