@@ -73,3 +73,4 @@ jobs:
         run: bun run prebuild && bun run build && perl -e 'alarm 300; exec @ARGV' bun run src/main/app-dock-live.test.ts
         env:
           ELECTRON_DISABLE_SECURITY_WARNINGS: "true"
+          NODE_OPTIONS: "--max-old-space-size=4096"
