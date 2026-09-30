@@ -421,7 +421,7 @@
       "authorizedAt": "2026-09-29"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 13769,
+      "maximumLines": 13849,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-09-29"

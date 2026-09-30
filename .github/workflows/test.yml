@@ -202,6 +202,12 @@ jobs:
             turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json') }}-
             turbo-${{ runner.os }}-
 
+      # Extension: installed Atlas code must match its canonical producer before any consumer proof.
+      - name: Check generated Atlas boundary
+        if: runner.os == 'Linux'
+        working-directory: packages/atlas-boundary
+        run: bun run check:generated
+
       - name: Run unit tests
         timeout-minutes: 45
         run: GITHUB_ACTIONS=false bun turbo test

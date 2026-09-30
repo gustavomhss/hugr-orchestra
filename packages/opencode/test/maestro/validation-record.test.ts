@@ -1,6 +1,9 @@
 import { afterEach, describe, expect } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { Config } from "../../src/config/config"
+import { Session } from "../../src/session/session"
 import { EventV2 } from "@opencode-ai/core/event"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { ProjectTable } from "@opencode-ai/core/project/sql"
@@ -28,7 +31,7 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-const it = testEffect(LayerNode.compile(LayerNode.group([Database.node, EventV2Bridge.node, Git.node])))
+const it = testEffect(LayerNode.compile(LayerNode.group([filesystem, Config.node, Session.node, Database.node, EventV2Bridge.node, Git.node])))
 
 const base = {
   sessionID: "ses_validation",

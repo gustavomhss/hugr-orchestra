@@ -1,7 +1,3 @@
-// ── REFERENCE MODEL — EXTERNAL ACE BOUNDARY ───────────────────────────────────────────────────────────
-// Atlas has no internal production caller until Maestro composes this read-only seam.
-// Declared in harness/gates/reference-model-guard.mjs; this module is the versioned catalog contract only.
-
 import type { Territory, Tier } from "@atlas/contracts"
 
 /** Versioned, read-only territory catalog for one explicit project. */
@@ -61,6 +57,11 @@ function catalogOf(value: unknown): TerritoryCatalog {
     catalogVersion: value.catalogVersion,
     territories: Object.freeze(territories),
   })
+}
+
+/** Decode a static catalog without selecting an ambient project or consulting an Atlas store. */
+export function parseTerritoryCatalog(value: unknown): TerritoryCatalog {
+  return catalogOf(value)
 }
 
 /**

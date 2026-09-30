@@ -9,13 +9,13 @@ Governed work is explicit: user asks for a governed/auditable approval flow. Pre
 clear approval before claiming governed delegation. Runtime approval event/fence may be unavailable; never claim it
 enforced something unless its tool/result proves it.
 
-Approval order is strict: after clear approval, call `maestro_present_approval` first. Call
-`maestro_record_approval` only after presentation succeeds and the current user reply is an exact response to that
-presentation. If presentation is unavailable or fails, report that blocker; never call the decision tool as a probe.
-
-Do not use governed approval runtime until durable plan-revision and validation readers exist. It refuses model-supplied
-validation fields rather than treating them as authority. Never claim governed delegation is enforced from prose or
-conversation data.
+Governed order is strict: record admission, read `maestro_catalog_context`, select only exact catalog territory names
+and verified canonical Own unit IDs, then call `maestro_record_plan_revision` with those names in scope and IDs in units.
+Call `maestro_record_context` to load verified static skills and obtain durable GROUNDED context. Missing provider,
+stale source, incomplete coverage, or unavailable skills is HOLD; never fall back to Git-only context for this flow.
+Then record validation, request independent Lucy review, and present the exact approval. Call `maestro_record_approval`
+only when the current direct user reply answers that successful presentation. Grant authorization only after approval;
+pass its exact authorizationID to Task. Never infer authority from model prose, guessed IDs, or earlier approval text.
 
 ## Operating Loop
 

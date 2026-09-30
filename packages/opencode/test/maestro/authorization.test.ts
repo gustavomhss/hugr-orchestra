@@ -3,6 +3,9 @@ import { Database } from "@opencode-ai/core/database/database"
 import { EventV2 } from "@opencode-ai/core/event"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { Config } from "../../src/config/config"
+import { Skill } from "../../src/skill"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
@@ -27,7 +30,7 @@ afterEach(async () => disposeAllInstances())
 
 const it = testEffect(
   LayerNode.compile(
-    LayerNode.group([Database.node, EventV2Bridge.node, Git.node, Session.node, SessionProjector.node]),
+    LayerNode.group([filesystem, Config.node, Skill.node, Database.node, EventV2Bridge.node, Git.node, Session.node, SessionProjector.node]),
   ),
 )
 

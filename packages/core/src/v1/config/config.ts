@@ -1,6 +1,7 @@
 export * as ConfigV1 from "./config"
 
 import { Schema } from "effect"
+import { ConfigMaestro } from "@opencode-ai/schema/config-maestro"
 import { NonNegativeInt, PositiveInt, type DeepMutable } from "../../schema"
 import { ConfigExperimental } from "../../config/experimental"
 import { ConfigReference } from "../../config/reference"
@@ -42,6 +43,7 @@ export const Info = Schema.Struct({
     description: "Command configuration, see https://opencode.ai/docs/commands",
   }),
   skills: Schema.optional(ConfigSkillsV1.Info).annotate({ description: "Additional skill folder paths" }),
+  maestro: Schema.optional(ConfigMaestro.Info).annotate({ description: "Project-bound static Atlas/Own context for governed Maestro work" }),
   references: Schema.optional(ConfigReference.Info).annotate({
     description: "Named git or local directory references",
   }),

@@ -1,7 +1,8 @@
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Database } from "@opencode-ai/core/database/database"
 import { Session } from "@/session/session"
+import { Config } from "@/config/config"
 import { SessionID } from "@/session/schema"
 import { Git } from "@/git"
 import { findReview, readValidation, workCardHash } from "@/maestro/validation-record"
@@ -24,6 +25,8 @@ export const MaestroRequestReviewTool = Tool.define(
     const sessions = yield* Session.Service
     const git = yield* Git.Service
     const database = yield* Database.Service
+    const config = yield* Config.Service
+    const fs = yield* FileSystem.FileSystem
     return {
       description: "Delegate one read-only cold review to native Lucy. Maestro only.",
       parameters: Parameters,
@@ -101,27 +104,49 @@ export const MaestroRequestReviewTool = Tool.define(
             return yield* Effect.fail(new Error("Review delegation context changed during child creation"))
           const model = ctx.extra?.model as { providerID?: string; api?: { id?: string } } | undefined
           const result = yield* Effect.exit(
-            ops.prompt({
-              sessionID: child.id,
-              agent: "lucy",
-              ...(model?.providerID && model.api?.id
-                ? {
-                    model: { providerID: ProviderV2.ID.make(model.providerID), modelID: ModelV2.ID.make(model.api.id) },
-                  }
-                : {}),
-              parts: yield* ops.resolvePromptParts(
-                [
-                  "Perform one read-only cold review.",
-                  `validationRecordID: ${params.validationRecordID}`,
-                  `work card:\n${params.workCard}`,
-                  `reviewMethodVersion: ${params.reviewMethodVersion}`,
-                  `artifact JSON: ${JSON.stringify({ baseSHA, headSHA, worktree, changedPaths, encoding: "base64", bytes: artifactBytes })}`,
-                  `checks JSON: ${JSON.stringify(validation.checks)}`,
-                  "You MUST call maestro_record_review exactly once with your evidence-based verdict, cited findings, exact artifact JSON, and exact checks JSON above. Do not answer with a review narrative.",
-                  "Never edit files or include transcript/model history.",
-                ].join("\n\n"),
-              ),
-            }),
+            ops.prompt(
+              {
+                sessionID: child.id,
+                agent: "lucy",
+                ...(model?.providerID && model.api?.id
+                  ? {
+                      model: {
+                        providerID: ProviderV2.ID.make(model.providerID),
+                        modelID: ModelV2.ID.make(model.api.id),
+                      },
+                    }
+                  : {}),
+                parts: yield* ops.resolvePromptParts(
+                  [
+                    "Perform one read-only cold review.",
+                    `validationRecordID: ${params.validationRecordID}`,
+                    `work card:\n${params.workCard}`,
+                    `reviewMethodVersion: ${params.reviewMethodVersion}`,
+                    `artifact JSON: ${JSON.stringify({ baseSHA, headSHA, worktree, changedPaths, encoding: "base64", bytes: artifactBytes })}`,
+                    `checks JSON: ${JSON.stringify(validation.checks)}`,
+                    ...("skills" in context
+                      ? context.skills.map(
+                          (skill) => `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
+                        )
+                      : []),
+                    "You MUST call maestro_record_review exactly once with your evidence-based verdict, cited findings, exact artifact JSON, and exact checks JSON above. Do not answer with a review narrative.",
+                    "Never edit files or include transcript/model history.",
+                  ].join("\n\n"),
+                ),
+              },
+              {
+                beforeModel: contextIsCurrent(context).pipe(
+                  Effect.provideService(Database.Service, database),
+                  Effect.provideService(Config.Service, config),
+                  Effect.provideService(FileSystem.FileSystem, fs),
+                  Effect.provideService(Git.Service, git),
+                  Effect.provideService(Session.Service, sessions),
+                  Effect.flatMap((current) =>
+                    current ? Effect.void : Effect.fail(new Error("Review context changed before provider execution")),
+                  ),
+                ),
+              },
+            ),
           )
           if (Exit.isFailure(result)) {
             return {
@@ -148,6 +173,9 @@ export const MaestroRequestReviewTool = Tool.define(
         }).pipe(
           Effect.provideService(Database.Service, database),
           Effect.provideService(Git.Service, git),
+          Effect.provideService(Config.Service, config),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Session.Service, sessions),
           Effect.orDie,
         ),
     }

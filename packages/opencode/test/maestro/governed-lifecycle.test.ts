@@ -4,6 +4,7 @@ import { Database } from "@opencode-ai/core/database/database"
 import { EventV2 } from "@opencode-ai/core/event"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { Agent } from "../../src/agent/agent"
@@ -46,6 +47,7 @@ const ref = {
 
 const layer = LayerNode.compile(
   LayerNode.group([
+    filesystem,
     Agent.node,
     BackgroundJob.node,
     EventV2Bridge.node,

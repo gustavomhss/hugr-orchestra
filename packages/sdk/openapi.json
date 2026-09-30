@@ -19571,7 +19571,7 @@
                       },
                       "revision": {
                         "type": "string",
-                        "enum": ["v1"]
+                        "enum": ["v2"]
                       },
                       "goal": {
                         "type": "object",
@@ -19700,6 +19700,9 @@
                       "createdAt": {
                         "type": "integer",
                         "minimum": 0
+                      },
+                      "grounding": {
+                        "$ref": "#/components/schemas/MaestroGrounding"
                       }
                     },
                     "required": [
@@ -19718,7 +19721,8 @@
                       "risks",
                       "status",
                       "revisionHash",
-                      "createdAt"
+                      "createdAt",
+                      "grounding"
                     ],
                     "additionalProperties": false
                   }
@@ -19757,7 +19761,7 @@
                       },
                       "mode": {
                         "type": "string",
-                        "enum": ["GROUNDED", "UNGROUNDED"]
+                        "enum": ["GROUNDED"]
                       },
                       "branch": {
                         "type": "string"
@@ -19784,6 +19788,24 @@
                       "createdAt": {
                         "type": "integer",
                         "minimum": 0
+                      },
+                      "planRevisionHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sourceIdentityHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "toolPlan": {
+                        "$ref": "#/components/schemas/MaestroContextToolPlan"
+                      },
+                      "skills": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                        },
+                        "minItems": 1
                       }
                     },
                     "required": [
@@ -19799,7 +19821,11 @@
                       "currentEvidenceIdentityHash",
                       "contextHash",
                       "status",
-                      "createdAt"
+                      "createdAt",
+                      "planRevisionHash",
+                      "sourceIdentityHash",
+                      "toolPlan",
+                      "skills"
                     ],
                     "additionalProperties": false
                   }
@@ -22629,6 +22655,9 @@
               }
             },
             "additionalProperties": false
+          },
+          "maestro": {
+            "$ref": "#/components/schemas/ConfigMaestro"
           },
           "references": {
             "type": "object",
@@ -26263,6 +26292,242 @@
         "required": ["messageID"],
         "additionalProperties": false
       },
+      "MaestroGrounding": {
+        "type": "object",
+        "properties": {
+          "catalogVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "snapshot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}(?:[a-f0-9]{24})?$"
+          },
+          "sourceIdentityHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["catalogVersion", "snapshot", "sourceRevision", "sourceIdentityHash", "units"],
+        "additionalProperties": false
+      },
+      "MaestroContextToolPlan": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "enum": ["context-tool-plan-v1"]
+          },
+          "actor": {
+            "type": "object",
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sessionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["projectId", "sessionId", "memberId"],
+            "additionalProperties": false
+          },
+          "actorBytes": {
+            "type": "string",
+            "minLength": 1
+          },
+          "planRevision": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": ["id", "hash"],
+            "additionalProperties": false
+          },
+          "catalogVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "headSnapshot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}(?:[a-f0-9]{24})?$"
+          },
+          "territories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "skillName": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "operation": {
+                  "type": "string",
+                  "enum": ["load-skill"]
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "contentHash": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "receiptHash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": ["unit", "skillName", "operation", "path", "contentHash", "receiptHash"],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "pointers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "drillUnits": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "manifest": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": ["pack", "memory", "knowledge", "drill"]
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "digest": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "pull": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "hits": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": ["kind", "name", "digest", "pull", "hits"],
+                    "additionalProperties": false
+                  }
+                },
+                "pullReachable": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "required": ["unit", "drillUnits", "manifest", "pullReachable"],
+              "additionalProperties": false
+            }
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "version",
+          "actor",
+          "actorBytes",
+          "planRevision",
+          "catalogVersion",
+          "headSnapshot",
+          "sourceRevision",
+          "territories",
+          "actions",
+          "pointers",
+          "hash"
+        ],
+        "additionalProperties": false
+      },
+      "MaestroLoadedOwnSkill": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contentHash": {
+            "type": "string",
+            "minLength": 1
+          },
+          "receiptHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": ["unit", "name", "content", "contentHash", "receiptHash"],
+        "additionalProperties": false
+      },
       "PermissionV2Source": {
         "type": "object",
         "properties": {
@@ -29113,7 +29378,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["maestro.plan_revision.recorded.1"]
+                "enum": ["maestro.plan_revision.recorded.2"]
               },
               "id": {
                 "type": "string",
@@ -29142,7 +29407,7 @@
                   },
                   "revision": {
                     "type": "string",
-                    "enum": ["v1"]
+                    "enum": ["v2"]
                   },
                   "goal": {
                     "type": "object",
@@ -29271,6 +29536,9 @@
                   "createdAt": {
                     "type": "integer",
                     "minimum": 0
+                  },
+                  "grounding": {
+                    "$ref": "#/components/schemas/MaestroGrounding"
                   }
                 },
                 "required": [
@@ -29289,7 +29557,8 @@
                   "risks",
                   "status",
                   "revisionHash",
-                  "createdAt"
+                  "createdAt",
+                  "grounding"
                 ],
                 "additionalProperties": false
               }
@@ -29317,7 +29586,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["maestro.context.recorded.1"]
+                "enum": ["maestro.context.recorded.2"]
               },
               "id": {
                 "type": "string",
@@ -29349,7 +29618,7 @@
                   },
                   "mode": {
                     "type": "string",
-                    "enum": ["GROUNDED", "UNGROUNDED"]
+                    "enum": ["GROUNDED"]
                   },
                   "branch": {
                     "type": "string"
@@ -29376,6 +29645,24 @@
                   "createdAt": {
                     "type": "integer",
                     "minimum": 0
+                  },
+                  "planRevisionHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sourceIdentityHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "toolPlan": {
+                    "$ref": "#/components/schemas/MaestroContextToolPlan"
+                  },
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                    },
+                    "minItems": 1
                   }
                 },
                 "required": [
@@ -29391,7 +29678,11 @@
                   "currentEvidenceIdentityHash",
                   "contextHash",
                   "status",
-                  "createdAt"
+                  "createdAt",
+                  "planRevisionHash",
+                  "sourceIdentityHash",
+                  "toolPlan",
+                  "skills"
                 ],
                 "additionalProperties": false
               }
@@ -30163,6 +30454,31 @@
           }
         },
         "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "ConfigMaestro": {
+        "type": "object",
+        "properties": {
+          "atlas": {
+            "type": "object",
+            "properties": {
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "directory": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceDirectory": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["projectID", "directory"],
+            "additionalProperties": false
+          }
+        },
         "additionalProperties": false
       },
       "ConfigV2ReferenceGit": {
@@ -35248,7 +35564,7 @@
               },
               "revision": {
                 "type": "string",
-                "enum": ["v1"]
+                "enum": ["v2"]
               },
               "goal": {
                 "type": "object",
@@ -35377,6 +35693,9 @@
               "createdAt": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "grounding": {
+                "$ref": "#/components/schemas/MaestroGrounding"
               }
             },
             "required": [
@@ -35395,7 +35714,8 @@
               "risks",
               "status",
               "revisionHash",
-              "createdAt"
+              "createdAt",
+              "grounding"
             ],
             "additionalProperties": false
           }
@@ -35456,7 +35776,7 @@
               },
               "mode": {
                 "type": "string",
-                "enum": ["GROUNDED", "UNGROUNDED"]
+                "enum": ["GROUNDED"]
               },
               "branch": {
                 "type": "string"
@@ -35483,6 +35803,24 @@
               "createdAt": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "planRevisionHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceIdentityHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "toolPlan": {
+                "$ref": "#/components/schemas/MaestroContextToolPlan"
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                },
+                "minItems": 1
               }
             },
             "required": [
@@ -35498,7 +35836,11 @@
               "currentEvidenceIdentityHash",
               "contextHash",
               "status",
-              "createdAt"
+              "createdAt",
+              "planRevisionHash",
+              "sourceIdentityHash",
+              "toolPlan",
+              "skills"
             ],
             "additionalProperties": false
           }
@@ -40705,7 +41047,7 @@
               },
               "revision": {
                 "type": "string",
-                "enum": ["v1"]
+                "enum": ["v2"]
               },
               "goal": {
                 "type": "object",
@@ -40834,6 +41176,9 @@
               "createdAt": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "grounding": {
+                "$ref": "#/components/schemas/MaestroGrounding"
               }
             },
             "required": [
@@ -40852,7 +41197,8 @@
               "risks",
               "status",
               "revisionHash",
-              "createdAt"
+              "createdAt",
+              "grounding"
             ],
             "additionalProperties": false
           }
@@ -40891,7 +41237,7 @@
               },
               "mode": {
                 "type": "string",
-                "enum": ["GROUNDED", "UNGROUNDED"]
+                "enum": ["GROUNDED"]
               },
               "branch": {
                 "type": "string"
@@ -40918,6 +41264,24 @@
               "createdAt": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "planRevisionHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceIdentityHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "toolPlan": {
+                "$ref": "#/components/schemas/MaestroContextToolPlan"
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                },
+                "minItems": 1
               }
             },
             "required": [
@@ -40933,7 +41297,11 @@
               "currentEvidenceIdentityHash",
               "contextHash",
               "status",
-              "createdAt"
+              "createdAt",
+              "planRevisionHash",
+              "sourceIdentityHash",
+              "toolPlan",
+              "skills"
             ],
             "additionalProperties": false
           }
