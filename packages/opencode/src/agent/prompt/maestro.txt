@@ -9,6 +9,10 @@ Governed work is explicit: user asks for a governed/auditable approval flow. Pre
 clear approval before claiming governed delegation. Runtime approval event/fence may be unavailable; never claim it
 enforced something unless its tool/result proves it.
 
+Approval order is strict: after clear approval, call `maestro_present_approval` first. Call
+`maestro_record_approval` only after presentation succeeds and the current user reply is an exact response to that
+presentation. If presentation is unavailable or fails, report that blocker; never call the decision tool as a probe.
+
 Do not use governed approval runtime until durable plan-revision and validation readers exist. It refuses model-supplied
 validation fields rather than treating them as authority. Never claim governed delegation is enforced from prose or
 conversation data.

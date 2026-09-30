@@ -12,6 +12,11 @@ import { ReadTool } from "./read"
 import { TaskTool } from "./task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
 import { MaestroRecordAdmissionTool } from "./maestro-admission"
+import { MaestroRecordPlanRevisionTool } from "./maestro-plan"
+import { MaestroRecordContextTool } from "./maestro-context"
+import { MaestroRequestReviewTool } from "./maestro-review"
+import { MaestroRecordReviewTool, MaestroRecordValidationTool } from "./maestro-validation"
+import { MaestroGrantAuthorizationTool } from "./maestro-authorization"
 import { Database } from "@opencode-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
@@ -46,6 +51,7 @@ import { LSP } from "@/lsp/lsp"
 import { Instruction } from "../session/instruction"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { Git } from "@/git"
 import { Agent } from "../agent/agent"
 import { Skill } from "../skill"
 import { Permission } from "@/permission"
@@ -105,6 +111,12 @@ const layer = Layer.effect(
     const maestroPresentApproval = yield* MaestroPresentApprovalTool
     const maestroRecordApproval = yield* MaestroRecordApprovalTool
     const maestroRecordAdmission = yield* MaestroRecordAdmissionTool
+    const maestroRecordPlanRevision = yield* MaestroRecordPlanRevisionTool
+    const maestroRecordContext = yield* MaestroRecordContextTool
+    const maestroRequestReview = yield* MaestroRequestReviewTool
+    const maestroRecordValidation = yield* MaestroRecordValidationTool
+    const maestroRecordReview = yield* MaestroRecordReviewTool
+    const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
     const read = yield* ReadTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
@@ -223,6 +235,12 @@ const layer = Layer.effect(
           maestroPresentApproval: Tool.init(maestroPresentApproval),
           maestroRecordApproval: Tool.init(maestroRecordApproval),
           maestroRecordAdmission: Tool.init(maestroRecordAdmission),
+          maestroRecordPlanRevision: Tool.init(maestroRecordPlanRevision),
+          maestroRecordContext: Tool.init(maestroRecordContext),
+          maestroRequestReview: Tool.init(maestroRequestReview),
+          maestroRecordValidation: Tool.init(maestroRecordValidation),
+          maestroRecordReview: Tool.init(maestroRecordReview),
+          maestroGrantAuthorization: Tool.init(maestroGrantAuthorization),
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
           search: Tool.init(websearch),
@@ -249,6 +267,12 @@ const layer = Layer.effect(
             tool.maestroPresentApproval,
             tool.maestroRecordApproval,
             tool.maestroRecordAdmission,
+            tool.maestroRecordPlanRevision,
+            tool.maestroRecordContext,
+            tool.maestroRequestReview,
+            tool.maestroRecordValidation,
+            tool.maestroRecordReview,
+            tool.maestroGrantAuthorization,
             tool.fetch,
             tool.todo,
             tool.search,
@@ -316,10 +340,22 @@ const layer = Layer.effect(
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
       const filtered = (yield* all()).filter((tool) => {
         if (
-          (tool.id === MaestroPresentApprovalTool.id ||
+          ((tool.id === MaestroPresentApprovalTool.id ||
             tool.id === MaestroRecordApprovalTool.id ||
-            tool.id === MaestroRecordAdmissionTool.id) &&
-          input.agent.id !== "maestro"
+            tool.id === MaestroRecordAdmissionTool.id ||
+            tool.id === MaestroRecordPlanRevisionTool.id ||
+            tool.id === MaestroRecordContextTool.id ||
+            tool.id === MaestroRequestReviewTool.id ||
+            tool.id === MaestroRecordValidationTool.id) &&
+            input.agent.id !== "maestro") ||
+          (tool.id === MaestroRecordReviewTool.id && input.agent.id !== "lucy") ||
+          (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro")
+        ) {
+          return false
+        }
+        if (
+          Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
+          Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
         ) {
           return false
         }
@@ -488,6 +524,7 @@ export const node = LayerNode.make({
     Instruction.node,
     FSUtil.node,
     EventV2Bridge.node,
+    Git.node,
     httpClient,
     CrossSpawnSpawner.node,
     Format.node,

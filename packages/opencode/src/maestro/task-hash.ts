@@ -4,7 +4,6 @@ export type TaskIntent = {
   subagentType: string
   prompt: string
   model?: string
-  taskID?: string
 }
 
 export type TaskHashBinding = TaskIntent & {
@@ -23,7 +22,6 @@ export function taskHash(input: TaskHashBinding) {
         subagent_type: input.subagentType,
         prompt: input.prompt,
         model: input.model ?? null,
-        task_id: input.taskID ?? null,
         planRevisionID: input.planRevisionID,
         revisionHash: input.revisionHash,
         validationRecordID: input.validationRecordID,

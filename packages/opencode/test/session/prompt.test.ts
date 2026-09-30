@@ -4,70 +4,35 @@ import { Database } from "@opencode-ai/core/database/database"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { MessageTable } from "@opencode-ai/core/session/sql"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
-import { Cause, Deferred, Duration, Effect, Exit, Fiber, Layer } from "effect"
+import { Cause, Deferred, Duration, Effect, Exit, Fiber } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
 import { NamedError } from "@opencode-ai/core/util/error"
-import { Agent as AgentSvc } from "../../src/agent/agent"
-import { BackgroundJob } from "@/background/job"
-import { Command } from "../../src/command"
 import { Config } from "@/config/config"
-import { LSP } from "@/lsp/lsp"
-import { MCP } from "../../src/mcp"
 import { Permission } from "../../src/permission"
-import { Plugin } from "../../src/plugin"
-import { Provider as ProviderSvc } from "@/provider/provider"
-import { Env } from "../../src/env"
-import { Git } from "../../src/git"
-import { Image } from "../../src/image/image"
 
-import { Question } from "../../src/question"
-import { Todo } from "../../src/session/todo"
 import { Session } from "@/session/session"
 import { SessionMessageTable } from "@opencode-ai/core/session/sql"
-import { LLM } from "../../src/session/llm"
 import { MessageV2 } from "../../src/session/message-v2"
 import { FSUtil } from "@opencode-ai/core/fs-util"
-import { SessionCompaction } from "../../src/session/compaction"
-import { SessionSummary } from "../../src/session/summary"
-import { Instruction } from "../../src/session/instruction"
-import { SessionProcessor } from "../../src/session/processor"
 import { SessionPrompt } from "../../src/session/prompt"
-import { SessionRevert } from "../../src/session/revert"
 import { SessionRunState } from "../../src/session/run-state"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { SessionStatus } from "../../src/session/status"
 import { SessionV2 } from "@opencode-ai/core/session"
 import { SessionExecution } from "@opencode-ai/core/session/execution"
-import { Skill } from "../../src/skill"
-import { SystemPrompt } from "../../src/session/system"
 import { Shell } from "@opencode-ai/core/shell"
-import { Snapshot } from "../../src/snapshot"
 import { ToolRegistry } from "@/tool/registry"
-import { Truncate } from "@/tool/truncate"
-import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
-import { Ripgrep } from "@opencode-ai/core/ripgrep"
-import { Format } from "../../src/format"
 import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { reply, TestLLMServer } from "../lib/llm-server"
-import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/location-services"
-
-const summary = Layer.succeed(
-  SessionSummary.Service,
-  SessionSummary.Service.of({
-    summarize: () => Effect.void,
-    diff: () => Effect.succeed([]),
-    computeDiff: () => Effect.succeed([]),
-  }),
-)
+import { makeHttp, makeHttpNoLLMServer, processorCreateStarted } from "./prompt.fixture"
 
 const ref = {
   providerID: ProviderV2.ID.make("test"),
@@ -109,136 +74,6 @@ function errorTool(parts: SessionV1.Part[]) {
   const part = toolPart(parts)
   expect(part?.state.status).toBe("error")
   return part?.state.status === "error" ? (part as ErrorToolPart) : undefined
-}
-
-function makeMcp(instructions: MCP.ServerInstructions[] = []) {
-  return Layer.succeed(
-    MCP.Service,
-    MCP.Service.of({
-      status: () => Effect.succeed({}),
-      clients: () => Effect.succeed({}),
-      instructions: () => Effect.succeed(instructions),
-      tools: () => Effect.succeed({}),
-      prompts: () => Effect.succeed({}),
-      resources: () => Effect.succeed({}),
-      resourceTemplates: () => Effect.succeed({}),
-      add: () => Effect.succeed({ status: { status: "disabled" as const } }),
-      connect: () => Effect.void,
-      disconnect: () => Effect.void,
-      getPrompt: () => Effect.succeed(undefined),
-      readResource: () => Effect.succeed(undefined),
-      startAuth: () => Effect.die("unexpected MCP auth in prompt-effect tests"),
-      authenticate: () => Effect.die("unexpected MCP auth in prompt-effect tests"),
-      finishAuth: () => Effect.die("unexpected MCP auth in prompt-effect tests"),
-      removeAuth: () => Effect.void,
-      supportsOAuth: () => Effect.succeed(false),
-      hasStoredTokens: () => Effect.succeed(false),
-      getAuthStatus: () => Effect.succeed("not_authenticated" as const),
-    }),
-  )
-}
-
-const lsp = Layer.succeed(
-  LSP.Service,
-  LSP.Service.of({
-    init: () => Effect.void,
-    status: () => Effect.succeed([]),
-    hasClients: () => Effect.succeed(false),
-    touchFile: () => Effect.void,
-    diagnostics: () => Effect.succeed({}),
-    hover: () => Effect.succeed(undefined),
-    definition: () => Effect.succeed([]),
-    references: () => Effect.succeed([]),
-    implementation: () => Effect.succeed([]),
-    documentSymbol: () => Effect.succeed([]),
-    workspaceSymbol: () => Effect.succeed([]),
-    prepareCallHierarchy: () => Effect.succeed([]),
-    incomingCalls: () => Effect.succeed([]),
-    outgoingCalls: () => Effect.succeed([]),
-  }),
-)
-
-const processorCreateStarted: Array<() => void> = []
-const blockingProcessor = Layer.succeed(
-  SessionProcessor.Service,
-  SessionProcessor.Service.of({
-    create: () => Effect.sync(() => processorCreateStarted.shift()?.()).pipe(Effect.andThen(Effect.never)),
-  }),
-)
-
-const runtimeFlags = RuntimeFlags.layer({ experimentalEventSystem: true })
-
-const testLLMServerNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
-
-const promptRoot = LayerNode.group([
-  SessionPrompt.node,
-  Session.node,
-  SessionProjector.node,
-  MessageV2.node,
-  Snapshot.node,
-  LLM.node,
-  Env.node,
-  AgentSvc.node,
-  Command.node,
-  Permission.node,
-  Plugin.node,
-  Config.node,
-  ProviderSvc.node,
-  LSP.node,
-  MCP.node,
-  FSUtil.node,
-  BackgroundJob.node,
-  SessionStatus.node,
-  SessionRunState.node,
-  Database.node,
-  EventV2Bridge.node,
-  Question.node,
-  Todo.node,
-  ToolRegistry.node,
-  Skill.node,
-  Git.node,
-  Ripgrep.node,
-  Format.node,
-  Truncate.node,
-  SessionProcessor.node,
-  Image.node,
-  SessionCompaction.node,
-  SessionRevert.node,
-  Instruction.node,
-  SystemPrompt.node,
-  CrossSpawnSpawner.node,
-  RuntimeFlags.node,
-])
-
-function makePrompt(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
-  const replacements = [
-    [SessionSummary.node, summary],
-    [LSP.node, lsp],
-    [MCP.node, makeMcp(input?.mcpInstructions)],
-    [RuntimeFlags.node, runtimeFlags],
-  ] as const
-  if (input?.processor === "blocking") {
-    return LayerNode.compile(promptRoot, [...replacements, [SessionProcessor.node, blockingProcessor]])
-  }
-  return LayerNode.compile(promptRoot, replacements)
-}
-
-function makeHttp(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
-  const root = LayerNode.group([promptRoot, testLLMServerNode])
-  const replacements = [
-    [SessionSummary.node, summary],
-    [LSP.node, lsp],
-    [MCP.node, makeMcp(input?.mcpInstructions)],
-    [RuntimeFlags.node, runtimeFlags],
-  ] as const
-  if (input?.processor === "blocking") {
-    return LayerNode.compile(root, [...replacements, [SessionProcessor.node, blockingProcessor]])
-  }
-  return LayerNode.compile(root, replacements)
-}
-
-function makeHttpNoLLMServer(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
-  return makePrompt(input)
 }
 
 const it = testEffect(makeHttp())

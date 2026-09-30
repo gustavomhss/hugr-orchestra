@@ -40,7 +40,10 @@ export const MaestroRecordAdmissionTool = Tool.define(
           return {
             title: `Admission ${record.outcome}`,
             metadata: { messageID: record.messageID, outcome: record.outcome },
-            output: record.outcome === "CLARIFY" ? `CLARIFY: ${record.reason}` : record.outcome,
+            output:
+              record.outcome === "CLARIFY"
+                ? `CLARIFY: ${record.reason}`
+                : `${record.outcome}: admission message ${record.messageID}`,
           }
         }).pipe(
           Effect.provideService(Database.Service, database),

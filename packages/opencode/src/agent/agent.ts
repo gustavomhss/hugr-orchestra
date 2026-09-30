@@ -16,7 +16,7 @@ import PROMPT_MAESTRO from "./prompt/maestro.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { Permission } from "@/permission"
-import { mergeDeep, pipe, sortBy, values } from "remeda"
+import { mergeDeep, values } from "remeda"
 import { Global } from "@opencode-ai/core/global"
 import path from "path"
 import { Plugin } from "@/plugin"
@@ -32,6 +32,7 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
+import { roster, nativeProfiles } from "@/maestro/roster"
 
 export const Info = Schema.Struct({
   id: Schema.optional(Schema.String),
@@ -287,9 +288,33 @@ const layer = Layer.effect(
             ),
             prompt: PROMPT_SUMMARY,
           },
+          ...Object.fromEntries(
+            roster
+              .filter((member) => member.nativeProfile && member.prompt)
+              .map((member) => [
+                member.memberId,
+                {
+                  id: member.memberId,
+                  name: member.displayName,
+                  description: `${member.displayName} native team specialist.`,
+                  prompt: member.prompt,
+                  options: {},
+                  permission: Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
+                  mode: "subagent" as const,
+                  native: true,
+                },
+              ]),
+          ),
         }
 
         for (const [key, value] of Object.entries(cfg.agent ?? {})) {
+          if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
+            const item = agents[key]
+            if (value.model) item.model = Provider.parseModel(value.model)
+            item.variant = value.variant ?? item.variant
+            item.temperature = value.temperature ?? item.temperature
+            continue
+          }
           if (value.disable) {
             delete agents[key]
             continue
@@ -322,6 +347,7 @@ const layer = Layer.effect(
         // Ensure Truncate.GLOB is allowed unless explicitly configured
         for (const name in agents) {
           const agent = agents[name]
+          if (roster.some((member) => member.memberId === name && member.nativeProfile)) continue
           const explicit = agent.permission.some((r) => {
             if (r.permission !== "external_directory") return false
             if (r.action !== "deny") return false
@@ -341,14 +367,12 @@ const layer = Layer.effect(
 
         const list = Effect.fnUntraced(function* () {
           const cfg = yield* config.get()
-          return pipe(
-            agents,
-            values(),
-            sortBy(
-              [(x) => (cfg.default_agent ? x.id === cfg.default_agent : x.id === "build"), "desc"],
-              [(x) => x.name, "asc"],
-            ),
-          )
+          const defaultID = cfg.default_agent ?? "build"
+          return values(agents).toSorted((a, b) => {
+            if (a.id === defaultID) return -1
+            if (b.id === defaultID) return 1
+            return a.name.localeCompare(b.name)
+          })
         })
 
         const defaultInfo = Effect.fnUntraced(function* () {

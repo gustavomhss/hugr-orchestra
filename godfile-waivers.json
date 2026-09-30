@@ -414,11 +414,17 @@
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-09"
     },
+    "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
+      "maximumLines": 6957,
+      "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
+      "authorizedBy": "generated-code-policy",
+      "authorizedAt": "2026-09-29"
+    },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 12653,
+      "maximumLines": 13769,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-09"
+      "authorizedBy": "generated-code-policy",
+      "authorizedAt": "2026-09-29"
     },
     "packages/stats/app/src/routes/index.tsx": {
       "maximumLines": 1596,

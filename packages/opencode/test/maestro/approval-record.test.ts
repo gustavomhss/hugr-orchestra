@@ -135,7 +135,7 @@ describe("Maestro approval record", () => {
     }),
   )
 
-  it.instance("holds when discussion intervenes before direct approval", () =>
+  it.instance("allows assistant narration but holds when another user intervenes", () =>
     Effect.gen(function* () {
       const { session, sessions, reply } = yield* seed()
       const intervening: SessionV1.Assistant = {
@@ -161,7 +161,7 @@ describe("Maestro approval record", () => {
         text: "approve",
       })
 
-      expect(yield* recordApproval(session.id)).toEqual({ status: "HOLD", reason: "reply-not-immediate" })
+      expect(yield* recordApproval(session.id)).toMatchObject({ status: "APPROVED" })
     }),
   )
 

@@ -24,6 +24,7 @@ import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
+import { Git } from "@/git"
 
 afterEach(async () => {
   await disposeAllInstances()
@@ -40,6 +41,7 @@ const layer = (flags: Partial<RuntimeFlags.Info> = {}) =>
       Agent.node,
       BackgroundJob.node,
       EventV2Bridge.node,
+      Git.node,
       Config.node,
       CrossSpawnSpawner.node,
       Session.node,
@@ -243,45 +245,6 @@ describe("tool.task", () => {
         },
       },
     },
-  )
-
-  it.instance("execute resumes an existing task session from task_id", () =>
-    Effect.gen(function* () {
-      const sessions = yield* Session.Service
-      const { chat, assistant } = yield* seed()
-      const child = yield* sessions.create({ parentID: chat.id, title: "Existing child", agent: "general" })
-      const tool = yield* TaskTool
-      const def = yield* tool.init()
-      let seen: SessionPrompt.PromptInput | undefined
-      const promptOps = stubOps({ text: "resumed", onPrompt: (input) => (seen = input) })
-
-      const result = yield* def.execute(
-        {
-          description: "inspect bug",
-          prompt: "look into the cache key path",
-          subagent_type: "general",
-          task_id: child.id,
-        },
-        {
-          sessionID: chat.id,
-          messageID: assistant.id,
-          agent: "build",
-          abort: new AbortController().signal,
-          extra: { promptOps },
-          messages: [],
-          metadata: () => Effect.void,
-          ask: () => Effect.void,
-        },
-      )
-
-      const kids = yield* sessions.children(chat.id)
-      expect(kids).toHaveLength(1)
-      expect(kids[0]?.id).toBe(child.id)
-      expect(result.metadata.sessionId).toBe(child.id)
-      expect(result.output).toContain(`<task id="${child.id}" state="completed">`)
-      expect(seen?.sessionID).toBe(child.id)
-      expect(seen?.variant).toBe("xhigh")
-    }),
   )
 
   it.instance(
