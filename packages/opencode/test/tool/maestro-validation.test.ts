@@ -7,7 +7,7 @@ import { EventTable } from "@opencode-ai/core/event/sql"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { Npm } from "@opencode-ai/core/npm"
 import { ProviderV2 } from "@opencode-ai/core/provider"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Effect, Exit, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -69,6 +69,9 @@ const context = (agent: string, agentID = agent): Tool.Context => ({
 })
 
 const validation = {
+  planRevisionID: "evt_plan_validation_tool",
+  contextRecordID: "evt_context_validation_tool",
+  contextHash: "a".repeat(64),
   projectID: "prj_validation_tool",
   workCardID: "card_validation_tool",
   workCard: "# Card\nTool boundary evidence.\n",
@@ -78,6 +81,23 @@ const validation = {
 }
 
 describe("Maestro validation tools", () => {
+  direct.instance("advertises required non-empty plan and context bindings", () =>
+    Effect.gen(function* () {
+      const tool = yield* MaestroRecordValidationTool
+      const def = yield* tool.init()
+      expect(Schema.toJsonSchemaDocument(def.parameters)).toMatchObject({
+        schema: {
+          required: expect.arrayContaining(["planRevisionID", "contextRecordID", "contextHash"]),
+          properties: {
+            planRevisionID: { type: "string", allOf: [{ minLength: 1 }] },
+            contextRecordID: { type: "string", allOf: [{ minLength: 1 }] },
+            contextHash: { type: "string", allOf: [{ minLength: 1 }] },
+          },
+        },
+      })
+    }),
+  )
+
   registry.instance("exposes validation only to Maestro and review only to Lucy", () =>
     Effect.gen(function* () {
       const agents = yield* Agent.Service
@@ -149,6 +169,8 @@ describe("Maestro validation tools", () => {
       const rejected = yield* Effect.exit(def.execute(validation, context("maestro", "build")))
 
       expect(Exit.isFailure(rejected)).toBe(true)
+      if (Exit.isFailure(rejected))
+        expect(Cause.pretty(rejected.cause)).toContain("Validation recording requires Maestro")
     }),
   )
 })

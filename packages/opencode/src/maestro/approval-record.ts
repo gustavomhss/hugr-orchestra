@@ -37,6 +37,14 @@ export class ApprovalConflictError extends Schema.TaggedErrorClass<ApprovalConfl
   callID: Schema.String,
 }) {}
 
+export class ApprovalRejectedError extends Schema.TaggedErrorClass<ApprovalRejectedError>()("MaestroApprovalRejected", {
+  reason: Schema.String,
+}) {
+  override get message() {
+    return this.reason
+  }
+}
+
 function hash(parts: readonly string[]) {
   return createHash("sha256").update(parts.join("\u0000")).digest("hex")
 }
@@ -123,6 +131,31 @@ function visiblePresentation(input: { presentation: PresentedData; message: Sess
 }
 
 export const presentApproval = Effect.fn("MaestroApproval.present")(function* (input: PresentApprovalInput) {
+  // Reject malformed producers here; invalid historical presentations make the whole Session ineligible.
+  const fields = {
+    sessionID: input.sessionID,
+    assistantMessageID: input.assistantMessageID,
+    callID: input.callID,
+    projectID: input.projectID,
+    memberID: input.memberID,
+    planRevisionID: input.planRevisionID,
+    validationRecordID: input.validationRecordID,
+    revisionHash: input.revisionHash,
+    validationHash: input.validationHash,
+    contextHash: input.contextHash,
+    policyHash: input.policyHash,
+    taskHash: input.taskHash,
+    subagentType: input.intent?.subagentType,
+    prompt: input.intent?.prompt,
+    ...(input.intent?.model !== undefined ? { model: input.intent.model } : {}),
+    ...(input.intent?.taskID !== undefined ? { taskID: input.intent.taskID } : {}),
+    methodVersion: input.methodVersion,
+  }
+  const malformed = Object.entries(fields).find(([, value]) => typeof value !== "string" || value.trim().length === 0)
+  if (malformed)
+    return yield* new ApprovalRejectedError({
+      reason: `Malformed approval presentation: ${malformed[0]} must be nonblank`,
+    })
   const presentationID = `apr_${hash([
     input.sessionID,
     input.planRevisionID,
@@ -151,8 +184,8 @@ export const presentApproval = Effect.fn("MaestroApproval.present")(function* (i
     validationLedger: input.validationLedger,
     contextState: input.contextState,
   }
-  const { db } = yield* Database.Service
-  const existing = yield* db
+  const database = yield* Database.Service
+  const existing = yield* database.db
     .select({ type: EventTable.type, data: EventTable.data })
     .from(EventTable)
     .where(eq(EventTable.id, presentationEventID(input)))

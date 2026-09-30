@@ -401,7 +401,7 @@ describe("Maestro governed lifecycle", () => {
         expect(Exit.isFailure(exit)).toBe(true)
         if (Exit.isFailure(exit)) {
           expect(Cause.pretty(exit.cause)).toContain(
-            "Approval presentation unavailable: durable plan revision and validation readers are not implemented",
+            "Approval presentation requires durable plan revision and validation event IDs",
           )
         }
         const spoofed = yield* Effect.exit(

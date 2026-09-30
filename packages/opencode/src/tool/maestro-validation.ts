@@ -7,11 +7,11 @@ import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import { eq } from "drizzle-orm"
-import { recordReview, recordValidation } from "@/maestro/validation-record"
+import { recordReview, recordValidation, validationRecordHash } from "@/maestro/validation-record"
 import { readPlanRevision } from "@/maestro/plan-revision"
 import { contextIsCurrent, readContext } from "@/maestro/context-record"
 import { Database } from "@opencode-ai/core/database/database"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 
 const Check = Schema.Struct({
   id: Schema.String,
@@ -20,9 +20,9 @@ const Check = Schema.Struct({
 })
 
 const ValidationParameters = Schema.Struct({
-  planRevisionID: Schema.optional(Schema.String),
-  contextRecordID: Schema.optional(Schema.String),
-  contextHash: Schema.optional(Schema.String),
+  planRevisionID: Schema.NonEmptyString,
+  contextRecordID: Schema.NonEmptyString,
+  contextHash: Schema.NonEmptyString,
   projectID: Schema.String,
   workCardID: Schema.String,
   workCard: Schema.String,
@@ -85,11 +85,17 @@ export const MaestroRecordValidationTool = Tool.define(
             return yield* Effect.fail(new Error("Validation recording requires Maestro"))
           }
           if (!params.planRevisionID || !params.contextRecordID || !params.contextHash)
-            return yield* Effect.fail(new Error("Validation requires PlanRevision and current ContextRecord"))
+            return yield* Effect.fail(
+              new Error("Validation requires non-empty planRevisionID, contextRecordID, and contextHash"),
+            )
           const plan = yield* readPlanRevision(params.planRevisionID)
           const context = yield* readContext(params.contextRecordID)
-          if (!plan || !context || context.planRevisionID !== plan.id || context.contextHash !== params.contextHash)
+          if (!plan) return yield* Effect.fail(new Error("Validation planRevisionID not found"))
+          if (!context) return yield* Effect.fail(new Error("Validation contextRecordID not found"))
+          if (context.planRevisionID !== plan.id)
             return yield* Effect.fail(new Error("Validation context does not match PlanRevision"))
+          if (context.contextHash !== params.contextHash)
+            return yield* Effect.fail(new Error("Validation contextHash does not match ContextRecord"))
           if (!(yield* contextIsCurrent(context))) return yield* Effect.fail(new Error("Validation context is stale"))
           const sessionRow = yield* database.db
             .select()
@@ -119,10 +125,17 @@ export const MaestroRecordValidationTool = Tool.define(
             validatorVersion: params.validatorVersion,
             checks: params.checks,
           })
+          const bindings = {
+            validationRecordID: record.id,
+            validationHash: validationRecordHash(record),
+            policyHash: record.reviewPolicyHash,
+            workCardHash: record.workCardHash,
+            ...("reviewBaseSHA" in record ? { reviewBaseSHA: record.reviewBaseSHA } : {}),
+          }
           return {
             title: `Validation ${record.outcome}`,
-            metadata: { validationRecordID: record.id, outcome: record.outcome },
-            output: `${record.outcome}: ${record.id}`,
+            metadata: { ...bindings, outcome: record.outcome, truncated: false },
+            output: `${record.outcome}: ${record.id}\n\nBindings: ${JSON.stringify(bindings)}`,
           }
         }).pipe(
           Effect.provideService(Database.Service, database),
