@@ -30,7 +30,16 @@ afterEach(async () => disposeAllInstances())
 
 const it = testEffect(
   LayerNode.compile(
-    LayerNode.group([filesystem, Config.node, Skill.node, Database.node, EventV2Bridge.node, Git.node, Session.node, SessionProjector.node]),
+    LayerNode.group([
+      filesystem,
+      Config.node,
+      Skill.node,
+      Database.node,
+      EventV2Bridge.node,
+      Git.node,
+      Session.node,
+      SessionProjector.node,
+    ]),
   ),
 )
 

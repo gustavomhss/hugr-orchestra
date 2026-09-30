@@ -31,7 +31,11 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-const it = testEffect(LayerNode.compile(LayerNode.group([filesystem, Config.node, Session.node, Database.node, EventV2Bridge.node, Git.node])))
+const it = testEffect(
+  LayerNode.compile(
+    LayerNode.group([filesystem, Config.node, Session.node, Database.node, EventV2Bridge.node, Git.node]),
+  ),
+)
 
 const base = {
   sessionID: "ses_validation",
