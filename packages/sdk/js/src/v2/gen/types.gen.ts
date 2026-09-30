@@ -1331,7 +1331,7 @@ export type GlobalEvent = {
           sessionID: string
           admissionMessageID: string
           methodVersion: string
-          revision: "v1"
+          revision: "v2"
           goal: {
             value: string
             source: "stakeholder" | "maestro" | "orientation"
@@ -1364,6 +1364,7 @@ export type GlobalEvent = {
           status: "PROPOSED"
           revisionHash: string
           createdAt: number
+          grounding: MaestroGrounding
         }
       }
     | {
@@ -1375,7 +1376,7 @@ export type GlobalEvent = {
           planRevisionID: string
           projectID: string
           directory: string
-          mode: "GROUNDED" | "UNGROUNDED"
+          mode: "GROUNDED"
           branch: string
           headSHA: string
           changedPaths: Array<string>
@@ -1383,6 +1384,10 @@ export type GlobalEvent = {
           contextHash: string
           status: "CURRENT"
           createdAt: number
+          planRevisionHash: string
+          sourceIdentityHash: string
+          toolPlan: MaestroContextToolPlan
+          skills: Array<MaestroLoadedOwnSkill>
         }
       }
     | {
@@ -2258,6 +2263,7 @@ export type Config = {
     paths?: Array<string>
     urls?: Array<string>
   }
+  maestro?: ConfigMaestro
   references?: {
     [key: string]: string | ConfigV2ReferenceGit | ConfigV2ReferenceLocal
   }
@@ -3490,6 +3496,61 @@ export type RevertState = {
   files?: Array<FileDiff>
 }
 
+export type MaestroGrounding = {
+  catalogVersion: string
+  snapshot: string
+  sourceRevision: string
+  sourceIdentityHash: string
+  units: Array<string>
+}
+
+export type MaestroContextToolPlan = {
+  version: "context-tool-plan-v1"
+  actor: {
+    projectId: string
+    sessionId: string
+    memberId: string
+  }
+  actorBytes: string
+  planRevision: {
+    id: string
+    hash: string
+  }
+  catalogVersion: string
+  headSnapshot: string
+  sourceRevision: string
+  territories: Array<string>
+  actions: Array<{
+    unit: string
+    skillName: string
+    operation: "load-skill"
+    path: string
+    contentHash: string
+    receiptHash: string
+  }>
+  pointers: Array<{
+    unit: string
+    drillUnits: Array<string>
+    manifest: Array<{
+      kind: "pack" | "memory" | "knowledge" | "drill"
+      name: string
+      digest: string
+      pull: string
+      hits: number
+    }>
+    pullReachable: Array<string>
+  }>
+  hash: string
+}
+
+export type MaestroLoadedOwnSkill = {
+  unit: string
+  name: string
+  content: string
+  contentHash: string
+  receiptHash: string
+}
+
 export type PermissionV2Source = {
   type: "tool"
   messageID: string
@@ -4352,7 +4413,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
   type: "sync"
   id: string
   syncEvent: {
-    type: "maestro.plan_revision.recorded.1"
+    type: "maestro.plan_revision.recorded.2"
     id: string
     seq: number
     aggregateID: string
@@ -4361,7 +4422,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
       sessionID: string
       admissionMessageID: string
       methodVersion: string
-      revision: "v1"
+      revision: "v2"
       goal: {
         value: string
         source: "stakeholder" | "maestro" | "orientation"
@@ -4394,6 +4455,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
       status: "PROPOSED"
       revisionHash: string
       createdAt: number
+      grounding: MaestroGrounding
     }
   }
 }
@@ -4402,7 +4464,7 @@ export type SyncEventMaestroContextRecorded = {
   type: "sync"
   id: string
   syncEvent: {
-    type: "maestro.context.recorded.1"
+    type: "maestro.context.recorded.2"
     id: string
     seq: number
     aggregateID: string
@@ -4412,7 +4474,7 @@ export type SyncEventMaestroContextRecorded = {
       planRevisionID: string
       projectID: string
       directory: string
-      mode: "GROUNDED" | "UNGROUNDED"
+      mode: "GROUNDED"
       branch: string
       headSHA: string
       changedPaths: Array<string>
@@ -4420,6 +4482,10 @@ export type SyncEventMaestroContextRecorded = {
       contextHash: string
       status: "CURRENT"
       createdAt: number
+      planRevisionHash: string
+      sourceIdentityHash: string
+      toolPlan: MaestroContextToolPlan
+      skills: Array<MaestroLoadedOwnSkill>
     }
   }
 }
@@ -4614,6 +4680,14 @@ export type SyncEventMaestroDispatchReserved = {
         action: "allow" | "deny" | "ask"
       }>
     }
+  }
+}
+
+export type ConfigMaestro = {
+  atlas?: {
+    projectID: string
+    directory: string
+    sourceDirectory?: string
   }
 }
 
@@ -6280,7 +6354,7 @@ export type MaestroPlanRevisionRecorded = {
     sessionID: string
     admissionMessageID: string
     methodVersion: string
-    revision: "v1"
+    revision: "v2"
     goal: {
       value: string
       source: "stakeholder" | "maestro" | "orientation"
@@ -6313,6 +6387,7 @@ export type MaestroPlanRevisionRecorded = {
     status: "PROPOSED"
     revisionHash: string
     createdAt: number
+    grounding: MaestroGrounding
   }
 }
 
@@ -6334,7 +6409,7 @@ export type MaestroContextRecorded = {
     planRevisionID: string
     projectID: string
     directory: string
-    mode: "GROUNDED" | "UNGROUNDED"
+    mode: "GROUNDED"
     branch: string
     headSHA: string
     changedPaths: Array<string>
@@ -6342,6 +6417,10 @@ export type MaestroContextRecorded = {
     contextHash: string
     status: "CURRENT"
     createdAt: number
+    planRevisionHash: string
+    sourceIdentityHash: string
+    toolPlan: MaestroContextToolPlan
+    skills: Array<MaestroLoadedOwnSkill>
   }
 }
 
@@ -8043,7 +8122,7 @@ export type EventMaestroPlanRevisionRecorded = {
     sessionID: string
     admissionMessageID: string
     methodVersion: string
-    revision: "v1"
+    revision: "v2"
     goal: {
       value: string
       source: "stakeholder" | "maestro" | "orientation"
@@ -8076,6 +8155,7 @@ export type EventMaestroPlanRevisionRecorded = {
     status: "PROPOSED"
     revisionHash: string
     createdAt: number
+    grounding: MaestroGrounding
   }
 }
 
@@ -8088,7 +8168,7 @@ export type EventMaestroContextRecorded = {
     planRevisionID: string
     projectID: string
     directory: string
-    mode: "GROUNDED" | "UNGROUNDED"
+    mode: "GROUNDED"
     branch: string
     headSHA: string
     changedPaths: Array<string>
@@ -8096,6 +8176,10 @@ export type EventMaestroContextRecorded = {
     contextHash: string
     status: "CURRENT"
     createdAt: number
+    planRevisionHash: string
+    sourceIdentityHash: string
+    toolPlan: MaestroContextToolPlan
+    skills: Array<MaestroLoadedOwnSkill>
   }
 }
 

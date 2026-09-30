@@ -1,6 +1,6 @@
 # Atlas Adapter Research
 
-Status: blocked before implementation. Researched 2026-09-08 against vendored Atlas snapshot.
+Status: current adapter implemented in the `maestro-grounding` worktree; landing pending. Original seam research below records the 2026-09-08 blocker. Current contract and operation: `grounding-boundary.md`.
 
 ## Verified Source
 
