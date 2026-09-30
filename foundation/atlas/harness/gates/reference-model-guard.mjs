@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 40 · dead-value-exports: 143 · type-reachable: 4
+//   declared-modules: 39 · dead-value-exports: 142 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -189,7 +189,7 @@ const BUILTIN_LEDGER = {
   },
   "packages/retrieval/src/poke.ts": { values: 5, shipped: null, banner: false },
   "packages/retrieval/src/relate.ts": { values: 6, shipped: null, banner: false },
-  "packages/retrieval/src/own-snapshot.ts": { values: 6, shipped: null, banner: false },
+  "packages/retrieval/src/host-context.ts": { values: 6, shipped: null, banner: true }, // external installed host entry; no Atlas-local consumer
 
   // ── @atlas/persist — one value edge crosses into this package in the whole tree (`NOTES_REF`, read by ─
   //    adapter-io/src/git-forge.ts). Everything below states a persistence invariant nothing executes.
@@ -247,7 +247,6 @@ const BUILTIN_LEDGER = {
   "packages/index/src/coverage.ts": { values: 2, shipped: null, banner: false },
   "packages/index/src/ownership.ts": { values: 2, shipped: null, banner: false },
   "packages/index/src/own-impact.ts": { values: 1, shipped: null, banner: false },
-  "packages/index/src/territory-catalog.ts": { values: 1, shipped: null, banner: true }, // external ACE seam; Maestro is consumer
 
   // ── @atlas/knowledge — PARTLY wired: currentNodes / deriveSameAs / deriveSubsumes reach wire.ts, and ──
   //    the ratify + write legs are reached by the governed doors. The lifecycle facet is not.

@@ -1,0 +1,30 @@
+{
+  "name": "@opencode-ai/atlas-boundary",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./src/generated/boundary.d.ts",
+      "default": "./src/generated/boundary.js"
+    },
+    "./materialize": {
+      "types": "./src/generated/materialize.d.ts",
+      "default": "./src/generated/materialize.js"
+    }
+  },
+  "scripts": {
+    "generate": "bun script/build.ts",
+    "check:generated": "bun script/build.ts --check",
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test --timeout 30000"
+  },
+  "devDependencies": {
+    "@noble/hashes": "1.8.0",
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "dts-bundle-generator": "9.5.1"
+  }
+}
