@@ -157,7 +157,14 @@ it.effect("native seat permission denies survive session rules", () =>
       native: true,
       mode: "subagent",
       options: {},
-      permission: Permission.fromConfig({ "*": "deny", read: "allow", glob: "allow", grep: "allow", bash: "allow", edit: "allow" }),
+      permission: Permission.fromConfig({
+        "*": "deny",
+        read: "allow",
+        glob: "allow",
+        grep: "allow",
+        bash: "allow",
+        edit: "allow",
+      }),
     } satisfies Agent.Info
     const custom = {
       id: "custom",

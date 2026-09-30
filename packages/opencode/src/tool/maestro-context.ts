@@ -23,9 +23,14 @@ export const MaestroRecordContextTool = Tool.define(
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx) =>
         Effect.gen(function* () {
           const agent = yield* agents.get(ctx.agentID ?? ctx.agent)
-          if (agent?.id !== "maestro" || agent.native !== true) return yield* Effect.fail(new Error("Context recording requires Maestro"))
+          if (agent?.id !== "maestro" || agent.native !== true)
+            return yield* Effect.fail(new Error("Context recording requires Maestro"))
           const record = yield* recordContext(params.planRevisionID, ctx.sessionID)
-          return { title: `Context ${record.status}`, metadata: { contextRecordID: record.id, contextHash: record.contextHash }, output: `${record.status}: ${record.id}` }
+          return {
+            title: `Context ${record.status}`,
+            metadata: { contextRecordID: record.id, contextHash: record.contextHash },
+            output: `${record.status}: ${record.id}`,
+          }
         }).pipe(
           Effect.provideService(Database.Service, database),
           Effect.provideService(EventV2Bridge.Service, events),

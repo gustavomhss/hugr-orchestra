@@ -35,7 +35,15 @@ const registry = testEffect(
 
 const direct = testEffect(
   AppNodeBuilder.build(
-    LayerNode.group([Agent.node, Database.node, EventV2Bridge.node, Git.node, Session.node, SessionProjector.node, Truncate.node]),
+    LayerNode.group([
+      Agent.node,
+      Database.node,
+      EventV2Bridge.node,
+      Git.node,
+      Session.node,
+      SessionProjector.node,
+      Truncate.node,
+    ]),
     [
       [Npm.node, NpmTest.noop],
       [RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true })],

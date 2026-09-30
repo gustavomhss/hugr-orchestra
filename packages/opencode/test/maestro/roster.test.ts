@@ -116,5 +116,4 @@ describe("Maestro roster", () => {
     expect(lookupRosterMember("charlie", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
     expect(lookupRosterMember("ana", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
   })
-
 })

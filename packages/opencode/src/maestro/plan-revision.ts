@@ -38,7 +38,12 @@ function eventID(input: Pick<RecordPlanRevisionInput, "sessionID" | "admissionMe
 }
 
 function wanted(input: RecordPlanRevisionInput): RevisionData {
-  const body = { ...input, revision: "v1" as const, status: "PROPOSED" as const, contextRequirement: "PENDING" as const }
+  const body = {
+    ...input,
+    revision: "v1" as const,
+    status: "PROPOSED" as const,
+    contextRequirement: "PENDING" as const,
+  }
   return { ...body, id: eventID(input), revisionHash: hash(body), createdAt: Date.now() }
 }
 
