@@ -77,11 +77,15 @@ describe("compileVerificationPlan", () => {
 
   test("falls back when package selection is empty or path falls outside selected exact package", () => {
     expect(compileVerificationPlan({ ...input, packages: [] })).toEqual(fallback())
-    expect(compileVerificationPlan({ ...input, changedPaths: ["packages/opencode-extra/src/index.ts"] })).toEqual(fallback())
+    expect(compileVerificationPlan({ ...input, changedPaths: ["packages/opencode-extra/src/index.ts"] })).toEqual(
+      fallback(),
+    )
   })
 
   test("selects workflow checks", () => {
-    expect(compileVerificationPlan({ ...input, changedPaths: [".github/workflows/test.yml"], risk: "workflow" })).toEqual({
+    expect(
+      compileVerificationPlan({ ...input, changedPaths: [".github/workflows/test.yml"], risk: "workflow" }),
+    ).toEqual({
       baseSHA: input.baseSHA,
       headSHA: input.headSHA,
       required: ["atlas", "generated", "godfile", "linux-unit", "windows-unit"],

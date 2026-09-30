@@ -138,7 +138,11 @@ export function evaluateReply(input: EvaluateReplyInput): ApprovalResult {
   if (reply.role !== "user") return { status: "HOLD", reason: "reply-not-direct-user" }
   if (reply.synthetic) return { status: "HOLD", reason: "reply-synthetic" }
   if (reply.seq <= presentationMessage.seq) return { status: "HOLD", reason: "reply-not-after-presentation" }
-  if (ordered.some((message) => message.role === "user" && message.seq > presentationMessage.seq && message.seq < reply.seq)) {
+  if (
+    ordered.some(
+      (message) => message.role === "user" && message.seq > presentationMessage.seq && message.seq < reply.seq,
+    )
+  ) {
     return { status: "HOLD", reason: "reply-not-immediate" }
   }
 

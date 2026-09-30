@@ -4,7 +4,9 @@ import { roster } from "../../src/maestro/roster"
 
 describe("Maestro route grants", () => {
   test("routes every non-Maestro roster seat with roster-derived metadata", () => {
-    const grants = roster.filter((member) => member.memberId !== "maestro").map((member) => lookupRouteGrant(member.memberId))
+    const grants = roster
+      .filter((member) => member.memberId !== "maestro")
+      .map((member) => lookupRouteGrant(member.memberId))
 
     expect(grants).toHaveLength(8)
     expect(grants).toEqual(

@@ -28,9 +28,41 @@ async function run() {
     await git(directory, ["add", "proof.txt"])
     await git(directory, ["commit", "-m", "change"])
     const head = (await git(directory, ["rev-parse", "HEAD"])).trim()
-    const names = await git(directory, ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", base, head, "--", "."])
-    const bytes = await git(directory, ["diff", "--binary", "--full-index", "--no-ext-diff", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/", base, head, "--", "."])
-    await Bun.write(artifact, JSON.stringify({ baseSHA: base, headSHA: head, worktree: directory, changedPaths: names.split("\0").filter(Boolean), encoding: "base64", bytes: Buffer.from(bytes).toString("base64") }))
+    const names = await git(directory, [
+      "diff",
+      "--no-ext-diff",
+      "--no-renames",
+      "--name-only",
+      "-z",
+      base,
+      head,
+      "--",
+      ".",
+    ])
+    const bytes = await git(directory, [
+      "diff",
+      "--binary",
+      "--full-index",
+      "--no-ext-diff",
+      "--no-renames",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      base,
+      head,
+      "--",
+      ".",
+    ])
+    await Bun.write(
+      artifact,
+      JSON.stringify({
+        baseSHA: base,
+        headSHA: head,
+        worktree: directory,
+        changedPaths: names.split("\0").filter(Boolean),
+        encoding: "base64",
+        bytes: Buffer.from(bytes).toString("base64"),
+      }),
+    )
     await child("write", db, receiptFile, artifact)
     await child("read", db, receiptFile, artifact)
   } finally {
@@ -39,7 +71,11 @@ async function run() {
 }
 
 async function child(childMode: "write" | "read", db: string, receiptFile: string, artifact: string) {
-  const process = Bun.spawn(["bun", import.meta.path, childMode, db, receiptFile, artifact], { env: { ...Bun.env, OPENCODE_DB: db }, stdout: "inherit", stderr: "inherit" })
+  const process = Bun.spawn(["bun", import.meta.path, childMode, db, receiptFile, artifact], {
+    env: { ...Bun.env, OPENCODE_DB: db },
+    stdout: "inherit",
+    stderr: "inherit",
+  })
   if ((await process.exited) !== 0) throw new Error(`restart ${childMode} failed`)
 }
 
@@ -65,8 +101,24 @@ async function write() {
     Effect.gen(function* () {
       const { db } = yield* Database.Service
       const events = yield* EventV2Bridge.Service
-      yield* db.insert(ProjectTable).values({ id: ProjectSchema.ID.make(projectID), worktree: artifact.worktree, sandboxes: [], time_created: 1 }).run().pipe(Effect.orDie)
-      yield* db.insert(SessionTable).values({ id: SessionID.make(sessionID), project_id: ProjectSchema.ID.make(projectID), slug: sessionID, directory: artifact.worktree, title: "restart", version: "test", time_created: 1 }).run().pipe(Effect.orDie)
+      yield* db
+        .insert(ProjectTable)
+        .values({ id: ProjectSchema.ID.make(projectID), worktree: artifact.worktree, sandboxes: [], time_created: 1 })
+        .run()
+        .pipe(Effect.orDie)
+      yield* db
+        .insert(SessionTable)
+        .values({
+          id: SessionID.make(sessionID),
+          project_id: ProjectSchema.ID.make(projectID),
+          slug: sessionID,
+          directory: artifact.worktree,
+          title: "restart",
+          version: "test",
+          time_created: 1,
+        })
+        .run()
+        .pipe(Effect.orDie)
       yield* events.publish(
         MaestroEvent.Context.Recorded,
         {
@@ -125,9 +177,14 @@ async function read() {
   const { readReview, readValidation } = await import("../src/maestro/validation-record")
   const expected = await Bun.file(receipt!).json()
   const layer = LayerNode.compile(LayerNode.group([Database.node, EventV2Bridge.node]))
-  const actual = await Effect.runPromise(Effect.gen(function* () {
-    return { validation: yield* readValidation(expected.validation.id), review: yield* readReview(expected.review.id) }
-  }).pipe(Effect.provide(layer)))
+  const actual = await Effect.runPromise(
+    Effect.gen(function* () {
+      return {
+        validation: yield* readValidation(expected.validation.id),
+        review: yield* readReview(expected.review.id),
+      }
+    }).pipe(Effect.provide(layer)),
+  )
   if (
     actual.validation?.id !== expected.validation.id ||
     actual.validation?.workCardHash !== expected.validation.workCardHash ||
@@ -136,13 +193,18 @@ async function read() {
     actual.review?.validationRecordID !== expected.review.validationRecordID ||
     actual.review?.workCardHash !== expected.review.workCardHash ||
     actual.review?.verdict !== "APPROVE"
-  ) throw new Error("restart receipts mismatch")
+  )
+    throw new Error("restart receipts mismatch")
   console.log("MAESTRO_WAVE1_RESTART_READ_OK")
 }
 
 async function git(cwd: string, args: string[]) {
   const process = Bun.spawn(["git", ...args], { cwd, stdout: "pipe", stderr: "pipe" })
-  const [code, stdout, stderr] = await Promise.all([process.exited, Bun.readableStreamToText(process.stdout), Bun.readableStreamToText(process.stderr)])
+  const [code, stdout, stderr] = await Promise.all([
+    process.exited,
+    Bun.readableStreamToText(process.stdout),
+    Bun.readableStreamToText(process.stderr),
+  ])
   if (code !== 0) throw new Error(stderr || stdout)
   return stdout
 }

@@ -15399,7 +15399,37 @@
             "$ref": "#/components/schemas/EventMaestroApprovalConsumed"
           },
           {
+            "$ref": "#/components/schemas/EventMaestroApprovalReserved"
+          },
+          {
             "$ref": "#/components/schemas/EventMaestroAdmissionDecided"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroPlan_revisionRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroContextRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroClarificationDecided"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroScopeDecided"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroHeldEntered"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroValidationRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroReviewReceived"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroAuthorizationGranted"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroDispatchReserved"
           },
           {
             "$ref": "#/components/schemas/EventMessagePartDelta"
@@ -19270,9 +19300,127 @@
                       },
                       "callID": {
                         "type": "string"
+                      },
+                      "childSessionID": {
+                        "type": "string"
                       }
                     },
-                    "required": ["sessionID", "presentationID", "approvalMessageID", "taskHash", "callID"],
+                    "required": [
+                      "sessionID",
+                      "presentationID",
+                      "approvalMessageID",
+                      "taskHash",
+                      "callID",
+                      "childSessionID"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.approval.reserved"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string"
+                      },
+                      "presentationID": {
+                        "type": "string"
+                      },
+                      "approvalMessageID": {
+                        "type": "string"
+                      },
+                      "projectID": {
+                        "type": "string"
+                      },
+                      "memberID": {
+                        "type": "string"
+                      },
+                      "planRevisionID": {
+                        "type": "string"
+                      },
+                      "validationRecordID": {
+                        "type": "string"
+                      },
+                      "revisionHash": {
+                        "type": "string"
+                      },
+                      "validationHash": {
+                        "type": "string"
+                      },
+                      "contextHash": {
+                        "type": "string"
+                      },
+                      "policyHash": {
+                        "type": "string"
+                      },
+                      "taskHash": {
+                        "type": "string"
+                      },
+                      "callID": {
+                        "type": "string"
+                      },
+                      "childSessionID": {
+                        "type": "string"
+                      },
+                      "parentSessionID": {
+                        "type": "string"
+                      },
+                      "agent": {
+                        "type": "string"
+                      },
+                      "permission": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "permission": {
+                              "type": "string"
+                            },
+                            "pattern": {
+                              "type": "string"
+                            },
+                            "action": {
+                              "type": "string",
+                              "enum": ["allow", "deny", "ask"]
+                            }
+                          },
+                          "required": ["permission", "pattern", "action"],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "sessionID",
+                      "presentationID",
+                      "approvalMessageID",
+                      "projectID",
+                      "memberID",
+                      "planRevisionID",
+                      "validationRecordID",
+                      "revisionHash",
+                      "validationHash",
+                      "contextHash",
+                      "policyHash",
+                      "taskHash",
+                      "callID",
+                      "childSessionID",
+                      "parentSessionID",
+                      "agent",
+                      "permission"
+                    ],
                     "additionalProperties": false
                   }
                 },
@@ -19389,6 +19537,919 @@
                       }
                     },
                     "required": ["sessionID", "messageID", "methodVersion", "outcome"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.plan_revision.recorded"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "sessionID": {
+                        "type": "string"
+                      },
+                      "admissionMessageID": {
+                        "type": "string"
+                      },
+                      "methodVersion": {
+                        "type": "string"
+                      },
+                      "revision": {
+                        "type": "string",
+                        "enum": ["v2"]
+                      },
+                      "goal": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": ["stakeholder", "maestro", "orientation"]
+                          }
+                        },
+                        "required": ["value", "source"],
+                        "additionalProperties": false
+                      },
+                      "acceptance": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["stakeholder", "maestro", "orientation"]
+                            }
+                          },
+                          "required": ["value", "source"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "scope": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["stakeholder", "maestro", "orientation"]
+                            }
+                          },
+                          "required": ["value", "source"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "constraints": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["stakeholder", "maestro", "orientation"]
+                            }
+                          },
+                          "required": ["value", "source"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "reviewRequirement": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": ["stakeholder", "maestro", "orientation"]
+                          }
+                        },
+                        "required": ["value", "source"],
+                        "additionalProperties": false
+                      },
+                      "contextRequirement": {
+                        "type": "string",
+                        "enum": ["PENDING"]
+                      },
+                      "assumptions": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["stakeholder", "maestro", "orientation"]
+                            }
+                          },
+                          "required": ["value", "source"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "risks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": ["stakeholder", "maestro", "orientation"]
+                            }
+                          },
+                          "required": ["value", "source"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["PROPOSED"]
+                      },
+                      "revisionHash": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "grounding": {
+                        "$ref": "#/components/schemas/MaestroGrounding"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "sessionID",
+                      "admissionMessageID",
+                      "methodVersion",
+                      "revision",
+                      "goal",
+                      "acceptance",
+                      "scope",
+                      "constraints",
+                      "reviewRequirement",
+                      "contextRequirement",
+                      "assumptions",
+                      "risks",
+                      "status",
+                      "revisionHash",
+                      "createdAt",
+                      "grounding"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.context.recorded"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "sessionID": {
+                        "type": "string"
+                      },
+                      "planRevisionID": {
+                        "type": "string"
+                      },
+                      "projectID": {
+                        "type": "string"
+                      },
+                      "directory": {
+                        "type": "string"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": ["GROUNDED"]
+                      },
+                      "branch": {
+                        "type": "string"
+                      },
+                      "headSHA": {
+                        "type": "string"
+                      },
+                      "changedPaths": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "currentEvidenceIdentityHash": {
+                        "type": "string"
+                      },
+                      "contextHash": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["CURRENT"]
+                      },
+                      "createdAt": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "planRevisionHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sourceIdentityHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "toolPlan": {
+                        "$ref": "#/components/schemas/MaestroContextToolPlan"
+                      },
+                      "skills": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                        },
+                        "minItems": 1
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "sessionID",
+                      "planRevisionID",
+                      "projectID",
+                      "directory",
+                      "mode",
+                      "branch",
+                      "headSHA",
+                      "changedPaths",
+                      "currentEvidenceIdentityHash",
+                      "contextHash",
+                      "status",
+                      "createdAt",
+                      "planRevisionHash",
+                      "sourceIdentityHash",
+                      "toolPlan",
+                      "skills"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.clarification.decided"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string"
+                      },
+                      "projectID": {
+                        "type": "string"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": ["maestro"]
+                      },
+                      "predecessorID": {
+                        "type": "string"
+                      },
+                      "methodVersion": {
+                        "type": "string"
+                      },
+                      "decision": {
+                        "type": "string"
+                      },
+                      "question": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "sessionID",
+                      "projectID",
+                      "mode",
+                      "predecessorID",
+                      "methodVersion",
+                      "decision",
+                      "question"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.scope.decided"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string"
+                      },
+                      "projectID": {
+                        "type": "string"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": ["maestro"]
+                      },
+                      "predecessorID": {
+                        "type": "string"
+                      },
+                      "methodVersion": {
+                        "type": "string"
+                      },
+                      "scopeID": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["sessionID", "projectID", "mode", "predecessorID", "methodVersion", "scopeID"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.held.entered"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string"
+                      },
+                      "projectID": {
+                        "type": "string"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": ["maestro"]
+                      },
+                      "predecessorID": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["sessionID", "projectID", "mode", "predecessorID", "reason"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.validation.recorded"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "planRevisionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "contextRecordID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "contextHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "reviewBaseSHA": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{40}$"
+                      },
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "workCardID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "workCard": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "workCardHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "routedMemberID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "rosterHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "grantHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "reviewPolicyHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "actor": {
+                        "type": "object",
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": ["rfc8785-v1"]
+                          },
+                          "bytes": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        },
+                        "required": ["version", "bytes", "sha256"],
+                        "additionalProperties": false
+                      },
+                      "validatorID": {
+                        "type": "string",
+                        "enum": ["maestro"]
+                      },
+                      "validatorVersion": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "checks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": ["PASS", "FAIL", "HOLD"]
+                            },
+                            "detail": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["id", "status", "detail"],
+                          "additionalProperties": false
+                        },
+                        "minItems": 1
+                      },
+                      "outcome": {
+                        "type": "string",
+                        "enum": ["VALID", "INVALID", "HOLD"]
+                      }
+                    },
+                    "required": [
+                      "sessionID",
+                      "planRevisionID",
+                      "contextRecordID",
+                      "contextHash",
+                      "reviewBaseSHA",
+                      "projectID",
+                      "workCardID",
+                      "workCard",
+                      "workCardHash",
+                      "routedMemberID",
+                      "rosterHash",
+                      "grantHash",
+                      "reviewPolicyHash",
+                      "actor",
+                      "validatorID",
+                      "validatorVersion",
+                      "checks",
+                      "outcome"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.review.received"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "validationRecordID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "workCardHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "routedMemberID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "rosterHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "grantHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "reviewPolicyHash": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "actor": {
+                        "type": "object",
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": ["rfc8785-v1"]
+                          },
+                          "bytes": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        },
+                        "required": ["version", "bytes", "sha256"],
+                        "additionalProperties": false
+                      },
+                      "reviewerID": {
+                        "type": "string",
+                        "enum": ["lucy"]
+                      },
+                      "reviewMethodVersion": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "artifact": {
+                        "type": "object",
+                        "properties": {
+                          "workCardHash": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          },
+                          "baseSHA": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "headSHA": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "worktree": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "changedPaths": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "bytes": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "workCardHash",
+                          "sha256",
+                          "baseSHA",
+                          "headSHA",
+                          "worktree",
+                          "changedPaths",
+                          "bytes"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "verdict": {
+                        "type": "string",
+                        "enum": ["APPROVE", "FIX_FIRST", "REJECT"]
+                      },
+                      "findings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "line": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["path", "line", "message"],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "sessionID",
+                      "projectID",
+                      "validationRecordID",
+                      "workCardHash",
+                      "routedMemberID",
+                      "rosterHash",
+                      "grantHash",
+                      "reviewPolicyHash",
+                      "actor",
+                      "reviewerID",
+                      "reviewMethodVersion",
+                      "artifact",
+                      "verdict",
+                      "findings"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.authorization.granted"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "approvalMessageID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "validationRecordID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "workCardHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "routedMemberID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "rosterHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "grantHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "reviewPolicyHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "actor": {
+                        "type": "object",
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": ["rfc8785-v1"]
+                          },
+                          "bytes": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        },
+                        "required": ["version", "bytes", "sha256"],
+                        "additionalProperties": false
+                      },
+                      "reviewerID": {
+                        "type": "string",
+                        "enum": ["lucy"]
+                      },
+                      "taskIntentHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "methodVersion": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "sessionID",
+                      "projectID",
+                      "approvalMessageID",
+                      "validationRecordID",
+                      "workCardHash",
+                      "routedMemberID",
+                      "rosterHash",
+                      "grantHash",
+                      "reviewPolicyHash",
+                      "actor",
+                      "reviewerID",
+                      "taskIntentHash",
+                      "methodVersion"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.dispatch.reserved"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "sessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "authorizationID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "childSessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "routedMemberID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "taskIntentHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "permission": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "permission": {
+                              "type": "string"
+                            },
+                            "pattern": {
+                              "type": "string"
+                            },
+                            "action": {
+                              "type": "string",
+                              "enum": ["allow", "deny", "ask"]
+                            }
+                          },
+                          "required": ["permission", "pattern", "action"],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "sessionID",
+                      "authorizationID",
+                      "childSessionID",
+                      "projectID",
+                      "routedMemberID",
+                      "taskIntentHash",
+                      "permission"
+                    ],
                     "additionalProperties": false
                   }
                 },
@@ -20911,7 +21972,37 @@
                 "$ref": "#/components/schemas/SyncEventMaestroApprovalConsumed"
               },
               {
+                "$ref": "#/components/schemas/SyncEventMaestroApprovalReserved"
+              },
+              {
                 "$ref": "#/components/schemas/SyncEventMaestroAdmissionDecided"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroPlan_revisionRecorded"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroContextRecorded"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroClarificationDecided"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroScopeDecided"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroHeldEntered"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroValidationRecorded"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroReviewReceived"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroAuthorizationGranted"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroDispatchReserved"
               }
             ]
           }
@@ -21564,6 +22655,9 @@
               }
             },
             "additionalProperties": false
+          },
+          "maestro": {
+            "$ref": "#/components/schemas/ConfigMaestro"
           },
           "references": {
             "type": "object",
@@ -24543,7 +25637,37 @@
             "$ref": "#/components/schemas/MaestroApprovalConsumed"
           },
           {
+            "$ref": "#/components/schemas/MaestroApprovalReserved"
+          },
+          {
             "$ref": "#/components/schemas/MaestroAdmissionDecided"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroPlan_revisionRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroContextRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroClarificationDecided"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroScopeDecided"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroHeldEntered"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroValidationRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroReviewReceived"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroAuthorizationGranted"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroDispatchReserved"
           },
           {
             "$ref": "#/components/schemas/MessagePartDelta"
@@ -25166,6 +26290,242 @@
           }
         },
         "required": ["messageID"],
+        "additionalProperties": false
+      },
+      "MaestroGrounding": {
+        "type": "object",
+        "properties": {
+          "catalogVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "snapshot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}(?:[a-f0-9]{24})?$"
+          },
+          "sourceIdentityHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["catalogVersion", "snapshot", "sourceRevision", "sourceIdentityHash", "units"],
+        "additionalProperties": false
+      },
+      "MaestroContextToolPlan": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "enum": ["context-tool-plan-v1"]
+          },
+          "actor": {
+            "type": "object",
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sessionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["projectId", "sessionId", "memberId"],
+            "additionalProperties": false
+          },
+          "actorBytes": {
+            "type": "string",
+            "minLength": 1
+          },
+          "planRevision": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": ["id", "hash"],
+            "additionalProperties": false
+          },
+          "catalogVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "headSnapshot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}(?:[a-f0-9]{24})?$"
+          },
+          "territories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "skillName": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "operation": {
+                  "type": "string",
+                  "enum": ["load-skill"]
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "contentHash": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "receiptHash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": ["unit", "skillName", "operation", "path", "contentHash", "receiptHash"],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "pointers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "drillUnits": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "manifest": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": ["pack", "memory", "knowledge", "drill"]
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "digest": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "pull": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "hits": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": ["kind", "name", "digest", "pull", "hits"],
+                    "additionalProperties": false
+                  }
+                },
+                "pullReachable": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "required": ["unit", "drillUnits", "manifest", "pullReachable"],
+              "additionalProperties": false
+            }
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "version",
+          "actor",
+          "actorBytes",
+          "planRevision",
+          "catalogVersion",
+          "headSnapshot",
+          "sourceRevision",
+          "territories",
+          "actions",
+          "pointers",
+          "hash"
+        ],
+        "additionalProperties": false
+      },
+      "MaestroLoadedOwnSkill": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contentHash": {
+            "type": "string",
+            "minLength": 1
+          },
+          "receiptHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": ["unit", "name", "content", "contentHash", "receiptHash"],
         "additionalProperties": false
       },
       "PermissionV2Source": {
@@ -27697,7 +29057,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["maestro.approval.consumed.1"]
+                "enum": ["maestro.approval.consumed.2"]
               },
               "id": {
                 "type": "string",
@@ -27726,9 +29086,148 @@
                   },
                   "callID": {
                     "type": "string"
+                  },
+                  "childSessionID": {
+                    "type": "string"
                   }
                 },
-                "required": ["sessionID", "presentationID", "approvalMessageID", "taskHash", "callID"],
+                "required": [
+                  "sessionID",
+                  "presentationID",
+                  "approvalMessageID",
+                  "taskHash",
+                  "callID",
+                  "childSessionID"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroApprovalReserved": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.approval.reserved.2"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "presentationID": {
+                    "type": "string"
+                  },
+                  "approvalMessageID": {
+                    "type": "string"
+                  },
+                  "projectID": {
+                    "type": "string"
+                  },
+                  "memberID": {
+                    "type": "string"
+                  },
+                  "planRevisionID": {
+                    "type": "string"
+                  },
+                  "validationRecordID": {
+                    "type": "string"
+                  },
+                  "revisionHash": {
+                    "type": "string"
+                  },
+                  "validationHash": {
+                    "type": "string"
+                  },
+                  "contextHash": {
+                    "type": "string"
+                  },
+                  "policyHash": {
+                    "type": "string"
+                  },
+                  "taskHash": {
+                    "type": "string"
+                  },
+                  "callID": {
+                    "type": "string"
+                  },
+                  "childSessionID": {
+                    "type": "string"
+                  },
+                  "parentSessionID": {
+                    "type": "string"
+                  },
+                  "agent": {
+                    "type": "string"
+                  },
+                  "permission": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "permission": {
+                          "type": "string"
+                        },
+                        "pattern": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "type": "string",
+                          "enum": ["allow", "deny", "ask"]
+                        }
+                      },
+                      "required": ["permission", "pattern", "action"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "presentationID",
+                  "approvalMessageID",
+                  "projectID",
+                  "memberID",
+                  "planRevisionID",
+                  "validationRecordID",
+                  "revisionHash",
+                  "validationHash",
+                  "contextHash",
+                  "policyHash",
+                  "taskHash",
+                  "callID",
+                  "childSessionID",
+                  "parentSessionID",
+                  "agent",
+                  "permission"
+                ],
                 "additionalProperties": false
               }
             },
@@ -27861,6 +29360,1125 @@
           }
         },
         "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroPlan_revisionRecorded": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.plan_revision.recorded.2"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "admissionMessageID": {
+                    "type": "string"
+                  },
+                  "methodVersion": {
+                    "type": "string"
+                  },
+                  "revision": {
+                    "type": "string",
+                    "enum": ["v2"]
+                  },
+                  "goal": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": ["stakeholder", "maestro", "orientation"]
+                      }
+                    },
+                    "required": ["value", "source"],
+                    "additionalProperties": false
+                  },
+                  "acceptance": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["stakeholder", "maestro", "orientation"]
+                        }
+                      },
+                      "required": ["value", "source"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "scope": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["stakeholder", "maestro", "orientation"]
+                        }
+                      },
+                      "required": ["value", "source"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "constraints": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["stakeholder", "maestro", "orientation"]
+                        }
+                      },
+                      "required": ["value", "source"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "reviewRequirement": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": ["stakeholder", "maestro", "orientation"]
+                      }
+                    },
+                    "required": ["value", "source"],
+                    "additionalProperties": false
+                  },
+                  "contextRequirement": {
+                    "type": "string",
+                    "enum": ["PENDING"]
+                  },
+                  "assumptions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["stakeholder", "maestro", "orientation"]
+                        }
+                      },
+                      "required": ["value", "source"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "risks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["stakeholder", "maestro", "orientation"]
+                        }
+                      },
+                      "required": ["value", "source"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["PROPOSED"]
+                  },
+                  "revisionHash": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "grounding": {
+                    "$ref": "#/components/schemas/MaestroGrounding"
+                  }
+                },
+                "required": [
+                  "id",
+                  "sessionID",
+                  "admissionMessageID",
+                  "methodVersion",
+                  "revision",
+                  "goal",
+                  "acceptance",
+                  "scope",
+                  "constraints",
+                  "reviewRequirement",
+                  "contextRequirement",
+                  "assumptions",
+                  "risks",
+                  "status",
+                  "revisionHash",
+                  "createdAt",
+                  "grounding"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroContextRecorded": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.context.recorded.2"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "planRevisionID": {
+                    "type": "string"
+                  },
+                  "projectID": {
+                    "type": "string"
+                  },
+                  "directory": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["GROUNDED"]
+                  },
+                  "branch": {
+                    "type": "string"
+                  },
+                  "headSHA": {
+                    "type": "string"
+                  },
+                  "changedPaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "currentEvidenceIdentityHash": {
+                    "type": "string"
+                  },
+                  "contextHash": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["CURRENT"]
+                  },
+                  "createdAt": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "planRevisionHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sourceIdentityHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "toolPlan": {
+                    "$ref": "#/components/schemas/MaestroContextToolPlan"
+                  },
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "sessionID",
+                  "planRevisionID",
+                  "projectID",
+                  "directory",
+                  "mode",
+                  "branch",
+                  "headSHA",
+                  "changedPaths",
+                  "currentEvidenceIdentityHash",
+                  "contextHash",
+                  "status",
+                  "createdAt",
+                  "planRevisionHash",
+                  "sourceIdentityHash",
+                  "toolPlan",
+                  "skills"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroClarificationDecided": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.clarification.decided.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "projectID": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["maestro"]
+                  },
+                  "predecessorID": {
+                    "type": "string"
+                  },
+                  "methodVersion": {
+                    "type": "string"
+                  },
+                  "decision": {
+                    "type": "string"
+                  },
+                  "question": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "projectID",
+                  "mode",
+                  "predecessorID",
+                  "methodVersion",
+                  "decision",
+                  "question"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroScopeDecided": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.scope.decided.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "projectID": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["maestro"]
+                  },
+                  "predecessorID": {
+                    "type": "string"
+                  },
+                  "methodVersion": {
+                    "type": "string"
+                  },
+                  "scopeID": {
+                    "type": "string"
+                  }
+                },
+                "required": ["sessionID", "projectID", "mode", "predecessorID", "methodVersion", "scopeID"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroHeldEntered": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.held.entered.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string"
+                  },
+                  "projectID": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["maestro"]
+                  },
+                  "predecessorID": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": ["sessionID", "projectID", "mode", "predecessorID", "reason"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroValidationRecorded": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.validation.recorded.3"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "planRevisionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "contextRecordID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "contextHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reviewBaseSHA": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{40}$"
+                  },
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "workCardID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "workCard": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "workCardHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "routedMemberID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rosterHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "grantHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reviewPolicyHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "actor": {
+                    "type": "object",
+                    "properties": {
+                      "version": {
+                        "type": "string",
+                        "enum": ["rfc8785-v1"]
+                      },
+                      "bytes": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    },
+                    "required": ["version", "bytes", "sha256"],
+                    "additionalProperties": false
+                  },
+                  "validatorID": {
+                    "type": "string",
+                    "enum": ["maestro"]
+                  },
+                  "validatorVersion": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "checks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["PASS", "FAIL", "HOLD"]
+                        },
+                        "detail": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": ["id", "status", "detail"],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": ["VALID", "INVALID", "HOLD"]
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "planRevisionID",
+                  "contextRecordID",
+                  "contextHash",
+                  "reviewBaseSHA",
+                  "projectID",
+                  "workCardID",
+                  "workCard",
+                  "workCardHash",
+                  "routedMemberID",
+                  "rosterHash",
+                  "grantHash",
+                  "reviewPolicyHash",
+                  "actor",
+                  "validatorID",
+                  "validatorVersion",
+                  "checks",
+                  "outcome"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroReviewReceived": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.review.received.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "validationRecordID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "workCardHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "routedMemberID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rosterHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "grantHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reviewPolicyHash": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "actor": {
+                    "type": "object",
+                    "properties": {
+                      "version": {
+                        "type": "string",
+                        "enum": ["rfc8785-v1"]
+                      },
+                      "bytes": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    },
+                    "required": ["version", "bytes", "sha256"],
+                    "additionalProperties": false
+                  },
+                  "reviewerID": {
+                    "type": "string",
+                    "enum": ["lucy"]
+                  },
+                  "reviewMethodVersion": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "artifact": {
+                    "type": "object",
+                    "properties": {
+                      "workCardHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "baseSHA": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "headSHA": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "worktree": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "changedPaths": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "bytes": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths", "bytes"],
+                    "additionalProperties": false
+                  },
+                  "verdict": {
+                    "type": "string",
+                    "enum": ["APPROVE", "FIX_FIRST", "REJECT"]
+                  },
+                  "findings": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "line": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": ["path", "line", "message"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "projectID",
+                  "validationRecordID",
+                  "workCardHash",
+                  "routedMemberID",
+                  "rosterHash",
+                  "grantHash",
+                  "reviewPolicyHash",
+                  "actor",
+                  "reviewerID",
+                  "reviewMethodVersion",
+                  "artifact",
+                  "verdict",
+                  "findings"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroAuthorizationGranted": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.authorization.granted.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "approvalMessageID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "validationRecordID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "workCardHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "routedMemberID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rosterHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "grantHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "reviewPolicyHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "actor": {
+                    "type": "object",
+                    "properties": {
+                      "version": {
+                        "type": "string",
+                        "enum": ["rfc8785-v1"]
+                      },
+                      "bytes": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    },
+                    "required": ["version", "bytes", "sha256"],
+                    "additionalProperties": false
+                  },
+                  "reviewerID": {
+                    "type": "string",
+                    "enum": ["lucy"]
+                  },
+                  "taskIntentHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "methodVersion": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "projectID",
+                  "approvalMessageID",
+                  "validationRecordID",
+                  "workCardHash",
+                  "routedMemberID",
+                  "rosterHash",
+                  "grantHash",
+                  "reviewPolicyHash",
+                  "actor",
+                  "reviewerID",
+                  "taskIntentHash",
+                  "methodVersion"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroDispatchReserved": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.dispatch.reserved.2"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "authorizationID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "childSessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "routedMemberID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "taskIntentHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "permission": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "permission": {
+                          "type": "string"
+                        },
+                        "pattern": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "type": "string",
+                          "enum": ["allow", "deny", "ask"]
+                        }
+                      },
+                      "required": ["permission", "pattern", "action"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "sessionID",
+                  "authorizationID",
+                  "childSessionID",
+                  "projectID",
+                  "routedMemberID",
+                  "taskIntentHash",
+                  "permission"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "ConfigMaestro": {
+        "type": "object",
+        "properties": {
+          "atlas": {
+            "type": "object",
+            "properties": {
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "directory": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceDirectory": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["projectID", "directory"],
+            "additionalProperties": false
+          }
+        },
         "additionalProperties": false
       },
       "ConfigV2ReferenceGit": {
@@ -32629,9 +35247,142 @@
               },
               "callID": {
                 "type": "string"
+              },
+              "childSessionID": {
+                "type": "string"
               }
             },
-            "required": ["sessionID", "presentationID", "approvalMessageID", "taskHash", "callID"],
+            "required": ["sessionID", "presentationID", "approvalMessageID", "taskHash", "callID", "childSessionID"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroApprovalReserved": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.approval.reserved"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "presentationID": {
+                "type": "string"
+              },
+              "approvalMessageID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "memberID": {
+                "type": "string"
+              },
+              "planRevisionID": {
+                "type": "string"
+              },
+              "validationRecordID": {
+                "type": "string"
+              },
+              "revisionHash": {
+                "type": "string"
+              },
+              "validationHash": {
+                "type": "string"
+              },
+              "contextHash": {
+                "type": "string"
+              },
+              "policyHash": {
+                "type": "string"
+              },
+              "taskHash": {
+                "type": "string"
+              },
+              "callID": {
+                "type": "string"
+              },
+              "childSessionID": {
+                "type": "string"
+              },
+              "parentSessionID": {
+                "type": "string"
+              },
+              "agent": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "permission": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": ["allow", "deny", "ask"]
+                    }
+                  },
+                  "required": ["permission", "pattern", "action"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sessionID",
+              "presentationID",
+              "approvalMessageID",
+              "projectID",
+              "memberID",
+              "planRevisionID",
+              "validationRecordID",
+              "revisionHash",
+              "validationHash",
+              "contextHash",
+              "policyHash",
+              "taskHash",
+              "callID",
+              "childSessionID",
+              "parentSessionID",
+              "agent",
+              "permission"
+            ],
             "additionalProperties": false
           }
         },
@@ -32757,6 +35508,1101 @@
               }
             },
             "required": ["sessionID", "messageID", "methodVersion", "outcome"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroPlan_revisionRecorded": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.plan_revision.recorded"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "sessionID": {
+                "type": "string"
+              },
+              "admissionMessageID": {
+                "type": "string"
+              },
+              "methodVersion": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string",
+                "enum": ["v2"]
+              },
+              "goal": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["stakeholder", "maestro", "orientation"]
+                  }
+                },
+                "required": ["value", "source"],
+                "additionalProperties": false
+              },
+              "acceptance": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "scope": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "reviewRequirement": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["stakeholder", "maestro", "orientation"]
+                  }
+                },
+                "required": ["value", "source"],
+                "additionalProperties": false
+              },
+              "contextRequirement": {
+                "type": "string",
+                "enum": ["PENDING"]
+              },
+              "assumptions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "risks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": ["PROPOSED"]
+              },
+              "revisionHash": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "grounding": {
+                "$ref": "#/components/schemas/MaestroGrounding"
+              }
+            },
+            "required": [
+              "id",
+              "sessionID",
+              "admissionMessageID",
+              "methodVersion",
+              "revision",
+              "goal",
+              "acceptance",
+              "scope",
+              "constraints",
+              "reviewRequirement",
+              "contextRequirement",
+              "assumptions",
+              "risks",
+              "status",
+              "revisionHash",
+              "createdAt",
+              "grounding"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroContextRecorded": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.context.recorded"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "sessionID": {
+                "type": "string"
+              },
+              "planRevisionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "directory": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["GROUNDED"]
+              },
+              "branch": {
+                "type": "string"
+              },
+              "headSHA": {
+                "type": "string"
+              },
+              "changedPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "currentEvidenceIdentityHash": {
+                "type": "string"
+              },
+              "contextHash": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["CURRENT"]
+              },
+              "createdAt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "planRevisionHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceIdentityHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "toolPlan": {
+                "$ref": "#/components/schemas/MaestroContextToolPlan"
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "sessionID",
+              "planRevisionID",
+              "projectID",
+              "directory",
+              "mode",
+              "branch",
+              "headSHA",
+              "changedPaths",
+              "currentEvidenceIdentityHash",
+              "contextHash",
+              "status",
+              "createdAt",
+              "planRevisionHash",
+              "sourceIdentityHash",
+              "toolPlan",
+              "skills"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroClarificationDecided": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.clarification.decided"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "predecessorID": {
+                "type": "string"
+              },
+              "methodVersion": {
+                "type": "string"
+              },
+              "decision": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              }
+            },
+            "required": ["sessionID", "projectID", "mode", "predecessorID", "methodVersion", "decision", "question"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroScopeDecided": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.scope.decided"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "predecessorID": {
+                "type": "string"
+              },
+              "methodVersion": {
+                "type": "string"
+              },
+              "scopeID": {
+                "type": "string"
+              }
+            },
+            "required": ["sessionID", "projectID", "mode", "predecessorID", "methodVersion", "scopeID"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroHeldEntered": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.held.entered"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "predecessorID": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": ["sessionID", "projectID", "mode", "predecessorID", "reason"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroValidationRecorded": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.validation.recorded"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planRevisionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contextRecordID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contextHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewBaseSHA": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCard": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rosterHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "grantHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewPolicyHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "enum": ["rfc8785-v1"]
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": ["version", "bytes", "sha256"],
+                "additionalProperties": false
+              },
+              "validatorID": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "validatorVersion": {
+                "type": "string",
+                "minLength": 1
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["PASS", "FAIL", "HOLD"]
+                    },
+                    "detail": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["id", "status", "detail"],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "outcome": {
+                "type": "string",
+                "enum": ["VALID", "INVALID", "HOLD"]
+              }
+            },
+            "required": [
+              "sessionID",
+              "planRevisionID",
+              "contextRecordID",
+              "contextHash",
+              "reviewBaseSHA",
+              "projectID",
+              "workCardID",
+              "workCard",
+              "workCardHash",
+              "routedMemberID",
+              "rosterHash",
+              "grantHash",
+              "reviewPolicyHash",
+              "actor",
+              "validatorID",
+              "validatorVersion",
+              "checks",
+              "outcome"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroReviewReceived": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.review.received"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "validationRecordID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rosterHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "grantHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewPolicyHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "enum": ["rfc8785-v1"]
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": ["version", "bytes", "sha256"],
+                "additionalProperties": false
+              },
+              "reviewerID": {
+                "type": "string",
+                "enum": ["lucy"]
+              },
+              "reviewMethodVersion": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifact": {
+                "type": "object",
+                "properties": {
+                  "workCardHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "baseSHA": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "headSHA": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "worktree": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "changedPaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths", "bytes"],
+                "additionalProperties": false
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["APPROVE", "FIX_FIRST", "REJECT"]
+              },
+              "findings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "line": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["path", "line", "message"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sessionID",
+              "projectID",
+              "validationRecordID",
+              "workCardHash",
+              "routedMemberID",
+              "rosterHash",
+              "grantHash",
+              "reviewPolicyHash",
+              "actor",
+              "reviewerID",
+              "reviewMethodVersion",
+              "artifact",
+              "verdict",
+              "findings"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroAuthorizationGranted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.authorization.granted"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "approvalMessageID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "validationRecordID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rosterHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "grantHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "reviewPolicyHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "actor": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "enum": ["rfc8785-v1"]
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": ["version", "bytes", "sha256"],
+                "additionalProperties": false
+              },
+              "reviewerID": {
+                "type": "string",
+                "enum": ["lucy"]
+              },
+              "taskIntentHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "methodVersion": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "sessionID",
+              "projectID",
+              "approvalMessageID",
+              "validationRecordID",
+              "workCardHash",
+              "routedMemberID",
+              "rosterHash",
+              "grantHash",
+              "reviewPolicyHash",
+              "actor",
+              "reviewerID",
+              "taskIntentHash",
+              "methodVersion"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroDispatchReserved": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.dispatch.reserved"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authorizationID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "childSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "taskIntentHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "permission": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "permission": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": ["allow", "deny", "ask"]
+                    }
+                  },
+                  "required": ["permission", "pattern", "action"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sessionID",
+              "authorizationID",
+              "childSessionID",
+              "projectID",
+              "routedMemberID",
+              "taskIntentHash",
+              "permission"
+            ],
             "additionalProperties": false
           }
         },
@@ -36950,9 +40796,120 @@
               },
               "callID": {
                 "type": "string"
+              },
+              "childSessionID": {
+                "type": "string"
               }
             },
-            "required": ["sessionID", "presentationID", "approvalMessageID", "taskHash", "callID"],
+            "required": ["sessionID", "presentationID", "approvalMessageID", "taskHash", "callID", "childSessionID"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroApprovalReserved": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.approval.reserved"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "presentationID": {
+                "type": "string"
+              },
+              "approvalMessageID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "memberID": {
+                "type": "string"
+              },
+              "planRevisionID": {
+                "type": "string"
+              },
+              "validationRecordID": {
+                "type": "string"
+              },
+              "revisionHash": {
+                "type": "string"
+              },
+              "validationHash": {
+                "type": "string"
+              },
+              "contextHash": {
+                "type": "string"
+              },
+              "policyHash": {
+                "type": "string"
+              },
+              "taskHash": {
+                "type": "string"
+              },
+              "callID": {
+                "type": "string"
+              },
+              "childSessionID": {
+                "type": "string"
+              },
+              "parentSessionID": {
+                "type": "string"
+              },
+              "agent": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "permission": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": ["allow", "deny", "ask"]
+                    }
+                  },
+                  "required": ["permission", "pattern", "action"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sessionID",
+              "presentationID",
+              "approvalMessageID",
+              "projectID",
+              "memberID",
+              "planRevisionID",
+              "validationRecordID",
+              "revisionHash",
+              "validationHash",
+              "contextHash",
+              "policyHash",
+              "taskHash",
+              "callID",
+              "childSessionID",
+              "parentSessionID",
+              "agent",
+              "permission"
+            ],
             "additionalProperties": false
           }
         },
@@ -37056,6 +41013,903 @@
               }
             },
             "required": ["sessionID", "messageID", "methodVersion", "outcome"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroPlan_revisionRecorded": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.plan_revision.recorded"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "sessionID": {
+                "type": "string"
+              },
+              "admissionMessageID": {
+                "type": "string"
+              },
+              "methodVersion": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string",
+                "enum": ["v2"]
+              },
+              "goal": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["stakeholder", "maestro", "orientation"]
+                  }
+                },
+                "required": ["value", "source"],
+                "additionalProperties": false
+              },
+              "acceptance": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "scope": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "reviewRequirement": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["stakeholder", "maestro", "orientation"]
+                  }
+                },
+                "required": ["value", "source"],
+                "additionalProperties": false
+              },
+              "contextRequirement": {
+                "type": "string",
+                "enum": ["PENDING"]
+              },
+              "assumptions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "risks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": ["stakeholder", "maestro", "orientation"]
+                    }
+                  },
+                  "required": ["value", "source"],
+                  "additionalProperties": false
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": ["PROPOSED"]
+              },
+              "revisionHash": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "grounding": {
+                "$ref": "#/components/schemas/MaestroGrounding"
+              }
+            },
+            "required": [
+              "id",
+              "sessionID",
+              "admissionMessageID",
+              "methodVersion",
+              "revision",
+              "goal",
+              "acceptance",
+              "scope",
+              "constraints",
+              "reviewRequirement",
+              "contextRequirement",
+              "assumptions",
+              "risks",
+              "status",
+              "revisionHash",
+              "createdAt",
+              "grounding"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroContextRecorded": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.context.recorded"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "sessionID": {
+                "type": "string"
+              },
+              "planRevisionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "directory": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["GROUNDED"]
+              },
+              "branch": {
+                "type": "string"
+              },
+              "headSHA": {
+                "type": "string"
+              },
+              "changedPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "currentEvidenceIdentityHash": {
+                "type": "string"
+              },
+              "contextHash": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["CURRENT"]
+              },
+              "createdAt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "planRevisionHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceIdentityHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "toolPlan": {
+                "$ref": "#/components/schemas/MaestroContextToolPlan"
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MaestroLoadedOwnSkill"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "sessionID",
+              "planRevisionID",
+              "projectID",
+              "directory",
+              "mode",
+              "branch",
+              "headSHA",
+              "changedPaths",
+              "currentEvidenceIdentityHash",
+              "contextHash",
+              "status",
+              "createdAt",
+              "planRevisionHash",
+              "sourceIdentityHash",
+              "toolPlan",
+              "skills"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroClarificationDecided": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.clarification.decided"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "predecessorID": {
+                "type": "string"
+              },
+              "methodVersion": {
+                "type": "string"
+              },
+              "decision": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              }
+            },
+            "required": ["sessionID", "projectID", "mode", "predecessorID", "methodVersion", "decision", "question"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroScopeDecided": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.scope.decided"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "predecessorID": {
+                "type": "string"
+              },
+              "methodVersion": {
+                "type": "string"
+              },
+              "scopeID": {
+                "type": "string"
+              }
+            },
+            "required": ["sessionID", "projectID", "mode", "predecessorID", "methodVersion", "scopeID"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroHeldEntered": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.held.entered"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string"
+              },
+              "projectID": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "predecessorID": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": ["sessionID", "projectID", "mode", "predecessorID", "reason"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroValidationRecorded": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.validation.recorded"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planRevisionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contextRecordID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contextHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewBaseSHA": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCard": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rosterHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "grantHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewPolicyHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "enum": ["rfc8785-v1"]
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": ["version", "bytes", "sha256"],
+                "additionalProperties": false
+              },
+              "validatorID": {
+                "type": "string",
+                "enum": ["maestro"]
+              },
+              "validatorVersion": {
+                "type": "string",
+                "minLength": 1
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["PASS", "FAIL", "HOLD"]
+                    },
+                    "detail": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["id", "status", "detail"],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "outcome": {
+                "type": "string",
+                "enum": ["VALID", "INVALID", "HOLD"]
+              }
+            },
+            "required": [
+              "sessionID",
+              "planRevisionID",
+              "contextRecordID",
+              "contextHash",
+              "reviewBaseSHA",
+              "projectID",
+              "workCardID",
+              "workCard",
+              "workCardHash",
+              "routedMemberID",
+              "rosterHash",
+              "grantHash",
+              "reviewPolicyHash",
+              "actor",
+              "validatorID",
+              "validatorVersion",
+              "checks",
+              "outcome"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroReviewReceived": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.review.received"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "validationRecordID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rosterHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "grantHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewPolicyHash": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "enum": ["rfc8785-v1"]
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": ["version", "bytes", "sha256"],
+                "additionalProperties": false
+              },
+              "reviewerID": {
+                "type": "string",
+                "enum": ["lucy"]
+              },
+              "reviewMethodVersion": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifact": {
+                "type": "object",
+                "properties": {
+                  "workCardHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "baseSHA": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "headSHA": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "worktree": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "changedPaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths", "bytes"],
+                "additionalProperties": false
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["APPROVE", "FIX_FIRST", "REJECT"]
+              },
+              "findings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "line": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["path", "line", "message"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sessionID",
+              "projectID",
+              "validationRecordID",
+              "workCardHash",
+              "routedMemberID",
+              "rosterHash",
+              "grantHash",
+              "reviewPolicyHash",
+              "actor",
+              "reviewerID",
+              "reviewMethodVersion",
+              "artifact",
+              "verdict",
+              "findings"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroAuthorizationGranted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.authorization.granted"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "approvalMessageID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "validationRecordID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workCardHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rosterHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "grantHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "reviewPolicyHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "actor": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "enum": ["rfc8785-v1"]
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": ["version", "bytes", "sha256"],
+                "additionalProperties": false
+              },
+              "reviewerID": {
+                "type": "string",
+                "enum": ["lucy"]
+              },
+              "taskIntentHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "methodVersion": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "sessionID",
+              "projectID",
+              "approvalMessageID",
+              "validationRecordID",
+              "workCardHash",
+              "routedMemberID",
+              "rosterHash",
+              "grantHash",
+              "reviewPolicyHash",
+              "actor",
+              "reviewerID",
+              "taskIntentHash",
+              "methodVersion"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroDispatchReserved": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.dispatch.reserved"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "sessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authorizationID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "childSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "routedMemberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "taskIntentHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "permission": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "permission": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": ["allow", "deny", "ask"]
+                    }
+                  },
+                  "required": ["permission", "pattern", "action"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sessionID",
+              "authorizationID",
+              "childSessionID",
+              "projectID",
+              "routedMemberID",
+              "taskIntentHash",
+              "permission"
+            ],
             "additionalProperties": false
           }
         },
