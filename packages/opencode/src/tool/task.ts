@@ -11,7 +11,7 @@ import { Provider } from "@/provider/provider"
 import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Effect, Exit, Schema, Scope } from "effect"
+import { Effect, Exit, FileSystem, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@opencode-ai/core/database/database"
@@ -23,11 +23,17 @@ import { Permission } from "@/permission"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Git } from "@/git"
 import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
+import { readAuthorization } from "@/maestro/authorization"
+import { readValidation } from "@/maestro/validation-record"
+import { readContext } from "@/maestro/context-record"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
   resolvePromptParts(template: string): Effect.Effect<SessionPrompt.PromptInput["parts"]>
-  prompt(input: SessionPrompt.PromptInput): Effect.Effect<SessionV1.WithParts>
+  prompt(
+    input: SessionPrompt.PromptInput,
+    options?: { beforeModel: Effect.Effect<void, unknown> },
+  ): Effect.Effect<SessionV1.WithParts>
 }
 
 const id = "task"
@@ -124,6 +130,7 @@ export const TaskTool = Tool.define(
     const database = yield* Database.Service
     const events = yield* EventV2Bridge.Service
     const git = yield* Git.Service
+    const fs = yield* FileSystem.FileSystem
 
     const run = Effect.fn("TaskTool.execute")(function* (
       params: Schema.Schema.Type<typeof Parameters>,
@@ -482,20 +489,57 @@ export const TaskTool = Tool.define(
             Effect.provideService(Database.Service, database),
             Effect.provideService(EventV2Bridge.Service, events),
             Effect.provideService(Git.Service, git),
+            Effect.provideService(Config.Service, config),
+            Effect.provideService(FileSystem.FileSystem, fs),
+            Effect.provideService(Session.Service, sessions),
           )
         }
         const parts = yield* ops.resolvePromptParts(params.prompt)
-        const result = yield* ops.prompt({
-          messageID: MessageID.ascending(),
-          sessionID: nextSession.id,
-          model: {
-            modelID: model.modelID,
-            providerID: model.providerID,
+        const authorizationID = params.authorizationID
+        const own = authorizationID
+          ? yield* Effect.gen(function* () {
+              const authorization = yield* readAuthorization(authorizationID)
+              const validation = authorization ? yield* readValidation(authorization.validationRecordID) : undefined
+              const context = validation?.contextRecordID ? yield* readContext(validation.contextRecordID) : undefined
+              return context?.mode === "GROUNDED"
+                ? context.skills.map((skill) => ({
+                    type: "text" as const,
+                    synthetic: true,
+                    text: `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
+                  }))
+                : []
+            }).pipe(Effect.provideService(Database.Service, database))
+          : []
+        const beforeModel = params.authorizationID
+          ? reserveDispatch({
+              sessionID: ctx.sessionID,
+              authorizationID: params.authorizationID,
+              permission: childPermissions,
+              requireCurrent: true,
+            }).pipe(
+              Effect.provideService(Database.Service, database),
+              Effect.provideService(EventV2Bridge.Service, events),
+              Effect.provideService(Git.Service, git),
+              Effect.provideService(Config.Service, config),
+              Effect.provideService(FileSystem.FileSystem, fs),
+              Effect.provideService(Session.Service, sessions),
+              Effect.asVoid,
+            )
+          : undefined
+        const result = yield* ops.prompt(
+          {
+            messageID: MessageID.ascending(),
+            sessionID: nextSession.id,
+            model: {
+              modelID: model.modelID,
+              providerID: model.providerID,
+            },
+            variant: next.model || explicitModel ? undefined : variant,
+            agent: nextID,
+            parts: [...parts, ...own],
           },
-          variant: next.model || explicitModel ? undefined : variant,
-          agent: nextID,
-          parts,
-        })
+          beforeModel ? { beforeModel } : undefined,
+        )
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -658,6 +702,9 @@ export const TaskTool = Tool.define(
           Effect.provideService(Database.Service, database),
           Effect.provideService(EventV2Bridge.Service, events),
           Effect.provideService(Git.Service, git),
+          Effect.provideService(Config.Service, config),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Session.Service, sessions),
           Effect.orDie,
         ),
     }

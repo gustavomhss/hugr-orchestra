@@ -5,6 +5,7 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { Event } from "@opencode-ai/schema/event"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
 import { Cause, Effect, Exit } from "effect"
@@ -41,6 +42,7 @@ afterEach(async () => {
 const it = testEffect(
   LayerNode.compile(
     LayerNode.group([
+      filesystem,
       Agent.node,
       BackgroundJob.node,
       Config.node,

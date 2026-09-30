@@ -16,7 +16,7 @@ import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { lookupRouteGrant } from "./route-grant"
 import { lookupRosterMember, nativeProfiles, roster, type RosterMember } from "./roster"
-import { readContext } from "./context-record"
+import { contextIsCurrent, readContext } from "./context-record"
 
 type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
 type LegacyValidationData = Schema.Schema.Type<typeof MaestroEvent.Validation.Recorded.data>
@@ -353,6 +353,8 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
   const artifact = yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root)
   if (record.contextRecordID) {
     const context = yield* readContext(record.contextRecordID)
+    if (context?.mode === "GROUNDED" && !(yield* contextIsCurrent(context)))
+      return yield* new ReviewRejectedError({ reason: "artifact-context-mismatch" })
     if (
       !context ||
       context.sessionID !== trusted.session.id ||

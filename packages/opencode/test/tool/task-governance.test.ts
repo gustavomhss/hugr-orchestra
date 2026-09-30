@@ -1,6 +1,8 @@
 import { afterEach, expect } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { Skill } from "../../src/skill"
 import { EventV2 } from "@opencode-ai/core/event"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -33,6 +35,8 @@ import { testEffect } from "../lib/effect"
 const it = testEffect(
   LayerNode.compile(
     LayerNode.group([
+      filesystem,
+      Skill.node,
       Agent.node,
       BackgroundJob.node,
       Config.node,

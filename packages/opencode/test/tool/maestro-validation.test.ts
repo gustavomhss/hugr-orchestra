@@ -2,6 +2,7 @@ import { afterEach, describe, expect } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { Npm } from "@opencode-ai/core/npm"
@@ -11,6 +12,8 @@ import { Agent } from "@/agent/agent"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
+import { Config } from "@/config/config"
+import { Skill } from "@/skill"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
@@ -35,7 +38,7 @@ const registry = testEffect(
 
 const direct = testEffect(
   AppNodeBuilder.build(
-    LayerNode.group([Agent.node, Database.node, EventV2Bridge.node, Git.node, Session.node, SessionProjector.node, Truncate.node]),
+    LayerNode.group([filesystem, Config.node, Skill.node, Agent.node, Database.node, EventV2Bridge.node, Git.node, Session.node, SessionProjector.node, Truncate.node]),
     [
       [Npm.node, NpmTest.noop],
       [RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true })],

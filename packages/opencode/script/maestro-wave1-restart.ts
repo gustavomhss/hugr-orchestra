@@ -55,9 +55,12 @@ async function write() {
   const { SessionID } = await import("../src/session/schema")
   const { EventV2Bridge } = await import("../src/event-v2-bridge")
   const { Git } = await import("../src/git")
+  const { Config } = await import("../src/config/config")
+  const { Session } = await import("../src/session/session")
+  const { filesystem } = await import("@opencode-ai/core/effect/app-node-platform")
   const { recordReview, recordValidation } = await import("../src/maestro/validation-record")
   const artifact = JSON.parse(await Bun.file(artifactPath!).text())
-  const layer = LayerNode.compile(LayerNode.group([Database.node, EventV2Bridge.node, Git.node]))
+  const layer = LayerNode.compile(LayerNode.group([filesystem, Config.node, Session.node, Database.node, EventV2Bridge.node, Git.node]))
   const result = await Effect.runPromise(
     Effect.gen(function* () {
       const { db } = yield* Database.Service

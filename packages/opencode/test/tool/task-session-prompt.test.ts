@@ -2,7 +2,9 @@ import { expect } from "bun:test"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import path from "node:path"
 import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
@@ -13,7 +15,7 @@ import { testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
 import { makeHttp } from "../session/prompt.fixture"
 
-const it = testEffect(makeHttp())
+const it = testEffect(Layer.merge(makeHttp(), LayerNode.compile(filesystem)))
 
 const model = {
   providerID: ProviderV2.ID.make("test"),

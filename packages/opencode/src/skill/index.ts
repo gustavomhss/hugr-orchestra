@@ -1,6 +1,7 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import path from "path"
-import { Effect, Layer, Context, Schema } from "effect"
+import { Effect, FileSystem, Layer, Context, Schema } from "effect"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { NamedError } from "@opencode-ai/core/util/error"
 import type { Agent } from "@/agent/agent"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -121,6 +122,11 @@ const add = Effect.fnUntraced(function* (state: State, match: string, events: Ev
   if (!md) return
 
   if (!isSkillFrontmatter(md.data)) return
+  if (
+    match.replaceAll("\\", "/").includes("/.opencode/skills/own/") &&
+    md.data.name !== `own_${path.basename(path.dirname(match))}`
+  )
+    return
 
   if (state.skills[md.data.name]) {
     yield* Effect.logWarning("duplicate skill name", {
@@ -179,6 +185,7 @@ const discoverSkills = Effect.fnUntraced(function* (
   disableClaudeCodeSkills: boolean,
   directory: string,
   worktree: string,
+  projectID: string,
 ) {
   const state: ScanState = { matches: new Set(), dirs: new Set() }
 
@@ -208,6 +215,43 @@ const discoverSkills = Effect.fnUntraced(function* (
   }
 
   const cfg = yield* config.get()
+  const provider = cfg.maestro?.atlas
+  if (
+    provider?.projectID === projectID &&
+    worktree !== "/" &&
+    (provider.directory === "." ||
+      (provider.directory.length > 0 &&
+        !/[\\:\p{Cc}]/u.test(provider.directory) &&
+        !path.posix.isAbsolute(provider.directory) &&
+        provider.directory.split("/").every((part) => part !== "" && part !== "." && part !== "..")))
+  ) {
+    const fs = yield* FileSystem.FileSystem
+    const repository = yield* fs.realPath(worktree)
+    const root = path.resolve(repository, provider.directory, ".opencode/skills/own")
+    const actual = yield* fs.realPath(root).pipe(Effect.catch(() => Effect.succeed(undefined)))
+    if (actual === root) {
+      const matches = yield* Effect.tryPromise({
+        try: () => Glob.scan(SKILL_PATTERN, { cwd: root, absolute: true, include: "file", symlink: false, dot: true }),
+        catch: (error) => error,
+      })
+      yield* Effect.forEach(matches, (match) =>
+        Effect.gen(function* () {
+          const resolved = yield* fs.realPath(match)
+          const relative = path.relative(root, resolved)
+          if (
+            resolved !== path.resolve(match) ||
+            path.isAbsolute(relative) ||
+            relative.startsWith(`..${path.sep}`) ||
+            relative === ".."
+          )
+            return
+          if ((yield* fs.stat(resolved)).type !== "File") return
+          state.matches.add(resolved)
+          state.dirs.add(path.dirname(resolved))
+        }),
+      )
+    }
+  }
   for (const item of cfg.skills?.paths ?? []) {
     const expanded = item.startsWith("~/") ? path.join(global.home, item.slice(2)) : item
     const dir = path.isAbsolute(expanded) ? expanded : path.join(directory, expanded)
@@ -256,6 +300,7 @@ const layer = Layer.effect(
     const fsys = yield* FSUtil.Service
     const global = yield* Global.Service
     const flags = yield* RuntimeFlags.Service
+    const fs = yield* FileSystem.FileSystem
     const discovered = yield* InstanceState.make(
       Effect.fn("Skill.discovery")(function* (ctx) {
         return yield* discoverSkills(
@@ -267,7 +312,8 @@ const layer = Layer.effect(
           flags.disableClaudeCodeSkills,
           ctx.directory,
           ctx.worktree,
-        )
+          ctx.project.id,
+        ).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.orDie)
       }),
     )
     const state = yield* InstanceState.make(
@@ -348,7 +394,7 @@ export function fmt(list: Info[], opts: { verbose: boolean }) {
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [Discovery.node, Config.node, EventV2Bridge.node, FSUtil.node, Global.node, RuntimeFlags.node],
+  deps: [filesystem, Discovery.node, Config.node, EventV2Bridge.node, FSUtil.node, Global.node, RuntimeFlags.node],
 })
 
 export * as Skill from "."

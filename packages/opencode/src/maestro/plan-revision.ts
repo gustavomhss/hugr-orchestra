@@ -8,10 +8,18 @@ import { eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { readAdmission } from "./admission-record"
+import { readAtlasSource, AtlasContextHeld } from "./atlas-source"
+import { compileContextToolPlan } from "./context-tool-plan"
+import { Session } from "@/session/session"
+import { SessionID } from "@/session/schema"
 
-type RevisionData = Schema.Schema.Type<typeof MaestroEvent.PlanRevision.Recorded.data>
+type LegacyRevisionData = Schema.Schema.Type<typeof MaestroEvent.PlanRevision.Recorded.data>
+type RevisionData = LegacyRevisionData | Schema.Schema.Type<typeof MaestroEvent.PlanRevision.RecordedV2.data>
 
-export type RecordPlanRevisionInput = Omit<RevisionData, "id" | "revisionHash" | "createdAt" | "status" | "revision">
+export type RecordPlanRevisionInput = Omit<
+  LegacyRevisionData,
+  "id" | "revisionHash" | "createdAt" | "status" | "revision"
+> & { units?: readonly string[] }
 
 export class PlanRevisionConflictError extends Schema.TaggedErrorClass<PlanRevisionConflictError>()(
   "MaestroPlanRevisionConflict",
@@ -37,8 +45,14 @@ function eventID(input: Pick<RecordPlanRevisionInput, "sessionID" | "admissionMe
   return EventV2.ID.make(`evt_maestro_plan_revision_${hash(input)}`)
 }
 
-function wanted(input: RecordPlanRevisionInput): RevisionData {
-  const body = { ...input, revision: "v1" as const, status: "PROPOSED" as const, contextRequirement: "PENDING" as const }
+function wanted(input: RecordPlanRevisionInput): LegacyRevisionData {
+  const { units, ...fields } = input
+  const body = {
+    ...fields,
+    revision: "v1" as const,
+    status: "PROPOSED" as const,
+    contextRequirement: "PENDING" as const,
+  }
   return { ...body, id: eventID(input), revisionHash: hash(body), createdAt: Date.now() }
 }
 
@@ -51,7 +65,11 @@ export const readPlanRevision = Effect.fn("MaestroPlanRevision.read")(function* 
     .where(eq(EventTable.id, EventV2.ID.make(id)))
     .get()
     .pipe(Effect.orDie)
-  if (!row || row.type !== EventV2.versionedType(MaestroEvent.PlanRevision.Recorded.type, 1)) return undefined
+  if (!row) return undefined
+  if (row.type === EventV2.versionedType(MaestroEvent.PlanRevision.RecordedV2.type, 2)) {
+    return Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV2.data)(row.data)
+  }
+  if (row.type !== EventV2.versionedType(MaestroEvent.PlanRevision.Recorded.type, 1)) return undefined
   return Schema.decodeUnknownSync(MaestroEvent.PlanRevision.Recorded.data)(row.data)
 })
 
@@ -64,13 +82,54 @@ export const recordPlanRevision = Effect.fn("MaestroPlanRevision.record")(functi
   if (!admission || admission.outcome !== "READY_TO_DRAFT") {
     return yield* new PlanRevisionConflictError(input)
   }
-  const next = wanted(input)
+  const legacy = wanted(input)
+  const units = input.units
+  const next: RevisionData = units
+    ? yield* Effect.gen(function* () {
+        const sessions = yield* Session.Service
+        const session = yield* sessions.get(SessionID.make(input.sessionID))
+        const source = yield* readAtlasSource(session)
+        const grounding = {
+          catalogVersion: source.context.catalogVersion,
+          snapshot: source.context.snapshot,
+          sourceRevision: source.context.sourceRevision,
+          sourceIdentityHash: source.identityHash,
+          units: [...units],
+        }
+        const { id, revisionHash, createdAt, ...fields } = legacy
+        const body = { ...fields, revision: "v2" as const, grounding }
+        const proposed = {
+          ...body,
+          id: EventV2.ID.make(`evt_maestro_plan_revision_${hash(body)}`),
+          revisionHash: hash(body),
+          createdAt,
+        }
+        const compiled = compileContextToolPlan({
+          actor: { projectId: session.projectID, sessionId: session.id, memberId: "maestro" },
+          revision: {
+            id: proposed.id,
+            hash: proposed.revisionHash,
+            projectId: session.projectID,
+            sessionId: session.id,
+          },
+          territories: proposed.scope.map((field) => field.value),
+          units: grounding.units,
+          context: source.context,
+        })
+        if (compiled.status === "HOLD")
+          return yield* new AtlasContextHeld({ reason: compiled.reason, evidence: compiled.evidence })
+        return proposed
+      })
+    : legacy
   const existing = yield* readPlanRevision(next.id)
   if (existing) {
     if (isDeepStrictEqual({ ...existing, createdAt: 0 }, { ...next, createdAt: 0 })) return existing
     return yield* new PlanRevisionConflictError(input)
   }
   const events = yield* EventV2Bridge.Service
-  const recorded = yield* events.publish(MaestroEvent.PlanRevision.Recorded, next, { id: EventV2.ID.make(next.id) })
+  const recorded =
+    next.revision === "v2"
+      ? yield* events.publish(MaestroEvent.PlanRevision.RecordedV2, next, { id: EventV2.ID.make(next.id) })
+      : yield* events.publish(MaestroEvent.PlanRevision.Recorded, next, { id: EventV2.ID.make(next.id) })
   return recorded.data
 })

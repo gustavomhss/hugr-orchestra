@@ -1,7 +1,8 @@
-import { Effect, Schema } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
+import { Config } from "@/config/config"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { SessionTable } from "@opencode-ai/core/session/sql"
@@ -60,6 +61,9 @@ export const MaestroRecordValidationTool = Tool.define(
     const events = yield* EventV2Bridge.Service
     const agents = yield* Agent.Service
     const git = yield* Git.Service
+    const config = yield* Config.Service
+    const fs = yield* FileSystem.FileSystem
+    const sessions = yield* Session.Service
     return {
       description: "Record validation evidence for one routed work card. Maestro only.",
       parameters: ValidationParameters,
@@ -125,6 +129,9 @@ export const MaestroRecordValidationTool = Tool.define(
           Effect.provideService(EventV2Bridge.Service, events),
           Effect.provideService(Agent.Service, agents),
           Effect.provideService(Git.Service, git),
+          Effect.provideService(Config.Service, config),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Session.Service, sessions),
           Effect.orDie,
         ),
     }
@@ -139,6 +146,8 @@ export const MaestroRecordReviewTool = Tool.define(
     const agents = yield* Agent.Service
     const git = yield* Git.Service
     const sessions = yield* Session.Service
+    const config = yield* Config.Service
+    const fs = yield* FileSystem.FileSystem
     return {
       description: "Record cold review evidence for one validation record. Lucy only.",
       parameters: ReviewParameters,
@@ -178,6 +187,8 @@ export const MaestroRecordReviewTool = Tool.define(
           Effect.provideService(Git.Service, git),
           Effect.provideService(Agent.Service, agents),
           Effect.provideService(Session.Service, sessions),
+          Effect.provideService(Config.Service, config),
+          Effect.provideService(FileSystem.FileSystem, fs),
           Effect.orDie,
         ),
     }

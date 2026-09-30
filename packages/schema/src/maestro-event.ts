@@ -3,6 +3,7 @@ export * as MaestroEvent from "./maestro-event"
 import { Event } from "./event"
 import { Schema } from "effect"
 import { NonNegativeInt, PositiveInt } from "./schema"
+import { MaestroContext } from "./maestro-context"
 
 export namespace Approval {
   export const Presented = Event.define({
@@ -211,6 +212,17 @@ export namespace PlanRevision {
     },
   })
   export type Recorded = typeof Recorded.Type
+
+  export const RecordedV2 = Event.define({
+    type: Recorded.type,
+    durable: { version: 2, aggregate: "sessionID" },
+    schema: {
+      ...Recorded.data.fields,
+      revision: Schema.Literal("v2"),
+      grounding: MaestroContext.Grounding,
+    },
+  })
+  export type RecordedV2 = typeof RecordedV2.Type
 }
 
 export namespace Context {
@@ -234,6 +246,20 @@ export namespace Context {
     },
   })
   export type Recorded = typeof Recorded.Type
+
+  export const RecordedV2 = Event.define({
+    type: Recorded.type,
+    durable: { version: 2, aggregate: "sessionID" },
+    schema: {
+      ...Recorded.data.fields,
+      mode: Schema.Literal("GROUNDED"),
+      planRevisionHash: Schema.NonEmptyString,
+      sourceIdentityHash: Schema.NonEmptyString,
+      toolPlan: MaestroContext.ToolPlan,
+      skills: Schema.Array(MaestroContext.LoadedSkill).check(Schema.isMinLength(1)),
+    },
+  })
+  export type RecordedV2 = typeof RecordedV2.Type
 }
 
 export namespace Clarification {
@@ -503,7 +529,9 @@ export const Definitions = Event.inventory(
   Approval.ConsumedV2,
   Admission.Decided,
   PlanRevision.Recorded,
+  PlanRevision.RecordedV2,
   Context.Recorded,
+  Context.RecordedV2,
   Clarification.Decided,
   Scope.Decided,
   Held.Entered,

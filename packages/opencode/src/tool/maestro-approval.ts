@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
 import { presentApprovalFromSession, recordApproval } from "@/maestro/approval-record"
 import { Database } from "@opencode-ai/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -6,6 +6,7 @@ import { Agent } from "@/agent/agent"
 import { readPlanRevision } from "@/maestro/plan-revision"
 import { contextIsCurrent, readContext } from "@/maestro/context-record"
 import { Git } from "@/git"
+import { Config } from "@/config/config"
 import { findReview, readValidation, validationRecordHash } from "@/maestro/validation-record"
 import { renderPresentation } from "@/maestro/approval"
 import { Session } from "@/session/session"
@@ -42,6 +43,8 @@ export const MaestroPresentApprovalTool = Tool.define(
     const agents = yield* Agent.Service
     const sessions = yield* Session.Service
     const git = yield* Git.Service
+    const config = yield* Config.Service
+    const fs = yield* FileSystem.FileSystem
     return {
       description:
         "Unavailable until durable plan revision and validation readers exist. Refuses rather than treat model-supplied fields as approval authority.",
@@ -130,6 +133,9 @@ export const MaestroPresentApprovalTool = Tool.define(
           Effect.provideService(Database.Service, database),
           Effect.provideService(Agent.Service, agents),
           Effect.provideService(Git.Service, git),
+          Effect.provideService(Config.Service, config),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Session.Service, sessions),
           Effect.orDie,
         ),
     }

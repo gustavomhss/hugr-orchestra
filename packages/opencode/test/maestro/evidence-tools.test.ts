@@ -2,6 +2,8 @@ import { afterEach, describe, expect } from "bun:test"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { Skill } from "../../src/skill"
 import { EventV2 } from "@opencode-ai/core/event"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -33,6 +35,8 @@ const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make
 const it = testEffect(
   LayerNode.compile(
     LayerNode.group([
+      filesystem,
+      Skill.node,
       Agent.node,
       Config.node,
       CrossSpawnSpawner.node,
