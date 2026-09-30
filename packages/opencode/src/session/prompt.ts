@@ -13,6 +13,7 @@ import { Provider } from "@/provider/provider"
 import { type Tool as AITool, tool, jsonSchema } from "ai"
 import type { JSONSchema7 } from "@ai-sdk/provider"
 import { SessionCompaction } from "./compaction"
+import { SessionContinuity } from "@/continuity/service"
 import { SystemPrompt } from "./system"
 import { Instruction } from "./instruction"
 import { Plugin } from "../plugin"
@@ -119,6 +120,7 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const processor = yield* SessionProcessor.Service
     const compaction = yield* SessionCompaction.Service
+    const continuity = yield* SessionContinuity.Service
     const plugin = yield* Plugin.Service
     const commands = yield* Command.Service
     const config = yield* Config.Service
@@ -1043,6 +1045,7 @@ const layer = Layer.effect(
         })
       }
 
+      yield* continuity.advance(input.sessionID)
       yield* sessions.updateMessage(info)
       for (const part of parts) yield* sessions.updatePart(part)
 
@@ -1053,6 +1056,7 @@ const layer = Layer.effect(
       "SessionPrompt.prompt",
     )(function* (input: PromptInput) {
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
+      if (session.revert) yield* continuity.invalidate(input.sessionID)
       yield* revert.cleanup(session)
       const message = yield* createUserMessage(input)
       yield* sessions.touch(input.sessionID)
@@ -1126,6 +1130,7 @@ const layer = Layer.effect(
               })
             }
             yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
+            if (!orphan) yield* continuity.start({ sessionID, message: lastAssistant })
             break
           }
 
@@ -1254,18 +1259,21 @@ const layer = Layer.effect(
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
+            const prepared = yield* continuity.prepare({ sessionID, messages: msgs })
+
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
               sys.environment(model),
               instruction.system().pipe(Effect.orDie),
               sys.mcp(agent, session.permission),
-              MessageV2.toModelMessagesEffect(msgs, model),
+              MessageV2.toModelMessagesEffect(prepared.messages, model),
             ])
             const system = [
               ...env,
               ...instructions,
               ...(mcpInstructions ? [mcpInstructions] : []),
               ...(skills ? [skills] : []),
+              ...prepared.system,
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
@@ -1289,6 +1297,7 @@ const layer = Layer.effect(
               handle.message.structured = structured
               handle.message.finish = handle.message.finish ?? "stop"
               yield* sessions.updateMessage(handle.message)
+              yield* continuity.start({ sessionID, message: handle.message })
               return "break" as const
             }
 
@@ -1342,6 +1351,7 @@ const layer = Layer.effect(
                 })
                 return "continue" as const
               }
+              yield* continuity.start({ sessionID, message: handle.message })
               return "break" as const
             }
             if (result === "compact") {
@@ -1633,6 +1643,7 @@ export const node = LayerNode.make({
     Provider.node,
     SessionProcessor.node,
     SessionCompaction.node,
+    SessionContinuity.node,
     Plugin.node,
     Command.node,
     Config.node,
