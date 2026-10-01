@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Stream } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Stream } from "effect"
 import { TestClock } from "effect/testing"
 import { LLMEvent } from "@opencode-ai/llm"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
@@ -8,13 +8,18 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { Provider } from "@/provider/provider"
 import type { LLM } from "@/session/llm"
 import { MessageID, PartID, SessionID } from "@/session/schema"
-import { request, run, snapshot } from "@/continuity/fork"
+import { MAX_ARTIFACT_TOKENS, run, snapshot } from "@/continuity/fork"
+import { catalogue } from "@/continuity/source"
+import { jsonSchema } from "@/continuity/artifact"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
 
 const model = ProviderTest.model({ id: ModelV2.ID.make("summary-model"), providerID: ProviderV2.ID.make("test") })
 const it = testEffect(Layer.mock(Provider.Service, { getModel: () => Effect.succeed(model) }))
 const sessionID = SessionID.make("ses_parent")
+const body = { status: "ready", exact: [{ source: "S002", reason: "identifier" }],
+  notes: [], reference_only: [], omissions: [], issues: [] }
+
 function input() {
   const history: SessionV1.WithParts[] = Array.from({ length: 10 }, (_, index) => {
     const id = MessageID.make(`msg_${index}`)
@@ -22,80 +27,119 @@ function input() {
       info: {
         id, sessionID, role: "user", agent: "parent-agent",
         model: { providerID: model.providerID, modelID: model.id, variant: "parent-variant" },
-        time: { created: index }, system: "parent-system-must-not-leak", tools: { bash: true },
+        time: { created: index }, system: "historical-parent-system", tools: { bash: true },
         format: { type: "json_schema", schema: { parent: true }, retryCount: 2 },
       },
       parts: [{ id: PartID.make(`prt_${index}`), messageID: id, sessionID, type: "text", text: `turn-${index}`,
         metadata: { private: "raw-metadata-must-not-leak" } }],
     }
   })
-  const selected = snapshot(sessionID, history, "prior-unique-context")
+  const selected = snapshot(sessionID, history)
   if (!selected) throw new Error("fixture must have compressible head")
   return selected
 }
-function text(value = "summary-unique-success"): LLMEvent[] {
+
+function text(value = JSON.stringify(body)): LLMEvent[] {
   return [LLMEvent.textStart({ id: "text-1" }), LLMEvent.textDelta({ id: "text-1", text: value }), LLMEvent.textEnd({ id: "text-1" })]
 }
-function execute(events: Stream.Stream<LLMEvent, unknown>, inspect?: (request: LLM.StreamInput) => void) {
-  return Effect.gen(function* () {
-    const provider = yield* Provider.Service
-    return yield* run(input(), { provider, llm: { stream: (request) => { inspect?.(request); return events } } })
+
+class Capture extends Context.Service<Capture, { llm: LLM.Interface; requests: LLM.StreamInput[] }>()("ContinuityTestCapture") {}
+
+function captureLayer(events: Stream.Stream<LLMEvent, unknown>, inspect?: (request: LLM.StreamInput) => void) {
+  return Layer.sync(Capture, () => {
+    const requests: LLM.StreamInput[] = []
+    return Capture.of({ requests, llm: { stream: (request) => {
+      requests.push(request)
+      inspect?.(request)
+      return events
+    } } })
   })
 }
-it.effect("successful stream returns trimmed text with sanitized request", () => Effect.gen(function* () {
+
+function execute(events: Stream.Stream<LLMEvent, unknown>, inspect?: (request: LLM.StreamInput) => void,
+  selected = input(), selectedModel = model) {
+  return Effect.gen(function* () {
+    const provider = yield* Provider.Service
+    const capture = yield* Capture
+    const artifact = yield* run(selected, {
+      provider: { ...provider, getModel: () => Effect.succeed(selectedModel) }, llm: capture.llm,
+    })
+    return { artifact, requests: capture.requests }
+  }).pipe(Effect.provide(captureLayer(events, inspect)))
+}
+
+it.effect("valid stop JSON materializes exact source with isolated producer request", () => Effect.gen(function* () {
   const result = yield* execute(Stream.fromIterable([
-    LLMEvent.reasoningDelta({ id: "thinking", text: "hidden-reasoning" }), ...text("  summary-unique-success  "),
+    LLMEvent.reasoningDelta({ id: "thinking", text: "hidden-reasoning" }), ...text(),
     LLMEvent.stepFinish({ index: 0, reason: "stop" }), LLMEvent.finish({ reason: "stop" }),
   ]), (request) => {
     expect(request.tools).toEqual({})
     expect(request.toolChoice).toBe("none")
+    expect(request.purpose).toBe("context-maintenance")
+    expect(request.system).toEqual([])
     expect(request.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
-    expect(request.agent.prompt).toContain("MAINTENANCE FORK, not the original assistant or worker")
-    expect(request.agent.prompt).toContain("parent retains its own role")
+    expect(request.agent.prompt).toContain("PRODUCER PROTOCOL v1")
+    expect(request.agent.prompt).toContain("not the original assistant, task owner, or original worker")
+    expect(request.agent.prompt).toContain("parent conversation identified by the host continues independently")
+    expect(request.agent.prompt).toContain(JSON.stringify(jsonSchema))
     expect(request.user.system).toBeUndefined()
     expect(request.user.tools).toBeUndefined()
     expect(request.user.format).toBeUndefined()
-    expect(request.user.model.variant).toBeUndefined()
+    expect(request.user.model.variant).toBe("parent-variant")
     expect(request.sessionID).not.toBe(sessionID)
-    const payload = JSON.parse(String(request.messages[0].content))
-    expect(payload.previous).toBe("prior-unique-context")
-    expect(payload.history[0].parts[0].text).toBe("turn-0")
+    expect(request.parentSessionID).toBe(sessionID)
+    const payload: unknown = JSON.parse(String(request.messages[0].content))
+    expect(payload).toMatchObject({ envelope: { parentID: sessionID, producerID: request.sessionID,
+      coveredThrough: "msg_1", tailStart: "msg_2", boundary: "msg_9" },
+      receiver: { canRecall: false }, bodySchema: jsonSchema, maxTokens: MAX_ARTIFACT_TOKENS })
+    expect(JSON.stringify(request.messages)).toContain("historical-parent-system")
     expect(JSON.stringify(request.messages)).not.toContain("turn-2")
-    expect(JSON.stringify(request)).not.toContain("must-not-leak")
+    expect(JSON.stringify(request)).not.toContain("raw-metadata-must-not-leak")
   })
-  expect(result).toBe("summary-unique-success")
+  expect(result.requests).toHaveLength(1)
+  expect(result.artifact?.exact).toEqual([{ source: "S002", reason: "identifier", value: "turn-0" }])
+  expect(result.artifact?.envelope.parentID).toBe(sessionID)
+  expect(result.artifact?.envelope.producerID).toBe(SessionID.make(result.requests[0].sessionID))
+  expect(result.artifact?.text).toContain("turn-0")
 }))
-it.effect("partial text plus provider error never becomes context", () => Effect.gen(function* () {
-  expect(yield* execute(Stream.fromIterable([
-    ...text("partial-provider-error-evidence"), LLMEvent.providerError({ message: "provider-error-unique" }), LLMEvent.finish({ reason: "stop" }),
-  ]))).toBeUndefined()
-}))
+
 for (const event of [
+  LLMEvent.providerError({ message: "provider-error-unique" }),
   LLMEvent.toolInputStart({ id: "tool-1", name: "bash" }),
   LLMEvent.toolInputDelta({ id: "tool-1", name: "bash", text: "{}" }),
   LLMEvent.toolInputEnd({ id: "tool-1", name: "bash" }),
   LLMEvent.toolCall({ id: "tool-1", name: "bash", input: { command: "touch forbidden" } }),
   LLMEvent.toolResult({ id: "tool-1", name: "bash", result: { type: "text", value: "forbidden-result" } }),
   LLMEvent.toolError({ id: "tool-1", name: "bash", message: "forbidden-error" }),
-]) it.effect(`rejects ${event.type} even with text and stop`, () => Effect.gen(function* () {
-  expect(yield* execute(Stream.fromIterable([...text("partial-tool-attempt"), event, LLMEvent.finish({ reason: "stop" })]))).toBeUndefined()
+  LLMEvent.stepFinish({ index: 0, reason: "length" }),
+]) it.effect(`rejects ${event.type} even with valid JSON and terminal stop`, () => Effect.gen(function* () {
+  const result = yield* execute(Stream.fromIterable([...text(), event, LLMEvent.finish({ reason: "stop" })]))
+  expect(result.requests).toHaveLength(1)
+  expect(result.artifact).toBeUndefined()
 }))
-it.effect("length terminal rejects nonempty partial output", () => Effect.gen(function* () {
-  expect(yield* execute(Stream.fromIterable([...text("partial-length-evidence"), LLMEvent.finish({ reason: "length" })]))).toBeUndefined()
+
+for (const events of [
+  [...text(), LLMEvent.finish({ reason: "length" })],
+  [...text(), LLMEvent.stepFinish({ index: 0, reason: "stop" })],
+  [...text(), LLMEvent.finish({ reason: "stop" }), LLMEvent.textDelta({ id: "text-1", text: "trailing" })],
+  [...text(" \n "), LLMEvent.finish({ reason: "stop" })],
+  [...text("I will continue implementing the user's task."), LLMEvent.finish({ reason: "stop" })],
+  [...text(JSON.stringify({ ...body, exact: [{ source: "FOREIGN", reason: "identifier" }] })), LLMEvent.finish({ reason: "stop" })],
+  [...text(JSON.stringify({ ...body, status: "needs_context", issues: [{ code: "missing_source", detail: "essential missing", sources: [] }] })), LLMEvent.finish({ reason: "stop" })],
+]) it.effect(`rejects incomplete or invalid artifact stream ${JSON.stringify(events.at(-1))}`, () => Effect.gen(function* () {
+  const result = yield* execute(Stream.fromIterable(events))
+  expect(result.requests).toHaveLength(1)
+  expect(result.artifact).toBeUndefined()
 }))
-it.effect("step finish is not a terminal finish", () => Effect.gen(function* () {
-  expect(yield* execute(Stream.fromIterable([...text("missing-terminal-evidence"), LLMEvent.stepFinish({ index: 0, reason: "stop" })]))).toBeUndefined()
-}))
-it.effect("empty stop output is invalid", () => Effect.gen(function* () {
-  expect(yield* execute(Stream.fromIterable([...text(" \n "), LLMEvent.finish({ reason: "stop" })]))).toBeUndefined()
-}))
-it.effect("stream failure propagates instead of accepting partial text", () => Effect.gen(function* () {
+
+it.effect("stream failure propagates instead of accepting partial JSON", () => Effect.gen(function* () {
   const failure = new Error("stream-failure-unique")
   const exit = yield* execute(Stream.concat(Stream.fromIterable(text()), Stream.fail(failure))).pipe(Effect.exit)
   expect(Exit.isFailure(exit)).toBe(true)
   if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBe(failure)
 }))
-it.effect("maintenance times out after sixty seconds", () => Effect.gen(function* () {
+
+it.effect("whole maintenance stream times out after sixty seconds", () => Effect.gen(function* () {
   const ready = yield* Deferred.make<void>()
   const stream = Stream.fromEffect(Deferred.succeed(ready, undefined).pipe(Effect.andThen(Effect.never)))
   const fiber = yield* execute(stream).pipe(Effect.exit, Effect.forkChild)
@@ -105,65 +149,81 @@ it.effect("maintenance times out after sixty seconds", () => Effect.gen(function
   expect(Exit.isFailure(exit)).toBe(true)
   if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toMatchObject({ _tag: "TimeoutError" })
 }))
-it.effect("maintenance retains tool evidence and file references", () => Effect.gen(function* () {
-  const selected = input()
-  const base = { sessionID, messageID: selected.head[0].info.id }
-  const attachment: SessionV1.FilePart = { ...base, id: PartID.make("prt_file"), type: "file", mime: "text/plain", filename: "evidence.txt", url: "file:///unique/evidence.txt" }
-  selected.head[0].parts.push({ ...base, id: PartID.make("prt_completed"), type: "tool", callID: "call-read", tool: "read",
-    state: { status: "completed", input: { filePath: "/unique/input.ts" }, output: "tool-output-unique-fact", title: "Read",
-      metadata: { private: "private-tool-metadata" }, time: { start: 0, end: 1 }, attachments: [attachment] } },
-    { ...base, id: PartID.make("prt_error"), type: "tool", callID: "call-error", tool: "bash",
-      state: { status: "error", input: { command: "unique-command" }, error: "tool-error-unique-fact", time: { start: 0, end: 1 } } }, attachment)
+
+it.effect("timeout also covers provider model lookup before stream", () => Effect.gen(function* () {
   const provider = yield* Provider.Service
-  expect(yield* run(selected, { provider, llm: { stream: (request) => {
-    const payload = JSON.parse(String(request.messages[0].content))
-    expect(payload.history[0].parts[1].output).toBe("tool-output-unique-fact")
-    expect(payload.history[0].parts[1].input).toEqual({ filePath: "/unique/input.ts" })
-    expect(payload.history[0].parts[1].attachments[0].url).toBe(attachment.url)
-    expect(payload.history[0].parts[2].error).toBe("tool-error-unique-fact")
-    expect(JSON.stringify(payload)).not.toContain("private-tool-metadata")
-    return Stream.fromIterable([...text("tool-evidence-summary"), LLMEvent.finish({ reason: "stop" })])
-  } } })).toBe("tool-evidence-summary")
+  const ready = yield* Deferred.make<void>()
+  const requests: LLM.StreamInput[] = []
+  const fiber = yield* run(input(), {
+    provider: { ...provider, getModel: () => Deferred.succeed(ready, undefined).pipe(Effect.andThen(Effect.never)) },
+    llm: { stream: (request) => { requests.push(request); return Stream.empty } },
+  }).pipe(Effect.exit, Effect.forkChild)
+  yield* Deferred.await(ready)
+  yield* TestClock.adjust("60 seconds")
+  const exit = yield* Fiber.join(fiber)
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toMatchObject({ _tag: "TimeoutError" })
+  expect(requests).toEqual([])
 }))
 
-for (const condition of ["workflow", "workflow-alias", "input-limit"] as const) it.effect(`maintenance declines ${condition} before streaming`, () => Effect.gen(function* () {
-  const provider = yield* Provider.Service
-  const selected = condition !== "input-limit"
-    ? { ...model, id: ModelV2.ID.make(condition === "workflow" ? "duo-workflow-test" : "maintenance-alias"), api: { ...model.api, id: "duo-workflow-test", npm: "gitlab-ai-provider" } }
-    : { ...model, limit: { ...model.limit, input: 1 } }
-  let streamed = false
-  const result = yield* run(input(), {
-    provider: { ...provider, getModel: () => Effect.succeed(selected) },
-    llm: { stream: () => { streamed = true; return Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })]) } },
-  })
-  expect(result).toBeUndefined()
-  expect(streamed).toBe(false)
-}))
-it.effect("compacted output and inline media are not resurrected into text", () => Effect.gen(function* () {
+for (const condition of ["workflow", "workflow-alias", "input-limit"] as const) {
+  it.effect(`declines ${condition} before streaming`, () => Effect.gen(function* () {
+    const selected = condition !== "input-limit"
+      ? { ...model, id: ModelV2.ID.make(condition === "workflow" ? "duo-workflow-test" : "maintenance-alias"),
+        api: { ...model.api, id: "duo-workflow-test", npm: "gitlab-ai-provider" } }
+      : { ...model, limit: { ...model.limit, input: 1 } }
+    const result = yield* execute(Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })]), undefined, input(), selected)
+    expect(result.artifact).toBeUndefined()
+    expect(result.requests).toEqual([])
+  }))
+}
+
+it.effect("critical exact overflow declines after counting materialized text, not selector JSON", () => Effect.gen(function* () {
   const selected = input()
-  const base = { sessionID, messageID: selected.head[0].info.id }
-  selected.head[0].parts.push({ ...base, id: PartID.make("prt_compacted"), type: "tool", callID: "cleared", tool: "read",
-    state: { status: "completed", input: {}, output: "CLEARED_OUTPUT_MUST_NOT_RETURN", title: "read", metadata: {}, time: { start: 0, end: 1, compacted: 2 } } },
-    { ...base, id: PartID.make("prt_inline"), type: "file", mime: "image/png", url: "data:image/png;base64,INLINE_BASE64_MUST_NOT_RETURN" })
-  const payload = JSON.stringify(request(selected.head))
-  expect(payload).toContain("[Tool output cleared]")
-  expect(payload).toContain("[inline attachment]")
-  expect(payload).not.toContain("MUST_NOT_RETURN")
+  const part = selected.head[0].parts[0]
+  if (part.type !== "text") throw new Error("expected text fixture")
+  part.text = "critical literal with qualifiers ".repeat(2000)
+  const result = yield* execute(Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })]), undefined, selected)
+  expect(JSON.stringify(body).length).toBeLessThan(1000)
+  expect(result.requests).toHaveLength(1)
+  expect(result.artifact).toBeUndefined()
 }))
 
-it.effect("supported terse model uses medium verbosity for maintenance only", () => Effect.gen(function* () {
-  const provider = yield* Provider.Service
-  const luna = { ...model, id: ModelV2.ID.make("gpt-5.6-luna"), api: { ...model.api, id: "gpt-5.6-luna", npm: "@ai-sdk/openai" } }
-  let inspected = false
-  const result = yield* run(input(), {
-    provider: { ...provider, getModel: () => Effect.succeed(luna) },
-    llm: { stream: (request) => {
-      inspected = true
-      expect(request.agent.options).toEqual({ textVerbosity: "medium" })
-      expect(luna.options).toEqual(model.options)
-      return Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })])
-    } },
+it.effect("source catalogue carries authenticated tool role, shell metadata, user.system scope as data", () => Effect.gen(function* () {
+  const selected = input()
+  const base = { sessionID, messageID: selected.head[0].info.id }
+  selected.head[0].parts.push({ ...base, id: PartID.make("prt_completed"), type: "tool", callID: "call-read", tool: "bash",
+    state: { status: "completed", input: { command: "unique-command" }, output: "tool-output-unique-fact", title: "bash",
+      metadata: { exit: 75, truncated: true, outputPath: "/unique/output", private: "private-tool-metadata" },
+      time: { start: 0, end: 1 } } })
+  const sources = catalogue({ parentID: sessionID, head: selected.head })
+  expect(sources.units.find((unit) => unit.locator.field === "system")).toMatchObject({
+    role: "user", scope: "turn:msg_0", value: "historical-parent-system",
   })
-  expect(inspected).toBe(true)
-  expect(result).toBe("summary-unique-success")
+  expect(sources.units.find((unit) => unit.locator.partID === "prt_completed" && unit.locator.path.length === 0)).toMatchObject({
+    role: "tool", exit: 75, extent: "preview",
+    value: { state: { metadata: { exit: 75, truncated: true, outputPath: "/unique/output" }, output: "tool-output-unique-fact" } },
+  })
+  const result = yield* execute(Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })]), (request) => {
+    expect(JSON.stringify(request.messages)).toContain("tool-output-unique-fact")
+    expect(JSON.stringify(request.messages)).not.toContain("private-tool-metadata")
+    expect(request.user.system).toBeUndefined()
+  }, selected)
+  expect(result.artifact).toBeDefined()
 }))
+
+for (const condition of ["supported-low", "explicit-low", "supported-high", "unsupported-low", "variant-high", "variant-low"] as const) {
+  it.effect(`verbosity respects provider support and parent settings: ${condition}`, () => Effect.gen(function* () {
+    const selected: Provider.Model = { ...model, api: { ...model.api, id: "gpt-5.6-luna",
+      npm: condition === "unsupported-low" ? "@ai-sdk/openai-compatible" : "@ai-sdk/openai" },
+      options: condition === "supported-high" ? { textVerbosity: "high" }
+        : condition === "unsupported-low" || condition === "explicit-low" ? { textVerbosity: "low" } : {},
+      variants: condition === "variant-high" ? { "parent-variant": { textVerbosity: "high" } }
+        : condition === "variant-low" ? { "parent-variant": { textVerbosity: "low" } } : {} }
+    const result = yield* execute(Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })]), (request) => {
+      expect(request.agent.options).toEqual(condition === "supported-low" ? { textVerbosity: "medium" } : {})
+      expect(request.user.model.variant).toBe("parent-variant")
+    }, input(), selected)
+    expect(result.artifact).toBeDefined()
+  }))
+}

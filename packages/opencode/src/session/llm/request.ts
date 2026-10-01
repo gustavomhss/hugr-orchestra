@@ -33,9 +33,11 @@ type PrepareInput = {
   readonly plugin: Plugin.Interface
   readonly flags: RuntimeFlags.Info
   readonly isWorkflow: boolean
+  readonly purpose?: "context-maintenance"
 }
 
 export type Prepared = {
+  readonly model: Provider.Model
   readonly system: string[]
   readonly messages: ModelMessage[]
   readonly tools: Record<string, Tool>
@@ -53,13 +55,41 @@ export type Prepared = {
 const mergeOptions = (target: Record<string, any>, source: Record<string, any> | undefined): Record<string, any> =>
   mergeDeep(target, source ?? {}) as Record<string, any>
 
-export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: PrepareInput) {
+export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: PrepareInput) {
+  const maintenance = request.purpose === "context-maintenance"
+  // Snapshot request-owned data before exposing anything to mutable hooks. Tools
+  // and provider transport callbacks are not JSON configuration and stay host-owned.
+  const input = maintenance ? yield* Effect.try({ try: () => ({
+    ...request,
+    ...structuredClone({ model: request.model, user: request.user, agent: request.agent,
+      messages: request.messages, system: request.system, permission: request.permission, flags: request.flags }),
+  }), catch: (cause) => cause }) : request
   const isOpenaiOauth = input.provider.id === "openai" && input.auth?.type === "oauth"
+  const role = maintenance ? input.agent.prompt ?? "" : undefined
+  if (maintenance && !role?.trim()) return yield* Effect.fail(new Error("Context maintenance requires a dedicated producer role"))
+  const data = maintenance ? structuredClone(input.messages) : undefined
+  const trusted = maintenance ? yield* Effect.try({
+    try: () => structuredClone(parameters(input)), catch: (cause) => cause,
+  }) : undefined
+  if (trusted && isOpenaiOauth) trusted.options.instructions = role
+  const hookContext = () => maintenance ? {
+    sessionID: input.sessionID,
+    agent: input.agent.name,
+    ...structuredClone({ model: input.model, message: input.user }),
+    provider: {
+      ...input.provider,
+      ...structuredClone({ env: input.provider.env, models: input.provider.models }),
+      // OAuth fetch overrides are trusted transport functions, not mutable config.
+      options: Object.fromEntries(Object.entries<unknown>(input.provider.options).map(([key, value]) =>
+        [key, typeof value === "function" ? value : structuredClone(value)])),
+    },
+  } : { sessionID: input.sessionID, agent: input.agent.name,
+    model: input.model, provider: input.provider, message: input.user }
   const system = [
     [
-      ...(input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)),
-      ...input.system,
-      ...(input.user.system ? [input.user.system] : []),
+      ...(maintenance ? [role] : input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)),
+      ...(maintenance ? [] : input.system),
+      ...(!maintenance && input.user.system ? [input.user.system] : []),
     ]
       .filter((x) => x)
       .join("\n"),
@@ -68,7 +98,7 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
   const header = system[0]
   yield* input.plugin.trigger(
     "experimental.chat.system.transform",
-    { sessionID: input.sessionID, model: input.model },
+    { sessionID: input.sessionID, model: maintenance ? structuredClone(input.model) : input.model },
     { system },
   )
   if (system.length > 2 && system[0] === header) {
@@ -77,26 +107,8 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
     system.push(header, rest.join("\n"))
   }
 
-  const variant =
-    !input.small && input.model.variants && input.user.model.variant
-      ? input.model.variants[input.user.model.variant]
-      : {}
-  const base = input.small
-    ? ProviderTransform.smallOptions(input.model)
-    : ProviderTransform.options({
-        model: input.model,
-        sessionID: input.sessionID,
-        providerOptions: input.provider.options,
-      })
-  const options = mergeOptions(mergeOptions(mergeOptions(base, input.model.options), input.agent.options), variant)
-  if (
-    input.model.api.npm === "@ai-sdk/azure" &&
-    (input.provider.options.useCompletionUrls || input.model.options.useCompletionUrls || options.useCompletionUrls)
-  ) {
-    delete options.reasoningSummary
-    delete options.include
-  }
-  if (isOpenaiOauth) options.instructions = system.join("\n")
+  const initial = trusted ?? parameters(input)
+  if (!maintenance && isOpenaiOauth) initial.options.instructions = system.join("\n")
 
   const messages =
     isOpenaiOauth || input.isWorkflow
@@ -113,39 +125,19 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
 
   const params = yield* input.plugin.trigger(
     "chat.params",
-    {
-      sessionID: input.sessionID,
-      agent: input.agent.name,
-      model: input.model,
-      provider: input.provider,
-      message: input.user,
-    },
-    {
-      temperature: input.model.capabilities.temperature
-        ? (input.agent.temperature ?? ProviderTransform.temperature(input.model))
-        : undefined,
-      topP: input.agent.topP ?? ProviderTransform.topP(input.model),
-      topK: ProviderTransform.topK(input.model),
-      maxOutputTokens: ProviderTransform.maxOutputTokens(input.model, input.flags.outputTokenMax),
-      options,
-    },
+    hookContext(),
+    maintenance ? structuredClone(initial) : initial,
   )
 
   const { headers } = yield* input.plugin.trigger(
     "chat.headers",
-    {
-      sessionID: input.sessionID,
-      agent: input.agent.name,
-      model: input.model,
-      provider: input.provider,
-      message: input.user,
-    },
+    hookContext(),
     {
       headers: {},
     },
   )
 
-  const tools = resolveTools(input)
+  const tools: Record<string, Tool> = maintenance ? {} : resolveTools(input)
   // Codex parity: OpenAI Responses-family providers hardcode `strict: false`
   // on every function tool so MCP-sourced and dynamic schemas that don't
   // satisfy OpenAI's structured-outputs constraints still register.
@@ -178,12 +170,21 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
     ? (yield* InstanceState.context).project.id
     : undefined
 
+  // Final role lock: both runtimes consume these same prepared values.
+  if (maintenance && trusted) {
+    system.splice(0, system.length, role ?? "")
+    Object.assign(params, trusted)
+  }
+
   return {
+    model: input.model,
     system,
-    messages,
-    tools: Object.fromEntries(Object.entries(tools).toSorted(([a], [b]) => a.localeCompare(b))),
+    messages: data
+      ? isOpenaiOauth || input.isWorkflow ? data : [{ role: "system", content: system[0] } satisfies ModelMessage, ...data]
+      : messages,
+    tools: maintenance ? {} : Object.fromEntries(Object.entries(tools).toSorted(([a], [b]) => a.localeCompare(b))),
     params,
-    messageTransformOptions: options,
+    messageTransformOptions: trusted?.options ?? initial.options,
     headers: {
       ...(input.model.providerID.startsWith("opencode")
         ? {
@@ -204,6 +205,28 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
     },
   }
 })
+
+function parameters(input: PrepareInput) {
+  const variant = !input.small && input.model.variants && input.user.model.variant
+    ? input.model.variants[input.user.model.variant] : {}
+  const base = input.small ? ProviderTransform.smallOptions(input.model) : ProviderTransform.options({
+    model: input.model, sessionID: input.sessionID, providerOptions: input.provider.options,
+  })
+  const options = mergeOptions(mergeOptions(mergeOptions(base, input.model.options), input.agent.options), variant)
+  if (input.model.api.npm === "@ai-sdk/azure" &&
+    (input.provider.options.useCompletionUrls || input.model.options.useCompletionUrls || options.useCompletionUrls)) {
+    delete options.reasoningSummary
+    delete options.include
+  }
+  return {
+    temperature: input.model.capabilities.temperature
+      ? (input.agent.temperature ?? ProviderTransform.temperature(input.model)) : undefined,
+    topP: input.agent.topP ?? ProviderTransform.topP(input.model),
+    topK: ProviderTransform.topK(input.model),
+    maxOutputTokens: ProviderTransform.maxOutputTokens(input.model, input.flags.outputTokenMax),
+    options,
+  }
+}
 
 function resolveTools(input: Pick<PrepareInput, "tools" | "agent" | "permission" | "user">) {
   const disabled = Permission.disabled(

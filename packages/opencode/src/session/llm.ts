@@ -45,6 +45,8 @@ export type StreamInput = {
   tools: Record<string, Tool>
   retries?: number
   toolChoice?: "auto" | "required" | "none"
+  /** Internal request isolation; agent names do not confer maintenance privileges. */
+  purpose?: "context-maintenance"
 }
 
 export type StreamRequest = StreamInput & {
@@ -82,7 +84,13 @@ const live: Layer.Layer<
     const llmClient = yield* LLMClient.Service
     const flags = yield* RuntimeFlags.Service
 
-    const run = Effect.fn("LLM.run")(function* (input: StreamRequest) {
+    const run = Effect.fn("LLM.run")(function* (request: StreamRequest) {
+      const input = request.purpose === "context-maintenance" ? yield* Effect.try({ try: () => ({
+        ...request,
+        ...structuredClone({ model: request.model, user: request.user, agent: request.agent,
+          system: request.system, messages: request.messages, permission: request.permission }),
+      }), catch: (cause) => cause }) : request
+      const toolChoice = input.purpose === "context-maintenance" ? "none" : input.toolChoice
       yield* Effect.logInfo("stream", {
         providerID: input.model.providerID,
         modelID: input.model.id,
@@ -225,13 +233,13 @@ const live: Layer.Layer<
       // either returns a ready LLMEvent stream or a concrete fallback reason.
       if (flags.experimentalNativeLlm) {
         const native = LLMNativeRuntime.stream({
-          model: input.model,
+          model: prepared.model,
           provider: item,
           auth: info,
           llmClient,
           messages: prepared.messages,
           tools: prepared.tools,
-          toolChoice: input.toolChoice,
+          toolChoice,
           temperature: prepared.params.temperature,
           topP: prepared.params.topP,
           topK: prepared.params.topK,
@@ -313,10 +321,10 @@ const live: Layer.Layer<
           temperature: prepared.params.temperature,
           topP: prepared.params.topP,
           topK: prepared.params.topK,
-          providerOptions: ProviderTransform.providerOptions(input.model, prepared.params.options),
+          providerOptions: ProviderTransform.providerOptions(prepared.model, prepared.params.options),
           activeTools: Object.keys(prepared.tools).filter((x) => x !== "invalid"),
           tools: prepared.tools,
-          toolChoice: input.toolChoice,
+          toolChoice,
           maxOutputTokens: prepared.params.maxOutputTokens,
           abortSignal: input.abort,
           headers: prepared.headers,
@@ -332,7 +340,7 @@ const live: Layer.Layer<
                     // @ts-expect-error
                     args.params.prompt = ProviderTransform.message(
                       args.params.prompt,
-                      input.model,
+                      prepared.model,
                       prepared.messageTransformOptions,
                     )
                   }

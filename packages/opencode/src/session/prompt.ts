@@ -1078,6 +1078,7 @@ const layer = Layer.effect(
       function* (sessionID: SessionID) {
         const ctx = yield* InstanceState.context
         let structured: unknown
+        let canRecall = false
         let step = 0
         const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
 
@@ -1122,7 +1123,7 @@ const layer = Layer.effect(
               })
             }
             yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
-            if (!orphan) yield* continuity.start({ sessionID, message: lastAssistant })
+            if (!orphan) yield* continuity.start({ sessionID, message: lastAssistant, canRecall })
             break
           }
 
@@ -1237,6 +1238,7 @@ const layer = Layer.effect(
               Effect.provideService(RuntimeFlags.Service, flags),
             )
 
+            canRecall = Object.hasOwn(tools, "context_recall") && model.capabilities.toolcall
             if (lastUser.format?.type === "json_schema") {
               tools["StructuredOutput"] = createStructuredOutputTool({
                 schema: lastUser.format.schema,
@@ -1289,7 +1291,7 @@ const layer = Layer.effect(
               handle.message.structured = structured
               handle.message.finish = handle.message.finish ?? "stop"
               yield* sessions.updateMessage(handle.message)
-              yield* continuity.start({ sessionID, message: handle.message })
+              yield* continuity.start({ sessionID, message: handle.message, canRecall })
               return "break" as const
             }
 
@@ -1343,7 +1345,7 @@ const layer = Layer.effect(
                 })
                 return "continue" as const
               }
-              yield* continuity.start({ sessionID, message: handle.message })
+              yield* continuity.start({ sessionID, message: handle.message, canRecall })
               return "break" as const
             }
             if (result === "compact") {

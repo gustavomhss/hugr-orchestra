@@ -10,16 +10,17 @@ import { Session } from "@/session/session"
 import { Cause, Context, Effect, Layer } from "effect"
 import { create } from "./context"
 import { run, snapshot } from "./fork"
-import { isCurrent } from "./model"
+import { hasArtifact, isCurrent } from "./model"
 import { isSafe, shouldStart, tokenCount } from "./trigger"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
 type Active = { generation: number; boundary: MessageID }
+type Pending = { message: SessionV1.Assistant; canRecall: boolean }
 type Entry = {
   generation: number
   safe?: MessageID
   active?: Active
-  pending?: SessionV1.Assistant
+  pending?: Pending
   attempted?: MessageID
   refresh: boolean
 }
@@ -30,7 +31,11 @@ export interface Interface {
     messages: SessionV1.WithParts[]
     system: string[]
   }>
-  readonly start: (input: { sessionID: SessionID; message: SessionV1.Assistant }) => Effect.Effect<void>
+  readonly start: (input: {
+    sessionID: SessionID
+    message: SessionV1.Assistant
+    canRecall?: boolean
+  }) => Effect.Effect<void>
   readonly advance: (sessionID: SessionID) => Effect.Effect<void>
   readonly invalidate: (sessionID: SessionID) => Effect.Effect<void>
   readonly forget: (sessionID: SessionID) => Effect.Effect<void>
@@ -91,11 +96,17 @@ const layer = Layer.effect(
       current.sessions.delete(sessionID)
     })
 
-    const schedule = (current: State, sessionID: SessionID, message: SessionV1.Assistant): Effect.Effect<void> =>
+    const schedule = (current: State, sessionID: SessionID, pending: Pending): Effect.Effect<void> =>
       Effect.gen(function* () {
+        const message = pending.message
         const active = yield* Effect.sync(() => {
           const item = entry(current, sessionID)
           if (item.active || item.safe !== message.id || item.attempted === message.id) return
+          const previous = current.contexts.get(sessionID)
+          if (previous && !hasArtifact(previous)) {
+            current.contexts.discard(sessionID)
+            item.refresh = true
+          }
           if (current.contexts.get(sessionID)?.boundary === message.id) return
           if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false })) return
           const active: Active = { generation: item.generation, boundary: message.id }
@@ -114,60 +125,110 @@ const layer = Layer.effect(
             const pending = item.pending
             item.pending = undefined
             // New users clear the safe boundary; retry only a new completed turn.
-            if (!pending || item.safe !== pending.id || item.attempted === pending.id) return
+            if (!pending || item.safe !== pending.message.id || item.attempted === pending.message.id) return
             return pending
           })
           if (pending) yield* schedule(current, sessionID, pending)
         })
 
-        yield* Effect.suspend(() => background.start({
-          id: `continuity:${sessionID}:${active.boundary}:${active.generation}`,
-          type: "context-continuity",
-          title: "Context continuity",
-          metadata: { sessionId: sessionID, background: true },
-          run: Effect.gen(function* () {
-            const history = yield* sessions.messages({ sessionID })
-            const selected = yield* Effect.sync(() => {
-              const item = current.sessions.get(sessionID)
-              if (!item || item.active !== active || item.generation !== active.generation || item.safe !== active.boundary ||
-                history.at(-1)?.info.id !== active.boundary) return
-              const prepared = current.contexts.prepare(sessionID, history)
-              const previous = prepared.system.length ? current.contexts.get(sessionID)?.text : undefined
-              return snapshot(sessionID, prepared.messages, previous)
-            })
-            if (!selected) {
-              yield* diagnostic(sessionID, active.boundary, "no-current-snapshot")
-              return "discarded"
-            }
-            const text = yield* run(selected, { provider, llm })
-            const latest = (yield* sessions.messages({ sessionID })).at(-1)?.info.id
-            const applied = yield* Effect.sync(() => {
-              const item = current.sessions.get(sessionID)
-              if (!item || !text?.trim() || item.active !== active || item.generation !== active.generation ||
-                item.safe !== active.boundary || selected.boundary !== active.boundary || !isCurrent(selected, latest)) return false
-              current.contexts.set({ sessionID, boundary: selected.boundary, tailStart: selected.tailStart, text })
-              item.refresh = false
-              return true
-            })
-            if (!applied) {
-              yield* diagnostic(sessionID, active.boundary, "empty-or-stale-output")
-              return "discarded"
-            }
-            return "applied"
-          }).pipe(
-            Effect.catchCause((cause) => diagnostic(sessionID, active.boundary,
-              Cause.hasInterruptsOnly(cause) ? "cancelled" : "failed",
-            ).pipe(Effect.andThen(Cause.hasInterruptsOnly(cause)
-              ? Effect.failCause(cause)
-              : Effect.fail(new Error("Continuity maintenance failed"))))),
-            Effect.ensuring(finish),
-          ),
-        })).pipe(
+        yield* Effect.suspend(() =>
+          background.start({
+            id: `continuity:${sessionID}:${active.boundary}:${active.generation}`,
+            type: "context-continuity",
+            title: "Context continuity",
+            metadata: { sessionId: sessionID, background: true },
+            run: Effect.gen(function* () {
+              const history = yield* sessions.messages({ sessionID })
+              const selected = yield* Effect.sync(() => {
+                const item = current.sessions.get(sessionID)
+                if (
+                  !item ||
+                  item.active !== active ||
+                  item.generation !== active.generation ||
+                  item.safe !== active.boundary ||
+                  history.at(-1)?.info.id !== active.boundary
+                )
+                  return
+                const prepared = current.contexts.prepare(sessionID, history)
+                const previous = current.contexts.get(sessionID)
+                // Full history is required for incompatible or unavailable prior coverage.
+                if (previous && !hasArtifact(previous)) current.contexts.discard(sessionID)
+                return snapshot(
+                  sessionID,
+                  history,
+                  prepared.system.length ? previous?.artifact : undefined,
+                  pending.canRecall,
+                )
+              })
+              if (!selected) {
+                yield* diagnostic(sessionID, active.boundary, "no-current-snapshot")
+                return "discarded"
+              }
+              const artifact = yield* run(selected, { provider, llm })
+              if (!artifact) {
+                yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
+                return "discarded"
+              }
+              const latest = (yield* sessions.messages({ sessionID })).at(-1)?.info.id
+              const applied = yield* Effect.sync(() => {
+                const item = current.sessions.get(sessionID)
+                if (
+                  !item ||
+                  item.active !== active ||
+                  item.generation !== active.generation ||
+                  item.safe !== active.boundary ||
+                  selected.boundary !== active.boundary ||
+                  !isCurrent(selected, latest)
+                )
+                  return false
+                if (
+                  artifact.envelope.parentID !== sessionID ||
+                  artifact.envelope.boundary !== selected.boundary ||
+                  artifact.envelope.tailStart !== selected.tailStart ||
+                  artifact.envelope.coveredThrough !== selected.head.at(-1)?.info.id
+                )
+                  return false
+                if (
+                  !current.contexts.set({
+                    sessionID,
+                    boundary: selected.boundary,
+                    tailStart: selected.tailStart,
+                    text: artifact.text,
+                    artifact,
+                  })
+                )
+                  return false
+                item.refresh = false
+                return true
+              })
+              if (!applied) {
+                yield* diagnostic(sessionID, active.boundary, "stale-or-mismatched-artifact")
+                return "discarded"
+              }
+              return "applied"
+            }).pipe(
+              Effect.catchCause((cause) =>
+                diagnostic(sessionID, active.boundary, Cause.hasInterruptsOnly(cause) ? "cancelled" : "failed").pipe(
+                  Effect.andThen(
+                    Cause.hasInterruptsOnly(cause)
+                      ? Effect.failCause(cause)
+                      : Effect.fail(new Error("Continuity maintenance failed")),
+                  ),
+                ),
+              ),
+              Effect.ensuring(finish),
+            ),
+          }),
+        ).pipe(
           // BackgroundJob carries caller interruptibility into its worker.
           Effect.interruptible,
-          Effect.catchCause((cause) => diagnostic(sessionID, active.boundary,
-            Cause.hasInterruptsOnly(cause) ? "scheduling-cancelled" : "scheduling-failed",
-          ).pipe(Effect.andThen(finish))),
+          Effect.catchCause((cause) =>
+            diagnostic(
+              sessionID,
+              active.boundary,
+              Cause.hasInterruptsOnly(cause) ? "scheduling-cancelled" : "scheduling-failed",
+            ).pipe(Effect.andThen(finish)),
+          ),
           Effect.asVoid,
         )
       })
@@ -175,25 +236,30 @@ const layer = Layer.effect(
     const start: Interface["start"] = Effect.fn("SessionContinuity.start")((input) =>
       Effect.gen(function* () {
         if (!isSafe(input.message) || input.message.sessionID !== input.sessionID) return
+        const pending: Pending = { message: input.message, canRecall: input.canRecall === true }
         const current = yield* InstanceState.get(state)
         const idle = yield* Effect.sync(() => {
           const item = entry(current, input.sessionID)
           item.safe = input.message.id
           if (item.active) {
             if (item.active.boundary !== input.message.id) {
-              item.pending = input.message
+              item.pending = pending
               item.refresh = true
             }
             return false
           }
           return true
         })
-        if (idle) yield* schedule(current, input.sessionID, input.message)
+        if (idle) yield* schedule(current, input.sessionID, pending)
       }).pipe(
         Effect.uninterruptible,
-        Effect.catchCause((cause) => diagnostic(input.sessionID, input.message.id,
-          Cause.hasInterruptsOnly(cause) ? "setup-cancelled" : "setup-failed",
-        )),
+        Effect.catchCause((cause) =>
+          diagnostic(
+            input.sessionID,
+            input.message.id,
+            Cause.hasInterruptsOnly(cause) ? "setup-cancelled" : "setup-failed",
+          ),
+        ),
       ),
     )
 
