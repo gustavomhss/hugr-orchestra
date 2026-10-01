@@ -112,78 +112,88 @@ describe("ProjectCopy", () => {
     }),
   )
 
-  it.live("creates and removes a git worktree directory", () =>
-    Effect.gen(function* () {
-      const input = yield* setup()
-      const copy = yield* ProjectCopy.Service
-      const events = yield* EventV2.Service
-      const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
-      const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-created"))
-      const target = abs(path.join(parent, "copy"))
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
-      )
-      const fiber = yield* events
-        .subscribe(ProjectCopy.Event.Updated)
-        .pipe(Stream.take(1), Stream.runCollect, Effect.forkScoped)
-      yield* Effect.yieldNow
+  // Real Git worktree setup and teardown can exceed Bun's 5s default on Windows runners.
+  it.live(
+    "creates and removes a git worktree directory",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        const copy = yield* ProjectCopy.Service
+        const events = yield* EventV2.Service
+        const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
+        const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-created"))
+        const target = abs(path.join(parent, "copy"))
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+        const fiber = yield* events
+          .subscribe(ProjectCopy.Event.Updated)
+          .pipe(Stream.take(1), Stream.runCollect, Effect.forkScoped)
+        yield* Effect.yieldNow
 
-      const created = yield* copy.create({
-        projectID: input.projectID,
-        strategy: gitWorktree,
-        sourceDirectory: input.sourceDirectory,
-        directory: parent,
-        name: "copy",
-      })
-      expect(created.directory).toBe(target)
-      expect(yield* stored(input.projectID)).toEqual(
-        [
-          { directory: input.sourceDirectory, strategy: null },
-          { directory: created.directory, strategy: "git_worktree" },
-        ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
-      )
-      expect(Array.from(yield* Fiber.join(fiber))[0]?.data).toEqual({ projectID: input.projectID })
+        const created = yield* copy.create({
+          projectID: input.projectID,
+          strategy: gitWorktree,
+          sourceDirectory: input.sourceDirectory,
+          directory: parent,
+          name: "copy",
+        })
+        expect(created.directory).toBe(target)
+        expect(yield* stored(input.projectID)).toEqual(
+          [
+            { directory: input.sourceDirectory, strategy: null },
+            { directory: created.directory, strategy: "git_worktree" },
+          ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
+        )
+        expect(Array.from(yield* Fiber.join(fiber))[0]?.data).toEqual({ projectID: input.projectID })
 
-      yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: false })
+        yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: false })
 
-      expect(yield* stored(input.projectID)).toEqual([{ directory: input.sourceDirectory, strategy: null }])
-      expect(yield* Effect.promise(() => Bun.file(target).exists())).toBe(false)
-    }),
+        expect(yield* stored(input.projectID)).toEqual([{ directory: input.sourceDirectory, strategy: null }])
+        expect(yield* Effect.promise(() => Bun.file(target).exists())).toBe(false)
+      }),
+    30_000,
   )
 
-  it.live("requires force to remove a dirty git worktree", () =>
-    Effect.gen(function* () {
-      const input = yield* setup()
-      const copy = yield* ProjectCopy.Service
-      const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
-      const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-dirty"))
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
-      )
-      const created = yield* copy.create({
-        projectID: input.projectID,
-        strategy: gitWorktree,
-        sourceDirectory: input.sourceDirectory,
-        directory: parent,
-        name: "copy",
-      })
-      yield* Effect.promise(() => Bun.write(path.join(created.directory, "dirty.txt"), "dirty"))
+  it.live(
+    "requires force to remove a dirty git worktree",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        const copy = yield* ProjectCopy.Service
+        const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
+        const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-dirty"))
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+        const created = yield* copy.create({
+          projectID: input.projectID,
+          strategy: gitWorktree,
+          sourceDirectory: input.sourceDirectory,
+          directory: parent,
+          name: "copy",
+        })
+        yield* Effect.promise(() => Bun.write(path.join(created.directory, "dirty.txt"), "dirty"))
 
-      const error = yield* copy
-        .remove({ projectID: input.projectID, directory: created.directory, force: false })
-        .pipe(Effect.flip)
+        const error = yield* copy
+          .remove({ projectID: input.projectID, directory: created.directory, force: false })
+          .pipe(Effect.flip)
 
-      expect(error).toBeInstanceOf(Git.WorktreeError)
-      if (error instanceof Git.WorktreeError) {
-        expect(error.operation).toBe("remove")
-        expect(error.forceRequired).toBe(true)
-      }
-      expect(yield* stored(input.projectID)).toContainEqual({ directory: created.directory, strategy: "git_worktree" })
-      expect(yield* Effect.promise(() => Bun.file(path.join(created.directory, "dirty.txt")).exists())).toBe(true)
+        expect(error).toBeInstanceOf(Git.WorktreeError)
+        if (error instanceof Git.WorktreeError) {
+          expect(error.operation).toBe("remove")
+          expect(error.forceRequired).toBe(true)
+        }
+        expect(yield* stored(input.projectID)).toContainEqual({
+          directory: created.directory,
+          strategy: "git_worktree",
+        })
+        expect(yield* Effect.promise(() => Bun.file(path.join(created.directory, "dirty.txt")).exists())).toBe(true)
 
-      yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: true })
-      expect(yield* Effect.promise(() => Bun.file(created.directory).exists())).toBe(false)
-    }),
+        yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: true })
+        expect(yield* Effect.promise(() => Bun.file(created.directory).exists())).toBe(false)
+      }),
+    30_000,
   )
 
   it.live("preserves copies whose stored strategy is unavailable", () =>
@@ -208,37 +218,40 @@ describe("ProjectCopy", () => {
     }),
   )
 
-  it.live("adds a numeric suffix when a copy directory already exists", () =>
-    Effect.gen(function* () {
-      const input = yield* setup()
-      const copy = yield* ProjectCopy.Service
-      const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
-      const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-suffix"))
-      const target = abs(path.join(parent, "copy-3"))
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
-      )
-      yield* Effect.promise(() => fs.mkdir(path.join(parent, "copy"), { recursive: true }))
-      yield* Effect.promise(() => fs.mkdir(path.join(parent, "copy-2")))
+  it.live(
+    "adds a numeric suffix when a copy directory already exists",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        const copy = yield* ProjectCopy.Service
+        const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
+        const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-suffix"))
+        const target = abs(path.join(parent, "copy-3"))
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+        yield* Effect.promise(() => fs.mkdir(path.join(parent, "copy"), { recursive: true }))
+        yield* Effect.promise(() => fs.mkdir(path.join(parent, "copy-2")))
 
-      const created = yield* copy.create({
-        projectID: input.projectID,
-        strategy: gitWorktree,
-        sourceDirectory: input.sourceDirectory,
-        directory: parent,
-        name: "copy",
-      })
+        const created = yield* copy.create({
+          projectID: input.projectID,
+          strategy: gitWorktree,
+          sourceDirectory: input.sourceDirectory,
+          directory: parent,
+          name: "copy",
+        })
 
-      expect(created.directory).toBe(target)
-      expect(yield* Effect.promise(() => fs.stat(path.join(parent, "copy")).then((item) => item.isDirectory()))).toBe(
-        true,
-      )
-      expect(yield* Effect.promise(() => fs.stat(path.join(parent, "copy-2")).then((item) => item.isDirectory()))).toBe(
-        true,
-      )
+        expect(created.directory).toBe(target)
+        expect(yield* Effect.promise(() => fs.stat(path.join(parent, "copy")).then((item) => item.isDirectory()))).toBe(
+          true,
+        )
+        expect(
+          yield* Effect.promise(() => fs.stat(path.join(parent, "copy-2")).then((item) => item.isDirectory())),
+        ).toBe(true)
 
-      yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: false })
-    }),
+        yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: false })
+      }),
+    30_000,
   )
 
   it.live("fails after ten copy directory conflicts", () =>
@@ -296,66 +309,72 @@ describe("ProjectCopy", () => {
     }),
   )
 
-  it.live("refresh discovers and prunes an externally managed git worktree", () =>
-    Effect.gen(function* () {
-      const input = yield* setup()
-      const copy = yield* ProjectCopy.Service
-      const events = yield* EventV2.Service
-      const target = abs(`${input.root.path}-copy-external`)
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => fs.rm(target, { recursive: true, force: true })).pipe(Effect.ignore),
-      )
-      yield* Effect.promise(() => $`git worktree add --detach ${target} HEAD`.cwd(input.root.path).quiet())
-      yield* input.db
-        .insert(ProjectDirectoryTable)
-        .values({ project_id: input.projectID, directory: target })
-        .run()
-        .pipe(Effect.orDie)
-      const fiber = yield* events
-        .subscribe(ProjectCopy.Event.Updated)
-        .pipe(Stream.take(1), Stream.runCollect, Effect.forkScoped)
-      yield* Effect.yieldNow
+  it.live(
+    "refresh discovers and prunes an externally managed git worktree",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        const copy = yield* ProjectCopy.Service
+        const events = yield* EventV2.Service
+        const target = abs(`${input.root.path}-copy-external`)
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(target, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+        yield* Effect.promise(() => $`git worktree add --detach ${target} HEAD`.cwd(input.root.path).quiet())
+        yield* input.db
+          .insert(ProjectDirectoryTable)
+          .values({ project_id: input.projectID, directory: target })
+          .run()
+          .pipe(Effect.orDie)
+        const fiber = yield* events
+          .subscribe(ProjectCopy.Event.Updated)
+          .pipe(Stream.take(1), Stream.runCollect, Effect.forkScoped)
+        yield* Effect.yieldNow
 
-      const discovered = abs(yield* Effect.promise(() => fs.realpath(target)))
-      expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [discovered], removed: [] })
+        const discovered = abs(yield* Effect.promise(() => fs.realpath(target)))
+        expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [discovered], removed: [] })
 
-      expect(yield* stored(input.projectID)).toEqual(
-        [
-          { directory: input.sourceDirectory, strategy: null },
-          { directory: discovered, strategy: "git_worktree" },
-        ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
-      )
-      expect(Array.from(yield* Fiber.join(fiber))[0]?.data).toEqual({ projectID: input.projectID })
+        expect(yield* stored(input.projectID)).toEqual(
+          [
+            { directory: input.sourceDirectory, strategy: null },
+            { directory: discovered, strategy: "git_worktree" },
+          ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
+        )
+        expect(Array.from(yield* Fiber.join(fiber))[0]?.data).toEqual({ projectID: input.projectID })
 
-      yield* Effect.promise(() => $`git worktree remove --force ${target}`.cwd(input.root.path).quiet())
-      expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [], removed: [discovered] })
-      expect(yield* stored(input.projectID)).toEqual([{ directory: input.sourceDirectory, strategy: null }])
-    }),
+        yield* Effect.promise(() => $`git worktree remove --force ${target}`.cwd(input.root.path).quiet())
+        expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [], removed: [discovered] })
+        expect(yield* stored(input.projectID)).toEqual([{ directory: input.sourceDirectory, strategy: null }])
+      }),
+    30_000,
   )
 
-  it.live("refresh ignores stale git worktree registrations", () =>
-    Effect.gen(function* () {
-      const input = yield* setup()
-      const copy = yield* ProjectCopy.Service
-      const stale = abs(`${input.root.path}-copy-stale`)
-      const target = abs(`${input.root.path}-copy-after-stale`)
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => fs.rm(target, { recursive: true, force: true })).pipe(Effect.ignore),
-      )
-      yield* Effect.promise(() => $`git worktree add --detach ${stale} HEAD`.cwd(input.root.path).quiet())
-      yield* Effect.promise(() => fs.rm(stale, { recursive: true, force: true }))
-      yield* Effect.promise(() => $`git worktree add --detach ${target} HEAD`.cwd(input.root.path).quiet())
+  it.live(
+    "refresh ignores stale git worktree registrations",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        const copy = yield* ProjectCopy.Service
+        const stale = abs(`${input.root.path}-copy-stale`)
+        const target = abs(`${input.root.path}-copy-after-stale`)
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(target, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+        yield* Effect.promise(() => $`git worktree add --detach ${stale} HEAD`.cwd(input.root.path).quiet())
+        yield* Effect.promise(() => fs.rm(stale, { recursive: true, force: true }))
+        yield* Effect.promise(() => $`git worktree add --detach ${target} HEAD`.cwd(input.root.path).quiet())
 
-      yield* copy.refresh({ projectID: input.projectID })
+        yield* copy.refresh({ projectID: input.projectID })
 
-      const discovered = abs(yield* Effect.promise(() => fs.realpath(target)))
-      expect(yield* stored(input.projectID)).toEqual(
-        [
-          { directory: input.sourceDirectory, strategy: null },
-          { directory: discovered, strategy: "git_worktree" },
-        ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
-      )
-    }),
+        const discovered = abs(yield* Effect.promise(() => fs.realpath(target)))
+        expect(yield* stored(input.projectID)).toEqual(
+          [
+            { directory: input.sourceDirectory, strategy: null },
+            { directory: discovered, strategy: "git_worktree" },
+          ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
+        )
+      }),
+    30_000,
   )
 
   it.live("refresh ignores existing directories that are no longer git checkouts", () =>
