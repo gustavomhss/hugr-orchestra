@@ -67,7 +67,7 @@ describe("continuity source catalogue", () => {
       units: [{ id: "S002", path: [], kind: "json" }, { id: "S003", path: ["state", "input", "command"], value: "exit 1" },
         { id: "S004", path: ["state", "metadata", "exit"], value: 1 },
         { id: "S005", path: ["state", "output"], kind: "text", value: raw }] })
-    expect(readSourceCatalogue(packet).units).toEqual(sources.units)
+    expect(readSourceCatalogue(packet).units).toEqual(sources.units.map(({ digest, ...unit }) => unit))
     for (const mutate of [
       (p: typeof packet) => { p.source.units = [] },
       (p: typeof packet) => { p.source.groups[0].units[0].parentID = "ses_foreign" },

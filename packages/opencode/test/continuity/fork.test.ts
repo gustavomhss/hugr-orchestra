@@ -13,6 +13,7 @@ import { catalogue } from "@/continuity/source"
 import { jsonSchema } from "@/continuity/artifact"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
+import { readSourceCatalogue } from "./fixtures"
 
 const model = ProviderTest.model({ id: ModelV2.ID.make("summary-model"), providerID: ProviderV2.ID.make("test") })
 const it = testEffect(Layer.mock(Provider.Service, { getModel: () => Effect.succeed(model) }))
@@ -89,6 +90,8 @@ it.effect("valid stop JSON materializes exact source with isolated producer requ
     expect(request.sessionID).not.toBe(sessionID)
     expect(request.parentSessionID).toBe(sessionID)
     const payload: unknown = JSON.parse(String(request.messages[0].content))
+    expect(readSourceCatalogue(payload).units).toEqual(catalogue({ parentID: sessionID, head: input().head })
+      .units.map(({ digest, ...unit }) => unit))
     expect(payload).toMatchObject({ envelope: { parentID: sessionID, producerID: request.sessionID,
       coveredThrough: "msg_1", tailStart: "msg_2", boundary: "msg_9" },
       receiver: { canRecall: false }, bodySchema: jsonSchema, maxTokens: MAX_ARTIFACT_TOKENS })

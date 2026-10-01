@@ -2,6 +2,8 @@ import { z } from "zod"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import type { ArtifactEnvelope, ExactReason, HandoffBody, JsonValue, MaterializedArtifact, SourceUnit } from "@/continuity/types"
 
+export type WireSourceUnit = Omit<SourceUnit, "digest">
+
 // Fixture selection reads actual vendor/request data; it never invents source handles.
 const value: z.ZodType<JsonValue> = z.lazy(() => z.union([
   z.null(), z.boolean(), z.number(), z.string(), z.array(value), z.record(z.string(), value),
@@ -17,7 +19,7 @@ const source = z.object({
   extent: z.enum(["full", "preview", "cleared", "unknown", "unavailable"]), recoverable: z.boolean(),
   digest: z.string(), exit: z.number().nullable(), value: value.optional(),
 })
-const leaf = source.pick({ id: true, kind: true, order: true, extent: true, recoverable: true, digest: true, value: true })
+const leaf = source.pick({ id: true, kind: true, order: true, extent: true, recoverable: true, value: true })
   .extend({ path: source.shape.locator.shape.path, exactTokens: z.number().int().positive().nullable(),
     citationTokens: z.number().int().positive() }).strict()
 const group = source.pick({ role: true, actor: true, scope: true, origin: true, exit: true }).extend({
@@ -93,7 +95,7 @@ export function readSourceCatalogue(data: unknown) {
   }
   const costs = request.source.groups.flatMap((group) => group.units.map((unit) => [unit.id, unit.exactTokens] as const))
   const citations = request.source.groups.flatMap((group) => group.units.map((unit) => [unit.id, unit.citationTokens] as const))
-  const units: SourceUnit[] = request.source.groups.flatMap(({ units, locator, ...shared }) => units.map(({ path, exactTokens, citationTokens, ...unit }) => ({
+  const units: WireSourceUnit[] = request.source.groups.flatMap(({ units, locator, ...shared }) => units.map(({ path, exactTokens, citationTokens, ...unit }) => ({
     ...shared, ...unit, parentID: request.source.parentID, locator: { ...locator, path },
   }))).sort((left, right) => left.order - right.order)
   if (new Set(units.map((unit) => unit.id)).size !== units.length ||
@@ -128,7 +130,7 @@ function hasLiteral(value: JsonValue | undefined, literal: string): boolean {
   return Object.values(value).some((entry) => hasLiteral(entry, literal))
 }
 
-export function selectSource(units: SourceUnit[], literal: string) {
+export function selectSource(units: WireSourceUnit[], literal: string) {
   const scalars = units.filter((unit) => unit.extent === "full" && unit.value === literal)
   const matches = scalars.length ? scalars : units.filter((unit) => unit.extent === "full" && hasLiteral(unit.value, literal))
   if (matches.length !== 1) throw new Error(`expected one complete source with exact literal: ${literal}`)

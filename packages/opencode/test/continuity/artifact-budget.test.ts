@@ -170,7 +170,7 @@ describe("continuity producer budget feedback", () => {
   test("strict grouped parser accepts every cost field; missing, unsafe or extra cost fields fail", () => {
     const current = packet()
     const parsed = readSourceCatalogue(current.prepared.messages[0].content)
-    expect(parsed.units).toEqual(current.sources.units)
+    expect(parsed.units).toEqual(current.sources.units.map(({ digest, ...unit }) => unit))
     for (const unit of current.sources.units) {
       expect(parsed.exactTokens[unit.id]).toBe(estimateExact(unit))
       expect(parsed.citationTokens[unit.id]).toBe(estimateCitation(unit))

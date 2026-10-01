@@ -153,7 +153,7 @@ function groups(units: SourceUnit[]) {
     locator: Omit<SourceLocator, "path">
     role: SourceUnit["role"]; actor: SourceUnit["actor"]; scope: SourceUnit["scope"]
     origin: SourceUnit["origin"]; exit: SourceUnit["exit"]
-    units: (Pick<SourceUnit, "id" | "kind" | "order" | "extent" | "recoverable" | "digest" | "value"> &
+    units: (Pick<SourceUnit, "id" | "kind" | "order" | "extent" | "recoverable" | "value"> &
       { path: SourceLocator["path"]; exactTokens: number | null; citationTokens: number })[]
   }>()
   for (const unit of units) {
@@ -162,7 +162,7 @@ function groups(units: SourceUnit[]) {
     const key = JSON.stringify(shared)
     const group = result.get(key) ?? { ...shared, units: [] }
     group.units.push({ id: unit.id, path: unit.locator.path, kind: unit.kind, order: unit.order,
-      extent: unit.extent, recoverable: unit.recoverable, digest: unit.digest, exactTokens: estimateExact(unit),
+      extent: unit.extent, recoverable: unit.recoverable, exactTokens: estimateExact(unit),
       citationTokens: estimateCitation(unit),
       ...(unit.value !== undefined && { value: unit.value }) })
     result.set(key, group)
