@@ -2,7 +2,10 @@ import { dict as en } from "./en"
 
 type Keys = keyof typeof en
 
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict = {
+  ...ORCHESTRA_COPY,
   "command.category.suggested": "Vorgeschlagen",
   "command.category.view": "Ansicht",
   "command.category.project": "Projekt",

@@ -1,7 +1,9 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
+import { ORCHESTRA_COPY } from "./orchestra"
 
 export const dict = {
   ...DESKTOP_NATIVE_ENGLISH,
+  ...ORCHESTRA_COPY,
   "command.category.suggested": "Suggested",
   "command.category.view": "View",
   "command.category.project": "Project",

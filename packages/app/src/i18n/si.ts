@@ -1,4 +1,7 @@
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict: Record<string, string> = {
+  ...ORCHESTRA_COPY,
   "desktop.menu.app": "OpenCode",
   "desktop.menu.file": "ගොනුව",
   "desktop.menu.edit": "සංස්කරණය කරන්න",

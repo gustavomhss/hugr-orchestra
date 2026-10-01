@@ -1,4 +1,7 @@
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict = {
+  ...ORCHESTRA_COPY,
   "command.category.suggested": "Suggeriti",
   "command.category.view": "Visualizzazione",
   "command.category.project": "Progetto",

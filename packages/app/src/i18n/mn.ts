@@ -1,4 +1,7 @@
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict = {
+  ...ORCHESTRA_COPY,
   "desktop.menu.app": "OpenCode",
   "desktop.menu.file": "Файл",
   "desktop.menu.edit": "Засварлах",

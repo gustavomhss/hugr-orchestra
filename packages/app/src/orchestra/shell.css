@@ -1,0 +1,387 @@
+@media (min-width: 768px) {
+  .orchestra-shell {
+    inline-size: calc(100% - 24px);
+    max-block-size: calc(100% - 24px);
+    margin-block: 12px;
+    margin-inline: 12px;
+    overflow: hidden;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--glass-border);
+    border-radius: 13px;
+    isolation: isolate;
+  }
+
+  .orchestra-shell > [data-slot="titlebar-v2"] {
+    block-size: 45px;
+    min-block-size: 45px;
+    flex-basis: 45px;
+    flex-shrink: 0;
+  }
+
+  .orchestra-workspace {
+    position: relative;
+    display: grid;
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 0;
+    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 6px;
+    padding-block: 6px;
+    padding-inline: 6px;
+  }
+
+  .orchestra-workspace::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .orchestra-content {
+    position: relative;
+    display: flex;
+    min-inline-size: 0;
+    min-block-size: 0;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .orchestra-session-tabs {
+    position: relative;
+    min-inline-size: 0;
+    flex-shrink: 0;
+    border: 1px solid var(--glass-border);
+    border-radius: 9px;
+    background: var(--glass-background);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+  }
+
+  .orchestra-session-tabs[hidden] {
+    display: none;
+  }
+
+  .orchestra-shell [data-component="orchestra-home"] {
+    margin-block: 0;
+    margin-inline: 0;
+    border-radius: 9px;
+  }
+
+  .orchestra-shell [data-slot="orchestra-home-grid"] {
+    max-inline-size: 720px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+    padding-inline: 24px;
+  }
+}
+
+.orchestra-sidebar {
+  position: relative;
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding-block: 14px 13px;
+  padding-inline: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  background: var(--glass-background);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+.orchestra-sidebar > .orchestra-brand {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-block: 2px 16px;
+  padding-inline: 10px;
+}
+
+.orchestra-sidebar > .orchestra-brand :is(svg, img) {
+  block-size: 32px;
+  inline-size: auto;
+  max-inline-size: 100%;
+}
+
+.orchestra-brand-descriptor {
+  color: var(--v2-text-text-faint);
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.01em;
+}
+
+.orchestra-navigation {
+  min-block-size: 0;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.orchestra-nav {
+  display: grid;
+  gap: 1px;
+  margin-block-start: 2px;
+}
+
+.orchestra-nav-button {
+  display: flex;
+  inline-size: 100%;
+  block-size: 31px;
+  align-items: center;
+  gap: 11px;
+  padding-block: 0;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--orchestra-sidebar-text);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.orchestra-nav-button:hover {
+  background: var(--orchestra-sidebar-hover-background);
+  color: var(--orchestra-sidebar-hover-text);
+}
+
+.orchestra-nav-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.orchestra-nav-button[aria-current="page"] {
+  background: var(--orchestra-sidebar-active-background);
+  color: var(--orchestra-sidebar-active-text);
+  box-shadow: var(--orchestra-sidebar-active-shadow);
+}
+
+.orchestra-nav-button:focus-visible,
+.orchestra-profile:focus-visible,
+.orchestra-profile-item[data-highlighted] {
+  outline: 2px solid var(--v2-icon-icon-accent);
+  outline-offset: -2px;
+}
+
+.orchestra-nav-icon {
+  color: var(--orchestra-sidebar-icon);
+  inline-size: 16px;
+  block-size: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.orchestra-nav-button[aria-current="page"] .orchestra-nav-icon {
+  color: var(--orchestra-sidebar-active-icon);
+}
+
+.orchestra-nav-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orchestra-nav-button kbd {
+  margin-inline-start: auto;
+  padding-block: 1px;
+  padding-inline: 5px;
+  border: 1px solid var(--orchestra-sidebar-key-border);
+  border-radius: 4px;
+  color: var(--orchestra-sidebar-key-text);
+  background: var(--orchestra-sidebar-key-background);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.orchestra-nav-rule {
+  block-size: 1px;
+  margin-block: 13px;
+  margin-inline: 9px;
+  background: var(--orchestra-sidebar-rule);
+}
+
+.orchestra-pending-dot {
+  inline-size: 5px;
+  block-size: 5px;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  border-radius: 50%;
+  background: var(--v2-state-fg-warning);
+}
+
+.orchestra-sidebar-foot {
+  display: grid;
+  flex-shrink: 0;
+  gap: 8px;
+  margin-block-start: auto;
+  padding-block-start: 12px;
+}
+
+.orchestra-profile {
+  display: flex;
+  inline-size: 100%;
+  min-inline-size: 0;
+  align-items: center;
+  gap: 9px;
+  padding-block: 8px;
+  padding-inline: 8px;
+  border: 1px solid var(--orchestra-sidebar-profile-border);
+  border-radius: 8px;
+  background: var(--orchestra-sidebar-profile-background);
+  color: var(--orchestra-sidebar-profile-text);
+  box-shadow: var(--orchestra-sidebar-profile-shadow);
+  text-align: start;
+  cursor: pointer;
+}
+
+.orchestra-profile-avatar[data-component="project-avatar-v2"] {
+  inline-size: 28px;
+  block-size: 28px;
+  flex-shrink: 0;
+}
+
+.orchestra-profile:hover {
+  border-color: var(--orchestra-sidebar-profile-hover-border);
+}
+
+.orchestra-profile-avatar [data-slot="project-avatar-surface"] {
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.orchestra-profile-text {
+  min-inline-size: 0;
+  flex: 1;
+}
+
+.orchestra-profile-text :is(strong, small) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orchestra-profile-text strong {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.orchestra-profile-text small {
+  color: var(--orchestra-sidebar-profile-muted);
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.orchestra-profile-chevron {
+  flex-shrink: 0;
+  color: var(--orchestra-sidebar-profile-chevron);
+}
+
+.orchestra-sidebar-footer {
+  margin-block: 1px 0;
+  margin-inline: 10px;
+  color: var(--orchestra-sidebar-footer);
+  font-size: 11px;
+  line-height: 15px;
+  white-space: pre-line;
+}
+
+.orchestra-profile-menu {
+  z-index: 40;
+  min-inline-size: 230px;
+  max-inline-size: min(360px, calc(100vw - 24px));
+  max-block-size: min(340px, calc(100dvh - 96px));
+  overflow-y: auto;
+  padding-block: 6px;
+  padding-inline: 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  background: var(--v2-background-bg-layer-01);
+  color: var(--v2-text-text-base);
+  box-shadow: var(--v2-elevation-floating);
+}
+
+.orchestra-profile-group {
+  padding-block: 7px 3px;
+  padding-inline: 9px;
+  color: var(--v2-text-text-faint);
+  font-size: 10px;
+}
+
+.orchestra-profile-item {
+  display: flex;
+  min-inline-size: 0;
+  align-items: center;
+  gap: 9px;
+  padding-block: 6px;
+  padding-inline: 9px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.orchestra-profile-item[data-highlighted] {
+  background: var(--v2-overlay-simple-overlay-hover);
+}
+
+.orchestra-profile-item[data-disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.orchestra-profile-item-name {
+  min-inline-size: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orchestra-profile-add {
+  color: var(--v2-text-text-muted);
+}
+
+.orchestra-profile-empty {
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 9px;
+  padding-inline: 9px;
+  color: var(--v2-text-text-faint);
+  font-size: 12px;
+}
+
+.orchestra-chapter-label {
+  margin-block: 0 12px;
+  margin-inline: 0;
+  color: var(--v2-text-text-muted);
+  font-size: 11px;
+}
+
+.orchestra-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

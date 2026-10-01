@@ -93,7 +93,10 @@ const desktop = [
   "Odabrani prilozi premašuju ograničenje od {{limit}} MB",
 ]
 
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict = {
+  ...ORCHESTRA_COPY,
   ...Object.fromEntries(DESKTOP_NATIVE_KEYS.map((key, index) => [key, desktop[index]])),
   "command.category.suggested": "Predloženo",
   "command.category.view": "Prikaz",

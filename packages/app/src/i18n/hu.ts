@@ -93,7 +93,10 @@ const desktop = [
   "A kiválasztott mellékletek meghaladják a(z) {{limit}} MB-os korlátot",
 ]
 
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict = {
+  ...ORCHESTRA_COPY,
   ...Object.fromEntries(DESKTOP_NATIVE_KEYS.map((key, index) => [key, desktop[index]])),
   "command.category.suggested": "Javasolt",
   "command.category.view": "Nézet",

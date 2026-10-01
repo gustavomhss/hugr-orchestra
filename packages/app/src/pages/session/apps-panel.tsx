@@ -143,6 +143,7 @@ export function AppsPanel() {
   let menuElement: HTMLDivElement | undefined
   let addressInput: HTMLInputElement | undefined
   let resizeFrame: number | undefined
+  let lastResize: { tab: TabIdentity; bounds: Bounds } | undefined
   const [switching, setSwitching] = createSignal(false)
   let restoreGeneration = 0
   let disposed = false
@@ -204,7 +205,21 @@ export function AppsPanel() {
     if (resizeFrame !== undefined) return
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = undefined
-      if (active() && host) void api()?.appDockResize(bounds(host))
+      const current = active()
+      const dock = api()
+      if (!current || !host || !dock) return
+      const next = bounds(host)
+      if (
+        sameTab(current, lastResize?.tab) &&
+        lastResize?.bounds.x === next.x &&
+        lastResize.bounds.y === next.y &&
+        lastResize.bounds.width === next.width &&
+        lastResize.bounds.height === next.height
+      ) {
+        return
+      }
+      lastResize = { tab: current, bounds: next }
+      void dock.appDockResize(next)
     })
   }
   const restoreProfile = async (profileID: string, generation: number, snapshot: AppDockManifest) => {
@@ -315,6 +330,8 @@ export function AppsPanel() {
     })
     const observer = new ResizeObserver(resize)
     if (host) observer.observe(host)
+    // ResizeObserver does not report position-only layout changes.
+    window.addEventListener("resize", resize)
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (!target || !root?.contains(target)) return
@@ -369,6 +386,7 @@ export function AppsPanel() {
     onCleanup(() => {
       disposed = true
       observer.disconnect()
+      window.removeEventListener("resize", resize)
       if (resizeFrame !== undefined) cancelAnimationFrame(resizeFrame)
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("pointerdown", onPointerDown)

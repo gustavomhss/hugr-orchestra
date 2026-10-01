@@ -23,6 +23,7 @@ import {
   openLocalFileURL,
   setPinchZoomEnabled,
   setTitlebar,
+  setTitlebarFrame,
   updateTitlebar,
 } from "./windows"
 import type { UpdaterController } from "./updater-controller"
@@ -117,10 +118,12 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
   const payload = appDockEventRecord(source.payload)
   if (!hasExactKeys(source, ["type", "payload"])) throw new Error("Invalid App Dock event")
   if (source.type === "state") {
-    if (!(
-      hasExactKeys(payload, ["tabID", "generation", "url", "title", "loading", "audible"]) ||
-      hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible"])
-    )) {
+    if (
+      !(
+        hasExactKeys(payload, ["tabID", "generation", "url", "title", "loading", "audible"]) ||
+        hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible"])
+      )
+    ) {
       throw new Error("Invalid App Dock event")
     }
     const identity = appDockEventIdentity(payload)
@@ -328,13 +331,17 @@ export function registerIpcHandlers(deps: Deps) {
         )
       } catch (error) {
         if (!event.sender.isDestroyed())
-          pendingEvents.forEach((appDockEvent) => event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)))
+          pendingEvents.forEach((appDockEvent) =>
+            event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)),
+          )
         throw error
       }
       opened = true
       if (!event.sender.isDestroyed()) {
         event.sender.send("app-dock-event", toCloneableAppDockEvent({ type: "tab-opened", payload: tab }))
-        pendingEvents.forEach((appDockEvent) => event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)))
+        pendingEvents.forEach((appDockEvent) =>
+          event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)),
+        )
       }
       if (!appDockDestroyHooks.has(event.sender.id)) {
         appDockDestroyHooks.add(event.sender.id)
@@ -676,6 +683,12 @@ export function registerIpcHandlers(deps: Deps) {
       checkForUpdates: () => void deps.showUpdater(),
       relaunch: deps.relaunch,
     })
+  })
+  ipcMain.handle("set-titlebar-frame", (event: IpcMainInvokeEvent, frame: unknown) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win || win.isDestroyed() || win.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame)
+      throw new Error("Invalid titlebar frame sender")
+    setTitlebarFrame(win, frame)
   })
 }
 

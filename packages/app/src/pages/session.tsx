@@ -86,7 +86,7 @@ import { sessionPanelLayout } from "@/pages/session/session-panel-layout"
 import { SessionReviewEmptyChangesV2 } from "@opencode-ai/session-ui/v2/session-review-empty-changes-v2"
 import { SessionReviewEmptyNoGitV2 } from "@opencode-ai/session-ui/v2/session-review-empty-no-git-v2"
 import { SessionReviewV2SidebarToggle } from "@opencode-ai/session-ui/v2/session-review-v2"
-import { ReviewPanelV2 } from "@/pages/session/v2/review-panel-v2"
+import { createOrchestraReviewPanel } from "@/orchestra/review"
 import { createReviewPanelV2State } from "@/pages/session/v2/review-panel-v2-state"
 import { reviewDiffDirectory, reviewDiffNeedsLoad, reviewRootDirectory } from "@/pages/session/v2/review-diff-kinds"
 import { TerminalPanel } from "@/pages/session/terminal-panel"
@@ -328,7 +328,11 @@ function SessionProviders(props: ParentProps) {
 
 function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
   return (
-    <div class="relative size-full overflow-hidden flex flex-col" classList={{ "p-2": props.padded }}>
+    <div
+      data-component="session-surface"
+      class="relative size-full overflow-hidden flex flex-col"
+      classList={{ "p-2": props.padded }}
+    >
       {props.children}
     </div>
   )
@@ -337,6 +341,8 @@ function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
 function SessionPanelFrame(props: ParentProps<{ newLayout: boolean; raised?: boolean }>) {
   return (
     <div
+      data-slot="session-body"
+      data-raised={props.raised ? "" : undefined}
       classList={{
         "flex-1 min-h-0 flex flex-col": true,
         "bg-v2-background-bg-base": props.newLayout,
@@ -446,6 +452,12 @@ export default function Page() {
   )
 
   const isDesktop = createMediaQuery("(min-width: 768px)")
+  const compactReview = createMediaQuery("(max-width: 1180px)")
+  const orchestraDesktop = createMemo(() => newSessionDesign() && isDesktop())
+  const [panelSizing, setPanelSizing] = persisted(
+    Persist.serverGlobal(serverSDK().scope, "orchestra-session-panel"),
+    createStore({ resized: false }),
+  )
   const size = createSizing()
   const desktopReviewOpen = createMemo(() => isDesktop() && view().reviewPanel.opened())
   const desktopV2ReviewOpen = createMemo(() => newSessionDesign() && desktopReviewOpen() && !!params.id)
@@ -480,25 +492,30 @@ export default function Page() {
   const sessionPanelAvailable = createMemo(() => {
     const width = panelRowWidth()
     if (width === undefined) return undefined
-    return width - (settings.general.newLayoutDesigns() ? 8 : 0)
+    return width - (orchestraDesktop() ? 6 : newSessionDesign() ? 8 : 0)
   })
   const sessionPanelMax = createMemo(() => {
     const available = sessionPanelAvailable()
     if (available === undefined) return 1000
+    if (desktopV2ReviewOpen()) return Math.max(SESSION_PANEL_WIDTH_MIN, available - (compactReview() ? 360 : 430))
     return sessionPanelWidthMax({ available, split: splitReview() })
   })
   // Clamp at render time so window or sidebar resizes squeeze the chat panel
   // instead of the review pane, without overwriting the persisted width.
-  const sessionPanelResizedWidth = createMemo(() =>
-    clampSessionPanelWidth({
-      width: layout.session.width(),
-      available: sessionPanelAvailable(),
-      split: splitReview(),
-    }),
-  )
+  const sessionPanelResizedWidth = createMemo(() => {
+    const width = layout.session.width()
+    const available = sessionPanelAvailable()
+    if (!desktopV2ReviewOpen()) return clampSessionPanelWidth({ width, available, split: splitReview() })
+    if (available === undefined) return width
+    // Legacy layout stored 600px for both the default and an explicit resize.
+    // Keep custom widths; the marker also preserves future explicit 600px resizes.
+    const selected = panelSizing.resized || width !== 600 ? width : available - (compactReview() ? 360 : 430)
+    return Math.max(SESSION_PANEL_WIDTH_MIN, Math.min(selected, sessionPanelMax()))
+  })
   const sessionPanelWidth = createMemo(() => {
     if (!desktopSidePanelOpen()) return "100%"
     if (desktopSessionResizeOpen()) return `${sessionPanelResizedWidth()}px`
+    if (orchestraDesktop()) return `calc(100% - ${Math.max(240, layout.fileTree.width()) + 6}px)`
     return `calc(100% - ${layout.fileTree.width()}px)`
   })
   const centered = createMemo(() => isDesktop() && (newSessionDesign() || !desktopReviewOpen()))
@@ -1293,6 +1310,7 @@ export default function Page() {
   )
 
   const reviewV2State = createReviewPanelV2State()
+  const OrchestraReviewPanel = createOrchestraReviewPanel()
 
   // Getters defer reactive reads to the consuming scope. Eager reads here ran inside
   // the side panel's Show children and remounted the whole review panel on unrelated
@@ -1351,7 +1369,7 @@ export default function Page() {
   const reviewPanelV2 = () => (
     <div class="flex flex-col h-full overflow-hidden bg-v2-background-bg-base contain-strict">
       <Show when={reviewPanelV2Rendered()}>
-        <ReviewPanelV2 {...reviewPanelV2Props()} />
+        <OrchestraReviewPanel {...reviewPanelV2Props()} />
       </Show>
     </div>
   )
@@ -2064,7 +2082,7 @@ export default function Page() {
       <Show when={!isDesktop() && !!params.id && settings.general.newLayoutDesigns() && !mobileTabsBottom()}>
         {mobileTabs(true)}
       </Show>
-      <div class="flex-1 min-h-0 overflow-hidden">
+      <div data-slot="session-timeline-region" class="flex-1 min-h-0 overflow-hidden">
         <Switch>
           <Match when={params.id && mobileChanges()}>
             <div class="relative h-full overflow-hidden">
@@ -2251,14 +2269,17 @@ export default function Page() {
       <SessionHeader />
       <div
         ref={panelRow}
+        data-slot="session-panel-row"
         class="flex-1 min-h-0 flex flex-col md:flex-row"
         classList={{
-          "gap-2 p-2": settings.general.newLayoutDesigns(),
+          "gap-2 p-2": newSessionDesign() && !isDesktop(),
+          "gap-[6px]": orchestraDesktop(),
         }}
       >
         <Show when={!isDesktop() && !!params.id && !settings.general.newLayoutDesigns()}>{mobileTabs()}</Show>
 
         <div
+          data-slot="session-conversation-panel"
           classList={{
             "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 md:flex-none transition-[width]": true,
             "duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
@@ -2286,7 +2307,7 @@ export default function Page() {
             <div onPointerDown={() => size.start()}>
               <ResizeHandle
                 classList={{
-                  "-end-1": settings.general.newLayoutDesigns(),
+                  "-end-[3px]": orchestraDesktop(),
                 }}
                 direction="horizontal"
                 size={sessionPanelResizedWidth()}
@@ -2294,7 +2315,10 @@ export default function Page() {
                 max={sessionPanelMax()}
                 onResize={(width) => {
                   size.touch()
-                  layout.session.resize(width)
+                  batch(() => {
+                    if (desktopV2ReviewOpen()) setPanelSizing("resized", true)
+                    layout.session.resize(width)
+                  })
                 }}
               />
             </div>
@@ -2321,7 +2345,7 @@ export default function Page() {
         </Show>
         <Show when={newSessionDesign()}>
           <Show when={isDesktop() ? desktopV2PanelLayout().visible : terminalOpen()}>
-            <div class="min-w-0 h-full flex flex-1 flex-col">
+            <div data-slot="session-secondary-column" class="min-w-0 h-full flex flex-1 flex-col">
               <Show when={isDesktop() && (desktopV2ReviewOpen() || desktopFileTreeOpen())}>
                 <div class="min-h-0 flex-1">
                   <Suspense>
@@ -2352,7 +2376,11 @@ export default function Page() {
                 </div>
               </Show>
               <Show when={desktopV2PanelLayout().stacked}>
-                <div class="relative h-2 shrink-0" onPointerDown={() => size.start()}>
+                <div
+                  class="relative shrink-0"
+                  classList={{ "h-[6px]": orchestraDesktop(), "h-2": !orchestraDesktop() }}
+                  onPointerDown={() => size.start()}
+                >
                   <ResizeHandle
                     class="!relative !inset-auto !h-full !w-full !transform-none"
                     direction="vertical"

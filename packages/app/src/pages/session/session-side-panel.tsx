@@ -323,6 +323,8 @@ export function SessionSidePanel(props: {
     <Show when={isDesktop() && !(settings.general.newLayoutDesigns() && !params.id)}>
       <aside
         id="review-panel"
+        data-component="session-side-panel"
+        data-active-tab={activeTab()}
         aria-label={language.t("session.panel.reviewAndFiles")}
         aria-hidden={!open()}
         inert={!open()}
@@ -342,6 +344,7 @@ export function SessionSidePanel(props: {
       >
         <Show when={open()}>
           <div
+            data-slot="session-side-panel-content"
             class="size-full flex"
             classList={{
               "border-l border-border-weaker-base": !settings.general.newLayoutDesigns(),
@@ -349,6 +352,7 @@ export function SessionSidePanel(props: {
           >
             <Show when={reviewOpen()}>
               <div
+                data-slot="session-side-panel-main"
                 class="relative min-w-0 h-full flex-1 overflow-hidden"
                 classList={{
                   "bg-v2-background-bg-base": settings.general.newLayoutDesigns(),
@@ -356,6 +360,7 @@ export function SessionSidePanel(props: {
                 }}
               >
                 <div
+                  data-slot="session-side-panel-shell"
                   class="size-full min-w-0 h-full"
                   classList={{
                     "bg-v2-background-bg-base": settings.general.newLayoutDesigns(),
@@ -373,8 +378,8 @@ export function SessionSidePanel(props: {
                       >
                         <DragDropSensors />
                         <ConstrainDragYAxis />
-                        <Tabs value={activeTab()} onChange={activateTab}>
-                          <div class="sticky top-0 shrink-0 flex">
+                        <Tabs data-scope="session-side-panel" value={activeTab()} onChange={activateTab}>
+                          <div data-slot="session-side-panel-tab-bar" class="sticky top-0 shrink-0 flex">
                             <Tabs.List
                               ref={(el: HTMLDivElement) => {
                                 const stop = createFileTabListSync({ el, contextOpen })
@@ -390,7 +395,7 @@ export function SessionSidePanel(props: {
                                   <div class="flex items-center gap-1.5">
                                     <div>{language.t("session.tab.review")}</div>
                                     <Show when={props.hasReview()}>
-                                      <div>{props.reviewCount()}</div>
+                                      <div data-slot="session-side-panel-tab-count">{props.reviewCount()}</div>
                                     </Show>
                                   </div>
                                 </Tabs.Trigger>
@@ -448,12 +453,14 @@ export function SessionSidePanel(props: {
                                   <div class="flex items-center gap-2">
                                     <div>{language.t("session.tab.tasks")}</div>
                                     <Show when={tasksData.liveCount() > 0}>
-                                      <div>{tasksData.liveCount()}</div>
+                                      <div data-slot="session-side-panel-tab-count">{tasksData.liveCount()}</div>
                                     </Show>
                                   </div>
                                 </Tabs.Trigger>
                               </Show>
-                              <Tabs.Trigger value="apps"><div>Apps</div></Tabs.Trigger>
+                              <Tabs.Trigger value="apps">
+                                <div>Apps</div>
+                              </Tabs.Trigger>
                               <SortableProvider ids={openedTabs()}>
                                 <For each={panelTabs()}>
                                   {(tab) => (
@@ -534,6 +541,7 @@ export function SessionSidePanel(props: {
                               aria-labelledby={reviewTabID}
                               tabIndex={props.reviewHasFocusableContent() ? undefined : 0}
                               data-slot="tabs-content"
+                              data-session-tab="review"
                               class="flex flex-col h-full overflow-hidden contain-strict"
                             >
                               {props.reviewPanel()}
@@ -541,7 +549,11 @@ export function SessionSidePanel(props: {
                           </Show>
 
                           <Show when={activeTab() === "empty"}>
-                            <Tabs.Content value="empty" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <Tabs.Content
+                              data-session-tab="empty"
+                              value="empty"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                                 <div class="h-full px-6 pb-42 -mt-4 flex flex-col items-center justify-center text-center gap-6">
                                   <Mark class="w-14 opacity-10" />
@@ -554,7 +566,11 @@ export function SessionSidePanel(props: {
                           </Show>
 
                           <Show when={activeTab() === "context"}>
-                            <Tabs.Content value="context" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <Tabs.Content
+                              data-session-tab="context"
+                              value="context"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                                 <SessionContextTab />
                               </div>
@@ -562,14 +578,24 @@ export function SessionSidePanel(props: {
                           </Show>
 
                           <Show when={activeTab() === "tasks"}>
-                            <Tabs.Content value="tasks" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <Tabs.Content
+                              data-session-tab="tasks"
+                              value="tasks"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                                 <TasksPanel />
                               </div>
                             </Tabs.Content>
                           </Show>
                           <Show when={activeTab() === "apps"}>
-                            <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict"><AppsPanel /></Tabs.Content>
+                            <Tabs.Content
+                              data-session-tab="apps"
+                              value="apps"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
+                              <AppsPanel />
+                            </Tabs.Content>
                           </Show>
 
                           <Show when={activeFileTab()} keyed>
@@ -618,8 +644,11 @@ export function SessionSidePanel(props: {
                         tabs().move(source.id.toString(), source.index)
                       }}
                     >
-                      <Tabs value={activeTab()} onChange={activateTab}>
-                        <div class="session-review-v2-tabs-bar sticky top-0 shrink-0 flex items-center">
+                      <Tabs data-scope="session-side-panel" value={activeTab()} onChange={activateTab}>
+                        <div
+                          data-slot="session-side-panel-tab-bar"
+                          class="session-review-v2-tabs-bar sticky top-0 shrink-0 flex items-center"
+                        >
                           <Tabs.List
                             ref={(el: HTMLDivElement) => {
                               tabList = el
@@ -710,12 +739,14 @@ export function SessionSidePanel(props: {
                                 <div class="flex items-center gap-2">
                                   <div>{language.t("session.tab.tasks")}</div>
                                   <Show when={tasksData.liveCount() > 0}>
-                                    <div>{tasksData.liveCount()}</div>
+                                    <div data-slot="session-side-panel-tab-count">{tasksData.liveCount()}</div>
                                   </Show>
                                 </div>
                               </Tabs.Trigger>
                             </Show>
-                            <Tabs.Trigger value="apps"><div>Apps</div></Tabs.Trigger>
+                            <Tabs.Trigger value="apps">
+                              <div>Apps</div>
+                            </Tabs.Trigger>
                             <For each={panelTabs()}>
                               {(tab) => (
                                 <Show
@@ -810,6 +841,7 @@ export function SessionSidePanel(props: {
                             aria-labelledby={reviewTabID}
                             tabIndex={props.reviewHasFocusableContent() ? undefined : 0}
                             data-slot="tabs-content"
+                            data-session-tab="review"
                             class="flex flex-col h-full overflow-hidden contain-strict"
                           >
                             {props.reviewPanel()}
@@ -817,7 +849,11 @@ export function SessionSidePanel(props: {
                         </Show>
 
                         <Show when={activeTab() === "empty"}>
-                          <Tabs.Content value="empty" class="flex flex-col h-full overflow-hidden contain-strict">
+                          <Tabs.Content
+                            data-session-tab="empty"
+                            value="empty"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
                             <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                               <div class="h-full px-6 pb-42 -mt-4 flex flex-col items-center justify-center text-center gap-6">
                                 <Mark class="w-14 opacity-10" />
@@ -830,7 +866,11 @@ export function SessionSidePanel(props: {
                         </Show>
 
                         <Show when={activeTab() === "context"}>
-                          <Tabs.Content value="context" class="flex flex-col h-full overflow-hidden contain-strict">
+                          <Tabs.Content
+                            data-session-tab="context"
+                            value="context"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
                             <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                               <SessionContextTab />
                             </div>
@@ -838,14 +878,24 @@ export function SessionSidePanel(props: {
                         </Show>
 
                         <Show when={activeTab() === "tasks"}>
-                          <Tabs.Content value="tasks" class="flex flex-col h-full overflow-hidden contain-strict">
+                          <Tabs.Content
+                            data-session-tab="tasks"
+                            value="tasks"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
                             <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                               <TasksPanel />
                             </div>
                           </Tabs.Content>
                         </Show>
                         <Show when={activeTab() === "apps"}>
-                          <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict"><AppsPanel /></Tabs.Content>
+                          <Tabs.Content
+                            data-session-tab="apps"
+                            value="apps"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
+                            <AppsPanel />
+                          </Tabs.Content>
                         </Show>
 
                         <Show when={fileBrowserMounted()}>
@@ -853,6 +903,7 @@ export function SessionSidePanel(props: {
                             id={fileBrowserTabPanelID}
                             role="tabpanel"
                             data-slot="tabs-content"
+                            data-session-tab="files"
                             class="h-full min-h-0 overflow-hidden"
                             classList={{ hidden: !fileBrowserVisible() }}
                             inert={!fileBrowserVisible() || undefined}

@@ -93,7 +93,10 @@ const desktop = [
   "Valin viðhengi fara yfir {{limit}} MB hámarkið",
 ]
 
+import { ORCHESTRA_COPY } from "./orchestra"
+
 export const dict = {
+  ...ORCHESTRA_COPY,
   ...Object.fromEntries(DESKTOP_NATIVE_KEYS.map((key, index) => [key, desktop[index]])),
   "command.category.suggested": "Tillögur",
   "command.category.view": "Skoða",

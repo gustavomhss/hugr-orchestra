@@ -23,10 +23,7 @@ function fmtDuration(start: number, end: number): string {
 
 function StateMark(props: { state: TasksItem["state"] }) {
   return (
-    <Show
-      when={props.state !== "running"}
-      fallback={<span data-slot="titlebar-update-loader" aria-hidden />}
-    >
+    <Show when={props.state !== "running"} fallback={<span data-slot="titlebar-update-loader" aria-hidden />}>
       <span
         aria-hidden
         class="inline-block size-2 shrink-0 rounded-full"
@@ -37,8 +34,7 @@ function StateMark(props: { state: TasksItem["state"] }) {
               : props.state === "completed"
                 ? "var(--v2-state-fg-success)"
                 : "var(--v2-state-fg-danger)",
-          "box-shadow":
-            props.state === "needs-input" ? "0 0 6px var(--v2-state-fg-warning)" : "none",
+          "box-shadow": props.state === "needs-input" ? "0 0 6px var(--v2-state-fg-warning)" : "none",
           margin: "2px",
         }}
       />
@@ -60,6 +56,9 @@ function TaskRow(props: {
 
   return (
     <div
+      data-slot="task-row"
+      data-state={item.state}
+      data-kind={item.kind}
       role="button"
       tabIndex={0}
       onClick={() => props.onOpen(item)}
@@ -76,11 +75,12 @@ function TaskRow(props: {
         "opacity-75 hover:opacity-100": !live(),
       }}
     >
-      <div class="mt-0.5 flex">
+      <div data-slot="task-mark" class="mt-0.5 flex">
         <StateMark state={item.state} />
       </div>
-      <div class="min-w-0 flex-1">
+      <div data-slot="task-main" class="min-w-0 flex-1">
         <div
+          data-slot="task-title"
           class="truncate text-strong"
           style={{ "font-size": "13px", "font-weight": "400", "line-height": "130%", "letter-spacing": "-0.04px" }}
         >
@@ -89,7 +89,7 @@ function TaskRow(props: {
             <span class="text-text-weak"> (+{item.nested})</span>
           </Show>
         </div>
-        <div class="text-12-regular text-text-weak mt-[3px] truncate tabular-nums">
+        <div data-slot="task-meta" class="text-12-regular text-text-weak mt-[3px] truncate tabular-nums">
           {item.kind === "agent" ? language.t("session.tasks.kind.agent") : language.t("session.tasks.kind.shell")}
           {" · "}
           {item.state === "needs-input" ? (
@@ -107,12 +107,16 @@ function TaskRow(props: {
           </span>
           <Show when={item.agent}>
             <span>
-              {" · "}<span style={{ color: "var(--text-interactive-base)" }}>@{item.agent}</span>
+              {" · "}
+              <span style={{ color: "var(--text-interactive-base)" }}>@{item.agent}</span>
             </span>
           </Show>
         </div>
         <Show when={item.stats}>
-          <div class="text-12-regular text-text-weak mt-3 flex flex-wrap gap-4 border-t border-border-weaker-base pt-3">
+          <div
+            data-slot="task-stats"
+            class="text-12-regular text-text-weak mt-3 flex flex-wrap gap-4 border-t border-border-weaker-base pt-3"
+          >
             <Show when={item.stats!.model}>
               <div class="flex items-center gap-1">
                 <span class="text-text-weaker">{language.t("session.tasks.stats.model")}:</span>
@@ -144,7 +148,8 @@ function TaskRow(props: {
             <div class="flex items-center gap-1">
               <span class="text-text-weaker">{language.t("session.tasks.stats.tokens")}:</span>
               <span class="font-mono text-text-base">
-                ↓{item.stats!.tokensIn.toLocaleString(language.intl())} ↑{item.stats!.tokensOut.toLocaleString(language.intl())}
+                ↓{item.stats!.tokensIn.toLocaleString(language.intl())} ↑
+                {item.stats!.tokensOut.toLocaleString(language.intl())}
               </span>
             </div>
             <Show when={item.stats!.cost > 0}>
@@ -156,7 +161,7 @@ function TaskRow(props: {
           </div>
         </Show>
       </div>
-      <div class="flex shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div data-slot="task-actions" class="flex shrink-0" onClick={(e) => e.stopPropagation()}>
         <Show
           when={live()}
           fallback={
@@ -227,33 +232,35 @@ export function TasksPanel() {
   }
 
   return (
-    <div class="flex h-full min-h-0 flex-col">
-      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 py-1">
+    <div data-component="tasks-panel" class="flex h-full min-h-0 flex-col">
+      <div data-slot="task-scroll" class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 py-1">
         <Show
           when={visible().running.length + visible().finished.length > 0}
           fallback={
             <div class="flex h-full flex-col items-center justify-center gap-6 px-6 pb-42 text-center">
               <Mark class="w-14 opacity-10" />
-              <div class="text-14-regular text-text-weak max-w-56">
-                {language.t("session.tasks.empty")}
-              </div>
+              <div class="text-14-regular text-text-weak max-w-56">{language.t("session.tasks.empty")}</div>
             </div>
           }
         >
           <Show when={visible().running.length > 0}>
-            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">
+            <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
               {language.t("session.tasks.running")}
             </div>
             <For each={visible().running}>
-              {(item) => <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />}
+              {(item) => (
+                <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />
+              )}
             </For>
           </Show>
           <Show when={visible().finished.length > 0}>
-            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">
+            <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
               {language.t("session.tasks.completed")}
             </div>
             <For each={visible().finished}>
-              {(item) => <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />}
+              {(item) => (
+                <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />
+              )}
             </For>
           </Show>
         </Show>
