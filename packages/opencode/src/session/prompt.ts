@@ -36,6 +36,7 @@ import { Tool } from "@/tool/tool"
 import { Permission } from "@/permission"
 import { SessionStatus } from "./status"
 import { LLM } from "./llm"
+import { LLMRequestPrep } from "./llm/request"
 import { Shell } from "@opencode-ai/core/shell"
 import { ShellID } from "@/tool/shell/id"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -1238,7 +1239,10 @@ const layer = Layer.effect(
               Effect.provideService(RuntimeFlags.Service, flags),
             )
 
-            canRecall = Object.hasOwn(tools, "context_recall") && model.capabilities.toolcall
+            canRecall = Object.hasOwn(
+              LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
+              "context_recall",
+            ) && model.capabilities.toolcall
             if (lastUser.format?.type === "json_schema") {
               tools["StructuredOutput"] = createStructuredOutputTool({
                 schema: lastUser.format.schema,
@@ -1253,7 +1257,7 @@ const layer = Layer.effect(
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
-            const prepared = yield* continuity.prepare({ sessionID, messages: msgs })
+            const prepared = yield* continuity.prepare({ sessionID, messages: msgs, canRecall })
 
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),

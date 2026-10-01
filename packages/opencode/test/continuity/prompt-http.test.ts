@@ -274,3 +274,117 @@ for (const invalid of ['{"status":"ready"}', "I resumed work and implemented the
     expect(yield* sessions.children(chat.id)).toEqual([])
   }), 120_000)
 }
+
+for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", "no-toolcall", "revoked"] as const) {
+  it.instance(`HTTP reference artifact respects receiver capability: ${condition}`, () => Effect.gen(function* () {
+    const llm = yield* TestLLMServer
+    const instance = yield* TestInstance
+    const prompt = yield* SessionPrompt.Service
+    const sessions = yield* Session.Service
+    const continuity = yield* SessionContinuity.Service
+    const jobs = yield* BackgroundJob.Service
+    const canRecall = condition === "allowed" || condition === "revoked"
+    const config = testProviderConfig(llm.url)
+    config.provider.test.models["test-model"].tool_call = condition !== "no-toolcall"
+    yield* Effect.promise(() => Bun.write(path.join(instance.directory, "opencode.json"), JSON.stringify({
+      ...config, model: "test/test-model", small_model: "test/test-model", enabled_providers: ["test"],
+      plugin: [], mcp: {}, compaction: { auto: false },
+      agent: { build: { permission: { context_recall: condition === "agent-deny" ? "deny" : "allow" } } },
+    })))
+    const chat = yield* sessions.create({ title: `Recall capability ${condition}`,
+      permission: condition === "session-deny" ? [{ permission: "context_recall", pattern: "*", action: "deny" }] : [] })
+    const head = "CAPABILITY_HEAD_913C"
+    const reference = "CAPABILITY_PROPOSAL_702F"
+    const seed = Array.from({ length: 6 }, (_, index) => index === 0 ? head : `CAPABILITY_SEED_${index}`)
+    const ledger: Array<{ name: string; hit: Hit }> = []
+    const record = (name: string, match: Match): Match => (hit) => {
+      if (!match(hit)) return false
+      ledger.push({ name, hit })
+      return true
+    }
+    for (const text of seed) yield* llm.pushMatch(record(text, parent(text)),
+      answer(text === head ? reference : `REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+    const response: unknown[] = []
+    yield* llm.pushMatch(record("reference", (hit) => {
+      if (!maintenance(hit)) return false
+      const data = wireInput(hit.body)
+      const catalogue = readSourceCatalogue(data)
+      expect(catalogue.parentID).toBe(chat.id)
+      expect(catalogue.previous).toBeNull()
+      const source = selectSource(catalogue.units, reference)
+      expect(source.role).toBe("assistant")
+      expect(hit.body.tools ?? []).toEqual([])
+      response.push(...chunks(JSON.stringify({ ...bodyFromRequest(data, head), reference_only: [{ source: source.id,
+        purpose: "Historical proposal", retrieve_when: "Before adopting proposal" }] })))
+      return true
+    }), raw({ tail: response }))
+    yield* llm.pushMatch(record("next", parent("CAPABILITY_NEXT")), answer("NEXT_DONE", 100))
+    const unexpected: Hit[] = []
+    yield* llm.pushMatch((hit) => { unexpected.push(hit); return true },
+      httpError(400, { error: { message: "unexpected capability HTTP request" } }))
+    const send = (text: string) => awaitWithTimeout(prompt.prompt({
+      sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text }],
+      tools: condition === "user-false" ? { context_recall: false } : undefined,
+    }), "capability parent did not complete", "30 seconds")
+    for (const text of seed) {
+      const result = yield* send(text)
+      if (result.info.role !== "assistant") throw new Error("expected capability assistant")
+      expect(result.info.error).toBeUndefined()
+    }
+    yield* awaitWithTimeout(llm.wait(7), "reference maintenance did not reach HTTP", "10 seconds")
+    const referenceHit = ledger.find((item) => item.name === "reference")
+    if (!referenceHit) throw new Error("missing reference HTTP capture")
+    const catalogue = readSourceCatalogue(wireInput(referenceHit.hit.body))
+    expect(catalogue.canRecall).toBe(canRecall)
+    expect(selectSource(catalogue.units, reference).recoverable).toBe(canRecall)
+    const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) =>
+      job.metadata?.sessionId === chat.id))), "capability maintenance job not registered", "10 seconds")
+    const terminal = yield* jobs.wait({ id: job.id, timeout: 10_000 })
+    expect(terminal.timedOut).toBe(false)
+    expect(terminal.info?.status).toBe("completed")
+    expect(terminal.info?.output).toBe(canRecall ? "applied" : "discarded")
+    const history = yield* sessions.messages({ sessionID: chat.id })
+    expect(yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: false }))
+      .toEqual({ messages: history, system: [] })
+    const allowed = yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })
+    expect(allowed.system).toHaveLength(canRecall ? 1 : 0)
+    expect(allowed.messages).toEqual(canRecall ? history.slice(4) : history)
+    if (condition === "revoked") yield* sessions.setPermission({ sessionID: chat.id,
+      permission: [{ permission: "context_recall", pattern: "*", action: "deny" }] })
+    const next = yield* send("CAPABILITY_NEXT")
+    expect(next.parts.some((part) => part.type === "text" && part.text === "NEXT_DONE")).toBe(true)
+    if (next.info.role !== "assistant") throw new Error("expected next assistant")
+    expect(next.info.tokens.input).toBe(100)
+    const hit = ledger.find((item) => item.name === "next")
+    if (!hit) throw new Error("missing next HTTP capture")
+    const wire = messages(hit.hit.body)
+    const conversation = JSON.stringify(wire.filter((message) => message.role !== "system"))
+    const system = wire.filter((message) => message.role === "system").map((message) => {
+      if (typeof message.content !== "string") throw new Error("expected system text on wire")
+      return message.content
+    }).join("\n")
+    for (const message of condition === "allowed" ? history.slice(4) : history) for (const part of message.parts) {
+      if (part.type === "text" && part.text) expect(conversation).toContain(part.text)
+    }
+    expect(conversation).toContain("CAPABILITY_NEXT")
+    expect(system.includes("continuity_handoff")).toBe(condition === "allowed")
+    if (condition === "allowed") {
+      expect(system).toContain(head)
+      expect(system).toContain('"retrieve_when":"Before adopting proposal"')
+      expect(conversation).not.toContain(head)
+      expect(conversation).not.toContain(reference)
+    }
+    const tools = JSON.stringify(hit.hit.body.tools ?? [])
+    expect(tools.includes('"name":"context_recall"')).toBe(condition === "allowed" || condition === "no-toolcall")
+    const first = ledger.find((item) => item.name === head)
+    if (!first) throw new Error("missing first HTTP capture")
+    expect(JSON.stringify(first.hit.body.tools ?? []).includes('"name":"context_recall"'))
+      .toBe(canRecall || condition === "no-toolcall")
+    expect(ledger.map((item) => item.name)).toEqual([...seed, "reference", "next"])
+    expect(yield* llm.calls).toBe(8)
+    expect(unexpected).toEqual([])
+    expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === chat.id)).toHaveLength(1)
+    expect((yield* continuity.prepare({ sessionID: chat.id,
+      messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })).system).toEqual(allowed.system)
+  }), 120_000)
+}

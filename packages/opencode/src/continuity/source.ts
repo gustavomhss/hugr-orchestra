@@ -142,8 +142,30 @@ export function input(catalogue: SourceCatalogue): JsonValue {
   return json({ parentID: catalogue.parentID, canRecall: catalogue.canRecall,
     previous: catalogue.previous ? { envelope: catalogue.previous.envelope,
       body: priorBody(catalogue.previous, new Set(catalogue.units.map((unit) => unit.id))) } : null,
-    units: catalogue.units,
+    groups: groups(catalogue.units),
   })
+}
+
+function groups(units: SourceUnit[]) {
+  // Groups share only host provenance; payload claims never determine authority. IDs remain flat selectors.
+  const result = new Map<string, {
+    locator: Omit<SourceLocator, "path">
+    role: SourceUnit["role"]; actor: SourceUnit["actor"]; scope: SourceUnit["scope"]
+    origin: SourceUnit["origin"]; exit: SourceUnit["exit"]
+    units: (Pick<SourceUnit, "id" | "kind" | "order" | "extent" | "recoverable" | "digest" | "value"> &
+      { path: SourceLocator["path"] })[]
+  }>()
+  for (const unit of units) {
+    const locator = { messageID: unit.locator.messageID, partID: unit.locator.partID, field: unit.locator.field }
+    const shared = { locator, role: unit.role, actor: unit.actor, scope: unit.scope, origin: unit.origin, exit: unit.exit }
+    const key = JSON.stringify(shared)
+    const group = result.get(key) ?? { ...shared, units: [] }
+    group.units.push({ id: unit.id, path: unit.locator.path, kind: unit.kind, order: unit.order,
+      extent: unit.extent, recoverable: unit.recoverable, digest: unit.digest,
+      ...(unit.value !== undefined && { value: unit.value }) })
+    result.set(key, group)
+  }
+  return [...result.values()]
 }
 
 function priorBody(previous: MaterializedArtifact, ids: ReadonlySet<string>) {
@@ -198,13 +220,13 @@ function extent(meta: unknown, fallback: SourceDescriptor["extent"]): SourceDesc
 function file(part: FilePart): JsonValue {
   const source = part.source
   return json({ type: "file", mime: part.mime, filename: part.filename,
-    url: part.url.startsWith("data:") ? "[inline attachment]" : part.url,
+    url: /^data:/i.test(part.url) ? "[inline attachment]" : part.url,
     ...(source && { source: {
       type: source.type,
       ...(source.type !== "resource" && { path: source.path }),
       ...(source.type === "symbol" && { range: source.range, name: source.name, kind: source.kind }),
       ...(source.type === "resource" && { clientName: source.clientName,
-        uri: source.uri.startsWith("data:") ? "[inline attachment]" : source.uri }),
+        uri: /^data:/i.test(source.uri) ? "[inline attachment]" : source.uri }),
     } }),
   })
 }

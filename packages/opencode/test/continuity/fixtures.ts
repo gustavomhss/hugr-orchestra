@@ -17,10 +17,15 @@ const source = z.object({
   extent: z.enum(["full", "preview", "cleared", "unknown", "unavailable"]), recoverable: z.boolean(),
   digest: z.string(), exit: z.number().nullable(), value: value.optional(),
 })
+const leaf = source.pick({ id: true, kind: true, order: true, extent: true, recoverable: true, digest: true, value: true })
+  .extend({ path: source.shape.locator.shape.path }).strict()
+const group = source.pick({ role: true, actor: true, scope: true, origin: true, exit: true }).extend({
+  locator: source.shape.locator.omit({ path: true }).strict(), units: z.array(leaf).min(1),
+}).strict()
 const catalogue = z.object({
-  parentID: z.string().transform((value) => SessionID.make(value)), units: z.array(source).min(1),
+  parentID: z.string().transform((value) => SessionID.make(value)), groups: z.array(group).min(1),
   previous: z.unknown(), canRecall: z.boolean(),
-})
+}).strict()
 const input = z.object({
   source: catalogue,
   envelope: z.object({
@@ -84,7 +89,18 @@ export function readSourceCatalogue(data: unknown) {
   if (request.source.parentID !== request.envelope.parentID || request.envelope.producerID === request.envelope.parentID) {
     throw new Error("maintenance source/envelope ownership mismatch")
   }
-  return request.source
+  const units: SourceUnit[] = request.source.groups.flatMap(({ units, locator, ...shared }) => units.map(({ path, ...unit }) => ({
+    ...shared, ...unit, parentID: request.source.parentID, locator: { ...locator, path },
+  }))).sort((left, right) => left.order - right.order)
+  if (new Set(units.map((unit) => unit.id)).size !== units.length ||
+    new Set(units.map((unit) => unit.order)).size !== units.length ||
+    units.some((unit) => !/^S(?:0[0-9]{2}|[1-9][0-9]{2,})$/.test(unit.id) || unit.id === "S000" ||
+      !Number.isSafeInteger(unit.order) || unit.order < 0 ||
+      !unit.locator.path.every((item) => typeof item === "string" || Number.isSafeInteger(item) && item >= 0) ||
+      (unit.locator.field === "system" ? unit.locator.partID !== null || unit.locator.path.length !== 0 : !unit.locator.partID))) {
+    throw new Error("invalid grouped source identity or locator")
+  }
+  return { parentID: request.source.parentID, canRecall: request.source.canRecall, previous: request.source.previous, units }
 }
 
 export function readEnvelope(data: string): ArtifactEnvelope {

@@ -25,9 +25,11 @@ export function create() {
     prepare(
       sessionID: SessionID,
       messages: SessionV1.WithParts[],
+      canRecall = false,
     ): { messages: SessionV1.WithParts[]; system: string[] } {
       const entry = entries.get(sessionID)
       if (!entry || !hasArtifact(entry)) return { messages, system: [] }
+      if (entry.artifact.body.reference_only.length > 0 && !canRecall) return { messages, system: [] }
       const index = messages.findIndex((message) => message.info.id === entry.tailStart)
       const boundary = messages.findIndex((message) => message.info.id === entry.boundary)
       const covered = messages.findIndex((message) => message.info.id === entry.artifact.envelope.coveredThrough)

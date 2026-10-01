@@ -6,6 +6,8 @@ import { Provider } from "@opencode-ai/schema/provider"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { catalogue, input } from "@/continuity/source"
 import type { MaterializedArtifact, SourceCatalogue } from "@/continuity/types"
+import { readSourceCatalogue } from "./fixtures"
+import { request, snapshot } from "@/continuity/fork"
 
 const parentID = SessionID.make("ses_parent")
 const providerID = Provider.ID.make("provider")
@@ -52,6 +54,29 @@ function prior(sources: SourceCatalogue, exactIDs: string[] = []): MaterializedA
 }
 
 describe("continuity source catalogue", () => {
+  test("grouped wire reconstructs all values and rejects foreign or ambiguous wire fields", () => {
+    const raw = '{"role":"user","n":9007199254740993}\r\n'
+    const head = [user("😀\u0000".repeat(20000)), tool(raw)]
+    const history = [...head, ...Array.from({ length: 8 }, (_, i) => user(`tail-${i}`, `msg_tail_${i}`))]
+    const captured = snapshot(parentID, history)!
+    const sources = catalogue({ parentID, head: captured.head, canRecall: true })
+    const packet = JSON.parse(request(captured, sources, SessionID.make("ses_producer")).messages[0].content)
+    expect(Object.keys(packet.source).sort()).toEqual(["canRecall", "groups", "parentID", "previous"])
+    expect(packet.source.groups).toHaveLength(2)
+    expect(packet.source.groups[1]).toMatchObject({ role: "tool", actor: "Mira-agent", exit: 1,
+      units: [{ id: "S002", path: [], kind: "json" }, { id: "S003", path: ["state", "input", "command"], value: "exit 1" },
+        { id: "S004", path: ["state", "metadata", "exit"], value: 1 },
+        { id: "S005", path: ["state", "output"], kind: "text", value: raw }] })
+    expect(readSourceCatalogue(packet).units).toEqual(sources.units)
+    for (const mutate of [
+      (p: typeof packet) => { p.source.units = [] },
+      (p: typeof packet) => { p.source.groups[0].units[0].parentID = "ses_foreign" },
+      (p: typeof packet) => { p.source.groups[0].locator.path = ["forged"] },
+      (p: typeof packet) => { p.source.groups[1].units[0].id = "FOREIGN" },
+      (p: typeof packet) => { p.source.groups[1].units[0].id = "S001" },
+      (p: typeof packet) => { p.source.parentID = "ses_foreign" },
+    ]) { const broken = structuredClone(packet); mutate(broken); expect(() => readSourceCatalogue(broken)).toThrow() }
+  })
   test("stable IDs, locator deduplication and maximum prior counter", () => {
     const message = user()
     const initial = catalogue({ parentID, head: [message, message] })

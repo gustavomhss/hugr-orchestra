@@ -27,7 +27,7 @@ type Entry = {
 type State = { sessions: Map<SessionID, Entry>; contexts: ReturnType<typeof create> }
 
 export interface Interface {
-  readonly prepare: (input: { sessionID: SessionID; messages: SessionV1.WithParts[] }) => Effect.Effect<{
+  readonly prepare: (input: { sessionID: SessionID; messages: SessionV1.WithParts[]; canRecall?: boolean }) => Effect.Effect<{
     messages: SessionV1.WithParts[]
     system: string[]
   }>
@@ -67,7 +67,7 @@ const layer = Layer.effect(
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
       const current = yield* InstanceState.get(state)
-      return yield* Effect.sync(() => current.contexts.prepare(input.sessionID, input.messages))
+      return yield* Effect.sync(() => current.contexts.prepare(input.sessionID, input.messages, input.canRecall))
     })
 
     const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")(function* (sessionID) {
@@ -149,7 +149,7 @@ const layer = Layer.effect(
                   history.at(-1)?.info.id !== active.boundary
                 )
                   return
-                const prepared = current.contexts.prepare(sessionID, history)
+                const prepared = current.contexts.prepare(sessionID, history, pending.canRecall)
                 const previous = current.contexts.get(sessionID)
                 // Full history is required for incompatible or unavailable prior coverage.
                 if (previous && !hasArtifact(previous)) current.contexts.discard(sessionID)

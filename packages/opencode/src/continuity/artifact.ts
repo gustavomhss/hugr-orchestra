@@ -203,13 +203,33 @@ function targets(unit: SourceUnit, value: JsonValue) {
 function adverse(unit: SourceUnit) {
   if (unit.exit !== null && unit.exit !== 0) return true
   if (!Object.hasOwn(unit, "value")) return false
-  if (typeof unit.value === "object" && unit.value !== null && !Array.isArray(unit.value)) {
-    if (unit.value.error || unit.value.success === false || unit.value.ok === false ||
-      ["failed", "error", "failure"].includes(String(unit.value.status))) return true
-  }
+  const path = unit.locator.path
+  const output = unit.locator.field === "part" && unit.locator.partID !== null &&
+    path[0] === "state" && path[1] === "output"
+  // Live JSON output selectors are scalars. Interpret only declared final-field
+  // markers on cited output paths; sibling selectors remain separate evidence.
+  if (output && path.length > 2 && adverseField(path.at(-1), unit.value)) return true
+  if ((typeof unit.value !== "string" || output && path.length === 2) && structuredAdverse(unit.value)) return true
   const state = toolState(unit)
-  if (state && (state.error || ["failed", "error", "failure"].includes(String(state.status)))) return true
+  if (state && (adverseField("error", state.error) || adverseField("status", state.status) ||
+    structuredAdverse(state.output))) return true
   return false
+}
+
+function adverseField(field: string | number | undefined, value: unknown) {
+  return (field === "success" || field === "ok") && value === false ||
+    field === "status" && typeof value === "string" && ["failed", "error", "failure"].includes(value) ||
+    field === "error" && !!value
+}
+
+function structuredAdverse(value: unknown): boolean {
+  if (typeof value === "string") {
+    const decoded = parse(value)
+    if (Option.isNone(decoded)) return false
+    value = decoded.value
+  }
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false
+  return Object.entries(value).some(([field, item]) => adverseField(field, item))
 }
 
 function toolState(unit: SourceUnit) {
@@ -226,9 +246,9 @@ function completedReceipt(unit: SourceUnit) {
   const state = toolState(unit)
   if (state) return state.status === "completed" && !state.error &&
     (unit.exit === 0 || Object.hasOwn(state, "output") && typeof state.output === "string")
-  // W1 publishes these host-owned result/exit paths. Input leaves inherit exit
-  // metadata too, so zero exit alone cannot make arbitrary tool data a receipt.
-  return unit.exit === 0 && (path[0] === "state" && path[1] === "output" ||
+  // Only the complete output root or exact exit unit carries completion here.
+  // Nested output leaves inherit exit too, but cannot certify their whole result.
+  return unit.exit === 0 && (path.length === 2 && path[0] === "state" && path[1] === "output" ||
     path.length === 3 && path[0] === "state" && path[1] === "metadata" && path[2] === "exit" && unit.value === 0)
 }
 

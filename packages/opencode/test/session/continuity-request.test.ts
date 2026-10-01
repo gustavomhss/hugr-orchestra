@@ -24,6 +24,35 @@ const role = PROMPT + '\nV1 BODY SCHEMA (host-owned):\n{"required":["status","ex
 const model = ProviderTest.model()
 const bash = tool({ inputSchema: jsonSchema({ type: "object", properties: {} }) })
 
+for (const condition of ["allowed", "user-false", "agent-deny", "session-deny", "session-wildcard", "session-grant", "no-toolcall"] as const) {
+  // Same exported resolver must describe the ordinary request's vendor tools.
+  const check = testEffect(RuntimeFlags.layer())
+  check.effect(`recall capability agrees with resolved vendor tools: ${condition}`, () => Effect.gen(function* () {
+    const value = request()
+    value.model.api.npm = "@ai-sdk/openai-compatible"
+    value.tools = { bash, context_recall: bash }
+    value.user.tools = condition === "user-false" ? { context_recall: false } : undefined
+    value.agent.permission = [{ permission: condition === "agent-deny" || condition === "session-grant" ? "context_recall" : "*",
+      pattern: "*", action: condition === "agent-deny" || condition === "session-grant" ? "deny" : "allow" }]
+    value.permission = condition === "session-deny" || condition === "session-wildcard"
+      ? [{ permission: condition === "session-wildcard" ? "context_*" : "context_recall", pattern: "*", action: "deny" }]
+      : condition === "session-grant" ? [{ permission: "context_recall", pattern: "*", action: "allow" }] : []
+    value.model.capabilities.toolcall = condition !== "no-toolcall"
+    const tools = LLMRequestPrep.resolveTools(value)
+    const flags = yield* RuntimeFlags.Service
+    const prepared = yield* LLMRequestPrep.prepare({ ...value, flags, isWorkflow: false,
+      provider: ProviderTest.info({}, value.model), auth: undefined,
+      plugin: { trigger: (_name, _input, output) => Effect.succeed(output), list: () => Effect.succeed([]), init: () => Effect.void },
+    })
+    expect(prepared.tools).toEqual(tools)
+    const offered = ["allowed", "session-grant", "no-toolcall"].includes(condition)
+    expect(Object.hasOwn(tools, "context_recall")).toBe(offered)
+    expect(Object.hasOwn(tools, "context_recall") && value.model.capabilities.toolcall)
+      .toBe(condition === "allowed" || condition === "session-grant")
+    expect(value.tools).toEqual({ bash, context_recall: bash })
+  }))
+}
+
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value)
 }
