@@ -50,6 +50,8 @@ it.effect("successful stream returns trimmed text with sanitized request", () =>
     expect(request.tools).toEqual({})
     expect(request.toolChoice).toBe("none")
     expect(request.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
+    expect(request.agent.prompt).toContain("MAINTENANCE FORK, not the original assistant or worker")
+    expect(request.agent.prompt).toContain("parent retains its own role")
     expect(request.user.system).toBeUndefined()
     expect(request.user.tools).toBeUndefined()
     expect(request.user.format).toBeUndefined()
@@ -147,4 +149,21 @@ it.effect("compacted output and inline media are not resurrected into text", () 
   expect(payload).toContain("[Tool output cleared]")
   expect(payload).toContain("[inline attachment]")
   expect(payload).not.toContain("MUST_NOT_RETURN")
+}))
+
+it.effect("supported terse model uses medium verbosity for maintenance only", () => Effect.gen(function* () {
+  const provider = yield* Provider.Service
+  const luna = { ...model, id: ModelV2.ID.make("gpt-5.6-luna"), api: { ...model.api, id: "gpt-5.6-luna", npm: "@ai-sdk/openai" } }
+  let inspected = false
+  const result = yield* run(input(), {
+    provider: { ...provider, getModel: () => Effect.succeed(luna) },
+    llm: { stream: (request) => {
+      inspected = true
+      expect(request.agent.options).toEqual({ textVerbosity: "medium" })
+      expect(luna.options).toEqual(model.options)
+      return Stream.fromIterable([...text(), LLMEvent.finish({ reason: "stop" })])
+    } },
+  })
+  expect(inspected).toBe(true)
+  expect(result).toBe("summary-unique-success")
 }))

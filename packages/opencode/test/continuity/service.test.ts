@@ -138,7 +138,8 @@ function applyFirst(sessionID: SessionID, plan: Held) {
     yield* Deferred.succeed(plan.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
     const prepared = yield* prepare(sessionID)
-    expect(prepared.system).toEqual([`Continuity context:\n${A}`])
+    expect(prepared.system).toHaveLength(1)
+    expect(prepared.system[0]).toStartWith(`Continuity context:\n${A}\n\n`)
     expect(prepared.messages).toHaveLength(8)
     return prepared
   })
@@ -158,7 +159,7 @@ it.instance("repeated pass receives prior artifact and only displaced incrementa
     yield* Deferred.succeed(second.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
     const after = yield* prepare(sessionID)
-    expect(after.system).toEqual([`Continuity context:\n${B}`])
+    expect(after.system[0]).toStartWith(`Continuity context:\n${B}\n\n`)
     expect(after.messages.slice(0, 6).map((message) => message.info.id)).toEqual(firstPrepared.messages.slice(2).map((message) => message.info.id))
     const sessions = yield* Session.Service
     const durable = yield* sessions.messages({ sessionID })
@@ -237,7 +238,7 @@ it.instance("cancellation preserves context and permits next safe start", () => 
     expect(nextHit.jobID).not.toBe(hit.jobID)
     yield* Deferred.succeed(next.release, undefined)
     yield* terminal(nextHit.jobID, "completed", "applied")
-    expect((yield* prepare(sessionID)).system).toEqual([`Continuity context:\n${B}`])
+    expect((yield* prepare(sessionID)).system[0]).toStartWith(`Continuity context:\n${B}\n\n`)
   }).pipe(Effect.provide(environment([first, cancelled, next])))
 }), 30_000)
 for (const ongoing of [false, true]) it.instance(`pending refresh respects parent safe boundary; ongoing=${ongoing}`, () => Effect.gen(function* () {
@@ -261,6 +262,6 @@ for (const ongoing of [false, true]) it.instance(`pending refresh respects paren
     expect((yield* prepare(sessionID)).system).toEqual([])
     yield* Deferred.succeed(fresh.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
-    expect((yield* prepare(sessionID)).system).toEqual([`Continuity context:\n${B}`])
+    expect((yield* prepare(sessionID)).system[0]).toStartWith(`Continuity context:\n${B}\n\n`)
   }).pipe(Effect.provide(environment([stale, fresh])))
 }), 30_000)
