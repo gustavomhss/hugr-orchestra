@@ -216,28 +216,87 @@ describe("OpenAI Responses native JSON format", () => {
     }),
   )
 
-  it.effect("finite refusal frames do not become output text or tool calls", () =>
-    Effect.gen(function* () {
-      const events = yield* LLMClient.stream(
-        LLM.updateRequest(request, { responseFormat: { type: "json", schema } }),
-      ).pipe(
-        Stream.runCollect,
-        Effect.provide(
-          fixedResponse(
-            sseEvents(
-              { type: "response.refusal.delta", item_id: "refusal", delta: "Cannot comply." },
-              { type: "response.refusal.done", item_id: "refusal", refusal: "Cannot comply." },
-              { type: "response.completed", response: { id: "refused" } },
-              { type: "response.output_text.delta", item_id: "late", delta: '{"accepted":true}' },
-            ),
-          ),
-        ),
+  for (const transport of ["HTTP", "WebSocket"] as const) {
+    for (const refusals of [
+      [{ type: "response.refusal.delta", delta: "fake-sensitive-refusal" }],
+      [{ type: "response.refusal.done", refusal: "fake-sensitive-refusal" }],
+      [
+        { type: "response.refusal.delta", delta: "" },
+        { type: "response.refusal.done", refusal: "" },
+      ],
+      [
+        { type: "response.refusal.delta", delta: "fake-sensitive-refusal" },
+        { type: "response.refusal.done", refusal: "fake-sensitive-refusal" },
+      ],
+    ]) {
+      for (const responseFormat of [
+        { type: "json", schema },
+        undefined,
+        { type: "text" },
+        { type: "tool", tool },
+      ] as const) {
+        it.effect(
+          `${transport} mixed refusal ${refusals[0].type} / ${refusals.length} / ${"delta" in refusals[0] && refusals[0].delta === "" ? "empty" : "nonempty"} / ${responseFormat?.type}`,
+          () =>
+            Effect.gen(function* () {
+              const text = '{"answer":"safe","evidence":[]}'
+              const events = yield* streamFrames(
+                LLM.updateRequest(request, { responseFormat }),
+                [
+                  { type: "response.output_text.delta", item_id: "json", delta: text },
+                  ...refusals,
+                  { type: "response.completed", response: { id: "refused" } },
+                  { type: "response.output_text.delta", item_id: "late", delta: '{"accepted":true}' },
+                ],
+                transport,
+              )
+              expect(
+                events
+                  .filter(LLMEvent.is.textDelta)
+                  .map((event) => event.text)
+                  .join(""),
+              ).toBe(text)
+              expect(events.filter(LLMEvent.is.finish)).toMatchObject([{ reason: "stop" }])
+              const errors = events.filter(LLMEvent.is.providerError)
+              if (responseFormat?.type === "json") {
+                expect(errors.length).toBeGreaterThan(0)
+                for (const error of errors) {
+                  expect(error).toMatchObject({ message: "Provider refused structured response", retryable: false })
+                  expect(events.indexOf(error)).toBeLessThan(events.findIndex(LLMEvent.is.finish))
+                }
+              }
+              // Compatibility: non-JSON requests still ignore refusal frames.
+              if (responseFormat?.type !== "json") expect(errors).toEqual([])
+              expect(ProviderShared.encodeJson(events)).not.toContain("fake-sensitive-refusal")
+            }),
+        )
+      }
+    }
+    for (const reason of ["stop", "length"] as const) {
+      it.effect(`${transport} normal JSON keeps ${reason} finish without provider error`, () =>
+        Effect.gen(function* () {
+          const text = reason === "stop" ? '{"answer":"safe","evidence":[]}' : '{"answer":'
+          const terminal =
+            reason === "stop"
+              ? { type: "response.completed", response: { id: "normal" } }
+              : { type: "response.incomplete", response: { incomplete_details: { reason: "max_output_tokens" } } }
+          const events = yield* streamFrames(
+            LLM.updateRequest(request, { responseFormat: { type: "json", schema } }),
+            [{ type: "response.output_text.delta", item_id: "json", delta: text }, terminal],
+            transport,
+          )
+          expect(
+            events
+              .filter(LLMEvent.is.textDelta)
+              .map((event) => event.text)
+              .join(""),
+          ).toBe(text)
+          expect(events.filter(LLMEvent.is.providerError)).toEqual([])
+          expect(events.filter(LLMEvent.is.finish)).toMatchObject([{ reason }])
+        }),
       )
-      // Existing parser ignores refusal payloads and finishes; no semantic JSON acceptance claim.
-      expect(events.map((event) => event.type)).toEqual(["step-start", "step-finish", "finish"])
-      expect(events.filter(LLMEvent.is.finish)).toMatchObject([{ reason: "stop" }])
-    }),
-  )
+    }
+  }
 
   it.effect("malformed provider frame keeps InvalidProviderOutput classifier", () =>
     Effect.gen(function* () {
@@ -250,3 +309,33 @@ describe("OpenAI Responses native JSON format", () => {
 })
 
 const decodeWire = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)
+
+const streamFrames = (
+  input: ReturnType<typeof LLM.request>,
+  frames: ReadonlyArray<unknown>,
+  transport: "HTTP" | "WebSocket",
+) => {
+  if (transport === "HTTP")
+    return LLMClient.stream(input).pipe(Stream.runCollect, Effect.provide(fixedResponse(sseEvents(...frames))))
+  const websocket = LLM.updateRequest(input, {
+    model: OpenAIResponses.webSocketRoute.with({ auth: Auth.none }).model({ id: "fixture-model" }),
+  })
+  const deps = Layer.mergeAll(
+    Layer.succeed(
+      RequestExecutor.Service,
+      RequestExecutor.Service.of({ execute: () => Effect.die("unexpected HTTP request") }),
+    ),
+    Layer.succeed(
+      WebSocketExecutor.Service,
+      WebSocketExecutor.Service.of({
+        open: () =>
+          Effect.succeed({
+            sendText: () => Effect.void,
+            messages: Stream.fromArray(frames.map((frame) => ProviderShared.encodeJson(frame))),
+            close: Effect.void,
+          }),
+      }),
+    ),
+  )
+  return LLMClient.stream(websocket).pipe(Stream.runCollect, Effect.provide(LLMClient.layer.pipe(Layer.provide(deps))))
+}

@@ -1,6 +1,6 @@
 import type { JSONSchema7 } from "ai"
 import { isDeepStrictEqual } from "node:util"
-import { estimateExact, jsonSchema } from "./artifact"
+import { estimateExact, jsonSchema, verificationReceipt } from "./artifact"
 import type { SourceCatalogue } from "./types"
 
 // Equivalent projection of the decoder exporter before catalogue specialization:
@@ -52,11 +52,34 @@ export function responseSchema(catalogue: SourceCatalogue): JSONSchema7 {
   }
   const known = [...ids]
   const notes = array(result.properties.notes, "notes")
-  const variants = object(notes.items, "notes.items").anyOf
+  const noteItems = object(notes.items, "notes.items")
+  const variants = noteItems.anyOf
   if (!variants?.length) changed("notes.items.anyOf")
-  variants.forEach((variant, index) => {
+  // Native generation is a subset of decoder acceptance: verified citations
+  // must all be supplied completion receipts in the same known exact scope.
+  // execution_completed remains distinct; eligibility is not objective entailment.
+  const receipts = new Map<string, string[]>()
+  catalogue.units.forEach((unit) => {
+    if (!verificationReceipt(unit) || !unit.scope?.trim()) return
+    receipts.set(unit.scope, [...(receipts.get(unit.scope) ?? []), unit.id])
+  })
+  noteItems.anyOf = variants.flatMap((variant, index) => {
     const entry = closedObject(variant, `notes.items.anyOf[${index}]`)
     selectors(entry.properties.sources, known, `notes.items.anyOf[${index}].sources`)
+    if (JSON.stringify(string(entry.properties.kind, `notes.items.anyOf[${index}].kind`).enum) !== '["work"]')
+      return [entry]
+    const state = string(entry.properties.state, `notes.items.anyOf[${index}].state`)
+    if (!Array.isArray(state.enum) || !state.enum.every((value) => typeof value === "string") ||
+      !state.enum.includes("verified") || state.enum.length < 2) changed(`notes.items.anyOf[${index}].state.enum`)
+    const verified = structuredClone(entry)
+    state.enum = state.enum.filter((value) => value !== "verified")
+    return [entry, ...[...receipts].map(([scope, sources]) => {
+      const selected = structuredClone(verified)
+      selected.properties.state = { ...string(selected.properties.state, "verified.state"), enum: ["verified"] }
+      selected.properties.scope = { type: "string", const: scope }
+      selectors(selected.properties.sources, sources, "verified.sources")
+      return selected
+    })]
   })
   const refs = array(result.properties.reference_only, "reference_only")
   const reference = closedObject(refs.items, "reference_only.items")

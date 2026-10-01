@@ -252,12 +252,18 @@ function completedReceipt(unit: SourceUnit) {
     path.length === 3 && path[0] === "state" && path[1] === "metadata" && path[2] === "exit" && unit.value === 0)
 }
 
+// Mechanical completion eligibility, not proof that the task objective succeeded.
+// Scope compatibility belongs to the cited note; null scope remains compatible
+// with the decoder's existing rule, while native generation can be narrower.
+export function verificationReceipt(unit: SourceUnit): boolean {
+  return unit.role === "tool" && supplied(unit) && unit.extent === "full" && !adverse(unit) && completedReceipt(unit)
+}
+
 function verification(note: HandoffBody["notes"][number], units: Map<string, SourceUnit>) {
   if (!note.scope?.trim()) return false
   const evidence = note.sources.map((id) => units.get(id)!)
     .filter((unit) => unit.role === "tool" && compatible(unit.scope, note.scope))
-  const receipts = evidence.filter((unit) => supplied(unit) && unit.extent === "full" && !adverse(unit) &&
-    completedReceipt(unit))
+  const receipts = evidence.filter(verificationReceipt)
   if (!receipts.length) return false
   // Only cited structured/exit metadata can mechanically contradict this claim.
   // A complete zero-exit receipt establishes completion, not objective entailment;
