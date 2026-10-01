@@ -4,6 +4,7 @@ import type { Node, ParseError } from "jsonc-parser"
 import type { FilePart, ToolPart, WithParts } from "@opencode-ai/core/v1/session"
 import type { SessionID } from "@/session/schema"
 import type { JsonValue, MaterializedArtifact, SourceCatalogue, SourceDescriptor, SourceLocator, SourceUnit } from "./types"
+import { estimateExact } from "./artifact"
 
 export function catalogue(input: {
   parentID: SessionID
@@ -153,7 +154,7 @@ function groups(units: SourceUnit[]) {
     role: SourceUnit["role"]; actor: SourceUnit["actor"]; scope: SourceUnit["scope"]
     origin: SourceUnit["origin"]; exit: SourceUnit["exit"]
     units: (Pick<SourceUnit, "id" | "kind" | "order" | "extent" | "recoverable" | "digest" | "value"> &
-      { path: SourceLocator["path"] })[]
+      { path: SourceLocator["path"]; exactTokens: number | null })[]
   }>()
   for (const unit of units) {
     const locator = { messageID: unit.locator.messageID, partID: unit.locator.partID, field: unit.locator.field }
@@ -161,7 +162,7 @@ function groups(units: SourceUnit[]) {
     const key = JSON.stringify(shared)
     const group = result.get(key) ?? { ...shared, units: [] }
     group.units.push({ id: unit.id, path: unit.locator.path, kind: unit.kind, order: unit.order,
-      extent: unit.extent, recoverable: unit.recoverable, digest: unit.digest,
+      extent: unit.extent, recoverable: unit.recoverable, digest: unit.digest, exactTokens: estimateExact(unit),
       ...(unit.value !== undefined && { value: unit.value }) })
     result.set(key, group)
   }

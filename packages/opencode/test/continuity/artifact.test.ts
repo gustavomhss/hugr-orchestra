@@ -2,9 +2,10 @@ import { describe, expect, test } from "bun:test"
 import { Option, Schema } from "effect"
 import { decode, jsonSchema, render, schema } from "../../src/continuity/artifact"
 import type { HandoffBody } from "../../src/continuity/types"
-import { MessageID, SessionID } from "../../src/session/schema"
+import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { Token } from "../../src/util/token"
 import { body, catalogue, envelope, literal, note, parentID, prior, run, source, toolReceipt } from "./artifact-fixture"
+import { readExactFrames } from "./fixtures"
 
 describe("continuity artifact W2", () => {
   test("positive: copies protected byte strings; canonical body and reader coverage", () => {
@@ -22,8 +23,8 @@ describe("continuity artifact W2", () => {
     expect(result.artifact.text).toContain("Live higher-priority instructions and newer native tail/turns prevail")
     expect(result.artifact.text).toContain('"covered_through":"msg_head"')
     expect(result.artifact.text).toContain('"tail_start":"msg_tail"')
-    expect(result.artifact.text).toContain('"message_id":"msg_original"')
-    expect(result.artifact.text).toContain('"part_id":"prt_original"')
+    expect(readExactFrames(result.artifact.text)[0].provenance.locator.messageID).toBe(MessageID.make("msg_original"))
+    expect(readExactFrames(result.artifact.text)[0].provenance.locator.partID).toBe(PartID.make("prt_original"))
     expect(result.artifact.text).toContain('"extent":"full"')
     expect(result.artifact.text).not.toContain("MAINTENANCE FORK")
     expect(result.artifact.text).toBe(render(result.artifact))

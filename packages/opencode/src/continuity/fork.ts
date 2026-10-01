@@ -8,7 +8,7 @@ import type { LLMEvent } from "@opencode-ai/llm"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
 import { catalogue, input } from "./source"
-import { decode, jsonSchema } from "./artifact"
+import { decode, estimateHostBase, jsonSchema } from "./artifact"
 import type { ArtifactEnvelope, MaterializedArtifact, SourceCatalogue } from "./types"
 import PROMPT from "./prompt.txt"
 
@@ -61,6 +61,7 @@ function envelope(input: Snapshot, producerID: SessionID): ArtifactEnvelope {
 }
 
 export function request(captured: Snapshot, sources: SourceCatalogue, producerID: SessionID) {
+  const hostEnvelope = envelope(captured, producerID)
   return {
     tools: {},
     toolChoice: "none" as const,
@@ -68,9 +69,10 @@ export function request(captured: Snapshot, sources: SourceCatalogue, producerID
     messages: [{
       role: "user" as const,
       content: JSON.stringify({
-        envelope: envelope(captured, producerID),
+        envelope: hostEnvelope,
         receiver: { canRecall: captured.canRecall },
         maxTokens: MAX_ARTIFACT_TOKENS,
+        budget: { maxTokens: MAX_ARTIFACT_TOKENS, fixedTokens: estimateHostBase(hostEnvelope) },
         source: input(sources),
         bodySchema: jsonSchema,
       }),
