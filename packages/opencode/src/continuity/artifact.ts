@@ -277,10 +277,7 @@ export function render(artifact: MaterializedArtifact): string {
       producer_id: envelope.producerID, boundary: envelope.boundary, covered_through: envelope.coveredThrough,
       tail_start: envelope.tailStart }),
     "Sources: code-owned provenance. Source IDs use the supplied catalogue namespace.",
-    ...artifact.sources.filter((source) => !exactIDs.has(source.id)).map((source) => JSON.stringify({
-      ...source, locator: undefined, message_id: source.locator.messageID, part_id: source.locator.partID,
-      field: source.locator.field, path: source.locator.path,
-    })),
+    ...artifact.sources.filter((source) => !exactIDs.has(source.id)).map(sourceDescriptorLine),
     "Reference-only: use the parent-only read-only session source recall tool with message_id/part_id;",
     "extent describes stored historical availability, not a promise of full content. No filesystem route inferred.",
     "Exact historical extracts are JSON data records. Decode value strings to recover unchanged literal bytes.",
@@ -303,6 +300,18 @@ function exactFrame(entry: ExactValue, provenance: SourceDescriptor): string {
   return JSON.stringify({ frame: "continuity_exact_v1", source: entry.source, reason: entry.reason,
     format: typeof entry.value === "string" ? "text" : "json", value: entry.value, provenance: descriptor(provenance) })
     .replaceAll("\u2028", "\\u2028").replaceAll("\u2029", "\\u2029")
+}
+
+function sourceDescriptorLine(source: SourceDescriptor): string {
+  return JSON.stringify({
+    ...source, locator: undefined, message_id: source.locator.messageID, part_id: source.locator.partID,
+    field: source.locator.field, path: source.locator.path,
+  })
+}
+
+export function estimateCitation(unit: SourceUnit): number {
+  // Non-exact active IDs each render one full descriptor, independent of payload eligibility.
+  return Token.estimate(sourceDescriptorLine(descriptor(unit)) + "\n") + 2
 }
 
 export function estimateExact(unit: SourceUnit): number | null {

@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
+import { Effect, Stream } from "effect"
+import type { LLMEvent } from "@opencode-ai/llm"
+import type { LLM } from "@/session/llm"
 import { Model } from "@opencode-ai/schema/model"
 import { Provider } from "@opencode-ai/schema/provider"
-import { decode, estimateExact, estimateHostBase, render } from "@/continuity/artifact"
+import { decode, estimateCitation, estimateExact, estimateHostBase, jsonSchema, render } from "@/continuity/artifact"
 import { MAX_ARTIFACT_TOKENS, request, snapshot } from "@/continuity/fork"
 import { catalogue } from "@/continuity/source"
 import type { JsonValue, MaterializedArtifact, SourceCatalogue, SourceUnit } from "@/continuity/types"
@@ -10,6 +13,7 @@ import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Token } from "@/util/token"
 import { body, envelope, note, parentID, prior, run, source } from "./artifact-fixture"
 import { readExactFrames, readHostHeader, readSourceCatalogue } from "./fixtures"
+import PROMPT from "@/continuity/prompt.txt"
 
 function emptyProjection(): MaterializedArtifact {
   return { envelope, body: body({ exact: [] }), exact: [], sources: [], text: "" }
@@ -94,6 +98,25 @@ describe("continuity producer budget feedback", () => {
     }
   })
 
+  test("citation hint measures the exact rendered descriptor bytes, with every metadata field", () => {
+    for (const extent of ["full", "preview", "unknown", "cleared", "unavailable"] as const) {
+      const unit = source({ id: "S001", extent, actor: "actor\r\n😀\u2028", scope: "scope/".repeat(100),
+        locator: { ...source().locator, path: ["state", "output", "漢字", 42] }, exit: 75 })
+      if (extent === "unavailable") delete unit.value
+      const result = run(body({ exact: [], notes: [note({ sources: [unit.id] })] }), fixtureCatalogue([unit]))
+      if (!result.ok) throw new Error(result.reason)
+      const lines = result.artifact.text.split("\n").filter((line) => line.startsWith('{"id":'))
+      expect(lines).toHaveLength(1)
+      expect(JSON.parse(lines[0])).toEqual({ id: unit.id, parentID: unit.parentID, role: unit.role, kind: unit.kind,
+        origin: unit.origin, order: unit.order, actor: unit.actor, scope: unit.scope, extent: unit.extent,
+        recoverable: unit.recoverable, digest: unit.digest, exit: unit.exit,
+        message_id: unit.locator.messageID, part_id: unit.locator.partID, field: unit.locator.field, path: unit.locator.path })
+      expect(estimateCitation(unit)).toBe(Token.estimate(lines[0] + "\n") + 2)
+      expect(estimateCitation(unit)).toBeGreaterThan(estimateCitation({ ...unit, actor: null, scope: null }))
+      expect(estimateCitation({ ...unit, value: "uncounted payload".repeat(1000) })).toBe(estimateCitation(unit))
+    }
+  })
+
   test("shared exact/note/reference citations retain one full descriptor per active ID", () => {
     const cat = fixtureCatalogue([source({ id: "S001", role: "tool" }),
       source({ id: "S002", role: "assistant", order: 2 }), source({ id: "S003", role: "tool", order: 3 }),
@@ -107,6 +130,15 @@ describe("continuity producer budget feedback", () => {
     expect(result.artifact.sources.map((entry) => entry.id)).toEqual(["S001", "S002", "S003"])
     const descriptors = result.artifact.text.split("\n").filter((line) => line.startsWith('{"id":')).map((line) => JSON.parse(line))
     expect(descriptors.map((entry) => entry.id)).toEqual(["S002", "S003"])
+    const nonExact = [...new Set([...selected.notes.flatMap((entry) => entry.sources),
+      ...selected.reference_only.map((entry) => entry.source)])]
+      .filter((id) => !selected.exact.some((entry) => entry.source === id))
+    expect(nonExact).toEqual(["S002", "S003"])
+    const costs = nonExact.map((id) => estimateCitation(cat.units.find((unit) => unit.id === id)!))
+    expect(costs.reduce((sum, cost) => sum + cost, 0)).toBe(descriptors.reduce((sum, entry) =>
+      sum + Token.estimate(JSON.stringify(entry) + "\n") + 2, 0))
+    expect(costs.reduce((sum, cost) => sum + cost, 0)).toBeLessThan(
+      cat.units.slice(0, 3).reduce((sum, unit) => sum + estimateCitation(unit), 0))
     const frames = readExactFrames(result.artifact.text)
     const lookup = new Map([...frames.map((entry) => [entry.source, entry.provenance] as const),
       ...descriptors.map((entry) => [entry.id, { ...entry, locator: { messageID: entry.message_id,
@@ -139,9 +171,13 @@ describe("continuity producer budget feedback", () => {
     const current = packet()
     const parsed = readSourceCatalogue(current.prepared.messages[0].content)
     expect(parsed.units).toEqual(current.sources.units)
-    for (const unit of current.sources.units) expect(parsed.exactTokens[unit.id]).toBe(estimateExact(unit))
+    for (const unit of current.sources.units) {
+      expect(parsed.exactTokens[unit.id]).toBe(estimateExact(unit))
+      expect(parsed.citationTokens[unit.id]).toBe(estimateCitation(unit))
+    }
     const wrapper = current.sources.units.find((unit) => unit.role === "tool" && unit.locator.path.length === 0)!
     expect(parsed.exactTokens[wrapper.id]).toBeNull()
+    expect(parsed.citationTokens[wrapper.id]).toBeGreaterThan(0)
     expect(parsed.exactTokens.S001).toBeGreaterThan(1000)
     const scalar = current.sources.units.find((unit) => unit.value === "Case_AbC/001")!
     expect(parsed.exactTokens[scalar.id]).toBeGreaterThan(0)
@@ -152,12 +188,77 @@ describe("continuity producer budget feedback", () => {
       (unit: Record<string, unknown>) => { delete unit.exactTokens },
       (unit: Record<string, unknown>) => { unit.exactTokens = -1 },
       (unit: Record<string, unknown>) => { unit.exactTokens = 1.5 },
+      (unit: Record<string, unknown>) => { delete unit.citationTokens },
+      ...[null, "1", 0, -1, 1.5, {}, true].map((value) =>
+        (unit: Record<string, unknown>) => { unit.citationTokens = value }),
       (unit: Record<string, unknown>) => { unit.estimatedTokens = 1 },
     ]) {
       const wire = JSON.parse(current.prepared.messages[0].content)
       change(wire.source.groups[0].units[0])
       expect(() => readSourceCatalogue(wire)).toThrow()
     }
+  })
+
+  for (const canRecall of [false, true]) test(`real fork appends host snapshot rules for receiver.canRecall:${canRecall}`, async () => {
+    const { run } = await import("@/continuity/fork")
+    const captured = { ...packet().captured, canRecall }
+    const model: import("@/provider/provider").Model = {
+      id: Model.ID.make("model"), providerID: Provider.ID.make("provider"), name: "Pure capture model",
+      api: { id: "model", url: "https://example.invalid", npm: "@ai-sdk/openai-compatible" },
+      capabilities: { toolcall: true, attachment: false, reasoning: false, temperature: true, interleaved: false,
+        input: { text: true, image: false, audio: false, video: false, pdf: false },
+        output: { text: true, image: false, audio: false, video: false, pdf: false } },
+      cost: { input: 0, output: 0, cache: { read: 0, write: 0 } }, limit: { context: 200000, output: 10000 },
+      status: "active", options: {}, headers: {}, release_date: "2026-01-01",
+    }
+    const requests: LLM.StreamInput[] = []
+    const unexpected = () => Effect.die(new Error("Unexpected provider call; pure capture only"))
+    const result = await Effect.runPromise(run(captured, {
+      provider: { getModel: (providerID, modelID) => {
+        expect(providerID).toBe(model.providerID)
+        expect(modelID).toBe(model.id)
+        return Effect.succeed(model)
+      }, list: unexpected, getProvider: unexpected, getLanguage: unexpected,
+      closest: unexpected, getSmallModel: unexpected, defaultModel: unexpected },
+      llm: { stream: (request) => {
+        requests.push(request)
+        const events: LLMEvent[] = [{ type: "text-delta", id: "pure", text: JSON.stringify(body({
+          exact: [{ source: "S001", reason: "constraint" }],
+          reference_only: canRecall ? [{ source: "S001", purpose: "detail", retrieve_when: "debugging" }] : [],
+        })) }, { type: "finish", reason: "stop" }]
+        return Stream.fromIterable(events)
+      } },
+    }))
+    expect(requests).toHaveLength(1)
+    expect(result?.body.status).toBe("ready")
+    const request = requests[0]
+    const prefix = PROMPT + `\nV1 BODY SCHEMA (host-owned):\n${JSON.stringify(jsonSchema)}`
+    expect(request.agent.prompt?.startsWith(prefix)).toBe(true)
+    const suffix = request.agent.prompt!.slice(prefix.length)
+    expect(suffix.startsWith("\nHOST SNAPSHOT RULES (host-owned; current runtime):\n")).toBe(true)
+    expect(suffix).toContain(`receiver.canRecall:${canRecall}\n`)
+    const noRecall = "reference_only MUST be []; this parent has no operational retrieval route. Preserve necessary supplied facts in exact or grounded notes; do not claim unsupported recovery."
+    if (!canRecall) expect(suffix).toContain(noRecall)
+    if (canRecall) {
+      expect(suffix).not.toContain(noRecall)
+      expect(suffix).toContain("reference_only requires receiver.canRecall:true AND each referenced unit.recoverable:true.")
+    }
+    expect(suffix).toContain("ready MUST have issues:[]; nonempty issues require status:needs_context. Unknown task facts are notes, not ready issues. exact reason only constraint/identifier/evidence.")
+    expect(suffix).toContain("fixed + exact(sum selected) + citation(sum unique active NOT exact) + notesJSON")
+    expect(suffix).toContain("Actual rendered budget maximum: 6000 tokens.")
+    expect(request.system).toEqual([])
+    expect(request.tools).toEqual({})
+    expect(request.toolChoice).toBe("none")
+    expect(request.purpose).toBe("context-maintenance")
+    const parent = captured.tail[0].info
+    if (parent.role !== "user") throw new Error("Fixture requires a user tail anchor")
+    expect(request.user.model).toEqual(parent.model)
+    const payload = JSON.parse(String(request.messages[0].content))
+    expect(payload.receiver.canRecall).toBe(canRecall)
+    expect(payload.source.canRecall).toBe(canRecall)
+    expect(payload.source.groups.flatMap((group: { units: { recoverable: boolean }[] }) => group.units)
+      .every((unit: { recoverable: boolean }) => unit.recoverable === canRecall)).toBe(true)
+    expect(JSON.stringify(payload.source)).not.toContain("HOST SNAPSHOT RULES")
   })
 
   test("hints exclude notes/extra descriptors; final 6000 guard still rejects protected overage", () => {

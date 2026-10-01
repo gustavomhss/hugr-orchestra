@@ -18,7 +18,8 @@ const source = z.object({
   digest: z.string(), exit: z.number().nullable(), value: value.optional(),
 })
 const leaf = source.pick({ id: true, kind: true, order: true, extent: true, recoverable: true, digest: true, value: true })
-  .extend({ path: source.shape.locator.shape.path, exactTokens: z.number().int().positive().nullable() }).strict()
+  .extend({ path: source.shape.locator.shape.path, exactTokens: z.number().int().positive().nullable(),
+    citationTokens: z.number().int().positive() }).strict()
 const group = source.pick({ role: true, actor: true, scope: true, origin: true, exit: true }).extend({
   locator: source.shape.locator.omit({ path: true }).strict(), units: z.array(leaf).min(1),
 }).strict()
@@ -91,7 +92,8 @@ export function readSourceCatalogue(data: unknown) {
     throw new Error("maintenance source/envelope ownership mismatch")
   }
   const costs = request.source.groups.flatMap((group) => group.units.map((unit) => [unit.id, unit.exactTokens] as const))
-  const units: SourceUnit[] = request.source.groups.flatMap(({ units, locator, ...shared }) => units.map(({ path, exactTokens, ...unit }) => ({
+  const citations = request.source.groups.flatMap((group) => group.units.map((unit) => [unit.id, unit.citationTokens] as const))
+  const units: SourceUnit[] = request.source.groups.flatMap(({ units, locator, ...shared }) => units.map(({ path, exactTokens, citationTokens, ...unit }) => ({
     ...shared, ...unit, parentID: request.source.parentID, locator: { ...locator, path },
   }))).sort((left, right) => left.order - right.order)
   if (new Set(units.map((unit) => unit.id)).size !== units.length ||
@@ -103,7 +105,7 @@ export function readSourceCatalogue(data: unknown) {
     throw new Error("invalid grouped source identity or locator")
   }
   return { parentID: request.source.parentID, canRecall: request.source.canRecall, previous: request.source.previous,
-    units, exactTokens: Object.fromEntries(costs), budget: request.budget }
+    units, exactTokens: Object.fromEntries(costs), citationTokens: Object.fromEntries(citations), budget: request.budget }
 }
 
 export function readEnvelope(data: string): ArtifactEnvelope {

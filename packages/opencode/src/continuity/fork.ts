@@ -95,7 +95,13 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   })
   const prepared = request(captured, sources, sessionID)
   const schemaRole = `\nV1 BODY SCHEMA (host-owned):\n${JSON.stringify(jsonSchema)}`
-  const role = PROMPT + schemaRole
+  const hostRules = `\nHOST SNAPSHOT RULES (host-owned; current runtime):\nreceiver.canRecall:${captured.canRecall}\n` +
+    (captured.canRecall
+      ? "reference_only requires receiver.canRecall:true AND each referenced unit.recoverable:true. Preserve necessary supplied facts in exact or grounded notes; a path alone is not a retrieval route.\n"
+      : "reference_only MUST be []; this parent has no operational retrieval route. Preserve necessary supplied facts in exact or grounded notes; do not claim unsupported recovery.\n") +
+    "ready MUST have issues:[]; nonempty issues require status:needs_context. Unknown task facts are notes, not ready issues. exact reason only constraint/identifier/evidence.\n" +
+    "Budget: fixed + exact(sum selected) + citation(sum unique active NOT exact) + notesJSON. Reserve reference_only JSON too. Exact frames already include full provenance; do not pay citationTokens again for exact IDs. Actual rendered budget maximum: 6000 tokens."
+  const role = PROMPT + schemaRole + hostRules
   const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
   if (inputLimit <= 0 || Token.estimate(role + prepared.messages[0].content) > inputLimit) return
   const defaults = ProviderTransform.options({ model, sessionID })
