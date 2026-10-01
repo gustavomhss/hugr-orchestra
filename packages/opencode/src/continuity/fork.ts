@@ -9,6 +9,7 @@ import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
 import { catalogue, input } from "./source"
 import { decode, estimateHostBase, jsonSchema } from "./artifact"
+import { responseSchema } from "./output-schema"
 import type { ArtifactEnvelope, MaterializedArtifact, SourceCatalogue } from "./types"
 import PROMPT from "./prompt.txt"
 
@@ -133,6 +134,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     purpose: "context-maintenance",
     model,
     ...prepared,
+    ...(model.api.npm === "@ai-sdk/openai" ? { responseSchema: responseSchema(sources) } : {}),
   }).pipe(Stream.runFold(() => ({ text: "", finished: false, invalid: false }), reduce))
   if (!result.finished || result.invalid) return
   const decoded = decode({

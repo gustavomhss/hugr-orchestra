@@ -21,6 +21,7 @@ import {
 import { JsonObject, optionalArray, optionalNull, ProviderShared } from "./shared"
 import { isContextOverflow } from "../provider-error"
 import { OpenAIOptions } from "./utils/openai-options"
+import { ResponseFormat } from "./utils/response-format"
 import { Lifecycle } from "./utils/lifecycle"
 import { ToolSchemaProjection } from "./utils/tool-schema"
 import { ToolStream } from "./utils/tool-stream"
@@ -139,11 +140,7 @@ const OpenAIResponsesCoreFields = {
       summary: Schema.optional(Schema.Literal("auto")),
     }),
   ),
-  text: Schema.optional(
-    Schema.Struct({
-      verbosity: Schema.optional(OpenAIOptions.OpenAITextVerbosity),
-    }),
-  ),
+  text: Schema.optional(ResponseFormat.OpenAIText),
   max_output_tokens: Schema.optional(Schema.Number),
   temperature: Schema.optional(Schema.Number),
   top_p: Schema.optional(Schema.Number),
@@ -461,7 +458,7 @@ const lowerOptions = Effect.fn("OpenAIResponses.lowerOptions")(function* (reques
     return yield* invalid(`OpenAI Responses does not support reasoning effort ${effort}`)
   const summary = OpenAIOptions.reasoningSummary(request)
   const include = OpenAIOptions.include(request)
-  const verbosity = OpenAIOptions.textVerbosity(request)
+  const text = ResponseFormat.openAIText(request)
   const instructions = OpenAIOptions.instructions(request)
   const serviceTier = OpenAIOptions.serviceTier(request)
   return {
@@ -470,7 +467,7 @@ const lowerOptions = Effect.fn("OpenAIResponses.lowerOptions")(function* (reques
     ...(promptCacheKey ? { prompt_cache_key: promptCacheKey } : {}),
     ...(include ? { include } : {}),
     ...(effort || summary ? { reasoning: { effort, summary } } : {}),
-    ...(verbosity ? { text: { verbosity } } : {}),
+    ...(text ? { text } : {}),
     ...(serviceTier ? { service_tier: serviceTier } : {}),
   }
 })
