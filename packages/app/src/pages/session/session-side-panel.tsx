@@ -453,7 +453,9 @@ export function SessionSidePanel(props: {
                                   </div>
                                 </Tabs.Trigger>
                               </Show>
-                              <Tabs.Trigger value="apps"><div>Apps</div></Tabs.Trigger>
+                              <Tabs.Trigger value="apps">
+                                <div>Apps</div>
+                              </Tabs.Trigger>
                               <SortableProvider ids={openedTabs()}>
                                 <For each={panelTabs()}>
                                   {(tab) => (
@@ -569,7 +571,9 @@ export function SessionSidePanel(props: {
                             </Tabs.Content>
                           </Show>
                           <Show when={activeTab() === "apps"}>
-                            <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict"><AppsPanel /></Tabs.Content>
+                            <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict">
+                              <AppsPanel />
+                            </Tabs.Content>
                           </Show>
 
                           <Show when={activeFileTab()} keyed>
@@ -715,7 +719,9 @@ export function SessionSidePanel(props: {
                                 </div>
                               </Tabs.Trigger>
                             </Show>
-                            <Tabs.Trigger value="apps"><div>Apps</div></Tabs.Trigger>
+                            <Tabs.Trigger value="apps">
+                              <div>Apps</div>
+                            </Tabs.Trigger>
                             <For each={panelTabs()}>
                               {(tab) => (
                                 <Show
@@ -845,7 +851,9 @@ export function SessionSidePanel(props: {
                           </Tabs.Content>
                         </Show>
                         <Show when={activeTab() === "apps"}>
-                          <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict"><AppsPanel /></Tabs.Content>
+                          <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <AppsPanel />
+                          </Tabs.Content>
                         </Show>
 
                         <Show when={fileBrowserMounted()}>

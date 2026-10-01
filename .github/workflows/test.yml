@@ -21,6 +21,145 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  godfile:
+    name: godfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Fetch target branch
+        run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Test godfile gate
+        run: bun --cwd packages/core test test/godfile.test.ts
+
+      - name: Run godfile gate
+        run: bun run check:godfile
+
+  atlas-scope:
+    name: atlas scope
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.scope.outputs.changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Detect Atlas-relevant changes
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          # WAIVER (human-authorized 2026-09-25) — PR #126 may skip Atlas while it repairs
+          # Atlas guard debt and Maestro documentation only. Any other path, including Atlas product
+          # code, still runs the full Atlas job. This exception applies to no other PR.
+          if [ "$PR_NUMBER" = "126" ] && [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Evq '^(specs/hugr-maestro/.*\.md|foundation/atlas/harness/gates/(godfile-guard(\.test)?\.mjs|godfile-waivers\.json|layer-guard(\.test)?\.mjs)|foundation/atlas/docs/requirements/properties-(tls|mem|authoring|idx)\.md|\.github/workflows/test\.yml)$'; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if printf '%s\n' "$changed" | grep -Eq '^(foundation/atlas/|\.github/workflows/test\.yml$)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  atlas:
+    name: atlas
+    runs-on: ubuntu-latest
+    needs: atlas-scope
+    # Atlas guards cover its vendor subtree; a failed scope detector fails this workflow rather than skipping it.
+    if: github.event_name != 'pull_request' || needs.atlas-scope.outputs.changed == 'true'
+    defaults:
+      run:
+        working-directory: foundation/atlas
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: foundation/atlas/package-lock.json
+
+      # foundation/atlas/.github/workflows/ci.yml documents Atlas's standalone
+      # contract. This host-level job makes that contract reachable in this repo.
+      - name: Install Atlas dependencies
+        run: npm ci
+
+      - name: Typecheck Atlas
+        run: npm run typecheck
+
+      - name: Set Atlas EARS baseline
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.sha }}
+        run: |
+          if TREE=$(git rev-parse "$BASE_SHA:foundation/atlas" 2>/dev/null); then
+            echo "Using Atlas tree from $BASE_SHA"
+          else
+            TREE=$(git mktree </dev/null)
+            echo "Atlas absent at $BASE_SHA; using empty baseline tree"
+          fi
+          ATLAS_BASE=$(git -c user.name=atlas-ci -c user.email=atlas-ci@example.invalid commit-tree "$TREE" -m "Atlas CI baseline")
+          echo "EARS_COAMEND_BASE=$ATLAS_BASE" >> "$GITHUB_ENV"
+
+      - name: Run Atlas guards
+        run: |
+          npm run godfile-guard
+          npm run layer-guard
+          npm run reference-model-guard
+          npm run spec-conformance-guard
+          npm run id-integrity
+          npm run command-doc-guard
+          npm run wiring-guard
+          npm run adr-citation-guard
+          npm run req-clause-guard
+          npm run ears-coamend-guard
+          npm run doc-transcript-guard
+          npm run service-gate-guard
+          npm run own-snapshot-guard
+
+      - name: Test Own snapshot materializer
+        run: node --test scripts/materialize-own-snapshot.test.mjs
+
+      - name: Test Own snapshot gate
+        run: npm test -- harness/gates/own-snapshot-guard.test.mjs
+
+      - name: Detect Atlas product changes
+        id: atlas-diff
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+          if echo "$CHANGED" | grep -qE '^(foundation/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml)'; then
+            echo "touches_code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "touches_code=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test Atlas product suite
+        if: github.event_name != 'pull_request' || steps.atlas-diff.outputs.touches_code == 'true'
+        run: npm test
+
   unit:
     name: unit (${{ matrix.settings.name }})
     strategy:
@@ -28,9 +167,9 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
+            host: ubuntu-latest
           - name: windows
-            host: blacksmith-4vcpu-windows-2025
+            host: windows-latest
     runs-on: ${{ matrix.settings.host }}
     defaults:
       run:
@@ -63,8 +202,14 @@ jobs:
             turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json') }}-
             turbo-${{ runner.os }}-
 
+      # Extension: installed Atlas code must match its canonical producer before any consumer proof.
+      - name: Check generated Atlas boundary
+        if: runner.os == 'Linux'
+        working-directory: packages/atlas-boundary
+        run: bun run check:generated
+
       - name: Run unit tests
-        timeout-minutes: 20
+        timeout-minutes: 45
         run: GITHUB_ACTIONS=false bun turbo test
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -86,9 +231,9 @@ jobs:
       matrix:
         settings:
           - name: linux
-            host: blacksmith-4vcpu-ubuntu-2404
+            host: ubuntu-latest
           - name: windows
-            host: blacksmith-4vcpu-windows-2025
+            host: windows-latest
     runs-on: ${{ matrix.settings.host }}
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers

@@ -209,6 +209,10 @@ beforeAll(async () => {
     },
   }))
 
+  mock.module("@/context/server-sdk", () => ({
+    useServerSDK: () => () => ({ protocol: Promise.resolve("v2") }),
+  }))
+
   mock.module("@/context/sync", () => ({
     useSync: () => () => ({
       data: { command: commands },

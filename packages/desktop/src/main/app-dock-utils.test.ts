@@ -3,7 +3,12 @@ import { appDockURL, appDockZoom, panelBoundsToContent } from "./app-dock-utils"
 
 describe("App Dock input", () => {
   test("converts CSS bounds to content bounds", () => {
-    expect(panelBoundsToContent({ x: 300, y: 80, width: 600, height: 900 }, 2)).toEqual({ x: 150, y: 40, width: 300, height: 450 })
+    expect(panelBoundsToContent({ x: 300, y: 80, width: 600, height: 900 }, 2)).toEqual({
+      x: 150,
+      y: 40,
+      width: 300,
+      height: 450,
+    })
   })
 
   test("rejects invalid bounds and zoom", () => {

@@ -19,6 +19,7 @@ export interface MockServerConfig {
   onMessages?: (input: { sessionID: string; before?: string; phase: "start" | "end" }) => void
   message?: (sessionID: string, messageID: string) => unknown
   onMessage?: (input: { sessionID: string; messageID: string }) => void
+  onPrompt?: (input: { sessionID: string; body: unknown }) => void
   events?: () => unknown[]
   eventRetry?: number
   todos?: (sessionID: string) => unknown[]
@@ -220,6 +221,26 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
     if (/^\/api\/session\/[^/]+\/shell$/.test(path) && route.request().method() === "POST") {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
+    const promptMatch = path.match(/^\/api\/session\/([^/]+)\/prompt$/)
+    if (promptMatch && route.request().method() === "POST") {
+      const body = route.request().postDataJSON()
+      config.onPrompt?.({ sessionID: promptMatch[1]!, body })
+      return json(route, {
+        data: {
+          admittedSeq: 1,
+          id: body?.id ?? "msg_mock_admitted",
+          sessionID: promptMatch[1],
+          prompt: body?.prompt ?? { parts: [] },
+          delivery: body?.delivery ?? "steer",
+          timeCreated: Date.now(),
+        },
+      })
+    }
+    const promptAsyncMatch = path.match(/^\/session\/([^/]+)\/prompt_async$/)
+    if (promptAsyncMatch && route.request().method() === "POST") {
+      config.onPrompt?.({ sessionID: promptAsyncMatch[1]!, body: route.request().postDataJSON() })
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+    }
     if (/^\/api\/session\/[^/]+\/question\/[^/]+\/(reply|reject)$/.test(path) && route.request().method() === "POST") {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
@@ -294,6 +315,10 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
 
     const messagesMatch = path.match(/^\/session\/([^/]+)\/message$/)
     if (messagesMatch) {
+      if (route.request().method() === "POST") {
+        config.onPrompt?.({ sessionID: messagesMatch[1]!, body: route.request().postDataJSON() })
+        return json(route, { info: {}, parts: [] })
+      }
       const token = url.searchParams.get("before") ?? undefined
       const before = token ? cursors.get(token) : undefined
       if (token && !before) return json(route, { error: "Invalid cursor" }, undefined, 400)

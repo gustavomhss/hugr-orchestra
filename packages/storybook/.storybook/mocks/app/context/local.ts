@@ -39,3 +39,7 @@ export function useLocal() {
     },
   }
 }
+
+export function LocalProvider(props: { children?: unknown }) {
+  return props.children
+}

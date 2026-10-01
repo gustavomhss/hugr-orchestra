@@ -43,6 +43,7 @@
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@types/cross-spawn": "catalog:",
+    "@types/mime-types": "3.0.1",
     "@types/node": "catalog:",
     "@types/npm-package-arg": "6.1.4",
     "@types/npmcli__arborist": "6.3.3",
@@ -58,6 +59,7 @@
     "@parcel/watcher-win32-arm64": "2.5.1",
     "@parcel/watcher-win32-x64": "2.5.1",
     "@opencode-ai/http-recorder": "workspace:*",
+    "@opencode-ai/sdk": "workspace:*",
     "drizzle-kit": "catalog:"
   },
   "dependencies": {

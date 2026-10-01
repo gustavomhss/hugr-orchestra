@@ -1195,4 +1195,14 @@ export const dict = {
   "help.tabs.persistence": "Kun avaat sovelluksen uudelleen, välilehtesi ovat yhä avoinna.",
   "help.tabs.worktrees":
     "Uusi ulkoasu ei vielä tue Git-työpuita, mutta tuki on tulossa pian. Jos haluat jatkaa aiemman ulkoasun käyttöä, voit vaihtaa ulkoasua asetuksissa. Huomaa kuitenkin, että uudesta ulkoasusta tulee pysyvä muutaman viikon kuluttua.",
+  "janitor.notify.title.one": "Janitor found {{count}} issue",
+  "janitor.notify.title.other": "Janitor found {{count}} issues",
+  "janitor.report.title": "Janitor report",
+  "janitor.widget.open": "Open janitor report",
+  "janitor.widget.close": "Collapse janitor report",
+  "janitor.widget.openSession": "Open session",
+  "janitor.widget.snooze": "Snooze for a day",
+  "janitor.chat.noProject": "Open a project first to ask.",
+  "janitor.pocket.unavailable": "Composer unavailable here.",
+  "janitor.pocket.retry": "Retry",
 }

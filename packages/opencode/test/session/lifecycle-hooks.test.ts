@@ -18,15 +18,12 @@ import { AuthTest } from "../fake/auth"
 import { NpmTest } from "../fake/npm"
 
 const it = testEffect(
-  AppNodeBuilder.build(
-    LayerNode.group([Session.node, Plugin.node, CrossSpawnSpawner.node]),
-    [
-      [Auth.node, AuthTest.empty],
-      [Account.node, AccountTest.empty],
-      [Npm.node, NpmTest.noop],
-      [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
-    ],
-  ),
+  AppNodeBuilder.build(LayerNode.group([Session.node, Plugin.node, CrossSpawnSpawner.node]), [
+    [Auth.node, AuthTest.empty],
+    [Account.node, AccountTest.empty],
+    [Npm.node, NpmTest.noop],
+    [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
+  ]),
 )
 
 const recordingPlugin = [

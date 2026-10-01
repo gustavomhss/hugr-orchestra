@@ -1212,4 +1212,14 @@ export const dict = {
   "help.tabs.persistence": "Wenn Sie die App erneut öffnen, sind Ihre Tabs weiterhin geöffnet.",
   "help.tabs.worktrees":
     "Das neue Design unterstützt Git-Worktrees noch nicht. Diese Funktion folgt in Kürze. Wenn Sie das bisherige Layout vorerst weiterverwenden möchten, können Sie in den Einstellungen zwischen den Layouts wechseln. Beachten Sie jedoch, dass das neue Layout in einigen Wochen dauerhaft verwendet wird.",
+  "janitor.notify.title.one": "Janitor found {{count}} issue",
+  "janitor.notify.title.other": "Janitor found {{count}} issues",
+  "janitor.report.title": "Janitor report",
+  "janitor.widget.open": "Open janitor report",
+  "janitor.widget.close": "Collapse janitor report",
+  "janitor.widget.openSession": "Open session",
+  "janitor.widget.snooze": "Snooze for a day",
+  "janitor.chat.noProject": "Open a project first to ask.",
+  "janitor.pocket.unavailable": "Composer unavailable here.",
+  "janitor.pocket.retry": "Retry",
 } satisfies Partial<Record<Keys, string>>

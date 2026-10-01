@@ -295,7 +295,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     })),
   ])
   const slashCommands = createMemo(() => [
-    ...sync().data.command.map((item) => ({
+    ...(sync().data.command ?? []).map((item) => ({
       id: `custom.${item.name}`,
       trigger: item.name,
       title: item.name,
@@ -495,21 +495,15 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
     }
     const scoped = hasModelScope(rules())
     if (!scoped) return language.t("session.tasks.models.all")
-    const models = local.model
-      .list()
-      .filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))
-    const allowed = models.filter(
-      (m) => effectiveModelState(rules(), m.provider.id, m.id) === "allow",
-    ).length
+    const models = local.model.list().filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))
+    const allowed = models.filter((m) => effectiveModelState(rules(), m.provider.id, m.id) === "allow").length
     return `${allowed}`
   }
   const open = () => {
     const directory = sdk().directory
     if (!directory) return
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => (
-        <x.DialogSubagentModels sessionID={props.sessionID} directory={directory} />
-      ))
+      dialog.show(() => <x.DialogSubagentModels sessionID={props.sessionID} directory={directory} />)
     })
   }
 
@@ -524,9 +518,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
         data-control-type="dialog"
         onClick={open}
       >
-        <span class="truncate leading-4">
-          {language.t("session.tasks.models.label", { count: label() })}
-        </span>
+        <span class="truncate leading-4">{language.t("session.tasks.models.label", { count: label() })}</span>
         <span class="-ml-0.5 -mr-1 flex shrink-0">
           <Icon name="chevron-down" />
         </span>

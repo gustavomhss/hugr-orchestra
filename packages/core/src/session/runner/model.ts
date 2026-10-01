@@ -218,8 +218,7 @@ export const locationLayer = Layer.effect(
               cause: `credential ${virtual.credentialID} not found`,
             })
         }
-        connection =
-          connection ?? (yield* integrations.connection.active(fallback))
+        connection = connection ?? (yield* integrations.connection.active(fallback))
         return yield* resolve(
           session,
           selected,

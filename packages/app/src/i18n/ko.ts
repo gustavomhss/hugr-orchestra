@@ -1194,4 +1194,14 @@ export const dict = {
 
   "desktop.picker.error.notSelected": "선택기에서 파일을 선택하지 않았습니다",
   "desktop.picker.error.sizeLimit": "선택한 첨부 파일이 {{limit}} MB 제한을 초과합니다",
+  "janitor.notify.title.one": "Janitor found {{count}} issue",
+  "janitor.notify.title.other": "Janitor found {{count}} issues",
+  "janitor.report.title": "Janitor report",
+  "janitor.widget.open": "Open janitor report",
+  "janitor.widget.close": "Collapse janitor report",
+  "janitor.widget.openSession": "Open session",
+  "janitor.widget.snooze": "Snooze for a day",
+  "janitor.chat.noProject": "Open a project first to ask.",
+  "janitor.pocket.unavailable": "Composer unavailable here.",
+  "janitor.pocket.retry": "Retry",
 }

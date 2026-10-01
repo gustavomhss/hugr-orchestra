@@ -524,6 +524,7 @@ function createV1Api(input: CompatibleInput): CompatibleApi {
 }
 
 function isMissingRoute(error: unknown) {
-  const status = error instanceof Error && "cause" in error ? (error.cause as { status?: unknown } | null)?.status : undefined
+  const status =
+    error instanceof Error && "cause" in error ? (error.cause as { status?: unknown } | null)?.status : undefined
   return status === 404 || status === 405
 }

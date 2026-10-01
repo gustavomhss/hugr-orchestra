@@ -37,6 +37,8 @@ export type Context<M extends Metadata = Metadata> = {
   sessionID: SessionID
   messageID: MessageID
   agent: string
+  /** Stable runtime agent identity. `agent` is configurable display text. */
+  agentID?: string
   abort: AbortSignal
   callID?: string
   extra?: { [key: string]: unknown }
@@ -60,8 +62,13 @@ export interface Def<
   description: string
   parameters: Parameters
   jsonSchema?: JSONSchema7
+  strictParameters?: StrictParameters
   execute(args: Schema.Schema.Type<Parameters>, ctx: Context): Effect.Effect<ExecuteResult<M>>
   formatValidationError?(error: unknown): string
+}
+
+export type StrictParameters = {
+  readonly [key: string]: true | StrictParameters | [true | StrictParameters]
 }
 export type DefWithoutID<
   Parameters extends Schema.Decoder<unknown> = Schema.Decoder<unknown>,
@@ -118,6 +125,9 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
           ...(ctx.callID ? { "tool.call_id": ctx.callID } : {}),
         }
         return Effect.gen(function* () {
+          if (toolInfo.strictParameters && hasUnknownParameters(args, toolInfo.strictParameters)) {
+            return yield* new InvalidArgumentsError({ tool: id, detail: "unknown parameter" })
+          }
           const decoded = yield* decode(args).pipe(
             Effect.mapError(
               (error) =>
@@ -146,6 +156,19 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
       }
       return toolInfo
     })
+}
+
+function hasUnknownParameters(value: unknown, shape: true | StrictParameters): boolean {
+  if (shape === true) return false
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  return Object.entries(value).some(([key, item]) => {
+    const expected = shape[key]
+    if (!expected) return true
+    if (expected === true) return false
+    if (Array.isArray(expected))
+      return Array.isArray(item) && item.some((child) => hasUnknownParameters(child, expected[0]))
+    return hasUnknownParameters(item, expected)
+  })
 }
 
 export function define<

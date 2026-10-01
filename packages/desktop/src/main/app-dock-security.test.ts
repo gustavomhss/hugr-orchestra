@@ -338,7 +338,8 @@ async function fixture() {
   const servers = Array.from({ length: 9 }, () => createServer(tls, handler))
   await Promise.all(servers.map((server) => new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))))
   const addresses = servers.map((server) => server.address())
-  if (addresses.some((address) => !address || typeof address === "string")) throw new Error("HTTPS fixture did not bind")
+  if (addresses.some((address) => !address || typeof address === "string"))
+    throw new Error("HTTPS fixture did not bind")
   const ports = addresses.map((address) => (address as AddressInfo).port)
   return {
     base: `https://127.0.0.1:${ports[0]!}`,
@@ -1082,7 +1083,8 @@ async function child() {
     )
     check(
       attached(ipcWin, u28ExtraContents) &&
-        (await execute("u28:active-extra", u28ExtraContents, "location.href")) === `${site.base}/ticker?capacity=extra` &&
+        (await execute("u28:active-extra", u28ExtraContents, "location.href")) ===
+          `${site.base}/ticker?capacity=extra` &&
         attached(ipcWinB, u28ActiveB) &&
         !u28ActiveB.isDestroyed(),
       "U28 capacity eviction displaced an active view",
@@ -1090,7 +1092,8 @@ async function child() {
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [u28TabsA[0]!.tabID, bounds])
     await waitFor(
       async () =>
-        (await execute("u28:retained-lru", attachedContents(ipcWin), "location.href")) === `${site.base}/ticker?capacity=a0`,
+        (await execute("u28:retained-lru", attachedContents(ipcWin), "location.href")) ===
+        `${site.base}/ticker?capacity=a0`,
       "U28 recently selected tab remains usable",
     )
 
@@ -1103,17 +1106,21 @@ async function child() {
         u28ActiveContents,
         `(() => { const link = document.createElement('a'); link.href = ${JSON.stringify(site.downloadURL(index))}; document.body.append(link); link.click() })()`,
       )
-      await waitFor(async () => {
-        await readEvents()
-        return (
-          new Set(
-            events
-              .slice(u28DownloadStart)
-              .filter((event) => event.type === "download" && event.payload.state === "progressing")
-              .map((event) => event.payload.id),
-          ).size >= index + 1
-        )
-      }, `U28 accepted profile download ${index + 1}`)
+      await waitFor(
+        async () => {
+          await readEvents()
+          return (
+            new Set(
+              events
+                .slice(u28DownloadStart)
+                .filter((event) => event.type === "download" && event.payload.state === "progressing")
+                .map((event) => event.payload.id),
+            ).size >=
+            index + 1
+          )
+        },
+        `U28 accepted profile download ${index + 1}`,
+      )
     }
     check(
       site.downloadRequests() === u28RequestsStart + 8,
@@ -1152,8 +1159,7 @@ async function child() {
     )
     for (const tab of [...u28TabsA, u28Extra])
       await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [tab.tabID])
-    for (const tab of u28TabsB.slice(1))
-      await invoke(ipcWinB.webContents.mainFrame, "app-dock-close-tab", [tab.tabID])
+    for (const tab of u28TabsB.slice(1)) await invoke(ipcWinB.webContents.mainFrame, "app-dock-close-tab", [tab.tabID])
     pass(
       "U28",
       "20 inactive views across two windows use global LRU: selecting A0 retains it while opening one more evicts older B0; active views remain usable; nine real same-profile slow downloads admit eight, cancel safely, and expose no filesystem path",
@@ -1176,20 +1182,18 @@ async function child() {
     devContents.closeDevTools()
     devDock.close(ipcWin.webContents.id)
     const productionDock = createAppDock({ developmentMode: () => false })
-    const productionTab = await productionDock.open(
-      ipcWin.webContents.id,
-      ipcWin,
-      site.base,
-      bounds,
-      () => {},
-      { storageKey: "abcdef12-1234-4123-8123-123456789abc" },
-    )
+    const productionTab = await productionDock.open(ipcWin.webContents.id, ipcWin, site.base, bounds, () => {}, {
+      storageKey: "abcdef12-1234-4123-8123-123456789abc",
+    })
     await rejects(
       () => productionDock.openDevTools(ipcWin.webContents.id, productionTab.tabID),
       "App Dock DevTools are disabled in production",
     )
     productionDock.close(ipcWin.webContents.id)
-    pass("U30", "renderer, content, and ordinary input cannot open DevTools; trusted development main route can; production refuses")
+    pass(
+      "U30",
+      "renderer, content, and ordinary input cannot open DevTools; trusted development main route can; production refuses",
+    )
 
     check(
       cases.length === required.length &&

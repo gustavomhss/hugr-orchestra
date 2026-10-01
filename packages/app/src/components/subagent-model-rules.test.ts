@@ -13,9 +13,7 @@ describe("subagent model rules", () => {
   test("hasModelScope detects only task rules with model patterns", () => {
     expect(hasModelScope([])).toBe(false)
     expect(hasModelScope([{ permission: "task", pattern: "general", action: "allow" }])).toBe(false)
-    expect(
-      hasModelScope([{ permission: "task", pattern: "openrouter/*", action: "allow" }]),
-    ).toBe(true)
+    expect(hasModelScope([{ permission: "task", pattern: "openrouter/*", action: "allow" }])).toBe(true)
     expect(hasModelScope([{ permission: "bash", pattern: "a/b", action: "allow" }])).toBe(false)
   })
 

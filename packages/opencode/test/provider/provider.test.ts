@@ -1202,7 +1202,9 @@ it.instance("ModelNotFoundError suggests catalog models for unloaded providers",
 
 it.instance("getProvider fails for nonexistent provider", () =>
   Effect.gen(function* () {
-    const exit = yield* Provider.Service.use((svc) => svc.getProvider(ProviderV2.ID.make("nonexistent"))).pipe(Effect.exit)
+    const exit = yield* Provider.Service.use((svc) => svc.getProvider(ProviderV2.ID.make("nonexistent"))).pipe(
+      Effect.exit,
+    )
     expect(Exit.isFailure(exit)).toBe(true)
   }),
 )

@@ -1,0 +1,44 @@
+# DRAFT / SKELETON CD — Orchestra-bound harness infra.
+# Builds every workspace and produces npm tarballs as CI artifacts on a v* tag.
+# It intentionally STOPS SHORT of publishing: Atlas has no registry target yet.
+# Do not add credentials or a deploy step until the registry decision is made.
+name: release (draft)
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Re-run the product gates before packing anything — a release must pass CI.
+      - run: npm run godfile-guard
+      - run: npm run typecheck
+      - run: npm test
+      # Compile TypeScript project references.
+      - run: npm run build
+      # Pack each workspace into a tarball under ./dist-packs/.
+      - name: Pack workspaces
+        run: |
+          mkdir -p dist-packs
+          npm pack --workspaces --pack-destination dist-packs
+      - name: Upload tarballs
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-packages-${{ github.ref_name }}
+          path: dist-packs/*.tgz
+          if-no-files-found: error
+      # --- PUBLISH (not wired) ---------------------------------------------
+      # TODO: wire the registry target when Atlas goes public (no registry yet).
+      # When a registry exists, replace this block with an authenticated publish,
+      # e.g. `npm publish --workspaces --access public` guarded by an NODE_AUTH_TOKEN
+      # secret and a `registry-url` on setup-node. Left disabled on purpose.
+      - name: Publish (disabled — no registry target)
+        if: ${{ false }}
+        run: echo "publish is intentionally disabled; see TODO above"

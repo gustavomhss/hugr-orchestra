@@ -1196,4 +1196,14 @@ export const dict = {
 
   "titlebar.update": "アップデート",
   "titlebar.updateVersion": "アップデート {{version}}",
+  "janitor.notify.title.one": "Janitor found {{count}} issue",
+  "janitor.notify.title.other": "Janitor found {{count}} issues",
+  "janitor.report.title": "Janitor report",
+  "janitor.widget.open": "Open janitor report",
+  "janitor.widget.close": "Collapse janitor report",
+  "janitor.widget.openSession": "Open session",
+  "janitor.widget.snooze": "Snooze for a day",
+  "janitor.chat.noProject": "Open a project first to ask.",
+  "janitor.pocket.unavailable": "Composer unavailable here.",
+  "janitor.pocket.retry": "Retry",
 }

@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["test"],
+  "references": [
+    { "path": "../contracts" },
+    { "path": "../kernel" },
+    { "path": "../index" },
+    { "path": "../persist" },
+    { "path": "../grounding" },
+    { "path": "../knowledge" },
+    { "path": "../retrieval" },
+    { "path": "../memory" },
+    { "path": "../tools" },
+    { "path": "../genesis" }
+  ]
+}

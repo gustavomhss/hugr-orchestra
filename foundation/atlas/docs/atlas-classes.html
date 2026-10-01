@@ -1,0 +1,648 @@
+<title>The Atlas — classes, owners & the no-junk bar</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141210;
+      --paper-2: #1b1812;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #2c2820;
+      --line-soft: #241f18;
+      --accent: #d8a94b;
+      --accent-2: #e4be68;
+      --panel: #1b1812;
+      --code-bg: #100e0a;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141210;
+    --paper-2: #1b1812;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #2c2820;
+    --line-soft: #241f18;
+    --accent: #d8a94b;
+    --accent-2: #e4be68;
+    --panel: #1b1812;
+    --code-bg: #100e0a;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code,
+  .tag {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(46px, 8vw, 84px) 0 clamp(30px, 5vw, 48px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 20px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    line-height: 1.02;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+    line-height: 1.4;
+    color: var(--ink);
+    max-width: 30ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .punch .hl {
+    color: var(--accent);
+  }
+
+  section {
+    padding: clamp(38px, 6vw, 60px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h2 .q {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.6em;
+    display: block;
+    margin-top: 8px;
+  }
+  p {
+    margin: 0 0 14px;
+  }
+  p.lead {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    max-width: 68ch;
+  }
+
+  /* anchors strip */
+  .anchors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+  }
+  @media (max-width: 620px) {
+    .anchors {
+      grid-template-columns: 1fr;
+    }
+  }
+  .anch {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border-left: 3px solid var(--accent);
+  }
+  .anch .t {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .anch p {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .anch code {
+    font-size: 0.82em;
+  }
+
+  /* class table */
+  .tblwrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-top: 8px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 640px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  th {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    background: var(--paper-2);
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  td .cls {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  td .own {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.82rem;
+    color: var(--accent);
+  }
+  td.g {
+    color: var(--ink-soft);
+  }
+  .sc {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--muted) 20%, transparent);
+    color: var(--ink-soft);
+  }
+  .sc.terr {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
+  }
+  .sc.proj {
+    background: color-mix(in srgb, var(--seal) 16%, transparent);
+    color: var(--seal);
+  }
+
+  /* the gate — the centerpiece */
+  .gate {
+    background: color-mix(in srgb, var(--block) 7%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--block) 32%, var(--line));
+    border-radius: 12px;
+    padding: clamp(20px, 3vw, 30px);
+    margin-top: 20px;
+  }
+  .gate .label {
+    color: var(--block);
+  }
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 18px 0 6px;
+  }
+  @media (max-width: 620px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .door {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .door .n {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .door.g1 {
+    border-top: 3px solid var(--seal);
+  }
+  .door.g1 .n {
+    color: var(--seal);
+  }
+  .door.g2 {
+    border-top: 3px solid var(--block);
+  }
+  .door.g2 .n {
+    color: var(--block);
+  }
+  .door .t {
+    font-weight: 600;
+    margin: 4px 0 6px;
+  }
+  .door p {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .crit {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .cr {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    font-size: 0.93rem;
+  }
+  .cr .k {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    flex: none;
+    min-width: 8.5em;
+  }
+  .cr .v {
+    color: var(--ink-soft);
+  }
+  .cr .v b {
+    color: var(--ink);
+  }
+  .verdict {
+    margin-top: 16px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--block);
+    font-size: 1.02rem;
+  }
+
+  .teaser {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+  }
+  @media (max-width: 720px) {
+    .teaser {
+      grid-template-columns: 1fr;
+    }
+  }
+  .tz {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+  .tz b {
+    color: var(--ink);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  footer {
+    padding: 40px 0 64px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .fnote b {
+    color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span
+      ><span class="label">Atlas · piece (C) · classes, owners &amp; the admission bar</span>
+    </div>
+    <h1 class="wordmark">Classes of the <span class="set">Atlas</span></h1>
+    <p class="punch">
+      Every fact is <span class="hl">owned</span>, <span class="hl">scoped</span>, and must
+      <span class="hl">earn its place</span> — or it doesn't enter.
+    </p>
+  </div>
+</header>
+
+<!-- anchors -->
+<section>
+  <div class="wrap">
+    <h2>Dois âncoras cravados<span class="q">onde vive · e a regra de posse</span></h2>
+    <div class="anchors">
+      <div class="anch">
+        <div class="t">Vive em <code>atlas/</code></div>
+        <p>
+          Todo repo tem uma pasta <code>atlas/</code> no root. Dentro dela mora a <b>memória</b> e o <b>knowledge</b> do
+          time — versionado com o repo, anexado a commits e PRs.
+        </p>
+      </div>
+      <div class="anch">
+        <div class="t">Owner + scope, leitura universal</div>
+        <p>
+          Todo item (knowledge <b>e</b> memory) carrega <code>owner</code> + <code>scope</code>.
+          <b>Qualquer um consulta qualquer classe</b>; só o <b>dono escreve/cura</b> a sua. Knowledge é shared-read, mas
+          <b>owned</b>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- classes -->
+<section>
+  <div class="wrap">
+    <h2>As classes — por função<span class="q">cada classe tem AS DUAS, em colunas separadas</span></h2>
+    <p class="lead" style="margin-bottom: 6px">
+      <b>Kinds diferentes, nunca a mesma coluna:</b> <span style="color: var(--seal)"><b>knowledge</b></span> =
+      compartilhado, grounded, sobre o <b>código</b>; <span style="color: var(--accent)"><b>memory</b></span> = do
+      membro, privada, sobre a <b>experiência de trabalhar</b>. O <b>logbook é memory</b> (do orquestrador), nunca
+      knowledge.
+    </p>
+    <div class="tblwrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Classe</th>
+            <th>Dono</th>
+            <th>Escopo</th>
+            <th style="color: var(--seal)">Knowledge — compartilhado, sobre o código</th>
+            <th style="color: var(--accent)">Memory — do membro, privada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cls">Definição</span></td>
+            <td><span class="own">walt</span></td>
+            <td><span class="sc proj">projeto</span></td>
+            <td class="g">spec de produto, critérios de aceite</td>
+            <td class="g">task · pr · project</td>
+          </tr>
+          <tr>
+            <td><span class="cls">Arquitetura</span></td>
+            <td><span class="own">archie</span></td>
+            <td><span class="sc proj">projeto</span> <span class="sc terr">terr.</span></td>
+            <td class="g">arquitetura, contratos, seams, ADRs</td>
+            <td class="g">task · pr · project</td>
+          </tr>
+          <tr>
+            <td><span class="cls">Orquestração</span></td>
+            <td><span class="own">orquestrador</span></td>
+            <td><span class="sc proj">projeto</span></td>
+            <td class="g">padrões de decomposição, estrutura wave/DAG (grounded)</td>
+            <td class="g">task · pr · project <b>+ logbook</b></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Build</span></td>
+            <td><span class="own">charlie · patty</span></td>
+            <td><span class="sc terr">território</span></td>
+            <td class="g">padrões-âncora, como se constrói aqui, convenções</td>
+            <td class="g">task · pr · project <span style="color: var(--muted)">(gotchas de build)</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Revisão</span></td>
+            <td><span class="own">lucy · bobby · billy · frankie</span></td>
+            <td><span class="sc terr">território</span> <span class="sc proj">proj</span></td>
+            <td class="g">invariantes-que-têm-que-valer, restrições de segurança/arquitetura</td>
+            <td class="g">task · pr · project</td>
+          </tr>
+          <tr>
+            <td><span class="cls">Discovery</span></td>
+            <td><span class="own">jimmy</span></td>
+            <td><span class="sc terr">território</span></td>
+            <td class="g">invariantes minerados, prior-art, risco de git-archaeology</td>
+            <td class="g">task · pr · project <span style="color: var(--muted)">("onde a doc mente")</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Manutenção</span></td>
+            <td><span class="own">rosie</span></td>
+            <td><span class="sc terr">território</span> <span class="sc proj">proj</span></td>
+            <td class="g">frescor de doc, staleness, órfãos</td>
+            <td class="g">task · pr · project</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- the gate: no junk -->
+<section>
+  <div class="wrap">
+    <h2>
+      A barra de admissão — nada de knowledge inútil<span class="q"
+        >o cuidado nº1 · um atlas cheio de lixo é pior que não ter</span
+      >
+    </h2>
+    <p class="lead">
+      Um fato pode ser <b>verdadeiro e inútil</b> ao mesmo tempo (verdadeiro-mas-óbvio = ruído). Por isso a admissão tem
+      <b>duas portas</b>, e um fato só entra se passar nas duas:
+    </p>
+    <div class="gate">
+      <span class="label">as duas portas</span>
+      <div class="two">
+        <div class="door g1">
+          <div class="n">porta 1 · verdade</div>
+          <div class="t">É verdade?</div>
+          <p>
+            Cita <code>source@sha</code> que re-checa agora (grounding). Sem isso → NA, não entra.
+            <i>(já é lei do atlas)</i>
+          </p>
+        </div>
+        <div class="door g2">
+          <div class="n">porta 2 · dano</div>
+          <div class="t">Guardar isso já é o dano?</div>
+          <p>
+            Segredo / PII — a única classe em que <b>armazenar É o dano</b>. Utilidade não é porta: obviedade vira
+            <b>score armazenado e auditável</b>, e a decisão de ranking é a-posteriori, na recuperação (ADR-0012). Um
+            portão destrói exatamente a evidência necessária para auditar o portão.
+          </p>
+        </div>
+      </div>
+      <div class="crit">
+        <div class="cr">
+          <span class="k">actionable</span
+          ><span class="v">muda o que alguém faz. <b>Se ninguém age diferente por causa dela, é ruído.</b></span>
+        </div>
+        <div class="cr">
+          <span class="k">non-obvious</span
+          ><span class="v"
+            >não é derivável de ler o código.
+            <b>"retorna string" = piso do score; "valida Idempotency-Key ou cobra 2×" = topo.</b>
+            <em>Pontua, nunca barra</em> — o obvio entra com score baixo.</span
+          >
+        </div>
+        <div class="cr">
+          <span class="k">grounded</span><span class="v">cita <code>source@sha</code> — porta 1.</span>
+        </div>
+        <div class="cr">
+          <span class="k">owned + scoped</span
+          ><span class="v">tem dono e vale em algum lugar específico. Sem escopo = generalidade vazia.</span>
+        </div>
+        <div class="cr">
+          <span class="k">earns its slot</span
+          ><span class="v">se ninguém consulta, <b>decai do set ativo</b> (arquiva, não deleta) — o hits mede.</span>
+        </div>
+      </div>
+      <div class="verdict">
+        Verdadeiro + nocivo de guardar = não entra. Verdadeiro + óbvio = <b>entra com score baixo</b> e perde no ranking
+        — nada é rejeitado por ser óbvio (ADR-0012).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- teaser to D -->
+<section>
+  <div class="wrap">
+    <h2>
+      Por que a classe importa<span class="q">classe distinta → tamanho e template distintos (próxima peça: D)</span>
+    </h2>
+    <div class="teaser">
+      <div class="tz"><b>Manutenção</b>curta e volátil — decai rápido, cap pequeno.</div>
+      <div class="tz"><b>Arquitetura</b>densa e estável — vive muito, template rico.</div>
+      <div class="tz"><b>Orquestração</b>logbook (memory) = prosa; knowledge = decisão/DAG.</div>
+    </div>
+    <p class="lead" style="margin-top: 16px">
+      Otimizar tamanho + template por classe é o que impede o overhead. Essa é a peça <b>(D)</b>. Antes dela vem a
+      <b>(B)</b>: a pasta por membro dentro de <code>atlas/</code>.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      <b>Peça (C) de 4</b> — taxonomia de classes. Próxima: (B) pasta por membro · depois (D) tamanho+template por
+      classe · (A) índice hasheado anexado a commits/PRs. <b>Rascunho p/ validação.</b>
+    </p>
+  </div>
+</footer>

@@ -1,0 +1,80 @@
+# Product build gate. Gate implementations live in harness/ (Orchestra-bound).
+# Runs on push (master) + pull_request. The bar Orchestra enforces on seats is enforced here.
+#
+# SECURITY — why the gate runs the way it does. This job executes UNTRUSTED code on a
+# SELF-HOSTED runner (the owner's machine): `npm ci` installs arbitrary dependencies
+# and the suite runs arbitrary scripts. The repository is public, so a fork's
+# pull_request is exactly the remote-code-execution vector GitHub warns self-hosted
+# runners must never accept. Therefore:
+#   · the `gate` job runs ONLY on trusted context — pushes to master, and
+#     pull_requests whose head branch lives inside this repository
+#     (head.repo.full_name == this repo).
+#   · a pull_request from a FORK triggers the `fork-guard` job instead, which checks
+#     out nothing and executes nothing from the PR — only our own echo script.
+#   · `permissions: contents: read` keeps the workflow token write-free; combined
+#     with the actions allowlist in repository settings, no third-party action can be
+#     introduced by a PR.
+#
+# COST MODEL (owner-decision 2026-09-03): CI runs per DELIVERY, not per PR × 2. The
+# full gate (guards + the whole product suite) runs ONCE on a push to master — the
+# merge is the delivery moment, and the merge never happens without it. On a PR, the
+# gate runs the guards ALWAYS; the 9000-test product suite runs only when the diff
+# touches CODE (packages/ or harness/), never for a docs-only PR. A push to a
+# feature branch with an open PR fires ONCE (via pull_request), so nothing runs 2×.
+name: ci
+on:
+  push:
+    branches: [master]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  gate:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS, X64]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0 # ears-coamend-guard diffs REQ blocks against merge-base(origin/master); needs full history
+      - run: npm ci
+      - run: npm run godfile-guard # ≤400-LOC ceiling per source file (harness/gates)
+      - run: npm run typecheck # tsc -b — strict, downward-only layers (also builds dist/)
+      - run: npm run layer-guard # ARCH-1..7 fitness function: layer direction, acyclicity, leg binding, surface budget
+      - run: npm run reference-model-guard # every zero-production-caller module is DECLARED, not discovered
+      - run: npm run spec-conformance-guard # shipped surface == specs; no governance-count drift; property pins fresh
+      - run: npm run id-integrity # docs id graph: unique definitions, no dangling citation/anchor, no orphan REQ/SCN, links resolve
+      - run: npm run command-doc-guard # every shipped CLI command has a reference page, and vice versa
+      - run: npm run wiring-guard # BUILT != REACHABLE: the unreached-package ledger vs the import graph
+      - run: npm run adr-citation-guard # every ADR-NNNN cited under docs/ resolves to docs/adr/ADR-NNNN-*.md
+      - run: npm run req-clause-guard # every REQ's normative-clause still occurs in the invariant it cites
+      - run: npm run ears-coamend-guard # a changed normative-clause must co-amend its EARS phrase in the same commit (#198)
+      - run: npm run doc-transcript-guard # every documented command transcript is re-run against the built binary, or named as unverifiable
+      - run: npm run service-gate-guard # THE TRIPWIRE: no non-stdio transport while the service gates are shut (ARCH-12)
+      - run: npm run own-snapshot-guard # Genesis snapshot exactly recomposes static Own skills; facts, units, and source blobs cannot drift
+      # Does this delivery touch CODE? On master (a push) ALWAYS run the suite — the
+      # merge is the delivery. On a PR, run it only when the diff reaches packages/ or
+      # harness/; a docs-only PR gets the guards above (which catch doc/REQ rot) and
+      # skips the 9000-test product suite, because docs cannot break product behavior.
+      - id: diff
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+          if echo "$CHANGED" | grep -qE '^(packages/|harness/|\.github/)'; then
+            echo "touches_code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "touches_code=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: npm test (product suite)
+        if: github.event_name != 'pull_request' || steps.diff.outputs.touches_code == 'true'
+        run: npm test # vitest run — own-suite + held-out GATE + totality fences
+  # Runs for a pull_request FROM A FORK. NO checkout, NO npm, NO repo code — the job
+  # body is our own echo only, so starting it on the self-hosted runner is safe. Its
+  # purpose is a visible, honest refusal instead of a silently-missing check.
+  fork-guard:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: [self-hosted, macOS, X64]
+    steps:
+      - run: |
+          echo "::warning::This pull_request comes from a FORK. The gate never runs on fork branches — a self-hosted runner must not execute a fork's code. Have a maintainer sync this change onto a branch inside the repository; the gate will run there."

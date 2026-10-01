@@ -8,21 +8,36 @@ import { SessionID, MessageID } from "../session/schema"
 import { MessageV2 } from "../session/message-v2"
 import { Agent } from "../agent/agent"
 import { Provider } from "@/provider/provider"
-import { deriveSubagentSessionPermission } from "../agent/subagent-permissions"
+import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Effect, Exit, Schema, Scope } from "effect"
+import { Effect, Exit, FileSystem, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@opencode-ai/core/database/database"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { reserveDispatch } from "@/maestro/dispatch"
+import { authorizationTaskIntentHash } from "@/maestro/authorization"
+import { nativeProfiles, roster } from "@/maestro/roster"
+import { Permission } from "@/permission"
+import { PermissionV1 } from "@opencode-ai/core/v1/permission"
+import { Git } from "@/git"
+import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
+import { readAuthorization } from "@/maestro/authorization"
+import { readValidation } from "@/maestro/validation-record"
+import { readContext } from "@/maestro/context-record"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
   resolvePromptParts(template: string): Effect.Effect<SessionPrompt.PromptInput["parts"]>
-  prompt(input: SessionPrompt.PromptInput): Effect.Effect<SessionV1.WithParts>
+  prompt(
+    input: SessionPrompt.PromptInput,
+    options?: { beforeModel: Effect.Effect<void, unknown> },
+  ): Effect.Effect<SessionV1.WithParts>
 }
 
 const id = "task"
+const dispatchLock = KeyedMutex.makeUnsafe<string>()
 const BACKGROUND_DESCRIPTION = [
   "Background mode: background=true launches the subagent asynchronously and returns immediately.",
   "Foreground is the default; use it when you need the result before continuing.",
@@ -53,6 +68,26 @@ const BaseParameterFields = {
   model: Schema.optional(Schema.String).annotate({
     description:
       "Run the subagent on a specific model as 'providerID/modelID' (e.g. 'openrouter/deepseek/deepseek-chat', 'groq/llama-3.3-70b-versatile'). Overrides the subagent's configured model and the parent session model. The provider part also selects credentials: OAuth subscriptions (Claude Max, ChatGPT) and API keys resolve per providerID at run time — use a custom provider alias in opencode.json to pin a second key for the same backend.",
+  }),
+  governed: Schema.optional(
+    Schema.Struct({
+      sessionID: Schema.String,
+      projectID: Schema.String,
+      memberID: Schema.String,
+      approvalMessageID: Schema.String,
+      planRevisionID: Schema.String,
+      revisionHash: Schema.String,
+      validationRecordID: Schema.String,
+      validationHash: Schema.String,
+      contextHash: Schema.String,
+      policyHash: Schema.String,
+      taskHash: Schema.String,
+    }),
+  ).annotate({
+    description: "Exact approval binding required only for an explicit governed Task.",
+  }),
+  authorizationID: Schema.optional(Schema.String).annotate({
+    description: "AuthorizationGranted ID for current team dispatch.",
   }),
 }
 
@@ -93,13 +128,33 @@ export const TaskTool = Tool.define(
     const scope = yield* Scope.Scope
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
+    const events = yield* EventV2Bridge.Service
+    const git = yield* Git.Service
+    const fs = yield* FileSystem.FileSystem
 
     const run = Effect.fn("TaskTool.execute")(function* (
       params: Schema.Schema.Type<typeof Parameters>,
       ctx: Tool.Context,
     ) {
       const cfg = yield* config.get()
+      const caller =
+        (yield* agent.get(ctx.agentID ?? ctx.agent)) ??
+        (!ctx.agentID ? (yield* agent.list()).find((candidate) => candidate.name === ctx.agent) : undefined)
+      const nativeSeat = caller?.native
+        ? roster.find((member) => member.memberId === caller.id && member.nativeProfile)
+        : undefined
+      if (nativeSeat?.nativeProfile) {
+        const nativePermission = Permission.fromConfig(nativeProfiles[nativeSeat.nativeProfile])
+        if (Permission.evaluate(id, params.subagent_type, nativePermission).action === "deny") {
+          return yield* new PermissionV1.DeniedError({ ruleset: nativePermission })
+        }
+      }
       const runInBackground = params.background === true
+      let governedChildID: SessionID | undefined
+      let governedPresentationID: string | undefined
+      let governedCallID: string | undefined
+      let replayReserved = false
+      let requireCompletedReplay = false
       if (runInBackground && !flags.experimentalBackgroundSubagents) {
         return yield* Effect.fail(
           new Error("Background subagents require OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true"),
@@ -107,6 +162,133 @@ export const TaskTool = Tool.define(
       }
 
       const parent = yield* sessions.get(ctx.sessionID)
+      const next = yield* agent.get(params.subagent_type)
+      if (!next) {
+        return yield* Effect.fail(new Error(`Unknown agent type: ${params.subagent_type} is not a valid agent type`))
+      }
+      const nextID = next.id ?? params.subagent_type
+      const childPermissions = GovernedTaskReservation.childPermissions({
+        parent,
+        next,
+        primaryTools: cfg.experimental?.primary_tools,
+      })
+      let reservedChildPermissions:
+        | readonly {
+            readonly permission: string
+            readonly pattern: string
+            readonly action: "allow" | "deny" | "ask"
+          }[]
+        | undefined
+      if (params.authorizationID) {
+        if (caller?.id !== "maestro" || caller.native !== true) {
+          return yield* Effect.fail(new Error("Authorized Task requires Maestro"))
+        }
+        const reservation = yield* reserveDispatch({
+          sessionID: ctx.sessionID,
+          authorizationID: params.authorizationID,
+          permission: childPermissions,
+        })
+        if (reservation.routedMemberID !== nextID) {
+          return yield* Effect.fail(new Error("Authorized Task denied: routed-seat-mismatch"))
+        }
+        if (
+          reservation.taskIntentHash !==
+          authorizationTaskIntentHash({
+            subagentType: params.subagent_type,
+            prompt: params.prompt,
+            model: params.model,
+          })
+        ) {
+          return yield* Effect.fail(new Error("Authorized Task denied: task-intent-mismatch"))
+        }
+        governedChildID = SessionID.make(reservation.childSessionID)
+        reservedChildPermissions = reservation.permission
+        replayReserved = true
+        requireCompletedReplay = true
+      }
+      const resumed = params.task_id
+        ? yield* sessions.get(SessionID.make(params.task_id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+        : undefined
+      if (resumed && (resumed.parentID !== ctx.sessionID || resumed.agent !== nextID)) {
+        return yield* Effect.fail(new Error("Task resume denied: task is not direct child for selected agent"))
+      }
+      if (params.governed) {
+        const message = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
+          Effect.provideService(Database.Service, database),
+          Effect.orDie,
+        )
+        if (message.info.role !== "assistant") return yield* Effect.fail(new Error("Not an assistant message"))
+        if (params.model) {
+          const parsed = Provider.parseModel(params.model)
+          if (!parsed.providerID || !parsed.modelID) {
+            return yield* Effect.fail(
+              new Error(
+                `Invalid model "${params.model}". Use the 'providerID/modelID' format, e.g. 'openrouter/deepseek/deepseek-chat'.`,
+              ),
+            )
+          }
+        }
+        let ancestor = parent
+        let ancestorDepth = 0
+        while (ancestor.parentID) {
+          ancestorDepth++
+          ancestor = yield* sessions.get(ancestor.parentID)
+        }
+        if (ancestorDepth >= (cfg.subagent_depth ?? 1)) {
+          return yield* Effect.fail(
+            new Error(
+              `Subagent depth limit reached (${cfg.subagent_depth ?? 1}). Increase "subagent_depth" to allow nested subagents.`,
+            ),
+          )
+        }
+        const selectedModel = params.model
+          ? Provider.parseModel(params.model)
+          : (next.model ?? { modelID: message.info.modelID, providerID: message.info.providerID })
+        const modelRules = (parent.permission ?? []).filter(
+          (rule) => rule.permission === id && rule.pattern.includes("/"),
+        )
+        if (!params.authorizationID && !ctx.extra?.bypassAgentCheck) {
+          yield* ctx.ask({
+            permission: id,
+            patterns:
+              modelRules.length > 0
+                ? [params.subagent_type, `${selectedModel.providerID}/${selectedModel.modelID}`]
+                : [params.subagent_type],
+            always: ["*"],
+            metadata: {
+              description: params.description,
+              subagent_type: params.subagent_type,
+              ...(modelRules.length > 0 ? { model: `${selectedModel.providerID}/${selectedModel.modelID}` } : {}),
+            },
+          })
+        }
+        if (!ctx.extra?.promptOps) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
+      }
+      if (params.governed) {
+        const reservation = yield* GovernedTaskReservation.reserve({
+          governed: params.governed,
+          subagentType: params.subagent_type,
+          prompt: params.prompt,
+          model: params.model,
+          taskID: params.task_id,
+          sessionID: ctx.sessionID,
+          agent: ctx.agent,
+          agentID: ctx.agentID,
+          callID: ctx.callID,
+          parent,
+          nextID,
+          permission: childPermissions,
+          agentService: agent,
+          database,
+          events,
+          sessions,
+        })
+        governedChildID = reservation.childSessionID
+        governedPresentationID = reservation.presentationID
+        governedCallID = reservation.callID
+        reservedChildPermissions = reservation.permission
+        replayReserved = reservation.replayReserved
+      }
       let current = parent
       let depth = 0
       while (current.parentID) {
@@ -119,11 +301,6 @@ export const TaskTool = Tool.define(
             `Subagent depth limit reached (${cfg.subagent_depth ?? 1}). Increase "subagent_depth" to allow nested subagents.`,
           ),
         )
-      }
-
-      const next = yield* agent.get(params.subagent_type)
-      if (!next) {
-        return yield* Effect.fail(new Error(`Unknown agent type: ${params.subagent_type} is not a valid agent type`))
       }
 
       const msg = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
@@ -161,11 +338,10 @@ export const TaskTool = Tool.define(
         (rule) => rule.permission === id && rule.pattern.includes("/"),
       )
 
-      if (!ctx.extra?.bypassAgentCheck) {
+      if (!params.authorizationID && !ctx.extra?.bypassAgentCheck && !params.governed) {
         yield* ctx.ask({
           permission: id,
-          patterns:
-            modelRules.length > 0 ? [params.subagent_type, modelPattern] : [params.subagent_type],
+          patterns: modelRules.length > 0 ? [params.subagent_type, modelPattern] : [params.subagent_type],
           always: ["*"],
           metadata: {
             description: params.description,
@@ -175,43 +351,83 @@ export const TaskTool = Tool.define(
         })
       }
 
-      const session = params.task_id
-        ? yield* sessions.get(SessionID.make(params.task_id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+      const reserved = governedChildID
+        ? yield* sessions.get(governedChildID).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
         : undefined
-      const childPermission = deriveSubagentSessionPermission({
-        parentSessionPermission: parent.permission ?? [],
-        subagent: next,
-      })
-      const childToolDenies = [
-        ...(next.permission.some((rule) => rule.permission === "todowrite")
-          ? []
-          : [{ permission: "todowrite" as const, pattern: "*" as const, action: "deny" as const }]),
-        ...(next.permission.some((rule) => rule.permission === id)
-          ? []
-          : [{ permission: id, pattern: "*" as const, action: "deny" as const }]),
-        ...(cfg.experimental?.primary_tools?.map((permission) => ({
-          permission,
-          pattern: "*" as const,
-          action: "deny" as const,
-        })) ?? []),
-      ]
+      if (reserved && (reserved.parentID !== ctx.sessionID || reserved.agent !== nextID)) {
+        return yield* Effect.fail(new Error("Governed Task denied: reservation-child-mismatch"))
+      }
+      if (params.authorizationID && !reserved) {
+        yield* reserveDispatch({
+          sessionID: ctx.sessionID,
+          authorizationID: params.authorizationID,
+          permission: childPermissions,
+          requireCurrent: true,
+        })
+      }
+      const session = governedChildID ? reserved : resumed
+      const permissionSnapshot = reservedChildPermissions
+      if (
+        reserved &&
+        (!permissionSnapshot ||
+          reserved.permission?.length !== permissionSnapshot.length ||
+          reserved.permission?.some(
+            (rule, index) =>
+              rule.permission !== permissionSnapshot[index]?.permission ||
+              rule.pattern !== permissionSnapshot[index]?.pattern ||
+              rule.action !== permissionSnapshot[index]?.action,
+          ))
+      ) {
+        return yield* Effect.fail(new Error("Governed Task denied: reservation-child-permission-mismatch"))
+      }
       const nextSession =
         session ??
-        (yield* sessions.create({
-          parentID: ctx.sessionID,
-          title: params.description + ` (@${next.name} subagent)`,
-          agent: next.name,
-          permission: [
-            ...childPermission,
-            ...childToolDenies.filter(
-              (deny) =>
-                !childPermission.some(
-                  (rule) =>
-                    rule.permission === deny.permission && rule.pattern === deny.pattern && rule.action === deny.action,
-                ),
-            ),
-          ],
-        }))
+        (yield* sessions
+          .create({
+            id: governedChildID,
+            parentID: ctx.sessionID,
+            title: params.description + ` (@${next.name} subagent)`,
+            agent: nextID,
+            permission: governedChildID ? permissionSnapshot : childPermissions,
+          })
+          .pipe(
+            Effect.catchCause(() => {
+              if (!governedChildID) return Effect.die("Task child creation failed")
+              return sessions
+                .get(governedChildID)
+                .pipe(Effect.catchCause(() => Effect.fail(new Error("Governed Task denied: reservation-child-hold"))))
+            }),
+          ))
+      if (governedChildID && (nextSession.parentID !== ctx.sessionID || nextSession.agent !== nextID)) {
+        return yield* Effect.fail(new Error("Governed Task denied: reservation-child-mismatch"))
+      }
+      if (
+        governedChildID &&
+        (!permissionSnapshot ||
+          nextSession.permission?.length !== permissionSnapshot.length ||
+          nextSession.permission?.some(
+            (rule, index) =>
+              rule.permission !== permissionSnapshot[index]?.permission ||
+              rule.pattern !== permissionSnapshot[index]?.pattern ||
+              rule.action !== permissionSnapshot[index]?.action,
+          ))
+      ) {
+        return yield* Effect.fail(new Error("Governed Task denied: reservation-child-permission-mismatch"))
+      }
+
+      if (params.governed) {
+        const governed = params.governed
+        if (!governedPresentationID || !governedChildID || !governedCallID)
+          return yield* Effect.fail(new Error("Governed Task denied: reservation-hold"))
+        yield* GovernedTaskReservation.consume({
+          governed,
+          presentationID: governedPresentationID,
+          childSessionID: governedChildID,
+          callID: governedCallID,
+          database,
+          events,
+        })
+      }
 
       const metadata = {
         parentSessionId: ctx.sessionID,
@@ -225,22 +441,105 @@ export const TaskTool = Tool.define(
         metadata,
       })
 
+      if (governedChildID && reserved) {
+        if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
+        const history = yield* MessageV2.stream(governedChildID)
+        const completed = requireCompletedReplay
+          ? history[0]
+          : history.findLast(
+              (message) =>
+                message.info.role === "assistant" && message.info.finish !== undefined && !message.info.error,
+            )
+        const job = requireCompletedReplay ? yield* background.get(governedChildID) : undefined
+        if (
+          requireCompletedReplay &&
+          (!completed ||
+            completed.info.role !== "assistant" ||
+            !completed.info.finish ||
+            ["tool-calls", "unknown"].includes(completed.info.finish) ||
+            completed.info.error ||
+            completed.info.parentID !== history.find((message) => message.info.role === "user")?.info.id ||
+            completed.parts.some(
+              (part) => part.type === "tool" && (part.state.status !== "completed" || !part.metadata?.providerExecuted),
+            ) ||
+            (job && job.status !== "completed"))
+        ) {
+          return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
+        }
+        const output = completed?.parts.findLast((part) => part.type === "text")?.text ?? ""
+        return {
+          title: params.description,
+          metadata,
+          output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
+        }
+      }
+
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
+        // Session-start hooks run after reservation and can change the repository.
+        if (params.authorizationID) {
+          yield* reserveDispatch({
+            sessionID: ctx.sessionID,
+            authorizationID: params.authorizationID,
+            permission: childPermissions,
+            requireCurrent: true,
+          }).pipe(
+            Effect.provideService(Database.Service, database),
+            Effect.provideService(EventV2Bridge.Service, events),
+            Effect.provideService(Git.Service, git),
+            Effect.provideService(Config.Service, config),
+            Effect.provideService(FileSystem.FileSystem, fs),
+            Effect.provideService(Session.Service, sessions),
+          )
+        }
         const parts = yield* ops.resolvePromptParts(params.prompt)
-        const result = yield* ops.prompt({
-          messageID: MessageID.ascending(),
-          sessionID: nextSession.id,
-          model: {
-            modelID: model.modelID,
-            providerID: model.providerID,
+        const authorizationID = params.authorizationID
+        const own = authorizationID
+          ? yield* Effect.gen(function* () {
+              const authorization = yield* readAuthorization(authorizationID)
+              const validation = authorization ? yield* readValidation(authorization.validationRecordID) : undefined
+              const context = validation?.contextRecordID ? yield* readContext(validation.contextRecordID) : undefined
+              return context?.mode === "GROUNDED"
+                ? context.skills.map((skill) => ({
+                    type: "text" as const,
+                    synthetic: true,
+                    text: `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
+                  }))
+                : []
+            }).pipe(Effect.provideService(Database.Service, database))
+          : []
+        const beforeModel = params.authorizationID
+          ? reserveDispatch({
+              sessionID: ctx.sessionID,
+              authorizationID: params.authorizationID,
+              permission: childPermissions,
+              requireCurrent: true,
+            }).pipe(
+              Effect.provideService(Database.Service, database),
+              Effect.provideService(EventV2Bridge.Service, events),
+              Effect.provideService(Git.Service, git),
+              Effect.provideService(Config.Service, config),
+              Effect.provideService(FileSystem.FileSystem, fs),
+              Effect.provideService(Session.Service, sessions),
+              Effect.asVoid,
+            )
+          : undefined
+        const result = yield* ops.prompt(
+          {
+            messageID: MessageID.ascending(),
+            sessionID: nextSession.id,
+            model: {
+              modelID: model.modelID,
+              providerID: model.providerID,
+            },
+            variant: next.model || explicitModel ? undefined : variant,
+            agent: nextID,
+            parts: [...parts, ...own],
           },
-          variant: next.model || explicitModel ? undefined : variant,
-          agent: next.name,
-          parts,
-        })
+          beforeModel ? { beforeModel } : undefined,
+        )
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -396,7 +695,18 @@ export const TaskTool = Tool.define(
       parameters: Parameters,
       jsonSchema: flags.experimentalBackgroundSubagents ? undefined : ToolJsonSchema.fromSchema(BaseParameters),
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context) =>
-        run(params, ctx).pipe(Effect.orDie),
+        (params.authorizationID
+          ? dispatchLock.withLock(params.authorizationID)(run(params, ctx))
+          : run(params, ctx)
+        ).pipe(
+          Effect.provideService(Database.Service, database),
+          Effect.provideService(EventV2Bridge.Service, events),
+          Effect.provideService(Git.Service, git),
+          Effect.provideService(Config.Service, config),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Session.Service, sessions),
+          Effect.orDie,
+        ),
     }
   }),
 )

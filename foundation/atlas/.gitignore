@@ -1,0 +1,36 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.orchestra/
+
+# agent worktrees (ephemeral, created by the Agent tool isolation)
+.claude/worktrees/
+
+# `.atlas` CAS/projection are local rebuildable state. Never commit model-derived store bytes.
+# Deny every child by default; only reviewed configuration and append-only shared logs travel.
+# `.atlas/` itself stays visible so later explicit exceptions remain possible.
+.atlas/*
+# `memory.jsonl` — the per-seat Memory log. MEM-10a REQUIRES it to travel at every commit / PR / branch /
+# fork, so it is admitted like the projection is. It is safe to admit for a reason the projection cannot
+# claim: the file is append-only and content-keyed one record per line (KERNEL-12b/12c), so a plain git text
+# merge can only union or duplicate whole lines — never splice two records — and a duplicate is deduped by
+# content id on the fold. There are no numbered generations to drag in, because nothing is ever replaced.
+!.atlas/memory.jsonl
+# `orientation.jsonl` — the derived-channel event log the Orientation slab folds. Admitted for a REQUIREMENT,
+# not a convenience: MEM-6 says the slab is byte-identical across all members, members work in different
+# clones, so a log that stayed local would fold to a different Orientation per machine and the invariant
+# would be false by construction. Same append-only content-keyed form, same safe line merge.
+!.atlas/orientation.jsonl
+# …and the admin-owned policy, as before: the ratified config the doors READ, reviewable in the same place
+# as the code.
+!.atlas/policy.json
+
+# staging must never travel at ANY depth. The root-anchored `.atlas/*` above only matches the repo-root
+# store; test runs create scratch `.atlas/` dirs under packages/*/ (e.g. packages/grounding/.atlas/) whose
+# staging*.json slips that anchor. This unanchored rule denies staging everywhere — same intent as above,
+# closing the nested-dir gap so `git add -A` after a test run cannot drag candidate material into history.
+**/.atlas/staging*.json
+
+# runtime telemetry from the orchestrator harness — not product source
+.maestro/

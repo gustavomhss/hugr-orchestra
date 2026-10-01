@@ -23,6 +23,8 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { isRecord } from "@/util/record"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { nativeProfiles, roster } from "@/maestro/roster"
+import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 
 const MCP_RESOURCE_TOOLS = {
   list: "list_mcp_resources",
@@ -55,6 +57,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
+  const nativeSeat = input.agent.native
+    ? roster.find((member) => member.memberId === input.agent.id && member.nativeProfile)
+    : undefined
 
   const context = (args: Record<string, unknown>, options: ToolExecutionOptions): Tool.Context => ({
     sessionID: input.session.id,
@@ -63,6 +68,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     callID: options.toolCallId,
     extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps },
     agent: input.agent.name,
+    agentID: input.agent.id,
     messages: input.messages,
     metadata: (val) =>
       input.processor.updateToolCall(options.toolCallId, (match) => {
@@ -79,14 +85,23 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
         }
       }),
     ask: (req) =>
-      permission
-        .ask({
+      Effect.gen(function* () {
+        if (nativeSeat?.nativeProfile) {
+          const nativePermission = Permission.fromConfig(nativeProfiles[nativeSeat.nativeProfile])
+          for (const pattern of req.patterns) {
+            if (Permission.evaluate(req.permission, pattern, nativePermission).action !== "deny") continue
+            return yield* new PermissionV1.DeniedError({
+              ruleset: nativePermission,
+            })
+          }
+        }
+        return yield* permission.ask({
           ...req,
           sessionID: input.session.id,
           tool: { messageID: input.processor.message.id, callID: options.toolCallId },
           ruleset: Permission.merge(input.agent.permission, input.session.permission ?? []),
         })
-        .pipe(Effect.orDie),
+      }).pipe(Effect.orDie),
   })
 
   for (const item of yield* registry.tools({

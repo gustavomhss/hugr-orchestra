@@ -42,6 +42,14 @@ export type FatalRendererError = {
   os?: string
 }
 
+export type JanitorAPI = {
+  getReport: () => Promise<{ report: string; source: string | null } | null>
+  publish: (report: string, notify?: boolean, source?: string | null) => Promise<boolean>
+  snooze: (minutes: number, source?: string | null) => Promise<boolean>
+  dismiss: (source?: string | null) => Promise<boolean>
+  onReport: (cb: (event: { report: string; notify: boolean; source: string | null }) => void) => () => void
+}
+
 export type AppDockEvent =
   | {
       type: "state"
@@ -156,6 +164,7 @@ export type ElectronAPI = {
   draftDelete: (key: string) => Promise<void>
   draftBlobPut: (data: ArrayBuffer) => Promise<string>
   draftBlobGet: (id: string) => Promise<ArrayBuffer | null>
+  janitor: JanitorAPI
 
   getWindowID: () => Promise<string>
   onMenuCommand: (cb: (id: string) => void) => () => void

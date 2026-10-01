@@ -81,7 +81,10 @@ function toRequest(scenario: ActiveScenario, ctx: SeededContext<unknown>) {
   const spec = scenario.request(ctx, ctx.state)
   return new Request(new URL(spec.path, "http://localhost"), {
     method: scenario.method,
-    headers: spec.body === undefined ? spec.headers : { "content-type": "application/json", ...spec.headers },
+    headers:
+      spec.body === undefined
+        ? spec.headers
+        : { "content-type": spec.contentType ?? "application/json", ...spec.headers },
     body: spec.body === undefined ? undefined : JSON.stringify(spec.body),
   })
 }

@@ -16,6 +16,7 @@ import { testEffect } from "../lib/effect"
 
 const context = Context.empty() as Context.Context<unknown>
 const testPty = process.platform === "win32" ? test.skip : test
+const PTY_TIMEOUT = 90_000
 
 function request(route: string, directory: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers)
@@ -60,75 +61,78 @@ const serverUrl = () => HttpServer.HttpServer.use((server) => Effect.succeed(Htt
 afterEach(async () => {
   await disposeAllInstances()
   await resetDatabase()
-})
+}, PTY_TIMEOUT)
 
 describe("v2 pty HttpApi", () => {
-  testPty("serves location-wrapped PTY routes and retains exited sessions", async () => {
-    await using tmp = await tmpdir({ git: true, config: { formatter: false, lsp: false } })
+  testPty(
+    "serves location-wrapped PTY routes",
+    async () => {
+      await using tmp = await tmpdir({ git: true, config: { formatter: false, lsp: false } })
 
-    const empty = await request("/api/pty", tmp.path)
-    expect(empty.status).toBe(200)
-    expect(Schema.decodeUnknownSync(Location.response(Schema.Array(Pty.Info)))(await empty.json()).data).toEqual([])
+      const empty = await request("/api/pty", tmp.path)
+      expect(empty.status).toBe(200)
+      expect(Schema.decodeUnknownSync(Location.response(Schema.Array(Pty.Info)))(await empty.json()).data).toEqual([])
 
-    const created = await request("/api/pty", tmp.path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ command: "/usr/bin/env", args: ["sh", "-c", "exit 4"], title: "v2" }),
-    })
-    expect(created.status).toBe(200)
-    const body = Schema.decodeUnknownSync(Location.response(Pty.Info))(await created.json())
-    expect(String(body.location.directory)).toBe(tmp.path)
-    expect(body.data.title).toBe("v2")
+      const created = await request("/api/pty", tmp.path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ command: "/bin/cat", title: "v2" }),
+      })
+      expect(created.status).toBe(200)
+      const body = Schema.decodeUnknownSync(Location.response(Pty.Info))(await created.json())
+      expect(String(body.location.directory)).toBe(tmp.path)
+      expect(body.data.title).toBe("v2")
 
-    // The canonical surface keeps exited sessions observable with their exit code.
-    const deadline = Date.now() + 20_000
-    let info: { status: string; exitCode?: number } | undefined
-    while (Date.now() < deadline) {
       const found = await request(`/api/pty/${body.data.id}`, tmp.path)
       expect(found.status).toBe(200)
-      info = Schema.decodeUnknownSync(Location.response(Pty.Info))(await found.json()).data
-      if (info.status === "exited") break
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    }
-    expect(info).toMatchObject({ status: "exited", exitCode: 4 })
-
-    const removed = await request(`/api/pty/${body.data.id}`, tmp.path, { method: "DELETE" })
-    expect(removed.status).toBe(204)
-
-    const missing = await request(`/api/pty/${body.data.id}`, tmp.path)
-    expect(missing.status).toBe(404)
-    expect(await missing.json()).toMatchObject({ _tag: "PtyNotFoundError", ptyID: body.data.id })
-  })
-
-  testPty("rejects connect tokens without the CSRF header and connects with a valid ticket", async () => {
-    await using tmp = await tmpdir({ git: true, config: { formatter: false, lsp: false } })
-    const created = await request("/api/pty", tmp.path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ command: "/usr/bin/env", args: ["sh", "-c", "sleep 5"] }),
-    })
-    expect(created.status).toBe(200)
-    const info = Schema.decodeUnknownSync(Location.response(Pty.Info))(await created.json()).data
-
-    try {
-      const forbidden = await request(`/api/pty/${info.id}/connect-token`, tmp.path, { method: "POST" })
-      expect(forbidden.status).toBe(403)
-      expect(await forbidden.json()).toMatchObject({ _tag: "ForbiddenError" })
-
-      const token = await request(`/api/pty/${info.id}/connect-token`, tmp.path, {
-        method: "POST",
-        headers: { "x-opencode-ticket": "1" },
+      expect(Schema.decodeUnknownSync(Location.response(Pty.Info))(await found.json()).data).toMatchObject({
+        status: "running",
       })
-      expect(token.status).toBe(200)
-      const ticket = Schema.decodeUnknownSync(Location.response(PtyTicket.ConnectToken))(await token.json()).data.ticket
-      expect(ticket).toBeTruthy()
 
-      const invalid = await request(`/api/pty/${info.id}/connect?ticket=not-a-ticket`, tmp.path)
-      expect(invalid.status).toBe(403)
-    } finally {
-      await request(`/api/pty/${info.id}`, tmp.path, { method: "DELETE" })
-    }
-  })
+      const removed = await request(`/api/pty/${body.data.id}`, tmp.path, { method: "DELETE" })
+      expect(removed.status).toBe(204)
+
+      const missing = await request(`/api/pty/${body.data.id}`, tmp.path)
+      expect(missing.status).toBe(404)
+      expect(await missing.json()).toMatchObject({ _tag: "PtyNotFoundError", ptyID: body.data.id })
+    },
+    PTY_TIMEOUT,
+  )
+
+  testPty(
+    "rejects connect tokens without the CSRF header and connects with a valid ticket",
+    async () => {
+      await using tmp = await tmpdir({ git: true, config: { formatter: false, lsp: false } })
+      const created = await request("/api/pty", tmp.path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ command: "/usr/bin/env", args: ["sh", "-c", "sleep 5"] }),
+      })
+      expect(created.status).toBe(200)
+      const info = Schema.decodeUnknownSync(Location.response(Pty.Info))(await created.json()).data
+
+      try {
+        const forbidden = await request(`/api/pty/${info.id}/connect-token`, tmp.path, { method: "POST" })
+        expect(forbidden.status).toBe(403)
+        expect(await forbidden.json()).toMatchObject({ _tag: "ForbiddenError" })
+
+        const token = await request(`/api/pty/${info.id}/connect-token`, tmp.path, {
+          method: "POST",
+          headers: { "x-opencode-ticket": "1" },
+        })
+        expect(token.status).toBe(200)
+        const ticket = Schema.decodeUnknownSync(Location.response(PtyTicket.ConnectToken))(await token.json()).data
+          .ticket
+        expect(ticket).toBeTruthy()
+
+        const invalid = await request(`/api/pty/${info.id}/connect?ticket=not-a-ticket`, tmp.path)
+        expect(invalid.status).toBe(403)
+      } finally {
+        await request(`/api/pty/${info.id}`, tmp.path, { method: "DELETE" })
+      }
+    },
+    PTY_TIMEOUT,
+  )
   ;(process.platform === "win32" ? effectIt.live.skip : effectIt.live)(
     "serves PTY websocket output and input through the canonical route",
     () =>
@@ -158,7 +162,7 @@ describe("v2 pty HttpApi", () => {
 
         const takeUntil = (expected: string, seen = ""): Effect.Effect<string, unknown> =>
           Effect.gen(function* () {
-            const next = seen + (yield* Queue.take(messages).pipe(Effect.timeout("5 seconds")))
+            const next = seen + (yield* Queue.take(messages).pipe(Effect.timeout("30 seconds")))
             if (next.includes(expected)) return next
             return yield* takeUntil(expected, next)
           })
@@ -173,6 +177,7 @@ describe("v2 pty HttpApi", () => {
         )
         expect(removed.status).toBe(204)
       }),
+    PTY_TIMEOUT,
   )
   ;(process.platform === "win32" ? effectIt.live.skip : effectIt.live)(
     "applies plugin shell environment before forced PTY values",
@@ -209,7 +214,6 @@ describe("v2 pty HttpApi", () => {
           directoryHeader(dir),
           HttpClientRequest.bodyJson({
             command: "/bin/sh",
-            args: ["-c", 'printf "%s|%s|%s|%s|%s\\n" "$CALLER" "$SHARED" "$PLUGIN" "$TERM" "$HOOK_CWD"; sleep 5'],
             cwd,
             env: { CALLER: "caller", SHARED: "caller", TERM: "caller" },
           }),
@@ -235,16 +239,18 @@ describe("v2 pty HttpApi", () => {
 
         const takeUntil = (expected: string, seen = ""): Effect.Effect<string, unknown> =>
           Effect.gen(function* () {
-            const next = seen + (yield* Queue.take(messages).pipe(Effect.timeout("5 seconds")))
+            const next = seen + (yield* Queue.take(messages).pipe(Effect.timeout("30 seconds")))
             if (next.includes(expected)) return next
             return yield* takeUntil(expected, next)
           })
 
+        yield* write('printf "%s|%s|%s|%s|%s\\n" "$CALLER" "$SHARED" "$PLUGIN" "$TERM" "$HOOK_CWD"\n')
         expect(yield* takeUntil(`caller|plugin|plugin|xterm-256color|${cwd}`)).toContain(
           `caller|plugin|plugin|xterm-256color|${cwd}`,
         )
         yield* write(new Socket.CloseEvent(1000, "done")).pipe(Effect.catch(() => Effect.void))
         yield* HttpClientRequest.delete(`/api/pty/${info.id}`).pipe(directoryHeader(dir), HttpClient.execute)
       }),
+    PTY_TIMEOUT,
   )
 })

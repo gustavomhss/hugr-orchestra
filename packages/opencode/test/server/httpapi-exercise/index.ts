@@ -681,7 +681,7 @@ const scenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { key: "test" },
     }))
-    .status(500, undefined, "status"),
+    .status(204, undefined, "status"),
   http.protected
     .post("/api/integration/{integrationID}/connect/oauth", "v2.integration.connect.oauth")
     .at((ctx) => ({
@@ -1738,8 +1738,8 @@ const scenarios: Scenario[] = [
     .post("/global/upgrade", "global.upgrade")
     .global()
     .probe({ path: "/global/upgrade", body: { target: 1 } })
-    .at(() => ({ path: "/global/upgrade", body: { target: 1 } }))
-    .status(400),
+    .at(() => ({ path: "/global/upgrade", body: { target: "1.0.0" }, contentType: "text/plain; charset=utf-8" }))
+    .status(415),
 ]
 
 const llmScenarios = new Set([

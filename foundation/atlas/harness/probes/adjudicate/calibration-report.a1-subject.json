@@ -1,0 +1,172 @@
+{
+  "kind": "a1-subject-test",
+  "method_doc": "docs/design/95-benchmark-methodology.md",
+  "instrument": {
+    "fixtures_file": "harness/probes/adjudicate/fixtures.mjs",
+    "fixtures_sha256_16": "01c7bc130eb7f384",
+    "subject": "claude-sonnet-5 (Agent tool, fresh context, 1 pass/fixture)",
+    "judge_in_correctness_loop": false
+  },
+  "n": {
+    "total": 20,
+    "true": 10,
+    "false": 10
+  },
+  "false_admit": {
+    "leaked": 1,
+    "total": 10,
+    "rate": 0.1,
+    "wilson95": [0.01787574951572113, 0.4041563854975721]
+  },
+  "catch": {
+    "caught": 9,
+    "total": 10,
+    "rate": 0.9
+  },
+  "false_alarm": {
+    "alarmed": 0,
+    "total": 10,
+    "rate": 0
+  },
+  "leaks": [
+    {
+      "id": "F03",
+      "falseKind": "wrong-constant",
+      "anchor": "isAbstainToken"
+    }
+  ],
+  "verdicts": [
+    {
+      "id": "T01",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T02",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T03",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T04",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T05",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T06",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T07",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T08",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T09",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "T10",
+      "label": "true",
+      "falseKind": null,
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "F01",
+      "label": "false",
+      "falseKind": "wrong-constant",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F02",
+      "label": "false",
+      "falseKind": "negated-condition",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F03",
+      "label": "false",
+      "falseKind": "wrong-constant",
+      "verdict": "GROUNDED_TRUE"
+    },
+    {
+      "id": "F04",
+      "label": "false",
+      "falseKind": "wrong-callee",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F05",
+      "label": "false",
+      "falseKind": "wrong-default",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F06",
+      "label": "false",
+      "falseKind": "past-comment-as-present",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F07",
+      "label": "false",
+      "falseKind": "fabricated-behavior",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F08",
+      "label": "false",
+      "falseKind": "fabricated-behavior",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F09",
+      "label": "false",
+      "falseKind": "wrong-callee",
+      "verdict": "HALLUCINATED"
+    },
+    {
+      "id": "F10",
+      "label": "false",
+      "falseKind": "wrong-constant",
+      "verdict": "HALLUCINATED"
+    }
+  ],
+  "run": {
+    "model": "claude-sonnet-5 (Agent tool, fresh context, 1 pass/fixture)",
+    "date": "2026-08-16",
+    "prompt_digest": "01c7bc130eb7f384"
+  },
+  "limits": [
+    "n=20 small; Wilson95% wide",
+    "reproducible by record (model + date + prompt digest + committed verdicts), not by forced T=0",
+    "precision only, not recall",
+    "synthetic-clean fixtures by design"
+  ],
+  "supersedes": "live 29/30=96.7% demoted to non-citable smoke (LLM self-verification)"
+}

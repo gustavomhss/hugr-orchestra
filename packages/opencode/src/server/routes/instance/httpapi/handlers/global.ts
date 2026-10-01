@@ -12,6 +12,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import * as Sse from "effect/unstable/encoding/Sse"
 import { RootHttpApi } from "../api"
 import { GlobalUpgradeInput } from "../groups/global"
+import { clearLatestReport, getLatestReport } from "@/janitor/report-state"
 
 function eventData(data: unknown): Sse.Event {
   return {
@@ -37,8 +38,20 @@ function eventResponse() {
       Stream.map(() => ({ payload: { id: EventV2.ID.create(), type: "server.heartbeat", properties: {} } })),
     )
 
+    const latest = getLatestReport()
+    const replay = latest
+      ? Stream.make({
+          directory: "global",
+          payload: {
+            id: EventV2.ID.create(),
+            type: "janitor.report",
+            properties: { report: latest, notify: false },
+          },
+        })
+      : Stream.empty
     return HttpServerResponse.stream(
       Stream.make({ payload: { id: EventV2.ID.create(), type: "server.connected", properties: {} } }).pipe(
+        Stream.concat(replay),
         Stream.concat(events.pipe(Stream.merge(heartbeat, { haltStrategy: "left" }))),
         Stream.map(eventData),
         Stream.pipeThroughChannel(Sse.encode()),
@@ -77,12 +90,16 @@ export const globalHandlers = HttpApiBuilder.group(RootHttpApi, "global", (handl
 
     const configUpdate = Effect.fn("GlobalHttpApi.configUpdate")(function* (ctx) {
       const result = yield* config.updateGlobal(ctx.payload)
-      if (result.changed) bridge.fork(disposeAllInstancesAndEmitGlobalDisposed({ swallowErrors: true }))
+      if (result.changed) {
+        clearLatestReport()
+        bridge.fork(disposeAllInstancesAndEmitGlobalDisposed({ swallowErrors: true }))
+      }
       return result.info
     })
 
     const dispose = Effect.fn("GlobalHttpApi.dispose")(function* () {
       yield* disposeAllInstancesAndEmitGlobalDisposed()
+      clearLatestReport()
       return true
     })
 

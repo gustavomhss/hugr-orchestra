@@ -9,7 +9,8 @@ export const ReadCommand = effectCmd({
     yargs
       .option("params", {
         type: "string",
-        description: 'Tool params as JSON (e.g. {"filePath":"...","symbol":"foo"}) — or an array of param objects for warm LSP runs',
+        description:
+          'Tool params as JSON (e.g. {"filePath":"...","symbol":"foo"}) — or an array of param objects for warm LSP runs',
       })
       .option("meta-only", {
         type: "boolean",

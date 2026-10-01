@@ -23,10 +23,7 @@ function fmtDuration(start: number, end: number): string {
 
 function StateMark(props: { state: TasksItem["state"] }) {
   return (
-    <Show
-      when={props.state !== "running"}
-      fallback={<span data-slot="titlebar-update-loader" aria-hidden />}
-    >
+    <Show when={props.state !== "running"} fallback={<span data-slot="titlebar-update-loader" aria-hidden />}>
       <span
         aria-hidden
         class="inline-block size-2 shrink-0 rounded-full"
@@ -37,8 +34,7 @@ function StateMark(props: { state: TasksItem["state"] }) {
               : props.state === "completed"
                 ? "var(--v2-state-fg-success)"
                 : "var(--v2-state-fg-danger)",
-          "box-shadow":
-            props.state === "needs-input" ? "0 0 6px var(--v2-state-fg-warning)" : "none",
+          "box-shadow": props.state === "needs-input" ? "0 0 6px var(--v2-state-fg-warning)" : "none",
           margin: "2px",
         }}
       />
@@ -107,7 +103,8 @@ function TaskRow(props: {
           </span>
           <Show when={item.agent}>
             <span>
-              {" · "}<span style={{ color: "var(--text-interactive-base)" }}>@{item.agent}</span>
+              {" · "}
+              <span style={{ color: "var(--text-interactive-base)" }}>@{item.agent}</span>
             </span>
           </Show>
         </div>
@@ -144,7 +141,8 @@ function TaskRow(props: {
             <div class="flex items-center gap-1">
               <span class="text-text-weaker">{language.t("session.tasks.stats.tokens")}:</span>
               <span class="font-mono text-text-base">
-                ↓{item.stats!.tokensIn.toLocaleString(language.intl())} ↑{item.stats!.tokensOut.toLocaleString(language.intl())}
+                ↓{item.stats!.tokensIn.toLocaleString(language.intl())} ↑
+                {item.stats!.tokensOut.toLocaleString(language.intl())}
               </span>
             </div>
             <Show when={item.stats!.cost > 0}>
@@ -234,26 +232,24 @@ export function TasksPanel() {
           fallback={
             <div class="flex h-full flex-col items-center justify-center gap-6 px-6 pb-42 text-center">
               <Mark class="w-14 opacity-10" />
-              <div class="text-14-regular text-text-weak max-w-56">
-                {language.t("session.tasks.empty")}
-              </div>
+              <div class="text-14-regular text-text-weak max-w-56">{language.t("session.tasks.empty")}</div>
             </div>
           }
         >
           <Show when={visible().running.length > 0}>
-            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">
-              {language.t("session.tasks.running")}
-            </div>
+            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">{language.t("session.tasks.running")}</div>
             <For each={visible().running}>
-              {(item) => <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />}
+              {(item) => (
+                <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />
+              )}
             </For>
           </Show>
           <Show when={visible().finished.length > 0}>
-            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">
-              {language.t("session.tasks.completed")}
-            </div>
+            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">{language.t("session.tasks.completed")}</div>
             <For each={visible().finished}>
-              {(item) => <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />}
+              {(item) => (
+                <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />
+              )}
             </For>
           </Show>
         </Show>

@@ -4,7 +4,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
 import { tool } from "ai"
-import { Cause, Effect, Exit, Fiber, Layer, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Stream } from "effect"
 import path from "path"
 import z from "zod"
 import type { Agent } from "../../src/agent/agent"
@@ -18,7 +18,7 @@ import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { SessionStatus } from "../../src/session/status"
 import { SessionSummary } from "../../src/session/summary"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
-import { provideTmpdirInstance, provideTmpdirServer } from "../fixture/fixture"
+import { TestInstance, provideTmpdirInstance, provideTmpdirServer } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { raw, reply, TestLLMServer } from "../lib/llm-server"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -226,6 +226,13 @@ const fragmentFailureLLM = Layer.succeed(
 const fragmentFailureEnv = LayerNode.compile(root, [...replacements, [LLM.node, fragmentFailureLLM]])
 const itFragmentFailure = testEffect(fragmentFailureEnv)
 
+let interruptBarrier: Deferred.Deferred<void> | undefined
+
+// prettier-ignore
+const interruptLLM = Layer.succeed(LLM.Service, LLM.Service.of({ stream: () => Stream.unwrap(Effect.sync(() => interruptBarrier).pipe(Effect.flatMap((barrier) => barrier ? Deferred.succeed(barrier, undefined).pipe(Effect.as(Stream.never)) : Effect.die("missing interrupt barrier")))) }))
+const interruptEnv = LayerNode.compile(root, [...replacements, [LLM.node, interruptLLM]])
+const itInterrupt = testEffect(interruptEnv)
+
 const boot = Effect.fn("test.boot")(function* () {
   const processors = yield* SessionProcessor.Service
   const session = yield* Session.Service
@@ -250,11 +257,8 @@ it.live("session.processor effect tests capture llm input cleanly", () =>
         const parent = yield* user(chat.id, "hi")
         const msg = yield* assistant(chat.id, parent.id, path.resolve(dir))
         const mdl = yield* provider.getModel(ref.providerID, ref.modelID)
-        const handle = yield* processors.create({
-          assistantMessage: msg,
-          sessionID: chat.id,
-          model: mdl,
-        })
+        // prettier-ignore
+        const handle = yield* processors.create({ assistantMessage: msg, sessionID: chat.id, model: mdl })
 
         const input = {
           user: {
@@ -1012,61 +1016,46 @@ it.live("session.processor effect tests record aborted errors and idle state", (
   ),
 )
 
-it.live("session.processor effect tests mark interruptions aborted without manual abort", () =>
-  provideTmpdirServer(
-    ({ dir, llm }) =>
-      Effect.gen(function* () {
-        const { processors, session, provider } = yield* boot()
-        const sts = yield* SessionStatus.Service
+itInterrupt.instance(
+  "session.processor effect tests mark interruptions aborted without manual abort",
+  () =>
+    Effect.gen(function* () {
+      const { directory: dir } = yield* TestInstance
+      const { processors, session, provider } = yield* boot()
+      const sts = yield* SessionStatus.Service
+      const barrier = yield* Deferred.make<void>()
+      interruptBarrier = barrier
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          if (interruptBarrier === barrier) interruptBarrier = undefined
+        }),
+      )
 
-        yield* llm.hang
+      const chat = yield* session.create({})
+      const parent = yield* user(chat.id, "interrupt")
+      const msg = yield* assistant(chat.id, parent.id, path.resolve(dir))
+      const mdl = yield* provider.getModel(ref.providerID, ref.modelID)
+      const handle = yield* processors.create({ assistantMessage: msg, sessionID: chat.id, model: mdl })
 
-        const chat = yield* session.create({})
-        const parent = yield* user(chat.id, "interrupt")
-        const msg = yield* assistant(chat.id, parent.id, path.resolve(dir))
-        const mdl = yield* provider.getModel(ref.providerID, ref.modelID)
-        const handle = yield* processors.create({
-          assistantMessage: msg,
-          sessionID: chat.id,
-          model: mdl,
-        })
+      // prettier-ignore
+      const run = yield* handle.process({ user: { id: parent.id, sessionID: chat.id, role: "user", time: parent.time, agent: parent.agent, model: { providerID: ref.providerID, modelID: ref.modelID } } satisfies SessionV1.User, sessionID: chat.id, model: mdl, agent: agent(), system: [], messages: [{ role: "user", content: "interrupt" }], tools: {} }).pipe(Effect.forkChild)
 
-        const run = yield* handle
-          .process({
-            user: {
-              id: parent.id,
-              sessionID: chat.id,
-              role: "user",
-              time: parent.time,
-              agent: parent.agent,
-              model: { providerID: ref.providerID, modelID: ref.modelID },
-            } satisfies SessionV1.User,
-            sessionID: chat.id,
-            model: mdl,
-            agent: agent(),
-            system: [],
-            messages: [{ role: "user", content: "interrupt" }],
-            tools: {},
-          })
-          .pipe(Effect.forkChild)
+      yield* Deferred.await(barrier)
+      yield* Fiber.interrupt(run)
 
-        yield* llm.wait(1)
-        yield* Fiber.interrupt(run)
+      const exit = yield* Fiber.await(run)
+      const stored = yield* MessageV2.get({ sessionID: chat.id, messageID: msg.id })
+      const state = yield* sts.get(chat.id)
 
-        const exit = yield* Fiber.await(run)
-        const stored = yield* MessageV2.get({ sessionID: chat.id, messageID: msg.id })
-        const state = yield* sts.get(chat.id)
-
-        expect(Exit.isFailure(exit)).toBe(true)
-        expect(handle.message.error?.name).toBe("MessageAbortedError")
-        expect(stored.info.role).toBe("assistant")
-        if (stored.info.role === "assistant") {
-          expect(stored.info.error?.name).toBe("MessageAbortedError")
-        }
-        expect(state).toMatchObject({ type: "idle" })
-      }),
-    { config: (url) => providerCfg(url) },
-  ),
+      expect(Exit.isFailure(exit)).toBe(true)
+      expect(handle.message.error?.name).toBe("MessageAbortedError")
+      expect(stored.info.role).toBe("assistant")
+      if (stored.info.role === "assistant") {
+        expect(stored.info.error?.name).toBe("MessageAbortedError")
+      }
+      expect(state).toMatchObject({ type: "idle" })
+    }),
+  { config: cfg },
 )
 
 itProviderError.live("session.processor effect tests fail provider-executed error results", () =>

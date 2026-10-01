@@ -108,6 +108,18 @@ const api: ElectronAPI = {
   draftDelete: (key) => ipcRenderer.invoke("draft-delete", key),
   draftBlobPut: (data) => ipcRenderer.invoke("draft-blob-put", data),
   draftBlobGet: (id) => ipcRenderer.invoke("draft-blob-get", id),
+  janitor: {
+    getReport: () => ipcRenderer.invoke("janitor-get-report"),
+    publish: (report, notify, source) => ipcRenderer.invoke("janitor-publish", report, notify, source),
+    snooze: (minutes, source) => ipcRenderer.invoke("janitor-snooze", minutes, source),
+    dismiss: (source) => ipcRenderer.invoke("janitor-dismiss", source),
+    onReport: (cb) => {
+      const handler = (_: unknown, report: string, notify = true, source: string | null = null) =>
+        cb({ report, notify, source })
+      ipcRenderer.on("janitor-report", handler)
+      return () => ipcRenderer.removeListener("janitor-report", handler)
+    },
+  },
 
   getWindowID: () => ipcRenderer.invoke("get-window-id"),
   onMenuCommand: (cb) => {

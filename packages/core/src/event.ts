@@ -528,17 +528,17 @@ export const layerWith = (options?: LayerOptions) =>
               ownerID: options?.ownerID,
               strictOwner: options?.strictOwner,
             })
-              if (!committed) return
-              const result = {
-                ...payload,
-                durable: {
-                  aggregateID: committed.aggregateID,
-                  seq: committed.seq,
-                  version: definition.durable.version,
-                },
-              } as Payload
-              if (options?.publish) yield* notify(result, true)
-              return result
+            if (!committed) return
+            const result = {
+              ...payload,
+              durable: {
+                aggregateID: committed.aggregateID,
+                seq: committed.seq,
+                version: definition.durable.version,
+              },
+            } as Payload
+            if (options?.publish) yield* notify(result, true)
+            return result
           }
         })
       }
@@ -759,18 +759,18 @@ export const compactSnapshotEvents = Effect.fn("EventV2.compactSnapshotEvents")(
     .transaction(
       (tx) =>
         Effect.gen(function* () {
-        const stats = yield* tx
-          .select({
-            rows: sql<number>`count(*)`,
-            bytes: sql<number>`sum(length(data))`,
-          })
-          .from(EventTable)
-          .where(inArray(EventTable.type, snapshotTypes))
-          .get()
-          .pipe(Effect.orDie)
-        yield* tx
-          .run(
-            sql.raw(`
+          const stats = yield* tx
+            .select({
+              rows: sql<number>`count(*)`,
+              bytes: sql<number>`sum(length(data))`,
+            })
+            .from(EventTable)
+            .where(inArray(EventTable.type, snapshotTypes))
+            .get()
+            .pipe(Effect.orDie)
+          yield* tx
+            .run(
+              sql.raw(`
         DELETE FROM "event"
         WHERE "type" IN ('message.updated.1', 'message.part.updated.1')
           AND "id" NOT IN (
@@ -798,26 +798,26 @@ export const compactSnapshotEvents = Effect.fn("EventV2.compactSnapshotEvents")(
             WHERE "rn" = 1
            )
        `),
-          )
-          .pipe(Effect.orDie)
-        const remaining = yield* tx
-          .select({
-            rows: sql<number>`count(*)`,
-            bytes: sql<number>`sum(length(data))`,
-          })
-          .from(EventTable)
-          .where(inArray(EventTable.type, snapshotTypes))
-          .get()
-          .pipe(Effect.orDie)
-        const removed = (stats?.rows ?? 0) - (remaining?.rows ?? 0)
-        const bytes = (stats?.bytes ?? 0) - (remaining?.bytes ?? 0)
-        if (removed > 0)
-          yield* tx
-            .run(
-              sql`INSERT OR REPLACE INTO data_migration (name, time_completed) VALUES (${SNAPSHOT_COMPACTION_MARKER}, ${Date.now()})`,
             )
             .pipe(Effect.orDie)
-        return { removed, bytes }
+          const remaining = yield* tx
+            .select({
+              rows: sql<number>`count(*)`,
+              bytes: sql<number>`sum(length(data))`,
+            })
+            .from(EventTable)
+            .where(inArray(EventTable.type, snapshotTypes))
+            .get()
+            .pipe(Effect.orDie)
+          const removed = (stats?.rows ?? 0) - (remaining?.rows ?? 0)
+          const bytes = (stats?.bytes ?? 0) - (remaining?.bytes ?? 0)
+          if (removed > 0)
+            yield* tx
+              .run(
+                sql`INSERT OR REPLACE INTO data_migration (name, time_completed) VALUES (${SNAPSHOT_COMPACTION_MARKER}, ${Date.now()})`,
+              )
+              .pipe(Effect.orDie)
+          return { removed, bytes }
         }),
       { behavior: "immediate" },
     )

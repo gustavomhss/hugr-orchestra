@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["src", "test"],
+  "references": [
+    { "path": "../adapter-io" },
+    { "path": "../tools" },
+    { "path": "../genesis" },
+    { "path": "../contracts" },
+    { "path": "../memory" },
+    { "path": "../persist" }
+  ]
+}

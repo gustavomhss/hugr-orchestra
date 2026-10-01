@@ -171,11 +171,7 @@ describe("plugin.trigger (lifecycle events E2E with real plugin file)", () => {
       )
       const plugin = yield* Plugin.Service
       const out = { continue: false }
-      yield* plugin.trigger(
-        "stop",
-        { sessionID: "s", agent: "a", messageID: "m", reason: "completed" },
-        out,
-      )
+      yield* plugin.trigger("stop", { sessionID: "s", agent: "a", messageID: "m", reason: "completed" }, out)
       expect(out.continue).toBe(true)
     }),
   )
@@ -205,11 +201,7 @@ describe("plugin.trigger (lifecycle events E2E with real plugin file)", () => {
       )
       const plugin = yield* Plugin.Service
       const out = { continue: false }
-      yield* plugin.trigger(
-        "stop",
-        { sessionID: "s", agent: "a", messageID: "m", reason: "completed" },
-        out,
-      )
+      yield* plugin.trigger("stop", { sessionID: "s", agent: "a", messageID: "m", reason: "completed" }, out)
       expect(out.continue).toBe(false)
     }),
   )

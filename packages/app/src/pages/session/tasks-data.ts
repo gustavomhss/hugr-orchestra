@@ -121,27 +121,23 @@ export function createTasksData() {
     if (!sid) return { running: [] as TasksItem[], finished: [] as TasksItem[] }
     const data = sync().data
     const perms = pendingPermissions()
-const nested = grandchildren()
-  const running: TasksItem[] = []
-  const finished: TasksItem[] = []
-  // Agent cards are keyed by child session id. `children()` is the
-  // authoritative source; task tool parts enrich (description/agent/model)
-  // or fall back to an orphan card when the child session is not synced
-  // yet. Shells stay callID-keyed.
-  const agentByChild = new Map<string, TasksItem>()
-  const seen = new Set<string>()
+    const nested = grandchildren()
+    const running: TasksItem[] = []
+    const finished: TasksItem[] = []
+    // Agent cards are keyed by child session id. `children()` is the
+    // authoritative source; task tool parts enrich (description/agent/model)
+    // or fall back to an orphan card when the child session is not synced
+    // yet. Shells stay callID-keyed.
+    const agentByChild = new Map<string, TasksItem>()
+    const seen = new Set<string>()
 
-  // Child session titles are titled "<description> (@<agent> subagent)".
-  const cleanTitle = (title: string) => title.replace(/ \(@[^)]* subagent\)$/, "")
+    // Child session titles are titled "<description> (@<agent> subagent)".
+    const cleanTitle = (title: string) => title.replace(/ \(@[^)]* subagent\)$/, "")
 
-  const needsInput = (childId: string | undefined, callID: string): boolean =>
+    const needsInput = (childId: string | undefined, callID: string): boolean =>
       (childId !== undefined && perms.sessions.has(childId)) || perms.calls.has(callID)
 
-    const stateOf = (
-      childId: string | undefined,
-      callID: string,
-      toolState: string,
-    ): TasksItemState => {
+    const stateOf = (childId: string | undefined, callID: string, toolState: string): TasksItemState => {
       if (needsInput(childId, callID)) return "needs-input"
       if (toolState === "error") return "failed"
       if (toolState === "completed") return "completed"
@@ -179,13 +175,9 @@ const nested = grandchildren()
         const input = (part.state.input ?? {}) as Record<string, unknown>
         const headline =
           toolTitle(part.state) ??
-          (typeof input.description === "string" && input.description.length > 0
-            ? input.description
-            : "")
+          (typeof input.description === "string" && input.description.length > 0 ? input.description : "")
         const agent =
-          typeof input.subagent_type === "string" && input.subagent_type.length > 0
-            ? input.subagent_type
-            : undefined
+          typeof input.subagent_type === "string" && input.subagent_type.length > 0 ? input.subagent_type : undefined
 
         if (childId) {
           const existing = agentByChild.get(childId)
@@ -211,8 +203,7 @@ const nested = grandchildren()
             agent,
             state: stateOf(childId, part.callID, st),
             startTime: toolStart(part.state) ?? Date.now(),
-            endTime:
-              st === "completed" || st === "error" ? (toolEnd(part.state) ?? Date.now()) : undefined,
+            endTime: st === "completed" || st === "error" ? (toolEnd(part.state) ?? Date.now()) : undefined,
             childId,
             sessionId: sid,
             nested: nested.get(childId) || undefined,

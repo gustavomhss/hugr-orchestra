@@ -2,7 +2,7 @@ export * as FileSystemSearch from "./search"
 
 import { makeLocationNode } from "../effect/app-node"
 import path from "path"
-import { Context, Effect, Layer, Scope } from "effect"
+import { Context, Effect, Layer } from "effect"
 import { Fff } from "#fff"
 import fuzzysort from "fuzzysort"
 import { FileSystem } from "../filesystem"
@@ -26,7 +26,6 @@ export const ripgrepLayer = Layer.effect(
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
     const ripgrep = yield* Ripgrep.Service
-    const scope = yield* Scope.Scope
     const state = {
       files: [] as string[],
       directories: [] as string[],
@@ -45,7 +44,7 @@ export const ripgrepLayer = Layer.effect(
             state.directories = Array.from(directories)
           }),
       })
-      .pipe(Effect.orDie, Effect.asVoid, Effect.forkIn(scope))
+      .pipe(Effect.orDie, Effect.asVoid)
     return Service.of({
       glob: (input) =>
         Effect.gen(function* () {

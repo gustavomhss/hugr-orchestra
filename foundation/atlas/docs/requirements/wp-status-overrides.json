@@ -1,0 +1,53 @@
+{
+  "baseline": "6cc2059",
+  "overrides": {
+    "WP-fix-sidecar-gen": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "sidecar-generation-filename.test.ts passed 6/6; card records RED/GREEN and determinism evidence"
+    },
+    "WP-FIX-5.SPEC": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "req-clause-guard.test.mjs passed 17/17; gate-directory passed; master delivery passed"
+    },
+    "WP-PROMOTE.CLI": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "promote-cli 8/8, governed-promote 21/21, S26 blackbox 7/7"
+    },
+    "WP-FIX-8.WRITE": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "closed-slot gate 9/9 plus master full-suite green; card records six killed mutants"
+    },
+    "WP-FIX-4.DOCS": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "doc-transcript guard wired and master delivery 34154872325 passed"
+    },
+    "WP-SEC-1.KNOW": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "fastpath-isgrounded parity 26/26 passed; card records 7/20 RED mutant run"
+    },
+    "WP-FIX-1.GROUND": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "grounding multiset test 4/4 passed; master delivery passed"
+    },
+    "WP-HARNESS-1.GATES": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "gate-directory test 24/24 passed; all named gates green on master"
+    },
+    "WP-4.12-b.TOOLS": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "tools visible 7/7 plus held-out 4/4 passed; TOOLS-13 implementation covered"
+    },
+    "WP-4.11-b.KNOW": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "KNOW-14 durability + untrusted advisory/full-ratify tests pass; mutation removing trust branch failed; typecheck and module gates pass"
+    },
+    "WP-4.12-a.GROUND": {
+      "status": "REVIEWED-BUILT",
+      "evidence": "KNOW-owned resolveFactFreshness tests pass for advisory STALE, predicate DRIFTED, FRESH, idempotence, and unknown kind; mutation failed; module gates pass"
+    },
+    "WP-5.17.TOOLS": {
+      "status": "DELEGATED-ORCHESTRA",
+      "evidence": "ResultCard and wave-close driver are Orchestra-owned; Atlas retains opaque EmitApi.absorb seam without invented payload"
+    }
+  }
+}

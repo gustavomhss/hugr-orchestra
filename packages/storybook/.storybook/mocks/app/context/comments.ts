@@ -32,3 +32,7 @@ export function useComments() {
     setActive,
   }
 }
+
+export function CommentsProvider(props: { children?: unknown }) {
+  return props.children
+}

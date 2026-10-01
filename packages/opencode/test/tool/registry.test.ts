@@ -574,12 +574,8 @@ describe("tool.registry", () => {
 describe("allowedTaskModels", () => {
   test("returns empty without model-scoped task rules", () => {
     expect(allowedTaskModels([])).toEqual([])
-    expect(allowedTaskModels([{ permission: "task", pattern: "general", action: "allow" }])).toEqual(
-      [],
-    )
-    expect(allowedTaskModels([{ permission: "bash", pattern: "a/b", action: "allow" }])).toEqual(
-      [],
-    )
+    expect(allowedTaskModels([{ permission: "task", pattern: "general", action: "allow" }])).toEqual([])
+    expect(allowedTaskModels([{ permission: "bash", pattern: "a/b", action: "allow" }])).toEqual([])
   })
 
   test("resolves allowed patterns with last-match-wins", () => {

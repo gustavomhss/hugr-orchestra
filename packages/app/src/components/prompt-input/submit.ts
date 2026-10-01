@@ -427,11 +427,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         if (draftRules.length > 0) {
           clearPending(sessionDirectory)
           if ((await serverSDK().protocol) === "v1") {
-            await serverSDK().client.session.update({
-              sessionID: created.id,
-              directory: sessionDirectory,
-              permission: draftRules,
-            }).catch((err) => console.error("[tasks] draft rules flush failed", err))
+            await serverSDK()
+              .client.session.update({
+                sessionID: created.id,
+                directory: sessionDirectory,
+                permission: draftRules,
+              })
+              .catch((err) => console.error("[tasks] draft rules flush failed", err))
           }
         }
         await startTransition(() => {

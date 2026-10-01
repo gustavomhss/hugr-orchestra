@@ -1,0 +1,637 @@
+<title>The Atlas — one folder per member</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141210;
+      --paper-2: #1b1812;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #2c2820;
+      --line-soft: #241f18;
+      --accent: #d8a94b;
+      --accent-2: #e4be68;
+      --panel: #1b1812;
+      --code-bg: #0e0c09;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141210;
+    --paper-2: #1b1812;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #2c2820;
+    --line-soft: #241f18;
+    --accent: #d8a94b;
+    --accent-2: #e4be68;
+    --panel: #1b1812;
+    --code-bg: #0e0c09;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(46px, 8vw, 84px) 0 clamp(30px, 5vw, 48px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 20px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    line-height: 1.02;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+    line-height: 1.4;
+    color: var(--ink);
+    max-width: 32ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .punch .hl {
+    color: var(--accent);
+  }
+
+  section {
+    padding: clamp(38px, 6vw, 58px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h2 .q {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.6em;
+    display: block;
+    margin-top: 8px;
+  }
+  p {
+    margin: 0 0 14px;
+  }
+  p.lead {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 68ch;
+  }
+
+  pre.tree {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 22px 22px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.7;
+    margin: 20px 0 0;
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  pre.tree .d {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  pre.tree .c {
+    color: var(--muted);
+  }
+  pre.tree .same {
+    color: var(--seal);
+  }
+  pre.tree .diff {
+    color: var(--block);
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-soft);
+  }
+  .sw {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .sw.same {
+    background: var(--seal);
+  }
+  .sw.diff {
+    background: var(--block);
+  }
+  .sw.dir {
+    background: var(--accent);
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+  }
+  @media (max-width: 720px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .box {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 20px;
+  }
+  .box.same {
+    border-top: 3px solid var(--seal);
+  }
+  .box.diff {
+    border-top: 3px solid var(--block);
+  }
+  .box .h {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+  .box.same .h {
+    color: var(--seal);
+  }
+  .box.diff .h {
+    color: var(--block);
+  }
+  .box ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .box li {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    padding: 7px 0;
+    border-top: 1px dashed var(--line);
+    line-height: 1.45;
+  }
+  .box li:first-child {
+    border-top: none;
+  }
+  .box li b {
+    color: var(--ink);
+  }
+  .box code {
+    font-size: 0.82em;
+  }
+
+  pre.code {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.62;
+    margin: 20px 0 0;
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  pre.code .k {
+    color: var(--accent);
+  }
+  pre.code .s {
+    color: var(--seal);
+  }
+  pre.code .c {
+    color: var(--muted);
+  }
+
+  .tblwrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-top: 18px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    min-width: 660px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  th {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    background: var(--paper-2);
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  td .cls {
+    font-weight: 600;
+  }
+  td .own {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+  td.g {
+    color: var(--ink-soft);
+  }
+  td .df {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.78rem;
+    color: var(--block);
+  }
+
+  .note {
+    background: color-mix(in srgb, var(--accent) 8%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 20px;
+    font-size: 0.95rem;
+  }
+  .note .label {
+    color: var(--accent);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  footer {
+    padding: 40px 0 64px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .fnote b {
+    color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span><span class="label">Atlas · piece (B) · one folder per member</span>
+    </div>
+    <h1 class="wordmark">A pasta de cada <span class="set">membro</span></h1>
+    <p class="punch">
+      Um esqueleto pré-definido, parametrizado por um <span class="hl">manifest</span> — quase idêntico, deliberadamente
+      diferente.
+    </p>
+  </div>
+</header>
+
+<!-- the tree -->
+<section>
+  <div class="wrap">
+    <h2>
+      A árvore <code>atlas/</code><span class="q">knowledge co-locado com o dono · memória do membro · nada morre</span>
+    </h2>
+    <pre
+      class="tree"
+    ><span class="d">atlas/</span>                        <span class="c"># no root do repo · versionado · anexado a commits/PRs</span>
+├─ <span class="d">log.jsonl</span>                 <span class="c"># event log append-only (a fonte do fold)</span>
+├─ <span class="d">index/</span>                    <span class="c"># o índice hasheado — ponteiros p/ tudo (peça A)</span>
+├─ <span class="d">archive/</span>                  <span class="c"># nada morre — decaído/fechado, deduped, re-spawnável</span>
+└─ <span class="d">members/</span>
+   ├─ <span class="d">charlie/</span>               <span class="c"># ← UMA PASTA POR MEMBRO (esqueleto pré-definido)</span>
+   │  ├─ <span class="same">manifest.json</span>       <span class="c"># classe · kit · escopo · caps/templates ← ONDE DIFERE</span>
+   │  ├─ <span class="same">knowledge/</span>          <span class="c"># o knowledge que ELE possui (owner-write, shared-read)</span>
+   │  │  └─ <span class="c">*.json          # fatos grounded, no template da sua classe</span>
+   │  └─ <span class="same">memory/</span>
+   │     ├─ <span class="same">project.md</span>       <span class="c"># INJETADA · capada · template rígido</span>
+   │     ├─ <span class="same">task/</span>            <span class="c"># consultável · arquiva ao fechar</span>
+   │     └─ <span class="same">pr/</span>              <span class="c"># consultável · arquiva ao mergear</span>
+   ├─ <span class="d">lucy/</span>  <span class="d">bobby/</span>  <span class="d">billy/</span> …  <span class="c"># mesmo esqueleto, manifest diferente</span>
+   └─ <span class="d">orchestrator/</span>
+      ├─ <span class="same">manifest.json</span>
+      ├─ <span class="same">knowledge/</span>
+      └─ <span class="same">memory/</span>
+         ├─ <span class="same">project.md</span> · <span class="same">task/</span> · <span class="same">pr/</span>
+         └─ <span class="diff">logbook.md</span>       <span class="c"># SÓ o orquestrador — diário em prosa, ritual/PR</span></pre>
+    <div class="legend">
+      <span><span class="sw dir"></span> pasta</span>
+      <span><span class="sw same"></span> igual em todo membro</span>
+      <span><span class="sw diff"></span> diferença por classe</span>
+    </div>
+  </div>
+</section>
+
+<!-- same vs different -->
+<section>
+  <div class="wrap">
+    <h2>
+      Igual pra todos · diferente por classe<span class="q">um esqueleto, parametrizado — não sete arquiteturas</span>
+    </h2>
+    <div class="two">
+      <div class="box same">
+        <div class="h">O esqueleto (idêntico em todo membro)</div>
+        <ul>
+          <li>
+            <b><code>manifest.json</code></b> — a identidade + parâmetros do membro.
+          </li>
+          <li>
+            <b><code>knowledge/</code></b> — o que ele possui, escrito só por ele, lido por todos.
+          </li>
+          <li>
+            <b><code>memory/project.md</code></b> — injetada, capada, template rígido.
+          </li>
+          <li>
+            <b><code>memory/task/</code> · <code>pr/</code></b> — consultáveis, arquivam ao fechar/mergear.
+          </li>
+        </ul>
+      </div>
+      <div class="box diff">
+        <div class="h">As diferenças (todas via manifest + 1 arquivo opcional)</div>
+        <ul>
+          <li>
+            <b>orquestrador</b> — ganha <code>logbook.md</code> <span style="color: var(--muted)">(memory)</span>; caps
+            maiores.
+          </li>
+          <li><b>revisão</b> — knowledge = invariantes checáveis / restrições (predicate).</li>
+          <li><b>build</b> — knowledge = padrões-âncora, território (fonte do pack).</li>
+          <li><b>discovery</b> — knowledge minerado + staging; memory forte em gotchas.</li>
+          <li><b>manutenção</b> — knowledge pequeno e volátil (staleness).</li>
+          <li><b>define / arquitetura</b> — knowledge projeto-scoped, denso, sem pack.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">
+      <span class="label">O princípio de co-locação</span>
+      A pasta de um membro guarda <b>o knowledge que ELE possui + a memória dele</b>. <b>Escrita é do dono</b> (só
+      charlie escreve em <code>charlie/</code>); <b>leitura é universal</b> (qualquer um lê qualquer pasta). Instâncias
+      efêmeras (<code>jimmy-1..n</code>) escrevem na pasta do <b>membro</b> — a pasta é a identidade do assento, não da
+      instância.
+    </div>
+  </div>
+</section>
+
+<!-- manifest -->
+<section>
+  <div class="wrap">
+    <h2>
+      O <code>manifest.json</code> — o único ponto de variação<span class="q"
+        >a classe vira parâmetro, não código novo</span
+      >
+    </h2>
+    <p class="lead">Todo membro nasce do mesmo template de pasta; o manifest é o que o especializa. Comparando dois:</p>
+    <pre class="code"><span class="c">// charlie — classe build</span>
+{
+  <span class="k">"member"</span>: <span class="s">"charlie"</span>, <span class="k">"class"</span>: <span class="s">"build"</span>, <span class="k">"kit"</span>: <span class="s">"FORGE"</span>,
+  <span class="k">"owns"</span>: { <span class="k">"scope"</span>: <span class="s">"territory"</span>, <span class="k">"write"</span>: <span class="s">"knowledge/**"</span> },
+  <span class="k">"knowledge"</span>: { <span class="k">"template"</span>: <span class="s">"anchor-fact-v1"</span>, <span class="k">"scope"</span>: <span class="s">"territory"</span> },
+  <span class="k">"memory"</span>: {
+    <span class="k">"project"</span>: { <span class="k">"injected"</span>: <span class="s">true</span>, <span class="k">"cap_tokens"</span>: <span class="s">500</span>, <span class="k">"template"</span>: <span class="s">"rule-v1"</span> },
+    <span class="k">"task"</span>: { <span class="k">"template"</span>: <span class="s">"task-v1"</span> }, <span class="k">"pr"</span>: { <span class="k">"template"</span>: <span class="s">"pr-v1"</span> }
+  },
+  <span class="k">"options"</span>: { <span class="k">"logbook"</span>: <span class="s">false</span> }
+}
+
+<span class="c">// orchestrator — classe orchestration (mesmo esqueleto, parâmetros diferentes)</span>
+{
+  <span class="k">"member"</span>: <span class="s">"orchestrator"</span>, <span class="k">"class"</span>: <span class="s">"orchestration"</span>, <span class="k">"kit"</span>: <span class="s">"PODIUM"</span>,
+  <span class="k">"knowledge"</span>: { <span class="k">"template"</span>: <span class="s">"decision-v1"</span>, <span class="k">"scope"</span>: <span class="s">"project"</span> },
+  <span class="k">"memory"</span>: { <span class="k">"project"</span>: { <span class="k">"injected"</span>: <span class="s">true</span>, <span class="k">"cap_tokens"</span>: <span class="s">800</span>, <span class="k">"template"</span>: <span class="s">"rule-v1"</span> }, … },
+  <span class="k">"options"</span>: { <span class="k">"logbook"</span>: <span class="s">true</span> }   <span class="c">// ← materializa memory/logbook.md</span>
+}</pre>
+  </div>
+</section>
+
+<!-- per-class table -->
+<section>
+  <div class="wrap">
+    <h2>Os deltas por classe<span class="q">o que cada manifest muda</span></h2>
+    <div class="tblwrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Classe</th>
+            <th>Membro(s)</th>
+            <th>Template de knowledge</th>
+            <th>Escopo</th>
+            <th>Delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cls">Definição</span></td>
+            <td><span class="own">walt</span></td>
+            <td class="g">spec / critérios de aceite</td>
+            <td class="g">projeto</td>
+            <td><span class="df">sem pack de território</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Arquitetura</span></td>
+            <td><span class="own">archie</span></td>
+            <td class="g">contrato / ADR</td>
+            <td class="g">projeto+terr</td>
+            <td><span class="df">denso, estável</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Orquestração</span></td>
+            <td><span class="own">orchestrator</span></td>
+            <td class="g">decisão</td>
+            <td class="g">projeto</td>
+            <td><span class="df">+logbook.md (memory) · caps maiores</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Build</span></td>
+            <td><span class="own">charlie · patty</span></td>
+            <td class="g">padrão-âncora</td>
+            <td class="g">território</td>
+            <td><span class="df">fonte do pack</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Revisão</span></td>
+            <td><span class="own">lucy·bobby·billy·frankie</span></td>
+            <td class="g">invariante checável</td>
+            <td class="g">terr+proj</td>
+            <td><span class="df">predicate-shaped</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Discovery</span></td>
+            <td><span class="own">jimmy</span></td>
+            <td class="g">invariante minerado</td>
+            <td class="g">território</td>
+            <td><span class="df">+staging de candidato</span></td>
+          </tr>
+          <tr>
+            <td><span class="cls">Manutenção</span></td>
+            <td><span class="own">rosie</span></td>
+            <td class="g">staleness</td>
+            <td class="g">terr+proj</td>
+            <td><span class="df">pequeno, volátil, decai rápido</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      <b>Peça (B) de 4</b> — pasta por membro (esqueleto gerado de template, parametrizado por manifest). Próxima:
+      <b>(D)</b> tamanho + template certo por classe · depois <b>(A)</b> o índice hasheado anexado a commits/PRs.
+      <b>Rascunho p/ validação.</b>
+    </p>
+  </div>
+</footer>

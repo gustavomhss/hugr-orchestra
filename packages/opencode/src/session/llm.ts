@@ -29,6 +29,7 @@ import * as OtelTracer from "@effect/opentelemetry/Tracer"
 import { LLMAISDK } from "./llm/ai-sdk"
 import { LLMNativeRuntime } from "./llm/native-runtime"
 import { LLMRequestPrep } from "./llm/request"
+import { PromptGuard } from "./prompt-guard"
 
 export const OUTPUT_TOKEN_MAX = ProviderTransform.OUTPUT_TOKEN_MAX
 
@@ -97,7 +98,7 @@ const live: Layer.Layer<
         modelID: input.model.id,
         "session.id": input.sessionID,
         small: (input.small ?? false).toString(),
-        agent: input.agent.name,
+        agent: input.agent.id ?? input.agent.name,
         mode: input.agent.mode,
       })
 
@@ -232,6 +233,7 @@ const live: Layer.Layer<
 
       // Runtime seam: native is an opt-in adapter over @opencode-ai/llm. It
       // either returns a ready LLMEvent stream or a concrete fallback reason.
+      yield* PromptGuard.check(input.sessionID, input.small !== true)
       if (flags.experimentalNativeLlm) {
         const native = LLMNativeRuntime.stream({
           model: prepared.model,
@@ -272,7 +274,7 @@ const live: Layer.Layer<
           modelID: input.model.id,
           "session.id": input.sessionID,
           small: (input.small ?? false).toString(),
-          agent: input.agent.name,
+          agent: input.agent.id ?? input.agent.name,
           mode: input.agent.mode,
           reason: native.reason,
         })
@@ -295,7 +297,7 @@ const live: Layer.Layer<
                 modelID: input.model.id,
                 "session.id": input.sessionID,
                 small: (input.small ?? false).toString(),
-                agent: input.agent.name,
+                agent: input.agent.id ?? input.agent.name,
                 mode: input.agent.mode,
                 error,
               }),

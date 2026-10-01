@@ -36,6 +36,7 @@ export type RequestSpec = {
   path: string
   headers?: Record<string, string>
   body?: unknown
+  contentType?: string
 }
 
 export type CallResult = {

@@ -28,6 +28,7 @@ import {
 import type { UpdaterController } from "./updater-controller"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 import { createDesktopDraftStore } from "./draft-store"
+import { registerJanitorIpcHandlers } from "./janitor-ipc"
 import { nativeT } from "./native-translations"
 import {
   createAppDock,
@@ -115,10 +116,12 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
   const payload = appDockEventRecord(source.payload)
   if (!hasExactKeys(source, ["type", "payload"])) throw new Error("Invalid App Dock event")
   if (source.type === "state") {
-    if (!(
-      hasExactKeys(payload, ["tabID", "generation", "url", "title", "loading", "audible"]) ||
-      hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible"])
-    )) {
+    if (
+      !(
+        hasExactKeys(payload, ["tabID", "generation", "url", "title", "loading", "audible"]) ||
+        hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible"])
+      )
+    ) {
       throw new Error("Invalid App Dock event")
     }
     const identity = appDockEventIdentity(payload)
@@ -474,6 +477,7 @@ export function registerIpcHandlers(deps: Deps) {
     const store = getStore(name)
     return Object.keys(store.store).length
   })
+  registerJanitorIpcHandlers({ ipcMain, app, BrowserWindow, getStore })
   ipcMain.handle("draft-get", (_event, key: string) => drafts.get(key))
   ipcMain.handle("draft-set", (_event, key: string, value: string) => drafts.set(key, value))
   ipcMain.handle("draft-delete", (_event, key: string) => drafts.set(key, null))

@@ -12,15 +12,13 @@ import type { ArgumentsCamelCase } from "yargs"
  * when yargs parses an invocation that exercises it. `builder` and `handler`
  * run lazily; `command`/`describe`/`aliases` stay eager so help text works.
  */
-export const lazyCommand = <T, U>(
-  input: {
-    readonly command: string
-    readonly aliases?: readonly string[]
-    readonly describe?: string | false
-    readonly load: () => Promise<Record<string, unknown>>
-    readonly resolve: (mod: Record<string, unknown>) => CommandModule<T, U>
-  },
-): CommandModule<T, U> => {
+export const lazyCommand = <T, U>(input: {
+  readonly command: string
+  readonly aliases?: readonly string[]
+  readonly describe?: string | false
+  readonly load: () => Promise<Record<string, unknown>>
+  readonly resolve: (mod: Record<string, unknown>) => CommandModule<T, U>
+}): CommandModule<T, U> => {
   const command = input.command
   const aliases = input.aliases
   const describe = input.describe

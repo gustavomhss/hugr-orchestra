@@ -45,3 +45,7 @@ const client = {
 export function useServerSDK() {
   return () => ({ client })
 }
+
+export function ServerSDKProvider(props: { children?: unknown }) {
+  return props.children
+}

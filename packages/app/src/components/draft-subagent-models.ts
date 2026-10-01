@@ -50,8 +50,6 @@ export function pendingRules(directory: string): ModelRule[] {
   if (selected.size === 0) return []
   return [
     { permission: "task", pattern: "*/*", action: "deny" as const },
-    ...[...selected].map(
-      (key): ModelRule => ({ permission: "task", pattern: key, action: "allow" as const }),
-    ),
+    ...[...selected].map((key): ModelRule => ({ permission: "task", pattern: key, action: "allow" as const })),
   ]
 }

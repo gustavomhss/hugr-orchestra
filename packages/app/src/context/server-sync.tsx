@@ -71,6 +71,19 @@ type GlobalStore = {
   reload: undefined | "pending" | "complete"
 }
 
+export type JanitorReportEvent = {
+  report: string
+  notify: boolean
+  source: string
+}
+
+const janitorReportListeners = new Set<(event: JanitorReportEvent) => void>()
+
+export function onJanitorReport(listener: (event: JanitorReportEvent) => void) {
+  janitorReportListeners.add(listener)
+  return () => janitorReportListeners.delete(listener)
+}
+
 type McpListApi = {
   readonly list: (input?: McpListInput) => Promise<McpListOutput>
 }
@@ -533,6 +546,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     const key = directoryKey(directory)
     const event = e.details
     const eventType: string = event.type
+    if (eventType === "janitor.report") forwardJanitorReport(event.properties, ServerConnection.key(serverSDK.server))
     const recent = bootingRoot || Date.now() - bootedAt < 1500
 
     if (event.current) session.applyV2(event.current)
@@ -757,4 +771,20 @@ export const { use: useServerSync, provider: ServerSyncProvider } = createSimple
 export function useQueryOptions() {
   const sync = useServerSync()
   return createMemo(() => sync().queryOptions)
+}
+
+function forwardJanitorReport(properties: unknown, source: string) {
+  const inner =
+    properties && typeof properties === "object" && "report" in properties
+      ? (properties as { report?: unknown }).report
+      : properties
+  if (!inner || typeof inner !== "object") return
+  const notify =
+    properties && typeof properties === "object" && "notify" in properties
+      ? (properties as { notify?: unknown }).notify !== false
+      : true
+  const event = { report: JSON.stringify(inner), notify, source }
+  for (const listener of janitorReportListeners) listener(event)
+  const api = window.api?.janitor
+  if (api) void api.publish(event.report, notify, source).catch(() => undefined)
 }

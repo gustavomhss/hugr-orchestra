@@ -96,12 +96,7 @@ describe("local persist gate (experimentalWorkspaces off)", () => {
         .where(eq(MessageTable.id, info.id))
         .all()
         .pipe(Effect.orDie)
-      const parts = yield* db
-        .select()
-        .from(PartTable)
-        .where(eq(PartTable.message_id, info.id))
-        .all()
-        .pipe(Effect.orDie)
+      const parts = yield* db.select().from(PartTable).where(eq(PartTable.message_id, info.id)).all().pipe(Effect.orDie)
       expect(messages).toHaveLength(1)
       expect(parts).toHaveLength(1)
 

@@ -1,0 +1,644 @@
+<title>The Atlas — the size sweet spot</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141210;
+      --paper-2: #1b1812;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #2c2820;
+      --line-soft: #241f18;
+      --accent: #d8a94b;
+      --accent-2: #e4be68;
+      --panel: #1b1812;
+      --code-bg: #0e0c09;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141210;
+    --paper-2: #1b1812;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #2c2820;
+    --line-soft: #241f18;
+    --accent: #d8a94b;
+    --accent-2: #e4be68;
+    --panel: #1b1812;
+    --code-bg: #0e0c09;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(46px, 8vw, 84px) 0 clamp(30px, 5vw, 48px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 20px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    line-height: 1.02;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+    line-height: 1.4;
+    color: var(--ink);
+    max-width: 30ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .punch .hl {
+    color: var(--accent);
+  }
+
+  section {
+    padding: clamp(38px, 6vw, 58px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h2 .q {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.6em;
+    display: block;
+    margin-top: 8px;
+  }
+  p {
+    margin: 0 0 14px;
+  }
+  p.lead {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 68ch;
+  }
+
+  /* budget bar */
+  .budget {
+    margin-top: 22px;
+  }
+  .bar {
+    display: flex;
+    height: 54px;
+    border-radius: 9px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    padding: 0 4px;
+    line-height: 1.1;
+    overflow: hidden;
+  }
+  .seg.pm {
+    background: var(--accent);
+  }
+  .seg.pk {
+    background: var(--seal);
+  }
+  .seg.pr {
+    background: var(--hold);
+  }
+  .seg.po {
+    background: var(--block);
+  }
+  .seg.hr {
+    background: color-mix(in srgb, var(--muted) 25%, var(--paper-2));
+    color: var(--ink-soft);
+  }
+  .barcap {
+    display: flex;
+    justify-content: space-between;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .barcap b {
+    color: var(--ink);
+  }
+  .keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+  }
+  .keys span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--ink-soft);
+  }
+  .kk {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  @media (max-width: 780px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .tcol {
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+  .tcol .hd {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    padding: 12px 16px;
+    border-bottom: 2px solid;
+  }
+  .tcol.inj .hd {
+    color: var(--block);
+    border-color: var(--block);
+    background: color-mix(in srgb, var(--block) 7%, var(--paper-2));
+  }
+  .tcol.con .hd {
+    color: var(--seal);
+    border-color: var(--seal);
+    background: color-mix(in srgb, var(--seal) 7%, var(--paper-2));
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  .ty {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .cap {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .dr {
+    color: var(--muted);
+    font-size: 0.92em;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* per-class strip */
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  @media (max-width: 720px) {
+    .strip {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 460px) {
+    .strip {
+      grid-template-columns: 1fr;
+    }
+  }
+  .cz {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 13px 15px;
+  }
+  .cz .n {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .cz .s {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .cz .w {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .note {
+    background: color-mix(in srgb, var(--accent) 8%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 20px;
+    font-size: 0.95rem;
+  }
+  .note .label {
+    color: var(--accent);
+    margin-bottom: 5px;
+    display: block;
+  }
+  .draft {
+    display: inline-block;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--hold);
+    border: 1px solid color-mix(in srgb, var(--hold) 45%, var(--line));
+    border-radius: 5px;
+    padding: 2px 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  footer {
+    padding: 40px 0 64px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .fnote b {
+    color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span><span class="label">Atlas · piece (D) · the size sweet spot</span>
+    </div>
+    <h1 class="wordmark">O <span class="set">sweet spot</span> de tamanho</h1>
+    <p class="punch">
+      O tamanho é a linha que separa <span class="hl">overhead</span> do que <span class="hl">funciona</span>. E não é
+      um número só.
+    </p>
+  </div>
+</header>
+
+<!-- the ceiling -->
+<section>
+  <div class="wrap">
+    <h2>
+      A arma anti-overhead: um teto global de injeção<span class="q"
+        >o que anda em TODO contexto tem um orçamento — a soma respeita o teto</span
+      >
+    </h2>
+    <p class="lead">
+      O que é <b>injetado</b> compete com o contexto da tarefa a cada turno. Então não basta capar cada tipo: a
+      <b>soma de tudo que é auto-injetado</b> tem um teto — uns <b>~3–5% da janela</b>. Ultrapassou o teto = overhead.
+      Abaixo, com o que é load-bearing = funciona.
+    </p>
+    <div class="budget">
+      <div class="bar">
+        <div class="seg" style="width: 8%; background: var(--accent-2); color: #17150f">awareness<br />~400</div>
+        <div
+          class="seg"
+          style="width: 5%; background: color-mix(in srgb, var(--hold) 55%, var(--accent-2)); color: #17150f"
+        >
+          orient<br />~250
+        </div>
+        <div class="seg pm" style="width: 10%">proj mem<br />~500</div>
+        <div class="seg pk" style="width: 40%">pack de território<br />~2K</div>
+        <div class="seg pr" style="width: 10%">protocolos<br />~500</div>
+        <div class="seg po" style="width: 3%">poke</div>
+        <div class="seg hr" style="width: 24%">headroom p/ a tarefa</div>
+      </div>
+      <div class="barcap">
+        <span>0</span><span>teto Σ injetado <b>≤ ~5K tokens</b> (~3–5% do contexto)</span>
+      </div>
+      <div class="keys">
+        <span><span class="kk" style="background: var(--accent-2)"></span> awareness (self-model derivado)</span>
+        <span
+          ><span class="kk" style="background: color-mix(in srgb, var(--hold) 55%, var(--accent-2))"></span> orientação
+          (estado derivado)</span
+        >
+        <span><span class="kk" style="background: var(--accent)"></span> memória de projeto (regras)</span>
+        <span><span class="kk" style="background: var(--seal)"></span> pack de knowledge (território)</span>
+        <span><span class="kk" style="background: var(--hold)"></span> protocolos ativos</span>
+        <span><span class="kk" style="background: var(--block)"></span> poke</span>
+      </div>
+    </div>
+    <div class="note">
+      <span class="label">Os dois drivers que fixam o tamanho</span>
+      <b>1. Injetado × frequência.</b> Anda em todo turno → os menores (os três slabs do header: awareness ~400 +
+      orientação ~250 derivados, + a memória de projeto ~500 escrita). Injetado às vezes (pack ao entrar num território)
+      → pequeno-médio. Consultável (pago só no acesso) → pode ser rico.<br />
+      <b>2. Volatilidade × vida.</b> Volátil e curto (manutenção/staleness) → pequeno, decai rápido. Estável e longevo
+      (arquitetura) → o tamanho se amortiza, pode ser denso.
+    </div>
+  </div>
+</section>
+
+<!-- the two tables -->
+<section>
+  <div class="wrap">
+    <h2>
+      Os sweet spots<span class="q"
+        >injetado aperta · consultável pode ser rico <span class="draft">números draft</span></span
+      >
+    </h2>
+    <div class="two">
+      <div class="tcol inj">
+        <div class="hd">INJETADO — soma cabe sob o teto</div>
+        <table>
+          <tr>
+            <td class="ty">
+              awareness <span class="dr">self-model derivado do root · todo turno · byte-idêntica</span>
+            </td>
+            <td class="cap">~400</td>
+          </tr>
+          <tr>
+            <td class="ty">orientação <span class="dr">estado derivado do log · todo turno · byte-idêntica</span></td>
+            <td class="cap">~250</td>
+          </tr>
+          <tr>
+            <td class="ty">memória de projeto (regras) <span class="dr">por membro · escrita · todo turno</span></td>
+            <td class="cap">~500<br /><span style="color: var(--muted); font-weight: 400">orq ~800</span></td>
+          </tr>
+          <tr>
+            <td class="ty">own — briefing do que você é dono <span class="dr">pack curado, zero-assembly</span></td>
+            <td class="cap">~1.5K</td>
+          </tr>
+          <tr>
+            <td class="ty">pack de território <span class="dr">ao entrar num território</span></td>
+            <td class="cap">~2K</td>
+          </tr>
+          <tr>
+            <td class="ty">related — banda de blast <span class="dr">dependentes/dependências, ranked</span></td>
+            <td class="cap">~300</td>
+          </tr>
+          <tr>
+            <td class="ty">protocolos ativos <span class="dr">regra cross-cut, por match</span></td>
+            <td class="cap">~500</td>
+          </tr>
+          <tr>
+            <td class="ty">poke notice <span class="dr">ao cruzar um escopo</span></td>
+            <td class="cap">~150</td>
+          </tr>
+        </table>
+      </div>
+      <div class="tcol con">
+        <div class="hd">CONSULTÁVEL — pago só no acesso</div>
+        <table>
+          <tr>
+            <td class="ty">fato de knowledge (átomo) <span class="dr">1 linha, actionable + grounding</span></td>
+            <td class="cap">~30</td>
+          </tr>
+          <tr>
+            <td class="ty">memória de task <span class="dr">o fold + a lição</span></td>
+            <td class="cap">~200</td>
+          </tr>
+          <tr>
+            <td class="ty">memória de PR <span class="dr">decisões + knowledge-delta</span></td>
+            <td class="cap">~300</td>
+          </tr>
+          <tr>
+            <td class="ty">logbook (por PR) <span class="dr">prosa em seções fixas</span></td>
+            <td class="cap">~500–800</td>
+          </tr>
+          <tr>
+            <td class="ty">resposta de recall <span class="dr">bound por query</span></td>
+            <td class="cap">~2–4K</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- per class -->
+<section>
+  <div class="wrap">
+    <h2>Não é igual por classe<span class="q">o pack de knowledge varia com a classe</span></h2>
+    <div class="strip">
+      <div class="cz">
+        <div class="n">Build</div>
+        <div class="s">~2K</div>
+        <div class="w">invariantes do território — a fonte do pack</div>
+      </div>
+      <div class="cz">
+        <div class="n">Revisão</div>
+        <div class="s">~1.5K</div>
+        <div class="w">só o que tem que valer ali</div>
+      </div>
+      <div class="cz">
+        <div class="n">Arquitetura</div>
+        <div class="s">~2–3K · consultada</div>
+        <div class="w">densa, estável, raramente injetada</div>
+      </div>
+      <div class="cz">
+        <div class="n">Manutenção</div>
+        <div class="s">~0.5K</div>
+        <div class="w">volátil — decai rápido, baixo valor/token</div>
+      </div>
+      <div class="cz">
+        <div class="n">Discovery</div>
+        <div class="s">sob demanda</div>
+        <div class="w">evidência quando pedida, não injetada</div>
+      </div>
+      <div class="cz">
+        <div class="n">Definição</div>
+        <div class="s">~1K · no topo</div>
+        <div class="w">o "norte", injetado 1× por campanha</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- calibration -->
+<section>
+  <div class="wrap">
+    <h2>Como o sweet spot se ajusta<span class="q">não é chute fixo — é medido</span></h2>
+    <p class="lead">
+      Os números acima são <b>ponto de partida</b>. O sweet spot real é <b>calibrado pelo ledger</b>: cada tipo mede
+      <code>hits</code> (quantas vezes evitou um erro / foi consultado). Se um tipo não move métrica, ele
+      <b>encolhe</b> (ou decai do set ativo → arquivo). Se sistematicamente estoura seu cap com conteúdo load-bearing,
+      sobe — com evidência, não por conforto. O overhead nunca é presumido; é medido e cortado.
+    </p>
+    <div class="note">
+      <span class="label">A regra em uma linha</span>
+      Injetado: <b>menor possível que ainda carregue o load-bearing.</b> Consultável:
+      <b>rico o suficiente pra valer o acesso, capado pra não virar dump.</b> O teto global é sagrado.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      <b>Peça (D) de 4</b> — sweet spot de tamanho por tipo/classe (draft, calibrado pelo ledger). Falta só <b>(A)</b>:
+      o índice hasheado anexado a commits/PRs. <b>Rascunho p/ validação — os números são teus pra afinar.</b>
+    </p>
+  </div>
+</footer>

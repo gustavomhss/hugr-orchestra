@@ -12,10 +12,11 @@ import { ProviderTransform } from "@/provider/transform"
 import PROMPT_GENERATE from "./generate.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
+import PROMPT_MAESTRO from "./prompt/maestro.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { Permission } from "@/permission"
-import { mergeDeep, pipe, sortBy, values } from "remeda"
+import { mergeDeep, values } from "remeda"
 import { Global } from "@opencode-ai/core/global"
 import path from "path"
 import { Plugin } from "@/plugin"
@@ -31,8 +32,10 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
+import { roster, nativeProfiles } from "@/maestro/roster"
 
 export const Info = Schema.Struct({
+  id: Schema.optional(Schema.String),
   name: Schema.String,
   description: Schema.optional(Schema.String),
   mode: Schema.Literals(["subagent", "primary", "all"]),
@@ -139,6 +142,7 @@ const layer = Layer.effect(
 
         const agents: Record<string, Info> = {
           build: {
+            id: "build",
             name: "build",
             description: "The default agent. Executes tools based on configured permissions.",
             options: {},
@@ -154,6 +158,7 @@ const layer = Layer.effect(
             native: true,
           },
           plan: {
+            id: "plan",
             name: "plan",
             description: "Plan mode. Disallows all edit tools.",
             options: {},
@@ -179,7 +184,24 @@ const layer = Layer.effect(
             mode: "primary",
             native: true,
           },
+          maestro: {
+            id: "maestro",
+            name: "maestro",
+            description: "High-agency development orchestrator. Uses governed approval only when explicitly requested.",
+            prompt: PROMPT_MAESTRO,
+            options: {},
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                question: "allow",
+              }),
+              user,
+            ),
+            mode: "primary",
+            native: true,
+          },
           general: {
+            id: "general",
             name: "general",
             description: `General-purpose agent for researching complex questions and executing multi-step tasks. Use this agent to execute multiple units of work in parallel.`,
             permission: Permission.merge(
@@ -194,6 +216,7 @@ const layer = Layer.effect(
             native: true,
           },
           explore: {
+            id: "explore",
             name: "explore",
             permission: Permission.merge(
               defaults,
@@ -217,6 +240,7 @@ const layer = Layer.effect(
             native: true,
           },
           compaction: {
+            id: "compaction",
             name: "compaction",
             mode: "primary",
             native: true,
@@ -232,6 +256,7 @@ const layer = Layer.effect(
             options: {},
           },
           title: {
+            id: "title",
             name: "title",
             mode: "primary",
             options: {},
@@ -248,6 +273,7 @@ const layer = Layer.effect(
             prompt: PROMPT_TITLE,
           },
           summary: {
+            id: "summary",
             name: "summary",
             mode: "primary",
             options: {},
@@ -262,9 +288,33 @@ const layer = Layer.effect(
             ),
             prompt: PROMPT_SUMMARY,
           },
+          ...Object.fromEntries(
+            roster
+              .filter((member) => member.nativeProfile && member.prompt)
+              .map((member) => [
+                member.memberId,
+                {
+                  id: member.memberId,
+                  name: member.displayName,
+                  description: `${member.displayName} native team specialist.`,
+                  prompt: member.prompt,
+                  options: {},
+                  permission: Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
+                  mode: "subagent" as const,
+                  native: true,
+                },
+              ]),
+          ),
         }
 
         for (const [key, value] of Object.entries(cfg.agent ?? {})) {
+          if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
+            const item = agents[key]
+            if (value.model) item.model = Provider.parseModel(value.model)
+            item.variant = value.variant ?? item.variant
+            item.temperature = value.temperature ?? item.temperature
+            continue
+          }
           if (value.disable) {
             delete agents[key]
             continue
@@ -272,6 +322,7 @@ const layer = Layer.effect(
           let item = agents[key]
           if (!item)
             item = agents[key] = {
+              id: key,
               name: key,
               mode: "all",
               permission: Permission.merge(defaults, user),
@@ -296,6 +347,7 @@ const layer = Layer.effect(
         // Ensure Truncate.GLOB is allowed unless explicitly configured
         for (const name in agents) {
           const agent = agents[name]
+          if (roster.some((member) => member.memberId === name && member.nativeProfile)) continue
           const explicit = agent.permission.some((r) => {
             if (r.permission !== "external_directory") return false
             if (r.action !== "deny") return false
@@ -315,14 +367,12 @@ const layer = Layer.effect(
 
         const list = Effect.fnUntraced(function* () {
           const cfg = yield* config.get()
-          return pipe(
-            agents,
-            values(),
-            sortBy(
-              [(x) => (cfg.default_agent ? x.name === cfg.default_agent : x.name === "build"), "desc"],
-              [(x) => x.name, "asc"],
-            ),
-          )
+          const defaultID = cfg.default_agent ?? "build"
+          return values(agents).toSorted((a, b) => {
+            if (a.id === defaultID) return -1
+            if (b.id === defaultID) return 1
+            return a.name.localeCompare(b.name)
+          })
         })
 
         const defaultInfo = Effect.fnUntraced(function* () {
@@ -340,7 +390,8 @@ const layer = Layer.effect(
         })
 
         const defaultAgent = Effect.fnUntraced(function* () {
-          return (yield* defaultInfo()).name
+          const agent = yield* defaultInfo()
+          return agent.id ?? agent.name
         })
 
         return {

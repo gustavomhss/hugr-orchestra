@@ -45,9 +45,10 @@ runs:
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.cache.outputs.dir }}
-        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+        # v2 invalidates caches containing Bun's Windows patched-package rename state.
+        key: ${{ runner.os }}-bun-v2-${{ hashFiles('**/bun.lock') }}
         restore-keys: |
-          ${{ runner.os }}-bun-
+          ${{ runner.os }}-bun-v2-
 
     - name: Install setuptools for distutils compatibility
       run: python3 -m pip install setuptools || pip install setuptools || true
@@ -59,7 +60,17 @@ runs:
         # e.g. ./patches/ for standard-openapi
         # https://github.com/oven-sh/bun/issues/28147
         if [ "$RUNNER_OS" = "Windows" ]; then
-          bun install --linker hoisted ${{ inputs.install-flags }}
+          # Bun can leave a patched package directory half-renamed on Windows.
+          cache_dir="$PWD/.bun-install-cache"
+          trap 'rm -rf "$cache_dir"' EXIT
+          for attempt in 1 2 3; do
+            rm -rf "$cache_dir"
+            rm -rf node_modules
+            if bun install --no-cache --cache-dir "$cache_dir" --linker hoisted ${{ inputs.install-flags }}; then
+              exit 0
+            fi
+          done
+          exit 1
         else
           bun install ${{ inputs.install-flags }}
         fi
@@ -70,4 +81,4 @@ runs:
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.cache.outputs.dir }}
-        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+        key: ${{ runner.os }}-bun-v2-${{ hashFiles('**/bun.lock') }}

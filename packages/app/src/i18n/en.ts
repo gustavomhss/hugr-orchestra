@@ -1177,4 +1177,15 @@ export const dict = {
   "workspace.reset.archived.one": "1 session will be archived.",
   "workspace.reset.archived.many": "{{count}} sessions will be archived.",
   "workspace.reset.note": "This will reset the workspace to match the default branch.",
+
+  "janitor.notify.title.one": "Janitor found {{count}} issue",
+  "janitor.notify.title.other": "Janitor found {{count}} issues",
+  "janitor.report.title": "Janitor report",
+  "janitor.widget.open": "Open janitor report",
+  "janitor.widget.close": "Collapse janitor report",
+  "janitor.widget.openSession": "Open session",
+  "janitor.widget.snooze": "Snooze for a day",
+  "janitor.chat.noProject": "Open a project first to ask.",
+  "janitor.pocket.unavailable": "Composer unavailable here.",
+  "janitor.pocket.retry": "Retry",
 }

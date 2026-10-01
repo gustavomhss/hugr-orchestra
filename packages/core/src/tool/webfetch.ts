@@ -206,6 +206,7 @@ export function extractTextFromHTML(html: string) {
 }
 
 export function convertHTMLToMarkdown(html: string) {
+  assertHTMLNestingBounded(html)
   const turndown = new TurndownService({
     headingStyle: "atx",
     hr: "---",
@@ -215,4 +216,19 @@ export function convertHTMLToMarkdown(html: string) {
   })
   turndown.remove(["script", "style", "meta", "link"])
   return turndown.turndown(html)
+}
+
+function assertHTMLNestingBounded(html: string) {
+  let depth = 0
+  const parser = new Parser({
+    onopentag() {
+      depth++
+      if (depth > 512) throw new Error("HTML nesting exceeds conversion limit")
+    },
+    onclosetag() {
+      depth--
+    },
+  })
+  parser.write(html)
+  parser.end()
 }

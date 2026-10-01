@@ -80,7 +80,7 @@ describe("global HttpApi", () => {
   it.live("rejects unsupported upgrade content types", () =>
     Effect.gen(function* () {
       const response = yield* HttpClientRequest.post(GlobalPaths.upgrade).pipe(
-        HttpClientRequest.setBody(HttpBody.text('{"target":"1.0.0"}', "text/plain")),
+        HttpClientRequest.setBody(HttpBody.text('{"target":"1.0.0"}', "text/plain; charset=utf-8")),
         HttpClient.execute,
       )
 

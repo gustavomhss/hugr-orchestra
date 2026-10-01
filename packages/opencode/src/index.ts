@@ -11,15 +11,9 @@ const lazy = (spec: {
   readonly command: string
   readonly aliases?: readonly string[]
   readonly describe?: string | false
-  readonly load: () => Promise<Record<string, unknown>>
-  readonly resolve: (mod: Record<string, unknown>) => CommandModule<unknown, unknown>
-}) => lazyCommand<unknown, unknown>(spec)
-
-function command(mod: Record<string, unknown>, name: string) {
-  const value = mod[name]
-  if (!value || typeof value !== "object") throw new Error(`Lazy command export ${name} is missing`)
-  return value as CommandModule<unknown, unknown>
-}
+  readonly load: () => Promise<Record<string, any>>
+  readonly resolve: (mod: Record<string, any>) => CommandModule
+}) => lazyCommand<object, never>({ ...spec, load: spec.load as never, resolve: spec.resolve as never })
 
 const args = hideBin(process.argv)
 
@@ -74,7 +68,7 @@ const cli = yargs(args)
       command: "acp",
       describe: "start ACP (Agent Client Protocol) server",
       load: () => import("./cli/cmd/acp"),
-      resolve: (m) => command(m, "AcpCommand"),
+      resolve: (m) => m.AcpCommand,
     }),
   )
   .command(
@@ -82,7 +76,7 @@ const cli = yargs(args)
       command: "mcp",
       describe: "manage MCP (Model Context Protocol) servers",
       load: () => import("./cli/cmd/mcp"),
-      resolve: (m) => command(m, "McpCommand"),
+      resolve: (m) => m.McpCommand,
     }),
   )
   .command(
@@ -90,7 +84,7 @@ const cli = yargs(args)
       command: "$0 [project]",
       describe: "start opencode tui",
       load: () => import("./cli/cmd/tui"),
-      resolve: (m) => command(m, "TuiThreadCommand"),
+      resolve: (m) => m.TuiThreadCommand,
     }),
   )
   .command(
@@ -98,7 +92,7 @@ const cli = yargs(args)
       command: "attach <url>",
       describe: "attach to a running opencode server",
       load: () => import("./cli/cmd/attach"),
-      resolve: (m) => command(m, "AttachCommand"),
+      resolve: (m) => m.AttachCommand,
     }),
   )
   .command(
@@ -106,22 +100,16 @@ const cli = yargs(args)
       command: "run [message..]",
       describe: "run opencode with a message",
       load: () => import("./cli/cmd/run"),
-      resolve: (m) => command(m, "RunCommand"),
+      resolve: (m) => m.RunCommand,
     }),
   )
-  .command(
-    lazy({
-      command: "generate",
-      load: () => import("./cli/cmd/generate"),
-      resolve: (m) => command(m, "GenerateCommand"),
-    }),
-  )
+  .command(lazy({ command: "generate", load: () => import("./cli/cmd/generate"), resolve: (m) => m.GenerateCommand }))
   .command(
     lazy({
       command: "debug",
       describe: "debugging and troubleshooting tools",
       load: () => import("./cli/cmd/debug"),
-      resolve: (m) => command(m, "DebugCommand"),
+      resolve: (m) => m.DebugCommand,
     }),
   )
   .command(
@@ -129,7 +117,7 @@ const cli = yargs(args)
       command: "console",
       describe: false,
       load: () => import("./cli/cmd/account"),
-      resolve: (m) => command(m, "ConsoleCommand"),
+      resolve: (m) => m.ConsoleCommand,
     }),
   )
   .command(
@@ -138,7 +126,7 @@ const cli = yargs(args)
       aliases: ["auth"],
       describe: "manage AI providers and credentials",
       load: () => import("./cli/cmd/providers"),
-      resolve: (m) => command(m, "ProvidersCommand"),
+      resolve: (m) => m.ProvidersCommand,
     }),
   )
   .command(
@@ -146,7 +134,7 @@ const cli = yargs(args)
       command: "agent",
       describe: "manage agents",
       load: () => import("./cli/cmd/agent"),
-      resolve: (m) => command(m, "AgentCommand"),
+      resolve: (m) => m.AgentCommand,
     }),
   )
   .command(
@@ -154,7 +142,7 @@ const cli = yargs(args)
       command: "upgrade [target]",
       describe: "upgrade opencode to the latest or a specific version",
       load: () => import("./cli/cmd/upgrade"),
-      resolve: (m) => command(m, "UpgradeCommand"),
+      resolve: (m) => m.UpgradeCommand,
     }),
   )
   .command(
@@ -162,7 +150,7 @@ const cli = yargs(args)
       command: "uninstall",
       describe: "uninstall opencode and remove all related files",
       load: () => import("./cli/cmd/uninstall"),
-      resolve: (m) => command(m, "UninstallCommand"),
+      resolve: (m) => m.UninstallCommand,
     }),
   )
   .command(
@@ -170,7 +158,7 @@ const cli = yargs(args)
       command: "serve",
       describe: "starts a headless opencode server",
       load: () => import("./cli/cmd/serve"),
-      resolve: (m) => command(m, "ServeCommand"),
+      resolve: (m) => m.ServeCommand,
     }),
   )
   .command(
@@ -178,7 +166,7 @@ const cli = yargs(args)
       command: "web",
       describe: "start opencode server and open web interface",
       load: () => import("./cli/cmd/web"),
-      resolve: (m) => command(m, "WebCommand"),
+      resolve: (m) => m.WebCommand,
     }),
   )
   .command(
@@ -186,7 +174,7 @@ const cli = yargs(args)
       command: "models [provider]",
       describe: "list all available models",
       load: () => import("./cli/cmd/models"),
-      resolve: (m) => command(m, "ModelsCommand"),
+      resolve: (m) => m.ModelsCommand,
     }),
   )
   .command(
@@ -194,7 +182,7 @@ const cli = yargs(args)
       command: "stats",
       describe: "show token usage and cost statistics",
       load: () => import("./cli/cmd/stats"),
-      resolve: (m) => command(m, "StatsCommand"),
+      resolve: (m) => m.StatsCommand,
     }),
   )
   .command(
@@ -202,7 +190,7 @@ const cli = yargs(args)
       command: "export [sessionID]",
       describe: "export session data as JSON",
       load: () => import("./cli/cmd/export"),
-      resolve: (m) => command(m, "ExportCommand"),
+      resolve: (m) => m.ExportCommand,
     }),
   )
   .command(
@@ -210,7 +198,7 @@ const cli = yargs(args)
       command: "import <file>",
       describe: "import session data from JSON file or URL",
       load: () => import("./cli/cmd/import"),
-      resolve: (m) => command(m, "ImportCommand"),
+      resolve: (m) => m.ImportCommand,
     }),
   )
   .command(
@@ -218,7 +206,7 @@ const cli = yargs(args)
       command: "github",
       describe: "manage GitHub agent",
       load: () => import("./cli/cmd/github"),
-      resolve: (m) => command(m, "GithubCommand"),
+      resolve: (m) => m.GithubCommand,
     }),
   )
   .command(
@@ -226,7 +214,7 @@ const cli = yargs(args)
       command: "pr <number>",
       describe: "fetch and checkout a GitHub PR branch, then run opencode",
       load: () => import("./cli/cmd/pr"),
-      resolve: (m) => command(m, "PrCommand"),
+      resolve: (m) => m.PrCommand,
     }),
   )
   .command(
@@ -234,7 +222,7 @@ const cli = yargs(args)
       command: "session",
       describe: "manage sessions",
       load: () => import("./cli/cmd/session"),
-      resolve: (m) => command(m, "SessionCommand"),
+      resolve: (m) => m.SessionCommand,
     }),
   )
   .command(
@@ -243,7 +231,7 @@ const cli = yargs(args)
       aliases: ["plug"],
       describe: "install plugin and update config",
       load: () => import("./cli/cmd/plug"),
-      resolve: (m) => command(m, "PluginCommand"),
+      resolve: (m) => m.PluginCommand,
     }),
   )
   .command(
@@ -251,7 +239,7 @@ const cli = yargs(args)
       command: "db",
       describe: "database tools",
       load: () => import("./cli/cmd/db"),
-      resolve: (m) => command(m, "DbCommand"),
+      resolve: (m) => m.DbCommand,
     }),
   )
   .fail((msg, err) => {

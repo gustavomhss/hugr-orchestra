@@ -1,0 +1,17 @@
+{
+  "what": "Cross-repo A1-dogfood: the SAME apparatus (real `atlas mine` advisory slot -> capture/replay -> Sonnet proposer effort=medium -> 3 blind Sonnet judges, majority-3) run on a THIRD-PARTY repo (zod) instead of Atlas-on-Atlas, to remove home-field advantage.",
+  "target": {
+    "repo": "colinhacks/zod",
+    "tag": "v3.23.8",
+    "head": "ca42965df46b2f7e2747db29c40a26bcb32a51d5",
+    "index": "scip-typescript 0.4.0 -> .atlas/index.scip (2.5MB)"
+  },
+  "run": { "slot": "advisory", "sites_visited": 83, "facts_emitted": 76, "abstained": 7, "emit_rate": "91.6%" },
+  "A1_precision": "66/76 = 86.8%",
+  "wilson95": ["77.4", "92.7"],
+  "breakdown": { "TRUE_GROUNDED": 66, "FALSE": 7, "NOT_GROUNDED": 2, "UNSURE": 1, "unanimous": "67/76" },
+  "per_judge_TG": ["88.2%", "85.5%", "85.5%"],
+  "vs_home": "Atlas-on-Atlas A1-dogfood was 93.8%. Off-home drops ~7 points to 86.8% -> the home number was OPTIMISTIC. This 86.8% is the more externally-valid figure (still same-family-judged; no reasoned 4th seat run on zod yet).",
+  "false_class": "The 7 FALSEs are genuine proposer HALLUCINATION on dense unfamiliar test files, not judge noise (67/76 unanimous). Two mechanically verified: ffc0cbfe (partials.test.ts:252 asserts `.success).toBe(false)`, the claim said success===true -> boolean inverted) and dd7f1aed (base.test.ts contains only 'type guard' and 'test this binding' tests; the claim describes a 'parse dateSchema invalid date' test that does not exist -> whole test confabulated). The panel's grounding discipline caught them.",
+  "artifacts": { "verdicts": "xrepo-zod-a1-verdicts.tsv (76 rows: sha, path, j1, j2, j3, majority, claim)" }
+}

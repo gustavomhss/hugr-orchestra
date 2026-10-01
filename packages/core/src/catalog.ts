@@ -259,10 +259,7 @@ const layer = Layer.effect(
         }),
 
         all: Effect.fn("CatalogV2.model.all")(function* () {
-          const records = [
-            ...Array.fromIterable(state.get().providers.values()),
-            ...(yield* virtualEntries()),
-          ]
+          const records = [...Array.fromIterable(state.get().providers.values()), ...(yield* virtualEntries())]
           return pipe(
             records,
             Array.flatMap((record) => {

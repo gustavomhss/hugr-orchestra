@@ -160,7 +160,11 @@ describe("EventV2.compactSnapshotEvents", () => {
   it.effect("detects a pre-existing sequence gap", () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service
-      yield* db.insert(EventSequenceTable).values([{ aggregate_id: "ses_c", seq: 2 }]).run().pipe(Effect.orDie)
+      yield* db
+        .insert(EventSequenceTable)
+        .values([{ aggregate_id: "ses_c", seq: 2 }])
+        .run()
+        .pipe(Effect.orDie)
       yield* insert(db)([
         { id: "e1", aggregateID: "ses_c", seq: 0, type: "session.created.1", data: { sessionID: "ses_c" } },
         { id: "e3", aggregateID: "ses_c", seq: 2, type: "session.updated.1", data: { sessionID: "ses_c" } },

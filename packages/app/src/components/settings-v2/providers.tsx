@@ -220,7 +220,11 @@ export const SettingsProvidersV2: Component<{
                           }
                         >
                           {(id) => (
-                            <ButtonV2 size="normal" variant="ghost-muted" onClick={() => void removeKey(id(), item.name)}>
+                            <ButtonV2
+                              size="normal"
+                              variant="ghost-muted"
+                              onClick={() => void removeKey(id(), item.name)}
+                            >
                               {language.t("common.remove")}
                             </ButtonV2>
                           )}

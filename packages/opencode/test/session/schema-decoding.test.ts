@@ -163,6 +163,7 @@ describe("Session input schemas", () => {
       workspaceID,
     }
     expect(decode(populated)).toEqual(populated)
+    expect(decode({ ...populated, id: sessionID })).toEqual(populated)
   })
 
   test("ForkInput round-trips", () => {

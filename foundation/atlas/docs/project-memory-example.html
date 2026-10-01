@@ -1,0 +1,519 @@
+<title>Escopo — uma memória de projeto injetada</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+    --inject-bg: #1c1a14;
+    --inject-ink: #e6dfc8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141210;
+      --paper-2: #1b1812;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #2c2820;
+      --line-soft: #241f18;
+      --accent: #d8a94b;
+      --accent-2: #e4be68;
+      --panel: #1b1812;
+      --code-bg: #0e0c09;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+      --inject-bg: #0c0b08;
+      --inject-ink: #e6dfc8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141210;
+    --paper-2: #1b1812;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #2c2820;
+    --line-soft: #241f18;
+    --accent: #d8a94b;
+    --accent-2: #e4be68;
+    --panel: #1b1812;
+    --code-bg: #0e0c09;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+    --inject-bg: #0c0b08;
+    --inject-ink: #e6dfc8;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+    --inject-bg: #1c1a14;
+    --inject-ink: #e6dfc8;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.84em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(44px, 7vw, 80px) 0 clamp(28px, 5vw, 44px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 18px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.1rem, 5.5vw, 3.2rem);
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+    line-height: 1.35;
+    color: var(--ink);
+    max-width: 34ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  section {
+    padding: clamp(34px, 5vw, 52px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h2 .who {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.55em;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  p {
+    margin: 0 0 12px;
+  }
+  p.lead {
+    font-size: 1.06rem;
+    color: var(--ink-soft);
+    max-width: 66ch;
+  }
+
+  /* the injected block */
+  .inject {
+    background: var(--inject-bg);
+    border: 1px solid #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 16px;
+    box-shadow: 0 8px 30px -12px rgba(0, 0, 0, 0.4);
+  }
+  .inject .top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11.5px;
+    color: #b9b19a;
+  }
+  .inject .top .r {
+    margin-left: auto;
+    color: var(--accent-2);
+    font-weight: 700;
+  }
+  .inject pre {
+    margin: 0;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: var(--inject-ink);
+  }
+  .zone {
+    color: #8a836c;
+  }
+  .zh {
+    display: block;
+    margin: 2px 0 6px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .zh.o {
+    color: #7fb38c;
+  }
+  .zh.r {
+    color: var(--accent-2);
+  }
+  .zh.o::before,
+  .zh.r::before {
+    content: "▏";
+    margin-right: 4px;
+  }
+  .k {
+    color: #8a836c;
+  }
+  .yes {
+    color: #7fb38c;
+    font-weight: 700;
+  }
+  .no {
+    color: #e08a6e;
+    font-weight: 700;
+  }
+  .sc {
+    color: #9a927a;
+  }
+  .hit {
+    color: var(--accent-2);
+  }
+  .arw {
+    color: #8a836c;
+    font-style: italic;
+  }
+  .budget {
+    color: #8a836c;
+  }
+
+  /* annotation grid */
+  .ann {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+    margin-top: 16px;
+  }
+  @media (max-width: 640px) {
+    .ann {
+      grid-template-columns: 1fr;
+    }
+  }
+  .a {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 15px 17px;
+  }
+  .a.o {
+    border-left: 3px solid var(--seal);
+  }
+  .a.r {
+    border-left: 3px solid var(--accent);
+  }
+  .a .h {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.78rem;
+    margin-bottom: 6px;
+  }
+  .a.o .h {
+    color: var(--seal);
+  }
+  .a.r .h {
+    color: var(--accent);
+  }
+  .a p {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .a p b {
+    color: var(--ink);
+  }
+
+  .note {
+    background: color-mix(in srgb, var(--accent) 8%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-radius: 10px;
+    padding: 14px 17px;
+    margin-top: 16px;
+    font-size: 0.94rem;
+  }
+  .note .label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--accent);
+  }
+
+  .cmp {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+  .cmp b {
+    color: var(--ink);
+  }
+
+  footer {
+    padding: 34px 0 60px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span><span class="label">Atlas · memory · project · exemplo completo</span>
+    </div>
+    <h1 class="wordmark">Uma memória de projeto <span class="set">injetada</span></h1>
+    <p class="punch">Exatamente o bloco que aterrissa no contexto do membro no início do turno.</p>
+  </div>
+</header>
+
+<!-- charlie -->
+<section>
+  <div class="wrap">
+    <h2>O bloco do <span class="who">charlie · build</span></h2>
+    <p class="lead">
+      Cenário: campanha <em>"migrar o billing pra idempotência"</em>. Isto é o que entra sozinho no contexto do
+      <code>charlie</code>, todo turno:
+    </p>
+    <div class="inject">
+      <div class="top">
+        <span>atlas ▸ inject @ turn-start</span><span>charlie</span><span class="r">Σ ~870 / ~5K tok</span>
+      </div>
+      <pre><span class="zone"><span class="zh" style="color:var(--accent-2)">▏ AWARENESS — self-model · derivado do root · byte-idêntica</span>
+  <span class="k">mission      </span> sistema de billing idempotente ponta-a-ponta
+  <span class="k">constitution </span> nenhum efeito de pagamento sem Idempotency-Key <span class="no">T0</span>
+  <span class="k">terrain      </span> gateway · worker · reconcile · ledger — T0: gateway, ledger
+  <span class="k">ontology     </span> seat · território · pack · poke · tier · kit
+  <span class="k">taste        </span> expand/contract · sem prosa livre · gate verde ou FAILED</span>
+
+<span class="zone"><span class="zh o">ORIENTAÇÃO — compartilhada · derivada do log</span>
+  <span class="k">goal    </span> migrar o billing pra idempotência ponta-a-ponta
+  <span class="k">last    </span> WP-12 · Idempotency-Key no gateway — <span class="yes">selado</span>
+  <span class="k">current </span> WP-13 · retries idempotentes no worker — em andamento
+  <span class="k">state   </span> 3/5 territórios de billing cobertos · falta worker + reconcile</span>
+
+<span class="zone"><span class="zh r">REGRAS — do charlie · sempre / nunca · a única escrita</span>
+  <span class="no">nunca </span> logar o header Authorization              <span class="sc">@ src/http/**</span>    <span class="hit">×12</span>
+  <span class="yes">sempre</span> rodar `pnpm typecheck` antes de selar     <span class="sc">@ *</span>             <span class="hit">×40</span>
+  <span class="yes">sempre</span> migrations = expand/contract só           <span class="sc">@ db/**</span>          <span class="hit">×7</span>
+  <span class="yes">sempre</span> handlers do worker idempotentes           <span class="sc">@ src/worker/**</span>   <span class="hit">×3</span>  <span class="arw">← puxada pelo WP atual</span></span>
+
+<span class="budget">awareness ~360 · orientação ~210 · regras ~300 → Σ ~870, sob o teto ~5K</span></pre>
+    </div>
+    <div class="ann">
+      <div class="a o" style="border-left-color: var(--accent-2)">
+        <div class="h" style="color: var(--accent-2)">AWARENESS (o primeiro slab)</div>
+        <p>
+          <b>O que o projeto É</b> — mission/constitution/terrain/ontology/taste.
+          <b>Rollup do root do Atlas</b> (grounded <code>node@sha</code>), <b>byte-idêntico</b> pra todo membro, não
+          escrito à mão. ~360 tok.
+        </p>
+      </div>
+      <div class="a o">
+        <div class="h">ORIENTAÇÃO (o segundo slab)</div>
+        <p>
+          <b>Compartilhada</b> — idêntica pra todo membro. <b>Derivada do log</b>: <code>last/current</code> vêm de
+          eventos de milestone, então nunca envelhecem. <code>goal</code> é do walt. ~250 tok.
+        </p>
+      </div>
+      <div class="a r">
+        <div class="h">REGRAS (o terceiro slab — a única escrita)</div>
+        <p>
+          <b>Do charlie</b>, privadas — o que ELE aprendeu. Note a última: só apareceu porque o
+          <b>milestone atual toca <code>src/worker/**</code></b> — regra certa, na hora certa. ~300 tok.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- lucy: same orientation, different rules -->
+<section>
+  <div class="wrap">
+    <h2>O bloco da <span class="who">lucy · revisão</span></h2>
+    <p class="lead">
+      Mesma campanha, mesmo turno. A <b>Orientação é idêntica</b> (é compartilhada); as <b>Regras mudam</b> — são as
+      dela:
+    </p>
+    <div class="inject">
+      <div class="top">
+        <span>atlas ▸ inject @ turn-start</span><span>lucy</span><span class="r">Σ ~810 / ~5K tok</span>
+      </div>
+      <pre><span class="zone"><span class="zh" style="color:var(--accent-2)">▏ AWARENESS — self-model · byte-idêntica à do charlie</span>
+  <span class="k">mission      </span> sistema de billing idempotente ponta-a-ponta
+  <span class="k">constitution </span> nenhum efeito de pagamento sem Idempotency-Key <span class="no">T0</span>
+  <span class="k">terrain      </span> gateway · worker · reconcile · ledger — T0: gateway, ledger
+  <span class="k">ontology     </span> seat · território · pack · poke · tier · kit
+  <span class="k">taste        </span> expand/contract · sem prosa livre · gate verde ou FAILED</span>
+
+<span class="zone"><span class="zh o">ORIENTAÇÃO — compartilhada · idêntica à do charlie</span>
+  <span class="k">goal    </span> migrar o billing pra idempotência ponta-a-ponta
+  <span class="k">last    </span> WP-12 · Idempotency-Key no gateway — <span class="yes">selado</span>
+  <span class="k">current </span> WP-13 · retries idempotentes no worker — em andamento
+  <span class="k">state   </span> 3/5 territórios de billing cobertos · falta worker + reconcile</span>
+
+<span class="zone"><span class="zh r">REGRAS — da lucy · sempre / nunca · a única escrita</span>
+  <span class="yes">sempre</span> exigir regressão de decisão no diff        <span class="sc">@ *</span>              <span class="hit">×22</span>
+  <span class="no">nunca </span> aprovar T0 sem o billy                     <span class="sc">@ {billing,auth}/**</span>  <span class="hit">×9</span>
+  <span class="yes">sempre</span> checar retry-duplo real em idempotência   <span class="sc">@ src/worker/**</span>   <span class="hit">×4</span>  <span class="arw">← puxada pelo WP atual</span></span>
+
+<span class="budget">awareness ~360 (byte-idêntica) · orientação ~210 · regras ~240 → Σ ~810</span></pre>
+    </div>
+    <p class="cmp">
+      <b>É esse o ponto:</b> Awareness (o que o projeto É) e Orientação (onde estamos) são compartilhadas, derivadas e
+      byte-idênticas; só as Regras são de cada um, escritas e privadas. Os três slabs injetados juntos, cada membro
+      recebe o seu.
+    </p>
+  </div>
+</section>
+
+<!-- anatomy recap -->
+<section>
+  <div class="wrap">
+    <h2>Anatomia, em 5 linhas</h2>
+    <div class="note">
+      <span class="label">o que você acabou de ver</span>
+      <b>1.</b> <b>Awareness</b> = mission + constitution + terrain + ontology + taste ·
+      <b>rollup do root do Atlas · derivada · byte-idêntica · não escrita</b> (~400 tok).<br />
+      <b>2.</b> <b>Orientação</b> = goal + last/current milestone + state ·
+      <b>compartilhada · derivada do log · sempre atual</b> (~250 tok).<br />
+      <b>3.</b> <b>Regras</b> = as "sempre/nunca" do membro · <b>a ÚNICA escrita · privadas · promovidas de lições</b>,
+      com scope + hits (~500 tok).<br />
+      <b>4.</b> Só entram regras cujo <b>scope casa com o trabalho atual</b> — relevância, não despejo.<br />
+      <b>5.</b> Set de regras = <b>slot fixo, top-12 por <code>hits</code></b
+      >; a que fica com <code>hits==0</code> em <code>max(20 waves, 30 dias)</code> é evictada pro arquivo (nunca
+      deleta).
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      Atlas · memória de projeto injetada · exemplo/escopo p/ validação. Números draft, calibrados pelo ledger. Spec:
+      <code>docs/spec/memory.md §4.1</code>.
+    </p>
+  </div>
+</footer>

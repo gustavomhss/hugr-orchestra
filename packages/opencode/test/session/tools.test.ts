@@ -15,7 +15,7 @@ import { ToolRegistry } from "@/tool/registry"
 import { Truncate } from "@/tool/truncate"
 import { Plugin } from "@/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
-import { Effect, Layer, Schema } from "effect"
+import { Cause, Effect, Exit, Layer, Schema } from "effect"
 import { testEffect } from "../lib/effect"
 
 const callID = "call-test"
@@ -87,12 +87,101 @@ const layer = Layer.mergeAll(
                 return { title: "timing", metadata: {}, output: "done" }
               }),
           } satisfies Tool.Def,
+          {
+            id: "ask_edit",
+            description: "asks to edit a file",
+            parameters: Schema.Struct({}),
+            jsonSchema: { type: "object", properties: {} },
+            execute: (_args, ctx) =>
+              Effect.gen(function* () {
+                yield* ctx.ask({ permission: "edit", metadata: {}, patterns: ["file.ts"], always: ["file.ts"] })
+                return { title: "ask_edit", metadata: {}, output: "done" }
+              }),
+          } satisfies Tool.Def,
         ]),
     }),
   ),
 )
 
 const it = testEffect(layer)
+
+it.effect("native seat permission denies survive session rules", () =>
+  Effect.gen(function* () {
+    const processor = {
+      message: {
+        id: messageID,
+        sessionID,
+        role: "assistant",
+        parentID: MessageID.ascending(),
+        agent: "test",
+        mode: "build",
+        path: { cwd: "/tmp", root: "/tmp" },
+        cost: 0,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+        modelID: ModelV2.ID.make("test-model"),
+        providerID: ProviderV2.ID.make("test"),
+        time: { created: 1 },
+      } satisfies SessionV1.Assistant,
+      updateToolCall: () => Effect.die("unused"),
+      completeToolCall: () => Effect.void,
+    } satisfies Pick<SessionProcessor.Handle, "message" | "updateToolCall" | "completeToolCall">
+    const session = { id: sessionID, permission: Permission.fromConfig({ edit: "allow" }) } as Session.Info
+    const invoke = (agent: Agent.Info) =>
+      Effect.gen(function* () {
+        const tools = yield* SessionTools.resolve({
+          agent,
+          model,
+          session,
+          processor,
+          bypassAgentCheck: false,
+          messages: [],
+          promptOps: {} as never,
+        })
+        const execute = tools.ask_edit.execute
+        if (!execute) throw new Error("ask_edit tool is missing execute")
+        return yield* Effect.promise(() =>
+          execute({}, { toolCallId: callID, abortSignal: new AbortController().signal, messages: [] }),
+        )
+      })
+    const lucy = {
+      id: "lucy",
+      name: "Lucy",
+      native: true,
+      mode: "subagent",
+      options: {},
+      permission: Permission.fromConfig({ "*": "deny", read: "allow", glob: "allow", grep: "allow" }),
+    } satisfies Agent.Info
+    const charlie = {
+      id: "charlie",
+      name: "Charlie",
+      native: true,
+      mode: "subagent",
+      options: {},
+      permission: Permission.fromConfig({
+        "*": "deny",
+        read: "allow",
+        glob: "allow",
+        grep: "allow",
+        bash: "allow",
+        edit: "allow",
+      }),
+    } satisfies Agent.Info
+    const custom = {
+      id: "custom",
+      name: "custom",
+      native: false,
+      mode: "subagent",
+      options: {},
+      permission: Permission.fromConfig({ edit: "deny" }),
+    } satisfies Agent.Info
+
+    const denied = yield* invoke(lucy).pipe(Effect.exit)
+    expect(Exit.isFailure(denied)).toBe(true)
+    if (Exit.isFailure(denied)) expect(Cause.pretty(denied.cause)).toContain("PermissionDeniedError")
+    yield* invoke(charlie)
+    yield* invoke(custom)
+  }),
+)
 
 it.effect("preserves running tool start time across metadata updates", () =>
   Effect.gen(function* () {

@@ -8,6 +8,7 @@
   "scripts": {
     "typecheck": "tsgo --noEmit",
     "test": "bun test --timeout 30000 --only-failures",
+    "test:maestro-restart": "bun test test/maestro/restart-proof.test.ts",
     "test:httpapi": "bun run script/httpapi-exercise.ts --mode coverage --fail-on-missing --fail-on-skip && bun run script/httpapi-exercise.ts --mode auth --fail-on-missing --fail-on-skip && bun run script/httpapi-exercise.ts --mode effect --fail-on-missing --fail-on-skip",
     "bench:test": "bun run script/bench-test-suite.ts",
     "profile:test": "bun run script/profile-test-files.ts",
@@ -52,6 +53,7 @@
     "why-is-node-running": "3.2.2"
   },
   "dependencies": {
+    "@opencode-ai/atlas-boundary": "workspace:*",
     "@actions/core": "1.11.1",
     "@actions/github": "6.0.1",
     "@agentclientprotocol/sdk": "0.21.0",

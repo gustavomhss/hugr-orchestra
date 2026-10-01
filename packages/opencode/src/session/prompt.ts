@@ -47,6 +47,7 @@ import { Process } from "@/util/process"
 import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { TaskTool, type TaskPromptOps } from "@/tool/task"
+import { PromptGuard } from "./prompt-guard"
 import { SessionRunState } from "./run-state"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -135,12 +136,11 @@ const layer = Layer.effect(
     const events = yield* EventV2Bridge.Service
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
-    const { db } = database
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
       return {
         cancel: (sessionID: SessionID) => cancel(sessionID),
         resolvePromptParts: (template: string) => resolvePromptParts(template),
-        prompt: (input: PromptInput) => prompt(input).pipe(Effect.catch(Effect.die)),
+        prompt: PromptGuard.wrap(prompt),
       } satisfies TaskPromptOps
     })
 
@@ -607,7 +607,7 @@ const layer = Layer.effect(
     })
 
     const currentModel = Effect.fnUntraced(function* (sessionID: SessionID) {
-      const current = yield* db
+      const current = yield* database.db
         .select({ model: SessionTable.model })
         .from(SessionTable)
         .where(eq(SessionTable.id, sessionID))
@@ -654,7 +654,7 @@ const layer = Layer.effect(
         sessionID: input.sessionID,
         time: { created: Date.now() },
         tools: input.tools,
-        agent: ag.name,
+        agent: ag.id ?? ag.name,
         model: {
           providerID: model.providerID,
           modelID: model.modelID,
@@ -1186,8 +1186,8 @@ const layer = Layer.effect(
             id: MessageID.ascending(),
             parentID: lastUser.id,
             role: "assistant",
-            mode: agent.name,
-            agent: agent.name,
+            mode: agent.id ?? agent.name,
+            agent: agent.id ?? agent.name,
             variant: lastUser.model.variant,
             path: { cwd: ctx.directory, root: ctx.worktree },
             cost: 0,
@@ -1478,7 +1478,7 @@ const layer = Layer.effect(
         ? [
             {
               type: "subtask" as const,
-              agent: agent.name,
+              agent: agent.id ?? agent.name,
               description: cmd.description ?? "",
               command: input.command,
               model: { providerID: taskModel.providerID, modelID: taskModel.modelID },
@@ -1487,7 +1487,8 @@ const layer = Layer.effect(
           ]
         : [...uniqueTemplateParts, ...(input.parts ?? [])]
 
-      const userAgent = isSubtask ? (input.agent ?? (yield* agents.defaultInfo()).name) : agent.name
+      const defaultAgent = isSubtask ? yield* agents.defaultInfo() : undefined
+      const userAgent = isSubtask ? (input.agent ?? defaultAgent!.id ?? defaultAgent!.name) : (agent.id ?? agent.name)
       const userModel = isSubtask
         ? input.model
           ? Provider.parseModel(input.model)

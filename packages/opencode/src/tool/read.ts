@@ -368,7 +368,9 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         )
       if (page.capped && !page.lines.length)
         return yield* Effect.fail(
-          new Error(`One complete rendered line cannot fit under ${MAX_BYTES / 1024} KB output cap. Reduce system reminder or path size.`),
+          new Error(
+            `One complete rendered line cannot fit under ${MAX_BYTES / 1024} KB output cap. Reduce system reminder or path size.`,
+          ),
         )
       if (page.capped && explicit)
         return yield* Effect.fail(

@@ -78,7 +78,7 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
   if (trusted && isOpenaiOauth) trusted.options.instructions = role
   const hookContext = () => maintenance ? {
     sessionID: input.sessionID,
-    agent: input.agent.name,
+    agent: input.agent.id ?? input.agent.name,
     ...structuredClone({ model: input.model, message: input.user }),
     provider: {
       ...input.provider,
@@ -87,7 +87,7 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
       options: Object.fromEntries(Object.entries<unknown>(input.provider.options).map(([key, value]) =>
         [key, typeof value === "function" ? value : structuredClone(value)])),
     },
-  } : { sessionID: input.sessionID, agent: input.agent.name,
+  } : { sessionID: input.sessionID, agent: input.agent.id ?? input.agent.name,
     model: input.model, provider: input.provider, message: input.user }
   const system = [
     [

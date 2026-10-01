@@ -1,5 +1,5 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
+import { filesystem, httpClient } from "@opencode-ai/core/effect/app-node-platform"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { PlanExitTool } from "./plan"
 import { Session } from "@/session/session"
@@ -11,6 +11,13 @@ import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
 import { TaskTool } from "./task"
+import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
+import { MaestroRecordAdmissionTool } from "./maestro-admission"
+import { MaestroCatalogContextTool, MaestroRecordPlanRevisionTool } from "./maestro-plan"
+import { MaestroRecordContextTool } from "./maestro-context"
+import { MaestroRequestReviewTool } from "./maestro-review"
+import { MaestroRecordReviewTool, MaestroRecordValidationTool } from "./maestro-validation"
+import { MaestroGrantAuthorizationTool } from "./maestro-authorization"
 import { Database } from "@opencode-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
@@ -45,6 +52,7 @@ import { LSP } from "@/lsp/lsp"
 import { Instruction } from "../session/instruction"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { Git } from "@/git"
 import { Agent } from "../agent/agent"
 import { Skill } from "../skill"
 import { Permission } from "@/permission"
@@ -101,6 +109,16 @@ const layer = Layer.effect(
 
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
+    const maestroPresentApproval = yield* MaestroPresentApprovalTool
+    const maestroRecordApproval = yield* MaestroRecordApprovalTool
+    const maestroRecordAdmission = yield* MaestroRecordAdmissionTool
+    const maestroRecordPlanRevision = yield* MaestroRecordPlanRevisionTool
+    const maestroCatalogContext = yield* MaestroCatalogContextTool
+    const maestroRecordContext = yield* MaestroRecordContextTool
+    const maestroRequestReview = yield* MaestroRequestReviewTool
+    const maestroRecordValidation = yield* MaestroRecordValidationTool
+    const maestroRecordReview = yield* MaestroRecordReviewTool
+    const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
     const read = yield* ReadTool
     const recall = yield* ContextRecallTool
     const question = yield* QuestionTool
@@ -218,6 +236,16 @@ const layer = Layer.effect(
           edit: Tool.init(edit),
           write: Tool.init(writetool),
           task: Tool.init(task),
+          maestroPresentApproval: Tool.init(maestroPresentApproval),
+          maestroRecordApproval: Tool.init(maestroRecordApproval),
+          maestroRecordAdmission: Tool.init(maestroRecordAdmission),
+          maestroRecordPlanRevision: Tool.init(maestroRecordPlanRevision),
+          maestroCatalogContext: Tool.init(maestroCatalogContext),
+          maestroRecordContext: Tool.init(maestroRecordContext),
+          maestroRequestReview: Tool.init(maestroRequestReview),
+          maestroRecordValidation: Tool.init(maestroRecordValidation),
+          maestroRecordReview: Tool.init(maestroRecordReview),
+          maestroGrantAuthorization: Tool.init(maestroGrantAuthorization),
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
           search: Tool.init(websearch),
@@ -242,6 +270,16 @@ const layer = Layer.effect(
             tool.edit,
             tool.write,
             tool.task,
+            tool.maestroPresentApproval,
+            tool.maestroRecordApproval,
+            tool.maestroRecordAdmission,
+            tool.maestroRecordPlanRevision,
+            tool.maestroCatalogContext,
+            tool.maestroRecordContext,
+            tool.maestroRequestReview,
+            tool.maestroRecordValidation,
+            tool.maestroRecordReview,
+            tool.maestroGrantAuthorization,
             tool.fetch,
             tool.todo,
             tool.search,
@@ -272,13 +310,13 @@ const layer = Layer.effect(
     ) {
       const items = (yield* agents.list()).filter((item) => item.mode !== "primary")
       const filtered = items.filter(
-        (item) => Permission.evaluate("task", item.name, agent.permission).action !== "deny",
+        (item) => Permission.evaluate("task", item.id ?? item.name, agent.permission).action !== "deny",
       )
-      const list = filtered.toSorted((a, b) => a.name.localeCompare(b.name))
+      const list = filtered.toSorted((a, b) => (a.id ?? a.name).localeCompare(b.id ?? b.name))
       const description = list
         .map(
           (item) =>
-            `- ${item.name}: ${item.description ?? "This subagent should only be called manually by the user."}`,
+            `- ${item.id ?? item.name}: ${item.description ?? "This subagent should only be called manually by the user."}`,
         )
         .join("\n")
       const sections = ["Available agent types and the tools they have access to:", description]
@@ -308,6 +346,27 @@ const layer = Layer.effect(
 
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
       const filtered = (yield* all()).filter((tool) => {
+        if (
+          ((tool.id === MaestroPresentApprovalTool.id ||
+            tool.id === MaestroRecordApprovalTool.id ||
+            tool.id === MaestroRecordAdmissionTool.id ||
+            tool.id === MaestroRecordPlanRevisionTool.id ||
+            tool.id === MaestroCatalogContextTool.id ||
+            tool.id === MaestroRecordContextTool.id ||
+            tool.id === MaestroRequestReviewTool.id ||
+            tool.id === MaestroRecordValidationTool.id) &&
+            input.agent.id !== "maestro") ||
+          (tool.id === MaestroRecordReviewTool.id && input.agent.id !== "lucy") ||
+          (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro")
+        ) {
+          return false
+        }
+        if (
+          Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
+          Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
+        ) {
+          return false
+        }
         if (tool.id === WebSearchTool.id) {
           return webSearchEnabled(input.providerID, { exa: flags.enableExa, parallel: flags.enableParallel })
         }
@@ -460,6 +519,7 @@ export const node = LayerNode.make({
   service: Service,
   layer,
   deps: [
+    filesystem,
     Config.node,
     Plugin.node,
     Question.node,
@@ -473,6 +533,7 @@ export const node = LayerNode.make({
     Instruction.node,
     FSUtil.node,
     EventV2Bridge.node,
+    Git.node,
     httpClient,
     CrossSpawnSpawner.node,
     Format.node,
