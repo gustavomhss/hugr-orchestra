@@ -1,11 +1,14 @@
 import { expect } from "bun:test"
 import { Cause, Effect, Exit, Layer, Stream } from "effect"
+import { FetchHttpClient } from "effect/unstable/http"
 import { createOpenAI } from "@ai-sdk/openai"
 import { LLMEvent, ModelID, ProviderID, type LLMRequest } from "@opencode-ai/llm"
 import { LLMClient } from "@opencode-ai/llm/route"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNodePlatform } from "@opencode-ai/core/effect/app-node-platform"
-import { jsonSchema, tool } from "ai"
+import { tool } from "ai"
+import z from "zod"
+import { jsonSchema } from "@/continuity/artifact"
 import { Plugin } from "@/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { LLMRequestPrep } from "@/session/llm/request"
@@ -20,9 +23,9 @@ import PROMPT from "@/continuity/prompt.txt"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
 
-const role = PROMPT + '\nV1 BODY SCHEMA (host-owned):\n{"required":["status","exact","notes","reference_only","omissions","issues"]}'
+const role = PROMPT + `\nV1 BODY SCHEMA (host-owned):\n${JSON.stringify(jsonSchema)}`
 const model = ProviderTest.model()
-const bash = tool({ inputSchema: jsonSchema({ type: "object", properties: {} }) })
+const bash = tool({ inputSchema: z.object({}) })
 
 for (const condition of ["allowed", "user-false", "agent-deny", "session-deny", "session-wildcard", "session-grant", "no-toolcall"] as const) {
   // Same exported resolver must describe the ordinary request's vendor tools.
@@ -149,7 +152,8 @@ for (const oauth of [false, true]) {
     expect(result.params.options.instructions).toBe(oauth ? role : undefined)
     expect(result.params.options.openai).toBeUndefined()
     expect(result.model).toEqual(model)
-    expect(result.params).toMatchObject({ temperature: 0.31, topP: 0.81, maxOutputTokens: 10000 })
+    expect(result.params).toMatchObject({ temperature: 0.31, topP: 0.81 })
+    expect(result.params.maxOutputTokens).toBe(oauth ? undefined : 10000)
     expect(result.params.topK).toBeUndefined()
     expect(result.params.options.reasoningEffort).toBe("medium")
     expect(result.messageTransformOptions).toEqual(result.params.options)
@@ -224,8 +228,8 @@ it.effect("unsupported maintenance config fails before hooks without contaminati
   expect(value.model.api.id).toBe(model.api.id)
 }))
 
-for (const native of [false, true]) {
-  it.instance(`LLM node keeps SDK-selected API identity and generation through hostile hooks, native=${native}`, () => Effect.gen(function* () {
+for (const [native, oauth] of [[false, false], [true, false], [false, true], [true, true]] as const) {
+  it.instance(`LLM node keeps SDK-selected API identity and generation through hostile hooks, native=${native}, oauth=${oauth}`, () => Effect.gen(function* () {
     const value = request("context-maintenance")
     value.model.id = ModelV2.ID.make("maintenance-alias")
     value.user.model.modelID = value.model.id
@@ -239,30 +243,33 @@ for (const native of [false, true]) {
       generate: () => Effect.die(new Error("unexpected generate: capture only streams")),
       stream: (input) => { nativeRequests.push(input); return Stream.make(LLMEvent.finish({ reason: "stop" })) },
     }))
+    const capture: typeof fetch = Object.assign(async (_url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+      const body: unknown = JSON.parse(await new Response(init?.body).text())
+      wire.push(body)
+      return new Response([
+        { type: "response.created", response: { id: "resp-capture", created_at: 0, model: sourceApiId } },
+        { type: "response.completed", response: { incomplete_details: null,
+          usage: { input_tokens: 1, output_tokens: 1 } } },
+      ].map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""), {
+        headers: { "Content-Type": "text/event-stream" },
+      })
+    }, { preconnect: () => { throw new Error("unexpected preconnect in local capture") } })
     const provider = ProviderTest.fake({ model: value.model,
-      info: ProviderTest.info({ options: { apiKey: "local-capture-only" } }, value.model),
+      info: ProviderTest.info({ options: { apiKey: "local-capture-only", ...(oauth ? { fetch: capture } : {}) } }, value.model),
       getLanguage: (selected) => Effect.sync(() => {
         languageModels.push(structuredClone(selected))
-        const capture: typeof fetch = Object.assign(async (_url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-          const body: unknown = JSON.parse(String(init?.body))
-          wire.push(body)
-          return new Response([
-            { type: "response.created", response: { id: "resp-capture", created_at: 0, model: sourceApiId } },
-            { type: "response.completed", response: { incomplete_details: null,
-              usage: { input_tokens: 1, output_tokens: 1 } } },
-          ].map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""), {
-            headers: { "Content-Type": "text/event-stream" },
-          })
-        }, { preconnect: () => { throw new Error("unexpected preconnect in local capture") } })
         return createOpenAI({ apiKey: "local-capture-only", fetch: capture }).responses(selected.api.id)
       }),
     })
     const layer = AppNodeBuilder.build(LLM.node, [
       [Provider.node, provider.layer], [Plugin.node, hostile],
-      [Auth.node, Layer.mock(Auth.Service, { get: () => Effect.succeed(undefined) })],
+      [Auth.node, Layer.mock(Auth.Service, { get: () => Effect.succeed(oauth
+        ? { type: "oauth" as const, access: "local-test-access", refresh: "local-test-refresh", expires: 0 } : undefined) })],
       [Config.node, Layer.mock(Config.Service, { get: () => Effect.succeed({}) })],
       [RuntimeFlags.node, RuntimeFlags.layer({ experimentalNativeLlm: native })],
-      [LayerNodePlatform.llmClient, client],
+      ...(!oauth ? [[LayerNodePlatform.llmClient, client] as const] : []),
+      ...(oauth && native ? [[LayerNodePlatform.httpClient,
+        FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, capture)))] as const] : []),
     ])
     const events = yield* LLM.Service.use((llm) => llm.stream(value).pipe(Stream.runCollect)).pipe(Effect.provide(layer))
     expect(languageModels).toHaveLength(1)
@@ -273,7 +280,7 @@ for (const native of [false, true]) {
     expect(value.model.limit.output).toBe(10000)
     expect(events.some((event) => event.type === "finish")).toBe(true)
     expect(events.some((event) => event.type === "provider-error")).toBe(false)
-    if (native) {
+    if (native && !oauth) {
       expect(nativeRequests).toHaveLength(1)
       expect(nativeRequests[0].model.id).toBe(ModelID.make(sourceApiId))
       expect(nativeRequests[0].model.provider).toBe(ProviderID.make("openai"))
@@ -282,9 +289,15 @@ for (const native of [false, true]) {
       expect(nativeRequests[0].tools).toEqual([])
       expect(wire).toEqual([])
     }
-    if (!native) {
+    if (!native || oauth) {
       expect(wire).toHaveLength(1)
-      expect(wire[0]).toMatchObject({ model: sourceApiId, max_output_tokens: 10000, reasoning: { effort: "medium" } })
+      expect(wire[0]).toMatchObject({ model: sourceApiId, reasoning: { effort: "medium" } })
+      if (!record(wire[0])) throw new Error("fixture requires an object request body")
+      if (oauth) {
+        expect(Object.hasOwn(wire[0], "max_output_tokens")).toBe(false)
+        expect(wire[0].instructions).toBe(role)
+      }
+      if (!oauth) expect(wire[0].max_output_tokens).toBe(10000)
       expect(nativeRequests).toEqual([])
     }
     const bad = request("context-maintenance")
@@ -310,4 +323,20 @@ it.effect("maintenance preserves trusted OAuth transport/header plugin compatibi
   expect(result.params.options.instructions).toBe(role)
   expect(new Headers(result.headers).get("Authorization")).toBe("Bearer trusted-oauth-plugin")
   expect(new Headers(result.headers).get("OpenAI-Beta")).toBe("responses=experimental")
+}))
+
+it.instance("actual Codex plugin clears output cap to match CLI without running auth loader", () => Effect.gen(function* () {
+  const hooks = yield* Plugin.Service.use((plugin) => plugin.list()).pipe(Effect.provide(AppNodeBuilder.build(Plugin.node, [
+    [Config.node, Layer.mock(Config.Service, { get: () => Effect.succeed({}) })],
+    [RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: false })],
+  ])))
+  const codex = hooks.find((hook) => hook.auth?.provider === "openai")?.["chat.params"]
+  if (!codex) throw new Error("actual Codex chat.params hook missing")
+  const value = request()
+  const output = { temperature: 0.31, topP: 0.81, topK: 99, maxOutputTokens: 10000, options: {} }
+  yield* Effect.promise(() => codex({ sessionID: value.sessionID, agent: value.agent.name, model: value.model,
+    provider: { source: "config", info: ProviderTest.info({}, value.model), options: {} },
+    message: { id: value.user.id, sessionID: value.user.sessionID, role: "user", agent: value.user.agent,
+      model: value.user.model, time: value.user.time } }, output))
+  expect(output.maxOutputTokens).toBeUndefined()
 }))

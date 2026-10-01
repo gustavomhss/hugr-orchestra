@@ -275,7 +275,7 @@ for (const invalid of ['{"status":"ready"}', "I resumed work and implemented the
   }), 120_000)
 }
 
-for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", "no-toolcall", "revoked"] as const) {
+for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", "no-toolcall", "revoked", "session-pattern-deny", "agent-pattern-deny", "pattern-revoked"] as const) {
   it.instance(`HTTP reference artifact respects receiver capability: ${condition}`, () => Effect.gen(function* () {
     const llm = yield* TestLLMServer
     const instance = yield* TestInstance
@@ -283,16 +283,19 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     const jobs = yield* BackgroundJob.Service
-    const canRecall = condition === "allowed" || condition === "revoked"
+    const canRecall = condition === "allowed" || condition === "revoked" || condition === "pattern-revoked"
     const config = testProviderConfig(llm.url)
     config.provider.test.models["test-model"].tool_call = condition !== "no-toolcall"
     yield* Effect.promise(() => Bun.write(path.join(instance.directory, "opencode.json"), JSON.stringify({
       ...config, model: "test/test-model", small_model: "test/test-model", enabled_providers: ["test"],
       plugin: [], mcp: {}, compaction: { auto: false },
-      agent: { build: { permission: { context_recall: condition === "agent-deny" ? "deny" : "allow" } } },
+      agent: { build: { permission: { context_recall: condition === "agent-deny" ? "deny"
+        : condition === "agent-pattern-deny" ? { "*": "allow", "ses_*": "deny" } : "allow" } } },
     })))
     const chat = yield* sessions.create({ title: `Recall capability ${condition}`,
       permission: condition === "session-deny" ? [{ permission: "context_recall", pattern: "*", action: "deny" }] : [] })
+    if (condition === "session-pattern-deny") yield* sessions.setPermission({ sessionID: chat.id,
+      permission: [{ permission: "context_recall", pattern: chat.id, action: "deny" }] })
     const head = "CAPABILITY_HEAD_913C"
     const reference = "CAPABILITY_PROPOSAL_702F"
     const seed = Array.from({ length: 6 }, (_, index) => index === 0 ? head : `CAPABILITY_SEED_${index}`)
@@ -349,8 +352,8 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     const allowed = yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })
     expect(allowed.system).toHaveLength(canRecall ? 1 : 0)
     expect(allowed.messages).toEqual(canRecall ? history.slice(4) : history)
-    if (condition === "revoked") yield* sessions.setPermission({ sessionID: chat.id,
-      permission: [{ permission: "context_recall", pattern: "*", action: "deny" }] })
+    if (condition === "revoked" || condition === "pattern-revoked") yield* sessions.setPermission({ sessionID: chat.id,
+      permission: [{ permission: "context_recall", pattern: condition === "pattern-revoked" ? chat.id : "*", action: "deny" }] })
     const next = yield* send("CAPABILITY_NEXT")
     expect(next.parts.some((part) => part.type === "text" && part.text === "NEXT_DONE")).toBe(true)
     if (next.info.role !== "assistant") throw new Error("expected next assistant")
@@ -375,11 +378,12 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
       expect(conversation).not.toContain(reference)
     }
     const tools = JSON.stringify(hit.hit.body.tools ?? [])
-    expect(tools.includes('"name":"context_recall"')).toBe(condition === "allowed" || condition === "no-toolcall")
+    const patterned = condition === "session-pattern-deny" || condition === "agent-pattern-deny" || condition === "pattern-revoked"
+    expect(tools.includes('"name":"context_recall"')).toBe(condition === "allowed" || condition === "no-toolcall" || patterned)
     const first = ledger.find((item) => item.name === head)
     if (!first) throw new Error("missing first HTTP capture")
     expect(JSON.stringify(first.hit.body.tools ?? []).includes('"name":"context_recall"'))
-      .toBe(canRecall || condition === "no-toolcall")
+      .toBe(canRecall || condition === "no-toolcall" || patterned)
     expect(ledger.map((item) => item.name)).toEqual([...seed, "reference", "next"])
     expect(yield* llm.calls).toBe(8)
     expect(unexpected).toEqual([])

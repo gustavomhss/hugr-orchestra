@@ -1242,7 +1242,8 @@ const layer = Layer.effect(
             canRecall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
               "context_recall",
-            ) && model.capabilities.toolcall
+            ) && model.capabilities.toolcall &&
+              Permission.evaluate("context_recall", sessionID, agent.permission, session.permission ?? []).action !== "deny"
             if (lastUser.format?.type === "json_schema") {
               tools["StructuredOutput"] = createStructuredOutputTool({
                 schema: lastUser.format.schema,

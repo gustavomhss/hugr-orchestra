@@ -69,7 +69,11 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
   if (maintenance && !role?.trim()) return yield* Effect.fail(new Error("Context maintenance requires a dedicated producer role"))
   const data = maintenance ? structuredClone(input.messages) : undefined
   const trusted = maintenance ? yield* Effect.try({
-    try: () => structuredClone(parameters(input)), catch: (cause) => cause,
+    try: () => {
+      const initial = parameters(input)
+      // Codex OAuth omits the output cap to match its CLI (plugin/openai/codex.ts:566–569).
+      return structuredClone({ ...initial, maxOutputTokens: isOpenaiOauth ? undefined : initial.maxOutputTokens })
+    }, catch: (cause) => cause,
   }) : undefined
   if (trusted && isOpenaiOauth) trusted.options.instructions = role
   const hookContext = () => maintenance ? {
