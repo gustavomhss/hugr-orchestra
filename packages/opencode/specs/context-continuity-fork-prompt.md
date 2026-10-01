@@ -1,8 +1,22 @@
-# Context Continuity: Producer System Prompt Candidate
+# Context Continuity: Producer System Prompt v1
 
-**Design candidate for contract v1; not wired into the runtime.** This is the fixed
-maintenance skill/protocol to embed in the fork's system prompt, together with the
-schema generated from the implemented decoder. It is not an optional `skill` call.
+**Status: implemented v1; production Luna quality/adoption blocked.** Source pin:
+`26db4aca2cd21060e10aefe435c0fa6c8e33bac3`. Mechanical and real private UI evidence
+does not establish typed-summary quality or merge approval.
+
+The executable prompt is [`src/continuity/prompt.txt`](../src/continuity/prompt.txt),
+headed `CONTEXT CONTINUITY PRODUCER PROTOCOL v1`. `src/continuity/fork.ts` appends
+the decoder-generated `V1 BODY SCHEMA` and receiver-specific `HOST SNAPSHOT RULES`.
+`src/session/llm/request.ts` restores the trusted role, snapshot and parameters after
+mutable hooks; `purpose: "context-maintenance"` locks empty tools and no-tool choice.
+No stored child session or optional `skill` invocation is involved.
+
+The text below preserves the original design protocol for explanation; it is not
+a byte-exact copy of the current assembled vendor role. Current additions cover
+grouped source IDs, null-cost eligibility, full-user constraint authority, recall
+availability, ready/issues consistency, protected carry and rendered-cost budgeting.
+See [the contract wire addendum](context-continuity-contract.md#10-current-runtime-wire-and-cost-hints)
+and [final validation](context-continuity-validation-v1.md) for measured limits.
 
 ```text
 ROLE AND ASSIGNMENT

@@ -1,8 +1,12 @@
 # Context Continuity: Maintenance Fork Contract v1
 
-**Status: design candidate.** This contract is not yet the implemented runtime
-format. Its rationale and primary sources are in
-[the research register](context-continuity-research.md).
+**Status: implemented v1; production Luna quality/adoption blocked.** Runtime pin:
+`26db4aca2cd21060e10aefe435c0fa6c8e33bac3` (2026-10-01). Mechanical validation and
+real private UI flows are verified within their recorded scope. Typed Luna phases
+v1–v4 produced no accepted artifacts or candidate QA; this is not production-ready,
+merge-approved, or a SOTA claim. See [final validation](context-continuity-validation-v1.md)
+and [the research register](context-continuity-research.md). Semantic obligations
+below are requirements, not properties established by schema acceptance.
 
 ## 1. Purpose and Identity
 
@@ -213,10 +217,10 @@ message may contain only a preview. Inline media without an accessible original
 does not supply visual content. Preserve these distinctions; never claim permanent
 recovery because a locator exists.
 
-The initial implementation must advertise actual capabilities. The current V1
-model tool set has filesystem read/search but no session-part recall tool. History
-IDs are therefore provenance, not reference-only recovery, until a scoped recall
-capability is wired and tested.
+The implementation must advertise actual capabilities. The current V1 parent has
+the built-in `context_recall` capability when its effective tool surface, model
+capability and current own-session permissions permit it. History IDs are provenance;
+reference-only recovery additionally requires that operational capability.
 Each reference-only source maps through the host catalogue to an advertised route
 available to ParentReader under its current permissions. Recovery capability is
 not a tool available to ForkWriter, and no route is inferred from a path/ID alone.
@@ -311,7 +315,7 @@ this artifact is not a replacement for opaque native state.
 
 ## 9. Adoption Tests
 
-Before replacing the current prototype, test:
+Adoption still requires mechanical and semantic evidence for:
 
 1. Historical "continue working now" cannot make the producer act as the parent.
 2. Dedicated role/protocol and empty tools survive hooks and final vendor lowering.
@@ -328,3 +332,41 @@ Before replacing the current prototype, test:
 
 Use frozen gold, calibrated negative controls, independent histories and actual Luna
 calls. No universal quality or "SOTA" label follows from a schema or one successful run.
+
+## 10. Current Runtime Wire and Cost Hints
+
+The implemented interfaces are `src/continuity/{source,artifact,fork,context}.ts`.
+The producer is ephemeral model execution: its independent ID does not create a
+stored child session. `purpose: "context-maintenance"`, the dedicated role, empty
+tools and `toolChoice: "none"` are host-enforced after mutable request hooks.
+The parent keeps its active role and tools.
+
+`Source.input` emits `{parentID, canRecall, previous, groups}`. Groups share
+`locator`, `role`, `actor`, `scope`, `origin`, `exit`; units retain flat selector
+`id`, `path`, `kind`, `order`, `extent`, `recoverable`, `digest`, optional `value`,
+`exactTokens` and `citationTokens`. Select unit IDs, never group handles. `previous`
+contains the host envelope and prior body, with omission diagnostics cleared;
+prior exact values are supplied through units. The wire is not the internal
+materialized prior object. The producer still returns exactly the six fields in §3.
+
+The host copies eligible selected values from the same parent catalogue. Strings
+retain decoded literal bytes; structured values retain value equality, not original
+JSON lexical formatting. Full user sources alone can be constraints; previews can
+be identifiers/evidence with their qualification. Unknown-extent wrappers cannot
+be exact. A non-null `exactTokens` hint does not grant user authority.
+
+The request includes `maxTokens: 6000` and `budget: {maxTokens, fixedTokens}`.
+Hints use `Token.estimate` (rounded string length / 4), not provider tokenization:
+fixed host cost + selected exact costs + citation costs for unique active non-exact
+IDs + serialized notes/reference JSON. Exact frames already include provenance.
+`exactTokens:null` means ineligible; hints cannot guarantee fit. The final complete
+host render must fit the 6000 estimate limit. It contains closed exact frames,
+non-exact provenance and a five-field canonical body excluding `omissions`.
+
+The native tail targets eight messages and starts at a user-turn boundary, retaining
+whole turns/tool exchanges; it is not an exact eight-message slice. Effective recall
+uses `resolveTools`, model tool-call capability and session-specific
+`Permission.evaluate("context_recall", sessionID, ...)`. Denial/removal makes
+`canRecall` false; context with reference-only dependencies falls back to full
+history. Local eligibility checks do not prove entailment, complete selection,
+correct attribution, or genuine verification of arbitrary objectives/receipts.

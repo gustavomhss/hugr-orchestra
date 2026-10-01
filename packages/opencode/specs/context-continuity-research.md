@@ -1,5 +1,10 @@
 # Context Continuity: Research and Design Rationale
 
+**Current status (2026-10-01): implemented v1; production Luna quality/adoption
+blocked.** The sections preceding the dated typed register preserve the pre-v1
+research snapshot, including its metadata/recall limitations. They do not describe
+the current runtime. See [final validation](context-continuity-validation-v1.md).
+
 Research date: 2026-09-30. This document supports the proposed
 [fork contract](context-continuity-contract.md); it is not a claim that the
 contract has already been implemented or achieved state-of-the-art performance.
@@ -130,3 +135,76 @@ capability is operational, affected history references are provenance only.
 Before adopting this contract, measure direct artifact fidelity, reference recovery,
 reader correctness, repeated-compaction loss, latency and generation failures.
 Token reduction alone is not the acceptance criterion.
+
+## Measured Typed Register — 2026-10-01 Addendum
+
+The preceding research/design sections are the historical record. Their statements
+about implementation, metadata omission and missing recall describe that checkpoint.
+Current v1 is implemented: typed decoder/materializer, grouped source input,
+metadata/extent, a dedicated locked role, protected carry and parent-only recall.
+Mechanical and real private UI validation are verified within their measured scope.
+**Production Luna quality/adoption remains blocked; no production-ready, approved
+or SOTA conclusion follows.** See [final validation](context-continuity-validation-v1.md).
+
+Evidence roots below are under
+`/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/` (`/private/var` is the alias).
+Read each root's `evidence/quality-report.json` and raw per-round receipts. Reports
+are an index, not independent proof. `RESULTS.md` exists for v1/v2 and the v3 offline
+audit; `LIVE-RESULTS.md` records v3/v4 live phases. The v3 offline projection is not
+a repaired/accepted candidate. Experiment suffixes v1–v4 do not change body version 1.
+
+| Typed phase / source SHA | Forwarded / verified completions | Measured outcome |
+| --- | --- | --- |
+| v1 / `756440441509785331ded8438052244ad19fa94e` | 2 / 0 | Three original attempts declined at estimated 333571 input vs 272000 limit; two holdout forwards returned HTTP 400 without completion/usage proof. |
+| v2 / `a81b816b61524013301667bfc080d3e73b1766a4` | 5 / 4 | Grouped source input; four completed outputs invalid, one 60-second holdout timeout. |
+| v3 / `aba98b0ab6a8d166396d5ecce8388e0454f23e16` | 5 / 3 | Eligibility/exact-cost hints; three completed outputs invalid, two 60-second holdout timeouts. |
+| v4 / `26db4aca2cd21060e10aefe435c0fa6c8e33bac3` | 1 / 1 | Citation/receiver costs; original-1 pilot completed, rejected `missing_source`; expansion stopped. |
+
+Every phase has zero accepted typed artifacts and zero candidate QA executions.
+Candidate correctness, new losses, critical errors, hallucinations, accepted fidelity
+and end-to-end savings are **unavailable**, not zero scores. Earlier plaintext
+29/30 quality results do not approve the typed implementation.
+
+V1 HTTP status is retained in raw receipts and v2 `evidence/v1-inspection.json`.
+The initial observer discarded provider code/type/body and exact cause. An initial
+parameter-related cause remains unconfirmed; later OAuth output-policy changes do
+not retrospectively prove it. `invalid_json` on an empty failed transport response
+is secondary, not evidence that Luna authored malformed JSON.
+
+| Completed typed call | Provider input / output | Pipeline ms | Strict decoder reason |
+| --- | --- | --- | --- |
+| v2 original-1 | 244572 / 2357 | 45549.95602 | `missing_source` |
+| v2 original-2 | 245003 / 1656 | 32365.787976 | `invalid_body` (`exact.reason: decision`) |
+| v2 original-3 | 244643 / 1768 | 34640.078652 | `missing_source` |
+| v2 holdout-2 | 109445 / 1983 | 38841.902935 | `missing_source` |
+| v3 original-1 | 253759 / 1955 | 37833.222618 | `unsupported_reference` |
+| v3 original-2 | 254189 / 1554 | 31692.645313 | `unexpected_issues` |
+| v3 original-3 | 253831 / 2281 | 43839.153653 | `unsupported_reference` |
+| v4 original-1 | 262839 / 1784 | 36938.590044 | `missing_source` |
+
+Verified completions have HTTP 200, `response.completed`, matching
+`gpt-5.6-luna` identity and numeric usage. V4 output includes 484 reasoning tokens;
+do not add them again. It selected S1454 with `extent: unknown`, `exactTokens:null`.
+S014–S016 were also selected as constraints despite `role: tool`. The first decoder
+reason stays `missing_source`; those authority violations remain separate facts.
+V4 ran no holdout, no continuation, no timeout extension and no candidate QA.
+V2 unknown wrappers and v3 unsupported references were never salvaged for grading.
+
+Frozen original baselines were 29/30 in three historical rounds (55281 input tokens);
+q01 `project_handle` truncation already existed in the full-history baseline.
+Holdout baseline was 30/30 (71741 input tokens); both holdout replicas reuse that
+same baseline/history/question, not independent baseline executions. Shared errors
+cannot be charged as newly caused by compaction. No typed candidate exists to compare.
+
+The v4 source fingerprint is
+`45f2b5f5818ccb04b740d25998f0e434b1925724424912317e5f41009367b53e`;
+its captured assembled role hash is
+`485c0854cbbe943cf8ecd5a8af8af056fcc76034490a62881f7b708aabb10847`;
+the body schema hash is
+`5dbdc3e65f1105489b07f33d73f3667496c42b38f9e3edb73b574ea3ed1b3f79`.
+These hashes identify measured bytes, not a semantic quality score.
+
+Provider-native constrained JSON plus source-eligibility constraints is an **open
+design decision**, not an implemented remedy or committed next step. Any chosen
+change needs new accepted-artifact and downstream semantic evidence; prompt/schema
+improvements alone cannot establish quality or SOTA.
