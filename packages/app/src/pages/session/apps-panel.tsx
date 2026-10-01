@@ -1,7 +1,7 @@
 import { createSignal, onCleanup, onMount } from "solid-js"
+import { bounds, createAppDockBoundsSync, type Bounds } from "./apps-panel-resize"
 import "./apps-panel.css"
 
-type Bounds = { x: number; y: number; width: number; height: number }
 type AppDockAPI = {
   appDockOpen: (
     url: string,
@@ -102,18 +102,6 @@ const isHTTPS = (url: string) => URL.canParse(url) && new URL(url).protocol === 
 const libraryEntries = (urls: string[]): Bookmark[] =>
   urls.filter(isHTTPS).map((url) => ({ url, title: new URL(url).hostname }))
 
-const bounds = (element: HTMLElement): Bounds => {
-  const rect = element.getBoundingClientRect()
-  // Inactive side-panel tabs can mount at 0x0 before layout settles. Native view
-  // needs valid bounds now; ResizeObserver supplies real dimensions afterward.
-  return {
-    x: Math.round(rect.x),
-    y: Math.round(rect.y),
-    width: Math.max(1, Math.round(rect.width)),
-    height: Math.max(1, Math.round(rect.height)),
-  }
-}
-
 export function AppsPanel() {
   const [profiles, setProfiles] = createSignal<Profile[]>(defaultProfiles)
   const [profile, setProfile] = createSignal("default")
@@ -142,7 +130,6 @@ export function AppsPanel() {
   let host: HTMLDivElement | undefined
   let menuElement: HTMLDivElement | undefined
   let addressInput: HTMLInputElement | undefined
-  let resizeFrame: number | undefined
   const [switching, setSwitching] = createSignal(false)
   let restoreGeneration = 0
   let disposed = false
@@ -200,13 +187,15 @@ export function AppsPanel() {
       history: [url, ...current.history.filter((item) => item !== url)].slice(0, 100),
     }))
   }
-  const resize = () => {
-    if (resizeFrame !== undefined) return
-    resizeFrame = requestAnimationFrame(() => {
-      resizeFrame = undefined
-      if (active() && host) void api()?.appDockResize(bounds(host))
-    })
-  }
+  const resize = createAppDockBoundsSync({
+    snapshot: () => {
+      const tab = active()
+      const dock = api()
+      return tab && host && dock ? { tab, bounds: bounds(host), resize: (next) => dock.appDockResize(next) } : undefined
+    },
+    requestAnimationFrame: (callback) => requestAnimationFrame(callback),
+    cancelAnimationFrame: (frame) => cancelAnimationFrame(frame),
+  })
   const restoreProfile = async (profileID: string, generation: number, snapshot: AppDockManifest) => {
     const saved = (snapshot.tabs[profileID] ?? []).filter((tab) => isHTTPS(tab.url))
     setTabs([])
@@ -313,8 +302,10 @@ export function AppsPanel() {
     const unsubscribeFind = api()?.appDockFindResult?.((result) => {
       if (sameTab(result, active()) && result.requestID === findRequestID) setFindResult(result)
     })
-    const observer = new ResizeObserver(resize)
+    const observer = new ResizeObserver(resize.request)
     if (host) observer.observe(host)
+    // ResizeObserver does not report position-only layout changes.
+    window.addEventListener("resize", resize.request)
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (!target || !root?.contains(target)) return
@@ -369,7 +360,8 @@ export function AppsPanel() {
     onCleanup(() => {
       disposed = true
       observer.disconnect()
-      if (resizeFrame !== undefined) cancelAnimationFrame(resizeFrame)
+      window.removeEventListener("resize", resize.request)
+      resize.dispose()
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("pointerdown", onPointerDown)
       window.removeEventListener("focusin", onFocusIn)

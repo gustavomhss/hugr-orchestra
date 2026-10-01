@@ -295,6 +295,7 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     webviewZoom,
 
     windowFullscreen,
+    setTitlebarFrame: (frame) => window.api.setTitlebarFrame(frame),
 
     getPinchZoomEnabled: () => window.api.getPinchZoomEnabled(),
 

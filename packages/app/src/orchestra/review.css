@@ -1,0 +1,75 @@
+/* Compact rail only. The existing diff renderer owns line numbers, copy and virtualization. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-component="orchestra-review"][data-compact] {
+    [data-slot="session-review-v2-body"] {
+      flex-direction: column;
+    }
+    [data-component="session-review-v2-sidebar-root"] {
+      flex: 0 0 auto;
+      inline-size: 100%;
+      block-size: auto;
+    }
+    &[data-sidebar-visible]
+      [data-component="session-review-v2-sidebar-root"]:has(> [data-slot="session-review-v2-sidebar"]) {
+      block-size: 160px;
+      max-block-size: 35%;
+    }
+    &[data-sidebar-visible] [data-slot="session-review-v2-sidebar"] {
+      inline-size: 100% !important;
+      border-inline-end: 0;
+      border-block-end: 1px solid var(--orchestra-session-rule);
+      background: transparent;
+    }
+    [data-slot="session-review-v2-sidebar-resize"] {
+      display: none;
+    }
+    [data-slot="session-review-v2-sidebar-header"] {
+      padding-block: 8px;
+    }
+    [data-slot="session-review-v2-sidebar-tree"] .scroll-view__viewport {
+      padding-block-end: 8px;
+    }
+    [data-slot="session-review-v2-preview"] {
+      margin-block-start: 10px;
+      border: 1px solid var(--orchestra-session-rule);
+      border-radius: 9px;
+      background: var(--orchestra-evidence-background);
+    }
+    [data-slot="session-review-v2-toolbar"] {
+      flex-wrap: wrap;
+      padding-block: 6px;
+      gap: 6px;
+    }
+    .session-review-v2-toolbar-group--segments {
+      gap: 8px;
+    }
+    [data-slot="session-review-v2-file-header"] {
+      padding-inline: 12px;
+    }
+    [data-slot="session-review-v2-file-title"] {
+      overflow: hidden;
+    }
+    [data-slot="session-review-v2-file-name"] {
+      flex: 0 1 auto;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    [data-slot="session-review-v2-file-path"] {
+      flex: 0 1 auto;
+      min-inline-size: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    [data-slot="session-review-v2-file-diff"] {
+      background: transparent;
+    }
+    [data-slot="session-review-v2-diff-scroll"] {
+      min-inline-size: 0;
+    }
+    [data-component="file"] {
+      user-select: text;
+    }
+  }
+}

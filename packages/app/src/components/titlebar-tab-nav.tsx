@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, onCleanup, Show, type Ref } from "solid-js"
+import { createEffect, createMemo, createSignal, onCleanup, Show, type JSX, type Ref } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/language"
 import { ServerConnection, serverName } from "@/context/server"
 import { displayName, projectForSession } from "@/pages/layout/helpers"
 import { SessionTabAvatar } from "@/pages/layout/session-tab-avatar"
+import { ModelLogo, SessionModelLogo } from "@/orchestra/model-logo"
 import type { Session } from "@opencode-ai/sdk/v2"
 import { canOpenTabRename, forwardTabRef } from "./titlebar-tab-gesture"
 import { TabPreviewPopover } from "./titlebar-tab-popover"
@@ -30,6 +31,7 @@ export function TabNavItem(props: {
   onNavigate: () => void
   active?: boolean
   forceTruncate?: boolean
+  workspace?: boolean
   suppressNavigation?: () => boolean
   dragging?: boolean
   pressed?: boolean
@@ -60,6 +62,11 @@ export function TabNavItem(props: {
     return projectForSession(session, serverCtx()?.projects.list() ?? [])
   })
   const title = createMemo(() => props.session()?.title ?? props.fallbackTitle)
+  const branch = createMemo(() => {
+    const session = props.session()
+    if (!props.workspace || !session) return
+    return serverCtx()?.sync.child(session.directory, { bootstrap: false })[0].vcs?.branch
+  })
 
   const projectName = createMemo(() => {
     const session = props.session()
@@ -235,16 +242,30 @@ export function TabNavItem(props: {
             when={props.session()}
             keyed
             fallback={
-              <span class="block size-4 rounded-[3px] border border-v2-border-border-muted" aria-hidden="true" />
+              <Show
+                when={props.workspace}
+                fallback={
+                  <span class="block size-4 rounded-[3px] border border-v2-border-border-muted" aria-hidden="true" />
+                }
+              >
+                <ModelLogo activity="idle" />
+              </Show>
             }
           >
             {(session) => (
-              <SessionTabAvatar
-                project={project()}
-                directory={session.directory}
-                sessionId={session.id}
-                server={props.server}
-              />
+              <Show
+                when={props.workspace}
+                fallback={
+                  <SessionTabAvatar
+                    project={project()}
+                    directory={session.directory}
+                    sessionId={session.id}
+                    server={props.server}
+                  />
+                }
+              >
+                <SessionModelLogo server={props.server} session={session} />
+              </Show>
             )}
           </Show>
         </span>
@@ -255,6 +276,7 @@ export function TabNavItem(props: {
           }}
           data-slot="tab-title"
           data-titlebar-tab-title
+          dir="auto"
           class="min-w-0 flex-1 outline-none leading-4"
           classList={{
             "overflow-hidden text-clip whitespace-nowrap": !editing(),
@@ -284,6 +306,13 @@ export function TabNavItem(props: {
             event.preventDefault()
           }}
         />
+        <Show when={branch()}>
+          {(value) => (
+            <bdi data-slot="tab-branch" dir="ltr">
+              {value()}
+            </bdi>
+          )}
+        </Show>
       </MenuV2.Context.Trigger>
 
       <div data-slot="tab-close">
@@ -347,6 +376,8 @@ export function DraftTabItem(props: {
   ref?: Ref<HTMLDivElement>
   href: string
   title: string
+  logo?: JSX.Element
+  branch?: string
   active?: boolean
   onNavigate: () => void
   onClose: () => void
@@ -406,14 +437,24 @@ export function DraftTabItem(props: {
         class="flex h-full min-w-0 flex-1 flex-row items-center gap-1.5 text-[13px] font-medium text-v2-text-text-faint group-data-[active='true']:text-v2-text-text-base [-webkit-user-drag:none]"
       >
         <span class="flex size-4 shrink-0 items-center justify-center">
-          <IconV2 name="edit" />
+          <Show when={props.logo} fallback={<IconV2 name="edit" />}>
+            {props.logo}
+          </Show>
         </span>
         <span
           data-titlebar-tab-title
+          dir="auto"
           class="min-w-0 flex-1 overflow-hidden text-clip whitespace-nowrap outline-none leading-4"
         >
           {props.title}
         </span>
+        <Show when={props.branch}>
+          {(branch) => (
+            <bdi data-slot="tab-branch" dir="ltr">
+              {branch()}
+            </bdi>
+          )}
+        </Show>
       </a>
       <div data-slot="tab-close">
         <IconButtonV2
