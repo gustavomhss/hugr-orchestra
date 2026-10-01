@@ -1,0 +1,74 @@
+{
+  "name": "identity-brand",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-brand",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "native-titlebar",
+  "staged": [],
+  "untracked": [
+    "packages/app/public/orchestra/hugr-horizontal-compact-inverse.svg",
+    "packages/app/public/orchestra/hugr-horizontal-compact-primary.svg",
+    "packages/desktop/src/main/titlebar-frame.test.ts",
+    "packages/desktop/src/main/titlebar-frame.ts"
+  ],
+  "missingTrackedPaths": [],
+  "files": [
+    {
+      "path": "packages/desktop/src/main/ipc.ts",
+      "bytes": 28873,
+      "sha256": "fcb37a90946e328cc3a3107a4eeb407ecda96146e02c908e951ae41740bc5830"
+    },
+    {
+      "path": "packages/desktop/src/main/windows.ts",
+      "bytes": 19805,
+      "sha256": "8ea98178e5bb6807a68c35053f9801cd5997949706d7007852952b3bc47aa480"
+    },
+    {
+      "path": "packages/desktop/src/preload/index.ts",
+      "bytes": 9898,
+      "sha256": "da2a8daca0832122ee47c3e897aa6b9c96b519c4cc742fb989cea8467396fe8f"
+    },
+    {
+      "path": "packages/desktop/src/preload/types.ts",
+      "bytes": 8357,
+      "sha256": "ac57d73c8d2060e34e27bed10f4f160d1b403f7888731ceb92587286d94a4aa9"
+    },
+    {
+      "path": "packages/app/public/orchestra/hugr-horizontal-compact-inverse.svg",
+      "bytes": 5234,
+      "sha256": "6c5c1fa4c3e20f1d8fead5196c45cc85ae2e9b809e9cdbd06e073f8a1d531a78"
+    },
+    {
+      "path": "packages/app/public/orchestra/hugr-horizontal-compact-primary.svg",
+      "bytes": 16732,
+      "sha256": "e87c318d3ffc79b53bdc8042c07da0b6f9d22b7d7f0bf78b22f7cdc2c599dbc4"
+    },
+    {
+      "path": "packages/desktop/src/main/titlebar-frame.test.ts",
+      "bytes": 2823,
+      "sha256": "ae3859b2d15d0759f02ac1490319397c893c351c68e26e52e746308af9b49e75"
+    },
+    {
+      "path": "packages/desktop/src/main/titlebar-frame.ts",
+      "bytes": 1271,
+      "sha256": "d7e4547835085500d80645c578df117befbcd27955e89ebcef379daa4bb8f613"
+    }
+  ],
+  "archive": {
+    "path": "archives/identity-brand.tar.gz",
+    "bytes": 20487,
+    "sha256": "525320545cb1d210e0fb05b696e18bb2aea2f7aa3300a387e7dcb7e03dfc5fde",
+    "members": [
+      "packages/desktop/src/main/ipc.ts",
+      "packages/desktop/src/main/windows.ts",
+      "packages/desktop/src/preload/index.ts",
+      "packages/desktop/src/preload/types.ts",
+      "packages/app/public/orchestra/hugr-horizontal-compact-inverse.svg",
+      "packages/app/public/orchestra/hugr-horizontal-compact-primary.svg",
+      "packages/desktop/src/main/titlebar-frame.test.ts",
+      "packages/desktop/src/main/titlebar-frame.ts"
+    ]
+  },
+  "stagedPatch": "archives/identity-brand.staged.patch",
+  "unstagedPatch": "archives/identity-brand.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

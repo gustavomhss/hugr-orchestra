@@ -1,5 +1,9 @@
 # Orchestra identity — delivery
 
+Current campaign state and recovery entry: [HANDOFF.md](HANDOFF.md). Local
+delivery checks below do not imply CI acceptance: the broader Linux/Windows
+E2E run on implementation commit `791b3bc9d0` failed and blocks merge.
+
 Date: 2026-10-01. PR integration branch/worktree: `identity-integration`.
 Base: `fork/dev@da2b75aff12e21c9974ebc5be41ae138302de40b`.
 Published identity source: `orchestra-identity@9c535be9e98021b34500794bdc207199b120217a`.

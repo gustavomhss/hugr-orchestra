@@ -1,5 +1,10 @@
 # Orchestra identity — verification handoff
 
+Campaign/resumption entry: [HANDOFF.md](HANDOFF.md). The broader GitHub E2E
+run `36932235243` failed on Linux and Windows for `791b3bc9d0`; logs and the
+complete check snapshot are preserved under `handoff/`. Resolve those failures
+before merge. The passing local delivery suite is narrower than that CI suite.
+
 PR integration: `identity-integration`, base
 `fork/dev@da2b75aff12e21c9974ebc5be41ae138302de40b`.
 Published source: `orchestra-identity@9c535be9e98021b34500794bdc207199b120217a`.

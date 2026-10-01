@@ -1,0 +1,50 @@
+{
+  "name": "identity-chat",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-chat",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "fix-composer",
+  "staged": [],
+  "untracked": [
+    "packages/app/src/orchestra/composer.css"
+  ],
+  "missingTrackedPaths": [
+    "packages/app/src/components/titlebar-tab-nav.css",
+    "packages/app/src/components/titlebar-tab-nav.tsx",
+    "packages/app/src/components/titlebar-tab-order.test.ts",
+    "packages/app/src/components/titlebar-tab-order.ts",
+    "packages/app/src/components/titlebar-tab-strip.tsx",
+    "packages/app/src/components/titlebar.tsx",
+    "packages/app/src/pages/layout/project-avatar-state.ts"
+  ],
+  "sparseSandboxWarning": "Raw index/status includes missing checkout files from --no-checkout. Their paths are recorded, but they are NOT intended product deletions and are excluded from scoped patches. Reconstruct from HEAD, then apply scoped patches and archived payload.",
+  "files": [
+    {
+      "path": "packages/app/e2e/regression/session-request-docks.spec.ts",
+      "bytes": 8366,
+      "sha256": "3415d4ed131453252ba1ef9e1a465511a83b9ff3c92be43bee6d5beccc911d17"
+    },
+    {
+      "path": "packages/app/e2e/user-story/model-selection-flow.spec.ts",
+      "bytes": 5528,
+      "sha256": "0d9d59d2b75027f15e4bf0c0b6c28a35d4e15dde4c65220bcfacab0011cb855f"
+    },
+    {
+      "path": "packages/app/src/orchestra/composer.css",
+      "bytes": 3725,
+      "sha256": "07739290cba2cc093a4b023ce31d5eac0f845794cfebbb6d26f8dd49a976086e"
+    }
+  ],
+  "archive": {
+    "path": "archives/identity-chat.tar.gz",
+    "bytes": 4908,
+    "sha256": "f90561f00d28711d4a9e16b22b89c688ac8afbb3a946b6290b6cc32ee63fa592",
+    "members": [
+      "packages/app/e2e/regression/session-request-docks.spec.ts",
+      "packages/app/e2e/user-story/model-selection-flow.spec.ts",
+      "packages/app/src/orchestra/composer.css"
+    ]
+  },
+  "stagedPatch": "archives/identity-chat.staged.patch",
+  "unstagedPatch": "archives/identity-chat.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

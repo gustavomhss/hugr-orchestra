@@ -1,0 +1,36 @@
+{
+  "name": "fix-profile-races",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-profile-races",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "fix-profile-races",
+  "staged": [],
+  "untracked": [
+    "packages/app/src/orchestra/sidebar.tsx",
+    "packages/app/test-browser/orchestra/profile-races.test.ts"
+  ],
+  "missingTrackedPaths": [],
+  "files": [
+    {
+      "path": "packages/app/src/orchestra/sidebar.tsx",
+      "bytes": 22864,
+      "sha256": "e5f2c6e8c9533850c09e617a592ca32d6bae6df127988ea95cecfcc1b9ae7f43"
+    },
+    {
+      "path": "packages/app/test-browser/orchestra/profile-races.test.ts",
+      "bytes": 15904,
+      "sha256": "94f23cbf6719b4e8b30d9e1f649bb0b7dd9e6db5573c22fa9174a77789748c03"
+    }
+  ],
+  "archive": {
+    "path": "archives/fix-profile-races.tar.gz",
+    "bytes": 10496,
+    "sha256": "cf23d95268f1d0a7685584942ad91cd86397aa7f2e8d40b4d7c5847391274e6b",
+    "members": [
+      "packages/app/src/orchestra/sidebar.tsx",
+      "packages/app/test-browser/orchestra/profile-races.test.ts"
+    ]
+  },
+  "stagedPatch": "archives/fix-profile-races.staged.patch",
+  "unstagedPatch": "archives/fix-profile-races.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}
