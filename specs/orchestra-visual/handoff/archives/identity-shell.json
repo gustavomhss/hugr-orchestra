@@ -5,10 +5,7 @@
   "branch": "perf-gpu",
   "staged": [],
   "untracked": [],
-  "missingTrackedPaths": [
-    "packages/app/src/pages/home.tsx",
-    "packages/app/src/pages/layout-new.tsx"
-  ],
+  "missingTrackedPaths": ["packages/app/src/pages/home.tsx", "packages/app/src/pages/layout-new.tsx"],
   "sparseSandboxWarning": "Raw index/status includes missing checkout files from --no-checkout. Their paths are recorded, but they are NOT intended product deletions and are excluded from scoped patches. Reconstruct from HEAD, then apply scoped patches and archived payload.",
   "files": [],
   "stagedPatch": "archives/identity-shell.staged.patch",

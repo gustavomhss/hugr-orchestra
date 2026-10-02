@@ -9,9 +9,7 @@
       "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-brand",
       "branch": "native-titlebar",
       "disposition": "archived, remote-confirmed and retired",
-      "ignoredGeneratedOutputs": [
-        "node_modules/"
-      ]
+      "ignoredGeneratedOutputs": ["node_modules/"]
     },
     {
       "name": "identity-chat",
@@ -177,18 +175,14 @@
       "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-locales",
       "branch": "fix-locales",
       "disposition": "archived, remote-confirmed and retired",
-      "ignoredGeneratedOutputs": [
-        "packages/app/node_modules/"
-      ]
+      "ignoredGeneratedOutputs": ["packages/app/node_modules/"]
     },
     {
       "name": "fix-profile-races",
       "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-profile-races",
       "branch": "fix-profile-races",
       "disposition": "archived, remote-confirmed and retired",
-      "ignoredGeneratedOutputs": [
-        "packages/app/node_modules/"
-      ]
+      "ignoredGeneratedOutputs": ["packages/app/node_modules/"]
     },
     {
       "name": "fix-test-runtime",

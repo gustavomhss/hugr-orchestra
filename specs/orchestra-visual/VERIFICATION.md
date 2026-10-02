@@ -31,18 +31,18 @@ language; this migration does not claim new translations for that namespace.
 
 Run from the indicated package directories, never repository root:
 
-| Check | Recorded result |
-| --- | --- |
-| `packages/app`: `bun typecheck` | Passed |
-| `packages/app`: `bun run typecheck:e2e` | Passed |
-| `packages/app`: `bun run test:unit` | 761 passed on the PR candidate |
-| `packages/app`: `bun run test:browser` | 51 passed on the PR candidate |
-| Production build + Orchestra identity/native-frame/request-dock/model-selection specs | 21 passed |
-| `packages/desktop`: `bun typecheck` | Passed on the final integrated tree |
-| `packages/desktop`: `bun test src/main/titlebar-frame.test.ts` | 5 passed |
-| `packages/desktop`: `bun run build` | Main, preload and renderer production build passed |
-| Real Electron 42.3.3 packaged asset probe | SVG/photo requests 200; byte hashes match |
-| Real AppsPanel + recording preload resize proof | Position-only x=440→540 updated once; cleanup/deduplication verified |
+| Check                                                                                 | Recorded result                                                      |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `packages/app`: `bun typecheck`                                                       | Passed                                                               |
+| `packages/app`: `bun run typecheck:e2e`                                               | Passed                                                               |
+| `packages/app`: `bun run test:unit`                                                   | 761 passed on the PR candidate                                       |
+| `packages/app`: `bun run test:browser`                                                | 51 passed on the PR candidate                                        |
+| Production build + Orchestra identity/native-frame/request-dock/model-selection specs | 21 passed                                                            |
+| `packages/desktop`: `bun typecheck`                                                   | Passed on the final integrated tree                                  |
+| `packages/desktop`: `bun test src/main/titlebar-frame.test.ts`                        | 5 passed                                                             |
+| `packages/desktop`: `bun run build`                                                   | Main, preload and renderer production build passed                   |
+| Real Electron 42.3.3 packaged asset probe                                             | SVG/photo requests 200; byte hashes match                            |
+| Real AppsPanel + recording preload resize proof                                       | Position-only x=440→540 updated once; cleanup/deduplication verified |
 
 The last candidate delivery receipt is
 `packages/app/e2e/test-results/orchestra/.last-run.json`: `status: passed`, no
@@ -73,9 +73,9 @@ ANGLE Metal / GraphiteDawnMetal, compositing enabled. Matched warmed workload:
 18 history turns, 64 deltas, CPU1, batch1, DPR1, onboarding disabled.
 
 | Theme | Baseline RAF-gap p95 | Migrated RAF-gap p95 | Initial visible content, baseline→migrated |
-| --- | --- | --- | --- |
-| Dark | 17.5ms | 17.4ms | 371.8→608.9ms |
-| Light | 17.5ms | 17.6ms | 369.8→596.7ms |
+| ----- | -------------------- | -------------------- | ------------------------------------------ |
+| Dark  | 17.5ms               | 17.4ms               | 371.8→608.9ms                              |
+| Light | 17.5ms               | 17.6ms               | 369.8→596.7ms                              |
 
 The migrated 2.4s running pulse stayed active; real permission events verified
 the 1.15s waiting bounce/shadow. Every delta was delivered; row/Markdown identity

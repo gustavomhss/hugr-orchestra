@@ -4,10 +4,7 @@
   "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
   "branch": "visual-evidence",
   "staged": [],
-  "untracked": [
-    "specs/orchestra-visual/DELIVERY.md",
-    "specs/orchestra-visual/VERIFICATION.md"
-  ],
+  "untracked": ["specs/orchestra-visual/DELIVERY.md", "specs/orchestra-visual/VERIFICATION.md"],
   "missingTrackedPaths": [],
   "files": [
     {
@@ -25,10 +22,7 @@
     "path": "archives/identity-review.tar.gz",
     "bytes": 10431,
     "sha256": "f8101d5b113856308d8339b2303132e53592835fd92b057c6dfc93c5d4203eeb",
-    "members": [
-      "specs/orchestra-visual/DELIVERY.md",
-      "specs/orchestra-visual/VERIFICATION.md"
-    ]
+    "members": ["specs/orchestra-visual/DELIVERY.md", "specs/orchestra-visual/VERIFICATION.md"]
   },
   "stagedPatch": "archives/identity-review.staged.patch",
   "unstagedPatch": "archives/identity-review.unstaged.patch",

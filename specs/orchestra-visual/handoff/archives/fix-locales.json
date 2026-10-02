@@ -4,10 +4,7 @@
   "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
   "branch": "fix-locales",
   "staged": [],
-  "untracked": [
-    "packages/app/src/i18n/orchestra-copy.md",
-    "packages/app/src/i18n/orchestra.ts"
-  ],
+  "untracked": ["packages/app/src/i18n/orchestra-copy.md", "packages/app/src/i18n/orchestra.ts"],
   "missingTrackedPaths": [],
   "files": [
     {

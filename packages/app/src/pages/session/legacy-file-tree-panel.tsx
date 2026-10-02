@@ -78,7 +78,9 @@ export function LegacyFileTreePanel(props: {
                 fallback={
                   <>
                     {props.reviewCount()}{" "}
-                    {language.t(props.reviewCount() === 1 ? "session.review.change.one" : "session.review.change.other")}
+                    {language.t(
+                      props.reviewCount() === 1 ? "session.review.change.one" : "session.review.change.other",
+                    )}
                   </>
                 }
               >

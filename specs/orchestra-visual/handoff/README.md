@@ -3,28 +3,28 @@
 Entrada humana: [HANDOFF.md](../HANDOFF.md). Este diretório preserva o checkpoint
 da campanha de identidade e o inventário local observado em 2026-10-01.
 
-| Arquivo | Conteúdo / uso |
-| --- | --- |
-| `STATE.json` | Estado final pós-limpeza: branch/HEAD, WIP, blockers, PR/CI, código e escopo externo |
-| `pr-239.json` | Head/base e resultado CI da implementação original |
-| `e2e-linux-36932235243.log` | Log completo do job Linux que bloqueia merge |
-| `e2e-windows-36932235243.log` | Log completo do job Windows que bloqueia merge |
-| `epic-215.json`, `plan-pr-232.json` | Escopo e planejamento remoto no checkpoint |
-| `open-prs.json` | Frentes publicadas, incluindo trabalho externo |
-| `worker-snapshots.json` | Índice dos 14 workers e seus manifests |
-| `archives/<worker>.json` | Base, branch, paths, staged/untracked, hashes e disposition |
-| `archives/<worker>.tar.gz` | Bytes de WIP físico, quando existia payload |
-| `archives/worker-patches.tar.gz` | Patches staged/unstaged de cada worker, bytes originais |
-| `text-archives.json`, `*.log.gz` | Hashes dos patches e logs brutos; `.log` legível tem apenas formatação normalizada |
-| `mock-snapshot.json`, `archives/approved-mock.tar.gz` | Mock completo aprovado, com hashes |
-| `evidence-snapshot.json` | Proveniência, hashes e omissões declaradas da evidência histórica |
-| `archives/historical-evidence.tar.gz.part-*` | Partes ordenadas da evidência, abaixo do limite de arquivo GitHub |
-| `ancillary-assets.json`, `archives/ancillary-assets.tar.gz` | Cópia recuperável dos quatro conjuntos de assets do canônico |
-| `global-worktrees.json`, `global-refs.json` | Inventário anterior à limpeza, inclusive trabalho externo e stashes |
-| `archive-verification.json` | Conferência real de hashes/conteúdo e controle de corrupção |
-| `secret-scan.json` | Controle do scanner e quatro falsos positivos auditados em literals estáticos |
-| `restore-evidence.ts` | Reconstrução portátil das partes, com SHA-256 antes da escrita |
-| `cleanup.json` | Recibo final: 14 workers arquivados/publicados e aposentados; escopo externo preservado |
+| Arquivo                                                     | Conteúdo / uso                                                                          |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `STATE.json`                                                | Estado final pós-limpeza: branch/HEAD, WIP, blockers, PR/CI, código e escopo externo    |
+| `pr-239.json`                                               | Head/base e resultado CI da implementação original                                      |
+| `e2e-linux-36932235243.log`                                 | Log completo do job Linux que bloqueia merge                                            |
+| `e2e-windows-36932235243.log`                               | Log completo do job Windows que bloqueia merge                                          |
+| `epic-215.json`, `plan-pr-232.json`                         | Escopo e planejamento remoto no checkpoint                                              |
+| `open-prs.json`                                             | Frentes publicadas, incluindo trabalho externo                                          |
+| `worker-snapshots.json`                                     | Índice dos 14 workers e seus manifests                                                  |
+| `archives/<worker>.json`                                    | Base, branch, paths, staged/untracked, hashes e disposition                             |
+| `archives/<worker>.tar.gz`                                  | Bytes de WIP físico, quando existia payload                                             |
+| `archives/worker-patches.tar.gz`                            | Patches staged/unstaged de cada worker, bytes originais                                 |
+| `text-archives.json`, `*.log.gz`                            | Hashes dos patches e logs brutos; `.log` legível tem apenas formatação normalizada      |
+| `mock-snapshot.json`, `archives/approved-mock.tar.gz`       | Mock completo aprovado, com hashes                                                      |
+| `evidence-snapshot.json`                                    | Proveniência, hashes e omissões declaradas da evidência histórica                       |
+| `archives/historical-evidence.tar.gz.part-*`                | Partes ordenadas da evidência, abaixo do limite de arquivo GitHub                       |
+| `ancillary-assets.json`, `archives/ancillary-assets.tar.gz` | Cópia recuperável dos quatro conjuntos de assets do canônico                            |
+| `global-worktrees.json`, `global-refs.json`                 | Inventário anterior à limpeza, inclusive trabalho externo e stashes                     |
+| `archive-verification.json`                                 | Conferência real de hashes/conteúdo e controle de corrupção                             |
+| `secret-scan.json`                                          | Controle do scanner e quatro falsos positivos auditados em literals estáticos           |
+| `restore-evidence.ts`                                       | Reconstrução portátil das partes, com SHA-256 antes da escrita                          |
+| `cleanup.json`                                              | Recibo final: 14 workers arquivados/publicados e aposentados; escopo externo preservado |
 
 ## Recuperação segura de um worker
 

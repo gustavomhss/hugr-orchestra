@@ -8058,9 +8058,7 @@
     "tsconfig.json",
     "turbo.json"
   ],
-  "untracked": [
-    "packages/app/node_modules"
-  ],
+  "untracked": ["packages/app/node_modules"],
   "missingTrackedPaths": [
     ".dockerignore",
     ".editorconfig",

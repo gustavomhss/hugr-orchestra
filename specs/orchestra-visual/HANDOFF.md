@@ -5,17 +5,17 @@ alterar código, trocar a base ou iniciar um novo chapter.
 
 ## 1. Resumo executivo
 
-| Item | Estado verificável |
-| --- | --- |
-| Produto entregue | Migração da identidade desktop HuGR/Orchestra, publicada no PR [#239](https://github.com/gmhelmold/HuGR-Orchestra/pull/239) |
-| Commit de implementação | `791b3bc9d06125e8ed4ad891a9e1e61798ae18ba` |
-| Branch de trabalho | `identity-integration`, tracking `fork/identity-integration` |
-| Base da implementação | `fork/dev@da2b75aff12e21c9974ebc5be41ae138302de40b` |
-| Integração em dev | **Pendente: E2E Linux e Windows falharam.** Não há aprovação de merge |
-| Campanha integral | Épico [#215](https://github.com/gmhelmold/HuGR-Orchestra/issues/215), aberto; esta entrega é uma fatia, não fechamento do épico |
-| Planejamento complementar | PR documental [#232](https://github.com/gmhelmold/HuGR-Orchestra/pull/232), branch `visual-migration-plan`, ainda aberto |
-| Chapters C01–C13 | Propostas de rework pendentes; nenhum ativo ou aprovado |
-| Próxima prioridade | Resolver regressões/compatibilidade do CI do #239, revisar e integrar; depois reconciliar a cobertura da campanha |
+| Item                      | Estado verificável                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Produto entregue          | Migração da identidade desktop HuGR/Orchestra, publicada no PR [#239](https://github.com/gmhelmold/HuGR-Orchestra/pull/239)     |
+| Commit de implementação   | `791b3bc9d06125e8ed4ad891a9e1e61798ae18ba`                                                                                      |
+| Branch de trabalho        | `identity-integration`, tracking `fork/identity-integration`                                                                    |
+| Base da implementação     | `fork/dev@da2b75aff12e21c9974ebc5be41ae138302de40b`                                                                             |
+| Integração em dev         | **Pendente: E2E Linux e Windows falharam.** Não há aprovação de merge                                                           |
+| Campanha integral         | Épico [#215](https://github.com/gmhelmold/HuGR-Orchestra/issues/215), aberto; esta entrega é uma fatia, não fechamento do épico |
+| Planejamento complementar | PR documental [#232](https://github.com/gmhelmold/HuGR-Orchestra/pull/232), branch `visual-migration-plan`, ainda aberto        |
+| Chapters C01–C13          | Propostas de rework pendentes; nenhum ativo ou aprovado                                                                         |
+| Próxima prioridade        | Resolver regressões/compatibilidade do CI do #239, revisar e integrar; depois reconciliar a cobertura da campanha               |
 
 O usuário pediu este checkpoint para continuar em uma sessão nova. Código,
 documentação, referências e WIP histórico são preservados com localização e
@@ -45,11 +45,11 @@ Ele permanece em `feat/app-dock-mcp@5e4bea3b519c04cebfb787e98dfa171f5771d25c`;
 não é a base atual desta entrega. Há quatro conjuntos de artefatos do usuário
 nesse checkout, preservados também em `handoff/archives/ancillary-assets.tar.gz`.
 
-| Remote | Destino | Uso |
-| --- | --- | --- |
-| `fork` | `https://github.com/gmhelmold/HuGR-Orchestra.git` | Publicação autorizada; default `dev` |
-| `myfork` | `https://github.com/gustavomhss/HuGR-Orchestra.git` | Outro fork; não é destino deste PR |
-| `origin` | `https://github.com/anomalyco/opencode.git` | Upstream; não usar como base por engano |
+| Remote   | Destino                                             | Uso                                     |
+| -------- | --------------------------------------------------- | --------------------------------------- |
+| `fork`   | `https://github.com/gmhelmold/HuGR-Orchestra.git`   | Publicação autorizada; default `dev`    |
+| `myfork` | `https://github.com/gustavomhss/HuGR-Orchestra.git` | Outro fork; não é destino deste PR      |
+| `origin` | `https://github.com/anomalyco/opencode.git`         | Upstream; não usar como base por engano |
 
 O `dev` local está antigo. Use `fork/dev` após fetch. Não assumir que `main`
 existe, não resetar o canônico e não modificar worktrees de outras campanhas.
@@ -108,18 +108,18 @@ renders de referência como implementação ou aceite novo.
 
 ## 4. O que já existe no produto
 
-| Área | Arquivos principais |
-| --- | --- |
-| Skin e marca | `packages/app/src/orchestra/{theme,shell,tabs,session,composer,review}.css`, `brand.tsx`, `public/orchestra/` |
-| Shell/perfil | `pages/layout-new.tsx`, `pages/home.tsx`, `orchestra/sidebar.tsx` |
-| Abas/modelos | `components/titlebar*.tsx`, `titlebar-tab-order.ts`, `orchestra/model-logo*.ts/tsx` |
-| Composer/model selection | `pages/session/composer/prompt-model-selection.ts`, `session-composer-region.tsx` |
-| Review/layout | `orchestra/review.tsx`, `orchestra/panel-sizing.ts`, `pages/session.tsx` |
-| Bounds Dock | `pages/session/apps-panel-resize.ts`, `apps-panel.tsx` |
-| Legacy file tree | `pages/session/legacy-file-tree-panel.tsx`, `session-side-panel.tsx` |
-| i18n | `src/i18n/orchestra.ts`, composição tipada em `context/language.tsx` |
-| Caption renderer | `components/orchestra/native-frame.ts`, `src/native-titlebar.ts`, `context/platform.tsx` |
-| Caption native | `packages/desktop/src/main/{titlebar-frame,windows,ipc}.ts`, preload e renderer |
+| Área                     | Arquivos principais                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Skin e marca             | `packages/app/src/orchestra/{theme,shell,tabs,session,composer,review}.css`, `brand.tsx`, `public/orchestra/` |
+| Shell/perfil             | `pages/layout-new.tsx`, `pages/home.tsx`, `orchestra/sidebar.tsx`                                             |
+| Abas/modelos             | `components/titlebar*.tsx`, `titlebar-tab-order.ts`, `orchestra/model-logo*.ts/tsx`                           |
+| Composer/model selection | `pages/session/composer/prompt-model-selection.ts`, `session-composer-region.tsx`                             |
+| Review/layout            | `orchestra/review.tsx`, `orchestra/panel-sizing.ts`, `pages/session.tsx`                                      |
+| Bounds Dock              | `pages/session/apps-panel-resize.ts`, `apps-panel.tsx`                                                        |
+| Legacy file tree         | `pages/session/legacy-file-tree-panel.tsx`, `session-side-panel.tsx`                                          |
+| i18n                     | `src/i18n/orchestra.ts`, composição tipada em `context/language.tsx`                                          |
+| Caption renderer         | `components/orchestra/native-frame.ts`, `src/native-titlebar.ts`, `context/platform.tsx`                      |
+| Caption native           | `packages/desktop/src/main/{titlebar-frame,windows,ipc}.ts`, preload e renderer                               |
 
 Os dicionários app/UI atuais, Janitor plurals/templates/native bundles e
 handlers nativos de browser foram preservados na integração. `ORCHESTRA_COPY`
@@ -159,14 +159,14 @@ Fontes: [VERIFICATION.md](VERIFICATION.md), [DELIVERY.md](DELIVERY.md),
 Run: [36932235243](https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36932235243).
 Snapshot completo: [handoff/pr-239.json](handoff/pr-239.json).
 
-| Check | Resultado final observado |
-| --- | --- |
-| Godfile, typecheck, nix-eval | SUCCESS |
-| Standards/compliance/duplicates/contributor | SUCCESS |
-| Atlas scope | SUCCESS; Atlas SKIPPED pelo escopo normal |
-| Unit Linux / Windows | SUCCESS / SUCCESS |
-| E2E Linux | **FAILURE: 10 failed, 1 flaky, 113 passed** |
-| E2E Windows | **FAILURE: 17 failed, 107 passed** |
+| Check                                       | Resultado final observado                   |
+| ------------------------------------------- | ------------------------------------------- |
+| Godfile, typecheck, nix-eval                | SUCCESS                                     |
+| Standards/compliance/duplicates/contributor | SUCCESS                                     |
+| Atlas scope                                 | SUCCESS; Atlas SKIPPED pelo escopo normal   |
+| Unit Linux / Windows                        | SUCCESS / SUCCESS                           |
+| E2E Linux                                   | **FAILURE: 10 failed, 1 flaky, 113 passed** |
+| E2E Windows                                 | **FAILURE: 17 failed, 107 passed**          |
 
 O run amplo executou 124 casos, não apenas os 21 da entrega. O PR está aberto,
 mergeable, mas `UNSTABLE`; nenhuma aprovação humana registrada. Não esconder
@@ -177,16 +177,16 @@ falhas selecionando apenas a suite menor ou retirando testes do workflow.
 Logs completos estão versionados em `handoff/e2e-{linux,windows}-36932235243.log`.
 Observação de falha é fato; hipóteses abaixo ainda precisam reprodução.
 
-| Grupo | Evidência | Próximo passo |
-| --- | --- | --- |
-| Cross-server close | `cross-server-tab-close.spec.ts:10`: esperava sessão B, recebeu Home | Reconciliar filtro por perfil e successor com contrato; preservar cobertura real de servidor e legacy |
-| Remote settings / busy | `remote-session-settings.spec.ts:46`, `remote-tab-busy.spec.ts:10`: aba B/indicador antigo não encontrados | Navegar pelo perfil adequado e conferir owner/state do servidor; não apagar assertions de isolamento |
-| Project picker | Dois casos em `project-picker-recent-search.spec.ts`: entrypoint antigo ausente | Adaptar entrada ao picker real mantendo busca de todos recentes e limite idle de cinco |
-| Home smoke | `smoke/session-timeline.spec.ts:322`: `home-project-row` ausente | Adaptar helper `selectHomeProject`, preservando paginação/ordem do histórico |
-| New session corner | `new-session-panel-corner.spec.ts:14`: comparação de pixels false | Reproduzir tema/frame aprovado e verificar se regressão ou oracle antigo; manter prova de cantos |
-| Timeline shell/patch | `session-timeline-shell-outline.spec.ts`, dois zooms e patch | Magenta esperado virou `rgba(70,84,98,0.14)`; altura esperada 33 recebeu 81; investigar CSS/fixture e clipping real |
-| Review comment | `review-line-comment.spec.ts:47`: flaky no Linux | Preservar sinal; conferir hover/virtualization no painel compacto |
-| Native fixture Windows | Todos os sete casos `orchestra/titlebar-native-frame.spec.ts` falharam | Resolver Vite fixture: import `@/context/layout` não resolvido; conferir normalização de `id`/`importer` Windows versus `fileURLToPath` |
+| Grupo                  | Evidência                                                                                                  | Próximo passo                                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Cross-server close     | `cross-server-tab-close.spec.ts:10`: esperava sessão B, recebeu Home                                       | Reconciliar filtro por perfil e successor com contrato; preservar cobertura real de servidor e legacy                                   |
+| Remote settings / busy | `remote-session-settings.spec.ts:46`, `remote-tab-busy.spec.ts:10`: aba B/indicador antigo não encontrados | Navegar pelo perfil adequado e conferir owner/state do servidor; não apagar assertions de isolamento                                    |
+| Project picker         | Dois casos em `project-picker-recent-search.spec.ts`: entrypoint antigo ausente                            | Adaptar entrada ao picker real mantendo busca de todos recentes e limite idle de cinco                                                  |
+| Home smoke             | `smoke/session-timeline.spec.ts:322`: `home-project-row` ausente                                           | Adaptar helper `selectHomeProject`, preservando paginação/ordem do histórico                                                            |
+| New session corner     | `new-session-panel-corner.spec.ts:14`: comparação de pixels false                                          | Reproduzir tema/frame aprovado e verificar se regressão ou oracle antigo; manter prova de cantos                                        |
+| Timeline shell/patch   | `session-timeline-shell-outline.spec.ts`, dois zooms e patch                                               | Magenta esperado virou `rgba(70,84,98,0.14)`; altura esperada 33 recebeu 81; investigar CSS/fixture e clipping real                     |
+| Review comment         | `review-line-comment.spec.ts:47`: flaky no Linux                                                           | Preservar sinal; conferir hover/virtualization no painel compacto                                                                       |
+| Native fixture Windows | Todos os sete casos `orchestra/titlebar-native-frame.spec.ts` falharam                                     | Resolver Vite fixture: import `@/context/layout` não resolvido; conferir normalização de `id`/`importer` Windows versus `fileURLToPath` |
 
 Erro Windows observado literalmente:
 `Failed to resolve import "@/context/layout" from "src/components/titlebar.tsx". Does the file exist?`
@@ -217,21 +217,21 @@ autoriza enfraquecer teste de comportamento, isolamento, clipping ou performance
 
 ### Registro dos chapters
 
-| Chapter | Destino | Estado / boundary |
-| --- | --- | --- |
-| C01 | MCP | Pendente; gestão por perfil sobre infraestrutura OpenCode |
-| C02 | Skills | Pendente; reutilizar conceito/infra existente |
-| C03 | LLM Plugins | Pendente; comportamento/instruções LLM, distinto de plugin geral |
-| C04 | Hooks | Pendente; eventos/automação por perfil |
-| C05 | Providers | Pendente; settings Providers já existe |
-| C06 | Shortcuts | Pendente; settings Shortcuts já existe |
-| C07 | CI/CD | Pendente; propostas de pipelines/logs/deploy não são jobs implementados |
-| C08 | Agendar | Pendente; proposta one-off/recorrente |
-| C09 | .env | Pendente; proposta de editor dedicado |
-| C10 | Home/KPIs | Pendente; impacto/uso/gastos, não dados sample como produto |
-| C11 | Agents | Pendente; agents existentes, novo destino/roster |
-| C12 | Workspaces | Pendente; reutilizar capacidade existente |
-| C13 | Dock | Pendente; destino dedicado reutiliza browser App Dock/Apps |
+| Chapter | Destino     | Estado / boundary                                                       |
+| ------- | ----------- | ----------------------------------------------------------------------- |
+| C01     | MCP         | Pendente; gestão por perfil sobre infraestrutura OpenCode               |
+| C02     | Skills      | Pendente; reutilizar conceito/infra existente                           |
+| C03     | LLM Plugins | Pendente; comportamento/instruções LLM, distinto de plugin geral        |
+| C04     | Hooks       | Pendente; eventos/automação por perfil                                  |
+| C05     | Providers   | Pendente; settings Providers já existe                                  |
+| C06     | Shortcuts   | Pendente; settings Shortcuts já existe                                  |
+| C07     | CI/CD       | Pendente; propostas de pipelines/logs/deploy não são jobs implementados |
+| C08     | Agendar     | Pendente; proposta one-off/recorrente                                   |
+| C09     | .env        | Pendente; proposta de editor dedicado                                   |
+| C10     | Home/KPIs   | Pendente; impacto/uso/gastos, não dados sample como produto             |
+| C11     | Agents      | Pendente; agents existentes, novo destino/roster                        |
+| C12     | Workspaces  | Pendente; reutilizar capacidade existente                               |
+| C13     | Dock        | Pendente; destino dedicado reutiliza browser App Dock/Apps              |
 
 **Nenhum chapter ativo.** C01/MCP foi sugerido como próximo, não iniciado nem
 aceito. O usuário escolhe e aprova um por vez; IDs não impõem sequência. As
@@ -244,10 +244,10 @@ As medições de hardware são históricas, feitas na branch original, antes dos
 refinamentos finais composer/Review e do port atual. Electron 42.3.3/Chromium148,
 Intel UHD630/ANGLE Metal, 18 history turns, 64 deltas, CPU1/batch1/DPR1:
 
-| Tema | RAF-gap p95 base → migrado | Initial visible base → migrado |
-| --- | --- | --- |
-| Dark | 17.5 → 17.4ms | 371.8 → 608.9ms |
-| Light | 17.5 → 17.6ms | 369.8 → 596.7ms |
+| Tema  | RAF-gap p95 base → migrado | Initial visible base → migrado |
+| ----- | -------------------------- | ------------------------------ |
+| Dark  | 17.5 → 17.4ms              | 371.8 → 608.9ms                |
+| Light | 17.5 → 17.6ms              | 369.8 → 596.7ms                |
 
 Software renderer: baseline p95 33.4ms; backdrop grande restaurado chegou a
 200–250ms. O custo existe e precisa disposition/budget no candidato final.

@@ -4,9 +4,7 @@
   "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
   "branch": "fix-composer",
   "staged": [],
-  "untracked": [
-    "packages/app/src/orchestra/composer.css"
-  ],
+  "untracked": ["packages/app/src/orchestra/composer.css"],
   "missingTrackedPaths": [
     "packages/app/src/components/titlebar-tab-nav.css",
     "packages/app/src/components/titlebar-tab-nav.tsx",

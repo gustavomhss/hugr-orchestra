@@ -44,13 +44,13 @@ Each agent owns an isolated worktree at the same base. No shared file is edited
 by two authors. Lead owns stylesheet imports, localization keys, app startup
 branding, integration and final acceptance.
 
-| Work package | Owned files | Dependencies |
-| --- | --- | --- |
-| Brand/theme | `src/orchestra/theme.css`, `brand.tsx`, official SVG assets | Frozen reference |
-| Shell/profile | `pages/layout-new.tsx`, `pages/home.tsx`, `src/orchestra/sidebar.tsx`, `shell.css` | Theme, `Titlebar.tabsMount` |
-| Session tabs/model | `components/titlebar.tsx`, `titlebar-tab-*`, `src/orchestra/model-logo*`, `tabs.css` | Production baseline, shell mount |
-| Session surfaces | App-local `src/orchestra/session.css`, session frame/side-panel/composer/tasks data hooks | Production baseline, theme |
-| Verification | Baseline performance evidence; visual integration checks | Baseline, integrated code |
+| Work package       | Owned files                                                                               | Dependencies                     |
+| ------------------ | ----------------------------------------------------------------------------------------- | -------------------------------- |
+| Brand/theme        | `src/orchestra/theme.css`, `brand.tsx`, official SVG assets                               | Frozen reference                 |
+| Shell/profile      | `pages/layout-new.tsx`, `pages/home.tsx`, `src/orchestra/sidebar.tsx`, `shell.css`        | Theme, `Titlebar.tabsMount`      |
+| Session tabs/model | `components/titlebar.tsx`, `titlebar-tab-*`, `src/orchestra/model-logo*`, `tabs.css`      | Production baseline, shell mount |
+| Session surfaces   | App-local `src/orchestra/session.css`, session frame/side-panel/composer/tasks data hooks | Production baseline, theme       |
+| Verification       | Baseline performance evidence; visual integration checks                                  | Baseline, integrated code        |
 
 `Titlebar` receives `tabsMount?: HTMLElement`. Its existing controllers and
 commands stay mounted once; the desktop strip portals into

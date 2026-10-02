@@ -4,10 +4,7 @@
   "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
   "branch": "fix-profile-races",
   "staged": [],
-  "untracked": [
-    "packages/app/src/orchestra/sidebar.tsx",
-    "packages/app/test-browser/orchestra/profile-races.test.ts"
-  ],
+  "untracked": ["packages/app/src/orchestra/sidebar.tsx", "packages/app/test-browser/orchestra/profile-races.test.ts"],
   "missingTrackedPaths": [],
   "files": [
     {
@@ -25,10 +22,7 @@
     "path": "archives/fix-profile-races.tar.gz",
     "bytes": 10496,
     "sha256": "cf23d95268f1d0a7685584942ad91cd86397aa7f2e8d40b4d7c5847391274e6b",
-    "members": [
-      "packages/app/src/orchestra/sidebar.tsx",
-      "packages/app/test-browser/orchestra/profile-races.test.ts"
-    ]
+    "members": ["packages/app/src/orchestra/sidebar.tsx", "packages/app/test-browser/orchestra/profile-races.test.ts"]
   },
   "stagedPatch": "archives/fix-profile-races.staged.patch",
   "unstagedPatch": "archives/fix-profile-races.unstaged.patch",

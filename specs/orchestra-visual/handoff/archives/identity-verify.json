@@ -4,10 +4,7 @@
   "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
   "branch": "HEAD",
   "staged": [],
-  "untracked": [
-    "artifacts/tabs-model-source.patch",
-    "artifacts/tabs-model-tests.patch"
-  ],
+  "untracked": ["artifacts/tabs-model-source.patch", "artifacts/tabs-model-tests.patch"],
   "missingTrackedPaths": [
     "packages/app/src/components/titlebar-tab-order.test.ts",
     "packages/app/src/components/titlebar-tab-order.ts",
