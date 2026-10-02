@@ -21,7 +21,8 @@
     --orchestra-session-message-rule: rgba(160, 181, 200, 0.09);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(26, 36, 47, 0.66), rgba(19, 27, 36, 0.62));
     --orchestra-evidence-solid: #131b24;
-    --orchestra-evidence-shadow: inset 0 1px 0 rgba(214, 231, 247, 0.05), 0 10px 24px rgba(0, 0, 0, 0.2);
+    --orchestra-evidence-highlight: inset 0 1px 0 rgba(214, 231, 247, 0.05);
+    --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(0, 0, 0, 0.2);
     --orchestra-evidence-heading: #9fadbc;
     --orchestra-evidence-add: #8fbf9b;
     --orchestra-evidence-delete: #c98a84;
@@ -110,7 +111,8 @@
     --orchestra-session-message-rule: rgba(70, 84, 98, 0.1);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 249, 251, 0.7));
     --orchestra-evidence-solid: #f7f9fb;
-    --orchestra-evidence-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 10px 24px rgba(40, 50, 62, 0.08);
+    --orchestra-evidence-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(40, 50, 62, 0.08);
     --orchestra-evidence-heading: #4d5661;
     --orchestra-evidence-add: #3f7a4c;
     --orchestra-evidence-delete: #9c4a42;
@@ -344,6 +346,20 @@
     background: var(--orchestra-evidence-background);
     color: var(--orchestra-session-body);
     box-shadow: var(--orchestra-evidence-shadow);
+  }
+
+  /* Virtual rows clip 0.5px past their measured height, which would cut an outer
+   * drop shadow flat at the row edge; evidence in a row keeps only its inset highlight. */
+  body[data-new-layout]
+    [data-component="session-surface"]
+    [data-timeline-key]
+    :is(
+      [data-component="tool-output"],
+      [data-component="bash-output"],
+      [data-slot="session-turn-diffs"],
+      [data-component="card"][data-variant="error"]
+    ) {
+    box-shadow: var(--orchestra-evidence-highlight);
   }
 
   body[data-new-layout] [data-component="session-surface"] [data-component="card"][data-variant="error"] {
