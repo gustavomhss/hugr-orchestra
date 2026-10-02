@@ -160,7 +160,12 @@ async function configureServers(page: Page, tabs: { type: "session"; server: str
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
         "opencode.global.dat:server",
-        JSON.stringify({ list: [serverB], projects: { [serverB]: [{ worktree: directoryB, expanded: true }] } }),
+        JSON.stringify({
+          list: [serverB],
+          projects: tabs.some((tab) => tab.server === serverB)
+            ? { [serverB]: [{ worktree: directoryB, expanded: true }] }
+            : undefined,
+        }),
       )
       localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify(tabs))
     },
