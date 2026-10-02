@@ -320,6 +320,11 @@ export function registerIpcHandlers(deps: Deps) {
   ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent) => {
     appDock.hide(event.sender.id, appDockSender(event))
   })
+  ipcMain.handle("app-dock-occlude", (event: IpcMainInvokeEvent, occluded: unknown) => {
+    appDockSender(event)
+    if (typeof occluded !== "boolean") throw new Error("Invalid App Dock occlusion")
+    appDock.occlude(event.sender.id, occluded)
+  })
   ipcMain.handle("app-dock-close", (event: IpcMainInvokeEvent) => {
     appDock.close(event.sender.id, appDockSender(event))
   })

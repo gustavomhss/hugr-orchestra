@@ -1,6 +1,7 @@
 import { batch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { pathKey } from "@/utils/path-key"
+import { createAppDockOverlayWatch } from "./apps-panel-overlay"
 import { bounds, type Bounds } from "./apps-panel-resize"
 
 export type AppDockAPI = {
@@ -11,6 +12,8 @@ export type AppDockAPI = {
   ) => Promise<{ tabID: string; generation: number; url: string }>
   appDockResize: (bounds: Bounds) => Promise<void>
   appDockHide: () => Promise<void>
+  // Older desktop builds lack occlusion; overlays then stay behind the native browser as before.
+  appDockOcclude?: (occluded: boolean) => Promise<void>
   appDockClose: () => Promise<void>
   appDockCloseTab: (tabID: string) => Promise<void>
   appDockRecoverTab: (tabID: string) => Promise<{ tabID: string; generation: number; url: string }>
@@ -152,6 +155,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   // Every owner change starts a new generation; work started under an older one must not land.
   let generation = 0
   let listening = false
+  let overlays: ReturnType<typeof createAppDockOverlayWatch> | undefined
   let manifest: AppDockManifest | undefined
   let manifestWrite = Promise.resolve()
 
@@ -332,6 +336,21 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     })
   }
 
+  // Occlusion is window state on the desktop side, not a hide of one tab: while it holds, every view
+  // the Dock shows stays hidden, and releasing it shows whichever tab is active by then. No older tab,
+  // owner or generation can restore a stale view. The first measurement resets a reloaded window.
+  const watch = () => {
+    if (dock?.appDockOcclude)
+      overlays ??= createAppDockOverlayWatch({
+        body: document.body,
+        target: () => host,
+        change: (covered) => void dock.appDockOcclude?.(covered).catch(() => undefined),
+        requestAnimationFrame: (callback) => requestAnimationFrame(callback),
+        cancelAnimationFrame: (frame) => cancelAnimationFrame(frame),
+      })
+    return overlays
+  }
+
   const open = async (url: string, fallback = "Could not open App Dock") => {
     const profile = state.profile
     if (!dock || !host || !profile || state.status !== "ready") return
@@ -363,6 +382,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       const token = ++attachments
       host = element
       listen()
+      watch()?.sync()
       if ((profile ?? "") !== state.owner || state.status === "failed") void load(profile ?? "")
       else if (state.status === "ready" && !activeTab()?.crashed) void show(state.active, generation)
       return () => {
@@ -372,6 +392,8 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       }
     },
     owns: (element: HTMLElement | undefined) => !!element && element === host,
+    // An overlay drawn inside the app tree rather than a portal covers the Dock while registered.
+    overlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     retry() {
       if (state.owner !== undefined && state.status === "failed") void load(state.owner)
     },
