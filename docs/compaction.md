@@ -1,84 +1,58 @@
-# Compaction: preventing tail-context rot in long chains
+# Arm feedback checkpoints
 
-## The problem: tail-context rot
+Audience: agents. Status: current.
 
-In a long [per-agent arm](per-agent-arms.md) chain every gate re-block injects feedback into
-the agent's context. A gate that requires multiple retries makes this worse: each re-block
-re-injects the **full** instructions block alongside the list of failing controls. After
-several retries on the same gate, or after many gates in a deep chain, the agent's context
-fills with redundant, now-stale detail — "tail-context rot". The agent's effective attention
-window shrinks, latency grows, and the signal-to-noise ratio falls.
+Load [relay-arm-hook](../.opencode/skills/relay-arm-hook/SKILL.md) when changing
+feedback and [relay-telemetry](../.opencode/skills/relay-telemetry/SKILL.md) when
+reading checkpoint events. Relay reduces repeated feedback; the harness owns
+actual context compaction.
 
-Relay cannot control Claude's context directly, but it controls the **reason** it injects via
-the `block` decision. Two surgical mechanisms address the two sources of rot.
+## Feedback rules
 
----
+| Trigger | Agent-facing reason |
+|---|---|
+| First current-gate failure (`r=0`) | Gate ID, failing IDs, regressions, and current WP instructions |
+| Later current-gate failure (`r>=1`) | Short "still failing" message with failing IDs and regressions; full instructions omitted |
+| Advance revealing another WP at `ni >= RELAY_COMPACT_AFTER` | Next instructions plus checkpoint hint; default threshold `6` |
 
-## Mechanism 1: shortened repeat-reblock
+Instructions should already be present: the author seeds the first state and
+the hook reveals later ones. The first failure is not necessarily the runner's
+first exposure to its requirements. Regression-only re-blocks use a separate
+message and retry path.
 
-**Trigger:** a second or later retry of the **same** work-package gate (retry counter `r >= 1`).
+The checkpoint text is:
 
-**First failure (r = 0):** the agent receives the full block reason — gate name, failing
-control ids, and the gate's `instructions` field verbatim. This is the first time the agent
-sees this gate's requirements.
-
-**Subsequent failures (r >= 1):** the agent already has the instructions in its context from
-the first block. Re-injecting them adds no information and inflates the context. On all
-subsequent retries Relay emits a **shortened reason** — only the still-failing control ids
-and a one-line "still failing, fix these" message. The full instructions are dropped.
-
-**Audit trail is unaffected.** The `gate-fail` entry in the ledger always records the full
-retry counter, the failing ids, and the regression field — the compaction touches only the
-agent-facing `reason` string, not the ledger envelope.
-
----
-
-## Mechanism 2: deep-advance checkpoint hint
-
-**Trigger:** `advance()` reveals a gate at depth `ni >= RELAY_COMPACT_AFTER` (default 6).
-
-When an agent has cleared many gates its context can contain a long history of injected
-instructions, inter-gate advances, and check output. At the threshold Relay appends one line
-to the advance `reason`:
-
-```
+```text
 (checkpoint: <ni> gates cleared — summarize progress and drop now-stale detail before continuing)
 ```
 
-This is a plain-language nudge: the agent can use it as a signal to summarise, discard stale
-content, and continue with a leaner context. Relay does not enforce what the agent does with
-this hint — it is advisory.
+`ni` is the next zero-based WP index, equal to gates cleared on an unchanged
+linear plan. A hint is emitted on each eligible advance, not only when the
+threshold is crossed; final completion exits before hint delivery.
 
-**Ledger event.** At the same time Relay appends a `compaction-hint` event to the per-arm
-ledger (using the standard `ledger` helper). This lets the corpus record exactly where
-checkpoints fired, which is useful for tuning `RELAY_COMPACT_AFTER` and for RLVR analysis.
-
-### Configuring the threshold
-
-```bash
-export RELAY_COMPACT_AFTER=6   # default — hint fires at gate depth 6 and above
-export RELAY_COMPACT_AFTER=3   # fire earlier for shorter chains
+```sh
+export RELAY_COMPACT_AFTER=6
 ```
 
-Below the threshold, `advance()` behavior is completely unchanged.
+Set a nonnegative integer in the hook environment. This knob does not call a
+compaction API, erase prior messages, restart the runner, or enforce a summary.
 
----
+## Agent checkpoint recipe
 
-## What is preserved
+1. Preserve token, workdir, current position, current instructions, relevant base
+   ref, accepted controls, unresolved failures, and next checks in a short summary.
+2. Use the harness's supported checkpoint/compaction facility when available.
+3. Re-read current artifacts and persisted arm state after compaction. Context
+   summaries do not replace gate results or the ledger.
 
-- The ledger envelope shape is unchanged — every `gate-fail`, `advance-reveal`,
-  `sprint-complete`, and `compaction-hint` entry is a normal hash-chain node.
-- Token binding, `archive_trace`, regression guard, and all gate evaluation logic are
-  untouched.
-- The `compaction-hint` event is new but additive; `verify_ledger.py` verifies it exactly
-  like any other event.
-- The [verified-trace corpus](trace-corpus.md) continues to capture the full audit trail
-  for RLVR / process supervision — compaction only ever shrinks what the **agent sees**,
-  never what the **ledger records**.
+## Ledger interpretation
 
----
+The hook records `compaction-hint`; that proves hint emission, not that the
+agent compacted context. Feedback shortening does not remove failure IDs from
+gate events. Separately, identical failed rounds are represented by
+`gate-fail-repeat` with round hash, repeat count, and retry number; changed and
+terminal rounds are recorded in full. Do not assume one checklist row per retry.
 
-## Related
-
-- [Per-agent checklist chains (arms)](per-agent-arms.md) — arm structure and gate lifecycle.
-- [Verified-trace corpus](trace-corpus.md) — how terminal traces are retained and exported.
+Source: [advance and retry feedback](../bin/relay-arm-hook.sh). Executable
+examples: [test_compaction.py](../tests/test_compaction.py). Related:
+[per-agent arms](per-agent-arms.md), [diagnosis](faq.md).

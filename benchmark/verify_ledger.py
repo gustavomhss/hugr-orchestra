@@ -42,15 +42,40 @@ def mac(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
-def body_bytes(line: str):
-    """Exact bytes that were MAC'd: the line minus its trailing `,"h":"..."}` suffix, or None if the
-    line carries no `h` field (a malformed/truncated entry — the caller reports it as TAMPERED).
+def unique_object(pairs):
+    """Reject duplicate decoded keys in every object, including escaped equivalents."""
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        out[key] = value
+    return out
 
-    `h` is always appended last (jq `. + {h:$h}`), so stripping from the final `,"h":` recovers
-    the canonical body with no re-serialization — hence no formatting drift.
+
+def reject_constant(token):
+    raise ValueError(f"non-JSON constant {token!r}")
+
+
+def strict_json_loads(text):
+    """Decode JSON without duplicate keys or non-JSON constants."""
+    return json.loads(text, object_pairs_hook=unique_object, parse_constant=reject_constant)
+
+
+def body_bytes(line: str):
+    """Recover exact signed body bytes, never reserialize the decoded object.
+
+    Call only after duplicate-free decoding, final root h order and digest type validation.
+    The writer appends h last with `,"h":`. Verify that the located delimiter starts only
+    that final root member, not a nested data.h whose spelling happened to match.
     """
     idx = line.rfind(',"h":')
     if idx == -1:
+        return None
+    try:
+        suffix = strict_json_loads("{" + line[idx + 1:])
+    except ValueError:
+        return None
+    if list(suffix) != ["h"]:
         return None
     return (line[:idx] + "}").encode()
 
@@ -66,6 +91,9 @@ def main() -> int:
     except FileNotFoundError:
         print(f"no ledger at {path}", file=sys.stderr)
         return 2
+    except (OSError, UnicodeError) as e:
+        print(f"BROKEN ledger: cannot read {path} ({e})")
+        return 1
 
     mode = "KEYED (HMAC-SHA256)" if KEY else "PLAIN (SHA-256)"
     prev = "GENESIS"
@@ -73,14 +101,26 @@ def main() -> int:
     last_event = None
     for n, line in enumerate(lines):  # n is the expected seq (0-based)
         try:
-            entry = json.loads(line)
-        except json.JSONDecodeError as e:
-            print(f"BROKEN line {n + 1}: not valid JSON ({e})")
+            entry = strict_json_loads(line)
+        except ValueError as e:
+            print(f"BROKEN line {n + 1}: invalid or ambiguous JSON ({e})")
             return 1
-        h = entry.get("h")
+        if not isinstance(entry, dict):
+            print(f"BROKEN line {n + 1}: entry must be a JSON object")
+            return 1
+        if "h" not in entry:
+            print(f"TAMPERED line {n + 1}: missing h field (malformed or truncated entry)")
+            return 1
+        if next(reversed(entry)) != "h":
+            print(f"TAMPERED line {n + 1}: h must be the final root member (unsigned fields after h)")
+            return 1
+        h = entry["h"]
+        if not isinstance(h, str) or len(h) != 64 or any(c not in "0123456789abcdef" for c in h):
+            print(f"TAMPERED line {n + 1}: h must be a SHA-256 hex string")
+            return 1
         body = body_bytes(line)
         if body is None:
-            print(f"TAMPERED line {n + 1}: missing h field (malformed or truncated entry)")
+            print(f"TAMPERED line {n + 1}: missing final root h delimiter")
             return 1
         # Mode binding: the line records the MAC algorithm it was sealed with (`mac`; absent on legacy
         # ledgers, treated as plain sha256). Refuse to validate it under a DIFFERENT mode — this is what
@@ -98,7 +138,7 @@ def main() -> int:
             else:
                 print(f"TAMPERED line {n + 1}: unknown MAC algorithm {stamped!r}")
             return 1
-        if not h or not hmac.compare_digest(mac(body), h):
+        if not hmac.compare_digest(mac(body), h):
             print(f"TAMPERED line {n + 1}: MAC mismatch under {mode}")
             if KEY:
                 print("   (wrong key, or the line was altered — both fail identically by design)")
@@ -107,8 +147,11 @@ def main() -> int:
             print(f"TAMPERED line {n + 1}: broken link (prev={entry.get('prev')!r}, expected {prev!r})")
             print("   -> a preceding line was altered, removed, or reordered.")
             return 1
-        if entry.get("seq") != n:
+        if type(entry.get("seq")) is not int or entry["seq"] != n:
             print(f"TAMPERED line {n + 1}: seq={entry.get('seq')!r}, expected {n}")
+            return 1
+        if not isinstance(entry.get("event"), str) or not entry["event"].strip():
+            print(f"BROKEN line {n + 1}: event must be a nonempty string")
             return 1
         prev = h
         last_event = entry.get("event")

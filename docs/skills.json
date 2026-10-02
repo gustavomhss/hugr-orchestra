@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source_roots": ["bin", "lib", "tools", "benchmark", "demo", "examples"],
+  "workflows": [
+    {"id":"ownership","skill":".opencode/skills/relay-ownership/SKILL.md"},
+    {"id":"maintenance","skill":".opencode/skills/relay-maintenance/SKILL.md"},
+    {"id":"blast-radius","skill":".opencode/skills/relay-blast-radius/SKILL.md"},
+    {"id":"integration","skill":".opencode/skills/relay-integration/SKILL.md"}
+  ],
+  "modules": [
+    {"id":"gate-core","skill":".opencode/skills/relay-gate-core/SKILL.md","sources":["lib/relay-gate.sh","bin/relay-note"],"tests":["tests/test_gate_core_runtime.py","tests/test_relay.py","tests/test_judge_diff.py","tests/test_judge_context.py","tests/test_ledger_provenance.py","tests/test_concurrent_gate.sh"],"depends_on":["judge"]},
+    {"id":"arm-hook","skill":".opencode/skills/relay-arm-hook/SKILL.md","sources":["bin/relay-arm-hook.sh"],"tests":["tests/test_arm_runtime.py","tests/test_arm_hook.sh","tests/test_arm_binding.py","tests/test_arm_state.py","tests/test_await_human.py","tests/test_backoff.py","tests/test_blocked_claim.py","tests/test_position_by_id.py","tests/test_position_macro.py","tests/test_kinds.py","tests/test_cap_preflight.py","tests/test_self_check.py","tests/test_compaction.py","tests/test_cost.py"],"depends_on":["gate-core"]},
+    {"id":"gate-cli","skill":".opencode/skills/relay-gate-cli/SKILL.md","sources":["bin/relay-gate"],"tests":["tests/test_command_transport.py","tests/test_gate_cli.py","tests/test_concurrent_gate.sh","tests/test_judge_diff.py"],"depends_on":["gate-core"]},
+    {"id":"audit","skill":".opencode/skills/relay-audit/SKILL.md","sources":["bin/relay","benchmark/verify_ledger.py"],"tests":["tests/test_audit_runtime.py","tests/test_relay.py","tests/test_oracle_drift.py","tests/test_sprint_diverged.py","tests/test_ledger_provenance.py","tests/test_cost.py","tests/test_await_human.py"],"depends_on":["gate-core"]},
+    {"id":"daemon","skill":".opencode/skills/relay-daemon/SKILL.md","sources":["bin/relay-daemon.py"],"tests":["tests/test_daemon.py","tests/test_ask.py"],"depends_on":["gate-cli","gate-core"]},
+    {"id":"judge","skill":".opencode/skills/relay-judge/SKILL.md","sources":["benchmark/judge.py","benchmark/calibrate_judge.py"],"tests":["tests/test_judge_cli.py","tests/test_judge_api.py","tests/test_judge_calibration.py","tests/test_judge_context.py","tests/test_judge_diff.py","tests/test_relay.py"],"depends_on":[]},
+    {"id":"profiles","skill":".opencode/skills/relay-profiles/SKILL.md","sources":["bin/relay-profile.py"],"tests":["tests/test_profile_compile.py","tests/test_shipped_profiles.py","tests/test_judge_context.py"],"depends_on":["spec-library","planning","specification","design","research"]},
+    {"id":"autodecompose","skill":".opencode/skills/relay-autodecompose/SKILL.md","sources":["bin/relay-autodecompose.py"],"tests":["tests/test_autodecompose.py"],"depends_on":["gate-core"]},
+    {"id":"spec-library","skill":".opencode/skills/relay-spec-library/SKILL.md","sources":["bin/relay-spec.py"],"tests":["tests/test_spec.py","tests/test_spec_lint.py","tests/test_amend.py"],"depends_on":["gate-core"]},
+    {"id":"policies","skill":".opencode/skills/relay-policies/SKILL.md","sources":["bin/relay-policy.py"],"tests":["tests/test_policy.py","tests/test_ledger_provenance.py"],"depends_on":["gate-core","spec-library"]},
+    {"id":"telemetry","skill":".opencode/skills/relay-telemetry/SKILL.md","sources":["bin/relay-corpus.py","bin/relay-dash.py"],"tests":["tests/test_corpus.py","tests/test_dash.py","tests/test_cost.py"],"depends_on":["audit","arm-hook"]},
+    {"id":"planning","skill":".opencode/skills/relay-planning/SKILL.md","sources":["tools/criterion","tools/edd/plan-check","tools/edd/plan-criterion","tools/edd/plan-graph","tools/edd/plan-check-selftest.sh"],"tests":["tests/test_profile_compile.py","tests/test_shipped_profiles.py","tests/test_spec_check.py","tests/test_research_check.py"],"depends_on":[]},
+    {"id":"specification","skill":".opencode/skills/relay-specification/SKILL.md","sources":["tools/spec/spec-check"],"tests":["tests/test_spec_check.py"],"depends_on":["planning"]},
+    {"id":"design","skill":".opencode/skills/relay-design/SKILL.md","sources":["tools/design/design-check"],"tests":["tests/test_design_check.py"],"depends_on":["planning"]},
+    {"id":"research","skill":".opencode/skills/relay-research/SKILL.md","sources":["tools/research/research-check","tools/research/research-capture","tools/research/research-note","tools/research/research-memo","tools/research/replay-evidence"],"tests":["tests/test_research_check.py","tests/test_research_capture.py","tests/test_research_tools.py"],"depends_on":["planning","judge"]},
+    {"id":"benchmark","skill":".opencode/skills/relay-benchmark/SKILL.md","sources":["benchmark/relay_hook.sh","benchmark/run_arm.sh","benchmark/run_crossover.py","benchmark/grader.py","benchmark/generator/gen_campaign.py","benchmark/generator/gen_campaign_v2.py","benchmark/campaigns/**/*.py"],"tests":["tests/test_benchmark_runtime.py","tests/test_command_transport.py","tests/test_relay.py","tests/test_gate_cli.py"],"depends_on":["gate-core","audit","judge"]},
+    {"id":"doc-tooling","skill":".opencode/skills/relay-doc-tooling/SKILL.md","sources":["bin/gen-doc-index.py","bin/check-docs.py"],"tests":["tests/test_docs.py"],"depends_on":[]},
+    {"id":"examples","skill":".opencode/skills/relay-examples/SKILL.md","sources":["demo/*.sh","examples/fleet-chain/run_example.py"],"tests":["tests/test_example_completion.py","tests/test_relay.py","tests/test_arm_hook.sh"],"depends_on":["arm-hook","benchmark","audit"]}
+  ]
+}

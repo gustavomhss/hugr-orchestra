@@ -1,9 +1,61 @@
 # Changelog
 
+Audience: agents. Status: historical entries with a current unreleased change record.
+
+Read dated entries as evidence of their recorded revisions, not installed contracts. Use [SPEC.md](SPEC.md)
+and [AGENTS.md](AGENTS.md) for current behavior and work routing.
+
 All notable changes to HuGR Relay are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); the project is pre-release.
 
 ## [Unreleased]
+
+### Runtime — repair failures exposed by independent review
+
+- Preserve decoded command/control text through current checks and JSONL regression/DoD transport,
+  including tabs and trailing LF. Protect transport stdin from oracle programs; explicit command pipes
+  and heredocs remain supported. Malformed required values and unavailable blocking judges fail closed.
+- Reject nonarray current checklists before item execution while retaining missing/null/empty-array
+  acceptance; reject decoder output names in the reserved `__relay_json_string_*` namespace.
+- Preserve raw ARM position and current/migrated/next WP/macro identities. Resolve raw whole ID,
+  then raw first-dot suffix, with LF-only legacy cleanup on a miss and CR retained. CLI validates
+  current ID/macro and next ID before commands; ARM validates next ID/macro inside advancement,
+  after commands but before passing-round flush. Named CLI checks validate only their selected WP.
+- Resolve releases by the actual WP ID, reset the matching retry state and reject blank reasons.
+  Serialize whole ARM evaluations with `.run.lock`; contention returns exit 3 without grading.
+- Make mandatory ARM/CLI/benchmark evidence and disposition append failures fatal before corresponding
+  state/counter/retry publication; ARM release evidence precedes consumption/reset/reactivation.
+  Earlier effects/records and later state-write failures remain possible. Ancillary ARM appends and
+  archives remain best-effort; ordering provides no atomicity, rollback, or fsync-backed durability.
+- Preserve `${name}` bindings when compiling bare `{macro}`, `{sub}` and `{criterion}` placeholders.
+  Parse judge prose verdicts exactly. Typed judge samples/ballots decide availability and voting;
+  backend/model/truncation labels are display metadata. JSON adds boolean `available` while public
+  API/CLI functions retain three-tuples. Calibration requires valid exit-0 response fields and literal
+  true availability, excludes invalid measurements, and reports all-invalid agreement as unavailable;
+  import does not launch model calls. The shared gate does not enforce that added availability field.
+- Check reachable sprint control IDs in both directions, reject unusable records/sprints with structured
+  audit results, and distinguish legacy-oracle uncertainty from an executed comparison.
+- Reject duplicate decoded ledger keys at every depth, escaped equivalents, unsigned suffix fields,
+  and nonfinal root hashes; reserve append-body root `h` while retaining nested hash data and original
+  signed-body bytes. Shared verifier/audit decoding also rejects unquoted `NaN`, `Infinity`, and
+  `-Infinity`; quoted strings and valid lexical numbers such as `1e999` remain allowed. This is not
+  arbitrary numeric exactness or complete finite-valued schema validation.
+- Resolve `/ask` against the arm's current position and baseline; distinguish busy/error preconditions
+  from satisfied checks. Serialize ask/answer operations and surface required-note write failures.
+- Treat Git scan errors as failed policy evaluation, skipped benchmark tests as unmet requirements,
+  and invalid JUnit/collection results as invalid measurements. Require real failures for grader sanity.
+- Require state, flags and an auditable terminal pass for fleet-example completion. Regression cases
+  preserve real failure probes while using bounded test-specific retry budgets.
+
+### Documentation — agent skill corpus
+
+- Added project-local skills for ownership, blast radius, maintenance, integration and module maintenance.
+  Every skill requires independent cold review of frozen artifacts before completion.
+- Reconciled current references against implemented driver differences; marked superseded plans and dated
+  measurements as historical, preserving benchmark/fixture evidence.
+- Added `AGENTS.md`, documentation routing and `docs/skills.json` source ownership catalog.
+- Added structural documentation validation and regression tests; expanded the hash index to recursive
+  documentation and skills. These checks do not prove semantic freshness or actual review independence.
 
 ### Fixed — 2026-08-24 (research-v2: two GRADE defects and one self-graded review verdict)
 Three defects found by RUNNING the `research-v2` profile agent-driven end to end, not by reading it.
@@ -248,4 +300,4 @@ adversarial reviews + fix + verify), each owning a disjoint subtree, then tech-l
 - `decision:block` continuation, per-`agent_id` counter, and bounded-retry escalation verified
   against Claude Code 2.1.x.
 
-[Unreleased]: https://example.invalid/hugr/relay
+[Unreleased]: #unreleased

@@ -18,6 +18,7 @@ silently-passing placeholder is worse than an admitted hole, because it reads as
 pressure while authoring 200 criteria is precisely to produce one.
 """
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -290,6 +291,89 @@ def test_a_placeholder_meant_for_a_later_stage_survives_compilation(tmp_path):
     assert r.returncode == 0, r.stderr
     cmds = {c["id"]: c["cmd"] for c in _wp(sprint, "framed")["checklist"]}
     assert cmds["readback_emitted"] == "${test_cmd} --phase frame", cmds
+
+
+def _command_profile(source, cmd):
+    yaml_mod = pytest.importorskip("yaml")
+    mappings = {
+        "default": {"default": cmd},
+        "per_criterion": {"default": "unused fallback", "per_criterion": {"evidence": cmd}},
+        "per_sub": {"per_sub": {"active.verify": [{"id": "evidence", "cmd": cmd}]}},
+    }
+    return yaml_mod.safe_dump({
+        "name": "bindings", "version": "1.0.0", "criteria_map": mappings[source],
+        "pipeline": [{"state_id": "active", "sub_states": [
+            {"id": "verify", "type": "checklist", "criteria": ["evidence"]},
+        ]}],
+    }, sort_keys=False)
+
+
+@pytest.mark.parametrize("source", ["default", "per_criterion", "per_sub"])
+def test_compiler_and_later_binding_placeholders_do_not_collide(tmp_path, source):
+    template = "run {macro} {sub} {criterion} ${macro} ${sub} ${criterion} ${test_cmd}"
+    sprint, r = _compile(tmp_path, _command_profile(source, template))
+    assert r.returncode == 0, r.stderr
+    controls = _wp(sprint, "verify")["checklist"]
+    assert len(controls) == 1, controls
+    criterion = "{criterion}" if source == "per_sub" else "evidence"
+    assert controls[0]["cmd"] == (
+        f"run active verify {criterion} "
+        "${macro} ${sub} ${criterion} ${test_cmd}"
+    )
+
+
+def test_unknown_braces_and_shell_syntax_stay_literal(tmp_path):
+    literal = ("{} {unknown} {{unknown}} ${unknown} {Macro} {submarine} "
+               "${macro:-fallback} ${sub:=fallback} ${criterion?required} "
+               "$(printf untouched) `printf untouched`")
+    sprint, r = _compile(tmp_path, _command_profile("default", literal + " {macro}"))
+    assert r.returncode == 0, r.stderr
+    assert _wp(sprint, "verify")["checklist"][0]["cmd"] == literal + " active"
+
+
+def test_non_command_fields_do_not_use_compiler_expansion(tmp_path):
+    yaml_mod = pytest.importorskip("yaml")
+    profile = yaml_mod.safe_load(_command_profile("per_sub", "check {macro} {sub}"))
+    text = "{macro} {sub} {criterion} ${macro} ${sub} ${criterion}"
+    profile["pipeline"][0]["system_prompt"] = text
+    profile["pipeline"][0]["sub_states"][0]["description"] = text
+    controls = profile["criteria_map"]["per_sub"]["active.verify"]
+    controls[0]["assert"] = text
+    controls[0]["judge"] = text
+    controls.append({"id": "semantic", "judge": text, "context": [text], "paths": [text]})
+    sprint, r = _compile(tmp_path, yaml_mod.safe_dump(profile, sort_keys=False))
+    assert r.returncode == 0, r.stderr
+    wp = _wp(sprint, "verify")
+    assert sprint["macros"][0]["instructions"] == text
+    assert wp["instructions"] == text
+    assert wp["checklist"][0]["cmd"] == "check active verify"
+    assert wp["checklist"][0]["assert"] == text
+    assert wp["checklist"][0]["judge"] == text
+    assert wp["checklist"][1] == {
+        "id": "semantic", "judge": text, "context": [text], "paths": [text],
+        "origin": "pe-profile:bindings@1.0.0",
+    }
+
+
+@pytest.mark.parametrize("source", ["default", "per_criterion", "per_sub"])
+@pytest.mark.parametrize("binding", ["macro", "sub", "criterion"])
+def test_compiled_later_binding_checks_missing_and_valid_files(tmp_path, source, binding):
+    """The renamed variables active/verify/evidence are unset. In particular, rewriting
+    `test -s ${macro}` to `test -s $active` makes Bash pass without checking a file."""
+    template = "test -s ${" + binding + "}"
+    sprint, r = _compile(tmp_path, _command_profile(source, template))
+    assert r.returncode == 0, r.stderr
+    cmd = _wp(sprint, "verify")["checklist"][0]["cmd"]
+    artifact = tmp_path / "evidence.txt"
+    env = {"PATH": os.environ.get("PATH", os.defpath), binding: artifact.name}
+    missing = subprocess.run(["bash", "-c", cmd], cwd=tmp_path, env=env,
+                             capture_output=True, text=True)
+    assert missing.returncode == 1, (cmd, missing.returncode, missing.stderr)
+    artifact.write_text("accepted evidence\n")
+    valid = subprocess.run(["bash", "-c", cmd], cwd=tmp_path, env=env,
+                           capture_output=True, text=True)
+    assert valid.returncode == 0, (cmd, valid.returncode, valid.stderr)
+    assert cmd == template
 
 
 def test_a_hand_mapped_control_may_be_a_judge(tmp_path):

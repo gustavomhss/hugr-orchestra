@@ -19,6 +19,38 @@
 # behavior (advance/escalate/archive). The caller must define, before sourcing-time use:
 #   $LEDGER $SPRINT $RUN_DIR $i  (vars) and  ledger_item()  (function).
 
+# Decode one JSON string into a caller variable without losing trailing LF to command substitution.
+# Null is the empty optional value. Bash cannot represent NUL, so reject it before raw decoding.
+# Output names under __relay_json_string_* are reserved for helper locals under Bash dynamic scope.
+relay_json_string() {  # $1 = output variable name, $2 = one JSON string or null
+  if [ "$#" -ne 2 ] || ! [[ "$1" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+    printf 'relay_json_string: expected output variable name and JSON value\n' >&2
+    return 1
+  fi
+  case "$1" in __relay_json_string_*)
+    printf 'relay_json_string: reserved output variable name: %s\n' "$1" >&2
+    return 1 ;;
+  esac
+  local __relay_json_string_value
+  __relay_json_string_value=$(printf '%s' "$2" | jq -js '
+    if length != 1 then error("relay_json_string: expected one JSON value") else .[0] end
+    | if . == null then ""
+      elif type != "string" then error("relay_json_string: expected string or null")
+      elif index("\u0000") != null then error("relay_json_string: NUL is not supported")
+      else . end
+    | . + "x"') || return 1
+  printf -v "$1" '%s' "${__relay_json_string_value%x}"
+}
+
+# Resolve a persisted ARM position using the same rule for qualified and dotted WP IDs.
+relay_position_index() {  # $1 = position; uses $SPRINT; emits index or returns nonzero
+  jq -er --arg p "$1" --arg suffix "${1#*.}" '
+    [.work_packages[].id] as $ids
+    | ($ids | index($p)) as $whole
+    | if $whole != null then $whole else ($ids | index($suffix)) end
+    | if . == null then empty else . end' "$SPRINT"
+}
+
 # Append one compact JSON body (no prev/seq/h) onto the chain. Same algorithm both hooks always used:
 # prev = previous line's h (GENESIS first), seq = running 0-based index, h = MAC over the body.
 # Serialize the read-tail-then-append. Without it two writers read the same `prev` and both append,
@@ -65,9 +97,16 @@ relay_chain_append() {  # $1 = compact JSON body
   # `mac` too, which an auditor holding the key detects as a downgrade (verify_ledger.py). `seq` makes
   # the entry count explicit so tail-truncation is detectable.
   if [ -n "${RELAY_LEDGER_KEY:-}" ]; then macalg="hmac-sha256"; else macalg="sha256"; fi
-  body=$(printf '%s' "$1" | jq -c --arg p "$prev" --argjson s "$seq" --arg m "$macalg" \
-           --argjson g "$RELAY_GEN" '. + {gen:$g, prev:$p, seq:$s, mac:$m}') || {
-    rmdir "$lock" 2>/dev/null || true; return 0; }
+  body=$(printf '%s' "$1" | jq -cs --arg p "$prev" --argjson s "$seq" --arg m "$macalg" \
+           --argjson g "$RELAY_GEN" '
+             if length != 1 or (.[0] | type) != "object" then
+               error("relay: ledger body must be one JSON object")
+             elif (.[0] | has("h")) then error("relay: ledger body must not contain top-level h")
+             else .[0] + {gen:$g, prev:$p, seq:$s, mac:$m} end') || {
+    rmdir "$lock" 2>/dev/null || true
+    printf 'relay: invalid ledger body (%s) — a verdict was not recorded\n' "$LEDGER" >&2
+    return 1
+  }
   if [ -n "${RELAY_LEDGER_KEY:-}" ]; then
     h=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$RELAY_LEDGER_KEY" | sed -E 's/.* //')
   else
@@ -207,23 +246,56 @@ relay_compute_diff() {  # $1 = space-separated pathspec (may be empty = everythi
 }
 
 relay_run_checklist() {
-  local out="" n j id as cmd verdict oracle origin
-  n=$(jq ".work_packages[$i].checklist // [] | length" "$SPRINT")
+  local out="" n j id as id_json as_json cmd verdict oracle origin
+  local cmd_json crit_json scope_json crit block jout jverd jback jback_json jstatus response_json
+  local ctxargs cf wantdiff scope scope_real dfile artsha
+  n=$(jq ".work_packages[$i].checklist
+    | if . == null then 0
+      elif type == \"array\" then length
+      else error(\"relay: work_packages[$i].checklist must be an array or null\") end" "$SPRINT") || return 1
   for ((j=0; j<n; j++)); do
-    id=$(jq -r ".work_packages[$i].checklist[$j].id" "$SPRINT")
-    as=$(jq -r ".work_packages[$i].checklist[$j].assert // .work_packages[$i].checklist[$j].id" "$SPRINT")
-    cmd=$(jq -r ".work_packages[$i].checklist[$j].cmd // empty" "$SPRINT")
+    id_json=$(jq -c ".work_packages[$i].checklist[$j].id" "$SPRINT") || return 1
+    if ! relay_json_string id "$id_json" || [ -z "$id" ]; then
+      printf 'relay: work_packages[%s].checklist[%s] has invalid id (expected a nonempty NUL-free string)\n' "$i" "$j" >&2
+      return 1
+    fi
+    as_json=$(jq -c ".work_packages[$i].checklist[$j].assert // .work_packages[$i].checklist[$j].id" "$SPRINT") || return 1
+    if ! relay_json_string as "$as_json"; then
+      printf 'relay: checklist %s has invalid assertion (expected a NUL-free string)\n' "$id" >&2
+      return 1
+    fi
     origin=$(relay_control_origin ".work_packages[$i].checklist[$j]")
+    cmd_json=$(jq -c ".work_packages[$i].checklist[$j].cmd" "$SPRINT") || return 1
+    if ! relay_json_string cmd "$cmd_json"; then
+      printf 'relay: checklist %s has an invalid command (expected a NUL-free string)\n' "$id" >&2
+      out="$out; $id"
+      ledger_item "$id" "$as" "fail" "unavailable(invalid-command)" "" "$origin" || return 1
+      continue
+    fi
     if [ -n "$cmd" ]; then
       oracle=$(relay_oracle_sha "$cmd")
       if ( cd "$RUN_DIR" && eval "$cmd" >/dev/null 2>&1 ); then verdict=pass; else verdict=fail; out="$out; $id"; fi
-      ledger_item "$id" "$as" "$verdict" "deterministic" "$oracle" "$origin"
+      ledger_item "$id" "$as" "$verdict" "deterministic" "$oracle" "$origin" || return 1
     else
-      local crit block jout jverd jback ctxargs cf wantdiff scope dfile artsha
-      crit=$(jq -r ".work_packages[$i].checklist[$j].judge" "$SPRINT")
+      crit_json=$(jq -c ".work_packages[$i].checklist[$j].judge" "$SPRINT") || return 1
+      if ! relay_json_string crit "$crit_json" || [ -z "$crit" ]; then
+        printf 'relay: checklist %s has no valid oracle (expected a command or nonempty NUL-free judge criterion)\n' "$id" >&2
+        out="$out; $id"
+        ledger_item "$id" "$as" "fail" "judge:unavailable(invalid-criterion)" "" "$origin" || return 1
+        continue
+      fi
       block=$(jq -r ".work_packages[$i].checklist[$j].blocking // false" "$SPRINT")
       wantdiff=$(jq -r ".work_packages[$i].checklist[$j].diff // false" "$SPRINT")
-      scope=$(jq -r ".work_packages[$i].checklist[$j].paths // [] | join(\" \")" "$SPRINT")
+      if ! scope_json=$(jq -c ".work_packages[$i].checklist[$j].paths
+          | if . == null then [] else . end
+          | if type == \"array\" and all(.[]; type == \"string\") then join(\" \")
+            else error(\"relay: paths must be an array of strings\") end" "$SPRINT") \
+          || ! relay_json_string scope "$scope_json"; then
+        printf 'relay: checklist %s has an invalid judge scope (expected NUL-free paths)\n' "$id" >&2
+        out="$out; $id"
+        ledger_item "$id" "$as" "fail" "judge:unavailable(invalid-scope)" "" "$origin" || return 1
+        continue
+      fi
       # What a control MEASURES is the criterion AND the artifact it measures it against, so the
       # scope belongs in the oracle. Same criterion over a narrower artifact is a different question,
       # and V3 reports a mid-run change of it as drift.
@@ -251,15 +323,40 @@ relay_run_checklist() {
           # that cannot run is still only advisory, which is exactly why docs/enforcement-model.md §5
           # never lets a discursive control stand alone.
           [ "$block" = "true" ] && out="$out; $id"
-          ledger_item "$id" "$as" "fail" "judge:unavailable(no-diff)" "$oracle" "$origin" "$scope" "$artsha"
+          ledger_item "$id" "$as" "fail" "judge:unavailable(no-diff)" "$oracle" "$origin" "$scope" "$artsha" || return 1
           continue
         fi
       fi
-      jout=$(python3 "$JUDGE" --criterion "$crit" "${ctxargs[@]}" 2>/dev/null || true)
-      jverd=$(printf '%s' "$jout" | jq -r '.verdict // "advisory"' 2>/dev/null); [ -z "$jverd" ] && jverd=advisory
-      jback=$(printf '%s' "$jout" | jq -r '.backend // "judge"' 2>/dev/null); [ -z "$jback" ] && jback=judge
+      if jout=$(python3 "$JUDGE" --criterion "$crit" "${ctxargs[@]}" 2>/dev/null); then
+        jstatus=0
+      else
+        jstatus=$?
+      fi
+      # A transport failure cannot become a pass even if stdout contains pass JSON. Accept exactly
+      # one response object with the supported pass/fail verdicts; unavailable evaluation is a fail,
+      # not a third "advisory" verdict. The declared blocking flag still decides whether it blocks.
+      jverd=fail
+      if [ "$jstatus" -ne 0 ]; then
+        jback="unavailable(exit-$jstatus)"
+        printf 'relay: judge unavailable for checklist %s (exit %s)\n' "$id" "$jstatus" >&2
+      elif response_json=$(printf '%s' "$jout" | jq -cse '
+          if length != 1 or (.[0] | type) != "object" then error("invalid judge response")
+          elif .[0].verdict != "pass" and .[0].verdict != "fail" then error("invalid judge verdict")
+          else .[0] end' 2>/dev/null); then
+        jback_json=$(printf '%s' "$response_json" | jq -c '.backend
+          | if . == null or . == "" then "judge" else . end') || return 1
+        if relay_json_string jback "$jback_json"; then
+          jverd=$(printf '%s' "$response_json" | jq -r '.verdict') || return 1
+        else
+          jback="unavailable(invalid-response)"
+          printf 'relay: judge unavailable for checklist %s (invalid response backend)\n' "$id" >&2
+        fi
+      else
+        jback="unavailable(invalid-response)"
+        printf 'relay: judge unavailable for checklist %s (expected one JSON object with pass/fail verdict)\n' "$id" >&2
+      fi
       [ "$block" = "true" ] && [ "$jverd" = "fail" ] && out="$out; $id"
-      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)" "$oracle" "$origin" "$scope" "$artsha"
+      ledger_item "$id" "$as" "$jverd" "judge:$jback(non-independent)" "$oracle" "$origin" "$scope" "$artsha" || return 1
     fi
   done
   printf '%s' "$out"

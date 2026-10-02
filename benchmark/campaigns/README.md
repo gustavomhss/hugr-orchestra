@@ -1,37 +1,50 @@
-# Benchmark Campaigns — isolation contract & layout
+# Benchmark Campaigns — Historical Input Records
 
-## Isolation contract (hard rule)
+Audience: agents. Status: historical.
 
-Every campaign here is **original and self-contained**. Strictly forbidden:
+Current authority: [SPEC.md](../../SPEC.md). Procedures: [operational skills](../../.opencode/skills/).
+Evidence: [RESULTS.md](../RESULTS.md). These records describe frozen experiment inputs, not
+current operational guides or reference solutions.
 
-- ❌ Copying or referencing **CoreLink** code, spec text, invariant IDs, or any file from it.
-- ❌ Importing files from **any other project** on the machine.
-- ❌ Reading from, or writing to, any path **outside `relay/`**.
+## Input ownership
 
-Allowed: drawing on the *difficulty profile* of hard domains (billing integrity, multi-tenant isolation,
-distributed failover, crypto, compliance) to author **fresh** tasks. Authoring fresh keeps the benchmark
-contamination-immune (unseen by any model) **and** keeps it cleanly separated from every other project.
+The hand-authored billing campaigns are original, self-contained fixtures; no CoreLink or
+other-project code, specification text or invariant IDs are campaign inputs. Their `repo/`
+contains the **unimplemented starting skeleton**, expected to be red against requirement tests.
+A pristine failure is task setup, not a Relay runtime regression. Agents edit candidate copies,
+not committed inputs or held-out tests.
 
-Everything the benchmark needs lives under `relay/benchmark/`. Nothing leaks in or out.
+Requirements, visible checks, holdout suites, skeletons, metadata and selected sprint snapshots
+are immutable for comparison. Raising difficulty creates a new experiment identity; it does
+not retroactively turn a saturated pilot into positive evidence. "Frozen" is experiment discipline,
+not a permission boundary enforced by the runner.
 
-## Per-campaign layout
+## Layout and scoring boundary
 
-```
-campaigns/<id>/            e.g. 01-billing-integrity/
-├── README.md              goal, type, size band, provenance ("original; no external artifacts")
-├── meta.json              { size_N, type, k, retry_budget, calibration: {arm_M_rsr, ...} }
-├── repo/                  the minimal starting repo the Runner works in (original code)
-├── requirements.yaml      frozen requirement set: [{id, statement, verifier, weight, deps}]
-├── checks/                one deterministic check per requirement (test/AST/lint/grep); the grader runs these
-└── sprint.json           frozen Relay decomposition (the METHODOLOGY output; Arm R/D input)
-```
+| Path | Meaning |
+|---|---|
+| `README.md` | Historical goal, shape, provenance and evidence limits |
+| `meta.json` | Original size/type/cap and calibration snapshot; prose conclusions can be superseded |
+| `repo/` | Starting implementation skeleton, not ground-truth reference code |
+| `requirements.yaml` | Frozen statements, weights, dependencies and visible verifier mapping |
+| `checks/` | Visible feedback/gates; visible grading alone is smoke evidence |
+| `holdout/` | Final efficacy grading inputs, removed from the runner copy |
+| `sprint.json` | R/D decomposition snapshot |
+| `sprint_mono.json` | M whole-campaign WP, gate on, bounded aggregate repair |
 
-- `requirements.yaml` is the **shared ground truth** — Arm M, R, and D are all graded against `checks/`.
-- `sprint.json` is the **frozen** output of [../METHODOLOGY.md](../METHODOLOGY.md), committed, never
-  regenerated per run or hand-edited per arm.
-- `meta.json` records the calibration (Arm M must reliably drop several requirements, else the campaign is
-  discarded for lack of headroom).
+[run_arm.sh](../run_arm.sh) copies a campaign to a fresh candidate directory, removes its
+holdout, then grades final candidate state against campaign-source holdout. Same-user access is
+not hardened blinding. [grader.py](../grader.py) skip/collection limits remain relevant even
+with a held-out suite. The two billing pilots saturated; they remain pipeline/overhead records.
 
-## Naming
+## Generated campaigns and historical isolation correction
 
-`NN-domain` — zero-padded index + short domain (`01-billing-integrity`, `02-tenant-isolation`, …).
+The [generators](../generator/) create separate seeded inputs plus reference/lookup-hacker
+implementations under external `/tmp` paths. The original claim "nothing reads or writes outside
+relay" was false for that tooling. Those external scratch artifacts are generator-owned inputs,
+not imported project code, but their paths and overwrite behavior are not immutable archive
+storage or an enforced secrecy boundary. No generator execution is prescribed by this record.
+
+Fresh authorship reduces obvious contamination; it does not prove that published inputs or
+generators are unseen by every model. Naming `NN-domain` is a fixture convention, not evidence
+that the planned size/type/model-ladder sweep was completed.

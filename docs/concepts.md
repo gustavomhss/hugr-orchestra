@@ -1,121 +1,95 @@
-# Concepts & Mental Model
+# Relay runtime concepts
 
-## 1. The Mental Model
+Audience: agents. Status: current.
 
-Think of Relay as **one worker, a stack of task cards, and a gate-keeper at the door.**
+Use this vocabulary when authoring plans or reading state. Load
+[relay-gate-core](../.opencode/skills/relay-gate-core/SKILL.md) for evaluation
+changes and [relay-audit](../.opencode/skills/relay-audit/SKILL.md) for evidence.
 
-The worker (the **Runner**) is a single sub-agent with continuous memory — it remembers
-everything it has built since the sprint started. The orchestrator hands it a **brief** and
-shows it the titles of every card in the stack up front (the **Map**), so it can orient
-without seeing details it doesn't need yet.
+## Terms
 
-Each card is a **Work Package (WP)**. The worker picks up WP1 and gets to work. When it
-believes it has finished, it heads for the exit — it stops.
-
-The **gate-keeper** (the **Relay hook**) catches that stop. It does not trust the stop; it
-checks the card's **Definition of Done (DoD)** through the **Gate**:
-
-- **Fail** — the gate-keeper hands the card back with the exact gap noted. The worker fixes
-  it. The door stays closed. The WP index does not advance.
-- **Pass** — the gate-keeper locks the card in (**keep-best**: accepted work is never
-  regressed), slides the next card under the door, and tells the worker to continue. Same
-  worker, same memory, next WP.
-
-This repeats until the stack is empty. Then the gate-keeper opens the door for real.
-**Sprint delivered.**
-
-The key insight: "stopped" does not mean "done". The stop is the engine — Relay turns every
-premature exit into one more link in the delivery chain.
-
----
-
-## 2. The Flow
-
-Per-stop loop (derived from SPEC §5):
-
-```
-orchestrator spawns ONE Runner with brief + Map → starts WP1
-       │
-       ▼
-┌──► Runner works the current WP … believes it is done → STOPS
-│        │
-│        ▼
-│   Relay hook fires at the stop boundary
-│        │
-│        ▼
-│   Gate evaluates the WP against its DoD
-│        │
-│        ├─ FAIL ──► retry budget exceeded? ──► YES → ESCALATE → allow stop
-│        │                │
-│        │               NO
-│        │                │
-│        │                ▼
-│        │          block: hand WP back with gap; index unchanged
-│        │                │
-│        └────────────────┘
-│        │
-│        └─ PASS ──► lock WP (keep-best)
-│                        │
-│                        ├─ next WP exists? ──► YES → block: relay next WP; advance index
-│                        │
-│                        └─ NO → list exhausted → allow stop
-│
-└──────────────────────────  repeat  ─────────────────────────────┘
-                 │
-        SPRINT DELIVERED
-```
-
-Two invariants hold at every step:
-
-1. **Forward-only** — the index only increments on a Gate pass.
-2. **Keep-best** — a locked WP can never be replaced by a worse version.
-
----
-
-## 3. Glossary
-
-The following terms are canonical. Use them verbatim in sprint files, hook code, and docs.
-
-| Term | Meaning |
+| Term | Runtime meaning |
 |---|---|
-| **Sprint** | The whole job: a brief + an ordered list of Work Packages. |
-| **Work Package (WP)** | One self-contained unit of work with its own instructions and DoD. |
-| **Definition of Done (DoD)** | The objective pass/fail criteria for a WP (a list of checks). |
-| **Runner** | The single sub-agent that executes every WP, with continuous memory. |
-| **Relay hook** | The `SubagentStop` hook that intercepts each stop and advances or holds. |
-| **Gate** | The evaluation of a WP's DoD at a stop; decides pass (advance) or fail (retry). |
-| **Keep-best** | Accepted WPs are locked; the chain never ships a worse version of them. |
-| **Map** | The sprint goal + list of WP titles, given to the Runner up front for orientation. |
-| **Retry budget** | Max gate failures allowed on one WP before the sprint escalates. |
+| Sprint | `brief`, `retry_budget`, and ordered `work_packages` in `sprint.json` |
+| Work Package (WP) | Stable `id`, instructions, and current gate controls |
+| Definition of Done (DoD) | Acceptance criteria; use named `checklist` controls for shipped arm evaluation |
+| Runner | Agent doing the work; the hook resumes the same runner through block responses |
+| Map | Brief and ordered WP titles supplied by the arm author at dispatch |
+| Arm | Token-keyed plan, metadata, state, and ledger for one runner |
+| Gate | Evaluation of current controls plus applicable deterministic regression checks |
+| Keep-best | Re-execution of earlier deterministic controls; no file freeze or rollback |
+| Macro | Named WP scope; author seeds opening protocol and entered marker, hook injects protocol on later unmarked entry |
+| Position | Arm's current WP ID, optionally qualified by macro; distinct from run status |
+| Ledger | Hash-chained JSONL entries carrying verdicts, control oracle hashes, and events |
 
----
+## Choose the runtime surface
 
-## 4. What Relay Is / Is NOT
+| Surface | State and delivery |
+|---|---|
+| `bin/relay-arm-hook.sh` | `SubagentStop`; transcript token binding; named `position`, `state`, and ID-keyed retries; next instructions in block reason; ARM `.run.lock` contention exits `3` |
+| `bin/relay-gate` | Explicit `eval`/`check`; integer `counter` and index-keyed retries; JSON outcomes; caller delivers instructions; `check` can override named position/base ref |
+| `benchmark/relay_hook.sh` | Plain `Stop`, single-runner measurement path; inspect separately before reuse |
 
-**What Relay is:**
+These surfaces share [checklist evaluation and chain append](../lib/relay-gate.sh),
+not every lifecycle feature. Typed `dod` catalog entries are design reference,
+not a runtime dispatcher. A WP `model` field does not switch the active runner;
+judge model selection uses `RELAY_JUDGE_MODEL`.
 
-- A sequencing and enforcement layer for multi-WP work delivered by a single continuous agent.
-- A gated advancement mechanism: the Runner earns the right to move forward by satisfying an
-  explicit DoD, not by stopping.
-- A structural answer to context-scale failure: one WP revealed at a time, none skippable.
+## Arm stop transitions
 
-**What Relay is NOT:**
+```text
+author seeds first-state prompt and base ref
+runner works → stop → resolve transcript token, arm, and position
+  current checks + regression checks pass
+    next WP → append evidence + advance-reveal, publish position/base, block with next instructions
+    last WP → append evidence + sprint-complete, state=complete, empty stdout
+  checks fail, budget available → record failure, same position, increment retry, block with failing IDs
+  budget spent → append escalation, state=awaiting-human, empty stdout
+```
 
-- **Not reflection.** Forced reflection was measured as zero-gain or harmful on verifiable work
-  (in one controlled run it regressed a correct solution to broken). Relay delivers sequenced
-  work; it does not second-guess finished work.
-- **Not an isolated pipeline.** One Runner, continuous memory — not a fresh agent per stage.
-  WP3 builds directly on the live code from WP2 with no handoff artifact to serialize.
-- **Not a mid-reasoning interrupt.** The Relay hook fires only at stop boundaries, after the
-  Runner has finished its current turn. It never severs an in-progress thought.
-- **Not a replacement for tests.** Where a verifier exists the Gate uses it; Relay adds
-  sequencing and enforcement, not a new source of truth.
+Binding refusal or plan defects can also permit the stop without completion.
+Inspect stderr, `state`, and the audit. Position identifies work; `counter` is
+only a compatibility mirror in the arm hook and reaches the end on escalation.
+Release requires a non-whitespace reason and a successful `human-release` append before clearing retry/round/repeat/blocked-claim
+state using the resolved full WP ID plus legacy index retry and `reg_retry`, then
+rechecks that same gate. It does not authenticate a human or waive controls.
+Mandatory evidence/transition failures abort before corresponding state publication.
+Some ARM ancillary appends and archives remain best-effort. Ordering is not atomicity or rollback.
 
----
+## Controls and evidence
 
-## 5. See Also
+- A nonempty `cmd` is evaluated in the declared workdir; nonzero exit blocks.
+- A `judge` item is non-independent and advisory by default. `blocking: true`
+  makes a returned failure block; malformed output or nonzero judge exit also
+  records an unavailable `fail` and blocks only when declared blocking. This does
+  not turn judgment into deterministic proof. Supply relevant `context`, or
+  `diff: true` with a recorded base ref.
+- Arm keep-best reruns earlier `cmd` controls with a recorded pass. CLI keep-best
+  reruns every earlier deterministic checklist command and earlier `dod[].cmd`.
+  Compact JSONL transports each full control; decoded tabs and interior/trailing LF
+  survive execution and oracle hashing. Each command is one Bash program judged
+  by its final exit status. CLI/benchmark DoD uses the same whole-program transport;
+  benchmark regression remains earlier DoD only, and ARM ignores legacy DoD.
+- `execute` is the default arm kind; `gate` adds no special evaluator. `review`
+  adds a cold-read reminder on reveal, not independent-review enforcement.
+  `inject` reads a declared file or inline text, records its hash, and still
+  evaluates any checklist. Payload delivery occurs only on successful nonterminal
+  advance; failures and final completion can record a hash without delivering
+  bytes. See [arm contract](per-agent-arms.md).
+- [Compaction](compaction.md) shortens repeated feedback and emits checkpoint
+  hints. The harness owns actual context compaction.
+- Plain SHA-256 detects edits unless a writer recomputes the chain. HMAC mode
+  uses `RELAY_LEDGER_KEY`; its protection depends on secret isolation. Neither
+  mode alone excludes a valid-prefix truncation.
 
-- [Getting started](getting-started.md) — install the hook, run your first sprint
-- [Architecture](architecture.md) — hook wiring, payload fields, counter storage
-- [Authoring sprints](authoring-sprints.md) — `sprint.json` schema, DoD check-type catalog,
-  the `slugify` worked example
+Audit with [relay verify](../bin/relay), including the sprint for oracle recheck.
+Terminal escalation, missing deterministic controls, invalid control records,
+drift, or an unfinished trace cannot produce an auditable pass. Sprint comparison
+also rejects added/unrecorded, changed, or removed named controls; legacy missing
+oracles are `unverified`, and supplied/discovered invalid sprints are `invalid`.
+No supplied/discovered sprint leaves a recorded-only `not-run` comparison.
+Audit does not rerun checks or validate current artifacts. Gate acceptance measures
+authored checks; held-out benchmark grading is a separate evaluation.
+
+Next: [task setup](getting-started.md), [CLI integration](sdk.md),
+[documentation routes](README.md).

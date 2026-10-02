@@ -1,22 +1,37 @@
-# Campaign 01 — billing-integrity
+# Campaign 01 — Historical Billing-Integrity Input
 
-**Original, self-contained task. No CoreLink or other-project artifacts.** (See the isolation contract in
-[../README.md](../README.md).)
+Audience: agents. Status: historical.
 
-## Goal
-Implement `repo/billing/core.py` so the usage→billing path is **lossless, tenant-isolated, correctly priced,
-and auditable**.
+Current authority: [SPEC.md](../../../SPEC.md). Procedures: [operational skills](../../../.opencode/skills/).
+Input contract: [campaign records](../README.md). Evidence: [RESULTS.md](../../RESULTS.md).
 
-## Profile
-- **Type:** coupled-deep (dependency depth 6) · **Size:** 12 requirements · **k=3 → 7 work packages.**
+## Original task and profile
 
-## Files
-- `repo/` — the starting repo; the Runner edits `repo/billing/core.py` (public API names are fixed).
-- `requirements.yaml` — the frozen requirement set (ground truth; the RSR denominator).
-- `checks/test_billing.py` — one deterministic test per requirement (the grader runs these).
-- `sprint.json` — the frozen Relay decomposition (Arm R/D input). Arm M gets the goal + all requirements at once.
-- `meta.json` — size/type/k + calibration record.
+The candidate task was to implement `repo/billing/core.py` so usage billing is lossless,
+tenant-isolated, correctly priced and auditable. Original/self-contained fixture; no CoreLink
+or other-project artifacts. Profile: 12 requirements, coupled-deep, dependency depth 6,
+k=3 and 7 WPs.
 
-## Grading
-Final state only: `python3 -m pytest checks/ -q` against the Runner's `repo/`. RSR = passing requirement-tests
-/ 12 (weighted per `requirements.yaml`). Regression = tests that passed earlier and later fail.
+## Immutable inputs
+
+- [repo/](repo/) is the original starting skeleton, **expected red**, not a reference solution.
+  Candidate implementation edits belong in isolated run copies; public API names are fixed.
+- [requirements.yaml](requirements.yaml) fixes statements, weights, dependencies and RSR denominator.
+- [checks/](checks/) is visible feedback; [holdout/](holdout/) supplies final grading inputs.
+- [sprint.json](sprint.json) is the R/D decomposition;
+  [sprint_mono.json](sprint_mono.json) is M's one-WP gated/repair baseline.
+- [meta.json](meta.json) retains original calibration-pending snapshot.
+
+Agents must not repair the committed skeleton, weaken tests, change weights or tailor sprint
+inputs to improve benchmark scores. Pristine test failure is the intended starting condition.
+
+## Evidence boundary
+
+The historical pipeline comparison reported RSR 1.0 for M/R, with $0.25/6 turns versus
+$0.53/23 turns. It was saturated pipeline evidence, not an independent efficacy result.
+Visible `checks/` grading is smoke only; current runner final grading uses the held-out suite
+against candidate final state. Grader skips can count as successes, and temporal regression
+requires explicit prior grades rather than inferring it from one final RSR.
+
+The pending metadata does not override the later historical saturation observation. This
+README is an input record, not a command sequence or a claim of reliable headroom.

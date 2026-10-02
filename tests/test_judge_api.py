@@ -34,6 +34,7 @@ class _Handler(BaseHTTPRequestHandler):
     replies = None      # or a list, consumed one per request — used to model a flapping judge
     seen = {}           # last request body
     calls = 0
+    status = 200
 
     def do_POST(self):
         n = int(self.headers.get("content-length", 0))
@@ -44,7 +45,7 @@ class _Handler(BaseHTTPRequestHandler):
             reply = _Handler.reply
         _Handler.calls += 1
         body = json.dumps(reply).encode()
-        self.send_response(200)
+        self.send_response(_Handler.status)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(body)))
         self.end_headers()
@@ -56,13 +57,17 @@ class _Handler(BaseHTTPRequestHandler):
 
 @pytest.fixture()
 def endpoint():
+    _Handler.reply = {}
     _Handler.replies = None
+    _Handler.seen = {}
     _Handler.calls = 0
+    _Handler.status = 200
     srv = HTTPServer(("127.0.0.1", 0), _Handler)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
     t.start()
     yield f"http://127.0.0.1:{srv.server_port}"
     srv.shutdown()
+    srv.server_close()
 
 
 def _judge(endpoint, criterion="crit", files=(), **env):
@@ -74,7 +79,9 @@ def _judge(endpoint, criterion="crit", files=(), **env):
     args = [sys.executable, str(JUDGE), "--criterion", criterion]
     for f in files:
         args += ["--file", str(f)]
-    p = subprocess.run(args, capture_output=True, text=True, env=e)
+    p = subprocess.run(args, capture_output=True, text=True, env=e, timeout=10)
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert not p.stderr, p.stderr
     return json.loads(p.stdout)
 
 
@@ -250,4 +257,153 @@ def test_one_vote_is_the_default_and_costs_one_call(endpoint):
     _Handler.replies = [_tool_reply("pass")]
     r = _judge(endpoint)
     assert r["backend"] == "llm:test-model" and "votes" not in r["backend"]
+    assert _Handler.calls == 1
+
+
+def test_empty_reply_with_truncated_context_aborts_before_later_passes(endpoint, tmp_path):
+    big = tmp_path / "big.diff"
+    big.write_text("x" * 5000)
+    _Handler.replies = [{"content": [], "stop_reason": "max_tokens"},
+                        _tool_reply("pass"), _tool_reply("pass")]
+    r = _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=1000, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail"
+    assert r["backend"] == "llm:test-model(no-verdict)(truncated:big.diff)"
+    assert "no VERDICT line" in r["reason"]
+    assert _Handler.calls == 1
+
+
+@pytest.mark.parametrize("filename", ["big.diff", "big(no-verdict).diff"])
+def test_valid_majority_keeps_model_tally_and_truncation(endpoint, tmp_path, filename):
+    big = tmp_path / filename
+    big.write_text("x" * 5000)
+    _Handler.replies = [_tool_reply("pass", "first accepted judgment"),
+                        _tool_reply("fail"), _tool_reply("pass")]
+    r = _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=1000, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "pass"
+    assert r["backend"] == f"llm:test-model(votes:2/3)(truncated:{filename})"
+    assert r["reason"] == "2/3 passed · first accepted judgment"
+    assert _Handler.calls == 3
+
+
+@pytest.mark.parametrize("line", [
+    "VERDICT: FAIL (previous PASS was incorrect)",
+    "VERDICT: PASS or FAIL",
+    "VERDICT: NOTPASS",
+    "VERDICT: UNKNOWN",
+    "Result: VERDICT: PASS",
+    "VERDICT: PASS\nVERDICT: FAIL (previous PASS was incorrect)",
+])
+def test_ambiguous_prose_is_unavailable_not_a_vote(endpoint, line):
+    _Handler.replies = [{"content": [{"type": "text", "text": line}]},
+                        _tool_reply("pass"), _tool_reply("pass")]
+    r = _judge(endpoint, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail"
+    assert r["backend"] == "llm:test-model(no-verdict)"
+    assert _Handler.calls == 1
+
+
+@pytest.mark.parametrize("verdict", ["pass", "fail"])
+def test_exact_prose_verdict_accepts_only_case_and_outer_whitespace_normalization(endpoint, verdict):
+    _Handler.reply = {"content": [{"type": "text", "text":
+                                   f"Explanation mentions PASS.\n \tVeRdIcT: {verdict}\t \n"}]}
+    r = _judge(endpoint)
+    assert r["verdict"] == verdict
+    assert r["backend"] == "llm:test-model"
+    assert _Handler.calls == 1
+
+
+@pytest.mark.parametrize("verdict,prose", [("pass", "FAIL"), ("fail", "PASS")])
+def test_forced_tool_verdict_takes_priority_over_conflicting_prose(endpoint, verdict, prose):
+    _Handler.reply = _tool_reply(verdict, "tool judgment")
+    _Handler.reply["content"].insert(0, {"type": "text", "text": f"VERDICT: {prose}"})
+    r = _judge(endpoint)
+    assert r == {"verdict": verdict, "reason": "tool judgment", "backend": "llm:test-model",
+                 "available": True}
+
+
+@pytest.mark.parametrize("tool_input", [
+    ["pass"], "pass", 1, None, {},
+    {"verdict": ["pass"], "reason": "bad verdict type"},
+    {"verdict": "pass", "reason": ["bad reason type"]},
+    {"verdict": "pass"},
+])
+def test_malformed_tool_input_returns_error_json_and_aborts_votes(endpoint, tmp_path, tool_input):
+    big = tmp_path / "big.diff"
+    big.write_text("x" * 5000)
+    _Handler.replies = [{"content": [
+        {"type": "text", "text": "VERDICT: PASS"},
+        {"type": "tool_use", "name": "submit_verdict", "input": tool_input},
+    ]}, _tool_reply("pass"), _tool_reply("pass")]
+    r = _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=1000, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail"
+    assert r["backend"] == "api-error:test-model(truncated:big.diff)"
+    assert "api error:" in r["reason"]
+    assert _Handler.calls == 1
+
+
+@pytest.mark.parametrize("reply", [
+    None, [], {"content": None}, {"content": {}}, {"content": [None]},
+    {"content": [{"type": "text", "text": None}]},
+])
+def test_malformed_response_returns_error_json_and_aborts_votes(endpoint, reply):
+    _Handler.replies = [reply, _tool_reply("pass"), _tool_reply("pass")]
+    r = _judge(endpoint, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail"
+    assert r["backend"] == "api-error:test-model"
+    assert "api error:" in r["reason"]
+    assert _Handler.calls == 1
+
+
+def test_http_error_preserves_transport_model_and_truncation(endpoint, tmp_path):
+    big = tmp_path / "big.diff"
+    big.write_text("x" * 5000)
+    _Handler.status = 503
+    _Handler.replies = [_tool_reply("pass")] * 3
+    r = _judge(endpoint, files=[big], RELAY_JUDGE_MAX_CTX=1000, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail"
+    assert r["backend"] == "api-error:test-model(truncated:big.diff)"
+    assert "HTTP Error 503" in r["reason"]
+    assert _Handler.calls == 1
+
+
+_MARKER_MODELS = [
+    "alias(truncated:shadow)",
+    "alias(no-verdict)",
+    "alias(extra)",
+    "alias(truncated:shadow(no-verdict))",
+    "alias(no-verdict)(truncated:shadow)",
+    "alias(api-error)(cli-error)(votes:0/3)",
+]
+
+
+@pytest.mark.parametrize("model", _MARKER_MODELS)
+@pytest.mark.parametrize("prose", [False, True], ids=["tool", "prose"])
+def test_model_alias_markers_preserve_valid_votes_and_exact_identity(endpoint, tmp_path, model, prose):
+    artifact = tmp_path / "large(no-verdict)(truncated:shadow(votes:9)).diff"
+    artifact.write_text("x" * 5000)
+    reply = ({"content": [{"type": "text", "text": "VERDICT: PASS"}]} if prose
+             else _tool_reply("pass"))
+    _Handler.replies = [reply] * 3
+    r = _judge(endpoint, files=[artifact], RELAY_JUDGE_MODEL=model,
+               RELAY_JUDGE_MAX_CTX=1000, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "pass"
+    assert r["available"] is True
+    assert r["backend"] == f"llm:{model}(votes:3/3)(truncated:{artifact.name})"
+    assert r["reason"].startswith("3/3 passed")
+    assert _Handler.calls == 3
+    assert _Handler.seen["model"] == model
+
+
+@pytest.mark.parametrize("model", _MARKER_MODELS)
+def test_model_alias_markers_cannot_hide_empty_reply_unavailability(endpoint, tmp_path, model):
+    artifact = tmp_path / "large(no-verdict)(truncated:shadow(votes:9)).diff"
+    artifact.write_text("x" * 5000)
+    _Handler.replies = [{"content": [], "stop_reason": "max_tokens"},
+                        _tool_reply("pass"), _tool_reply("pass")]
+    r = _judge(endpoint, files=[artifact], RELAY_JUDGE_MODEL=model,
+               RELAY_JUDGE_MAX_CTX=1000, RELAY_JUDGE_VOTES=3)
+    assert r["verdict"] == "fail"
+    assert r["available"] is False
+    assert r["backend"] == f"llm:{model}(no-verdict)(truncated:{artifact.name})"
+    assert "no VERDICT line" in r["reason"]
     assert _Handler.calls == 1

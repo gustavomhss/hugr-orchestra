@@ -1,319 +1,243 @@
-# Configuration & Installation
+Audience: agents. Status: current.
 
-## 1. Installing the Relay hook
+# Configuration and integration reference
 
-The Relay hook is a `SubagentStop` hook entry in a Claude Code settings file. It must use an
-empty matcher (`""`) so it fires on every sub-agent stop, regardless of session context.
+Use [SPEC.md](../SPEC.md) for the current contract and
+[relay-integration](../.opencode/skills/relay-integration/SKILL.md) for the operational guide.
+Use [maintenance](../.opencode/skills/relay-maintenance/SKILL.md) for repository checks.
+Run examples from the Relay repository root; child-process cwd is explicit where needed.
 
-```json
-{
-  "hooks": {
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/absolute/path/to/relay-hook.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+## 1. Dependencies
 
-**Project scope vs. global scope**
+| Dependency | Required for |
+|---|---|
+| Bash, `jq`, standard Unix utilities, `shasum` | Hook/CLI evaluation, JSON handling, hashes, persisted state. |
+| `python3` | Judge, audit, spec tools, profile compiler, and Python project checks; third-party dependencies are listed below. |
+| Git | Computed diffs and ARM state-entry base refs; the integration example clones committed source. |
+| OpenSSL | HMAC ledger writing and random-token generation in the example. |
+| `pytest` | Repository tests and pytest-based sprint controls. |
+| PyYAML | `bin/relay-profile.py` and skill-frontmatter parsing in `bin/check-docs.py`; profile tests can skip when it is absent. |
+| markdown-it-py | Markdown parsing in `bin/check-docs.py`. |
+| `bin/relay-profile.py` | The shipped YAML-to-sprint compiler; regenerate derived profile JSON with this tool. |
+| Authenticated `claude` CLI | Claude hook sessions and the judge's `cli` backend. API/stub judging does not require it. |
 
-| File | Scope | When to use |
+Install development dependencies from [requirements-dev.txt](../requirements-dev.txt) in the Python
+environment running the documentation checks. It declares pytest, PyYAML, and markdown-it-py ranges;
+the documentation guard and profile compiler are not standard-library-only tools.
+
+Install any additional compiler or project tool actually invoked by the selected `cmd` controls.
+The core does not provision dependencies or apply a per-command timeout to `cmd` evaluation.
+[`benchmark/run_arm.sh`](../benchmark/run_arm.sh) uses `timeout` around the outer Claude process,
+not around each gate command. The judge API's `urlopen(..., timeout=60)` and CLI subprocess's
+`timeout=300` apply only to judge transport/process calls, not deterministic controls. Add an
+explicit timeout to a command when its contract requires one.
+
+## 2. Choose the event and isolate state
+
+| Runner | Registration | Binding |
 |---|---|---|
-| `<repo-root>/.claude/settings.json` | This project only | Relay driving a specific codebase sprint — most common |
-| `~/.claude/settings.json` | All Claude Code sessions | Shared tooling you want available everywhere |
+| Task-spawned subagent | `SubagentStop` -> `bin/relay-arm-hook.sh` | Put one `RELAY-ARM:<token>` marker in each subagent opening prompt; leave global `RELAY_ARM_TOKEN` unset. |
+| Direct `claude -p` runner | `Stop` -> `bin/relay-arm-hook.sh` | Set `RELAY_ARM_TOKEN` for that process, or use its single-token transcript. |
+| Benchmark single runner | `Stop` -> `benchmark/relay_hook.sh` | Set `RELAY_RUN_DIR` and `RELAY_SPRINT`; no ARM token. |
+| Non-Claude driver | Call `bin/relay-gate eval` | Allocate a separate state directory and handle JSON plus exit code. |
 
-Prefer project scope. The Relay hook reads `sprint.json` from a path it knows at install time;
-keeping the hook co-located with the sprint definition avoids cross-project interference.
+Register before starting the session. Do not assume changing settings removes a hook from an already
+running harness. Commands must resolve independently of the agent's cwd; derive the Relay path from
+the checked-out repository rather than copying a machine-specific path.
 
----
+An ARM needs `<arms>/<token>/sprint.json` and `meta.json`; there is no in-repository `relay-arm` MCP
+writer required for this file contract. Set `meta.workdir` to an existing directory and initial
+`meta.base_ref` to the pre-work Git commit. Use a unique token, isolated state, and one runner per arm.
+An invalid workdir can fall back to `.`; a missing token/sprint can let the runner stop ungated.
 
-## 2. Files & layout
+ARM acquires `<arm>/.run.lock` before agent-ID binding, release consumption, state updates, and usage
+attribution. A busy fire exits `3`, writes diagnostics only to stderr, and changes no arm state or
+ledger. Exit cleanup removes its owned run lock and temporary round buffer. The shared `.chain.lock`
+serializes ledger appends separately; neither lock authenticates the runner or release writer.
 
-A minimal Relay installation has three artifacts:
+## 3. Minimal isolated ARM recipe
 
-```
-<repo-root>/
-├── .claude/
-│   └── settings.json          # SubagentStop hook registration (see §1)
-├── relay/
-│   ├── relay-hook.sh          # The Relay hook script (the installed executable)
-│   └── sprint.json            # Sprint definition — read fresh on every hook fire
-└── .relay-state/              # Runtime state (created by the hook on first run)
-    ├── counters/              # Per-agent_id WP index (one file per Runner)
-    └── retries/               # Per-agent_id, per-WP retry counters
-```
-
-**relay-hook.sh** — The Relay hook script. Registered in `settings.json`; receives the
-`SubagentStop` payload on stdin as JSON. Reads `sprint.json` fresh on every fire (SPEC §3),
-runs the Gate, and writes `decision:block` or `decision:allow` to stdout.
-
-**sprint.json** — The on-disk Sprint definition (SPEC §3 schema). Because the hook re-reads
-this file on every fire, you can edit `sprint.json` between stops — add DoD checks, adjust
-instructions, change the retry budget — without touching the hook or restarting the session.
-
-**State & counters** — The hook persists two counters per Runner keyed by `agent_id`
-(SPEC §9): the current WP index and the per-WP retry count. These live outside the hook
-script so the hook process is stateless; the files survive compaction and re-fires.
-
----
-
-## 3. Knobs
-
-### retry_budget
-
-Top-level field in `sprint.json` (SPEC §3). Sets the maximum Gate failures allowed on a
-single WP before the sprint escalates to the human.
-
-```json
-{ "retry_budget": 3, "work_packages": [ … ] }
-```
-
-When `retries[runner][i] > retry_budget`, the hook calls `allow_stop()` and surfaces the WP
-and its gaps for human resolution. The last accepted (keep-best) WP remains locked. Default
-recommendation: 3. Raise for exploratory WPs, lower for mechanical ones where a second failure
-likely signals a spec gap.  See SPEC §5 (the Relay loop) for the exact escalation path.
-
-### Per-WP model override
-
-Each WP in `work_packages` accepts an optional `model` field (SPEC §3):
-
-```json
-{
-  "id": "wp1-impl",
-  "title": "Implement slugify",
-  "instructions": "…",
-  "model": "sonnet",
-  "dod": [ … ]
-}
-```
-
-Accepted values: `"haiku"` | `"sonnet"` | `"opus"`. When present, the Relay hook uses this
-model for any `llm` DoD checks on that WP (SPEC §4). WPs without a `model` field inherit the
-session default. Use `"haiku"` for mechanical WPs with cheap `grep`/`shell` gates to minimize
-judge cost.
-
-### Map-up-front
-
-At Runner spawn, the orchestrator gives the Runner the sprint `brief` plus the ordered list of
-WP **titles** — the Map (SPEC §2, §7). Each WP's `instructions` and `dod` are withheld until
-the Relay hook relays that WP. This gives the Runner global orientation ("table of contents
-visible") while keeping detail focused ("chapters revealed one at a time"). The Map is part of
-the orchestrator's initial prompt, not a hook knob — but the `title` field in each WP is the
-canonical source for Map content (SPEC §3).
-
-### RELAY_LEDGER_KEY (verified-trace ledger mode)
-
-Environment variable read by the hook (when it writes the ledger) and by `verify_ledger.py`
-(when it checks it). It selects how each ledger line is sealed (SPEC §7):
+This example uses the shipped `pytest-green` template against a focused repository test file. It
+creates a fresh clone, ARM state, and hook settings without modifying the source checkout. The clone
+contains committed files only. Use the integration skill for project-specific sprint selection.
 
 ```bash
-# PLAIN (default, unset): h = SHA-256(body). Tamper-EVIDENT — catches in-place edits, reorders,
-# and middle-deletions, but a holder of the file can rewrite the whole chain. Fine for demos/CI.
-python3 benchmark/verify_ledger.py <run>/.relay-state/ledger.jsonl
-
-# KEYED: h = HMAC-SHA256(RELAY_LEDGER_KEY, body). UNFORGEABLE without the secret — the mode for an
-# actual adversary / a compliance artifact an auditor verifies without trusting the producer.
-export RELAY_LEDGER_KEY="$(openssl rand -hex 32)"   # set for BOTH the run and the verification
-```
-
-The **same** key must be present when the hook writes and when you verify — a missing or wrong key
-fails verification identically to a tampered line (by design). Keep the key out of the run directory
-(env / secret manager), or the ledger and its seal travel together and the guarantee is lost. Neither
-mode defends against tail-truncation on its own; anchor the latest chain head out-of-band if that is
-in scope (SPEC §7).
-
-### RELAY_JUDGE_* — pointing the discursive judge at a real model
-
-A `judge` control is graded by `benchmark/judge.py`, which picks its backend as: forced
-`RELAY_JUDGE_BACKEND` > `api` when a key is present > `stub`. The stub is a TEST double — it passes
-only when every context file contains `RELAY_JUDGE_OK` — and is never a compliance control.
-
-```bash
-export RELAY_JUDGE_BACKEND=api
-export RELAY_JUDGE_MODEL=claude-sonnet-4-6
-export ANTHROPIC_API_KEY=...                       # or RELAY_JUDGE_API_KEY for another endpoint
-export RELAY_JUDGE_BASE_URL=http://127.0.0.1:8787  # any Messages-API-compatible endpoint
-export RELAY_JUDGE_MAX_TOKENS=8192                 # default; a cap, not a spend
-```
-
-| variable | what it does |
-|---|---|
-| `RELAY_JUDGE_BACKEND` | `api` or `stub`, forced |
-| `RELAY_JUDGE_MODEL` | the model — and it lands on the ledger, as `judge:llm:<model>(non-independent)` |
-| `RELAY_JUDGE_BASE_URL` | a Messages-API-compatible endpoint instead of `api.anthropic.com` |
-| `RELAY_JUDGE_API_KEY` | that endpoint's key; falls back to `ANTHROPIC_API_KEY` |
-| `RELAY_JUDGE_MAX_TOKENS` | reply budget, default 8192 |
-| `RELAY_JUDGE_STUB` | `pass`/`fail`, forces the stub's verdict — demos and CI only |
-
-Read the three verdicts a judge can put on a chain as three different statements:
-
-| ledger tag | what it means |
-|---|---|
-| `judge:llm:<model>(non-independent)` | the model answered. Advisory unless the control is `blocking` |
-| `judge:llm:<model>(no-verdict)` | the model was reached and never answered. Fails the control, but it is **not** a judgment about the artifact |
-| `judge:api-error(non-independent)` | the endpoint was not reached at all |
-| `judge:unavailable(no-diff)` | a `diff: true` control had no base ref to grade against |
-
-The last three are infrastructure, not opinion. `docs/profiles.md` §12 records what happened when
-they were not distinguishable: a live model burned its whole token budget thinking and returned an
-empty reply, and the resulting `fail` was indistinguishable from a considered rejection.
-
-Why 8192 rather than something tight: `max_tokens` bounds the reply, it does not reserve it. A model
-that answers in forty tokens costs forty. A model that reasons first and is cut off mid-thought
-returns nothing at all — measured, twice, at 512 and at 2048.
-
-### CLAUDE_CODE_STOP_HOOK_BLOCK_CAP — the cap that bounds a whole chain
-
-**Set it to `0` for any chain longer than about eight states.** This is not a tuning knob; it is a
-precondition.
-
-The harness caps consecutive hook blocks. Measured across three real `claude -p` runs against an
-always-blocking Stop hook:
-
-| session | fires before release |
-|---|---|
-| varying block reason | 10 |
-| identical block reason | 9 |
-| `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0` | 20 — that run's own release limit, never the harness's |
-
-The trap is that **advancement is itself a block** — Relay reveals the next gate through the same
-`{"decision":"block"}` channel, with a different reason and the position moved. So the cap does not
-bound retries; it bounds the *chain*. A default cap of 8 stops any sprint past roughly eight work
-packages, silently, in the middle of the work.
-
-```sh
+export RELAY_REPO="$PWD"
+export RELAY_RUNTIME="$(mktemp -d "${TMPDIR:-/tmp}/relay-agent.XXXXXX")"
+export RELAY_WORKDIR="$RELAY_RUNTIME/work"
+export RELAY_ARMS_DIR="$RELAY_RUNTIME/arms"
+export RELAY_CORPUS_DIR="$RELAY_RUNTIME/corpus"
+export RELAY_ARM_TOKEN="$(openssl rand -hex 12)"
 export CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0
+git clone --local "$RELAY_REPO" "$RELAY_WORKDIR"
+mkdir -p "$RELAY_ARMS_DIR/$RELAY_ARM_TOKEN"
+python3 bin/relay-spec.py instantiate pytest-green \
+  --param tests=tests/test_arm_binding.py \
+  -o "$RELAY_ARMS_DIR/$RELAY_ARM_TOKEN/sprint.json"
 ```
 
-Disabling it removes the harness's only runaway protection, so Relay carries its own: every
-re-blocking path is bounded by a turn budget (`retry_budget`, `$ARM/reg_retry`, no-progress
-detection). See `docs/gates.md` §5 and `docs/relay-v2.md` §2.5 for the full table.
-
-**Relay checks this for you, once per arm.** The hook runs inside the agent's process, so it is the
-only thing that can read the live value. If the cap is lower than the chain needs it appends a
-`cap-risk` entry to the ledger and prepends a warning to that fire's block reason:
-
-```
-Relay: this session's hook block cap is 8, and this chain needs at least 13 blocks to finish
-(12 gates plus completion; retries cost more). It will stop mid-chain.
-Set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0 to disable the cap.
-```
-
-The number is a **lower bound**, not a prediction: it assumes every gate passes on the first try, and
-each retry, regression re-block and park costs another block. A chain that merely fits under the cap
-can still die. A malformed value reads as the default of 8, never as uncapped — failing open would
-silence the warning in exactly the misconfigured sessions it exists for.
-
-### Context compaction for long sprints
-
-A single continuous Runner accumulates context across all WPs (SPEC §7 design decision).
-For long sprints this grows into compaction territory. Mitigation: Claude Code's built-in
-`/compact` between WP relays, or configure `context_compaction` in `settings.json` to trigger
-automatically. The hook-driven relay pattern (one continuous context) is the explicit design
-choice; compaction is the cost-management knob. See SPEC §7 for the continuous-context
-rationale.
-
----
-
-## 4. Headless / automation
-
-To run a sprint unattended, spawn the Runner via `claude -p` (print mode) with the appropriate
-permission mode:
+Prepare the first context, metadata, and registration before launch:
 
 ```bash
-claude -p \
-  --permission-mode acceptEdits \
-  "$(cat orchestrator-prompt.txt)"
+python3 - <<'PY'
+import json, os, shlex, subprocess
+from pathlib import Path
+
+repo = Path(os.environ["RELAY_REPO"])
+runtime = Path(os.environ["RELAY_RUNTIME"])
+work = Path(os.environ["RELAY_WORKDIR"])
+token = os.environ["RELAY_ARM_TOKEN"]
+arm = Path(os.environ["RELAY_ARMS_DIR"]) / token
+sprint = json.loads((arm / "sprint.json").read_text())
+protocol = "Work only in the assigned workdir. Do not weaken, skip, or edit the target tests."
+sprint["macros"] = [{"id": "verify", "instructions": protocol}]
+for wp in sprint["work_packages"]:
+    wp["macro"] = "verify"
+    wp["self_check"] = ["Which implementation changes address the test failures?"]
+(arm / "sprint.json").write_text(json.dumps(sprint, indent=2) + "\n")
+base = subprocess.check_output(["git", "-C", str(work), "rev-parse", "HEAD"], text=True).strip()
+(arm / "meta.json").write_text(json.dumps({"workdir": str(work), "base_ref": base, "token": token}) + "\n")
+(arm / "macro_verify").touch()
+first = sprint["work_packages"][0]
+prompt = "\n\n".join([
+    "RELAY-ARM:" + token,
+    sprint["brief"],
+    "Map: " + " -> ".join(w["title"] for w in sprint["work_packages"]),
+    protocol,
+    first["instructions"],
+    "Before finishing:\n" + "\n".join("- " + q for q in first["self_check"]),
+    "When the current WP is done, stop so Relay can evaluate it. Follow any next-WP block.",
+])
+(runtime / "prompt.txt").write_text(prompt + "\n")
+command = "bash " + shlex.quote(str(repo / "bin" / "relay-arm-hook.sh"))
+settings = {"hooks": {"Stop": [{"matcher": "", "hooks": [{"type": "command", "command": command}]}]}}
+settings_dir = work / ".claude"
+settings_dir.mkdir(exist_ok=True)
+(settings_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n")
+PY
+python3 bin/relay-spec.py lint "$RELAY_ARMS_DIR/$RELAY_ARM_TOKEN/sprint.json" --json
 ```
 
-`--permission-mode acceptEdits` allows the Runner to read and write files without interactive
-prompts, which is the minimum required for most sprints. Use `bypassPermissions` only in fully
-isolated environments (containers, CI) where no interactive safeguard is needed.
-
-The Relay hook fires identically in headless and interactive sessions — `SubagentStop` is
-session-mode-agnostic. The `permission_mode` field in the hook payload (SPEC §9) reflects the
-mode the session was started with; the hook can inspect it if gate logic needs to vary by mode.
-
-For CI pipelines, write `sprint.json` from a template step, invoke `claude -p`, and assert exit
-code 0. The hook writes its escalation reason to stderr and exits non-zero on budget exhaustion,
-making it compatible with standard CI failure detection.
-
----
-
-## 5. Disabling or neutralizing a hook
-
-**Critical caveat (SPEC §9):** removing a `SubagentStop` entry from `settings.json` does **not**
-hot-reload mid-session. Hook registration is snapshotted at session start; the settings file is
-not re-read between fires.
-
-However, the hook **script body is read fresh on every fire**. This means:
-
-- To **disable a hook in a live session**: neutralize the script — replace its body with `exit 0`.
-  The hook entry remains registered, but every fire is a no-op. The Runner will stop normally.
-- To **fully clean up**: remove the hook from `settings.json` and restart the session. The hook
-  will not fire in the new session.
-
-Neutralizing to a no-op:
+For the direct runner, launch from the isolated workdir through an explicit child cwd:
 
 ```bash
-# Disable relay-hook.sh for the rest of this session
-echo 'exit 0' > /absolute/path/to/relay-hook.sh
+python3 - <<'PY'
+import os, subprocess
+from pathlib import Path
+prompt = (Path(os.environ["RELAY_RUNTIME"]) / "prompt.txt").read_text()
+raise SystemExit(subprocess.run(
+    ["claude", "-p", prompt, "--permission-mode", "acceptEdits"],
+    cwd=os.environ["RELAY_WORKDIR"], env=os.environ.copy(),
+).returncode)
+PY
+python3 bin/relay problems "$RELAY_ARMS_DIR/$RELAY_ARM_TOKEN" --json
+python3 bin/relay verify "$RELAY_ARMS_DIR/$RELAY_ARM_TOKEN" --json
 ```
 
-Restore from version control afterward. Do not leave a neutralized script committed.
+Runner exit `0` does not imply chain completion: hooks also exit `0` on escalation and binding
+refusal. Inspect `state`, stderr/logs, and the audit result. Preserve `RELAY_RUNTIME` until evidence
+review is complete.
 
----
+For subagent dispatch, register the same command under `SubagentStop` in the spawning session,
+allocate one arm per subagent, and pass each generated opening prompt to its owner. Unset the global
+`RELAY_ARM_TOKEN` override before starting that parent session; otherwise every child uses the same
+token regardless of its transcript marker. Keep the block-cap environment on the parent process.
+Do not register the direct-runner `Stop` adapter as a substitute for subagent stops.
 
-## 6. Troubleshooting install
+## 4. Environment reference
 
-**Hook not firing**
+| Variable | Consumer and default |
+|---|---|
+| `RELAY_ARMS_DIR` | ARM root; `$HOME/.relay/arms`. |
+| `RELAY_ARM_TOKEN` | ARM explicit override; unset for transcript-bound multi-agent dispatch. |
+| `RELAY_CORPUS_DIR` | ARM terminal archive root; `$HOME/.relay/corpus`. |
+| `RELAY_JUDGE` | ARM/CLI judge script override; defaults to `benchmark/judge.py`. Benchmark hook uses its fixed adjacent script. |
+| `RELAY_COMPACT_AFTER` | ARM checkpoint-text threshold on advancement; default `6`. It adds a hint, not actual context compaction. |
+| `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` | Harness setting inspected once by ARM; absent/invalid reads as `8` for warning logic, `0` requests no cap. |
+| `RELAY_LEDGER_KEY` | Shared append/verifier key; nonempty selects HMAC-SHA256, otherwise SHA-256. |
+| `RELAY_RUN_DIR`, `RELAY_SPRINT` | Required benchmark workdir/plan. Its state lives in `<run>/.relay-state`. |
+| `RELAY_GATE` | Benchmark only; default `on`, literal `off` bypasses controls. |
+| `RELAY_SPECS_DIR` | Spec catalog override for `relay-spec.py`. |
 
-- Confirm the entry is in the correct settings file for the session scope (project vs. global,
-  see §1). Run `claude /hooks` or inspect the active settings to verify registration.
-- The `matcher` must be `""` (empty string). A non-empty matcher is matched against
-  session context; only `""` catches all stops unconditionally.
-- Ensure the hook script is executable: `chmod +x /path/to/relay-hook.sh`.
-- The hook fires only on `SubagentStop` — i.e., when a sub-agent (Runner) stops, not when
-  the top-level session stops. If you have not spawned a sub-agent, the hook will not fire.
+### Judge settings
 
-**`jq` missing**
+| Variable | Contract |
+|---|---|
+| `RELAY_JUDGE_BACKEND` | Choose `stub`, `api`, or `cli`. Without override, API only if `ANTHROPIC_API_KEY` is present, otherwise stub. |
+| `RELAY_JUDGE_MODEL` | Judge model, default `claude-sonnet-4-6`; not the runner model. |
+| `RELAY_JUDGE_BASE_URL` | Optional Messages-compatible base URL; API appends `/v1/messages`. |
+| `RELAY_JUDGE_API_KEY`, `ANTHROPIC_API_KEY` | API credential in that precedence order. A custom base can use no key; default Anthropic endpoint cannot. |
+| `RELAY_JUDGE_MAX_CTX` | API/CLI per-file character cap, default `120000`. Cuts are announced/tagged. |
+| `RELAY_JUDGE_MAX_TOKENS` | API reply cap, default `8192`; CLI invocation does not use this value. |
+| `RELAY_JUDGE_VOTES` | API/CLI samples, default `1`, minimum `1`; strict majority passes, ties fail. |
+| `RELAY_JUDGE_STUB` | Stub-only forced `pass`/`fail`; otherwise every supplied file needs `RELAY_JUDGE_OK`. |
 
-The Relay hook script parses the JSON payload with `jq`. If `jq` is absent the script will fail
-silently (exit non-zero) and the Runner will stop as if no hook fired.
+Set numeric judge settings to valid integers. Invalid values can fail before the script emits JSON.
+The shared core records nonzero judge exits or malformed/missing responses as `fail` with an
+unavailable backend tag; `blocking:true` blocks them. A valid response must be exactly one JSON
+object with `verdict: pass|fail`; the core does not require the shipped judge's added boolean `available`.
+API/CLI voting uses typed sample state: unavailable samples abort with `fail` and `available:false`;
+answered pass/fail ballots have `available:true`. Backend/model/truncation labels are metadata, never
+parsed back into state. Calibration requires process exit 0, one object, pass/fail verdict, string
+reason, NUL-free string backend, and literal `available:true`; invalid/unavailable results are excluded
+from TP/TN/FP/FN and agreement. Stub availability does not establish semantic quality.
+Prose fallback accepts the last line starting
+with `VERDICT:` only when it is exactly `VERDICT: PASS` or `VERDICT: FAIL` after case and outer
+whitespace normalization. A malformed last declaration does not fall back to an earlier pass.
+Read [gates](gates.md) for exact voting and failure limits.
 
-```bash
-# macOS
-brew install jq
+Checklist commands and IDs preserve tabs, interior LF, and trailing LF through compact JSON records
+and exact string decoding. ARM/CLI checklist regression and CLI/benchmark `dod[].cmd` readers execute
+each complete decoded shell program rather than separate physical lines. Checklist oracle hashes
+cover the full decoded `cmd`, or `judge` plus raw space-joined `paths`, including trailing LF;
+unchanged LF-bearing controls do not diverge merely because of extraction. NUL is unsupported in
+shell strings. External scripts remain useful for complex controls, but single-line commands are
+not a transport requirement. A multiline program passes according to its overall Bash exit status;
+use explicit status propagation when every constituent command must succeed.
 
-# Ubuntu/Debian
-apt-get install -y jq
-```
+## 5. Integrity, release, and diagnostics
 
-Verify: `jq --version`.
+Use the same HMAC key for writing and verification; keep it outside published trace artifacts.
+HMAC's producer-resistant guarantee requires the key and trusted writer to be inaccessible to the
+producer. Same-user environment variables, editable plans/commands, and writable ARM state do not
+create a security boundary. Neither hash mode proves the latest tail is present without an external
+head anchor.
 
-**Wrong `sprint.json` path**
+Required ARM/CLI/benchmark verdict and disposition appends are fatal and precede their corresponding
+transition/retry/release publication. Earlier command effects or appended records can remain after a
+later error; this ordering provides no atomicity, rollback, or fsync guarantee. ARM ancillary events
+and terminal archives remain best-effort; see the ARM skill for the event boundary.
 
-The hook script has the path to `sprint.json` hardcoded at install time (or derived from
-`$SPRINT_JSON` if you parameterize it). If the sprint file is not found, the hook has no WP
-list and will fail. Check:
+Operators MUST give a real who/why reason in `<arm>/release`. The engine removes CR, maps LF to ASCII
+spaces, and trims leading/trailing ASCII spaces. It also rejects reasons containing no non-whitespace
+character, including tabs-only and CRLF/space/tab-only input; a rejected file is retained. An accepted
+release resolves raw whole WP ID first, then raw first-dot suffix; only a raw miss permits legacy
+trailing-LF cleanup and retrying those lookups. CR remains identity data.
+Required `human-release` append succeeds before reason consumption or cleanup. Cleanup clears the
+resolved ID's sanitized `retry_`, `round_`, `repeat_`, and `blocked_` files, legacy `retry_<index>`,
+and `reg_retry`, preserving unrelated WP keys. Set `active`, restore the compatibility `counter`
+to that WP's current array index, and recheck. A failure charges the restored budget normally;
+release does not waive controls or authenticate a human. A lost position leaves the reason unconsumed.
+See the [ARM skill](../.opencode/skills/relay-arm-hook/SKILL.md) for state repair operations.
 
-1. The path in the hook script matches the actual file location.
-2. The file is valid JSON: `jq . sprint.json` should print without error.
-3. The working directory at hook fire time (`cwd` in the payload, SPEC §9) matches your
-   assumptions if you use a relative path. Prefer absolute paths.
+`relay verify` reports recorded checklist verdicts and chain integrity; it does not rerun controls
+or certify current artifacts. With a reachable sprint or explicit `--sprint`, it compares named
+control IDs in both directions and recorded oracle hashes. Added/unrecorded, removed, or changed
+controls produce `SPRINT-DIVERGED`; an unusable requested/reachable sprint produces `SPRINT-INVALID`,
+not a skipped comparison. Legacy graded events without oracle hashes produce `ORACLE-UNVERIFIED`
+when comparison is requested. An intact chain with unusable audit fields produces `RECORD-INVALID`.
+These are exit `2` results. A bare ledger without a sprint has `oracle_recheck.status=not-run` and
+explicit recorded-controls-only scope, even when its result is `PASS`.
 
----
+| Symptom | Inspect |
+|---|---|
+| Hook never blocks | Event registration, inherited environment, own transcript path/marker, token directory, `agent_id` refusal, stderr. |
+| Checks run in the wrong directory | `meta.workdir` exists; the ARM fallback is `.`, not payload `cwd`. |
+| Runner stops mid-chain | `state`, `relay.log`, ledger `escalate`/plan defects, harness block cap, and unexpected tool errors. |
+| Diff unavailable | Initial `meta.base_ref` or CLI `<state>/base_ref`, valid commit, Git workdir. |
+| Judge fails or disappears | Backend/model/credentials, file context, truncation tags, numeric settings, script stderr when run directly. |
+| ARM/CLI busy (`3`) | `<arm-or-state>/.run.lock`; establish whether an evaluation is alive before removing a stale lock. |
+| Audit cannot certify | Chain integrity, terminal event, deterministic controls, oracle drift, invalid record/sprint, and `oracle_recheck` status/scope. |
 
-## 7. See also
-
-- [Getting started](getting-started.md) — write your first `sprint.json` and run a sprint end-to-end.
-- [Architecture](architecture.md) — the Relay loop internals, Gate evaluation order, and
-  keep-best semantics in detail.
+Use [relay-gate-cli](../.opencode/skills/relay-gate-cli/SKILL.md) for outcome handling and
+[relay-audit](../.opencode/skills/relay-audit/SKILL.md) for evidence review.

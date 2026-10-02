@@ -1,130 +1,135 @@
-# Relay Benchmark — Results
+# Relay Benchmark — Historical Results and Evidence Limits
 
-## Pipeline validation — campaign 01 (uncalibrated; NOT a result)
+Audience: agents. Status: historical.
 
-First end-to-end runs, proving the harness works (grader + Relay hook + run_arm + KPI capture).
-**Campaign 01 is saturated** — both arms reach RSR 1.0 — so these numbers measure the *pipeline*, not
-Relay's value. They already reproduce the predicted **overhead regime**: with no headroom, Relay costs
-more for identical quality.
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+These are May 2026 observations, reconciled against baseline
+`684456d571e8deb5f435d39e789e1b1258453d85`. They are not a current benchmark runbook.
+Agents quoting them must preserve the artifact/provenance distinctions and limits below.
 
-| Arm | RSR | CCR | REG | cost $ | out-tok | turns |
+## 1. Billing pipeline pilots — saturated, not efficacy proof
+
+Campaign 01's initial end-to-end comparison recorded:
+
+| Arm | RSR | CCR | REG reported | Cost $ | Output tokens | Turns |
 |---|---|---|---|---|---|---|
-| M — monolithic (1-WP, gated) | 1.00 | 1 | 0 | 0.25 | 6873 | 6 |
-| R — relay (7-WP, gated)      | 1.00 | 1 | 0 | 0.53 | 7860 | 23 |
+| M — one WP, gated | 1.00 | 1 | 0 | 0.25 | 6,873 | 6 |
+| R — seven WPs, gated | 1.00 | 1 | 0 | 0.53 | 7,860 | 23 |
 
-**Observation:** on a saturated campaign, R = **2.1× cost, 3.8× turns, same RSR** → pure overhead — exactly
-what [GOALS.md](GOALS.md) §2 predicts *below the crossover*. This validates both the harness and the
-hypothesis-shape; it is not yet a measurement of Relay's value.
+The roughly 2.1× cost / 3.8× turns comparison is a pipeline/overhead observation at equal
+reported quality. The original runs were not established as held-out efficacy evidence.
+The zero REG summary does not establish full temporal grading coverage.
 
-**Next:** calibrate campaign 01 (raise composition depth / interaction / density until Arm M reliably drops
-requirements), then run all three arms (M / R / D) across the size sweep. Only past the crossover does the
-comparison become meaningful.
+Campaign 02's [metadata](campaigns/02-billing-engine-pro/meta.json) records M saturation at
+30 requirements, 6 turns; the historical report gives $0.29 and reports R also at RSR 1.0.
+No matching R usage summary was retained here. Campaign 01 metadata still says calibration
+pending; campaign 02 metadata's "only SCALE" extrapolation is historical, not a current conclusion.
+Neither immutable metadata file has been rewritten to fit this evidence summary.
 
----
+## 2. v1 templated-coupled M observations — 2026-05-30
 
-## Held-out grading + the M-breakpoint hunt (2026-05-30) — the decisive negative result
+[generator/gen_campaign.py](generator/gen_campaign.py) emits validations, derived fields and
+cross-field rules for a record processor. Expectations are generated from an external `/tmp`
+reference; visible/held-out suites use different inputs.
 
-Two upgrades make these numbers trustworthy where the campaign-01 pipeline numbers were not:
-
-- **gate ≠ grader.** The runner's feedback gate is the visible `checks/`; the grade is an *independent*
-  HELD-OUT suite (`holdout/`) with disjoint inputs + metamorphic invariants, anti-hack verified — a
-  reward-hacker that aces the visible gate 100% scores only ~0.08–0.11 held-out.
-- **Parametric, contamination-immune substrate.** `generator/gen_campaign.py` emits coupled campaigns at any
-  N (validation + derived + cross-field rules); ground truth is a /tmp reference baked as literals.
-
-### Question: does the monolith ever drop requirements as N grows?
-
-Arm M = one prompt (the full spec) + a bounded full-suite repair loop (the realistic baseline). M-only sweep,
-graded on the held-out suite:
-
-| N (rules) | M held-out RSR | exit | turns | cost $ |
+| N | M held-out RSR reported | Exit reported | Turns | Cost $ |
 |---|---|---|---|---|
-| 60  | 1.00 (60/60)       | time-capped (impl complete) | — | — |
-| 150 | **1.00 (150/150)** | clean | 6 | 0.66 |
-| 300 | **1.00 (300/300)** | clean | 7 | 0.81 |
+| 60 | 1.00 (60/60) | Time-capped; implementation reported complete | — | — |
+| 150 | 1.00 (150/150) | Clean | 6 | 0.66 |
+| 300 | 1.00 (300/300) | Clean | 7 | 0.81 |
 
-**The monolith does not break up to N=300.** A strong model (Sonnet) implements 300 coupled, precisely-specified
-rules in 6–7 turns for <$1, and the independent held-out grader confirms it *generalizes* (a compact general
-dispatch, not hard-coded branches). Arm R (Relay) is, by contrast, pure overhead and far slower — at N=60 it ran
-~150–200s/WP and timed out at 4/12 WPs; running R at higher N is dominated and unnecessary to reach the verdict.
+The historical R-at-60 attempt reportedly timed out after 4/12 WPs, at roughly 150–200 seconds
+per WP. It is an incomplete run, not an equal-budget superiority/inferiority result. These rows
+are retained report-level observations; raw repeated-seed grades/usage were not committed in
+the results directory. The time-capped N60 observation is not a clean-envelope completion claim.
 
-### Verdict: no crossover up to N=300 → the amplifier thesis is unsupported on this substrate
+The substrate is wide but precisely specified and compressible to general dispatch. The reported
+M pilots found no recovery headroom; they do not test arbitrary evolving-context code campaigns.
 
-This is the decisive negative result the white paper pre-registered as a kill condition (WHITEPAPER §5.2, §5.4,
-§7 decision rule). It does **not** support "Relay recovers requirements the monolith drops at scale" — because
-the monolith drops nothing. It **confirms** the durable positioning: Relay's value is the deterministic external
-oracle + forward-only ratchet + verified-trace ledger (reliability insurance + compliance — *proof, not speed*),
-which hold at all N and never depended on a crossover existing.
+## 3. v2 bespoke-function M observations — 2026-05-31
 
-### Honest boundary of this result
+[generator/gen_campaign_v2.py](generator/gen_campaign_v2.py) emits distinct arithmetic
+definitions, optional single calls to earlier functions, and ordered rules based on index%7,
+presence of a call and parity. "Non-compressible" was the experiment's label for removing the
+v1 table-dispatch shortcut, not a mathematical proof of incompressibility or reasoning difficulty.
 
-The generated substrate is **wide but shallow**: N individually-simple rules under a *complete, precise* spec —
-exactly the regime strong models ace first-pass. It does NOT probe the deepest real-world failure mode: a large,
-*evolving* context where early decisions must constrain late ones and the coherent whole exceeds what the model
-holds reliably. Whether that regime (a) admits a clean deterministic oracle and (b) is one where Relay wins is
-still open — and is precisely the benchmark that is hard to build. Until such a substrate exists and shows a
-crossover, the efficacy half stays unsupported, and we ship the control-plane / compliance product.
-
----
-
-## v2: the non-compressible substrate (the amplifier's last shot) — still no break (2026-05-31)
-
-To rule out that v1's negative was an artifact of *compressibility* (templated rules collapse to one
-general dispatch, so the model never holds N distinct things), generator v2 (`gen_campaign_v2.py`) emits
-N **bespoke** functions g1..gN — each a unique arithmetic expression that calls one earlier function (a
-single-call chain, so an error propagates), each applying 3 per-function global rules (index parity /
-index%7 / has-a-call). There is no table to interpret: the model must emit N **distinct** definitions and
-apply the right global-rule combination to each. Same gate≠grader + clean /tmp oracle; held-out
-anti-hack verified (cheat ≈0.03).
-
-| substrate | N | M held-out RSR | turns | cost $ |
+| Substrate | N | M held-out RSR reported | Turns | Cost $ |
 |---|---|---|---|---|
-| v2 bespoke-graph | 150 | **1.00 (150/150)** | 8 | 1.35 |
-| v2 bespoke-graph | 300 | **1.00 (300/300)** | 8 | 1.16 |
+| v2 bespoke-graph | 150 | 1.00 (150/150) | 8 | 1.35 |
+| v2 bespoke-graph | 300 | 1.00 (300/300) | 8 | 1.16 |
 
-Even with the compression shortcut removed and cross-function coupling added, the monolith implements 300
-distinct, coupled, non-local-rule-bearing functions in 8 turns for ~$1, held-out-confirmed. **The amplifier
-thesis is now falsified on two independent substrates.**
+These are historical report-level rows, not a committed complete seed sweep. Historical visible-
+lookup hacker probes reportedly scored approximately 0.08–0.11 held-out on v1 and 0.03 on v2.
+Those narrow probes do not establish zero hack rate, hardened blinding or contamination immunity.
 
-### What this rules in and out
-A *complete, precise* spec of up to N=300 distinct coupled requirements is implemented first-pass by a strong
-model **regardless of compressibility**. The failure modes that actually break long agentic work — ambiguity,
-underspecification, evolving requirements, or context that genuinely exceeds the window — are exactly the ones
-that resist a clean deterministic oracle. The only remaining lever with a clean oracle is sheer
-output/context **saturation** (N ≫ 300, e.g. 1000+), but (a) M's bounded-repair loop gets multiple turns, so
-it may still complete — turning it into a **cost** question, not a quality one; and (b) a win there is "M
-can't fit it in one pass," a mechanical-capacity regime, not reasoning amplification. **Verdict: on every
-clean-oracle substrate up to N=300, there is no crossover. The durable product is control-plane / compliance.**
+## 4. N500 — one committed v2 seed-1 M aggregate
 
----
+Primary retained artifact: [results/crossover_N500_s1_M.json](results/crossover_N500_s1_M.json).
 
-## N=500: the saturation lever, integrity-guarded (2026-05-31)
+| Field | Recorded value |
+|---|---|
+| Substrate / size / WP cap | v2 bespoke-graph / N=500 / k=25 |
+| Seed / arm | 1 / M only |
+| RSR / validity | 1.0 / `valid:true`, empty reasons |
+| Turns / output tokens | 7 / 88,178 |
+| Cost / elapsed | $1.8373097999999999 / 1,866.2 seconds |
+| Timeout / headroom threshold | 2,400 seconds / 0.85 |
+| Optional grader sanity flag | **`check_grader:false`** |
+| Run directory pointer | `_runs/N500-s1-k25-M` on the original machine |
 
-The one remaining lever §"What this rules in and out" left open was sheer **scale** (N ≫ 300). Tested it
-directly at **N=500** on the v2 non-compressible bespoke-graph substrate, via `run_crossover.py` — a new
-orchestrator that **refuses to report an RSR unless the run proves itself real**: it validates that the
-model actually executed (non-empty `run.json` with real turns/tokens) AND that the run's `engine/core.py`
-is **not** byte-identical to the `/tmp` reference (a reference-leak guard). Only runs passing both are
-counted; the grader-discriminates check (pristine skeleton must FAIL the held-out suite) confirmed the
-oracle still tests the candidate (500/500 fail on the empty skeleton).
+The JSON stores aggregate usage/RSR, not candidate implementation, per-requirement grade,
+pytest collection record, full transcript or independently anchored provenance. It cannot
+establish "first-pass" success, even though the earlier prose used that phrase. There is no
+N500 R/D comparison in this artifact, and v1 was not measured to 500 by this record.
 
-| substrate | N | arm | M held-out RSR | valid? | turns | out-tok | cost $ |
-|---|---|---|---|---|---|---|---|
-| v2 bespoke-graph | 500 | M (monolith) | **1.00 (500/500)** | ✅ guards passed | 7 | 88,178 | 1.84 |
+The original narrative described a separate pristine-skeleton check as 500/500 failures; no
+such result is stored in this JSON, and its optional sanity flag was false. Retain that as a
+historical report, not as a prerequisite proven by the committed record.
 
-**The monolith aces N=500 too** — 500 distinct, coupled, non-local-rule-bearing functions implemented
-first-pass in 7 turns for ~$1.84, held-out-confirmed, with the implementation verified to be the model's
-own work (not a leaked reference). This is a **fifth independent substrate point** and it pushes the
-no-crossover finding past the scale lever that §"What this rules in and out" had flagged as the last
-open question.
+An earlier attempt reportedly produced false RSR 1.0 with an empty model envelope and copied
+reference implementation. The runner guards address that exact shape; they do not prove every
+accepted candidate is exclusively model-authored.
 
-> Methodological note: an earlier attempt to run this from *inside* a Claude session produced a false
-> `RSR 1.0` — `claude -p` did not execute (empty `run.json`) and the `/tmp` reference leaked into the run
-> dir, so the grader scored the reference against itself. `run_crossover.py`'s two guards catch exactly
-> that pair and mark such runs INVALID; the table above is the clean-terminal run that passed both.
+## 5. What the code checks, and what it does not
 
-### Updated verdict
-On every clean-oracle substrate **up to N=500**, there is no crossover. Intricacy is not a difficulty
-lever and — now measured, not extrapolated — neither is scale to N=500. The amplifier thesis stays
-unsupported; the durable product is the **control-plane / compliance** surface (external oracle +
-forward-only ratchet + verified-trace ledger), whose value never depended on a crossover existing.
+### End-gated M is already built
+
+[run_arm.sh](run_arm.sh) chooses M's monolithic sprint with `GATE=on`.
+[relay_hook.sh](relay_hook.sh) runs its full campaign checks and permits bounded aggregate repair.
+The product's former "M+CI absent" framing was wrong. This is the end-gated campaign baseline;
+equal total compute is not enforced, and arbitrary project CI is not implied.
+
+### Gate/grader split is directory-level
+
+`run_arm.sh` removes `holdout/` from the runner copy; [grader.py](grader.py) grades the
+campaign-source holdout via `RELAY_IMPL`. Visible-check fallback is explicitly non-independent,
+valid for smoke only. The process/filesystem remain accessible under the same OS user; directory
+removal is not a complete secrecy or sandbox boundary.
+
+### Validity and sanity are bounded checks
+
+[run_crossover.py](run_crossover.py) `validate_run` checks a nonempty parsable usage envelope,
+nonzero turns **or** output tokens, error status and implementation presence. It rejects a
+candidate byte-identical to the reference **when that reference exists**. It does not reject
+transformed copies or prove broader provenance, and it can mark a run valid without a usable grade.
+
+`--check-grader` considers anything except a clean pytest pass discrimination, including
+infrastructure, import and collection failures. Its "pristine fails ⇒ discriminates" label is
+not a strong sanity proof. The committed N500 record did not enable this option.
+
+`grader.py` ignores pytest return code and marks only JUnit failure/error children as failures.
+A skipped testcase can count as a successful requirement. Missing requirement results reduce
+RSR, but that does not validate full collection or prevent success via skips. REG is a final
+comparison only when `--baseline` is supplied, not an automatic history of every flip.
+
+## 6. Supported conclusion
+
+The reported M pilots were saturated on v1 through 300 and v2 through 300, plus the committed
+v2 N500 seed-1 aggregate. These observations do not support a requirement-recovery/speed claim
+for Relay on those tasks. The small billing pipeline showed overhead for equal reported quality.
+
+They do **not** settle a statistical crossover at all sizes ≤500, show two substrates each to
+500, establish a general win/loss for per-step gating, or compare high-N M/R/D at equal budget.
+Repeated seeds, uncertainty, adversarial/skip/collection controls and evolving-context effects
+remain unresolved. Current positioning stays narrow: external checks, progression and recorded
+evidence, bounded by actual oracle and enforcement reach.

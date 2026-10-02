@@ -1,99 +1,44 @@
-# Relay Benchmark — Measurement Goals & Angles
+# Relay Benchmark — Historical Measurement Goals
 
-> Read this before [KPIS.md](KPIS.md). KPIs are the *instruments*; this file is *what we are trying
-> to learn*. The KPIs only matter in service of these angles.
+Audience: agents. Status: historical.
 
-## The framing
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+This is the question register behind [DESIGN.md](DESIGN.md), not a promise that every metric
+was collected. [RESULTS.md](RESULTS.md) bounds the evidence; [KPIS.md](KPIS.md) defines instruments.
 
-We are **not** asking "is Relay good?". A single benchmark score is a vanity number — and we proved it
-the hard way: across 8 single-size runs this session, frontier *and* cheap models scored at ceiling, so
-the number measured nothing. The literature agrees (benchmarks die from saturation + contamination).
+## Question
 
-The benchmark exists to answer one scientific question, broken into angles:
+In what regime does decomposition plus per-step gated execution beat an end-gated monolithic
+repair baseline, by how much and why, and where does it instead add overhead?
 
-> **In what regime does work-package decomposition + gated execution beat a monolithic baseline,
-> by how much, and *why* — and where is it instead pure overhead?**
+The original hypothesis expected a crossover as size increased. Historical M pilots reached
+ceiling at the reported points; the only committed N500 aggregate is v2, seed 1, M only.
+Those observations did not demonstrate the expected advantage, and do not establish a universal
+absence of crossover or a complete statistical sweep.
 
-We expect — and want to *map* — a **crossover**: below some campaign scale, Relay is overhead (no
-headroom; the model nails it in one shot); above it, Relay pulls ahead and the gap widens with scale.
+## Seven angles retained
 
----
+| Angle | Original question / hypothesis | Comparison and required evidence |
+|---|---|---|
+| Efficacy | Higher delivered fraction on large coupled campaigns? Hypothesis: R beats M. | Matched-budget M/R, held-out RSR/CCR/REG |
+| Scaling | Does advantage widen with N, context or horizon? Hypothesis: overhead before crossover, positive margin after. | Size/context sweep, RSR gap, RET, HOR |
+| Attribution | Smaller revealed increments or gates? Hypothesis: both, gating especially on regression. | M/R/D ablation, CTX; revealed count is not live-context size |
+| Regression | Does keep-best reduce correct→wrong transitions? Hypothesis: REG(R) near zero and below M. | Per-requirement states over time, not final grade alone |
+| Cost | Is a quality change worth compute? Hypothesis: lower CNQ below crossover, higher after. | Tokens/calls/turns/USD/wall, budget controls and CNQ |
+| Reliability | Improved floor or luck? Hypothesis: lower variance and higher all-runs success. | Repeated comparable seeds/runs; pass^k distinct from best-of-k |
+| Generalization | Does effect depend on coupling, depth or interaction? Hypothesis: bigger on coupled/dense work. | Typed suite, segmented effects, uncertainty per cell |
 
-## The seven angles
+These are hypotheses, not measured facts. No completed M/R/D matrix or repeated-seed reliability
+estimate accompanies the N500 record. Mechanism tests showing that a check re-blocks are not
+proof that per-step gating improves population-level outcomes.
 
-Each angle is a question + a hypothesis + the variable we sweep + the KPIs that answer it + the
-experimental design it forces. (KPI names defined in [KPIS.md](KPIS.md).)
+## Intended verdict
 
-### 1. Efficacy — does it actually win?
-- **Q:** At a fixed *large* campaign and matched budget, does Relay deliver a higher fraction of the
-  campaign than dumping it all at once?
-- **Hypothesis:** Yes on large, coupled, multi-requirement campaigns.
-- **Vary:** arm (M monolithic vs R Relay).
-- **KPIs:** RSR, CCR, REG.
-- **Forces:** the core budget-matched A/B.
+The intended output was a regime map with crossover, attribution, regression evidence and a
+cost curve, each tied to seeds, comparable budgets, held-out grading and adversarial checks.
+The delivered record instead supports a narrower negative finding: reported M runs were
+saturated; a small billing pipeline comparison showed overhead for equal visible quality.
 
-### 2. Scaling / crossover — does the margin grow with scale? *(the central angle)*
-- **Q:** How does the Relay-minus-baseline gap change as campaign size grows (requirement count N,
-  context length, horizon)?
-- **Hypothesis:** ≈ 0 at small N (ceiling), positive and widening past a crossover point.
-- **Vary:** campaign size — a sweep, not a single point.
-- **KPIs:** RSR gap vs N, RET (retention curve), HOR.
-- **Forces:** we must run a *size sweep*. This is the lesson of the whole session — one size proves nothing.
-
-### 3. Attribution — *why* does it win?
-- **Q:** If Relay wins, is it from the smaller per-step context, or from gating / error-pruning between WPs?
-- **Hypothesis:** both contribute; gating dominates on regression, context-bounding on omission.
-- **Vary:** add Arm D (decomposed-but-ungated).
-- **KPIs:** CTX per step, RSR(M) vs RSR(D) vs RSR(R).
-- **Forces:** the ablation arm. Without it, "decomposition just buys more tokens" stays unrefuted.
-
-### 4. Safety / regression — does keep-best stop correct→wrong?
-- **Q:** Does the gated keep-best design eliminate the regressions we *measured* forced reflection cause?
-- **Hypothesis:** REG(R) ≈ 0 and < REG(M).
-- **Vary:** arm.
-- **KPIs:** REG (correct→wrong flips), tracked per-requirement over the whole run.
-- **Forces:** per-requirement state logged at every step, not just at the end.
-
-### 5. Cost-efficiency — is the win worth the compute?
-- **Q:** Decomposition+gating spends more tokens/calls. Is the quality gain worth it — and where is Relay
-  *net-negative* (the overhead regime)?
-- **Hypothesis:** net-negative below the crossover, net-positive above it.
-- **Vary:** arm × campaign size.
-- **KPIs:** TOK, CALLS/TURNS, CNQ (cost-normalized quality), USD.
-- **Forces:** budget-matching + cost-normalized reporting; a win bought only with extra compute is not a win.
-
-### 6. Reliability — consistent, or just lucky?
-- **Q:** Does Relay raise the *floor* (reduce variance), not only the mean?
-- **Hypothesis:** lower RSR variance and higher pass^k.
-- **Vary:** seeds (N per campaign).
-- **KPIs:** REL (pass^k), RSR standard deviation.
-- **Forces:** multiple seeds; report pass^k, never best-of-k.
-
-### 7. Generalization — where does it help, where doesn't it?
-- **Q:** Does the advantage hold across campaign *shapes* — coupled vs independent WPs, deep dependency
-  chains, out-of-distribution / interacting requirements?
-- **Hypothesis:** bigger help on coupled, deep-dependency, dense campaigns; little on independent, shallow ones.
-- **Vary:** campaign *type* (a typed suite).
-- **KPIs:** RSR gap segmented by campaign class.
-- **Forces:** a deliberately typed campaign suite, not one homogeneous task.
-
----
-
-## What a verdict looks like
-
-We do **not** ship "Relay scored X". We ship a **regime map**:
-
-- the **crossover point** (campaign scale where Relay turns net-positive),
-- the **attribution** (how much of the gain is context-bounding vs gating),
-- the **safety result** (regressions eliminated or not),
-- and the **cost curve** (CNQ vs scale),
-
-each with seeds, budget-matched, blinded, and adversarially harness-checked. If Relay is overhead below the
-crossover, we say so plainly — that honesty is the point, and it's already half-proven.
-
----
-
-## Non-goals (explicitly)
-
-- A leaderboard number. - Beating a baseline on a task the baseline already aces. - Measuring "elegance" or
-authoring effort. - Any metric that isn't objective, reproducible, and budget-controlled.
+Agents must preserve saturated/invalid runs as evidence rather than rewrite campaign inputs
+to fit the hypothesis. Authoring effort, review time and subjective elegance were contextual
+questions, not scored efficacy metrics. Current execution procedures belong in skills.

@@ -25,21 +25,34 @@ CASES = [
 ]
 
 def run(crit, review, diff):
-    r = subprocess.run([sys.executable, os.path.join(ROOT, "benchmark", "judge.py"),
-                        "--criterion", crit, "--file", review, "--file", diff],
-                       capture_output=True, text=True)
+    try:
+        r = subprocess.run([sys.executable, os.path.join(ROOT, "benchmark", "judge.py"),
+                            "--criterion", crit, "--file", review, "--file", diff],
+                           capture_output=True, text=True)
+    except (OSError, subprocess.SubprocessError) as e:
+        return "?", f"judge process error: {e}"[:60]
+    if r.returncode != 0:
+        return "?", f"judge exit {r.returncode}: {(r.stderr or '').strip()}"[:60]
     try:
         j = json.loads(r.stdout)
-        return j.get("verdict", "?"), j.get("backend", "?")
-    except Exception:
-        return "?", (r.stdout or r.stderr).strip()[:60]
+    except (TypeError, ValueError):
+        return "?", "invalid judge JSON"
+    if not isinstance(j, dict) or j.get("verdict") not in ("pass", "fail"):
+        return "?", "invalid judge verdict/object"
+    backend = j.get("backend")
+    if not isinstance(backend, str) or "\0" in backend:
+        return "?", "invalid judge backend"
+    if not isinstance(j.get("reason"), str):
+        return "?", "invalid judge reason"
+    if j.get("available") is not True:
+        return "?", "judge unavailable or invalid availability"
+    return j["verdict"], backend
 
 def main():
     tp=fp=tn=fn=0; invalid=0; rows=[]
     for label, ck, review, diff, exp in CASES:
         verd, back = run(CRIT[ck], review, diff)
-        bad_transport = ("api-error" in back) or ("no-verdict" in back) or (verd=="?")
-        if bad_transport:
+        if verd not in ("pass", "fail"):
             invalid+=1; rows.append((label, exp, verd, "--", back)); continue
         if exp=="pass" and verd=="pass": tp+=1
         elif exp=="pass" and verd!="pass": fn+=1
@@ -50,7 +63,9 @@ def main():
     for r in rows: print(f"{r[0]:22} {r[1]:5} {r[2]:5} {r[3]:2} {r[4]}")
     graded=tp+tn+fp+fn
     print(f"\nINVALID (transport, excluded)={invalid}/{len(CASES)}")
-    print(f"TP={tp} TN={tn} FP={fp} FN={fn}  agreement={tp+tn}/{graded} of graded")
+    agreement = f"{tp+tn}/{graded} of graded" if graded else "unavailable (no valid judgments)"
+    print(f"TP={tp} TN={tn} FP={fp} FN={fn}  agreement={agreement}")
     print(f"FP (passed a defective review) = {fp}  <- the dangerous error")
     print(f"FN (rejected a good review)    = {fn}")
-main()
+if __name__ == "__main__":
+    main()

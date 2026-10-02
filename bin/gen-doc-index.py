@@ -2,29 +2,63 @@
 """
 gen-doc-index.py — regenerate docs/INDEX.md, the hashed integrity manifest of the doc set.
 
-CONTRIBUTING.md requires regenerating the index after substantive doc changes, but no generator
-existed — so the index silently drifted (missing files, stale hashes). This is that generator: it
-hashes every documentation file (top-level *.md + docs/*.md, excluding the index itself), writes the
-table + the root hash, and is idempotent.
+Hash authored Markdown at the repository root and recursively under docs/, benchmark/, examples/
+and .opencode/skills/. Runtime/generated directories and the index itself are excluded. This detects
+byte drift, not semantic freshness. --check preserves the existing file and ignores only its stamp.
 
 Usage:  bin/gen-doc-index.py [--check]      # --check: exit 1 if the index is stale, write nothing
 The --check mode is CI-friendly: it fails the build if someone edited docs without regenerating.
 """
 import argparse, hashlib, os, sys
+from pathlib import Path
+import stat
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX = os.path.join("docs", "INDEX.md")
-# Deterministic order: the top-level set first (in this canonical order), then docs/*.md sorted.
-TOP = ["README.md", "WHITEPAPER.md", "PRODUCT.md", "SPEC.md", "CONTRIBUTING.md", "CHANGELOG.md"]
+DOC_ROOTS = ("docs", "benchmark", "examples", ".opencode/skills")
+EXCLUDED = {".git", "__pycache__", ".pytest_cache", ".relay-state", ".relay-ledger",
+            "_runs", "runs", ".live-runs", "node_modules", ".venv", "venv"}
 
 
-def doc_files():
-    files = [f for f in TOP if os.path.exists(os.path.join(ROOT, f))]
-    docs_dir = os.path.join(ROOT, "docs")
-    for name in sorted(os.listdir(docs_dir)):
-        if name.endswith(".md") and name != "INDEX.md":
-            files.append(os.path.join("docs", name))
-    return files
+def authored(path):
+    return not any(p in EXCLUDED or p.startswith("_gen") for p in path.parts)
+
+
+def walk_files(folder, missing_ok=False):
+    """Enumerate explicitly; scandir errors must never become an empty inventory."""
+    try:
+        entries = os.scandir(folder)
+    except FileNotFoundError:
+        if missing_ok:
+            return
+        raise
+    with entries:
+        rows = sorted(entries, key=lambda e: e.name)
+    for entry in rows:
+        if not authored(Path(entry.name)):
+            continue
+        path = Path(entry.path)
+        if entry.is_symlink():
+            if stat.S_ISDIR(entry.stat().st_mode):
+                raise OSError(f"directory symlink is not an inventory root: {path}")
+            yield path
+        elif entry.is_dir(follow_symlinks=False):
+            yield from walk_files(path)
+        elif entry.is_file(follow_symlinks=False):
+            yield path
+
+
+def doc_files(root=None):
+    root = Path(root or ROOT).resolve()
+    with os.scandir(root) as entries:
+        paths = [Path(e.path) for e in entries if e.name.endswith(".md") and e.is_file()]
+    for folder in DOC_ROOTS:
+        paths.extend(p for p in walk_files(root / folder, missing_ok=True) if p.suffix == ".md")
+    for path in paths:
+        if not path.resolve().is_relative_to(root):
+            raise OSError(f"documentation target outside repository: {path}")
+    return sorted({p.relative_to(root).as_posix() for p in paths
+                   if authored(p.relative_to(root)) and p.relative_to(root).as_posix() != "docs/INDEX.md"})
 
 
 def sha(path):
@@ -49,6 +83,7 @@ def build(generated_stamp):
 
     out = []
     out.append("# HuGR Relay — Documentation Index (hashed)\n")
+    out.append("Audience: agents. Status: current.\n")
     out.append("Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.")
     out.append("Regenerate after any documentation change (`bin/gen-doc-index.py`).\n")
     out.append(f"- **Generated:** {generated_stamp}")
@@ -59,11 +94,7 @@ def build(generated_stamp):
     out.extend(rows)
     out.append("\n## Verify\n")
     out.append("```bash")
-    out.append("# from the relay/ root — recompute and compare to the table above")
-    out.append("for f in " + " ".join(TOP) + " docs/*.md; do")
-    out.append('  [ "$f" = docs/INDEX.md ] && continue')
-    out.append('  shasum -a 256 "$f"')
-    out.append("done")
+    out.append("python3 bin/gen-doc-index.py --check")
     out.append("```")
     return "\n".join(out) + "\n", root
 
@@ -101,4 +132,8 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except OSError as exc:
+        print(f"documentation-inventory: {exc}", file=sys.stderr)
+        sys.exit(1)

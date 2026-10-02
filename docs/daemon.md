@@ -1,176 +1,94 @@
-# relay-daemon — HTTP gate service (Roadmap R4)
+# HTTP gate service
 
-`bin/relay-gate eval` is Relay's model-agnostic gate surface: a one-shot CLI that evaluates a single gate
-step (sprint + workdir + state → JSON outcome + exit code) with zero knowledge of Claude Code or any
-specific harness. That is enough for a shell loop on the same machine.
+Audience: agents. Status: current.
 
-`bin/relay-daemon.py` adds the other half of "model-agnostic": a **long-running HTTP surface** so a remote
-or non-Claude harness (a CI runner, a LangGraph/AutoGen loop, an OEM integration) can drive Relay over the
-network. This is the OEM surface.
+Procedure: [relay-integration skill](../.opencode/skills/relay-integration/SKILL.md).
+Sources: [daemon](../bin/relay-daemon.py), [portable CLI](../bin/relay-gate), [shared core](../lib/relay-gate.sh).
+Evidence: [daemon tests](../tests/test_daemon.py), [wait-channel tests](../tests/test_ask.py).
 
-There is exactly **one gate**. The daemon does NOT reimplement gate logic — every `/gate/eval` request
-shells out to `bin/relay-gate eval` and relays its JSON, mapping the gate's exit code onto the HTTP
-status. The ledger it produces is **semantically identical** to what `relay-gate` would have produced
-directly: the same events, verdicts, `seq`, and chain structure. (The `ts` field is wall-clock seconds and
-is part of the hashed body, so `ts` and the ts-dependent hashes naturally differ per run — the bytes are
-not identical, only the semantics are.) Regression test:
-`tests/test_daemon.py::test_daemon_ledger_matches_cli`.
+## Gate request contract
 
-## Run it
+`POST /gate/eval` accepts a JSON object with `workdir`, `state_dir`, and exactly one of `sprint_path`
+or inline `sprint`. Supplied path fields must be nonempty, NUL-free strings. Paths refer to the daemon
+host; use absolute paths. Each request invokes `relay-gate eval` with an argv list. This exposes CLI
+evaluation (current checklist and DoD, then earlier deterministic checks), not the full arm FSM.
 
-```sh
-bin/relay-daemon.py                       # 127.0.0.1:8787
-bin/relay-daemon.py --port 9000           # explicit port
-RELAY_DAEMON_PORT=9000 bin/relay-daemon.py  # env-configurable (the --port flag wins if both are set)
-```
+| Result | HTTP | Body |
+|---|---|---|
+| Advance / complete | 200 | CLI outcome object |
+| Gate failure | 409 | `outcome:gate-fail`, failing controls |
+| Retry exhaustion | 423 | `outcome:escalate`, failing controls |
+| Bad request | 400 | Validation error |
+| Hard error or busy gate without usable outcome JSON | 500 | `error:gate error`, `detail`, CLI `exit` |
 
-It binds to `127.0.0.1` by default; `--host` and `--port` are configurable. It refuses to start if it
-cannot find `bin/relay-gate` next to itself.
+Busy CLI exit 3 is a 500 error response, not 409 or an advance. Outcome mapping takes precedence over
+exit mapping when a usable outcome exists. `/healthz` returns `{"status":"ok","gate":"relay-gate"}`;
+it does not execute a checklist or establish control success.
 
-## Endpoints
+State persists in `state_dir`: counter, retries, ledger. The daemon serializes `/gate/eval` requests
+by state realpath; distinct states may run concurrently. CLI `.run.lock` protects CLI evaluation/check,
+and shared `.chain.lock` protects each ledger append. Locks do not deduplicate repeated requests.
 
-### `POST /gate/eval`
+Inline sprint is written to a temporary file deleted after that request. Retain the original sprint
+yourself and use `relay verify <ledger> --sprint <retained-sprint>` for oracle recheck.
+CLI and HTTP share gate semantics; timestamps and their dependent hashes differ between runs.
 
-Runs one gate step. Request body (JSON):
+CLI outcomes preserve decoded `wp`, `next`, and emitted `macro` strings; ledger entries preserve
+`wp` and emitted `macro`. Tabs, CR, and trailing LF are retained. The selected WP ID/macro and, for
+nonterminal `eval`, the required next WP ID are validated before commands or ledger writes. `check`
+needs only the selected identity; these checks are not complete sprint validation.
 
-| field         | required        | meaning                                                        |
-| ------------- | --------------- | -------------------------------------------------------------- |
-| `workdir`     | yes             | the directory the checklist `cmd`s run against                 |
-| `state_dir`   | yes             | where counter / retry state and `ledger.jsonl` live (on disk)  |
-| `sprint_path` | one of these    | path to a `sprint.json` file                                   |
-| `sprint`      | one of these    | the sprint as inline JSON (written to a temp file for the call) |
+## Arm wait-channel contract
 
-Provide **exactly one** of `sprint_path` / `sprint`.
+`POST /ask` takes `token` and `question`; `POST /answer` takes `token`, a 12-lowercase-hex `ticket`, and
+`answer`. Required fields are nonempty, NUL-free strings, stripped at their ends. Wrong field types,
+invalid tokens/tickets, and nonobject bodies return 400. Tokens follow `[A-Za-z0-9_.-]+`, exclude `.`
+and any `..`. These routes use arms under `RELAY_ARMS_DIR` (default `~/.relay/arms`). Unknown arms return
+404; an answer for a syntactically valid ticket with no stored ask returns 404 without creating an orphan answer.
 
-The response body is `relay-gate`'s JSON outcome, verbatim. The HTTP status carries the disposition:
+- Read persisted `position` as UTF-8 without newline translation, retaining literal CR/LF. Match the
+  raw whole WP ID first, then its suffix after the first dot. Only after both raw candidates fail,
+  remove trailing LF for legacy files and retry whole-ID then first-dot-suffix resolution; CR and
+  other whitespace remain identity data. Pass the successful raw or normalized string through check's
+  `--position`. Named checks override stale or past-end compatibility counters. Only an arm without
+  `position` uses the legacy counter; an active arm with no current WP returns 500.
+- The ARM hook also reads raw position through `jq -Rs` and lossless JSON-string decoding, tries raw
+  whole-ID/suffix before LF-only legacy fallback, and writes supported identities without adding LF.
+  Driver-specific migration/state rules remain separate: an existing empty daemon position is invalid,
+  while ARM can migrate an empty position from its compatibility counter. This is not a guarantee that
+  every payload, base-ref, or other state-field path is lossless.
+- Daemon WP IDs must be nonempty NUL-free strings; whitespace is identity data, and IDs must be unique.
+  A supplied daemon WP `macro` must be a NUL-free string; explicit null is rejected. CLI/ARM accept
+  absent/null optional macros as empty. These driver-specific validations are not a common full schema.
+- For diff checks, resolve `base_<safe-actual-wp-id>` first, otherwise `meta.base_ref`. Sanitize the resolved
+  WP ID, not a guessed suffix. Pass `--base-ref` explicitly when arm position/base metadata or a diff
+  requires it; an explicit empty value means unavailable and prevents fallback to unrelated CLI `base_ref`.
+- The precheck runs only the selected checklist: no DoD, earlier regressions, retry charge, advancement,
+  or grading-ledger writes. It still executes command/judge side effects and takes the CLI run lock.
+- A valid passing `check` is refused with 409. `complete`, `awaiting-human`, or `escalated` arm state returns
+  423 before checking. CLI busy exit 3 returns 503 (`check busy`); other process, malformed/inconsistent
+  check-output, and arm-data errors return 500. Process-error bodies retain `detail` and `exit`.
+- Same question reuses its hash-derived ticket. Three unanswered pokes are served; the fourth parks.
+- `/answer` stores an answer for an existing ticket; delivery records `ask-answered`. Refusals `no`, `n`,
+  `stop`, `denied`, `refused`, `reject`, and `rejected` park on delivery. Stored answers remain repeatable
+  while the precondition still fails, without charging new pokes or ask totals.
+- Total ask cap defaults to 8. Breach records facts and keeps serving; `orchestrator.json` can say `continue` or `stop`/`park`.
+- Silence at or beyond `ask_deadline` (default 900 seconds) parks when an ask evaluates the deadline; no background timer.
+- Park writes `awaiting-human`; it does not pass or advance the gate. Attributed `release` resumes through the arm hook.
 
-| outcome     | HTTP status | meaning                                                |
-| ----------- | ----------- | ------------------------------------------------------ |
-| `advance`   | `200`       | gate passed; counter advanced to the next work package |
-| `complete`  | `200`       | sprint done                                            |
-| `gate-fail` | `409`       | failing controls; retry budget not yet exhausted       |
-| `escalate`  | `423`       | retry budget spent; surface to a human                 |
-| —           | `400`       | bad request (missing/conflicting fields, invalid JSON) |
-| —           | `500`       | the gate itself errored (its stderr is returned)       |
+Complete ask/answer operations share the daemon's in-process lock registry, keyed by arm realpath;
+symlink aliases share that lock. This does not serialize other daemon processes or whole arm-hook
+transactions. CLI run locks and ledger append locks have narrower scopes.
 
-On a `500`, the body is `{"error":"gate error","detail":<the gate's stderr>,"exit":<gate exit code>}`.
-This covers every case where `relay-gate` exits non-zero with no JSON outcome on stdout (a missing or
-invalid `workdir`, a non-object/non-JSON sprint, an internal gate error). The gate's stderr is surfaced
-verbatim in `detail` so a remote operator is not left debugging a bare `500 {}`.
+Wait-channel notes are required writes through `relay-note`. Append errors return 500 (`note error`)
+with diagnostics, before consuming the corresponding poke/total or writing parked state. `/answer`
+storage itself adds no ledger note; its later delivery does. Earlier notes or created directories may
+remain after a later failure, and filesystem writes after a successful note can fail: this is not a
+rollback-capable transaction across ledger and state.
 
-The service is **stateless per request**: all state lives in `state_dir` on disk, exactly as the CLI does
-today. Pass the same `state_dir` across calls to advance a sprint; the hash-chain ledger lands at
-`<state_dir>/ledger.jsonl` and can be audited afterwards with `relay verify`.
+## Trust boundary
 
-**Concurrency.** The daemon is multi-threaded but the gate's hash-chain append is not internally locked,
-so the daemon serializes gate evaluations **per `state_dir`** (keyed on its realpath). Distinct
-`state_dir`s evaluate in parallel; requests sharing one `state_dir` are strictly serialized, so concurrent
-callers can never interleave the chain and manufacture a false `TAMPERED` verdict.
-
-Example:
-
-```sh
-curl -s -X POST http://127.0.0.1:8787/gate/eval \
-  -d '{"sprint_path":"sprint.json","workdir":"/path/to/work","state_dir":"/path/to/state"}'
-# 409 {"outcome":"gate-fail","i":0,"wp":"wp1","failing":["C1"],"reason":"..."}
-# ...satisfy the controls, call again...
-# 200 {"outcome":"advance","i":0,"wp":"wp1","next":"wp2"}
-```
-
-### `GET /healthz`
-
-```json
-{"status": "ok", "gate": "relay-gate"}
-```
-
-## Security (v0)
-
-The daemon binds to `127.0.0.1` only and has **no authentication**. It is **localhost-only by design**.
-Evaluating a gate executes the sprint's checklist `cmd`s, so anyone who can reach the port can run those
-commands — do not expose it to an untrusted network.
-
-Authentication, TLS, and a real authorization model are the **next increment** and are deliberately not
-faked here. There is no token check, no transport encryption, and no allowlist in v0; adding a placeholder
-would create a false sense of security.
-
-One concrete reason the port **must** stay localhost-only: error bodies still distinguish *some* failure
-modes (e.g. a non-existent vs. an existing-but-non-sprint `sprint_path`), and the daemon accepts arbitrary
-absolute `workdir` / `state_dir` / `sprint_path` paths with no confinement, so an unauthenticated caller
-could probe for the presence of host paths. (The daemon shells out with an argv list — no `shell=True` —
-so there is no daemon-layer injection; the only code execution is the gate's by-design `eval` of the
-sprint's checklist `cmd`s.) When auth is added, the next increment will also `realpath`-confine those paths
-to an allowlist and normalize existence/parse failures to a single response so the surface stops leaking
-path existence.
-
-
----
-
-## The wait channel — `/ask` and `/answer`
-
-A block costs a model turn; a wait costs only wall clock, so waiting is strictly cheaper. An agent
-that needs a credential provisioned should not burn turns re-failing a gate it cannot pass.
-
-```
-POST /ask     {"token": "...", "question": "provision the deploy token"}
-              -> 200 {"outcome":"waiting","ticket":"a1b2c3d4e5f6","poke":1,"failing":["c1"]}
-              -> 200 {"outcome":"answered","answer":"provisioned, retry now"}
-              -> 409 the checklist for this state is passing — nothing is blocking you
-              -> 423 {"outcome":"parked", ...}
-POST /answer  {"token": "...", "ticket": "a1b2c3d4e5f6", "answer": "provisioned, retry now"}
-```
-
-**This channel is where the design nearly broke its own invariant.** Everything else rests on
-*stopping is the trigger*, and a tool call that never stops leaves the enforcement layer blind for
-its entire duration: no fire, no round, no no-progress detection, nothing metered. Three consequences
-follow, and none of them is optional.
-
-### The meter is here, not in the hook
-
-The hook runs when an agent stops, and a waiting agent has not stopped. So the meter has to live on
-the far side of the boundary, in the thing the agent is actually calling.
-
-### It refuses unless the gate is currently failing
-
-The daemon runs the checklist itself — `relay-gate check`, which grades nothing, advances nothing and
-records nothing, because a precondition test is not a verdict. Writing one here would put a second
-evaluation of the same state on the chain, from a path that never decides anything.
-
-It is a conditioned channel, not a rest button, and the condition is established from the controls
-rather than from the agent's account of being stuck — the same rule the `RELAY-BLOCKED:` marker
-follows.
-
-### One ticket, three pokes
-
-The ticket is derived from the question, so re-asking the same thing reuses it. A fresh id per poke
-would provision N times, which is the failure this exists to avoid. Three pokes; the fourth round
-parks. An answer of `no` parks immediately — waiting out the remaining rounds after a decision has
-been made spends wall clock on nothing.
-
-### The cap is passive, and it has a deadline
-
-On breach the daemon notifies the orchestrator and **keeps serving**. Continue means continue; stop,
-or silence past the window, means park.
-
-Passive *without* a deadline would be decorative: a dead orchestrator would then mean no cap at all.
-
-The notification carries **facts, never the agent's prose** — counts, elapsed time, and which control
-is still failing. The agent's text reaching the orchestrator is a social-engineering channel.
-
-| file under `$ARM/` | meaning |
-|---|---|
-| `ask_cap` | total asks before the orchestrator is notified (default 8) |
-| `ask_deadline` | seconds of silence after a breach before the arm parks (default 900) |
-| `orchestrator.json` | `{"decision": "continue" \| "stop"}` |
-| `answers/<ticket>.json` | `{"answer": "..."}` |
-
-### Writing to the chain
-
-Every ask, answer, breach and park is an entry on the arm's hash chain, appended through `bin/relay-note`
-— the same `relay_chain_append` the hook uses, rather than a second encoding in Python that would
-drift.
-
-Single-writer is load-bearing: `relay_chain_append` computes `prev`/`seq` from the file tail with no
-lock. The daemon does not break that, and the reason is structural rather than defensive — it writes
-only while the agent is waiting inside a tool call, which is exactly when the hook cannot be firing.
-`relay-note` also takes a `mkdir` lock as insurance for the cases that argument does not cover, such
-as a stray second agent on the same token. (`mkdir`, not `flock`, which is absent on macOS.)
+The service defaults to `127.0.0.1:8787`; `--host` is configurable and `--port` overrides `RELAY_DAEMON_PORT`.
+It has no authentication, TLS, or path confinement. Reachable callers can select host paths and execute sprint
+commands as the service user. Use this surface only for trusted local command execution. An argv-based daemon
+invocation does not sandbox the gate's intentional Bash `eval`.

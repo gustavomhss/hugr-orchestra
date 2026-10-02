@@ -3,25 +3,33 @@
 
 Subcommands:
   relay verify <run-dir | ledger.jsonl> [--sprint <sprint.json>] [--json]
-      Audit a finished run: verify the verified-trace ledger's hash chain AND report the
-      final verdict of every named control. This is the command you hand to compliance — it
-      answers "did the controls actually pass, and can I trust this record?" in one shot.
+      Audit a finished record: verify the ledger's hash chain and report each recorded named
+      control's final checklist verdict. This does not rerun controls or prove current artifacts.
 
-      Exit 0 = chain intact AND all deterministic controls passed (auditable PASS).
+      Exit 0 = chain intact, terminal completion, recorded deterministic controls passed,
+               and no detected drift or unusable record/sprint input.
       Exit 1 = chain TAMPERED/broken (the record cannot be trusted).
       Exit 2 = chain intact but the run is not an auditable pass: a deterministic control's final
-               verdict is FAIL, the chain escalated or ends mid-run, no deterministic control was
-               recorded, or the sprint on disk no longer asks what the ledger answered.
+               verdict is not pass, the chain escalated or ends mid-run, no deterministic control was
+               recorded, the record/sprint is unusable, or the sprint on disk differs from
+               the recorded named controls and available oracles.
 
-      When a sprint is reachable (a run dir, an arm dir, or --sprint) every recorded oracle is
-      recomputed from it and compared. A bare ledger path has no sprint, so that check is reported
-      as not-run rather than as agreement.
-      (Advisory/`judge` controls are reported but never affect the exit code — by design.)
+      When a sprint is reachable (a run dir, an arm dir, or --sprint), compare named control IDs
+      in both directions and recompute recorded oracles. Legacy records without oracles cannot
+      establish oracle agreement. A bare ledger without --sprint has recorded-only scope;
+      its sprint comparison is not-run. Only IDs and cmd/judge-plus-paths hashes are compared,
+      not every plan field. Judge verdicts are non-independent and excluded from pass counts.
 """
-import sys, os, json, subprocess, hashlib
+import sys, os, json, subprocess, hashlib, importlib.util
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VERIFY_LEDGER = os.path.join(HERE, "..", "benchmark", "verify_ledger.py")
+
+# Share the verifier's duplicate-free decoder; report readers must not choose a different
+# meaning for ledger bytes. Integrity still comes from the verifier subprocess below.
+_verifier_spec = importlib.util.spec_from_file_location("relay_ledger_verifier", VERIFY_LEDGER)
+_verifier = importlib.util.module_from_spec(_verifier_spec)
+_verifier_spec.loader.exec_module(_verifier)
 
 G, R, Y, B, X = "\033[32m", "\033[31m", "\033[33m", "\033[1m", "\033[0m"
 
@@ -53,10 +61,13 @@ def chain_status(path: str):
 def load_entries(path: str):
     out = []
     with open(path) as f:
-        for ln in f:
+        for n, ln in enumerate(f, 1):
             ln = ln.strip()
             if ln:
-                out.append(json.loads(ln))
+                entry = _verifier.strict_json_loads(ln)
+                if not isinstance(entry, dict):
+                    raise ValueError(f"line {n}: entry must be a JSON object")
+                out.append(entry)
     return out
 
 
@@ -70,6 +81,35 @@ def control_report(entries):
 
 
 GRADED_EVENTS = ("checklist-item", "regression-item")
+
+
+def record_errors(entries):
+    """Validate fields interpreted by verify, separately from raw chain integrity.
+
+    An intact signature authenticates bytes, not a usable verdict. Missing oracle is a
+    supported legacy record; a present malformed oracle is not legacy evidence.
+    """
+    errors = []
+    for n, e in enumerate(entries, 1):
+        def broken(field, reason):
+            errors.append({"entry": n, "field": field, "reason": reason})
+
+        for field in ("event", "wp", "assert", "fails"):
+            if field in e and e[field] is not None and not isinstance(e[field], str):
+                broken(field, "must be a string")
+        if e.get("event") not in GRADED_EVENTS:
+            continue
+        if not isinstance(e.get("item"), str) or not e["item"].strip():
+            broken("item", "must be a nonempty string")
+        if e.get("verdict") not in ("pass", "fail", "advisory"):
+            broken("verdict", "must be pass, fail, or advisory")
+        if not isinstance(e.get("graded_by"), str):
+            broken("graded_by", "must be a string")
+        if "oracle" in e:
+            o = e["oracle"]
+            if not isinstance(o, str) or len(o) != 64 or any(c not in "0123456789abcdef" for c in o):
+                broken("oracle", "must be a SHA-256 hex string when present")
+    return errors
 
 
 def find_sprint(arg: str):
@@ -96,61 +136,90 @@ def sha256_text(t: str) -> str:
 def sprint_oracles(sprint_path: str):
     """id -> oracle sha, recomputed from the sprint AS IT IS NOW.
 
-    Mirrors lib/relay-gate.sh `relay_run_checklist` exactly: a deterministic control's oracle is the
-    sha of its RAW `cmd` (placeholders unexpanded — expansion happens at eval time, after the sha),
-    and a judge control's is the sha of `criterion :: paths-joined-by-space`, scope included because
-    the same criterion over a narrower artifact is a different question.
+    Hash decoded cmd, or judge plus space-joined paths, without environment expansion.
+    Unlike the shell's command substitution, JSON decoding retains trailing LF. This
+    comparison does not validate every plan field or execute any control.
     """
     with open(sprint_path) as f:
         sprint = json.load(f)
+    if not isinstance(sprint, dict) or not isinstance(sprint.get("work_packages"), list):
+        raise ValueError("sprint must be an object with a work_packages array")
     out = {}
-    for wp in sprint.get("work_packages", []):
-        for c in wp.get("checklist", []) or []:
+    for i, wp in enumerate(sprint["work_packages"]):
+        if not isinstance(wp, dict):
+            raise ValueError(f"work_packages[{i}] must be an object")
+        checklist = wp.get("checklist", [])
+        if checklist is None:
+            checklist = []
+        if not isinstance(checklist, list):
+            raise ValueError(f"work_packages[{i}].checklist must be an array")
+        for j, c in enumerate(checklist):
+            where = f"work_packages[{i}].checklist[{j}]"
+            if not isinstance(c, dict):
+                raise ValueError(f"{where} must be an object")
             cid = c.get("id")
-            if not cid:
-                continue
+            if not isinstance(cid, str) or not cid.strip():
+                raise ValueError(f"{where}.id must be a nonempty string")
+            if cid in out:
+                raise ValueError(f"duplicate checklist id {cid!r}")
+            for field in ("cmd", "judge"):
+                if c.get(field) is not None and not isinstance(c[field], str):
+                    raise ValueError(f"{where}.{field} must be a string")
             cmd = c.get("cmd")
             if cmd:
                 out[cid] = sha256_text(cmd)
             elif c.get("judge"):
-                scope = " ".join(c.get("paths", []) or [])
+                paths = c.get("paths", [])
+                if paths is None:
+                    paths = []
+                if not isinstance(paths, list) or any(not isinstance(p, str) for p in paths):
+                    raise ValueError(f"{where}.paths must be an array of strings")
+                scope = " ".join(paths)
                 out[cid] = sha256_text(c["judge"] + (f" :: {scope}" if scope else ""))
+            else:
+                raise ValueError(f"{where} must declare a nonempty cmd or judge")
     return out
 
 
 def oracle_recheck(entries, sprint_path):
-    """Does the spec on disk still ask what the ledger says was answered?
+    """Compare named IDs both ways and available oracle hashes, without executing checks.
 
-    The one attack in docs/enforcement-model.md §9 that left NO trace: swap a passed control's `cmd`
-    (or delete the control) AFTER the run, and every existing signal still agrees. The chain is
-    intact because nothing on it was touched. `oracle_drift` sees one oracle per control because the
-    control was graded once. Both are working correctly and both are answering a question this
-    attack does not ask.
-
-    So this asks the one that is left — recompute the oracle from the sprint and compare it to what
-    was recorded. It is a comparison, not a boundary: an attacker who can rewrite the sprint can
-    rewrite the ledger too, and then integrity catches it. What this removes is the SILENT variant.
-
-    Returns {"status": "not-run"|"ok"|"diverged", "items": [{id, kind, recorded, current}]}.
+    Legacy graded IDs still participate in set comparison, but absent oracle bytes cannot
+    establish agreement. A reachable unreadable/malformed sprint is invalid, never not-run.
     """
-    if not sprint_path:
-        return {"status": "not-run", "items": []}
+    if sprint_path is None:
+        return {"status": "not-run", "items": [],
+                "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."}
     try:
         current = sprint_oracles(sprint_path)
-    except (OSError, ValueError, json.JSONDecodeError):
-        return {"status": "not-run", "items": []}
-    recorded = {}
+    except (OSError, ValueError, UnicodeError) as e:
+        return {"status": "invalid", "items": [], "sprint": sprint_path, "reason": str(e)}
+    recorded, ids, legacy = {}, {}, set()
     for e in entries:
-        if e.get("event") in GRADED_EVENTS and e.get("oracle"):
-            recorded[e["item"]] = e["oracle"]
+        if e.get("event") in GRADED_EVENTS:
+            cid = e["item"]
+            ids[cid] = None
+            if "oracle" in e:
+                recorded[cid] = e["oracle"]
+            else:
+                legacy.add(cid)
     items = []
-    for cid, orc in recorded.items():
+    for cid in ids:
+        orc = recorded.get(cid)
         if cid not in current:
-            items.append({"id": cid, "kind": "removed", "recorded": orc[:12], "current": None})
-        elif current[cid] != orc:
+            items.append({"id": cid, "kind": "removed", "recorded": orc[:12] if orc else None,
+                          "current": None})
+        elif orc is not None and current[cid] != orc:
             items.append({"id": cid, "kind": "changed", "recorded": orc[:12],
                           "current": current[cid][:12]})
-    return {"status": "diverged" if items else "ok", "items": items}
+    for cid, orc in current.items():
+        if cid not in ids:
+            items.append({"id": cid, "kind": "added", "recorded": None, "current": orc[:12]})
+    result = {"status": "diverged" if items else ("unverified" if legacy else "ok"), "items": items}
+    if legacy:
+        result.update({"unverified": sorted(legacy),
+                       "note": "Legacy graded events lack oracles; no full oracle agreement established."})
+    return result
 
 
 def oracle_drift(entries):
@@ -377,12 +446,13 @@ def cmd_verify(args):
     sprint_opt = None
     if "--sprint" in args:
         k = args.index("--sprint")
-        if k + 1 >= len(args):
-            print("usage: relay verify <run-dir | ledger.jsonl> [--sprint <sprint.json>] [--json]",
-                  file=sys.stderr)
-            return 2
-        sprint_opt = args[k + 1]
-        args = args[:k] + args[k + 2:]
+        if k + 1 >= len(args) or args[k + 1].startswith("--"):
+            # A requested comparison without a path is invalid input, not an omitted comparison.
+            sprint_opt = ""
+            args = args[:k] + args[k + 1:]
+        else:
+            sprint_opt = args[k + 1]
+            args = args[:k] + args[k + 2:]
     pos = [a for a in args if not a.startswith("--")]
     if not pos:
         print("usage: relay verify <run-dir | ledger.jsonl> [--sprint <sprint.json>] [--json]",
@@ -395,18 +465,35 @@ def cmd_verify(args):
 
     rc, chain_msg = chain_status(path)
     intact = rc == 0
-    entries = load_entries(path)
-    controls = control_report(entries)
-    drift = oracle_drift(entries)
+    entries, errors = [], []
+    if intact:
+        try:
+            entries = load_entries(path)
+            errors = record_errors(entries)
+        except (OSError, ValueError, UnicodeError) as e:
+            errors = [{"field": "ledger", "reason": str(e)}]
+    # Never interpret broken or unusable records as control verdicts. The chain result remains
+    # authoritative for integrity; record validity is a separate exit-2 failure.
+    usable = entries if intact and not errors else []
+    controls = control_report(usable)
+    drift = oracle_drift(usable)
     laundered = [d for d in drift if d["laundered"]]
-    recheck = oracle_recheck(entries, sprint_opt or find_sprint(pos[0]))
+    if not intact or errors:
+        recheck = {"status": "not-run", "items": [],
+                   "note": "Broken or unusable record; sprint comparison not run."}
+    else:
+        recheck = oracle_recheck(usable, sprint_opt if sprint_opt is not None else find_sprint(pos[0]))
     diverged = recheck["status"] == "diverged"
+    sprint_invalid = recheck["status"] == "invalid"
+    unverified = recheck["status"] == "unverified"
 
     det = [c for c in controls if c.get("graded_by") == "deterministic"]
-    det_fail = [c for c in det if c.get("verdict") == "fail"]
+    det_fail = [c for c in det if c.get("verdict") != "pass"]
     advisory = [c for c in controls if c.get("graded_by", "").startswith("judge")]
     last_event = entries[-1].get("event") if entries else None
-    wps = sorted({e["wp"] for e in entries if e.get("wp") and e["wp"] != "?"})
+    if not isinstance(last_event, str):
+        last_event = None
+    wps = sorted({e["wp"] for e in usable if e.get("wp") and e["wp"] != "?"})
 
     # BUG 1 fix: an empty ledger (or one with zero controls) is NOT an auditable pass.
     no_controls = len(entries) == 0 or len(det) == 0
@@ -424,7 +511,8 @@ def cmd_verify(args):
     # exit precedence: tamper (1) dominates no-controls/truncation/failing-control (2) dominates pass (0)
     if not intact:
         code = 1
-    elif diverged or no_controls or truncated or det_fail or drift or escalated:
+    elif (errors or sprint_invalid or diverged or no_controls or truncated or det_fail
+          or drift or escalated or unverified):
         code = 2
     else:
         code = 0
@@ -434,6 +522,10 @@ def cmd_verify(args):
             result = "PASS"
         elif code == 1:
             result = "TAMPERED"
+        elif errors:
+            result = "RECORD-INVALID"
+        elif sprint_invalid:
+            result = "SPRINT-INVALID"
         elif diverged:
             result = "SPRINT-DIVERGED"
         elif no_controls:
@@ -446,12 +538,15 @@ def cmd_verify(args):
             result = "ORACLE-DRIFT"
         elif escalated:
             result = "ESCALATED"
+        elif unverified and not truncated:
+            result = "ORACLE-UNVERIFIED"
         else:
             result = "TRUNCATED"
         print(json.dumps({
             "ledger": path,
             "chain_intact": intact,
             "chain_detail": chain_msg,
+            "record_errors": errors,
             "controls": [{"id": c["item"], "assert": c.get("assert"),
                           "verdict": c["verdict"], "graded_by": c["graded_by"]} for c in controls],
             "deterministic_total": len(det),
@@ -476,6 +571,11 @@ def cmd_verify(args):
         print(f"  chain integrity:  {R}✗ TAMPERED / BROKEN{X}")
         for ln in chain_msg.splitlines():
             print(f"      {ln}")
+    if errors:
+        print(f"  {R}RECORD INVALID{X} — intact bytes do not form a usable audit record:")
+        for e in errors:
+            where = f"entry {e['entry']}: " if "entry" in e else ""
+            print(f"    {where}{e['field']}: {e['reason']}")
     print()
     if controls:
         print(f"  {B}controls (final verdict){X}")
@@ -483,7 +583,7 @@ def cmd_verify(args):
             v = c["verdict"]
             mark = f"{G}✓{X}" if v == "pass" else (f"{R}✗{X}" if v == "fail" else f"{Y}⚠{X}")
             gb = "deterministic" if c["graded_by"] == "deterministic" else f"{Y}advisory · {c['graded_by']}{X}"
-            print(f"    {mark} {c['item']:<8} {c.get('assert','')[:54]:<54}  {gb}")
+            print(f"    {mark} {c['item']:<8} {(c.get('assert') or '')[:54]:<54}  {gb}")
         print()
     summary = f"{len(det)-len(det_fail)}/{len(det)} deterministic controls passed"
     if advisory:
@@ -507,28 +607,39 @@ def cmd_verify(args):
         for it in recheck["items"]:
             if it["kind"] == "removed":
                 print(f"    {it['id']:<10} graded under oracle {it['recorded']} — no longer in the sprint")
+            elif it["kind"] == "added":
+                print(f"    {it['id']:<10} added/unrecorded — current oracle {it['current']}, no graded record")
             else:
                 print(f"    {it['id']:<10} oracle {it['recorded']} -> {it['current']} (changed after grading)")
-        print(f"  {Y}The chain is intact and nothing on it was touched. The QUESTION was rewritten "
-              f"after it was answered.{X}")
+        print(f"  {Y}Current named controls/oracles differ from the recorded comparison scope.{X}")
+        print()
+    elif sprint_invalid:
+        print(f"  {R}SPRINT INVALID{X} — oracle re-check cannot read a usable sprint: {recheck['reason']}")
         print()
     elif recheck["status"] == "not-run":
-        print(f"  {Y}note: oracle re-check not run — no sprint reachable from what was named. "
-              f"Pass --sprint to compare the recorded oracles against the spec.{X}")
+        print(f"  {Y}note: oracle re-check not run — {recheck['note']}{X}")
+        print()
+    if recheck.get("unverified"):
+        print(f"  {Y}ORACLE UNVERIFIED — legacy graded events lack oracle hashes: "
+              f"{', '.join(recheck['unverified'])}. No full oracle agreement established.{X}")
         print()
     if truncated:
         # Always emit a truncation WARN banner when applicable, before the final RESULT line.
         print(f"  {Y}WARN: trace ends on '{last_event}', not a terminal event (sprint-complete / escalate).{X}")
         print()
     if code == 0:
-        print(f"  {B}RESULT: {G}PASS{X}{B} — deterministic controls verified, chain intact, auditable.{X}")
+        scope = "recorded controls only" if recheck["status"] == "not-run" else "named IDs/oracles compared"
+        print(f"  {B}RESULT: {G}PASS{X}{B} — recorded deterministic verdicts passed, chain intact; {scope}.{X}")
     elif code == 1:
         print(f"  {B}RESULT: {R}TAMPERED{X}{B} — the record cannot be trusted. Do not accept this run.{X}")
+    elif errors:
+        print(f"  {B}RESULT: {R}RECORD INVALID{X}{B} — chain intact but audit fields are unusable.{X}")
+    elif sprint_invalid:
+        print(f"  {B}RESULT: {R}SPRINT INVALID{X}{B} — requested/reachable sprint comparison is unusable.{X}")
     elif diverged:
         print(f"  {B}RESULT: {R}SPRINT DIVERGED{X}{B} — not an auditable pass: "
               f"{', '.join(i['id'] for i in recheck['items'])} "
-              f"{'was' if len(recheck['items']) == 1 else 'were'} graded under a different spec "
-              f"than the one on disk.{X}")
+              f"{'differs' if len(recheck['items']) == 1 else 'differ'} from the current named control/oracle set.{X}")
     elif no_controls:
         print(f"  {B}RESULT: {R}NO CONTROLS{X}{B} — not an auditable pass: no deterministic controls were recorded.{X}")
     elif laundered:
@@ -544,6 +655,8 @@ def cmd_verify(args):
         print(f"  {B}RESULT: {R}ESCALATED{X}{B} — not an auditable pass: the chain stopped at "
               f"{last.get('wp')} and was handed to a human. Still failing: "
               f"{(last.get('fails') or '').lstrip('; ') or '(unrecorded)'}.{X}")
+    elif unverified and not truncated:
+        print(f"  {B}RESULT: {R}ORACLE UNVERIFIED{X}{B} — legacy oracle bytes absent; comparison incomplete.{X}")
     else:
         # truncated and no other explicit failure — the truncation WARN above is the primary signal
         print(f"  {B}RESULT: {R}TRUNCATED{X}{B} — possible tail-truncation; cannot issue an auditable pass.{X}")

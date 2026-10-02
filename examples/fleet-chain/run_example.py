@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-examples/fleet-chain — reproducible proof of the per-agent checklist-chain loop.
+examples/fleet-chain — deterministic smoke demonstration of the per-agent checklist-chain loop.
 
 This is the LLM-free, deterministic distillation of a real fleet test (a sonnet agent given a
 200-item checklist over a 4500-line file, with the checklist injected only by the Stop-hook). It
@@ -14,9 +14,10 @@ reproduces the SAME mechanism a real agent goes through, without spending tokens
   3. Drive the REAL hook (bin/relay-arm-hook.sh) the way Claude Code's SubagentStop would. The agent
      is BLOCKED, the hook returns exactly what's missing; we play the agent reacting to that feedback
      (re-formatting to the demanded convention, planting the demanded flag). Repeat until the chain
-     completes — proving each control was satisfied *because the gate demanded it*.
-  4. Assert: chain completes, all tracer flags planted with exact content (so they could only have
-     come from the hook's feedback), and the per-arm ledger verifies offline.
+     stops, then check completion separately from escalation or hook errors.
+  4. Assert: arm state is complete, all tracer flags have exact content, and the audit CLI verifies
+     an intact ledger ending in sprint-complete with passing recorded deterministic controls and
+     matching recorded oracles against the retained sprint. This does not revalidate artifacts.
 
 Run:  python3 examples/fleet-chain/run_example.py        # exit 0 = the loop holds end-to-end
 """
@@ -25,9 +26,9 @@ import json, os, re, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 RELAY = os.path.abspath(os.path.join(HERE, "..", ".."))
 HOOK = os.path.join(RELAY, "bin", "relay-arm-hook.sh")
-VERIFY = os.path.join(RELAY, "benchmark", "verify_ledger.py")
+VERIFY = os.path.join(RELAY, "bin", "relay")
 
-# Five arbitrary tracer flags. The agent is NEVER told these; they live only in the gate checks
+# Four arbitrary tracer flags. The agent is NEVER told these; they live only in the gate checks
 # below, so a planted flag with exact content proves the hook's feedback was obeyed.
 FLAGS = [
     ("f1", "FLAG{fleet::doc::a91c}"),
@@ -142,7 +143,7 @@ def seed_blind_work(workdir):
 
 
 def fire(token, arm, workdir, arms_dir):
-    """One SubagentStop fire of the real hook. Returns the block reason, or None on complete."""
+    """Return the block reason, or None on a silent stop (not proof of completion)."""
     transcript = os.path.join(workdir, "..", "transcript.jsonl")
     open(transcript, "w").write(json.dumps({"type": "user", "content": f"done RELAY-ARM:{token}"}) + "\n")
     # keep retained traces inside this run's sandbox (sibling of arms_dir), never the real corpus
@@ -150,13 +151,22 @@ def fire(token, arm, workdir, arms_dir):
            "RELAY_CORPUS_DIR": os.path.join(os.path.dirname(arms_dir), "corpus")}
     p = subprocess.run(["bash", HOOK], input=json.dumps({"transcript_path": os.path.abspath(transcript)}),
                        capture_output=True, text=True, env=env)
+    diagnostics = f"stdout: {p.stdout.strip()!r}; stderr: {p.stderr.strip()!r}"
+    if p.returncode != 0:
+        raise RuntimeError(f"hook failed (exit {p.returncode}); {diagnostics}")
     out = p.stdout.strip()
     if not out:
+        if p.stderr.strip():
+            print(f"  hook stderr: {p.stderr.strip()}", file=sys.stderr)
         return None
     try:
-        return json.loads(out).get("reason", "")
-    except Exception:
-        return out
+        response = json.loads(out)
+    except ValueError as exc:
+        raise RuntimeError(f"hook returned invalid JSON; {diagnostics}") from exc
+    if (not isinstance(response, dict) or response.get("decision") != "block"
+            or not isinstance(response.get("reason"), str) or not response["reason"].strip()):
+        raise RuntimeError(f"hook returned invalid block response; {diagnostics}")
+    return response["reason"]
 
 
 def agent_react(reason, workdir):
@@ -200,8 +210,8 @@ def main():
 
         nwp = len(json.load(open(os.path.join(arm, "sprint.json")))["work_packages"])
         # drive the real hook; each block -> the agent reacts to the hook's feedback. Bounded loop.
-        # A silent (no-output) fire means EITHER the chain completed OR a gate escalated (budget spent);
-        # we disambiguate by the counter afterwards.
+        # Silent stops also occur on escalation and plan/binding defects. Require state and audit
+        # evidence afterwards; the compatibility counter also reaches nwp on escalation.
         stops = 0
         for _ in range(80):
             reason = fire(token, arm, workdir, arms_dir)
@@ -210,7 +220,9 @@ def main():
                 break
             agent_react(reason, workdir)
         counter = int(open(os.path.join(arm, "counter")).read().strip()) if os.path.exists(os.path.join(arm, "counter")) else 0
-        complete = counter >= nwp
+        state_path = os.path.join(arm, "state")
+        state = open(state_path).read().strip() if os.path.exists(state_path) else "missing"
+        complete = state == "complete"
 
         flag_ok = []
         for fid, content in FLAGS:
@@ -218,17 +230,42 @@ def main():
             ok = os.path.exists(p) and open(p).read().strip() == content
             flag_ok.append(ok)
 
-        ledger = os.path.join(arm, "ledger.jsonl")
-        lv = subprocess.run(["python3", VERIFY, ledger], capture_output=True, text=True)
-
-        print(f"  drove {stops} stops -> chain complete: {complete} ({counter}/{nwp} gates)")
+        print(f"  drove {stops} stops -> chain complete: {complete} ({counter}/{nwp} counter; state: {state})")
         print(f"  tracer flags planted via hook feedback: {sum(flag_ok)}/{len(FLAGS)}")
-        print(f"  ledger: {'INTACT' if lv.returncode == 0 else 'BROKEN'} "
-              f"({lv.stdout.splitlines()[0] if lv.stdout else ''})")
 
-        ok = complete and all(flag_ok) and lv.returncode == 0
+        ledger = os.path.join(arm, "ledger.jsonl")
+        sprint = os.path.join(arm, "sprint.json")
+        lv = subprocess.run([sys.executable, VERIFY, "verify", ledger, "--sprint", sprint, "--json"],
+                            capture_output=True, text=True)
+        try:
+            audit = json.loads(lv.stdout)
+        except ValueError as exc:
+            raise RuntimeError(f"relay verify returned no valid JSON (exit {lv.returncode}); "
+                               f"stdout: {lv.stdout.strip()!r}; stderr: {lv.stderr.strip()!r}") from exc
+        if not isinstance(audit, dict) or not isinstance(audit.get("oracle_recheck"), dict):
+            raise RuntimeError(f"relay verify returned an invalid report (exit {lv.returncode}); "
+                               f"stdout: {lv.stdout.strip()!r}; stderr: {lv.stderr.strip()!r}")
+        recheck = audit["oracle_recheck"].get("status")
+        print(f"  ledger: {'INTACT' if audit.get('chain_intact') is True else 'BROKEN'} "
+              f"({audit.get('chain_detail', '')})")
+        print(f"  audit: {audit.get('result')} (exit {lv.returncode}; last event: {audit.get('last_event')}; "
+              f"{audit.get('deterministic_passed')}/{audit.get('deterministic_total')} deterministic controls; "
+              f"sprint recheck: {recheck})")
+
+        # Delegate ledger/control/oracle interpretation to bin/relay. Require its completed PASS
+        # and an executed sprint comparison, not merely an intact prefix or exit 0 without JSON.
+        audit_ok = (lv.returncode == 0 and audit.get("result") == "PASS"
+                    and audit.get("chain_intact") is True and audit.get("last_event") == "sprint-complete"
+                    and recheck == "ok")
+        if not audit_ok and lv.stderr.strip():
+            print(f"  relay verify stderr: {lv.stderr.strip()}", file=sys.stderr)
+        ok = complete and all(flag_ok) and audit_ok
         print("\nRESULT:", "PASS — the checklist-chain loop holds end-to-end" if ok else "FAIL")
         return 0 if ok else 1
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"  example failed: {exc}", file=sys.stderr)
+        print("\nRESULT: FAIL")
+        return 1
     finally:
         shutil.rmtree(root, ignore_errors=True)
 

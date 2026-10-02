@@ -1,24 +1,27 @@
-# Roadmap R3 — Executable-spec library
+# R3 — Historical Completed Scope: Executable-Spec Library
 
-**Owns (disjoint):** `bin/relay-spec.py`, `specs/` (the catalog), `tests/test_spec.py`,
-`docs/spec-library.md`. Nothing else.
-**Frozen contract:** a *spec* is a versioned, reusable `sprint.json` (SPEC §3 schema) plus a `meta.json`
-(`{id, title, description, version, params?}`). `relay-spec.py instantiate` materializes a spec into a
-runnable `sprint.json`, substituting `${param}` placeholders. Output consumed unchanged by the hook /
-`bin/relay-gate`. Author-once-ratchet-many: the auto-decomposer (`bin/relay-autodecompose.py`) is the
-first author of these; R3 is the *catalog + instantiation* layer.
+Audience: agents. Status: historical.
 
-`bin/relay-spec.py` (pure stdlib):
-- `list` — catalog of specs under `specs/` (id, title, version).
-- `show <id>` — the spec's meta + WP titles + param list.
-- `instantiate <id> [--param k=v ...] [-o sprint.json]` — render the spec, substituting `${k}` in
-  instructions/cmds, validate all params supplied (error listing any missing), emit valid sprint.json.
+Current authority: [SPEC.md](../../SPEC.md). Procedures: [operational skills](../../.opencode/skills/).
+This card records a completed local scope, not an active catalog-building assignment.
 
-`specs/` — ship 2 REAL starter specs (each a frozen sprint.json + meta.json), e.g.:
-- `pytest-green/` — a generic "make the suite pass" spec parameterized on the test path,
-- `py-package-skeleton/` — gates for a well-formed Python package (has `__init__`, importable, a smoke
-  test passes). Make controls deterministic + shlex-safe.
+## Delivered scope
 
-**Tests:** real `bin/relay-spec.py` via subprocess. Assert: list/show, instantiate substitutes params,
-missing-param errors clearly, the rendered sprint is schema-valid for the hook (work_packages[].id +
-checklist[].{id,cmd}). Tmp-isolated.
+[bin/relay-spec.py](../../bin/relay-spec.py) implements catalog `list`/`show` and
+`instantiate`: versioned metadata plus sprint templates with `${param}` substitutions,
+missing-parameter checks and rendered-shape validation. Parameters in `cmd` fields are
+shell-word quoted; IDs must select one catalog entry. Rendering does not execute controls.
+
+[specs/](../../specs/) contains `pytest-green` and `py-package-skeleton` starter specs.
+Original ownership: renderer/catalog, [tests/test_spec.py](../../tests/test_spec.py), library docs.
+[Auto-decomposition](../../bin/relay-autodecompose.py) is a separate existing-suite draft tool,
+not a dependency-aware implementation of the benchmark's proposed partition method.
+
+## Later additions and limits
+
+Offline `lint` and `amend-check` now also live in this module. Lint errors fail; warnings alone
+do not. Its closed list of trivial command spellings is not proof that every passing stub is
+detected. `--signed-by` accepts attribution text, not a cryptographic signature or automatic
+live-plan enforcement. Compiler/linter `human` recognition exceeds production arm support.
+
+Test references record verification intent, not a current suite result or test count.

@@ -1,283 +1,199 @@
-# Architecture & Internals
+Audience: agents. Status: current.
 
-This document describes how HuGR Relay is built: its control flow, state model, payload
-contract, and the empirical findings that shaped every design decision. All terminology
-and schema are canonical from [SPEC.md](../SPEC.md).
+# Architecture reference
 
----
+Use [SPEC.md](../SPEC.md) as the canonical current contract. Use operational skills for
+[ARM changes](../.opencode/skills/relay-arm-hook/SKILL.md),
+[core changes](../.opencode/skills/relay-gate-core/SKILL.md),
+[CLI changes](../.opencode/skills/relay-gate-cli/SKILL.md), and
+[maintenance](../.opencode/skills/relay-maintenance/SKILL.md).
 
-## 1. Overview
+## 1. Component ownership
 
-Relay drives **one continuous sub-agent (the Runner)** through an ordered list of **Work
-Packages (WPs)**. The orchestrator role is intentionally thin: spawn the Runner with the
-`brief` + the **Map** (WP titles), then hand off. From that point forward the **Relay hook**
-— a `SubagentStop` hook — owns all advancement.
+| Component | Responsibility |
+|---|---|
+| [`lib/relay-gate.sh`](../lib/relay-gate.sh) | Exact JSON-string decoding (`relay_json_string`, reserved helper-local output namespace), named-position lookup (`relay_position_index`), checklist-shape validation/evaluation, environment path expansion, computed Git diff, oracle/artifact digests, serialized ledger append. |
+| [`bin/relay-arm-hook.sh`](../bin/relay-arm-hook.sh) | Token binding, whole-evaluation lock, persisted ID position, ARM kinds, progressive instructions, accepted-control regression, repeat collapse, parking/release, corpus copy. |
+| [`bin/relay-gate`](../bin/relay-gate) | Harness-neutral `eval`/`check`, shared evaluation-lock convention, integer evaluation state, lossless current/macro/next identity decoding and prevalidation, named/base-ref check overrides, legacy DoD commands, JSON outcomes and disposition exits. |
+| [`benchmark/relay_hook.sh`](../benchmark/relay_hook.sh) | Single-runner `Stop` adapter, benchmark DoD/checklist evaluation, optional ungated advancement. |
+| [`benchmark/judge.py`](../benchmark/judge.py) | Stub/API/CLI semantic grading and typed sample/ballot availability/backend/model/cuts for voting; emit additive JSON `available` and render tags as display metadata while retaining public three-tuples. |
+| [`benchmark/calibrate_judge.py`](../benchmark/calibrate_judge.py) | Validate process/object/verdict/backend/reason and literal true availability; exclude invalid measurements from confusion matrix/agreement; import-guard calibration execution. |
+| [`bin/relay`](../bin/relay) | Read-only `verify`, `problems`, and `cost` views of recorded entries. |
+| [`bin/relay-spec.py`](../bin/relay-spec.py) | Template rendering, limited sprint lint, offline amendment comparison. |
+| [`bin/relay-profile.py`](../bin/relay-profile.py) | YAML profile compilation and generated-JSON text comparison through newline-normalizing `Path.read_text()`, not raw-byte freshness. |
 
-```
-orchestrator
-  └─ spawn Runner(brief + Map)
-       └─ [Runner works …  → STOPS]
-            └─ Relay hook fires
-                 ├─ Gate FAIL → block (same WP)
-                 ├─ Gate PASS + more WPs → block (next WP)
-                 └─ Gate PASS + exhausted → allow stop
-```
+The shared library owns mechanisms, not a universal driver policy. ARM ignores `dod`; CLI evaluates
+checklist then DoD and regresses both; benchmark evaluates DoD then checklist and regresses DoD only.
+Checklist order is the declared array order. Preserve these distinctions when reviewing changes.
 
-The orchestrator never polls, never injects mid-reasoning, and never interprets output.
-The hook does all three of: evaluate, enforce, and advance. This keeps the orchestrator
-correct-by-construction and the Runner free of external interruption.
+## 2. ARM event flow
 
----
-
-## 2. The Relay Loop
-
-The following pseudocode is the normative description of what happens on every
-`SubagentStop` fire (SPEC §5). Each line is explained inline.
-
-```
-on SubagentStop(payload):
-    runner   = payload.agent_id            # (1)
-    i        = counter[runner]             # (2)
-    wp       = sprint.work_packages[i]     # (3)
-    verdict, gaps = run_gate(             # (4)
-        wp.dod,
-        payload.last_assistant_message,
-        payload.agent_transcript_path
-    )
-
-    if verdict == FAIL:
-        retries[runner][i] += 1            # (5)
-        if retries[runner][i] > sprint.retry_budget:
-            ESCALATE(wp, gaps)             # (6)
-            allow_stop()
-        else:
-            block(                         # (7)
-                reason = "WP <id> not done: " + gaps + " — fix and continue."
-            )
-    else:  # PASS
-        lock_best(wp)                      # (8)
-        if i + 1 < len(sprint.work_packages):
-            counter[runner] = i + 1        # (9)
-            block(                         # (10)
-                reason = "WP <id> accepted. Next — WP <next.id>: " + next.instructions
-            )
-        else:
-            allow_stop()                   # (11)
+```text
+SubagentStop payload
+  -> own transcript (session transcript only as fallback)
+  -> explicit token override or unique transcript marker
+  -> token directory -> acquire .run.lock (busy: exit 3, stderr only)
+  -> optional agent_id ownership guard
+  -> persisted state and ID position resolved against current sprint
+  -> kind handling, current checklist, accepted earlier deterministic checks
+  -> required round/disposition evidence succeeds before its transition/budget publication
+  -> clean pass: advance one WP and block with next text, or complete and allow stop
+  -> current failure: charge WP retry and block, or park
+  -> regression-only failure: charge separate retry and block, or park
 ```
 
-Line-by-line:
+Each hook invocation is a new process. State survives through files. The opening prompt is the
+dispatcher's responsibility: brief/Map, first instructions, macro protocol, and self-check questions.
+The first `meta.base_ref` must precede work; the hook cannot reconstruct that moment at first stop.
 
-1. **`runner = payload.agent_id`** — the stable per-Runner identity pulled from the payload.
-   This is the key for all per-Runner state (see §3).
-2. **`i = counter[runner]`** — look up which WP the Runner is currently on. Starts at 0 on
-   first fire; advanced only on a Gate pass.
-3. **`wp = sprint.work_packages[i]`** — resolve the WP at index `i` from the sprint
-   definition. `sprint.json` is read fresh on every fire, so edits take effect immediately.
-4. **`run_gate(...)`** — evaluate every DoD check for `wp`. The Gate receives the WP's `dod`
-   array, the Runner's `last_assistant_message`, and its `agent_transcript_path` for deeper
-   inspection. Returns `(PASS|FAIL, list-of-gaps)`.
-5. **`retries[runner][i] += 1`** — increment the per-WP retry counter. This is separate from
-   the WP index counter and is never reset by advancement.
-6. **`ESCALATE(wp, gaps)`** — retry budget exhausted; surface the WP and its unresolved gaps
-   to the human, then `allow_stop()`. The last accepted WP state is preserved via keep-best.
-7. **`block(reason=...)`** — `decision:block` with the precise gap description. The Runner
-   does **not** stop; it resumes in the same context with the gap injected. The WP index `i`
-   is **not** changed, so the same WP is evaluated again on the next stop.
-8. **`lock_best(wp)`** — record this WP as accepted. The keep-best invariant is now active for
-   it: no future action can ship a worse version (see §4).
-9. **`counter[runner] = i + 1`** — advance the index. The next fire evaluates WP `i+1`.
-10. **`block(reason=...)`** — inject WP `i+1`'s full instructions into the Runner via a
-    `decision:block`. The Runner continues in the same context, now working on the next WP.
-11. **`allow_stop()`** — the package list is exhausted; the sprint is delivered; the Runner
-    is permitted to exit.
+Token binding is not cwd binding. Subagents can share a parent cwd; ARM commands use `meta.workdir`.
+When present, `agent_id` binds ownership within the token directory. Multiple tokens or a different
+owner are refused with stderr and exit `0`, not a hook block. Missing markers and unknown arms are
+also nonblocking. These paths require integration diagnostics; empty stdout is not proof of success.
 
-**Loop-safety:** the retry budget provides a hard bound on failures per WP. The
-`stop_hook_active` flag (see §6) is available as a secondary guard against hook re-entrancy.
+The hook reads only the payload transcript paths and `agent_id` for this binding/attribution. It does
+not use `stop_hook_active` as a secondary enforcement guard or grade `last_assistant_message` as a
+DoD artifact. Blocked claims are extracted from the selected transcript.
 
----
+## 3. Persisted ARM files
 
-## 3. State Management
+Paths below are relative to `$RELAY_ARMS_DIR/<token>`:
 
-The hook maintains two pieces of per-Runner state:
+| Path | Meaning |
+|---|---|
+| `sprint.json`, `meta.json` | Plan and `{workdir, base_ref?, token?}` metadata. |
+| `agent_id` | First nonempty payload owner ID. |
+| `position` | WP ID or macro-qualified coordinate. Whole-ID lookup precedes first-dot suffix lookup. |
+| `counter` | Derived next-array-index mirror, also written to WP count on escalation; not the authoritative ARM position. |
+| `state` | Missing/active state runs; `complete` exits; `awaiting-human` and legacy `escalated` require release. |
+| `retry_<safe-wp-id>`, `reg_retry` | Current WP and separate regression-only retry counters. |
+| `round_<safe-wp-id>`, `repeat_<safe-wp-id>` | Recorded round digest and identical-round count. |
+| `blocked_<safe-wp-id>` | Last honored blocked-claim digest at that WP. |
+| `base_<safe-wp-id>` | State-entry Git `HEAD`; fallback is `meta.base_ref`. |
+| `macro_<safe-macro-id>` | First-entry protocol marker; initialize the first macro after supplying its opening text. |
+| `preflight` | Once-per-arm cap-warning marker. |
+| `release` | Consumed text whose normalized form contains a non-whitespace character; operators MUST provide a real reason. Not a waiver or identity proof. |
+| `tr_cursor`, `entered_at` | Transcript usage cursor and last hook timestamp. |
+| `ledger.jsonl`, `relay.log` | Structured evidence and operational diagnostics. |
+| `.run.lock` | Whole ARM evaluation exclusion, acquired before ownership/state writes; shared with CLI calls using this state directory. |
 
-| State | Key | Description |
-|---|---|---|
-| `counter[runner]` | `agent_id` | Current WP index for this Runner. Starts at 0; incremented on each Gate pass. |
-| `retries[runner][i]` | `agent_id` + WP index | Failure count for WP `i`. Incremented on each Gate fail; checked against `sprint.retry_budget`. |
+Safe filenames replace characters outside `A-Za-z0-9._-` with `_`. Avoid distinct IDs that sanitize
+to the same key. The first fire migrates legacy integer position; later insertions before the ARM
+cursor do not re-aim it. Removing the current WP records `position-lost` and leaves position intact.
+CLI/benchmark counters remain indices and are sensitive to reorder/insertion.
+ARM preserves raw position and current/migrated/next WP/macro identities through JSON decoding and
+canonical position writes. Resolve raw whole ID, then raw first-dot suffix; only a raw miss permits
+legacy trailing-LF cleanup and another lookup. CR remains identity data. Missing/raw-empty position
+still migrates from the counter; past-end migration marks completion, using `?` for an empty plan.
+CLI `check --position <position>` uses the shared whole-ID-first resolver instead of `counter`,
+including when the counter is stale or past-end. It checks only that WP's checklist; it does not
+write position, charge retries, advance, or record verdicts. `check --base-ref <commit>` overrides
+`<state>/base_ref`; explicit empty prevents fallback. Both flags are rejected by `eval`.
+CLI `wp`/`macro`/`next` strings retain tabs and interior/trailing LF in outcomes/applicable ledger
+fields. Eval prevalidates current ID/macro and next ID before controls or persistent ledger/counter/
+retry writes; check validates only the selected ID/macro. Directory creation/locking still happens
+first. ARM validates current ID/macro before its controls, but next ID/macro only inside `advance`
+after current/regression commands and before buffered passing-round flush or transition publication.
+This preserves exact identities without providing full-plan validation or benchmark identity transport.
 
-**Where state lives:** both structures are held in the hook process's memory during a session.
-Because `sprint.json` is read fresh on every fire, the sprint definition itself is stateless
-from the hook's perspective.
+## 4. Macros and kinds
 
-**The position is a WP id, and may be two coordinates.** The table above describes the original
-integer counter, which `bin/relay-gate` and `benchmark/relay_hook.sh` still use. The production arm
-hook moved past it twice, for reasons worth keeping in view:
+Macros annotate flat WPs. No macro executor, macro retry counter, or nested loop exists. ARM supplies
+macro text once when advancing into an unmarked macro; the dispatcher supplies the first macro text.
+`execute`/`gate` use the same checks. `review` adds a reminder, not independent reviewer creation.
+`inject` records a label and digest before checking controls, not payload bytes. A successful next-WP
+reason includes extracted text. File SHA-256 covers original bytes, while `$(cat ...)` strips trailing
+LF from delivered text; inline `$(jq -r ...)` strips trailing LF before hashing and delivery.
+Missing payload records `inject-missing` without advancement. Failing rounds and terminal injection
+states retain the injection event without delivering the text. Delivery is not lossless byte transport.
 
-- **R6** replaced the index with the WP **id**. `sprint.json` is re-read on every fire, so an index
-  silently re-aims at a different WP the moment anything is inserted ahead of it, and the hook then
-  demands work the runner was never given. `$ARM/counter` survives only as a derived mirror for
-  pre-R6 readers.
-- **V1** made it two coordinates, `<macro>.<sub>`, when the sprint declares macros
-  (`docs/relay-v2.md` §2.2). Without the first coordinate a failure localizes to a work package and
-  no further; with it, to `frame.terms, control C7`. Resolution tries the whole string as an id
-  before splitting on the first dot, so a pre-v2 arm is migrated rather than reported lost.
+Compiler/lint accept `human`; ARM does not. It records `unknown-kind` and releases the runner without
+moving. Neither CLI nor benchmark implements ARM injection, review reminders, or human approval.
+Do not derive runtime approval behavior from compiler vocabulary.
 
-A macro is a **scope**, not a loop: one fire still resolves exactly one WP, and a macro holds no
-retry state of its own — retry, keep-best and the compliance criterion all key on a recorded verdict,
-which only a WP has.
+## 5. Evidence and regression
 
-**Why `agent_id` is the stable key:** the `SubagentStop` payload provides a stable
-`agent_id` that is consistent across all stops for the same Runner. It is not a session ID
-(one session can spawn multiple Runners) and not a timestamp. Using `agent_id` as the
-counter key means two concurrent Relay sprints in the same session do not collide, and the
-hook correctly resumes a Runner that stops many times before the sprint completes.
+Keep-best re-evaluates selected controls; it does not lock artifacts or
+restore an earlier version. ARM selects earlier deterministic checklist controls by IDs with any
+recorded checklist pass, using the current plan. A newly inserted earlier control with no pass is
+not a regression obligation. CLI selects all earlier deterministic checklist and DoD commands;
+benchmark selects earlier DoD commands only. Neither requires ARM acceptance history.
 
----
+Regression and DoD loops transport compact JSONL records, then decode strings with
+`relay_json_string`. Current/earlier shell programs execute whole, preserving tabs and interior/trailing
+LF. Current IDs/assertions and ARM regression membership retain exact decoded strings; command/judge
+oracle hashing now matches audit's decoded strings. Old fragmentation and trailing-LF mismatches remain
+possible in historical ledgers, which stay unchanged. Invalid required current-checklist values fail or abort instead
+of becoming unexecuted passes; this is not complete sprint validation. Earlier CLI regression
+has narrower decoding/validation; see [regression limits](gates.md#2-driver-order-and-regression-reach).
+Judge responses must be one
+pass/fail object from an exit-0 process; malformed/nonzero responses record unavailable failure,
+blocking only when that semantic item is blocking. See [gate details](gates.md).
+Core response validation permits additive fields; it does not validate `available` or require reason.
+Judge JSON availability comes from typed ballot/sample state; calibration requires literal true
+availability plus its stricter process/object/verdict/NUL-free-backend/string-reason contract. Invalid
+measurements do not enter the confusion matrix, and no valid judgments means unavailable agreement.
+Neither consumer derives availability by parsing backend display tags.
+Missing/null/empty-array checklists remain valid empty control lists; `{}`, `false`, `""`, and every
+other nonarray are fatal before checklist-item execution. The decoder rejects output variable names
+under `__relay_json_string_*` so helper locals cannot shadow a caller's requested assignment.
 
-## 4. Anti-Regression (Keep-Best)
+ARM buffers round verdicts because checklist evaluation runs in a command substitution. It records
+the first failing round in full and replaces identical nonterminal verdict rounds with a
+`gate-fail-repeat` hash/count event. This reduces duplicated verdict payload, not evaluation or turn
+count. Passing and terminal rounds are full. An honored blocked claim matching the last stored
+honored hash at that WP can park early; a new honored claim replaces that hash. Persistent transcript
+text can match without a new message. Ordinary identical failures use the usual retry budget.
 
-When the Gate returns PASS, `lock_best(wp)` records the WP as accepted. This is a one-way
-latch: once a WP is accepted, the chain never ships a regression of it.
+Escalation retains position, sets `awaiting-human`, copies trace artifacts, and produces no block.
+Release resumes the same gate after whitespace-only reason rejection and full resolved-WP-ID cleanup
+of retry/round/repeat/blocked-claim state, the legacy index retry, and `reg_retry`. An unresolved
+position preserves release for repair. See [SPEC §4](../SPEC.md#4-failures-repeats-and-release).
+The release reason and judge corroboration are attribution fields, not authentication/enforcement.
 
-**Measured motivation (SPEC §10):** in the empirical A/B runs that shaped Relay's design,
-forced reflection/refactor passes on already-correct outputs occasionally regressed working
-code to broken — in one documented case, a refactor pass introduced an undefined-variable
-bug into a solution that had previously passed all tests. Blanket reflection therefore has
-negative expected value when a verifier already exists.
+## 6. Locking, archival, and attribution limits
 
-Keep-best is the structural response: advancement is strictly forward, and earlier accepted
-WPs are held constant while later WPs are being worked. A future WP can *use* the output of
-a past WP but cannot mutate it in a way that breaks the past WP's Gate.
+The shared append lock is `<ledger-parent>/.chain.lock`; it protects read-tail/append sequence only.
+CLI `eval`/`check` hold `<state>/.run.lock`; ARM holds `$ARM/.run.lock` before binding, release, usage,
+retry, or position writes. Competing calls on that directory return `3`, stderr only, without state
+changes or grading. Exit cleanup removes the owned lock and ARM round buffer, never another caller's
+lock. These locks do not guard external plan/state writers; coordinate plan mutation separately.
 
----
+Malformed shared append bodies, including any supplied top-level `h`, return nonzero and release
+`.chain.lock`; nested `data.h` is allowed. Checklist/regression evidence writes, ARM round flushes,
+and mandatory disposition appends now propagate failure. All three drivers append completion/
+advance evidence before corresponding counter/position/state publication, and failure evidence
+before retry publication. ARM also records release before consumption/reactivation and compaction
+hints before next-state publication; escalation records precede disposition/output. See
+[SPEC ordering matrix](../SPEC.md#6-ledger-and-audit-boundary) for exact driver scope.
 
-## 5. Boundary Semantics
+Ledger/state writes are not atomic and provide no rollback or fsync-backed durability guarantee.
+An earlier command or ARM binding/usage/bookkeeping can already have effects; a partial prefix can
+remain, or a later state write can fail after its append. ARM ancillary cap-risk, injection,
+unknown-kind, and blocked-claim appends still tolerate errors; archive copies remain best-effort.
 
-The Gate runs **only at stop boundaries** — never mid-reasoning. This is a first-class
-design constraint, not an implementation detail:
+The verifier and audit loader reject duplicate decoded keys at every nesting depth, including
+escaped equivalents. A chain entry must have exactly one final root `h` with its writer delimiter;
+nested `h` stays ordinary data. Verification hashes original signed body bytes, without JSON
+reserialization, and rejects unsigned fields after the root digest. These rules do not close the
+valid-prefix truncation or same-user trust limits.
 
-- **Latency, not interruption:** the hook adds latency at the exit point of a completed
-  turn. The Runner's reasoning is already finished when the hook fires.
-- **Fail extends, never cuts:** on a Gate fail, the hook issues `decision:block` with the
-  gap description. This *extends* the Runner's work with a new turn. It does not abort,
-  truncate, or splice into an in-progress thought.
-- **Premature stop handling:** if the Runner stops before a WP is done (e.g., it
-  underestimates the work required), the Gate catches it and the `block` response sends it
-  back. "Stopped" is not equivalent to "done."
+ARM copies terminal ledger/sprint/meta plus `outcome.json` into
+`$RELAY_CORPUS_DIR/<token>-<head-prefix>` (default `$HOME/.relay/corpus`). Copy failures are tolerated;
+this is an archive attempt, not a transaction, immutable snapshot, or rollback store. Benchmark
+archival belongs to [`run_arm.sh`](../benchmark/run_arm.sh), not the hook or shared library.
 
-This means the Gate's verdict latency only matters between turns, not within them, and the
-Runner always has a complete, coherent state when it receives a block reason.
+Benchmark gate and grader are separate. `run_arm.sh` removes `holdout/` from the runner copy, leaves
+visible `checks/` for self-checking/gates, and selects the original campaign's holdout for final
+grading when present. Held-out scoring is not a feature of the ARM hook or shared checklist core.
 
-**Single-context vs isolated stations (SPEC §7):**
-Relay defaults to a single continuous context — the Runner retains full working memory
-across all WPs. This is correct when WPs are coupled (the normal case inside one
-codebase), because WP3 can build on WP2's live code with no handoff artifact to serialize.
-An isolated-stations variant (fresh Runner per WP with an explicit handoff contract) is the
-right choice only when WPs are genuinely independent and context isolation is more valuable
-than memory continuity.
+ARM derives token usage from new transcript rows since `tr_cursor`. Missing usage produces absent
+cost fields; an empty window in a transcript with usage can produce measured zeros. Initial elapsed
+time is absent unless an entry timestamp was supplied. Later elapsed values measure hook-to-hook
+windows; terminal state summaries do not necessarily include earlier failed windows. Read `cost`
+records for what was captured, not a fabricated full-run bill.
 
----
-
-## 6. The SubagentStop Payload
-
-The hook receives the following verified payload on every fire (SPEC §9, Claude Code 2.1.x):
-
-```json
-{
-  "session_id": "…",
-  "transcript_path": "…/<session>.jsonl",
-  "cwd": "…",
-  "permission_mode": "…",
-  "agent_id": "abf99b91daecefad2",
-  "agent_type": "general-purpose",
-  "effort": { "level": "high" },
-  "hook_event_name": "SubagentStop",
-  "stop_hook_active": false,
-  "agent_transcript_path": "…/subagents/agent-<agent_id>.jsonl",
-  "last_assistant_message": "…",
-  "background_tasks": [],
-  "session_crons": []
-}
-```
-
-**Verified properties:**
-
-- **`decision:block` forces continuation.** When the hook exits with
-  `{"decision":"block","reason":"..."}`, the Runner does not stop. The `reason` is injected
-  and it resumes in the same context. Verified live: a blocked Runner resumed and obeyed the
-  injected instruction.
-- **`agent_id` is stable per Runner.** The same Runner produces the same `agent_id` across
-  every stop it makes. This is the correct and only key for per-Runner state.
-- **`stop_hook_active` is the loop-guard.** This field is `false` on a normal stop and flips
-  to `true` after the hook has issued a `decision:block` for this stop cycle. The hook can
-  inspect it to detect re-entrant conditions and avoid infinite block loops.
-- **`agent_transcript_path` exposes the Runner's full JSONL transcript.** The Gate can read
-  every prior turn the Runner has taken, enabling structural checks (e.g., grep a specific
-  file the Runner wrote) that go beyond the final `last_assistant_message`.
-- **Hot-reload caveat.** The hook script body is read fresh on every fire — so changes to
-  the hook script take effect without restarting the session. However, settings-file hook
-  *registration* does not hot-reload mid-session. Relay is therefore shipped as a stable
-  installed hook whose behavior is driven entirely by `sprint.json`, which is itself read
-  fresh on every fire.
-
----
-
-## 7. Single-Context vs Isolated Stations
-
-| Mode | Runner lifetime | Handoff | Right when |
-|---|---|---|---|
-| **Single context** (default) | One Runner for the whole sprint | None — working memory is continuous | WPs are coupled (typical: one codebase, shared state) |
-| **Isolated stations** | Fresh Runner per WP | Explicit handoff contract serialized between Runners | WPs are genuinely independent; context isolation outweighs memory continuity |
-
-The single-context mode is the default because WP coupling is the normal case: a test WP
-depends on the implementation WP's exact file paths and API surface; a docs WP depends on
-the test WP's assertions. Requiring no serialization also eliminates a class of handoff
-bugs where the contract misses an implicit assumption.
-
-Context growth over a long sprint is the associated cost. The mitigation is compaction
-between WPs when the context is approaching limits — not switching to isolated stations.
-
----
-
-## 8. Empirical Grounding
-
-Relay's shape is defined by eight controlled A/B runs executed during design (SPEC §10).
-Three findings came out:
-
-**Finding 1 — Prompt-scale compliance is solved.** Both a frontier model and a cheap model
-implemented fully-specified single-prompt specs correctly on the first pass, including a
-12-rule pricing engine with interacting business rules. A clean spec that fits in a single
-prompt is squarely in the model's wheelhouse. This ruled out prompt-engineering as the
-primary intervention.
-
-**Finding 2 — Reflection is zero-gain or harmful on verifiable work.** Forced
-"reflect and improve" passes on already-correct outputs produced zero functional gain
-across runs and in one case regressed a correct solution to broken (a refactor pass
-introduced an undefined-variable bug). This finding directly motivates the keep-best
-invariant (§4) and rules out reflection as a Relay primitive.
-
-**Finding 3 — The hypothesized "requirements get dropped at scale" failure mode did NOT
-materialize (measured).** We originally designed Relay around the belief that a monolith drops
-requirements as work grows. Measurement falsified it: on freshly generated, contamination-immune,
-held-out-graded campaigns, a strong model implements a *complete, precise* spec of up to N=300
-distinct, coupled requirements first-pass (≈8 turns, ~$1), on both a templated and a non-compressible
-substrate. The monolith does not break, so there is no crossover for a per-step ratchet to win at
-(see [benchmark/RESULTS.md](../benchmark/RESULTS.md)). What this leaves is **not** "Relay recovers
-dropped requirements" — it is the deterministic, model-improvement-robust core: an external oracle
-("a real check passed" replaces "the agent said done"), the keep-best ratchet against regression, and
-a tamper-evident verified-trace ledger. Relay's value is **proof, not amplification.**
-
-These findings explain every non-obvious decision in the design: why there is no reflection step
-(Finding 2), why the keep-best latch is a hard invariant (Finding 2), why the Gate must be objective
-(so PASS is a real signal — the deterministic oracle, the part that survives Finding 3), and why a
-green gate must be earned by an *independent* held-out check, never the one the Runner self-tested
-against (gate ≠ grader).
-
----
-
-## 9. See Also
-
-- [gates.md](gates.md) — DoD check-type catalog, Gate evaluation order, and LLM-judge rubric
-  authoring guide.
-- [configuration.md](configuration.md) — `sprint.json` schema reference, per-WP model
-  selection, retry budget tuning, and hook installation.
+HMAC authenticates bytes only when the key and trusted writer are outside the producer's control.
+Same-user processes and editable commands/state remain inside Relay's trust boundary. Structural
+verification, control verdicts, and current-plan oracle agreement are separate audit questions; use
+the [audit skill](../.opencode/skills/relay-audit/SKILL.md) and [SPEC §6](../SPEC.md#6-ledger-and-audit-boundary).

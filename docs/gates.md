@@ -1,434 +1,299 @@
-# Gates & Definition of Done
+Audience: agents. Status: current.
 
-## 1. What a Gate is and when it runs
+# Gate and verdict reference
 
-A **Gate** is the evaluation of a Work Package's (WP) Definition of Done (DoD) at a stop
-boundary. It runs inside the **Relay hook** (`SubagentStop`) each time the Runner halts,
-after the Runner has finished reasoning and output for the current WP.
+Use [SPEC.md](../SPEC.md) for canonical fields and driver contracts. Use
+[relay-gate-core](../.opencode/skills/relay-gate-core/SKILL.md),
+[relay-gate-cli](../.opencode/skills/relay-gate-cli/SKILL.md), and
+[relay-audit](../.opencode/skills/relay-audit/SKILL.md) for operational work.
 
-The Gate's position is deliberate: hooks fire only when the agent has already stopped. This
-means the Gate adds **latency at the exit** — it never severs an in-progress thought
-(SPEC §7, "Gate at the boundary, never mid-reasoning"). On failure, the Gate
-*extends* work by injecting a `decision:block` with the precise gap; it does not interrupt
-a turn.
+## 1. Executable controls
 
-A WP's verdict is the AND of every check in its DoD. All checks must pass; a single
-failure holds the WP.
+[`relay_run_checklist`](../lib/relay-gate.sh) iterates `checklist` in array order. A nonempty `cmd`
+takes precedence; otherwise invoke the judge criterion. Do not expect automatic mechanical-first
+sorting, ordinary-failure short-circuiting, or a typed DoD dispatcher.
 
----
-
-## 2. Check-type catalog
-
-The catalog below is the complete Gate vocabulary (SPEC §4). No other check types exist.
-
-### Mechanical checks — free, deterministic (prefer these)
-
-| `type` | Required fields | Passes when |
+| Shape | Evaluation | Advancement effect |
 |---|---|---|
-| `file_exists` | `path` | the file exists on disk |
-| `grep` | `path`, `pattern` (ERE) | pattern is found at least once in the file |
-| `grep_absent` | `path`, `pattern` (ERE) | pattern is NOT found in the file |
-| `min_count` | `path`, `pattern`, `min` | ≥ `min` non-overlapping matches of pattern in the file |
-| `shell` | `cmd` | command exits 0 (run at repo root) |
-| `test` | `cmd` | alias of `shell`, semantically signals a test-runner invocation; exits 0 |
+| `{"id":"C1","cmd":"..."}` | Bash `eval` in gate workdir, suppressed stdout/stderr; `0` -> pass, nonzero -> fail | Always blocking on failure |
+| `{"id":"J1","judge":"...","context":["..."]}` | Exit-0 `benchmark/judge.py` plus exactly one valid pass/fail JSON object | Advisory by default; unavailable response records fail without blocking |
+| Same judge with `"blocking":true` | Same evaluation, still non-independent | Blocks on fail, including response/transport unavailability |
+| `dod: [{"cmd":"..."}]` | Separate CLI/benchmark shell loop | Blocking there; ignored by ARM |
 
-### Semantic check — costs a model call
+Fields such as `type=file_exists`, `type=min_count`, or `type=llm` have no evaluator. Implement a
+requirement as a shell command or judge control. `assert` is report text, not proof; `model`,
+`rubric`, and `output_contract` do not activate per-item behavior.
 
-| `type` | Required fields | Optional fields | Passes when |
-|---|---|---|---|
-| `llm` | `criterion`, `rubric` | `model` | the judge model returns PASS under the rubric |
+Malformed/empty/multiple judge responses, missing or unsupported verdicts, and invalid backend strings
+record `fail` / `judge:unavailable(invalid-response)(non-independent)`. A nonzero judge process records
+`fail` / `judge:unavailable(exit-<status>)(non-independent)`, even with pass JSON on stdout. These
+failures block a blocking control; actual advisory-response failures remain nonblocking but never
+become an `advisory` verdict. Missing computed diff records `fail` / `judge:unavailable(no-diff)` under
+the same blocking policy. Keep a deterministic oracle alongside semantic controls and verify judge
+configuration independently.
 
-The Gate runs all mechanical checks first; `llm` checks run only if at least one is present.
+The shared `relay_json_string` helper rejects nonstring/NUL values instead of coercing or truncating
+them; `null` represents an empty optional string. Current IDs must be nonempty; invalid IDs and
+resolved assertions abort before that item's execution. Invalid commands, missing/invalid criteria
+without a usable command, and invalid scope are named failures regardless of the semantic blocking
+flag. Empty/null commands can select a valid judge. Optional DoD may be absent/null/empty; malformed
+arrays or entries and empty/nonstring/NUL commands fail with a declared ID or synthetic
+`dod:<wp>:invalid-array` / `dod:<wp>:<index>:invalid-command` label. This is not complete plan validation.
+`relay_json_string` also rejects output names under reserved `__relay_json_string_*`, leaving the
+caller variable unchanged. Missing/null `checklist` and `[]` are valid empty control lists; every
+nonarray, including `{}`, `false`, and `""`, is fatal before checklist-item execution.
 
----
+Commands run in each item's subshell. Environment/shell state changed by one item does not configure
+the next item. Filesystem side effects persist. No gate-core timeout is supplied. Failure feedback
+names checklist IDs; legacy DoD failures use the command suffix after its last `::`, or the command
+itself. The drivers do not capture and forward command diagnostics as detailed failure explanations.
 
-### Concrete DoD-entry examples — one per type
+## 2. Driver order and regression reach
 
-**`file_exists`** — verify the module was created:
-```json
-{ "type": "file_exists", "path": "src/payments/refund.py" }
-```
+| Driver | Current WP | Earlier WPs |
+|---|---|---|
+| ARM | Checklist | Deterministic checklist commands whose IDs have a recorded checklist pass |
+| CLI `eval` | Checklist, then DoD commands | All deterministic checklist and DoD commands |
+| Benchmark gated | DoD commands, then checklist | DoD commands only |
+| CLI `check` | Checklist only | No regression checks |
 
-**`grep`** — verify the expected export is present:
-```json
-{ "type": "grep", "path": "src/payments/refund.py", "pattern": "^def refund\\(" }
-```
+Current checklist, ARM/CLI checklist regression, and CLI/benchmark current/earlier DoD execute each
+decoded command whole. Regression/DoD loops carry compact JSONL records through line readers and
+decode with `relay_json_string`; tabs and interior/trailing LF stay inside their original strings.
+Current checklist IDs/assertions and ARM regression membership retain exact decoded strings, as do
+command hashing inputs. The final shell status decides pass/fail: `false; true` passes. Failure-summary
+delimiters are still presentation text, not a lossless encoding of arbitrary IDs.
+Regression/DoD transport-loop commands receive EOF on stdin by default to protect JSONL records; explicit pipes or heredocs inside `cmd` still supply input.
 
-**`grep_absent`** — verify no debug `print` statements were left in:
-```json
-{ "type": "grep_absent", "path": "src/payments/refund.py", "pattern": "print\\(" }
-```
+ARM regression uses the current plan's earlier controls and the set of previously passed control
+IDs, not a frozen accepted command snapshot. A new control inserted before the cursor without a
+recorded pass is not reclassified as a regression. An accepted control moved after the current cursor
+is outside earlier-WP regression reach. Selected earlier commands execute and hash whole. Judges are
+never deterministic regression controls. ARM skips null/empty earlier commands, but invalid
+nonstring/NUL command decoding aborts. CLI records named regression failures for malformed earlier
+checklist collections, undecodable commands, or missing/empty commands without a nonempty string
+judge. Missing/empty/nonstring earlier IDs receive synthetic labels; a valid command can still pass
+under that label. Earlier assertions are not validated. Judge-only controls are skipped by checking
+for a nonempty string, without NUL decoding or complete criterion validation. Neither policy is
+complete plan-schema validation.
 
-**`min_count`** — enforce a minimum number of test functions:
-```json
-{ "type": "min_count", "path": "tests/test_refund.py", "pattern": "def test_", "min": 6 }
-```
+Keep-best means refusing clean advancement when selected earlier checks fail. It does not prevent
+file edits, restore a last-good artifact, roll back a failed WP, or prove every historical requirement
+still holds. CLI/ARM checklist re-runs produce `regression-item` events; legacy DoD checks contribute
+failure strings rather than individually named verdicts. Benchmark does not re-run earlier checklist
+controls or write their regression verdicts.
 
-**`shell`** — enforce zero lint violations:
-```json
-{ "type": "shell", "cmd": "ruff check src/payments/refund.py --quiet" }
-```
+ARM injection records a label and digest before gate evaluation, not payload bytes. Extracted text
+appears only in a successful next-WP block; failing rounds and terminal injection states do not
+deliver it. File SHA-256 covers original bytes, but `$(cat ...)` strips trailing LF from delivered
+text. Inline `$(jq -r ...)` strips trailing LF before hashing and delivery. Wrapped block text and
+the digest-only event do not provide lossless file-payload transport or retention.
 
-**`test`** — run the relevant test suite:
-```json
-{ "type": "test", "cmd": "python -m pytest tests/test_refund.py -q" }
-```
+## 3. Semantic judge behavior
 
-**`llm`** — verify that the changelog entry reads as a user-facing summary, not an
-internal diff description (a criterion no script can evaluate reliably):
-```json
-{
-  "type": "llm",
-  "criterion": "The CHANGELOG entry for this release reads as a user-facing summary of impact, not an internal diff description.",
-  "rubric": "Return PASS if the entry is written from the user's perspective and avoids internal implementation details (e.g. 'faster checkout flow' not 'replaced O(n²) loop in cart.py'). Return FAIL otherwise.",
-  "model": "haiku"
-}
-```
+[`benchmark/judge.py`](../benchmark/judge.py) normally prints one JSON object and exits `0`, whether
+its verdict is `pass` or `fail`. JSON includes additive boolean `available` from typed `_Ballot`/
+`_Sample` state: answered pass/fail and stub results are true; unavailable ballots fail with false.
+Public `judge_api`/`judge_cli` preserve `(verdict, reason, backend)` three-tuples. It returns backend
+tags that the core prefixes with `judge:` and suffixes with `(non-independent)`. The auditor wording
+in its prompt does not establish independence.
 
----
-
-## 3. Mechanical vs semantic tiers
-
-### Prefer mechanical
-
-Mechanical checks (`file_exists`, `grep`, `grep_absent`, `min_count`, `shell`, `test`) are
-**free and deterministic**. They run first regardless of ordering in the DoD array. When
-writing a DoD, exhaust the mechanical vocabulary before reaching for `llm`.
-
-Push requirements into mechanical form wherever possible:
-- "documentation is present" → `grep` for a section header
-- "no regressions" → `test` against the existing suite
-- "sufficient coverage" → `min_count` of test functions, or a `shell` coverage command
-
-### When to use `llm`
-
-Reserve `llm` for criteria that are **genuinely undecidable by a script**: tone, coherence,
-user-facing readability, or whether an explanation is correct at the semantic level. If a
-mechanical check could approximate the criterion, use the mechanical check.
-
-### Cost guidance
-
-| Scenario | Recommended |
+| Backend | Acceptance and failure behavior |
 |---|---|
-| File existence, content, test pass | mechanical only |
-| Coverage threshold, lint, formatting | `shell` / `test` |
-| "Is this well-written?" / tone / user-facing correctness | `llm` with `"model": "haiku"` |
-| Complex multi-dimensional rubric | `llm` with `"model": "sonnet"` |
+| `stub` | Forced `RELAY_JUDGE_STUB=pass|fail`, otherwise every supplied file must contain `RELAY_JUDGE_OK`; no files fails. Criterion is ignored. |
+| `api` | Messages-compatible endpoint; prefer forced `submit_verdict`, fall back to a verdict line. Network/auth errors return fail / `api-error`. |
+| `cli` | Authenticated `claude -p` with configured judge model; parse a verdict line. Process/transport errors return fail / `cli-error`. |
 
-Specifying `"model": "haiku"` on `llm` checks keeps costs low for routine semantic gates.
-Omit `model` only when the rubric genuinely requires a stronger judge.
+Backend precedence: explicit `RELAY_JUDGE_BACKEND`, otherwise API with `ANTHROPIC_API_KEY`, otherwise
+stub. Set `RELAY_JUDGE_BACKEND=api` when using only a custom endpoint/key. Defaults and environment
+fields are in [configuration](configuration.md#judge-settings).
 
----
+API/CLI voting takes `RELAY_JUDGE_VOTES` samples, strict majority passes, and ties fail. API/CLI
+sampling uses typed internal answered/no-verdict/error state, backend kind, model, and truncation
+cuts. Unavailable samples abort the ballot with fail and discard earlier votes; answered samples on
+truncated evidence still count. Backend display tags are rendered from those fields, not parsed back
+into voting state. Model aliases/filenames containing `(no-verdict)`, `(truncated:...)`, error-like
+text, or tally-like text cannot change availability. Do not infer parser state by splitting display
+labels. API tool verdicts require `pass`/`fail` plus a string reason; prose fallback accepts a trimmed,
+case-normalized exact `VERDICT: PASS` / `VERDICT: FAIL` line. A malformed
+last verdict declaration is unavailable, not a substring pass or a fallback to an earlier declaration.
+Votes are separate samples, not independently authenticated reviewers.
 
-## 4. Verdict semantics
+API/CLI reads cap each file at `RELAY_JUDGE_MAX_CTX` characters and announce/tag truncation. Missing
+files become `(file not found)` context; no context becomes `(no artifact provided)`. The stub reads
+full files rather than this truncated context. Neither `pass` nor a high vote margin establishes a
+deterministic contract. Read infrastructure tags separately from semantic rejection.
 
-**A WP passes only when ALL its checks pass (AND).**
+The core accepts additive judge response fields but does not validate `available` or require reason;
+do not confuse its process/object/verdict/backend contract with calibration's stricter acceptance.
+[`calibrate_judge.py`](../benchmark/calibrate_judge.py) requires process exit `0`, one JSON object,
+pass/fail verdict, NUL-free backend string, string reason, and `available is True`. Invalid/unavailable
+measurements are excluded from TP/TN/FP/FN and agreement; all-invalid input reports
+`unavailable (no valid judgments)`. No backend substring classifier is used, even for tag-like model
+aliases. Its import guard prevents calibration/model calls on import; fixture metadata still loads.
+Agreement is a report, not an exit-code quality gate or independent-review proof.
 
-On failure, Relay collects the specific gaps — the list of checks that did not pass —
-and injects them verbatim into the `block` reason delivered back to the Runner:
+## 4. Computed diffs and recorded scope
 
-```
-WP <id> not done: <gap 1>; <gap 2> — fix and continue.
-```
+For `diff=true`, the core appends a computed artifact to any declared `context`. The artifact contains
+tracked changes from `git diff <base_ref>` and no-index diffs for nonignored untracked files, respecting
+optional `paths`. It covers committed and uncommitted tracked work relative to the supplied commit
+without changing the index. An empty valid diff is still graded.
 
-The Runner receives the gaps as its next instruction and resumes the **same WP** (the index
-is not advanced). This makes every retry targeted: the Runner knows exactly what is missing,
-not just that it failed.
-
-On pass, the WP is locked via keep-best (see §5) and the Gate relays the next WP's
-instructions into the same Runner.
-
-### The self-check ships with the next state's instructions
-
-A WP may declare `self_check`, a list of questions:
-
-```json
-{ "id": "wp2-carve", "instructions": "...",
-  "self_check": ["Which requirement does each package close, and where is that recorded?",
-                 "What did the packet ask for that you did not do?"] }
-```
-
-They are delivered on the **advance into that WP**, alongside its instructions — never after a
-failure, where the Runner needs the gap rather than a questionnaire. Asked in advance, a self-check
-is a forcing function: an agent that knows what it will be asked works toward it while it still can.
-Asked only once the gate has failed, it is a remedy, and unaided self-correction is known to plateau
-or hurt. What makes it work is that it is anchored to a check that runs whatever the Runner says.
-
-A self-check is **text**. It produces no verdict and no ledger entry — a chain that recorded it as
-one would be certifying the Runner's own account of its work. Write it to probe the *protocol's
-steps* while the deterministic control measures the *outcome*; if both ask the same question, the
-self-check is decoration.
-
-The first WP's self-check is not the Gate's to deliver: the hook speaks only once the Runner has
-stopped, so the first state's context — instructions, macro protocol, self-check — belongs in the
-opening prompt the arm author writes.
-
-### `diff: true` — the artifact is computed, not supplied
-
-A `judge` item may set `diff: true`. The Gate then computes `git diff <base_ref>` **itself** and
-hands the result to the judge, instead of grading whatever static paths the plan listed in `context`:
-
-```json
-{ "id": "described-what-changed",
-  "judge": "Does the description match the diff? FAIL any claim the diff does not support.",
-  "diff": true, "blocking": true }
-```
-
-- **`base_ref` is the workdir's HEAD when the state was entered**, captured by the advance out of the
-  previous state and written onto the chain with it. The first state has no such moment, so its base
-  ref goes in the arm's `meta.json` — the arm author's job, like its instructions.
-- **Committed and uncommitted work are both covered**, and so are **untracked files** — a brand-new
-  file is the most common shape of new work. Untracked content is appended as a `--no-index` diff
-  rather than through `git add -N`, because the Gate must not write into the index of the workspace
-  it is judging.
-- **Narrowing with `paths` is legal but never free.** It is folded into the control's oracle and
-  recorded as `scope` on the entry, so a narrowing introduced mid-run reads as ORACLE DRIFT. This
-  matters because artifact selection is an *oracle* decision living in a *plan* field: narrowing it
-  to omit the file where the problem lives makes the judge dutifully cross-check an incomplete
-  artifact and pass — the scope-narrowing attack, moved out of the agent's prose and into the
-  orchestrator's.
-- **The artifact's own state is recorded, not just its address.** `oracle` says what was asked and
-  `scope` says where; neither says what was *there*. So a judge entry also carries `artifact`, the
-  sha-256 of the contents at those paths at the moment it was graded (each path contributing its name
-  as well as its bytes, and `absent` where there is no readable file). Without it, two fires of the
-  same control over a file that tripled in size between them are byte-identical on the chain — which
-  is exactly how a measured run grew `conclusions.json` 3.1× across 21 review rounds and still read as
-  a clean first-try pass ([`FINDING-self-graded-review-verdicts.md`](FINDING-self-graded-review-verdicts.md)).
-  It is emitted only where there is a scope to digest, so a deterministic control's entry is unchanged.
-- **It fails closed.** No base ref, or not a git workdir, records `fail` with
-  `graded_by: judge:unavailable` — an infrastructure failure, not a judgment. Note that it still only
-  *blocks* if the item is `blocking`: an advisory control that cannot run is still only advisory,
-  which is exactly why a discursive control is never allowed to stand alone.
-
----
-
-## 5. Keep-best, retry budget, and escalation
-
-### Keep-best (anti-regression)
-
-Once a WP's Gate returns PASS, that WP is **locked**. The chain advances; no later WP,
-refactor, or retry can ship a worse version of an already-accepted package. This property is
-empirically motivated: measured reflection/refactor passes occasionally regressed correct
-code (SPEC §7, §10, Finding 2).
-
-### Retry budget
-
-Each WP has a bounded retry budget (sprint-level field `retry_budget`). The per-WP retry
-counter increments on every FAIL verdict for that WP.
-
-```
-retries[runner][wp.id] += 1      # on each FAIL
-```
-
-### Escalation — no skipping
-
-When `retries[runner][wp.id] > retry_budget`, the chain **escalates and stops**. The
-escalation surfaces the WP id and the outstanding gaps to the human, with the last accepted
-WP preserved intact. The chain does **not** skip the failing WP and proceed to the next one
-— a WP that cannot be delivered within budget is a signal for human intervention, not silent
-advancement.
-
-```
-if retries[runner][i] > sprint.retry_budget:
-    ESCALATE(wp, gaps)   # stop; surface to human; keep last accepted WP
-    allow_stop()
-```
-
-### Escalation parks the arm — it does not end it
-
-The arm's `state` becomes **`awaiting-human`**. The Runner is released, because turns are expensive;
-the arm is not finished. Nothing the Runner does leaves that state — not a later fire, not the gate
-passing because the world changed underneath it. (`escalated` is still honored for arms written
-before this.)
-
-A person leaves it by writing a **reason** into `$ARM/release`:
-
-```sh
-echo "known CI flake, verified by hand — GS" > ~/.relay/arms/<token>/release
-```
-
-The next fire consumes the file, records a `human-release` event carrying the reason, clears that
-gate's retry counters, and puts the Runner back on **the same gate**. It resumes; it does not skip.
-
-Three properties, each deliberate:
-
-- **A reason is mandatory.** `release` is the only thing that moves a parked arm, so it is the one
-  that must be attributable. An empty file is refused and the arm stays parked. No layer below Relay
-  supplies this warning — DAP specifies `goto` in purely mechanical terms with no danger language at
-  all, and VS, GDB and LLDB each independently invented their own guard.
-- **The budget is restored.** Resuming into a spent counter would re-park on the very next fire — a
-  door that opens onto a wall.
-- **The release is consumed, not standing.** A file left on disk would silently un-park every future
-  escalation of that arm.
-
-### `relay problems` — the queue, not the dashboard
-
-Every problem is **derived from the chain** on each call and therefore self-clearing: a stuck gate
-that later advances stops being reported without anyone clearing a flag. A stored field would be a
-second source of truth that drifts.
-
-```
-$ relay problems ~/.relay/arms/<token>
-RELAY PROBLEMS — .../ledger.jsonl
-
-  awaiting-human [wp3-migrate]  retry budget spent at wp3-migrate; still failing: schema-reversible
-```
-
-Exit code 1 means this arm wants attention, 0 means it does not — that is the filter a fleet console
-uses; the payload is for the person who then looks. The categories split by *what a reader does next*:
-
-| the Runner may still resolve it | only a person can |
+| Driver | Base-ref source |
 |---|---|
-| `gate-failing`, `regression` | `awaiting-human`, `oracle-drift`, and the plan defects — `cap-risk`, `inject-missing`, `position-lost`, `unknown-kind` |
+| ARM first WP | Author-supplied `meta.base_ref`, captured before the runner works |
+| ARM later WPs | `base_<safe-wp-id>` stamped from workdir `HEAD` on advancement; metadata fallback |
+| CLI | Harness-supplied `<state>/base_ref`, unless `check --base-ref` explicitly overrides it; CLI does not update it automatically |
+| Benchmark | No base-ref initialization; do not assume its hook supports meaningful diff review without additional environment setup |
 
-No amount of retrying escapes the right-hand column.
+No base ref, non-Git workdir, invalid commit ref, or failed tracked diff command records
+`fail` / `judge:unavailable(no-diff)`. Advisory diff controls still only advise. Untracked diff append
+errors are tolerated by the current helper; do not claim a complete fail-closed transport guarantee.
+The helper's path list is whitespace-split, so avoid relying on paths with spaces in `paths`.
 
-### `RELAY-BLOCKED:` — the Runner may say it is stuck
+`check --position <position>` selects a WP by exact ID first, then suffix after the first dot, instead
+of `counter`. This also checks named parked/past-end positions. Unknown position returns exit `2`
+with `{outcome:"error", error:"unknown-position", position:...}`. Explicit `--base-ref ""` suppresses
+state-file fallback and yields unavailable diff, failing a blocking item. `eval` rejects both flags
+with usage exit `1`. Check writes no verdict, charges no retry, and does not advance; commands,
+judges, temporary diffs, directory creation, and `.run.lock` acquisition still have side effects.
+CLI current `wp`/`macro` and emitted `next` identities retain exact tabs/interior/trailing LF in
+outcomes/applicable ledger fields. Eval prevalidates current ID/macro and next ID before controls or
+ledger/counter/retry effects; check validates only selected ID/macro, not malformed future identity.
+Current/next IDs must be nonempty NUL-free strings; macro is optional/null/empty or a NUL-free string.
+Directory/lock creation precedes validation; future macros and full-plan schema are outside it.
+ARM also preserves raw position and current/migrated/next ID/macro strings, including CR/LF. Raw
+whole-ID lookup precedes raw first-dot suffix; only a raw miss allows trailing-LF cleanup, preserving
+CR. Next ID/macro validation occurs in `advance` after current/regression commands but before buffered
+passing-round flush and transition publication. It is not CLI-style pre-command validation.
+Missing/raw-empty position and legacy empty-plan completion retain their migration behavior.
 
-A Runner that has genuinely hit a wall has exactly one honest move, and a design that does not
-provide it gets a dishonest one instead. It puts a marker in its final message:
+For judge context/scope, `${name}` expands from environment data without `eval`; unset names remain
+literal. `context` accepts one string or an array. Scope's raw path strings remain in the oracle hash
+and ledger even when expanded values differ.
 
-```
-RELAY-BLOCKED: the deploy token is not provisioned in this environment
-```
+- Deterministic checklist `oracle`: SHA-256 of extracted `cmd` before execution.
+- Judge `oracle`: SHA-256 of extracted criterion plus optional ` :: ` and extracted space-joined
+  `paths`, before environment expansion.
+- `origin`: explicit origin, otherwise `policy:<bundle>`, otherwise `sprint`.
+- ARM/CLI `scope`: declared raw paths when nonempty.
+- ARM/CLI `artifact`: SHA-256 over ordered declared path names and each file digest or absence marker.
+  It does not hash the computed diff or all context files. Benchmark omits scope/artifact fields.
 
-- **Parking is not passing.** Honored only when the checklist ALSO failed, and even then the position
-  does not move. The work is still undone. A claim on a passing gate is recorded and the chain
-  advances — the controls decide, not the narration.
-- **The reason is cross-checked against the artifact**, exactly like a discursive control, using the
-  same computed diff as `diff: true`. "The checklist also failed" is content-blind on its own: the
-  Runner usually controls whether it fails, so it can under-deliver deliberately and attach a
-  plausible blocker.
-- **The marker is never silenced.** No budget closes this channel. Closing it at the moment pressure
-  peaks is the regime that produces covert shortcuts, so every claim reaches the chain — including
-  the fifth one.
-- **Recurrence accelerates to a human.** The same claim twice parks the arm immediately, bypassing
-  the retry budget rather than spending it. Saying the same thing twice is not persistence. Distinct
-  obstacles do not accelerate — progress through different walls is work, not a loop.
+Exact JSON decoding retains trailing LF in commands, criteria, and joined scope, matching audit
+recomputation for new records. Old gate versions stripped trailing LF or hashed regression fragments;
+their retained ledgers can still show false drift/divergence. Those serialization defects are
+historical, not a current single-line/trailing-LF authoring restriction. Preserve old ledger bytes.
 
-### Every re-blocking path is bounded
+Oracle drift detection does not cover changes to `context`, `diff`, `blocking`, model, or
+base ref. Select artifact scope as part of control design; do not equate unchanged oracle hashes
+with identical evaluation conditions.
 
-A **regression-only** failure — the current WP's Gate passes, but an earlier accepted control has
-backslid — is not a failure of the current WP, so it does not charge that WP's retry budget. It has
-a budget of its own (`$ARM/reg_retry`), spent on the same `retry_budget`, and cleared by a clean
-pass. Nothing may re-block without a bound: a Relay retry costs a model turn, so an unbounded path
-spends indefinitely (docs/control-plane.md §8).
+## 5. Retry, collapse, escalation, and release
 
-Note this is a *turn* budget, not a wall-clock backoff. The Gate fires only when the Runner has
-stopped, so there is no timer to ration — sleeping would add latency and save no turns.
+The driver reads the prior failure count before deciding whether to re-block. `retry_budget=3` allows
+three failure blocks and escalates on the next still-failing evaluation. `0` escalates immediately.
+ARM regression-only failure uses its own `reg_retry` counter; CLI/benchmark charge the current index's
+single retry counter for current or regression failures.
 
-### A re-run is a verdict, and the oracle it ran under is on the chain
+ARM cap preflight warns only when the nonzero cap is below its `len(work_packages)+1` estimate.
+Cap `0` skips that comparison. Relay neither enforces the harness cap nor guarantees completion.
 
-Keep-best re-executes earlier controls on every later fire. Those re-runs are recorded as
-`regression-item` entries, each carrying the sha of the command that actually ran — not just the
-failing ids, which is all that used to reach the chain. A re-run that *passed* left no trace at all,
-and that omission is what made the following attack work.
+ARM hashes buffered verdicts and failure sets to identify rounds. It records the first failing round
+in full, counts identical nonterminal rounds as `gate-fail-repeat`, and flushes passing/terminal
+rounds in full. Collapse does not stop re-evaluation, reset retry counts, or escalate early.
 
-**Why it matters.** A control's `id` and `assert` are what a reader sees; the `cmd` is what was
-measured. Swap the `cmd` of a control that has ALREADY PASSED — leaving `id` and `assert`
-byte-identical — and nothing is tampered with, so the hash chain stays INTACT. Before this, the
-chain held exactly one oracle for that control, `relay verify` had nothing to compare against, and
-it printed `RESULT: PASS — auditable` while the violation the control existed to catch sat on disk.
+`RELAY-BLOCKED:` is the early-escalation exception. ARM extracts the last matching claim from the
+selected transcript, records it and a diff-based corroboration, and honors it only when the current
+checklist failed. It parks early when that claim's hash equals the last stored honored hash for the
+current WP, regardless of corroboration. Each new honored claim replaces the stored hash; A/B/A
+does not match on the final A. A persistent transcript marker can match on another fire without a
+new message. Unmatched claims use ordinary retry handling; a claim alone does not satisfy or fail
+a gate.
 
-`relay verify` now reports **any** control graded under more than one oracle within a single run:
+ARM parks by flushing required round evidence, recording `escalate`, setting `awaiting-human`,
+retaining position, and emitting no block with exit `0`. Operators MUST supply a real who/why release
+reason. The engine removes CR,
+converts LF to ASCII spaces, trims leading/trailing ASCII spaces, and requires a non-whitespace
+character; tabs-only and other whitespace-only reasons are rejected. Required `human-release` evidence
+must append before an accepted release is consumed or its state reset/reactivated; failed append
+leaves the reason pending and parked disposition intact. Then the same gate runs again. No failed
+control is waived, and no actor identity is authenticated.
+Release resolves the full plan WP ID, clears its sanitized retry/round/repeat/blocked-claim files,
+the legacy index retry and `reg_retry`, and restores the counter to that index. Qualified/dotted IDs
+use the same keys as evaluation. If position cannot resolve, release stays on disk for repair.
 
-```
-  ORACLE DRIFT — these controls were graded under more than one oracle in this run:
-    C1         verdicts pass -> pass   oracle 4b710f6cc8f7 -> b5bea41b6c62
-  The chain is intact — nothing was tampered with. The question was changed.
+CLI `eval` emits `escalate` with exit `2` but does not persist a parked state. Benchmark escalation
+emits no block with exit `0`, does not advance its counter, and can evaluate again on another fire.
+Do not interpret hook-process exit `0` or empty stdout as an acceptance verdict.
 
-  RESULT: ORACLE DRIFT — not an auditable pass.
-```
+ARM and CLI `eval`/`check` share the `.run.lock` convention. A held `$ARM/.run.lock` returns exit `3`
+with stderr before owner binding, release/cursor/retry/position writes, or grading. CLI calls using
+that directory are also excluded. Exit cleanup removes owned locks and ARM round buffers only.
+The separate `.chain.lock` protects each append. Malformed append bodies return nonzero and release
+that lock; a failed `ledger_item` aborts the shared checklist. CLI regression writes and ARM verdict
+buffers/flushes also propagate failure. Mandatory disposition writes now fail fatally before their
+corresponding evaluated transition publication: all three drivers record completion/advance before
+terminal/next counters and state, and gate failure before retries. ARM records compaction hints before next-state publication,
+round/repeat metadata after failure disposition records, escalation before parking, and release before
+consumption/reset/reactivation. CLI escalation records precede its JSON outcome without a persistent
+park latch; benchmark escalation records precede normal no-block exit without advancing its counter.
 
-This catches the swap **while the run is still going**, because the regression guard re-grades the
-control and the chain then holds two oracles for it. It cannot catch the same swap made **after** the
-run ends — the control was graded once, so there is one oracle and nothing to compare. That case is
-`SPRINT DIVERGED`, which compares the recorded oracle against the sprint on disk rather than against
-another ledger entry; see `docs/enforcement-model.md` §9.
+This is not atomic publication, rollback, or fsync-backed durability. Commands, ARM binding/usage/
+bookkeeping, and earlier appends may already have effects; state writes can fail after the required
+record succeeds. Ancillary ARM cap-risk, injection/inject-missing, unknown-kind, and blocked-claim
+appends still tolerate errors; archives remain best-effort. See
+[SPEC ordering matrix](../SPEC.md#6-ledger-and-audit-boundary) for exact transition scope.
 
-The older, narrower rule — a control that **failed** one check and passes a different one — survives
-as a labelled subset and still reports as `ORACLE CHANGED`, because it supports the stronger claim:
-that control was not repaired, its question was.
+## 6. Audit interpretation
 
-No exemption exists yet for a legitimate amendment, so amending a control mid-run reports as drift.
-That is the correct failure direction while relay-v2 V11 is unbuilt: a false positive costs a human
-one look, a false negative certifies a fabricated pass.
+Run from the repository root:
 
-A `regression-item` is deliberately **not** a `checklist-item`. "The final verdict for this control"
-keeps meaning *as graded at its own gate* — a re-run reports on kept work, not on a gate being
-cleared — so `relay verify`'s control list, the corpus exporter and the dash are unchanged.
-
----
-
-## 6. Example DoDs
-
-### 6.1 — Implementation WP
-
-```json
-{
-  "id": "wp1-impl",
-  "title": "Implement refund endpoint",
-  "dod": [
-    { "type": "file_exists", "path": "src/payments/refund.py" },
-    { "type": "grep", "path": "src/payments/refund.py", "pattern": "^def refund\\(" },
-    { "type": "grep_absent", "path": "src/payments/refund.py", "pattern": "print\\(" },
-    { "type": "shell", "cmd": "ruff check src/payments/refund.py --quiet" },
-    { "type": "test", "cmd": "python -m pytest tests/test_refund_smoke.py -q" }
-  ]
-}
-```
-
-All mechanical. Verifies: file created, function exported, no debug noise, lint-clean, smoke
-tests pass.
-
----
-
-### 6.2 — Tests WP
-
-```json
-{
-  "id": "wp2-tests",
-  "title": "Unit tests for refund",
-  "dod": [
-    { "type": "file_exists", "path": "tests/test_refund.py" },
-    { "type": "test", "cmd": "python -m pytest tests/test_refund.py -q" },
-    { "type": "min_count", "path": "tests/test_refund.py", "pattern": "def test_", "min": 6 }
-  ]
-}
+```bash
+python3 bin/relay verify runs/arm --json
+python3 bin/relay verify runs/ledger.jsonl --sprint runs/sprint.json --json
+python3 bin/relay problems runs/arm --json
 ```
 
-Enforces: test file present, full suite green, and at least six distinct test functions
-(prevents a single parameterized stub from satisfying the DoD).
+These paths represent retained evidence supplied by the caller. `verify` locates a run's
+`.relay-state/ledger.jsonl` or an arm's top-level `ledger.jsonl`. Exit `1` means chain integrity did
+not validate. Exit `2` means an intact record cannot be certified: unusable audit fields, unusable
+requested/discovered sprint, no deterministic controls, any final deterministic verdict other than
+`pass`, nonterminal end, escalation, oracle drift, changed/removed/added named controls, or incomplete
+legacy oracle comparison. Usage/missing ledger also returns `2`. `0` reports recorded deterministic
+verdicts passed and chain intact, with either recorded-only or named-ID/oracle-comparison scope;
+it does not revalidate current artifacts or universal requirement coverage.
 
----
+Final control verdicts use the last `checklist-item` per ID; `regression-item` participates in drift
+analysis but does not overwrite the control list. A bare ledger needs `--sprint` for current-plan
+comparison. No requested/discovered sprint produces `oracle_recheck.status=not-run` and permits a
+scoped recorded-only PASS. An unreadable, malformed, or unusable requested/discovered sprint is
+`SPRINT-INVALID` / exit `2`. ID comparison includes both checklist and regression events and detects
+added/unrecorded as well as removed controls; changed available hashes also yield `SPRINT-DIVERGED`.
+Legacy events with absent oracles participate in ID comparison but, when otherwise matching a current
+sprint, yield `ORACLE-UNVERIFIED` / exit `2`. A present malformed/empty hash is `RECORD-INVALID`, not legacy.
 
-### 6.3 — Docs WP (mixed mechanical + semantic)
+Chain-valid but unusable audit fields yield structured `RECORD-INVALID` with `record_errors` / exit `2`.
+Malformed JSON/nonobject chain input yields structured `TAMPERED` / exit `1` for `verify --json`.
+Duplicate decoded object keys at any depth, including escaped-equivalent spellings, are refused by
+the verifier and audit loader. Each entry requires exactly one final root `h` with its writer's
+`,"h":` delimiter; unsigned suffix fields and ambiguous members fail integrity verification.
+Append bodies cannot supply top-level `h`, even null, while nested `data.h` remains ordinary data.
+Signed-body verification uses original bytes, not reserialized JSON; do not rewrite old evidence.
+That shared verifier/audit decoder rejects unquoted `NaN`, `Infinity`, and `-Infinity` at any depth
+through `parse_constant`; quoted strings and valid lexical JSON numbers such as `1e999` remain
+allowed. This is not arbitrary numeric exactness or complete finite-valued schema validation.
+Integrity failure dominates validity errors. Other JSON labels remain `NO-CONTROLS`, `CONTROL-FAIL`,
+`ORACLE-CHANGED`, `ORACLE-DRIFT`, `ESCALATED`, and `TRUNCATED`; see [SPEC §6](../SPEC.md#6-ledger-and-audit-boundary)
+and the [audit skill](../.opencode/skills/relay-audit/SKILL.md). Judges are reported but never counted
+as deterministic controls, even when they blocked runtime advancement. DoD coverage, every WP's
+completion, non-oracle fields, and fresh artifact validity remain outside this comparison.
 
-```json
-{
-  "id": "wp3-docs",
-  "title": "User-facing CHANGELOG and README entry",
-  "dod": [
-    { "type": "grep", "path": "CHANGELOG.md", "pattern": "refund" },
-    { "type": "grep", "path": "docs/payments.md", "pattern": "refund\\(" },
-    {
-      "type": "llm",
-      "criterion": "The CHANGELOG entry for the refund feature reads as a user-facing summary of impact.",
-      "rubric": "Return PASS if the entry is written from the user's perspective without internal implementation details. Return FAIL otherwise.",
-      "model": "haiku"
-    }
-  ]
-}
-```
-
-Mechanical checks confirm presence; the `llm` check enforces quality a grep cannot — used
-only because tone is the explicit requirement.
-
----
-
-## 7. See also
-
-- [authoring-sprints.md](authoring-sprints.md) — how to write `sprint.json`, WP structure,
-  the Map-up-front pattern, and per-WP model selection.
-- [architecture.md](architecture.md) — Relay hook internals, the per-`agent_id` counter,
-  keep-best storage, and the full `SubagentStop` payload reference.
+`problems` derives views from the chain. Current gate failures/regressions clear on later advancement;
+plan-defect events remain visible, and any prior escalation is still reported until final completion.
+This is not a complete live-state or authenticated approval view. Check
+[SPEC §6](../SPEC.md#6-ledger-and-audit-boundary) for hash-mode, tail-anchor, and same-user trust limits.
+`problems`/`cost` share duplicate-rejecting decoding but load entries without integrity/schema
+validation; malformed input may still fail without structured JSON. Missing/unparseable output is
+an execution failure, not an audit verdict.

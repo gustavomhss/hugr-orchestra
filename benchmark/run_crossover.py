@@ -8,8 +8,8 @@ across seeds, and reports RSR per arm — but REFUSES to trust any run that does
 Why the guards exist (the lesson that motivated this script): a run can come back "RSR 1.0" while
 being completely meaningless if (a) the model never actually executed (empty run.json) or (b) the
 reference implementation leaked into the run's repo (you grade the answer against itself). This
-script validates BOTH for every run and marks the result VALID / INVALID accordingly. A number is
-only reported as a measurement when its run is VALID.
+script validates these and the grader's explicit measurement status for every run, marking the
+result VALID / INVALID accordingly. A number is only reported when its run and grade are VALID.
 
 Run it from a CLEAN, dedicated terminal (no other Claude session racing this repo), where `claude -p`
 actually works.
@@ -24,6 +24,11 @@ Decision rule (printed at the end):
   * Only when M drops below that threshold is the R-vs-M comparison meaningful (the crossover).
 """
 import argparse, json, os, subprocess, sys, filecmp, glob, time
+
+if __package__:
+    from . import grader
+else:
+    import grader
 
 BENCH = os.path.dirname(os.path.abspath(__file__))
 GEN = os.path.join(BENCH, "generator", "gen_campaign_v2.py")
@@ -61,20 +66,32 @@ def find_run_core(out_dir):
 
 
 def check_grader_discriminates(camp):
-    """Sanity: the pristine (unimplemented) skeleton must FAIL the held-out suite. If it passes,
-    the grader is not testing the candidate's code — every result would be a false positive."""
+    """Require real failure children, exit 1, and every expected requirement in pristine JUnit.
+
+    Skips, collection/tool/report errors, empty requirements, and incomplete coverage
+    cannot establish discrimination. This negative control alone does not prove isolation.
+    """
     impl = os.path.join(camp, "repo")
     holdout = os.path.join(camp, "holdout")
-    env = {"RELAY_IMPL": impl}
-    rc, out, err = sh(f"python3 -m pytest {holdout!r} -q", env=env)
-    txt = out + err
-    # pytest rc != 0 when tests fail -> that's what we WANT here (pristine should fail).
-    passed_clean = (rc == 0) and ("passed" in txt) and ("failed" not in txt)
-    return (not passed_clean), txt.strip().splitlines()[-1] if txt.strip() else "(no output)"
+    try:
+        expected = grader.weights(os.path.join(camp, "requirements.yaml"))
+    except OSError as e:
+        return False, f"requirements-unreadable: {e}"
+    if expected and sum(expected.values()) <= 0:
+        return False, "requirements-no-positive-weight"
+    checked = grader.run_checks(holdout, impl, expected)
+    if not checked["grade_valid"]:
+        return False, "; ".join(checked["grade_errors"])
+    if checked["skipped"]:
+        return False, "junit-skipped: " + ", ".join(checked["skipped"])
+    if checked["pytest_exit_code"] != 1 or not checked["failures"]:
+        return False, "pristine did not produce real requirement failures (pytest exit 1 required)"
+    return True, (f"pytest exit 1; {len(checked['failures'])} requirement testcase failures; "
+                  f"coverage {len(checked['per_req'])}/{len(expected)}")
 
 
 def validate_run(out_dir, n, seed):
-    """Return (valid: bool, reasons: list[str], usage: dict). Enforces the two integrity guards."""
+    """Return (valid, reasons, usage): model execution, reference identity, and valid grade."""
     reasons = []
     usage = {}
 
@@ -107,6 +124,26 @@ def validate_run(out_dir, n, seed):
         reasons.append("no-impl-file (repo/engine/core.py missing)")
     elif os.path.exists(ref_core) and filecmp.cmp(run_core, ref_core, shallow=False):
         reasons.append("REFERENCE-LEAK (run core.py is byte-identical to the /tmp reference)")
+
+    # Guard 3: real usage cannot turn a broken grading instrument into a measurement.
+    # Legacy grade files remain unchanged but lack explicit evidence of grade validity.
+    gp = os.path.join(out_dir, "grade.json")
+    if not os.path.exists(gp):
+        reasons.append("grade-missing (grade.json missing)")
+    else:
+        try:
+            grade = json.load(open(gp))
+            if not isinstance(grade, dict):
+                reasons.append("grade-invalid (grade.json is not an object)")
+            elif "grade_valid" not in grade:
+                reasons.append("grade-status-missing (grade.json has no explicit grade_valid)")
+            elif grade["grade_valid"] is not True:
+                reasons.append(f"grade-invalid ({grade.get('grade_errors') or 'grade_valid is not true'})")
+            elif (type(grade.get("rsr")) not in (int, float)
+                  or not 0 <= grade["rsr"] <= 1):
+                reasons.append("grade-invalid (rsr is not a finite number in [0, 1])")
+        except (OSError, ValueError) as e:
+            reasons.append(f"grade-unparseable ({e})")
 
     return (len(reasons) == 0), reasons, usage
 
@@ -158,7 +195,7 @@ def main():
 
         if a.check_grader:
             ok, last = check_grader_discriminates(camp)
-            tag = "OK (pristine fails => grader discriminates)" if ok else "BROKEN (pristine PASSES => grader not testing candidate!)"
+            tag = "OK (pristine requirement failures observed)" if ok else "BROKEN (valid pristine-failure measurement missing)"
             print(f"[seed {seed}] grader sanity: {tag}  [{last}]")
             if not ok:
                 print(f"[seed {seed}] refusing to run arms on a non-discriminating grader.\n")
@@ -172,10 +209,12 @@ def main():
             dt = time.time() - t0
 
             valid, reasons, usage = validate_run(out_dir, a.n, seed)
-            rsr = grade.get("rsr") if grade else None
+            rsr = grade.get("rsr") if valid and isinstance(grade, dict) else None
             rec = {
                 "n": a.n, "k": a.k, "seed": seed, "arm": arm,
                 "rsr": rsr, "valid": valid, "reasons": reasons,
+                "grade_valid": grade.get("grade_valid") if isinstance(grade, dict) else None,
+                "grade_errors": grade.get("grade_errors", []) if isinstance(grade, dict) else [],
                 "usage": usage, "secs": round(dt, 1),
                 "out_dir": os.path.relpath(out_dir, BENCH),
             }
@@ -204,7 +243,7 @@ def main():
     print("\nVERDICT:")
     if not valid_M:
         print("  No VALID Arm-M run. Cannot assess headroom. Fix the INVALID reasons above and re-run.")
-        print("  (Most common: `claude -p` not executing in this shell, or a reference leak.)")
+        print("  (Check model execution, reference identity, and grade validity.)")
     else:
         mean_M = sum(valid_M) / len(valid_M)
         if mean_M >= a.headroom_rsr:

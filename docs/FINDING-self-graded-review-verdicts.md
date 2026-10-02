@@ -1,120 +1,116 @@
-# FINDING — a review verdict the executor writes is self-graded evidence
+# FINDING — executor-written review verdicts are self-graded evidence
 
-**Measured 2026-08-24, on the agent-driven `research-v2` run** (52 sources, 41 findings, 8
-conclusions, 199 minutes). Status: **confirmed, partially fixed** — `research-v2` is fixed, nine
-other review controls across three profiles still carry the defect.
+Audience: agents. Status: historical.
 
-## The doctrine clause it violates
+Read this as the **2026-08-24 finding snapshot**, followed by residuals checked against source at
+`684456d571e8deb5f435d39e789e1b1258453d85`. Use [relay-research](../.opencode/skills/relay-research/SKILL.md)
+and [relay-profiles](../.opencode/skills/relay-profiles/SKILL.md) for current operating instructions.
 
-`docs/enforcement-model.md` §4:
+## Preserve the historical defect
 
-> The agent's claims may **never** advance the chain.
-
-And the sentence the whole Relay migration was built on (`docs/relay-vs-mcp`, and
-[[relay-vs-mcp-evidence]]): the MCP state machine's checklist gate advanced when a key with the
-criterion's name was **present** in the evidence the executor submitted, and a real session was
-measured advancing a gate on evidence whose values read `FAIL`. Relay's answer was that a gate
-passes when a **command exits zero, run by the gate itself**.
-
-## The defect
-
-Eleven shipped review controls are of this shape:
+The original account described an agent-driven `research-v2` run with 52 sources, 41 findings,
+8 conclusions, and 199 minutes. Its review controls included this shape:
 
 ```json
 {"id": "synthesis-review-verdict",
  "cmd": "test \"$(jq -r .verdict ${research_dir}/review-synthesis.json)\" = APPROVE"}
 ```
 
-The command *is* run by the gate and it *does* exit zero or one. But the file it reads is written by
-the executor. The gate is grading the executor's own claim about itself, with a `jq` in between.
-That is presence-gating with extra steps: it is the MCP defect, re-introduced in a costume that
-satisfies the letter of the rule Relay replaced it with.
+The gate ran a real command, but the command read an executor-writable claim. Exit-status grading
+did not make the asserted reviewer outcome independent. Compare the stated rule in
+[`enforcement-model.md` §4](enforcement-model.md):
 
-## What it cost, measured
+> The agent's claims may **never** advance the chain.
 
-The executor knows the gate will demand `APPROVE`. So it pre-satisfies the control *before* firing
-the gate — it spawns a reviewer, gets `FIXES-NEEDED`, revises, spawns another, and repeats until one
-approves. On the measured run, `synthesis.cold_review`:
+Treat that sentence as doctrine, not proof that every current control implements it. Read
+[`relay-profile.py`](../bin/relay-profile.py) and [`relay-gate.sh`](../lib/relay-gate.sh) for the actual
+translation and grading. Earlier references to `docs/relay-vs-mcp` and `[[relay-vs-mcp-evidence]]`
+named external migration material; they are not bundled source references for this finding.
 
-| | |
+The historical account reported these off-gate synthesis-review costs:
+
+| Snapshot observation | Recorded account |
 |---|---|
-| reviewer clones spawned | **21** |
-| rounds that changed the artifact | **21 of 21** — none spun in place |
-| `conclusions.json` growth | **11,365 → 35,664 chars (3.1×)** |
-| the one round that SHRANK it (35,664 → 33,261) | the round that returned **APPROVE** |
-| tokens | **11.16M** |
-| wall clock | **~2h of the run's 199 min** |
-| **rows on the ledger** | **3 checklist-items, all `pass`, one gate fire** |
+| Reviewer clones | 21 |
+| Rounds changing the artifact | 21 of 21 |
+| `conclusions.json` growth | 11,365 → 35,664 characters |
+| Approval round | The round shrinking 35,664 → 33,261 characters |
+| Tokens | 11.16M |
+| Wall clock | About two hours of the 199-minute run |
+| Gate-visible synthesis review | Three passing checklist items in one fire |
 
-It is a justification **ratchet**, not an oscillation: each reviewer demands more justification, the
-artifact grows, and the next reviewer has more surface to attack.
+Read the [agent-driven historical ledger](fixtures/research-v2-agent-driven-PASS.ledger.jsonl) for
+the old `evidence-review-verdict` and `synthesis-review-verdict` rows. The clone/token/growth account
+was reconstructed from reviewer transcripts; those costs are not reconstructable from the ledger
+alone and are not re-measured here. Read the [escalated ledger](fixtures/research-v2-live-escalated.ledger.jsonl)
+as another dated failure record, not evidence of the replacement controls converging.
 
-**The last row is the serious one.** An auditor reading that ledger sees a cold review that passed
-clean on the first fire. Twenty-one reviewers, eleven million tokens and two hours are invisible,
-because the loop ran on the executor's side of the gate. `retry_budget: 5` does not bound it either —
-that budget counts gate re-fires, and the gate never re-fired.
+The account called this a justification **ratchet**: revisions grew the artifact rather than cycling
+without change. Local reviewer respawns happened before the gate fired, so gate retry accounting did
+not meter them. Preserve that distinction when discussing the cost or the stopping-rule defect.
 
-## The fix
+## Inspect the implemented replacement
 
-Move the reviewer from the executor's side of the gate to the gate's side. A `judge` control is run
-by the gate, votes are tallied inside `benchmark/judge.py` (`RELAY_JUDGE_VOTES`), and the verdict
-lands on the ledger with its own oracle sha and a `(votes:n/m)` tag. The executor cannot re-run it
-and cannot manufacture its input.
+Read [`profiles/research-v2.yaml`](../profiles/research-v2.yaml) `criteria_map.per_sub` and its
+[compiled sprint](../profiles/research-v2.sprint.json). The former executor-written APPROVE controls
+are replaced by blocking `evidence-withstands-cold-review` and `conclusions-withstand-cold-review`
+judges. The executor still owes substantive written reviews and review-engagement judges.
 
-Three consequences, all of them the point:
+Read [`lib/relay-gate.sh`](../lib/relay-gate.sh) `relay_run_checklist`: the gate computes a scoped diff,
+invokes [`benchmark/judge.py`](../benchmark/judge.py), and passes verdict/backend/oracle/origin/scope
+to its caller's ledger function. A recorded failing blocking judge enters the consumer's normal
+failure path. Read [`bin/relay-gate`](../bin/relay-gate) for CLI retry accounting; do not call an
+arbitrary local judge invocation a charged gate fire.
 
-- **the loop is bounded** — a failing gate-side judge is a gate fire, so `retry_budget` finally
-  applies to review rounds;
-- **every round is on the ledger** — one row per fire per control, instead of one row for
-  twenty-one rounds;
-- **fan-out is fixed-N in one round** — `RELAY_JUDGE_VOTES=3` is three independent reviewers with a
-  majority verdict, not an unbounded search for one that says yes.
+Use `RELAY_JUDGE_VOTES` to request repeated API/CLI calls. Majority wins and ties fail; one call is
+the default. Multi-call ballots record `(votes:n/m)` with backend/model information. Treat these as
+samples, not authenticated independent reviewer identities. Inspect error/no-verdict/truncation tags:
+the suffix-only no-verdict abort check does not cover every combined no-verdict/truncation tag.
 
-What is deliberately KEPT is the executor's written review. The `*-is-substantive` control and the
-`*-engages-with-the-diff` judge stay: the executor must still think in writing, and that writing is
-still graded against the diff. What is removed is only the executor's power to declare the outcome.
+Do not repeat the old claim that the executor cannot rerun the judge or manufacture its inputs.
+`benchmark/judge.py` is directly callable; `relay-gate check` also runs the checklist without advancing,
+charging retries, or recording verdicts. Artifacts, bindings, and context remain supplied inputs.
+Recorded `eval` failures are metered; off-gate attempts are not comprehensively metered by this change.
 
-## Status
+## Record current residuals
 
-| profile | control | status |
-|---|---|---|
-| `research-v2` | `evidence-review-verdict` | **removed**, replaced by `evidence-withstands-cold-review` (gate-side, blocking) |
-| `research-v2` | `synthesis-review-verdict` | **removed**, replaced by `conclusions-withstand-cold-review` (gate-side, blocking) |
-| `design` | `distinctness-verdict`, `dress_rehearsal-verdict`, `no_flinching-verdict` | open |
-| `spec-decompose` | `invariants-`, `requirements-`, `spec-`, `goldens-`, `work_packages-review-verdict` | open |
-| `planning` | `hostile_read_approved` | open — same shape, different name |
+| Source | Residual at the checked baseline |
+|---|---|
+| [`research-v2.yaml`](../profiles/research-v2.yaml) | The replacement evidence reviewer has only the `findings.json` diff; the replacement conclusion reviewer has only the `conclusions.json` diff. Neither declares upstream source snapshots or cited findings as `context`. Do not claim it inspected those files. |
+| [`spec-decompose.yaml`](../profiles/spec-decompose.yaml) | `invariants-`, `requirements-`, `spec-`, `goldens-`, and `work_packages-review-verdict` still read executor-writable APPROVE files. Length and blocking engagement judges are additional controls, not verdict provenance authentication. |
+| [`design.yaml`](../profiles/design.yaml) | `distinctness-verdict`, `dress_rehearsal-verdict`, and `no_flinching-verdict` still read executor-writable APPROVE files. [`design-check`](../tools/design/design-check) also consumes those verdicts in `doors_reviewed`, `scenes_reviewed`, and `anti_optimism_reviewed`. |
+| [`planning.yaml`](../profiles/planning.yaml), [`plan-check`](../tools/edd/plan-check) | `hostile_read_approved` resolves verdict data and tests `APPROVE`; `_resolve_verdict` permits an inline manifest object as well as supported file refs. It does not authenticate a cold reviewer. |
+| [`tdd_feature.yaml`](../profiles/tdd_feature.yaml), [`wp-execute.yaml`](../profiles/wp-execute.yaml) | The review states use presence/length and blocking judge controls rather than APPROVE-verdict commands. Do not describe that as guaranteed review independence. |
+| [`relay-arm-hook.sh`](../bin/relay-arm-hook.sh) | `kind: review` adds a cold-read reminder; the engine does not spawn a fresh reviewer context. |
+| [`relay-gate.sh`](../lib/relay-gate.sh) | Only literal judge verdict `fail` blocks when `blocking: true`; missing/malformed judge output can become `advisory`. Missing diff is separately recorded as `judge:unavailable(no-diff)`. |
 
-`tdd_feature` and `wp-execute` were already clean: their review states ship no verdict control at
-all, only `*-is-substantive` and `*-engages-with-the-diff`.
+Keep deterministic proxies distinct from semantic quality. A nonempty/long review, a stored hash,
+or a command reading `APPROVE` does not prove the reviewer inspected supporting evidence. Gate-side
+judges improve who emits the recorded verdict while retaining supplied-context and model limits.
 
-## Making the ratchet visible on the chain — done
+## Interpret artifact hashes within their reach
 
-The ratchet above was only reconstructable because the dead reviewer clones' transcripts happened to
-still be on disk. A judge control recorded its `scope` (the raw path list) but not a digest of what
-was **at** those paths when it graded, so two fires of the same control over a file that tripled in
-size were indistinguishable on the chain.
+Read `relay_artifact_sha` in [`relay-gate.sh`](../lib/relay-gate.sh). For nonempty declared `paths`, it
+hashes path names plus current file-content digests, or an `absent` marker. The gate passes that
+digest as `artifact` to the caller's ledger function; scope/oracle use raw template paths while the
+artifact read uses expanded paths.
 
-Judge entries now carry `artifact`: the sha-256 of the contents at the scoped paths at the moment of
-grading, each path contributing its name as well as its bytes so a rename with identical content
-still moves the digest, and `absent` where there is no readable file. It is emitted only where there
-is a scope to digest, so a deterministic control's entry is byte-identical to what it always was and
-legacy chains still verify (the verifier recomputes the MAC from stored bytes, so additive fields are
-backward-compatible).
+Treat this as scoped-artifact identity, not a transcript of local reviewer spawns, a digest of all
+`context` files, or proof that an API prompt contained every artifact byte. Empty scope supplies no
+artifact digest; whitespace-split paths and workdir prefixes limit supported path forms. Diff bytes
+and source truth are separate questions. Preserve historical entries without retroactively adding fields.
 
-sha-256 and not a faster hash, and the reason is not speed: the chain is sha-256 end to end
-(`relay_chain_append`, `relay_oracle_sha`, `hmac-sha256` when keyed), `shasum` is already a dependency
-of `lib/relay-gate.sh`, and a second algorithm in the same record is one more thing a verifier has to
-know. At kilobyte artifacts hashed once per gate fire — inside a fire that already spends seconds on
-an LLM call — the difference does not exist.
+## Verify before updating the finding
 
-Bounding the loop made the growth cheaper. This is what makes it **visible**.
+Run from the repository root:
 
-## The sweep is deferred on purpose
+```sh
+python3 bin/relay-profile.py profiles/research-v2.yaml --qualify-ids -o profiles/research-v2.sprint.json --check
+PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider tests/test_judge_context.py tests/test_judge_api.py tests/test_shipped_profiles.py
+git diff --check
+```
 
-The nine controls listed above are not being converted yet. `research-v2` is the profile the defect
-was measured on and the only one where the new shape has a corpus to be proven against; none of
-`design`, `spec-decompose` or `planning` has an agent-driven run to show that a gate-side reviewer
-actually converges there. Converting them now would trade a measured defect for an unmeasured one,
-and each conversion turns a deterministic control into an LLM judge — cheap next to the 11.16M tokens
-the ratchet cost, but not free. The order is: run `research-v2` agent-driven under the new shape,
-confirm the rounds appear on the ledger and that `retry_budget` bites, then sweep.
+Use context marker/canary tests and fake-endpoint verdict/tie/error cases to verify wiring; do not
+claim they establish real semantic convergence. Inspect source and actual supplied files before
+closing a residual. Coordinate changes to mappings, judge inputs, metering, or reviewer isolation
+with runtime owners and the linked skills; preserve this dated snapshot instead of rewriting history.

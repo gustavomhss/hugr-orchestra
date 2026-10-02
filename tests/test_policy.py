@@ -4,12 +4,19 @@ Drives the REAL bin/relay-policy.py via subprocess. Asserts apply prepends org c
 work package, dedupes by control id (org wins), stamps a `policy` field, rejects a malformed control,
 and that the merged sprint is schema-valid for the real gate (we actually run bin/relay-gate eval on
 it). `list` is exercised against a tmp bundle dir and against the shipped policies/. Tmp-isolated.
+The shipped Git detectors are also checked against real tracked content and search/tool failures,
+both through Bash eval and through policy application followed by the real gate.
 """
+import hashlib
 import json
 import os
+import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 TOOL = ROOT / "bin" / "relay-policy.py"
@@ -32,6 +39,187 @@ def _sprint(tmp_path, work_packages, **extra):
     p = tmp_path / "sprint.json"
     p.write_text(json.dumps(s))
     return p
+
+
+@pytest.fixture(params=["no-debug-prints", "no-loosened-tests"])
+def git_bundle(request):
+    name = request.param
+    control, = json.loads((POLICIES / f"{name}.json").read_text())
+    return name, control
+
+
+@pytest.fixture
+def tracked_work(tmp_path):
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "tests").mkdir()
+    (work / "app.py").write_text("value = 1\n")
+    (work / "tests" / "test_sample.py").write_text("def test_value():\n    assert 1 == 1\n")
+    subprocess.run(["git", "init", "-q", str(work)], check=True, capture_output=True)
+    subprocess.run(["git", "add", "app.py", "tests/test_sample.py"], cwd=work,
+                   check=True, capture_output=True)
+    return work
+
+
+def _plant_git_violation(work, name):
+    if name == "no-debug-prints":
+        (work / "app.py").write_text('print("debug")\n')
+    else:
+        (work / "tests" / "test_sample.py").write_text("@pytest.mark.skip\ndef test_value():\n    pass\n")
+
+
+def _git_search_env(tmp_path, status):
+    """Use real rev-parse, then an empty-output search status (or remove Git after preflight)."""
+    real_git = shutil.which("git")
+    assert real_git is not None, "real Git is required for detector conformance"
+    tools = tmp_path / "fake-bin"
+    tools.mkdir()
+    calls = tmp_path / "git-calls"
+    wrapper = tools / "git"
+    env = dict(os.environ)
+    if status == "missing":
+        # Keep the real gate's dependencies available, with no fallback Git on PATH.
+        for tool in ("bash", "dirname", "mkdir", "cat", "jq", "shasum", "cut", "date",
+                     "seq", "sleep", "tail", "rmdir", "sed", "python3", "openssl"):
+            binary = shutil.which(tool)
+            assert binary is not None, f"gate dependency missing: {tool}"
+            (tools / tool).symlink_to(binary)
+        env["PATH"] = str(tools)
+        # Removing the cached executable also probes Bash 3.2's errexit status edge.
+        remove = '/bin/rm -- "$0"; '
+        search = "exit 99"
+    else:
+        env["PATH"] = f"{tools}{os.pathsep}{env.get('PATH', '')}"
+        remove = ""
+        env["RELAY_TEST_GREP_STATUS"] = str(status)
+        search = 'exit "$RELAY_TEST_GREP_STATUS"'
+    wrapper.write_text(
+        "#!/bin/bash\n"
+        f"printf '%s\\n' \"$1\" >> {shlex.quote(str(calls))}\n"
+        'case "$1" in\n'
+        f"  rev-parse) {remove}exec {shlex.quote(real_git)} \"$@\" ;;\n"
+        f"  grep) {search} ;;\n"
+        "  *) exit 99 ;;\n"
+        "esac\n"
+    )
+    wrapper.chmod(0o755)
+    return env, calls
+
+
+def _eval_git_cmd(control, work, shell_options, env=None):
+    return subprocess.run(["/bin/bash", *shell_options, "-c", 'eval "$1"',
+                           "policy-test", control["cmd"]], cwd=work, env=env,
+                          capture_output=True, text=True)
+
+
+def _eval_shipped_git_gate(tmp_path, work, git_bundle, env=None):
+    name, control = git_bundle
+    sprint = _sprint(tmp_path, [{"id": "wp1", "instructions": "i"}], retry_budget=0)
+    merged = tmp_path / "merged.json"
+    applied = _run("apply", "--bundle", str(POLICIES / f"{name}.json"),
+                   "--sprint", str(sprint), "-o", str(merged))
+    assert applied.returncode == 0, applied.stderr
+    injected = json.loads(merged.read_text())["work_packages"][0]["checklist"]
+    assert injected == [{**control, "policy": name}]
+    state = tmp_path / "state"
+    g = subprocess.run(["/bin/bash", str(GATE), "eval", "--sprint", str(merged),
+                        "--workdir", str(work), "--state", str(state)],
+                       capture_output=True, text=True, env=env)
+    return g, state
+
+
+def _assert_git_gate(g, state, git_bundle, passes):
+    name, control = git_bundle
+    assert g.returncode == (0 if passes else 2), f"rc={g.returncode} {g.stdout} {g.stderr}"
+    outcome = json.loads(g.stdout)
+    assert outcome["outcome"] == ("complete" if passes else "escalate"), outcome
+    assert outcome.get("failing", []) == ([] if passes else [control["id"]]), outcome
+    entries = [json.loads(line) for line in (state / "ledger.jsonl").read_text().splitlines()]
+    item, = [entry for entry in entries if entry["event"] == "checklist-item"]
+    assert item["item"] == control["id"]
+    assert item["verdict"] == ("pass" if passes else "fail")
+    assert item["graded_by"] == "deterministic"
+    assert item["origin"] == f"policy:{name}"
+    assert item["oracle"] == hashlib.sha256(control["cmd"].encode()).hexdigest()
+
+
+SHELL_OPTIONS = [(), ("-e",), ("-o", "pipefail"), ("-euo", "pipefail")]
+SEARCH_STATUSES = [0, 1, 2, 99, 126, 127, 128, 129, 130, 255, "missing"]
+
+
+@pytest.mark.parametrize("shell_options", SHELL_OPTIONS,
+                         ids=["normal", "errexit", "pipefail", "strict"])
+@pytest.mark.parametrize("violation", [False, True], ids=["clean", "tracked-violation"])
+def test_shipped_git_detector_real_conformance(tracked_work, git_bundle, shell_options, violation):
+    name, control = git_bundle
+    if violation:
+        _plant_git_violation(tracked_work, name)
+    r = _eval_git_cmd(control, tracked_work, shell_options)
+    assert r.returncode == (1 if violation else 0), f"rc={r.returncode} {r.stdout} {r.stderr}"
+
+
+@pytest.mark.parametrize("shell_options", SHELL_OPTIONS,
+                         ids=["normal", "errexit", "pipefail", "strict"])
+@pytest.mark.parametrize("status", SEARCH_STATUSES)
+def test_shipped_git_detector_search_status(tmp_path, tracked_work, git_bundle, shell_options, status):
+    _, control = git_bundle
+    env, calls = _git_search_env(tmp_path, status)
+    r = _eval_git_cmd(control, tracked_work, shell_options, env)
+    assert calls.read_text().splitlines() == (["rev-parse"] if status == "missing"
+                                            else ["rev-parse", "grep"])
+    assert r.returncode == (0 if status == 1 else 1), f"status={status}: rc={r.returncode} {r.stderr}"
+
+
+@pytest.mark.parametrize("shell_options", [(), ("-euo", "pipefail")], ids=["normal", "strict"])
+def test_shipped_git_detector_closed_status_set(tmp_path, tracked_work, git_bundle, shell_options):
+    """Only Git's documented no-match status may pass, across all shell exit statuses."""
+    _, control = git_bundle
+    env, calls = _git_search_env(tmp_path, 0)
+    for status in range(256):
+        env["RELAY_TEST_GREP_STATUS"] = str(status)
+        r = _eval_git_cmd(control, tracked_work, shell_options, env)
+        assert r.returncode == (0 if status == 1 else 1), f"status={status}: rc={r.returncode} {r.stderr}"
+    assert calls.read_text().splitlines() == ["rev-parse", "grep"] * 256
+
+
+@pytest.mark.parametrize("violation", [False, True], ids=["clean", "tracked-violation"])
+def test_shipped_git_detector_real_gate(tmp_path, tracked_work, git_bundle, violation):
+    if violation:
+        _plant_git_violation(tracked_work, git_bundle[0])
+    g, state = _eval_shipped_git_gate(tmp_path, tracked_work, git_bundle)
+    _assert_git_gate(g, state, git_bundle, passes=not violation)
+
+
+@pytest.mark.parametrize("status", SEARCH_STATUSES)
+def test_shipped_git_search_status_blocks_gate(tmp_path, tracked_work, git_bundle, status):
+    env, calls = _git_search_env(tmp_path, status)
+    g, state = _eval_shipped_git_gate(tmp_path, tracked_work, git_bundle, env)
+    assert calls.read_text().splitlines() == (["rev-parse"] if status == "missing"
+                                            else ["rev-parse", "grep"])
+    _assert_git_gate(g, state, git_bundle, passes=status == 1)
+
+
+def test_shipped_git_detector_scope_preserved(tmp_path, tracked_work, git_bundle):
+    name, control = git_bundle
+    if name == "no-debug-prints":
+        excluded = ["tests/test_excluded.py", "spec_helper.py", "NOTES.md"]
+        untracked = "scratch.py"
+        violation = 'print("debug")\n'
+    else:
+        excluded = ["app.py", "tests/test_relay_helper.py"]
+        untracked = "tests/test_untracked.py"
+        violation = "@pytest.mark.skip\n"
+    for path in excluded:
+        (tracked_work / path).write_text(violation)
+    subprocess.run(["git", "add", "--", *excluded], cwd=tracked_work,
+                   check=True, capture_output=True)
+    (tracked_work / untracked).write_text(violation)
+    r = _eval_git_cmd(control, tracked_work, ("-euo", "pipefail"))
+    assert r.returncode == 0, f"excluded/untracked content failed: {r.stderr}"
+    # A violation in the included tracked scope must still fire in the same tree.
+    _plant_git_violation(tracked_work, name)
+    r = _eval_git_cmd(control, tracked_work, ("-euo", "pipefail"))
+    assert r.returncode == 1, f"included tracked violation passed: {r.stderr}"
 
 
 def test_apply_prepends_to_every_wp(tmp_path):
@@ -214,15 +402,17 @@ def test_forged_policy_on_wp_control_is_stripped(tmp_path):
     assert org["policy"] == "org"
 
 
-def test_git_grep_bundle_fails_closed_outside_git(tmp_path):
-    """The shipped git-grep bundle must FAIL (not silently pass) in a non-git workdir that contains a
+def test_git_grep_bundle_fails_closed_outside_git(tmp_path, git_bundle):
+    """The shipped git-grep bundles must FAIL (not silently pass) in a non-git workdir that contains a
     violation — otherwise an org-mandated control lands on the ledger as `pass` having scanned nothing."""
     work = tmp_path / "work"  # deliberately NOT a git repo
     work.mkdir()
-    (work / "leftover.py").write_text('print("debug")\n')
+    (work / "tests").mkdir()
+    name, control = git_bundle
+    _plant_git_violation(work, name)
     sprint = _sprint(tmp_path, [{"id": "wp1", "instructions": "i"}], retry_budget=0)
     merged = tmp_path / "merged.json"
-    r = _run("apply", "--bundle", str(POLICIES / "no-debug-prints.json"),
+    r = _run("apply", "--bundle", str(POLICIES / f"{name}.json"),
              "--sprint", str(sprint), "-o", str(merged))
     assert r.returncode == 0, r.stderr
     state = tmp_path / "state"
@@ -232,7 +422,7 @@ def test_git_grep_bundle_fails_closed_outside_git(tmp_path):
     # retry_budget 0 -> the failing (fail-closed) org control escalates immediately
     assert g.returncode == 2, f"git-grep bundle did NOT fail closed: rc={g.returncode} {g.stdout} {g.stderr}"
     outcome = json.loads(g.stdout)
-    assert "ORG-NO-DEBUG-PRINTS" in outcome["failing"], outcome
+    assert control["id"] in outcome["failing"], outcome
 
 
 def test_list_tmp_bundles(tmp_path):

@@ -1,166 +1,144 @@
-# FAQ & Design Rationale
+# Relay diagnosis recipes
 
-Answers derived exclusively from the canonical Relay SPEC. Where empirical findings are cited,
-they refer to the eight controlled A/B runs described in SPEC §10.
+Audience: agents. Status: current.
 
----
+Start with [relay-integration](../.opencode/skills/relay-integration/SKILL.md) for
+harness issues or [relay-audit](../.opencode/skills/relay-audit/SKILL.md) for trace
+issues. Runtime source wins when historical descriptions disagree.
 
-## Architecture
+## Hook returns no JSON. Is the task done?
 
-### Why doesn't Relay use reflection?
+No. Empty stdout with exit `0` occurs for unarmed or unknown tokens, ambiguous
+binding, a different bound agent, completed arms, parked arms, escalation, and
+some plan defects.
 
-Because it was measured to provide zero benefit and caused an observable regression.
+1. Inspect stderr and the selected transcript path.
+2. Inspect arm `position`, `state`, and `relay.log`.
+3. Run `bin/relay problems /path/to/arm --json` and
+   `bin/relay verify /path/to/arm --json`.
+4. Require `state=complete`, usable `relay verify --json` output, and audit exit
+   `0`. When plan comparison is required, also require
+   `oracle_recheck.status == "ok"`; see audit limits below.
 
-Eight controlled runs tested forcing extra "reflect and improve" passes on outputs that were
-already correct. Results: zero functional gain, and in one case a refactor pass introduced an
-undefined-variable bug — a correct solution regressed to broken. The conclusion in SPEC §10 is
-unambiguous: **blanket reflection is negative expected value when a verifier already exists.**
+## Wrong arm or WP appears
 
-Relay uses that verifier (the Gate) to enforce delivery; it does not second-guess a WP that has
-already passed. The keep-best invariant makes this concrete: once a WP is accepted it is locked,
-and no subsequent step can ship a worse version of it.
+- Pass `agent_transcript_path`, the subagent's own file. `transcript_path` is the
+  session file and can contain several dispatch markers; it is only a fallback
+  when the own-transcript path is absent or not a file.
+- Give each runner one distinct `RELAY-ARM:<token>`. Repeated copies of one token
+  are unambiguous; multiple distinct tokens trigger refusal, not arbitrary
+  enforcement. Inspect any explicit `RELAY_ARM_TOKEN` override.
+- An arm binds the first supplied `agent_id`; a different agent is refused with
+  exit `0`. Correct dispatch rather than sharing or clearing another runner's arm.
+- Read named `position` for the arm hook. CLI `counter` is an array index, so
+  editing array order can retarget its current WP.
+  ARM tries raw whole ID, then raw first-dot suffix; only both missing permit
+  legacy trailing-LF removal and another lookup. Literal CR remains identity data.
 
----
+## Hook never runs
 
-### Why one continuous Runner instead of isolated stations?
+Check active `SubagentStop` registration and the absolute script path
+`bin/relay-arm-hook.sh`. Confirm a subagent stopped; top-level `claude -p` uses
+the plain `Stop` event. Check `jq`, Bash, and the hook environment. Begin a new
+session after registration changes, then inspect an actual payload and stderr.
+Setup recipe: [getting-started](getting-started.md).
 
-The coupled nature of work inside a sprint makes a shared context strictly better than serialized
-handoffs.
+## A gate keeps failing
 
-When WPs are coupled — the common case inside one codebase — WP3 needs to see the live code and
-decisions from WP2 directly, not a summary written after the fact. An isolated-stations design
-(fresh agent per WP, explicit handoff contract) requires serializing that working memory into an
-artifact. That artifact is either lossy or expensive to produce, and it creates a new class of
-failure: the handoff itself.
+Run each failing `cmd` in `meta.json.workdir` with the same environment; gate
+evaluation discards command output. The hook falls back to `.` for a missing
+workdir, so validate the directory before dispatch. Check tool availability,
+fixture paths, and whether the command proves the intended assertion.
 
-A single continuous Runner holds full working memory across all WPs at no extra cost. The
-trade-off is context growth over a long sprint; SPEC §7 explicitly names compaction as the
-mitigation. The isolated-stations design is appropriate only when WPs are genuinely independent.
+Checklist and DoD readers preserve whole decoded commands, including tabs and
+interior/trailing LF; regression hashes the same full command. Each value is one
+Bash program whose final exit status decides acceptance. `false\ntrue` can pass;
+use explicit failure propagation when every step must succeed. See
+[CLI contract](sdk.md#controls-and-feature-limits).
 
----
+A blocking judge's nonzero process exit or malformed/missing response records
+`fail` with a `judge:unavailable(...)` label and blocks. Advisory judge failures
+remain recorded failures without blocking. Inspect backend labels and context;
+a stub verdict is not a semantic assessment.
 
-### Why gated advancement instead of trusting the Runner's "I'm done"?
+`retry_budget` defaults to `3`: the first three failures re-block; the next
+failed evaluation escalates. Regression-only failures use a separate arm retry
+counter. Repeated `RELAY-BLOCKED: <reason>` claims can escalate earlier when
+honored; they do not pass the gate. Inspect `relay problems` for plan defects.
 
-Because "stopped" is not the same as "done."
+## Escalation looks like success to the harness
 
-Agents stop prematurely. A premature stop without a gate silently skips a deliverable. The Gate
-exists precisely to distinguish "the Runner paused" from "the WP is actually complete." Relay
-advances the WP index only on a Gate pass; a stop that fails the Gate bounces back to the same
-WP with the specific gap identified. No deliverable can be skipped. SPEC §7: "stopped ≠ done;
-advance only on a Gate pass."
+The arm hook writes an `escalate` event, `state=awaiting-human`, and a counter at
+the plan length, then exits `0` with empty stdout. This permits the agent stop.
+Do not classify either empty output or `counter >= nwp` as success. The audit
+returns `2` for an escalated terminal trace.
 
----
+An operator MUST provide real who/why in the arm's `release` file. The hook
+removes CR, maps LF to spaces, trims edge ASCII spaces, and requires a non-whitespace
+character; tabs-only input is rejected. It does not authenticate a human. After
+resolving position, it must append `human-release` before consuming the release.
+It then clears that resolved ID's retry/round/repeat/blocked-claim keys and
+the legacy index retry and `reg_retry`, restores the current counter, and retries
+the same gate with a fresh budget. Controls still apply; an unresolved position
+keeps the release for repair. See
+[release input and cleanup](per-agent-arms.md#release-input-and-cleanup).
+CLI callers handle `outcome=escalate`, exit `2` themselves; the CLI has no matching
+parked-arm lifecycle.
 
-### Does the Gate interrupt the Runner's reasoning?
+## Chain stops before the final gate
 
-No.
+Inspect harness block limits. Advancement costs a block as well as retries.
+At its first preflight, the arm hook reads `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`,
+using `8` for unset, empty, or invalid values. It records `cap-risk` only when
+a nonzero cap is below `len(work_packages)+1`. That is the implemented warning
+estimate, not a physical minimum. `0` requests an uncapped harness and suppresses
+the warning; it does not guarantee completion. Inspect actual state and terminal
+ledger event afterward.
 
-The Relay hook is a `SubagentStop` hook. It fires only after the Runner has already stopped —
-after its reasoning turn has fully concluded. There is no mechanism by which the Gate can cut a
-thought in progress. What the Gate adds is **latency at the exit boundary**: the check runs
-between one turn ending and the next beginning.
+## Hook or `relay-gate` returns exit 3 or no outcome
 
-On a Gate failure the hook returns `decision:block`, which injects the gap description and
-causes the Runner to start a new turn. This is an *extension* of the work, not an interruption
-of it. SPEC §7: "the Gate adds latency at the exit and on failure *extends* work with a new turn
-— it never cuts a thought."
+Exit `3` means the ARM or CLI state directory's `.run.lock` is held. Both drivers
+serialize whole evaluations; `.chain.lock` separately serializes ledger appends.
+Establish whether an evaluation is still running before removing a stale lock.
+Usage errors and missing input paths also need stderr handling; do not assume
+every nonzero exit includes JSON. Pair CLI outcomes with codes in [sdk.md](sdk.md).
+Mandatory evidence/transition append failures also abort before corresponding
+state/retry updates; a successful append can precede a later failed state write.
+Some ARM ancillary appends and archives remain best-effort. There is no atomicity or rollback.
 
----
+## Is accepted work frozen? Does Relay compact or switch models?
 
-## Failure modes & edge cases
+Accepted files remain editable. Keep-best reruns full deterministic commands;
+Relay does not restore snapshots. [Compaction hints](compaction.md) only change
+feedback text. `review` supplies a cold-read reminder without spawning a reviewer.
+A WP `model` field does not switch runners; judge configuration selects the
+judge process's model through `RELAY_JUDGE_MODEL`.
 
-### What happens if a WP never passes its Gate?
+## Is an intact ledger sufficient?
 
-The `retry_budget` field (default 3 in the reference schema) caps how many consecutive Gate
-failures are allowed on a single WP. When that budget is exhausted:
+No. `benchmark/verify_ledger.py` checks integrity; `bin/relay verify` also checks
+record schema, final recorded checklist verdicts, terminal completion, and oracle
+drift. With a sprint, it compares named IDs both ways: added/unrecorded, changed,
+and removed controls prevent PASS. It does not rerun commands, validate current
+artifacts, or compare every plan field or judge setting.
 
-1. The sprint **escalates** — execution is surfaced to a human for intervention.
-2. The chain **stops without skipping** the failing WP.
-3. The last WP that did pass remains locked under keep-best; the sprint state is consistent up to
-   that point.
+Require usable `--json` output and process exit `0`. Supply a reachable sprint
+or `--sprint`, and when plan comparison is required, also require
+`oracle_recheck.status == "ok"`. No discovered/supplied sprint yields `not-run`
+and can still return exit `0`. A discovered or explicitly supplied unreadable,
+malformed, or schema-invalid sprint yields `invalid` / `SPRINT-INVALID`, exit `2`.
+Legacy graded records without oracle hashes yield `unverified` /
+`ORACLE-UNVERIFIED` when compared without other defects; new IDs still diverge.
 
-A WP is never silently promoted past a failing Gate regardless of how many retries were spent.
-See SPEC §5 for the exact loop pseudocode.
+Malformed chain JSON/fields produce `TAMPERED`, exit `1`; intact but unusable
+control records produce `RECORD-INVALID`, exit `2`, with `record_errors`.
+Deterministic verdicts other than `pass` cannot establish a passed control.
+Interior/trailing LF is preserved in command and judge oracle hashes; an unchanged
+full string no longer causes the former extraction mismatch. See
+[SPEC §5](../SPEC.md#5-judge-and-computed-artifact-contract) and
+[§6](../SPEC.md#6-ledger-and-audit-boundary). Judge controls remain non-independent.
+A scripted example is mechanism evidence, not live model or fan-out measurement.
 
----
-
-### Does context grow unbounded on long sprints?
-
-Yes, and this is an acknowledged cost, not a hidden one.
-
-Because the Runner is a single continuous agent, its context accumulates across every WP in the
-sprint. On a long sprint this can become expensive and can degrade model quality at the tail.
-SPEC §7 names this explicitly as the cost of the single-context design and names **compaction**
-as the mitigation. There is no magic: choose WP granularity and sprint length to keep total
-context within a workable range, and apply compaction as needed.
-
----
-
-## Troubleshooting
-
-### The hook is not firing at all.
-
-Check three things in order:
-
-1. **Hook registration.** The Relay hook must be registered as a `SubagentStop` hook in
-   `settings.json` (or `settings.local.json`). Verify the entry is present and the path to the
-   hook script is correct.
-2. **Hot-reload caveat.** Removing the hook from the settings file does **not** hot-reload
-   mid-session — the existing session continues with the hooks active at session start. However,
-   edits to the **script body** are read fresh on each fire. If you added the hook after the
-   session started, start a new session.
-3. **Runner vs. top-level session.** `SubagentStop` fires for sub-agent stops, not for the
-   top-level session. Confirm the Runner was spawned as a sub-agent by the orchestrator.
-
----
-
-### The wrong WP is being relayed (counter is off).
-
-The Relay hook tracks the current WP index keyed by `agent_id`, which is stable per Runner for
-the life of a session (SPEC §9). A counter mismatch typically has one of these causes:
-
-- The same `sprint.json` was reused with a different Runner whose `agent_id` collided with a
-  stale counter from a previous run. Clear persisted counters between sprint runs.
-- `sprint.json` was edited mid-sprint in a way that renumbered the WP array. The hook reads
-  `sprint.json` fresh on each fire, so index `i` now points at a different WP than it did before
-  the edit. Avoid reordering WPs in a live sprint.
-
----
-
-### The sprint is stuck in an infinite loop.
-
-Two guards exist (SPEC §5 and §9):
-
-1. **`retry_budget`** — the per-WP retry counter. Once exhausted the chain escalates and stops.
-   Verify the budget is set to a finite positive integer in `sprint.json`.
-2. **`stop_hook_active`** — the payload field that flips to `true` after a `decision:block` on
-   the current stop. This is available as a secondary loop guard in the hook script; check that
-   your hook respects it rather than issuing a second block unconditionally.
-
-If both guards are in place and the sprint is still looping, the most likely cause is a Gate
-check that is structurally unsatisfiable (e.g., a `grep` pointing at the wrong path, or a `shell`
-command that always exits non-zero due to an environment issue). Verify each DoD check in
-isolation before running the full sprint.
-
----
-
-## Positioning
-
-### How is Relay different from a generic workflow or pipeline tool?
-
-Three differences are structural, not superficial:
-
-1. **One continuous agent, not per-stage agents.** A generic pipeline spawns a fresh executor
-   per stage. Relay uses one Runner whose working memory spans the entire sprint. Later WPs build
-   on earlier ones without any serialization artifact.
-2. **Stop-interception, not task scheduling.** Relay's mechanism is intercepting the Runner's
-   natural stop signal (`SubagentStop`) and deciding whether to let it land. A pipeline tool
-   hands off control between steps; Relay never hands off — it redirects.
-3. **DoD gates as first-class primitives.** Relay's Gate evaluates an explicit, authored
-   Definition of Done at every WP boundary. A generic pipeline may have no concept of a WP-level
-   acceptance criterion; work completes when the stage function returns. Relay refuses to advance
-   until the criterion is provably met.
-
-The result: Relay is not a workflow engine that happens to call an LLM at each node. It is a
-delivery enforcer built around how a single LLM agent actually works — stopping, being
-redirected, and continuing in the same context.
+Authorities: [arm hook](../bin/relay-arm-hook.sh), [gate CLI](../bin/relay-gate),
+[shared core](../lib/relay-gate.sh), [audit CLI](../bin/relay),
+[binding regression tests](../tests/test_arm_binding.py).

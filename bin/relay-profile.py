@@ -45,6 +45,7 @@ Usage:
 """
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -62,16 +63,21 @@ KIND = {"execute": "execute", "checklist": "gate", "review": "review",
 
 
 def _expand(tpl, macro, sub, criterion=None):
-    """Substitute THIS compiler's placeholders and leave every other brace alone.
+    """Substitute bare compiler placeholders; preserve `${name}` for later binding.
 
     Not `str.format`: the template is author-supplied text that legitimately contains braces meant
     for a LATER stage — `relay-spec.py instantiate` renders `${param}` when a template profile is
     bound to a project. `.format()` reads `${test_cmd}` as a substitution of its own and raises
     KeyError, so a perfectly valid profile fails to compile. A compiler that chokes on a placeholder
     addressed to someone else is a compiler that forbids composition.
+    Only literal `{macro}`, `{sub}`, and (when supplied) `{criterion}` are recognized, and a
+    preceding `$` protects a later-stage binding. Substituted values are not expanded again.
     """
-    out = tpl.replace("{macro}", macro).replace("{sub}", sub)
-    return out if criterion is None else out.replace("{criterion}", criterion)
+    values = {"macro": macro, "sub": sub}
+    if criterion is not None:
+        values["criterion"] = criterion
+    return re.sub(r"(?<!\$)\{(macro|sub|criterion)\}",
+                  lambda m: values.get(m.group(1), m.group(0)), tpl)
 
 
 def compile_profile(profile, qualify=False):

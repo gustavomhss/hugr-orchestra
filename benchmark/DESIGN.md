@@ -1,117 +1,83 @@
-# Relay Benchmark — Experimental Design
+# Relay Benchmark — Historical Experimental Design
 
-> The runnable plan. Ties together [GOALS.md](GOALS.md) (the angles), [KPIS.md](KPIS.md) (the
-> instruments), and [METHODOLOGY.md](METHODOLOGY.md) (how campaigns become WPs). The output is a
-> **regime map**, not a leaderboard number.
+Audience: agents. Status: historical.
 
-## 1. The experiment in one paragraph
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Read this as the intended experiment, not a current runbook or a completed statistical study.
+Actual observations and their limits are in [RESULTS.md](RESULTS.md).
 
-Hold the model, tools, sandbox, and budget constant. For each campaign in a **size-swept, typed suite**,
-run three orchestration **arms** over **N seeds**, grade every arm against the **same frozen
-requirement checks** in an isolated grader, and measure the [KPIS](KPIS.md) across the seven
-[angles](GOALS.md). Report where Relay turns net-positive (the crossover), why (attribution), and at
-what cost.
+## 1. Research question and arms
 
-## 2. Arms (the only thing that varies)
+The design sought a **regime map**: where per-step gating changes requirement satisfaction,
+regression, consistency and cost against an end-gated monolith, and how decomposition contributes.
 
-| Arm | Delivery | Purpose |
+| Arm | Implemented delivery | Intended attribution |
 |---|---|---|
-| **M — Monolithic** | The whole campaign (`goal` + all requirements) in one brief; free-running; **same** aggregate retry budget and **same** test-feedback Relay gets. | The honest baseline. |
-| **R — Relay** | The campaign decomposed via [METHODOLOGY.md](METHODOLOGY.md); WPs revealed sequentially; gated per WP; keep-best. | The system under test. |
-| **D — Decomposed-ungated** | Same WP sequence as R, but **no gates** (advance on stop regardless). | Ablation: isolates *small per-step context* (D) from *gating + error-pruning* (R − D). |
+| M | Whole campaign in `sprint_mono.json`, one WP, gate on, bounded aggregate repair | End-gated baseline; no separate missing M+CI arm |
+| R | `sprint.json`, gates per WP and regression checks | Per-step gating treatment |
+| D | Same decomposed sprint, gate off, advance on stop | Decomposition ablation |
 
-Everything else — base model, temperature, tool set, sandbox image, token/turn budget, the requirement
-checks — is identical across arms. Per the research, an orchestration that wins only by spending more
-compute, or only on best-of-k, **has not won**.
+Source: [run_arm.sh](run_arm.sh), [relay_hook.sh](relay_hook.sh). M receives the same visible
+test feedback. R/D keep one continuous context; revealing fewer new requirements is not proof
+of smaller live context.
 
-## 3. Campaign suite
+## 2. Intended controls versus implemented controls
 
-### Substrate: original campaigns, CoreLink-grade difficulty (strict isolation)
-Campaigns are **authored fresh inside this repository**, under `benchmark/campaigns/` — original repos,
-requirements, and checks — in the *same hard problem domains* (billing integrity, multi-tenant isolation,
-distributed failover, crypto, compliance). **No CoreLink code, spec text, invariant identifiers, or any
-other project's files are copied in or referenced.** CoreLink only informed the *difficulty profile* (the
-dense, cross-referential, interacting requirement style); nothing is imported. The Relay benchmark stays
-strictly separated from CoreLink and every other project — all artifacts live under `relay/benchmark/`.
-
-Two reasons this substrate is right:
-1. **Contamination-immune by construction.** Freshly authored tasks are in no model's training data —
-   sidestepping the #1 benchmark killer (the reason SWE-bench Verified was retired). No temporal windowing
-   or canaries needed: the tasks are genuinely unseen. Authoring fresh (rather than lifting any private
-   corpus) gives the same immunity *and* keeps clean project separation.
-2. **Naturally high difficulty.** Modeling these domains yields dense, cross-referential, interacting
-   requirements — the composition-depth + OOD + interaction profile the research says is required to force
-   frontier models to drop requirements (raw count alone does not).
-
-Each campaign is a **self-contained, runnable task**: a minimal repo + the frozen requirement set +
-deterministic checks, reviewed against the Step-1 reject criteria and committed under `relay/benchmark/`.
-
-### The two sweep axes
-- **Size** (the central angle): campaigns at `N ∈ {8, 16, 32, 64}` requirements (and the WP cap
-  `k ∈ {3, 6}` as a secondary sweep). Crossover lives along this axis.
-- **Type** (generalization angle): three shapes per size band —
-  *coupled-deep* (long dependency chains, shared state), *independent-shallow* (parallelizable, flat),
-  *dense-interacting* (near-conflicting constraints on one artifact).
-
-### Calibration (mandatory before trusting numbers)
-Pilot Arm M (the strongest baseline) 3–5× on each campaign. If it scores **> ~85% RSR**, the campaign
-lacks headroom → raise composition depth / interaction / density until M reliably drops several
-requirements. Confirm a **monotonic model-ladder spread** (a weak→strong model gradient) before shipping
-the campaign. A campaign with no headroom is discarded.
-
-## 4. Scoring harness
-
-- **Per-requirement, deterministic, final-state.** Each requirement is one `FAIL_TO_PASS` check bundle;
-  RSR = weighted satisfied / total. Grade the **final repo state only**, never the agent's commands or logs.
-- **Regression set.** Every campaign carries a `PASS_TO_PASS` set; REG = requirements that passed then broke.
-- **Isolation & blinding.** The grader runs in a **separate process the agent cannot reach**, parses
-  **structured output** (never substring/`eval`), and is **blind to which arm** produced the artifact.
-- **LLM-judge residue.** Only for the genuinely subjective < 20%; rubric-anchored, order-randomized,
-  calibrated FP/FN against human labels (LLM code-vs-spec judging systematically over-rejects correct code).
-
-## 5. Fairness controls (non-negotiable)
-
-1. **Budget-matched.** One dominant resource (total LLM calls *or* tokens) held equal across arms; Arm M
-   gets the same aggregate retry/turn budget R spends across all WPs. Report raw **and** cost-normalized (CNQ).
-2. **Equal oracle access.** The Gate's tests are the worst confound — Arm M must receive the **same tests**
-   as retry feedback, or we measure oracle access, not decomposition.
-3. **Blind grading**, **fixed model + temperature**, **N seeds per cell**.
-4. **Pre-registration.** The primary metric (CNQ with REG + REL), the significance test, and the seed
-   count are fixed **before** running. No post-hoc metric shopping.
-5. **Adversarial harness check.** Run an exploit agent against the grader before trusting any number
-   (BenchJack: all 10 audited benchmarks were hackable; the canonical exploit is a 9-line `conftest.py`).
-   Iterate the harness until residual hack rate ≈ 0.
-
-## 6. Analysis plan → the regime map
-
-For each `(size, type)` cell, aggregate over seeds and report:
-
-- **RSR / CCR / REG** per arm, with confidence intervals.
-- **Crossover**: the size at which `RSR(R) − RSR(M)` crosses zero and stays positive.
-- **Attribution**: decompose the Relay effect as `R − M = (D − M)` [context-bounding] `+ (R − D)` [gating].
-- **Cost curve**: CNQ vs size; flag the overhead regime where R is net-negative.
-- **Reliability**: pass^k and RSR variance per arm.
-- **Mechanism evidence**: live context size (CTX) vs RSR, to confirm the context-scale story.
-
-Each headline claim ships with its statistical test (effect size + p-value), per the pre-registration.
-
-## 7. Controlled confounds (the checklist)
-
-| Confound | Control |
+| Original requirement | Implemented reach / unresolved limit |
 |---|---|
-| Decomposition cleverness | Canonical, frozen [methodology](METHODOLOGY.md); same for all campaigns |
-| Extra compute buys the win | Budget-matched; CNQ reported; Arm D ablation |
-| Oracle/test-feedback leakage | Arm M gets the identical tests as feedback |
-| Best-of-k luck | pass^k over N seeds, never best-of-k |
-| Grader gaming | Isolated, blind, structured-parse grader; adversarial exploit pass |
-| Train/test contamination | Freshly-authored, unpublished campaigns (unseen by construction) |
-| Ambiguous requirements | Step-1 reject gate (too-narrow / too-wide checks discarded) |
-| Ceiling / no headroom | Per-campaign calibration; discard saturated campaigns |
+| Fixed model/tools/sandbox | Runner selects Sonnet and common hook/prompt mechanics; no hardened sandbox or complete temperature/environment record |
+| Equal total calls/tokens | Not enforced by runners. Generated M uses `max(3, N//3)` retry budget; R uses per-WP budget 3. Timeout equality is not compute equality. |
+| Same visible feedback; separate final oracle | Built campaign-copy split: `holdout/` removed from runner directory, final grader uses campaign-source holdout |
+| Blind, isolated grader | Grader receives final candidate path, not an explicit arm label; a separate process under the same user is not unreachable isolation |
+| Structured scoring | JUnit testcase parsing is built; skipped cases and unchecked pytest/collection failures limit its meaning |
+| Multiple seeds, preregistered significance tests | Design intent, not a committed full run matrix, confidence-interval analysis or verified preregistration artifact |
+| Residual hack rate near zero | Historical lookup-hacker snapshots only; no standing adversarial gate or universal exploit resistance |
+| Contamination immunity | Original/generated inputs reduce direct reuse; publication and provenance are not proof of zero contamination |
 
-## 8. Deliverables
+## 3. Campaign design record
 
-- The frozen campaign suite (repos + requirement checks + decomposed `sprint.json` per campaign).
-- The arm runners (M / R / D), the isolated grader, and the adversarial harness report.
-- A results notebook producing the **regime map** (the §6 outputs) with pre-registered tests.
-- An honest verdict: the crossover, the attribution, the safety result, and the cost curve — including,
-  plainly, the regime where Relay is overhead.
+Original billing campaigns were self-contained tasks informed by hard-domain interaction styles,
+without importing CoreLink code, requirements or identifiers. Intended axes were requirement
+counts `{8,16,32,64}`, WP caps `{3,6}` and coupled-deep, independent-shallow, dense-interacting
+types. Actual committed campaigns and generated pilots did not complete that grid.
+
+The calibration proposal used 3–5 M pilots and roughly 0.85 RSR as the headroom threshold, with
+a weak-to-strong model ladder. Saturated campaigns remain useful pipeline/overhead records;
+the original instruction to discard them was superseded by retaining their negative evidence.
+`run_crossover.py` compares the available valid M mean to a configurable threshold, not a
+statistical model-ladder proof.
+
+v1 generated templated record rules; v2 generated bespoke arithmetic functions with earlier
+function calls and ordered global rules. Selected input snapshots are immutable experiment
+inputs. Agents must not edit requirements, tests, skeletons or frozen sprint decomposition to
+improve an arm's result. Generators can overwrite their chosen output directory; regeneration
+is not evidence that an earlier experiment's inputs were frozen or identical.
+
+## 4. Scoring and integrity
+
+RSR is weighted final-state requirement satisfaction; all mapped tests for a requirement must
+pass. CCR is all requirements satisfied. Grader REG compares with an explicitly supplied prior
+per-requirement baseline; it is not automatically every correct→wrong flip during a run.
+Definitions and instrument reach: [KPIS.md](KPIS.md).
+
+Known source limits:
+
+- [grader.py](grader.py) falls back to visible checks without `--holdout`; that is smoke evidence,
+  not independent efficacy. It ignores pytest return status and marks only failure/error children
+  as failures, so skipped testcases can count as successful requirements.
+- [run_crossover.py](run_crossover.py) `--check-grader` accepts infrastructure/collection failure
+  as a non-clean pass. The printed "discriminates" label overstates that check.
+- Its reference guard rejects byte equality only when a reference file exists; transformed copies
+  and broader leakage are outside its reach. `valid=true` also does not guarantee a usable grade.
+- Runner outputs/ledger copies are best-effort and do not establish protected provenance.
+
+## 5. Intended analysis, not delivered inference
+
+The original plan called for per-cell RSR/CCR/REG intervals, a persistent positive R−M crossover,
+`R−M = (D−M) + (R−D)` attribution, CNQ cost curves, reliability over repeated runs and live
+context diagnostics. Those remain criteria for a stronger study. Arm means from unmatched
+seeds/budgets do not establish causal decomposition or gating effects.
+
+The recorded M pilots were saturated. The committed N500 evidence is one v2 seed-1 M aggregate,
+not a high-N R/D comparison or two substrates measured to 500. Agents must retain the supported
+conclusion: no demonstrated amplifier win in these observations; universal win/loss remains open.

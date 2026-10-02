@@ -20,10 +20,13 @@ Backends (auto-selected: forced RELAY_JUDGE_BACKEND > `api` if ANTHROPIC_API_KEY
          "an LLM said so" is not an audit trail — which LLM is the first thing a reader asks.
 
 Usage:  judge.py --criterion TEXT [--file F ...]
-Output: one JSON line {"verdict":"pass|fail","reason":"...","backend":"..."}  (exit always 0;
-        the verdict lives in the payload so the caller decides whether it blocks).
+Output: one JSON line {"verdict":"pass|fail","reason":"...","backend":"...","available":true|false}
+        (exit always 0; the verdict lives in the payload so the caller decides whether it blocks).
 """
 import sys, os, json, argparse
+from dataclasses import dataclass
+from enum import Enum
+from typing import Literal
 
 MODEL = os.environ.get("RELAY_JUDGE_MODEL", "claude-sonnet-4-6")
 # Chars of context per file. 16000 silently cut a 24k-char diff in half on a live run: the judge was
@@ -105,41 +108,107 @@ def judge_stub(criterion, files):
     return "pass", "stub: marker present in all context files"
 
 
+class _SampleState(Enum):
+    ANSWERED = "answered"
+    NO_VERDICT = "no-verdict"
+    ERROR = "error"
+
+
+class _BackendKind(Enum):
+    API = "llm"
+    CLI = "cli"
+
+
+@dataclass(frozen=True)
+class _Sample:
+    verdict: Literal["pass", "fail"]
+    reason: str
+    state: _SampleState
+    backend: _BackendKind
+    model: str
+    cuts: tuple[str, ...] = ()
+
+    @property
+    def available(self) -> bool:
+        return self.state is _SampleState.ANSWERED
+
+
+@dataclass(frozen=True)
+class _Ballot:
+    verdict: Literal["pass", "fail"]
+    reason: str
+    backend: str
+    available: bool
+
+    def as_tuple(self):
+        return self.verdict, self.reason, self.backend
+
+
+def _sample_tag(sample, tally=None, cut_sets=None):
+    """Render human metadata from fields; labels are never parsed back into sample state."""
+    backend = sample.backend.value
+    if sample.state is _SampleState.ERROR:
+        backend = "api-error" if sample.backend is _BackendKind.API else "cli-error"
+    tag = f"{backend}:{sample.model}"
+    if tally is not None:
+        tag += f"(votes:{tally[0]}/{tally[1]})"
+    if sample.state is _SampleState.NO_VERDICT:
+        tag += "(no-verdict)"
+    for cuts in ((sample.cuts,) if cut_sets is None else cut_sets):
+        if cuts:
+            tag += f"(truncated:{','.join(cuts)})"
+    return tag
+
+
+def _judge_samples(once, criterion, files) -> _Ballot:
+    samples = []
+    for _ in range(VOTES):
+        sample = once(criterion, files)
+        if not sample.available:
+            # Transport failures and missing verdicts cannot vote about the artifact.
+            return _Ballot("fail", sample.reason, _sample_tag(sample), sample.available)
+        samples.append(sample)
+    if VOTES == 1:
+        sample = samples[0]
+        return _Ballot(sample.verdict, sample.reason, _sample_tag(sample), sample.available)
+    passes = sum(sample.verdict == "pass" for sample in samples)
+    verdict = "pass" if passes * 2 > len(samples) else "fail"
+    chosen = next((sample for sample in samples if sample.verdict == verdict), samples[0])
+    reason = f"{passes}/{len(samples)} passed · {chosen.reason}"
+    cut_sets = sorted({sample.cuts for sample in samples if sample.cuts})
+    return _Ballot(verdict, reason[:300], _sample_tag(samples[0], (passes, len(samples)), cut_sets),
+                   all(sample.available for sample in samples))
+
+
+def _prose_verdict(text):
+    """Only an exact verdict line is a judgment; a malformed last declaration is unavailable."""
+    for line in reversed(text.strip().splitlines()):
+        normalized = line.strip().upper()
+        if normalized.startswith("VERDICT:"):
+            return {"VERDICT: PASS": "pass", "VERDICT: FAIL": "fail"}.get(normalized)
+    return None
+
+
 def judge_api(criterion, files):
     """One verdict, from VOTES independent samples."""
-    if VOTES == 1:
-        return _judge_api_once(criterion, files)
-    tally, reasons, tags = [], [], []
-    for _ in range(VOTES):
-        v, why, tag = _judge_api_once(criterion, files)
-        if tag.startswith("api-error") or tag.endswith("(no-verdict)"):
-            # Not a vote. A transport failure or a reply that never reached a verdict says nothing
-            # about the artifact, and counting it would let the plumbing outvote the evidence — the
-            # failure mode this whole tagging effort exists to remove. Truncation is NOT in this list:
-            # a cut artifact still yields a real judgment on what was shown, and the tag records that.
-            return v, why, tag
-        tally.append(v); reasons.append(why); tags.append(tag)
-    passes = tally.count("pass")
-    verdict = "pass" if passes * 2 > len(tally) else "fail"
-    base = tags[0].split("(")[0]
-    extra = "".join(sorted({t[t.index("("):] for t in tags if "(" in t}))
-    reason = f"{passes}/{len(tally)} passed · " + (reasons[tally.index(verdict)] if verdict in tally
-                                                  else reasons[0])
-    return verdict, reason[:300], f"{base}(votes:{passes}/{len(tally)}){extra}"
+    return _judge_samples(_judge_api_once, criterion, files).as_tuple()
 
 
-def _judge_api_once(criterion, files):
+def _judge_api_once(criterion, files) -> _Sample:
     import urllib.request
+    model = MODEL
     base = os.environ.get("RELAY_JUDGE_BASE_URL", "").rstrip("/")
     key = os.environ.get("RELAY_JUDGE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         # A custom endpoint may not authenticate at all (a loopback gateway), but sending nothing to
         # api.anthropic.com is a guaranteed 401 dressed up as a judgment.
         if not base:
-            return "fail", "api: ANTHROPIC_API_KEY not set", "api-error"
+            return _Sample("fail", "api: ANTHROPIC_API_KEY not set",
+                           _SampleState.ERROR, _BackendKind.API, model)
         key = ""
     prompt = (f"CRITERION:\n{criterion}\n\nARTIFACT UNDER REVIEW:\n{read_ctx(files)}\n\n"
               "Does the artifact satisfy the criterion? Reason briefly, then give the VERDICT line.")
+    cuts = tuple(TRUNCATED)
     # The verdict is taken from a FORCED tool call, not from a line of prose. Measured on a live run:
     # asking a model to end with `VERDICT: PASS` produced the line sometimes and not others for the
     # same artifact and criterion — and a missing line is read as FAIL, so the control's verdict moved
@@ -153,7 +222,7 @@ def _judge_api_once(criterion, files):
                 "reason": {"type": "string", "description": "One or two sentences of justification."},
             }, "required": ["verdict", "reason"]}}
     body = json.dumps({
-        "model": MODEL, "max_tokens": MAX_TOKENS, "system": SYSTEM,
+        "model": model, "max_tokens": MAX_TOKENS, "system": SYSTEM,
         "tools": [tool], "tool_choice": {"type": "tool", "name": "submit_verdict"},
         # Explicit: the Anthropic default is already non-streaming, but a compatible gateway may
         # default the other way, and a streamed body parses as "no verdict" — which the conservative
@@ -168,38 +237,41 @@ def _judge_api_once(criterion, files):
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
             data = json.load(r)
+        if not isinstance(data, dict):
+            raise ValueError("response must be an object")
         blocks = data.get("content", [])
+        if not isinstance(blocks, list) or any(not isinstance(b, dict) for b in blocks):
+            raise ValueError("response content must be a list of objects")
+        for b in blocks:
+            if b.get("type") == "tool_use" and b.get("name") == "submit_verdict":
+                tool_input = b.get("input")
+                if not isinstance(tool_input, dict):
+                    raise ValueError("submit_verdict input must be an object")
+                got = tool_input.get("verdict")
+                if got not in ("pass", "fail"):
+                    raise ValueError("submit_verdict verdict must be pass or fail")
+                reason = tool_input.get("reason")
+                if not isinstance(reason, str):
+                    raise ValueError("submit_verdict reason must be a string")
+                return _Sample(got, reason[:300] or "(no reason given)",
+                               _SampleState.ANSWERED, _BackendKind.API, model, cuts)
         text = "".join(p.get("text", "") for p in blocks)
-    except Exception as e:  # network/auth/etc — conservative: FAIL, surfaced
-        return "fail", f"api error: {e}", "api-error"
+    except Exception as e:  # network/auth/malformed response — conservative: FAIL, surfaced
+        return _Sample("fail", f"api error: {e}",
+                       _SampleState.ERROR, _BackendKind.API, model, cuts)
 
-    for b in blocks:
-        if b.get("type") == "tool_use" and b.get("name") == "submit_verdict":
-            got = (b.get("input") or {}).get("verdict", "")
-            if got in ("pass", "fail"):
-                reason = str((b.get("input") or {}).get("reason", ""))[:300]
-                tag = f"llm:{MODEL}"
-                if TRUNCATED:
-                    tag += f"(truncated:{','.join(TRUNCATED)})"
-                return got, reason or "(no reason given)", tag
-    verdict, answered = "fail", False
-    for line in reversed(text.strip().splitlines()):
-        u = line.strip().upper()
-        if u.startswith("VERDICT:"):
-            verdict, answered = ("pass" if "PASS" in u else "fail"), True
-            break
+    verdict = _prose_verdict(text)
+    answered = verdict is not None
     reason = text.strip().splitlines()[-1] if text.strip() else "no response"
     # A judge that never reached a verdict still fails the control — an unproven control is a failed
     # control — but the ledger must not record it as a JUDGMENT. `no-verdict` is the same admission
     # `judge:unavailable(no-diff)` already makes on the other side of the gate: the check could not
     # run, rather than ran and disagreed.
-    tag = f"llm:{MODEL}" if answered else f"llm:{MODEL}(no-verdict)"
-    if TRUNCATED:
-        # The ledger must not read a verdict on a partial artifact as a verdict on the artifact.
-        tag += f"(truncated:{','.join(TRUNCATED)})"
     if not answered:
         reason = f"no VERDICT line in {len(text)} chars of reply (truncated at max_tokens?): {reason}"
-    return verdict, reason[:300], tag
+    return _Sample(verdict or "fail", reason[:300],
+                   _SampleState.ANSWERED if answered else _SampleState.NO_VERDICT,
+                   _BackendKind.API, model, cuts)
 
 
 def judge_cli(criterion, files):
@@ -210,49 +282,34 @@ def judge_cli(criterion, files):
     bridge. Same voting contract as judge_api: VOTES independent samples, majority wins, and a CLI
     or transport failure is NOT a vote — it aborts the ballot rather than letting the plumbing
     outvote the evidence."""
-    if VOTES == 1:
-        return _judge_cli_once(criterion, files)
-    tally, reasons, tags = [], [], []
-    for _ in range(VOTES):
-        v, why, tag = _judge_cli_once(criterion, files)
-        if tag.startswith("cli-error") or tag.endswith("(no-verdict)"):
-            return v, why, tag
-        tally.append(v); reasons.append(why); tags.append(tag)
-    passes = tally.count("pass")
-    verdict = "pass" if passes * 2 > len(tally) else "fail"
-    base = tags[0].split("(")[0]
-    extra = "".join(sorted({t[t.index("("):] for t in tags if "(" in t}))
-    reason = f"{passes}/{len(tally)} passed \u00b7 " + (reasons[tally.index(verdict)] if verdict in tally
-                                                   else reasons[0])
-    return verdict, reason[:300], f"{base}(votes:{passes}/{len(tally)}){extra}"
+    return _judge_samples(_judge_cli_once, criterion, files).as_tuple()
 
 
-def _judge_cli_once(criterion, files):
+def _judge_cli_once(criterion, files) -> _Sample:
     import subprocess
+    model = MODEL
     prompt = (f"CRITERION:\n{criterion}\n\nARTIFACT UNDER REVIEW:\n{read_ctx(files)}\n\n"
               "Does the artifact satisfy the criterion? Reason briefly, then give the VERDICT line.")
+    cuts = tuple(TRUNCATED)
     try:
-        r = subprocess.run(["claude", "-p", prompt, "--model", MODEL,
+        r = subprocess.run(["claude", "-p", prompt, "--model", model,
                             "--append-system-prompt", SYSTEM],
                            capture_output=True, text=True, timeout=300)
     except Exception as e:
-        return "fail", f"cli error: {e}", "cli-error"
+        return _Sample("fail", f"cli error: {e}",
+                       _SampleState.ERROR, _BackendKind.CLI, model, cuts)
     if r.returncode != 0:
-        return "fail", f"cli exit {r.returncode}: {(r.stderr or '').strip()[:160]}", "cli-error"
+        return _Sample("fail", f"cli exit {r.returncode}: {(r.stderr or '').strip()[:160]}",
+                       _SampleState.ERROR, _BackendKind.CLI, model, cuts)
     text = (r.stdout or "").strip()
-    verdict, answered = "fail", False
-    for line in reversed(text.splitlines()):
-        u = line.strip().upper()
-        if u.startswith("VERDICT:") or u.endswith("VERDICT: PASS") or u.endswith("VERDICT: FAIL"):
-            verdict, answered = ("pass" if "PASS" in u else "fail"), True
-            break
+    verdict = _prose_verdict(text)
+    answered = verdict is not None
     reason = (text.splitlines()[-1] if text else "no response")
-    tag = f"cli:{MODEL}" if answered else f"cli:{MODEL}(no-verdict)"
-    if TRUNCATED:
-        tag += f"(truncated:{','.join(TRUNCATED)})"
     if not answered:
         reason = f"no VERDICT line in {len(text)} chars of CLI reply: {reason}"
-    return verdict, reason[:300], tag
+    return _Sample(verdict or "fail", reason[:300],
+                   _SampleState.ANSWERED if answered else _SampleState.NO_VERDICT,
+                   _BackendKind.CLI, model, cuts)
 
 
 def main():
@@ -264,12 +321,13 @@ def main():
     backend = pick_backend()
     if backend == "stub":
         verdict, reason = judge_stub(args.criterion, args.file)
-        tag = "stub"
+        result = _Ballot(verdict, reason, "stub", True)
     elif backend == "cli":
-        verdict, reason, tag = judge_cli(args.criterion, args.file)
+        result = _judge_samples(_judge_cli_once, args.criterion, args.file)
     else:
-        verdict, reason, tag = judge_api(args.criterion, args.file)
-    print(json.dumps({"verdict": verdict, "reason": reason, "backend": tag}))
+        result = _judge_samples(_judge_api_once, args.criterion, args.file)
+    print(json.dumps({"verdict": result.verdict, "reason": result.reason, "backend": result.backend,
+                      "available": result.available}))
     return 0
 
 

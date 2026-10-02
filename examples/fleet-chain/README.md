@@ -1,40 +1,70 @@
-# fleet-chain — reproducible proof of the per-agent checklist-chain loop
+# fleet-chain — scripted arm feedback exercise
 
-A deterministic, **LLM-free** smoke test of the full Relay arm loop — the same mechanism a real
-fleet agent goes through, distilled so it runs in CI without spending tokens.
+Audience: agents. Status: current.
 
+Load [relay-examples](../../.opencode/skills/relay-examples/SKILL.md) and
+[relay-arm-hook](../../.opencode/skills/relay-arm-hook/SKILL.md).
+This deterministic, model-free harness drives the actual arm hook with scripted
+artifact edits. Use it to inspect feedback mechanics.
+
+## Run
+
+From repository root, with Bash, `jq`, Python 3, `shasum`, and pytest available:
+
+```sh
+python3 examples/fleet-chain/run_example.py
 ```
-python3 examples/fleet-chain/run_example.py     # exit 0 = the loop holds end-to-end
-```
 
-## What it proves
+The script creates a temporary workdir, arm, check scripts, transcript, and
+corpus, then removes the sandbox in `finally`. No model endpoint is called.
 
-The hard claim behind per-agent arms (see [`docs/per-agent-arms.md`](../../docs/per-agent-arms.md))
-is: **an agent is held to a checklist it never saw in its prompt, and that checklist is enforced from
-outside its control by the Stop-hook.** This example demonstrates exactly that, end to end:
+## Inspect the mechanism
 
-1. **Author an arm** — an ordered chain of 4 gates, each a checklist of deterministic `cmd` controls
-   plus arbitrary **tracer flags**, written the way the `relay-arm` MCP tool writes it.
-2. **Seed "blind" work** — a workdir simulating an agent that did the work but in the *wrong
-   conventions* (`### \`Name\`` instead of the required `## Name`, untyped wrappers, a generic test),
-   and **without the tracer flags** — because the agent never saw them; they exist only inside the
-   gate checks.
-3. **Drive the real hook** (`bin/relay-arm-hook.sh`) the way Claude Code's `SubagentStop` would. Each
-   block returns exactly what's missing; the harness plays the agent reacting *to the hook's feedback*
-   — re-formatting to the demanded convention and planting the demanded flag (whose exact content it
-   reads out of the hook's reason, not from prior knowledge).
-4. **Assert**: the chain completes, every tracer flag is planted with exact content (so it could only
-   have come from the hook's feedback), and the per-arm ledger verifies offline.
+| Stage | Scripted behavior |
+|---|---|
+| Author | Four gates: API headings, symbol references plus pytest, annotated wrappers, final tracer |
+| Seed | Wrong heading format, generic test, unannotated wrappers, missing tracers |
+| Fire | Invoke `bin/relay-arm-hook.sh` with a single-token `transcript_path` fallback |
+| React | Parse feedback to plant named tracer content and rewrite demanded artifacts |
+| Inspect | Print state-based completion, counter for diagnostics, tracer results, and audit result with terminal event and sprint recheck |
 
-## Why the tracer flags matter
+There are four tracer flags (`f1`–`f4`). Their contents appear in both gate
+checks and gate instructions. `agent_react()` extracts the exact flag content
+from the hook reason. This exercises feedback-driven edits; the harness already
+contains scripted fixes and is not an agent solving unseen work.
 
-The flags are arbitrary strings (`FLAG{fleet::doc::a91c}`, …) defined **only** inside the gate check
-scripts — never in any prompt. A planted flag with exact content is therefore proof-positive that the
-control was satisfied *because the gate demanded it*, not because the task description mentioned it.
-This is the same trick used in the live multi-agent fleet tests, made deterministic here.
+## Interpret results
 
-## Relation to the live test
+Exit `0` requires all of the script's predicates:
 
-The live version ran a real Sonnet agent over a 4500-line file with a 207-item checklist injected only
-at Stop; it reached 207/207 items and 5/5 flags after the hook drove the corrections. This example is
-the CI-safe distillation: same loop, same hook, same ledger, no model required.
+- Arm `state=complete` and all four tracer contents match after `read().strip()`.
+- `bin/relay verify <ledger> --sprint <sprint.json> --json` returns usable audit JSON
+  and exit `0`, with `result=PASS`, `chain_intact=true`, terminal
+  `last_event=sprint-complete`, and `oracle_recheck.status=ok`.
+- Hook calls return exit `0`; nonempty hook stdout is a valid `decision:block`
+  response with a nonblank reason. Nonzero exits or malformed responses fail the
+  example with diagnostics, even if state or counters otherwise look complete.
+
+The counter is diagnostic only: escalation also sets it to the plan length.
+Empty hook stdout is a silent stop, not proof of completion. The example now
+checks state and audit after that stop; audit acceptance records checked progression
+without reexecuting controls or revalidating current artifacts.
+
+[test_example_completion.py](../../tests/test_example_completion.py) includes a
+real-hook last-gate `false` control: all four flags exist, counter reaches the end,
+and the intact ledger ends in escalation, yet the example returns FAIL. That
+negative control uses retry budget `1` only in its disposable test plan; the
+example's production plan remains budget `8`. Other cases cover malformed hook/audit
+transport, incomplete evidence, and cleanup.
+Synthetic transport fixtures record every declared deterministic control and require
+real audit PASS before mutation; they do not execute those controls or prove semantic quality.
+
+This exercise does not establish live-model quality, independent test quality,
+or multi-agent fan-out isolation. Binding regression coverage is in
+[test_arm_binding.py](../../tests/test_arm_binding.py); kind behavior is in
+[test_kinds.py](../../tests/test_kinds.py).
+
+Authorities: [run_example.py](run_example.py),
+[arm hook](../../bin/relay-arm-hook.sh). Contracts:
+[per-agent arms](../../docs/per-agent-arms.md),
+[gate CLI](../../docs/sdk.md), [documentation routes](../../docs/README.md).

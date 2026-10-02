@@ -177,6 +177,22 @@ def test_bad_requests(tmp_path):
         assert _get(port, "/nope")[0] == 404
 
 
+@pytest.mark.parametrize("field, value", [
+    ("workdir", []), ("workdir", 1), ("workdir", ""),
+    ("state_dir", {}), ("state_dir", 1), ("state_dir", ""),
+    ("sprint_path", []), ("sprint_path", 1), ("sprint_path", ""),
+])
+def test_gate_path_field_types_are_structured_400(tmp_path, field, value):
+    payload = {"workdir": str(tmp_path), "state_dir": str(tmp_path / "state"),
+               "sprint_path": str(tmp_path / "sprint.json")}
+    payload[field] = value
+    port = _free_port()
+    with running_daemon(port):
+        status, body = _post(port, "/gate/eval", payload)
+        assert _get(port, "/healthz")[0] == 200
+    assert status == 400 and body.get("error"), body
+
+
 def test_missing_workdir_is_500_with_gate_stderr(tmp_path):
     """A gate HARD error (relay-gate exits 1, empty stdout, message on stderr) must surface as 500 with
     the gate's stderr in `detail` — NOT be masked as a retriable 409 gate-fail with an empty body."""
