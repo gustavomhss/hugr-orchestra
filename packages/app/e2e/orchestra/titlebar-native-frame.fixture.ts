@@ -8,7 +8,7 @@ import {
   SyntaxKind,
   type Node,
 } from "typescript"
-import type { InlineConfig } from "vite"
+import { normalizePath, type InlineConfig } from "vite"
 import solid from "vite-plugin-solid"
 import type { NativeTitlebarFrame } from "../../src/native-titlebar"
 
@@ -34,8 +34,10 @@ export type NativeFrameFixture = {
 
 // Compile the real component and native-frame helper. Providers and unrelated UI
 // are fixtures; Solid ownership, media queries, layout, ResizeObserver and RAF remain real.
-const titlebar = fileURLToPath(new URL("../../src/components/titlebar.tsx", import.meta.url))
-const nativeFrame = fileURLToPath(new URL("../../src/components/orchestra/native-frame.ts", import.meta.url))
+const titlebar = normalizePath(fileURLToPath(new URL("../../src/components/titlebar.tsx", import.meta.url)))
+const nativeFrame = normalizePath(
+  fileURLToPath(new URL("../../src/components/orchestra/native-frame.ts", import.meta.url)),
+)
 const stateModule = `
 import { createStore } from "solid-js/store"
 export const [state, setState] = createStore({ zoom: 1, fullscreen: false, newLayout: true })
@@ -263,7 +265,9 @@ export function nativeFrameViteConfig(cache: string) {
           if (importer !== titlebar) return
           if (source === "./orchestra/native-frame") return nativeFrame
           if (source === "@/components/titlebar-session-events")
-            return fileURLToPath(new URL("../../src/components/titlebar-session-events.ts", import.meta.url))
+            return normalizePath(
+              fileURLToPath(new URL("../../src/components/titlebar-session-events.ts", import.meta.url)),
+            )
           if (
             source.startsWith("@/context/") ||
             source.startsWith("@opencode-ai/ui/") ||
