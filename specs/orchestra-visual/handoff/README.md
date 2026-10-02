@@ -5,6 +5,7 @@ da campanha de identidade e o inventário local observado em 2026-10-01.
 
 | Arquivo | Conteúdo / uso |
 | --- | --- |
+| `STATE.json` | Estado final pós-limpeza: branch/HEAD, WIP, blockers, PR/CI, código e escopo externo |
 | `pr-239.json` | Head/base e resultado CI da implementação original |
 | `e2e-linux-36932235243.log` | Log completo do job Linux que bloqueia merge |
 | `e2e-windows-36932235243.log` | Log completo do job Windows que bloqueia merge |

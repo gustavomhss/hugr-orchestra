@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-02T00:11:02.962Z",
+  "repository": "https://github.com/gmhelmold/HuGR-Orchestra",
+  "branch": "identity-integration",
+  "upstream": "fork/identity-integration",
+  "worktree": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-integration",
+  "observedHead": "e2c0b913f05cde884102ebef05e0ed84092fd6ef",
+  "implementationCommit": "791b3bc9d06125e8ed4ad891a9e1e61798ae18ba",
+  "archiveCommit": "cbbdf7b1f56db2e4832faa3f66cf7a771656d3f2",
+  "cleanupCommit": "e2c0b913f05cde884102ebef05e0ed84092fd6ef",
+  "base": "da2b75aff12e21c9974ebc5be41ae138302de40b",
+  "publication": "The containing follow-up commit adds this snapshot and documentation links only; observedHead names the pre-snapshot published revision, not a self-referential commit hash.",
+  "workInProgress": {
+    "activeWorktreeStatusBeforeSnapshot": "",
+    "productionPackages": [
+      {
+        "path": "packages/app",
+        "tree": "b100b0caf93972241a6fb88a748beede0897b0ca",
+        "unchangedSinceImplementation": true
+      },
+      {
+        "path": "packages/desktop",
+        "tree": "86b8b93244c497666b14806ce02e6c26aaefca30",
+        "unchangedSinceImplementation": true
+      }
+    ],
+    "retiredWorkers": [
+      {
+        "name": "identity-brand",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-chat",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-review",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-shell",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-surfaces",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-verify",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-glass",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-locales",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-profile-races",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-test-runtime",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-tab-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-panel-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-dock-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-rail-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      }
+    ],
+    "productBlockers": [
+      "Original broad CI E2E Linux: 10 failed, 1 flaky, 113 passed",
+      "Original broad CI E2E Windows: 17 failed, 107 passed",
+      "No production fixes for those failures included in the documentation checkpoint"
+    ],
+    "chapters": {
+      "active": null,
+      "accepted": [],
+      "pending": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C10",
+        "C11",
+        "C12",
+        "C13"
+      ],
+      "nextProposed": "C01 MCP; owner scope and acceptance required"
+    },
+    "externalCanonicalStatus": "?? artifacts/hugr-figure/\n?? artifacts/janitor-fiapo-hugr/\n?? artifacts/janitor-fiapo/\n?? artifacts/janitor-mascot/\n",
+    "externalStashes": "stash@{0} f8514ddb0fd48721e7a6cbf4589729fb6b4c3a41 WIP on perf-lazy-persist-gate: 1465fd7154 feat(maestro): record validation receipts\nstash@{1} 4d8d0854794ac04a9c68a4e1ba77eef676201471 On perf-lazy-persist-gate: current-changes\nstash@{2} 2929354eab46116eba272e987f6e5f080c193982 On feat/tasks-pane: my-feature-wip\nstash@{3} 58eff009fd0c868fe46b5cfd819d2aedd8127407 On dev: wip pre-phase1\nstash@{4} 33ab1de84511f2bbedfcf9fb5ee9a030bee2d9bd On dev: wip: unrelated working tree changes\n",
+    "externalDisposition": "Preserved and inventoried, not claimed clean or merged; separate campaigns are not authorized for blanket integration"
+  },
+  "pr": {
+    "baseRefName": "dev",
+    "baseRefOid": "da2b75aff12e21c9974ebc5be41ae138302de40b",
+    "headRefName": "identity-integration",
+    "headRefOid": "e2c0b913f05cde884102ebef05e0ed84092fd6ef",
+    "mergeStateStatus": "UNSTABLE",
+    "mergeable": "MERGEABLE",
+    "number": 239,
+    "reviewDecision": "",
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:09:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436387/job/110643144594",
+        "name": "nix-eval",
+        "startedAt": "2026-10-02T00:08:04Z",
+        "status": "COMPLETED",
+        "workflowName": "nix-eval"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:08:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944434796/job/110643141108",
+        "name": "check-standards",
+        "startedAt": "2026-10-02T00:08:03Z",
+        "status": "COMPLETED",
+        "workflowName": "pr-standards"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:09:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643311158",
+        "name": "godfile",
+        "startedAt": "2026-10-02T00:08:40Z",
+        "status": "COMPLETED",
+        "workflowName": "test"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:11:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436295/job/110643144298",
+        "name": "typecheck",
+        "startedAt": "2026-10-02T00:08:03Z",
+        "status": "COMPLETED",
+        "workflowName": "typecheck"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:08:07Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944434796/job/110643140885",
+        "name": "check-compliance",
+        "startedAt": "2026-10-02T00:08:03Z",
+        "status": "COMPLETED",
+        "workflowName": "pr-standards"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:09:22Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643311236",
+        "name": "atlas scope",
+        "startedAt": "2026-10-02T00:08:41Z",
+        "status": "COMPLETED",
+        "workflowName": "test"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643311192",
+        "name": "unit (linux)",
+        "startedAt": "2026-10-02T00:08:40Z",
+        "status": "IN_PROGRESS",
+        "workflowName": "test"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643310943",
+        "name": "unit (windows)",
+        "startedAt": "2026-10-02T00:08:41Z",
+        "status": "IN_PROGRESS",
+        "workflowName": "test"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643311148",
+        "name": "e2e (linux)",
+        "startedAt": "2026-10-02T00:08:41Z",
+        "status": "IN_PROGRESS",
+        "workflowName": "test"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643311295",
+        "name": "e2e (windows)",
+        "startedAt": "2026-10-02T00:08:42Z",
+        "status": "IN_PROGRESS",
+        "workflowName": "test"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T00:09:22Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/gmhelmold/HuGR-Orchestra/actions/runs/36944436294/job/110643513558",
+        "name": "atlas",
+        "startedAt": "2026-10-02T00:09:22Z",
+        "status": "COMPLETED",
+        "workflowName": "test"
+      }
+    ],
+    "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/239"
+  },
+  "checkReach": "Latest observed remote checks above; original completed failure evidence is in pr-239.json and both E2E logs. New checks may be pending and must be re-read.",
+  "nextAction": "Read HANDOFF.md, revalidate PR/HEAD/CI, resolve recorded E2E groups, review and obtain acceptance before merge; then reconcile epic #215 and plan #232.",
+  "recoveryIndex": "README.md",
+  "archiveVerification": "archive-verification.json",
+  "cleanupReceipt": "cleanup.json"
+}

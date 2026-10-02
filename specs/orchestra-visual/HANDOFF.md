@@ -21,6 +21,13 @@ O usuário pediu este checkpoint para continuar em uma sessão nova. Código,
 documentação, referências e WIP histórico são preservados com localização e
 disposition explícitas. Uma pendência registrada não equivale a entrega aprovada.
 
+**Estado final após a limpeza:** [handoff/STATE.json](handoff/STATE.json). Esse
+snapshot registra branch/upstream, HEAD publicado observado, status limpo antes
+da adição do snapshot, árvores app/desktop idênticas ao commit de implementação,
+workers aposentados, WIP/bloqueios de produto, estado remoto do PR/CI e os
+artefatos/stashes externos preservados. O commit que contém o snapshot apenas
+adiciona o registro e seus links; `observedHead` é a revisão anterior observada.
+
 O snapshot de GitHub e worktrees em `handoff/` foi coletado em
 **2026-10-01T23:09:20.607Z**. A publicação deste handoff adiciona documentação e
 arquivos de recuperação ao commit de implementação; o CI dessa nova revisão
