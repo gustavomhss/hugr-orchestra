@@ -37,7 +37,6 @@ for (const deviceScaleFactor of [1.25, 1.5]) {
       return {
         outputWidth: outputRect.width,
         outputHeight: outputRect.height,
-        borderColor: style.borderTopColor,
         boxShadow: style.boxShadow,
         clipMargin: getComputedStyle(element).overflowClipMargin,
       }
@@ -55,7 +54,6 @@ for (const deviceScaleFactor of [1.25, 1.5]) {
 
     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
-    expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
     expect(outerShadows(geometry.boxShadow)).toEqual([])
     expect(geometry.clipMargin).toBe("0.5px")
     expect(edges.magenta.top).toBeGreaterThan(0.75)

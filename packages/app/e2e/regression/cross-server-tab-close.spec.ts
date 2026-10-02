@@ -96,23 +96,31 @@ test("desktop closing the last profile tab goes Home and preserves the other ser
   })
   await tabA.locator('[data-slot="tab-close"] button').click()
 
+  // Settle on Home first, so a late jump to the other server's tab would be recorded.
+  await expect(page.locator('[data-component="orchestra-home"]')).toBeVisible()
   await expect(page).toHaveURL(new URL("/", page.url()).toString())
   expect(navigations).not.toContain(hrefB)
 
+  // Only traffic after the profile switch proves that session B loads from its own server.
+  const mark = requests.length
   await page.locator('[data-slot="orchestra-profile"]').click()
   await page
     .locator('[data-component="orchestra-profile-picker"]')
     .getByRole("menuitemradio", { name: "server-b", exact: true })
     .click()
   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
-  await expect.poll(() => requests.some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`))).toBe(true)
+  await expect
+    .poll(() => requests.slice(mark).some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`)))
+    .toBe(true)
   await expect(page.getByText(sessionB.title).first()).toBeVisible()
   const sessionBRequests = requests.filter((url) => url.includes(`/session/${sessionB.id}`))
   expect(sessionBRequests.every((url) => url.startsWith(serverB))).toBe(true)
   expect(
-    requests.some((request) => {
+    requests.slice(mark).some((request) => {
       const url = new URL(request)
-      return url.origin === serverB && url.searchParams.get("directory") === sessionB.directory
+      // V1 routes take `directory`; V2 routes take `location[directory]`.
+      const directory = url.searchParams.get("directory") ?? url.searchParams.get("location[directory]")
+      return url.origin === serverB && directory === sessionB.directory
     }),
   ).toBe(true)
 })

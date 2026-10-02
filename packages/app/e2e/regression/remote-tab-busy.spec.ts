@@ -43,7 +43,7 @@ test.describe("legacy tab strip", () => {
   })
 })
 
-test("desktop tabs filter by profile and retain the remote busy state", async ({ page }) => {
+test("desktop tabs filter by profile and show each server's own busy state", async ({ page }) => {
   await mockServers(page)
   await page.addInitScript(
     ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
@@ -83,20 +83,29 @@ test("desktop tabs filter by profile and retain the remote busy state", async ({
 
   const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
   const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
-  await expect(tabB).toHaveCount(0)
   await expect(tabA.locator("[data-titlebar-tab-title]")).toHaveText(sessionA.title)
-  await expect(tabA.locator('[data-slot="orchestra-model-logo"]')).toHaveAttribute("data-activity", "idle")
+  await expect(tabB).toHaveCount(0)
 
-  await page.locator('[data-slot="orchestra-profile"]').click()
-  await page
-    .locator('[data-component="orchestra-profile-picker"]')
-    .getByRole("menuitemradio", { name: "server-b", exact: true })
-    .click()
+  await selectProfile(page, "server-b")
   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
   await expect(tabB.locator("[data-titlebar-tab-title]")).toHaveText(sessionB.title)
   await expect(tabB.locator('[data-slot="orchestra-model-logo"]')).toHaveAttribute("data-activity", "running")
   await expect(tabA).toHaveCount(0)
+
+  // Server B is busy now; server A's tab must still read its own idle status.
+  await selectProfile(page, "server-a")
+  await expect(page).toHaveURL(new RegExp(`${hrefA.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+  await expect(tabA.locator('[data-slot="orchestra-model-logo"]')).toHaveAttribute("data-activity", "idle")
+  await expect(tabB).toHaveCount(0)
 })
+
+async function selectProfile(page: Page, name: string) {
+  await page.locator('[data-slot="orchestra-profile"]').click()
+  await page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("menuitemradio", { name, exact: true })
+    .click()
+}
 
 function session(id: string, directory: string, title: string) {
   return {
