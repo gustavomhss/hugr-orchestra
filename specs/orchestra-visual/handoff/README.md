@@ -23,7 +23,7 @@ da campanha de identidade e o inventário local observado em 2026-10-01.
 | `archive-verification.json` | Conferência real de hashes/conteúdo e controle de corrupção |
 | `secret-scan.json` | Controle do scanner e quatro falsos positivos auditados em literals estáticos |
 | `restore-evidence.ts` | Reconstrução portátil das partes, com SHA-256 antes da escrita |
-| `cleanup.json` | Recibo final da limpeza dos workers, quando concluída |
+| `cleanup.json` | Recibo final: 14 workers arquivados/publicados e aposentados; escopo externo preservado |
 
 ## Recuperação segura de um worker
 

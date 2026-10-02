@@ -282,8 +282,16 @@ deleção em massa inferida desse status.
 
 Workers históricos só podem ser retirados após validar hashes, recuperação,
 ausência de processo usando o diretório e publicação remota. O recibo final
-de limpeza fica em `handoff/cleanup.json`; o inventário anterior continua como
-proveniência. Não apagar worktrees ou stashes de escopo externo.
+de limpeza está em [handoff/cleanup.json](handoff/cleanup.json): **os 14 workers
+da identidade foram arquivados, confirmados no remote e aposentados**, com
+remoção das branches locais históricas correspondentes. O commit que publicou
+os backups é `cbbdf7b1f5`; o inventário anterior continua como proveniência.
+Worktrees/stashes externos e os arquivos originais do usuário foram preservados.
+
+A worktree ativa é `identity-integration`; `orchestra-identity` permanece como
+entrega original publicada. O checkpoint e o recibo de limpeza são commitados
+e publicados nessa mesma branch. Não há WIP de produto da campanha aguardando
+resgate de worker; a integração do produto continua bloqueada pelo CI do #239.
 
 **Pendência de merge conhecida:** #239 aguarda E2E/review; #232 e PRs externos
 continuam com suas próprias condições. Este handoff não declara tudo merged ou
