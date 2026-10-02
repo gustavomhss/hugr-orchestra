@@ -1,0 +1,92 @@
+{
+  "name": "fix-test-runtime",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-test-runtime",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "native-frame",
+  "staged": [
+    "packages/app/e2e/orchestra/titlebar-native-frame.fixture.ts",
+    "packages/app/e2e/orchestra/titlebar-native-frame.spec.ts",
+    "packages/app/src/components/titlebar.tsx",
+    "packages/app/src/context/platform.tsx",
+    "packages/app/src/index.ts",
+    "packages/desktop/src/renderer/index.tsx"
+  ],
+  "untracked": [
+    "packages/app/src/pages/session/composer/prompt-model-selection.test.ts",
+    "packages/app/test-browser/orchestra/prompt-model-selection.test.ts",
+    "packages/app/test-browser/orchestra/titlebar-tab-order.test.ts"
+  ],
+  "missingTrackedPaths": [],
+  "files": [
+    {
+      "path": "packages/app/e2e/orchestra/titlebar-native-frame.fixture.ts",
+      "bytes": 11938,
+      "sha256": "1f07fe43a33b6b565a0c391d3876c3c74d38f0c592d3468aad234fccb2299bae"
+    },
+    {
+      "path": "packages/app/e2e/orchestra/titlebar-native-frame.spec.ts",
+      "bytes": 8337,
+      "sha256": "0ee1de53002a9b011701450061963431c0d081f979c1922a28005c55ee01b506"
+    },
+    {
+      "path": "packages/app/src/components/titlebar.tsx",
+      "bytes": 35001,
+      "sha256": "70fb846888b03031e8fe9a408ab7e2c6aa4a14fe30007857e7bf512ee6f67111"
+    },
+    {
+      "path": "packages/app/src/context/platform.tsx",
+      "bytes": 5099,
+      "sha256": "a83e02de621b9abf6c12f024f6fac584c8d0962606df65b3771ac1426716b679"
+    },
+    {
+      "path": "packages/app/src/index.ts",
+      "bytes": 1350,
+      "sha256": "7fff1b568732fb0275fb8624d3f246f958503cb3d70964512d4035b255985cf8"
+    },
+    {
+      "path": "packages/desktop/src/renderer/index.tsx",
+      "bytes": 14126,
+      "sha256": "0ac4bd2e4b38b7cfd884a685923c56419959afe843d8502bf2c0f977f8b4b49a"
+    },
+    {
+      "path": "packages/app/src/components/titlebar-tab-order.test.ts",
+      "bytes": 2176,
+      "sha256": "85c1b5992291a8af7d03a08c3539ca19c992f4bad47c44533234d112360c3500"
+    },
+    {
+      "path": "packages/app/src/pages/session/composer/prompt-model-selection.test.ts",
+      "bytes": 1797,
+      "sha256": "1692c82cf28d49ae33ea3afa30ba98228bd626380525339581d31664fbce9b55"
+    },
+    {
+      "path": "packages/app/test-browser/orchestra/prompt-model-selection.test.ts",
+      "bytes": 1519,
+      "sha256": "28e5f3c8eb9a04409283e970b2d869e58eb27a5326161e6e6938c07179a75c62"
+    },
+    {
+      "path": "packages/app/test-browser/orchestra/titlebar-tab-order.test.ts",
+      "bytes": 1810,
+      "sha256": "4e35da5af444b52807e3f40f1da18d2f70c83229129c3e316bd470372b63e071"
+    }
+  ],
+  "archive": {
+    "path": "archives/fix-test-runtime.tar.gz",
+    "bytes": 22835,
+    "sha256": "83ab6bcaa88c0a3ad0ede00a7095e48d125f2a96b86947275c0b4761eb257909",
+    "members": [
+      "packages/app/e2e/orchestra/titlebar-native-frame.fixture.ts",
+      "packages/app/e2e/orchestra/titlebar-native-frame.spec.ts",
+      "packages/app/src/components/titlebar.tsx",
+      "packages/app/src/context/platform.tsx",
+      "packages/app/src/index.ts",
+      "packages/desktop/src/renderer/index.tsx",
+      "packages/app/src/components/titlebar-tab-order.test.ts",
+      "packages/app/src/pages/session/composer/prompt-model-selection.test.ts",
+      "packages/app/test-browser/orchestra/prompt-model-selection.test.ts",
+      "packages/app/test-browser/orchestra/titlebar-tab-order.test.ts"
+    ]
+  },
+  "stagedPatch": "archives/fix-test-runtime.staged.patch",
+  "unstagedPatch": "archives/fix-test-runtime.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

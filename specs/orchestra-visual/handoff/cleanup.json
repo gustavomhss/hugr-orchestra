@@ -1,0 +1,235 @@
+{
+  "retiredAt": "2026-10-02T00:06:37.000Z",
+  "archiveCommit": "cbbdf7b1f56db2e4832faa3f66cf7a771656d3f2",
+  "remoteConfirmed": true,
+  "processControl": "Current integration process cwd observed; no retirement while worker has a live cwd",
+  "results": [
+    {
+      "name": "identity-brand",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-brand",
+      "branch": "native-titlebar",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "node_modules/"
+      ]
+    },
+    {
+      "name": "identity-chat",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-chat",
+      "branch": "fix-composer",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "node_modules/",
+        "packages/app/dist/",
+        "packages/app/node_modules/",
+        "packages/cli/node_modules/",
+        "packages/client/node_modules/",
+        "packages/codemode/node_modules/",
+        "packages/console/app/node_modules/",
+        "packages/console/core/node_modules/",
+        "packages/console/function/node_modules/",
+        "packages/console/mail/node_modules/",
+        "packages/console/resource/node_modules/",
+        "packages/console/support/node_modules/",
+        "packages/core/node_modules/",
+        "packages/desktop/node_modules/",
+        "packages/effect-drizzle-sqlite/node_modules/",
+        "packages/effect-sqlite-node/node_modules/",
+        "packages/enterprise/node_modules/",
+        "packages/function/node_modules/",
+        "packages/http-recorder/node_modules/",
+        "packages/httpapi-codegen/node_modules/",
+        "packages/llm/node_modules/",
+        "packages/opencode/node_modules/",
+        "packages/plugin/node_modules/",
+        "packages/protocol/node_modules/",
+        "packages/schema/node_modules/",
+        "packages/script/node_modules/",
+        "packages/sdk-next/node_modules/",
+        "packages/sdk/js/node_modules/",
+        "packages/server/node_modules/",
+        "packages/session-ui/node_modules/",
+        "packages/slack/node_modules/",
+        "packages/stats/app/node_modules/",
+        "packages/stats/core/node_modules/",
+        "packages/stats/server/node_modules/",
+        "packages/storybook/node_modules/",
+        "packages/tui/node_modules/",
+        "packages/ui/node_modules/",
+        "packages/web/node_modules/"
+      ]
+    },
+    {
+      "name": "identity-review",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-review",
+      "branch": "visual-evidence",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    },
+    {
+      "name": "identity-shell",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-shell",
+      "branch": "perf-gpu",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    },
+    {
+      "name": "identity-surfaces",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-surfaces",
+      "branch": "fix-review",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "node_modules/",
+        "packages/app/dist/",
+        "packages/app/e2e/test-results/",
+        "packages/app/node_modules/",
+        "packages/cli/node_modules/",
+        "packages/client/node_modules/",
+        "packages/codemode/node_modules/",
+        "packages/console/app/node_modules/",
+        "packages/console/core/node_modules/",
+        "packages/console/function/node_modules/",
+        "packages/console/mail/node_modules/",
+        "packages/console/resource/node_modules/",
+        "packages/console/support/node_modules/",
+        "packages/core/node_modules/",
+        "packages/desktop/node_modules/",
+        "packages/effect-drizzle-sqlite/node_modules/",
+        "packages/effect-sqlite-node/node_modules/",
+        "packages/enterprise/node_modules/",
+        "packages/function/node_modules/",
+        "packages/http-recorder/node_modules/",
+        "packages/httpapi-codegen/node_modules/",
+        "packages/llm/node_modules/",
+        "packages/opencode/node_modules/",
+        "packages/plugin/node_modules/",
+        "packages/protocol/node_modules/",
+        "packages/schema/node_modules/",
+        "packages/script/node_modules/",
+        "packages/sdk-next/node_modules/",
+        "packages/sdk/js/node_modules/",
+        "packages/server/node_modules/",
+        "packages/session-ui/node_modules/",
+        "packages/slack/node_modules/",
+        "packages/stats/app/node_modules/",
+        "packages/stats/core/node_modules/",
+        "packages/stats/server/node_modules/",
+        "packages/storybook/node_modules/",
+        "packages/tui/node_modules/",
+        "packages/ui/node_modules/",
+        "packages/web/node_modules/"
+      ]
+    },
+    {
+      "name": "identity-verify",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-verify",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "node_modules/",
+        "packages/app/dist/",
+        "packages/app/node_modules/",
+        "packages/cli/node_modules/",
+        "packages/client/node_modules/",
+        "packages/codemode/node_modules/",
+        "packages/console/app/node_modules/",
+        "packages/console/core/node_modules/",
+        "packages/console/function/node_modules/",
+        "packages/console/mail/node_modules/",
+        "packages/console/resource/node_modules/",
+        "packages/console/support/node_modules/",
+        "packages/core/node_modules/",
+        "packages/desktop/node_modules/",
+        "packages/effect-drizzle-sqlite/node_modules/",
+        "packages/effect-sqlite-node/node_modules/",
+        "packages/enterprise/node_modules/",
+        "packages/function/node_modules/",
+        "packages/http-recorder/node_modules/",
+        "packages/httpapi-codegen/node_modules/",
+        "packages/llm/node_modules/",
+        "packages/opencode/node_modules/",
+        "packages/plugin/node_modules/",
+        "packages/protocol/node_modules/",
+        "packages/schema/node_modules/",
+        "packages/script/node_modules/",
+        "packages/sdk-next/node_modules/",
+        "packages/sdk/js/node_modules/",
+        "packages/server/node_modules/",
+        "packages/session-ui/node_modules/",
+        "packages/slack/node_modules/",
+        "packages/stats/app/node_modules/",
+        "packages/stats/core/node_modules/",
+        "packages/stats/server/node_modules/",
+        "packages/storybook/node_modules/",
+        "packages/tui/node_modules/",
+        "packages/ui/node_modules/",
+        "packages/web/node_modules/"
+      ]
+    },
+    {
+      "name": "fix-glass",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-glass",
+      "branch": "fix-frame-details",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    },
+    {
+      "name": "fix-locales",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-locales",
+      "branch": "fix-locales",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "packages/app/node_modules/"
+      ]
+    },
+    {
+      "name": "fix-profile-races",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-profile-races",
+      "branch": "fix-profile-races",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "packages/app/node_modules/"
+      ]
+    },
+    {
+      "name": "fix-test-runtime",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-test-runtime",
+      "branch": "native-frame",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": [
+        "packages/app/node_modules",
+        "packages/desktop/node_modules",
+        "packages/session-ui/node_modules"
+      ]
+    },
+    {
+      "name": "identity-tab-limit",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-tab-limit",
+      "branch": "identity-tab-limit",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    },
+    {
+      "name": "identity-panel-limit",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-panel-limit",
+      "branch": "identity-panel-limit",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    },
+    {
+      "name": "identity-dock-limit",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-dock-limit",
+      "branch": "identity-dock-limit",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    },
+    {
+      "name": "identity-rail-limit",
+      "path": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-rail-limit",
+      "branch": "identity-rail-limit",
+      "disposition": "archived, remote-confirmed and retired",
+      "ignoredGeneratedOutputs": []
+    }
+  ],
+  "worktreesAfter": "worktree /Users/gustavoschneiter/Documents/HuGR/orchestra-canonical\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/feat/app-dock-mcp\n\nworktree /private/tmp/wt-perf/acp-startup\nHEAD 80c9141568dc539907f64d2a765114fd8f9b2580\nbranch refs/heads/acp-startup\n\nworktree /private/tmp/wt-perf/ci-runners\nHEAD 9247c6c35c5df8780e43d09fe198df767e4eac5a\nbranch refs/heads/ci-runners\n\nworktree /private/tmp/wt-perf/hosted-actions\nHEAD 99d429600d0614cb98384bd82ce8444acca6eccb\nbranch refs/heads/hosted-actions\n\nworktree /private/tmp/wt-perf/hosted-actions-review\nHEAD 99d429600d0614cb98384bd82ce8444acca6eccb\ndetached\n\nworktree /private/tmp/wt-perf/process-repairs\nHEAD 4c5139da8e278592b86ca5ffe2b77c8333f535f2\nbranch refs/heads/process-repairs\n\nworktree /private/tmp/wt-perf/repo\nHEAD 7c8d6da65bc553797c94ec6f3a7dd22114a6a28f\nbranch refs/heads/ci-salvage\n\nworktree /private/tmp/wt-perf/review-repairs\nHEAD 5f39bbb4cb06b979c5b0a2b17dd66aba9e832eb1\nbranch refs/heads/review-repairs\n\nworktree /private/tmp/wt-perf/session-shell-sync\nHEAD 5b30a4e062c07c982d5a039c4564f5b66576039b\nbranch refs/heads/session-shell-sync\n\nworktree /private/tmp/wt-perf/shell-fix-review\nHEAD de6acf352983ad7705f081ccbf68bc1217031851\ndetached\n\nworktree /private/tmp/wt-perf/startup-fix-review\nHEAD 280036fbfb9e6f6489004d5ff4ac68c5b15676da\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode-httpapi-global-39407/data/opencode/worktree/012780c4098d08caa4ea8c479ed0a4690489f38d/curious-island\nHEAD e0b17ff85a1d624786b84c2d2057c9522e9f1764\nbranch refs/heads/opencode/curious-island\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode-httpapi-global-39407/data/opencode/worktree/012780c4098d08caa4ea8c479ed0a4690489f38d/glowing-panda\nHEAD e0b17ff85a1d624786b84c2d2057c9522e9f1764\nbranch refs/heads/opencode/glowing-panda\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-actions-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-actions\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-channel-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-channel\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-lifetime-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-lifetime\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-proof-check-20260930\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-proof-check\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-proof-tools-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-proof-tools\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-read-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-read\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-resource-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-resource\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/a11y-tools-20261001\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/a11y-tools\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/ability-descriptors-review\nHEAD ee1c2a74a0fcae26feef4f39931a4bf75eeced8c\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/approval-recovery-r1\nHEAD 0257ed51f8f6b4dc1595a6c7f3099d53537a0748\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/ci-fixture-review\nHEAD 7c8d6da65bc553797c94ec6f3a7dd22114a6a28f\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/ci-salvage-review\nHEAD e335f4a6312c1c4e797eaf7213659f52f5f2aa74\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-bridge-review\nHEAD 0751949af28c44cff6714da0b1a379ae2ea88140\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-desktop-review\nHEAD 311445f3051d3038f266c1321f95879ee8cb0ab6\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-dev-review\nHEAD 173b0df0229d5838e04b9df3964be84de5fc6cd1\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-encoder-review\nHEAD 173b0df0229d5838e04b9df3964be84de5fc6cd1\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-fix-budget\nHEAD 8ba02e275413531d9d499977246d5f7f5c1737c8\nbranch refs/heads/continuity-fix-budget\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-fix-capability\nHEAD 591ce053c93ac824a49150739913e5f292948979\nbranch refs/heads/continuity-recall-capability\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-fix-oauth\nHEAD 62c8d18e715a79390d58cfe79d2d88a314b343fe\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-fix-receipts\nHEAD 37347589a90c7829a6299e339a12321244d13fbd\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-fix-receiver\nHEAD ee0c417ec6069e671488930821cf4c2ae150b120\nbranch refs/heads/continuity-fix-receiver\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-fix-source\nHEAD babbf4faecf8b4892924e8605f28c2b6aba5cc77\nbranch refs/heads/continuity-source-fix\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-native-bridge\nHEAD 85ed2a2ed56c3ee412e0917b1e676ebfaefbb91e\nbranch refs/heads/continuity-native-bridge\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-native-encoder\nHEAD 4f6ee0a287f26a017b4a1577b6e194e7d622f40b\nbranch refs/heads/continuity-native-encoder\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-native-receipts\nHEAD 2fd683366b674fe5785d67e621e458d0b4ff3e28\nbranch refs/heads/continuity-native-receipts\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-native-refusal\nHEAD 1017d937e230f22d8b404945185bf2406aea18e3\nbranch refs/heads/continuity-native-refusal\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-native-schema\nHEAD 7fbdacd472a2bca9f81f4cf3733fff0e6dc0843e\nbranch refs/heads/continuity-native-schema\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-review-isolation\nHEAD 756440441509785331ded8438052244ad19fa94e\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-review-orchestration\nHEAD 26db4aca2cd21060e10aefe435c0fa6c8e33bac3\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-review-provenance\nHEAD 756440441509785331ded8438052244ad19fa94e\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-runtime-review\nHEAD 311445f3051d3038f266c1321f95879ee8cb0ab6\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-schema-review\nHEAD 12c687dacd4d327d4afe17addd0bcd3011bf3751\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-split-service\nHEAD 782bb39e7c0631ebe4677d9ae820d49683c09e75\nbranch refs/heads/continuity-split-service\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-user-validation-r4/source\nHEAD 26db4aca2cd21060e10aefe435c0fa6c8e33bac3\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-wave-artifact\nHEAD a739a96d2fccf11783bcef9435c45b8abc405d5d\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-wave-orchestration\nHEAD 3fb92f6604b0d57c302c492d03b78c02633edd25\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-wave-prompt\nHEAD 1879c2e82c31fed60b17390cd0a4236356160e3a\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-wave-recall\nHEAD 16a60bc06362fad6f91fa2c4c28426d1e202a7e8\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-wave-sources\nHEAD 66206ed393b9dff412ac2fd6a6aadb482bb6be4e\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/continuity-wave-validation\nHEAD 6e03dd04dfbc3f7b42d35743fe6c8289ae1aa34e\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/e2e-assets\nHEAD 5f39bbb4cb06b979c5b0a2b17dd66aba9e832eb1\nbranch refs/heads/e2e-assets\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/maestro-pr235-review-f909\nHEAD f9096732d2ee4a4eee345d6ea453ef7126816e4c\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/maestro-review-card\nHEAD fc11c24b8a65404f4d0defdeab3c503ad837f4e1\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/maestro-review-card-cold\nHEAD 2ac4e80ecf01bb76a387460163321296f6a33591\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/maestro-roster-c2-review\nHEAD c2f88f43edab67e270fd10b11c38a5b5f6e0c163\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/maestro-roster-review\nHEAD f75106106397efbb1c63dea2c6ec00a8375919c2\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/ov-check\nHEAD 1a86cdf6583148094c8e10498664dcb1d480c827\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/process-cleanup\nHEAD f666c26e289dceea4ec343a01820b89852615370\nbranch refs/heads/process-cleanup\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/process-cleanup-adversarial\nHEAD f666c26e289dceea4ec343a01820b89852615370\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/projection-cleanup\nHEAD 07e245345d36b147c306a9ef683ac6dd2dd624ab\nbranch refs/heads/projection-cleanup\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/route-grant-cold-review\nHEAD 7a8a888561d2014c15aab19ca17ce8a72224f41e\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/sandbox-real-20261001\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\ndetached\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/task-resume-proof\nHEAD 874a354fd466d78d07ac5dee9a83be80a7a260e8\ndetached\nprunable gitdir file points to non-existent location\n\nworktree /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/windows-stack-adversarial\nHEAD 5f39bbb4cb06b979c5b0a2b17dd66aba9e832eb1\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-issue-110-admission-trigger\nHEAD 6c35a6adc3a7f0a070f0b4f8bc87bc526487e2d0\nbranch refs/heads/agent/issue-110-admission-trigger\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-issue-112-territory-catalog\nHEAD c09ddbc33677bc647b121a03795e11eec863b940\nbranch refs/heads/agent/issue-112-territory-catalog\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-issue-112-territory-catalog-fix\nHEAD 2209025ad716e7bf785c821087917f14cecd53f6\nbranch refs/heads/agent/issue-112-territory-catalog-fix\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-issue-25-approval-redisplay\nHEAD 352961803934d07294025a74374ea777672f472e\nbranch refs/heads/agent/issue-25-approval-redisplay\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-issue-72-consume-attribution\nHEAD 1972e6993b55f064b0352af029e4881e0b2b6174\nbranch refs/heads/agent/issue-72-consume-attribution\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-issue-94-atlas-ledger\nHEAD b0c33d2f6567a2c741240f3c44bc00ca2f01e7e7\nbranch refs/heads/agent/issue-94-atlas-ledger\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-m0-2-baseline-evidence\nHEAD ba2dcb664b53f7d3d842a63dcccd6c6748d0a834\nbranch refs/heads/agent/m0-2-baseline-evidence\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-m0-3-work-contract\nHEAD 02bf1d32a86aaa28a1d653fd3914eded4c2329ac\nbranch refs/heads/agent/m0-3-work-contract\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-acp-windows\nHEAD 0041eee58ea654060c467f68dcef219047b89a08\nbranch refs/heads/agent/pr13-acp-windows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-ci-fanout\nHEAD 25fd5cab5a7784951a2850c9d841f775d7b3506b\nbranch refs/heads/agent/pr13-ci-fanout\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-ci-fanout-audit\nHEAD 072e0f0dfa3a3b779c17d56213056edd6b4664f1\nbranch refs/heads/agent/pr13-ci-fanout-audit\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-ci-windows-audit\nHEAD 6deed4222661358cdffdfc1bab9d2371e77ad9cc\nbranch refs/heads/agent/pr13-ci-windows-audit\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-help-snapshot\nHEAD 70c50e59307608e52b3c11e9995d39e5371b68e9\nbranch refs/heads/agent/pr13-help-snapshot\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-httpapi-connect-contract\nHEAD cbcdc56ab6d4d2c00dc262e510bcb746d1ea76ed\nbranch refs/heads/agent/pr13-httpapi-connect-contract\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-httpapi-index\nHEAD 781d7089b40b2b7a554dcbf200b4fee72eb22c72\nbranch refs/heads/agent/pr13-httpapi-index\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-model-e2e\nHEAD c3fd7a377e1393f6c2c9bd530d16557d829f77a5\nbranch refs/heads/agent/pr13-model-e2e\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-opencode-windows-hang\nHEAD 99dabd705ef6362637b9688e5e50dcf47f88072d\nbranch refs/heads/agent/pr13-opencode-windows-hang\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-parameter-snapshots\nHEAD 808e112cbce450d643a1cb52099bf0c002e25b4b\nbranch refs/heads/agent/pr13-parameter-snapshots\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-reference-minimal\nHEAD 6f844c373003c2961103c6a497867b10d49f0587\nbranch refs/heads/agent/pr13-reference-minimal\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-repository-cache\nHEAD 1807f4e1f9fe8a8f6f40701e3d7af7fccd2dd938\nbranch refs/heads/agent/pr13-repository-cache\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-ripgrep-bootstrap\nHEAD 58898dbcf39bd10f57fe8d9aa175fe8057f03501\nbranch refs/heads/agent/pr13-ripgrep-bootstrap\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-ripgrep-lock\nHEAD b3f1b20da5a53bad60276c21a1a6142227ec3fe8\nbranch refs/heads/agent/pr13-ripgrep-lock\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-run-process\nHEAD 8c063e4f8b431777ef3dcdc5721694d568986031\nbranch refs/heads/agent/pr13-run-process\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-run-stream-timeout\nHEAD 9e6374a31b710a6da24b0b45ae0776540a91b7a8\nbranch refs/heads/agent/pr13-run-stream-timeout\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-stream-lifecycle-root\nHEAD 91c0c8b233c298adfd719f55c2e46b9030ce11ab\nbranch refs/heads/agent/pr13-stream-lifecycle-root\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-windows-bun-cache\nHEAD 32be38ab968167266ad6cd15b30faf5f2d5cccba\nbranch refs/heads/agent/pr13-windows-bun-cache\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-windows-paths\nHEAD 9eb5e67a21a31f11c844b7fa5ec00d917100db98\nbranch refs/heads/agent/pr13-windows-paths\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-windows-unit-forensics\nHEAD 6deed4222661358cdffdfc1bab9d2371e77ad9cc\nbranch refs/heads/agent/pr13-windows-unit-forensics\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/agent-pr13-windows-unit-timeout\nHEAD ba68429f5d8ddab66d32ea087919b98c5663f9a6\nbranch refs/heads/agent/pr13-windows-unit-timeout\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-acquire\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/arsenal-acquire\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-composer-audit\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-compute\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/arsenal-compute\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-governance\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/arsenal-governance\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-hooks-audit\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-host-review\nHEAD 5d057cfa2869943a510d0cdc73bdb90828fa0ee5\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-native\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/arsenal-native\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-policy-review\nHEAD 5d057cfa2869943a510d0cdc73bdb90828fa0ee5\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-safety\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/arsenal-safety\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-skills-audit\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/arsenal-tools-audit\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/atlas-source\nHEAD b1db4570c68207789b1b8bef30fa97ffdb2d2946\nbranch refs/heads/atlas-source\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/context-continuity-v3\nHEAD 12c687dacd4d327d4afe17addd0bcd3011bf3751\nbranch refs/heads/context-continuity-v3\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/context-tool-plan\nHEAD b1db4570c68207789b1b8bef30fa97ffdb2d2946\nbranch refs/heads/context-tool-plan\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/continuity-validation-docs\nHEAD c13cc0ac748e3a48a4bc373056891496ff24af56\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/dock-accessibility\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/dock-accessibility\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/dock-mcp-native\nHEAD a7fadc872f227d3b1a7e623965746e35b5051733\nbranch refs/heads/feat/app-dock-chromium\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/dock-runtime\nHEAD 5e4bea3b519c04cebfb787e98dfa171f5771d25c\nbranch refs/heads/dock-runtime\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-ci-godfile-splits\nHEAD 4dd95c4fe6afada71d47a1e7904d5e125522ccbe\nbranch refs/heads/fix/ci-godfile-splits\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-ci-godfile-splits-dev\nHEAD c7baf17c7000fd63e2664ac45e8ac407d68370d4\nbranch refs/heads/fix/ci-godfile-splits-dev\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-pty-regressions\nHEAD 3ee8c05a8d04706b8f1c3adeafbc2ab043e77670\nbranch refs/heads/fix/pty-regressions\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-tool-schema-regressions\nHEAD 93813163df62fae1ddbb3c696ada7d3002acb992\nbranch refs/heads/fix/tool-schema-regressions\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/grounding-integration-review\nHEAD 159404319b4a923189c7788477d8f60b1d7caef1\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/grounding-pilot\nHEAD 76f9608329ca5eba36fb98bf921289e16b169c08\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/grounding-wire-review\nHEAD b1db4570c68207789b1b8bef30fa97ffdb2d2946\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-integration\nHEAD cbbdf7b1f56db2e4832faa3f66cf7a771656d3f2\nbranch refs/heads/identity-integration\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-s1-native\nHEAD bc7f5f3818a7fcd1a508bd6fc0139776ec7b91b0\nbranch refs/heads/luna/appdock-s1-native\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-s1-popup-test\nHEAD ae60df269282a972f90ab74c6ec1501c108da3e4\nbranch refs/heads/luna/appdock-s1-popup-test\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-s1-tests\nHEAD 0de8a26c1d8071b00c230b3fa2235aaed97ff2af\nbranch refs/heads/luna/appdock-s1-tests\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-s1-ui\nHEAD eaede2675ec81c70b3eb01b63bf568925a7ad0fa\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-s1-visual-order\nHEAD 7eba67135b2ebcf66fa4988643967cb55411c87a\nbranch refs/heads/luna/appdock-s1-visual-order\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-s2-e2e\nHEAD f7d84de5256e956a6494f6f106c2af9b507b8fc4\nbranch refs/heads/luna/appdock-s2-e2e\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave1-registry\nHEAD 79feb4181f356575a24e498b79d547d99b4ac41d\nbranch refs/heads/luna/appdock-wave1-registry\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave1-registry-test\nHEAD 452a8c9243af88b3e8b977e9a1905fff173875b1\nbranch refs/heads/luna/appdock-wave1-registry-test\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave1-restart-harness\nHEAD 16d0c6c32757c5b89064d8b6acf839074e68c0e7\nbranch refs/heads/luna/appdock-wave1-restart-harness\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave2-test\nHEAD 8be26d0dc93366f1b69654974a9d8df5a0b79370\nbranch refs/heads/luna/appdock-wave2-test\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave2-ui\nHEAD 2bd96bccf3cc744d7b6157b0e5b10d0190ae9a32\nbranch refs/heads/luna/appdock-wave2-ui\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave3-budget\nHEAD de11049d04761c35408a8db83b29ef90d904ab0c\nbranch refs/heads/luna/appdock-wave3-budget\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave3-test\nHEAD 0da8257af2e92da34ce3e918b5df8b9b65d73f5e\nbranch refs/heads/luna/appdock-wave3-test\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-appdock-wave4-devtools\nHEAD 0fa1178f61df58b020824e81dc6e108caa6f5d01\nbranch refs/heads/luna/appdock-wave4-devtools\nprunable gitdir file points to non-existent location\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-atlas-own-ledger\nHEAD 735a85b8d4a682f880c8d6be963c346467b0b475\nbranch refs/heads/atlas-own-ledger\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-fix-acp-lifecycle\nHEAD f99bc933ab4ed0dc4a07188fc89d0c8b3ae418d9\nbranch refs/heads/luna/fix-acp-lifecycle\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-fix-maestro-governance\nHEAD 6513603959d54198bb4775260649bfba4778d160\nbranch refs/heads/luna/fix-maestro-governance\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-fix-pty-httpapi\nHEAD 8746e1fbc25a73352a8ac1f5dbbc5c1e4170cd3d\nbranch refs/heads/luna/fix-pty-httpapi\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-fix-tool-snapshots\nHEAD 4178f0bc680e35f1216a6b37404388486180ad11\nbranch refs/heads/luna/fix-tool-snapshots\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-issue-102-windows-core\nHEAD eafa59545bb5e05f8345350f6ceef41a3edf1907\nbranch refs/heads/windows-core-lifecycle\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-pr13-cwd-root\nHEAD abe9c8b29d1aaad4657cb7d4269f301a82da85fb\nbranch refs/heads/luna/pr13-cwd-root\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-pr13-e2e-root\nHEAD 6bcff6c95c5bd02d7670840e9beeb14ddb16b3c9\nbranch refs/heads/luna/pr13-e2e-root\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-pr13-httpapi-root\nHEAD 5397288c9444cdd621e8bfdb952ed0a51840e1a8\nbranch refs/heads/luna/pr13-httpapi-root\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/luna-session-create-timeout\nHEAD ba2dcb664b53f7d3d842a63dcccd6c6748d0a834\nbranch refs/heads/session-create-timeout\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-ability-descriptors\nHEAD 886490e3d5a169f88bf556d558d5f5a712003705\nbranch refs/heads/ability-descriptors\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-ability-registry\nHEAD f28f2e70be34846fc969ebb3a8499a14a8874415\nbranch refs/heads/ability-registry\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-approval-recovery\nHEAD 45d12e8e33fc219625c3c11b064c286d998abc0d\nbranch refs/heads/approval-recovery\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-arsenal\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/maestro-arsenal\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-ci-health-exception\nHEAD f649f4e4b22f21ac4ee57f1de28349541f0d62b6\nbranch refs/heads/maestro/ci-health-exception\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-docs-integration\nHEAD 817681c90485b68fb6abe5b66e1aca8e5ed1bbef\nbranch refs/heads/maestro-docs\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-godfile-policy\nHEAD 25dfb77a255f059ad0bf6b2fc6cbd0285def50a6\nbranch refs/heads/godfile-policy\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-grounding\nHEAD 159404319b4a923189c7788477d8f60b1d7caef1\nbranch refs/heads/maestro-grounding\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-issue-102-windows-diagnostic\nHEAD bde9005056e17d6495ce1270a2f25ca811b69e43\nbranch refs/heads/maestro/issue-102-windows-diagnostic\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-issue-206-conflict-map\nHEAD 42470b027ab95c100cfc440f5f41caf610ec6700\nbranch refs/heads/maestro/issue-206-conflict-map\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-lifecycle-fold\nHEAD 436fb55b008d08ed716516f638c0761acca15473\nbranch refs/heads/lifecycle-fold\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-native\nHEAD 5d057cfa2869943a510d0cdc73bdb90828fa0ee5\nbranch refs/heads/maestro-native\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-playbooks\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/maestro-playbooks\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-program-contract\nHEAD 97ae51b0b240cf10655be7f12c1cd9cf79f49a36\nbranch refs/heads/maestro/program-contract-current\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-project-config\nHEAD 0f1ffe360de6a34cdd23e16263e2b215e50d541a\nbranch refs/heads/project-config\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-state-update-2\nHEAD 730eddc21d466d47eab94bd9c3c1877172a91dff\nbranch refs/heads/maestro-state-update\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-ungrounded-lifecycle\nHEAD 68226da21d7d8f0413d3054951a41e316e4b286d\nbranch refs/heads/ungrounded-lifecycle\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/maestro-verification-plan\nHEAD b210ec612bd23917ef26aa920f0418ff73a4a38d\nbranch refs/heads/verification-plan\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-admission\nHEAD da2b75aff12e21c9974ebc5be41ae138302de40b\nbranch refs/heads/native-admission\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-approval\nHEAD da2b75aff12e21c9974ebc5be41ae138302de40b\nbranch refs/heads/native-approval\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-bindings\nHEAD da2b75aff12e21c9974ebc5be41ae138302de40b\nbranch refs/heads/native-bindings\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-ci-e2e\nHEAD 5d057cfa2869943a510d0cdc73bdb90828fa0ee5\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-ci-fix\nHEAD 628f72404baaf1cd3f5adedf497e830e176503d9\nbranch refs/heads/native-ci-fix\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-ci-unit\nHEAD 5d057cfa2869943a510d0cdc73bdb90828fa0ee5\nbranch refs/heads/native-ci-unit\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-review\nHEAD da2b75aff12e21c9974ebc5be41ae138302de40b\nbranch refs/heads/native-review\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/native-tests-review\nHEAD da2b75aff12e21c9974ebc5be41ae138302de40b\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-maestro-dev\nHEAD b1db4570c68207789b1b8bef30fa97ffdb2d2946\nbranch refs/heads/maestro-dev\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-maestro-roster\nHEAD c2f88f43edab67e270fd10b11c38a5b5f6e0c163\nbranch refs/heads/maestro-roster\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-native-team\nHEAD f96aae0fe6ada181de97d70432561bf8a0892c86\nbranch refs/heads/native-team\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-review-card\nHEAD a6d86a7dca71b64499f72877ef492371f2655c1c\nbranch refs/heads/maestro-review-card\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-route-grant\nHEAD 7a8a888561d2014c15aab19ca17ce8a72224f41e\nbranch refs/heads/maestro-route-grant\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-task-resume\nHEAD d21c84b6c0d47f767cf969f6b42f181f2f3dd916\nbranch refs/heads/task-resume-proof\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-dev\nHEAD 311445f3051d3038f266c1321f95879ee8cb0ab6\nbranch refs/heads/dev\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-identity\nHEAD 9c535be9e98021b34500794bdc207199b120217a\nbranch refs/heads/orchestra-identity\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-maestro\nHEAD d4c8f45765e7fe4a2d7803173bc9f908cbc905e3\nbranch refs/heads/maestro-core\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-maestro-rebuild\nHEAD 88b0f1687a81ef4344a41dbb37a0c3d2d2743765\nbranch refs/heads/maestro/rebuild-fork-dev\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-maestro-rebuild-clean\nHEAD a79db3b1b486b37a0c36d9136c2b37e693dc4635\nbranch refs/heads/fix/fork-postmerge-workflows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-postmerge-fix\nHEAD 5ebab06d640ef75c0ae407c479cab493a721da89\nbranch refs/heads/maestro-roadmap-consolidation\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/permission-dev\nHEAD 7ddd3a83d0a4225cb62ca7fa339f3ccc39af6a13\nbranch refs/heads/permission-dev\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/permission-mode\nHEAD 0d147dcf87825736259a2c7749c3db886bffadde\nbranch refs/heads/permission-mode\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/rca-pr13-app-windows\nHEAD 65c12bc69ea6596e61e566873d4e3f852c9dc9f5\nbranch refs/heads/rca/pr13-app-windows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/rca-pr13-core-windows\nHEAD 65c12bc69ea6596e61e566873d4e3f852c9dc9f5\nbranch refs/heads/rca/pr13-core-windows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/rca-pr13-opencode-windows\nHEAD 65c12bc69ea6596e61e566873d4e3f852c9dc9f5\nbranch refs/heads/rca/pr13-opencode-windows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/rca-pr13-reference-windows\nHEAD 04410195d011b517686d2f514e64ed536dfa15d4\nbranch refs/heads/rca/pr13-reference-windows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/rca-pr13-run-windows\nHEAD 04410195d011b517686d2f514e64ed536dfa15d4\nbranch refs/heads/rca/pr13-run-windows\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/review-112-nemotron\nHEAD 0890c5026c9b9272497c6511baab99bd2147336f\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/review-115-muse\nHEAD 352961803934d07294025a74374ea777672f472e\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/review-116-nemotron\nHEAD 6c35a6adc3a7f0a070f0b4f8bc87bc526487e2d0\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/review-118-muse\nHEAD 573bc8458b1f53a9e5715ebe4ea268f86c5d56a9\ndetached\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/split-control-plane\nHEAD b0c33d2f6567a2c741240f3c44bc00ca2f01e7e7\nbranch refs/heads/split/control-plane\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/split-core-event\nHEAD b0c33d2f6567a2c741240f3c44bc00ca2f01e7e7\nbranch refs/heads/split/core-event\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/split-github-handler\nHEAD b0c33d2f6567a2c741240f3c44bc00ca2f01e7e7\nbranch refs/heads/split/github-handler\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/split-openai-ws\nHEAD b0c33d2f6567a2c741240f3c44bc00ca2f01e7e7\nbranch refs/heads/split/openai-ws\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/split-prompt-tests\nHEAD b0c33d2f6567a2c741240f3c44bc00ca2f01e7e7\nbranch refs/heads/split/prompt-tests\n\nworktree /Users/gustavoschneiter/Documents/HuGR/_worktrees/visual-shell\nHEAD ee93c9d4d38b44779ede5251502445e25e8e0706\nbranch refs/heads/visual-shell\n\n",
+  "externalDisposition": "Other campaigns, canonical user assets and stashes preserved; inventory recorded separately"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "identity-shell",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-shell",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "perf-gpu",
+  "staged": [],
+  "untracked": [],
+  "missingTrackedPaths": [
+    "packages/app/src/pages/home.tsx",
+    "packages/app/src/pages/layout-new.tsx"
+  ],
+  "sparseSandboxWarning": "Raw index/status includes missing checkout files from --no-checkout. Their paths are recorded, but they are NOT intended product deletions and are excluded from scoped patches. Reconstruct from HEAD, then apply scoped patches and archived payload.",
+  "files": [],
+  "stagedPatch": "archives/identity-shell.staged.patch",
+  "unstagedPatch": "archives/identity-shell.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

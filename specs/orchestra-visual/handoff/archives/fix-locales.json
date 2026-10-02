@@ -1,0 +1,408 @@
+{
+  "name": "fix-locales",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-locales",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "fix-locales",
+  "staged": [],
+  "untracked": [
+    "packages/app/src/i18n/orchestra-copy.md",
+    "packages/app/src/i18n/orchestra.ts"
+  ],
+  "missingTrackedPaths": [],
+  "files": [
+    {
+      "path": "packages/app/src/i18n/am.ts",
+      "bytes": 85365,
+      "sha256": "7c94d341f15546b951768da581ba016e31cc0ab1987427a5baca987480ab3478"
+    },
+    {
+      "path": "packages/app/src/i18n/ar.ts",
+      "bytes": 83983,
+      "sha256": "0795b618c854ef1dd9b60ae934c7b5d5cf6be0974a58f4f3d28c7fc23fa94524"
+    },
+    {
+      "path": "packages/app/src/i18n/az.ts",
+      "bytes": 73763,
+      "sha256": "e635c502efe5e7d6d8093359d672966b3cf522fb1b1457fdb41efee0c33447d7"
+    },
+    {
+      "path": "packages/app/src/i18n/bg.ts",
+      "bytes": 94849,
+      "sha256": "7230715d0a24e7933e03379073f4463a0ed5ac88482907c6f48fc2e4b0798b7a"
+    },
+    {
+      "path": "packages/app/src/i18n/bn.ts",
+      "bytes": 108479,
+      "sha256": "a5e0c9f927503cc4a29b11d02a78b6ae21bf938d80bdb6b18ec619375daad473"
+    },
+    {
+      "path": "packages/app/src/i18n/br.ts",
+      "bytes": 72750,
+      "sha256": "beca3cf11ac67468505f55a43f7dfadede573a8f511cddb6b0a1dc4fa2c05637"
+    },
+    {
+      "path": "packages/app/src/i18n/bs.ts",
+      "bytes": 71300,
+      "sha256": "349270d3d6fd79cb784fe20d1391166432ce724d34b276fe81eb5fcbbd5b6246"
+    },
+    {
+      "path": "packages/app/src/i18n/ca.ts",
+      "bytes": 73667,
+      "sha256": "28cb2fc58cb14f29d8914ff38f1ff624e37d83bad17979a8c7cf1a10121779e9"
+    },
+    {
+      "path": "packages/app/src/i18n/cs.ts",
+      "bytes": 72565,
+      "sha256": "417163434c5270b7d8b20855840d6232a09b0cf4a1cb1573b9c351294cbdecec"
+    },
+    {
+      "path": "packages/app/src/i18n/da.ts",
+      "bytes": 69778,
+      "sha256": "565e351639e5830c4734064c3957e50e3e16ad9ca5b88579b7e1f3cad8cfe3b0"
+    },
+    {
+      "path": "packages/app/src/i18n/de.ts",
+      "bytes": 73879,
+      "sha256": "f9869d57216f6e2eecc3b3240829ec7bb04556c14ecc91918deaef6ef41a34e0"
+    },
+    {
+      "path": "packages/app/src/i18n/dv.ts",
+      "bytes": 101529,
+      "sha256": "ba71fe62bb98394dd57813cbe562a7a75cc95eb452b815c4d2944a57f85c4ee8"
+    },
+    {
+      "path": "packages/app/src/i18n/dz.ts",
+      "bytes": 130155,
+      "sha256": "56fd107b27f2a1f72b5ca1788db51328e235ebe63b9cdf339d6625c3d64623ab"
+    },
+    {
+      "path": "packages/app/src/i18n/el.ts",
+      "bytes": 97468,
+      "sha256": "fbdfdba15a0b68d330f5b6955186e5bca9fbb0036c0c396ccba78c6f0208a547"
+    },
+    {
+      "path": "packages/app/src/i18n/en.ts",
+      "bytes": 62081,
+      "sha256": "db81bba8fb96e03dd29d5480493618b7d88858c34121530cca3f482fe19c3922"
+    },
+    {
+      "path": "packages/app/src/i18n/es.ts",
+      "bytes": 73206,
+      "sha256": "12845800ba2f895df1e548c59b52527a0543463849aeb29f1f4afbc517ab731f"
+    },
+    {
+      "path": "packages/app/src/i18n/et.ts",
+      "bytes": 69716,
+      "sha256": "c05b62843b0821d57d555e35c7a76ecc37af3820cc64f82d90faee49de22db37"
+    },
+    {
+      "path": "packages/app/src/i18n/fa.ts",
+      "bytes": 86122,
+      "sha256": "6373e54ab1aa97f193ea844fcf1a539820a5e172714dc5905550d8dbd3b48887"
+    },
+    {
+      "path": "packages/app/src/i18n/fi.ts",
+      "bytes": 72114,
+      "sha256": "abb230b2b49a47fc6fdc552f04cd95670707b03b2c4c1933a4b91b949870c60d"
+    },
+    {
+      "path": "packages/app/src/i18n/fo.ts",
+      "bytes": 69911,
+      "sha256": "d6f58cadf52140dc129b1a24dfab4dd826bb1c8ab750d1048b27e43cf361890c"
+    },
+    {
+      "path": "packages/app/src/i18n/fr.ts",
+      "bytes": 75829,
+      "sha256": "a07de9bc1660be721ef99b59cf144f9ed45b2482bd2927c1758f5e1683eaf828"
+    },
+    {
+      "path": "packages/app/src/i18n/hi.ts",
+      "bytes": 105750,
+      "sha256": "43b1e8f13ca220fc5adfac8ece5c1b308454212064366cb9508964e63647bfc8"
+    },
+    {
+      "path": "packages/app/src/i18n/hr.ts",
+      "bytes": 69392,
+      "sha256": "bdd86409273ce60625639feaade23f446a27cd1efecbb01ecebb20a848bc53a5"
+    },
+    {
+      "path": "packages/app/src/i18n/hu.ts",
+      "bytes": 72851,
+      "sha256": "e3358054d5a3b4b4bc24c1aa5c3653f995c755ff165da910dffcfd0a709815d3"
+    },
+    {
+      "path": "packages/app/src/i18n/hy.ts",
+      "bytes": 92700,
+      "sha256": "f21188887b8e0628dfcef28ccc8073f6ce1fcead0551cfdc88869ca418395b48"
+    },
+    {
+      "path": "packages/app/src/i18n/id.ts",
+      "bytes": 69174,
+      "sha256": "aacd74a2a1c33838a08d0d096614d485e2ea7a1abded190dcb7d59ec55ed422f"
+    },
+    {
+      "path": "packages/app/src/i18n/is.ts",
+      "bytes": 68437,
+      "sha256": "a2680a55905f74e29ee607e5d90dff7ebe29eb9197160a7cb7052e7378ad9425"
+    },
+    {
+      "path": "packages/app/src/i18n/it.ts",
+      "bytes": 73617,
+      "sha256": "32d521f6183be408faa2e50688ced0a8c3c9ed6ed6463d4ace34699ac9a7ef2e"
+    },
+    {
+      "path": "packages/app/src/i18n/ja.ts",
+      "bytes": 81457,
+      "sha256": "00ee4362e74472c9f72034d941de28f04926fe12250c690111ba2af533eaf37c"
+    },
+    {
+      "path": "packages/app/src/i18n/ka.ts",
+      "bytes": 112149,
+      "sha256": "936ab54862b19c056f2e8c9be7026a5c044f9b62ed2f5213c0a6ebfbc35ddf53"
+    },
+    {
+      "path": "packages/app/src/i18n/km.ts",
+      "bytes": 111090,
+      "sha256": "f4f1b9bb9bb1912902dbb3a71fe5180e2e3e10007871d2294eaddfb14285cd79"
+    },
+    {
+      "path": "packages/app/src/i18n/ko.ts",
+      "bytes": 73252,
+      "sha256": "01ceabc229165bed787642c3e116a4375d2502afb68e627700447c4dc573ab39"
+    },
+    {
+      "path": "packages/app/src/i18n/lo.ts",
+      "bytes": 103257,
+      "sha256": "bd890c05a3f2b136b7cec4fc87ec6080e1377c06cc19e978d1549b9c62fe0bd9"
+    },
+    {
+      "path": "packages/app/src/i18n/lt.ts",
+      "bytes": 70492,
+      "sha256": "c65db569e786e319d169f8e9332000223bd88ecd9a3c1207b05481898cf6ab3c"
+    },
+    {
+      "path": "packages/app/src/i18n/lv.ts",
+      "bytes": 71906,
+      "sha256": "a33c2bf77522bd77848a0f2bf668192d159db8404a50592480cafc324c832153"
+    },
+    {
+      "path": "packages/app/src/i18n/mk.ts",
+      "bytes": 94122,
+      "sha256": "1b2c3a7d89db09bef14b89efd0ca576567059726dba22ad2b216dc2ded375163"
+    },
+    {
+      "path": "packages/app/src/i18n/mn.ts",
+      "bytes": 92610,
+      "sha256": "bdff896bbfd932eb367f53fff08a7233ac649f534a5d180df1e54aa20b16c02e"
+    },
+    {
+      "path": "packages/app/src/i18n/ms.ts",
+      "bytes": 69322,
+      "sha256": "365891f531377eb03d1969bbaac86cc637c009b2ec888991cee89b5969a8c815"
+    },
+    {
+      "path": "packages/app/src/i18n/my.ts",
+      "bytes": 125946,
+      "sha256": "141b553bee82a6ed8abf349d2cfebc756c60ab97827b565735920df24736eda6"
+    },
+    {
+      "path": "packages/app/src/i18n/ne.ts",
+      "bytes": 111703,
+      "sha256": "4e3785607ace62b87534b2a88b2595fc8623f4ad6a1f5c7053e872e7a7154554"
+    },
+    {
+      "path": "packages/app/src/i18n/nl.ts",
+      "bytes": 71900,
+      "sha256": "d3b0540e50a728951352f84c81cb9d86a009ae1b3d5f7dcd49407de1f2d3c1c5"
+    },
+    {
+      "path": "packages/app/src/i18n/no.ts",
+      "bytes": 70119,
+      "sha256": "96ea4614117e7deb7602987249408d92dc3f8bd732be2ed0cf0d36c224c9f23c"
+    },
+    {
+      "path": "packages/app/src/i18n/pa.ts",
+      "bytes": 84434,
+      "sha256": "15736b7880296d1007119b87f17a5422dfeb85fef1b02424df2b1cb494c60d7c"
+    },
+    {
+      "path": "packages/app/src/i18n/pl.ts",
+      "bytes": 73428,
+      "sha256": "21d4a6bc9d518edd37c23feb5cb208b78f8f6bf184e640ebf5acd34b6f155770"
+    },
+    {
+      "path": "packages/app/src/i18n/ro.ts",
+      "bytes": 72270,
+      "sha256": "58b4babf0f2b18f231b42f64e305bb208b6c35aa714f502659df4ccefe0b26a7"
+    },
+    {
+      "path": "packages/app/src/i18n/ru.ts",
+      "bytes": 93282,
+      "sha256": "4ac6f83a12bf8acb54aae968d4265e75aa251e2ad5c16921be25ce74ca50bed9"
+    },
+    {
+      "path": "packages/app/src/i18n/si.ts",
+      "bytes": 107022,
+      "sha256": "091437eecf5a6c6c5320733a004e6ef3685bc4ab27d437fe525b6fd35864f239"
+    },
+    {
+      "path": "packages/app/src/i18n/sk.ts",
+      "bytes": 72875,
+      "sha256": "3a22e2c87ca6270cf6bbd6f1955058284f94fd668a88d3c0b9ffe431281341a6"
+    },
+    {
+      "path": "packages/app/src/i18n/sl.ts",
+      "bytes": 70923,
+      "sha256": "44a8cc1724d9e7f5678b14bc5b76447a55d10909c623be53d586eb811fe738d9"
+    },
+    {
+      "path": "packages/app/src/i18n/sq.ts",
+      "bytes": 72821,
+      "sha256": "0068a718e736a9c3ac461694bb4bcbaee393af8b2b0d5c61de2623ac8ba415ed"
+    },
+    {
+      "path": "packages/app/src/i18n/sr.ts",
+      "bytes": 90758,
+      "sha256": "72c8f4ebc3faa58507f961a3a83799271d5730659046815ebec651fe4df2584b"
+    },
+    {
+      "path": "packages/app/src/i18n/sv.ts",
+      "bytes": 70856,
+      "sha256": "6c9a86fac9aae7cad47518363a0db04810b2f36c54601788bd84daa9a30f9629"
+    },
+    {
+      "path": "packages/app/src/i18n/tg.ts",
+      "bytes": 92486,
+      "sha256": "a48352e24c7a06e7ed4062b927adff13ec0cd5eb79dbad3d5f8fe60f61fc67e5"
+    },
+    {
+      "path": "packages/app/src/i18n/th.ts",
+      "bytes": 104731,
+      "sha256": "a49163c920dbf5de9c7f0576cef656dca15e2167e87672a5248884870b1fba24"
+    },
+    {
+      "path": "packages/app/src/i18n/tk.ts",
+      "bytes": 71787,
+      "sha256": "a4fb6b2310c3d1e0e60a56e76b6db6b0b53e66de5aed6bdacbfc24865abf7e09"
+    },
+    {
+      "path": "packages/app/src/i18n/tr.ts",
+      "bytes": 72066,
+      "sha256": "acbf275cbb48831be8411fc37d3368e68e2e5a033e7613e5451e61f6cf91b0e3"
+    },
+    {
+      "path": "packages/app/src/i18n/uk.ts",
+      "bytes": 93207,
+      "sha256": "07feee6e6cc68e4df2cc7e7fa74da664ba51b991fecfcdea1a63018c83e8b668"
+    },
+    {
+      "path": "packages/app/src/i18n/ur.ts",
+      "bytes": 88041,
+      "sha256": "49d60d1289b1d6205854e0fd66440122f9be9804e94d531e1ab344813a037368"
+    },
+    {
+      "path": "packages/app/src/i18n/uz.ts",
+      "bytes": 72564,
+      "sha256": "b22c8cf17f6970bd92526a57f16f3fb4884a0dcb5a1b641856f34f9b92f1c0ad"
+    },
+    {
+      "path": "packages/app/src/i18n/vi.ts",
+      "bytes": 77368,
+      "sha256": "616db65990c467daa8db435f3c6ba6fdcfdfcced049e8f0cc7ab93b63f17ac5a"
+    },
+    {
+      "path": "packages/app/src/i18n/zh.ts",
+      "bytes": 66524,
+      "sha256": "b4788960e685e6b859d77b4393f6120aecfe2209b5227e728a4c5974570167f4"
+    },
+    {
+      "path": "packages/app/src/i18n/zht.ts",
+      "bytes": 67215,
+      "sha256": "3917c8050f54e121d112397d1105163b599d2697e321df5d00f0dd033c215ccf"
+    },
+    {
+      "path": "packages/app/src/i18n/orchestra-copy.md",
+      "bytes": 2873,
+      "sha256": "8a97ab332deb5755a7e4bde6d16a6a0c747d4182217797ee2ab70dfd06176a66"
+    },
+    {
+      "path": "packages/app/src/i18n/orchestra.ts",
+      "bytes": 1348,
+      "sha256": "aceb9d84c878eb3d19dc66d773b13b5f4a221918096dfda133f6c47c2d12c77f"
+    }
+  ],
+  "archive": {
+    "path": "archives/fix-locales.tar.gz",
+    "bytes": 1196960,
+    "sha256": "43ab8205ca89428fbdf10abe5971381287f1753f7ca9ca2979379a1986964049",
+    "members": [
+      "packages/app/src/i18n/am.ts",
+      "packages/app/src/i18n/ar.ts",
+      "packages/app/src/i18n/az.ts",
+      "packages/app/src/i18n/bg.ts",
+      "packages/app/src/i18n/bn.ts",
+      "packages/app/src/i18n/br.ts",
+      "packages/app/src/i18n/bs.ts",
+      "packages/app/src/i18n/ca.ts",
+      "packages/app/src/i18n/cs.ts",
+      "packages/app/src/i18n/da.ts",
+      "packages/app/src/i18n/de.ts",
+      "packages/app/src/i18n/dv.ts",
+      "packages/app/src/i18n/dz.ts",
+      "packages/app/src/i18n/el.ts",
+      "packages/app/src/i18n/en.ts",
+      "packages/app/src/i18n/es.ts",
+      "packages/app/src/i18n/et.ts",
+      "packages/app/src/i18n/fa.ts",
+      "packages/app/src/i18n/fi.ts",
+      "packages/app/src/i18n/fo.ts",
+      "packages/app/src/i18n/fr.ts",
+      "packages/app/src/i18n/hi.ts",
+      "packages/app/src/i18n/hr.ts",
+      "packages/app/src/i18n/hu.ts",
+      "packages/app/src/i18n/hy.ts",
+      "packages/app/src/i18n/id.ts",
+      "packages/app/src/i18n/is.ts",
+      "packages/app/src/i18n/it.ts",
+      "packages/app/src/i18n/ja.ts",
+      "packages/app/src/i18n/ka.ts",
+      "packages/app/src/i18n/km.ts",
+      "packages/app/src/i18n/ko.ts",
+      "packages/app/src/i18n/lo.ts",
+      "packages/app/src/i18n/lt.ts",
+      "packages/app/src/i18n/lv.ts",
+      "packages/app/src/i18n/mk.ts",
+      "packages/app/src/i18n/mn.ts",
+      "packages/app/src/i18n/ms.ts",
+      "packages/app/src/i18n/my.ts",
+      "packages/app/src/i18n/ne.ts",
+      "packages/app/src/i18n/nl.ts",
+      "packages/app/src/i18n/no.ts",
+      "packages/app/src/i18n/pa.ts",
+      "packages/app/src/i18n/pl.ts",
+      "packages/app/src/i18n/ro.ts",
+      "packages/app/src/i18n/ru.ts",
+      "packages/app/src/i18n/si.ts",
+      "packages/app/src/i18n/sk.ts",
+      "packages/app/src/i18n/sl.ts",
+      "packages/app/src/i18n/sq.ts",
+      "packages/app/src/i18n/sr.ts",
+      "packages/app/src/i18n/sv.ts",
+      "packages/app/src/i18n/tg.ts",
+      "packages/app/src/i18n/th.ts",
+      "packages/app/src/i18n/tk.ts",
+      "packages/app/src/i18n/tr.ts",
+      "packages/app/src/i18n/uk.ts",
+      "packages/app/src/i18n/ur.ts",
+      "packages/app/src/i18n/uz.ts",
+      "packages/app/src/i18n/vi.ts",
+      "packages/app/src/i18n/zh.ts",
+      "packages/app/src/i18n/zht.ts",
+      "packages/app/src/i18n/orchestra-copy.md",
+      "packages/app/src/i18n/orchestra.ts"
+    ]
+  },
+  "stagedPatch": "archives/fix-locales.staged.patch",
+  "unstagedPatch": "archives/fix-locales.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}
