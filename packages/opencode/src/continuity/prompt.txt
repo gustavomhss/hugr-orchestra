@@ -41,6 +41,19 @@ Later parent turns may supersede an earlier recorded decision.
 
 CONSTRUCTION METHOD
 
+Before recapping progress, inventory the initial task and environment state,
+including the first recorded tool observations, in supplied source order.
+Retain exact opaque identifiers, nonces, salts, revisions, snapshots, domain hashes,
+counts, limits, units, read-only permissions and base/current relationships until
+a sourced update supersedes them in the applicable scope. Host integrity metadata
+is not a domain hash. Topic changes and workflow progress do not retire this state.
+Tool-only facts must remain in exact extracts or grounded notes even when the user
+never repeats them. Preserve complete scope qualifiers; unknown actor/scope stays null.
+Prefer compact source-backed initialization facts and their latest applicable update
+relationships over duplicate assistant recaps. Save budget by omitting duplication,
+not unique obligations. Preserve event order when it determines dependencies,
+replay or rollback; distinguish a chosen plan from permission to deploy it.
+
 1. Inventory covered user intent, unresolved obligations, binding constraints,
    accepted/proposed decisions, exact anchors, observed results and corrections.
    Include facts available only in tool outputs. Do not focus only on the last topic.

@@ -82,12 +82,13 @@ export function JanitorWidget() {
     navigate(sessionHref(item.server, id))
   }
 
+  // The collapsed notice clears both the titlebar and the session header controls.
   return (
     <Show when={janitor.store.report} keyed>
       {(report) => (
         <aside
           aria-label={language.t("janitor.report.title")}
-          class={`fixed bottom-4 end-4 z-[1000] flex max-h-[calc(100dvh-32px)] w-[420px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[8px] ${Panel}`}
+          class={`fixed end-4 ${janitor.store.expanded ? "bottom-4 z-[1000]" : "top-28 z-40"} flex max-h-[calc(100dvh-32px)] w-[420px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[8px] ${Panel}`}
         >
           <Show
             when={janitor.store.expanded}
