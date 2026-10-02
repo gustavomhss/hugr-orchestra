@@ -35,6 +35,7 @@ type PluralKey =
   | "session.followupDock.summary"
   | "session.revertDock.summary"
   | "janitor.notify.title"
+  | "orchestra.env.preserved"
 type Source = { dict: Record<string, string> }
 
 function cookie(locale: Locale) {

@@ -9,6 +9,7 @@ import { createHomeScrollController } from "./home/home-scroll-controller"
 import { createHomeSessionSearchController } from "./home/home-session-search-controller"
 import { createHomeSessionsController } from "./home/home-sessions-controller"
 import { HomeSessions } from "./home/home-sessions"
+import { RecordedUsageHome } from "@/orchestra/chapters/kpis-home"
 
 export function NewHome() {
   const desktop = createMediaQuery("(min-width: 768px)")
@@ -53,6 +54,11 @@ export function NewHome() {
             />
           </Show>
         </div>
+        <Show when={desktop()}>
+          <div class="mx-auto w-full max-w-[720px] px-6">
+            <RecordedUsageHome home={home} />
+          </div>
+        </Show>
       </ScrollView>
     </div>
   )

@@ -15,6 +15,8 @@ import { usePlatform } from "@/context/platform"
 import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
+import { chapterPages } from "@/orchestra/chapter-route"
+import { navigation } from "@/orchestra/navigation"
 import { createHomeController } from "@/pages/home/home-controller"
 import {
   displayName,
@@ -51,26 +53,6 @@ const icons = {
   help: '<circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.7.6-.7 1.1M8 11.6v.1"/>',
 }
 
-const navigation = [
-  { id: "home", label: "home.title", chapter: undefined },
-  { id: "chat", label: "orchestra.nav.chat", chapter: undefined },
-  { id: "agents", label: "orchestra.nav.agents", chapter: "C11" },
-  { id: "mcp", label: "orchestra.nav.mcp", chapter: "C01" },
-  { id: "skills", label: "orchestra.nav.skills", chapter: "C02" },
-  { id: "plugins", label: "orchestra.nav.plugins", chapter: "C03" },
-  { id: "hooks", label: "orchestra.nav.hooks", chapter: "C04" },
-  { id: "cicd", label: "orchestra.nav.cicd", chapter: "C07" },
-  { id: "schedule", label: "orchestra.nav.schedule", chapter: "C08" },
-  { id: "env", label: "orchestra.nav.env", chapter: "C09" },
-  { id: "dock", label: "orchestra.nav.dock", chapter: "C13" },
-  { id: "search", label: "orchestra.nav.search", chapter: undefined },
-  { id: "workspaces", label: "orchestra.nav.workspaces", chapter: "C12" },
-  { id: "providers", label: "settings.providers.title", chapter: "C05" },
-  { id: "shortcuts", label: "settings.tab.shortcuts", chapter: "C06" },
-  { id: "settings", label: "sidebar.settings", chapter: undefined },
-  { id: "help", label: "sidebar.help", chapter: undefined },
-] as const
-
 export function OrchestraSidebar() {
   const layout = useLayout()
   const global = useGlobal()
@@ -103,7 +85,7 @@ export function OrchestraSidebar() {
   const profile = createMemo(() => {
     const route = layout.route()
     const target = (() => {
-      if (route.type === "home") return layout.home.selection()
+      if (route.type === "home" || route.type === "chapter") return layout.home.selection()
       if (route.type === "dir-new-sesssion") return { server: route.server ?? server.key, directory: route.dir }
       if (route.type === "draft") {
         const draft = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === route.draftID)
@@ -203,7 +185,7 @@ export function OrchestraSidebar() {
       tabs.select(result.tab)
       return
     }
-    if (route.type === "home" && !draft) return
+    if ((route.type === "home" || route.type === "chapter") && !draft) return
     home.project.openProjectNewSession(conn, project.worktree)
   }
 
@@ -231,6 +213,22 @@ export function OrchestraSidebar() {
         if (project) selectProject(conn, project, draft)
       },
     })
+  }
+
+  function openChapter(id: string) {
+    // Chapter pages read the Home selection; carry the profile the user is looking at.
+    const target = profile()
+    const directory = target.project?.worktree ?? target.directory
+    if (directory) layout.home.setSelection({ server: target.server, directory })
+    navigate(`/orchestra/${id}`)
+  }
+
+  function current(id: string) {
+    const route = layout.route()
+    if (route.type === "chapter") return route.chapter === id
+    if (id === "home") return route.type === "home"
+    if (id === "chat") return route.type === "session" || route.type === "draft"
+    return false
   }
 
   function openChat() {
@@ -343,19 +341,19 @@ export function OrchestraSidebar() {
                     (item.id === "chat" &&
                       (!layout.ready() || !tabs.ready() || global.servers.health[profile().server]?.healthy === false))
                   }
-                  aria-current={
-                    (item.id === "home" && layout.route().type === "home") ||
-                    (item.id === "chat" && (layout.route().type === "session" || layout.route().type === "draft"))
-                      ? "page"
+                  aria-current={current(item.id) ? "page" : undefined}
+                  title={
+                    item.chapter && !chapterPages[item.id]
+                      ? `${item.chapter} · ${language.t("orchestra.rework.pending")}`
                       : undefined
                   }
-                  title={item.chapter ? `${item.chapter} · ${language.t("orchestra.rework.pending")}` : undefined}
                   onClick={() => {
                     if (item.id === "home") return navigate("/")
                     if (item.id === "chat") return openChat()
                     if (item.id === "search") return command.show()
                     if (item.id === "settings") return command.trigger("settings.open")
                     if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
+                    if (chapterPages[item.id]) return openChapter(item.id)
                     if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
                     if (item.chapter) openPending(language.t(item.label), item.chapter)
                   }}
@@ -365,7 +363,7 @@ export function OrchestraSidebar() {
                   <Show when={item.id === "search"}>
                     <kbd>{command.keybind("command.palette")}</kbd>
                   </Show>
-                  <Show when={item.chapter}>
+                  <Show when={item.chapter && !chapterPages[item.id]}>
                     <span class="orchestra-pending-dot" aria-hidden="true" />
                     <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
                   </Show>

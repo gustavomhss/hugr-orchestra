@@ -45,6 +45,7 @@ import { normalizeSessionInfo } from "@/utils/session"
 import { projectForSession } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import { createNativeTitlebarFrame } from "./orchestra/native-frame"
+import { breadcrumbLabel } from "../orchestra/navigation"
 
 const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 36
@@ -269,7 +270,10 @@ export function Titlebar(props: {
               if (!tabsMount()) return
               const route = layout.route()
               const current = currentTab()
-              const key = route.type === "home" ? layout.home.selection().server : (route.server ?? server.key)
+              const key =
+                route.type === "home" || route.type === "chapter"
+                  ? layout.home.selection().server
+                  : (route.server ?? server.key)
               const conn = global.servers.list().find((item) => ServerConnection.key(item) === key)
               const ctx = conn ? global.ensureServerCtx(conn) : undefined
               const value =
@@ -522,7 +526,7 @@ export function Titlebar(props: {
                   >
                     <span>{language.t("orchestra.brand.name")}</span>
                     <span aria-hidden="true">/</span>
-                    <span>{language.t(layout.route().type === "home" ? "home.title" : "orchestra.nav.chat")}</span>
+                    <span>{language.t(breadcrumbLabel(layout.route()))}</span>
                   </div>
                 </Show>
                 <Show when={tabsMount()} keyed fallback={tabControls}>
