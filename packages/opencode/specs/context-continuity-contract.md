@@ -358,15 +358,19 @@ be exact. A non-null `exactTokens` hint does not grant user authority.
 
 The request includes `maxTokens: 6000` and `budget: {maxTokens, fixedTokens}`.
 Hints use `Token.estimate` (rounded string length / 4), not provider tokenization:
-fixed host cost + selected exact costs + citation costs for unique active non-exact
-IDs + serialized notes/reference JSON. Costs conservatively charge shared dictionary
-values per source and reserve index widths and possible physical recall mappings.
-The actual render deduplicates shared values. Exact frames include semantic provenance.
+fixed host/shared cost + selected exact costs + citation costs for unique active
+non-exact IDs + serialized notes/reference JSON. Fixed cost charges the catalogue-wide
+union of shared semantic values once; per-source costs reserve path/order, bounded
+index widths and possible physical recall mappings. Notes/reference costs include
+JSON escaping, including six-character U+2028/U+2029 escapes.
 `exactTokens:null` means ineligible; hints cannot guarantee fit. The final complete
 host render must fit the 6000 estimate limit. It contains closed exact frames,
-non-exact provenance and a five-field canonical body excluding `omissions`.
+non-exact provenance and a four-field body excluding `omissions` and duplicate exact
+selectors. The ordered source/reason pairs remain in exact frames; internal body is unchanged.
 
-The parent reader receives closed `continuity_exact_v3` frames. Their provenance
+The parent reader receives closed `continuity_exact_v4` frames. Each copies the typed
+original `path` beside its exact value. That path also matches dictionary provenance.
+Their provenance
 arrays index a host-owned JSON value dictionary in explicit named-column order:
 `field`, `path`, `role`, `kind`, `origin`, `order`, `actor`, `scope`, `extent`,
 `recoverable`, `exit`. The envelope supplies parent identity and each record supplies

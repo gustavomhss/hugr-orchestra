@@ -9,6 +9,7 @@ import { catalogue } from "@/continuity/source"
 import type { HandoffBody, MaterializedArtifact } from "@/continuity/types"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { readEnvelope, readExactFrames, readerDescriptor, readSourceCatalogue, selectSource } from "./fixtures"
+import { pricing } from "@/continuity/render"
 
 const parentID = SessionID.make("ses_wire")
 const producerID = SessionID.make("ses_wire_producer")
@@ -60,8 +61,8 @@ describe("continuity source wire digest boundary", () => {
       expect(unit.digest).toMatch(/^[a-f0-9]{64}$/)
       expect(unit.digest).not.toBe(domainDigest)
       expect(wire.units.find((entry) => entry.id === unit.id)).not.toHaveProperty("digest")
-      expect(wire.exactTokens[unit.id]).toBe(estimateExact(unit))
-      expect(wire.citationTokens[unit.id]).toBe(estimateCitation(unit))
+      expect(wire.exactTokens[unit.id]).toBe(estimateExact(unit, pricing(current.sources.units)))
+      expect(wire.citationTokens[unit.id]).toBe(estimateCitation(unit, pricing(current.sources.units)))
     }
     const wrapper = wire.units.find((unit) => unit.role === "tool" && unit.locator.path.length === 0)
     expect(wrapper?.value).toMatchObject({ state: { input: { dataset }, output: JSON.stringify({ dataset }) } })
@@ -97,7 +98,7 @@ describe("continuity source wire digest boundary", () => {
     expect(artifact.sources.find((entry) => entry.id === selected[3].id)?.digest)
       .toBe(createHash("sha256").update(JSON.stringify(domainDigest)).digest("hex"))
     const broken = artifact.text.split("\n").map((line) => {
-      if (!line.startsWith('{"frame":"continuity_exact_v3"')) return line
+      if (!line.startsWith('{"frame":"continuity_exact_v4"')) return line
       const frame = JSON.parse(line)
       frame.provenance.splice(10, 1)
       return JSON.stringify(frame)

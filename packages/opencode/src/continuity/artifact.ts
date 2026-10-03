@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from "node:util"
 import { parseTree } from "jsonc-parser"
 import type { Node } from "jsonc-parser"
 import { Token } from "@/util/token"
-import { estimateExtract, render } from "./render"
+import { estimateExtract, pricing, render } from "./render"
 export { estimateCitation, estimateHostBase, render } from "./render"
 import type {
   ArtifactEnvelope, ArtifactResult, HandoffBody, JsonValue, MaterializedArtifact,
@@ -273,7 +273,7 @@ function verification(note: HandoffBody["notes"][number], units: Map<string, Sou
   return evidence.filter(adverse).every((unit) => receipts.some((receipt) => receipt.order > unit.order))
 }
 
-export function estimateExact(unit: SourceUnit): number | null {
+export function estimateExact(unit: SourceUnit, costs?: ReturnType<typeof pricing>): number | null {
   if (!supplied(unit)) return null
-  return estimateExtract({ source: unit.id, reason: "identifier", value: unit.value }, unit)
+  return estimateExtract({ source: unit.id, reason: "identifier", value: unit.value }, unit, costs)
 }

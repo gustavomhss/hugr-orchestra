@@ -10,6 +10,7 @@ import { Token } from "@/util/token"
 import { catalogue, input } from "./source"
 import { decode, estimateHostBase, jsonSchema } from "./artifact"
 import { responseSchema } from "./output-schema"
+import { pricing } from "./render"
 import type { ArtifactEnvelope, MaterializedArtifact, SourceCatalogue } from "./types"
 import PROMPT from "./prompt.txt"
 
@@ -73,7 +74,7 @@ export function request(captured: Snapshot, sources: SourceCatalogue, producerID
         envelope: hostEnvelope,
         receiver: { canRecall: captured.canRecall },
         maxTokens: MAX_ARTIFACT_TOKENS,
-        budget: { maxTokens: MAX_ARTIFACT_TOKENS, fixedTokens: estimateHostBase(hostEnvelope) },
+        budget: { maxTokens: MAX_ARTIFACT_TOKENS, fixedTokens: estimateHostBase(hostEnvelope) + pricing(sources.units).sharedTokens },
         source: input(sources),
         bodySchema: jsonSchema,
       }),
@@ -101,7 +102,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
       ? "reference_only requires receiver.canRecall:true AND each referenced unit.recoverable:true. Preserve necessary supplied facts in exact or grounded notes; a path alone is not a retrieval route.\n"
       : "reference_only MUST be []; this parent has no operational retrieval route. Preserve necessary supplied facts in exact or grounded notes; do not claim unsupported recovery.\n") +
     "ready MUST have issues:[]; nonempty issues require status:needs_context. Unknown task facts are notes, not ready issues. exact reason only constraint/identifier/evidence.\n" +
-    "Budget: fixed + exact(sum selected) + citation(sum unique active NOT exact) + notesJSON. Reserve reference_only JSON too. Exact frames already include semantic provenance; do not pay citationTokens again for exact IDs. Costs are conservative per-source bounds; shared dictionary values render once. Actual rendered budget maximum: 6000 tokens."
+    "Budget: fixed + exact(sum selected) + citation(sum unique active NOT exact) + notesJSON. Reserve reference_only JSON too. Exact frames already include semantic provenance; do not pay citationTokens again for exact IDs. Fixed cost includes catalogue-wide shared metadata once; per-source costs reserve path/order, bounded indices and possible recall locators. Actual rendered budget maximum: 6000 tokens."
   const role = PROMPT + schemaRole + hostRules
   const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
   if (inputLimit <= 0 || Token.estimate(role + prepared.messages[0].content) > inputLimit) return

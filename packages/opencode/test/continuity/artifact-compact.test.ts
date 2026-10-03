@@ -39,7 +39,7 @@ describe("compact continuity provenance", () => {
     const result = run(body({ exact: [{ source: "S001", reason: "constraint" }, { source: "S002", reason: "evidence" }],
       notes: [note({ sources: ["S001", "S003"] })] }), catalogue(units))
     if (!result.ok) throw new Error(result.reason)
-    expect(result.artifact.text).toContain('"frame":"continuity_exact_v3"')
+    expect(result.artifact.text).toContain('"frame":"continuity_exact_v4"')
     expect(result.artifact.text).toContain('"provenance_columns":')
     expect(readRenderedSources(result.artifact.text)).toEqual(result.artifact.sources.map(readerDescriptor))
     expect(readExactFrames(result.artifact.text).map((frame) => frame.value)).toEqual([payload, false])

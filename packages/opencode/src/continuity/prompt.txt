@@ -141,16 +141,20 @@ essential facts/corrections, pending work and unknowns before optional narrative
 Use dense records rather than a recap of repetitive logs. Do not invent counts.
 Budget the host-rendered artifact, not just your selector JSON. budget.maxTokens
 is the final limit; budget.fixedTokens estimates the actual envelope, empty host
-header and canonical body. Each eligible unit's exactTokens conservatively prices
-one closed exact frame, its semantic provenance dictionary entries, its canonical
-selector and possible physical recall locator. Each unit's citationTokens similarly
-prices a non-exact active source. Shared dictionary values render once; these hints
-charge them per source and reserve index-width overhead, so totals can overestimate.
+header and canonical body plus catalogue-wide shared semantic metadata charged once.
+Each eligible unit's exactTokens conservatively prices one closed exact frame,
+its original path/order and possible physical recall locator. Each unit's
+citationTokens similarly prices a non-exact active source. Shared role, kind,
+origin, actor, scope, extent, recoverability and exit values are already in fixedTokens;
+do not charge them again. Index-width and unused shared values can still overestimate.
 Host integrity digests remain internal. Semantic provenance retains field/path,
 role/kind/origin/order/actor/scope/extent/recoverability/exit. Physical message/part
 locators are published only for declared reference_only sources, never inferred.
 Reserve the serialized notes/reference_only JSON plus citationTokens for the union
 of unique ids used by notes/reference_only that are NOT already selected as exact.
+Serialized JSON costs include escaping: U+2028 and U+2029 render as six-character
+backslash-u escapes, as do control characters where JSON requires them. Count the
+escaped representation, not the visible prose length.
 Exact frames already include semantic provenance: do not pay a separate citation cost
 for an exact id, even when notes or references also cite it.
 Plan fixedTokens + sum(selected exactTokens) + sum(unique active non-exact

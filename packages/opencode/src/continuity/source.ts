@@ -5,6 +5,7 @@ import type { FilePart, ToolPart, WithParts } from "@opencode-ai/core/v1/session
 import type { SessionID } from "@/session/schema"
 import type { JsonValue, MaterializedArtifact, SourceCatalogue, SourceDescriptor, SourceLocator, SourceUnit } from "./types"
 import { estimateCitation, estimateExact } from "./artifact"
+import { pricing } from "./render"
 
 export function catalogue(input: {
   parentID: SessionID
@@ -148,6 +149,7 @@ export function input(catalogue: SourceCatalogue): JsonValue {
 }
 
 function groups(units: SourceUnit[]) {
+  const costs = pricing(units)
   // Groups share only host provenance; payload claims never determine authority. IDs remain flat selectors.
   const result = new Map<string, {
     locator: Omit<SourceLocator, "path">
@@ -162,8 +164,8 @@ function groups(units: SourceUnit[]) {
     const key = JSON.stringify(shared)
     const group = result.get(key) ?? { ...shared, units: [] }
     group.units.push({ id: unit.id, path: unit.locator.path, kind: unit.kind, order: unit.order,
-      extent: unit.extent, recoverable: unit.recoverable, exactTokens: estimateExact(unit),
-      citationTokens: estimateCitation(unit),
+      extent: unit.extent, recoverable: unit.recoverable, exactTokens: estimateExact(unit, costs),
+      citationTokens: estimateCitation(unit, costs),
       ...(unit.value !== undefined && { value: unit.value }) })
     result.set(key, group)
   }

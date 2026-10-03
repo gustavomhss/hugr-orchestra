@@ -8,6 +8,7 @@ import { Provider } from "@opencode-ai/schema/provider"
 import { decode, estimateCitation, estimateExact, estimateHostBase, jsonSchema, render } from "@/continuity/artifact"
 import { MAX_ARTIFACT_TOKENS, request, snapshot } from "@/continuity/fork"
 import { catalogue } from "@/continuity/source"
+import { pricing } from "@/continuity/render"
 import type { JsonValue, MaterializedArtifact, SourceCatalogue, SourceUnit } from "@/continuity/types"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Token } from "@/util/token"
@@ -55,12 +56,12 @@ describe("continuity producer budget feedback", () => {
       expect(frames[0].value).toEqual(value)
       expect(frames[0].provenance).toEqual(readerDescriptor(result.artifact.sources[0]))
       if (typeof value === "string") expect(Buffer.from(String(frames[0].value))).toEqual(Buffer.from(value))
-      const frameLine = result.artifact.text.split("\n").find((line) => line.startsWith('{"frame":"continuity_exact_v3"'))!
+      const frameLine = result.artifact.text.split("\n").find((line) => line.startsWith('{"frame":"continuity_exact_v4"'))!
       expect(frameLine.includes("\u2028")).toBe(false)
       expect(frameLine.includes("\u2029")).toBe(false)
       const selector = JSON.stringify(result.artifact.body.exact[0])
       const hint = estimateExact(unit)
-      expect(hint!).toBeGreaterThanOrEqual(Token.estimate(frameLine + "\n" + selector + ",") + 2)
+      expect(hint!).toBeGreaterThanOrEqual(Token.estimate(frameLine + "\n") + 2)
       expect(hint!).toBeGreaterThan(Token.estimate(selector))
       expect(hint!).toBeGreaterThan(estimateExact({ ...unit, actor: null, scope: null })!)
       const actualAdded = Token.estimate(result.artifact.text) - estimateHostBase(envelope)
@@ -156,8 +157,8 @@ describe("continuity producer budget feedback", () => {
       const parsed = readSourceCatalogue(raw)
       const wire = JSON.parse(raw)
       const empty = { ...emptyProjection(), envelope: wire.envelope }
-      expect(parsed.budget).toEqual({ maxTokens: 6000, fixedTokens: Token.estimate(render(empty)) })
-      expect(parsed.budget.fixedTokens).toBe(estimateHostBase(wire.envelope))
+      expect(parsed.budget).toEqual({ maxTokens: 6000, fixedTokens: Token.estimate(render(empty)) + pricing(current.sources.units).sharedTokens })
+      expect(parsed.budget.fixedTokens).toBe(estimateHostBase(wire.envelope) + pricing(current.sources.units).sharedTokens)
       expect(readHostHeader(render(empty)).producer_id).toBe(producerID)
       expect(decode({ text: JSON.stringify(empty.body), catalogue: current.sources,
         envelope: wire.envelope, maxTokens: 6000 })).toEqual({ ok: false, reason: "empty_handoff" })
@@ -181,8 +182,8 @@ describe("continuity producer budget feedback", () => {
     const parsed = readSourceCatalogue(current.prepared.messages[0].content)
     expect(parsed.units).toEqual(current.sources.units.map(({ digest, ...unit }) => unit))
     for (const unit of current.sources.units) {
-      expect(parsed.exactTokens[unit.id]).toBe(estimateExact(unit))
-      expect(parsed.citationTokens[unit.id]).toBe(estimateCitation(unit))
+      expect(parsed.exactTokens[unit.id]).toBe(estimateExact(unit, pricing(current.sources.units)))
+      expect(parsed.citationTokens[unit.id]).toBe(estimateCitation(unit, pricing(current.sources.units)))
     }
     const wrapper = current.sources.units.find((unit) => unit.role === "tool" && unit.locator.path.length === 0)!
     expect(parsed.exactTokens[wrapper.id]).toBeNull()

@@ -66,6 +66,7 @@ const projected = source.omit({ value: true, digest: true, locator: true }).exte
 const projectedColumns = ["field", "path", "role", "kind", "origin", "order", "actor", "scope", "extent", "recoverable", "exit"]
 const indexed = z.array(z.number().int().nonnegative()).length(11)
 const indexedFrame = frame.omit({ provenance: true }).extend({ frame: z.literal("continuity_exact_v3"), provenance: indexed }).strict()
+const labeledFrame = indexedFrame.extend({ frame: z.literal("continuity_exact_v4"), path: source.shape.locator.shape.path }).strict()
 const indexedSource = z.object({ source: z.string(), provenance: indexed }).strict()
 const header = z.object({
   version: z.literal(1), kind: z.literal("continuity_handoff"),
@@ -84,16 +85,19 @@ export function readHostHeader(text: string) {
 }
 
 export function readExactFrames(text: string) {
-  const frames = text.split("\n").filter((line) => /^\{"frame":"continuity_exact_v[123]"/.test(line))
+  const frames = text.split("\n").filter((line) => /^\{"frame":"continuity_exact_v[1234]"/.test(line))
     .map((line) => {
       const raw = JSON.parse(line)
       if (raw.frame === "continuity_exact_v1") {
         const parsed = frame.parse(raw)
         return { ...parsed, provenance: readerDescriptor(parsed.provenance) }
       }
-      if (raw.frame === "continuity_exact_v3") {
-        const parsed = indexedFrame.parse(raw)
-        return { ...parsed, provenance: expandIndexed(text, parsed.source, parsed.provenance) }
+      if (raw.frame === "continuity_exact_v3" || raw.frame === "continuity_exact_v4") {
+        const parsed = raw.frame === "continuity_exact_v4" ? labeledFrame.parse(raw) : indexedFrame.parse(raw)
+        const provenance = expandIndexed(text, parsed.source, parsed.provenance)
+        if ("path" in parsed && JSON.stringify(parsed.path) !== JSON.stringify(provenance.locator.path))
+          throw new Error("exact path/provenance mismatch")
+        return { ...parsed, provenance }
       }
       const parsed = compactFrame.parse(raw)
       return { ...parsed, provenance: readerDescriptor(expandProvenance(text, parsed.source, parsed.provenance)) }
@@ -130,7 +134,7 @@ export function readRenderedSources(text: string) {
     throw new Error("duplicate rendered source")
   if (text.includes('{"provenance_dictionary":')) {
     const table = JSON.parse(text.split("\n").find((line) => line.startsWith('{"provenance_dictionary":'))!)
-    const used = new Set(text.split("\n").filter((line) => line.startsWith('{"source":') || line.startsWith('{"frame":"continuity_exact_v3"'))
+    const used = new Set(text.split("\n").filter((line) => line.startsWith('{"source":') || /^\{"frame":"continuity_exact_v[34]"/.test(line))
       .flatMap((line) => indexed.parse(JSON.parse(line).provenance)))
     if (used.size !== table.provenance_dictionary.length) throw new Error("unused provenance dictionary entry")
   }
