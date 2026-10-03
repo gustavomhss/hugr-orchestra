@@ -1,4 +1,4 @@
-import { useNavigate } from "@solidjs/router"
+import { useLocation, useNavigate } from "@solidjs/router"
 import { useCommand, type CommandOption } from "@/context/command"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { previewSelectedLines } from "@opencode-ai/session-ui/pierre/selection-bridge"
@@ -51,6 +51,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   const layout = useLayout()
   const local = useLocal()
   const navigate = useNavigate()
+  const location = useLocation()
   const { params, sessionKey, tabs, view } = useSessionLayout()
   const sessionOwnership = createSessionOwnership(sessionKey)
   const sessionArchive = useSessionArchive()
@@ -421,6 +422,28 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     )
   }
 
+  // Read-only S20 destination; "Show in chat" reuses the existing #message-<id> navigation.
+  const openGovernance = () => {
+    const sessionID = params.id
+    if (!sessionID) return
+    const owner = sessionOwnership.capture()
+    const route = `${location.pathname}${location.search}`
+    void openDialog(
+      () => import("./orchestra-governance"),
+      (x) =>
+        dialog.show(() => (
+          <x.DialogOrchestraGovernance
+            sessionID={sessionID}
+            current={owner.current}
+            onShowMessage={(id) => {
+              dialog.close()
+              owner.run(() => navigate(`${route}#message-${id}`, { replace: true }))
+            }}
+          />
+        )),
+    )
+  }
+
   const shareCmds = () => {
     if (sync().data.config.share === "disabled") return []
     return [
@@ -498,6 +521,13 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       slash: "export",
       disabled: !params.id,
       onSelect: exportSession,
+    }),
+    sessionCommand({
+      id: "maestro.governance",
+      title: language.t("orchestra.governance.command"),
+      description: language.t("orchestra.governance.command.description"),
+      disabled: !params.id,
+      onSelect: openGovernance,
     }),
     sessionCommand({
       id: "session.archive",
