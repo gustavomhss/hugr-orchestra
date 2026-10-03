@@ -138,7 +138,7 @@ export function buildPlan(input: PartitionInput): Plan {
   input.symbols.forEach((s) => { if (!Object.hasOwn(input.assignment, s.name)) issues.push(`unassigned symbol: ${s.name} (partition must be exhaustive)`) })
   Object.keys(input.assignment).forEach((name) => { if (!symbols.has(name)) issues.push(`assignment names unknown symbol: ${name}`) })
   const ids = [...new Set(input.symbols.filter((s) => Object.hasOwn(input.assignment, s.name)).map((s) => input.assignment[s.name]))].sort()
-  if (ids.some((id) => id === EXTERNAL || id === LEAD)) issues.push("assignment uses a reserved module id")
+  if (ids.some((id) => id === EXTERNAL || id === LEAD || id.toLowerCase() === "_shared")) issues.push("assignment uses a reserved module id")
   const modules: ModulePlan[] = ids.map((id) => ({ id, exports: input.symbols.filter((s) => input.assignment[s.name] === id && s.exported).map((s) => s.name).sort(), helpers: input.symbols.filter((s) => input.assignment[s.name] === id && !s.exported).map((s) => s.name).sort(), imports: [] }))
   const relocations: Relocation[] = []
   const edgeMap = new Map<string, PlanEdge>()
@@ -174,6 +174,39 @@ export function buildPlan(input: PartitionInput): Plan {
       if (input.ownerUsedHelpers?.includes(name) || input.pinned?.includes(name)) addImport(owner, LEAD, name)
     }
   })
+  // Module-level evidence cannot identify a helper's exact dependency subset.
+  // Preserve every declared incoming dependency at a moved helper's destination.
+  while (true) {
+    const before = [...edgeMap.values()].reduce((sum, edge) => sum + edge.via.length, 0)
+    const declaredImports = new Map(modules.map((module) => [module.id, module.imports.map((item) => ({ from: item.from, names: [...item.names] }))]))
+    relocations.forEach((relocation) => {
+      const dependencies = [
+        ...input.symbols.filter((symbol) => input.assignment[symbol.name] === relocation.from).map((symbol) => ({ symbol: symbol.name,
+          from: modules.find((module) => module.exports.includes(symbol.name) || module.helpers.includes(symbol.name))?.id ??
+            (relocations.some((item) => item.symbol === symbol.name && item.to === LEAD) ? LEAD : relocation.from) })),
+        ...modules.filter((module) => module.id === relocation.from).flatMap((module) => [...module.exports, ...module.helpers].map((symbol) => ({ symbol, from: module.id }))),
+        ...(declaredImports.get(relocation.from) ?? []).flatMap((item) => item.names.map((symbol) => ({ symbol, from: item.from }))),
+        ...input.soundEdges.filter((edge) => edge.neededBy === relocation.from).map((edge) => ({ symbol: edge.symbol,
+          from: modules.find((module) => module.exports.includes(edge.symbol) || module.helpers.includes(edge.symbol))?.id ??
+            (relocations.some((item) => item.symbol === edge.symbol && item.to === LEAD) ? LEAD : EXTERNAL) })),
+      ].filter((edge) => edge.symbol !== relocation.symbol)
+      dependencies.forEach((edge) => {
+        const from = edge.from
+        const provider = modules.find((module) => module.id === from)
+        if (from === relocation.to) return
+        if (relocation.to === LEAD) {
+          issues.push(`shared helper dependency scope unresolved: ${relocation.symbol} requires ${edge.symbol} from ${from}`)
+          return
+        }
+        if (provider?.helpers.includes(edge.symbol)) {
+          issues.push(`relocated helper dependency is not exported: ${relocation.symbol} requires ${edge.symbol} from ${from}`)
+          return
+        }
+        addImport(relocation.to, from, edge.symbol)
+      })
+    })
+    if ([...edgeMap.values()].reduce((sum, edge) => sum + edge.via.length, 0) === before) break
+  }
   ;[...(input.ownerUsedHelpers ?? []), ...(input.pinned ?? [])].filter((name) => !symbols.has(name)).forEach((name) => issues.push(`unknown helper constraint: ${name}`))
   modules.forEach((m) => { m.helpers.sort(); m.imports.forEach((i) => i.names.sort()); m.imports.sort((a, b) => a.from.localeCompare(b.from)) })
   const edges = [...edgeMap.values()].map((e) => ({ ...e, via: e.via.sort() })).sort((a, b) => `${a.from}->${a.to}`.localeCompare(`${b.from}->${b.to}`))
@@ -182,12 +215,13 @@ export function buildPlan(input: PartitionInput): Plan {
     return { modules: component, via, dangerous: via.some((name) => ["const", "class", "enum", "function"].includes(symbols.get(name)?.kind ?? "type")) }
   })
   cycles.filter((c) => c.dangerous).forEach((c) => issues.push(`runtime-dangerous value cycle across [${c.modules.join(", ")}] via [${c.via.join(", ")}]`))
+  const diagnostics = [...new Set(issues)]
   const plan = {
     baselineSha: input.baselineSha, target: input.target, modules,
     frozenSurface: input.symbols.filter((s) => s.exported && Object.hasOwn(input.assignment, s.name)).map((s) => s.name).sort(),
     edges, relocations,
     conservation: { totalSymbols: input.symbols.length, totalExports: input.symbols.filter((s) => s.exported).length, perModule: Object.fromEntries(modules.map((m) => [m.id, m.exports.length + m.helpers.length])) },
-    cycles, ok: !issues.length, issues,
+    cycles, ok: !diagnostics.length, issues: diagnostics,
   }
   return { ...plan, hash: planHash(plan) }
 }
@@ -199,9 +233,35 @@ export function requirePlan(plan: Plan): string | undefined {
   if (plan.modules.some((m) => m.ctxBudget && m.ctxBudget.in > m.ctxBudget.total)) return "input context budget exceeds total"
   if (plan.modules.some((m) => m.outputMode === "file" && !m.outputPath)) return "file output mode requires outputPath"
   const ids = new Set(plan.modules.map((m) => m.id))
+  if ([...ids].some((id) => id === LEAD || id === EXTERNAL || id.toLowerCase() === "_shared")) return "plan uses a reserved module id"
   if (plan.edges.some((e) => !ids.has(e.to) || !ids.has(e.from) && e.from !== EXTERNAL && e.from !== LEAD)) return "plan edge names unknown module"
   const symbols = plan.modules.flatMap((m) => [...m.exports, ...m.helpers])
   if (new Set(symbols).size !== symbols.length) return "symbol owned by multiple modules"
+  const relocated = new Set(plan.relocations.map((relocation) => relocation.symbol))
+  if (relocated.size !== plan.relocations.length) return "duplicate relocation symbol"
+  for (const relocation of plan.relocations) {
+    if (!ids.has(relocation.from) || !ids.has(relocation.to) && relocation.to !== LEAD || relocation.from === relocation.to) return "relocation names invalid ownership endpoints"
+    if (plan.frozenSurface.includes(relocation.symbol)) return "relocation contradicts frozen exports"
+    if (relocation.to === LEAD && symbols.includes(relocation.symbol)) return "lead relocation collides with module ownership"
+    if (relocation.to !== LEAD && !plan.modules.find((module) => module.id === relocation.to)?.helpers.includes(relocation.symbol)) return "relocation contradicts destination helper ownership"
+    if (plan.ok) {
+      const origin = plan.modules.find((module) => module.id === relocation.from)
+      const destination = plan.modules.find((module) => module.id === relocation.to)
+      const dependencies = [...(origin?.imports ?? []),
+        { from: relocation.from, names: [...(origin?.exports ?? []), ...(origin?.helpers ?? [])] },
+        ...plan.relocations.filter((item) => item.from === relocation.from).map((item) => ({ from: item.to, names: [item.symbol] })),
+      ]
+      for (const imported of dependencies) {
+        for (const name of imported.names.filter((name) => name !== relocation.symbol)) {
+          if (imported.from === relocation.to && (relocation.to === LEAD ? relocated.has(name)
+            : [...(destination?.exports ?? []), ...(destination?.helpers ?? [])].includes(name))) continue
+          if (relocation.to === LEAD) return "shared helper dependency scope unresolved"
+          if (plan.modules.find((module) => module.id === imported.from)?.helpers.includes(name)) return "relocated helper dependency is not exported"
+          if (!destination?.imports.some((item) => item.from === imported.from && item.names.includes(name))) return "relocation drops declared dependency imports"
+        }
+      }
+    }
+  }
   if (plan.ok) {
     const exported = plan.modules.flatMap((m) => m.exports).sort()
     if (JSON.stringify(exported) !== JSON.stringify([...plan.frozenSurface].sort())) return "module exports contradict frozen surface"
@@ -210,6 +270,19 @@ export function requirePlan(plan: Plan): string | undefined {
     const imports = plan.modules.flatMap((m) => m.imports.flatMap((i) => i.names.map((name) => `${i.from}|${m.id}|${name}`))).sort()
     const edges = plan.edges.flatMap((e) => e.via.map((name) => `${e.from}|${e.to}|${name}`)).sort()
     if (new Set(edges).size !== edges.length || JSON.stringify(imports) !== JSON.stringify(edges)) return "imports contradict declared edges"
+  }
+  for (const module of plan.modules) {
+    const bindings = new Set([...module.exports, ...module.helpers])
+    for (const imported of module.imports) {
+      for (const name of imported.names) {
+        if (bindings.has(name)) return `import binding collision: ${module.id}.${name}`
+        bindings.add(name)
+        if (imported.from === EXTERNAL) continue
+        const available = imported.from === LEAD ? plan.relocations.filter((item) => item.to === LEAD).map((item) => item.symbol)
+          : plan.modules.find((provider) => provider.id === imported.from)?.exports ?? []
+        if (!available.includes(name)) return `imported symbol is absent or non-exported: ${imported.from}.${name}`
+      }
+    }
   }
   if (plan.cycles.some((cycle) => cycle.dangerous) && plan.ok) return "dangerous cycle contradicts Plan verdict"
   const cycles = findCycles([...ids], plan.edges).map((cycle) => cycle.join(",")).sort()
