@@ -258,7 +258,7 @@ test("opening a chapter right after choosing a profile replaces Home while usage
   // The usage view and the chapter page are separate modules. Hold both so the usage view
   // first mounts while the route transition to the chapter is still pending.
   await page.route(
-    (url) => url.pathname.endsWith("/orchestra/chapters/kpis.tsx"),
+    (url) => url.pathname.endsWith("/orchestra/chapters/kpis.tsx") || /^\/assets\/kpis-[\w-]+\.js$/.test(url.pathname),
     async (route) => {
       held.usage = true
       await navigation.promise
@@ -266,7 +266,7 @@ test("opening a chapter right after choosing a profile replaces Home while usage
     },
   )
   await page.route(
-    (url) => url.pathname.endsWith("/orchestra/chapters/env.tsx"),
+    (url) => url.pathname.endsWith("/orchestra/chapters/env.tsx") || /^\/assets\/env-[\w-]+\.js$/.test(url.pathname),
     async (route) => {
       navigation.resolve()
       await chapter.promise
