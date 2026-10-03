@@ -219,6 +219,7 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
             error={form.err.baseURL}
           />
           <TextField
+            type="password"
             label={language.t("provider.custom.field.apiKey.label")}
             placeholder={language.t("provider.custom.field.apiKey.placeholder")}
             description={language.t("provider.custom.field.apiKey.description")}

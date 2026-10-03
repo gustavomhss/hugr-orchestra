@@ -7,13 +7,65 @@ const serverB = "http://127.0.0.1:4097"
 const sessionA = session("ses_server_a", "C:/server-a", "Server A session")
 const sessionB = session("ses_server_b", "/home/server-b", "Server B session")
 
-test("closing the active server's last tab opens the remaining server tab", async ({ page }) => {
+test.describe("legacy tab strip", () => {
+  test.use({ viewport: { width: 760, height: 900 } })
+
+  test("closing the active server's last tab opens the remaining server tab", async ({ page }) => {
+    const requests: string[] = []
+    await mockServers(page, requests)
+    await page.addInitScript(
+      ({ serverB, sessionA, sessionB }) => {
+        localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+        localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
+        localStorage.setItem(
+          "opencode.window.browser.dat:tabs",
+          JSON.stringify([
+            { type: "session", server: "http://127.0.0.1:4096", sessionId: sessionA },
+            { type: "session", server: serverB, sessionId: sessionB },
+          ]),
+        )
+      },
+      { serverB, sessionA: sessionA.id, sessionB: sessionB.id },
+    )
+
+    const hrefA = `/server/${base64Encode(serverA)}/session/${sessionA.id}`
+    const hrefB = `/server/${base64Encode(serverB)}/session/${sessionB.id}`
+    await page.goto(hrefA)
+    await expect(page.getByText(sessionA.title).first()).toBeVisible()
+
+    const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+    await tabA.locator('[data-slot="tab-close"] button').click()
+
+    await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+    await expect.poll(() => requests.some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`))).toBe(true)
+    await expect(page.getByText(sessionB.title).first()).toBeVisible()
+    const sessionBRequests = requests.filter((url) => url.includes(`/session/${sessionB.id}`))
+    expect(sessionBRequests.every((url) => url.startsWith(serverB))).toBe(true)
+    expect(
+      requests.some((request) => {
+        const url = new URL(request)
+        return url.origin === serverB && url.searchParams.get("directory") === sessionB.directory
+      }),
+    ).toBe(true)
+  })
+})
+
+test("desktop closing the last profile tab goes Home and preserves the other server tab", async ({ page }) => {
   const requests: string[] = []
   await mockServers(page, requests)
   await page.addInitScript(
-    ({ serverB, sessionA, sessionB }) => {
+    ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
-      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
+      localStorage.setItem(
+        "opencode.global.dat:server",
+        JSON.stringify({
+          list: [serverB],
+          projects: {
+            [serverA]: [{ worktree: directoryA, expanded: true }],
+            [serverB]: [{ worktree: directoryB, expanded: true }],
+          },
+        }),
+      )
       localStorage.setItem(
         "opencode.window.browser.dat:tabs",
         JSON.stringify([
@@ -22,7 +74,14 @@ test("closing the active server's last tab opens the remaining server tab", asyn
         ]),
       )
     },
-    { serverB, sessionA: sessionA.id, sessionB: sessionB.id },
+    {
+      serverA,
+      serverB,
+      sessionA: sessionA.id,
+      sessionB: sessionB.id,
+      directoryA: sessionA.directory,
+      directoryB: sessionB.directory,
+    },
   )
 
   const hrefA = `/server/${base64Encode(serverA)}/session/${sessionA.id}`
@@ -31,17 +90,37 @@ test("closing the active server's last tab opens the remaining server tab", asyn
   await expect(page.getByText(sessionA.title).first()).toBeVisible()
 
   const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+  const navigations: string[] = []
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) navigations.push(new URL(frame.url()).pathname)
+  })
   await tabA.locator('[data-slot="tab-close"] button').click()
 
+  // Settle on Home first, so a late jump to the other server's tab would be recorded.
+  await expect(page.locator('[data-component="orchestra-home"]')).toBeVisible()
+  await expect(page).toHaveURL(new URL("/", page.url()).toString())
+  expect(navigations).not.toContain(hrefB)
+
+  // Only traffic after the profile switch proves that session B loads from its own server.
+  const mark = requests.length
+  await page.locator('[data-slot="orchestra-profile"]').click()
+  await page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("menuitemradio", { name: "server-b", exact: true })
+    .click()
   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
-  await expect.poll(() => requests.some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`))).toBe(true)
+  await expect
+    .poll(() => requests.slice(mark).some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`)))
+    .toBe(true)
   await expect(page.getByText(sessionB.title).first()).toBeVisible()
   const sessionBRequests = requests.filter((url) => url.includes(`/session/${sessionB.id}`))
   expect(sessionBRequests.every((url) => url.startsWith(serverB))).toBe(true)
   expect(
-    requests.some((request) => {
+    requests.slice(mark).some((request) => {
       const url = new URL(request)
-      return url.origin === serverB && url.searchParams.get("directory") === sessionB.directory
+      // V1 routes take `directory`; V2 routes take `location[directory]`.
+      const directory = url.searchParams.get("directory") ?? url.searchParams.get("location[directory]")
+      return url.origin === serverB && directory === sessionB.directory
     }),
   ).toBe(true)
 })
@@ -88,7 +167,7 @@ async function mockServers(page: Page, requests: string[]) {
     if (url.pathname === "/global/event" || url.pathname === "/event" || url.pathname === "/api/event")
       return sse(route)
     if (url.pathname === "/global/health") return json(route, {}, 404)
-    if (url.pathname === "/api/health") return json(route, { pid: 1 })
+    if (url.pathname === "/api/health") return json(route, { pid: 1, healthy: true })
     if (url.pathname === "/api/session") return json(route, { data: [currentSession(current)], cursor: {} })
     if (url.pathname === "/api/session/active") return json(route, { data: {} })
     if (url.pathname === `/api/session/${current.id}`) return json(route, { data: currentSession(current) })

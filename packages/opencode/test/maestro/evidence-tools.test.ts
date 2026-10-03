@@ -10,8 +10,9 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { mkdir } from "node:fs/promises"
+import path from "node:path"
 import { Agent } from "../../src/agent/agent"
 import { Config } from "../../src/config/config"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
@@ -119,12 +120,16 @@ describe("Maestro evidence tools", () => {
         const { chat, assistant } = yield* provideInstance(`${test.directory}/nested`)(seed())
         const events = yield* EventV2Bridge.Service
         const git = yield* Git.Service
+        // Bun.write can resolve on Windows before its file handle closes, so Git for Windows' FSCache may read a stale
+        // directory entry (an empty blob for new files, an unchanged size for edits). FileSystem writes close first.
+        const fs = yield* FileSystem.FileSystem
+        const first = path.join(test.directory, "first.txt")
         const workCard = "# Card\nReview full branch diff.\n"
         const base = (yield* git.run(["rev-parse", "HEAD"], { cwd: test.directory })).text().trim()
-        yield* Effect.promise(() => Bun.write(`${test.directory}/first.txt`, "first\n"))
+        yield* fs.writeFileString(first, "first\n")
         yield* git.run(["add", "first.txt"], { cwd: test.directory })
         yield* git.run(["commit", "-m", "first"], { cwd: test.directory })
-        yield* Effect.promise(() => Bun.write(`${test.directory}/second.txt`, "second\n"))
+        yield* fs.writeFileString(path.join(test.directory, "second.txt"), "second\n")
         yield* git.run(["add", "second.txt"], { cwd: test.directory })
         yield* git.run(["commit", "-m", "second"], { cwd: test.directory })
         const planRevisionID = EventV2.ID.make("evt_plan_review_tool")
@@ -289,7 +294,7 @@ describe("Maestro evidence tools", () => {
         expect(Exit.isFailure(foreignReview)).toBe(true)
         if (Exit.isFailure(foreignReview))
           expect(Cause.pretty(foreignReview.cause)).toContain("Review delegation context is stale or dirty")
-        yield* Effect.promise(() => Bun.write(`${test.directory}/first.txt`, "dirty sibling\n"))
+        yield* fs.writeFileString(first, "dirty sibling\n")
         const dirtyReview = yield* tool.init().pipe(
           Effect.flatMap((def) =>
             def.execute(
@@ -302,7 +307,7 @@ describe("Maestro evidence tools", () => {
         expect(Exit.isFailure(dirtyReview)).toBe(true)
         if (Exit.isFailure(dirtyReview))
           expect(Cause.pretty(dirtyReview.cause)).toContain("Review delegation context is stale or dirty")
-        yield* Effect.promise(() => Bun.write(`${test.directory}/first.txt`, "first\n"))
+        yield* fs.writeFileString(first, "first\n")
         const hookTool = yield* MaestroRequestReviewTool.pipe(
           Effect.provideService(Session.Service, {
             ...sessions,
@@ -310,7 +315,7 @@ describe("Maestro evidence tools", () => {
               sessions.create(input).pipe(
                 Effect.tap(() =>
                   Effect.gen(function* () {
-                    yield* Effect.promise(() => Bun.write(`${test.directory}/first.txt`, "child hook change\n"))
+                    yield* fs.writeFileString(first, "child hook change\n")
                     yield* git.run(["add", "first.txt"], { cwd: test.directory })
                     expect((yield* git.run(["commit", "-m", "child hook"], { cwd: test.directory })).exitCode).toBe(0)
                   }),

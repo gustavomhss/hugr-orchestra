@@ -1,6 +1,6 @@
 import { createSimpleContext } from "@opencode-ai/ui/context"
 import { base64Encode } from "@opencode-ai/core/util/encode"
-import { useParams } from "@solidjs/router"
+import { useParams, useSearchParams } from "@solidjs/router"
 import { batch, createEffect, createMemo, startTransition } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useModels } from "@/context/models"
@@ -8,7 +8,7 @@ import { useSettings } from "@/context/settings"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { Persist, persisted } from "@/utils/persist"
-import { hasCustomAgent, resolveAgent } from "./local-agent"
+import { agentChoiceVisible, hasCustomAgent, resolveAgent } from "./local-agent"
 import { cycleModelVariant, getConfiguredAgentVariant, resolveModelVariant } from "./model-variant"
 import { useSDK } from "./sdk"
 import { useSync } from "./sync"
@@ -60,6 +60,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
   name: "Local",
   init: () => {
     const params = useParams()
+    const [search] = useSearchParams<{ draftId?: string }>()
     const sdk = useSDK()
     const sync = useSync()
     const serverSDK = useServerSDK()
@@ -84,6 +85,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
     const [store, setStore] = createStore<{
       current?: string
+      explicitDraft?: string
       draft?: State
       promoting?: State
       last?: {
@@ -94,6 +96,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       }
     }>({
       current: list()[0]?.name,
+      explicitDraft: undefined,
       draft: undefined,
       last: undefined,
     })
@@ -181,11 +184,17 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
     const agent = {
       list,
-      visible: agentsVisible,
+      visible: () =>
+        agentChoiceVisible({
+          custom: agentsVisible(),
+          sessionID: id(),
+          explicitDraft: store.explicitDraft,
+          draftID: search.draftId,
+        }),
       current() {
-        return pickAgent(agentsVisible() ? (scope()?.agent ?? store.current) : "build")
+        return pickAgent(agent.visible() ? (scope()?.agent ?? store.current) : "build")
       },
-      set(name: string | undefined) {
+      set(name: string | undefined, options?: { draftID?: string }) {
         const item = pickAgent(name)
         if (!item) {
           setStore("current", undefined)
@@ -193,6 +202,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         }
 
         batch(() => {
+          if (options?.draftID) setStore("explicitDraft", options.draftID)
           setStore("current", item.name)
           setStore("last", {
             type: "agent",

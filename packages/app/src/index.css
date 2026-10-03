@@ -2,6 +2,13 @@
 @import "@opencode-ai/session-ui/styles";
 @import "@opencode-ai/ui/v2/styles/tailwind.css";
 @import "tw-animate-css";
+@import "./orchestra/background.css";
+@import "./orchestra/theme.css";
+@import "./orchestra/shell.css";
+@import "./orchestra/tabs.css";
+@import "./orchestra/session.css";
+@import "./orchestra/composer.css";
+@import "./orchestra/review.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";

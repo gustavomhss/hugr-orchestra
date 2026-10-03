@@ -7,11 +7,13 @@ import { Session } from "../../src/session/session"
 import { EventV2 } from "@opencode-ai/core/event"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { ProjectTable } from "@opencode-ai/core/project/sql"
+import { ProjectSchema } from "@opencode-ai/core/project/schema"
 import { AbsolutePath } from "@opencode-ai/core/schema"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
-import { Effect, Schema } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
 import { eq } from "drizzle-orm"
+import { rm } from "node:fs/promises"
 import path from "node:path"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
@@ -84,12 +86,15 @@ const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDir
   const { db } = yield* Database.Service
   const events = yield* EventV2Bridge.Service
   const git = yield* Git.Service
+  // Bun.write can resolve on Windows before its file handle closes. Git for Windows' FSCache then reads the stale
+  // zero-byte directory entry and stages an empty blob, leaving a dirty tree. FileSystem writes close before completing.
+  const fs = yield* FileSystem.FileSystem
   const baseCommit = yield* git.run(["rev-parse", "HEAD"], { cwd: directory })
   const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: directory })
-  yield* Effect.promise(() => Bun.write(`${directory}/proof.txt`, "proof\n"))
+  yield* fs.writeFileString(path.join(directory, "proof.txt"), "proof\n")
   yield* git.run(["add", "proof.txt"], { cwd: directory })
   yield* git.run(["commit", "-m", "proof"], { cwd: directory })
-  yield* Effect.promise(() => Bun.write(`${directory}/proof-2.txt`, "proof 2\n"))
+  yield* fs.writeFileString(path.join(directory, "proof-2.txt"), "proof 2\n")
   yield* git.run(["add", "proof-2.txt"], { cwd: directory })
   yield* git.run(["commit", "-m", "proof 2"], { cwd: directory })
   const head = yield* git.run(["rev-parse", "HEAD"], { cwd: directory })
@@ -125,16 +130,29 @@ const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDir
     ],
     { cwd: directory },
   )
-  const project = yield* db.select().from(ProjectTable).get().pipe(Effect.orDie)
-  if (!project) throw new Error("missing test project")
+  const session = yield* db
+    .select()
+    .from(SessionTable)
+    .where(eq(SessionTable.id, SessionID.make(base.sessionID)))
+    .get()
+    .pipe(Effect.orDie)
+  if (!session) throw new Error("missing artifact Session")
+  expect(session.directory).toBe(path.normalize(directory))
+  const status = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: session.directory })
+  expect({
+    exitCode: status.exitCode,
+    truncated: status.truncated,
+    stdout: status.text(),
+    stderr: status.stderr.toString(),
+  }).toMatchObject({ exitCode: 0, truncated: false, stdout: "" })
   yield* events.publish(
     MaestroEvent.Context.Recorded,
     {
       id: base.contextRecordID,
       sessionID: base.sessionID,
       planRevisionID: base.planRevisionID,
-      projectID: project.id,
-      directory,
+      projectID: session.project_id,
+      directory: session.directory,
       mode: "UNGROUNDED",
       branch: "test",
       headSHA: head.text().trim(),
@@ -328,7 +346,8 @@ describe("Maestro validation receipt", () => {
         const { db } = yield* Database.Service
         const sandbox = path.join(test.directory, ".sandboxes", "card")
         const git = yield* Git.Service
-        yield* Effect.promise(() => Bun.write(`${test.directory}/.git/info/exclude`, ".sandboxes/\n"))
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString(path.join(test.directory, ".git", "info", "exclude"), ".sandboxes/\n")
         expect((yield* git.run(["worktree", "add", "-b", "sandbox", sandbox], { cwd: test.directory })).exitCode).toBe(
           0,
         )
@@ -474,7 +493,8 @@ describe("Maestro validation receipt", () => {
         const git = yield* Git.Service
         yield* git.run(["checkout", "--orphan", "unrelated-artifact"], { cwd: test.directory })
         yield* git.run(["rm", "-rf", "."], { cwd: test.directory })
-        yield* Effect.promise(() => Bun.write(`${test.directory}/unrelated.txt`, "unrelated\n"))
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString(path.join(test.directory, "unrelated.txt"), "unrelated\n")
         yield* git.run(["add", "unrelated.txt"], { cwd: test.directory })
         yield* git.run(["commit", "-m", "unrelated"], { cwd: test.directory })
         const head = yield* git.run(["rev-parse", "HEAD"], { cwd: test.directory })
@@ -567,20 +587,67 @@ describe("Maestro validation receipt", () => {
         const input = yield* prepare()
         const validation = yield* recordValidation(input)
         const evidence = yield* artifact()
-        const rejected = yield* recordReview({
+        const review = {
           sessionID: input.sessionID,
           validationRecordID: validation.id,
           workCard: input.workCard,
           reviewerID: "lucy",
           reviewMethodVersion: "review-v1",
           verdict: "FIX_FIRST",
-          findings: [{ path: "proof.txt", line: 99, message: "invented citation" }],
           artifact: evidence,
           checks: input.checks,
+        }
+        expect(
+          (yield* recordReview({
+            ...review,
+            findings: [{ path: "proof.txt", line: 1, message: "actual added line" }],
+          })).findings,
+        ).toEqual([{ path: "proof.txt", line: 1, message: "actual added line" }])
+        const test = yield* TestInstance
+        const git = yield* Git.Service
+        yield* Effect.promise(() => Bun.write(path.join(test.directory, "untracked-control.txt"), "untracked\n"))
+        const dirty = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: test.directory })
+        expect(dirty.exitCode).toBe(0)
+        expect(dirty.text()).toContain("?? untracked-control.txt")
+        expectReviewRejection(
+          yield* recordReview({
+            ...review,
+            findings: [{ path: "proof.txt", line: 99, message: "invented citation" }],
+          }).pipe(Effect.flip),
+          "artifact-context-mismatch",
+        )
+        yield* Effect.promise(() => rm(path.join(test.directory, "untracked-control.txt")))
+        const clean = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: test.directory })
+        expect({ exitCode: clean.exitCode, truncated: clean.truncated, stdout: clean.text() }).toEqual({
+          exitCode: 0,
+          truncated: false,
+          stdout: "",
+        })
+        const rejected = yield* recordReview({
+          ...review,
+          findings: [{ path: "proof.txt", line: 99, message: "invented citation" }],
         }).pipe(Effect.flip)
 
         expectReviewRejection(rejected, "finding-not-in-artifact")
       }),
-    { git: true },
+    {
+      git: true,
+      init: (directory) =>
+        Effect.gen(function* () {
+          const { db } = yield* Database.Service
+          // Seed an unrelated row first so an unscoped Project lookup cannot mask the finding gate.
+          yield* db
+            .insert(ProjectTable)
+            .values({
+              id: ProjectSchema.ID.make("prj_unrelated"),
+              worktree: AbsolutePath.make(path.dirname(directory)),
+              sandboxes: [],
+              time_created: 1,
+              time_updated: 1,
+            })
+            .run()
+            .pipe(Effect.orDie)
+        }),
+    },
   )
 })

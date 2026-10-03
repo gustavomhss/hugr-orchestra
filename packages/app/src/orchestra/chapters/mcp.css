@@ -1,0 +1,95 @@
+.orchestra-mcp {
+  min-block-size: 0;
+  overflow: auto;
+  padding: 28px;
+  color: var(--orchestra-text);
+}
+
+.orchestra-mcp h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.orchestra-mcp header p {
+  margin-block: 6px 24px;
+  color: var(--orchestra-body);
+}
+
+.orchestra-mcp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-block-end: 20px;
+}
+
+.orchestra-mcp-toolbar [data-component="text-input-v2"] {
+  inline-size: min(320px, 100%);
+}
+
+.orchestra-mcp-directory {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  color: var(--orchestra-muted);
+  font-size: 12px;
+}
+
+.orchestra-mcp-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.orchestra-mcp-row {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: 20px;
+  padding: 18px;
+  border: 1px solid var(--orchestra-border);
+  border-radius: 9px;
+  background: var(--orchestra-surface);
+}
+
+.orchestra-mcp-details {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.orchestra-mcp-row h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.orchestra-mcp-row p {
+  margin-block: 8px 0;
+  font-size: 13px;
+}
+
+.orchestra-mcp-status {
+  color: var(--orchestra-muted);
+}
+
+.orchestra-mcp-row[data-status="connected"] .orchestra-mcp-status {
+  color: var(--orchestra-success);
+}
+
+.orchestra-mcp-error {
+  color: var(--orchestra-body);
+}
+
+.orchestra-mcp-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--orchestra-border-muted);
+}
+
+.orchestra-mcp-message p {
+  margin-block-end: 12px;
+  overflow-wrap: anywhere;
+}

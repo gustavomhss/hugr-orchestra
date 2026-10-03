@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page, type TestInfo } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
@@ -6,12 +6,42 @@ const draftID = "draft_new_session_panel_corner"
 const directory = "C:/OpenCode/NewSessionPanelCorner"
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 
-test.use({
-  viewport: { width: 935, height: 522 },
-  deviceScaleFactor: 1,
+test.use({ deviceScaleFactor: 1 })
+
+test.describe("Orchestra layout", () => {
+  test.use({ viewport: { width: 935, height: 522 } })
+
+  for (const scheme of ["dark", "light"] as const) {
+    test(`matches the rounded panel corners to the ${scheme} Orchestra backdrop`, async ({ page }, testInfo) => {
+      const corners = await readPanelCorners(page, testInfo, scheme)
+      // The glass panel is transparent outside its 9px radius: each corner must show the same workspace
+      // backdrop as the gutter just outside it, never a differently coloured layer behind the panel.
+      expect(
+        corners.filter(
+          (corner) =>
+            corner.pixel[3] !== 255 ||
+            corner.pixel.slice(0, 3).some((value, index) => Math.abs(value - corner.backdrop[index]) > 6),
+        ),
+      ).toEqual([])
+    })
+  }
 })
 
-test("matches the rounded panel corners to the dark new-session background", async ({ page }, testInfo) => {
+test.describe("legacy layout", () => {
+  test.use({ viewport: { width: 760, height: 522 } })
+
+  test("matches the rounded panel corners to the dark new-session background", async ({ page }, testInfo) => {
+    const corners = await readPanelCorners(page, testInfo, "dark")
+    // The Orchestra palette also themes the legacy layout; its near-black is #080c11.
+    expect(
+      corners.filter(
+        ({ pixel: [red, green, blue, alpha] }) => !(red <= 8 && green <= 12 && blue <= 17 && alpha === 255),
+      ),
+    ).toEqual([])
+  })
+})
+
+async function readPanelCorners(page: Page, testInfo: TestInfo, scheme: "dark" | "light") {
   await mockOpenCodeServer(page, {
     directory,
     project: {
@@ -27,10 +57,14 @@ test("matches the rounded panel corners to the dark new-session background", asy
     pageMessages: () => ({ items: [] }),
   })
   await page.addInitScript(
-    ({ directory, draftID, server }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+    ({ directory, draftID, server, scheme }) => {
+      // The fixed tabs toast and its shadow sit next to the bottom-right panel corner.
+      localStorage.setItem(
+        "settings.v3",
+        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
+      )
       localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", "dark")
+      localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem(
         "opencode.global.dat:server",
         JSON.stringify({
@@ -43,20 +77,24 @@ test("matches the rounded panel corners to the dark new-session background", asy
         JSON.stringify([{ type: "draft", draftID, server, directory }]),
       )
     },
-    { directory, draftID, server },
+    { directory, draftID, server, scheme },
   )
 
   await page.goto(`/new-session?draftId=${draftID}`)
   await expectAppVisible(page.locator('[data-component="prompt-input"]'))
-  await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "dark")
-  const panel = page.locator('main div[class*="rounded-[10px]"][class*="overflow-hidden"]')
+  await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
+  const panel = page.locator('main [data-component="session-new-design"]')
   await expect(panel).toHaveCount(1)
   const box = await panel.boundingBox()
   if (!box) throw new Error("New-session panel bounds are unavailable")
 
-  const screenshot = await page.screenshot({ path: testInfo.outputPath("new-session-dark.png") })
-  const corners = await page.evaluate(
-    async ({ source, points }) => {
+  const left = Math.floor(box.x)
+  const top = Math.floor(box.y)
+  const right = Math.ceil(box.x + box.width) - 1
+  const bottom = Math.ceil(box.y + box.height) - 1
+  const screenshot = await page.screenshot({ path: testInfo.outputPath(`new-session-${scheme}.png`) })
+  return page.evaluate(
+    async ({ source, corners }) => {
       const image = new Image()
       image.src = source
       await image.decode()
@@ -66,18 +104,22 @@ test("matches the rounded panel corners to the dark new-session background", asy
       const context = canvas.getContext("2d")
       if (!context) throw new Error("2D canvas is unavailable")
       context.drawImage(image, 0, 0)
-      return points.map((point) => Array.from(context.getImageData(point.x, point.y, 1, 1).data))
+      const read = (x: number, y: number) => Array.from(context.getImageData(x, y, 1, 1).data)
+      return corners.map((corner) => ({
+        at: [corner.x, corner.y],
+        pixel: read(corner.x, corner.y),
+        backdrop: read(corner.x + corner.dx, corner.y + corner.dy),
+      }))
     },
     {
       source: `data:image/png;base64,${screenshot.toString("base64")}`,
-      points: [
-        { x: Math.floor(box.x), y: Math.floor(box.y) },
-        { x: Math.ceil(box.x + box.width) - 1, y: Math.floor(box.y) },
-        { x: Math.floor(box.x), y: Math.ceil(box.y + box.height) - 1 },
-        { x: Math.ceil(box.x + box.width) - 1, y: Math.ceil(box.y + box.height) - 1 },
+      // Two pixels diagonally outward stays inside the 6px Orchestra gutter.
+      corners: [
+        { x: left, y: top, dx: -2, dy: -2 },
+        { x: right, y: top, dx: 2, dy: -2 },
+        { x: left, y: bottom, dx: -2, dy: 2 },
+        { x: right, y: bottom, dx: 2, dy: 2 },
       ],
     },
   )
-
-  expect(corners.every(([red, green, blue, alpha]) => red <= 8 && green <= 8 && blue <= 8 && alpha === 255)).toBe(true)
-})
+}

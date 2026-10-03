@@ -195,27 +195,31 @@ describe("ProjectV2.resolve", () => {
     }),
   )
 
-  it.live("linked worktree returns opened worktree directory and previous from common dir", () =>
-    Effect.gen(function* () {
-      const tmp = yield* Effect.acquireRelease(
-        Effect.promise(() => tmpdir()),
-        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
-      )
-      const worktree = `${tmp.path}-worktree`
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => $`rm -rf ${worktree}`.quiet().nothrow()).pipe(Effect.ignore),
-      )
-      yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
-      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "opencode"), "old-id"))
-      yield* Effect.promise(() => $`git worktree add ${worktree} -b test-${Date.now()}`.cwd(tmp.path).quiet())
-      const project = yield* ProjectV2.Service
+  // Real Git worktree setup and teardown can exceed Bun's 5s default on Windows runners.
+  it.live(
+    "linked worktree returns opened worktree directory and previous from common dir",
+    () =>
+      Effect.gen(function* () {
+        const tmp = yield* Effect.acquireRelease(
+          Effect.promise(() => tmpdir()),
+          (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+        )
+        const worktree = `${tmp.path}-worktree`
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => $`rm -rf ${worktree}`.quiet().nothrow()).pipe(Effect.ignore),
+        )
+        yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
+        yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "opencode"), "old-id"))
+        yield* Effect.promise(() => $`git worktree add ${worktree} -b test-${Date.now()}`.cwd(tmp.path).quiet())
+        const project = yield* ProjectV2.Service
 
-      const result = yield* project.resolve(abs(worktree))
+        const result = yield* project.resolve(abs(worktree))
 
-      expect(result.directory).toBe(yield* real(worktree))
-      expect(result.previous).toBe(ProjectV2.ID.make("old-id"))
-      expect(result.id).toBe(remoteID("github.com/owner/repo"))
-      expect(result.vcs?.type).toBe("git")
-    }),
+        expect(result.directory).toBe(yield* real(worktree))
+        expect(result.previous).toBe(ProjectV2.ID.make("old-id"))
+        expect(result.id).toBe(remoteID("github.com/owner/repo"))
+        expect(result.vcs?.type).toBe("git")
+      }),
+    30_000,
   )
 })

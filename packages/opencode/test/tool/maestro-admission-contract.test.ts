@@ -1,4 +1,4 @@
-import { afterEach, describe, expect } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -58,7 +58,26 @@ const context = (agent = "maestro", agentID?: string): Tool.Context => ({
   ask: () => Effect.void,
 })
 
+function skillExample(source: string) {
+  // The skill's example is delimited by literal JSON fences; Git may check it out with CRLF.
+  const json = source.replaceAll("\r\n", "\n").match(/^```json\n([\s\S]*?)\n```$/m)?.[1]
+  if (!json) throw new Error("frame-request must contain a JSON tool payload example")
+  return json
+}
+
 describe("Maestro admission contract", () => {
+  test.each(["\n", "\r\n"])("extracts the literal JSON example with newline %j", (newline) => {
+    const json = '{"methodVersion":"admit-request-v1","assessment":{"kind":"work"}}'
+    expect(skillExample(["Intro", "```json", json, "```", "Outro"].join(newline))).toBe(json)
+  })
+
+  test.each(["{}", "```text\n{}\n```", "```json\n{}", "```json\n\n```"])(
+    "rejects missing or empty JSON example fences: %j",
+    (source) => {
+      expect(() => skillExample(source)).toThrow("frame-request must contain a JSON tool payload example")
+    },
+  )
+
   it.instance("advertises provenance and records actual skill example against latest direct user message", () =>
     Effect.gen(function* () {
       const tool = yield* MaestroRecordAdmissionTool
@@ -91,9 +110,7 @@ describe("Maestro admission contract", () => {
       const skill = yield* Effect.promise(() =>
         Bun.file(new URL("../../../../.opencode/skills/frame-request/SKILL.md", import.meta.url)).text(),
       )
-      const json = skill.match(/```json\n([\s\S]*?)\n```/)?.[1]
-      if (!json) throw new Error("frame-request must contain a JSON tool payload example")
-      const raw = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(json)
+      const raw = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(skillExample(skill))
       expect(raw).toHaveProperty("assessment")
       expect(raw).not.toHaveProperty("assessment.outcome")
       const params = Schema.decodeUnknownSync(def.parameters)(raw)

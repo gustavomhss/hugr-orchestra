@@ -1,0 +1,33 @@
+/* Inlined before the theme preload by the app's shared Vite plugin. */
+html[data-color-scheme] {
+  --orchestra-background: #080c11;
+  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #1a2532 0%, transparent 65%), #080c11;
+}
+
+html[data-color-scheme="light"] {
+  --orchestra-background: #dfe3e8;
+  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #eef1f4 0%, transparent 65%), #dfe3e8;
+}
+
+html[data-new-layout] {
+  --app-background: var(--orchestra-background);
+  background-color: var(--orchestra-background);
+}
+
+html[data-new-layout] body {
+  background: var(--orchestra-page-background);
+}
+
+html[data-new-layout] #root {
+  background-color: var(--orchestra-background);
+}
+
+@media (min-width: 768px) {
+  html[data-new-layout] {
+    background: var(--orchestra-page-background);
+  }
+
+  html[data-new-layout] #root {
+    background: transparent;
+  }
+}

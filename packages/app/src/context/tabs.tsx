@@ -206,10 +206,10 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         if (!tab || tab.type !== "draft") throw new Error(`Draft not found: ${draftID}`)
         return tab
       },
-      async newDraft(draft: Omit<DraftTab, "type" | "draftID">, prompt?: string, model?: PromptModel) {
+      async newDraft(draft: Omit<DraftTab, "type" | "draftID">, prompt?: string, model?: PromptModel, agent?: string) {
         const draftID = uuid()
         const tab = { type: "draft" as const, draftID, ...draft }
-        memory.ensure(tabKey(tab), "prompt", () => createDraftPromptSession(draftID, { prompt, model }))
+        memory.ensure(tabKey(tab), "prompt", () => createDraftPromptSession(draftID, { prompt, model, agent }))
         await startTransition(() => {
           setStore(
             produce((tabs) => {

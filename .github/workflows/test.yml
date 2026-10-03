@@ -221,6 +221,8 @@ jobs:
 
       - name: Run HttpApi exerciser gates
         if: runner.os == 'Linux'
+        # The gates finish in a few minutes; fail fast instead of holding the runner if a scenario wedges.
+        timeout-minutes: 15
         working-directory: packages/opencode
         run: bun run test:httpapi
 
@@ -282,7 +284,8 @@ jobs:
         run: bun --cwd packages/app test:e2e:local
         env:
           CI: true
-        timeout-minutes: 30
+        # One CI worker runs the whole suite; on 2-vCPU Windows runners it takes about 30 minutes.
+        timeout-minutes: 45
 
       - name: Upload Playwright artifacts
         if: always()

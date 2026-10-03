@@ -12,6 +12,7 @@ import { TextField } from "@opencode-ai/ui/text-field"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { DialogBody, DialogHeader, DialogTitle, DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
 import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
+import { SecretInputV2 } from "@/components/secret-input-v2"
 import { showToast } from "@/utils/toast"
 import {
   type Accessor,
@@ -863,22 +864,19 @@ function ProviderConnection(props: {
             </div>
           </Show>
           <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
-            <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
-              {language.t("provider.connect.apiKey.label", { provider: provider().name })}
-              <TextInputV2
-                ref={apiKey}
-                class="!w-full"
-                name="apiKey"
-                data-input="provider-api-key"
-                placeholder={language.t("provider.connect.apiKey.placeholder")}
-                value={formStore.value}
-                invalid={formStore.error !== undefined}
-                aria-describedby={formStore.error ? errorID : undefined}
-                autocomplete="off"
-                spellcheck={false}
-                onInput={(event) => setFormStore("value", event.currentTarget.value)}
-              />
-            </label>
+            <SecretInputV2
+              ref={apiKey}
+              label={language.t("provider.connect.apiKey.label", { provider: provider().name })}
+              name="apiKey"
+              data-input="provider-api-key"
+              placeholder={language.t("provider.connect.apiKey.placeholder")}
+              value={formStore.value}
+              invalid={formStore.error !== undefined}
+              aria-describedby={formStore.error ? errorID : undefined}
+              autocomplete="off"
+              spellcheck={false}
+              onInput={(event) => setFormStore("value", event.currentTarget.value)}
+            />
             <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
               {language.t("provider.connect.apiKey.labelOptional")}
               <TextInputV2
@@ -930,7 +928,7 @@ function ProviderConnection(props: {
           <TextField
             autofocus={!newLayout()}
             ref={apiKey}
-            type="text"
+            type="password"
             label={language.t("provider.connect.apiKey.label", { provider: provider().name })}
             placeholder={language.t("provider.connect.apiKey.placeholder")}
             name="apiKey"

@@ -1,0 +1,115 @@
+{
+  "verifiedAt": "2026-10-01T23:20:47.674Z",
+  "results": [
+    {
+      "name": "identity-brand",
+      "files": 8,
+      "sha256": "525320545cb1d210e0fb05b696e18bb2aea2f7aa3300a387e7dcb7e03dfc5fde",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-chat",
+      "files": 3,
+      "sha256": "f90561f00d28711d4a9e16b22b89c688ac8afbb3a946b6290b6cc32ee63fa592",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-review",
+      "files": 2,
+      "sha256": "f8101d5b113856308d8339b2303132e53592835fd92b057c6dfc93c5d4203eeb",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-shell",
+      "files": 0,
+      "archive": "no payload"
+    },
+    {
+      "name": "identity-surfaces",
+      "files": 9,
+      "sha256": "26b3305ac62447db9a115be53dd84e30e4040e11525a61d7988e7aa621b06f36",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-verify",
+      "files": 5,
+      "sha256": "d860a2a1655828042cac61b7f9670b9f8b99eed297b5fc51ded49b1b8dc4ed86",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "fix-glass",
+      "files": 4,
+      "sha256": "eccb7a068c0147038925675d692c8ab77bfd006ebe8571b0b972c3b0d997292e",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "fix-locales",
+      "files": 64,
+      "sha256": "43ab8205ca89428fbdf10abe5971381287f1753f7ca9ca2979379a1986964049",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "fix-profile-races",
+      "files": 2,
+      "sha256": "cf23d95268f1d0a7685584942ad91cd86397aa7f2e8d40b4d7c5847391274e6b",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "fix-test-runtime",
+      "files": 10,
+      "sha256": "83ab6bcaa88c0a3ad0ede00a7095e48d125f2a96b86947275c0b4761eb257909",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-tab-limit",
+      "files": 3,
+      "sha256": "c31db7a8da960a66539745def5b5419780a625280cbd63f5094c075b1d17153d",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-panel-limit",
+      "files": 4,
+      "sha256": "12f17c821a77e99f68e2fa0c10a5e1680bdf78e95b8c2b09755a99028acdc6bf",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-dock-limit",
+      "files": 3,
+      "sha256": "e3c790248448bd4e136256fc8972958676c1844b41d2eaf686d37aa340387c7e",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "identity-rail-limit",
+      "files": 2,
+      "sha256": "048cad43280007133f500620d573249b61d489cd1f25c16b749117217d78fffe",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "approved-mock",
+      "files": 27,
+      "sha256": "25d6dc34f5f51cf09ba1cfdd60973557d791029d1dd15b07d378b3ad73c0d290",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "ancillary-assets",
+      "files": 82,
+      "sha256": "4759ddf552f979c11d5f70f892828952a906bd4c9f664e63c8a4ee0f38edd8b5",
+      "result": "restored bytes match"
+    },
+    {
+      "name": "historical-evidence",
+      "files": 4819,
+      "sha256": "27921a7b12d047070c8c4672f110a56c5edef9a97dcb608f6b8826d1b4e16d48",
+      "result": "restored bytes match"
+    }
+  ],
+  "splitReconstruction": "sha256 matches complete archive",
+  "mutationControl": "Changing one byte of recovered app.html changes SHA-256; corrupted recovery rejected",
+  "extractedScannerSource": "/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/handoff-verified",
+  "restoreUtility": {
+    "goodOutput": "historical-evidence-restored.tar.gz",
+    "goodSha256": "27921a7b12d047070c8c4672f110a56c5edef9a97dcb608f6b8826d1b4e16d48",
+    "negativeControl": "Actual restore-evidence.ts rejects corrupted part SHA-256 before writing output",
+    "negativeExit": 1
+  }
+}
