@@ -58,7 +58,7 @@ function mime(uri: string) {
   return match?.[1] ?? "application/octet-stream"
 }
 
-function sessionInfo(session: Session): SessionInfo {
+function sessionInfo(session: Session): SessionInfo & { costAvailable: boolean } {
   return {
     id: session.id,
     parentID: session.parentID,
@@ -70,6 +70,7 @@ function sessionInfo(session: Session): SessionInfo {
       variant: session.model.variant,
     },
     cost: session.cost ?? 0,
+    costAvailable: session.cost !== undefined,
     tokens: session.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
     time: session.time,
     title: session.title,
