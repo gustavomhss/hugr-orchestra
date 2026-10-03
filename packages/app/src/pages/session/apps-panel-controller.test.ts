@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import { appDockProfile, createAppDockController, type AppDockAPI } from "./apps-panel-controller"
 
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
@@ -105,6 +105,53 @@ describe("App Dock controller", () => {
     expect(dock.calls.at(-1)).toEqual(["close-tab", "tab-1"])
   })
 
+  test("an overlay over the Dock occludes the browser; closing it releases whichever tab is current", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    controller.attach(placed(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    expect(dock.calls.filter((call) => call[0] === "occlude")).toEqual([["occlude", false]])
+    const before = dock.calls.length
+
+    const dialog = overlay()
+    await until(() => dock.calls.some((call) => call[0] === "occlude" && call[1] === true))
+    await controller.openNewTab()
+    controller.select(controller.state.tabs[0])
+    dialog.remove()
+    await until(() => dock.calls.at(-1)?.[0] === "occlude")
+
+    // The renderer never hides or re-selects a remembered tab: the desktop keeps every view hidden
+    // while occluded and shows its active tab on release, so no stale tab can come back.
+    expect(dock.calls.slice(before)).toEqual([
+      ["occlude", true],
+      ["open", "https://opencode.ai", profileA],
+      ["select", "tab-1"],
+      ["occlude", false],
+    ])
+  })
+
+  test("a view attached while an overlay is open is occluded before its tab is shown", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const detachPage = controller.attach(placed(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    detachPage()
+    overlay()
+    await settle()
+    const before = dock.calls.length
+
+    controller.attach(placed(), profileA)
+    await settle()
+    expect(dock.calls.slice(before)).toEqual([
+      ["occlude", true],
+      ["select", "tab-1"],
+    ])
+  })
+
   test("a failed load shows its error and retry restores the profile", async () => {
     const dock = fakeDock()
     dock.failManifest(true)
@@ -174,6 +221,35 @@ function element() {
   return document.createElement("div")
 }
 
+const mounted: Element[] = []
+afterEach(() => mounted.splice(0).forEach((item) => item.remove()))
+
+// A Dock host laid out in the document beside the sidebar; happy-dom has no layout of its own.
+function placed() {
+  const root = document.createElement("div")
+  const host = sized(element(), { x: 600, y: 100, width: 600, height: 500 })
+  root.append(host)
+  document.body.append(root)
+  mounted.push(root)
+  return host
+}
+
+// A portal like a Kobalte dialog's: its fixed-position overlay fills the window.
+function overlay() {
+  const portal = document.createElement("div")
+  portal.append(sized(element(), { x: 0, y: 0, width: 1400, height: 900 }))
+  document.body.append(portal)
+  mounted.push(portal)
+  return portal
+}
+
+function sized<T extends Element>(item: T, area: { x: number; y: number; width: number; height: number }) {
+  Object.defineProperty(item, "getBoundingClientRect", {
+    value: () => new DOMRect(area.x, area.y, area.width, area.height),
+  })
+  return item
+}
+
 async function settle() {
   for (let index = 0; index < 10; index++) await new Promise((resolve) => setTimeout(resolve, 0))
 }
@@ -225,6 +301,9 @@ function fakeDock() {
     },
     appDockHide: async () => {
       calls.push(["hide"])
+    },
+    appDockOcclude: async (occluded: boolean) => {
+      calls.push(["occlude", occluded])
     },
     appDockClose: async () => {
       calls.push(["close"])

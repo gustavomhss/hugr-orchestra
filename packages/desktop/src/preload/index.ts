@@ -15,6 +15,7 @@ const api: ElectronAPI = {
   appDockDeleteProfile: (profileID) => ipcRenderer.invoke("app-dock-delete-profile", { profileID }),
   appDockResize: (bounds) => ipcRenderer.invoke("app-dock-resize", bounds),
   appDockHide: () => ipcRenderer.invoke("app-dock-hide"),
+  appDockOcclude: (occluded) => ipcRenderer.invoke("app-dock-occlude", occluded),
   appDockClose: () => ipcRenderer.invoke("app-dock-close"),
   appDockCloseTab: (tabID) => ipcRenderer.invoke("app-dock-close-tab", tabID),
   appDockRecoverTab: (tabID) => ipcRenderer.invoke("app-dock-recover-tab", tabID),

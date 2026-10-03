@@ -283,6 +283,7 @@ declare global {
       appDockDeleteProfile?: (profileID: string) => Promise<void>
       appDockResize?: (bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
       appDockHide?: () => Promise<void>
+      appDockOcclude?: (occluded: boolean) => Promise<void>
       appDockClose?: () => Promise<void>
       appDockCloseTab?: (id: string) => Promise<void>
       appDockSelect?: (id: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
