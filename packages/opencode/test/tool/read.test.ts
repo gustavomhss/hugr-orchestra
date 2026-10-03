@@ -51,6 +51,26 @@ const readLayer = (flags: Partial<RuntimeFlags.Info> = {}) =>
 
 const it = testEffect(Layer.mergeAll(readLayer(), testInstanceStoreLayer))
 
+it.instance("raw reader blocks credential hidden after line crop and across 64 KiB chunks", () =>
+  Effect.gen(function* () {
+    const instance = yield* TestInstance
+    const fs = yield* FSUtil.Service
+    const file = path.join(instance.directory, "raw-secret.txt")
+    yield* fs.writeFileString(file, "ordinary "+"x".repeat(70000)+"\n")
+    expect((yield* run({ filePath: file, limit: 1 })).output).toContain("line truncated")
+    const secret = "gh"+"p_"+"Q".repeat(40)
+    for (const prefix of [1980, 65520]) {
+      yield* fs.writeFileString(file, "x".repeat(prefix)+" "+secret+"\n")
+      const exit = yield* Effect.exit(run({ filePath: file, limit: 1 }))
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) {
+        expect(Cause.pretty(exit.cause)).toContain("recognized-secret-output")
+        expect(Cause.pretty(exit.cause)).not.toContain(secret)
+      }
+    }
+  }),
+)
+
 const init = Effect.fn("ReadToolTest.init")(function* () {
   const info = yield* ReadTool
   return yield* info.init()

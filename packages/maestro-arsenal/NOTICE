@@ -1,0 +1,30 @@
+Maestro Arsenal
+
+This package includes adaptations of TechLead by HuGR Labs.
+Copyright 2026 HuGR Labs.
+Source revision: a68e7af92c7ed5aaf8b6574b7ad2f705fb38eeb5.
+Host baseline: 628f72404baaf1cd3f5adedf497e830e176503d9.
+The complete source LICENSE is reproduced in this directory.
+License identifier: Apache-2.0.
+
+Changes for Orchestra/Maestro, 2026:
+- A: ported computation, strict validation, canonical capability discovery,
+  lazy selected handlers and a shared standalone MCP transport.
+- B: ported scoped repository/compiler/parser acquisition, physical path
+  fencing, bounded coverage and explicitly authorized materialization.
+- C: adapted TechLead doctrine into demand-loaded Maestro playbooks and
+  Composer guidance; native authority remains with the Orchestra host.
+- D: ported project-isolated bounded governance state, provenance-aware
+  evidence, replay scheduling and selective recovery without Git reset/clean.
+- E: added native Core/OpenCode adapters for progressive discovery,
+  exact schema execution and host-owned identity/permissions.
+- F: adapted recognized command/output checks at native tool boundaries;
+  remaining host-binding gaps are not claims of delivered enforcement.
+- Integration: connected actual owner descriptors, registered governance,
+  froze authorization resources and added workspace runtime dependencies.
+
+Parser/runtime source versions declared by this package:
+tree-sitter 0.25.0; tree-sitter-python 0.25.0;
+tree-sitter-typescript 0.23.2; transitive tree-sitter-javascript 0.23.1;
+TypeScript 5.8.2 (workspace catalog); @modelcontextprotocol/sdk 1.29.0.
+Third-party dependencies retain their own licenses and notices.

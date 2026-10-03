@@ -21,6 +21,7 @@ import { SessionSummary } from "./summary"
 import type { Provider } from "@/provider/provider"
 import { Question } from "@/question"
 import { errorMessage } from "@/util/error"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
 import { isRecord } from "@/util/record"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Database } from "@opencode-ai/core/database/database"
@@ -186,12 +187,15 @@ const layer = Layer.effect(
       const failToolCall = Effect.fn("SessionProcessor.failToolCall")(function* (toolCallID: string, error: unknown) {
         const match = yield* readToolCall(toolCallID)
         if (!match || match.part.state.status !== "running") return false
+        const checked = yield* ToolSafety.inspect(error).pipe(Effect.result)
+        const message = checked._tag === "Failure" ? checked.failure.message : errorMessage(error)
+        const projected = yield* ToolSafety.inspect(message).pipe(Effect.result)
         yield* session.updatePart({
           ...match.part,
           state: {
             status: "error",
             input: match.part.state.input,
-            error: errorMessage(error),
+            error: projected._tag === "Failure" ? projected.failure.message : message,
             // Keep metadata streamed while running so failures retain progress detail (e.g. execute's child calls).
             metadata: match.part.state.metadata,
             time: { start: match.part.state.time.start, end: Date.now() },

@@ -7,6 +7,8 @@ import { FileSystem } from "../filesystem"
 import { FSUtil } from "../fs-util"
 import { makeLocationNode } from "../effect/app-node"
 import { AbsolutePath, PositiveInt, RelativePath } from "../schema"
+import { OutputInspector } from "../output-inspector"
+import { ToolSafety } from "../tool-safety"
 
 export const MAX_READ_LINES = 2_000
 export const MAX_READ_BYTES = 50 * 1024
@@ -68,6 +70,7 @@ export type ReadError =
   | MalformedUtf8Error
   | OffsetOutOfRangeError
   | PathKindError
+  | ToolSafety.Denied
 
 export const PageInput = Schema.Struct({
   offset: PositiveInt.pipe(Schema.optional),
@@ -211,6 +214,12 @@ export const read = Effect.fn("ReadTool.read")(function* (
       }
       if (startsWith(first, [0x25, 0x50, 0x44, 0x46]) || extensions.has(path.extname(resource).toLowerCase()))
         return yield* Effect.fail(new BinaryFileError({ resource }))
+      const inspector = OutputInspector.make()
+      const inspectChunk = (chunk: Uint8Array) => {
+        const reason = inspector.push(chunk)
+        return reason ? Effect.fail(new ToolSafety.Denied({ reason })) : Effect.void
+      }
+      yield* inspectChunk(first)
       const paged = info.size > MAX_READ_BYTES || page.offset !== undefined || page.limit !== undefined
       if (!paged) {
         if (binary(resource, first)) return yield* Effect.fail(new BinaryFileError({ resource }))
@@ -219,9 +228,12 @@ export const read = Effect.fn("ReadTool.read")(function* (
         while (true) {
           const chunk = yield* file.readAlloc(64 * 1024)
           if (Option.isNone(chunk)) break
+          yield* inspectChunk(chunk.value)
           text.push(yield* decodeChunk(resource, decoder, chunk.value))
         }
         text.push(yield* decodeUtf8(resource, decoder))
+        const reason = inspector.finish()
+        if (reason) return yield* new ToolSafety.Denied({ reason })
         return {
           uri: pathToFileURL(real).href,
           name: path.basename(real),
@@ -301,6 +313,7 @@ export const read = Effect.fn("ReadTool.read")(function* (
       while (!done) {
         const chunk = yield* file.readAlloc(64 * 1024)
         if (Option.isNone(chunk)) break
+        yield* inspectChunk(chunk.value)
         done = !(yield* consumeChunk(chunk.value))
       }
       if (!done) {
@@ -309,6 +322,8 @@ export const read = Effect.fn("ReadTool.read")(function* (
         if (pending) append(pending.endsWith("\r") ? pending.slice(0, -1) : pending)
       }
       if (lines.length === 0 && offset !== 1) return yield* Effect.fail(new OffsetOutOfRangeError({ offset }))
+      const reason = inspector.finish()
+      if (reason) return yield* new ToolSafety.Denied({ reason })
       return new TextPage({
         type: "text-page",
         content: lines.join("\n"),

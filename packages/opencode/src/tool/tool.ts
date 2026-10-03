@@ -5,8 +5,14 @@ import type { JSONSchema7 } from "@ai-sdk/provider"
 import type { MessageV2 } from "../session/message-v2"
 import type { Permission } from "../permission"
 import type { SessionID, MessageID } from "../session/schema"
-import * as Truncate from "./truncate"
+import { Truncate } from "./truncate"
 import { Agent } from "@/agent/agent"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { FSUtil } from "@opencode-ai/core/fs-util"
+import { AppProcess } from "@opencode-ai/core/process"
+import { Global } from "@opencode-ai/core/global"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { InstanceRef } from "@/effect/instance-ref"
 
 interface Metadata {
   [key: string]: any
@@ -137,7 +143,22 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
                 }),
             ),
           )
-          const result = yield* execute(decoded as Schema.Schema.Type<Parameters>, ctx)
+          const safety = yield* ToolSafety.make.pipe(
+            Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))),
+          )
+          const placement = yield* InstanceRef
+          const loader = yield* ToolSafety.RuntimeProfileLoader
+          const profile = loader ? yield* loader() : yield* ToolSafety.RuntimeProfile
+          yield* safety.before({ tool: id, args: decoded, sessionID: ctx.sessionID, callID: ctx.callID ?? "",
+            directory: placement?.directory, projectID: placement?.project.id,
+            projectDirectory: placement?.worktree === "/" ? placement.directory : placement?.worktree,
+          }).pipe(Effect.provideService(ToolSafety.RuntimeProfile, profile))
+          const result = yield* execute(decoded as Schema.Schema.Type<Parameters>, ctx).pipe(
+            Effect.provideService(ToolSafety.RuntimeProfile, profile),
+            Effect.provideService(ToolSafety.NativeContext, placement ? { directory: placement.directory, projectID: placement.project.id } : undefined),
+            ToolSafety.sanitizeFailure,
+          )
+          yield* ToolSafety.inspect(result)
           if (result.metadata.truncated !== undefined) {
             return result
           }
@@ -152,7 +173,7 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
               ...(truncated.truncated && { outputPath: truncated.outputPath }),
             },
           }
-        }).pipe(Effect.orDie, Effect.withSpan("Tool.execute", { attributes: attrs }))
+        }).pipe(ToolSafety.sanitizeFailure, Effect.orDie, Effect.withSpan("Tool.execute", { attributes: attrs }))
       }
       return toolInfo
     })

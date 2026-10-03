@@ -1,0 +1,124 @@
+// Requires the actual assembled @opencode-ai/maestro-arsenal package. Never mock its validator/handlers.
+import { expect } from "bun:test"
+import { Effect, Schema } from "effect"
+import { FSUtil } from "@opencode-ai/core/fs-util"
+import { Global } from "@opencode-ai/core/global"
+import { Location } from "@opencode-ai/core/location"
+import { MaestroArsenal } from "@opencode-ai/core/tool/maestro-arsenal"
+import { ToolRegistry } from "@opencode-ai/core/tool/registry"
+import { testEffect } from "./lib/effect"
+import { executeTool, settleTool, toolIdentity } from "./lib/tool"
+import { hostLayer, maestro, sessionID, setup } from "./maestro-arsenal.test"
+
+const it = testEffect(hostLayer)
+const call = (name: string, input: unknown) => ({
+  sessionID,
+  agent: maestro,
+  assistantMessageID: toolIdentity.assistantMessageID,
+  call: { type: "tool-call" as const, id: `call-${name}`, name, input },
+})
+
+it.live("Arsenal package conformance: bounded metadata and selected schema come from the actual registry", () =>
+  Effect.gen(function* () {
+    const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
+    const agents = yield* setup([{ action: "*", resource: "*", effect: "allow" }])
+    yield* MaestroArsenal.registerScoped({
+      nativeMaestro: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === maestro)),
+    })
+    const registry = yield* ToolRegistry.Service
+    const catalog = yield* settleTool(registry, call(MaestroArsenal.names.catalog, { limit: 2 }))
+    const page = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(catalog.output?.structured)
+    const descriptors = yield* Effect.promise(() => Arsenal.list())
+    expect(page).toMatchObject({
+      total: descriptors.length,
+      capabilities: descriptors
+        .slice(0, 2)
+        .map((descriptor) => ({ name: descriptor.name, effects: descriptor.effects })),
+    })
+    expect(JSON.stringify(page)).not.toContain("inputSchema")
+    expect(
+      yield* executeTool(registry, call(MaestroArsenal.names.execute, { name: "profile", arguments: {} })),
+    ).toMatchObject({
+      type: "error",
+      value: "Describe this Arsenal capability in the current Session and agent before executing it.",
+    })
+    const descriptor = yield* Effect.promise(() => Arsenal.describe("profile"))
+    const result = yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "profile" }))
+    expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(result.output?.structured)).toEqual(descriptor)
+    expect(
+      yield* executeTool(
+        registry,
+        call(MaestroArsenal.names.execute, {
+          name: "profile",
+          arguments: { action: "set", patch: { scrutiny: "invalid" } },
+        }),
+      ),
+    ).toMatchObject({ type: "error" })
+  }),
+)
+
+it.live("Arsenal package conformance: real edit denial prevents profile persistence; allow control creates state", () =>
+  Effect.gen(function* () {
+    const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
+    expect(yield* Effect.promise(() => Arsenal.describe("profile"))).toBeDefined()
+    const agents = yield* setup([
+      { action: "*", resource: "*", effect: "allow" },
+      { action: "edit", resource: "*", effect: "deny" },
+    ])
+    yield* MaestroArsenal.registerScoped({
+      nativeMaestro: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === maestro)),
+    })
+    const registry = yield* ToolRegistry.Service
+    const filesystem = yield* FSUtil.Service
+    const location = yield* Location.Service
+    const global = yield* Global.Service
+    const directory = MaestroArsenal.stateDirectory(global.data, location.project.id)
+    const description = yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "profile" }))
+    expect(description.output?.structured).toBeString()
+    expect(yield* filesystem.readDirectory(directory)).toEqual([])
+    const input = { name: "profile", arguments: { action: "set", patch: { scrutiny: "strict" } } }
+    expect(yield* executeTool(registry, call(MaestroArsenal.names.execute, input))).toMatchObject({ type: "error" })
+    expect(yield* filesystem.readDirectory(directory)).toEqual([])
+    yield* agents.transform((editor) =>
+      editor.update(maestro, (agent) => {
+        agent.permissions = [{ action: "*", resource: "*", effect: "allow" }]
+      }),
+    )
+    expect(yield* executeTool(registry, call(MaestroArsenal.names.execute, input))).toMatchObject({ type: "text" })
+    expect((yield* filesystem.readDirectory(directory)).length).toBeGreaterThan(0)
+  }),
+)
+
+it.live(
+  "Arsenal package conformance: swallowed process denial remains failure; model observations cannot replace host binding",
+  () =>
+    Effect.gen(function* () {
+      const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
+      expect(yield* Effect.promise(() => Arsenal.describe("repo-hygiene-check"))).toBeDefined()
+      const agents = yield* setup([
+        { action: "*", resource: "*", effect: "allow" },
+        { action: "bash", resource: "*", effect: "deny" },
+      ])
+      yield* MaestroArsenal.registerScoped({
+        nativeMaestro: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === maestro)),
+      })
+      const registry = yield* ToolRegistry.Service
+      yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "repo-hygiene-check" }))
+      expect(
+        yield* executeTool(registry, call(MaestroArsenal.names.execute, { name: "repo-hygiene-check", arguments: {} })),
+      ).toEqual({ type: "error", value: "Arsenal permission denied." })
+      yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "governance" }))
+      expect(
+        yield* executeTool(
+          registry,
+          call(MaestroArsenal.names.execute, {
+            name: "governance",
+            arguments: { operation: "status", observations: { complete: true, usage: [], actions: [] } },
+          }),
+        ),
+      ).toEqual({
+        type: "error",
+        value: "Arsenal governance requires actual host Session observations; this host has no observation binding.",
+      })
+    }),
+)

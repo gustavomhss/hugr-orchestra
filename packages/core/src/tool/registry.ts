@@ -1,7 +1,8 @@
 export * as ToolRegistry from "./registry"
 
 import { ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@opencode-ai/llm"
-import { Context, Effect, Layer, Scope } from "effect"
+import { Context, DateTime, Effect, Layer, Option, Scope } from "effect"
+import { SessionEvent } from "@opencode-ai/schema/session-event"
 import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
 import { SessionMessage } from "../session/message"
@@ -12,6 +13,10 @@ import { ApplicationTools } from "./application-tools"
 import { definition, permission, settle, validateName, type AnyTool, type RegistrationError } from "./tool"
 import { Tools } from "./tools"
 import { makeLocationNode } from "../effect/app-node"
+import { ToolSafety } from "../tool-safety"
+import { Location } from "../location"
+import { EventV2 } from "../event"
+import { ToolSafetyOutput } from "../tool-safety-output"
 
 export type ExecuteInput = {
   readonly sessionID: SessionSchema.ID
@@ -39,11 +44,20 @@ export interface Settlement {
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/v2/ToolRegistry") {}
 
+const NativeBinding = Context.Reference<{
+  location: Location.Interface
+  events: EventV2.Interface
+} | undefined>("@opencode/ToolRegistry/NativeSafetyBinding", { defaultValue: () => undefined })
+
 const registryLayer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const applications = yield* ApplicationTools.Service
     const resources = yield* ToolOutputStore.Service
+    const safety = yield* ToolSafety.Service
+    const native = yield* NativeBinding
+    const capturedProfile = yield* ToolSafety.RuntimeProfile
+    const profileLoader = yield* ToolSafety.RuntimeProfileLoader
     type Registration = { readonly identity: object; readonly tool: AnyTool }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
 
@@ -59,26 +73,71 @@ const registryLayer = Layer.effect(
         }
       if (advertised && registration.identity !== advertised)
         return { result: { type: "error" as const, value: `Stale tool call: ${input.call.name}` } }
-      const pending = yield* settle(registration.tool, input.call, {
+      const location = native?.location ?? Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
+      const events = native?.events ?? Option.getOrUndefined(yield* Effect.serviceOption(EventV2.Service))
+      const effectiveProfile = capturedProfile ?? (yield* ToolSafety.RuntimeProfile)
+      const effectiveLoader = profileLoader ?? (yield* ToolSafety.RuntimeProfileLoader)
+      if ((capturedProfile || profileLoader) && (!location || !events))
+        return { result: { type: "error" as const, value: "Tool safety HOLD: native-placement-or-events-missing" } }
+      const invocation = {
+        tool: input.call.name,
+        args: input.call.input,
         sessionID: input.sessionID,
-        agent: input.agent,
+        callID: input.call.id,
         assistantMessageID: input.assistantMessageID,
-        toolCallID: input.call.id,
-      }).pipe(
-        Effect.map((output) => ({ output })),
-        Effect.catchTag("LLM.ToolFailure", (failure) =>
-          Effect.succeed({ result: { type: "error" as const, value: failure.message } }),
+        agent: input.agent,
+        directory: location?.directory,
+        projectID: location?.project.id,
+        projectDirectory: location?.project.directory === "/" ? location.directory : location?.project.directory,
+      }
+      return yield* safety.run(
+        invocation,
+        Effect.gen(function* () {
+          const pending = yield* settle(registration.tool, input.call, {
+            sessionID: input.sessionID,
+            agent: input.agent,
+            assistantMessageID: input.assistantMessageID,
+            toolCallID: input.call.id,
+          }).pipe(
+            Effect.map((output) => ({ output })),
+            Effect.catchTag("LLM.ToolFailure", (failure) => failure.error instanceof ToolSafety.Denied
+              ? Effect.fail(failure.error) : safety.inspect(failure).pipe(
+                Effect.as({ result: { type: "error" as const, value: failure.message } }),
+              ),
+            ),
+          )
+          if ("result" in pending) return pending
+          const output = pending.output
+          yield* safety.inspect(output)
+          const bounded = yield* resources.bound({ sessionID: input.sessionID, toolCallID: input.call.id, output })
+          const projected = bounded.outputPaths.length
+            ? ToolSafetyOutput.nudge(bounded.output, bounded.outputPaths, yield* resources.limits())
+            : bounded.output
+          const result = ToolOutput.toResultValue(projected)
+          if (result.type === "error")
+            return bounded.outputPaths.length > 0 ? { result, outputPaths: bounded.outputPaths } : { result }
+          return bounded.outputPaths.length > 0
+            ? { result, output: projected, outputPaths: bounded.outputPaths }
+            : { result, output: projected }
+        }),
+        (observation) => events ? Effect.gen(function* () {
+          yield* events.publish(SessionEvent.Tool.Progress, {
+            timestamp: yield* DateTime.now,
+            sessionID: input.sessionID,
+            assistantMessageID: input.assistantMessageID,
+            callID: input.call.id,
+            structured: { toolSafety: observation },
+            content: [],
+          }, { location })
+        }) : Effect.void,
+        (settlement) => settlement.result.type === "error" ? "failure" : ToolSafetyOutput.outcome(settlement.output),
+      ).pipe(
+        Effect.provideService(ToolSafety.RuntimeProfileLoader, effectiveLoader),
+        Effect.provideService(ToolSafety.RuntimeProfile, effectiveProfile),
+        Effect.catchTag("ToolSafety.Denied", (error) =>
+          Effect.succeed({ result: { type: "error" as const, value: error.message } }),
         ),
       )
-      if ("result" in pending) return pending
-      const output = pending.output
-      const bounded = yield* resources.bound({ sessionID: input.sessionID, toolCallID: input.call.id, output })
-      const result = ToolOutput.toResultValue(bounded.output)
-      if (result.type === "error")
-        return bounded.outputPaths.length > 0 ? { result, outputPaths: bounded.outputPaths } : { result }
-      return bounded.outputPaths.length > 0
-        ? { result, output: bounded.output, outputPaths: bounded.outputPaths }
-        : { result, output: bounded.output }
     })
 
     return Service.of({
@@ -129,6 +188,12 @@ const layer = Layer.effect(
   Service.use((registry) => Effect.succeed(Tools.Service.of({ register: registry.register }))),
 ).pipe(Layer.provideMerge(registryLayer))
 
+const nativeLayer = Layer.unwrap(Effect.gen(function* () {
+  const location = yield* Location.Service
+  const events = yield* EventV2.Service
+  return layer.pipe(Layer.provide(Layer.succeed(NativeBinding, { location, events })))
+}))
+
 function whollyDisabled(action: string, rules: PermissionV2.Ruleset) {
   const rule = rules.findLast((rule) => Wildcard.match(action, rule.action))
   return rule?.resource === "*" && rule.effect === "deny"
@@ -137,11 +202,21 @@ function whollyDisabled(action: string, rules: PermissionV2.Ruleset) {
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [ApplicationTools.node, ToolOutputStore.node],
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node],
+})
+
+/** Native host composition replacements: captures real Location/Event services while constructing the registry. */
+export const nativeNode = makeLocationNode({
+  service: Service, layer: nativeLayer,
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node],
+})
+export const nativeToolsNode = makeLocationNode({
+  service: Tools.Service, layer: nativeLayer,
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node],
 })
 
 export const toolsNode = makeLocationNode({
   service: Tools.Service,
   layer,
-  deps: [ApplicationTools.node, ToolOutputStore.node],
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node],
 })

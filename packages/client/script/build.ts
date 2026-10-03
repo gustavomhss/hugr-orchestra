@@ -12,6 +12,10 @@ await Effect.runPromise(
       write(
         emitPromise(contract, {
           outputTypes: {
+            "sessions.events": {
+              name: "SessionEventEncoded",
+              import: 'import type { SessionEventEncoded } from "../wire"',
+            },
             "events.subscribe": {
               name: "OpenCodeEventEncoded",
               import: 'import type { OpenCodeEventEncoded } from "@opencode-ai/protocol/groups/event"',

@@ -1,4 +1,4 @@
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 import DESCRIPTION from "./task.txt"
 import { ToolJsonSchema } from "./json-schema"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
@@ -26,6 +26,11 @@ import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
 import { readAuthorization } from "@/maestro/authorization"
 import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
+import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { FSUtil } from "@opencode-ai/core/fs-util"
+import { AppProcess } from "@opencode-ai/core/process"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { InstanceState } from "@/effect/instance-state"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -131,6 +136,9 @@ export const TaskTool = Tool.define(
     const events = yield* EventV2Bridge.Service
     const git = yield* Git.Service
     const fs = yield* FileSystem.FileSystem
+    const completion = yield* ArsenalCompletion.make.pipe(
+      Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node]))),
+    )
 
     const run = Effect.fn("TaskTool.execute")(function* (
       params: Schema.Schema.Type<typeof Parameters>,
@@ -415,6 +423,12 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error("Governed Task denied: reservation-child-permission-mismatch"))
       }
 
+      const placement = yield* InstanceState.context
+      const completionReceipt = yield* completion.beforeDispatch({
+        sessionID: ctx.sessionID, taskID: nextSession.id, callID: ctx.callID ?? "",
+        directory: placement.directory, projectID: placement.project.id, planID: params.governed?.planRevisionID,
+      })
+
       if (params.governed) {
         const governed = params.governed
         if (!governedPresentationID || !governedChildID || !governedCallID)
@@ -435,6 +449,7 @@ export const TaskTool = Tool.define(
         model,
         ...(runInBackground ? { background: true } : {}),
       }
+      const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
 
       yield* ctx.metadata({
         title: params.description,
@@ -444,15 +459,16 @@ export const TaskTool = Tool.define(
       if (governedChildID && reserved) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
-        const completed = requireCompletedReplay
+        const strictReplay = requireCompletedReplay || completionReceipt !== undefined
+        const completed = strictReplay
           ? history[0]
           : history.findLast(
               (message) =>
                 message.info.role === "assistant" && message.info.finish !== undefined && !message.info.error,
             )
-        const job = requireCompletedReplay ? yield* background.get(governedChildID) : undefined
+        const job = strictReplay ? yield* background.get(governedChildID) : undefined
         if (
-          requireCompletedReplay &&
+          strictReplay &&
           (!completed ||
             completed.info.role !== "assistant" ||
             !completed.info.finish ||
@@ -464,12 +480,14 @@ export const TaskTool = Tool.define(
             ) ||
             (job && job.status !== "completed"))
         ) {
-          return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
+          return yield* Effect.fail(new Error(completionReceipt
+            ? "Tool safety HOLD: completion-worker-not-finished" : "Governed Task denied: reserved-child-incomplete"))
         }
         const output = completed?.parts.findLast((part) => part.type === "text")?.text ?? ""
+        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
         return {
           title: params.description,
-          metadata,
+          metadata: { ...metadata, ...(verified ? { completion: verified } : {}) },
           output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
         }
       }
@@ -550,6 +568,15 @@ export const TaskTool = Tool.define(
         const failed = result.parts.findLast((item) => item.type === "tool" && item.state.status === "error")
         if (failed?.type === "tool" && failed.state.status === "error") {
           return yield* Effect.fail(new Error(`Subagent failed (task_id: ${nextSession.id}): ${failed.state.error}`))
+        }
+        if (completionReceipt && (result.info.role !== "assistant" || !result.info.finish ||
+          ["tool-calls", "unknown"].includes(result.info.finish) ||
+          result.parts.some((part) => part.type === "tool" && part.state.status !== "completed")))
+          return yield* Effect.fail(new Error("Tool safety HOLD: completion-worker-not-finished"))
+        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
+        if (verified) {
+          completionEvidence.value = verified
+          yield* ctx.metadata({ metadata: { ...metadata, completion: verified } })
         }
         return result.parts.findLast((item) => item.type === "text")?.text ?? ""
       })
@@ -670,7 +697,7 @@ export const TaskTool = Tool.define(
             if (result?.status === "cancelled") return yield* Effect.fail(new Error("Task cancelled"))
             return {
               title: params.description,
-              metadata,
+              metadata: { ...metadata, ...(completionEvidence.value ? { completion: completionEvidence.value } : {}) },
               output: renderOutput({ sessionID: nextSession.id, state: "completed", text: result?.output ?? "" }),
             }
           }),
