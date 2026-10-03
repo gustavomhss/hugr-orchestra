@@ -1,3 +1,44 @@
+/* Keep the painted control and its layout box intact; only the pointer target grows.
+   The component layer preserves existing positioning utilities and overrides. */
+@layer components {
+  :where(body[data-new-layout])
+    :where(
+      [data-component="button"],
+      [data-component="button-v2"],
+      [data-component="icon-button"],
+      [data-component="icon-button-v2"],
+      [data-slot="dialog-close-button"]
+    ) {
+    position: relative;
+  }
+}
+
+body[data-new-layout]
+  :is(
+    [data-component="button"],
+    [data-component="button-v2"],
+    [data-component="icon-button"],
+    [data-component="icon-button-v2"],
+    [data-slot="dialog-close-button"]
+  ):not(:disabled):not([aria-disabled="true"])::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: max(100%, 24px);
+  block-size: max(100%, 24px);
+  transform: translate(-50%, -50%);
+}
+
+body[data-new-layout] [data-slot="dialog-close-button"]:active {
+  background: var(--orchestra-overlay-pressed);
+}
+
+body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: 2px;
+}
+
 @media (min-width: 768px) {
   .orchestra-shell {
     inline-size: calc(100% - 24px);
