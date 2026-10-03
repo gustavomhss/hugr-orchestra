@@ -36,14 +36,16 @@ it.live("Git -C staging refuses managed data without changing index; source-only
     yield* fs.writeFileString(path.join(tmp.path, "source.ts"), "export const value = 2\n")
     const baseline = yield* git(["diff", "--cached", "--name-only", "-z"])
     const check = (command: string) => ToolSafetyGit.before({ command, directory: tmp.path, projectDirectory: tmp.path })
-    const execute = (command: string) => safety.run({ tool: "bash", args: { command }, sessionID: "session", callID: "call",
+    const execute = (args: string[]) => safety.run({ tool: "bash", args: { command: `git -C "${tmp.path.replaceAll("\\", "/")}" ${args.join(" ")}` }, sessionID: "session", callID: "call",
       directory: tmp.path, projectID: "project", projectDirectory: tmp.path,
-    }, processes.run(ChildProcess.make("/bin/sh", ["-c", command], { cwd: tmp.path })), () => Effect.void)
-    const denied = yield* Effect.flip(execute(`git -C '${tmp.path}' add -A`))
+    }, processes.run(ChildProcess.make("git", ["-C", tmp.path, ...args], { cwd: tmp.path })).pipe(
+      Effect.flatMap((result) => result.exitCode === 0 ? Effect.succeed(result) : Effect.fail(new Error("fixture stage failed"))),
+    ), () => Effect.void)
+    const denied = yield* Effect.flip(execute(["add", "-A"]))
     if (!(denied instanceof ToolSafety.Denied)) throw new Error("fixture stage was not held by native safety")
     expect(denied.reason).toBe("git-hygiene-managed-or-protected-data")
     expect(yield* git(["diff", "--cached", "--name-only", "-z"])).toBe(baseline)
-    yield* execute(`git -C '${tmp.path}' add source.ts`)
+    yield* execute(["add", "source.ts"])
     expect(yield* git(["diff", "--cached", "--name-only", "-z"])).toBe("source.ts\0")
     expect(yield* fs.readFileString(path.join(tmp.path, "untracked", "keep"))).toBe("keep")
     yield* git(["add", "-f", ".techlead/audit.json"])
@@ -132,13 +134,14 @@ test.skipIf(!binary || !["darwin", "linux"].includes(process.platform))("LIVE sr
   }).pipe(Effect.scoped, Effect.provide(AppNodeBuilder.build(LayerNode.group([FSUtil.node, AppProcess.node]))), Effect.runPromise)
 })
 
-if (!binary) it.live("required real sandbox absence is a named HOLD, not an unsandboxed fallback", () =>
+if (!binary || !["darwin", "linux"].includes(process.platform)) it.live("required real sandbox absence is a named HOLD, not an unsandboxed fallback", () =>
   Effect.gen(function* () {
     const tmp = yield* fixture
     const outcome = yield* Effect.flip(ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", "touch denied"], { cwd: tmp.path })).pipe(
       Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true }),
     ))
-    expect(outcome.reason).toBe("required-process-sandbox-unavailable")
+    expect(outcome.reason).toBe(["darwin", "linux"].includes(process.platform)
+      ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable")
     const fs = yield* FSUtil.Service
     expect(yield* fs.exists(path.join(tmp.path, "denied"))).toBe(false)
   }),

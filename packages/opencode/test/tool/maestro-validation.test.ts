@@ -1,6 +1,6 @@
 import { afterEach, describe, expect } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { EventTable } from "@opencode-ai/core/event/sql"
@@ -30,14 +30,14 @@ afterEach(async () => {
 })
 
 const registry = testEffect(
-  AppNodeBuilder.build(LayerNode.group([Agent.node, ToolRegistry.node]), [
+  TestAppNodeBuilder.build(LayerNode.group([Agent.node, ToolRegistry.node]), [
     [Npm.node, NpmTest.noop],
     [RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true })],
   ]),
 )
 
 const direct = testEffect(
-  AppNodeBuilder.build(
+  TestAppNodeBuilder.build(
     LayerNode.group([
       filesystem,
       Config.node,

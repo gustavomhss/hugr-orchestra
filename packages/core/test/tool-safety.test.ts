@@ -12,6 +12,7 @@ import { ToolRegistry } from "../src/tool/registry"
 import { ToolOutputStore } from "../src/tool-output-store"
 import { Location } from "../src/location"
 import { AbsolutePath } from "../src/schema"
+import { Shell } from "../src/shell"
 import { SessionSchema } from "../src/session/schema"
 import { location } from "./fixture/location"
 import { tmpdir } from "./fixture/tmpdir"
@@ -30,12 +31,14 @@ describe("native tool safety", () => {
       const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
       const registry = yield* ToolRegistry.Service
       const fs = yield* FSUtil.Service
-      const process = yield* AppProcess.Service
+      const processes = yield* AppProcess.Service
+      const shell = process.platform === "win32" ? Shell.gitbash() : "/bin/sh"
+      if (!shell) throw new Error("Fixture requires a real POSIX shell")
       yield* registry.register({ bash: Tool.make({
         description: "fixture shell",
         input: Schema.Struct({ command: Schema.String }),
         output: Schema.String,
-        execute: (args) => process.run(ChildProcess.make(args.command, [], { cwd: tmp.path, shell: "/bin/sh" }), { combineOutput: true })
+        execute: (args) => processes.run(ChildProcess.make(args.command, [], { cwd: tmp.path, shell }), { combineOutput: true })
           .pipe(Effect.map((result) => result.stdout.toString()), Effect.mapError(() => new Tool.Failure({ message: "fixture process failed" }))),
       }) })
       const denied = yield* settleTool(registry, { ...identity, call: {

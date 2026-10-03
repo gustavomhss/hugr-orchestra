@@ -43,7 +43,7 @@ it.live("askBefore push enters real native permission graph; model approval labe
       expect((yield* permissions.ask({ sessionID, agent: toolIdentity.agent, action: "push", resources: ["git push"] })).effect).toBe("ask")
       const invocation = { tool: "bash", sessionID, callID: "approval", directory: tmp.path, projectID: Project.ID.global,
         args: { command: "git push", userApproved: true, approved: true } }
-      const child = processes.run(ChildProcess.make("/bin/sh", ["-c", "touch reached"], { cwd: tmp.path }))
+      const child = processes.run(ChildProcess.make(process.execPath, ["-e", "require('fs').writeFileSync('reached','written')"], { cwd: tmp.path }))
       const unbound = yield* Effect.flip(safety.run(invocation, child, () => Effect.void).pipe(
         Effect.provideService(ToolSafety.RuntimeProfile, { askBefore: ["push"] }),
       ))

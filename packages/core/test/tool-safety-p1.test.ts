@@ -26,8 +26,11 @@ import { toolIdentity, settleTool } from "./lib/tool"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([FSUtil.node, AppProcess.node, ToolSafety.node])))
+const liveSandbox = ["darwin", "linux"].includes(process.platform) && (await Effect.runPromise(ToolSafetySandbox.available())) ? it.live : it.live.skip
 const fixture = Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
 const secret = "gh" + "p_" + "Q".repeat(40)
+// Base64 keeps fixture JS quoting identical under both cmd.exe and POSIX shells.
+const nodeCommand = (script: string) => `"${process.execPath}" -e "eval(Buffer.from('${Buffer.from(script).toString("base64")}','base64').toString())"`
 
 it.live("raw process hook sees credentials after memory cap; unbound provider process remains unaffected", () =>
   Effect.gen(function* () {
@@ -80,14 +83,14 @@ it.live("real Core Bash denies post-capture credential; native outcomes classify
       const run = (id: string, command: string, timeout?: number) => settleTool(registry, {
         sessionID, ...toolIdentity, call: { type: "tool-call", name: "bash", id, input: { command, timeout } },
       })
-      expect((yield* run("ok", "printf ordinary")).output?.structured).toMatchObject({ exit: 0 })
+      expect((yield* run("ok", nodeCommand("process.stdout.write('ordinary')"))).output?.structured).toMatchObject({ exit: 0 })
       const script = `process.stdout.write('ordinary\\n'.repeat(150000)+${JSON.stringify(secret)})`
-      const denied = yield* run("secret", `'${process.execPath}' -e '${script.replaceAll("'", "'\\''")}'`)
+      const denied = yield* run("secret", nodeCommand(script))
       expect(denied.result.type).toBe("error")
       expect(denied.result).toEqual({ type: "error", value: "Tool safety HOLD: recognized-secret-output" })
       expect(denied.outputPaths).toBeUndefined()
-      expect((yield* run("exit", "exit 17")).output?.structured).toMatchObject({ exit: 17 })
-      expect((yield* run("timeout", "sleep 5", 10)).output?.structured).toMatchObject({ timeout: true })
+      expect((yield* run("exit", nodeCommand("process.exit(17)"))).output?.structured).toMatchObject({ exit: 17 })
+      expect((yield* run("timeout", nodeCommand("setTimeout(() => {}, 5000)"), 10)).output?.structured).toMatchObject({ timeout: true })
       yield* registry.register({ exploding: Tool.make({ description: "failing acquisition", input: Schema.Struct({}), output: Schema.String,
         execute: () => Effect.die(new Error(secret)),
       }) })
@@ -133,7 +136,7 @@ it.live("secret Error messages sanitize failure and defects while preserving int
   }),
 )
 
-it.live("LIVE sandbox relative policies stay project-bound when child cwd changes", () =>
+liveSandbox("LIVE sandbox relative policies stay project-bound when child cwd changes", () =>
   Effect.gen(function* () {
     const tmp = yield* fixture
     const fs = yield* FSUtil.Service

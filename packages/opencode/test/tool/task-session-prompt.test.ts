@@ -10,7 +10,6 @@ import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { MessageID, PartID } from "../../src/session/schema"
 import { TaskTool } from "../../src/tool/task"
-import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
 import { makeHttp } from "../session/prompt.fixture"
@@ -26,38 +25,7 @@ it.instance(
   "TaskTool resumes native child history through SessionPrompt",
   () =>
     Effect.gen(function* () {
-      const instance = yield* TestInstance
       const llm = yield* TestLLMServer
-      yield* Effect.promise(() =>
-        Bun.write(
-          path.join(instance.directory, "opencode.json"),
-          JSON.stringify({
-            provider: {
-              test: {
-                name: "Test",
-                id: "test",
-                env: [],
-                npm: "@ai-sdk/openai-compatible",
-                models: {
-                  "test-model": {
-                    id: "test-model",
-                    name: "Test Model",
-                    attachment: false,
-                    reasoning: false,
-                    temperature: false,
-                    tool_call: true,
-                    release_date: "2025-01-01",
-                    limit: { context: 100000, output: 10000 },
-                    cost: { input: 0, output: 0 },
-                    options: {},
-                  },
-                },
-                options: { apiKey: "test-key", baseURL: llm.url },
-              },
-            },
-          }),
-        ),
-      )
       const prompt = yield* SessionPrompt.Service
       const sessions = yield* Session.Service
       const chat = yield* sessions.create({
@@ -140,5 +108,42 @@ it.instance(
       expect(yield* sessions.children(chat.id)).toHaveLength(1)
       expect(resumed.metadata.sessionId).toBe(child.id)
     }),
+  {
+    // Prepare provider config before any instance service can cache discovery.
+    init: (directory) =>
+      Effect.gen(function* () {
+        const llm = yield* TestLLMServer
+        yield* Effect.promise(() =>
+          Bun.write(
+            path.join(directory, "opencode.json"),
+            JSON.stringify({
+              provider: {
+                test: {
+                  name: "Test",
+                  id: "test",
+                  env: [],
+                  npm: "@ai-sdk/openai-compatible",
+                  models: {
+                    "test-model": {
+                      id: "test-model",
+                      name: "Test Model",
+                      attachment: false,
+                      reasoning: false,
+                      temperature: false,
+                      tool_call: true,
+                      release_date: "2025-01-01",
+                      limit: { context: 100000, output: 10000 },
+                      cost: { input: 0, output: 0 },
+                      options: {},
+                    },
+                  },
+                  options: { apiKey: "test-key", baseURL: llm.url },
+                },
+              },
+            }),
+          ),
+        )
+      }),
+  },
   15_000,
 )

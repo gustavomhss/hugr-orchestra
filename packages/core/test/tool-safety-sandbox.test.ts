@@ -11,11 +11,14 @@ import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
+const backend = ["darwin", "linux"].includes(process.platform) && await Effect.runPromise(ToolSafetySandbox.available())
+// Live confinement is measured only with a real backend; the absent-backend HOLD case always runs below.
+const live = backend ? it.live : it.live.skip
 const fixture = Effect.gen(function* () {
   const fs = yield* FSUtil.Service
   const processes = yield* AppProcess.Service
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "sandbox-real-" })
-  const root = path.join(directory, 'root "quoted" literal')
+  const root = path.join(directory, process.platform === "win32" ? "root spaced literal" : 'root "quoted" literal')
   yield* fs.makeDirectory(root)
   const physical = yield* fs.realPath(root)
   const node = yield* ToolSafetySandbox.available("node")
@@ -30,7 +33,7 @@ const fixture = Effect.gen(function* () {
   return { fs, processes, directory, root, physical, node, run }
 })
 
-it.live("real backend permits physical cwd writes, dependency reads and child-only environment scrub", () =>
+live("real backend permits physical cwd writes, dependency reads and child-only environment scrub", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const alias = path.join(f.directory, "cwd-alias")
@@ -56,7 +59,7 @@ it.live("real backend permits physical cwd writes, dependency reads and child-on
   }), 30_000,
 )
 
-it.live("real descendants and shell redirection cannot write outside roots, through symlinks or directly in /tmp", () =>
+live("real descendants and shell redirection cannot write outside roots, through symlinks or directly in /tmp", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const outside = path.join(f.directory, "outside")
@@ -83,7 +86,7 @@ it.live("real descendants and shell redirection cannot write outside roots, thro
   }), 30_000,
 )
 
-it.live("real read denials and protected writes use captured physical policy, while dependencies remain readable", () =>
+live("real read denials and protected writes use captured physical policy, while dependencies remain readable", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const names = ["managed", "denied", "never"]
@@ -110,7 +113,7 @@ it.live("real read denials and protected writes use captured physical policy, wh
   }), 30_000,
 )
 
-it.live("real network denial blocks loopback TCP against a working local server", () =>
+live("real network denial blocks loopback TCP against a working local server", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const connections: string[] = []
@@ -139,11 +142,12 @@ it.live("unbound pipelines and invalid physical roots HOLD before side effects; 
     expect(yield* ToolSafetySandbox.available(f.node)).toBe(f.node)
     expect(yield* ToolSafetySandbox.available(path.join(f.directory, "missing-binary"))).toBeNull()
     const command = ChildProcess.make(f.node, ["-e", "require('fs').writeFileSync('must-not-run','changed')"], { cwd: f.root })
-    const backend = yield* ToolSafetySandbox.available()
     if (!backend) {
       const hold = yield* Effect.flip(ToolSafetySandbox.wrap(command).pipe(Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true })))
-      expect(hold.reason).toBe("required-process-sandbox-unavailable")
-      return yield* hold // Missing backend is evidence of HOLD, never a green confinement result.
+      expect(hold.reason).toBe(process.platform === "darwin" || process.platform === "linux"
+        ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable")
+      expect(yield* f.fs.exists(path.join(f.root, "must-not-run"))).toBe(false)
+      return // This passes the absence/HOLD contract, not a live-confinement claim.
     }
     const invalid = yield* Effect.flip(ToolSafetySandbox.wrap(command).pipe(Effect.provideService(ToolSafety.RuntimeProfile, {
       requireSandbox: true, writeRoots: [path.join(f.root, "missing-root")],

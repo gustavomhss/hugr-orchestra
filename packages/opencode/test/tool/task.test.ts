@@ -3,6 +3,7 @@ import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { Cause, Deferred, Effect, Exit, Fiber, Layer } from "effect"
 import { Agent } from "../../src/agent/agent"
@@ -37,7 +38,7 @@ const ref = {
 }
 
 const layer = (flags: Partial<RuntimeFlags.Info> = {}) =>
-  LayerNode.compile(
+  TestAppNodeBuilder.build(
     LayerNode.group([
       filesystem,
       Agent.node,
