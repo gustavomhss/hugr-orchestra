@@ -23,9 +23,11 @@ import { testEffect } from "../lib/effect"
 const it = testEffect(LayerNode.compile(LayerNode.group([
   FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Agent.node, Plugin.node, Permission.node, Config.node, RuntimeFlags.node, Instruction.node,
 ]), [
-  [Config.node, TestConfig.layer({ get: () => Effect.succeed({ shell: "/bin/sh" }), directories: () => Effect.succeed([]) })],
+  [Config.node, TestConfig.layer({ get: () => Effect.succeed({ shell: process.platform === "win32" ? process.env.COMSPEC ?? "cmd.exe" : "/bin/sh" }), directories: () => Effect.succeed([]) })],
   [RuntimeFlags.node, RuntimeFlags.layer()],
 ]))
+
+const nodeCommand = (script: string) => `"${process.execPath}" -e "eval(Buffer.from('${Buffer.from(`(async () => { ${script} })()`).toString("base64")}','base64').toString())"`
 
 it.instance("actual V1 split credential prefix stays out of retained artifact and progress; safe overflow remains usable", () =>
   Effect.gen(function* () {
@@ -42,7 +44,7 @@ it.instance("actual V1 split credential prefix stays out of retained artifact an
       abort: new AbortController().signal, messages: [], metadata: () => Effect.void,
       ask: (request) => permission.ask({ ...request, sessionID, ruleset: [{ permission: "*", pattern: "*", action: "allow" }] }).pipe(Effect.orDie),
     }
-    const ordinary = yield* tool.execute({ command: "printf ordinary", timeout: 5000 }, context)
+    const ordinary = yield* tool.execute({ command: nodeCommand("process.stdout.write('ordinary')"), timeout: 5000 }, context)
     expect(ordinary.output).toContain("ordinary")
     const limits = yield* truncate.limits()
     const repeats = Math.ceil((limits.maxBytes + 1) / "ordinary\n".length)
@@ -51,7 +53,7 @@ it.instance("actual V1 split credential prefix stays out of retained artifact an
     )
     const overflowScript = `process.stdout.write('ordinary\\n'.repeat(${repeats}))`
     const overflow = yield* tool.execute({
-      command: `'${process.execPath}' -e '${overflowScript.replaceAll("'", "'\\''")}'`, timeout: 5000,
+      command: nodeCommand(overflowScript), timeout: 5000,
     }, context)
     expect(overflow.metadata.truncated).toBe(true)
     if (!overflow.metadata.outputPath) throw new Error("safe foreground overflow did not retain an artifact")
@@ -66,7 +68,7 @@ it.instance("actual V1 split credential prefix stays out of retained artifact an
     expect((yield* Effect.flip(ToolSafety.inspect(secret))).reason).toBe("recognized-secret-output")
     // Acknowledge the reader's real progress callbacks, including its quarantined prefix chunk.
     const script = `async function wait(name) { while (!(await Bun.file(name).exists())) await Bun.sleep(5) } process.stdout.write('ordinary\\n'.repeat(${repeats})+'!'.repeat(64)); await wait('ordinary-read'); process.stdout.write(${JSON.stringify(secret.slice(0, 12))}); await wait('prefix-read'); process.stdout.write(${JSON.stringify(secret.slice(12))})`
-    const command = `'${process.execPath}' -e '${script.replaceAll("'", "'\\''")}'`
+    const command = nodeCommand(script)
     const outcome = yield* Effect.exit(tool.execute({ command, timeout: 5000 }, {
       ...context,
       metadata: (input) => {
@@ -98,7 +100,8 @@ it.instance("actual V1 timeout settles failure; nonzero fails and cancellation s
   Effect.gen(function* () {
     const safety = yield* ToolSafety.make
     const instance = yield* InstanceState.context
-    const shell = yield* Tool.init(yield* ShellTool)
+    const definition = yield* ShellTool
+    const shell = yield* Tool.init(definition)
     const observations: string[] = []
     const context: Tool.Context = {
       sessionID: SessionID.descending(), messageID: MessageID.ascending(), callID: "outcome", agent: "build",
@@ -110,15 +113,15 @@ it.instance("actual V1 timeout settles failure; nonzero fails and cancellation s
     }, shell.execute({ command, timeout }, { ...context, abort }),
     (value) => Effect.sync(() => { observations.push(value.outcome) }),
     (value) => ArsenalOutcome.classifyOutcome(value, abort.aborted))
-    expect(ArsenalOutcome.classifyOutcome(yield* run("printf ordinary", 5000))).toBe("success")
-    expect(ArsenalOutcome.classifyOutcome(yield* run("exit 7", 5000))).toBe("failure")
-    const timeout = yield* run("sleep 2", 5)
+    expect(ArsenalOutcome.classifyOutcome(yield* run(nodeCommand("process.stdout.write('ordinary')"), 5000))).toBe("success")
+    expect(ArsenalOutcome.classifyOutcome(yield* run(nodeCommand("process.exit(7)"), 5000))).toBe("failure")
+    const timeout = yield* run(nodeCommand("await Bun.sleep(2000)"), 5)
     expect(timeout.metadata.exit).toBeNull()
     expect(ArsenalOutcome.classifyOutcome(timeout)).toBe("failure")
     expect(timeout.metadata).toMatchObject({ timeout: true, aborted: false })
     const abort = new AbortController()
     abort.abort()
-    const cancelled = yield* run("sleep 2", 5000, abort.signal)
+    const cancelled = yield* run(nodeCommand("await Bun.sleep(2000)"), 5000, abort.signal)
     expect(ArsenalOutcome.classifyOutcome(cancelled)).toBe("cancelled")
     expect(ArsenalOutcome.classifyOutcome(cancelled, true)).toBe("cancelled")
     expect(observations).toEqual(["started", "success", "started", "failure", "started", "failure", "started", "cancelled"])

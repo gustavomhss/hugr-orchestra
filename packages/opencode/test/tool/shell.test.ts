@@ -918,7 +918,7 @@ describe("tool.shell permissions", () => {
           const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
           expect((yield* run(
             {
-              command: "rm -rf nested",
+              command: PS.has(sh()) ? "Remove-Item -Recurse -Force -LiteralPath nested" : sh() === "cmd" ? "rmdir /s /q nested" : "rm -rf nested",
             },
             capture(requests),
           )).metadata.exit).toBe(0)

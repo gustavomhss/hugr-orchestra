@@ -35,7 +35,7 @@ describe("Maestro Arsenal playbooks", () => {
     expect(skill.data.name).toBe(name)
     expect(path.basename(path.dirname(skill.location))).toBe(skill.data.name)
     expect(path.basename(skill.location)).toBe("SKILL.md")
-    expect(skill.source.startsWith("---\n")).toBe(true)
+    expect(skill.source).toMatch(/^---\r?\n/)
     expect(skill.source.split("\n").length).toBeLessThanOrEqual(160)
     expect(skill.data.description).toContain("Use ")
     expect(skill.content).toContain("## Trigger and rationale")
@@ -54,7 +54,7 @@ describe("Maestro Arsenal playbooks", () => {
 
   test("orientation keeps playbooks and catalogs on demand", async () => {
     const prompt = await Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt")).text()
-    const orientation = prompt.split("## On-demand Playbooks\n")[1]?.split("\n## Response")[0]
+    const orientation = prompt.split(/## On-demand Playbooks\r?\n/)[1]?.split(/\r?\n## Response/)[0]
     expect(orientation).toBeDefined()
     expect(orientation).toContain("Load only the playbook relevant to the current action")
     expect(orientation).toContain("Do not preload all playbooks or full Arsenal/Composer catalogs.")
@@ -139,7 +139,7 @@ describe("Maestro Arsenal playbooks", () => {
     expect(skill.content.indexOf("Call `hugr-search`")).toBeLessThan(skill.content.indexOf("Call `hugr-describe`"))
     expect(skill.content.indexOf("Call `hugr-describe`")).toBeLessThan(skill.content.indexOf("Use `hugr-compose`"))
     expect(skill.content).toContain("requests native `edit` permission for output paths")
-    expect(skill.content).toContain("`isError`, `ok: false`, or `error`\n   means failure")
+    expect(skill.content).toMatch(/`isError`, `ok: false`, or `error`\r?\n   means failure/)
     expect(skill.content).toContain("do not reconnect/retry writes automatically")
     expect(skill.content).toContain("a breadcrumb, not callable capability")
     expect(skill.content).toContain("Backend success is not validation in this repository.")
