@@ -5,30 +5,29 @@ alterar código, trocar a base ou iniciar um novo chapter.
 
 ## 1. Resumo executivo
 
-| Item                      | Estado verificável                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Produto entregue          | Migração da identidade desktop HuGR/Orchestra, publicada no PR [#239](https://github.com/gmhelmold/HuGR-Orchestra/pull/239)     |
-| Commit de implementação   | `791b3bc9d06125e8ed4ad891a9e1e61798ae18ba`                                                                                      |
-| Branch de trabalho        | `identity-integration`, tracking `fork/identity-integration`                                                                    |
-| Base da implementação     | `fork/dev@da2b75aff12e21c9974ebc5be41ae138302de40b`                                                                             |
-| Integração em dev         | **Pendente: E2E Linux e Windows falharam.** Não há aprovação de merge                                                           |
-| Campanha integral         | Épico [#215](https://github.com/gmhelmold/HuGR-Orchestra/issues/215), aberto; esta entrega é uma fatia, não fechamento do épico |
-| Planejamento complementar | PR documental [#232](https://github.com/gmhelmold/HuGR-Orchestra/pull/232), branch `visual-migration-plan`, ainda aberto        |
-| Chapters C01–C13          | Propostas de rework pendentes; nenhum ativo ou aprovado                                                                         |
-| Próxima prioridade        | Resolver regressões/compatibilidade do CI do #239, revisar e integrar; depois reconciliar a cobertura da campanha               |
+| Item                      | Estado verificável                                                                                                                                                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repositório               | Migrado para `gusmhs/HuGR-Orchestra` (privado) em 2026-10-02: a conta `gmhelmold` foi bloqueada e os links `gmhelmold/...` deste documento ficaram inacessíveis. Código e branches migraram; PRs, issues e histórico de CI antigos não |
+| Identidade desktop        | Integrada em `dev` pelo PR [#239](https://github.com/gmhelmold/HuGR-Orchestra/pull/239), squash `9fc1af89b9` (2026-10-02)                                                                                                              |
+| Chapters onda 1           | Integrados em `dev` pelo PR [#240](https://github.com/gmhelmold/HuGR-Orchestra/pull/240), squash `9e21939938`: C01, C02, C07, C09–C13                                                                                                  |
+| Chapters adiados          | C03, C04, C08 (exigem backend inexistente); C05, C06 (painéis de Settings existentes); decisões em [CHAPTERS-SCOPE.md](CHAPTERS-SCOPE.md)                                                                                              |
+| Correções de CI           | PR [#241](https://github.com/gmhelmold/HuGR-Orchestra/pull/241) (deadlock do `InstanceStore` no gate HttpApi); PR #244 (timeouts Windows)                                                                                              |
+| Campanha integral         | Épico [#215](https://github.com/gmhelmold/HuGR-Orchestra/issues/215) aberto; nenhuma entrega fecha o épico sem reconciliação e aceite                                                                                                  |
+| Planejamento complementar | PR documental [#232](https://github.com/gmhelmold/HuGR-Orchestra/pull/232), branch `visual-migration-plan`, ainda aberto                                                                                                               |
+| Aceite do dono            | Pendente para a identidade integrada e para cada chapter da onda 1                                                                                                                                                                     |
+| Próxima prioridade        | Reconciliar cobertura (#130–#133), fechar lacunas reais, aceitação integrada com budgets e aceite do dono (seção 7)                                                                                                                    |
 
 O usuário pediu este checkpoint para continuar em uma sessão nova. Código,
 documentação, referências e WIP histórico são preservados com localização e
 disposition explícitas. Uma pendência registrada não equivale a entrega aprovada.
 
-**Estado final após a limpeza:** [handoff/STATE.json](handoff/STATE.json). Esse
-snapshot registra branch/upstream, HEAD publicado observado, status limpo antes
-da adição do snapshot, árvores app/desktop idênticas ao commit de implementação,
-workers aposentados, WIP/bloqueios de produto, estado remoto do PR/CI e os
-artefatos/stashes externos preservados. O commit que contém o snapshot apenas
-adiciona o registro e seus links; `observedHead` é a revisão anterior observada.
+**Estado atual:** [handoff/STATE.json](handoff/STATE.json) registra os PRs
+integrados em `dev`, follow-ups abertos, estado de cada chapter (integrado,
+aceito pelo dono, adiado) e, em `previousSnapshot`, os SHAs do checkpoint
+anterior da `identity-integration` como proveniência.
 
-O snapshot de GitHub e worktrees em `handoff/` foi coletado em
+Os inventários de GitHub e worktrees em `handoff/` (`open-prs.json`,
+`global-worktrees.json`, `global-refs.json`) são históricos e foram coletados em
 **2026-10-01T23:09:20.607Z**. A publicação deste handoff adiciona documentação e
 arquivos de recuperação ao commit de implementação; o CI dessa nova revisão
 deve ser consultado novamente. Os resultados abaixo pertencem ao SHA indicado,
@@ -36,8 +35,10 @@ não a qualquer HEAD futuro.
 
 ## 2. Onde trabalhar e quais referências usar
 
-**Worktree de integração:**
-`/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-integration`.
+**Base atual:** `fork/dev` (identidade, chapters onda 1 e correções de CI já
+integrados). Trabalho novo começa em worktree própria a partir de `fork/dev`; a
+worktree `identity-integration` foi removida após o merge (a branch segue no fork
+como histórico).
 
 **Clone comum/canônico:**
 `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical`.
@@ -172,71 +173,77 @@ O run amplo executou 124 casos, não apenas os 21 da entrega. O PR está aberto,
 mergeable, mas `UNSTABLE`; nenhuma aprovação humana registrada. Não esconder
 falhas selecionando apenas a suite menor ou retirando testes do workflow.
 
-## 6. Bloqueio imediato: E2E antes do merge
+## 6. Bloqueio de E2E do #239: resolvido
 
-Logs completos estão versionados em `handoff/e2e-{linux,windows}-36932235243.log`.
-Observação de falha é fato; hipóteses abaixo ainda precisam reprodução.
-
-| Grupo                  | Evidência                                                                                                  | Próximo passo                                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Cross-server close     | `cross-server-tab-close.spec.ts:10`: esperava sessão B, recebeu Home                                       | Reconciliar filtro por perfil e successor com contrato; preservar cobertura real de servidor e legacy                                   |
-| Remote settings / busy | `remote-session-settings.spec.ts:46`, `remote-tab-busy.spec.ts:10`: aba B/indicador antigo não encontrados | Navegar pelo perfil adequado e conferir owner/state do servidor; não apagar assertions de isolamento                                    |
-| Project picker         | Dois casos em `project-picker-recent-search.spec.ts`: entrypoint antigo ausente                            | Adaptar entrada ao picker real mantendo busca de todos recentes e limite idle de cinco                                                  |
-| Home smoke             | `smoke/session-timeline.spec.ts:322`: `home-project-row` ausente                                           | Adaptar helper `selectHomeProject`, preservando paginação/ordem do histórico                                                            |
-| New session corner     | `new-session-panel-corner.spec.ts:14`: comparação de pixels false                                          | Reproduzir tema/frame aprovado e verificar se regressão ou oracle antigo; manter prova de cantos                                        |
-| Timeline shell/patch   | `session-timeline-shell-outline.spec.ts`, dois zooms e patch                                               | Magenta esperado virou `rgba(70,84,98,0.14)`; altura esperada 33 recebeu 81; investigar CSS/fixture e clipping real                     |
-| Review comment         | `review-line-comment.spec.ts:47`: flaky no Linux                                                           | Preservar sinal; conferir hover/virtualization no painel compacto                                                                       |
-| Native fixture Windows | Todos os sete casos `orchestra/titlebar-native-frame.spec.ts` falharam                                     | Resolver Vite fixture: import `@/context/layout` não resolvido; conferir normalização de `id`/`importer` Windows versus `fileURLToPath` |
-
-Erro Windows observado literalmente:
-`Failed to resolve import "@/context/layout" from "src/components/titlebar.tsx". Does the file exist?`
-
-Para mudanças no oracle/gate, provar que o teste continua rejeitando a falha
-protegida. Um ajuste visual aprovado pode mudar uma expectativa antiga, mas não
-autoriza enfraquecer teste de comportamento, isolamento, clipping ou performance.
+Os oito grupos de falha registrados em `handoff/e2e-{linux,windows}-36932235243.log`
+foram corrigidos no #239 antes do merge: fixture nativo com `normalizePath` no
+Windows, specs de abas por perfil (fechar a última aba volta para a Home; troca de
+perfil pelo menu), entradas do project picker e da Home pelo menu de perfil,
+oracle do canto do painel contra o backdrop real, sombra de evidência da timeline
+separada do contorno, e hover de comentário de review com retry após re-render.
+Cada assert novo teve prova de mutação. O CI final do #239 passou em E2E Linux e
+Windows; o único job travado era o gate HttpApi, cuja causa (deadlock do
+`InstanceStore` ao fechar com boot em andamento) foi corrigida no #241.
 
 ## 7. O que falta para encerrar a campanha
 
-1. **CI e integração da identidade:** corrigir os grupos acima, verificação
-   proporcional, CI completo na revisão final, review e aceite antes do merge.
-2. **Reconciliação de cobertura:** mapear #239 aos tickets de #215/#232;
-   classificar cada superfície como migrada, herda tema, pendente ou fora do
-   escopo com razão. Não inventar porcentagem nem declarar 66 tasks concluídas.
-3. **Superfícies/widgets reais:** conferir lacunas em settings, dialogs/pickers,
-   command palette, terminal, diff, checklist/Docs/evidência de testes,
-   Tasks/Atividade, Contexto/Own, Maestro, Janitor e Dock. Implementar o que a
-   cobertura provar pendente usando controllers/dados existentes.
-4. **Rework por chapter:** fechar escopo e aceite de cada proposta antes de
-   execução. Infraestrutura existente não é feature ausente. Não inventar
-   backend, scheduler ou novos tickets como consequência automática da skin.
-5. **Aceitação integrada:** comportamento, visual, foco/contraste/RTL/reduced
-   motion, native e budgets de CPU/memória/startup/streaming no mesmo candidato.
-6. **Entrega:** evidência permanente, comandos/run/rollback, aceite do usuário e
-   fechamento verdadeiro dos tickets. Blocker externo recebe owner/dependência,
-   não PASS fictício.
+Situação em 2026-10-02 (PRs no repositório novo `gusmhs/HuGR-Orchestra`):
+
+1. **CI e integração da identidade:** concluído (#239, #240 e #241 do repositório
+   antigo em `dev`). No repositório novo, o PR #15 ajusta o CI aos runners padrão
+   (typecheck serial, bundle do Atlas determinístico, retries do `bun install`
+   no Windows, timeouts de testes git-heavy) e é pré-requisito para os demais.
+2. **Reconciliação de cobertura:** feita em [COVERAGE.md](COVERAGE.md); a seção
+   "Situação atual" no topo registra o que fechou depois da auditoria.
+3. **Lacunas de superfície (onda 2):** implementadas, revisadas e validadas juntas
+   na branch `wave2-integration`; merge após CI verde:
+   - #8 paleta do terminal; #10 branding no splash e na página de erro;
+     #12 fundo correto no primeiro paint; #17 alvos de clique de 24 px;
+     #21 chaves de provider mascaradas e listas de modelos virtualizadas;
+     #23 navegador nativo do Dock escondido sob overlays.
+   - #25 regressão de performance: recálculo de estilo no streaming ~2,8 s → 0,28 s
+     e passada de scroll 34 s → 10 s, com capturas idênticas pixel a pixel.
+   - #19 suíte Orchestra contra o build de produção (89/89) e #6 fixtures do
+     Maestro no Windows.
+4. **Cockpit (#131/#132):** reverificado (detalhe em [COVERAGE.md](COVERAGE.md)).
+   A base existe; os itens são parciais. (A) Correções em superfícies existentes:
+   Tasks (subtask parada aparece como concluída, horário inventado, estatística
+   desconhecida como zero, órfãs duplicadas), Stop que cai para a sessão pai e
+   engole erro, custo/uso desconhecido como zero no Contexto, Resize/Hide do Dock
+   sem amarração a aba/geração, checklist histórica escondida. (B) Funcionalidades
+   novas, sob decisão do dono: cockpit simultâneo Dock/Tasks/Atividade, painéis
+   Arquivos/Docs/Terminal no Dock, resumo de testes, replay seguro e preparação de
+   PR, destino de governança do Maestro, modos compactos de navegação.
+   **Janitor (S21): adiado pelo dono.**
+5. **Verificação formal ainda sem automação:** budgets de CPU/memória/startup/
+   streaming no CI, matriz visual contra o mock aprovado, contraste e anel de
+   foco, hit zones nativas Windows/Linux. A medição A/B manual de 2026-10-02 está
+   resumida no PR #25.
+6. **Aceite do dono:** identidade integrada e cada chapter da onda 1.
+7. **Entrega:** fechar #1 (continuação do épico) e os tickets com evidência real;
+   blocker externo recebe owner/dependência, não PASS fictício.
 
 ### Registro dos chapters
 
-| Chapter | Destino     | Estado / boundary                                                       |
-| ------- | ----------- | ----------------------------------------------------------------------- |
-| C01     | MCP         | Pendente; gestão por perfil sobre infraestrutura OpenCode               |
-| C02     | Skills      | Pendente; reutilizar conceito/infra existente                           |
-| C03     | LLM Plugins | Pendente; comportamento/instruções LLM, distinto de plugin geral        |
-| C04     | Hooks       | Pendente; eventos/automação por perfil                                  |
-| C05     | Providers   | Pendente; settings Providers já existe                                  |
-| C06     | Shortcuts   | Pendente; settings Shortcuts já existe                                  |
-| C07     | CI/CD       | Pendente; propostas de pipelines/logs/deploy não são jobs implementados |
-| C08     | Agendar     | Pendente; proposta one-off/recorrente                                   |
-| C09     | .env        | Pendente; proposta de editor dedicado                                   |
-| C10     | Home/KPIs   | Pendente; impacto/uso/gastos, não dados sample como produto             |
-| C11     | Agents      | Pendente; agents existentes, novo destino/roster                        |
-| C12     | Workspaces  | Pendente; reutilizar capacidade existente                               |
-| C13     | Dock        | Pendente; destino dedicado reutiliza browser App Dock/Apps              |
+| Chapter | Destino     | Estado / boundary                                                                               |
+| ------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| C01     | MCP         | Em `dev` (#240); inventário por perfil, conectar/desconectar/OAuth. Aguarda aceite do dono      |
+| C02     | Skills      | Em `dev` (#240); catálogo e leitor read-only. Aguarda aceite do dono                            |
+| C03     | LLM Plugins | Adiado: ativação de comportamentos exige backend inexistente                                    |
+| C04     | Hooks       | Adiado: regras/execução declarativas exigem backend inexistente                                 |
+| C05     | Providers   | Adiado: painel de Settings existente continua sendo o destino                                   |
+| C06     | Shortcuts   | Adiado: painel de Settings existente continua sendo o destino                                   |
+| C07     | CI/CD       | Em `dev` (#240); inventário read-only de workflows e draft para o Chat. Aguarda aceite do dono  |
+| C08     | Agendar     | Adiado: não há MVP honesto sem scheduler durável                                                |
+| C09     | .env        | Em `dev` (#240); editor só em memória com download fiel. Aguarda aceite do dono                 |
+| C10     | Home/KPIs   | Em `dev` (#240); "Uso registrado" na Home, sem dados sample. Aguarda aceite do dono             |
+| C11     | Agents      | Em `dev` (#240); roster read-only e Chat com o agente escolhido. Aguarda aceite do dono         |
+| C12     | Workspaces  | Em `dev` (#240); raiz e sandboxes, draft no workspace escolhido. Aguarda aceite do dono         |
+| C13     | Dock        | Em `dev` (#240); um navegador por projeto, compartilhado com a aba Apps. Aguarda aceite do dono |
 
-**Nenhum chapter ativo.** C01/MCP foi sugerido como próximo, não iniciado nem
-aceito. O usuário escolhe e aprova um por vez; IDs não impõem sequência. As
-novas páginas do mock não aprovam domínio/workflow. Atualizar registro e marcador
-apenas após aceite. O registro completo está no mock arquivado (`CHAPTERS.md`).
+Escopo e aceite por chapter em [CHAPTERS-SCOPE.md](CHAPTERS-SCOPE.md). Chapters
+adiados mantêm o marcador "rework pendente" e o diálogo atual. Marcar um chapter
+como aceito somente depois do aceite explícito do dono.
 
 ## 8. Performance e limites que não podem desaparecer
 
@@ -295,9 +302,7 @@ remoção das branches locais históricas correspondentes. O commit que publicou
 os backups é `cbbdf7b1f5`; o inventário anterior continua como proveniência.
 Worktrees/stashes externos e os arquivos originais do usuário foram preservados.
 
-A worktree ativa é `identity-integration`; `orchestra-identity` permanece como
-entrega original publicada. O checkpoint e o recibo de limpeza são commitados
-e publicados nessa mesma branch. Não há WIP de produto da campanha aguardando
+`orchestra-identity` permanece como entrega original publicada. Não há WIP de produto da campanha aguardando
 resgate de worker; a integração do produto continua bloqueada pelo CI do #239.
 
 **Pendência de merge conhecida:** #239 aguarda E2E/review; #232 e PRs externos
@@ -306,23 +311,18 @@ repo global limpo, nem converte WIP arquivado em produto aprovado.
 
 ## 10. Retomada na próxima sessão
 
-No checkout `identity-integration`, leia `AGENTS.md`, `packages/app/AGENTS.md`,
-`packages/desktop/AGENTS.md` e este handoff. Em outra máquina, clone o fork e
-faça checkout de `identity-integration`; não precisa de ZIP enviado pelo chat.
+Crie uma worktree a partir de `fork/dev` e leia `AGENTS.md`,
+`packages/app/AGENTS.md`, `packages/desktop/AGENTS.md` e este handoff.
 
 ```sh
-# CWD: worktree identity-integration
-git status --short --branch
-git fetch fork dev identity-integration orchestra-identity
-git log --oneline fork/dev..HEAD
-gh pr view 239 --repo gmhelmold/HuGR-Orchestra
-gh pr checks 239 --repo gmhelmold/HuGR-Orchestra
-gh run list --repo gmhelmold/HuGR-Orchestra --branch identity-integration --limit 10
+git fetch fork dev
+git worktree add -b <branch-curta> ../<branch-curta> fork/dev
+gh pr list --repo gmhelmold/HuGR-Orchestra --state open
+gh issue view 215 --repo gmhelmold/HuGR-Orchestra
 ```
 
-Primeiro reproduzir somente os grupos de falha, com portas próprias e waits de
-estado. Depois rodar a suite ampla e conferir Linux/Windows no CI. Não repetir
-builds/benchmarks verdes sem mudança ou dúvida específica.
+Verificação proporcional à mudança, com portas próprias e sem reiniciar o
+servidor/app do usuário:
 
 ```sh
 # CWD: packages/app
@@ -330,26 +330,19 @@ bun typecheck
 bun run typecheck:e2e
 bun run test:unit
 bun run test:browser
-PLAYWRIGHT_PORT=4313 bun run test:orchestra --reporter=line
-bun run test:e2e:local -- e2e/regression/cross-server-tab-close.spec.ts e2e/regression/remote-session-settings.spec.ts e2e/regression/remote-tab-busy.spec.ts
+PLAYWRIGHT_PORT=4313 bunx playwright test e2e/orchestra/ --reporter=line
 
 # CWD: packages/desktop
 bun typecheck
-bun test src/main/titlebar-frame.test.ts
-bun run build
 
-# CWD: worktree identity-integration; isto é guard, não testes na raiz
+# CWD: raiz da worktree; guard, não testes
 GODFILE_BASE_REF=fork/dev bun run check:godfile
 ```
-
-Preparar o backend/fixture correto para cada runner conforme configuração; não
-reiniciar servidor/app do usuário para conseguir uma porta. No CI, o runner
-amplo usa a configuração padrão; a suite Orchestra de produção é complementar.
 
 Para consultar o plano ainda não integrado:
 
 ```sh
-# CWD: worktree identity-integration; ler sem sobrescrever o checkout
+# CWD: qualquer worktree; ler sem sobrescrever o checkout
 git fetch fork visual-migration-plan
 git show fork/visual-migration-plan:specs/orchestra-visual/START-HERE.md
 git show fork/visual-migration-plan:specs/orchestra-visual/INDEX.md
@@ -392,12 +385,10 @@ inicial histórico S01-W1-T1 não obriga refazer código já provado. Não merge
 
 ## 12. Prompt pronto para a sessão nova
 
-> Continue a campanha Orchestra a partir de
-> `specs/orchestra-visual/HANDOFF.md` na branch `identity-integration` do fork
-> `gmhelmold/HuGR-Orchestra`. Revalide HEAD/PR/CI, leia os logs preservados e
-> resolva primeiro os bloqueios E2E do PR #239. Preserve visual aprovado,
-> Janitor, isolamento por perfil/servidor, gates e trabalho externo. Não refaça
-> migração nem misture ancestors da branch original. Depois de CI/review/aceite
-> e integração, reconcilie #215/#232 e proponha escopo do C01/MCP; nenhum chapter
-> está ativo ou aprovado. Use manifests/archives para recuperação, nunca para
-> sobrescrever código atual cegamente. Responda em português, caveman full.
+> Continue a campanha Orchestra a partir de `specs/orchestra-visual/HANDOFF.md`
+> em `fork/dev` do fork `gmhelmold/HuGR-Orchestra`. Identidade (#239), chapters
+> onda 1 (#240) e correções de CI (#241) já estão em `dev`. Siga a seção 7:
+> reconciliação de cobertura #130–#133, lacunas reais com controllers/dados
+> existentes, aceitação integrada com budgets e aceite do dono. Preserve visual
+> aprovado, Janitor, isolamento por perfil/servidor, gates e trabalho externo.
+> Não invente backend para chapters adiados. Responda em português, caveman full.
