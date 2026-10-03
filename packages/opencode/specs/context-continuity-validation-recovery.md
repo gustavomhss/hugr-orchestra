@@ -1,7 +1,9 @@
 # Context Continuity: recovered bundle validation
 
-Date: 2026-10-03. Implementation baseline:
+Date: 2026-10-03. G2 measurement baseline:
 `37666c8acd71164adb3b686aa0cec5a191aaa609`, with the reader-v3 working bundle.
+The later integrated checkpoint is `c14a1fa9390b38b886c0ba89cfee8aa8e0492b99`;
+its current-dev validation is recorded separately below.
 
 **Mechanical checks and the complete private Electron replay passed. Luna semantic
 quality remains adoption-blocked. This record does not authorize a merge.**
@@ -142,3 +144,44 @@ tested runtime bytes.
 Adoption still requires baseline-equivalent semantic retention, repeated accepted
 original/holdout comparisons and reliable production deadline completion. Schema,
 literal fidelity, budget reduction and complete UI success do not replace that gate.
+
+## Current-dev integration and final local closure
+
+The bundle integrates Orchestra dev `76015a9dcd` through merge `c14a1fa939`,
+including its existing UI identity/controls and interrupted-instance boot fix.
+No claim of synchronization with later remote changes is made.
+
+Cold review identified inherited Object/Array `toJSON` hooks rewriting reader
+records. Hook-independent JSON-data serialization now handles records, dictionary
+identity and hints. An isolated child installs both hooks; the real serializer
+mutation failed, restoration passed. Reader validation was strengthened to reject
+unused dictionary entries, with distinct non-reference physical-ID/digest leakage
+controls and a combined forecast that reserves variable reference JSON. These
+repairs do not alter the recorded G2 semantic quality outcome.
+
+After integration, the broader run exercised 249 cases: 247 passed and two legacy
+source tests still expected host digests on producer wire. Those assertions were
+aligned with the already implemented digest boundary; their corrected file passed.
+Successful cases were not repeated. Opencode, app and desktop package typechecks
+then exited zero sequentially. Actual command/exit receipts are preserved in
+`checks-current-dev-02/completed.json`; the original failure log remains in
+`checks-current-dev-01/`. The pre-integration review-fix subset also passed 57 tests.
+
+Complete merged UI generation `restored-ui/replay/run-current-dev-c14-06/` passed
+all scenarios, including published-locator Allow Once, Stop, durable history and
+Home reopening. A single fresh source build was reused for UI05 and UI06; UI05
+exposed old harness selector scoping after Orchestra moved New Session outside the
+banner. Actual visible controls and DOM hit-tests were retained in the repaired
+harness. This is distinct from the earlier UI04 build and evidence.
+
+UI06's original teardown raised `PermissionError` during a group-liveness probe;
+its cause is unknown. Separate follow-up verification positively calibrated the OS
+membership query, verified departure of the three owned groups and rebound the
+private ports. It did not blindly signal historical PIDs or infer cleanup from UI
+success. `final-report-followup.json` distinguishes existing UI PASS from the fresh
+calibrated cleanup result; original receipts and errors remain preserved.
+
+Merged UI source/dirty-tree fingerprint:
+`20641a1c5859eee3f037e05fd4254f9aacdac379f43a7f4bd200bf09380a44a0`.
+Later closure changes are documentation and the two corrected test expectations,
+not a new Luna evaluation. Current-head remote CI remains a separate gate.

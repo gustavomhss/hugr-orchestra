@@ -140,7 +140,7 @@ test("request supplies code-owned identities, scope, source roles and decoder sc
         units: [{ id: "S003", path: ["text"], value: "turn-1" }] },
     ] },
   })
-  expect(readSourceCatalogue(payload).units).toEqual(sources.units)
+  expect(readSourceCatalogue(payload).units).toEqual(sources.units.map(({ digest, ...unit }) => unit))
   expect(payload).not.toHaveProperty("source.units")
   expect(sources.units.find((unit) => unit.locator.field === "system")).toMatchObject({
     role: "user", scope: "turn:msg_0", value: user.system,
@@ -157,7 +157,7 @@ test("grouped prior packet keeps original body, exact values and descriptors", (
   const sources = catalogue({ parentID: sessionID, head: captured.head, previous, canRecall: true })
   const payload = JSON.parse(request(captured, sources, producerID).messages[0].content)
   expect(payload.source.previous).toEqual({ envelope: previous.envelope, body: previous.body })
-  expect(readSourceCatalogue(payload).units).toEqual(sources.units)
+  expect(readSourceCatalogue(payload).units).toEqual(sources.units.map(({ digest, ...unit }) => unit))
   expect(payload.source.groups[0]).toMatchObject({ origin: "prior", units: [{ id: "S001", value: "turn-0" }] })
   expect(payload.source.groups[1].units[0]).not.toHaveProperty("value")
   expect(payload.source.groups[2]).toMatchObject({ origin: "head", units: [{ id: "S003", value: "turn-2" }] })
