@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, test } from "bun:test"
+import { syncThemeBackground } from "@opencode-ai/ui/theme/context"
 
 const src = await Bun.file(new URL("../public/oc-theme-preload.js", import.meta.url)).text()
+const skin = await Bun.file(new URL("./orchestra/background.css", import.meta.url)).text()
 
 const run = () => Function(src)()
 
 beforeEach(() => {
   document.head.innerHTML = ""
+  document.documentElement.removeAttribute("style")
+  document.documentElement.removeAttribute("data-new-layout")
   document.documentElement.removeAttribute("data-theme")
   document.documentElement.removeAttribute("data-color-scheme")
   localStorage.clear()
@@ -19,6 +23,28 @@ beforeEach(() => {
 })
 
 describe("theme preload", () => {
+  test.each(["light", "dark"])("uses the approved Orchestra %s background before mount", (mode) => {
+    const style = document.createElement("style")
+    style.textContent = skin
+    document.head.appendChild(style)
+    const meta = document.createElement("meta")
+    meta.name = "theme-color"
+    document.head.appendChild(meta)
+    localStorage.setItem("opencode-color-scheme", mode)
+
+    run()
+
+    expect(getComputedStyle(document.documentElement).backgroundColor).toBe(mode === "dark" ? "#080c11" : "#dfe3e8")
+    expect(meta.content).toBe(getComputedStyle(document.documentElement).backgroundColor)
+
+    document.documentElement.dataset.colorScheme = mode === "dark" ? "light" : "dark"
+    syncThemeBackground()
+
+    expect(getComputedStyle(document.documentElement).backgroundColor).toBe(mode === "dark" ? "#dfe3e8" : "#080c11")
+    expect(meta.content).toBe(getComputedStyle(document.documentElement).backgroundColor)
+    expect(document.documentElement.style.colorScheme).toBe(mode === "dark" ? "light" : "dark")
+  })
+
   test("migrates legacy oc-1 to oc-2 before mount", () => {
     localStorage.setItem("opencode-theme-id", "oc-1")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")

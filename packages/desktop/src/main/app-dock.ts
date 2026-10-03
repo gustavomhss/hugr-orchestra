@@ -83,6 +83,9 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
   >()
   const terminalDownloads = new Map<string, number>()
   const active = new Map<number, string>()
+  // Senders whose renderer draws an overlay over the Dock. Their views stay hidden until released,
+  // including views shown while it holds, because native views always paint above the renderer.
+  const occluded = new Set<number>()
   const inactive = new Map<string, { senderID: number; tabID: string }>()
   let generation = 0
   const identity = (tabID: string, tabGeneration: number): AppDockIdentity =>
@@ -387,7 +390,7 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
     tabs.set(senderID, senderTabs)
     if (replacement?.selected ?? true) {
       win.contentView.addChildView(view)
-      view.setVisible(true)
+      view.setVisible(!occluded.has(senderID))
       view.webContents.setBackgroundThrottling(false)
       active.set(senderID, id)
     }
@@ -426,6 +429,13 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
       }
       active.delete(senderID)
     },
+    // Releasing occlusion shows the sender's active tab at release time, never a remembered one.
+    occlude(senderID: number, value: boolean) {
+      if (value) occluded.add(senderID)
+      else occluded.delete(senderID)
+      const tabID = active.get(senderID)
+      if (tabID) tabs.get(senderID)?.get(tabID)?.view.setVisible(!value)
+    },
     select(senderID: number, win: BrowserWindow, tabID: string, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
       const record = tabs.get(senderID)?.get(tabID)
@@ -433,6 +443,7 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
       for (const [id, other] of tabs.get(senderID) ?? []) {
         if (id === tabID) {
           win.contentView.addChildView(other.view)
+          other.view.setVisible(!occluded.has(senderID))
           other.view.webContents.setBackgroundThrottling(false)
           inactive.delete(`${senderID}:${id}`)
         } else {

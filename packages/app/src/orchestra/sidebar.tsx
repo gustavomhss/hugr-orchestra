@@ -1,0 +1,521 @@
+import { DropdownMenu } from "@kobalte/core/dropdown-menu"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { Dialog, DialogBody, DialogHeader, DialogTitle, DialogTitleGroup } from "@opencode-ai/ui/v2/dialog-v2"
+import { Icon } from "@opencode-ai/ui/v2/icon"
+import { ProjectAvatar } from "@opencode-ai/ui/v2/project-avatar-v2"
+import { useNavigate } from "@solidjs/router"
+import { createEffect, createMemo, createRoot, For, getOwner, onCleanup, Show, type JSX } from "solid-js"
+import { createStore } from "solid-js/store"
+import { useDirectoryPicker } from "@/components/directory-picker"
+import { useCommand } from "@/context/command"
+import { useGlobal } from "@/context/global"
+import { getProjectAvatarVariant, type LocalProject, useLayout } from "@/context/layout"
+import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
+import { ServerConnection, serverName, useServer } from "@/context/server"
+import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
+import { HugrBrand } from "@/orchestra/brand"
+import { chapterPages } from "@/orchestra/chapter-route"
+import { navigation } from "@/orchestra/navigation"
+import { createHomeController } from "@/pages/home/home-controller"
+import {
+  displayName,
+  errorMessage,
+  getProjectAvatarSource,
+  homeProjectDirectories,
+  projectForSession,
+} from "@/pages/layout/helpers"
+import { createMenuDismissController } from "@/utils/menu-dismiss-controller"
+import { pathKey } from "@/utils/path-key"
+import { isLocalSessionNotFoundError, isSessionNotFoundError } from "@/utils/server-errors"
+import { showToast } from "@/utils/toast"
+
+// Navigation marks copied from the approved Orchestra reference.
+const icons = {
+  home: '<path d="M2.8 6.6 8 2.6l5.2 4v6a1 1 0 0 1-1 1h-2.7v-3.8H6.5v3.8H3.8a1 1 0 0 1-1-1z"/>',
+  chat: '<path d="M2.6 3.6h10.8v6.9H6.9l-3.1 2.3v-2.3H2.6z"/>',
+  agents:
+    '<circle cx="5.4" cy="4.6" r="2.1"/><circle cx="11.4" cy="5" r="1.7"/><path d="M1.6 13.2c.3-2.2 1.9-3.4 3.8-3.4s3.5 1.2 3.8 3.4M9.9 9.9c2.2-.3 3.9 1 4.3 3.3"/>',
+  mcp: '<path d="M5 2v3M11 2v3M3 5h10v3a5 5 0 0 1-10 0V5ZM8 13v2"/>',
+  skills: '<path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>',
+  plugins: '<path d="M2 3h4a2 2 0 1 1 4 0h4v4a2 2 0 1 0 0 4v3h-4a2 2 0 1 0-4 0H2V3Z"/>',
+  hooks: '<path d="M4 2v7a4 4 0 0 0 8 0V7M9 9l3-3 3 3"/><circle cx="4" cy="2" r="1"/>',
+  cicd: '<circle cx="3" cy="8" r="2"/><circle cx="13" cy="4" r="2"/><circle cx="13" cy="12" r="2"/><path d="M5 8h3V4h3M8 8v4h3"/>',
+  schedule: '<circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/>',
+  env: '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="m5 6 2 2-2 2M9 10h2"/>',
+  dock: '<path d="M2.6 3.4h10.8v7.4H2.6zM2.6 5.8h10.8M5 12.6h6"/>',
+  search: '<circle cx="7.1" cy="7.1" r="4.2"/><path d="m10.3 10.3 2.6 2.6"/>',
+  workspaces: '<path d="M2.6 4.2h4.2l1.3 1.6h5.3v6.4H2.6z"/>',
+  providers: '<path d="M3 6a5 5 0 0 1 10 0M2 6h12v6H2V6ZM6 9h4"/>',
+  shortcuts: '<rect x="1" y="3" width="14" height="10" rx="2"/><path d="M4 6h.1M7 6h.1M10 6h.1M12 6h.1M4 9h.1M7 9h5"/>',
+  settings:
+    '<circle cx="8" cy="8" r="2.3"/><path d="M8 1.9v1.6M8 12.5v1.6M14.1 8h-1.6M3.5 8H1.9M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1M12.3 12.3l-1.1-1.1M4.8 4.8 3.7 3.7"/>',
+  help: '<circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.7.6-.7 1.1M8 11.6v.1"/>',
+}
+
+export function OrchestraSidebar() {
+  const layout = useLayout()
+  const global = useGlobal()
+  const server = useServer()
+  const tabs = useTabs()
+  const language = useLanguage()
+  const platform = usePlatform()
+  const command = useCommand()
+  const navigate = useNavigate()
+  const dialog = useDialog()
+  const pickDirectory = useDirectoryPicker()
+  const home = createHomeController()
+  const [state, setState] = createStore({
+    profileOpen: false,
+    settings: undefined as (() => JSX.Element) | undefined,
+  })
+  let menuRef: HTMLDivElement | undefined
+  const dismiss = createMenuDismissController(() => menuRef)
+  const requests = { settings: 0, profile: 0, disposed: false }
+  onCleanup(() => {
+    requests.disposed = true
+  })
+  const groups = createMemo(() =>
+    global.servers.list().map((conn) => ({
+      conn,
+      key: ServerConnection.key(conn),
+      projects: global.ensureServerCtx(conn).projects.list,
+    })),
+  )
+  const profile = createMemo(() => {
+    const route = layout.route()
+    const target = (() => {
+      if (route.type === "home" || route.type === "chapter") return layout.home.selection()
+      if (route.type === "dir-new-sesssion") return { server: route.server ?? server.key, directory: route.dir }
+      if (route.type === "draft") {
+        const draft = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === route.draftID)
+        if (draft?.type === "draft") return { server: draft.server, directory: draft.directory }
+        return layout.home.selection()
+      }
+      const key = route.server ?? server.key
+      const conn = global.servers.list().find((item) => ServerConnection.key(item) === key)
+      const session = conn ? global.ensureServerCtx(conn).sync.session.peek(route.sessionId) : undefined
+      return {
+        server: key,
+        directory:
+          session?.directory ??
+          tabs.info[tabKey({ type: "session", server: key, sessionId: route.sessionId })]?.directory,
+      }
+    })()
+    const group = groups().find((item) => item.key === target.server)
+    const directory = target.directory ? pathKey(target.directory) : undefined
+    const session =
+      route.type === "session" && group
+        ? global.ensureServerCtx(group.conn).sync.session.peek(route.sessionId)
+        : undefined
+    return {
+      ...target,
+      conn: group?.conn,
+      project:
+        (session ? projectForSession(session, group?.projects() ?? []) : undefined) ??
+        group
+          ?.projects()
+          .find(
+            (project) =>
+              !!directory &&
+              (pathKey(project.worktree) === directory ||
+                project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory)),
+          ),
+    }
+  })
+
+  async function projectTab(conn: ServerConnection.Any, project: LocalProject) {
+    const key = ServerConnection.key(conn)
+    const ctx = global.ensureServerCtx(conn)
+    const directories = new Set([project.worktree, ...(project.sandboxes ?? [])].map(pathKey))
+    const matches = (tab: Tab) => {
+      if (tab.server !== key) return false
+      if (tab.type === "draft") return directories.has(pathKey(tab.directory))
+      const session = ctx.sync.session.peek(tab.sessionId)
+      if (session) return !!projectForSession(session, [project])
+      const directory = tabs.info[tabKey(tab)]?.directory
+      return !!directory && directories.has(pathKey(directory))
+    }
+    const current = tabs.store.find(matches)
+    if (current) return current
+    // Restored tabs may not have directory metadata yet. Join the sync store's
+    // existing info request before deciding that this repository needs a draft.
+    await Promise.all(
+      tabs.store
+        .filter(
+          (tab): tab is SessionTab =>
+            tab.type === "session" &&
+            tab.server === key &&
+            !ctx.sync.session.peek(tab.sessionId) &&
+            !tabs.info[tabKey(tab)]?.directory,
+        )
+        .map((tab) =>
+          ctx.sync.session.resolve(tab.sessionId).catch((cause: unknown) => {
+            if (isLocalSessionNotFoundError(cause, tab.sessionId) || isSessionNotFoundError(cause, tab.sessionId))
+              return
+            throw cause
+          }),
+        ),
+    )
+    return tabs.store.find(matches)
+  }
+
+  async function selectProject(conn: ServerConnection.Any, project: LocalProject, draft = false) {
+    if (global.servers.health[ServerConnection.key(conn)]?.healthy === false) return
+    const current = ++requests.profile
+    const route = layout.route()
+    const ctx = global.ensureServerCtx(conn)
+    layout.home.setSelection({ server: ServerConnection.key(conn), directory: project.worktree })
+    ctx.projects.open(project.worktree)
+    ctx.projects.touch(project.worktree)
+    setState("profileOpen", false)
+    const result = await projectTab(conn, project).then(
+      (tab) => ({ tab }),
+      (cause: unknown) => ({ cause }),
+    )
+    if (requests.disposed || requests.profile !== current || layout.route() !== route) return
+    if ("cause" in result) {
+      showToast({
+        title: language.t("common.requestFailed"),
+        description: errorMessage(result.cause, language.t("common.requestFailed")),
+      })
+      return
+    }
+    if (result.tab) {
+      tabs.select(result.tab)
+      return
+    }
+    if ((route.type === "home" || route.type === "chapter") && !draft) return
+    home.project.openProjectNewSession(conn, project.worktree)
+  }
+
+  function chooseProject(conn: ServerConnection.Any, draft = false) {
+    if (global.servers.health[ServerConnection.key(conn)]?.healthy === false) return
+    const current = ++requests.profile
+    const route = layout.route()
+    const target = profile()
+    setState("profileOpen", false)
+    pickDirectory({
+      server: conn,
+      title: language.t("command.project.open"),
+      multiple: true,
+      onSelect: (result) => {
+        if (requests.disposed || requests.profile !== current || layout.route() !== route) return
+        if (profile().server !== target.server || profile().directory !== target.directory) return
+        const directories = homeProjectDirectories(result)
+        if (!directories[0]) return
+        home.project.add(conn, directories)
+        const project = global
+          .ensureServerCtx(conn)
+          .projects.list()
+          .find((item) => item.worktree === directories[0])
+        if (requests.disposed || requests.profile !== current || layout.route() !== route) return
+        if (project) selectProject(conn, project, draft)
+      },
+    })
+  }
+
+  function openChapter(id: string) {
+    // Chapter pages read the Home selection; carry the profile the user is looking at.
+    const target = profile()
+    const directory = target.project?.worktree ?? target.directory
+    if (directory) layout.home.setSelection({ server: target.server, directory })
+    navigate(`/orchestra/${id}`)
+  }
+
+  function current(id: string) {
+    const route = layout.route()
+    if (route.type === "chapter") return route.chapter === id
+    if (id === "home") return route.type === "home"
+    if (id === "chat") return route.type === "session" || route.type === "draft"
+    return false
+  }
+
+  function openChat() {
+    const route = layout.route()
+    if (route.type === "session" || route.type === "draft") return
+    const conn = profile().conn ?? home.server.focused()
+    if (!conn) {
+      command.trigger("settings.open")
+      return
+    }
+    const ctx = global.ensureServerCtx(conn)
+    const project =
+      profile().project ??
+      ctx.projects.list().find((item) => item.worktree === ctx.projects.last()) ??
+      ctx.projects.list()[0]
+    if (project) {
+      selectProject(conn, project, true)
+      return
+    }
+    chooseProject(conn, true)
+  }
+
+  async function openSettingsPanel(panel: "providers" | "shortcuts") {
+    const current = ++requests.settings
+    const target = profile()
+    const route = layout.route()
+    const conn = target.conn ?? server.current
+    if (!conn) return
+    const [{ DialogSettings }, { ServerSDKProvider }, { ServerSyncProvider }, { ModelsProvider }] = await Promise.all([
+      import("@/components/settings-v2"),
+      import("@/context/server-sdk"),
+      import("@/context/server-sync"),
+      import("@/context/models"),
+    ])
+    if (requests.disposed || requests.settings !== current || layout.route() !== route) return
+    if (profile().server !== target.server || profile().directory !== target.directory) return
+    // Dialog replacements inherit the opening owner, not the replaced content's providers.
+    const launch = () => (
+      <ServerSDKProvider server={() => conn}>
+        <ServerSyncProvider server={() => conn}>
+          <ModelsProvider directory={() => target.directory}>
+            <SettingsLauncher
+              valid={
+                layout.route() === route &&
+                profile().server === target.server &&
+                profile().directory === target.directory
+              }
+              content={() => (
+                <DialogSettings
+                  sessionID={route.type === "session" ? route.sessionId : undefined}
+                  defaultValue={panel}
+                />
+              )}
+              onClose={() => {
+                if (state.settings === launch) setState("settings", undefined)
+              }}
+            />
+          </ModelsProvider>
+        </ServerSyncProvider>
+      </ServerSDKProvider>
+    )
+    setState("settings", () => launch)
+  }
+
+  function openPending(title: string, chapter: string) {
+    void dialog.show(() => (
+      <Dialog class="orchestra-pending-dialog">
+        <DialogHeader>
+          <DialogTitle>{language.t("orchestra.rework.title", { title })}</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <p class="orchestra-chapter-label">
+            <bdi>{chapter}</bdi> · {language.t("orchestra.rework.pending")}
+          </p>
+          <DialogTitleGroup description={language.t("orchestra.rework.body", { title, chapter })} />
+        </DialogBody>
+      </Dialog>
+    ))
+  }
+
+  function afterProfileClose(action: () => void) {
+    dismiss.preventTriggerRestore()
+    setState("profileOpen", false)
+    dismiss.afterClose(() => {
+      if (requests.disposed) return
+      action()
+    })
+  }
+
+  return (
+    <aside data-component="orchestra-sidebar" class="orchestra-sidebar" aria-label={language.t("home.projects")}>
+      <HugrBrand />
+      <Show when={state.settings} keyed>
+        {(launch) => launch()}
+      </Show>
+      <div class="orchestra-navigation">
+        <nav class="orchestra-nav">
+          <For each={navigation}>
+            {(item) => (
+              <>
+                <Show when={item.id === "search"}>
+                  <div class="orchestra-nav-rule" />
+                </Show>
+                <button
+                  type="button"
+                  class="orchestra-nav-button"
+                  disabled={
+                    (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
+                    (item.id === "settings" && !command.options.some((option) => option.id === "settings.open")) ||
+                    (item.id === "chat" &&
+                      (!layout.ready() || !tabs.ready() || global.servers.health[profile().server]?.healthy === false))
+                  }
+                  aria-current={current(item.id) ? "page" : undefined}
+                  title={
+                    item.chapter && !chapterPages[item.id]
+                      ? `${item.chapter} · ${language.t("orchestra.rework.pending")}`
+                      : undefined
+                  }
+                  onClick={() => {
+                    if (item.id === "home") return navigate("/")
+                    if (item.id === "chat") return openChat()
+                    if (item.id === "search") return command.show()
+                    if (item.id === "settings") return command.trigger("settings.open")
+                    if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
+                    if (chapterPages[item.id]) return openChapter(item.id)
+                    if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
+                    if (item.chapter) openPending(language.t(item.label), item.chapter)
+                  }}
+                >
+                  <svg class="orchestra-nav-icon" viewBox="0 0 16 16" aria-hidden="true" innerHTML={icons[item.id]} />
+                  <span class="orchestra-nav-label">{language.t(item.label)}</span>
+                  <Show when={item.id === "search"}>
+                    <kbd>{command.keybind("command.palette")}</kbd>
+                  </Show>
+                  <Show when={item.chapter && !chapterPages[item.id]}>
+                    <span class="orchestra-pending-dot" aria-hidden="true" />
+                    <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
+                  </Show>
+                </button>
+              </>
+            )}
+          </For>
+        </nav>
+      </div>
+      <div class="orchestra-sidebar-foot">
+        <DropdownMenu
+          placement="top-start"
+          gutter={8}
+          modal={false}
+          open={state.profileOpen}
+          onOpenChange={(open) => {
+            if (open) dismiss.allowTriggerRestore()
+            setState("profileOpen", open)
+          }}
+        >
+          <DropdownMenu.Trigger
+            class="orchestra-profile"
+            data-slot="orchestra-profile"
+            aria-label={language.t("orchestra.profile.choose")}
+            aria-describedby="orchestra-profile-name"
+          >
+            <ProjectAvatar
+              class="orchestra-profile-avatar"
+              fallback={profile().project ? displayName(profile().project!) : ""}
+              src={getProjectAvatarSource(profile().project?.id, profile().project?.icon)}
+              variant={getProjectAvatarVariant(profile().project?.icon?.color)}
+              aria-hidden="true"
+            />
+            <span class="orchestra-profile-text">
+              <strong id="orchestra-profile-name">
+                <bdi>{profile().project ? displayName(profile().project!) : language.t("orchestra.profile.empty")}</bdi>
+              </strong>
+              <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
+                {profile().project?.worktree ?? serverName(profile().conn)}
+              </small>
+            </span>
+            <Icon name="chevron-down" class="orchestra-profile-chevron" />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              ref={menuRef}
+              class="orchestra-profile-menu"
+              data-component="orchestra-profile-picker"
+              onCloseAutoFocus={dismiss.onCloseAutoFocus}
+              onPointerDownOutside={dismiss.preventTriggerRestore}
+              onFocusOutside={dismiss.preventTriggerRestore}
+            >
+              <DropdownMenu.RadioGroup
+                value={profile().project ? `${profile().server}\n${profile().project!.worktree}` : ""}
+              >
+                <For each={groups()}>
+                  {(group) => (
+                    <DropdownMenu.Group>
+                      <DropdownMenu.GroupLabel class="orchestra-profile-group">
+                        <bdi>{serverName(group.conn)}</bdi>
+                      </DropdownMenu.GroupLabel>
+                      <For each={group.projects()}>
+                        {(project) => (
+                          <DropdownMenu.RadioItem
+                            class="orchestra-profile-item"
+                            value={`${group.key}\n${project.worktree}`}
+                            disabled={
+                              !layout.ready() || !tabs.ready() || global.servers.health[group.key]?.healthy === false
+                            }
+                            onSelect={() => afterProfileClose(() => selectProject(group.conn, project))}
+                          >
+                            <DropdownMenu.ItemLabel class="orchestra-profile-item-name">
+                              <bdi>{displayName(project)}</bdi>
+                            </DropdownMenu.ItemLabel>
+                            <DropdownMenu.ItemIndicator>
+                              <Icon name="check" />
+                            </DropdownMenu.ItemIndicator>
+                          </DropdownMenu.RadioItem>
+                        )}
+                      </For>
+                      <DropdownMenu.Item
+                        class="orchestra-profile-item orchestra-profile-add"
+                        disabled={
+                          !layout.ready() || !tabs.ready() || global.servers.health[group.key]?.healthy === false
+                        }
+                        onSelect={() => afterProfileClose(() => chooseProject(group.conn))}
+                      >
+                        <Icon name="plus" />
+                        <DropdownMenu.ItemLabel>{language.t("home.project.add")}</DropdownMenu.ItemLabel>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Group>
+                  )}
+                </For>
+              </DropdownMenu.RadioGroup>
+              <Show when={!groups().some((group) => group.projects().length > 0)}>
+                <p class="orchestra-profile-empty">{language.t("orchestra.profile.empty")}</p>
+              </Show>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu>
+        <p class="orchestra-sidebar-footer">{language.t("orchestra.sidebar.footer")}</p>
+      </div>
+    </aside>
+  )
+}
+
+function SettingsLauncher(props: { valid: boolean; content: () => JSX.Element; onClose: () => void }) {
+  const dialog = useDialog()
+  const owner = getOwner()
+  const lifetime = { opened: false, disposed: false }
+  const close = () => {
+    if (dialog.active?.owner === owner) dialog.close()
+  }
+
+  createEffect(() => {
+    if (!props.valid) return props.onClose()
+    const active = dialog.active
+    if (lifetime.opened) {
+      if (active?.owner !== owner) props.onClose()
+      return
+    }
+    // show() adopts an active owner; defer stack closure until the previous close releases its lock.
+    if (active) {
+      queueMicrotask(() => {
+        if (!lifetime.disposed && dialog.active === active) dialog.close()
+      })
+      return
+    }
+    lifetime.opened = true
+    void dialog
+      .show(
+        () => (lifetime.disposed ? undefined : props.content()),
+        () => {
+          if (!lifetime.disposed) props.onClose()
+        },
+      )
+      .then(() => {
+        if (lifetime.disposed) close()
+      })
+  })
+  onCleanup(() => {
+    lifetime.disposed = true
+    // Nested settings dialogs share this owner; drain its stack after the launcher is gone.
+    createRoot((dispose) => {
+      createEffect(() => {
+        const active = dialog.active
+        if (active?.owner !== owner) return dispose()
+        queueMicrotask(() => {
+          if (dialog.active === active) dialog.close()
+        })
+      })
+    })
+  })
+  return null
+}

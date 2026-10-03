@@ -110,6 +110,7 @@ describe("ProjectCopy", () => {
       expect(error).toBeInstanceOf(ProjectCopy.StrategyUnavailableError)
       if (error instanceof ProjectCopy.StrategyUnavailableError) expect(error.strategy).toBe(unavailable)
     }),
+    process.platform === "win32" ? 30_000 : 5_000,
   )
 
   // Real Git worktree setup and teardown can exceed Bun's 5s default on Windows runners.

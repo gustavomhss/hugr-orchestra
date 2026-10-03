@@ -143,8 +143,12 @@
   }
 
   [data-slot="tab-close"] {
-    right: auto;
-    left: 50%;
+    inset-inline-end: auto;
+    inset-inline-start: 50%;
     transform: translateX(-50%);
+  }
+
+  [data-slot="tab-close"]:dir(rtl) {
+    transform: translateX(50%);
   }
 }

@@ -1,0 +1,316 @@
+@media (min-width: 768px) {
+  #orchestra-session-tabs {
+    position: relative;
+    display: flex;
+    min-inline-size: 0;
+    flex: none;
+    align-items: center;
+    padding-block: 0;
+    padding-inline: 8px;
+    overflow: hidden;
+    border: 1px solid var(--orchestra-glass-border);
+    border-radius: 9px;
+    background: var(--orchestra-glass-background);
+    box-shadow: var(--orchestra-glass-shadow);
+    -webkit-backdrop-filter: var(--orchestra-glass-filter);
+    backdrop-filter: var(--orchestra-glass-filter);
+  }
+
+  /* Solid's Portal adds one container; the controls still span the whole row. */
+  #orchestra-session-tabs > div,
+  #orchestra-session-tabs [data-slot="orchestra-tab-controls"] {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+
+  #orchestra-session-tabs [data-slot="orchestra-tab-controls"] {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  [data-orchestra-tabs] {
+    flex: 0 1 auto;
+    inline-size: max-content;
+    max-inline-size: calc(100% - 33px);
+  }
+
+  [data-orchestra-tabs] [data-slot="titlebar-tabs-scroll"] {
+    padding-block: 6px;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab-list] {
+    inline-size: max-content;
+    min-inline-size: 100%;
+    gap: 5px;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab-slot] {
+    flex: none;
+    inline-size: 224px;
+    min-inline-size: 170px;
+    max-inline-size: 248px;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab-slot]::before,
+  [data-orchestra-tabs] [data-slot^="titlebar-tabs-fade-"] {
+    display: none;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab] {
+    position: relative;
+    block-size: 30px;
+    padding-block: 0;
+    padding-inline: 0 5px;
+    gap: 6px;
+    overflow: visible;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--orchestra-tab-text);
+    font-size: 12px;
+    line-height: 16px;
+    transition:
+      background 0.16s ease,
+      border-color 0.16s ease,
+      color 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab]:hover {
+    background: var(--orchestra-tab-hover-background);
+    color: var(--orchestra-tab-hover-text);
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
+    border-color: var(--orchestra-glass-border);
+    background: var(--orchestra-glass-background);
+    color: var(--orchestra-tab-active-text);
+    box-shadow: var(--orchestra-glass-shadow);
+    -webkit-backdrop-filter: var(--orchestra-glass-filter);
+    backdrop-filter: var(--orchestra-glass-filter);
+  }
+
+  /* Any selected decoration follows the tab's own box, never an oversized cap. */
+  [data-orchestra-tabs] [data-titlebar-tab][data-active="true"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  #orchestra-session-tabs [data-titlebar-tab-link] {
+    padding-inline: 9px 26px;
+    gap: 8px;
+    color: inherit;
+    font-size: inherit;
+    font-weight: 400;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  #orchestra-session-tabs [data-titlebar-tab][data-title-overflow="true"] [data-slot="tab-link"] {
+    padding-inline-end: 26px;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab-title]:not([contenteditable="true"]) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  [data-orchestra-tabs] [data-slot="project-avatar-slot"],
+  [data-orchestra-tabs] [data-titlebar-tab-link] > span:first-child {
+    inline-size: 20px;
+    block-size: 20px;
+  }
+
+  [data-orchestra-tabs] [data-slot="tab-branch"] {
+    flex: none;
+    color: var(--orchestra-branch-color);
+    font-family: var(--orchestra-branch-font-family);
+    font-size: var(--orchestra-branch-font-size);
+    font-weight: var(--orchestra-branch-font-weight);
+  }
+
+  [data-orchestra-tabs] [data-slot="tab-close"] {
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    background: transparent;
+    color: inherit;
+  }
+
+  #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > [data-component="tooltip"] {
+    flex: none;
+  }
+
+  #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > :last-child button {
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: 6px;
+    color: var(--orchestra-faint);
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab-link]:focus-visible,
+  [data-orchestra-tabs] [data-slot="tab-close"] button:focus-visible,
+  #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > :last-child button:focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+
+  [data-slot="orchestra-titlebar-breadcrumb"] {
+    color: var(--orchestra-toolbar-label);
+    user-select: none;
+  }
+
+  [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
+    color: var(--orchestra-toolbar-brand);
+    font-weight: 520;
+  }
+
+  [data-slot="orchestra-titlebar-caption"] {
+    color: var(--orchestra-toolbar-caption);
+    font-size: 12px;
+    white-space: nowrap;
+    margin-inline-end: 8px;
+  }
+
+  [data-slot="orchestra-theme-toggle"] {
+    display: grid;
+    flex: none;
+    inline-size: 28px;
+    block-size: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--orchestra-toolbar-button);
+    font-size: 14px;
+    cursor: pointer;
+    app-region: no-drag;
+  }
+
+  [data-slot="orchestra-theme-toggle"]:hover {
+    background: var(--orchestra-overlay-hover);
+    color: var(--orchestra-body);
+  }
+
+  [data-slot="orchestra-theme-toggle"]:focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+}
+
+[data-slot="orchestra-model-logo"] {
+  position: relative;
+  display: grid;
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+  place-items: center;
+  color: var(--orchestra-tab-icon);
+}
+
+[data-titlebar-tab][data-active="true"] [data-slot="orchestra-model-logo"] {
+  color: var(--orchestra-text);
+}
+
+[data-slot="orchestra-model-logo"] > svg {
+  display: block;
+  inline-size: 20px;
+  block-size: 20px;
+  transform-origin: 50% 80%;
+  animation: none;
+}
+
+[data-slot="orchestra-model-logo"][data-activity="running"] > svg {
+  animation: orchestra-model-pulse 2.4s ease-in-out infinite;
+}
+
+[data-slot="orchestra-model-logo"][data-activity="waiting"] {
+  color: var(--orchestra-warm);
+}
+
+[data-slot="orchestra-model-logo"][data-activity="waiting"] > svg {
+  animation: orchestra-model-bounce 1.15s infinite;
+}
+
+[data-slot="orchestra-model-logo"][data-activity="waiting"]::after {
+  content: "";
+  position: absolute;
+  inset-block-end: -3px;
+  inset-inline-start: calc(50% - 6px);
+  inline-size: 12px;
+  block-size: 2px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: orchestra-model-shadow 1.15s infinite;
+  pointer-events: none;
+}
+
+@keyframes orchestra-model-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.025);
+  }
+}
+
+@keyframes orchestra-model-bounce {
+  0%,
+  100% {
+    transform: translateY(3px) scale(1.09, 0.85);
+    animation-timing-function: cubic-bezier(0.18, 0.65, 0.35, 1);
+  }
+  12% {
+    transform: translateY(-2px) scale(0.96, 1.04);
+    animation-timing-function: cubic-bezier(0.18, 0.6, 0.4, 1);
+  }
+  46% {
+    transform: translateY(-8px) scale(1);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.82, 0.42);
+  }
+  86% {
+    transform: translateY(2px) scale(0.97, 1.04);
+    animation-timing-function: ease-out;
+  }
+  94% {
+    transform: translateY(3px) scale(1.1, 0.83);
+  }
+}
+
+@keyframes orchestra-model-shadow {
+  0%,
+  94%,
+  100% {
+    opacity: 0.24;
+    transform: scaleX(1);
+  }
+  46% {
+    opacity: 0.06;
+    transform: scaleX(0.55);
+  }
+  86% {
+    opacity: 0.2;
+    transform: scaleX(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="orchestra-model-logo"] > svg,
+  [data-slot="orchestra-model-logo"]::after {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab] {
+    transition: none;
+  }
+}

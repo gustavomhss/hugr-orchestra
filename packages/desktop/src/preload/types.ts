@@ -2,6 +2,7 @@ import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import type { WslServersPlatform } from "@opencode-ai/app/wsl/types"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 import type { DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
+import type { NativeTitlebarFrame } from "@opencode-ai/app/native-titlebar"
 export type {
   WslDistroProbe,
   WslInstalledDistro,
@@ -112,6 +113,7 @@ export type ElectronAPI = {
   appDockDeleteProfile: (profileID: string) => Promise<void>
   appDockResize: (bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
   appDockHide: () => Promise<void>
+  appDockOcclude: (occluded: boolean) => Promise<void>
   appDockClose: () => Promise<void>
   appDockCloseTab: (tabID: string) => Promise<void>
   appDockRecoverTab: (tabID: string) => Promise<{ tabID: string; generation: number; url: string }>
@@ -203,6 +205,7 @@ export type ElectronAPI = {
   onPinchZoomEnabledChanged: (cb: (enabled: boolean) => void) => () => void
   onZoomFactorChanged: (cb: (factor: number) => void) => () => void
   setTitlebar: (theme: TitlebarTheme) => Promise<void>
+  setTitlebarFrame: (frame?: NativeTitlebarFrame) => Promise<void>
   runDesktopMenuAction: (action: DesktopMenuAction) => Promise<void>
   setBackgroundColor: (color: string) => Promise<void>
   exportDebugLogs: () => Promise<string>

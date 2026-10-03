@@ -23,6 +23,7 @@ import {
   openLocalFileURL,
   setPinchZoomEnabled,
   setTitlebar,
+  setTitlebarFrame,
   updateTitlebar,
 } from "./windows"
 import type { UpdaterController } from "./updater-controller"
@@ -318,6 +319,11 @@ export function registerIpcHandlers(deps: Deps) {
   })
   ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent) => {
     appDock.hide(event.sender.id, appDockSender(event))
+  })
+  ipcMain.handle("app-dock-occlude", (event: IpcMainInvokeEvent, occluded: unknown) => {
+    appDockSender(event)
+    if (typeof occluded !== "boolean") throw new Error("Invalid App Dock occlusion")
+    appDock.occlude(event.sender.id, occluded)
   })
   ipcMain.handle("app-dock-close", (event: IpcMainInvokeEvent) => {
     appDock.close(event.sender.id, appDockSender(event))
@@ -634,6 +640,12 @@ export function registerIpcHandlers(deps: Deps) {
       checkForUpdates: () => void deps.showUpdater(),
       relaunch: deps.relaunch,
     })
+  })
+  ipcMain.handle("set-titlebar-frame", (event: IpcMainInvokeEvent, frame: unknown) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win || win.isDestroyed() || win.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame)
+      throw new Error("Invalid titlebar frame sender")
+    setTitlebarFrame(win, frame)
   })
 }
 

@@ -1,11 +1,7 @@
-import { withAlpha } from "@opencode-ai/ui/theme/color"
 import { useTheme } from "@opencode-ai/ui/theme/context"
-import { resolveThemeVariant } from "@opencode-ai/ui/theme/resolve"
-import { resolveThemeVariantV2 } from "@opencode-ai/ui/theme/v2/resolve"
-import type { HexColor, ResolvedV2Theme } from "@opencode-ai/ui/theme/types"
 import { showToast } from "@/utils/toast"
 import type { FitAddon, Ghostty, Terminal as Term } from "ghostty-web"
-import { type ComponentProps, createEffect, createMemo, onCleanup, onMount, splitProps } from "solid-js"
+import { type ComponentProps, createEffect, onCleanup, onMount, splitProps } from "solid-js"
 import { SerializeAddon } from "@/addons/serialize"
 import { matchKeybind, parseKeybind } from "@/context/command"
 import { useLanguage } from "@/context/language"
@@ -15,6 +11,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { terminalFontFamily, useSettings } from "@/context/settings"
 import type { LocalPTY } from "@/context/terminal"
 import { disposeIfDisposable, getHoveredLinkText, setOptionIfSupported } from "@/utils/runtime-adapters"
+import { createTerminalTheme } from "@/utils/terminal-theme"
 import { terminalWriter } from "@/utils/terminal-writer"
 import { terminalWebSocketURL } from "@/utils/terminal-websocket-url"
 
@@ -43,44 +40,9 @@ const loadGhostty = () => {
   return shared
 }
 
-type TerminalColors = {
-  background: string
-  foreground: string
-  cursor: string
-  selectionBackground: string
-}
-
-const DEFAULT_TERMINAL_COLORS: Record<"light" | "dark", TerminalColors> = {
-  light: {
-    background: "#fcfcfc",
-    foreground: "#211e1e",
-    cursor: "#211e1e",
-    selectionBackground: withAlpha("#211e1e", 0.2),
-  },
-  dark: {
-    background: "#191515",
-    foreground: "#d4d4d4",
-    cursor: "#d4d4d4",
-    selectionBackground: withAlpha("#d4d4d4", 0.25),
-  },
-}
-
 const debugTerminal = (...values: unknown[]) => {
   if (!import.meta.env.DEV) return
   console.debug("[terminal]", ...values)
-}
-
-const resolveV2Token = (tokens: ResolvedV2Theme, key: string) => {
-  let current = tokens[key]
-  for (let i = 0; i < 8 && current; i++) {
-    const match = /^var\(--([^)]+)\)$/.exec(current.trim())
-    if (!match) {
-      const hex = current.trim()
-      if (/^#[0-9a-fA-F]{8}$/.test(hex)) return hex.slice(0, 7)
-      return hex
-    }
-    current = tokens[match[1]]
-  }
 }
 
 const useTerminalUiBindings = (input: {
@@ -262,31 +224,11 @@ export const Terminal = (props: TerminalProps) => {
       })
   }
 
-  const getTerminalColors = (): TerminalColors => {
-    const mode = theme.mode() === "dark" ? "dark" : "light"
-    const fallback = DEFAULT_TERMINAL_COLORS[mode]
-    const currentTheme = theme.themes()[theme.themeId()]
-    if (!currentTheme) return fallback
-    const variant = mode === "dark" ? currentTheme.dark : currentTheme.light
-    if (!variant?.seeds && !variant?.palette) return fallback
-    const resolved = resolveThemeVariant(variant, mode === "dark")
-    const text = resolved["text-stronger"] ?? fallback.foreground
-    const background = settings.general.newLayoutDesigns()
-      ? (resolveV2Token(resolveThemeVariantV2(variant, mode === "dark"), "v2-background-bg-base") ??
-        fallback.background)
-      : (resolved["background-stronger"] ?? fallback.background)
-    const alpha = mode === "dark" ? 0.25 : 0.2
-    const base = text.startsWith("#") ? (text as HexColor) : (fallback.foreground as HexColor)
-    const selectionBackground = withAlpha(base, alpha)
-    return {
-      background,
-      foreground: text,
-      cursor: text,
-      selectionBackground,
-    }
-  }
-
-  const terminalColors = createMemo(getTerminalColors)
+  const terminalTheme = createTerminalTheme({
+    mode: theme.mode,
+    theme: () => theme.themes()[theme.themeId()],
+    newLayout: settings.general.newLayoutDesigns,
+  })
 
   const scheduleFit = () => {
     if (disposed) return
@@ -331,11 +273,10 @@ export const Terminal = (props: TerminalProps) => {
   }
 
   createEffect(() => {
-    const colors = terminalColors()
-    const mode = theme.mode() === "dark" ? "dark" : "light"
+    const palette = terminalTheme()
     if (!term) return
-    setOptionIfSupported(term, "theme", colors)
-    setOptionIfSupported(term, "colorScheme", mode)
+    setOptionIfSupported(term, "theme", palette.colors)
+    setOptionIfSupported(term, "colorScheme", palette.mode)
   })
 
   createEffect(() => {
@@ -406,7 +347,7 @@ export const Terminal = (props: TerminalProps) => {
         fontFamily: terminalFontFamily(settings.appearance.terminalFont()),
         allowTransparency: false,
         convertEol: false,
-        theme: terminalColors(),
+        theme: terminalTheme().colors,
         scrollback: 10_000,
         ghostty: g,
       })
@@ -417,7 +358,7 @@ export const Terminal = (props: TerminalProps) => {
       }
       _ghostty = g
       term = t
-      setOptionIfSupported(t, "colorScheme", theme.mode() === "dark" ? "dark" : "light")
+      setOptionIfSupported(t, "colorScheme", terminalTheme().mode)
       output = terminalWriter((data, done) =>
         t.write(data, () => {
           done?.()
@@ -744,7 +685,7 @@ export const Terminal = (props: TerminalProps) => {
       dir="ltr"
       data-prevent-autofocus
       tabIndex={-1}
-      style={{ "background-color": terminalColors().background }}
+      style={{ "background-color": terminalTheme().colors.background }}
       classList={{
         ...local.classList,
         "select-text": true,

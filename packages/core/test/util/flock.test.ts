@@ -130,7 +130,9 @@ describe("util.flock", () => {
           done,
           active,
           holdMs: 30,
-          staleMs: 1_000,
+          // Stale breaking assumes a live holder never stalls this long. Sixteen workers starting at once on a
+          // 2-vCPU runner can stall a holder past 1s, so a short window turns starvation into a broken lock.
+          staleMs: 10_000,
           timeoutMs: 15_000,
         }),
       ),

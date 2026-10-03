@@ -305,8 +305,11 @@ export class AppDockProfileRegistry {
 
   private addManifestProfile(id: string) {
     if (this.#manifest.profiles.length >= maxProfiles) throw new Error("App Dock profile limit reached")
+    // A renderer holding the previous revision must get a conflict and refetch, not a write
+    // that fails validation because it lacks the profile created by app-dock-open.
     this.writeManifest({
       ...this.#manifest,
+      revision: this.#manifest.revision + 1,
       profiles: [...this.#manifest.profiles, { id, name: id }],
       activeProfileID: this.#manifest.activeProfileID || id,
       tabs: { ...this.#manifest.tabs, [id]: [] },

@@ -15,10 +15,19 @@ import { useLanguage } from "@/context/language"
 import { useCommand } from "@/context/command"
 import { useTabs } from "@/context/tabs"
 import { createTabPromptState } from "@/context/prompt"
+import { createDraftPromptSession } from "@/context/prompt-state"
+import type { HomeProjectSelection } from "@/context/layout"
+import { projectForSession } from "@/pages/layout/helpers"
+import { pathKey } from "@/utils/path-key"
+import { resolveDefaultModel } from "@/hooks/provider-catalog"
+import { useModels } from "@/context/models"
+import { createPromptModelContext, selectPromptModel } from "@/pages/session/composer/prompt-model-selection"
+import { ModelLogo } from "@/orchestra/model-logo"
+import { modelActivity } from "@/orchestra/model-logo-resolver"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { showToast } from "@/utils/toast"
 import { canStartTabDrag, isTabCloseTarget } from "./titlebar-tab-gesture"
-import { adjacentTabKey, mergeVisibleTabOrder } from "./titlebar-tab-order"
+import { adjacentTabKey, mergeVisibleTabOrder, tabMatchesProfile } from "./titlebar-tab-order"
 import type { Session } from "@opencode-ai/sdk/v2"
 
 function SessionTabSlot(props: {
@@ -27,6 +36,7 @@ function SessionTabSlot(props: {
   index: () => number
   active: () => boolean
   forceTruncate: boolean
+  workspace: boolean
   session: () => Session | undefined
   fallbackTitle?: string
   onRename: (title: string) => Promise<void>
@@ -64,6 +74,7 @@ function SessionTabSlot(props: {
         onClose={props.onClose}
         active={props.active()}
         forceTruncate={props.forceTruncate}
+        workspace={props.workspace}
         dragging={sortable.isDragSource()}
       />
     </div>
@@ -76,7 +87,9 @@ function SessionTabEntry(props: {
   index: () => number
   active: () => boolean
   forceTruncate: boolean
+  workspace: boolean
   serverCtx: () => ServerCtx | undefined
+  include: (session?: Session, directory?: string) => boolean
   onVisibleChange: (visible: boolean) => void
   onNavigate: (element: HTMLDivElement) => void
   onClose: () => void
@@ -95,7 +108,9 @@ function SessionTabEntry(props: {
   )
   const session = createMemo(() => cachedSession() ?? loadedSession())
   const missingSession = createMemo(() => !!props.serverCtx() && !loadedSession.loading && !session())
-  const visible = createMemo(() => !!session() || missingSession() || !!persisted()?.title)
+  const visible = createMemo(
+    () => props.include(session(), persisted()?.directory) && (!!session() || missingSession() || !!persisted()?.title),
+  )
   let prefetched = false
 
   const rename = async (title: string) => {
@@ -157,6 +172,7 @@ function SessionTabEntry(props: {
         index={props.index}
         active={props.active}
         forceTruncate={props.forceTruncate}
+        workspace={props.workspace}
         session={session}
         fallbackTitle={persisted()?.title ?? (missingSession() ? language.t("session.tab.unknown") : undefined)}
         onRename={rename}
@@ -173,9 +189,45 @@ function DraftTabSlot(props: {
   index: () => number
   active: () => boolean
   title: string
+  workspace: boolean
   onNavigate: (element: HTMLDivElement) => void
   onClose: () => void
 }) {
+  const tabs = useTabs()
+  const global = useGlobal()
+  const models = useModels()
+  const prompt = createMemo(() =>
+    props.workspace ? tabs.state(props.tab, "prompt", () => createDraftPromptSession(props.tab.draftID)) : undefined,
+  )
+  const directory = createMemo(() => {
+    if (!props.workspace) return
+    const conn = global.servers.list().find((item) => ServerConnection.key(item) === props.tab.server)
+    return conn ? global.ensureServerCtx(conn).sync.child(props.tab.directory, { bootstrap: false })[0] : undefined
+  })
+  const context = createMemo(() =>
+    props.workspace ? tabs.state(props.tab, "prompt-model-context", createPromptModelContext)[0] : undefined,
+  )
+  const model = createMemo(() => {
+    const store = directory()
+    if (!store?.provider_ready) return
+    const active = context()
+    const provider = [...store.provider.all.values()].find((item) => store.provider.connected.includes(item.id))
+    const id = provider && (store.provider.default[provider.id] ?? Object.values(provider.models)[0]?.id)
+    const chosen = selectPromptModel(
+      {
+        chosen: prompt()?.model.current(),
+        agent: active?.recent
+          ? active.agent
+          : store.agent.find((item) => item.mode !== "subagent" && !item.hidden)?.model,
+        configured: resolveDefaultModel(store.provider.defaultModel, store.config.model),
+        recent: active?.recent ?? models.recent.list(),
+        fallback: provider && id ? { modelID: id, providerID: provider.id } : undefined,
+      },
+      store.provider,
+    )
+    return chosen ? { id: chosen.modelID, providerID: chosen.providerID } : undefined
+  })
+  const provider = createMemo(() => directory()?.provider.all.get(model()?.providerID ?? ""))
   const sortable = useSortable({
     get id() {
       return props.id
@@ -200,6 +252,17 @@ function DraftTabSlot(props: {
         }}
         href={tabHref(props.tab)}
         title={props.title}
+        logo={
+          props.workspace ? (
+            <ModelLogo
+              model={model()}
+              name={provider()?.models[model()?.id ?? ""]?.name}
+              provider={provider()?.name}
+              activity={modelActivity({ draft: true, waiting: false, running: false })}
+            />
+          ) : undefined
+        }
+        branch={props.workspace ? directory()?.vcs?.branch : undefined}
         onNavigate={() => props.onNavigate(ref)}
         onClose={props.onClose}
         active={props.active()}
@@ -211,22 +274,44 @@ function DraftTabSlot(props: {
 
 export function TitlebarTabStrip(props: {
   tabs: Tab[]
+  profile?: HomeProjectSelection
+  workspace?: boolean
   currentTab: () => Tab | undefined
   forceTruncate: boolean
   onNavigate: (tab: Tab, el?: HTMLDivElement) => void
   onClose: (tab: Tab) => void
   onReorder: (keys: string[]) => void
   onOverflowChange: (overflowing: boolean) => void
+  onVisibleTabsChange?: (tabs: Tab[]) => void
 }) {
   const global = useGlobal()
   const language = useLanguage()
   const command = useCommand()
+  const tabs = useTabs()
   let scrollRef!: HTMLDivElement
   let listRef!: HTMLDivElement
   let resizeFrame: number | undefined
   const [visibility, setVisibility] = createStore<Record<string, boolean>>({})
-  const visibleTabs = createMemo(() => props.tabs.filter((tab) => tab.type === "draft" || visibility[tabKey(tab)]))
+  const matchesProfile = (tab: Tab, session?: Session, fallback?: string) => {
+    if (!props.profile) return true
+    const conn = global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
+    const projects = conn ? global.ensureServerCtx(conn).projects.list() : []
+    const directory = tab.type === "draft" ? tab.directory : (session?.directory ?? fallback)
+    const project = session
+      ? projectForSession(session, projects)
+      : projects.find(
+          (item) =>
+            !!directory &&
+            (pathKey(item.worktree) === pathKey(directory) ||
+              item.sandboxes?.some((sandbox) => pathKey(sandbox) === pathKey(directory))),
+        )
+    return tabMatchesProfile({ server: tab.server, directory, rootDirectory: project?.worktree }, props.profile)
+  }
+  const visibleTabs = createMemo(() =>
+    props.tabs.filter((tab) => (tab.type === "draft" ? matchesProfile(tab) : visibility[tabKey(tab)])),
+  )
   const visibleTabIds = () => visibleTabs().map(tabKey)
+  createEffect(() => props.onVisibleTabsChange?.(visibleTabs()))
 
   command.register("titlebar-tab-cycle", () => [
     {
@@ -285,7 +370,7 @@ export function TitlebarTabStrip(props: {
   })
 
   return (
-    <div data-slot="titlebar-tabs" class="relative min-w-0">
+    <div data-slot="titlebar-tabs" data-orchestra-tabs={props.workspace ? "" : undefined} class="relative min-w-0">
       <div
         data-slot="titlebar-tabs-scroll"
         class="flex min-w-0 flex-row items-center gap-1.5 overflow-x-auto no-scrollbar [app-region:no-drag]"
@@ -353,6 +438,10 @@ export function TitlebarTabStrip(props: {
                       index={visibleIndex}
                       active={() => props.currentTab() === tab}
                       forceTruncate={props.forceTruncate}
+                      workspace={!!props.workspace}
+                      include={(session, directory) =>
+                        matchesProfile(tab, session, directory ?? tabs.info[id]?.directory)
+                      }
                       serverCtx={serverCtx}
                       onVisibleChange={(visible) => setVisibility(id, visible)}
                       onNavigate={(element) => {
@@ -365,18 +454,21 @@ export function TitlebarTabStrip(props: {
                 }
 
                 return (
-                  <DraftTabSlot
-                    tab={tab}
-                    id={id}
-                    index={visibleIndex}
-                    active={() => props.currentTab() === tab}
-                    title={language.t("command.session.new")}
-                    onNavigate={(element) => {
-                      ref = element
-                      props.onNavigate(tab, element)
-                    }}
-                    onClose={() => props.onClose(tab)}
-                  />
+                  <Show when={matchesProfile(tab)}>
+                    <DraftTabSlot
+                      tab={tab}
+                      id={id}
+                      index={visibleIndex}
+                      active={() => props.currentTab() === tab}
+                      title={language.t("command.session.new")}
+                      workspace={!!props.workspace}
+                      onNavigate={(element) => {
+                        ref = element
+                        props.onNavigate(tab, element)
+                      }}
+                      onClose={() => props.onClose(tab)}
+                    />
+                  </Show>
                 )
               }}
             </For>

@@ -1,0 +1,50 @@
+{
+  "name": "fix-glass",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/fix-glass",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "fix-frame-details",
+  "staged": [],
+  "untracked": [
+    "packages/app/src/orchestra/session.css",
+    "packages/app/src/orchestra/shell.css",
+    "packages/app/src/orchestra/tabs.css",
+    "packages/app/src/orchestra/theme.css"
+  ],
+  "missingTrackedPaths": [],
+  "files": [
+    {
+      "path": "packages/app/src/orchestra/session.css",
+      "bytes": 34745,
+      "sha256": "1a356b2ddf6e8191ecffb12dcf2f09302754d75de0ece512654b3b698297b79c"
+    },
+    {
+      "path": "packages/app/src/orchestra/shell.css",
+      "bytes": 8222,
+      "sha256": "4cd8e0d672ab15a152506db3eacfa8ba23170a53559ad296961137994ec2654b"
+    },
+    {
+      "path": "packages/app/src/orchestra/tabs.css",
+      "bytes": 7272,
+      "sha256": "e5bb6163672098841621b0f67f568f9061973a9e7fc9df8d2c832b9c8a5699fc"
+    },
+    {
+      "path": "packages/app/src/orchestra/theme.css",
+      "bytes": 20092,
+      "sha256": "5e4f2a8eda5f43351470aecc80ec2b7934c7720d4a721b05704406bdcd00735c"
+    }
+  ],
+  "archive": {
+    "path": "archives/fix-glass.tar.gz",
+    "bytes": 12957,
+    "sha256": "eccb7a068c0147038925675d692c8ab77bfd006ebe8571b0b972c3b0d997292e",
+    "members": [
+      "packages/app/src/orchestra/session.css",
+      "packages/app/src/orchestra/shell.css",
+      "packages/app/src/orchestra/tabs.css",
+      "packages/app/src/orchestra/theme.css"
+    ]
+  },
+  "stagedPatch": "archives/fix-glass.staged.patch",
+  "unstagedPatch": "archives/fix-glass.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

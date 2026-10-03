@@ -1,0 +1,66 @@
+.orchestra-workspaces {
+  padding: 28px;
+  overflow: auto;
+  color: var(--orchestra-text);
+}
+.orchestra-workspaces h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+.orchestra-workspaces header p {
+  margin-block-start: 10px;
+  color: var(--orchestra-body);
+}
+.workspaces-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 28px;
+}
+.workspaces-list [data-slot="radio-v2-items"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+.workspaces-list [data-slot="radio-v2-label"] {
+  margin-block-end: 16px;
+  color: var(--orchestra-muted);
+  font-size: 13px;
+}
+.workspaces-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--orchestra-border);
+  border-radius: 9px;
+  background: var(--orchestra-surface);
+}
+.workspaces-card[data-selected="true"] {
+  border-color: var(--orchestra-accent);
+}
+.workspaces-card:focus-within {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: 3px;
+}
+.workspaces-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.workspaces-card [data-slot="radio-v2-item-label-text"] {
+  font-size: 16px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.workspaces-card code {
+  color: var(--orchestra-body);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.workspaces-state {
+  color: var(--orchestra-body);
+}
