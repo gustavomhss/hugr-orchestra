@@ -1,0 +1,26 @@
+   Compiling approval v0.1.0 (/repo)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.45s
+     Running unittests src/lib.rs (target/debug/deps/approval-b75e01314268f070)
+
+running 3 tests
+test tests::slow ... ignored
+test tests::adds ... ok
+test tests::rejects_empty ... FAILED
+
+failures:
+
+---- tests::rejects_empty stdout ----
+
+thread 'tests::rejects_empty' (1) panicked at src/lib.rs:11:34:
+assertion `left == right` failed
+  left: 0
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::rejects_empty
+
+test result: FAILED. 1 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

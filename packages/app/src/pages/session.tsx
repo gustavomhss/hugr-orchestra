@@ -65,6 +65,7 @@ import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
 import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
 import {
+  createEvidenceComposerActions,
   createPromptInputController,
   createSessionComposerController,
   createSessionComposerRegionController,
@@ -72,6 +73,7 @@ import {
 } from "@/pages/session/composer"
 import { createOpenReviewFile, createSessionTabs, createSizing, shouldShowFileTree } from "@/pages/session/helpers"
 import { MessageTimeline } from "@/pages/session/timeline/message-timeline"
+import { createExecutionEvidenceRenderer } from "@/pages/session/orchestra-evidence"
 import { createTimelineModel } from "@/pages/session/timeline/model"
 import { type DiffStyle, SessionReviewTab, type SessionReviewTabProps } from "@/pages/session/review-tab"
 import { useSessionLayout } from "@/pages/session/session-layout"
@@ -402,6 +404,11 @@ export default function Page() {
   })
 
   const composer = createSessionComposerController()
+  const renderExecutionEvidence = createExecutionEvidenceRenderer({
+    actions: createEvidenceComposerActions({ sessionKey, blocked: composer.blocked }),
+    enabled: newSessionDesign,
+    sessionKey,
+  })
   const inputController = createPromptInputController({
     sessionKey,
     sessionID: () => params.id,
@@ -507,15 +514,7 @@ export default function Page() {
   }
 
   function normalizeTabs(list: string[]) {
-    const seen = new Set<string>()
-    const next: string[] = []
-    for (const item of list) {
-      const value = normalizeTab(item)
-      if (seen.has(value)) continue
-      seen.add(value)
-      next.push(value)
-    }
-    return next
+    return [...new Set(list.map(normalizeTab))]
   }
 
   const openReviewPanel = () => {
@@ -2110,6 +2109,7 @@ export default function Page() {
                   setScrollToEnd={(fn) => {
                     scrollToEnd = fn
                   }}
+                  renderExecutionEvidence={renderExecutionEvidence}
                 />
               )}
             </Show>

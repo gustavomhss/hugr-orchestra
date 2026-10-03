@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /repo
+plugins: asyncio-1.4.0, anyio-4.12.1, httpx-0.36.2, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6 items
+
+pass/test_ok.py ..                                                       [ 33%]
+test_approval.py .FsF                                                    [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_rejects_empty ______________________________
+
+    def test_rejects_empty():
+>       assert len([]) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+test_approval.py:5: AssertionError
+____________________________ TestSuite.test_inside _____________________________
+
+self = <test_approval.TestSuite object at 0x1107f9450>
+
+    def test_inside(self):
+>       assert False, "nope"
+E       AssertionError: nope
+E       assert False
+
+test_approval.py:11: AssertionError
+=========================== short test summary info ============================
+FAILED test_approval.py::test_rejects_empty - assert 0 == 1
+FAILED test_approval.py::TestSuite::test_inside - AssertionError: nope
+==================== 2 failed, 3 passed, 1 skipped in 0.07s ====================
