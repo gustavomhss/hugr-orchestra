@@ -11,6 +11,7 @@ import {
   untrack,
 } from "solid-js"
 import { createStore } from "solid-js/store"
+import { Portal } from "solid-js/web"
 import { useLocation, useNavigate, useParams } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Icon } from "@opencode-ai/ui/icon"
@@ -20,8 +21,9 @@ import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
 import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
+import { useTheme } from "@opencode-ai/ui/theme/context"
 
-import { LayoutRoute, useLayout } from "@/context/layout"
+import { LayoutRoute, useLayout, type HomeProjectSelection } from "@/context/layout"
 import { usePlatform } from "@/context/platform"
 import { useCommand } from "@/context/command"
 import { useLanguage } from "@/context/language"
@@ -34,14 +36,20 @@ import { createMediaQuery } from "@solid-primitives/media"
 import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/components/titlebar-session-events"
 import { useGlobal } from "@/context/global"
 import { ServerConnection, useServer } from "@/context/server"
-import { tabKey, useTabs } from "@/context/tabs"
+import { tabKey, useTabs, type Tab } from "@/context/tabs"
+import { closeProfileTab } from "./titlebar-tab-order"
 import type { PromptSession } from "@/context/prompt"
 import "./titlebar.css"
 import { newTabTooltipKeybind } from "./command-tooltip-keybind"
 import { normalizeSessionInfo } from "@/utils/session"
+import { projectForSession } from "@/pages/layout/helpers"
+import { pathKey } from "@/utils/path-key"
+import { createNativeTitlebarFrame } from "./orchestra/native-frame"
+import { breadcrumbLabel } from "../orchestra/navigation"
 
 const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 36
+const desktopTitlebarHeight = 45
 const minTitlebarZoom = 0.25
 const windowsControlsBaseWidth = 138 // 3 native Windows caption buttons at 46px each.
 const macTrafficLightsBaseWidth = 84
@@ -61,18 +69,25 @@ export function useTitlebarRightMount() {
   return mount
 }
 
-export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visible: boolean; toggle: () => void } }) {
+export function Titlebar(props: {
+  update?: TitlebarUpdate
+  debugTools?: { visible: boolean; toggle: () => void }
+  tabsMount?: HTMLElement
+}) {
   const layout = useLayout()
   const platform = usePlatform()
   const command = useCommand()
   const language = useLanguage()
   const settings = useSettings()
+  const theme = useTheme()
   const server = useServer()
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
   const useV2Titlebar = createMemo(() => settings.general.newLayoutDesigns())
-  const mobile = createMediaQuery("(max-width: 767px)")
+  const desktop = createMediaQuery("(min-width: 768px)")
+  const mobile = () => !desktop()
+  const tabsMount = createMemo(() => (desktop() ? props.tabsMount : undefined))
   const bottom = createMemo(() => useV2Titlebar() && mobile() && settings.general.mobileTitlebarPosition() === "bottom")
 
   const mac = createMemo(() => platform.platform === "desktop" && platform.os === "macos")
@@ -84,12 +99,20 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
   const titlebarZoom = () => (windows() ? Math.max(zoom(), minTitlebarZoom) : zoom())
   const counterZoom = () => (windows() && titlebarZoom() < 1 ? 1 / titlebarZoom() : 1)
   const minHeight = () => {
-    const height = useV2Titlebar() ? v2TitlebarHeight : legacyTitlebarHeight
+    const height = useV2Titlebar() ? (mobile() ? v2TitlebarHeight : desktopTitlebarHeight) : legacyTitlebarHeight
     if (mac()) return `${height / zoom()}px`
     if (windows()) return `${height / Math.min(titlebarZoom(), 1)}px`
     return undefined
   }
   const windowsControlsWidth = () => `${windowsControlsBaseWidth / Math.max(titlebarZoom(), 1)}px`
+
+  let header!: HTMLElement
+  createNativeTitlebarFrame({
+    platform,
+    header: () => header,
+    isDesktop: desktop,
+    useV2Titlebar,
+  })
 
   const [history, setHistory] = createStore({
     stack: [] as string[],
@@ -170,10 +193,13 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
 
   return (
     <header
+      ref={header}
       data-slot={useV2Titlebar() ? "titlebar-v2" : undefined}
       classList={{
         "shrink-0 relative flex flex-row": true,
-        "h-9 bg-v2-background-bg-deep overflow-visible": useV2Titlebar(),
+        "bg-v2-background-bg-deep overflow-visible": useV2Titlebar(),
+        "h-9": useV2Titlebar() && mobile(),
+        "h-[45px]": useV2Titlebar() && !mobile(),
         "h-10 bg-background-base overflow-hidden": !useV2Titlebar(),
         "order-last": bottom(),
       }}
@@ -181,8 +207,12 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
         "min-height": minHeight(),
         // Keep native macOS traffic lights clear even when the desktop window is narrow.
         "padding-left": macTrafficLights() ? `${macTrafficLightsBaseWidth / zoom()}px` : 0,
-        width: windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
-        "max-width": windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
+        width: windows()
+          ? `calc(env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()})) - ${props.tabsMount && !mobile() ? 13 : 0}px)`
+          : undefined,
+        "max-width": windows()
+          ? `calc(env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()})) - ${props.tabsMount && !mobile() ? 13 : 0}px)`
+          : undefined,
         // Native Windows caption controls remain on the physical right in both writing directions.
         "margin-right": windows() ? "auto" : undefined,
       }}
@@ -236,6 +266,41 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
             }
 
             const currentTab = () => matchRoute(layout.route())
+            const profile = createMemo<HomeProjectSelection | undefined>(() => {
+              if (!tabsMount()) return
+              const route = layout.route()
+              const current = currentTab()
+              const key =
+                route.type === "home" || route.type === "chapter"
+                  ? layout.home.selection().server
+                  : (route.server ?? server.key)
+              const conn = global.servers.list().find((item) => ServerConnection.key(item) === key)
+              const ctx = conn ? global.ensureServerCtx(conn) : undefined
+              const value =
+                route.type === "session"
+                  ? (ctx?.sync.session.peek(route.sessionId) ??
+                    (session()?.id === route.sessionId ? session() : undefined))
+                  : undefined
+              const directory =
+                value?.directory ??
+                (current?.type === "draft"
+                  ? current.directory
+                  : route.type === "dir-new-sesssion"
+                    ? route.dir
+                    : route.type === "session"
+                      ? tabs.info[tabKey({ type: "session", server: key, sessionId: route.sessionId })]?.directory
+                      : layout.home.selection().directory)
+              const projects = ctx?.projects.list() ?? []
+              const project = value
+                ? projectForSession(value, projects)
+                : projects.find(
+                    (item) =>
+                      !!directory &&
+                      (pathKey(item.worktree) === pathKey(directory) ||
+                        item.sandboxes?.some((sandbox) => pathKey(sandbox) === pathKey(directory))),
+                  )
+              return { server: key, directory: project?.worktree ?? directory }
+            })
 
             createEffect(() => {
               const route = layout.route()
@@ -264,6 +329,16 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
             const openNewTab = () => {
               const route = layout.route()
               const activeSession = session()
+              const selected = profile()
+              if (selected?.directory) {
+                const active = currentTab()
+                const model =
+                  active?.server === selected.server
+                    ? tabs.stateValue<PromptSession>(active, "prompt")?.model.current()
+                    : undefined
+                tabs.newDraft({ server: selected.server, directory: selected.directory }, "", model)
+                return
+              }
               if (route.type === "session" && activeSession) {
                 const sessionTab = {
                   type: "session" as const,
@@ -312,6 +387,15 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               tabs.newDraft({ server: fallback.server, directory: fallback.project.worktree }, "")
             }
             const toggleHome = () => tabs.toggleHome({ home: layout.route().type === "home", current: currentTab() })
+            const [visible, setVisible] = createStore({ tabs: [] as Tab[] })
+            const closeTab = (tab: Tab) =>
+              closeProfileTab({
+                tabs,
+                visible: profile() ? visible.tabs : undefined,
+                current: currentTab(),
+                tab,
+                home: () => navigate("/"),
+              })
 
             command.register("titlebar-home", () => [
               {
@@ -342,9 +426,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   title: language.t("command.tab.close"),
                   keybind: "mod+w",
                   hidden: true,
-                  onSelect: () => {
-                    tabsStoreActions.closeTab(tabsStore.findIndex((tab) => current === tab))
-                  },
+                  onSelect: () => closeTab(current),
                 },
                 {
                   id: "tab.reopenClosed",
@@ -358,56 +440,23 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
 
             const [tabsAreOverflowing, setTabsAreOverflowing] = createSignal(false)
 
-            return (
-              <div
-                class="h-full flex-1 overflow-hidden flex flex-row items-center gap-1.5 px-2 md:pr-3"
-                classList={{
-                  "pt-2": !bottom(),
-                  "pb-2": bottom(),
-                  "md:pl-2": macTrafficLights(),
-                  "md:pl-4": !macTrafficLights(),
-                }}
-              >
-                <ChannelIndicator debugTools={props.debugTools} />
-                <Show when={windows() || linux()}>
-                  <WindowsAppMenu command={command} platform={platform} variant="v2" />
-                </Show>
-                <TooltipV2
-                  placement="bottom"
-                  value={
-                    <>
-                      {language.t("home.title")}
-                      <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
-                    </>
-                  }
-                  class="shrink-0"
-                >
-                  <IconButtonV2
-                    type="button"
-                    variant="ghost-muted"
-                    size="large"
-                    class="!w-9 shrink-0"
-                    icon={<IconV2 name="grid-plus" />}
-                    state={layout.route().type === "home" ? "pressed" : undefined}
-                    onClick={toggleHome}
-                    aria-label={language.t("home.title")}
-                    aria-pressed={layout.route().type === "home"}
-                  />
-                </TooltipV2>
-
+            // Construct once under the persistent shell owner. Moving this DOM through
+            // the portal must not recreate tab commands, history sync or prompt memory.
+            const tabControls = (
+              <div data-slot="orchestra-tab-controls" class="flex min-w-0 items-center gap-1.5">
                 <TitlebarTabStrip
                   tabs={tabsStore}
+                  profile={profile()}
+                  workspace={!!tabsMount()}
                   currentTab={currentTab}
                   forceTruncate={tabsAreOverflowing()}
                   onOverflowChange={setTabsAreOverflowing}
+                  onVisibleTabsChange={(tabs) => setVisible("tabs", tabs)}
                   onNavigate={(tab, el) => {
                     tabs.select(tab)
-                    el?.scrollIntoView({ behavior: "instant" })
+                    el?.scrollIntoView({ behavior: "instant", block: "nearest", inline: "nearest" })
                   }}
-                  onClose={(tab) => {
-                    const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
-                    if (index !== -1) tabsStoreActions.closeTab(index)
-                  }}
+                  onClose={closeTab}
                   onReorder={(keys) => tabsStoreActions.reorder(keys)}
                 />
                 <TooltipV2
@@ -429,7 +478,73 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                     aria-label={language.t("command.session.new")}
                   />
                 </TooltipV2>
+              </div>
+            )
+
+            return (
+              <div
+                class="h-full flex-1 overflow-hidden flex flex-row items-center gap-1.5 px-2 md:pr-3"
+                classList={{
+                  "pt-2": mobile() && !bottom(),
+                  "pb-2": mobile() && bottom(),
+                  "md:pl-2": macTrafficLights(),
+                  "md:pl-4": !macTrafficLights(),
+                }}
+              >
+                <ChannelIndicator debugTools={props.debugTools} />
+                <Show when={windows() || linux()}>
+                  <WindowsAppMenu command={command} platform={platform} variant="v2" />
+                </Show>
+                <Show when={mobile()}>
+                  <TooltipV2
+                    placement="bottom"
+                    value={
+                      <>
+                        {language.t("home.title")}
+                        <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
+                      </>
+                    }
+                    class="shrink-0"
+                  >
+                    <IconButtonV2
+                      type="button"
+                      variant="ghost-muted"
+                      size="large"
+                      class="!w-9 shrink-0"
+                      icon={<IconV2 name="grid-plus" />}
+                      state={layout.route().type === "home" ? "pressed" : undefined}
+                      onClick={toggleHome}
+                      aria-label={language.t("home.title")}
+                      aria-pressed={layout.route().type === "home"}
+                    />
+                  </TooltipV2>
+                </Show>
+                <Show when={!mobile()}>
+                  <div
+                    data-slot="orchestra-titlebar-breadcrumb"
+                    class="pointer-events-none absolute inset-0 flex items-center justify-center gap-2 text-xs"
+                  >
+                    <span>{language.t("orchestra.brand.name")}</span>
+                    <span aria-hidden="true">/</span>
+                    <span>{language.t(breadcrumbLabel(layout.route()))}</span>
+                  </div>
+                </Show>
+                <Show when={tabsMount()} keyed fallback={tabControls}>
+                  {(mount) => <Portal mount={mount}>{tabControls}</Portal>}
+                </Show>
                 <div class="flex-1" />
+                <Show when={!mobile()}>
+                  <span data-slot="orchestra-titlebar-caption">{language.t("orchestra.brand.caption")}</span>
+                  <button
+                    type="button"
+                    data-slot="orchestra-theme-toggle"
+                    aria-label={language.t(theme.mode() === "dark" ? "theme.scheme.light" : "theme.scheme.dark")}
+                    title={language.t(theme.mode() === "dark" ? "theme.scheme.light" : "theme.scheme.dark")}
+                    onClick={() => theme.setColorScheme(theme.mode() === "dark" ? "light" : "dark")}
+                  >
+                    <span aria-hidden="true">☼</span>
+                  </button>
+                </Show>
                 <TitlebarV2Right state={v2RightState()} />
               </div>
             )

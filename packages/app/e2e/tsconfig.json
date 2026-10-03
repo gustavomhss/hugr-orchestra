@@ -3,9 +3,13 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": "..",
-    "types": ["node", "bun"]
+    "types": ["node", "bun", "vite/client"]
   },
   "include": [
+    "../src/native-titlebar.ts",
+    "../playwright.config.ts",
+    "./orchestra/**/*.ts",
+    "./orchestra/theme-first-paint.fixture.tsx",
     "./performance/timeline-stability/**/*.spec.ts",
     "./performance/timeline-stability/fixture.test.ts",
     "./performance/timeline-stability/fixture.ts",

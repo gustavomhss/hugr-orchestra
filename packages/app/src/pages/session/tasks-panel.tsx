@@ -56,6 +56,9 @@ function TaskRow(props: {
 
   return (
     <div
+      data-slot="task-row"
+      data-state={item.state}
+      data-kind={item.kind}
       role="button"
       tabIndex={0}
       onClick={() => props.onOpen(item)}
@@ -72,11 +75,12 @@ function TaskRow(props: {
         "opacity-75 hover:opacity-100": !live(),
       }}
     >
-      <div class="mt-0.5 flex">
+      <div data-slot="task-mark" class="mt-0.5 flex">
         <StateMark state={item.state} />
       </div>
-      <div class="min-w-0 flex-1">
+      <div data-slot="task-main" class="min-w-0 flex-1">
         <div
+          data-slot="task-title"
           class="truncate text-strong"
           style={{ "font-size": "13px", "font-weight": "400", "line-height": "130%", "letter-spacing": "-0.04px" }}
         >
@@ -85,7 +89,7 @@ function TaskRow(props: {
             <span class="text-text-weak"> (+{item.nested})</span>
           </Show>
         </div>
-        <div class="text-12-regular text-text-weak mt-[3px] truncate tabular-nums">
+        <div data-slot="task-meta" class="text-12-regular text-text-weak mt-[3px] truncate tabular-nums">
           {item.kind === "agent" ? language.t("session.tasks.kind.agent") : language.t("session.tasks.kind.shell")}
           {" · "}
           {item.state === "needs-input" ? (
@@ -109,7 +113,10 @@ function TaskRow(props: {
           </Show>
         </div>
         <Show when={item.stats}>
-          <div class="text-12-regular text-text-weak mt-3 flex flex-wrap gap-4 border-t border-border-weaker-base pt-3">
+          <div
+            data-slot="task-stats"
+            class="text-12-regular text-text-weak mt-3 flex flex-wrap gap-4 border-t border-border-weaker-base pt-3"
+          >
             <Show when={item.stats!.model}>
               <div class="flex items-center gap-1">
                 <span class="text-text-weaker">{language.t("session.tasks.stats.model")}:</span>
@@ -154,7 +161,7 @@ function TaskRow(props: {
           </div>
         </Show>
       </div>
-      <div class="flex shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div data-slot="task-actions" class="flex shrink-0" onClick={(e) => e.stopPropagation()}>
         <Show
           when={live()}
           fallback={
@@ -225,8 +232,8 @@ export function TasksPanel() {
   }
 
   return (
-    <div class="flex h-full min-h-0 flex-col">
-      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 py-1">
+    <div data-component="tasks-panel" class="flex h-full min-h-0 flex-col">
+      <div data-slot="task-scroll" class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 py-1">
         <Show
           when={visible().running.length + visible().finished.length > 0}
           fallback={
@@ -237,7 +244,9 @@ export function TasksPanel() {
           }
         >
           <Show when={visible().running.length > 0}>
-            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">{language.t("session.tasks.running")}</div>
+            <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
+              {language.t("session.tasks.running")}
+            </div>
             <For each={visible().running}>
               {(item) => (
                 <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />
@@ -245,7 +254,9 @@ export function TasksPanel() {
             </For>
           </Show>
           <Show when={visible().finished.length > 0}>
-            <div class="text-12-medium text-text-weak px-1 pb-1 pt-2">{language.t("session.tasks.completed")}</div>
+            <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
+              {language.t("session.tasks.completed")}
+            </div>
             <For each={visible().finished}>
               {(item) => (
                 <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />

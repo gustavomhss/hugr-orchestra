@@ -712,13 +712,15 @@ function expectCompleteScroll(
 
 async function selectHomeProject(page: Page, projectName: string) {
   await page.goto("/")
-  const row = page
-    .locator('[data-component="home-project-row"]')
-    .filter({ hasText: new RegExp(projectName, "i") })
-    .first()
-  await expectAppVisible(row)
-  await row.click()
-  await expect(row).toHaveAttribute("data-selected", "", { timeout: APP_READY_TIMEOUT })
+  const profile = page.locator('[data-slot="orchestra-profile"]')
+  await expectAppVisible(profile)
+  await profile.click()
+  const project = page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("menuitemradio", { name: projectName, exact: true })
+  await expectAppVisible(project)
+  await project.click()
+  await expect(page.locator("#orchestra-profile-name")).toHaveText(projectName, { timeout: APP_READY_TIMEOUT })
   await expect(page).toHaveURL(/\/$/)
 }
 

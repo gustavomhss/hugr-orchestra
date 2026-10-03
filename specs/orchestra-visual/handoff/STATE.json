@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-02T18:44:21.000Z",
+  "repository": "https://github.com/gusmhs/HuGR-Orchestra",
+  "branch": "dev",
+  "base": "fork/dev",
+  "integrated": [
+    {
+      "pr": 239,
+      "title": "feat(app): migrate Orchestra visual identity",
+      "squash": "9fc1af89b9"
+    },
+    {
+      "pr": 240,
+      "title": "feat(app): add Orchestra chapter pages (wave 1)",
+      "squash": "9e21939938"
+    },
+    {
+      "pr": 241,
+      "title": "fix(opencode): settle interrupted instance boots",
+      "squash": "1b2c9a0a25"
+    }
+  ],
+  "openFollowUps": [
+    {
+      "repository": "gusmhs/HuGR-Orchestra",
+      "pr": 15,
+      "title": "fix(ci): fit CI to standard runners and make Atlas bundles deterministic",
+      "note": "prerequisite for the others"
+    },
+    {
+      "repository": "gusmhs/HuGR-Orchestra",
+      "prs": [4, 6, 8, 10, 12, 17, 19, 21, 23, 25],
+      "note": "wave 2: docs, Windows Maestro fixtures, terminal palette, branding, first paint, hit areas, production-build suite, provider secrets/model list, Dock overlays, style-recalc regression; validated together on branch wave2-integration"
+    }
+  ],
+  "chapters": {
+    "active": null,
+    "integrated": ["C01", "C02", "C07", "C09", "C10", "C11", "C12", "C13"],
+    "accepted": [],
+    "deferred": {
+      "C03": "needs backend that does not exist",
+      "C04": "needs backend that does not exist",
+      "C08": "no honest MVP without a durable scheduler",
+      "C05": "existing Settings panel remains the destination",
+      "C06": "existing Settings panel remains the destination"
+    },
+    "scope": "CHAPTERS-SCOPE.md",
+    "deferredSurfaces": {
+      "Janitor (S21)": "deferred by the owner on 2026-10-02"
+    }
+  },
+  "productBlockers": [],
+  "resolvedBlockers": "The eight E2E failure groups recorded for #239 were fixed before merge (see HANDOFF.md section 6); the hanging HttpApi gate was fixed by #241.",
+  "previousSnapshot": {
+    "observedAt": "2026-10-02T00:11:02.962Z",
+    "branch": "identity-integration",
+    "observedHead": "e2c0b913f05cde884102ebef05e0ed84092fd6ef",
+    "implementationCommit": "791b3bc9d06125e8ed4ad891a9e1e61798ae18ba",
+    "archiveCommit": "cbbdf7b1f56db2e4832faa3f66cf7a771656d3f2",
+    "cleanupCommit": "e2c0b913f05cde884102ebef05e0ed84092fd6ef",
+    "base": "da2b75aff12e21c9974ebc5be41ae138302de40b"
+  },
+  "workInProgress": {
+    "retiredWorkers": [
+      {
+        "name": "identity-brand",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-chat",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-review",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-shell",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-surfaces",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-verify",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-glass",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-locales",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-profile-races",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "fix-test-runtime",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-tab-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-panel-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-dock-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      },
+      {
+        "name": "identity-rail-limit",
+        "disposition": "archived, remote-confirmed and retired"
+      }
+    ],
+    "externalDisposition": "Preserved and inventoried, not claimed clean or merged; separate campaigns are not authorized for blanket integration"
+  },
+  "nextAction": "Merge #15 then the wave 2 PRs once CI is green; record the cockpit re-verification in HANDOFF.md section 7 and COVERAGE.md; then owner acceptance of the identity and wave 1 chapters.",
+  "recoveryIndex": "README.md",
+  "archiveVerification": "archive-verification.json",
+  "cleanupReceipt": "cleanup.json",
+  "repositoryMigration": "Moved from gmhelmold/HuGR-Orchestra on 2026-10-02 after that account was suspended; old PR, issue and CI links are unreachable. Branches were restored from a local backup; PR numbers below refer to the old repository."
+}

@@ -1,0 +1,126 @@
+.orchestra-skills {
+  min-block-size: 0;
+  overflow: auto;
+  padding: 28px;
+  color: var(--orchestra-text);
+}
+
+.orchestra-skills h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+.orchestra-skills h2 {
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.orchestra-skills h3,
+.orchestra-skills dt {
+  font-size: 12px;
+  color: var(--orchestra-muted);
+}
+.orchestra-skills p {
+  color: var(--orchestra-body);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-block: 8px;
+  overflow-wrap: anywhere;
+}
+.skills-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-block: 24px;
+}
+.skills-toolbar [data-component="text-input-v2"] {
+  inline-size: min(100%, 300px);
+}
+.skills-directory {
+  color: var(--orchestra-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.skills-status:empty {
+  display: none;
+}
+.skills-status {
+  color: var(--orchestra-body);
+  font-size: 14px;
+  padding-block: 12px;
+}
+.skills-retry {
+  margin-block-start: 12px;
+}
+.skills-panels {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  align-items: start;
+}
+.skills-catalog {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.skills-card,
+.skills-reader {
+  min-inline-size: 0;
+  border: 1px solid var(--orchestra-border);
+  border-radius: 9px;
+  background: var(--glass-background);
+  padding: 18px;
+  box-shadow: var(--glass-shadow);
+}
+.skills-card[data-selected="true"] {
+  border-color: var(--orchestra-accent);
+}
+.skills-card-heading,
+.skills-reader header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+.skills-path {
+  display: block;
+  margin-block: 12px;
+  overflow-wrap: anywhere;
+  color: var(--orchestra-muted);
+  font-size: 12px;
+}
+.skills-reader dl {
+  margin-block: 20px;
+}
+.skills-reader dd {
+  margin-inline: 0;
+  margin-block-start: 6px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.skills-reader pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  background: var(--orchestra-background);
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: 6px;
+  padding: 16px;
+  margin-block-start: 10px;
+  max-block-size: 60vh;
+  overflow: auto;
+}
+.orchestra-skills :focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .skills-panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

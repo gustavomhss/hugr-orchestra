@@ -7,12 +7,57 @@ const serverB = "http://127.0.0.1:4097"
 const sessionA = session("ses_server_a", "C:/server-a", "Server A session")
 const sessionB = session("ses_server_b", "/home/server-b", "Server B session")
 
-test("tab busy indicator reflects the tab server's own session status", async ({ page }) => {
+test.describe("legacy tab strip", () => {
+  test.use({ viewport: { width: 760, height: 900 } })
+
+  test("tab busy indicator reflects the tab server's own session status", async ({ page }) => {
+    await mockServers(page)
+    await page.addInitScript(
+      ({ serverA, serverB, sessionA, sessionB }) => {
+        localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+        localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
+        localStorage.setItem(
+          "opencode.window.browser.dat:tabs",
+          JSON.stringify([
+            { type: "session", server: serverA, sessionId: sessionA },
+            { type: "session", server: serverB, sessionId: sessionB },
+          ]),
+        )
+      },
+      { serverA, serverB, sessionA: sessionA.id, sessionB: sessionB.id },
+    )
+
+    const hrefA = `/server/${base64Encode(serverA)}/session/${sessionA.id}`
+    const hrefB = `/server/${base64Encode(serverB)}/session/${sessionB.id}`
+    await page.goto(hrefA)
+    await expect(page.getByText(sessionA.title).first()).toBeVisible()
+
+    // Session B is busy on server B while server A stays the active server, so the
+    // busy indicator must come from the tab server's status, not the active server's.
+    const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
+    await expect(tabB.locator('[data-component="session-progress-indicator-v2"]')).toBeVisible()
+
+    const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+    await expect(tabA.locator("[data-titlebar-tab-title]")).toHaveText(sessionA.title)
+    await expect(tabA.locator('[data-component="session-progress-indicator-v2"]')).toHaveCount(0)
+  })
+})
+
+test("desktop tabs filter by profile and show each server's own busy state", async ({ page }) => {
   await mockServers(page)
   await page.addInitScript(
-    ({ serverA, serverB, sessionA, sessionB }) => {
+    ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
-      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
+      localStorage.setItem(
+        "opencode.global.dat:server",
+        JSON.stringify({
+          list: [serverB],
+          projects: {
+            [serverA]: [{ worktree: directoryA, expanded: true }],
+            [serverB]: [{ worktree: directoryB, expanded: true }],
+          },
+        }),
+      )
       localStorage.setItem(
         "opencode.window.browser.dat:tabs",
         JSON.stringify([
@@ -21,7 +66,14 @@ test("tab busy indicator reflects the tab server's own session status", async ({
         ]),
       )
     },
-    { serverA, serverB, sessionA: sessionA.id, sessionB: sessionB.id },
+    {
+      serverA,
+      serverB,
+      sessionA: sessionA.id,
+      sessionB: sessionB.id,
+      directoryA: sessionA.directory,
+      directoryB: sessionB.directory,
+    },
   )
 
   const hrefA = `/server/${base64Encode(serverA)}/session/${sessionA.id}`
@@ -29,15 +81,31 @@ test("tab busy indicator reflects the tab server's own session status", async ({
   await page.goto(hrefA)
   await expect(page.getByText(sessionA.title).first()).toBeVisible()
 
-  // Session B is busy on server B while server A stays the active server, so the
-  // busy indicator must come from the tab server's status, not the active server's.
-  const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
-  await expect(tabB.locator('[data-component="session-progress-indicator-v2"]')).toBeVisible()
-
   const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+  const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
   await expect(tabA.locator("[data-titlebar-tab-title]")).toHaveText(sessionA.title)
-  await expect(tabA.locator('[data-component="session-progress-indicator-v2"]')).toHaveCount(0)
+  await expect(tabB).toHaveCount(0)
+
+  await selectProfile(page, "server-b")
+  await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+  await expect(tabB.locator("[data-titlebar-tab-title]")).toHaveText(sessionB.title)
+  await expect(tabB.locator('[data-slot="orchestra-model-logo"]')).toHaveAttribute("data-activity", "running")
+  await expect(tabA).toHaveCount(0)
+
+  // Server B is busy now; server A's tab must still read its own idle status.
+  await selectProfile(page, "server-a")
+  await expect(page).toHaveURL(new RegExp(`${hrefA.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+  await expect(tabA.locator('[data-slot="orchestra-model-logo"]')).toHaveAttribute("data-activity", "idle")
+  await expect(tabB).toHaveCount(0)
 })
+
+async function selectProfile(page: Page, name: string) {
+  await page.locator('[data-slot="orchestra-profile"]').click()
+  await page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("menuitemradio", { name, exact: true })
+    .click()
+}
 
 function session(id: string, directory: string, title: string) {
   return {
@@ -61,7 +129,7 @@ async function mockServers(page: Page) {
     if (url.pathname === "/global/event" || url.pathname === "/event" || url.pathname === "/api/event")
       return sse(route, url.origin === serverB && url.pathname === "/api/event")
     if (url.pathname === "/global/health") return json(route, {}, 404)
-    if (url.pathname === "/api/health") return json(route, { pid: 1 })
+    if (url.pathname === "/api/health") return json(route, { pid: 1, healthy: true })
     if (url.pathname === "/api/session/active") return json(route, { data: {} })
     if (url.pathname === "/api/session") return json(route, { data: [currentSession(current)], cursor: {} })
     if (url.pathname === `/api/session/${current.id}`) return json(route, { data: currentSession(current) })

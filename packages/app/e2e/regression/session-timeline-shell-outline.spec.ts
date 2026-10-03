@@ -31,13 +31,12 @@ for (const deviceScaleFactor of [1.25, 1.5]) {
       // Match a rounded-down measurement at a fractional device-pixel phase.
       element.style.height = `${outputRect.bottom - rowRect.top - 0.49}px`
       element.style.transform = "translateY(0.25px)"
-      output.style.setProperty("--v2-border-border-base", "rgb(255, 0, 255)")
+      output.style.setProperty("border-color", "rgb(255, 0, 255)", "important")
       output.style.setProperty("background", "rgb(0, 0, 0)", "important")
       const style = getComputedStyle(output)
       return {
         outputWidth: outputRect.width,
         outputHeight: outputRect.height,
-        borderColor: style.borderTopColor,
         boxShadow: style.boxShadow,
         clipMargin: getComputedStyle(element).overflowClipMargin,
       }
@@ -55,8 +54,7 @@ for (const deviceScaleFactor of [1.25, 1.5]) {
 
     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
-    expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
-    expect(geometry.boxShadow).toBe("none")
+    expect(outerShadows(geometry.boxShadow)).toEqual([])
     expect(geometry.clipMargin).toBe("0.5px")
     expect(edges.magenta.top).toBeGreaterThan(0.75)
     expect(edges.magenta.bottom).toBeGreaterThan(0.75)
@@ -89,11 +87,24 @@ test("keeps the patch card inside a fractionally short virtual row", async ({ pa
   const card = part.locator('[data-component="accordion"][data-scope="apply-patch"]')
   const row = page.locator("[data-timeline-key]", { has: part })
   await expect(card).toBeVisible()
+  // The header paints before the diff lands from the highlighter; the row re-measures once it has.
+  await expect(card.locator("[data-line]").first()).toBeVisible()
+  await expect
+    .poll(() =>
+      row.evaluate((element) =>
+        Math.abs(element.getBoundingClientRect().height - element.firstElementChild!.getBoundingClientRect().height),
+      ),
+    )
+    .toBeLessThan(1)
   await timeline.settle()
 
   const geometry = await row.evaluate((element) => {
     const card = element.querySelector<HTMLElement>('[data-component="accordion"][data-scope="apply-patch"]')
     if (!card) throw new Error("Patch card is unavailable")
+    // Compare one border over one background at both edges; the skin paints header and body differently.
+    card
+      .querySelectorAll<HTMLElement>('[data-slot="accordion-trigger"], [data-slot="accordion-content"]')
+      .forEach((surface) => surface.style.setProperty("background", "rgb(255, 255, 255)", "important"))
     const rowRect = element.getBoundingClientRect()
     const cardRect = card.getBoundingClientRect()
     element.style.height = `${cardRect.bottom - rowRect.top - 0.49}px`
@@ -157,6 +168,15 @@ test("allows paint rounding for every framed row but not fixed turn gaps", async
   expect(rows.filter((row) => row.tag !== "TurnGap").every((row) => row.clipMargin === "0.5px")).toBe(true)
   expect(rows.filter((row) => row.tag === "TurnGap")).toEqual([{ tag: "TurnGap", clipMargin: "0px" }])
 })
+
+// Computed box-shadow layers are comma separated, but so are the arguments of their colours.
+function outerShadows(value: string) {
+  if (value === "none") return []
+  return value
+    .split(/,(?![^(]*\))/)
+    .map((layer) => layer.trim())
+    .filter((layer) => !layer.split(/\s+/).includes("inset"))
+}
 
 async function captureCardEdges(page: Page, card: Locator) {
   const box = await card.boundingBox()

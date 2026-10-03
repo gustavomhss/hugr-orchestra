@@ -61,14 +61,18 @@ runs:
         # https://github.com/oven-sh/bun/issues/28147
         if [ "$RUNNER_OS" = "Windows" ]; then
           # Bun can leave a patched package directory half-renamed on Windows.
+          # The hoisted layout nests several copies of a patched package (e.g. @ai-sdk/openai-compatible),
+          # and Bun applies the patch once per copy; concurrent renames into the same cache entry race
+          # with ENOTEMPTY. Every attempt starts from an empty cache because the loser may leave it partial.
           cache_dir="$PWD/.bun-install-cache"
           trap 'rm -rf "$cache_dir"' EXIT
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             rm -rf "$cache_dir"
             rm -rf node_modules
             if bun install --no-cache --cache-dir "$cache_dir" --linker hoisted ${{ inputs.install-flags }}; then
               exit 0
             fi
+            echo "::warning::bun install attempt $attempt failed on Windows; retrying from an empty cache"
           done
           exit 1
         else

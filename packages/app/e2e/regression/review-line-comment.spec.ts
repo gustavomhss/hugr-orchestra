@@ -50,15 +50,19 @@ test("shows a comment button when a line number is hovered", async ({ page }) =>
   await expectAppVisible(lineNumber)
 
   const comment = review.getByRole("button", { name: "Comment", exact: true })
+  // The diff can re-render its rows when syntax highlighting settles, even after the pointer has moved. The
+  // renderer then forgets the hovered line and detaches the comment button until the next pointer move, so every
+  // attempt hovers again and presses the button inside the retried block. The inner waits need a short timeout:
+  // with the default one a single attempt would consume the whole toPass budget.
   await expect(async () => {
     await lineNumber.hover()
-    await expect(lineNumber).toHaveAttribute("data-hovered", "")
-    await expect(comment).toHaveCount(1)
-    await expect(comment).toHaveCSS("pointer-events", "auto")
-    await comment.focus()
-    await expect(comment).toBeFocused()
-  }).toPass({ timeout: 10_000 })
-  await comment.press("Enter")
+    await expect(lineNumber).toHaveAttribute("data-hovered", "", { timeout: 2_000 })
+    await expect(comment).toHaveCount(1, { timeout: 2_000 })
+    await expect(comment).toHaveCSS("pointer-events", "auto", { timeout: 2_000 })
+    await comment.focus({ timeout: 2_000 })
+    await expect(comment).toBeFocused({ timeout: 2_000 })
+    await comment.press("Enter", { timeout: 2_000 })
+  }).toPass({ timeout: 15_000 })
   await expect(review.getByRole("textbox")).toBeVisible()
   await expect(review.locator('[data-slot="line-comment-editor-label"]')).toHaveText("Commenting on line 1")
 })
