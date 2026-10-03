@@ -130,6 +130,19 @@ function getSystemMode(): "light" | "dark" {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
+/** Refresh the root and browser chrome from the active app or theme background tokens. */
+export function syncThemeBackground() {
+  const root = document.documentElement
+  root.style.colorScheme = root.dataset.colorScheme ?? "light"
+  const style = getComputedStyle(root)
+  const fallback = root.dataset.colorScheme === "dark" ? "#080808" : "#fafafa"
+  root.style.backgroundColor =
+    style.getPropertyValue("--app-background").trim() ||
+    style.getPropertyValue("--v2-background-bg-deep").trim() ||
+    fallback
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", getComputedStyle(root).backgroundColor)
+}
+
 function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "dark") {
   const isDark = mode === "dark"
   const variant = isDark ? theme.dark : theme.light
@@ -152,11 +165,7 @@ function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "da
   ensureThemeStyleElement().textContent = fullCss
   document.documentElement.dataset.theme = themeId
   document.documentElement.dataset.colorScheme = mode
-  document.documentElement.style.backgroundColor = isDark ? "#080808" : "#fafafa"
-
-  // Update theme-color meta tag to match light/dark mode
-  const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute("content", isDark ? "#080808" : "#fafafa")
+  syncThemeBackground()
 }
 
 function cacheThemeVariants(theme: DesktopTheme, themeId: string) {

@@ -14,8 +14,6 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-success: #9dbfae;
   --orchestra-danger: #d29e9b;
 
-  --orchestra-background: #080c11;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #1a2532 0%, transparent 65%), #080c11;
   --orchestra-shell-background: #0e141b;
   --orchestra-shell-border: rgba(145, 166, 187, 0.25);
   --orchestra-shell-shadow: 0 32px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -233,8 +231,6 @@ html[data-color-scheme="light"] body[data-new-layout] {
   /* The reference leaves --danger unchanged in light mode. */
   --orchestra-danger: #d29e9b;
 
-  --orchestra-background: #dfe3e8;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #eef1f4 0%, transparent 65%), #dfe3e8;
   --orchestra-shell-background: #e9ecf0;
   --orchestra-shell-border: rgba(60, 72, 86, 0.22);
   --orchestra-shell-shadow: 0 32px 90px rgba(28, 36, 46, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -365,7 +361,6 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-des
 @media (min-width: 768px) {
   body[data-new-layout] #root {
     padding: 0;
-    background: transparent;
   }
 
   body[data-new-layout] :is(.orchestra-shell, .orchestra-profile-menu) {
