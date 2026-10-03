@@ -43,12 +43,13 @@ test("shared config SDK identity is prepared before test bootstrap", async () =>
 })
 
 test("SDK fixture refuses workspace aliases at modules root and scoped parent", async () => {
-  const modules = await realpath(path.resolve(import.meta.dir, "../../node_modules"))
+  const modules = await realpath(path.resolve(import.meta.dir, "../../../../node_modules"))
+  const scope = path.dirname(path.dirname(await realpath(Bun.resolveSync("@opencode-ai/plugin/package.json", path.resolve(import.meta.dir, "../..")))))
   for (const scoped of [false, true]) {
     await using tmp = await tmpdir()
     const target = path.join(tmp.path, ".opencode", "node_modules")
     await mkdir(scoped ? target : path.dirname(target), { recursive: true })
-    await symlink(scoped ? path.join(modules, "@opencode-ai") : modules,
+    await symlink(scoped ? scope : modules,
       scoped ? path.join(target, "@opencode-ai") : target, process.platform === "win32" ? "junction" : "dir")
     await expect(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))
       .rejects.toThrow("modules parent outside fixture ownership")

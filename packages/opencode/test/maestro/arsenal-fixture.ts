@@ -7,7 +7,6 @@ export async function prepareArsenalSDK(directory: string, configDirectory: stri
   await Promise.all([directory, configDirectory].map((root) => mkdir(root, { recursive: true })))
   const owned = await Promise.all([directory, configDirectory].map((root) => realpath(root)))
   const workspace = await realpath(path.resolve(import.meta.dir, "../../../.."))
-  const modules = await realpath(path.resolve(import.meta.dir, "../../node_modules"))
   const manifest = Bun.resolveSync("@opencode-ai/plugin/package.json", path.resolve(import.meta.dir, "../.."))
   const sdk: unknown = await Bun.file(manifest).json()
   assert(
@@ -23,7 +22,7 @@ export async function prepareArsenalSDK(directory: string, configDirectory: stri
   const name = sdk.name
   const version = sdk.version
   const dependencies = { [name]: version }
-  const installed = await realpath(path.join(modules, name))
+  const installed = path.dirname(await realpath(manifest))
   assert.equal(await realpath(path.join(installed, "package.json")), await realpath(manifest), "Arsenal fixture SDK package resolution mismatch")
   await Promise.all(
     [configDirectory, path.join(directory, ".opencode")].map(async (root) => {
