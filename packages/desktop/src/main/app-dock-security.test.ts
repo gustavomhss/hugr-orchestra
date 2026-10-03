@@ -7,38 +7,7 @@ import { tmpdir } from "node:os"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { createRequire } from "node:module"
 
-const required = [
-  "U01",
-  "U02",
-  "U03",
-  "U04",
-  "U05",
-  "U06",
-  "U07",
-  "U08",
-  "U09",
-  "U10",
-  "U11",
-  "U12",
-  "U13",
-  "U14",
-  "U15",
-  "U16",
-  "U17",
-  "U18",
-  "U19",
-  "U20",
-  "U21",
-  "U22",
-  "U23",
-  "U24",
-  "U25",
-  "U26",
-  "U27",
-  "U28",
-  "U29",
-  "U30",
-]
+const required = Array.from({ length: 31 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
 const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock/s1.json")
 const schemes = ["http://127.0.0.1/", "file:///etc/passwd", "javascript:document.title='pwned'", "data:text/html,pwned"]
@@ -490,6 +459,7 @@ async function child() {
   await installEventStore()
   const profile = "e2e-profile"
   const bounds = { x: 0, y: 0, width: 400, height: 300 }
+  const identity = (tab: { tabID: string; generation: number }) => ({ tabID: tab.tabID, generation: tab.generation })
   const open = async (url = site.base, profileID = profile) =>
     invoke(ipcWin.webContents.mainFrame, "app-dock-open", [url, bounds, profileID])
   const navigate = (tabID: string, url: string) =>
@@ -702,7 +672,7 @@ async function child() {
     const frame = ipcWin.webContents.mainFrame.frames.find((item) => item !== ipcWin.webContents.mainFrame)
     check(frame, "fixture did not create iframe")
     await rejects(
-      () => invoke(frame, "app-dock-resize", [{ x: 0, y: 0, width: 1, height: 1 }]),
+      () => invoke(frame, "app-dock-resize", [{ tabID: "subframe", generation: 1 }, bounds]),
       "Invalid App Dock sender",
     )
     pass("U12", "subframe IPC sender rejected")
@@ -729,7 +699,7 @@ async function child() {
       return { count: Number(match[1]), elapsed: Number(match[2]), observed: performance.now() }
     }
     await waitFor(async () => (await tickerSample())?.count >= 2, "ticker startup")
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(ticker)])
     check(!attached(ipcWin, tickerContents), "hide leaves App Dock view attached")
     await new Promise<void>((resolve) => setTimeout(resolve, 1_200))
     const beforeHide = await tickerSample()
@@ -741,7 +711,7 @@ async function child() {
       hidden.count - beforeHide.count <= 1,
       `hidden ticker was not throttled: ${beforeHide.count} -> ${hidden.count}`,
     )
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [ticker.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(ticker), bounds])
     check(attached(ipcWin, tickerContents), "select does not reattach hidden App Dock view")
     const resumedAt = performance.now()
     await waitFor(
@@ -812,15 +782,15 @@ async function child() {
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [closeTarget.tabID, "invalid"]),
       "Invalid App Dock close scope",
     )
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [closeTarget.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(closeTarget), bounds])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [closeTarget.tabID, "others"])
     check(!closeTargetContents.isDestroyed(), "close-tabs others destroyed target")
     await rejects(
-      () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [closeA.tabID, bounds]),
+      () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(closeA), bounds]),
       "Unknown App Dock tab",
     )
     await rejects(
-      () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [closeC.tabID, bounds]),
+      () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(closeC), bounds]),
       "Unknown App Dock tab",
     )
     const rightA = await open(site.base, "close-tabs-right-profile")
@@ -831,7 +801,7 @@ async function child() {
     const rightCContents = viewContents()
     const rightD = await open(site.base, "close-tabs-right-profile")
     const rightDContents = viewContents()
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [rightTarget.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightTarget), bounds])
     const visualOrder = [rightA.tabID, rightC.tabID, rightTarget.tabID, rightD.tabID]
     await rejects(
       () =>
@@ -861,11 +831,11 @@ async function child() {
       "Invalid App Dock tab order",
     )
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [rightTarget.tabID, "right", visualOrder])
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [rightTarget.tabID, bounds])
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [rightA.tabID, bounds])
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [rightC.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightTarget), bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightA), bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightC), bounds])
     await rejects(
-      () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [rightD.tabID, bounds]),
+      () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightD), bounds]),
       "Unknown App Dock tab",
     )
     diagnostic("u20:right-verified")
@@ -917,7 +887,7 @@ async function child() {
     )
     pass("U21", "real HTTPS popup emits cloneable public tab identity and selects second WebContentsView")
 
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(popupOpened.payload)])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupOpened.payload.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupSource.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightA.tabID])
@@ -983,7 +953,7 @@ async function child() {
     const crashed = await open(`${site.base}/ticker`, "crash-profile")
     const unaffected = await open(`${site.base}/ticker`, "unaffected-profile")
     const unaffectedContents = attachedContents(ipcWin)
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [crashed.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(crashed), bounds])
     const crashedContents = attachedContents(ipcWin)
     check(crashedContents && unaffectedContents && crashedContents !== unaffectedContents, "U27 App Dock views missing")
     await execute("view:crash-storage-set", crashedContents, "localStorage.setItem('recovery', 'present')")
@@ -1044,6 +1014,27 @@ async function child() {
       "old crashed generation emitted event after recovery",
     )
     check(!unaffectedContents.isDestroyed(), "other App Dock tab changed during recovery")
+    // Resize, Hide and Select name the tab and generation they target; stale or malformed ones never land.
+    const u31Moved = { x: 10, y: 20, width: 300, height: 200 }
+    const u31At = (expected: typeof bounds) => {
+      const views = ipcWin.contentView.children as Electron.WebContentsView[]
+      const actual = views.find((child) => child.webContents === recoveredContents)?.getBounds()
+      return (["x", "y", "width", "height"] as const).every((key) => actual?.[key] === expected[key])
+    }
+    for (const stale of [identity(crashed), identity(unaffected)]) {
+      await invoke(ipcWin.webContents.mainFrame, "app-dock-resize", [stale, u31Moved])
+      await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [stale])
+    }
+    check(u31At(bounds) && attached(ipcWin, recoveredContents), "stale resize or hide reached the attached view")
+    await rejects(() => invoke(ipcWin.webContents.mainFrame, "app-dock-resize", [u31Moved]), "Invalid App Dock tab")
+    for (const args of [[], [recovered]])
+      await rejects(() => invoke(ipcWin.webContents.mainFrame, "app-dock-hide", args), "Invalid App Dock tab")
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-resize", [identity(recovered), u31Moved])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(crashed), bounds])
+    check(u31At(u31Moved), "attached tab's resize did not apply, or an older generation's select did")
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(recovered)])
+    check(!attached(ipcWin, recoveredContents), "hide for the attached tab left it attached")
+    pass("U31", "resize/hide/select for an older generation or another tab are ignored; unqualified ones are rejected")
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [recovered.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [unaffected.tabID])
     pass(
@@ -1052,8 +1043,8 @@ async function child() {
     )
 
     const u28Profile = "u28-capacity-profile"
-    const u28TabsA = [] as { tabID: string }[]
-    const u28TabsB = [] as { tabID: string }[]
+    const u28TabsA = [] as { tabID: string; generation: number }[]
+    const u28TabsB = [] as { tabID: string; generation: number }[]
     for (let index = 0; index < 11; index++)
       u28TabsA.push(await open(`${site.base}/ticker?capacity=a${index}`, u28Profile))
     for (let index = 0; index < 11; index++)
@@ -1065,7 +1056,7 @@ async function child() {
         ]),
       )
     const u28ActiveB = attachedContents(ipcWinB)
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [u28TabsA[0]!.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u28TabsA[0]!), bounds])
     const u28ActiveContents = attachedContents(ipcWin)
     check(u28ActiveContents && u28ActiveB, "U28 active App Dock views missing")
     await waitFor(
@@ -1078,7 +1069,7 @@ async function child() {
     const u28ExtraContents = attachedContents(ipcWin)
     check(u28ExtraContents, "U28 extra active App Dock view missing")
     await rejects(
-      () => invoke(ipcWinB.webContents.mainFrame, "app-dock-select", [u28TabsB[0]!.tabID, bounds]),
+      () => invoke(ipcWinB.webContents.mainFrame, "app-dock-select", [identity(u28TabsB[0]!), bounds]),
       "Unknown App Dock tab",
     )
     check(
@@ -1089,7 +1080,7 @@ async function child() {
         !u28ActiveB.isDestroyed(),
       "U28 capacity eviction displaced an active view",
     )
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [u28TabsA[0]!.tabID, bounds])
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u28TabsA[0]!), bounds])
     await waitFor(
       async () =>
         (await execute("u28:retained-lru", attachedContents(ipcWin), "location.href")) ===

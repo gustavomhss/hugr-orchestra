@@ -8,7 +8,14 @@ const directory = "/work/shared repository"
 const sessionID = "ses_dock_chat"
 const sessionTitle = "Dock chat session"
 
-type DockCall = { type: string; url?: string; profile?: string; tabID?: string; occluded?: boolean }
+type DockCall = {
+  type: string
+  url?: string
+  profile?: string
+  tabID?: string
+  generation?: number
+  occluded?: boolean
+}
 type DockFake = {
   calls: DockCall[]
   live: { tabID: string; generation: number; url: string; profile: string }[]
@@ -52,11 +59,15 @@ test("Dock page and Chat's Apps tab share one live browser session", async ({ pa
   const after = await fake(page)
   const moves = after.calls.slice(before)
   expect(moves.filter((call) => ["open", "close", "close-tab", "manifest"].includes(call.type))).toEqual([])
+  // Every Show and Hide names the live tab and its generation, so the desktop can drop stale ones.
+  const live = { tabID: opened.live[0]!.tabID, generation: opened.live[0]!.generation }
   expect(moves.filter((call) => call.type === "select")).toEqual([
-    { type: "select", tabID: opened.live[0]!.tabID },
-    { type: "select", tabID: opened.live[0]!.tabID },
+    { type: "select", ...live },
+    { type: "select", ...live },
   ])
-  expect(moves.filter((call) => call.type === "hide").length).toBeGreaterThanOrEqual(2)
+  const hides = moves.filter((call) => call.type === "hide")
+  expect(hides.length).toBeGreaterThanOrEqual(2)
+  expect(hides).toEqual(hides.map(() => ({ type: "hide", ...live })))
   expect(after.live).toEqual(opened.live)
 
   await page.evaluate(() => document.fonts.ready)
@@ -368,11 +379,11 @@ function installDockBridge(partial: boolean) {
     ? { appDockOpen }
     : {
         appDockOpen,
-        appDockSelect: async (tabID: string) => {
-          dock.calls.push({ type: "select", tabID })
+        appDockSelect: async (tab: { tabID: string; generation: number }) => {
+          dock.calls.push({ type: "select", tabID: tab.tabID, generation: tab.generation })
         },
-        appDockHide: async () => {
-          dock.calls.push({ type: "hide" })
+        appDockHide: async (tab: { tabID: string; generation: number }) => {
+          dock.calls.push({ type: "hide", tabID: tab.tabID, generation: tab.generation })
         },
         appDockOcclude: async (occluded: boolean) => {
           dock.calls.push({ type: "occlude", occluded })

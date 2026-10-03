@@ -76,8 +76,8 @@ export function AppsPanel() {
   const resize = createAppDockBoundsSync({
     snapshot: () => {
       const tab = state.active
-      return tab && host && api && dock.owns(host)
-        ? { tab, bounds: bounds(host), resize: (next) => api.appDockResize(next) }
+      return tab && host && dock.owns(host)
+        ? { tab, bounds: bounds(host), resize: (next) => dock.resize(tab, next) }
         : undefined
     },
     requestAnimationFrame: (callback) => requestAnimationFrame(callback),
@@ -87,6 +87,15 @@ export function AppsPanel() {
     on(profile, (id) => {
       if (host) onCleanup(dock.attach(host, id))
     }),
+  )
+  // Resizes reach only the tab they name. A tab the desktop attached while one was in flight (a new
+  // tab, a popup or a recovery) is measured again once it becomes active here.
+  createEffect(
+    on(
+      () => state.active,
+      () => resize.request(),
+      { defer: true },
+    ),
   )
   // The tab menu is drawn in place, not in a portal, and can reach over the browser.
   createEffect(() => {

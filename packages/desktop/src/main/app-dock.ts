@@ -92,6 +92,12 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
     Object.freeze({ tabID, generation: tabGeneration })
   const isCurrent = (senderID: number, tabID: string, tabGeneration: number) =>
     tabs.get(senderID)?.get(tabID)?.generation === tabGeneration
+  // Resize and Hide name the tab they were sent for. One that arrives after another tab, a recovery
+  // or a new owner took the window's place is stale and must not move or hide the view shown now.
+  const attachedRecord = (senderID: number, tab: AppDockIdentity) => {
+    const record = tabs.get(senderID)?.get(tab.tabID)
+    return active.get(senderID) === tab.tabID && record?.generation === tab.generation ? record : undefined
+  }
   const markInactive = (senderID: number, tabID: string, record: AppDockRecord) => {
     record.view.webContents.setBackgroundThrottling(true)
     inactive.delete(`${senderID}:${tabID}`)
@@ -414,12 +420,12 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
   }
   return {
     open,
-    resize(senderID: number, bounds: DockBounds) {
+    resize(senderID: number, tab: AppDockIdentity, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
-      const tabID = active.get(senderID)
-      if (tabID) tabs.get(senderID)?.get(tabID)?.view.setBounds(bounds)
+      attachedRecord(senderID, tab)?.view.setBounds(bounds)
     },
-    hide(senderID: number, _win: BrowserWindow) {
+    hide(senderID: number, _win: BrowserWindow, tab: AppDockIdentity) {
+      if (!attachedRecord(senderID, tab)) return
       while (active.has(senderID) && inactive.size >= MAX_INACTIVE_TABS) {
         if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
       }
@@ -436,12 +442,14 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
       const tabID = active.get(senderID)
       if (tabID) tabs.get(senderID)?.get(tabID)?.view.setVisible(!value)
     },
-    select(senderID: number, win: BrowserWindow, tabID: string, bounds: DockBounds) {
+    select(senderID: number, win: BrowserWindow, tab: AppDockIdentity, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
-      const record = tabs.get(senderID)?.get(tabID)
+      const record = tabs.get(senderID)?.get(tab.tabID)
       if (!record) throw new Error("Unknown App Dock tab")
+      // A recovered tab keeps its ID under a new generation; a Show for the older one is stale.
+      if (record.generation !== tab.generation) return
       for (const [id, other] of tabs.get(senderID) ?? []) {
-        if (id === tabID) {
+        if (id === tab.tabID) {
           win.contentView.addChildView(other.view)
           other.view.setVisible(!occluded.has(senderID))
           other.view.webContents.setBackgroundThrottling(false)
@@ -452,7 +460,7 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
         }
       }
       record.view.setBounds(bounds)
-      active.set(senderID, tabID)
+      active.set(senderID, tab.tabID)
     },
     navigate(senderID: number, tabID: string, address: string) {
       const record = tabs.get(senderID)?.get(tabID)
