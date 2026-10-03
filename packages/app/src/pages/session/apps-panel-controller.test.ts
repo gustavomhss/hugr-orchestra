@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { appDockProfile, createAppDockController, type AppDockAPI } from "./apps-panel-controller"
+import { appDockProfile, createAppDockController, type AppDockAPI, type TabIdentity } from "./apps-panel-controller"
 
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
 const profileB = appDockProfile("http://127.0.0.1:4097", "/work/shared repository")
@@ -32,7 +32,12 @@ describe("App Dock controller", () => {
     const detachReturn = controller.attach(element(), profileA)
     await settle()
 
-    expect(dock.calls.slice(before)).toEqual([["hide"], ["select", "tab-1"], ["hide"], ["select", "tab-1"]])
+    expect(dock.calls.slice(before)).toEqual([
+      ["hide", tab("tab-1", 1)],
+      ["select", tab("tab-1", 1)],
+      ["hide", tab("tab-1", 1)],
+      ["select", tab("tab-1", 1)],
+    ])
     expect(controller.state.tabs.map((tab) => [tab.tabID, tab.generation, tab.url])).toEqual([
       ["tab-1", 1, "https://example.com/a"],
     ])
@@ -46,6 +51,8 @@ describe("App Dock controller", () => {
     const page = element()
     const detachPage = controller.attach(page, profileA)
     await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
     const apps = element()
     const detachApps = controller.attach(apps, profileA)
     expect(controller.owns(apps)).toBe(true)
@@ -54,7 +61,7 @@ describe("App Dock controller", () => {
     detachPage()
     expect(dock.calls.slice(before)).toEqual([])
     detachApps()
-    expect(dock.calls.slice(before)).toEqual([["hide"]])
+    expect(dock.calls.slice(before)).toEqual([["hide", tab("tab-1", 1)]])
     expect(dock.subscriptions()).toBe(1)
   })
 
@@ -127,7 +134,7 @@ describe("App Dock controller", () => {
     expect(dock.calls.slice(before)).toEqual([
       ["occlude", true],
       ["open", "https://opencode.ai", profileA],
-      ["select", "tab-1"],
+      ["select", tab("tab-1", 1)],
       ["occlude", false],
     ])
   })
@@ -148,7 +155,87 @@ describe("App Dock controller", () => {
     await settle()
     expect(dock.calls.slice(before)).toEqual([
       ["occlude", true],
-      ["select", "tab-1"],
+      ["select", tab("tab-1", 1)],
+    ])
+  })
+
+  test("Resize, Hide and Show name exactly the tab and generation they target", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const detach = controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    await controller.openNewTab()
+    const [first, second] = controller.state.tabs
+    const before = dock.calls.length
+
+    await controller.resize(second!, { x: 600, y: 100, width: 600, height: 500 })
+    controller.select(first!)
+    await settle()
+    detach()
+    expect(dock.calls.slice(before)).toEqual([
+      ["resize", tab("tab-2", 2), { x: 600, y: 100, width: 600, height: 500 }],
+      ["select", tab("tab-1", 1)],
+      ["hide", tab("tab-1", 1)],
+    ])
+  })
+
+  test("a tab the desktop attaches while no view shows the Dock is hidden by name", async () => {
+    const dock = fakeDock()
+    dock.seed({
+      profiles: [{ id: "default", name: "default" }],
+      tabs: {
+        default: [],
+        [profileA]: [
+          { url: "https://example.com/a", pinned: false },
+          { url: "https://example.com/b", pinned: false },
+        ],
+      },
+    })
+    const controller = createAppDockController(dock.api)
+    // Restoring attaches each saved tab in turn, so the last one restored is the one on screen.
+    controller.attach(element(), profileA)()
+    await until(() => controller.state.status === "ready")
+    await settle()
+    expect(dock.calls.filter((call) => call[0] === "hide" || call[0] === "select")).toEqual([["hide", tab("tab-2", 2)]])
+
+    // A tab opened while the view goes away lands after the Hide for the view's tab.
+    const detach = controller.attach(element(), profileA)
+    await settle()
+    const gate = Promise.withResolvers<void>()
+    dock.gate(gate.promise)
+    const opening = controller.openNewTab()
+    detach()
+    gate.resolve()
+    await opening
+    // A popup the page opens while the Dock is hidden is attached by the desktop as well.
+    dock.emit({ type: "tab-opened", payload: { tabID: "popup", generation: 9, url: "https://example.com/popup" } })
+    expect(dock.calls.filter((call) => call[0] === "hide").slice(1)).toEqual([
+      ["hide", tab("tab-1", 1)],
+      ["hide", tab("tab-3", 3)],
+      ["hide", tab("popup", 9)],
+    ])
+  })
+
+  test("a crashed tab is not shown, so selecting it hides the tab shown before it", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    await controller.openNewTab()
+    dock.emit({ type: "tab-crashed", payload: { identity: tab("tab-1", 1), reason: "crashed" } })
+    const before = dock.calls.length
+
+    controller.select(controller.state.tabs[0]!)
+    // The desktop attaches a recovered tab only if it was attached when it crashed, so show it again.
+    dock.emit({ type: "tab-recovered", payload: { tabID: "tab-1", generation: 3, url: "https://example.com/a" } })
+    await settle()
+    expect(dock.calls.slice(before)).toEqual([
+      ["hide", tab("tab-2", 2)],
+      ["select", tab("tab-1", 3)],
     ])
   })
 
@@ -219,6 +306,10 @@ describe("App Dock controller", () => {
 
 function element() {
   return document.createElement("div")
+}
+
+function tab(tabID: string, generation: number) {
+  return { tabID, generation }
 }
 
 const mounted: Element[] = []
@@ -296,11 +387,12 @@ function fakeDock() {
         }
       return { tabID, generation, url }
     },
-    appDockSelect: async (tabID: string) => {
-      calls.push(["select", tabID])
+    // The desktop accepts exactly a tab's ID and generation, so the raw argument is recorded.
+    appDockSelect: async (target: TabIdentity) => {
+      calls.push(["select", target])
     },
-    appDockHide: async () => {
-      calls.push(["hide"])
+    appDockHide: async (target: TabIdentity) => {
+      calls.push(["hide", target])
     },
     appDockOcclude: async (occluded: boolean) => {
       calls.push(["occlude", occluded])
@@ -314,7 +406,9 @@ function fakeDock() {
     appDockNavigate: async (tabID: string, url: string) => {
       calls.push(["navigate", tabID, url])
     },
-    appDockResize: async () => undefined,
+    appDockResize: async (target: TabIdentity, bounds: unknown) => {
+      calls.push(["resize", target, bounds])
+    },
     appDockEvent: (callback: Parameters<AppDockAPI["appDockEvent"]>[0]) => {
       listeners.add(callback)
       return () => listeners.delete(callback)
@@ -337,6 +431,8 @@ function fakeDock() {
     calls,
     manifest: () => state.manifest,
     subscriptions: () => listeners.size,
+    emit: (event: Parameters<Parameters<AppDockAPI["appDockEvent"]>[0]>[0]) =>
+      listeners.forEach((listener) => listener(event)),
     gate: (promise: Promise<void>) => (state.gate = promise),
     seed: (manifest: Pick<Manifest, "profiles" | "tabs">) => (state.manifest = { ...state.manifest, ...manifest }),
     failManifest: (value: boolean) => (state.failManifest = value),

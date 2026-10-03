@@ -2,7 +2,14 @@ import { app, session, shell, WebContentsView } from "electron"
 import type { BrowserWindow, Session } from "electron"
 import { randomUUID } from "node:crypto"
 import type { EventEmitter } from "node:events"
-import { appDockURL, appDockZoom, panelBoundsToContent, type DockBounds } from "./app-dock-utils"
+import {
+  appDockAttached,
+  appDockShown,
+  appDockURL,
+  appDockZoom,
+  panelBoundsToContent,
+  type DockBounds,
+} from "./app-dock-utils"
 export type { DockBounds } from "./app-dock-utils"
 
 export type AppDockIdentity = Readonly<{ tabID: string; generation: number }>
@@ -414,12 +421,12 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
   }
   return {
     open,
-    resize(senderID: number, bounds: DockBounds) {
+    resize(senderID: number, tab: AppDockIdentity, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
-      const tabID = active.get(senderID)
-      if (tabID) tabs.get(senderID)?.get(tabID)?.view.setBounds(bounds)
+      appDockAttached(tabs.get(senderID), active.get(senderID), tab)?.view.setBounds(bounds)
     },
-    hide(senderID: number, _win: BrowserWindow) {
+    hide(senderID: number, _win: BrowserWindow, tab: AppDockIdentity) {
+      if (!appDockAttached(tabs.get(senderID), active.get(senderID), tab)) return
       while (active.has(senderID) && inactive.size >= MAX_INACTIVE_TABS) {
         if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
       }
@@ -436,12 +443,12 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
       const tabID = active.get(senderID)
       if (tabID) tabs.get(senderID)?.get(tabID)?.view.setVisible(!value)
     },
-    select(senderID: number, win: BrowserWindow, tabID: string, bounds: DockBounds) {
+    select(senderID: number, win: BrowserWindow, tab: AppDockIdentity, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
-      const record = tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      const record = appDockShown(tabs.get(senderID), tab)
+      if (!record) return
       for (const [id, other] of tabs.get(senderID) ?? []) {
-        if (id === tabID) {
+        if (id === tab.tabID) {
           win.contentView.addChildView(other.view)
           other.view.setVisible(!occluded.has(senderID))
           other.view.webContents.setBackgroundThrottling(false)
@@ -452,7 +459,7 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
         }
       }
       record.view.setBounds(bounds)
-      active.set(senderID, tabID)
+      active.set(senderID, tab.tabID)
     },
     navigate(senderID: number, tabID: string, address: string) {
       const record = tabs.get(senderID)?.get(tabID)
