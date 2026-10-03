@@ -93,7 +93,7 @@ export function DialogOrchestraGovernance(props: {
   const capability = createMemo(() =>
     maestroCapability(sync.data.agent, sync.data.agent.length > 0 || sync.status === "complete"),
   )
-  const own = createMemo(() => ownSource(sync.data.config, protocol() === "v1"))
+  const own = createMemo(() => ownSource(sync.data.config, protocol() === "v1" && sync.status === "complete"))
   const configured = () => {
     const source = own()
     if (source.state === "configured") return source

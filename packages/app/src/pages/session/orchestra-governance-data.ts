@@ -111,25 +111,27 @@ export function readGovernance(input: {
         new Map(message.content.filter((part) => part.type === "tool").map((part) => [part.id, part])),
       ]),
   )
-  const found = input.messages.flatMap((message) =>
-    message.role === "assistant"
-      ? (input.parts(message.id) ?? []).flatMap((part) => {
-          const record =
-            part.type === "tool"
-              ? governanceRecord(input.sessionID, message, part, sources.get(message.id)?.get(part.id))
-              : undefined
-          return record
-            ? [
-                {
-                  ...record,
-                  time: timestamp(record.time),
-                  turnID: turns.has(message.parentID) ? message.parentID : undefined,
-                },
-              ]
-            : []
-        })
-      : [],
-  )
+  const found = input.messages.flatMap((message) => {
+    if (message.role !== "assistant") return []
+    const parts = input.parts(message.id) ?? []
+    const source = sources.get(message.id)
+    const byID = new Map(parts.map((part) => [part.id, part]))
+    // V2 call IDs are opaque; the shared part store sorts them lexically. Preserve server content order.
+    const ordered = source ? Array.from(source.keys()).flatMap((id) => byID.get(id) ?? []) : parts
+    return ordered.flatMap((part) => {
+      const record =
+        part.type === "tool" ? governanceRecord(input.sessionID, message, part, source?.get(part.id)) : undefined
+      return record
+        ? [
+            {
+              ...record,
+              time: timestamp(record.time),
+              turnID: turns.has(message.parentID) ? message.parentID : undefined,
+            },
+          ]
+        : []
+    })
+  })
   // Only supersession observed in this transcript is known; current backend validity stays unknown.
   const current = found.findLast((record) => record.kind === "presentation" && record.state === "recorded")
   const records = found.map(

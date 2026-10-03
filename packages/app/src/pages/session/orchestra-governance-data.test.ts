@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { Agent, AssistantMessage, Config, Message, Part, ToolPart, UserMessage } from "@opencode-ai/sdk/v2/client"
 import { normalizeSessionMessages } from "@/utils/session-message"
+import type { SessionMessageAssistantTool } from "@opencode-ai/client/promise"
 import { maestroCapability, ownSource, readGovernance } from "./orchestra-governance-data"
 
 const sessionID = "ses_governance"
@@ -333,6 +334,55 @@ describe("readGovernance", () => {
       })
       expect(result.approval.record?.time).toBeUndefined()
     }
+  })
+
+  test("current server content order wins over lexically sorted opaque call IDs", () => {
+    const tools: SessionMessageAssistantTool[] = [
+      {
+        type: "tool",
+        id: "call_z",
+        name: "maestro_present_approval",
+        time: { created: 2, completed: 3 },
+        state: {
+          status: "completed",
+          input: {},
+          metadata: { presentationID: "apr_1" },
+          content: [{ type: "text", text: "Presentation" }],
+        },
+      },
+      {
+        type: "tool",
+        id: "call_a",
+        name: "maestro_record_approval",
+        time: { created: 4, completed: 5 },
+        state: {
+          status: "completed",
+          input: {},
+          metadata: { status: "APPROVED", approvalMessageID: "msg_reply" },
+          content: [{ type: "text", text: "APPROVED: exact plan revision evt_plan" }],
+        },
+      },
+    ]
+    const source = [
+      { id: "msg_user", type: "user" as const, time: { created: 1 }, text: "Review this plan" },
+      {
+        id: "msg_a",
+        type: "assistant" as const,
+        agent: "maestro",
+        model: { id: "m", providerID: "p" },
+        time: { created: 2 },
+        content: tools,
+      },
+    ]
+    const normalized = normalizeSessionMessages(sessionID, source)
+    const result = readGovernance({
+      sessionID,
+      source,
+      messages: normalized.messages,
+      parts: (id) => normalized.parts.get(id)?.toReversed(),
+    })
+    expect(result.approval.state).toBe("approved")
+    expect(result.trail.map((record) => record.id)).toEqual(["msg_reply", "apr_1"])
   })
 })
 
