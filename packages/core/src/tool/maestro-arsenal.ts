@@ -289,9 +289,10 @@ export const stateDirectory = (data: string, projectID: string) =>
 /** Host bootstrap, before tool invocation. Backend state operations require an existing managed root. */
 export const prepareState = Effect.fn("MaestroArsenal.prepareState")(function* (data: string, projectID: string) {
   const fs = yield* FSUtil.Service
+  // Expand Windows short-name aliases before the SDK re-resolves managed paths.
   const root = yield* fs
     .realPath(data)
-    .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal host data directory is unavailable." })))
+    .pipe(Effect.map(FSUtil.normalizePath), Effect.mapError(() => new Tool.Failure({ message: "Arsenal host data directory is unavailable." })))
   const directory = yield* fence(fs, root, stateDirectory(root, projectID))
   yield* fs
     .makeDirectory(directory, { recursive: true, mode: 0o700 })
@@ -566,7 +567,7 @@ export const registerScoped = Effect.fn("MaestroArsenal.registerScoped")(functio
           .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal Location is unavailable." })))
         const data = yield* fs
           .realPath(global.data)
-          .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal host data directory is unavailable." })))
+          .pipe(Effect.map(FSUtil.normalizePath), Effect.mapError(() => new Tool.Failure({ message: "Arsenal host data directory is unavailable." })))
         const state = yield* fence(fs, data, stateDirectory(data, location.project.id))
         const agent = yield* agents.get(context.agent)
         const nativeMaestro =

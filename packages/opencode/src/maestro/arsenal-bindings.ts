@@ -93,7 +93,7 @@ const layer = Layer.effectDiscard(
               const nativeMaestro = agent?.id === "maestro" && native?.id === "maestro" && native.native === true
               const data = yield* fs
                 .realPath(global.data)
-                .pipe(Effect.mapError(() => new ToolFailure({ message: "ARSENAL_DATA_UNAVAILABLE" })))
+                .pipe(Effect.map(FSUtil.normalizePath), Effect.mapError(() => new ToolFailure({ message: "ARSENAL_DATA_UNAVAILABLE" })))
               const stateDirectory = nativeMaestro
                 ? yield* MaestroArsenal.prepareState(data, session.projectID).pipe(
                     Effect.provideService(FSUtil.Service, fs),

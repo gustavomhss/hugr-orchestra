@@ -47,7 +47,7 @@ export const make = (options: Options = {}) =>
               .pipe(Effect.mapError(() => new ToolFailure({ message: "Arsenal Instance directory is unavailable." })))
             const data = yield* fs
               .realPath(Global.Path.data)
-              .pipe(Effect.mapError(() => new ToolFailure({ message: "Arsenal host data directory is unavailable." })))
+              .pipe(Effect.map(FSUtil.normalizePath), Effect.mapError(() => new ToolFailure({ message: "Arsenal host data directory is unavailable." })))
             const stateDirectory = yield* MaestroArsenal.fence(
               fs,
               data,

@@ -1,6 +1,7 @@
 // Requires the actual assembled @opencode-ai/maestro-arsenal package. Never mock its validator/handlers.
 import { expect } from "bun:test"
 import { Effect, Schema } from "effect"
+import { realpath } from "node:fs/promises"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Global } from "@opencode-ai/core/global"
 import { Location } from "@opencode-ai/core/location"
@@ -17,6 +18,20 @@ const call = (name: string, input: unknown) => ({
   assistantMessageID: toolIdentity.assistantMessageID,
   call: { type: "tool-call" as const, id: `call-${name}`, name, input },
 })
+
+it.live("native managed root keeps OS identity when the assembled SDK re-resolves profile paths", () =>
+  Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const location = yield* Location.Service
+    const binding = {
+      directory: yield* Effect.promise(() => realpath(location.directory)),
+      projectID: `${location.project.id}_canonical_profile`,
+      stateDirectory: yield* MaestroArsenal.prepareState(Global.Path.data, location.project.id),
+    }
+    expect(binding.stateDirectory).toBe(yield* Effect.promise(() => realpath(binding.stateDirectory)))
+    expect(yield* MaestroArsenal.makeProfileLoader(fs, binding)()).toBeUndefined()
+  }),
+)
 
 it.live("Arsenal package conformance: bounded metadata and selected schema come from the actual registry", () =>
   Effect.gen(function* () {
