@@ -10,6 +10,7 @@ import { unresolvedScopes } from "./tools/conflict-semantics"
 import type { WpWrites } from "./tools/conflict-semantics"
 import { acquisitionDescriptors } from "./engine/descriptors"
 import { governanceToolDescriptors } from "./governance/descriptors"
+import { captureContext } from "./context"
 
 const exactSites = { ...stringsSchema, description: "Exact POSIX paths or inclusive :Lstart-end ranges. Unescaped * or ? yields PATTERN_SCOPE_UNRESOLVED/HOLD until expanded via repo-mapper. Escape literal *, ? and backslash with a backslash; brackets are literal filename characters." }
 const paths = { id: stringSchema, writes: exactSites, reads: exactSites, appendOnly: exactSites }
@@ -57,17 +58,19 @@ export async function execute(name: string, args: unknown, context?: ArsenalCont
   const declared = descriptor(name)
   const validation = validateArgs(declared.inputSchema, args)
   if (!validation.ok) return failure("invalid_arguments", `invalid arguments for ${name}: ${validation.errors.join("; ")}`)
-  if (name === "wave-scheduler" && args && typeof args === "object" && "wps" in args) {
-    const scopes = unresolvedScopes(args.wps as WpWrites[])
+  const input: unknown = structuredClone(args)
+  if (name === "wave-scheduler" && input && typeof input === "object" && "wps" in input) {
+    const scopes = unresolvedScopes(input.wps as WpWrites[])
     if (scopes.length) return text({ status: "HOLD", code: "PATTERN_SCOPE_UNRESOLVED", unresolvedScopes: scopes, dispatchNow: [], mergeNow: null, done: false }, {
       next: "expand pattern scopes into complete repo-mapper literal references before scheduling",
       invariant: "unresolved scope coverage cannot authorize dispatch or integration, including singleton waves",
     })
   }
-  if (JSON.stringify(args).length > 1048576) return failure("input_limit", "arguments exceed 1048576 characters; narrow requested input")
+  if (JSON.stringify(input).length > 1048576) return failure("input_limit", "arguments exceed 1048576 characters; narrow requested input")
   if (declared.effects.length && (!context || !context.directory || !context.stateDirectory || !context.projectID || typeof context.authorize !== "function")) return failure("missing_context", `non-pure tool ${name} requires ArsenalContext`)
-  if (args && typeof args === "object" && "plan" in args) {
-    const issue = requirePlan(args.plan as Plan)
+  const captured = captureContext(declared.effects, context)
+  if (input && typeof input === "object" && "plan" in input) {
+    const issue = requirePlan(input.plan as Plan)
     if (issue) return failure("invalid_plan", issue)
   }
   // Modules request exact path/command permission at their root-bound I/O boundary, before every side effect.
@@ -78,16 +81,7 @@ export async function execute(name: string, args: unknown, context?: ArsenalCont
   return load().then(async (tool) => {
     if (tool.name !== name || typeof tool.handler !== "function" || !Array.isArray(tool.effects) || JSON.stringify(tool.effects) !== JSON.stringify(declared.effects) || JSON.stringify(tool.inputSchema) !== JSON.stringify(declared.inputSchema)) return failure("registry_mismatch", `handler/schema/effects mismatch for ${name}`)
     // The registered schema is canonical. Handler modules obtain it through descriptor(name).
-    const result = await tool.handler(args, context && Object.freeze({
-      directory: context.directory,
-      stateDirectory: context.stateDirectory,
-      projectID: context.projectID,
-      authorize: (request: Parameters<ArsenalContext["authorize"]>[0]) => context.authorize(Object.freeze({
-        effect: request.effect,
-        paths: Object.freeze([...request.paths]),
-        commands: Object.freeze([...request.commands]),
-      })),
-    }))
+    const result = await tool.handler(input, captured)
     if (!Array.isArray(result.content) || result.content.some((item) => item.type !== "text" || typeof item.text !== "string")) return failure("invalid_result", `non-text result for ${name}`)
     if (result.content.reduce((sum, item) => sum + item.text.length, 0) > 1048576) return failure("output_limit", "tool output exceeds 1048576 characters; narrow requested input")
     return result

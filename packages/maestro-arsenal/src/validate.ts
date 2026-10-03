@@ -13,8 +13,8 @@ export function validateArgs(schema: unknown, args: unknown): ValidateResult {
   // Descriptor inspection rejects accessors without invoking user code; proxies never reach the walker.
   const inputIssue = jsonIssue(args, "args", new Set())
   if (inputIssue) return { ok: false, errors: [inputIssue] }
-  const schemaIssue = jsonIssue(schema, "schema", new Set())
-  if (schemaIssue) return { ok: false, errors: [schemaIssue] }
+  const invalidSchema = jsonIssue(schema, "schema", new Set()) ?? schemaIssue(schema, "schema")
+  if (invalidSchema) return { ok: false, errors: [invalidSchema] }
   const errors: string[] = []
   const visit = (raw: unknown, value: unknown, path: string, depth: number): void => {
     if (depth > 64) { errors.push(`${path}: maximum schema depth exceeded`); return }
@@ -38,8 +38,8 @@ export function validateArgs(schema: unknown, args: unknown): ValidateResult {
       if (key === "anyOf" && !passes || key === "oneOf" && passes !== 1 || key === "allOf" && passes !== alternatives.length) errors.push(`${path}: ${key} constraint failed`)
     }
     if (schema.not && validateArgs(schema.not, value).ok) errors.push(`${path}: forbidden value`)
-    if (schema.enum && !schema.enum.some((item) => JSON.stringify(item) === JSON.stringify(value))) errors.push(`${path}: value outside enum`)
-    if (Object.hasOwn(schema, "const") && JSON.stringify(schema.const) !== JSON.stringify(value)) errors.push(`${path}: const mismatch`)
+    if (schema.enum && !schema.enum.some((item) => canonicalJson(item) === canonicalJson(value))) errors.push(`${path}: value outside enum`)
+    if (Object.hasOwn(schema, "const") && canonicalJson(schema.const) !== canonicalJson(value)) errors.push(`${path}: const mismatch`)
     const type = schema.type ?? (schema.required || schema.properties || schema.additionalProperties !== undefined ? "object" : undefined)
     if (!type) {
       if (!schema.anyOf && !schema.oneOf && !schema.allOf && !schema.not && !schema.enum && !Object.hasOwn(schema, "const")) errors.push(`${path}: schema declares no constraint`)
@@ -77,7 +77,7 @@ export function validateArgs(schema: unknown, args: unknown): ValidateResult {
     if (Array.isArray(value)) {
       if (schema.minItems !== undefined && value.length < schema.minItems) errors.push(`${path}: minItems ${schema.minItems}`)
       if (schema.maxItems !== undefined && value.length > schema.maxItems) errors.push(`${path}: maxItems ${schema.maxItems}`)
-      if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) errors.push(`${path}: duplicate items`)
+      if (schema.uniqueItems && new Set(value.map(canonicalJson)).size !== value.length) errors.push(`${path}: duplicate items`)
       if (Array.isArray(schema.items)) {
         const tuple = schema.items
         if (value.length > tuple.length && schema.additionalItems !== true) errors.push(`${path}: excess tuple items`)
@@ -90,6 +90,61 @@ export function validateArgs(schema: unknown, args: unknown): ValidateResult {
   }
   visit(schema, args, "args", 0)
   return errors.length ? { ok: false, errors } : { ok: true }
+}
+
+/** Schema errors never become ordinary non-matches in not/unions or absent properties. */
+function schemaIssue(raw: unknown, path: string, depth = 0): string | undefined {
+  if (depth > 64) return `${path}: maximum schema depth exceeded`
+  if (!record(raw) || !Object.keys(raw).length) return `${path}: missing or malformed schema`
+  const unsupported = Object.keys(raw).filter((key) => !keywords.has(key))
+  if (unsupported.length) return `${path}: unsupported schema keyword ${unsupported.join(", ")}`
+  if (raw.type !== undefined && (typeof raw.type !== "string" || !["object", "array", "string", "number", "integer", "boolean", "null"].includes(raw.type))) return `${path}: malformed type schema`
+  for (const key of ["description", "title", "$schema"])
+    if (raw[key] !== undefined && typeof raw[key] !== "string") return `${path}: malformed ${key} schema`
+  if (raw.required !== undefined && (!Array.isArray(raw.required) || raw.required.some((key) => typeof key !== "string") || new Set(raw.required).size !== raw.required.length)) return `${path}: malformed required schema`
+  if (raw.enum !== undefined && (!Array.isArray(raw.enum) || !raw.enum.length || new Set(raw.enum.map(canonicalJson)).size !== raw.enum.length)) return `${path}: malformed enum schema`
+  for (const key of ["minimum", "maximum", "minItems", "maxItems", "minLength", "maxLength", "minProperties", "maxProperties"]) {
+    const bound = raw[key]
+    if (bound !== undefined && (typeof bound !== "number" || !Number.isFinite(bound) || key !== "minimum" && key !== "maximum" && (!Number.isSafeInteger(bound) || bound < 0))) return `${path}: malformed ${key} schema`
+  }
+  for (const key of ["uniqueItems", "additionalItems"])
+    if (raw[key] !== undefined && typeof raw[key] !== "boolean") return `${path}: malformed ${key} schema`
+  if (raw.pattern !== undefined) {
+    if (typeof raw.pattern !== "string") return `${path}: malformed pattern schema`
+    try { new RegExp(raw.pattern, "u") }
+    catch { return `${path}: malformed pattern schema` }
+  }
+  const nested: [string, unknown][] = []
+  if (raw.properties !== undefined) {
+    if (!record(raw.properties)) return `${path}: malformed properties schema`
+    nested.push(...Object.entries(raw.properties).map(([key, value]): [string, unknown] => [`${path}.properties.${key}`, value]))
+  }
+  if (raw.additionalProperties !== undefined && typeof raw.additionalProperties !== "boolean") {
+    if (!record(raw.additionalProperties)) return `${path}: malformed additionalProperties schema`
+    nested.push([`${path}.additionalProperties`, raw.additionalProperties])
+  }
+  if (raw.items !== undefined) {
+    if (Array.isArray(raw.items)) nested.push(...raw.items.map((value, i): [string, unknown] => [`${path}.items[${i}]`, value]))
+    if (!Array.isArray(raw.items)) nested.push([`${path}.items`, raw.items])
+  }
+  if (raw.type === "array" && raw.items === undefined) return `${path}: array schema lacks items`
+  for (const key of ["anyOf", "oneOf", "allOf"]) {
+    const alternatives = raw[key]
+    if (alternatives === undefined) continue
+    if (!Array.isArray(alternatives) || !alternatives.length) return `${path}: malformed ${key} schema`
+    nested.push(...alternatives.map((value, i): [string, unknown] => [`${path}.${key}[${i}]`, value]))
+  }
+  if (Object.hasOwn(raw, "not")) nested.push([`${path}.not`, raw.not])
+  if (!raw.type && !raw.properties && !raw.required && raw.additionalProperties === undefined && !raw.anyOf && !raw.oneOf && !raw.allOf && !raw.not && !raw.enum && !Object.hasOwn(raw, "const")) return `${path}: schema declares no constraint`
+  return nested.map(([location, schema]) => schemaIssue(schema, location, depth + 1)).find((issue) => issue !== undefined)
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`
+  if (record(value)) return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`
+  const encoded = JSON.stringify(value)
+  if (encoded === undefined) throw new Error("unsupported JSON equality value")
+  return encoded
 }
 
 function jsonIssue(value: unknown, path: string, ancestors: Set<object>, depth = 0): string | undefined {
