@@ -208,6 +208,20 @@ test("address drafts survive title events and lazy pane switches; Escape restore
   await address.press("Escape")
   await expect(address).toHaveValue("https://example.com/a")
   expect((await calls(page)).filter((call) => call.type === "navigate")).toEqual([])
+  const activityTask = page.getByRole("region", { name: "Activity" }).getByRole("button", {
+    name: "Agent Running task Session · Running",
+    exact: true,
+  })
+  await activityTask.focus()
+  await expect(activityTask).toBeFocused()
+  await page.evaluate(() =>
+    (window as unknown as { __dockEmit: (event: unknown) => void }).__dockEmit({
+      type: "state",
+      payload: { tabID: "tab-1", generation: 1, url: "https://example.com/a", title: "Final title", loading: false },
+    }),
+  )
+  await expect(dock.locator(".zen-tab-title")).toHaveText("Final title")
+  await expect(activityTask).toBeFocused()
 })
 
 test("65 active tasks remain reachable in bounded Tasks and Activity details", async ({ page }) => {

@@ -57,6 +57,7 @@ export function OrchestraActivity(props: {
   )
   const filtered = createMemo(() => (props.agents ? items().filter((item) => item.kind === "agent") : items()))
   const shown = createMemo(() => (props.expanded() ? filtered() : filtered().slice(0, summaryRows)))
+  const rows = createMemo(() => new Map((shown().length > 30 ? [] : shown()).map((item) => [item.key, item] as const)))
   const observed = createMemo(() => filtered().some((item) => item.kind !== "janitor" || item.findings !== undefined))
 
   const kind = (item: ActivityItem) => {
@@ -152,7 +153,9 @@ export function OrchestraActivity(props: {
           when={shown().length > 30}
           fallback={
             <ul data-slot="activity-list">
-              <For each={shown()}>{(item) => <li>{row(() => item)}</li>}</For>
+              <For each={[...rows().keys()]}>
+                {(key) => <Show when={rows().get(key)}>{(item) => <li>{row(item)}</li>}</Show>}
+              </For>
             </ul>
           }
         >
