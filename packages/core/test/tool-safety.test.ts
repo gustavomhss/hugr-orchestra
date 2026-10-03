@@ -12,7 +12,6 @@ import { ToolRegistry } from "../src/tool/registry"
 import { ToolOutputStore } from "../src/tool-output-store"
 import { Location } from "../src/location"
 import { AbsolutePath } from "../src/schema"
-import { Shell } from "../src/shell"
 import { SessionSchema } from "../src/session/schema"
 import { location } from "./fixture/location"
 import { tmpdir } from "./fixture/tmpdir"
@@ -32,8 +31,7 @@ describe("native tool safety", () => {
       const registry = yield* ToolRegistry.Service
       const fs = yield* FSUtil.Service
       const processes = yield* AppProcess.Service
-      const shell = process.platform === "win32" ? Shell.gitbash() : "/bin/sh"
-      if (!shell) throw new Error("Fixture requires a real POSIX shell")
+      const shell = process.platform === "win32" ? process.env.COMSPEC ?? "cmd.exe" : "/bin/sh"
       yield* registry.register({ bash: Tool.make({
         description: "fixture shell",
         input: Schema.Struct({ command: Schema.String }),
@@ -42,12 +40,14 @@ describe("native tool safety", () => {
           .pipe(Effect.map((result) => result.stdout.toString()), Effect.mapError(() => new Tool.Failure({ message: "fixture process failed" }))),
       }) })
       const denied = yield* settleTool(registry, { ...identity, call: {
-        type: "tool-call", name: "bash", id: "denied", input: { command: "git commit --no-verify; touch denied" },
+        type: "tool-call", name: "bash", id: "denied", input: { command: process.platform === "win32"
+          ? "git commit --no-verify & type nul > denied" : "git commit --no-verify; touch denied" },
       } })
       expect(denied.result).toEqual({ type: "error", value: "Tool safety HOLD: known-gate-bypass" })
       expect(yield* fs.exists(path.join(tmp.path, "denied"))).toBe(false)
       expect((yield* settleTool(registry, { ...identity, call: {
-        type: "tool-call", name: "bash", id: "allowed", input: { command: "printf '%s' '--no-verify'; touch allowed" },
+        type: "tool-call", name: "bash", id: "allowed", input: { command: process.platform === "win32"
+          ? 'echo "--no-verify" & type nul > allowed' : "printf '%s' '--no-verify'; touch allowed" },
       } })).result.type).toBe("text")
       expect(yield* fs.stat(path.join(tmp.path, "allowed"))).toMatchObject({ type: "File" })
     }),

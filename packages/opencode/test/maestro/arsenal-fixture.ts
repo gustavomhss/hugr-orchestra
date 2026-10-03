@@ -17,9 +17,10 @@ export async function prepareArsenalSDK(directory: string, configDirectory: stri
       sdk.version.length > 0,
     "Arsenal fixture installed SDK identity unavailable",
   )
+  const name = sdk.name
   const version = sdk.version
-  const dependencies = { [sdk.name]: version }
-  const installed = await realpath(path.join(modules, sdk.name))
+  const dependencies = { [name]: version }
+  const installed = await realpath(path.join(modules, name))
   assert.equal(await realpath(path.join(installed, "package.json")), await realpath(manifest), "Arsenal fixture SDK package resolution mismatch")
   await Promise.all(
     [configDirectory, path.join(directory, ".opencode")].map(async (root) => {
@@ -27,7 +28,10 @@ export async function prepareArsenalSDK(directory: string, configDirectory: stri
       const target = path.join(root, "node_modules")
       await symlink(modules, target, "dir").catch(async (error: unknown) => {
         if (typeof error !== "object" || error === null || !("code" in error) || error.code !== "EEXIST") throw error
-        if ((await realpath(target)) !== modules) throw new Error("Arsenal fixture SDK installation mismatch")
+        // Another fixture may link the workspace root instead of package-local
+        // modules. Accept that only when it resolves this exact installed SDK.
+        if (await realpath(path.join(target, name)).catch(() => undefined) !== installed)
+          throw new Error("Arsenal fixture SDK installation mismatch")
       })
       await Bun.write(path.join(root, "package.json"), JSON.stringify({ private: true, type: "module", dependencies }))
       await Bun.write(

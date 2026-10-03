@@ -1,24 +1,24 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Cause, Effect, Fiber, Layer, Schema } from "effect"
+import { Cause, DateTime, Effect, Fiber, Layer, Schema } from "effect"
 import { AgentV2 } from "@opencode-ai/core/agent"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Global } from "@opencode-ai/core/global"
 import { SessionStore } from "@opencode-ai/core/session/store"
 import { SessionMessage } from "@opencode-ai/core/session/message"
-import { Location } from "@opencode-ai/core/location"
-import { Database } from "@opencode-ai/core/database/database"
+import { SessionEvent } from "@opencode-ai/core/session/event"
+import { ModelV2 } from "@opencode-ai/core/model"
+import { ProviderV2 } from "@opencode-ai/core/provider"
+import { PermissionV2 } from "@opencode-ai/core/permission"
+import { LocationServiceMap } from "@opencode-ai/core/location-services"
 import { EventV2 } from "@opencode-ai/core/event"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { ToolRegistry } from "@opencode-ai/core/tool/registry"
 import { ToolSafety } from "@opencode-ai/core/tool-safety"
 import { Tool } from "@opencode-ai/core/tool/tool"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceRef } from "@/effect/instance-ref"
 import { InstanceStore } from "@/project/instance-store"
-import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
 import { Session } from "@/session/session"
-import { Permission } from "@/permission"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect, pollWithTimeout } from "../lib/effect"
 import { prepareArsenalSDK } from "./arsenal-fixture"
@@ -37,21 +37,14 @@ it.live("default native registry captures explicit approval before a real filesy
       const store = yield* SessionStore.Service
       const projected = yield* store.get(session.id)
       if (!projected) throw new Error("Actual native Session placement missing")
-      const database = yield* Database.Service
       const events = yield* EventV2.Service
+      const locations = yield* LocationServiceMap.Service
       const fs = yield* FSUtil.Service
       const marker = path.join(tmp.path, "approved-native-effect")
       const action = "native-fixture-write"
-      const layer = AppNodeBuilderV1.build(LayerNode.group([
-        ToolRegistry.node, ToolRegistry.toolsNode, Permission.node, Session.node, InstanceStore.node,
-      ]), [
-        [Location.node, Location.boundNode(projected.location)],
-        [Database.node, Layer.succeed(Database.Service, database)],
-        [EventV2.node, Layer.succeed(EventV2.Service, events)],
-      ])
       yield* Effect.gen(function* () {
         const registry = yield* ToolRegistry.Service
-        const permissions = yield* Permission.Service
+        const permissions = yield* PermissionV2.Service
         yield* registry.register({ [action]: Tool.make({
           description: "Actual native approval boundary fixture",
           input: Schema.Struct({}),
@@ -59,13 +52,20 @@ it.live("default native registry captures explicit approval before a real filesy
           execute: () => fs.writeFileString(marker, "approved-native-effect").pipe(Effect.orDie, Effect.as("written")),
         }) })
         const materialized = yield* registry.materialize()
+        const assistantMessageID = SessionMessage.ID.make("msg_default_native_approval")
+        yield* events.publish(SessionEvent.Step.Started, { sessionID: session.id, assistantMessageID, agent: "build",
+          model: ModelV2.Ref.make({ id: ModelV2.ID.make("fixture"), providerID: ProviderV2.ID.make("fixture") }), timestamp: yield* DateTime.now })
         const replies = ["reject", "once"] as const
         yield* Effect.forEach(replies, (reply) => Effect.gen(function* () {
+          yield* events.publish(SessionEvent.Tool.Input.Started, { sessionID: session.id, assistantMessageID,
+            callID: `default-approval-${reply}`, name: action, timestamp: yield* DateTime.now })
+          yield* events.publish(SessionEvent.Tool.Called, { sessionID: session.id, assistantMessageID,
+            callID: `default-approval-${reply}`, tool: action, input: {}, provider: { executed: false }, timestamp: yield* DateTime.now })
           const state: { settled?: unknown } = {}
           const pending = yield* materialized.settle({
             sessionID: session.id,
             agent: AgentV2.ID.make("build"),
-            assistantMessageID: SessionMessage.ID.make("msg_default_native_approval"),
+            assistantMessageID,
             call: { type: "tool-call", id: `default-approval-${reply}`, name: action, input: {} },
           }).pipe(
             Effect.exit,
@@ -75,11 +75,11 @@ it.live("default native registry captures explicit approval before a real filesy
           )
           const asked = yield* pollWithTimeout(Effect.gen(function* () {
             const items = yield* permissions.list()
-            const request = items.find((item) => item.metadata.nativeSafety === true)
+            const request = items.find((item) => item.metadata?.nativeSafety === true)
             if (request) return request
             if (state.settled) throw new Error(`Native settlement preceded required approval: ${JSON.stringify(state.settled)}`)
           }), "Default native approval producer did not request explicit permission")
-          expect(asked).toMatchObject({ sessionID: session.id, patterns: [action], metadata: {
+          expect(asked).toMatchObject({ sessionID: session.id, resources: [action], source: { type: "tool", messageID: assistantMessageID, callID: `default-approval-${reply}` }, metadata: {
             action, callID: `default-approval-${reply}`, projectID: session.projectID,
           } })
           expect(yield* fs.exists(marker)).toBe(false)
@@ -97,7 +97,7 @@ it.live("default native registry captures explicit approval before a real filesy
         }))
         expect(yield* permissions.list()).toEqual([])
       }).pipe(
-        Effect.provide(layer),
+        Effect.provide(locations.get(projected.location)),
         Effect.provideService(InstanceRef, instance),
       )
     })))
