@@ -16,7 +16,9 @@ await Promise.all(
       entrypoints: [entry],
       target: "node",
       format: "esm",
-      minify: true,
+      // Bun's cross-module identifier minifier is nondeterministic: repeated builds of the same graph
+      // occasionally permute short names, so check:generated flakes. Keep whitespace and syntax minification only.
+      minify: { whitespace: true, syntax: true, identifiers: false },
       plugins: [
         {
           name: "canonical-atlas-build-boundary",
