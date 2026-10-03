@@ -185,3 +185,16 @@ Merged UI source/dirty-tree fingerprint:
 `20641a1c5859eee3f037e05fd4254f9aacdac379f43a7f4bd200bf09380a44a0`.
 Later closure changes are documentation and the two corrected test expectations,
 not a new Luna evaluation. Current-head remote CI remains a separate gate.
+
+### First remote CI and header-collision correction
+
+PR #36 was recreated in `gusmhs/HuGR-Orchestra`, with one integrated push at
+`e7cdff2a68`. Remote typecheck and Linux unit passed. Linux and Windows E2E both
+found a real collapsed-Janitor collision with `View context usage` at y=139 in the
+normal-layout regression fixture; the earlier private Electron story did not
+exercise that same control geometry. The collapsed notice moved from 112px to
+160px below those controls, preserving expanded positioning and pointer behavior.
+The unchanged three Janitor Chromium cases then passed locally at 1280×800 and
+768×720, including real Send/Stop/header hits and expanded chat behavior. This
+focused correction is not a new full Electron or Luna result. Evidence is preserved
+in `ci-e2e-linux.log`, `ci-e2e-windows.log` and `janitor-focused-fix.log`.
