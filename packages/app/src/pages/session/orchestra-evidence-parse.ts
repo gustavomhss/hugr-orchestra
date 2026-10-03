@@ -38,6 +38,7 @@ export function detectTestRunner(command: string): TestRunner | undefined {
   const start = words.findIndex((word) => !ENV_ASSIGNMENT.test(word))
   if (start < 0) return
   const args = words.slice(start)
+  if (args.some((word) => /^(--watch(?:All)?(?:=.*)?|-w|--listTests|--list|--help|--version)$/.test(word))) return
   const program = executable(args[0]!)
   if (program === "bun" && args[1] === "test") return "bun"
   if (program === "go" && args[1] === "test") return "go"
@@ -65,7 +66,10 @@ export function parseTestOutput(runner: TestRunner, output: string): TestSummary
 
 export function failedCount(summary: TestSummary) {
   const counts = summary.tests.counts
-  return (counts.failed ?? 0) + (counts.errors ?? 0) + (counts.interrupted ?? 0)
+  return Math.max(
+    (counts.failed ?? 0) + (counts.errors ?? 0) + (counts.interrupted ?? 0),
+    summary.groups?.counts?.failed ?? 0,
+  )
 }
 
 export function ranCount(summary: TestSummary) {
@@ -92,6 +96,10 @@ function count(value: string) {
 
 function sum(counts: TestCounts) {
   return Object.values(counts).reduce((total, value) => total + (value ?? 0), 0)
+}
+
+function validDuration(value: string) {
+  return /^\d+(?:\.\d+)?(?:ms|s|m|h)$/.test(value) && Number.isFinite(Number.parseFloat(value))
 }
 
 function unique(values: string[]) {
@@ -122,7 +130,7 @@ const BUN_LABELS: Record<string, TestCountKey | undefined> = {
 
 function parseBun(lines: string[]): TestSummary | undefined {
   const footer = lines.at(-1)!.match(BUN_FOOTER)
-  if (!footer || lines.filter((line) => BUN_FOOTER.test(line)).length !== 1) return
+  if (!footer || !validDuration(footer[3]!) || lines.filter((line) => BUN_FOOTER.test(line)).length !== 1) return
   const counts: TestCounts = {}
   const seen = new Set<string>()
   for (const line of lines.slice(0, -1).toReversed()) {
@@ -171,10 +179,11 @@ function parseVitest(lines: string[]): TestSummary | undefined {
   const tests = vitestRow(lines[index + 1], "Tests")
   const rest = lines.slice(index + 2).map((line) => line.trim())
   const duration = rest.at(-1)?.match(/^Duration\s{2,}(\S+)/)
-  if (!files || !tests || !duration) return
+  if (!files || !tests || !duration || !validDuration(duration[1]!)) return
   if (!rest.slice(0, -1).every((line) => /^(Errors|Start at)\s{2,}\S/.test(line))) return
   const errors = rest.find((line) => line.startsWith("Errors"))?.match(/^Errors\s{2,}(\d+) errors?$/)
   if (rest.some((line) => line.startsWith("Errors")) && !errors) return
+  if (rest.filter((line) => line.startsWith("Errors")).length > 1 || (errors && count(errors[1]!) === undefined)) return
   return {
     runner: "vitest",
     tests: {
@@ -212,8 +221,8 @@ function parseJest(lines: string[]): TestSummary | undefined {
   const snapshots = lines[index + 2]?.match(/^Snapshots:\s+.*\d+ total$/)
   const time = lines[index + 3]?.match(/^Time:\s+([\d.]+ m?s)(?:, estimated .+)?$/)
   const rest = lines.slice(index + 4)
-  if (!suites || !tests || !snapshots || !time) return
-  if (rest.length > 1 || (rest[0] !== undefined && !/^Ran all test suites/.test(rest[0]))) return
+  if (!suites || !tests || !snapshots || !time || !validDuration(time[1]!.replace(" ", ""))) return
+  if (rest.length !== 1 || !/^Ran all test suites(?: matching .+)?\.$/.test(rest[0]!)) return
   return {
     runner: "jest",
     tests: { unit: "tests", counts: tests.counts, total: tests.total },
@@ -246,7 +255,7 @@ function parsePlaywright(lines: string[]): TestSummary | undefined {
       if (value === undefined || counts[key] !== undefined) return
       counts[key] = value
       if (match[3]) {
-        if (key !== "passed" || duration) return
+        if (key !== "passed" || duration || !validDuration(match[3])) return
         duration = match[3]
       }
       if (key === "failed" || key === "interrupted") failures.push(...pending)
@@ -259,7 +268,7 @@ function parsePlaywright(lines: string[]): TestSummary | undefined {
   if (pending.length > 0 || Object.keys(counts).length === 0) return
   const running = lines.filter((line) => /^Running \d+ tests? using \d+ workers?/.test(line))
   const total = running.length === 1 ? count(running[0]!.match(/^Running (\d+)/)![1]!) : undefined
-  if (running.length > 1 || (total !== undefined && sum(counts) !== total)) return
+  if (running.length !== 1 || total === undefined || sum(counts) !== total) return
   return { runner: "playwright", tests: { unit: "tests", counts, total }, failures: unique(failures), duration }
 }
 
@@ -278,18 +287,24 @@ const PYTEST_FOOTER = /^(?:=+ )?(.+?) in ([\d.]+s)(?: \([\d:]+\))?(?: =+)?$/
 function parsePytest(lines: string[]): TestSummary | undefined {
   const last = lines.at(-1)!.trim()
   const footer = last.match(PYTEST_FOOTER)
-  if (!footer || last.startsWith("=") !== last.endsWith("=")) return
-  if (lines.slice(0, -1).some((line) => /^=+ .+ in [\d.]+s.* =+$/.test(line.trim()))) return
+  if (!footer || !validDuration(footer[2]!) || last.startsWith("=") !== last.endsWith("=")) return
+  if (lines.slice(0, -1).some((line) => PYTEST_FOOTER.test(line.trim()))) return
   const counts: TestCounts = {}
+  const seen = new Set<string>()
   if (footer[1] !== "no tests ran") {
     for (const item of footer[1]!.split(", ")) {
       const match = item.match(/^(\d+) ([a-z]+)$/)
       const key = match ? PYTEST_LABELS[match[2]!] : undefined
       const value = match ? count(match[1]!) : undefined
-      if (!key || value === undefined) return
-      if (key !== "ignored") counts[key] = (counts[key] ?? 0) + value
+      if (!key || value === undefined || seen.has(match![2]!)) return
+      seen.add(match![2]!)
+      if (key !== "ignored") {
+        if (counts[key] !== undefined) return
+        counts[key] = value
+      }
     }
   }
+  if (footer[1] !== "no tests ran" && Object.keys(counts).length === 0) return
   return {
     runner: "pytest",
     tests: { unit: "tests", counts },
@@ -298,8 +313,8 @@ function parsePytest(lines: string[]): TestSummary | undefined {
   }
 }
 
-const GO_OK = /^ok\s+(\S+)\s+(?:[\d.]+s|\(cached\))(?:\s+coverage: .+)?(\s+\[no tests to run\])?$/
-const GO_FAIL = /^FAIL\s+(\S+)\s+(?:[\d.]+s|\[[a-z ]+ failed\])$/
+const GO_OK = /^ok\s+(\S+)\s+(?:\d+(?:\.\d+)?s|\(cached\))(?:\s+coverage: .+)?(\s+\[no tests to run\])?$/
+const GO_FAIL = /^FAIL\s+(\S+)\s+(?:\d+(?:\.\d+)?s|\[[a-z ]+ failed\])$/
 const GO_NONE = /^\?\s+(\S+)\s+\[no test files\]$/
 
 function parseGo(lines: string[]): TestSummary | undefined {
@@ -313,8 +328,15 @@ function parseGo(lines: string[]): TestSummary | undefined {
   })
   const last = lines.at(-1)!
   if (results.length === 0 || !(last === "FAIL" || GO_OK.test(last) || GO_FAIL.test(last) || GO_NONE.test(last))) return
+  if (
+    lines.some(
+      (line) => /^(?:ok|FAIL|\?)\s+\S/.test(line) && !GO_OK.test(line) && !GO_FAIL.test(line) && !GO_NONE.test(line),
+    )
+  )
+    return
   if (new Set(results.map((result) => result.name)).size !== results.length) return
   const counts = results.reduce<TestCounts>((acc, result) => ({ ...acc, [result.key]: (acc[result.key] ?? 0) + 1 }), {})
+  if ((last === "FAIL") !== (counts.failed ?? 0) > 0) return
   return {
     runner: "go",
     tests: { unit: "packages", counts: { passed: 0, failed: 0, ...counts }, total: results.length },
@@ -340,11 +362,15 @@ function parseCargo(lines: string[]): TestSummary | undefined {
       continue
     }
     const result = line.match(CARGO_RESULT)
-    if (!result) continue
+    if (!result) {
+      if (line.startsWith("test result:")) return
+      continue
+    }
     const [passed, failed, ignored, measured] = result.slice(2, 6).map(count)
     if (running === undefined || [passed, failed, ignored].some((value) => value === undefined) || measured !== 0)
       return
     if (passed! + failed! + ignored! !== running) return
+    if (!validDuration(result[7]!) || count(result[6]!) === undefined) return
     if ((result[1] === "FAILED") !== failed! > 0) return
     counts.passed! += passed!
     counts.failed! += failed!

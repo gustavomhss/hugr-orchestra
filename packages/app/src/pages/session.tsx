@@ -405,7 +405,7 @@ export default function Page() {
 
   const composer = createSessionComposerController()
   const renderExecutionEvidence = createExecutionEvidenceRenderer({
-    actions: createEvidenceComposerActions({ sessionKey, blocked: composer.blocked }),
+    actions: createEvidenceComposerActions({ sessionKey, blocked: composer.blocked, diffs: () => reviewDiffs() }),
     enabled: newSessionDesign,
     sessionKey,
   })

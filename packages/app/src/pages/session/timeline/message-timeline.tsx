@@ -78,6 +78,7 @@ import { createTimelineProjection } from "./projection"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
 import type { ExecutionEvidenceInput } from "../orchestra-evidence"
+import { withoutShellProjections } from "../orchestra-evidence-data"
 
 const emptyMessages: MessageType[] = []
 const emptyParts: PartType[] = []
@@ -280,7 +281,7 @@ export function MessageTimeline(props: {
     if (!id) return []
     const visible = new Set(props.userMessages.map((message) => message.id))
     const boundary = sessionMessages().find((message) => message.role === "user" && !visible.has(message.id))?.id
-    const messages = sync().data.session_message[id] ?? []
+    const messages = withoutShellProjections(sync().data.session_message[id] ?? [])
     if (!boundary) return messages
     const index = messages.findIndex((message) => message.id === boundary)
     return index < 0 ? messages : messages.slice(0, index)

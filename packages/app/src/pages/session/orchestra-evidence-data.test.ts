@@ -2,10 +2,38 @@ import { describe, expect, test } from "bun:test"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import type { ToolPart } from "@opencode-ai/sdk/v2"
 import { normalizeSessionMessages } from "@/utils/session-message"
-import { createEvidenceCache, EVIDENCE_CACHE_LIMIT, readExecutionEvidence } from "./orchestra-evidence-data"
+import {
+  createEvidenceCache,
+  EVIDENCE_CACHE_LIMIT,
+  readExecutionEvidence,
+  withoutShellProjections,
+} from "./orchestra-evidence-data"
 
 const scope = { scope: "server-a", directory: "/repo" }
 const fixture = (name: string) => Bun.file(new URL(`./orchestra-evidence-fixtures/${name}.txt`, import.meta.url)).text()
+
+test("raw shells project once even when the live bridge also indexes a synthetic assistant", () => {
+  const assistant = {
+    id: "msg_real",
+    type: "assistant",
+    agent: "build",
+    model: { id: "model", providerID: "provider" },
+    time: { created: 1 },
+    content: [],
+  } satisfies SessionMessageInfo
+  const shell = {
+    id: "msg_shell",
+    type: "shell",
+    shellID: "shl_1",
+    command: "bun test",
+    status: "running",
+    time: { created: 2 },
+  } satisfies SessionMessageInfo
+  const source = [assistant, shell, { ...assistant, id: `${shell.id}:assistant` }]
+  expect(withoutShellProjections(source)).toEqual([assistant, shell])
+  const untouched = [assistant]
+  expect(withoutShellProjections(untouched)).toBe(untouched)
+})
 
 function bash(input: {
   id?: string
@@ -23,7 +51,7 @@ function bash(input: {
           input: { command: input.command ?? "bun test", ...(input.workdir ? { workdir: input.workdir } : {}) },
           output: input.output ?? "",
           title: "bun test",
-          metadata: input.metadata ?? {},
+          metadata: { truncated: false, ...input.metadata },
           time: { start: 1, end: 2 },
         }
   return {
@@ -52,6 +80,7 @@ describe("readExecutionEvidence", () => {
       sessionID: "ses_a",
       messageID: "msg_a",
       partID: "prt_bash",
+      callID: "call_a",
       command: "bun test",
       workdir: "/repo",
     })
@@ -124,12 +153,22 @@ describe("readExecutionEvidence", () => {
       } satisfies SessionMessageInfo
       const part = normalizeSessionMessages("ses_a", [message]).parts.get("msg_shell:assistant")![0] as ToolPart
       expect(part.state.status).toBe("completed")
-      return readExecutionEvidence(part, scope)
+      return readExecutionEvidence(part, scope, message)
     }
     expect(run("exited", 0)?.state).toBe("passed")
-    expect(run("exited", 0)?.source.messageID).toBe("msg_shell:assistant")
+    expect(run("exited", 0)?.source.messageID).toBe("msg_shell")
+    expect(run("exited", 0)?.durationMs).toBeUndefined()
     expect(run("killed")).toBeUndefined()
+    expect(run("killed", 0)).toBeUndefined()
     expect(run("timeout")).toBeUndefined()
+  })
+
+  test("unknown completeness and nonzero exits beside passing totals keep raw fallback", async () => {
+    const output = await fixture("bun-pass")
+    expect(readExecutionEvidence(bash({ output, metadata: { exit: 0, truncated: undefined } }), scope)).toBeUndefined()
+    expect(readExecutionEvidence(bash({ output, metadata: { exit: 1 } }), scope)).toBeUndefined()
+    expect(readExecutionEvidence(bash({ output, metadata: { exit: 0, status: "killed" } }), scope)).toBeUndefined()
+    expect(readExecutionEvidence(bash({ output, metadata: { exit: 0, status: "exited" } }), scope)).toBeUndefined()
   })
 })
 

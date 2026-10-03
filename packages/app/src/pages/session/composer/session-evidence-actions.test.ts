@@ -11,6 +11,7 @@ const source: EvidenceSource = {
   sessionID: "ses_a",
   messageID: "msg_a",
   partID: "prt_a",
+  callID: "call_a",
   command: "bun test",
 }
 const current = { scope: "server-a", directory: "/repo", sessionID: "ses_a" }
@@ -27,6 +28,12 @@ describe("replayBlock", () => {
     expect(replayBlock({ source, current: { ...current, scope: "server-b" }, ...idle })).toBe("session")
     expect(replayBlock({ source, current: { ...current, directory: "/other" }, ...idle })).toBe("session")
     expect(replayBlock({ source, current: { ...current, sessionID: undefined }, ...idle })).toBe("session")
+    expect(replayBlock({ source: { ...source, directory: "" }, current: { ...current, directory: "" }, ...idle })).toBe(
+      "session",
+    )
+    expect(
+      replayBlock({ source: { ...source, directory: "." }, current: { ...current, directory: "." }, ...idle }),
+    ).toBe("session")
   })
 
   test("refuses a working directory the shell request cannot reproduce", () => {
@@ -38,6 +45,7 @@ describe("replayBlock", () => {
 
   test("waits for an idle, unblocked session with a model", () => {
     expect(replayBlock({ source, current, ...idle, busy: true })).toBe("busy")
+    expect(replayBlock({ source, current, ...idle, pending: true })).toBe("pending")
     expect(replayBlock({ source, current, ...idle, blocked: true })).toBe("blocked")
     expect(replayBlock({ source, current, ...idle, ready: false })).toBe("model")
   })
@@ -98,11 +106,17 @@ test("pullRequestRequest asks for review before publishing and uses only known s
       "Branch: feature/approval",
       "Session changes: 2 files (+10 −3)",
       "Changed files: src/a.ts, src/b.ts",
-      "Latest test run: `bun test` — Tests failed, 2 failed, 5 passed (Exit 1)",
+      "Selected test run: `bun test` — Tests failed, 2 failed, 5 passed (Exit 1)",
+      ORCHESTRA_COPY["orchestra.evidence.revisionUnlinked"],
     ].join("\n"),
   )
   expect(pullRequestRequest({ command: "pytest", t })).toBe(
-    [ORCHESTRA_COPY["orchestra.pr.request"], "", "Latest test command: `pytest`"].join("\n"),
+    [
+      ORCHESTRA_COPY["orchestra.pr.request"],
+      "",
+      "Selected test command: `pytest`",
+      ORCHESTRA_COPY["orchestra.evidence.revisionUnlinked"],
+    ].join("\n"),
   )
 })
 

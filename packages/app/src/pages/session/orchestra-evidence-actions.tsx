@@ -2,7 +2,8 @@ import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { DialogBody, DialogFooter, DialogHeader, DialogTitleGroup, DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { Icon } from "@opencode-ai/ui/v2/icon"
-import { createEffect, createSignal, Show } from "solid-js"
+import { createEffect, onCleanup, Show } from "solid-js"
+import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { showToast } from "@/utils/toast"
 import type { EvidenceComposerActions, EvidenceOwner, ReplayResult } from "./composer/session-evidence-actions"
@@ -22,8 +23,10 @@ export function EvidenceActions(props: ActionProps) {
 
   const replay = (event: MouseEvent) => {
     const owner = props.actions.capture()
+    const evidence = props.evidence
+    const result = props.result
     dialog.show(
-      () => <ReplayDialog evidence={props.evidence} result={props.result} actions={props.actions} owner={owner} />,
+      () => <ReplayDialog evidence={evidence} result={result} actions={props.actions} owner={owner} />,
       restore(event.currentTarget as HTMLElement),
     )
   }
@@ -33,7 +36,11 @@ export function EvidenceActions(props: ActionProps) {
     const context = { source: props.evidence.source, result: props.result }
     const state = props.actions.pullRequestState()
     if (state === "shell") return showToast({ title: language.t("orchestra.pr.shell") })
-    if (state === "ready") return void props.actions.preparePullRequest(context, owner)
+    if (state === "ready") {
+      if (!props.actions.preparePullRequest(context, owner))
+        showToast({ title: language.t("orchestra.evidence.sessionChanged") })
+      return
+    }
     dialog.show(
       () => (
         <AppendDialog
@@ -76,31 +83,39 @@ function useSessionGuard(owner: EvidenceOwner, notify: boolean) {
 function ReplayDialog(props: ActionProps & { owner: EvidenceOwner }) {
   const dialog = useDialog()
   const language = useLanguage()
-  const [request, setRequest] = createSignal<"idle" | "sending" | Extract<ReplayResult, { status: "unknown" }>>("idle")
-  const [copied, setCopied] = createSignal(false)
+  const [state, setState] = createStore<{
+    request: "idle" | "sending" | Extract<ReplayResult, { status: "unknown" }>
+    copied: boolean
+    copyFailed: boolean
+    disposed: boolean
+  }>({ request: "idle", copied: false, copyFailed: false, disposed: false })
+  onCleanup(() => setState("disposed", true))
   const source = props.evidence.source
   const blocked = () => props.actions.replayBlocked(source)
   const failure = () => {
-    const value = request()
+    const value = state.request
     return typeof value === "object" ? value : undefined
   }
   useSessionGuard(props.owner, false)
 
   const run = async () => {
     // Locked until the request settles: a double click never sends twice.
-    if (request() !== "idle" || blocked()) return
-    setRequest("sending")
+    if (state.request !== "idle" || blocked()) return
+    setState("request", "sending")
     const result = await props.actions.replay(source, props.owner)
+    if (state.disposed || !props.owner.current()) return
     if (result.status === "sent") return dialog.close()
-    if (result.status === "blocked") return setRequest("idle")
-    setRequest(result)
+    if (result.status === "blocked") return setState("request", "idle")
+    setState("request", result)
   }
 
-  const copy = () =>
-    navigator.clipboard
-      ?.writeText(source.command)
-      .then(() => setCopied(true))
-      .catch(() => setCopied(false))
+  const copy = async () => {
+    const copied = await navigator.clipboard?.writeText(source.command).then(
+      () => true,
+      () => false,
+    )
+    setState({ copied: !!copied, copyFailed: !copied })
+  }
 
   return (
     <DialogV2 fit class="orchestra-evidence-dialog">
@@ -110,14 +125,14 @@ function ReplayDialog(props: ActionProps & { owner: EvidenceOwner }) {
           description={language.t("orchestra.output.rerunBody")}
         />
       </DialogHeader>
-      <DialogBody>
+      <DialogBody class="px-4">
         <dl data-slot="evidence-replay">
           <dt>{language.t("orchestra.evidence.rerun.command")}</dt>
           <dd>
-            <code>{source.command}</code>
+            <code dir="ltr">{source.command}</code>
           </dd>
           <dt>{language.t("orchestra.evidence.rerun.directory")}</dt>
-          <dd>{source.workdir ?? source.directory}</dd>
+          <dd dir="ltr">{source.workdir ?? source.directory}</dd>
           <dt>{language.t("orchestra.evidence.rerun.session")}</dt>
           <dd>
             {props.actions.sessionTitle(source.sessionID) ?? source.sessionID} · {props.actions.server()}
@@ -140,17 +155,20 @@ function ReplayDialog(props: ActionProps & { owner: EvidenceOwner }) {
             </p>
           )}
         </Show>
+        <Show when={state.copyFailed}>
+          <p role="status">{language.t("orchestra.evidence.copyFailed")}</p>
+        </Show>
       </DialogBody>
       <DialogFooter>
         <ButtonV2 variant="ghost" onClick={copy}>
-          {language.t(copied() ? "orchestra.evidence.rerun.copied" : "orchestra.evidence.rerun.copy")}
+          {language.t(state.copied ? "orchestra.evidence.rerun.copied" : "orchestra.evidence.rerun.copy")}
         </ButtonV2>
         <ButtonV2 variant="ghost" onClick={() => dialog.close()}>
           {language.t("common.cancel")}
         </ButtonV2>
-        <ButtonV2 variant="contrast" disabled={request() !== "idle" || !!blocked()} onClick={run}>
+        <ButtonV2 variant="contrast" disabled={state.request !== "idle" || !!blocked()} onClick={run}>
           {language.t(
-            request() === "sending" ? "orchestra.evidence.rerun.sending" : "orchestra.evidence.rerun.confirm",
+            state.request === "sending" ? "orchestra.evidence.rerun.sending" : "orchestra.evidence.rerun.confirm",
           )}
         </ButtonV2>
       </DialogFooter>

@@ -16,6 +16,8 @@ import {
 } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { useSync } from "@/context/sync"
+import { useParams } from "@solidjs/router"
 import type { EvidenceComposerActions } from "./composer/session-evidence-actions"
 import { createEvidenceCache, type ExecutionEvidence, isShellTool } from "./orchestra-evidence-data"
 import { EvidenceActions } from "./orchestra-evidence-actions"
@@ -60,7 +62,12 @@ export function createExecutionEvidenceRenderer(input: {
   sessionKey: Accessor<string>
 }) {
   const sdk = useSDK()
+  const sync = useSync()
+  const params = useParams()
   const cache = createEvidenceCache()
+  const sources = createMemo(
+    () => new Map((sync().data.session_message[params.id ?? ""] ?? []).map((message) => [message.id, message])),
+  )
   createEffect(on(input.sessionKey, () => cache.clear(), { defer: true }))
 
   return (seam: ExecutionEvidenceInput) => {
@@ -69,7 +76,12 @@ export function createExecutionEvidenceRenderer(input: {
     const evidence = createMemo(() => {
       const part = seam.part()
       if (part.type !== "tool") return
-      return cache.read(part, { scope: sdk().scope, directory: sdk().directory })
+      const message = seam.message()
+      const parent = message.role === "assistant" ? sources().get(message.parentID) : undefined
+      // Live projection can also index its synthetic assistant. The raw shell
+      // parent remains authoritative, including interruption and missing end time.
+      const source = parent?.type === "shell" ? parent : sources().get(message.id)
+      return cache.read(part, { scope: sdk().scope, directory: sdk().directory }, source)
     })
     return (
       <Show when={evidence()} fallback={seam.output()}>
@@ -135,6 +147,7 @@ function EvidenceCard(props: {
   return (
     <section
       data-orchestra-evidence
+      data-part-id={props.evidence.source.partID}
       data-state={props.evidence.state}
       aria-label={language.t("orchestra.evidence.label", { command: props.evidence.source.command })}
     >
@@ -155,7 +168,7 @@ function EvidenceCard(props: {
               </button>
             )}
           </For>
-          <code data-slot="evidence-command" title={props.evidence.source.command}>
+          <code dir="ltr" data-slot="evidence-command" title={props.evidence.source.command}>
             {props.evidence.source.command}
           </code>
         </div>
@@ -199,7 +212,7 @@ function EvidenceCard(props: {
               when={summary()}
               fallback={
                 <div data-slot="evidence-partial">
-                  <p>{language.t("orchestra.output.partial.body")}</p>
+                  <p>{language.t("orchestra.evidence.partialRetained")}</p>
                   <Show when={props.evidence.outputPath}>
                     {(path) => (
                       <p data-slot="evidence-meta">{language.t("orchestra.evidence.outputPath", { path: path() })}</p>
@@ -256,7 +269,11 @@ function EvidenceCard(props: {
                       <span>{language.t("orchestra.evidence.failures")}</span>
                       <ul>
                         <For each={value().failures.slice(0, FAILURES_SHOWN)}>
-                          {(name) => <li title={name}>{name}</li>}
+                          {(name) => (
+                            <li dir="ltr" title={name}>
+                              {name}
+                            </li>
+                          )}
                         </For>
                       </ul>
                       <Show when={value().failures.length > FAILURES_SHOWN}>
@@ -276,12 +293,18 @@ function EvidenceCard(props: {
                         })
                       : language.t("orchestra.evidence.reported", { runner: runner() })}
                   </p>
+                  <p data-slot="evidence-meta">
+                    {props.evidence.durationMs === undefined
+                      ? language.t("orchestra.evidence.durationUnknown")
+                      : language.t("orchestra.evidence.duration", { duration: props.evidence.durationMs })}
+                  </p>
                 </>
               )}
             </Show>
           </div>
         </Show>
       </div>
+      <p data-slot="evidence-meta">{language.t("orchestra.evidence.revisionUnlinked")}</p>
       <EvidenceActions evidence={props.evidence} result={result()} actions={props.actions} />
     </section>
   )

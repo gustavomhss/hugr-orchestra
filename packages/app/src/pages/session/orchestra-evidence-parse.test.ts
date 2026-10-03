@@ -10,7 +10,7 @@ import {
 
 // Fixtures were captured from real runs (bun 1.3.14, vitest 4.1.7, @playwright/test 1.59.1,
 // pytest 9.0.3, go 1.27.1, cargo 1.98.0) with absolute paths replaced by /repo.
-// jest-fail.documented.txt follows Jest's documented default reporter: Jest was not available to capture.
+// Jest 30.2.0 was captured on resume; its reproducer and command are beside the logs.
 const fixture = (name: string) => Bun.file(new URL(`./orchestra-evidence-fixtures/${name}.txt`, import.meta.url)).text()
 
 describe("detectTestRunner", () => {
@@ -46,6 +46,8 @@ describe("detectTestRunner", () => {
       "echo bun test",
       "vitest watch",
       "npx vitest dev",
+      "bun test --watch",
+      "jest --watchAll",
       "playwright show-report",
       "cargo nextest run",
       "uv run pytest",
@@ -94,11 +96,11 @@ describe("parseTestOutput", () => {
   })
 
   test("jest reports suites and tests", async () => {
-    const summary = parseTestOutput("jest", await fixture("jest-fail.documented"))
+    const summary = parseTestOutput("jest", await fixture("jest-fail"))
     expect(summary?.groups).toEqual({ unit: "suites", counts: { failed: 1, passed: 1 }, total: 2 })
     expect(summary?.tests).toEqual({ unit: "tests", counts: { failed: 1, skipped: 1, passed: 2 }, total: 4 })
     expect(summary?.failures).toEqual(["approval › rejects empty"])
-    expect(summary?.duration).toBe("0.512s")
+    expect(summary?.duration).toBe("0.402s")
   })
 
   test("playwright list, line and dot reporters", async () => {
@@ -170,12 +172,15 @@ describe("parseTestOutput", () => {
     expect(parseTestOutput("bun", bun.replace("Ran 9 tests", "Ran 10 tests"))).toBeUndefined()
     expect(parseTestOutput("bun", bun.replace(" 2 fail", " 2.5 fail"))).toBeUndefined()
     expect(parseTestOutput("bun", bun.replace(" 2 fail\n", ""))).toBeUndefined()
+    expect(parseTestOutput("bun", bun.replace("50.00ms", "1.2.3ms"))).toBeUndefined()
     expect(parseTestOutput("bun", "echo:  3 pass\n 0 fail\nRan 3 tests across 1 file. [1.00ms]")).toBeUndefined()
     const vitest = await fixture("vitest-fail")
     expect(parseTestOutput("vitest", vitest.replace("(5)", "(6)"))).toBeUndefined()
     expect(parseTestOutput("vitest", vitest.replace("1 todo (5)", "1 expected fail (5)"))).toBeUndefined()
     expect(parseTestOutput("pytest", "== 1 failed, 1 xfailed in 0.1s ==")).toBeUndefined()
     expect(parseTestOutput("pytest", "Finished in 0.5s")).toBeUndefined()
+    expect(parseTestOutput("pytest", "1 passed, 1 passed in 0.1s")).toBeUndefined()
+    expect(parseTestOutput("pytest", "1 warnings in 0.1s")).toBeUndefined()
     const playwright = await fixture("pw-fail")
     expect(parseTestOutput("playwright", playwright.replace("Running 4 tests", "Running 5 tests"))).toBeUndefined()
     const cargo = await fixture("cargo-pass")
@@ -188,6 +193,9 @@ describe("parseTestOutput", () => {
     ).toBeUndefined()
     const go = await fixture("go-fail")
     expect(parseTestOutput("go", `${go}ok  \texample.com/approval/b\t0.1s\n`)).toBeUndefined()
+    expect(parseTestOutput("go", "ok example.com/a 0.1s\nFAIL\n")).toBeUndefined()
+    expect(parseTestOutput("go", "FAIL example.com/b [unknown failure]\nok example.com/a 0.1s\n")).toBeUndefined()
+    expect(parseTestOutput("playwright", "  1 passed (1s)\n")).toBeUndefined()
   })
 
   test("reads only the bounded tail and refuses aggregates it cannot see whole", async () => {

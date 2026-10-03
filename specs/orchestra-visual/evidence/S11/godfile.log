@@ -1,0 +1,302 @@
+Godfile: 3561 source files, 301 warnings, 0 errors.
+WARN .opencode/plugins/tui-smoke.tsx: 960 LOC exceeds hard limit 750; legacy base 960 LOC did not grow.
+WARN github/index.ts: 938 LOC exceeds hard limit 750; legacy base 938 LOC did not grow.
+WARN packages/app/e2e/performance/timeline-stability/fixture.ts: 538 LOC exceeds target 500.
+WARN packages/app/e2e/performance/timeline/session-timeline-stream-probe.ts: 535 LOC exceeds target 500.
+WARN packages/app/e2e/smoke/session-timeline.spec.ts: 691 LOC exceeds target 500.
+WARN packages/app/src/addons/serialize.ts: 550 LOC exceeds target 500.
+WARN packages/app/src/app.tsx: 699 LOC exceeds target 500.
+WARN packages/app/src/components/debug-bar.tsx: 538 LOC exceeds target 500.
+WARN packages/app/src/components/dialog-connect-provider.tsx: 1153 LOC exceeds hard limit 750; legacy base 1153 LOC did not grow.
+WARN packages/app/src/components/dialog-select-model.tsx: 514 LOC exceeds target 500.
+WARN packages/app/src/components/dialog-select-server.tsx: 669 LOC exceeds target 500.
+WARN packages/app/src/components/prompt-input-v2.tsx: 631 LOC exceeds target 500.
+WARN packages/app/src/components/prompt-input.tsx: 1689 LOC exceeds hard limit 750; legacy base 1689 LOC did not grow.
+WARN packages/app/src/components/prompt-input/submit.test.ts: 549 LOC exceeds target 500.
+WARN packages/app/src/components/prompt-input/submit.ts: 614 LOC exceeds target 500.
+WARN packages/app/src/components/prompt-project-selector.tsx: 568 LOC exceeds target 500.
+WARN packages/app/src/components/session/session-header.tsx: 535 LOC exceeds target 500.
+WARN packages/app/src/components/settings-general.tsx: 717 LOC exceeds target 500.
+WARN packages/app/src/components/settings-keybinds.tsx: 684 LOC exceeds target 500.
+WARN packages/app/src/components/settings-v2/general.tsx: 525 LOC exceeds target 500.
+WARN packages/app/src/components/terminal.tsx: 625 LOC exceeds target 500.
+WARN packages/app/src/components/titlebar.tsx: 746 LOC exceeds target 500.
+WARN packages/app/src/context/global-sync/bootstrap.ts: 526 LOC exceeds target 500.
+WARN packages/app/src/context/global-sync/event-reducer.test.ts: 551 LOC exceeds target 500.
+WARN packages/app/src/context/layout.tsx: 957 LOC exceeds hard limit 750; legacy base 957 LOC did not grow.
+WARN packages/app/src/context/server-session.test.ts: 1403 LOC exceeds hard limit 750; legacy base 1403 LOC did not grow.
+WARN packages/app/src/context/server-session.ts: 1380 LOC exceeds hard limit 750; legacy base 1380 LOC did not grow.
+WARN packages/app/src/context/server-sync.tsx: 736 LOC exceeds target 500.
+WARN packages/app/src/context/settings.tsx: 510 LOC exceeds target 500.
+WARN packages/app/src/i18n/am.ts: 1170 LOC exceeds hard limit 750; legacy base 1170 LOC did not grow.
+WARN packages/app/src/i18n/ar.ts: 1202 LOC exceeds hard limit 750; legacy base 1202 LOC did not grow.
+WARN packages/app/src/i18n/az.ts: 1204 LOC exceeds hard limit 750; legacy base 1204 LOC did not grow.
+WARN packages/app/src/i18n/bg.ts: 1210 LOC exceeds hard limit 750; legacy base 1210 LOC did not grow.
+WARN packages/app/src/i18n/bn.ts: 1192 LOC exceeds hard limit 750; legacy base 1192 LOC did not grow.
+WARN packages/app/src/i18n/br.ts: 1209 LOC exceeds hard limit 750; legacy base 1209 LOC did not grow.
+WARN packages/app/src/i18n/bs.ts: 1205 LOC exceeds hard limit 750; legacy base 1205 LOC did not grow.
+WARN packages/app/src/i18n/ca.ts: 1214 LOC exceeds hard limit 750; legacy base 1214 LOC did not grow.
+WARN packages/app/src/i18n/cs.ts: 1205 LOC exceeds hard limit 750; legacy base 1205 LOC did not grow.
+WARN packages/app/src/i18n/da.ts: 1198 LOC exceeds hard limit 750; legacy base 1198 LOC did not grow.
+WARN packages/app/src/i18n/de.ts: 1216 LOC exceeds hard limit 750; legacy base 1216 LOC did not grow.
+WARN packages/app/src/i18n/dv.ts: 1217 LOC exceeds hard limit 750; legacy base 1217 LOC did not grow.
+WARN packages/app/src/i18n/dz.ts: 1221 LOC exceeds hard limit 750; legacy base 1221 LOC did not grow.
+WARN packages/app/src/i18n/el.ts: 1213 LOC exceeds hard limit 750; legacy base 1213 LOC did not grow.
+WARN packages/app/src/i18n/en.ts: 1102 LOC exceeds hard limit 750; legacy base 1102 LOC did not grow.
+WARN packages/app/src/i18n/es.ts: 1214 LOC exceeds hard limit 750; legacy base 1214 LOC did not grow.
+WARN packages/app/src/i18n/et.ts: 1191 LOC exceeds hard limit 750; legacy base 1191 LOC did not grow.
+WARN packages/app/src/i18n/fa.ts: 1195 LOC exceeds hard limit 750; legacy base 1195 LOC did not grow.
+WARN packages/app/src/i18n/fi.ts: 1204 LOC exceeds hard limit 750; legacy base 1204 LOC did not grow.
+WARN packages/app/src/i18n/fo.ts: 1194 LOC exceeds hard limit 750; legacy base 1194 LOC did not grow.
+WARN packages/app/src/i18n/fr.ts: 1228 LOC exceeds hard limit 750; legacy base 1228 LOC did not grow.
+WARN packages/app/src/i18n/hi.ts: 1193 LOC exceeds hard limit 750; legacy base 1193 LOC did not grow.
+WARN packages/app/src/i18n/hr.ts: 1207 LOC exceeds hard limit 750; legacy base 1207 LOC did not grow.
+WARN packages/app/src/i18n/hu.ts: 1208 LOC exceeds hard limit 750; legacy base 1208 LOC did not grow.
+WARN packages/app/src/i18n/hy.ts: 1205 LOC exceeds hard limit 750; legacy base 1205 LOC did not grow.
+WARN packages/app/src/i18n/id.ts: 1195 LOC exceeds hard limit 750; legacy base 1195 LOC did not grow.
+WARN packages/app/src/i18n/is.ts: 1195 LOC exceeds hard limit 750; legacy base 1195 LOC did not grow.
+WARN packages/app/src/i18n/it.ts: 1213 LOC exceeds hard limit 750; legacy base 1213 LOC did not grow.
+WARN packages/app/src/i18n/ja.ts: 1196 LOC exceeds hard limit 750; legacy base 1196 LOC did not grow.
+WARN packages/app/src/i18n/ka.ts: 1196 LOC exceeds hard limit 750; legacy base 1196 LOC did not grow.
+WARN packages/app/src/i18n/km.ts: 1191 LOC exceeds hard limit 750; legacy base 1191 LOC did not grow.
+WARN packages/app/src/i18n/ko.ts: 1186 LOC exceeds hard limit 750; legacy base 1186 LOC did not grow.
+WARN packages/app/src/i18n/lo.ts: 1188 LOC exceeds hard limit 750; legacy base 1188 LOC did not grow.
+WARN packages/app/src/i18n/lt.ts: 1213 LOC exceeds hard limit 750; legacy base 1213 LOC did not grow.
+WARN packages/app/src/i18n/lv.ts: 1203 LOC exceeds hard limit 750; legacy base 1203 LOC did not grow.
+WARN packages/app/src/i18n/mk.ts: 1206 LOC exceeds hard limit 750; legacy base 1206 LOC did not grow.
+WARN packages/app/src/i18n/mn.ts: 1208 LOC exceeds hard limit 750; legacy base 1208 LOC did not grow.
+WARN packages/app/src/i18n/ms.ts: 1197 LOC exceeds hard limit 750; legacy base 1197 LOC did not grow.
+WARN packages/app/src/i18n/my.ts: 1216 LOC exceeds hard limit 750; legacy base 1216 LOC did not grow.
+WARN packages/app/src/i18n/ne.ts: 1197 LOC exceeds hard limit 750; legacy base 1197 LOC did not grow.
+WARN packages/app/src/i18n/nl.ts: 1207 LOC exceeds hard limit 750; legacy base 1207 LOC did not grow.
+WARN packages/app/src/i18n/no.ts: 1203 LOC exceeds hard limit 750; legacy base 1203 LOC did not grow.
+WARN packages/app/src/i18n/pa.ts: 1191 LOC exceeds hard limit 750; legacy base 1191 LOC did not grow.
+WARN packages/app/src/i18n/pl.ts: 1214 LOC exceeds hard limit 750; legacy base 1214 LOC did not grow.
+WARN packages/app/src/i18n/ro.ts: 1203 LOC exceeds hard limit 750; legacy base 1203 LOC did not grow.
+WARN packages/app/src/i18n/ru.ts: 1216 LOC exceeds hard limit 750; legacy base 1216 LOC did not grow.
+WARN packages/app/src/i18n/si.ts: 1193 LOC exceeds hard limit 750; legacy base 1193 LOC did not grow.
+WARN packages/app/src/i18n/sk.ts: 1201 LOC exceeds hard limit 750; legacy base 1201 LOC did not grow.
+WARN packages/app/src/i18n/sl.ts: 1205 LOC exceeds hard limit 750; legacy base 1205 LOC did not grow.
+WARN packages/app/src/i18n/sq.ts: 1203 LOC exceeds hard limit 750; legacy base 1203 LOC did not grow.
+WARN packages/app/src/i18n/sr.ts: 1202 LOC exceeds hard limit 750; legacy base 1202 LOC did not grow.
+WARN packages/app/src/i18n/sv.ts: 1196 LOC exceeds hard limit 750; legacy base 1196 LOC did not grow.
+WARN packages/app/src/i18n/tg.ts: 1204 LOC exceeds hard limit 750; legacy base 1204 LOC did not grow.
+WARN packages/app/src/i18n/th.ts: 1185 LOC exceeds hard limit 750; legacy base 1185 LOC did not grow.
+WARN packages/app/src/i18n/tk.ts: 1199 LOC exceeds hard limit 750; legacy base 1199 LOC did not grow.
+WARN packages/app/src/i18n/tr.ts: 1204 LOC exceeds hard limit 750; legacy base 1204 LOC did not grow.
+WARN packages/app/src/i18n/uk.ts: 1213 LOC exceeds hard limit 750; legacy base 1213 LOC did not grow.
+WARN packages/app/src/i18n/ur.ts: 1194 LOC exceeds hard limit 750; legacy base 1194 LOC did not grow.
+WARN packages/app/src/i18n/uz.ts: 1211 LOC exceeds hard limit 750; legacy base 1211 LOC did not grow.
+WARN packages/app/src/i18n/vi.ts: 1199 LOC exceeds hard limit 750; legacy base 1199 LOC did not grow.
+WARN packages/app/src/i18n/zh.ts: 1172 LOC exceeds hard limit 750; legacy base 1172 LOC did not grow.
+WARN packages/app/src/i18n/zht.ts: 1173 LOC exceeds hard limit 750; legacy base 1173 LOC did not grow.
+WARN packages/app/src/orchestra/sidebar.tsx: 507 LOC exceeds target 500.
+WARN packages/app/src/pages/home/home-projects-view.tsx: 602 LOC exceeds target 500.
+WARN packages/app/src/pages/home/home-sessions-view.tsx: 534 LOC exceeds target 500.
+WARN packages/app/src/pages/layout.tsx: 2198 LOC exceeds hard limit 750; legacy base 2198 LOC did not grow.
+WARN packages/app/src/pages/session.tsx: 2167 LOC exceeds hard limit 750; legacy base 2167 LOC did not grow.
+WARN packages/app/src/pages/session/apps-panel-controller.ts: 515 LOC exceeds target 500.
+WARN packages/app/src/pages/session/apps-panel.tsx: 675 LOC exceeds target 500.
+WARN packages/app/src/pages/session/composer/session-question-dock.tsx: 570 LOC exceeds target 500.
+WARN packages/app/src/pages/session/composer/todo-panel-motion.stories.tsx: 583 LOC exceeds target 500.
+WARN packages/app/src/pages/session/file-tabs.tsx: 708 LOC exceeds target 500.
+WARN packages/app/src/pages/session/session-side-panel.tsx: 893 LOC exceeds hard limit 750; legacy base 893 LOC did not grow.
+WARN packages/app/src/pages/session/timeline/message-timeline.tsx: 1760 LOC exceeds hard limit 750; legacy base 1761 LOC did not grow.
+WARN packages/app/src/pages/session/use-session-commands.tsx: 629 LOC exceeds target 500.
+WARN packages/app/src/utils/persist.ts: 618 LOC exceeds target 500.
+WARN packages/app/src/utils/server-compat.ts: 523 LOC exceeds target 500.
+WARN packages/client/src/generated-effect/client.ts: 626 LOC exceeds target 500.
+WARN packages/client/src/generated/client.ts: 1016 LOC exceeds hard limit 750; legacy base 1016 LOC did not grow.
+WARN packages/client/src/generated/types.ts: 2680 LOC exceeds hard limit 750; legacy base 2680 LOC did not grow.
+WARN packages/codemode/src/interpreter/runtime.ts: 3218 LOC exceeds hard limit 750; legacy base 3218 LOC did not grow.
+WARN packages/codemode/src/tool-runtime.ts: 737 LOC exceeds target 500.
+WARN packages/codemode/test/codemode.test.ts: 1062 LOC exceeds hard limit 750; legacy base 1062 LOC did not grow.
+WARN packages/codemode/test/openapi.test.ts: 883 LOC exceeds hard limit 750; legacy base 883 LOC did not grow.
+WARN packages/codemode/test/stdlib.test.ts: 642 LOC exceeds target 500.
+WARN packages/console/app/src/component/spotlight.tsx: 695 LOC exceeds target 500.
+WARN packages/console/app/src/i18n/ar.ts: 789 LOC exceeds hard limit 750; legacy base 789 LOC did not grow.
+WARN packages/console/app/src/i18n/br.ts: 804 LOC exceeds hard limit 750; legacy base 804 LOC did not grow.
+WARN packages/console/app/src/i18n/da.ts: 796 LOC exceeds hard limit 750; legacy base 796 LOC did not grow.
+WARN packages/console/app/src/i18n/de.ts: 803 LOC exceeds hard limit 750; legacy base 803 LOC did not grow.
+WARN packages/console/app/src/i18n/en.ts: 802 LOC exceeds hard limit 750; legacy base 802 LOC did not grow.
+WARN packages/console/app/src/i18n/es.ts: 804 LOC exceeds hard limit 750; legacy base 804 LOC did not grow.
+WARN packages/console/app/src/i18n/fr.ts: 814 LOC exceeds hard limit 750; legacy base 814 LOC did not grow.
+WARN packages/console/app/src/i18n/it.ts: 801 LOC exceeds hard limit 750; legacy base 801 LOC did not grow.
+WARN packages/console/app/src/i18n/ja.ts: 799 LOC exceeds hard limit 750; legacy base 799 LOC did not grow.
+WARN packages/console/app/src/i18n/ko.ts: 789 LOC exceeds hard limit 750; legacy base 789 LOC did not grow.
+WARN packages/console/app/src/i18n/no.ts: 797 LOC exceeds hard limit 750; legacy base 797 LOC did not grow.
+WARN packages/console/app/src/i18n/pl.ts: 802 LOC exceeds hard limit 750; legacy base 802 LOC did not grow.
+WARN packages/console/app/src/i18n/ru.ts: 808 LOC exceeds hard limit 750; legacy base 808 LOC did not grow.
+WARN packages/console/app/src/i18n/th.ts: 794 LOC exceeds hard limit 750; legacy base 794 LOC did not grow.
+WARN packages/console/app/src/i18n/tr.ts: 803 LOC exceeds hard limit 750; legacy base 803 LOC did not grow.
+WARN packages/console/app/src/i18n/uk.ts: 762 LOC exceeds hard limit 750; legacy base 762 LOC did not grow.
+WARN packages/console/app/src/i18n/zh.ts: 768 LOC exceeds hard limit 750; legacy base 768 LOC did not grow.
+WARN packages/console/app/src/i18n/zht.ts: 767 LOC exceeds hard limit 750; legacy base 767 LOC did not grow.
+WARN packages/console/app/src/routes/index.tsx: 820 LOC exceeds hard limit 750; legacy base 820 LOC did not grow.
+WARN packages/console/app/src/routes/legal/privacy-policy/index.tsx: 1344 LOC exceeds hard limit 750; legacy base 1344 LOC did not grow.
+WARN packages/console/app/src/routes/workspace/[id]/go/lite-section.tsx: 705 LOC exceeds target 500.
+WARN packages/console/app/src/routes/workspace/[id]/usage/graph-section.tsx: 518 LOC exceeds target 500.
+WARN packages/console/app/src/routes/zen/util/handler.ts: 1172 LOC exceeds hard limit 750; legacy base 1172 LOC did not grow.
+WARN packages/console/app/src/routes/zen/util/provider/anthropic.ts: 688 LOC exceeds target 500.
+WARN packages/console/app/src/routes/zen/util/provider/openai.ts: 564 LOC exceeds target 500.
+WARN packages/console/core/src/billing.ts: 539 LOC exceeds target 500.
+WARN packages/core/src/event.ts: 787 LOC exceeds hard limit 750; legacy base 787 LOC did not grow.
+WARN packages/core/src/git.ts: 934 LOC exceeds hard limit 750; legacy base 934 LOC did not grow.
+WARN packages/core/src/github-copilot/chat/openai-compatible-chat-language-model.ts: 730 LOC exceeds target 500.
+WARN packages/core/src/github-copilot/responses/openai-responses-language-model.ts: 1610 LOC exceeds hard limit 750; legacy base 1610 LOC did not grow.
+WARN packages/core/test/config/config.test.ts: 760 LOC exceeds hard limit 750; legacy base 760 LOC did not grow.
+WARN packages/core/test/database-migration.test.ts: 652 LOC exceeds target 500.
+WARN packages/core/test/event.test.ts: 1042 LOC exceeds hard limit 750; legacy base 1042 LOC did not grow.
+WARN packages/core/test/github-copilot/copilot-chat-model.test.ts: 502 LOC exceeds target 500.
+WARN packages/core/test/plugin/provider-amazon-bedrock.test.ts: 597 LOC exceeds target 500.
+WARN packages/core/test/session-projector.test.ts: 540 LOC exceeds target 500.
+WARN packages/core/test/session-prompt.test.ts: 515 LOC exceeds target 500.
+WARN packages/core/test/session-runner.test.ts: 3169 LOC exceeds hard limit 750; legacy base 3169 LOC did not grow.
+WARN packages/core/test/tool-read.test.ts: 631 LOC exceeds target 500.
+WARN packages/desktop/src/main/app-dock-security.test.ts: 1329 LOC exceeds hard limit 750; legacy base 1338 LOC did not grow.
+WARN packages/desktop/src/main/app-dock.ts: 628 LOC exceeds target 500.
+WARN packages/desktop/src/main/ipc.ts: 642 LOC exceeds target 500.
+WARN packages/desktop/src/main/windows.ts: 522 LOC exceeds target 500.
+WARN packages/http-recorder/test/record-replay.test.ts: 815 LOC exceeds hard limit 750; legacy base 815 LOC did not grow.
+WARN packages/httpapi-codegen/src/index.ts: 1122 LOC exceeds hard limit 750; legacy base 1122 LOC did not grow.
+WARN packages/httpapi-codegen/test/generate.test.ts: 895 LOC exceeds hard limit 750; legacy base 895 LOC did not grow.
+WARN packages/llm/src/protocols/anthropic-messages.ts: 776 LOC exceeds hard limit 750; legacy base 776 LOC did not grow.
+WARN packages/llm/src/protocols/bedrock-converse.ts: 620 LOC exceeds target 500.
+WARN packages/llm/src/protocols/openai-responses.ts: 942 LOC exceeds hard limit 750; legacy base 942 LOC did not grow.
+WARN packages/llm/src/schema/events.ts: 555 LOC exceeds target 500.
+WARN packages/llm/test/provider/anthropic-messages.test.ts: 835 LOC exceeds hard limit 750; legacy base 835 LOC did not grow.
+WARN packages/llm/test/provider/bedrock-converse.test.ts: 680 LOC exceeds target 500.
+WARN packages/llm/test/provider/gemini.test.ts: 550 LOC exceeds target 500.
+WARN packages/llm/test/provider/openai-chat.test.ts: 628 LOC exceeds target 500.
+WARN packages/llm/test/provider/openai-responses.test.ts: 1362 LOC exceeds hard limit 750; legacy base 1362 LOC did not grow.
+WARN packages/llm/test/tool-runtime.test.ts: 748 LOC exceeds target 500.
+WARN packages/opencode/src/acp/service.ts: 1015 LOC exceeds hard limit 750; legacy base 1015 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/github.handler.ts: 1458 LOC exceeds hard limit 750; legacy base 1458 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/mcp.ts: 751 LOC exceeds hard limit 750; legacy base 751 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run.ts: 922 LOC exceeds hard limit 750; legacy base 922 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/demo.ts: 1173 LOC exceeds hard limit 750; legacy base 1173 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/footer.command.tsx: 981 LOC exceeds hard limit 750; legacy base 981 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/footer.prompt.tsx: 1160 LOC exceeds hard limit 750; legacy base 1160 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/footer.question.tsx: 527 LOC exceeds target 500.
+WARN packages/opencode/src/cli/cmd/run/footer.ts: 988 LOC exceeds hard limit 750; legacy base 988 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/footer.view.tsx: 881 LOC exceeds hard limit 750; legacy base 881 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/runtime.ts: 740 LOC exceeds target 500.
+WARN packages/opencode/src/cli/cmd/run/session-data.ts: 937 LOC exceeds hard limit 750; legacy base 937 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/stream.transport.ts: 1294 LOC exceeds hard limit 750; legacy base 1294 LOC did not grow.
+WARN packages/opencode/src/cli/cmd/run/subagent-data.ts: 742 LOC exceeds target 500.
+WARN packages/opencode/src/cli/cmd/run/theme.ts: 615 LOC exceeds target 500.
+WARN packages/opencode/src/cli/cmd/run/tool.ts: 1283 LOC exceeds hard limit 750; legacy base 1283 LOC did not grow.
+WARN packages/opencode/src/config/config.ts: 629 LOC exceeds target 500.
+WARN packages/opencode/src/control-plane/workspace.ts: 922 LOC exceeds hard limit 750; legacy base 922 LOC did not grow.
+WARN packages/opencode/src/lsp/client.ts: 587 LOC exceeds target 500.
+WARN packages/opencode/src/lsp/server.ts: 1754 LOC exceeds hard limit 750; legacy base 1754 LOC did not grow.
+WARN packages/opencode/src/maestro/validation-record.ts: 565 LOC exceeds target 500.
+WARN packages/opencode/src/mcp/index.ts: 893 LOC exceeds hard limit 750; legacy base 893 LOC did not grow.
+WARN packages/opencode/src/patch/index.ts: 582 LOC exceeds target 500.
+WARN packages/opencode/src/plugin/openai/codex.ts: 515 LOC exceeds target 500.
+WARN packages/opencode/src/plugin/tui/runtime.ts: 1023 LOC exceeds hard limit 750; legacy base 1023 LOC did not grow.
+WARN packages/opencode/src/provider/provider.ts: 1949 LOC exceeds hard limit 750; legacy base 1949 LOC did not grow.
+WARN packages/opencode/src/provider/transform.ts: 1742 LOC exceeds hard limit 750; legacy base 1742 LOC did not grow.
+WARN packages/opencode/src/session/compaction.ts: 570 LOC exceeds target 500.
+WARN packages/opencode/src/session/message-v2.ts: 695 LOC exceeds target 500.
+WARN packages/opencode/src/session/processor.ts: 679 LOC exceeds target 500.
+WARN packages/opencode/src/session/prompt.ts: 1543 LOC exceeds hard limit 750; legacy base 1543 LOC did not grow.
+WARN packages/opencode/src/session/session.ts: 1001 LOC exceeds hard limit 750; legacy base 1001 LOC did not grow.
+WARN packages/opencode/src/session/tools.ts: 573 LOC exceeds target 500.
+WARN packages/opencode/src/snapshot/index.ts: 730 LOC exceeds target 500.
+WARN packages/opencode/src/tool/edit.ts: 642 LOC exceeds target 500.
+WARN packages/opencode/src/tool/registry.ts: 505 LOC exceeds target 500.
+WARN packages/opencode/src/tool/shell.ts: 586 LOC exceeds target 500.
+WARN packages/opencode/src/tool/task.ts: 682 LOC exceeds target 500.
+WARN packages/opencode/src/worktree/index.ts: 540 LOC exceeds target 500.
+WARN packages/opencode/test/acp/event.test.ts: 681 LOC exceeds target 500.
+WARN packages/opencode/test/acp/service-session.test.ts: 1278 LOC exceeds hard limit 750; legacy base 1278 LOC did not grow.
+WARN packages/opencode/test/agent/agent.test.ts: 704 LOC exceeds target 500.
+WARN packages/opencode/test/cli/run/entry.body.test.ts: 514 LOC exceeds target 500.
+WARN packages/opencode/test/cli/run/footer.view.test.tsx: 1278 LOC exceeds hard limit 750; legacy base 1278 LOC did not grow.
+WARN packages/opencode/test/cli/run/scrollback.surface.test.ts: 1002 LOC exceeds hard limit 750; legacy base 1002 LOC did not grow.
+WARN packages/opencode/test/cli/run/session-data.test.ts: 546 LOC exceeds target 500.
+WARN packages/opencode/test/cli/run/session-replay.test.ts: 657 LOC exceeds target 500.
+WARN packages/opencode/test/cli/run/stream.transport.test.ts: 2183 LOC exceeds hard limit 750; legacy base 2183 LOC did not grow.
+WARN packages/opencode/test/cli/run/subagent-data.test.ts: 513 LOC exceeds target 500.
+WARN packages/opencode/test/cli/tui/plugin-loader.test.ts: 1232 LOC exceeds hard limit 750; legacy base 1232 LOC did not grow.
+WARN packages/opencode/test/config/config.test.ts: 2022 LOC exceeds hard limit 750; legacy base 2022 LOC did not grow.
+WARN packages/opencode/test/config/tui.test.ts: 808 LOC exceeds hard limit 750; legacy base 808 LOC did not grow.
+WARN packages/opencode/test/control-plane/workspace.test.ts: 1644 LOC exceeds hard limit 750; legacy base 1644 LOC did not grow.
+WARN packages/opencode/test/lib/cli-process.ts: 519 LOC exceeds target 500.
+WARN packages/opencode/test/lib/llm-server.ts: 695 LOC exceeds target 500.
+WARN packages/opencode/test/maestro/atlas-source.test.ts: 658 LOC exceeds target 500.
+WARN packages/opencode/test/maestro/context-tool-plan.test.ts: 508 LOC exceeds target 500.
+WARN packages/opencode/test/maestro/governed-lifecycle.test.ts: 738 LOC exceeds target 500.
+WARN packages/opencode/test/maestro/validation-record.test.ts: 559 LOC exceeds target 500.
+WARN packages/opencode/test/mcp/lifecycle.test.ts: 507 LOC exceeds target 500.
+WARN packages/opencode/test/permission/next.test.ts: 1035 LOC exceeds hard limit 750; legacy base 1035 LOC did not grow.
+WARN packages/opencode/test/plugin/install.test.ts: 506 LOC exceeds target 500.
+WARN packages/opencode/test/plugin/loader-shared.test.ts: 1203 LOC exceeds hard limit 750; legacy base 1203 LOC did not grow.
+WARN packages/opencode/test/plugin/openai-ws.test.ts: 805 LOC exceeds hard limit 750; legacy base 805 LOC did not grow.
+WARN packages/opencode/test/plugin/xai.test.ts: 535 LOC exceeds target 500.
+WARN packages/opencode/test/project/project.test.ts: 670 LOC exceeds target 500.
+WARN packages/opencode/test/provider/provider.test.ts: 1977 LOC exceeds hard limit 750; legacy base 1977 LOC did not grow.
+WARN packages/opencode/test/provider/transform.test.ts: 5748 LOC exceeds hard limit 750; legacy base 5748 LOC did not grow.
+WARN packages/opencode/test/server/httpapi-exercise/index.ts: 1791 LOC exceeds hard limit 750; legacy base 1791 LOC did not grow.
+WARN packages/opencode/test/server/httpapi-sdk.test.ts: 844 LOC exceeds hard limit 750; legacy base 844 LOC did not grow.
+WARN packages/opencode/test/server/httpapi-session.test.ts: 977 LOC exceeds hard limit 750; legacy base 977 LOC did not grow.
+WARN packages/opencode/test/session/compaction.test.ts: 1793 LOC exceeds hard limit 750; legacy base 1793 LOC did not grow.
+WARN packages/opencode/test/session/llm-native.test.ts: 716 LOC exceeds target 500.
+WARN packages/opencode/test/session/llm.test.ts: 2107 LOC exceeds hard limit 750; legacy base 2107 LOC did not grow.
+WARN packages/opencode/test/session/message-v2.test.ts: 1612 LOC exceeds hard limit 750; legacy base 1612 LOC did not grow.
+WARN packages/opencode/test/session/messages-pagination.test.ts: 925 LOC exceeds hard limit 750; legacy base 925 LOC did not grow.
+WARN packages/opencode/test/session/processor-effect.test.ts: 1043 LOC exceeds hard limit 750; legacy base 1043 LOC did not grow.
+WARN packages/opencode/test/session/prompt.test.ts: 2067 LOC exceeds hard limit 750; legacy base 2067 LOC did not grow.
+WARN packages/opencode/test/session/revert-compact.test.ts: 603 LOC exceeds target 500.
+WARN packages/opencode/test/skill/skill.test.ts: 523 LOC exceeds target 500.
+WARN packages/opencode/test/snapshot/snapshot.test.ts: 1149 LOC exceeds hard limit 750; legacy base 1149 LOC did not grow.
+WARN packages/opencode/test/tool/code-mode.test.ts: 657 LOC exceeds target 500.
+WARN packages/opencode/test/tool/read.test.ts: 705 LOC exceeds target 500.
+WARN packages/opencode/test/tool/registry.test.ts: 552 LOC exceeds target 500.
+WARN packages/opencode/test/tool/shell.test.ts: 1135 LOC exceeds hard limit 750; legacy base 1135 LOC did not grow.
+WARN packages/opencode/test/tool/task-governance.test.ts: 506 LOC exceeds target 500.
+WARN packages/opencode/test/tool/task.test.ts: 1154 LOC exceeds hard limit 750; legacy base 1154 LOC did not grow.
+WARN packages/opencode/test/util/filesystem.test.ts: 536 LOC exceeds target 500.
+WARN packages/plugin/src/tui.ts: 568 LOC exceeds target 500.
+WARN packages/schema/src/maestro-event.ts: 520 LOC exceeds target 500.
+WARN packages/schema/src/v1/session.ts: 618 LOC exceeds target 500.
+WARN packages/sdk/js/src/gen/sdk.gen.ts: 1114 LOC exceeds hard limit 750; legacy base 1114 LOC did not grow.
+WARN packages/sdk/js/src/gen/types.gen.ts: 3476 LOC exceeds hard limit 750; legacy base 3476 LOC did not grow.
+WARN packages/sdk/js/src/v2/gen/sdk.gen.ts: 6955 LOC exceeds hard limit 750; legacy base 6955 LOC did not grow.
+WARN packages/sdk/js/src/v2/gen/types.gen.ts: 13849 LOC exceeds hard limit 750; legacy base 13849 LOC did not grow.
+WARN packages/session-ui/src/components/file.tsx: 1064 LOC exceeds hard limit 750; legacy base 1064 LOC did not grow.
+WARN packages/session-ui/src/components/line-comment-annotations.tsx: 574 LOC exceeds target 500.
+WARN packages/session-ui/src/components/markdown-inline-code-kind.ts: 1910 LOC exceeds hard limit 750; legacy base 1910 LOC did not grow.
+WARN packages/session-ui/src/components/markdown.tsx: 653 LOC exceeds target 500.
+WARN packages/session-ui/src/components/message-part.tsx: 2416 LOC exceeds hard limit 750; legacy base 2459 LOC did not grow.
+WARN packages/session-ui/src/components/session-review.tsx: 597 LOC exceeds target 500.
+WARN packages/session-ui/src/components/timeline-playground.stories.tsx: 1954 LOC exceeds hard limit 750; legacy base 1954 LOC did not grow.
+WARN packages/session-ui/src/v2/components/prompt-input/index.tsx: 705 LOC exceeds target 500.
+WARN packages/stats/app/src/component/model-compare-detail.tsx: 1102 LOC exceeds hard limit 750; legacy base 1102 LOC did not grow.
+WARN packages/stats/app/src/routes/[lab]/[model].tsx: 1378 LOC exceeds hard limit 750; legacy base 1378 LOC did not grow.
+WARN packages/stats/app/src/routes/[lab]/index.tsx: 922 LOC exceeds hard limit 750; legacy base 922 LOC did not grow.
+WARN packages/stats/app/src/routes/compare/index.tsx: 571 LOC exceeds target 500.
+WARN packages/stats/app/src/routes/index.tsx: 1596 LOC exceeds hard limit 750; legacy base 1596 LOC did not grow.
+WARN packages/stats/app/src/routes/stats-shell.tsx: 514 LOC exceeds target 500.
+WARN packages/stats/core/src/domain/home.ts: 1044 LOC exceeds hard limit 750; legacy base 1044 LOC did not grow.
+WARN packages/stats/core/src/honeycomb-backfill.ts: 916 LOC exceeds hard limit 750; legacy base 916 LOC did not grow.
+WARN packages/tui/src/app.tsx: 1085 LOC exceeds hard limit 750; legacy base 1085 LOC did not grow.
+WARN packages/tui/src/component/prompt/autocomplete.tsx: 697 LOC exceeds target 500.
+WARN packages/tui/src/component/prompt/index.tsx: 1600 LOC exceeds hard limit 750; legacy base 1600 LOC did not grow.
+WARN packages/tui/src/context/data.tsx: 557 LOC exceeds target 500.
+WARN packages/tui/src/context/local.tsx: 510 LOC exceeds target 500.
+WARN packages/tui/src/context/sync.tsx: 643 LOC exceeds target 500.
+WARN packages/tui/src/feature-plugins/system/diff-viewer.tsx: 1030 LOC exceeds hard limit 750; legacy base 1030 LOC did not grow.
+WARN packages/tui/src/feature-plugins/system/which-key.tsx: 574 LOC exceeds target 500.
+WARN packages/tui/src/routes/session/index.tsx: 2539 LOC exceeds hard limit 750; legacy base 2539 LOC did not grow.
+WARN packages/tui/src/routes/session/permission.tsx: 682 LOC exceeds target 500.
+WARN packages/tui/src/theme/index.ts: 1025 LOC exceeds hard limit 750; legacy base 1025 LOC did not grow.
+WARN packages/tui/src/ui/dialog-select.tsx: 749 LOC exceeds target 500.
+WARN packages/ui/src/components/file-icon.tsx: 538 LOC exceeds target 500.
+WARN packages/ui/src/components/file-icons/types.ts: 1093 LOC exceeds hard limit 750; legacy base 1093 LOC did not grow.
+WARN packages/ui/src/components/thinking-heading.stories.tsx: 784 LOC exceeds hard limit 750; legacy base 784 LOC did not grow.
+WARN packages/web/src/components/Share.tsx: 590 LOC exceeds target 500.
+WARN packages/web/src/components/icons/index.tsx: 4452 LOC exceeds hard limit 750; legacy base 4452 LOC did not grow.
+WARN packages/web/src/components/share/part.tsx: 759 LOC exceeds hard limit 750; legacy base 759 LOC did not grow.
+WARN script/translate-app.ts: 537 LOC exceeds target 500.

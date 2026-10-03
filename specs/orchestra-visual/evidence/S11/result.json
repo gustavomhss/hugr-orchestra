@@ -1,0 +1,69 @@
+{
+  "status": "SCOPED_VERIFIED",
+  "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
+  "checkpoint": "061fd0da58",
+  "verified_source_tree": "5d1b6a1bb28d540e2708f23355d34c92632ee6e4",
+  "source_tree_scope": "Compare packages/app against this Git tree; the final commit adds only evidence artifacts outside that subtree.",
+  "branch": "orchestra-evidence",
+  "date": "2026-10-03",
+  "scope": ["S11/W03 execution summaries and raw fallback", "S10/W07 replay and unsent PR preparation"],
+  "contract": "Latest resume brief extends the older Bun-only W03 contract to captured Bun, Vitest, Jest, Playwright, pytest, Go and Cargo formats. DS19 plus current Orchestra tokens guide presentation.",
+  "environment": { "os": "Darwin 24.3.0", "machine": "MacBookPro16,1", "logical_cpus": 12, "bun": "1.3.14", "playwright": "1.59.1", "browser": "Chromium", "screenshots": "1400x900, DPR 1, dark" },
+  "checks": [
+    { "cwd": "packages/app", "command": "bun typecheck", "exit": 0 },
+    { "cwd": "packages/app", "command": "bun run typecheck:e2e", "exit": 0 },
+    { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/orchestra-evidence-parse.test.ts src/pages/session/orchestra-evidence-data.test.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 32, "failed": 0, "assertions": 183 },
+    { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/components/prompt-input/submit.test.ts", "exit": 0, "passed": 8, "note": "Separate process: this existing suite's global module mocks contaminated an initial combined run (missing checksum export). No new module mocks were introduced." },
+    { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence.spec.ts e2e/orchestra/evidence-actions.spec.ts --reporter=line", "exit": 0, "passed": 24, "failed": 0, "skipped": 0, "build": "production; isolated mocked API and SSE; no paid provider" },
+    { "cwd": "packages/app", "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 bunx playwright test --config evidence-benchmark.config.ts session-timeline-checklists.spec.ts --reporter=line", "exit": 0, "passed": 5, "note": "Temporary preview-only config reused the production bundle. Existing historical snapshot, live confirmation and virtualization/collapse regressions. Config removed after use." },
+    { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "source_files": 3561, "warnings": 301, "errors": 0, "artifact": "godfile.log" }
+  ],
+  "mutation": {
+    "file": "packages/app/src/pages/session/composer/session-evidence-actions.ts",
+    "change": "Temporarily removed if (input.busy) return busy from replayBlock.",
+    "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence-actions.spec.ts --grep 'busy state is rechecked' --reporter=line",
+    "exit": 1,
+    "failure": "expect(dialog).toContainText: expected This session is working; received enabled Run command without that reason",
+    "restored": true,
+    "restored_verification": "Targeted browser run passed, then all 24 production E2E tests passed with the restored guard."
+  },
+  "coverage": [
+    "Runner-specific counts and failing names; Go reports packages, not invented test totals",
+    "Unknown formats, unsupported commands, incomplete footers, unknown completeness, contradictions, partial output and unknown exit",
+    "Raw shell status/call identity and absent timestamps override normalized display values",
+    "Bounded 64 KiB parsing and 32-entry cache; revision invalidation and clear",
+    "Replay confirmation/cancel, exact command/new ID, double click, pending request lock, busy recheck and unsupported workdir",
+    "Captured command survives part revision; session switch and same-ID server switch invalidate confirmation",
+    "Draft text, caret and attachment survive replay; uncertain response never retries; late response cannot close a newer dialog",
+    "Replay creates one new evidence card without replacing the original; synthetic shell projection duplicates filtered",
+    "PR draft uses loaded review paths/counts, branch and selected result; empty/append/cancel/later edits; no session mutation request",
+    "Keyboard tabs, LTR command/output islands in RTL, retained raw viewer and non-navigable saved path"
+  ],
+  "dependency": "strip-ansi 7.1.2 is now a direct app dependency, reusing the exact package already used by session-ui's raw shell renderer. bun.lock adds only that workspace edge; no runner/reporting framework.",
+  "performance": {
+    "baseline": "benchmark-baseline.json",
+    "candidate": "benchmark-candidate.json",
+    "candidate_source_tree": "4c18f11513ea437fc2aa6c35493c55b6746d1390",
+    "scope": "Same final parser/timeline code; sampled before final dialog padding and pending-request copy polish. Those changes were rechecked in the final production E2E run.",
+    "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 TIMELINE_CPU_THROTTLE=1 TIMELINE_DELTA_COUNT=32 TIMELINE_HISTORY_TURNS=40 bunx playwright test --config evidence-benchmark.config.ts timeline/session-timeline-benchmark.spec.ts --grep 'streams assistant text in v2 with review pane closed' --reporter=line",
+    "baseline_method": "Recovered from git archive of base packages/app inside this worktree, using unchanged shared packages/dependencies. Initial pre-edit baseline attempts failed; this is a recovered baseline, not a claimed pre-edit measurement.",
+    "comparison": "32/32 deltas both runs; completion 8134.1 -> 8103.2 ms. Both reported zero blank samples, drift and row/markdown replacement. RAF-gap p95 increased 83.4 -> 166.6 ms; one noisy sample per side cannot establish latency equivalence.",
+    "full_stress": "NOT_VERIFIED: original-base default 30x CPU / 320 turns / 160 deltas timed out at the 420000 ms completion check and reported metrics:null. Earlier attempts also hit build startup timeouts and an API-port mismatch. No budgets or guards were relaxed.",
+    "acceptance": "Diagnostic only; full-load/quiet-host budget acceptance remains with integration."
+  },
+  "screenshots": {
+    "failed-tests.png": "b635f14ea762702123b71dbf8c2c127a8eca459b2b652415fd4a7e776bd4619a",
+    "partial-output.png": "3d6c31a62ef0671344506b519e15638e7ecd685d301fc973cc47d3d960e236cd",
+    "replay-confirmation.png": "47f525ed201872cef170a5f01164dc7bd4390471fc0644018fab2eac1e0e24b4",
+    "prepare-pr-unsent.png": "df40a3a618596ca9fcf3b863b9f5ca02ccaa395552adbbca192533ca5801b7a8"
+  },
+  "framing_corrections": [
+    "Printed totals are runner-reported evidence, never independent proof of success or validation of the current revision. Nonzero exit beside passing totals stays raw.",
+    "The original Jest example was documented, not captured; replaced with real Jest 30.2.0 output and reproducible cases.",
+    "V2 transports command/id and owns agent/model on the session; compatibility may drop old session summary fields. PR preparation consumes loaded review data instead of fabricating them.",
+    "Shared V2 test conversion put metadata in structured and omitted model discovery; evidence fixtures serve actual protocol shapes.",
+    "Open dialogs can outlive session-page disposal; reactive invalidation is required in addition to confirm-time ownership checks."
+  ],
+  "review": "Implementation-agent review and decoded screenshots; independent lead review and owner visual acceptance remain.",
+  "integration": "Lead reconciles additive evidence i18n keys and performs branch integration. This receipt does not close unrelated S11 panes or the other B lanes."
+}
