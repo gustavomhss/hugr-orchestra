@@ -16,7 +16,7 @@ await Promise.all(
       entrypoints: [entry],
       target: "node",
       format: "esm",
-      minify: true,
+      minify: { identifiers: false, syntax: true, whitespace: true },
       plugins: [
         {
           name: "canonical-atlas-build-boundary",
