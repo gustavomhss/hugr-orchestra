@@ -168,7 +168,7 @@ for (const scheme of ["dark", "light"] as const) {
     await openChapter(page)
     await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
     const debug = page.getByRole("button", { name: "Toggle debug tools", exact: true })
-    if ((await debug.getAttribute("aria-pressed")) === "true") await debug.click()
+    if ((await debug.isVisible()) && (await debug.getAttribute("aria-pressed")) === "true") await debug.click()
     const notice = page.getByRole("button", { name: "Dismiss Tabs information", exact: true })
     if (await notice.count()) await notice.click()
     const workflow = page.getByRole("button", { name: ".github/workflows/release.yaml", exact: true })

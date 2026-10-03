@@ -8,7 +8,7 @@ const directory = "/work/shared repository"
 const sessionID = "ses_dock_chat"
 const sessionTitle = "Dock chat session"
 
-type DockCall = { type: string; url?: string; profile?: string; tabID?: string }
+type DockCall = { type: string; url?: string; profile?: string; tabID?: string; occluded?: boolean }
 type DockFake = {
   calls: DockCall[]
   live: { tabID: string; generation: number; url: string; profile: string }[]
@@ -66,6 +66,55 @@ test("Dock page and Chat's Apps tab share one live browser session", async ({ pa
   await page.screenshot({ path: test.info().outputPath(`light.png`), animations: "disabled" })
   await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
   await page.screenshot({ path: test.info().outputPath(`rtl-light.png`), animations: "disabled" })
+})
+
+test("an overlay over the Dock occludes the native browser until it closes", async ({ page }) => {
+  // Chat registers the settings dialog, so the Apps tab hosts the Dock for this one.
+  await setup(page, { bridge: true, session: true })
+  // The settings dialog lists terminal shells, which the shared server mock does not answer.
+  await page.route(
+    (url) => url.pathname === "/pty/shells",
+    (route) => json(route, []),
+  )
+  await page.goto(`/server/${base64Encode(serverA)}/session/${sessionID}`)
+  await expect(page.getByRole("heading", { name: sessionTitle })).toBeVisible({ timeout: 30_000 })
+  const apps = page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps" })
+  if (!(await apps.isVisible())) await page.getByRole("button", { name: "Toggle review" }).click()
+  await apps.click()
+  await openAddress(page, "https://example.com/a")
+  await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
+  const occluded = async () => (await fake(page)).calls.filter((call) => call.type === "occlude").at(-1)?.occluded
+  // Release is the desktop's job: it shows its active tab, so the renderer never hides or re-selects one.
+  const moves = async (before: number) => {
+    const calls = (await fake(page)).calls.slice(before)
+    expect(calls.filter((call) => call.type !== "occlude")).toEqual([])
+    return calls.map((call) => call.occluded)
+  }
+  await expect.poll(occluded).toBe(false)
+
+  // The settings dialog renders through a portal and its overlay covers the whole window.
+  const beforeDialog = (await fake(page)).calls.length
+  await nav(page, "Settings")
+  await expect(page.getByRole("dialog")).toBeVisible()
+  await expect.poll(occluded).toBe(true)
+  await page.keyboard.press("Escape")
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect.poll(occluded).toBe(false)
+  expect(await moves(beforeDialog)).toEqual([true, false])
+
+  // The tab menu is drawn in place rather than in a portal and opens over the browser.
+  await openDock(page)
+  await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
+  await expect.poll(occluded).toBe(false)
+  const beforeMenu = (await fake(page)).calls.length
+  await tab(page, "Page /a").click({ button: "right" })
+  const menu = page.getByRole("menu", { name: "Actions for Page /a" })
+  await expect(menu).toBeVisible()
+  await expect.poll(occluded).toBe(true)
+  await page.keyboard.press("Escape")
+  await expect(menu).toHaveCount(0)
+  await expect.poll(occluded).toBe(false)
+  expect(await moves(beforeMenu)).toEqual([true, false])
 })
 
 test("a profile switch selects the other repository's native profile, ignoring late tabs", async ({ page }) => {
@@ -324,6 +373,9 @@ function installDockBridge(partial: boolean) {
         },
         appDockHide: async () => {
           dock.calls.push({ type: "hide" })
+        },
+        appDockOcclude: async (occluded: boolean) => {
+          dock.calls.push({ type: "occlude", occluded })
         },
         appDockClose: async () => {
           dock.calls.push({ type: "close" })

@@ -14,8 +14,6 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-success: #9dbfae;
   --orchestra-danger: #d29e9b;
 
-  --orchestra-background: #080c11;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #1a2532 0%, transparent 65%), #080c11;
   --orchestra-shell-background: #0e141b;
   --orchestra-shell-border: rgba(145, 166, 187, 0.25);
   --orchestra-shell-shadow: 0 32px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -106,6 +104,11 @@ html[data-color-scheme] body[data-new-layout] {
   --surface-base-active: var(--orchestra-surface-active);
   --surface-raised-base: var(--orchestra-surface);
   --surface-float-base: var(--orchestra-surface-float);
+  --surface-raised-stronger-non-alpha: var(--orchestra-surface-float);
+  --surface-disabled: var(--orchestra-surface);
+  --button-primary-base: var(--orchestra-text);
+  --button-secondary-base: var(--orchestra-surface);
+  --button-secondary-hover: var(--orchestra-surface-hover);
   --text-base: var(--orchestra-body);
   --text-strong: var(--orchestra-text);
   --text-weak: var(--orchestra-muted);
@@ -116,6 +119,12 @@ html[data-color-scheme] body[data-new-layout] {
   --text-on-critical-base: var(--orchestra-danger);
   --icon-base: var(--orchestra-body);
   --icon-strong-base: var(--orchestra-text);
+  --icon-strong-hover: var(--orchestra-body);
+  --icon-strong-focus: var(--orchestra-text);
+  --icon-strong-active: var(--orchestra-body);
+  --icon-strong-disabled: var(--orchestra-muted);
+  --icon-invert-base: var(--orchestra-background);
+  --icon-disabled: var(--orchestra-muted);
   --icon-weak-base: var(--orchestra-muted);
   --icon-interactive-base: var(--orchestra-accent);
   --icon-success-base: var(--orchestra-success);
@@ -125,6 +134,7 @@ html[data-color-scheme] body[data-new-layout] {
   --border-weak-base: var(--orchestra-border-muted);
   --border-strong-base: var(--orchestra-border-strong);
   --border-focus: var(--orchestra-accent);
+  --border-disabled: var(--orchestra-border-muted);
   --border-interactive-focus: var(--orchestra-accent);
 
   --v2-background-bg-base: var(--orchestra-shell-background);
@@ -233,8 +243,6 @@ html[data-color-scheme="light"] body[data-new-layout] {
   /* The reference leaves --danger unchanged in light mode. */
   --orchestra-danger: #d29e9b;
 
-  --orchestra-background: #dfe3e8;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #eef1f4 0%, transparent 65%), #dfe3e8;
   --orchestra-shell-background: #e9ecf0;
   --orchestra-shell-border: rgba(60, 72, 86, 0.22);
   --orchestra-shell-shadow: 0 32px 90px rgba(28, 36, 46, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -365,7 +373,6 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-des
 @media (min-width: 768px) {
   body[data-new-layout] #root {
     padding: 0;
-    background: transparent;
   }
 
   body[data-new-layout] :is(.orchestra-shell, .orchestra-profile-menu) {

@@ -6,7 +6,7 @@ import { FileComponentProvider } from "@opencode-ai/ui/context/file"
 import { File } from "@opencode-ai/session-ui/file"
 import { Font } from "@opencode-ai/ui/font"
 import { HugrSplash } from "@/orchestra/brand"
-import { ThemeProvider } from "@opencode-ai/ui/theme/context"
+import { ThemeProvider, syncThemeBackground } from "@opencode-ai/ui/theme/context"
 import { MetaProvider } from "@solidjs/meta"
 import {
   type BaseRouterProps,
@@ -283,6 +283,7 @@ declare global {
       appDockDeleteProfile?: (profileID: string) => Promise<void>
       appDockResize?: (bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
       appDockHide?: () => Promise<void>
+      appDockOcclude?: (occluded: boolean) => Promise<void>
       appDockClose?: () => Promise<void>
       appDockCloseTab?: (id: string) => Promise<void>
       appDockSelect?: (id: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
@@ -370,7 +371,9 @@ function BodyDesignClass() {
     if (typeof document === "undefined") return
 
     const enabled = settings.general.newLayoutDesigns()
+    document.documentElement.toggleAttribute("data-new-layout", enabled)
     document.body.toggleAttribute("data-new-layout", enabled)
+    syncThemeBackground()
     document.body.classList.toggle("text-12-regular", !enabled)
     document.body.classList.toggle("font-(family-name:--font-family-text)", enabled)
     document.body.classList.toggle("text-[13px]", enabled)

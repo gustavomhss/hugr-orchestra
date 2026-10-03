@@ -326,7 +326,7 @@ function SessionProviders(props: ParentProps) {
 function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
   return (
     <div
-      data-component="session-surface"
+      data-session-layout="surface"
       class="relative size-full overflow-hidden flex flex-col"
       classList={{ "p-2": props.padded }}
     >
@@ -338,7 +338,7 @@ function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
 function SessionPanelFrame(props: ParentProps<{ newLayout: boolean; raised?: boolean }>) {
   return (
     <div
-      data-slot="session-body"
+      data-session-layout="body"
       data-raised={props.raised ? "" : undefined}
       classList={{
         "flex-1 min-h-0 flex flex-col": true,
@@ -2056,7 +2056,7 @@ export default function Page() {
       <Show when={!isDesktop() && !!params.id && settings.general.newLayoutDesigns() && !mobileTabsBottom()}>
         {mobileTabs(true)}
       </Show>
-      <div data-slot="session-timeline-region" class="flex-1 min-h-0 overflow-hidden">
+      <div data-session-layout="timeline-region" class="flex-1 min-h-0 overflow-hidden">
         <Switch>
           <Match when={params.id && mobileChanges()}>
             <div class="relative h-full overflow-hidden">
@@ -2243,7 +2243,7 @@ export default function Page() {
       <SessionHeader />
       <div
         ref={panelRow}
-        data-slot="session-panel-row"
+        data-session-layout="panel-row"
         class="flex-1 min-h-0 flex flex-col md:flex-row"
         classList={{
           "gap-2 p-2": newSessionDesign() && !isDesktop(),
@@ -2253,7 +2253,7 @@ export default function Page() {
         <Show when={!isDesktop() && !!params.id && !settings.general.newLayoutDesigns()}>{mobileTabs()}</Show>
 
         <div
-          data-slot="session-conversation-panel"
+          data-session-layout="conversation-panel"
           classList={{
             "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 md:flex-none transition-[width]": true,
             "duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
@@ -2316,7 +2316,7 @@ export default function Page() {
         </Show>
         <Show when={newSessionDesign()}>
           <Show when={isDesktop() ? desktopV2PanelLayout().visible : terminalOpen()}>
-            <div data-slot="session-secondary-column" class="min-w-0 h-full flex flex-1 flex-col">
+            <div data-session-layout="secondary-column" class="min-w-0 h-full flex flex-1 flex-col">
               <Show when={isDesktop() && (desktopV2ReviewOpen() || desktopFileTreeOpen())}>
                 <div class="min-h-0 flex-1">
                   <Suspense>

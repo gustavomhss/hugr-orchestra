@@ -3,7 +3,8 @@ import config from "../../playwright.config"
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 4313)
 const baseURL = `http://127.0.0.1:${port}`
-process.env.PLAYWRIGHT_SERVER_PORT = String(port)
+const serverHost = process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"
+const serverPort = process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"
 
 export default defineConfig({
   ...config,
@@ -24,6 +25,6 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,
-    env: { VITE_OPENCODE_SERVER_HOST: "127.0.0.1", VITE_OPENCODE_SERVER_PORT: String(port) },
+    env: { VITE_OPENCODE_SERVER_HOST: serverHost, VITE_OPENCODE_SERVER_PORT: serverPort },
   },
 })

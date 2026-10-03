@@ -88,6 +88,10 @@ export function AppsPanel() {
       if (host) onCleanup(dock.attach(host, id))
     }),
   )
+  // The tab menu is drawn in place, not in a portal, and can reach over the browser.
+  createEffect(() => {
+    if (view.menu && menuElement) onCleanup(dock.overlay(menuElement))
+  })
   onMount(() => {
     const unsubscribeFind = api?.appDockFindResult?.((result) => {
       if (sameTab(result, state.active) && result.requestID === findRequestID) setView("findResult", result)

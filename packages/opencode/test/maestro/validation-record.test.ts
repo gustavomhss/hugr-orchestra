@@ -10,7 +10,7 @@ import { ProjectTable } from "@opencode-ai/core/project/sql"
 import { AbsolutePath } from "@opencode-ai/core/schema"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
-import { Effect, Schema } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
 import { eq } from "drizzle-orm"
 import path from "node:path"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -84,12 +84,15 @@ const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDir
   const { db } = yield* Database.Service
   const events = yield* EventV2Bridge.Service
   const git = yield* Git.Service
+  // Bun.write can resolve on Windows before its file handle closes. Git for Windows' FSCache then reads the stale
+  // zero-byte directory entry and stages an empty blob, leaving a dirty tree. FileSystem writes close before completing.
+  const fs = yield* FileSystem.FileSystem
   const baseCommit = yield* git.run(["rev-parse", "HEAD"], { cwd: directory })
   const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: directory })
-  yield* Effect.promise(() => Bun.write(`${directory}/proof.txt`, "proof\n"))
+  yield* fs.writeFileString(path.join(directory, "proof.txt"), "proof\n")
   yield* git.run(["add", "proof.txt"], { cwd: directory })
   yield* git.run(["commit", "-m", "proof"], { cwd: directory })
-  yield* Effect.promise(() => Bun.write(`${directory}/proof-2.txt`, "proof 2\n"))
+  yield* fs.writeFileString(path.join(directory, "proof-2.txt"), "proof 2\n")
   yield* git.run(["add", "proof-2.txt"], { cwd: directory })
   yield* git.run(["commit", "-m", "proof 2"], { cwd: directory })
   const head = yield* git.run(["rev-parse", "HEAD"], { cwd: directory })
@@ -328,7 +331,8 @@ describe("Maestro validation receipt", () => {
         const { db } = yield* Database.Service
         const sandbox = path.join(test.directory, ".sandboxes", "card")
         const git = yield* Git.Service
-        yield* Effect.promise(() => Bun.write(`${test.directory}/.git/info/exclude`, ".sandboxes/\n"))
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString(path.join(test.directory, ".git", "info", "exclude"), ".sandboxes/\n")
         expect((yield* git.run(["worktree", "add", "-b", "sandbox", sandbox], { cwd: test.directory })).exitCode).toBe(
           0,
         )
@@ -474,7 +478,8 @@ describe("Maestro validation receipt", () => {
         const git = yield* Git.Service
         yield* git.run(["checkout", "--orphan", "unrelated-artifact"], { cwd: test.directory })
         yield* git.run(["rm", "-rf", "."], { cwd: test.directory })
-        yield* Effect.promise(() => Bun.write(`${test.directory}/unrelated.txt`, "unrelated\n"))
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString(path.join(test.directory, "unrelated.txt"), "unrelated\n")
         yield* git.run(["add", "unrelated.txt"], { cwd: test.directory })
         yield* git.run(["commit", "-m", "unrelated"], { cwd: test.directory })
         const head = yield* git.run(["rev-parse", "HEAD"], { cwd: test.directory })

@@ -144,7 +144,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
           />
         </Show>
 
-        <div class="relative min-h-[60px]">
+        <div data-slot="prompt-input-v2-editor" class="relative min-h-[60px]">
           <div
             ref={(element) => {
               editor = element
@@ -196,8 +196,9 @@ export function PromptInputV2(props: PromptInputV2Props) {
           </Show>
         </div>
 
-        <div class="flex h-11 items-center px-2">
+        <div data-slot="prompt-input-v2-toolbar" class="flex h-11 items-center px-2">
           <div
+            data-slot="prompt-input-v2-controls"
             class="flex min-w-0 flex-1 items-center gap-1"
             aria-hidden={state.mode === "shell"}
             inert={state.mode === "shell" ? true : undefined}
