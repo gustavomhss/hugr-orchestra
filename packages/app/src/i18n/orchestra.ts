@@ -1,5 +1,8 @@
 // Preserve approved identity copy across locales; inherited product labels retain their translations.
 export const ORCHESTRA_COPY = {
+  "orchestra.nav.expand": "Expand sidebar",
+  "orchestra.nav.collapse": "Collapse sidebar",
+  "orchestra.nav.compactWidth": "The sidebar stays compact in this window width.",
   "orchestra.mcp.description": "Connect tools and context to the agents in this profile.",
   "orchestra.mcp.search": "Search MCP servers",
   "orchestra.mcp.loading": "Loading MCP servers…",

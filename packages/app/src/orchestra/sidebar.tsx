@@ -17,6 +17,8 @@ import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
 import { navigation } from "@/orchestra/navigation"
+import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
+import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
 import { createHomeController } from "@/pages/home/home-controller"
 import {
   displayName,
@@ -53,7 +55,7 @@ const icons = {
   help: '<circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.7.6-.7 1.1M8 11.6v.1"/>',
 }
 
-export function OrchestraSidebar() {
+export function OrchestraSidebar(props: { compact: boolean; constrained: boolean; onToggle: () => void }) {
   const layout = useLayout()
   const global = useGlobal()
   const server = useServer()
@@ -320,54 +322,76 @@ export function OrchestraSidebar() {
 
   return (
     <aside data-component="orchestra-sidebar" class="orchestra-sidebar" aria-label={language.t("home.projects")}>
-      <HugrBrand />
+      <HugrBrand compact={props.compact} />
+      <OrchestraNavigationToggle compact={props.compact} constrained={props.constrained} onToggle={props.onToggle} />
       <Show when={state.settings} keyed>
         {(launch) => launch()}
       </Show>
       <div class="orchestra-navigation">
-        <nav class="orchestra-nav">
+        <nav id="orchestra-navigation" class="orchestra-nav">
           <For each={navigation}>
             {(item) => (
               <>
                 <Show when={item.id === "search"}>
                   <div class="orchestra-nav-rule" />
                 </Show>
-                <button
-                  type="button"
-                  class="orchestra-nav-button"
-                  disabled={
-                    (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
-                    (item.id === "settings" && !command.options.some((option) => option.id === "settings.open")) ||
-                    (item.id === "chat" &&
-                      (!layout.ready() || !tabs.ready() || global.servers.health[profile().server]?.healthy === false))
-                  }
-                  aria-current={current(item.id) ? "page" : undefined}
-                  title={
+                <OrchestraNavigationTooltip
+                  value={
                     item.chapter && !chapterPages[item.id]
-                      ? `${item.chapter} · ${language.t("orchestra.rework.pending")}`
-                      : undefined
+                      ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
+                      : language.t(item.label)
                   }
-                  onClick={() => {
-                    if (item.id === "home") return navigate("/")
-                    if (item.id === "chat") return openChat()
-                    if (item.id === "search") return command.show()
-                    if (item.id === "settings") return command.trigger("settings.open")
-                    if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
-                    if (chapterPages[item.id]) return openChapter(item.id)
-                    if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
-                    if (item.chapter) openPending(language.t(item.label), item.chapter)
-                  }}
                 >
-                  <svg class="orchestra-nav-icon" viewBox="0 0 16 16" aria-hidden="true" innerHTML={icons[item.id]} />
-                  <span class="orchestra-nav-label">{language.t(item.label)}</span>
-                  <Show when={item.id === "search"}>
-                    <kbd>{command.keybind("command.palette")}</kbd>
-                  </Show>
-                  <Show when={item.chapter && !chapterPages[item.id]}>
-                    <span class="orchestra-pending-dot" aria-hidden="true" />
-                    <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
-                  </Show>
-                </button>
+                  {(Trigger) => (
+                    <Trigger
+                      type="button"
+                      class="orchestra-nav-button"
+                      aria-label={language.t(item.label)}
+                      aria-description={
+                        item.chapter && !chapterPages[item.id] ? language.t("orchestra.rework.pending") : undefined
+                      }
+                      disabled={
+                        (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
+                        (item.id === "settings" && !command.options.some((option) => option.id === "settings.open")) ||
+                        (item.id === "chat" &&
+                          (!layout.ready() ||
+                            !tabs.ready() ||
+                            global.servers.health[profile().server]?.healthy === false))
+                      }
+                      aria-current={current(item.id) ? "page" : undefined}
+                      title={
+                        item.chapter && !chapterPages[item.id]
+                          ? `${item.chapter} · ${language.t("orchestra.rework.pending")}`
+                          : undefined
+                      }
+                      onClick={() => {
+                        if (item.id === "home") return navigate("/")
+                        if (item.id === "chat") return openChat()
+                        if (item.id === "search") return command.show()
+                        if (item.id === "settings") return command.trigger("settings.open")
+                        if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
+                        if (chapterPages[item.id]) return openChapter(item.id)
+                        if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
+                        if (item.chapter) openPending(language.t(item.label), item.chapter)
+                      }}
+                    >
+                      <svg
+                        class="orchestra-nav-icon"
+                        viewBox="0 0 16 16"
+                        aria-hidden="true"
+                        innerHTML={icons[item.id]}
+                      />
+                      <span class="orchestra-nav-label">{language.t(item.label)}</span>
+                      <Show when={item.id === "search"}>
+                        <kbd>{command.keybind("command.palette")}</kbd>
+                      </Show>
+                      <Show when={item.chapter && !chapterPages[item.id]}>
+                        <span class="orchestra-pending-dot" aria-hidden="true" />
+                        <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
+                      </Show>
+                    </Trigger>
+                  )}
+                </OrchestraNavigationTooltip>
               </>
             )}
           </For>
@@ -384,29 +408,36 @@ export function OrchestraSidebar() {
             setState("profileOpen", open)
           }}
         >
-          <DropdownMenu.Trigger
-            class="orchestra-profile"
-            data-slot="orchestra-profile"
-            aria-label={language.t("orchestra.profile.choose")}
-            aria-describedby="orchestra-profile-name"
-          >
-            <ProjectAvatar
-              class="orchestra-profile-avatar"
-              fallback={profile().project ? displayName(profile().project!) : ""}
-              src={getProjectAvatarSource(profile().project?.id, profile().project?.icon)}
-              variant={getProjectAvatarVariant(profile().project?.icon?.color)}
-              aria-hidden="true"
-            />
-            <span class="orchestra-profile-text">
-              <strong id="orchestra-profile-name">
-                <bdi>{profile().project ? displayName(profile().project!) : language.t("orchestra.profile.empty")}</bdi>
-              </strong>
-              <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
-                {profile().project?.worktree ?? serverName(profile().conn)}
-              </small>
-            </span>
-            <Icon name="chevron-down" class="orchestra-profile-chevron" />
-          </DropdownMenu.Trigger>
+          <OrchestraNavigationTooltip value={language.t("orchestra.profile.choose")}>
+            {(Trigger) => (
+              <Trigger
+                as={DropdownMenu.Trigger}
+                class="orchestra-profile"
+                data-slot="orchestra-profile"
+                aria-label={language.t("orchestra.profile.choose")}
+                aria-describedby="orchestra-profile-name"
+              >
+                <ProjectAvatar
+                  class="orchestra-profile-avatar"
+                  fallback={profile().project ? displayName(profile().project!) : ""}
+                  src={getProjectAvatarSource(profile().project?.id, profile().project?.icon)}
+                  variant={getProjectAvatarVariant(profile().project?.icon?.color)}
+                  aria-hidden="true"
+                />
+                <span class="orchestra-profile-text">
+                  <strong id="orchestra-profile-name">
+                    <bdi>
+                      {profile().project ? displayName(profile().project!) : language.t("orchestra.profile.empty")}
+                    </bdi>
+                  </strong>
+                  <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
+                    {profile().project?.worktree ?? serverName(profile().conn)}
+                  </small>
+                </span>
+                <Icon name="chevron-down" class="orchestra-profile-chevron" />
+              </Trigger>
+            )}
+          </OrchestraNavigationTooltip>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
               ref={menuRef}

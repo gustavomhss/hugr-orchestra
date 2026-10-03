@@ -66,7 +66,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     flex: 1;
     min-inline-size: 0;
     min-block-size: 0;
-    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-columns: var(--orchestra-workspace-columns, var(--orchestra-navigation-width, 230px) minmax(0, 1fr));
     grid-template-rows: minmax(0, 1fr);
     gap: 6px;
     padding-block: 6px;
@@ -122,7 +122,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 
 .orchestra-sidebar {
   position: relative;
-  display: flex;
+  display: var(--orchestra-navigation-display, flex);
   min-inline-size: 0;
   min-block-size: 0;
   flex-direction: column;
@@ -177,7 +177,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 .orchestra-nav-button {
   display: flex;
   inline-size: 100%;
-  block-size: 31px;
+  block-size: 34px;
   align-items: center;
   gap: 11px;
   padding-block: 0;
@@ -425,4 +425,123 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.orchestra-navigation-toggle {
+  margin-block-end: 8px;
+}
+
+.orchestra-navigation-toggle:focus-visible {
+  outline: 2px solid var(--v2-icon-icon-accent);
+  outline-offset: -2px;
+}
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .orchestra-workspace {
+    --orchestra-navigation-width: 208px;
+  }
+}
+
+/* The layout attribute only changes navigation geometry. No timeline ancestor
+   receives a slot/component hook, and width changes do not animate. */
+.orchestra-workspace[data-navigation="compact"] {
+  --orchestra-navigation-width: 56px;
+  --orchestra-navigation-padding: 7px;
+  --orchestra-brand-padding: 0px;
+}
+
+.orchestra-workspace[data-navigation="hidden"] {
+  --orchestra-workspace-columns: minmax(0, 1fr);
+  --orchestra-navigation-display: none;
+}
+
+.orchestra-shell > [data-slot="titlebar-v2"] .orchestra-navigation-toggle {
+  inline-size: 34px;
+  margin-block-end: 0;
+  padding-inline: 7px;
+  -webkit-app-region: no-drag;
+}
+
+.orchestra-shell > [data-slot="titlebar-v2"] .orchestra-navigation-toggle .orchestra-nav-label {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .orchestra-sidebar .orchestra-navigation-toggle {
+    display: none;
+  }
+}
+
+[data-navigation="compact"] .orchestra-sidebar {
+  padding-inline: 7px;
+}
+
+[data-navigation="compact"] .orchestra-sidebar > .orchestra-brand {
+  align-items: center;
+  padding-inline: 0;
+}
+
+[data-navigation="compact"] .orchestra-brand img {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+[data-navigation="compact"]
+  :is(.orchestra-nav-label, .orchestra-profile-text, [data-slot="orchestra-brand-descriptor"]) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-navigation="compact"] :is(.orchestra-nav-button kbd, .orchestra-profile-chevron, .orchestra-sidebar-footer) {
+  display: none;
+}
+
+[data-navigation="compact"] .orchestra-nav-button {
+  position: relative;
+  inline-size: 40px;
+  justify-content: center;
+  gap: 0;
+  padding-inline: 0;
+}
+
+[data-navigation="compact"] .orchestra-nav-icon {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+[data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 4px;
+  inline-size: 2px;
+  border-radius: 1px;
+  background: var(--orchestra-sidebar-active-icon);
+}
+
+[data-navigation="compact"] .orchestra-pending-dot {
+  position: absolute;
+  inset-inline-end: 4px;
+  inset-block-start: 4px;
+}
+
+[data-navigation="compact"] .orchestra-nav-rule {
+  margin-inline: 4px;
+}
+
+[data-navigation="compact"] .orchestra-profile {
+  inline-size: 40px;
+  min-block-size: 40px;
+  justify-content: center;
+  gap: 0;
+  padding: 4px;
+}
+
+[data-navigation="compact"] .orchestra-profile-avatar[data-component="project-avatar-v2"] {
+  inline-size: 30px;
+  block-size: 30px;
 }
