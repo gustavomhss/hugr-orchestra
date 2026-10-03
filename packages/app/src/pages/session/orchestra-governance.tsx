@@ -83,7 +83,7 @@ export function DialogOrchestraGovernance(props: {
       readGovernance({
         sessionID: props.sessionID,
         messages: sync.data.message[props.sessionID] ?? [],
-        source: sync.data.session_message[props.sessionID],
+        source: protocol() === "v2" ? sync.data.session_message[props.sessionID] : undefined,
         parts: (messageID) => sync.data.part[messageID],
       }),
     undefined,
