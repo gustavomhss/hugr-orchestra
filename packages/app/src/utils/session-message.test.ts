@@ -3,6 +3,43 @@ import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import { normalizeSessionMessages } from "./session-message"
 
 describe("normalizeSessionMessages", () => {
+  test("preserves confirmed structured todos when display output is truncated", () => {
+    const todos = [{ content: "Confirmed task", status: "completed", priority: "high" }]
+    const source = [
+      { id: "msg_user", type: "user", text: "plan it", time: { created: 1 } },
+      {
+        id: "msg_assistant",
+        type: "assistant",
+        agent: "build",
+        model: { id: "model", providerID: "provider" },
+        content: [
+          {
+            type: "tool",
+            id: "call_todo",
+            name: "todowrite",
+            state: {
+              status: "completed",
+              input: { todos: [{ content: "Proposal", status: "pending", priority: "low" }] },
+              // The bundled client predates the server's structured output field.
+              ...{ structured: { todos } },
+              metadata: { todos: [] },
+              content: [{ type: "text", text: "[\n...output truncated..." }],
+            },
+            time: { created: 2, ran: 3, completed: 4 },
+          },
+        ],
+        time: { created: 2, completed: 4 },
+      },
+    ] satisfies SessionMessageInfo[]
+
+    expect(normalizeSessionMessages("ses_1", source).parts.get("msg_assistant")).toEqual([
+      expect.objectContaining({
+        tool: "todowrite",
+        state: expect.objectContaining({ status: "completed", metadata: { todos } }),
+      }),
+    ])
+  })
+
   test("projects current turns into stable legacy rendering records", () => {
     const source = [
       { id: "msg_1", type: "agent-switched", agent: "build", time: { created: 1 } },
