@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createUniqueId } from "solid-js"
+import { For, Show, createMemo, createUniqueId, type Accessor } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { Icon } from "@opencode-ai/ui/icon"
 import { useJanitor } from "@/context/janitor"
@@ -9,6 +9,7 @@ import { deriveActivity, type ActivityItem } from "./orchestra-activity-data"
 import type { DockSnapshot } from "./orchestra-dock-snapshot"
 import type { TasksData, TasksItem } from "./tasks-data"
 import { taskStateLabel } from "./tasks-panel"
+import { OrchestraCockpitList } from "./orchestra-cockpit-list"
 
 const summaryRows = 4
 
@@ -37,6 +38,8 @@ export function OrchestraActivity(props: {
   dock: () => DockSnapshot | undefined
   expanded: () => boolean
   setExpanded: (value: boolean) => void
+  agents: boolean
+  setAgents: (value: boolean) => void
   onOpenTask: (task: TasksItem) => void
   onShowBrowser: (dock: DockSnapshot) => void
 }) {
@@ -52,8 +55,9 @@ export function OrchestraActivity(props: {
       server: ServerConnection.key(serverSDK().server),
     }),
   )
-  const shown = createMemo(() => (props.expanded() ? items() : items().slice(0, summaryRows)))
-  const observed = createMemo(() => items().some((item) => item.kind !== "janitor"))
+  const filtered = createMemo(() => (props.agents ? items().filter((item) => item.kind === "agent") : items()))
+  const shown = createMemo(() => (props.expanded() ? filtered() : filtered().slice(0, summaryRows)))
+  const observed = createMemo(() => filtered().some((item) => item.kind !== "janitor" || item.findings !== undefined))
 
   const kind = (item: ActivityItem) => {
     if (item.kind === "agent") return language.t("session.tasks.kind.agent")
@@ -74,13 +78,38 @@ export function OrchestraActivity(props: {
         : language.plural("janitor.notify.title", item.findings)
     return language.t(taskStateLabel[item.task.state])
   }
-  // Shell work belongs to this very session, so it has nowhere else to open.
   const action = (item: ActivityItem) => {
     if (item.kind === "dock") return item.dock.tab ? () => props.onShowBrowser(item.dock) : undefined
-    if (item.kind === "janitor") return item.findings === undefined ? undefined : () => janitor.expand()
-    if (item.kind === "agent" && item.task.childId) return () => props.onOpenTask(item.task)
-    return undefined
+    if (item.kind === "janitor")
+      return item.findings === undefined
+        ? undefined
+        : () => {
+            if (items().includes(item) && janitor.store.source === ServerConnection.key(serverSDK().server))
+              janitor.expand()
+          }
+    return () => props.onOpenTask(item.task)
   }
+  const row = (item: Accessor<ActivityItem>) => (
+    <Dynamic
+      component={action(item()) ? "button" : "div"}
+      type={action(item()) ? "button" : undefined}
+      data-slot="activity-row"
+      data-kind={item().kind}
+      data-attention={item().rank === 0 ? "" : undefined}
+      onClick={() => action(item())?.()}
+    >
+      <span data-slot="activity-mark">
+        <Icon name={icon[item().kind]} size="small" />
+      </span>
+      <span data-slot="activity-label" title={[kind(item()), title(item())].filter(Boolean).join(" · ")}>
+        <span data-slot="activity-kind">{kind(item())}</span>
+        <Show when={title(item())}>{(text) => <bdi data-slot="activity-name">{text()}</bdi>}</Show>
+      </span>
+      <span data-slot="activity-meta">
+        {language.t(scopeLabel[item().scope])} · {state(item())}
+      </span>
+    </Dynamic>
+  )
 
   return (
     <section data-component="orchestra-activity" aria-labelledby={`${listID}-title`}>
@@ -88,7 +117,7 @@ export function OrchestraActivity(props: {
         <h2 id={`${listID}-title`} data-slot="activity-title">
           {language.t("orchestra.activity.title")}
         </h2>
-        <Show when={items().length > summaryRows}>
+        <Show when={filtered().length > summaryRows}>
           <button
             type="button"
             data-slot="activity-view-all"
@@ -98,43 +127,40 @@ export function OrchestraActivity(props: {
           >
             {props.expanded()
               ? language.t("orchestra.common.showLess")
-              : `${language.t("orchestra.common.viewAll")} (${items().length})`}
+              : language.t("orchestra.common.viewAllCount", { count: filtered().length })}
           </button>
         </Show>
       </div>
+      <div data-slot="activity-filter" role="group" aria-label={language.t("orchestra.activity.filter")}>
+        <button type="button" aria-pressed={!props.agents} onClick={() => props.setAgents(false)}>
+          {language.t("orchestra.activity.all")}
+        </button>
+        <button type="button" aria-pressed={props.agents} onClick={() => props.setAgents(true)}>
+          {language.t("orchestra.activity.agents")}
+        </button>
+      </div>
       <Show when={!observed()}>
         <div data-slot="activity-empty" role="status">
-          <strong>{language.t("orchestra.activity.empty.title")}</strong>
-          <span>{language.t("orchestra.activity.empty.body")}</span>
+          <strong>{language.t(props.tasks.ready() ? "orchestra.activity.empty.title" : "common.loading")}</strong>
+          <Show when={props.tasks.ready()}>
+            <span>{language.t("orchestra.activity.empty.body")}</span>
+          </Show>
         </div>
       </Show>
-      <ul id={listID} data-slot="activity-list">
-        <For each={shown()}>
-          {(item) => (
-            <li>
-              <Dynamic
-                component={action(item) ? "button" : "div"}
-                type={action(item) ? "button" : undefined}
-                data-slot="activity-row"
-                data-kind={item.kind}
-                data-attention={item.rank === 0 ? "" : undefined}
-                onClick={action(item)}
-              >
-                <span data-slot="activity-mark">
-                  <Icon name={icon[item.kind]} size="small" />
-                </span>
-                <span data-slot="activity-label" title={[kind(item), title(item)].filter(Boolean).join(" · ")}>
-                  <span data-slot="activity-kind">{kind(item)}</span>
-                  <Show when={title(item)}>{(text) => <span data-slot="activity-name">{text()}</span>}</Show>
-                </span>
-                <span data-slot="activity-meta">
-                  {language.t(scopeLabel[item.scope])} · {state(item)}
-                </span>
-              </Dynamic>
-            </li>
-          )}
-        </For>
-      </ul>
+      <div id={listID}>
+        <Show
+          when={shown().length > 30}
+          fallback={
+            <ul data-slot="activity-list">
+              <For each={shown()}>{(item) => <li>{row(() => item)}</li>}</For>
+            </ul>
+          }
+        >
+          <OrchestraCockpitList items={shown()} estimate={40} label={language.t("orchestra.activity.title")}>
+            {row}
+          </OrchestraCockpitList>
+        </Show>
+      </div>
     </section>
   )
 }

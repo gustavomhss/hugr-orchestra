@@ -1,0 +1,111 @@
+import { For, Show, createEffect, createMemo, createSignal, type Accessor, type JSX } from "solid-js"
+import { createStore } from "solid-js/store"
+import { createVirtualizer, defaultRangeExtractor } from "@tanstack/solid-virtual"
+
+// Expanded cockpit cards retain every entity, but mount only the visible range. Keep a focused row
+// mounted while scrolling; keyboard navigation can reach rows that have not been mounted yet.
+export function OrchestraCockpitList<T extends { key: string }>(props: {
+  items: readonly T[]
+  estimate: number
+  label: string
+  children: (item: Accessor<T>) => JSX.Element
+}) {
+  const [root, setRoot] = createSignal<HTMLDivElement>()
+  const [view, setView] = createStore({
+    focused: undefined as string | undefined,
+    pending: undefined as string | undefined,
+  })
+  const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
+    get count() {
+      return props.items.length
+    },
+    // Solid refs can still belong to a detached template document with no window. Attaching there
+    // prevents the virtualizer from installing its resize and scroll observers on mount.
+    getScrollElement: () => (root()?.isConnected ? root()! : null),
+    initialRect: { width: 0, height: 320 },
+    estimateSize: () => props.estimate,
+    overscan: 3,
+    get getItemKey() {
+      const items = props.items
+      return (index: number) => items[index].key
+    },
+    get rangeExtractor() {
+      // The virtualizer memoizes ranges by extractor identity. Capture focus here so a keyboard
+      // jump mounts its destination before the native scroll event arrives.
+      const focused = props.items.findIndex((item) => item.key === view.focused)
+      return (range: Parameters<typeof defaultRangeExtractor>[0]) => {
+        const indexes = defaultRangeExtractor(range)
+        return focused < 0 || indexes.includes(focused) ? indexes : [...indexes, focused].sort((a, b) => a - b)
+      }
+    },
+  })
+  const rows = createMemo(() => new Map(virtualizer.getVirtualItems().map((item) => [item.key, item])))
+  const keys = createMemo(() => virtualizer.getVirtualItems().map((item) => item.key))
+  createEffect(() => {
+    const key = view.pending
+    if (!key || !keys().includes(key)) return
+    const index = props.items.findIndex((item) => item.key === key)
+    queueMicrotask(() => {
+      if (view.pending !== key) return
+      const target = root()?.querySelector<HTMLElement>(`[data-index="${index}"] :is(button, [role="button"])`)
+      if (!target) return
+      target.focus()
+      setView("pending", undefined)
+    })
+  })
+
+  return (
+    <div
+      ref={setRoot}
+      class="orchestra-cockpit-list"
+      role="list"
+      aria-label={props.label}
+      onKeyDown={(event) => {
+        const element = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-cockpit-row]") : null
+        if (!element || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return
+        const current = Number(element.dataset.index)
+        const index =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? props.items.length - 1
+              : Math.max(0, Math.min(props.items.length - 1, current + (event.key === "ArrowDown" ? 1 : -1)))
+        event.preventDefault()
+        setView({ focused: props.items[index].key, pending: props.items[index].key })
+        virtualizer.scrollToIndex(index, { align: "auto" })
+      }}
+    >
+      <div style={{ position: "relative", height: `${virtualizer.getTotalSize()}px` }}>
+        <For each={keys()}>
+          {(key) => (
+            <Show when={rows().get(key)}>
+              {(row) => (
+                <div
+                  ref={(element) => queueMicrotask(() => virtualizer.measureElement(element))}
+                  data-index={row().index}
+                  data-cockpit-row=""
+                  role="listitem"
+                  aria-posinset={row().index + 1}
+                  aria-setsize={props.items.length}
+                  onFocusIn={() => setView("focused", String(key))}
+                  onFocusOut={(event) => {
+                    if (!view.pending && !event.currentTarget.contains(event.relatedTarget as Node | null))
+                      setView("focused", undefined)
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: "0",
+                    "inset-inline": "0",
+                    transform: `translateY(${row().start}px)`,
+                  }}
+                >
+                  {props.children(() => props.items[row().index])}
+                </div>
+              )}
+            </Show>
+          )}
+        </For>
+      </div>
+    </div>
+  )
+}

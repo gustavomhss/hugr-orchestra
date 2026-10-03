@@ -1,9 +1,10 @@
 import { For, Match, Show, Switch, createUniqueId, type JSX } from "solid-js"
+import { createStore } from "solid-js/store"
 import { Icon } from "@opencode-ai/ui/icon"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { AppsPanel } from "./apps-panel"
+import { AppsPanel, type DockAddressDraft } from "./apps-panel"
 import { appDockController, sameTab } from "./apps-panel-controller"
 import "./orchestra-dock.css"
 
@@ -31,6 +32,7 @@ export function OrchestraDock(props: {
   const platform = usePlatform()
   const dock = appDockController()
   const id = createUniqueId()
+  const [view, setView] = createStore({ draft: undefined as DockAddressDraft | undefined })
   const activeURL = () => dock.state.tabs.find((tab) => sameTab(tab, dock.state.active))?.url
 
   const keydown = (event: KeyboardEvent & { currentTarget: HTMLButtonElement }, index: number) => {
@@ -127,7 +129,7 @@ export function OrchestraDock(props: {
                   </p>
                 </Match>
               </Switch>
-              <AppsPanel compact />
+              <AppsPanel compact draft={view.draft} onDraftChange={(draft) => setView("draft", draft)} />
             </Show>
           </Match>
           <Match when={props.pane === "files"}>{props.files()}</Match>

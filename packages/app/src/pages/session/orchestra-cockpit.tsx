@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js"
+import { Show, createMemo } from "solid-js"
 import { useNavigate } from "@solidjs/router"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
@@ -12,7 +12,7 @@ import { OrchestraEvidenceDocs } from "./orchestra-evidence-docs"
 import { OrchestraEvidenceFiles } from "./orchestra-evidence-files"
 import { OrchestraEvidenceTerminal } from "./orchestra-evidence-terminal"
 import { useSessionLayout } from "./session-layout"
-import type { TasksData } from "./tasks-data"
+import type { TasksData, TasksItem } from "./tasks-data"
 import { TasksPanel } from "./tasks-panel"
 import "./orchestra-cockpit.css"
 
@@ -24,45 +24,61 @@ export function OrchestraCockpit(props: { tasks: TasksData }) {
   const navigate = useNavigate()
   const serverSDK = useServerSDK()
   const dock = appDockController()
-  const view = () => cockpitView(sessionKey())
-  const update = (patch: Partial<CockpitView>) => updateCockpitView(sessionKey(), patch)
   const snapshot = createMemo(() => dockSnapshot(dock.state, dock.available))
+  const openTask = (task: TasksItem) => {
+    const items = props.tasks.items()
+    if (![...items.running, ...items.finished].includes(task)) return
+    const hash = !task.childId && task.originUserMessageID ? `#message-${task.originUserMessageID}` : ""
+    navigate(sessionHref(ServerConnection.key(serverSDK().server), task.childId ?? task.sessionId) + hash)
+  }
 
   return (
-    <div class="orchestra-cockpit">
-      <OrchestraDock
-        pane={view().pane}
-        onPaneChange={(pane) => update({ pane })}
-        files={() => <OrchestraEvidenceFiles path={view().file} onPathChange={(file) => update({ file })} />}
-        docs={() => (
-          <OrchestraEvidenceDocs
-            path={view().doc}
-            onPathChange={(doc) => update({ doc })}
-            onOpenFiles={(file) => update({ pane: "files", file })}
-          />
-        )}
-        terminal={() => <OrchestraEvidenceTerminal />}
-      />
-      <div class="orchestra-cockpit-feed">
-        <TasksPanel
-          data={props.tasks}
-          summary={{ expanded: () => view().tasks, setExpanded: (tasks) => update({ tasks }) }}
-        />
-        <OrchestraActivity
-          tasks={props.tasks}
-          dock={snapshot}
-          expanded={() => view().activity}
-          setExpanded={(activity) => update({ activity })}
-          onOpenTask={(task) =>
-            navigate(sessionHref(ServerConnection.key(serverSDK().server), task.childId ?? task.sessionId))
-          }
-          onShowBrowser={(observed) => {
-            const tab = dock.state.tabs.find((item) => sameTab(item, observed.tab))
-            if (tab) dock.select(tab)
-            update({ pane: "browser" })
-          }}
-        />
-      </div>
-    </div>
+    <Show when={sessionKey()} keyed>
+      {(key) => {
+        const view = () => cockpitView(key)
+        const update = (patch: Partial<CockpitView>) => {
+          if (key === sessionKey()) updateCockpitView(key, patch)
+        }
+        return (
+          <div class="orchestra-cockpit">
+            <OrchestraDock
+              pane={view().pane}
+              onPaneChange={(pane) => update({ pane })}
+              files={() => <OrchestraEvidenceFiles path={view().file} onPathChange={(file) => update({ file })} />}
+              docs={() => (
+                <OrchestraEvidenceDocs
+                  path={view().doc}
+                  onPathChange={(doc) => update({ doc })}
+                  onOpenFiles={(file) => update({ pane: "files", file })}
+                />
+              )}
+              terminal={() => <OrchestraEvidenceTerminal />}
+            />
+            <div class="orchestra-cockpit-feed">
+              <TasksPanel
+                data={props.tasks}
+                onOpenItem={openTask}
+                summary={{ expanded: () => view().tasks, setExpanded: (tasks) => update({ tasks }) }}
+              />
+              <OrchestraActivity
+                tasks={props.tasks}
+                dock={snapshot}
+                expanded={() => view().activity}
+                setExpanded={(activity) => update({ activity })}
+                agents={view().activityAgents}
+                setAgents={(activityAgents) => update({ activityAgents })}
+                onOpenTask={openTask}
+                onShowBrowser={(observed) => {
+                  const tab = dock.state.tabs.find((item) => sameTab(item, observed.tab))
+                  if (key !== sessionKey() || !tab || dock.state.profile !== observed.profile) return
+                  if (!sameTab(tab, dock.state.active)) dock.select(tab)
+                  update({ pane: "browser" })
+                }}
+              />
+            </div>
+          </div>
+        )
+      }}
+    </Show>
   )
 }

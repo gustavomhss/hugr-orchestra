@@ -310,3 +310,45 @@ describe("summarizeTasks", () => {
     expect(summary.rows.map((row) => row.key)).toEqual(["task-00", "task-01", "task-02"])
   })
 })
+
+describe("task origins", () => {
+  test("shell navigation retains the confirmed user parent, never a call ID as a message", () => {
+    const call = tool("msg_parent", "call_shell", "shell", {
+      status: "running",
+      input: {},
+      time: { start: 1 },
+      metadata: {},
+      title: "shell",
+    })
+    const input = setup({
+      calls: [call],
+      message: { [parent]: [user(parent, "msg_user"), assistant(parent, "msg_parent")] },
+    })
+    expect(only(input)).toMatchObject({
+      sourceMessageID: "msg_parent",
+      sourcePartID: "prt_call_shell",
+      callID: "call_shell",
+      originUserMessageID: "msg_user",
+    })
+    expect(
+      only({ ...input, message: { [parent]: [assistant(parent, "msg_parent")] } }).originUserMessageID,
+    ).toBeUndefined()
+    expect(
+      only({ ...input, message: { [parent]: [user("ses_other", "msg_user"), assistant(parent, "msg_parent")] } })
+        .originUserMessageID,
+    ).toBeUndefined()
+  })
+
+  test("identical call IDs in two sessions remain separate", () => {
+    const call = tool("msg_parent", "same", "shell", { status: "pending", input: {}, raw: "" })
+    const a = only(setup({ calls: [call] }))
+    const b = only(
+      setup({
+        sessionID: "ses_other",
+        part: { msg_parent: [{ ...call, sessionID: "ses_other" }] },
+        message: { ses_other: [assistant("ses_other", "msg_parent")] },
+      }),
+    )
+    expect(a.key).not.toBe(b.key)
+  })
+})

@@ -9,7 +9,7 @@
 }
 
 .orchestra-cockpit > .orchestra-dock-card {
-  block-size: clamp(260px, 58%, 470px);
+  block-size: clamp(240px, 50%, 470px);
   flex: none;
 }
 
@@ -21,6 +21,31 @@
   gap: 10px;
   overflow-y: auto;
   scrollbar-width: thin;
+}
+
+.orchestra-cockpit-list {
+  block-size: 320px;
+  max-block-size: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+.orchestra-cockpit [data-slot="activity-filter"] {
+  display: flex;
+  gap: 4px;
+  padding-inline: 11px;
+}
+
+.orchestra-cockpit [data-slot="activity-filter"] button {
+  min-block-size: 28px;
+  padding-inline: 6px;
+  color: var(--orchestra-task-meta);
+  font-size: 12px;
+}
+
+.orchestra-cockpit [data-slot="activity-filter"] [aria-pressed="true"] {
+  color: var(--orchestra-accent);
 }
 
 body[data-new-layout] [data-session-layout="surface"] .orchestra-cockpit [data-component="tasks-panel"] {

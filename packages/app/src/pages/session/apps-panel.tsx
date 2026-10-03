@@ -21,11 +21,18 @@ import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
 import "./apps-panel.css"
 
 const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
+export type DockAddressDraft = { owner?: string; tab?: TabIdentity; value: string }
 
 // A view of the window's App Dock. The live tabs belong to the controller and the repository
 // profile in context, so unmounting this view hides the native browser instead of closing it.
 // The compact view is the cockpit's Dock card: tabs above the address bar and only the core controls.
-export function AppsPanel(props: { compact?: boolean } = {}) {
+export function AppsPanel(
+  props: {
+    compact?: boolean
+    draft?: DockAddressDraft
+    onDraftChange?: (draft: DockAddressDraft | undefined) => void
+  } = {},
+) {
   const dock = appDockController()
   const api = dock.api
   const state = dock.state
@@ -159,6 +166,12 @@ export function AppsPanel(props: { compact?: boolean } = {}) {
     })
   })
   const activeTab = () => state.tabs.find((tab) => sameTab(tab, state.active))
+  const address = () => {
+    const draft = props.draft
+    return draft && draft.owner === state.owner && (draft.tab ? sameTab(draft.tab, state.active) : !state.active)
+      ? draft.value
+      : state.url
+  }
   const activeCrashed = () => activeTab()?.crashed
   const bookmarked = () => !!activeTab() && state.bookmarks.some((item) => item.url === activeTab()!.url)
   const toggleSidebar = () => {
@@ -301,6 +314,8 @@ export function AppsPanel(props: { compact?: boolean } = {}) {
           class="zen-urlbar"
           onSubmit={(event) => {
             event.preventDefault()
+            dock.setURL(address())
+            props.onDraftChange?.(undefined)
             void dock.launch()
           }}
         >
@@ -333,8 +348,19 @@ export function AppsPanel(props: { compact?: boolean } = {}) {
           </button>
           <input
             ref={addressInput}
-            value={state.url}
-            onInput={(event) => dock.setURL(event.currentTarget.value)}
+            value={address()}
+            dir="ltr"
+            onInput={(event) => {
+              const value = event.currentTarget.value
+              if (props.onDraftChange) props.onDraftChange({ owner: state.owner, tab: state.active, value })
+              dock.setURL(value)
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape") return
+              event.preventDefault()
+              props.onDraftChange?.(undefined)
+              dock.setURL(activeTab()?.url ?? "")
+            }}
             aria-label="Address"
             disabled={!!activeCrashed()}
           />
@@ -588,7 +614,14 @@ function TabButton(props: {
           ? tabs[0]
           : event.key === "End"
             ? tabs.at(-1)
-            : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]
+            : tabs[
+                (index +
+                  (event.key === (getComputedStyle(current).direction === "rtl" ? "ArrowLeft" : "ArrowRight")
+                    ? 1
+                    : -1) +
+                  tabs.length) %
+                  tabs.length
+              ]
       event.preventDefault()
       next?.focus()
       next?.click()

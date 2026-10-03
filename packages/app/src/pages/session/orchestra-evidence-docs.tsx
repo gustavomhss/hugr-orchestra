@@ -7,6 +7,7 @@ import { useFile } from "@/context/file"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { documentationRoots, isDocument, resolveDocumentLink } from "./orchestra-evidence-docs-path"
+import { useSessionLayout } from "./session-layout"
 
 // The Dock's Docs pane: the workspace's own documentation, not a site or a search. It looks only at
 // README.md and AGENTS.md at the root and lists docs/ one folder at a time, on demand. Text comes from
@@ -48,9 +49,12 @@ export function OrchestraEvidenceDocs(props: {
           >
             <Match when={root()?.error}>
               {(error) => (
-                <p class="orchestra-dock-note" role="alert">
-                  {error()}
-                </p>
+                <div class="orchestra-dock-note" role="alert">
+                  <span>{error()}</span>
+                  <button type="button" onClick={() => void file.tree.refresh("")}>
+                    {language.t("orchestra.dock.retry")}
+                  </button>
+                </div>
               )}
             </Match>
             <Match when={!root()?.loaded}>
@@ -77,7 +81,7 @@ export function OrchestraEvidenceDocs(props: {
                 <Icon name="chevron-left" size="small" />
                 {language.t("orchestra.dock.docs")}
               </button>
-              <bdi class="orchestra-dock-path" title={path()}>
+              <bdi dir="ltr" class="orchestra-dock-path" title={path()}>
                 {path()}
               </bdi>
               <button type="button" class="orchestra-dock-link" onClick={() => props.onOpenFiles(path())}>
@@ -97,7 +101,7 @@ function DocumentEntry(props: { node: FileNode; onOpen: (path: string) => void }
     <li>
       <button type="button" class="orchestra-docs-entry" onClick={() => props.onOpen(props.node.path)}>
         <Icon name="open-file" size="small" />
-        <span>{props.node.name}</span>
+        <bdi dir="ltr">{props.node.name}</bdi>
       </button>
     </li>
   )
@@ -106,6 +110,7 @@ function DocumentEntry(props: { node: FileNode; onOpen: (path: string) => void }
 // A folder lists its children only once it is opened, and keeps only documents and subfolders.
 function DocumentFolder(props: { node: FileNode; onOpen: (path: string) => void }) {
   const file = useFile()
+  const language = useLanguage()
   const [open, setOpen] = createSignal(false)
   const children = createMemo(() =>
     file.tree.children(props.node.path).filter((node) => node.type === "directory" || isDocument(node.name)),
@@ -120,6 +125,21 @@ function DocumentFolder(props: { node: FileNode; onOpen: (path: string) => void 
         <span>{props.node.name}</span>
       </button>
       <Show when={open()}>
+        <Show when={file.tree.state(props.node.path)?.error}>
+          {(error) => (
+            <div class="orchestra-dock-note" role="alert">
+              <span>{error()}</span>
+              <button type="button" onClick={() => void file.tree.refresh(props.node.path)}>
+                {language.t("orchestra.dock.retry")}
+              </button>
+            </div>
+          )}
+        </Show>
+        <Show when={file.tree.state(props.node.path)?.loading}>
+          <p class="orchestra-dock-note" role="status">
+            {language.t("common.loading")}
+          </p>
+        </Show>
         <ul class="orchestra-docs-list">
           <For each={children()}>
             {(node) =>
@@ -140,6 +160,7 @@ function DocumentView(props: { path: string; onOpen: (path: string) => void }) {
   const file = useFile()
   const language = useLanguage()
   const platform = usePlatform()
+  const { workspaceKey } = useSessionLayout()
   const state = () => file.get(props.path)
   const markdown = () => /\.md$/i.test(props.path)
 
@@ -160,19 +181,22 @@ function DocumentView(props: { path: string; onOpen: (path: string) => void }) {
         <Switch>
           <Match when={state()?.error}>
             {(error) => (
-              <p class="orchestra-dock-note" role="alert">
-                {error()}
-              </p>
+              <div class="orchestra-dock-note" role="alert">
+                <span>{error()}</span>
+                <button type="button" onClick={() => void file.load(props.path, { force: true })}>
+                  {language.t("orchestra.dock.retry")}
+                </button>
+              </div>
             )}
           </Match>
           <Match when={state()?.content?.type === "binary"}>
             <p class="orchestra-dock-note">{language.t("session.files.binaryContent")}</p>
           </Match>
           <Match when={state()?.loaded && markdown()}>
-            <Markdown text={state()?.content?.content ?? ""} cacheKey={`dock-doc:${props.path}`} />
+            <Markdown text={state()?.content?.content ?? ""} cacheKey={`${workspaceKey()}:dock-doc:${props.path}`} />
           </Match>
           <Match when={state()?.loaded}>
-            <pre>{state()?.content?.content ?? ""}</pre>
+            <pre dir="ltr">{state()?.content?.content ?? ""}</pre>
           </Match>
           <Match when={true}>
             <p class="orchestra-dock-note" role="status">

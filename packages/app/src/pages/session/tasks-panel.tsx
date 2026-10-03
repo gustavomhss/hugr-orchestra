@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal, createUniqueId, onCleanup } from "solid-js"
+import { For, Show, createEffect, createMemo, createUniqueId, on, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -10,6 +10,9 @@ import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
 import { sessionHref } from "@/utils/session-route"
 import { createTasksData, live, summarizeTasks, type TasksData, type TasksItem } from "./tasks-data"
+import { OrchestraCockpitList } from "./orchestra-cockpit-list"
+import { createSessionOwnership } from "./session-ownership"
+import { useSessionLayout } from "./session-layout"
 
 type StopState = "pending" | "failed"
 
@@ -93,6 +96,16 @@ function TaskRow(props: {
       data-state={item().state}
       data-kind={item().kind}
       role="button"
+      aria-label={
+        item().kind === "shell"
+          ? language.t(item().originUserMessageID ? "orchestra.tasks.openExecution" : "orchestra.tasks.openSession")
+          : undefined
+      }
+      title={
+        item().kind === "shell" && !item().originUserMessageID
+          ? language.t("orchestra.tasks.sourceMissing")
+          : item().headline
+      }
       tabIndex={0}
       onClick={() => props.onOpen(item())}
       onKeyDown={(e) => {
@@ -119,7 +132,7 @@ function TaskRow(props: {
           class="truncate text-strong"
           style={{ "font-size": "13px", "font-weight": "400", "line-height": "130%", "letter-spacing": "-0.04px" }}
         >
-          {item().headline || language.t("session.tasks.subagent")}
+          <bdi>{item().headline || language.t("session.tasks.subagent")}</bdi>
           <Show when={item().nested}>
             <span class="text-text-weak"> (+{item().nested})</span>
           </Show>
@@ -142,6 +155,16 @@ function TaskRow(props: {
               {" · "}
               <span style={{ color: "var(--text-interactive-base)" }}>@{item().agent}</span>
             </span>
+          </Show>
+          <Show when={props.compact && item().stats?.model}>
+            {(model) => (
+              <span>
+                {" · "}
+                <bdi dir="ltr" title={model()}>
+                  {model()}
+                </bdi>
+              </span>
+            )}
           </Show>
         </div>
         <Show when={active() && props.stop}>
@@ -248,38 +271,67 @@ function TaskRow(props: {
 /** Expansion of the cockpit's Tasks card; the session owner keeps it so commands can open the detail. */
 export type TasksSummary = { expanded: () => boolean; setExpanded: (value: boolean) => void }
 
-export function TasksPanel(props: { data?: TasksData; summary?: TasksSummary } = {}) {
+export function TasksPanel(
+  props: { data?: TasksData; summary?: TasksSummary; onOpenItem?: (item: TasksItem) => void } = {},
+) {
   const language = useLanguage()
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const navigate = useNavigate()
   // Views mounted beside each other read the projection their session owner created.
-  const items = (props.data ?? createTasksData()).items
-  const [dismissed, setDismissed] = createSignal<Set<string>>(new Set())
+  const data = props.data ?? createTasksData()
+  const items = data.items
+  const ownership = createSessionOwnership(useSessionLayout().sessionKey)
+  const [view, setView] = createStore({
+    dismissed: [] as string[],
+    tick: 0,
+    visible: false,
+    foreground: !document.hidden,
+  })
   const [stops, setStops] = createStore<Record<string, StopState | undefined>>({})
-  const [tick, setTick] = createSignal(0)
   const listID = createUniqueId()
+  let root: HTMLDivElement | undefined
+
+  onMount(() => {
+    const observer = new IntersectionObserver(([entry]) => setView("visible", entry.isIntersecting))
+    if (root) observer.observe(root)
+    const visible = () => setView("foreground", !document.hidden)
+    document.addEventListener("visibilitychange", visible)
+    onCleanup(() => {
+      observer.disconnect()
+      document.removeEventListener("visibilitychange", visible)
+    })
+  })
 
   // Elapsed-time ticker exists only while live work is present: no timer,
   // no re-render churn, nothing retained when the panel is idle.
   createEffect(() => {
-    if (items().running.length === 0) return
-    const timer = setInterval(() => setTick((t) => t + 1), 1000)
+    if (!view.visible || !view.foreground || items().running.length === 0) return
+    const timer = setInterval(() => setView("tick", (t) => t + 1), 1000)
     onCleanup(() => clearInterval(timer))
   })
 
   const visible = createMemo(() => {
-    const gone = dismissed()
     return {
       running: items().running,
-      finished: items().finished.filter((t) => !gone.has(t.key)),
+      finished: items().finished.filter((t) => !view.dismissed.includes(t.key)),
     }
   })
   const summary = createMemo(() => summarizeTasks(visible()))
   const expanded = () => !props.summary || props.summary.expanded()
+  createEffect(
+    on(
+      () => summary().needsInput,
+      (next, previous) => {
+        if (next > 0 && !previous) props.summary?.setExpanded(true)
+      },
+    ),
+  )
 
   // Agent work opens its child session on the server that owns it; shell work lives in this session.
   const openItem = (item: TasksItem) => {
+    if (props.onOpenItem) return props.onOpenItem(item)
+    if (![...items().running, ...items().finished].includes(item)) return
     navigate(sessionHref(ServerConnection.key(serverSDK().server), item.childId ?? item.sessionId))
   }
 
@@ -287,24 +339,29 @@ export function TasksPanel(props: { data?: TasksData; summary?: TasksSummary } =
   // outcome visible: pending while in flight, failed with retry on rejection.
   const stopItem = (item: TasksItem) => {
     const sessionID = item.childId
-    if (!sessionID || stops[item.key] === "pending") return
+    if (!sessionID || !items().running.includes(item) || stops[item.key] === "pending") return
+    const owner = ownership.capture()
     setStops(item.key, "pending")
     sdk()
       .api.session.interrupt({ sessionID })
       .then(
-        () => setStops(item.key, undefined),
-        () => setStops(item.key, "failed"),
+        () => owner.run(() => setStops(item.key, undefined)),
+        () => owner.run(() => setStops(item.key, "failed")),
       )
   }
 
   const dismissItem = (item: TasksItem) => {
-    setDismissed((prev) => new Set(prev).add(item.key))
+    if (live(item)) return
+    setView("dismissed", (prev) => [
+      ...prev.filter((key) => items().finished.some((item) => item.key === key)),
+      item.key,
+    ])
   }
 
   const row = (item: TasksItem, compact = false) => (
     <TaskRow
       item={item}
-      tick={tick()}
+      tick={view.tick}
       compact={compact}
       stop={stops[item.key]}
       onOpen={openItem}
@@ -315,6 +372,7 @@ export function TasksPanel(props: { data?: TasksData; summary?: TasksSummary } =
 
   return (
     <div
+      ref={root}
       data-component="tasks-panel"
       data-variant={props.summary ? "summary" : undefined}
       data-attention={summary().needsInput > 0 ? "" : undefined}
@@ -353,7 +411,7 @@ export function TasksPanel(props: { data?: TasksData; summary?: TasksSummary } =
               >
                 {expanded()
                   ? language.t("orchestra.common.showLess")
-                  : `${language.t("orchestra.common.viewAll")} (${summary().total})`}
+                  : language.t("orchestra.common.viewAllCount", { count: summary().total })}
               </button>
             </Show>
           </div>
@@ -377,7 +435,9 @@ export function TasksPanel(props: { data?: TasksData; summary?: TasksSummary } =
                 </div>
               }
             >
-              <p data-slot="tasks-empty">{language.t("session.tasks.empty")}</p>
+              <p data-slot="tasks-empty" role="status" aria-busy={!data.ready()}>
+                {language.t(data.ready() ? "session.tasks.empty" : "common.loading")}
+              </p>
             </Show>
           }
         >
@@ -386,11 +446,33 @@ export function TasksPanel(props: { data?: TasksData; summary?: TasksSummary } =
               <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
                 {language.t("session.tasks.running")}
               </div>
-              <For each={visible().running}>{(item) => row(item)}</For>
+              <Show
+                when={props.summary && summary().total > 30}
+                fallback={<For each={visible().running}>{(item) => row(item)}</For>}
+              >
+                <OrchestraCockpitList
+                  items={visible().running}
+                  estimate={100}
+                  label={language.t("session.tasks.running")}
+                >
+                  {(item) => (
+                    <TaskRow
+                      item={item()}
+                      tick={view.tick}
+                      stop={stops[item().key]}
+                      onOpen={openItem}
+                      onStop={stopItem}
+                      onDismiss={dismissItem}
+                    />
+                  )}
+                </OrchestraCockpitList>
+              </Show>
             </Show>
             <Show when={visible().finished.length > 0}>
               <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
-                {language.t("orchestra.tasks.finished")}
+                {props.summary
+                  ? language.t("orchestra.tasks.recent", { count: visible().finished.length })
+                  : language.t("orchestra.tasks.finished")}
               </div>
               <For each={visible().finished}>{(item) => row(item)}</For>
             </Show>

@@ -2,6 +2,7 @@ import { Show, createMemo, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Terminal } from "@/components/terminal"
 import { useLanguage } from "@/context/language"
+import { useLayout } from "@/context/layout"
 import { useTerminal } from "@/context/terminal"
 import { useSessionLayout } from "@/pages/session/session-layout"
 
@@ -12,13 +13,14 @@ import { useSessionLayout } from "@/pages/session/session-layout"
 export function OrchestraEvidenceTerminal() {
   const terminal = useTerminal()
   const language = useLanguage()
-  const owner = useSessionLayout().view()
+  const layout = useLayout()
+  const owner = layout.view(useSessionLayout().sessionKey())
   const bottom = owner.terminal.opened()
   if (bottom) owner.terminal.close()
   onCleanup(() => {
     if (bottom && !owner.terminal.opened()) owner.terminal.open()
   })
-  const [recovered, setRecovered] = createStore<Record<string, boolean>>({})
+  const [state, setState] = createStore({ error: undefined as string | undefined })
   const active = createMemo(() => terminal.all().find((pty) => pty.id === terminal.active())?.id)
 
   return (
@@ -43,46 +45,53 @@ export function OrchestraEvidenceTerminal() {
           }
         >
           <Show
-            when={active()}
-            keyed
+            when={!state.error}
             fallback={
-              <div class="orchestra-dock-state" role="status">
-                <span>{language.t("orchestra.dock.terminal.empty")}</span>
-                <button type="button" onClick={() => terminal.new({ focus: true })}>
-                  {language.t("command.terminal.new")}
+              <div class="orchestra-dock-state" role="alert">
+                <span>{state.error}</span>
+                <button type="button" onClick={() => setState("error", undefined)}>
+                  {language.t("orchestra.dock.retry")}
                 </button>
               </div>
             }
           >
-            {(id) => {
-              const ops = terminal.bind()
-              return (
-                <Show when={terminal.all().find((item) => item.id === id)}>
-                  {(pty) => {
-                    const key = () => String(pty().titleNumber || pty().title || id)
-                    return (
+            <Show
+              when={active()}
+              keyed
+              fallback={
+                <div class="orchestra-dock-state" role="status">
+                  <span>{language.t("orchestra.dock.terminal.empty")}</span>
+                  <button type="button" onClick={() => terminal.new({ focus: true })}>
+                    {language.t("command.terminal.new")}
+                  </button>
+                </div>
+              }
+            >
+              {(id) => {
+                const ops = terminal.bind()
+                return (
+                  <Show when={terminal.all().find((item) => item.id === id)}>
+                    {(pty) => (
                       <div id={`terminal-wrapper-${id}`} class="orchestra-dock-terminal">
                         <Terminal
                           pty={pty()}
                           autoFocus={terminal.focusRequested(id)}
                           onAutoFocus={() => terminal.consumeFocus(id)}
-                          onConnect={() => {
-                            setRecovered(key(), false)
-                            ops.trim(id)
-                          }}
+                          onConnect={() => ops.trim(id)}
                           onCleanup={ops.update}
-                          onConnectError={() => {
-                            if (recovered[key()]) return
-                            setRecovered(key(), true)
-                            void ops.clone(id)
-                          }}
+                          onConnectError={(error) =>
+                            setState(
+                              "error",
+                              error instanceof Error ? error.message : language.t("orchestra.dock.terminal.failed"),
+                            )
+                          }
                         />
                       </div>
-                    )
-                  }}
-                </Show>
-              )
-            }}
+                    )}
+                  </Show>
+                )
+              }}
+            </Show>
           </Show>
         </Show>
       </Show>
