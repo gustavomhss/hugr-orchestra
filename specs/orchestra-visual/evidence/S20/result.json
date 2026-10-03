@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-03",
+  "branch": "orchestra-governance",
+  "scope": "S20-W1 session destination, W08/W09 and WK24 local consumer proofs; S19-W1 historical Own/Atlas subset",
+  "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
+  "contract_commit": "e5b5bf9c446ed0ae3eddb841e38c7ebdb06f957a",
+  "source_commit": "8868cd226614f8794a3d424d1ad2935470f608b1",
+  "verification": "PASS: scoped local tests, not live governance enablement or full visual-campaign acceptance",
+  "review": "Implementation agent reviewed code and screenshots; no independent reviewer claim. Lead integration review remains separate.",
+  "api_audit": [
+    {
+      "source": "packages/opencode/src/tool/maestro-{admission,plan,context,validation,review,approval,authorization}.ts",
+      "finding": "Completed results expose admission/plan/context/validation/review/presentation/approval/authorization identities and selected outcomes. Catalog output also exposes Atlas project, snapshot, territories, Own units, token estimates, manifest pointers and truncation flags. Presentation output retains plan, provenance, validation ledger and hashes. These outputs are displayed as historical text, not parsed into authority. Direct review recording is Lucy-only; Maestro reports the delegated receipt."
+    },
+    {
+      "source": "packages/schema/src/session-message.ts:95; packages/app/src/utils/session-message.ts:350",
+      "finding": "Current HTTP messages carry confirmed tool state.structured, content and tool timestamps. The vendored-client normalizer reads metadata instead. Governance recovers structured results from retained raw V2 messages, preserving server content order rather than opaque call-ID order. Legacy results continue using their original part IDs."
+    },
+    {
+      "source": "packages/app/src/context/global-sync/bootstrap.ts:258,365; packages/protocol/src/api.ts:37",
+      "finding": "Agent lists exist on both protocols. Project config.maestro.atlas is read by the existing V1 bootstrap; V2 does not load that config. Own configuration is only reported after successful project bootstrap and is not proof of fresh grounding."
+    },
+    {
+      "source": "packages/protocol/src/groups/session.ts:307; packages/schema/src/session-event.ts:448",
+      "finding": "The finite session-history reader returns SessionEvent.Durable, including confirmed tool results, not a Maestro durable-record projection. The inspected Protocol and composed OpenCode APIs have no session-scoped current Maestro projection."
+    },
+    {
+      "source": "packages/protocol/src/groups/event.ts:35; packages/schema/src/event-manifest.ts:38; packages/opencode/src/server/routes/instance/httpapi/handlers/sync.ts:27,80",
+      "finding": "Maestro fields are NOT absent from HTTP altogether: /api/event includes Maestro events, and legacy POST /sync/history can dump durable events across aggregates (refused when compacted snapshots exist). Neither is a bounded current session projection. This consumer does not use the unscoped dump or create a new event store."
+    }
+  ],
+  "missing_data_inventory": [
+    {
+      "fields": "Full work-card identity/content/hash and execution-attempt binding",
+      "limit": "Not returned by the consumed tool-result records. Work-card fields exist in Maestro durable events, including Validation.Recorded. Tool input is not substituted for those records; UI explicitly reports unavailable."
+    },
+    {
+      "fields": "Structured validation checks, review findings, exact cross-record authority chain",
+      "limit": "Tool results return record IDs/outcomes, not these complete records. A presentation's retained output can include the server validation ledger and bindings, displayed without reconstructing authority."
+    },
+    {
+      "fields": "Current approval eligibility, context freshness, current Git/Own revision, current authorization validity",
+      "limit": "Historical CURRENT/GROUNDED/APPROVED output cannot establish present validity. UI reports unknown; observed server refusals and loaded presentation supersession retain their reasons."
+    },
+    {
+      "fields": "Own configuration on V2 or unfinished/failed bootstrap; missing timestamps; unloaded history",
+      "limit": "Unknown stays unknown, never zero or an invented configuration. Missing completion time never borrows start time. Earlier history uses the existing session-history loader; no total durable-record count is claimed."
+    }
+  ],
+  "checks": [
+    { "cwd": "packages/app", "command": "bun test src/pages/session/orchestra-governance-data.test.ts", "exit": 0, "result": "16 pass, 0 fail", "log": "unit.log" },
+    { "cwd": "packages/app", "command": "bun typecheck", "exit": 0 },
+    { "cwd": "packages/app", "command": "bun run typecheck:e2e", "exit": 0 },
+    {
+      "cwd": "packages/app",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4993 bunx playwright test e2e/orchestra/governance.spec.ts --reporter=line",
+      "exit": 0,
+      "result": "7 pass, 0 fail; real app with isolated HTTP fixtures",
+      "coverage": "V1/V2 results, read-only request observation with bootstrap positive control, missing Maestro/session, pending question distinct from approval, source-turn navigation, fixed header/body scroll, dark/light, English forced RTL, Arabic RTL, mixed IDs, keyboard Escape/focus and draft preservation",
+      "log": "playwright.log"
+    },
+    { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "result": "3551 source files, 301 warnings, 0 errors; guard and waivers preserved", "log": "godfile.log" },
+    { "cwd": ".", "command": "git diff --check; bunx prettier --check <six owned governance/copy files>", "exit": 0 }
+  ],
+  "mutations": [
+    { "change": "Read missing confirmed ID/outcome from state.input", "test": "never from model input", "exit": 1, "observed": "Model-proposed evt_model became recorded; expected hold. Restored; final unit suite green." },
+    { "change": "Accept Lucy verdict by prefix instead of exact verdict plus receipt", "test": "Lucy verdict must match", "exit": 1, "observed": "APPROVE for evt_other was accepted as evt_receipt. Restored; final unit suite green." },
+    { "change": "Detach raw V2 messages from the UI reader at checkpoint 7f17ff082ca7d575cecd67592050479440d1001a", "test": "Playwright --grep 'Show in chat moves'", "exit": 1, "observed": "Expected evt_current_validation, received unreadable HOLD. Restored; browser suite green.", "log": "mutation-v2.log" },
+    { "change": "Use lexical part order instead of server content order in the final ordering candidate", "test": "content order wins", "exit": 1, "observed": "Expected approved, received awaiting. Restored; final unit suite green.", "log": "mutation-order.log" }
+  ],
+  "corrected_framing_and_failures": [
+    "The original blanket claim that no HTTP route exposes Maestro records was too broad: generic event and sync surfaces exist. The missing capability is a bounded current session projection, not all HTTP data.",
+    "The approval tool's old unavailable description does not mean internal readers are absent: its implementation reads persisted plan, validation, context and review records.",
+    "Catalog output is richer than WIP metadata-only rendering; it is now inspectable. Review fixtures incorrectly attributed Lucy-only recording to Maestro and now use the real delegated result.",
+    "An empty loaded transcript cannot prove no durable approval; a presentation alone cannot prove the user still owes a reply.",
+    "V2 testing found invalid-time rendering and dropped structured metadata. Native-shaped fixtures and the governance-local adapter fixed both. Ordering hardening then exposed legacy synthesized source IDs; raw ordering is now V2-only.",
+    "Early runs hit outer timeout/orphaned test-server loss; one later run timed out waiting behind another worktree's shared lock before tests started. Completed harness-owned locked runs finished green; no manual app/server restart."
+  ],
+  "live_authorization": "NOT_RUN: S19/S20 W2 live authority, restart and decision enablement remain outside this read-only scope",
+  "display_limits": "Only loaded session history is read. Catalog/presentation previews retain at most 16,384 UTF-16 code units with a partial marker. Source navigation requires a loaded user turn in the same session. No durable-record total is inferred.",
+  "performance": "NOT_RUN: owner explicitly excluded performance/full-suite runs for this task",
+  "native": "NOT_RUN: browser consumer verification only",
+  "artifacts_sha256": {
+    "governance-dark.png": "2faeaf324e633cb1e159951f844445231de6de4a1fd3e64fdac6db1b6e636996",
+    "governance-dark-scrolled.png": "84ab57dea54019acc5b44ba6bf8c29f1bc07a34947b5a4505bea6eee92dd5541",
+    "governance-light.png": "e446163b94c4e9628915ce5fbc928c5ae833d8f2d93b135d595edc9b0fdac535",
+    "governance-light-scrolled.png": "5bbd18dcd2ed0b3db84df62eac12f858313895142b23ad09d26d88268ea8468a",
+    "governance-rtl-en.png": "6d9545cc3f4f96f78229d849056ff314a1b21ae76d10f1c2a372f6b74e797c35",
+    "governance-rtl-ar.png": "a64d901e5f0dbfa0c2408186134f3e136d5c42c1803503ebc66a907ffd293dc1",
+    "unit.log": "5eb630d5fffd3877f736362131b0251953782e34132f8a0291b666c5c937fbc4",
+    "playwright.log": "d8ce661f5acac75927e42fb05067dda41c24dcd7f6b1f48e95f1c30e687e27f3",
+    "mutation-v2.log": "aa6605d1d365786f2898b6762a13fec88ef6c12a6a7f75119256494bcdbeff01",
+    "mutation-order.log": "68ffe34ba66cc640675deca77881177c83bce7d6eb16c1f26d8193c58a5d4cd8",
+    "godfile.log": "91eccf9a808d5313b7ebcb3f9abdcc1e5243737ec7d39c221320ce394139464d"
+  }
+}
