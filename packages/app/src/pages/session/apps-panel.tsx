@@ -24,7 +24,8 @@ const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
 
 // A view of the window's App Dock. The live tabs belong to the controller and the repository
 // profile in context, so unmounting this view hides the native browser instead of closing it.
-export function AppsPanel() {
+// The compact view is the cockpit's Dock card: tabs above the address bar and only the core controls.
+export function AppsPanel(props: { compact?: boolean } = {}) {
   const dock = appDockController()
   const api = dock.api
   const state = dock.state
@@ -201,7 +202,7 @@ export function AppsPanel() {
   return (
     <div
       ref={root}
-      class={`zen-browser-shell ${view.sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}
+      class={`zen-browser-shell ${view.sidebarCollapsed ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
       data-status={state.status}
     >
       <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
@@ -322,7 +323,7 @@ export function AppsPanel() {
             &#8594;
           </button>
           <button
-            class={`zen-nav-button ${bookmarked() ? "is-active" : ""}`}
+            class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
             type="button"
             aria-label={bookmarked() ? "Remove bookmark" : "Add bookmark"}
             disabled={!!activeCrashed()}
@@ -338,7 +339,7 @@ export function AppsPanel() {
             disabled={!!activeCrashed()}
           />
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Bookmarks"
             onClick={() => setView("libraryOpen", view.libraryOpen === "bookmarks" ? undefined : "bookmarks")}
@@ -346,7 +347,7 @@ export function AppsPanel() {
             &#9734;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="History"
             onClick={() => setView("libraryOpen", view.libraryOpen === "history" ? undefined : "history")}
@@ -354,7 +355,7 @@ export function AppsPanel() {
             &#8986;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Find in page"
             disabled={!!activeCrashed()}
@@ -363,7 +364,7 @@ export function AppsPanel() {
             &#8981;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Zoom out"
             disabled={!!activeCrashed()}
@@ -372,7 +373,7 @@ export function AppsPanel() {
             A-
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Zoom in"
             disabled={!!activeCrashed()}
@@ -381,7 +382,7 @@ export function AppsPanel() {
             A+
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Downloads"
             onClick={() => setView("downloadsOpen", !view.downloadsOpen)}
@@ -389,7 +390,7 @@ export function AppsPanel() {
             &#8595;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label={state.fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             disabled={!!activeCrashed()}

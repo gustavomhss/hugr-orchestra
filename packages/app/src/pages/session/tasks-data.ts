@@ -95,6 +95,44 @@ export function createTasksData() {
   return { items, liveCount }
 }
 
+/** The one Tasks projection a session owns; every Tasks and Activity view reads this instance. */
+export type TasksData = ReturnType<typeof createTasksData>
+
+/**
+ * The compact Tasks summary: active work first (needs input, then running; newest known start
+ * first, unknown starts after known ones, then by key). Finished work fills only the slots active
+ * work leaves free, failures first. Counts come from the whole collection, never from the rows shown.
+ */
+export function summarizeTasks(items: { running: TasksItem[]; finished: TasksItem[] }, limit = 3) {
+  const active = items.running.toSorted(
+    (a, b) =>
+      Number(b.state === "needs-input") - Number(a.state === "needs-input") ||
+      newest(a.startTime, b.startTime) ||
+      a.key.localeCompare(b.key),
+  )
+  const finished = items.finished.toSorted(
+    (a, b) =>
+      Number(b.state === "error") - Number(a.state === "error") ||
+      newest(a.endTime, b.endTime) ||
+      a.key.localeCompare(b.key),
+  )
+  const rows = [...active.slice(0, limit), ...finished.slice(0, Math.max(0, limit - active.length))]
+  return {
+    rows,
+    active: active.length,
+    needsInput: active.filter((item) => item.state === "needs-input").length,
+    hiddenFailures: finished.filter((item) => item.state === "error" && !rows.includes(item)).length,
+    total: active.length + finished.length,
+  }
+}
+
+/** Comparator for optional timestamps: newest first, unknown after every known one. */
+export function newest(a: number | undefined, b: number | undefined) {
+  if (a === undefined) return b === undefined ? 0 : 1
+  if (b === undefined) return -1
+  return b - a
+}
+
 export function deriveTasks(input: TasksInput) {
   const waiting = waitingRequests(input)
   const calls = (input.message[input.sessionID] ?? []).flatMap((message) =>

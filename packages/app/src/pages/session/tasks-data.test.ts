@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { AssistantMessage, Message, Part, Session, UserMessage } from "@opencode-ai/sdk/v2/client"
 import { ServerConnection } from "@/context/server"
 import { ServerScope } from "@/utils/server-scope"
-import { deriveTasks, type TasksInput } from "./tasks-data"
+import { deriveTasks, summarizeTasks, type TasksInput, type TasksItem } from "./tasks-data"
 
 const parent = "ses_parent"
 const tokens = { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
@@ -256,5 +256,57 @@ describe("deriveTasks stats", () => {
     }
     const more = (id: string) => id === "ses_a"
     expect(only(setup({ sessions: [child], message: paged, more })).stats?.toolCalls).toBeUndefined()
+  })
+})
+
+describe("summarizeTasks", () => {
+  const item = (key: string, state: TasksItem["state"], extra: Partial<TasksItem> = {}): TasksItem => ({
+    key,
+    kind: "agent",
+    headline: key,
+    state,
+    sessionId: parent,
+    ...extra,
+  })
+
+  test("active work fills the summary before finished work, needing input first", () => {
+    const summary = summarizeTasks({
+      running: [
+        item("old", "running", { startTime: 1_000 }),
+        item("unknown", "running"),
+        item("new", "running", { startTime: 3_000 }),
+        item("asks", "needs-input", { startTime: 500 }),
+      ],
+      finished: [item("failed", "error", { endTime: 9_000 })],
+    })
+    expect(summary.rows.map((row) => row.key)).toEqual(["asks", "new", "old"])
+    expect(summary.active).toBe(4)
+    expect(summary.needsInput).toBe(1)
+    expect(summary.hiddenFailures).toBe(1)
+    expect(summary.total).toBe(5)
+  })
+
+  test("finished work fills only the free slots, failures before other outcomes", () => {
+    const summary = summarizeTasks({
+      running: [item("live", "running", { startTime: 1_000 })],
+      finished: [
+        item("done-new", "completed", { endTime: 8_000 }),
+        item("failed-old", "error", { endTime: 2_000 }),
+        item("done-unknown", "unknown"),
+        item("failed-new", "error", { endTime: 7_000 }),
+      ],
+    })
+    expect(summary.rows.map((row) => row.key)).toEqual(["live", "failed-new", "failed-old"])
+    expect(summary.hiddenFailures).toBe(0)
+    expect(summary.total).toBe(5)
+  })
+
+  test("the count covers every active entity, past what the summary shows", () => {
+    const running = Array.from({ length: 65 }, (_, index) => item(`task-${String(index).padStart(2, "0")}`, "running"))
+    const summary = summarizeTasks({ running, finished: [] })
+    expect(summary.rows).toHaveLength(3)
+    expect(summary.active).toBe(65)
+    // Unknown start times tie, so the key decides and the order never depends on the input order.
+    expect(summary.rows.map((row) => row.key)).toEqual(["task-00", "task-01", "task-02"])
   })
 })

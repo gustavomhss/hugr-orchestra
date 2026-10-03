@@ -20,6 +20,7 @@ import { Message, Part, UserMessage } from "@opencode-ai/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { createSessionOwnership } from "./session-ownership"
+import { cockpitView, updateCockpitView } from "./orchestra-cockpit-state"
 import { useLocal } from "@/context/local"
 
 export type SessionCommandContext = {
@@ -569,6 +570,15 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       id: "tasks.toggle",
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
+        // Orchestra shows Tasks in the cockpit beside the Dock: reveal it and toggle the Tasks detail.
+        if (settings.general.newLayoutDesigns()) {
+          const shown = view().reviewPanel.opened() && tabs().active() === "apps"
+          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
+          view().reviewPanel.open()
+          tabs().open("apps")
+          tabs().setActive("apps")
+          return
+        }
         if (tabs().active() === "tasks") {
           tabs().close("tasks")
           return
