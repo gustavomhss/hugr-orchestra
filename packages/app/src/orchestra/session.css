@@ -939,7 +939,7 @@
 
   body[data-new-layout]
     [data-component="session-surface"]
-    [data-slot="task-row"][data-state="failed"]
+    [data-slot="task-row"][data-state="error"]
     [data-slot="task-mark"] {
     color: var(--orchestra-evidence-delete);
   }

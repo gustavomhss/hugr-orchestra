@@ -169,4 +169,9 @@ export const ORCHESTRA_COPY = {
   "orchestra.dock.loadFailed": "Could not load the Dock.",
   "orchestra.dock.retry": "Retry",
   "orchestra.dock.unavailable": "The Dock needs the desktop app. Native browser tabs are not available in the web app.",
+  "orchestra.tasks.finished": "Finished",
+  "orchestra.tasks.state.unknown": "Status unknown",
+  "orchestra.tasks.stopping": "Stopping…",
+  "orchestra.tasks.stopFailed": "Could not stop this task.",
+  "orchestra.tasks.retry": "Retry",
 }

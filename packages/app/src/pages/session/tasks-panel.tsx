@@ -1,11 +1,32 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
+import { createStore } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Mark } from "@opencode-ai/ui/logo"
+import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
-import { createTasksData, type TasksItem } from "./tasks-data"
+import { createTasksData, live, type TasksItem } from "./tasks-data"
+
+type StopState = "pending" | "failed"
+
+const stateLabel = {
+  running: "session.tasks.state.running",
+  "needs-input": "session.tasks.state.needsInput",
+  completed: "session.tasks.state.completed",
+  error: "session.tasks.state.failed",
+  interrupted: "ui.message.interrupted",
+  unknown: "orchestra.tasks.state.unknown",
+} as const
+
+const stateColor = {
+  "needs-input": "var(--v2-state-fg-warning)",
+  completed: "var(--v2-state-fg-success)",
+  error: "var(--v2-state-fg-danger)",
+  interrupted: "var(--text-weak)",
+  unknown: "transparent",
+} as const
 
 function fmtElapsed(start: number): string {
   const s = Math.max(0, Math.floor((Date.now() - start) / 1000))
@@ -28,12 +49,9 @@ function StateMark(props: { state: TasksItem["state"] }) {
         aria-hidden
         class="inline-block size-2 shrink-0 rounded-full"
         style={{
-          background:
-            props.state === "needs-input"
-              ? "var(--v2-state-fg-warning)"
-              : props.state === "completed"
-                ? "var(--v2-state-fg-success)"
-                : "var(--v2-state-fg-danger)",
+          background: props.state === "running" ? undefined : stateColor[props.state],
+          // An unknown outcome reads as a hollow mark, never as a finished one.
+          border: props.state === "unknown" ? "1px solid var(--text-weaker)" : undefined,
           "box-shadow": props.state === "needs-input" ? "0 0 6px var(--v2-state-fg-warning)" : "none",
           margin: "2px",
         }}
@@ -45,14 +63,23 @@ function StateMark(props: { state: TasksItem["state"] }) {
 function TaskRow(props: {
   item: TasksItem
   tick: number
+  stop?: StopState
   onOpen: (item: TasksItem) => void
   onStop: (item: TasksItem) => void
   onDismiss: (item: TasksItem) => void
 }) {
   const language = useLanguage()
   const item = props.item
-  const live = () => item.state === "running" || item.state === "needs-input"
-  void props.tick
+  const active = () => live(item)
+  const unknown = () => language.t("common.unknown")
+  const time = () => {
+    void props.tick
+    if (active()) return item.startTime === undefined ? unknown() : fmtElapsed(item.startTime)
+    if (item.startTime === undefined || item.endTime === undefined) return unknown()
+    return fmtDuration(item.startTime, item.endTime)
+  }
+  const count = (value: number | undefined) => (value === undefined ? unknown() : value.toLocaleString(language.intl()))
+  const money = (value: number | undefined) => (value === undefined ? unknown() : `$${value.toFixed(4)}`)
 
   return (
     <div
@@ -63,6 +90,7 @@ function TaskRow(props: {
       tabIndex={0}
       onClick={() => props.onOpen(item)}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
           props.onOpen(item)
@@ -70,9 +98,9 @@ function TaskRow(props: {
       }}
       class="flex min-h-7 shrink-0 cursor-pointer items-start gap-2 rounded-md border border-transparent px-3 py-2"
       classList={{
-        "bg-surface-raised-base": live(),
-        "border-border-weaker-base": live(),
-        "opacity-75 hover:opacity-100": !live(),
+        "bg-surface-raised-base": active(),
+        "border-border-weaker-base": active(),
+        "opacity-75 hover:opacity-100": !active(),
       }}
     >
       <div data-slot="task-mark" class="mt-0.5 flex">
@@ -92,18 +120,15 @@ function TaskRow(props: {
         <div data-slot="task-meta" class="text-12-regular text-text-weak mt-[3px] truncate tabular-nums">
           {item.kind === "agent" ? language.t("session.tasks.kind.agent") : language.t("session.tasks.kind.shell")}
           {" · "}
-          {item.state === "needs-input" ? (
-            <span style={{ color: "var(--v2-state-fg-warning)" }}>{language.t("session.tasks.state.needsInput")}</span>
-          ) : item.state === "running" ? (
-            language.t("session.tasks.state.running")
-          ) : item.state === "completed" ? (
-            language.t("session.tasks.state.completed")
-          ) : (
-            language.t("session.tasks.state.failed")
-          )}
+          <span
+            data-slot="task-state"
+            style={{ color: item.state === "needs-input" ? "var(--v2-state-fg-warning)" : undefined }}
+          >
+            {language.t(stateLabel[item.state])}
+          </span>
           {" · "}
-          <span class="text-12-mono text-text-weaker">
-            {live() ? fmtElapsed(item.startTime) : fmtDuration(item.startTime, item.endTime ?? item.startTime)}
+          <span data-slot="task-time" class="text-12-mono text-text-weaker">
+            {time()}
           </span>
           <Show when={item.agent}>
             <span>
@@ -112,58 +137,78 @@ function TaskRow(props: {
             </span>
           </Show>
         </div>
+        <Show when={active() && props.stop}>
+          {(stop) => (
+            <div
+              data-slot="task-stop-status"
+              data-status={stop()}
+              role={stop() === "failed" ? "alert" : "status"}
+              class="text-12-regular mt-2 flex items-center gap-2"
+              style={{ color: stop() === "failed" ? "var(--v2-state-fg-danger)" : "var(--text-weak)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span>{language.t(stop() === "failed" ? "orchestra.tasks.stopFailed" : "orchestra.tasks.stopping")}</span>
+              <Show when={stop() === "failed"}>
+                <ButtonV2 size="small" variant="outline" onClick={() => props.onStop(item)}>
+                  {language.t("orchestra.tasks.retry")}
+                </ButtonV2>
+              </Show>
+            </div>
+          )}
+        </Show>
         <Show when={item.stats}>
-          <div
-            data-slot="task-stats"
-            class="text-12-regular text-text-weak mt-3 flex flex-wrap gap-4 border-t border-border-weaker-base pt-3"
-          >
-            <Show when={item.stats!.model}>
-              <div class="flex items-center gap-1">
-                <span class="text-text-weaker">{language.t("session.tasks.stats.model")}:</span>
-                <span class="font-mono text-text-base">{item.stats!.model}</span>
+          {(stats) => (
+            <div
+              data-slot="task-stats"
+              class="text-12-regular text-text-weak mt-3 flex flex-wrap gap-4 border-t border-border-weaker-base pt-3"
+            >
+              <Show when={stats().model}>
+                <div class="flex items-center gap-1">
+                  <span class="text-text-weaker">{language.t("session.tasks.stats.model")}:</span>
+                  <span class="font-mono text-text-base">{stats().model}</span>
+                </div>
+              </Show>
+              <Show when={stats().agent}>
+                <div class="flex items-center gap-1">
+                  <span class="text-text-weaker">{language.t("session.tasks.stats.agent")}:</span>
+                  <span class="font-mono text-text-base">{stats().agent}</span>
+                </div>
+              </Show>
+              <div data-slot="task-stat-tools" class="flex items-center gap-1">
+                <span class="text-text-weaker">{language.t("session.tasks.stats.tools")}:</span>
+                <span class="font-mono text-text-base">{count(stats().toolCalls)}</span>
               </div>
-            </Show>
-            <Show when={item.stats!.agent}>
-              <div class="flex items-center gap-1">
-                <span class="text-text-weaker">{language.t("session.tasks.stats.agent")}:</span>
-                <span class="font-mono text-text-base">{item.stats!.agent}</span>
+              <Show when={(stats().fails ?? 0) > 0}>
+                <div class="flex items-center gap-1" style={{ color: "var(--v2-state-fg-danger)" }}>
+                  <span class="text-text-weaker">{language.t("session.tasks.stats.fails")}:</span>
+                  <span class="font-mono text-text-base">{count(stats().fails)}</span>
+                </div>
+              </Show>
+              <Show when={stats().fails === 0 && (stats().toolCalls ?? 0) > 0}>
+                <div class="flex items-center gap-1" style={{ color: "var(--v2-state-fg-success)" }}>
+                  <span class="text-text-weaker">{language.t("session.tasks.stats.fails")}:</span>
+                  <span class="font-mono text-text-base">{count(0)}</span>
+                </div>
+              </Show>
+              <div data-slot="task-stat-tokens" class="flex items-center gap-1">
+                <span class="text-text-weaker">{language.t("session.tasks.stats.tokens")}:</span>
+                <span class="font-mono text-text-base">
+                  <Show when={stats().tokens} fallback={unknown()}>
+                    {(tokens) => `↓${count(tokens().input)} ↑${count(tokens().output)}`}
+                  </Show>
+                </span>
               </div>
-            </Show>
-            <div class="flex items-center gap-1">
-              <span class="text-text-weaker">{language.t("session.tasks.stats.tools")}:</span>
-              <span class="font-mono text-text-base">{item.stats!.toolCalls.toLocaleString(language.intl())}</span>
-            </div>
-            <Show when={item.stats!.fails > 0}>
-              <div class="flex items-center gap-1" style={{ color: "var(--v2-state-fg-danger)" }}>
-                <span class="text-text-weaker">{language.t("session.tasks.stats.fails")}:</span>
-                <span class="font-mono text-text-base">{item.stats!.fails.toLocaleString(language.intl())}</span>
-              </div>
-            </Show>
-            <Show when={item.stats!.fails === 0 && item.stats!.toolCalls > 0}>
-              <div class="flex items-center gap-1" style={{ color: "var(--v2-state-fg-success)" }}>
-                <span class="text-text-weaker">{language.t("session.tasks.stats.fails")}:</span>
-                <span class="font-mono text-text-base">0</span>
-              </div>
-            </Show>
-            <div class="flex items-center gap-1">
-              <span class="text-text-weaker">{language.t("session.tasks.stats.tokens")}:</span>
-              <span class="font-mono text-text-base">
-                ↓{item.stats!.tokensIn.toLocaleString(language.intl())} ↑
-                {item.stats!.tokensOut.toLocaleString(language.intl())}
-              </span>
-            </div>
-            <Show when={item.stats!.cost > 0}>
-              <div class="flex items-center gap-1">
+              <div data-slot="task-stat-cost" class="flex items-center gap-1">
                 <span class="text-text-weaker">{language.t("session.tasks.stats.cost")}:</span>
-                <span class="font-mono text-text-base">${item.stats!.cost.toFixed(4)}</span>
+                <span class="font-mono text-text-base">{money(stats().cost)}</span>
               </div>
-            </Show>
-          </div>
+            </div>
+          )}
         </Show>
       </div>
       <div data-slot="task-actions" class="flex shrink-0" onClick={(e) => e.stopPropagation()}>
         <Show
-          when={live()}
+          when={active()}
           fallback={
             <IconButton
               icon="close-small"
@@ -175,14 +220,16 @@ function TaskRow(props: {
             />
           }
         >
-          <Show when={item.kind === "agent"}>
+          <Show when={item.childId}>
             <IconButton
               icon="stop"
               variant="ghost"
               class="h-5 w-5"
+              disabled={props.stop === "pending"}
+              aria-busy={props.stop === "pending"}
               onClick={() => props.onStop(item)}
               aria-label={language.t("session.tasks.stop")}
-              title={language.t("session.tasks.stop")}
+              title={language.t(props.stop === "pending" ? "orchestra.tasks.stopping" : "session.tasks.stop")}
             />
           </Show>
         </Show>
@@ -197,6 +244,7 @@ export function TasksPanel() {
   const navigate = useNavigate()
   const { items } = createTasksData()
   const [dismissed, setDismissed] = createSignal<Set<string>>(new Set())
+  const [stops, setStops] = createStore<Record<string, StopState | undefined>>({})
   const [tick, setTick] = createSignal(0)
 
   // Elapsed-time ticker exists only while live work is present: no timer,
@@ -221,10 +269,18 @@ export function TasksPanel() {
     navigate(`/${base64Encode(dir)}/session/${item.childId ?? item.sessionId}`)
   }
 
-  const stopItem = async (item: TasksItem) => {
-    await sdk()
-      .api.session.interrupt({ sessionID: item.childId ?? item.sessionId })
-      .catch(() => {})
+  // Stop interrupts the child session only — never the parent — and keeps the
+  // outcome visible: pending while in flight, failed with retry on rejection.
+  const stopItem = (item: TasksItem) => {
+    const sessionID = item.childId
+    if (!sessionID || stops[item.key] === "pending") return
+    setStops(item.key, "pending")
+    sdk()
+      .api.session.interrupt({ sessionID })
+      .then(
+        () => setStops(item.key, undefined),
+        () => setStops(item.key, "failed"),
+      )
   }
 
   const dismissItem = (item: TasksItem) => {
@@ -249,13 +305,20 @@ export function TasksPanel() {
             </div>
             <For each={visible().running}>
               {(item) => (
-                <TaskRow item={item} tick={tick()} onOpen={openItem} onStop={stopItem} onDismiss={dismissItem} />
+                <TaskRow
+                  item={item}
+                  tick={tick()}
+                  stop={stops[item.key]}
+                  onOpen={openItem}
+                  onStop={stopItem}
+                  onDismiss={dismissItem}
+                />
               )}
             </For>
           </Show>
           <Show when={visible().finished.length > 0}>
             <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
-              {language.t("session.tasks.completed")}
+              {language.t("orchestra.tasks.finished")}
             </div>
             <For each={visible().finished}>
               {(item) => (
