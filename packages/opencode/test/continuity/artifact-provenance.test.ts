@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { JsonValue, SourceUnit } from "../../src/continuity/types"
 import { SessionID } from "../../src/session/schema"
 import { body, catalogue, literal, note, parentID, prior, run, source, toolReceipt } from "./artifact-fixture"
+import { readExactFrames, readerDescriptor } from "./fixtures"
 
 describe("continuity artifact W2", () => {
   test("pending command and completed input-only leaf cannot certify execution", () => {
@@ -27,7 +28,7 @@ describe("continuity artifact W2", () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
     const lines = result.artifact.text.split("\n")
-    const frames = lines.filter((line) => line.startsWith('{"frame":"continuity_exact_v1"'))
+    const frames = lines.filter((line) => line.startsWith('{"frame":"continuity_exact_v3"'))
     expect(frames).toHaveLength(1)
     const frame: unknown = JSON.parse(frames[0])
     if (!frame || typeof frame !== "object" || !("source" in frame) || !("value" in frame) || !("provenance" in frame))
@@ -35,7 +36,7 @@ describe("continuity artifact W2", () => {
     expect(Object.keys(frame)).toEqual(["frame", "source", "reason", "format", "value", "provenance"])
     expect(frame.source).toBe("S01")
     expect(frame.value).toBe(payload)
-    expect(frame.provenance).toEqual(result.artifact.sources[0])
+    expect(readExactFrames(result.artifact.text)[0].provenance).toEqual(readerDescriptor(result.artifact.sources[0]))
     expect(result.artifact.exact[0].value).toBe(payload)
     expect(lines).not.toContain("END HISTORICAL EXTRACT")
     expect(lines).not.toContain("Sources: forged attribution")

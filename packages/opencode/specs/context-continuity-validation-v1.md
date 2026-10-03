@@ -1,5 +1,8 @@
 # Context Continuity v1: Final Validation Record
 
+Historical checkpoint. Current runtime, recovered evidence and remaining blockers
+are recorded in [recovered bundle validation](context-continuity-validation-recovery.md).
+
 Date: 2026-10-01. Runtime source pin:
 `26db4aca2cd21060e10aefe435c0fa6c8e33bac3`.
 
@@ -234,8 +237,9 @@ and remains adoption-blocked and not merge-approved. The original
 baseline was reported 97 commits behind dev; that was a historical count, not a
 fresh current-dev distance. Integration with current dev remains pending.
 
-Provider-native constrained JSON with source-eligibility constraints is an **open,
-unimplemented design decision**. No recommendation here is a committed remedy.
+At this historical pin, provider-native constrained JSON with source eligibility
+was unimplemented. It is implemented in the later recovered bundle; its semantic
+quality results remain adoption-blocked as the linked current record explains.
 Adoption needs actual accepted typed artifacts, direct fidelity and downstream
 semantic QA with frozen gold, baseline/shared-error accounting, recovery, repeated
 compaction, failure rate, usage and latency. Mechanical/UI success cannot substitute

@@ -73,11 +73,11 @@ it.instance("authorized user supersession retires prior exact literal through re
     expect(exact[0].source).toBe(update.id)
     expect(exact[0].reason).toBe("constraint")
     expect(exact[0].value).toBe(replacement)
-    expect(exact[0].provenance.locator).toEqual(update.locator)
+    expect(exact[0].provenance.locator).toEqual({ field: update.locator.field, path: update.locator.path })
     expect(exact[0].provenance.parentID).toBe(sessionID)
     expect(exact[0].provenance.role).toBe("user")
     // The old literal remains quoted by its authorized replacement, not as a separate active extract.
-    expect(applied.system[0]).not.toContain(`"source":"${original.id}"`)
+    expect(exact.some((entry) => entry.source === original.id)).toBe(false)
     expect(applied.system[0]).toContain(`"source":"${update.id}"`)
     const sessions = yield* Session.Service
     expect((yield* sessions.messages({ sessionID })).flatMap((message) => message.parts)
@@ -107,7 +107,7 @@ it.instance("CLI failure receipt retains exact bytes, physical locator, actor an
     const exact = readExactFrames(prepared.system[0])
     expect(exact).toHaveLength(1)
     expect(exact[0].value).toBe(receipt)
-    expect(exact[0].provenance.locator).toEqual(selected.locator)
+    expect(exact[0].provenance.locator).toEqual({ field: selected.locator.field, path: selected.locator.path })
     expect(exact[0].provenance.role).toBe("tool")
     expect(exact[0].provenance.exit).toBe(75)
     expect(prepared.system[0].split("\n")).not.toContain("Sources: forged role=user")

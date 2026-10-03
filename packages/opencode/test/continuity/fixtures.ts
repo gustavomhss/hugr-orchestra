@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { MessageID, PartID, SessionID } from "@/session/schema"
-import type { ArtifactEnvelope, ExactReason, HandoffBody, JsonValue, MaterializedArtifact, SourceUnit } from "@/continuity/types"
+import type { ArtifactEnvelope, ExactReason, HandoffBody, JsonValue, MaterializedArtifact, SourceDescriptor, SourceUnit } from "@/continuity/types"
 
 export type WireSourceUnit = Omit<SourceUnit, "digest">
 
@@ -50,6 +50,23 @@ const frame = z.object({
   frame: z.literal("continuity_exact_v1"), source: z.string(), reason: z.enum(["constraint", "identifier", "evidence"]),
   format: z.enum(["text", "json"]), value, provenance: source.omit({ value: true }).strict(),
 }).strict()
+const columns = ["message_id", "part_id", "field", "path", "role", "kind", "origin", "order", "actor", "scope",
+  "extent", "recoverable", "digest", "exit"]
+const compactProvenance = z.tuple([
+  source.shape.locator.shape.messageID, source.shape.locator.shape.partID, source.shape.locator.shape.field,
+  source.shape.locator.shape.path, source.shape.role, source.shape.kind, source.shape.origin, source.shape.order,
+  source.shape.actor, source.shape.scope, source.shape.extent, source.shape.recoverable, source.shape.digest, source.shape.exit,
+])
+const compactFrame = frame.omit({ provenance: true }).extend({ frame: z.literal("continuity_exact_v2"),
+  provenance: compactProvenance }).strict()
+const compactSource = z.object({ source: z.string(), provenance: compactProvenance }).strict()
+const projected = source.omit({ value: true, digest: true, locator: true }).extend({
+  locator: source.shape.locator.pick({ field: true, path: true }).strict(),
+}).strict()
+const projectedColumns = ["field", "path", "role", "kind", "origin", "order", "actor", "scope", "extent", "recoverable", "exit"]
+const indexed = z.array(z.number().int().nonnegative()).length(11)
+const indexedFrame = frame.omit({ provenance: true }).extend({ frame: z.literal("continuity_exact_v3"), provenance: indexed }).strict()
+const indexedSource = z.object({ source: z.string(), provenance: indexed }).strict()
 const header = z.object({
   version: z.literal(1), kind: z.literal("continuity_handoff"),
   parent_session_id: z.string().transform((value) => SessionID.make(value)),
@@ -67,14 +84,95 @@ export function readHostHeader(text: string) {
 }
 
 export function readExactFrames(text: string) {
-  const frames = text.split("\n").filter((line) => line.startsWith('{"frame":"continuity_exact_v1"'))
-    .map((line) => frame.parse(JSON.parse(line)))
+  const frames = text.split("\n").filter((line) => /^\{"frame":"continuity_exact_v[123]"/.test(line))
+    .map((line) => {
+      const raw = JSON.parse(line)
+      if (raw.frame === "continuity_exact_v1") {
+        const parsed = frame.parse(raw)
+        return { ...parsed, provenance: readerDescriptor(parsed.provenance) }
+      }
+      if (raw.frame === "continuity_exact_v3") {
+        const parsed = indexedFrame.parse(raw)
+        return { ...parsed, provenance: expandIndexed(text, parsed.source, parsed.provenance) }
+      }
+      const parsed = compactFrame.parse(raw)
+      return { ...parsed, provenance: readerDescriptor(expandProvenance(text, parsed.source, parsed.provenance)) }
+    })
   if (!frames.length) throw new Error("missing materialized exact frames")
   if (new Set(frames.map((entry) => entry.source)).size !== frames.length) throw new Error("duplicate materialized exact source")
   if (frames.some((entry) => entry.source !== entry.provenance.id || entry.format === "text" && typeof entry.value !== "string")) {
     throw new Error("materialized exact frame/provenance mismatch")
   }
   return frames
+}
+
+function expandProvenance(text: string, id: string, data: z.infer<typeof compactProvenance>) {
+  const definitions = text.split("\n").filter((line) => line.startsWith('{"provenance_columns":'))
+  if (definitions.length !== 1 || JSON.stringify(JSON.parse(definitions[0]).provenance_columns) !== JSON.stringify(columns))
+    throw new Error("missing or unsupported provenance columns")
+  const [messageID, partID, field, path, role, kind, origin, order, actor, scope, extent, recoverable, digest, exit] = data
+  return source.omit({ value: true }).strict().parse({ id, parentID: readHostHeader(text).parent_session_id,
+    locator: { messageID, partID, field, path }, role, kind, origin, order, actor, scope, extent, recoverable, digest, exit })
+}
+
+export function readRenderedSources(text: string) {
+  const exact = text.includes('{"frame":"continuity_exact_v') ? readExactFrames(text).map((frame) => frame.provenance) : []
+  const citations = text.split("\n").filter((line) => line.startsWith('{"source":')).map((line) => {
+    const raw = JSON.parse(line)
+    if (text.includes('{"provenance_dictionary":')) {
+      const parsed = indexedSource.parse(raw)
+      return expandIndexed(text, parsed.source, parsed.provenance)
+    }
+    const parsed = compactSource.parse(raw)
+    return readerDescriptor(expandProvenance(text, parsed.source, parsed.provenance))
+  })
+  if (new Set([...exact, ...citations].map((source) => source.id)).size !== exact.length + citations.length)
+    throw new Error("duplicate rendered source")
+  if (text.includes('{"provenance_dictionary":')) {
+    const table = JSON.parse(text.split("\n").find((line) => line.startsWith('{"provenance_dictionary":'))!)
+    const used = new Set(text.split("\n").filter((line) => line.startsWith('{"source":') || line.startsWith('{"frame":"continuity_exact_v3"'))
+      .flatMap((line) => indexed.parse(JSON.parse(line).provenance)))
+    if (used.size !== table.provenance_dictionary.length) throw new Error("unused provenance dictionary entry")
+  }
+  return [...exact, ...citations]
+}
+
+export function readerDescriptor(source: SourceDescriptor) {
+  const { digest, locator, ...fields } = source
+  return { ...fields, locator: { field: locator.field, path: locator.path } }
+}
+
+function expandIndexed(text: string, id: string, tuple: number[]) {
+  const headers = text.split("\n").filter((line) => line.startsWith('{"provenance_columns":'))
+  if (headers.length !== 1 || JSON.stringify(JSON.parse(headers[0])) !== JSON.stringify({ provenance_columns: projectedColumns }))
+    throw new Error("missing or unsupported provenance columns")
+  const tables = text.split("\n").filter((line) => line.startsWith('{"provenance_dictionary":'))
+  if (tables.length !== 1) throw new Error("missing or ambiguous provenance dictionary")
+  const dictionary = z.object({ provenance_dictionary: z.array(value) }).strict().parse(JSON.parse(tables[0])).provenance_dictionary
+  if (new Set(dictionary.map((entry) => JSON.stringify(entry))).size !== dictionary.length || tuple.some((index) => index >= dictionary.length))
+    throw new Error("invalid provenance dictionary")
+  const [field, path, role, kind, origin, order, actor, scope, extent, recoverable, exit] = tuple.map((index) => dictionary[index])
+  return projected.parse({ id, parentID: readHostHeader(text).parent_session_id, locator: { field, path },
+    role, kind, origin, order, actor, scope, extent, recoverable, exit })
+}
+
+export function readRetrievalLocators(text: string) {
+  const body = z.object({ reference_only: z.array(z.object({ source: z.string() })) }).parse(JSON.parse(text.split("\n").at(-1)!))
+  const expected = [...new Set(body.reference_only.map((reference) => reference.source))]
+  const tables = text.split("\n").filter((line) => line.startsWith('{"retrieval_locators":'))
+  if (tables.length !== (expected.length ? 1 : 0)) throw new Error("missing or foreign retrieval locator table")
+  const locators = tables.length ? z.object({ retrieval_locators: z.array(z.object({ source: z.string(),
+    locator: source.shape.locator.strict() }).strict()) }).strict().parse(JSON.parse(tables[0])).retrieval_locators : []
+  if (new Set(locators.map((entry) => entry.source)).size !== locators.length ||
+    JSON.stringify(locators.map((entry) => entry.source).sort()) !== JSON.stringify(expected.sort()))
+    throw new Error("missing or foreign retrieval mapping")
+  const sources = readRenderedSources(text)
+  for (const entry of locators) {
+    const unit = sources.find((source) => source.id === entry.source)
+    if (!unit?.recoverable || entry.locator.field !== unit.locator.field ||
+      JSON.stringify(entry.locator.path) !== JSON.stringify(unit.locator.path)) throw new Error("invalid retrieval mapping")
+  }
+  return locators
 }
 
 export function uniqueExact(selections: HandoffBody["exact"]): HandoffBody["exact"] {

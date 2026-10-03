@@ -12,7 +12,7 @@ import type { JsonValue, MaterializedArtifact, SourceCatalogue, SourceUnit } fro
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Token } from "@/util/token"
 import { body, envelope, note, parentID, prior, run, source } from "./artifact-fixture"
-import { readExactFrames, readHostHeader, readSourceCatalogue } from "./fixtures"
+import { readExactFrames, readHostHeader, readerDescriptor, readRenderedSources, readSourceCatalogue } from "./fixtures"
 import PROMPT from "@/continuity/prompt.txt"
 
 function emptyProjection(): MaterializedArtifact {
@@ -53,20 +53,20 @@ describe("continuity producer budget feedback", () => {
       const frames = readExactFrames(result.artifact.text)
       expect(frames).toHaveLength(1)
       expect(frames[0].value).toEqual(value)
-      expect(frames[0].provenance).toEqual(result.artifact.sources[0])
+      expect(frames[0].provenance).toEqual(readerDescriptor(result.artifact.sources[0]))
       if (typeof value === "string") expect(Buffer.from(String(frames[0].value))).toEqual(Buffer.from(value))
-      const frameLine = result.artifact.text.split("\n").find((line) => line.startsWith('{"frame":"continuity_exact_v1"'))!
+      const frameLine = result.artifact.text.split("\n").find((line) => line.startsWith('{"frame":"continuity_exact_v3"'))!
       expect(frameLine.includes("\u2028")).toBe(false)
       expect(frameLine.includes("\u2029")).toBe(false)
       const selector = JSON.stringify(result.artifact.body.exact[0])
       const hint = estimateExact(unit)
-      expect(hint).toBe(Token.estimate(frameLine + "\n" + selector + ",") + 2)
+      expect(hint!).toBeGreaterThanOrEqual(Token.estimate(frameLine + "\n" + selector + ",") + 2)
       expect(hint!).toBeGreaterThan(Token.estimate(selector))
       expect(hint!).toBeGreaterThan(estimateExact({ ...unit, actor: null, scope: null })!)
       const actualAdded = Token.estimate(result.artifact.text) - estimateHostBase(envelope)
       expect(hint! - actualAdded).toBeGreaterThanOrEqual(0)
-      expect(hint! - actualAdded).toBeLessThanOrEqual(3)
-      expect(result.artifact.text.split(unit.digest)).toHaveLength(2)
+      expect(result.artifact.sources[0].digest).toBe(unit.digest)
+      expect(result.artifact.text.split(unit.digest)).toHaveLength(1)
     }
   })
 
@@ -98,20 +98,19 @@ describe("continuity producer budget feedback", () => {
     }
   })
 
-  test("citation hint measures the exact rendered descriptor bytes, with every metadata field", () => {
+  test("citation hint conservatively prices dictionary metadata and possible retrieval; payload is excluded", () => {
     for (const extent of ["full", "preview", "unknown", "cleared", "unavailable"] as const) {
       const unit = source({ id: "S001", extent, actor: "actor\r\n😀\u2028", scope: "scope/".repeat(100),
         locator: { ...source().locator, path: ["state", "output", "漢字", 42] }, exit: 75 })
       if (extent === "unavailable") delete unit.value
       const result = run(body({ exact: [], notes: [note({ sources: [unit.id] })] }), fixtureCatalogue([unit]))
       if (!result.ok) throw new Error(result.reason)
-      const lines = result.artifact.text.split("\n").filter((line) => line.startsWith('{"id":'))
+      const lines = result.artifact.text.split("\n").filter((line) => line.startsWith('{"source":'))
       expect(lines).toHaveLength(1)
-      expect(JSON.parse(lines[0])).toEqual({ id: unit.id, parentID: unit.parentID, role: unit.role, kind: unit.kind,
-        origin: unit.origin, order: unit.order, actor: unit.actor, scope: unit.scope, extent: unit.extent,
-        recoverable: unit.recoverable, digest: unit.digest, exit: unit.exit,
-        message_id: unit.locator.messageID, part_id: unit.locator.partID, field: unit.locator.field, path: unit.locator.path })
-      expect(estimateCitation(unit)).toBe(Token.estimate(lines[0] + "\n") + 2)
+      expect(readRenderedSources(result.artifact.text)).toEqual(result.artifact.sources.map(readerDescriptor))
+      expect(JSON.parse(lines[0]).provenance).toHaveLength(11)
+      const added = Token.estimate(result.artifact.text) - estimateHostBase(envelope) - Token.estimate(JSON.stringify(result.artifact.body.notes))
+      expect(estimateCitation(unit)).toBeGreaterThanOrEqual(added)
       expect(estimateCitation(unit)).toBeGreaterThan(estimateCitation({ ...unit, actor: null, scope: null }))
       expect(estimateCitation({ ...unit, value: "uncounted payload".repeat(1000) })).toBe(estimateCitation(unit))
     }
@@ -128,25 +127,23 @@ describe("continuity producer budget feedback", () => {
     if (!result.ok) throw new Error(result.reason)
     expect(result.artifact.body).toEqual(selected)
     expect(result.artifact.sources.map((entry) => entry.id)).toEqual(["S001", "S002", "S003"])
-    const descriptors = result.artifact.text.split("\n").filter((line) => line.startsWith('{"id":')).map((line) => JSON.parse(line))
-    expect(descriptors.map((entry) => entry.id)).toEqual(["S002", "S003"])
+    const descriptors = result.artifact.text.split("\n").filter((line) => line.startsWith('{"source":')).map((line) => JSON.parse(line))
+    expect(descriptors.map((entry) => entry.source)).toEqual(["S002", "S003"])
     const nonExact = [...new Set([...selected.notes.flatMap((entry) => entry.sources),
       ...selected.reference_only.map((entry) => entry.source)])]
       .filter((id) => !selected.exact.some((entry) => entry.source === id))
     expect(nonExact).toEqual(["S002", "S003"])
     const costs = nonExact.map((id) => estimateCitation(cat.units.find((unit) => unit.id === id)!))
-    expect(costs.reduce((sum, cost) => sum + cost, 0)).toBe(descriptors.reduce((sum, entry) =>
-      sum + Token.estimate(JSON.stringify(entry) + "\n") + 2, 0))
+    expect(costs.reduce((sum, cost) => sum + cost, 0)).toBeGreaterThanOrEqual(descriptors.reduce((sum, entry) =>
+      sum + Token.estimate(JSON.stringify(entry) + "\n"), 0))
     expect(costs.reduce((sum, cost) => sum + cost, 0)).toBeLessThan(
       cat.units.slice(0, 3).reduce((sum, unit) => sum + estimateCitation(unit), 0))
     const frames = readExactFrames(result.artifact.text)
-    const lookup = new Map([...frames.map((entry) => [entry.source, entry.provenance] as const),
-      ...descriptors.map((entry) => [entry.id, { ...entry, locator: { messageID: entry.message_id,
-        partID: entry.part_id, field: entry.field, path: entry.path } }] as const)])
+    const lookup = new Map(readRenderedSources(result.artifact.text).map((entry) => [entry.id, entry]))
     expect(lookup.size).toBe(3)
     for (const entry of result.artifact.sources) {
-      expect(lookup.get(entry.id)).toMatchObject(entry)
-      expect(result.artifact.text.split(`"id":"${entry.id}"`)).toHaveLength(2)
+      expect(lookup.get(entry.id)).toEqual(readerDescriptor(entry))
+      expect(readRenderedSources(result.artifact.text).filter((source) => source.id === entry.id)).toHaveLength(1)
     }
     const duplicate = descriptors.length ? result.artifact.text + "\n" + JSON.stringify(frames[0].provenance) : ""
     expect(Token.estimate(duplicate)).toBeGreaterThan(Token.estimate(result.artifact.text))
@@ -165,6 +162,18 @@ describe("continuity producer budget feedback", () => {
       expect(decode({ text: JSON.stringify(empty.body), catalogue: current.sources,
         envelope: wire.envelope, maxTokens: 6000 })).toEqual({ ok: false, reason: "empty_handoff" })
     }
+  })
+
+  test("combined forecast reserves variable reference text as well as notes, exact and citation metadata", () => {
+    const cat = fixtureCatalogue([source({ id: "S001" }), source({ id: "S002", role: "tool", order: 2 })])
+    const selected = body({ exact: [{ source: "S001", reason: "constraint" }], notes: [note({ sources: ["S002"] })],
+      reference_only: [{ source: "S002", purpose: "original record ".repeat(30), retrieve_when: "debugging original bytes ".repeat(30) }] })
+    const result = run(selected, cat, 6000)
+    if (!result.ok) throw new Error(result.reason)
+    const forecast = estimateHostBase(envelope) + estimateExact(cat.units[0])! + estimateCitation(cat.units[1]) +
+      Token.estimate(JSON.stringify(selected.notes) + JSON.stringify(selected.reference_only))
+    expect(forecast).toBeGreaterThanOrEqual(Token.estimate(result.artifact.text))
+    expect(Token.estimate(result.artifact.text)).toBeLessThanOrEqual(6000)
   })
 
   test("strict grouped parser accepts every cost field; missing, unsafe or extra cost fields fail", () => {

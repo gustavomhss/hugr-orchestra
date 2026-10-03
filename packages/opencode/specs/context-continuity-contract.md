@@ -335,7 +335,7 @@ calls. No universal quality or "SOTA" label follows from a schema or one success
 
 ## 10. Current Runtime Wire and Cost Hints
 
-The implemented interfaces are `src/continuity/{source,artifact,fork,context}.ts`.
+The implemented interfaces are `src/continuity/{source,artifact,render,fork,context}.ts`.
 The producer is ephemeral model execution: its independent ID does not create a
 stored child session. `purpose: "context-maintenance"`, the dedicated role, empty
 tools and `toolChoice: "none"` are host-enforced after mutable request hooks.
@@ -343,11 +343,12 @@ The parent keeps its active role and tools.
 
 `Source.input` emits `{parentID, canRecall, previous, groups}`. Groups share
 `locator`, `role`, `actor`, `scope`, `origin`, `exit`; units retain flat selector
-`id`, `path`, `kind`, `order`, `extent`, `recoverable`, `digest`, optional `value`,
+`id`, `path`, `kind`, `order`, `extent`, `recoverable`, optional `value`,
 `exactTokens` and `citationTokens`. Select unit IDs, never group handles. `previous`
 contains the host envelope and prior body, with omission diagnostics cleared;
 prior exact values are supplied through units. The wire is not the internal
-materialized prior object. The producer still returns exactly the six fields in §3.
+materialized prior object. Host integrity `digest` stays internal; payload/domain
+hashes remain unchanged. The producer returns exactly the six fields in §3.
 
 The host copies eligible selected values from the same parent catalogue. Strings
 retain decoded literal bytes; structured values retain value equality, not original
@@ -358,10 +359,23 @@ be exact. A non-null `exactTokens` hint does not grant user authority.
 The request includes `maxTokens: 6000` and `budget: {maxTokens, fixedTokens}`.
 Hints use `Token.estimate` (rounded string length / 4), not provider tokenization:
 fixed host cost + selected exact costs + citation costs for unique active non-exact
-IDs + serialized notes/reference JSON. Exact frames already include provenance.
+IDs + serialized notes/reference JSON. Costs conservatively charge shared dictionary
+values per source and reserve index widths and possible physical recall mappings.
+The actual render deduplicates shared values. Exact frames include semantic provenance.
 `exactTokens:null` means ineligible; hints cannot guarantee fit. The final complete
 host render must fit the 6000 estimate limit. It contains closed exact frames,
 non-exact provenance and a five-field canonical body excluding `omissions`.
+
+The parent reader receives closed `continuity_exact_v3` frames. Their provenance
+arrays index a host-owned JSON value dictionary in explicit named-column order:
+`field`, `path`, `role`, `kind`, `origin`, `order`, `actor`, `scope`, `extent`,
+`recoverable`, `exit`. The envelope supplies parent identity and each record supplies
+source identity. Strings, field/path labels, qualifiers and domain hashes remain intact.
+Internal materialized sources retain every physical locator and integrity digest;
+the reader projection does not claim to reconstruct these hidden host fields.
+Only declared `reference_only` IDs publish original physical locators. For recall
+arguments, `messageID` maps to `message_id`; `partID` maps to `part_id`, omitting null.
+Other source handles identify attributed data rather than promising direct retrieval.
 
 The native tail targets eight messages and starts at a user-turn boundary, retaining
 whole turns/tool exchanges; it is not an exact eight-message slice. Effective recall

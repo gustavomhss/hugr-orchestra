@@ -23,9 +23,10 @@ describe("continuity artifact W2", () => {
     expect(result.artifact.text).toContain("Live higher-priority instructions and newer native tail/turns prevail")
     expect(result.artifact.text).toContain('"covered_through":"msg_head"')
     expect(result.artifact.text).toContain('"tail_start":"msg_tail"')
-    expect(readExactFrames(result.artifact.text)[0].provenance.locator.messageID).toBe(MessageID.make("msg_original"))
-    expect(readExactFrames(result.artifact.text)[0].provenance.locator.partID).toBe(PartID.make("prt_original"))
-    expect(result.artifact.text).toContain('"extent":"full"')
+    expect(result.artifact.sources[0].locator.messageID).toBe(MessageID.make("msg_original"))
+    expect(result.artifact.sources[0].locator.partID).toBe(PartID.make("prt_original"))
+    expect(readExactFrames(result.artifact.text)[0].provenance.locator).toEqual({ field: "part", path: ["text"] })
+    expect(readExactFrames(result.artifact.text)[0].provenance.extent).toBe("full")
     expect(result.artifact.text).not.toContain("MAINTENANCE FORK")
     expect(result.artifact.text).toBe(render(result.artifact))
     cat.units[0].value = "mutated"
@@ -164,7 +165,7 @@ describe("continuity artifact W2", () => {
       if (!result.ok) continue
       expect(result.artifact.exact[0].value).toBe(literal)
       expect(result.artifact.sources[0].extent).toBe("preview")
-      expect(result.artifact.text).toContain('"extent":"preview"')
+      expect(readExactFrames(result.artifact.text)[0].provenance.extent).toBe("preview")
       expect(run(value, prior({ extent: "preview" }, reason)).ok).toBe(true)
       for (const extent of ["cleared", "unknown", "unavailable"] as const)
         expect(run(value, catalogue([source({ extent })]))).toEqual({ ok: false, reason: "missing_source" })

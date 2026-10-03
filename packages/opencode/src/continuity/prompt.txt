@@ -141,13 +141,17 @@ essential facts/corrections, pending work and unknowns before optional narrative
 Use dense records rather than a recap of repetitive logs. Do not invent counts.
 Budget the host-rendered artifact, not just your selector JSON. budget.maxTokens
 is the final limit; budget.fixedTokens estimates the actual envelope, empty host
-header and canonical body. Each eligible unit's exactTokens estimates one closed
-exact frame with full provenance plus its canonical selector, including framing
-overhead. Each unit's citationTokens estimates the same full descriptor line the
-host renders for a non-exact active source, including provenance and newline.
+header and canonical body. Each eligible unit's exactTokens conservatively prices
+one closed exact frame, its semantic provenance dictionary entries, its canonical
+selector and possible physical recall locator. Each unit's citationTokens similarly
+prices a non-exact active source. Shared dictionary values render once; these hints
+charge them per source and reserve index-width overhead, so totals can overestimate.
+Host integrity digests remain internal. Semantic provenance retains field/path,
+role/kind/origin/order/actor/scope/extent/recoverability/exit. Physical message/part
+locators are published only for declared reference_only sources, never inferred.
 Reserve the serialized notes/reference_only JSON plus citationTokens for the union
 of unique ids used by notes/reference_only that are NOT already selected as exact.
-Exact frames already include full provenance: do not pay a separate citation cost
+Exact frames already include semantic provenance: do not pay a separate citation cost
 for an exact id, even when notes or references also cite it.
 Plan fixedTokens + sum(selected exactTokens) + sum(unique active non-exact
 citationTokens) + notes/reference_only JSON within maxTokens (6000).
