@@ -1,7 +1,11 @@
 /* App-local session skin from the approved app.html. The shell owns outer
- * gutters and the session strip; virtual rows keep their measured positioning. */
+ * gutters and the session strip; virtual rows keep their measured positioning.
+ * Layout wrappers above the timeline use data-session-layout, not data-slot or
+ * data-component: those names on a virtual row's ancestors let shared generic sibling
+ * and :has() rules pass Chromium's ancestor filter, so every row insertion restyled
+ * whole rows and the layout ancestors. */
 @media (min-width: 768px) {
-  body[data-new-layout] [data-component="session-surface"] {
+  body[data-new-layout] [data-session-layout="surface"] {
     --orchestra-session-background: linear-gradient(
       180deg,
       rgba(20, 28, 37, 0.9) 0%,
@@ -81,14 +85,19 @@
     color: var(--orchestra-body);
   }
 
-  /* A native browser view cannot follow an unobserved position-only CSS transition. */
+  /* A native browser view cannot follow an unobserved position-only CSS transition.
+   * Anchor :has() on the conversation panel and reach only the sibling column's side
+   * panel: a :has() on the whole surface turns every timeline mutation into a full
+   * surface style recalc. */
   body[data-new-layout]
-    [data-component="session-surface"]:has([data-active-tab="apps"])
-    [data-slot="session-conversation-panel"] {
+    [data-session-layout="surface"]
+    [data-session-layout="conversation-panel"]:has(
+      ~ [data-session-layout="secondary-column"] > div > [data-active-tab="apps"]
+    ) {
     transition: none;
   }
 
-  html[data-color-scheme="light"] body[data-new-layout] [data-component="session-surface"] {
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
     --orchestra-rail-tab-hover-background: rgba(40, 56, 74, 0.06);
     --orchestra-context-background: rgba(255, 255, 255, 0.55);
     --orchestra-context-border: rgba(70, 84, 98, 0.12);
@@ -163,23 +172,23 @@
     --orchestra-permission-always-text: #3a434e;
   }
 
-  body[data-new-layout] [data-component="session-surface"]:dir(rtl) {
+  body[data-new-layout] [data-session-layout="surface"]:dir(rtl) {
     --orchestra-inline-highlight: -2px;
     --orchestra-file-active: linear-gradient(270deg, #212e3c, #1e2a37);
   }
 
-  html[data-color-scheme="light"] body[data-new-layout] [data-component="session-surface"]:dir(rtl) {
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"]:dir(rtl) {
     --orchestra-file-active: linear-gradient(270deg, #dde5ed, #e7ecf2);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="session-panel-row"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-layout="panel-row"] {
     gap: 6px;
     padding: 0;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
-    :is([data-slot="session-body"], [data-component="session-side-panel"], [data-component="session-new-design"]) {
+    [data-session-layout="surface"]
+    :is([data-session-layout="body"], [data-component="session-side-panel"], [data-component="session-new-design"]) {
     position: relative;
     border-radius: 9px;
     background: transparent;
@@ -189,9 +198,9 @@
   /* Paint glass in a separate layer: a filter on the Apps ancestor would create
    * a containing block for its fixed menu and cannot clip a native WebContentsView. */
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is(
-      [data-slot="session-body"],
+      [data-session-layout="body"],
       [data-component="session-side-panel"],
       [data-component="session-new-design"]
     )::before {
@@ -209,9 +218,9 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is(
-      [data-slot="session-timeline-region"],
+      [data-session-layout="timeline-region"],
       [data-component="session-prompt-dock"],
       [data-slot="session-side-panel-content"]
     ) {
@@ -220,12 +229,12 @@
   }
 
   /* The title remains 48px + 16px; these are the virtualizer's header offsets. */
-  body[data-new-layout] [data-component="session-surface"] [data-session-title] {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
     padding-inline: 30px;
     background: linear-gradient(to bottom, var(--orchestra-evidence-solid) 48px, transparent);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="session-title-child"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
     margin: 0;
     padding: 0;
     color: var(--orchestra-session-heading);
@@ -237,13 +246,13 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is([data-slot="session-title-parent"], [data-slot="session-title-separator"]) {
     color: var(--orchestra-session-secondary);
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-session-title]
     :is([data-component="button-v2"], [data-component="icon-button-v2"]) {
     min-block-size: 32px;
@@ -256,7 +265,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-session-title]
     :is([data-component="button-v2"], [data-component="icon-button-v2"]):hover {
     background: var(--orchestra-surface-hover);
@@ -264,7 +273,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="icon"]:has(use[href="#opencode-icon-branch"])
     + span {
     color: var(--orchestra-branch-color);
@@ -274,33 +283,33 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-timeline-row]
     [data-slot="session-turn-message-container"] {
     padding-inline: 30px;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is([data-timeline-row="UserMessage"], [data-timeline-row="AssistantPart"])
     [data-slot="session-turn-message-container"] {
     padding-block: 14px;
     border-block-start: 1px solid var(--orchestra-session-message-rule);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-component="user-message"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-component="user-message"] {
     align-items: flex-start;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is([data-slot="user-message-body"], [data-slot="user-message-attachments"]) {
     margin-inline-start: 0;
     max-inline-size: 100%;
     align-items: flex-start;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="user-message-text"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="user-message-text"] {
     padding: 0;
     border-radius: 0;
     background: transparent;
@@ -310,7 +319,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is([data-component="text-part"], [data-component="reasoning-part"])
     [data-component="markdown"] {
     color: var(--orchestra-session-body);
@@ -319,7 +328,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is([data-slot="user-message-meta"], [data-slot="user-message-meta-tail"], [data-slot="text-part-meta"]) {
     color: var(--orchestra-session-meta);
     font-size: 11.5px;
@@ -327,14 +336,14 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
-    [data-slot="session-timeline-region"]
+    [data-session-layout="surface"]
+    [data-session-layout="timeline-region"]
     .scroll-view__thumb::after {
     background-color: rgba(140, 160, 180, 0.3);
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is(
       [data-component="tool-output"],
       [data-component="bash-output"],
@@ -351,7 +360,7 @@
   /* Virtual rows clip 0.5px past their measured height, which would cut an outer
    * drop shadow flat at the row edge; evidence in a row keeps only its inset highlight. */
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-timeline-key]
     :is(
       [data-component="tool-output"],
@@ -362,11 +371,11 @@
     box-shadow: var(--orchestra-evidence-highlight);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-component="card"][data-variant="error"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-component="card"][data-variant="error"] {
     --card-accent: var(--orchestra-evidence-delete);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="session-turn-diffs-header"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-turn-diffs-header"] {
     padding-inline: 13px;
     border-block-end: 1px solid var(--orchestra-session-rule);
     background: var(--orchestra-evidence-solid);
@@ -374,8 +383,8 @@
     font-size: 12px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-component="file"],
-  body[data-new-layout] [data-component="session-surface"] [data-component="file"] diffs-container {
+  body[data-new-layout] [data-session-layout="surface"] [data-component="file"],
+  body[data-new-layout] [data-session-layout="surface"] [data-component="file"] diffs-container {
     --opencode-diffs-bg: var(--orchestra-evidence-solid);
     --diffs-fg-number-override: var(--orchestra-evidence-number);
     --diffs-added-light: #2f7a4c;
@@ -384,25 +393,25 @@
     --diffs-deleted-dark: #c8757b;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="diff-changes-additions"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="diff-changes-additions"] {
     color: var(--orchestra-file-add);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="diff-changes-deletions"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="diff-changes-deletions"] {
     color: var(--orchestra-file-delete);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-component="session-prompt-dock"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-prompt-dock"] {
     padding-block-end: 16px;
     background: transparent;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="session-composer-container"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-composer-container"] {
     padding-inline: 30px;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input-v2"] {
     --dock-shell-visual-shadow: var(--orchestra-composer-shadow);
@@ -419,7 +428,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input-v2"]
     > [data-component="prompt-input-v2-attachments"] {
@@ -427,20 +436,20 @@
     min-inline-size: 0;
   }
 
-  /* Shared editor and toolbar have no slots. Match their semantic editor/form
-   * boundary rather than Tailwind class spellings; keep multiline/attachments. */
+  /* Match the shared editor's slots rather than Tailwind class spellings or a
+   * per-div :has() probe; keep multiline/attachments. */
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input-v2"]
-    > div:has(> [data-component="prompt-input"]) {
+    > div[data-slot="prompt-input-v2-editor"] {
     flex: 1 1 64px;
     min-inline-size: 0;
     min-block-size: 36px;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input"] {
     min-block-size: 36px;
@@ -453,7 +462,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input"]
     + div {
@@ -466,7 +475,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input-v2"]
     > div:last-child {
@@ -479,7 +488,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="tooltip-v2-trigger"] {
     min-inline-size: 0;
@@ -487,14 +496,14 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="tooltip-v2-trigger"]:has(> [data-action="prompt-attach"]) {
     flex-shrink: 0;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="tooltip-v2-trigger"]
     > [data-component="button-v2"] {
@@ -502,7 +511,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="button-v2"] {
     /* Model controls carry an inline 28px height and an important 440 weight. */
@@ -517,14 +526,14 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="tooltip-v2-trigger"]:has([data-action="prompt-model"]) {
     max-inline-size: 160px;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="button-v2"]:hover {
     background: var(--orchestra-overlay-hover);
@@ -532,7 +541,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-action="prompt-submit"] {
     flex-shrink: 0;
@@ -547,14 +556,14 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="session-child-prompt"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-child-prompt"] {
     border-color: var(--orchestra-composer-border);
     border-radius: 10px;
     background: var(--orchestra-composer-background);
     color: var(--orchestra-muted);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-component="dock-prompt"][data-kind="permission"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-component="dock-prompt"][data-kind="permission"] {
     border: 1px solid var(--orchestra-permission-border);
     border-radius: 10px;
     overflow: hidden;
@@ -562,7 +571,7 @@
     box-shadow: var(--orchestra-permission-shadow);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-body"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-body"] {
     gap: 0;
     padding: 0;
     border-radius: 0;
@@ -570,54 +579,51 @@
     box-shadow: none;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-header"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-header"] {
     padding: 10px 15px;
     border-block-end: 1px solid var(--orchestra-permission-rule);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-content"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-content"] {
     gap: 0;
     padding: 0 15px 11px;
   }
 
-  body[data-new-layout]
-    [data-component="session-surface"]
-    [data-slot="permission-content"]
-    [data-slot="permission-row"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-content"] [data-slot="permission-row"] {
     padding-block-start: 9px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-row"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-row"] {
     grid-template-columns: 15px minmax(0, 1fr);
     column-gap: 12px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-icon"] [data-component="icon"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-icon"] [data-component="icon"] {
     inline-size: 15px;
     block-size: 15px;
     color: var(--orchestra-permission-icon);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-header-title"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-header-title"] {
     color: var(--orchestra-permission-title);
     font-size: 13px;
     font-weight: 600;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-hint"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-hint"] {
     color: var(--orchestra-permission-hint);
     font-size: 12.5px;
     line-height: 17px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-patterns"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-patterns"] {
     flex-direction: row;
     flex-wrap: wrap;
     margin: 0;
     padding: 0;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-patterns"] code {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-patterns"] code {
     padding: 1px 6px;
     border: 1px solid var(--orchestra-permission-pattern-border);
     border-radius: 5px;
@@ -626,7 +632,7 @@
     font: 11px / 15px var(--font-family-mono);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-footer"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer"] {
     margin-block-start: 0;
     padding: 9px 15px;
     border: 0;
@@ -635,13 +641,13 @@
     background: var(--orchestra-permission-footer);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="permission-footer-actions"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer-actions"] {
     flex-wrap: wrap;
     justify-content: flex-end;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="permission-footer-actions"]
     [data-component="button"] {
     block-size: 30px;
@@ -650,17 +656,14 @@
     font-weight: 520;
   }
 
-  body[data-new-layout]
-    [data-component="session-surface"]
-    [data-slot="permission-footer-actions"]
-    [data-variant="ghost"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer-actions"] [data-variant="ghost"] {
     border: 1px solid transparent;
     background: transparent;
     color: var(--orchestra-permission-deny);
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="permission-footer-actions"]
     [data-variant="secondary"] {
     border: 1px solid var(--orchestra-permission-always-border);
@@ -669,7 +672,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="permission-footer-actions"]
     [data-variant="primary"] {
     border: 1px solid rgba(88, 134, 196, 0.5);
@@ -681,7 +684,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is(
       [data-slot="session-side-panel-main"],
       [data-slot="session-side-panel-shell"],
@@ -694,14 +697,14 @@
   /* Apps keeps its native browser's geometry. Only non-native rail content gets
    * the reference's 16px inset and 38px tab bar. */
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-side-panel"]:not([data-active-tab="apps"])
     [data-component="tabs"][data-scope="session-side-panel"] {
     padding: 16px;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-side-panel"]:not([data-active-tab="apps"])
     [data-slot="session-side-panel-tab-bar"] {
     min-block-size: 38px;
@@ -714,7 +717,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-side-panel"]:not([data-active-tab="apps"])
     [data-scope="session-side-panel"]
     > [data-slot="session-side-panel-tab-bar"]
@@ -727,7 +730,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-scope="session-side-panel"]
     [data-slot="tabs-trigger-wrapper"] {
     border: 0;
@@ -738,7 +741,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-component="session-side-panel"]:not([data-active-tab="apps"])
     [data-slot="tabs-trigger-wrapper"] {
     block-size: 26px;
@@ -747,14 +750,14 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-scope="session-side-panel"]
     [data-slot="tabs-trigger-wrapper"]::after {
     display: none;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-scope="session-side-panel"]
     [data-slot="tabs-trigger-wrapper"]:hover {
     background: var(--orchestra-rail-tab-hover-background);
@@ -762,7 +765,7 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-scope="session-side-panel"]
     [data-slot="tabs-trigger-wrapper"]:has([data-selected]) {
     background: var(--orchestra-rail-tab-active);
@@ -770,22 +773,19 @@
     box-shadow: inset 0 1px 0 var(--orchestra-rail-tab-highlight);
   }
 
-  body[data-new-layout]
-    [data-component="session-surface"]
-    [data-scope="session-side-panel"]
-    [data-slot="tabs-trigger"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-scope="session-side-panel"] [data-slot="tabs-trigger"] {
     color: inherit;
     font-size: 11.5px;
     font-weight: 400;
     white-space: nowrap;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-scope="session-side-panel"] [data-slot="tabs-trigger-wrapper"][data-value^="file://"]
+  body[data-new-layout] [data-session-layout="surface"] [data-scope="session-side-panel"] [data-slot="tabs-trigger-wrapper"][data-value^="file://"]
   {
     max-inline-size: 150px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="session-side-panel-tab-count"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-tab-count"] {
     display: inline-grid;
     min-inline-size: 16px;
     block-size: 16px;
@@ -799,20 +799,20 @@
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="tabs-trigger"][data-selected]
     [data-slot="session-side-panel-tab-count"] {
     background: var(--orchestra-rail-badge-active-background);
     color: var(--orchestra-rail-badge-active-text);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-session-tab]:not([data-session-tab="apps"]) {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab]:not([data-session-tab="apps"]) {
     min-block-size: 0;
     background: transparent;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is(
       [data-slot="session-review-v2-toolbar"],
       [data-slot="session-review-v2-file-header"],
@@ -822,38 +822,38 @@
     background: transparent;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="file-tree-v2-row"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-row"] {
     color: var(--orchestra-file-text);
     font-family: var(--font-family-mono);
     font-size: 12px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="file-tree-v2-row"] span {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-row"] span {
     font-family: inherit;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="file-tree-v2-row"][data-selected] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-row"][data-selected] {
     background: var(--orchestra-file-active);
     box-shadow:
       inset 0 0 0 1px var(--orchestra-file-active-border),
       inset var(--orchestra-inline-highlight) 0 0 var(--orchestra-file-active-accent);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="file-tree-v2-change"][data-change="added"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-change"][data-change="added"] {
     color: var(--orchestra-file-add);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="file-tree-v2-change"][data-change="deleted"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-change"][data-change="deleted"] {
     color: var(--orchestra-file-delete);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-session-tab="context"] .scroll-view__viewport > div {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .scroll-view__viewport > div {
     padding: 10px 2px;
     gap: 10px;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-session-tab="context"]
     .scroll-view__viewport
     > div
@@ -862,14 +862,14 @@
     gap: 6px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-session-tab="context"] .grid > div {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid > div {
     padding: 7px 9px;
     border: 1px solid var(--orchestra-context-border);
     border-radius: 7px;
     background: var(--orchestra-context-background);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-component="tasks-panel"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-component="tasks-panel"] {
     --v2-state-fg-danger: var(--orchestra-evidence-delete);
     border: 1px solid var(--orchestra-border-muted);
     border-radius: 10px;
@@ -877,18 +877,18 @@
     overflow: hidden;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-scroll"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-scroll"] {
     gap: 0;
     padding: 0;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-section"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-section"] {
     padding: 9px 11px;
     color: var(--orchestra-task-meta);
     font-size: 10.5px;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-row"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-row"] {
     display: grid;
     grid-template-columns: 30px minmax(0, 1fr) auto;
     gap: 11px;
@@ -900,15 +900,15 @@
     background: transparent;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-row"]:last-child {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-row"]:last-child {
     border-block-end: 0;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-row"]:hover {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-row"]:hover {
     background: var(--orchestra-overlay-hover);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-mark"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-mark"] {
     display: grid;
     inline-size: 30px;
     block-size: 30px;
@@ -920,36 +920,36 @@
     color: var(--orchestra-task-mark-text);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-title"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-title"] {
     color: var(--orchestra-task-title);
     font-weight: 520 !important;
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-meta"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-meta"] {
     color: var(--orchestra-task-meta);
     font: 11.5px / 16px var(--font-family-mono);
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="task-row"][data-state="needs-input"]
     [data-slot="task-mark"] {
     color: var(--orchestra-warm);
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="task-row"][data-state="failed"]
     [data-slot="task-mark"] {
     color: var(--orchestra-evidence-delete);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-slot="task-stats"] {
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-stats"] {
     border-color: var(--orchestra-task-rule);
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     :is(
       [data-slot="task-row"],
       [data-scope="session-side-panel"] [data-slot="tabs-trigger"],
@@ -961,7 +961,7 @@
 
   html[data-color-scheme="light"]
     body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-slot="permission-footer-actions"]
     [data-variant="primary"] {
     background: linear-gradient(180deg, #4a86d6, #3a6fba);
@@ -969,24 +969,24 @@
 
   /* Native Apps chrome is paint-only. Keep Zen spacing, sizing, scale, host
    * bounds, observer, and native view lifecycle in their existing owner. */
-  body[data-new-layout] [data-component="session-surface"] [data-session-tab="apps"] .zen-browser-shell {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="apps"] .zen-browser-shell {
     background-color: transparent;
   }
 
   body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-session-tab="apps"]
     :is(.zen-browser-sidebar, .zen-urlbar) {
     background: rgba(19, 27, 36, 0.55);
   }
 
-  body[data-new-layout] [data-component="session-surface"] [data-session-tab="apps"] .zen-browser-host {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="apps"] .zen-browser-host {
     background: rgba(19, 27, 36, 0.42);
   }
 
   html[data-color-scheme="light"]
     body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-session-tab="apps"]
     :is(.zen-browser-sidebar, .zen-urlbar) {
     background: rgba(255, 255, 255, 0.62);
@@ -994,7 +994,7 @@
 
   html[data-color-scheme="light"]
     body[data-new-layout]
-    [data-component="session-surface"]
+    [data-session-layout="surface"]
     [data-session-tab="apps"]
     .zen-browser-host {
     background: rgba(255, 255, 255, 0.5);
@@ -1004,7 +1004,7 @@
 @layer components {
   @media (min-width: 768px) {
     body[data-new-layout]
-      [data-component="session-surface"]
+      [data-session-layout="surface"]
       [data-component="session-prompt-dock"]
       [data-component="button-v2"] {
       font-weight: 500 !important;
