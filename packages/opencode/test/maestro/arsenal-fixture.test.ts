@@ -15,7 +15,7 @@ test("SDK fixture preserves actual package-resolution identity; conflicting exis
     expect(await realpath(Bun.resolveSync("@opencode-ai/plugin/package.json", root))).toBe(await realpath(installed))
   }
   await using conflict = await tmpdir()
-  await mkdir(path.join(conflict.path, ".opencode/node_modules"), { recursive: true })
+  await mkdir(path.join(conflict.path, ".opencode/node_modules/@opencode-ai/plugin"), { recursive: true })
   await expect(prepareArsenalSDK(conflict.path, path.join(conflict.path, "config"))).rejects.toThrow("Arsenal fixture SDK installation mismatch")
 })
 
@@ -31,4 +31,26 @@ test("SDK fixture accepts an existing distinct modules root only with the same p
   await prepareArsenalSDK(tmp.path, config)
   expect(await realpath(path.join(config, "node_modules"))).toBe(await realpath(modules))
   expect(await realpath(Bun.resolveSync("@opencode-ai/plugin/package.json", config))).toBe(installed)
+})
+
+test("shared config SDK identity is prepared before test bootstrap", async () => {
+  const directory = process.env.XDG_CONFIG_HOME
+  if (!directory) throw new Error("Test config directory missing")
+  const config = path.join(directory, "opencode")
+  expect(await realpath(path.join(config, "node_modules"))).toBe(path.join(await realpath(config), "node_modules"))
+  expect(await realpath(Bun.resolveSync("@opencode-ai/plugin/package.json", config)))
+    .toBe(await realpath(Bun.resolveSync("@opencode-ai/plugin/package.json", path.resolve(import.meta.dir, "../.."))))
+})
+
+test("SDK fixture refuses workspace aliases at modules root and scoped parent", async () => {
+  const modules = await realpath(path.resolve(import.meta.dir, "../../node_modules"))
+  for (const scoped of [false, true]) {
+    await using tmp = await tmpdir()
+    const target = path.join(tmp.path, ".opencode", "node_modules")
+    await mkdir(scoped ? target : path.dirname(target), { recursive: true })
+    await symlink(scoped ? path.join(modules, "@opencode-ai") : modules,
+      scoped ? path.join(target, "@opencode-ai") : target, process.platform === "win32" ? "junction" : "dir")
+    await expect(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))
+      .rejects.toThrow("modules parent outside fixture ownership")
+  }
 })
