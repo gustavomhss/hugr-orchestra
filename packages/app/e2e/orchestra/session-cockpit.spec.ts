@@ -435,6 +435,183 @@ test("Arabic locale keeps pane order logical and code paths LTR", async ({ page 
   await shoot(page, "cockpit-arabic")
 })
 
+// The cockpit sits in side-panel tab panels with `contain: strict`, which become the containing block
+// of a fixed menu drawn inside them: the menu must still open at its trigger.
+test.describe("Dock tab menu at the cockpit's geometry", () => {
+  test.use({ viewport: { width: 1672, height: 941 } })
+
+  for (const locale of ["en", "ar"] as const) {
+    test(`the tab menu opens at its trigger (${locale === "ar" ? "RTL" : "LTR"})`, async ({ page }) => {
+      const rtl = await openTabs(page, locale, 2)
+      const dock = dockCard(page)
+      const trigger = dock.locator(".zen-tab", { hasText: "Page /a" })
+      const menu = page.getByRole("menu", { name: "Actions for Page /a" })
+      const tab = await rect(trigger)
+      const start = rtl ? "right" : "left"
+
+      // A pointer opens the menu with its inline-start corner on the pointer.
+      const point = { x: Math.round(tab.left + tab.width / 2), y: Math.round(tab.top + tab.height / 2) }
+      await page.mouse.click(point.x, point.y, { button: "right" })
+      await expect(menu).toBeVisible()
+      await expect(menu.getByRole("menuitem", { name: "Duplicate" })).toBeFocused()
+      await expectAnchored(page, menu, point, { x: start, y: "top" })
+      await shoot(page, `tab-menu-pointer-${rtl ? "rtl" : "ltr"}`)
+      await page.keyboard.press("Escape")
+      await expect(menu).toHaveCount(0)
+      await expect(trigger).toBeFocused()
+
+      // The keyboard opens it under the trigger, from the trigger's inline-start edge.
+      await page.keyboard.press("Shift+F10")
+      await expect(menu).toBeVisible()
+      await expectAnchored(
+        page,
+        menu,
+        { x: rtl ? tab.right - 8 : tab.left + 8, y: tab.bottom + 4 },
+        { x: start, y: "top" },
+      )
+      await shoot(page, `tab-menu-keyboard-${rtl ? "rtl" : "ltr"}`)
+      await menu.getByRole("menuitem", { name: "Pin", exact: true }).click()
+      await expect(menu).toHaveCount(0)
+      await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toContainText("Pinned")
+    })
+
+    // The Dock card sits at the window's inline-end edge, so the last tab's menu would leave the window.
+    test(`the tab menu flips inside the window at its edges (${locale === "ar" ? "RTL" : "LTR"})`, async ({ page }) => {
+      const rtl = await openTabs(page, locale, 4)
+      const dock = dockCard(page)
+      const tabs = dock.locator(".zen-tab")
+      const menu = page.getByRole("menu", { name: "Actions for Page /" })
+      const width = page.viewportSize()!.width
+      const end = rtl ? "left" : "right"
+      const tab = await rect(tabs.nth(3))
+
+      const point = { x: Math.round(rtl ? tab.left + 4 : tab.right - 4), y: Math.round(tab.top + tab.height / 2) }
+      // The menu is at least 180px wide, so opening toward the inline end would cross the window's edge.
+      expect(rtl ? point.x - 180 : width - point.x).toBeLessThan(rtl ? 0 : 180)
+      await page.mouse.click(point.x, point.y, { button: "right" })
+      await expect(menu).toBeVisible()
+      await expectAnchored(page, menu, point, { x: end, y: "top" })
+      await shoot(page, `tab-menu-edge-pointer-${rtl ? "rtl" : "ltr"}`)
+      const size = await rect(menu)
+      await page.keyboard.press("Escape")
+      await expect(menu).toHaveCount(0)
+
+      // From the keyboard it flips only if it would not fit from the trigger's inline-start edge.
+      const start = rtl ? tab.right - 8 : tab.left + 8
+      const fits = rtl ? start - size.width >= 0 : start + size.width <= width
+      await tabs.nth(3).focus()
+      await page.keyboard.press("Shift+F10")
+      await expect(menu).toBeVisible()
+      await expectAnchored(
+        page,
+        menu,
+        { x: start, y: tab.bottom + 4 },
+        { x: fits ? (rtl ? "right" : "left") : end, y: "top" },
+      )
+      await page.keyboard.press("Escape")
+      await expect(menu).toHaveCount(0)
+
+      // In a short window the menu opens upward from the pointer instead.
+      await page.setViewportSize({ width, height: 460 })
+      const short = await rect(tabs.nth(3))
+      const low = { x: Math.round(rtl ? short.left + 4 : short.right - 4), y: Math.round(short.bottom - 2) }
+      expect(low.y + size.height).toBeGreaterThan(460)
+      await page.mouse.click(low.x, low.y, { button: "right" })
+      await expect(menu).toBeVisible()
+      await expectAnchored(page, menu, low, { x: end, y: "bottom" })
+      await shoot(page, `tab-menu-edge-short-${rtl ? "rtl" : "ltr"}`)
+    })
+  }
+
+  test("the tab menu roves with the arrow keys, and Tab returns to its trigger", async ({ page }) => {
+    await openTabs(page, "en", 2)
+    const trigger = dockCard(page).locator(".zen-tab", { hasText: "Page /a" })
+    const menu = page.getByRole("menu", { name: "Actions for Page /a" })
+    const item = (name: string) => menu.getByRole("menuitem", { name, exact: true })
+    await trigger.click({ button: "right" })
+    await expect(item("Duplicate")).toBeFocused()
+    for (const [key, name] of [
+      ["ArrowDown", "Pin"],
+      ["ArrowDown", "Reload"],
+      ["ArrowUp", "Pin"],
+      ["Home", "Duplicate"],
+      ["ArrowUp", "Close right"],
+      ["ArrowDown", "Duplicate"],
+      ["End", "Close right"],
+    ] as const) {
+      await page.keyboard.press(key)
+      await expect(item(name)).toBeFocused()
+    }
+    // The menu is portaled to the end of the body: Tab must not carry focus out to the document's ends.
+    await page.keyboard.press("Tab")
+    await expect(menu).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+    await page.keyboard.press("Shift+F10")
+    await expect(item("Duplicate")).toBeFocused()
+    await page.keyboard.press("Shift+Tab")
+    await expect(menu).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
+})
+
+// Opens the cockpit with a page tab and `count - 1` new tabs after it, the last one selected and every
+// title loaded.
+async function openTabs(page: Page, locale: "en" | "ar", count: number) {
+  await setup(page, { bridge: true, locale })
+  await page.goto(`/server/${base64Encode(server)}/session/${parentID}`, { waitUntil: "domcontentloaded" })
+  await expectSessionTitle(page, parentTitle)
+  const rtl = locale === "ar"
+  await expect(page.locator("html")).toHaveAttribute("dir", rtl ? "rtl" : "ltr")
+  // Existing dictionary copy for the review toggle, not a translation supplied by this fixture.
+  await page.getByRole("button", { name: rtl ? "تبديل المراجعة" : "Toggle review", exact: true }).click()
+  const dock = dockCard(page)
+  await expect(dock).toBeVisible()
+  const address = dock.getByRole("textbox", { name: "Address" })
+  await address.fill("https://example.com/a")
+  await address.press("Enter")
+  await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toHaveAttribute("aria-selected", "true")
+  for (let index = 1; index < count; index++) {
+    await dock.getByRole("button", { name: "+ New tab" }).click()
+    await expect(dock.locator(".zen-tab")).toHaveCount(index + 1)
+    // The page's title arrives after the tab: wait for it, so no tab re-renders under an open menu.
+    await expect(dock.locator(".zen-tab").nth(index).locator(".zen-tab-title")).toHaveText("Page /")
+    await expect(dock.locator(".zen-tab").nth(index)).toHaveAttribute("aria-selected", "true")
+  }
+  return rtl
+}
+
+async function rect(locator: Locator) {
+  return locator.evaluate((element) => element.getBoundingClientRect().toJSON() as DOMRect)
+}
+
+// The named corner of the menu sits on the anchor and the menu lies inside the window. It is painted
+// where it is laid out: nothing clips or covers it, so both ends of every item hit that item.
+async function expectAnchored(
+  page: Page,
+  menu: Locator,
+  anchor: { x: number; y: number },
+  corner: { x: "left" | "right"; y: "top" | "bottom" },
+) {
+  const box = await rect(menu)
+  expect({ x: Math.round(box[corner.x]), y: Math.round(box[corner.y]) }).toEqual({
+    x: Math.round(anchor.x),
+    y: Math.round(anchor.y),
+  })
+  const viewport = page.viewportSize()!
+  expect(box.left).toBeGreaterThanOrEqual(0)
+  expect(box.top).toBeGreaterThanOrEqual(0)
+  expect(box.right).toBeLessThanOrEqual(viewport.width)
+  expect(box.bottom).toBeLessThanOrEqual(viewport.height)
+  const hits = await menu.getByRole("menuitem").evaluateAll((items) =>
+    items.flatMap((item) => {
+      const area = item.getBoundingClientRect()
+      const middle = area.top + area.height / 2
+      return [area.left + 4, area.right - 4].map((x) => document.elementFromPoint(x, middle) === item)
+    }),
+  )
+  expect(hits).toEqual(Array(12).fill(true))
+}
+
 function dockCard(page: Page) {
   return page.locator(".orchestra-dock-card")
 }
@@ -490,7 +667,7 @@ async function setup(
     many?: boolean
     empty?: boolean
     shell?: boolean
-    locale?: "ar"
+    locale?: "en" | "ar"
     reads?: string[]
     lists?: string[]
   },

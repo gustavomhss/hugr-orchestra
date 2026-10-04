@@ -56,7 +56,7 @@ type AppDockEvent =
         audible: boolean
       }
     }
-  | { type: "tab-opened"; payload: { tabID: string; generation: number; url: string } }
+  | { type: "tab-opened" | "tab-opened-background"; payload: { tabID: string; generation: number; url: string } }
   | { type: "tab-crashed"; payload: { identity: TabIdentity; reason: "crashed" | "killed" | "oom" } }
   | { type: "tab-recovered"; payload: { tabID: string; generation: number; url: string } }
   | { type: "download"; payload: Download }
@@ -300,6 +300,15 @@ export function createAppDockController(api: AppDockAPI | undefined) {
         void conceal(tab)
         return
       }
+      // A popup from a tab that was not on screen stays unattached and unselected until the user picks it.
+      if (event.type === "tab-opened-background") {
+        const tab = event.payload
+        if (state.tabs.some((item) => sameTab(item, tab))) return
+        const tabs = [...state.tabs, tab]
+        setState("tabs", tabs)
+        if (state.status === "ready") void saveTabs(tabs)
+        return
+      }
       if (event.type === "tab-crashed") {
         const crashed = event.payload
         if (!state.tabs.some((tab) => sameTab(tab, crashed.identity))) return
@@ -387,9 +396,9 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     if (!dock || !tab || !host) return
     return dock.appDockSelect(identity(tab), bounds(host)).catch(fail(current))
   }
-  // The desktop attaches every tab it opens (restored, new or a popup) and each tab it recovers in
-  // place. Conceal arrivals while no host or live selection can show them: an earlier Hide named
-  // the tab attached then and cannot reach a newer tab or recovery generation.
+  // The desktop attaches every tab it opens (restored, new or a popup from the tab on screen) and each
+  // tab it recovers in place. Conceal arrivals while no host or live selection can show them: an earlier
+  // Hide named the tab attached then and cannot reach a newer tab or recovery generation.
   const conceal = (tab: TabIdentity | undefined) => {
     if (dock && tab && (!host || !state.active || activeTab()?.crashed))
       return dock.appDockHide(identity(tab)).catch(() => undefined)
@@ -419,8 +428,6 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     owns: (element: HTMLElement | undefined) => !!element && element === host,
     // Bounds measured for one tab; the desktop drops them once another tab or generation is attached.
     resize: (tab: TabIdentity, next: Bounds) => dock?.appDockResize(identity(tab), next) ?? Promise.resolve(),
-    // An overlay drawn inside the app tree rather than a portal covers the Dock while registered.
-    overlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     retry() {
       if (state.owner !== undefined && state.status === "failed") void load(state.owner)
     },
