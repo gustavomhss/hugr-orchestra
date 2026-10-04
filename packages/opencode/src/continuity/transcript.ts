@@ -3,6 +3,8 @@ import type { SessionID } from "@/session/schema"
 import type { ArchiveChunk } from "./memory-types"
 import { chunk, fenced, identity, split } from "./archive-format"
 
+export * as Transcript from "./transcript"
+
 export function transcript(messages: SessionV1.WithParts[]): string {
   validate(messages, messages[0]?.info.sessionID)
   return messages.map(render).join("\n\n")

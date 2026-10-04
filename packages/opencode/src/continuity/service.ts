@@ -10,6 +10,7 @@ import { Session } from "@/session/session"
 import { MessageV2 } from "@/session/message-v2"
 import { Archive } from "./archive"
 import { chunks } from "./transcript"
+import { Token } from "@/util/token"
 import { Cause, Context, Effect, Layer } from "effect"
 import { create } from "./context"
 import { run, snapshot } from "./fork"
@@ -76,6 +77,14 @@ const layer = Layer.effect(
       if (!prepared.system.length) return prepared
       const artifact = current.contexts.get(input.sessionID)?.artifact
       if (!artifact) return { messages: input.messages, system: [] }
+      const user = input.messages.findLast((message) => message.info.role === "user")?.info
+      if (!user || user.role !== "user") return { messages: input.messages, system: [] }
+      const capacity = yield* provider.getModel(user.model.providerID, user.model.modelID).pipe(
+        Effect.map((model) => Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)),
+        Effect.catch(() => Effect.succeed(0)),
+      )
+      if (Token.estimate(prepared.system.join("\n") + JSON.stringify(prepared.messages)) + 2048 > capacity)
+        return { messages: input.messages, system: [] }
       const available = yield* Effect.forEach(artifact.references, (reference) =>
         archive.read({ sessionID: input.sessionID, id: reference.id }).pipe(
           Effect.map((chunk) => !!chunk), Effect.catch(() => Effect.succeed(false)),

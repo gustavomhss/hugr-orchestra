@@ -8,7 +8,7 @@ import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNodePlatform } from "@opencode-ai/core/effect/app-node-platform"
 import { tool } from "ai"
 import z from "zod"
-import { jsonSchema } from "@/continuity/artifact"
+import { responseSchema } from "@/continuity/memory"
 import { Plugin } from "@/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { LLMRequestPrep } from "@/session/llm/request"
@@ -23,7 +23,7 @@ import PROMPT from "@/continuity/prompt.txt"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
 
-const role = PROMPT + `\nV1 BODY SCHEMA (host-owned):\n${JSON.stringify(jsonSchema)}`
+const role = PROMPT + `\nHOST TRANSPORT SCHEMA:\n${JSON.stringify(responseSchema([]))}`
 const model = ProviderTest.model()
 const bash = tool({ inputSchema: z.object({}) })
 

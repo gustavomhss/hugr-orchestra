@@ -23,7 +23,7 @@ function input() {
   return captured
 }
 
-function execute(events = stopped(), captured = input(), selected: Provider.Model = model) {
+function execute(events: Stream.Stream<LLMEvent, unknown> = stopped(), captured = input(), selected: Provider.Model = model) {
   return Effect.gen(function* () {
     const requests: LLM.StreamInput[] = []
     const archived = chunks(sessionID, captured.head)

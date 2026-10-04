@@ -169,7 +169,7 @@ describe("hashed session archive on real filesystem", () => {
       yield* f.fs.writeFileString(f.index, JSON.stringify({ ...index, references: [item] }))
       yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-corrupt-content")
       // Listing validates descriptor shape, not its agreement with bytes in the fragment.
-      expect(yield* f.archive.list(f.sessionID)).toEqual([item])
+      expect([item]).toEqual(yield* f.archive.list(f.sessionID))
       yield* failure(f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID)] }), "archive-corrupt-content")
     }
     yield* f.fs.writeFileString(f.index, JSON.stringify(index))

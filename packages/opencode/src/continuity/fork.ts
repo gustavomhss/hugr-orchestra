@@ -10,7 +10,7 @@ import { Token } from "@/util/token"
 import { createHash } from "node:crypto"
 import { decode, inline, responseSchema } from "./memory"
 import { ownedHistory, tailIndex, validReference, validSnapshot } from "./model"
-import { transcript } from "./transcript"
+import { Transcript } from "./transcript"
 import type { ArchiveChunk, ArchiveReference, MemoryArtifact, MemorySnapshot } from "./memory-types"
 import PROMPT from "./prompt.txt"
 
@@ -38,7 +38,7 @@ export function snapshot(
   let end = start
   for (let next = start + 1; next <= limit; next++) {
     if (messages[next].info.role !== "user") continue
-    if (Token.estimate(transcript(messages.slice(start, next))) > maxHeadTokens) break
+    if (Token.estimate(Transcript.transcript(messages.slice(start, next))) > maxHeadTokens) break
     end = next
   }
   if (end === start) return
@@ -161,6 +161,8 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
 }, Effect.timeout("180 seconds"))
 
 function validArchive(captured: MemorySnapshot, chunks: ArchiveChunk[], available: ArchiveReference[]) {
+  const expected = Transcript.chunks(captured.sessionID, captured.head)
+  if (expected.length !== chunks.length || expected.some((chunk, index) => chunk.id !== chunks[index].id)) return false
   const known = new Map(available.map((reference) => [reference.id, reference]))
   if (!chunks.length || known.size !== available.length || !available.every(validReference) ||
     new Set(chunks.map((chunk) => chunk.id)).size !== chunks.length) return false

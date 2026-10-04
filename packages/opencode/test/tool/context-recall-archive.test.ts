@@ -113,7 +113,7 @@ describe("context_recall archive guards", () => {
     for (const input of [
       ...modes,
       { reference: id, offset: 0, limit: 8000 },
-      { archive_list: true, offset: 0, limit: 20 },
+      { archive_list: true as const, offset: 0, limit: 20 },
       { archive_query: "x".repeat(256), limit: 20 },
     ])
       expect(decode(input)).toEqual(input)
