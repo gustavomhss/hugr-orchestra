@@ -221,6 +221,27 @@ describe("deriveTasks rows", () => {
     expect(item.startTime).toBeUndefined()
   })
 
+  test("every finished task reaches the counts, a failure with no end time included", () => {
+    const running = ["r0", "r1", "r2"].map((id) => taskCall(id, `ses_${id}`, "running"))
+    const completed = Array.from({ length: 12 }, (_, index) => taskCall(`c${index}`, `ses_c${index}`, "completed"))
+    // The child transcript proves the failure but records no completion time.
+    const failed = assistant("ses_failed", "msg_failed", {
+      error: { name: "UnknownError", data: { message: "boom" } },
+      time: { created: 2_000 },
+    })
+    const result = deriveTasks(
+      setup({
+        sessions: [session("ses_failed", { parentID: parent })],
+        message: { [parent]: [assistant(parent, "msg_parent")], ses_failed: [user("ses_failed", "msg_user"), failed] },
+        calls: [...running, ...completed],
+      }),
+    )
+    expect(result.finished).toHaveLength(13)
+    const summary = summarizeTasks(result)
+    expect(summary.total).toBe(16)
+    expect(summary.hiddenFailures).toBe(1)
+  })
+
   test("keys are qualified by server scope and kind", () => {
     const shell = tool("msg_parent", "ses_same", "bash", { status: "running", input: {}, time: { start: 1 } })
     const input = setup({ calls: [taskCall("c1", "ses_same", "running"), shell] })

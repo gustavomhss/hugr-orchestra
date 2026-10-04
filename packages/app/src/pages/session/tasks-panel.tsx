@@ -335,6 +335,8 @@ export function TasksPanel(
     }
   })
   const summary = createMemo(() => summarizeTasks(visible()))
+  // Only the list is bounded; counts and the summary cover every finished task.
+  const recent = createMemo(() => visible().finished.slice(0, 12))
   const rows = createMemo(
     () => new Map([...visible().running, ...visible().finished].map((item) => [item.key, item] as const)),
   )
@@ -498,10 +500,10 @@ export function TasksPanel(
             <Show when={visible().finished.length > 0}>
               <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
                 {props.summary
-                  ? language.t("orchestra.tasks.recent", { count: visible().finished.length })
+                  ? language.t("orchestra.tasks.recent", { count: recent().length })
                   : language.t("orchestra.tasks.finished")}
               </div>
-              <For each={visible().finished.map((item) => item.key)}>{(key) => row(key)}</For>
+              <For each={recent().map((item) => item.key)}>{(key) => row(key)}</For>
             </Show>
           </Show>
         </Show>

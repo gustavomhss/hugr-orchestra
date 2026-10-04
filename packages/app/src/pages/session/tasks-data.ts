@@ -206,10 +206,7 @@ export function deriveTasks(input: TasksInput) {
   const all = [...agents, ...shells.values()]
   return {
     running: all.filter(live).sort((a, b) => (b.startTime ?? 0) - (a.startTime ?? 0)),
-    finished: all
-      .filter((item) => !live(item))
-      .sort((a, b) => (b.endTime ?? 0) - (a.endTime ?? 0))
-      .slice(0, 12),
+    finished: all.filter((item) => !live(item)).sort((a, b) => (b.endTime ?? 0) - (a.endTime ?? 0)),
   }
 }
 
