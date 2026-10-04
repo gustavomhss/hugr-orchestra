@@ -9,17 +9,18 @@ import { errorMessage } from "@/pages/layout/helpers"
 import { createSessionOwnership } from "./session-ownership"
 
 // The Dock's Terminal pane shows the workspace's active terminal; it never starts one by itself. One
-// PTY has at most one renderer: selecting this pane moves an open bottom terminal here and leaving it
-// moves it back, while opening the bottom panel meanwhile hands the terminal over to it. Closing or
-// leaving the pane never ends the process.
-export function OrchestraEvidenceTerminal() {
+// PTY has at most one renderer: choosing this pane moves an open bottom terminal here and leaving it
+// moves it back, while opening the bottom panel meanwhile hands the terminal over to it. A pane that is
+// only restored leaves an open bottom terminal where it is. Closing or leaving the pane never ends the
+// process.
+export function OrchestraEvidenceTerminal(props: { takeover: boolean }) {
   const terminal = useTerminal()
   const language = useLanguage()
   const layout = useLayout()
   const session = useSessionLayout()
   const owner = layout.view(session.sessionKey())
   const ownership = createSessionOwnership(session.sessionKey)
-  const bottom = owner.terminal.opened()
+  const bottom = props.takeover && owner.terminal.opened()
   if (bottom) owner.terminal.close()
   onCleanup(() => {
     if (bottom && !owner.terminal.opened()) owner.terminal.open()

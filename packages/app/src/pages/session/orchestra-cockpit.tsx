@@ -1,4 +1,4 @@
-import { Show, createMemo } from "solid-js"
+import { Show, createMemo, createSignal } from "solid-js"
 import { useNavigate } from "@solidjs/router"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
@@ -39,11 +39,17 @@ export function OrchestraCockpit(props: { tasks: TasksData }) {
         const update = (patch: Partial<CockpitView>) => {
           if (key === sessionKey()) updateCockpitView(key, patch)
         }
+        // The pane is restored whenever the cockpit mounts, including when live work opens the Apps tab
+        // unprompted. Only a pane chosen in this Dock may take the terminal from the bottom panel.
+        const [chosen, setChosen] = createSignal(false)
         return (
           <div class="orchestra-cockpit">
             <OrchestraDock
               pane={view().pane}
-              onPaneChange={(pane) => update({ pane })}
+              onPaneChange={(pane) => {
+                setChosen(true)
+                update({ pane })
+              }}
               files={() => <OrchestraEvidenceFiles path={view().file} onPathChange={(file) => update({ file })} />}
               docs={() => (
                 <OrchestraEvidenceDocs
@@ -52,7 +58,7 @@ export function OrchestraCockpit(props: { tasks: TasksData }) {
                   onOpenFiles={(file) => update({ pane: "files", file })}
                 />
               )}
-              terminal={() => <OrchestraEvidenceTerminal />}
+              terminal={() => <OrchestraEvidenceTerminal takeover={chosen()} />}
             />
             <div class="orchestra-cockpit-feed">
               <TasksPanel
