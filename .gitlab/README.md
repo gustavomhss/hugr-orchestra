@@ -26,7 +26,9 @@ Bun comes from `package.json` (`1.3.14`) using x64 baseline archives. Node is pi
 `24.15.0` on both platforms, including after Bun setup: `24.16` hangs Playwright extraction.
 Windows retains five clean-cache hoisted installation attempts. Test git identity uses
 environment variables, passed through Turbo's loose environment mode; setup does not
-write git identity config. Unit and E2E commands retain 45-minute limits; HttpApi retains
+write git identity config. Linux tests run as the unprivileged `node` user: the existing
+filesystem permission test returns early under root. The timed runner rejects root on
+GitLab Linux. Unit and E2E commands retain 45-minute limits; HttpApi retains
 15 minutes. Job timeout also bounds setup/cleanup. Dependency/browser/Turbo caches are
 not reused in this initial port, so the first hosted runs execute the checks afresh.
 

@@ -48,42 +48,27 @@ godfile:
     - git fetch origin "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
     - GODFILE_BASE_REF=$(git rev-parse --verify FETCH_HEAD)
     - export GODFILE_BASE_REF
-    - bun --cwd packages/core test test/godfile.test.ts
-    - bun run check:godfile
+    - chown -R node:node "$CI_PROJECT_DIR"
+    - runuser -u node -- bun --cwd packages/core test test/godfile.test.ts
+    - runuser -u node -- bun run check:godfile
 
 # Full Atlas is deliberate: no GitHub PR-number waiver or ambiguous diff can skip it.
 atlas:
   extends: .linux
   script:
-    - cd foundation/atlas
-    - npm ci
-    - npm run typecheck
-    - source ../../.gitlab/atlas-base.sh
-    - npm run godfile-guard
-    - npm run layer-guard
-    - npm run reference-model-guard
-    - npm run spec-conformance-guard
-    - npm run id-integrity
-    - npm run command-doc-guard
-    - npm run wiring-guard
-    - npm run adr-citation-guard
-    - npm run req-clause-guard
-    - npm run ears-coamend-guard
-    - npm run doc-transcript-guard
-    - npm run service-gate-guard
-    - npm run own-snapshot-guard
-    - node --test scripts/materialize-own-snapshot.test.mjs
-    - npm test -- harness/gates/own-snapshot-guard.test.mjs
-    - npm test
+    - chown -R node:node "$CI_PROJECT_DIR"
+    - runuser -u node -- bash .gitlab/atlas.sh
 
 unit-linux:
   extends: .bun-linux
   script:
     - bun run --cwd packages/atlas-boundary check:generated
+    # GitHub Linux jobs are unprivileged; root silently skips filesystem permission tests.
+    - chown -R node:node "$CI_PROJECT_DIR"
     # Pass the environment-only git identity and watcher setting into every package.
-    - node .gitlab/run.mjs 2700 . bun turbo test --env-mode=loose
-    - bun run --cwd packages/client check:generated
-    - node .gitlab/run.mjs 900 packages/opencode bun run test:httpapi
+    - runuser -u node -- node .gitlab/run.mjs 2700 . bun turbo test --env-mode=loose
+    - runuser -u node -- bun run --cwd packages/client check:generated
+    - runuser -u node -- node .gitlab/run.mjs 900 packages/opencode bun run test:httpapi
 
 unit-windows:
   extends: .windows
@@ -105,8 +90,9 @@ e2e-linux:
   script:
     - cd packages/app
     - bunx playwright install-deps chromium
-    - bunx playwright install chromium
-    - node ../../.gitlab/run.mjs 2700 . bun run test:e2e:local
+    - chown -R node:node "$CI_PROJECT_DIR"
+    - runuser -u node -- bunx playwright install chromium
+    - runuser -u node -- node ../../.gitlab/run.mjs 2700 . bun run test:e2e:local
 
 e2e-windows:
   extends: [.windows, .e2e]

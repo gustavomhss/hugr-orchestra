@@ -6,6 +6,7 @@ apt-get update
 apt-get install -y --no-install-recommends unzip python3-setuptools
 version=$(node -p 'require("./package.json").packageManager.split("@")[1]')
 tools=$(mktemp -d)
+chmod 755 "$tools"
 curl --fail --location --retry 3 "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-x64-baseline.zip" -o "$tools/bun.zip"
 unzip -q "$tools/bun.zip" -d "$tools"
 ln -s bun "$tools/bun-linux-x64-baseline/bunx"
