@@ -3,7 +3,7 @@ import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import type { LLM } from "@/session/llm"
 import { MessageID, SessionID } from "@/session/schema"
-import { Effect, Stream } from "effect"
+import { Effect, Pull, Stream } from "effect"
 import type { LLMEvent } from "@opencode-ai/llm"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
@@ -141,11 +141,21 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     id: MessageID.ascending(), sessionID, role: "user", agent: agent.name,
     model: { ...parent.model }, time: { created: Date.now() },
   }
+  // Bind transport pulls to this Effect's scope. The runFold/Channel.runWith
+  // runner owns a separate scope; cancellation must join transport cleanup before
+  // the timeout worker exits and the service releases its maintenance slot.
   const result = yield* services.llm.stream({
     user, agent, permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
     purpose: "context-maintenance", model, ...prepared,
     ...(model.api.npm === "@ai-sdk/openai" ? { responseSchema: schema } : {}),
-  }).pipe(Stream.runFold(() => ({ text: "", finished: false, invalid: false }), reduce))
+  }).pipe(Stream.toPull, Effect.flatMap((pull) => {
+    let state = { text: "", finished: false, invalid: false }
+    return pull.pipe(
+      Effect.tap((events) => Effect.sync(() => { for (const event of events) state = reduce(state, event) })),
+      Effect.forever,
+      Pull.catchDone(() => Effect.succeed(state)),
+    )
+  }), Effect.scoped)
   if (!result.finished || result.invalid) return
   return decode({ text: result.text, snapshot: captured, producerID: sessionID, available: known, maxTokens })
 }, Effect.timeout("180 seconds"))
