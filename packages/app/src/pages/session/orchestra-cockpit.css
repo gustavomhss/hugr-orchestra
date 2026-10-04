@@ -218,7 +218,7 @@ body[data-new-layout] [data-session-layout="surface"] .orchestra-cockpit [data-s
   color: var(--orchestra-warm);
 }
 
-.orchestra-cockpit :is(button, [role="button"]):focus-visible {
+.orchestra-cockpit :is(button, [role="button"], [data-cockpit-row]):focus-visible {
   outline: 2px solid var(--orchestra-accent);
   outline-offset: -2px;
 }

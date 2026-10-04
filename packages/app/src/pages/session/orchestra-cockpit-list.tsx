@@ -50,7 +50,10 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
     const index = props.items.findIndex((item) => item.key === key)
     queueMicrotask(() => {
       if (view.pending !== key) return
-      const target = root()?.querySelector<HTMLElement>(`[data-index="${index}"] :is(button, [role="button"])`)
+      const row = root()?.querySelector<HTMLElement>(`[data-index="${index}"]`)
+      // A row without a control of its own (an Activity row with no action) takes focus itself, or
+      // navigation would stop there.
+      const target = row?.querySelector<HTMLElement>(':is(button, [role="button"])') ?? row
       if (!target) return
       target.focus()
       setView("pending", undefined)
@@ -97,6 +100,7 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
                       data-index={row().index}
                       data-cockpit-row=""
                       role="listitem"
+                      tabIndex={-1}
                       aria-posinset={row().index + 1}
                       aria-setsize={props.items.length}
                       onFocusIn={() => setView("focused", String(key))}
