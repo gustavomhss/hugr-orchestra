@@ -10,9 +10,11 @@ Expand-Archive "$tools/node.zip" -DestinationPath $tools -Force
 $version = (Get-Content package.json -Raw | ConvertFrom-Json).packageManager.Split('@')[1]
 Invoke-WebRequest "https://github.com/oven-sh/bun/releases/download/bun-v$version/bun-windows-x64-baseline.zip" -OutFile "$tools/bun.zip"
 Expand-Archive "$tools/bun.zip" -DestinationPath $tools -Force
+Copy-Item "$tools/bun-windows-x64-baseline/bun.exe" "$tools/bun-windows-x64-baseline/bunx.exe"
 $env:PATH = "$tools/node-v24.15.0-win-x64;$tools/bun-windows-x64-baseline;$env:PATH"
 if ((node --version) -ne "v24.15.0") { throw "Unexpected Node version" }
 if ((bun --version) -ne $version) { throw "Unexpected Bun version" }
+if ((bunx --version) -ne $version) { throw "Unexpected bunx version" }
 node --version
 bun --version
 python -m pip install setuptools

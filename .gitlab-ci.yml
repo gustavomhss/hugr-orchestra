@@ -79,10 +79,10 @@ atlas:
 unit-linux:
   extends: .bun-linux
   script:
-    - bun --cwd packages/atlas-boundary run check:generated
+    - bun run --cwd packages/atlas-boundary check:generated
     # Pass the environment-only git identity and watcher setting into every package.
     - node .gitlab/run.mjs 2700 . bun turbo test --env-mode=loose
-    - bun --cwd packages/client run check:generated
+    - bun run --cwd packages/client check:generated
     - node .gitlab/run.mjs 900 packages/opencode bun run test:httpapi
 
 unit-windows:

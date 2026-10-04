@@ -8,8 +8,10 @@ version=$(node -p 'require("./package.json").packageManager.split("@")[1]')
 tools=$(mktemp -d)
 curl --fail --location --retry 3 "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-x64-baseline.zip" -o "$tools/bun.zip"
 unzip -q "$tools/bun.zip" -d "$tools"
+ln -s bun "$tools/bun-linux-x64-baseline/bunx"
 export PATH="$tools/bun-linux-x64-baseline:$PATH"
 test "$(bun --version)" = "$version"
+test "$(bunx --version)" = "$version"
 node --version
 bun --version
 bun install
