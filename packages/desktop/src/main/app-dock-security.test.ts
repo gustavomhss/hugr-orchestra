@@ -6,6 +6,14 @@ import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { createRequire } from "node:module"
+import {
+  attached,
+  attachedContents,
+  backgroundPopups,
+  check,
+  popupsAtCapacity,
+  waitFor,
+} from "./app-dock-security.popups"
 
 const required = Array.from({ length: 33 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
@@ -15,9 +23,6 @@ const cacheableBody = `cacheable fixture${"x".repeat(1_000_000)}`
 type Case = { id: string; status: "pass"; detail: string }
 const cases: Case[] = []
 
-const check = (condition: unknown, message: string) => {
-  if (!condition) throw new Error(message)
-}
 const pass = (id: string, detail: string) => cases.push({ id, status: "pass", detail })
 const rejects = async (fn: () => unknown | Promise<unknown>, text: string) => {
   try {
@@ -425,21 +430,6 @@ async function child() {
     await readEvents()
     return events.length
   }
-  const attached = (win: BrowserWindow, contents: Electron.WebContents) =>
-    (win.contentView as unknown as { children: { webContents?: Electron.WebContents }[] }).children.some(
-      (child) => child.webContents === contents,
-    )
-  const attachedContents = (win: BrowserWindow) =>
-    (win.contentView as unknown as { children: { webContents?: Electron.WebContents }[] }).children
-      .map((child) => child.webContents)
-      .find(Boolean)
-  const waitFor = async (predicate: () => boolean | Promise<boolean>, label: string) => {
-    const deadline = Date.now() + 5_000
-    while (!(await predicate())) {
-      if (Date.now() >= deadline) throw new Error(`Timed out waiting for ${label}`)
-      await new Promise<void>((resolve) => setTimeout(resolve, 25))
-    }
-  }
   const waitEvent = (after: number, predicate: (event: any) => boolean, label: string) => {
     const deadline = Date.now() + 5_000
     return new Promise<any>((resolve, reject) => {
@@ -459,6 +449,7 @@ async function child() {
   await installEventStore()
   const profile = "e2e-profile"
   const bounds = { x: 0, y: 0, width: 400, height: 300 }
+  const harness = { ipcWin, webContents, base: site.base, bounds, execute, invoke }
   const identity = (tab: { tabID: string; generation: number }) => ({ tabID: tab.tabID, generation: tab.generation })
   const open = async (url = site.base, profileID = profile) =>
     invoke(ipcWin.webContents.mainFrame, "app-dock-open", [url, bounds, profileID])
@@ -891,81 +882,7 @@ async function child() {
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupOpened.payload.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupSource.tabID])
 
-    // Only the tab on screen may attach a view. A popup from a background tab, or from any tab while the
-    // Dock is hidden, opens behind it and is attached only when it is selected.
-    const u32Start = await eventCount()
-    const u32Profile = "popup-background-profile"
-    const u32Opener = await open(site.base, u32Profile)
-    const u32OpenerContents = attachedContents(ipcWin)
-    const u32Front = await open(site.base, u32Profile)
-    const u32FrontContents = attachedContents(ipcWin)
-    check(u32OpenerContents && u32FrontContents && u32OpenerContents !== u32FrontContents, "U32 App Dock views missing")
-    check(!attached(ipcWin, u32OpenerContents), "U32 opener is not a background tab")
-    const u32Popup = async (from: Electron.WebContents, url: string) => {
-      await waitFor(
-        async () => (await execute("view:u32-opener-ready", from, "document.readyState === 'complete'")) === true,
-        "U32 opener load",
-      )
-      await execute("view:u32-window-open", from, `window.open(${JSON.stringify(url)}); undefined`)
-      let contents: Electron.WebContents | undefined
-      await waitFor(() => {
-        contents = webContents.getAllWebContents().find((item) => !item.isDestroyed() && item.getURL() === url)
-        return contents !== undefined
-      }, `U32 popup WebContents ${url}`)
-      return contents!
-    }
-    const u32BackgroundURL = `${site.base}/popup-target?u32=background`
-    const u32BackgroundContents = await u32Popup(u32OpenerContents, u32BackgroundURL)
-    check(
-      ipcWin.contentView.children.length === 1 && attached(ipcWin, u32FrontContents),
-      "U32 popup from a background tab displaced the tab on screen",
-    )
-    check(!attached(ipcWin, u32BackgroundContents), "U32 popup from a background tab attached a view")
-    check(!attached(ipcWin, u32OpenerContents), "U32 background opener attached a view")
-    const u32Background = await waitEvent(
-      u32Start,
-      (event) => event.type === "tab-opened-background" && event.payload.url === u32BackgroundURL,
-      "U32 background popup tab-opened-background",
-    )
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(u32Front)])
-    check(attachedContents(ipcWin) === undefined, "U32 hide left a view attached")
-    const u32HiddenURL = `${site.base}/popup-target?u32=hidden`
-    const u32HiddenContents = await u32Popup(u32FrontContents, u32HiddenURL)
-    check(attachedContents(ipcWin) === undefined, "U32 popup attached a view while the Dock was hidden")
-    const u32Hidden = await waitEvent(
-      u32Start,
-      (event) => event.type === "tab-opened-background" && event.payload.url === u32HiddenURL,
-      "U32 hidden popup tab-opened-background",
-    )
-    await readEvents()
-    check(
-      [u32Background, u32Hidden].every(
-        (event) =>
-          Object.keys(event.payload).length === 3 &&
-          typeof event.payload.tabID === "string" &&
-          event.payload.tabID.length > 0 &&
-          Number.isSafeInteger(event.payload.generation) &&
-          event.payload.generation >= 1 &&
-          JSON.stringify(structuredClone(event.payload)) === JSON.stringify(event.payload),
-      ) && !events.slice(u32Start).some((event) => event.type === "tab-opened"),
-      "U32 background popup event is not a cloneable public tab identity, or announced a selected tab",
-    )
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u32Background.payload), bounds])
-    check(
-      ipcWin.contentView.children.length === 1 && attached(ipcWin, u32BackgroundContents),
-      "U32 selecting the background popup did not attach only its view",
-    )
-    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u32Hidden.payload), bounds])
-    check(
-      ipcWin.contentView.children.length === 1 && attached(ipcWin, u32HiddenContents),
-      "U32 selecting the hidden popup did not attach only its view",
-    )
-    pass(
-      "U32",
-      "popups from a background tab or a hidden Dock open unattached as tab-opened-background; selecting attaches only them",
-    )
-    for (const opened of [u32Hidden.payload, u32Background.payload, u32Front, u32Opener])
-      await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [opened.tabID])
+    pass("U32", await backgroundPopups(harness))
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightA.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightC.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightTarget.tabID])
@@ -1163,55 +1080,7 @@ async function child() {
         `${site.base}/ticker?capacity=a0`,
       "U28 recently selected tab remains usable",
     )
-    // U28 left both windows at the 20 inactive view cap. A popup never makes room for itself: it is
-    // refused as blocked, whether a background tab or the tab on screen opens it.
-    const u33Start = await eventCount()
-    const u33Live = () =>
-      JSON.stringify(
-        webContents
-          .getAllWebContents()
-          .filter((item) => !item.isDestroyed())
-          .map((item) => item.id)
-          .sort((left, right) => left - right),
-      )
-    const u33Before = u33Live()
-    const u33Background = webContents
-      .getAllWebContents()
-      .find((item) => !item.isDestroyed() && item.getURL() === `${site.base}/ticker?capacity=a1`)
-    check(u33Background && !attached(ipcWin, u33Background), "U33 background tab missing")
-    for (const [from, url] of [
-      [u33Background!, `${site.base}/popup-target?u33=background`],
-      [u28ActiveContents, `${site.base}/popup-target?u33=active`],
-    ] as const) {
-      await execute("view:u33-window-open", from, `window.open(${JSON.stringify(url)}); undefined`)
-      await waitFor(async () => {
-        await readEvents()
-        return (
-          events.slice(u33Start).some((event) => event.type === "navigation-error" && event.payload.url === url) ||
-          webContents.getAllWebContents().some((item) => !item.isDestroyed() && item.getURL() === url)
-        )
-      }, `U33 popup outcome ${url}`)
-      check(u33Live() === u33Before, `U33 popup ${url} at the view cap evicted a tab or opened a view`)
-      check(
-        events
-          .slice(u33Start)
-          .some(
-            (event) =>
-              event.type === "navigation-error" && event.payload.code === "blocked" && event.payload.url === url,
-          ),
-        `U33 popup ${url} at the view cap was not refused as blocked`,
-      )
-    }
-    check(
-      !events.slice(u33Start).some((event) => event.type === "tab-opened" || event.type === "tab-opened-background") &&
-        attached(ipcWin, u28ActiveContents) &&
-        attached(ipcWinB, u28ActiveB),
-      "U33 a popup at the view cap announced a tab or displaced an active one",
-    )
-    pass(
-      "U33",
-      "at the 20 inactive view cap, popups from a background or the active tab are refused; nothing is evicted",
-    )
+    pass("U33", await popupsAtCapacity(harness, ipcWinB!, u28ActiveContents, u28ActiveB))
 
     const u28DownloadStart = await eventCount()
     const u28CancelledStart = site.cancelledDownloads()
