@@ -348,8 +348,9 @@ export function TasksPanel(
     }
   })
   const summary = createMemo(() => summarizeTasks(visible()))
-  // Only the list is bounded; counts and the summary cover every finished task.
-  const recent = createMemo(() => visible().finished.slice(0, 12))
+  // The cockpit counts every finished task, so its detail lists every one. The side panel shows no
+  // counts and has no virtual list, so it keeps only the first 12, failures first.
+  const finished = createMemo(() => (props.summary ? summary().finished : summary().finished.slice(0, 12)))
   const rows = createMemo(
     () => new Map([...visible().running, ...visible().finished].map((item) => [item.key, item] as const)),
   )
@@ -395,6 +396,27 @@ export function TasksPanel(
           onDismiss={dismissItem}
         />
       )}
+    </Show>
+  )
+
+  // A cockpit section past 30 rows mounts only the rows in view; the side panel scrolls as a whole.
+  const TaskList = (list: { items: TasksItem[]; label: string }) => (
+    <Show
+      when={props.summary && list.items.length > 30}
+      fallback={<For each={list.items.map((item) => item.key)}>{(key) => row(key)}</For>}
+    >
+      <OrchestraCockpitList items={list.items} estimate={100} label={list.label}>
+        {(item) => (
+          <TaskRow
+            item={item()}
+            tick={view.tick}
+            stop={stops.state(item().key)}
+            onOpen={openItem}
+            onStop={stopItem}
+            onDismiss={dismissItem}
+          />
+        )}
+      </OrchestraCockpitList>
     </Show>
   )
 
@@ -473,39 +495,19 @@ export function TasksPanel(
             when={expanded()}
             fallback={<For each={summary().rows.map((item) => item.key)}>{(key) => row(key, true)}</For>}
           >
-            <Show when={visible().running.length > 0}>
+            <Show when={summary().running.length > 0}>
               <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
                 {language.t("session.tasks.running")}
               </div>
-              <Show
-                when={props.summary && summary().total > 30}
-                fallback={<For each={visible().running.map((item) => item.key)}>{(key) => row(key)}</For>}
-              >
-                <OrchestraCockpitList
-                  items={visible().running}
-                  estimate={100}
-                  label={language.t("session.tasks.running")}
-                >
-                  {(item) => (
-                    <TaskRow
-                      item={item()}
-                      tick={view.tick}
-                      stop={stops.state(item().key)}
-                      onOpen={openItem}
-                      onStop={stopItem}
-                      onDismiss={dismissItem}
-                    />
-                  )}
-                </OrchestraCockpitList>
-              </Show>
+              <TaskList items={summary().running} label={language.t("session.tasks.running")} />
             </Show>
-            <Show when={visible().finished.length > 0}>
+            <Show when={finished().length > 0}>
               <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
                 {props.summary
-                  ? language.t("orchestra.tasks.recent", { count: recent().length })
+                  ? language.t("orchestra.tasks.recent", { count: finished().length })
                   : language.t("orchestra.tasks.finished")}
               </div>
-              <For each={recent().map((item) => item.key)}>{(key) => row(key)}</For>
+              <TaskList items={finished()} label={language.t("orchestra.tasks.recent", { count: finished().length })} />
             </Show>
           </Show>
         </Show>

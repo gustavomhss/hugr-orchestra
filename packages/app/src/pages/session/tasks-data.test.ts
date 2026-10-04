@@ -467,6 +467,27 @@ describe("summarizeTasks", () => {
     expect(summary.total).toBe(5)
   })
 
+  test("the expanded lists hold every counted task, in the order the summary shows them", () => {
+    const running = ["r0", "r1", "r2"].map((key, index) => item(key, "running", { startTime: 3 - index }))
+    const completed = Array.from({ length: 12 }, (_, index) =>
+      item(`done-${String(index).padStart(2, "0")}`, "completed", { endTime: 1_000 + index }),
+    )
+    // The projection orders finished work by end time, so a failure without one arrives last.
+    const failed = item("failed", "error")
+    const finished = [...completed.toReversed(), failed]
+    const summary = summarizeTasks({ running, finished })
+    expect(summary.total).toBe(16)
+    expect(summary.hiddenFailures).toBe(1)
+    expect([...summary.running, ...summary.finished]).toHaveLength(summary.total)
+    expect(summary.finished.map((row) => row.key)).toEqual(["failed", ...completed.toReversed().map((row) => row.key)])
+    expect(summary.rows).toEqual([...summary.running, ...summary.finished].slice(0, 3))
+
+    // With no running work the collapsed summary shows the failure, and so does the head of the detail.
+    const idle = summarizeTasks({ running: [], finished })
+    expect(idle.rows[0]).toBe(failed)
+    expect(idle.rows).toEqual(idle.finished.slice(0, 3))
+  })
+
   test("the count covers every active entity, past what the summary shows", () => {
     const running = Array.from({ length: 65 }, (_, index) => item(`task-${String(index).padStart(2, "0")}`, "running"))
     const summary = summarizeTasks({ running, finished: [] })
