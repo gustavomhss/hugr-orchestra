@@ -156,6 +156,8 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   let attachments = 0
   // Every owner change starts a new generation; work started under an older one must not land.
   let generation = 0
+  // An open reply must not replace a selection requested after that open.
+  let selection = 0
   let listening = false
   let overlays: ReturnType<typeof createAppDockOverlayWatch> | undefined
   let manifest: AppDockManifest | undefined
@@ -291,8 +293,10 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       if (event.type === "tab-opened") {
         const tab = event.payload
         const tabs = state.tabs.some((item) => sameTab(item, tab)) ? state.tabs : [...state.tabs, tab]
+        selection++
         setState({ tabs, active: identity(tab), url: tab.url })
         if (state.status === "ready") void saveTabs(tabs)
+        void show(tab, generation)
         void conceal(tab)
         return
       }
@@ -316,8 +320,9 @@ export function createAppDockController(api: AppDockAPI | undefined) {
           if (wasActive) setState({ active: identity(recovered), url: recovered.url })
           if (sameTab(state.recovering, crashed)) setState("recovering", undefined)
         })
-        // The desktop attaches a recovered tab only if it was attached when it crashed.
-        if (wasActive) void (host ? show(recovered, generation) : conceal(recovered))
+        // Recovery can attach before its event arrives, after a Hide named the old generation.
+        if (wasActive) void show(recovered, generation)
+        void conceal(recovered)
         return
       }
       if (event.type === "navigation-error") {
@@ -361,6 +366,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     const profile = state.profile
     if (!dock || !host || !profile || state.status !== "ready") return
     const current = generation
+    const requested = ++selection
     const tab = await dock.appDockOpen(url, bounds(host), profile).catch(fail(current, fallback))
     if (!tab) return
     if (current !== generation) {
@@ -368,8 +374,13 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       return
     }
     const tabs = [...state.tabs, tab]
-    setState({ tabs, active: identity(tab), url: tab.url })
+    batch(() => {
+      setState("tabs", tabs)
+      if (requested === selection) setState({ active: identity(tab), url: tab.url })
+    })
     void saveTabs(tabs, profile)
+    // Opening attaches before replying; a later selection may already have replaced that view.
+    if (!activeTab()?.crashed) void show(state.active, current)
     void conceal(tab)
   }
   const show = (tab: TabIdentity | undefined, current: number) => {
@@ -377,10 +388,11 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     return dock.appDockSelect(identity(tab), bounds(host)).catch(fail(current))
   }
   // The desktop attaches every tab it opens (restored, new or a popup) and each tab it recovers in
-  // place. One that lands while no view shows the Dock is hidden by name, because a Hide sent earlier
-  // named the tab attached then and does not reach a newer one.
+  // place. Conceal arrivals while no host or live selection can show them: an earlier Hide named
+  // the tab attached then and cannot reach a newer tab or recovery generation.
   const conceal = (tab: TabIdentity | undefined) => {
-    if (dock && tab && !host) return dock.appDockHide(identity(tab)).catch(() => undefined)
+    if (dock && tab && (!host || !state.active || activeTab()?.crashed))
+      return dock.appDockHide(identity(tab)).catch(() => undefined)
   }
 
   return {
@@ -467,6 +479,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       setState("tabs", remaining)
       void saveTabs(remaining)
       if (!sameTab(requested, state.active)) return
+      selection++
       setState({ active: next && identity(next), url: next?.url ?? home })
       await show(next, current)
     },
@@ -487,11 +500,13 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       void saveTabs(remaining)
       if (remaining.some((item) => sameTab(item, state.active))) return
       const next = remaining.at(-1)
+      selection++
       setState({ active: next && identity(next), url: next?.url ?? home })
       await show(next, current)
     },
     select(tab: Tab) {
       const previous = state.active
+      selection++
       setState({ active: identity(tab), url: tab.url })
       if (!tab.crashed) return void show(tab, generation)
       // A crashed tab is not shown, so the tab shown before it must not stay on screen in its place.
