@@ -134,6 +134,7 @@ describe("App Dock controller", () => {
     expect(dock.calls.slice(before)).toEqual([
       ["occlude", true],
       ["open", "https://opencode.ai", profileA],
+      ["select", tab("tab-2", 2)],
       ["select", tab("tab-1", 1)],
       ["occlude", false],
     ])
@@ -237,6 +238,69 @@ describe("App Dock controller", () => {
       ["hide", tab("tab-2", 2)],
       ["select", tab("tab-1", 3)],
     ])
+  })
+
+  test("a late open reply preserves the newer selection and its detach identity", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const detach = controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    const gate = Promise.withResolvers<void>()
+    void dock.gate(gate.promise)
+    const opening = controller.openNewTab()
+    // The native open attaches tab-2 before replying; the later Select attaches tab-1 again.
+    controller.select(controller.state.tabs[0])
+    const before = dock.calls.length
+    gate.resolve()
+    await opening
+    expect(controller.state.active).toEqual(tab("tab-1", 1))
+    expect(controller.state.url).toBe("https://example.com/a")
+    expect(controller.state.tabs.map((item) => item.tabID)).toEqual(["tab-1", "tab-2"])
+    detach()
+    expect(dock.calls.slice(before)).toEqual([
+      ["select", tab("tab-1", 1)],
+      ["hide", tab("tab-1", 1)],
+    ])
+  })
+
+  test.each([
+    ["absent host", false, true],
+    ["newer crashed selection", true, false],
+    ["newer crashed selection after detach", true, true],
+    ["newer live selection", false, false],
+  ] as const)("a late recovery reconciles its native identity with %s", async (_name, crashed, detached) => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const detach = controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    await controller.openNewTab()
+    controller.select(controller.state.tabs[0])
+    dock.emit({ type: "tab-crashed", payload: { identity: tab("tab-1", 1), reason: "crashed" } })
+    if (crashed) dock.emit({ type: "tab-crashed", payload: { identity: tab("tab-2", 2), reason: "crashed" } })
+    const gate = Promise.withResolvers<void>()
+    const recovered = { tabID: "tab-1", generation: 3, url: "https://example.com/a" }
+    dock.api.appDockRecoverTab = async () => {
+      await gate.promise
+      return recovered
+    }
+    const recovering = controller.recover()
+    // Native recovery attaches generation 3 before the renderer learns its identity. Hides for
+    // generation 1 or tab-2 cannot conceal it, so the recovery event must reconcile it by name.
+    controller.select(controller.state.tabs[1])
+    if (detached) detach()
+    const before = dock.calls.length
+    dock.emit({ type: "tab-recovered", payload: recovered })
+    gate.resolve()
+    await recovering
+    expect(controller.state.active).toEqual(tab("tab-2", 2))
+    expect(controller.state.tabs[0]?.generation).toBe(3)
+    expect(controller.state.tabs[0]?.crashed).toBeUndefined()
+    expect(dock.calls.slice(before)).toEqual(crashed || detached ? [["hide", tab("tab-1", 3)]] : [])
+    if (!detached) detach()
   })
 
   test("a failed load shows its error and retry restores the profile", async () => {
