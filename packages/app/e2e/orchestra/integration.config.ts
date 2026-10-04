@@ -16,6 +16,8 @@ export default defineConfig({
   // Specs read this to prove debug-only controls are absent from the built bundle.
   metadata: { ...config.metadata, bundle: "production" },
   outputDir: "../test-results/orchestra-integration",
+  // The inherited HTML report path is relative to this config, which would nest it under e2e/orchestra.
+  reporter: [["html", { outputFolder: "../playwright-report/orchestra-integration", open: "never" }], ["line"]],
   workers: 1,
   retries: 0,
   fullyParallel: false,

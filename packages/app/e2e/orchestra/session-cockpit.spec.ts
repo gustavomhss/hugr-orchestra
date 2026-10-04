@@ -296,7 +296,12 @@ test("Terminal hands one existing PTY renderer between Dock and bottom panel", a
   await expect(dock.getByRole("status").locator("span")).toHaveText("This terminal is shown in the bottom panel.")
   await expect(dock.getByRole("button", { name: "Show here", exact: true })).toBeVisible()
   await expect(page.locator('[data-component="terminal"]')).toHaveCount(1)
+  // "Show here" takes the terminal from the bottom panel, so leaving the pane must give it back.
+  await dock.getByRole("button", { name: "Show here", exact: true }).click()
+  await expect(dock.locator('[data-component="terminal"] canvas')).toBeVisible()
+  await expect(page.locator('#terminal-panel [data-component="terminal"]')).toHaveCount(0)
   await pane(dock, "Browser").click()
+  await expect(page.locator('#terminal-panel [data-component="terminal"] canvas')).toBeVisible()
   await pane(dock, "Terminal").click()
   await expect(dock.locator('[data-component="terminal"] canvas')).toBeVisible()
   await expect(page.locator('#terminal-panel [data-component="terminal"]')).toHaveCount(0)
