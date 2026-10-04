@@ -19,42 +19,37 @@ Um build do Orchestra em que o agente opera o workspace Linux isolado do App Doc
 As duas frentes mexem no mesmo núcleo: runtime Docker, `workspace.py`, App Dock host, IPC,
 painel Apps e plugin `app-dock.ts`.
 
-## Estado da integração
+## Estado da integração (2026-10-04, fim do dia)
 
 | Passo | Estado |
 | --- | --- |
-| Frente B commitada (`dock-a11y-w06`, 6 commits) | feito |
-| 18 arquivos só da frente A + 2 merges limpos (`073926ab0b`) | feito |
-| 15 arquivos divergentes: merge de 3 vias por grupos disjuntos | em andamento |
-| Gate completo (typecheck, suítes host/plugin/app/script, fixtures Python em container) | pendente |
-| Build único + prova no Orchestra real (CLI e interface na mesma sessão) | pendente |
-| Controle negativo e receipt durável da rodada no app real | pendente |
+| Frente B commitada (`dock-a11y-w06`) | feito |
+| 18 arquivos só da frente A + 2 merges limpos | feito |
+| 15 arquivos divergentes, merge por 4 grupos disjuntos (agentes, verificados pelo lead) | feito |
+| Conflito sem marcador: `mode` com dois sentidos (leitura do navegador × ação nativa), corrigido no host e no plugin, com testes | feito |
+| `target` nativo: nome exato vence parciais; alvo decidido na árvore inteira com segunda passada antes de agir | feito |
+| Gate: typecheck desktop/app/opencode/script = 0 erros; desktop 379, plugin 46, app 116, script 2, runtime Docker 2, todos sem falha; fixtures Python idênticas às aprovadas | feito |
+| Prova no Orchestra real, build único, na mesma sessão | feito |
+| Controle negativo no app real | feito |
+| Receipt durável | feito: `~/.local/share/opencode/recovery/linux-workspace-campaign-20261004/real-app-joint-proof.json` (0600) |
 
-Grupos de merge (um agente e um worktree cada; arquivos sem sobreposição):
+### Prova no app real (Orchestra dev deste branch, VS Code 1.140.0, agente MiMo-V2.6-Flash Free)
 
-| Grupo | Branch / worktree | Arquivos |
-| --- | --- | --- |
-| Runtime | `merge-runtime` | `app-dock-runtime.ts`, `docker-engine.ts(.test)`, `linux-runtime/Dockerfile`, `electron-builder.config.ts`, `docs/linux-runtime.md` |
-| Guest | `merge-guest` | `resources/linux-runtime/workspace.py` |
-| Host | `merge-host` | `app-dock-linux.ts`, `app-dock-linux-live.test.ts`, `ipc.ts`, `app-dock.ts`, `app-dock-rpc.ts` |
-| App/plugin | `merge-app` | `apps-panel.tsx(.test)`, `opencode/src/plugin/app-dock.ts` |
+- **Terminal → interface:** `linux_exec`/`linux_write` criam `/home/dock/campaign/nota.txt`; `code --reuse-window` pede a abertura; o VS Code mostra o diálogo de confiança de arquivos; o agente aperta "Open" pela interface; `dock_find` acha a janela "nota.txt - Visual Studio Code". Conferido por fora (`docker exec`).
+- **Interface → terminal:** Manage → Settings, busca `@id:files.trimTrailingWhitespace` (keyboard, `verified`), marcar a caixa (`observed`); `linux_read` vê `{"files.trimTrailingWhitespace": true}`; desmarcar e `linux_read` vê `{}`. Repetido no código final: 7/7.
+- **Recusa segura:** `target {name: "Settings"}` foi recusado (`target-ambiguous`, nada executado), porque a árvore inteira tem dois itens; com `"Settings Ctrl"` passou.
+- **Controle negativo:** com `OPENCODE_PERMISSION={"dock":{"*":"allow","action":"deny"}}`, o primeiro `dock_action` é negado pela regra de permissão, o agente para, e `settings.json` fica com bytes e mtime idênticos. Isso também prova que o serviço de permissão real está ligado ao App Dock.
+- **Recolhimento do helper:** helper `accessibility` rodando antes de fechar o app e 0 depois.
+- A frente A provou sua correção de versão: o build se carimba `1.18.27-<branch>-<data>` e o free tier aceita.
 
-Cada entrega só entra depois de verificação do lead: lista de arquivos, diff, testes por nome e
-probe de mutação nos testes do agente.
+## Pendências (próximas fatias)
 
-## Fases seguintes
-
-1. **Gate** no `dock-linux-unified`: `bun typecheck` em `packages/desktop`, `packages/app`,
-   `packages/opencode`, `packages/script`; suítes `app-dock-*`, `linux-workspace*`, plugin,
-   `apps-panel`, `script`; fixtures Python (`test_bus`, `test_snapshot`, `test_actions`,
-   `test_helper`, `test_runtime_session`, `test_workspace`) no container de prova com
-   `--self-check`/`--mutations`.
-2. **Build único e prova no app real**, uma GUI por vez: Orchestra dev deste branch, Linux no App
-   Dock, VS Code lançado pela UI; na mesma sessão o agente usa `linux_exec`/PTY e
-   `dock_find`/`dock_action`/`dock_type`; efeito conferido por fora (`docker exec`).
-3. **Controle negativo** na rodada real (ação bloqueada de propósito tem que reprovar) e receipt
-   durável fora do Git.
-4. **Revisão fria** das mudanças da campanha e atualização deste documento.
+1. **Pré-aquecer o helper nativo** quando o Linux abre no App Dock: sob carga alta (load 16–19) a partida a frio passou do prazo de 15s da ferramenta (`transport-timeout`). Não afrouxar o prazo.
+2. `target`: página final com `coverage.complete: false` sem `hasMore` ainda permite agir; controle homônimo surgindo em outra página entre as passadas não é detectado; custo de até 96 leituras por ação.
+3. Teste Docker dedicado para `stop()`/`dispose()` recolherem o helper (hoje provado só no app real).
+4. Decisão de produto: o `workspace.py` estrito faz toda a sessão Linux (inclusive `linux_exec` e Slack) depender do barramento de acessibilidade subir.
+5. W06 no harness com as ferramentas novas; pacote empacotado (`extraResources`); Windows/arm64; performance P01–P05.
+6. Nome com atalho de teclado ("Settings Ctrl+,") impede casamento exato; avaliar normalização explícita.
 
 ## Regras herdadas das duas frentes
 
