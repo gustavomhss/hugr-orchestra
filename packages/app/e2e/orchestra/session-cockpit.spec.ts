@@ -522,6 +522,36 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
       await shoot(page, `tab-menu-edge-short-${rtl ? "rtl" : "ltr"}`)
     })
   }
+
+  test("the tab menu roves with the arrow keys, and Tab returns to its trigger", async ({ page }) => {
+    await openTabs(page, "en", 2)
+    const trigger = dockCard(page).locator(".zen-tab", { hasText: "Page /a" })
+    const menu = page.getByRole("menu", { name: "Actions for Page /a" })
+    const item = (name: string) => menu.getByRole("menuitem", { name, exact: true })
+    await trigger.click({ button: "right" })
+    await expect(item("Duplicate")).toBeFocused()
+    for (const [key, name] of [
+      ["ArrowDown", "Pin"],
+      ["ArrowDown", "Reload"],
+      ["ArrowUp", "Pin"],
+      ["Home", "Duplicate"],
+      ["ArrowUp", "Close right"],
+      ["ArrowDown", "Duplicate"],
+      ["End", "Close right"],
+    ] as const) {
+      await page.keyboard.press(key)
+      await expect(item(name)).toBeFocused()
+    }
+    // The menu is portaled to the end of the body: Tab must not carry focus out to the document's ends.
+    await page.keyboard.press("Tab")
+    await expect(menu).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+    await page.keyboard.press("Shift+F10")
+    await expect(item("Duplicate")).toBeFocused()
+    await page.keyboard.press("Shift+Tab")
+    await expect(menu).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
 })
 
 // Opens the cockpit with a page tab and `count - 1` new tabs after it, the last one selected and every

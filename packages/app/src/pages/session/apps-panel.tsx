@@ -544,6 +544,7 @@ export function AppsPanel(
             y={view.menu.y}
             rtl={view.menu.rtl}
             setElement={(element) => (menuElement = element)}
+            onDismiss={() => closeMenu()}
             canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
             canReload={capability("appDockCommand") && !view.menu.tab.crashed}
             canClose={capability("appDockCloseTab")}
@@ -667,6 +668,7 @@ function TabMenu(props: {
   y: number
   rtl: boolean
   setElement: (element: HTMLDivElement) => void
+  onDismiss: () => void
   canDuplicate: boolean
   canReload: boolean
   canClose: boolean
@@ -702,6 +704,26 @@ function TabMenu(props: {
         role="menu"
         aria-label={`Actions for ${tabLabel(props.tab)}`}
         style={place() ?? { left: "0px", top: "0px", visibility: "hidden" }}
+        onKeyDown={(event) => {
+          // At the end of the body, Tab would carry focus to the document's ends: it returns to the tab.
+          if (event.key === "Tab") {
+            event.preventDefault()
+            props.onDismiss()
+            return
+          }
+          const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("[role='menuitem']:not(:disabled)")]
+          const index = items.findIndex((item) => item === document.activeElement)
+          const steps: Record<string, number> = {
+            ArrowDown: index + 1,
+            ArrowUp: index - 1,
+            Home: 0,
+            End: items.length - 1,
+          }
+          const next = steps[event.key]
+          if (next === undefined) return
+          event.preventDefault()
+          items[(next + items.length) % items.length]?.focus()
+        }}
       >
         <button
           ref={(element) => {
