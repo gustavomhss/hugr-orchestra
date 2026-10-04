@@ -9,16 +9,20 @@ export function createOrchestraNavigation(input: {
   constrained: () => boolean
   storage?: SyncStorage
 }) {
-  const [state, setState, init] =
+  // Desktop windows read the preference over IPC; browser storage answers synchronously.
+  const [state, setState, , ready] =
     input.platform.platform === "desktop" && input.platform.windowID
       ? persisted(Persist.window("orchestra-navigation.v1"), createStore({ collapsed: false }), input.platform)
-      : makePersisted(createStore({ collapsed: false }), {
-          name: "orchestra-navigation.v1",
-          storage: input.storage ?? windowNavigationStorage,
-        })
+      : ([
+          ...makePersisted(createStore({ collapsed: false }), {
+            name: "orchestra-navigation.v1",
+            storage: input.storage ?? windowNavigationStorage,
+          }),
+          () => true,
+        ] as const)
 
   return {
-    ready: Promise.resolve(init),
+    ready,
     compact: createMemo(() => input.constrained() || state.collapsed === true),
     toggle: () => {
       // Responsive presentation must not change the window's explicit preference.

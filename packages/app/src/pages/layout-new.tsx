@@ -37,66 +37,70 @@ export default function NewLayout(props: ParentProps) {
   }
 
   return (
-    <div
-      class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text"
-      classList={{ "orchestra-shell": desktop() }}
-      style={{
-        "padding-top": "env(safe-area-inset-top, 0px)",
-        "padding-bottom": "env(safe-area-inset-bottom, 0px)",
-      }}
-    >
-      <Titlebar
-        navigation={
-          <Show when={desktop() && narrow()}>
-            <OrchestraNavigationToggle
-              compact={!state.railRequested}
-              constrained={false}
-              iconOnly
-              onToggle={() => setState("railRequested", (value) => !value)}
-            />
-          </Show>
-        }
-        update={update}
-        tabsMount={desktop() ? state.tabsMount : undefined}
-        debugTools={
-          import.meta.env.DEV
-            ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
-            : undefined
-        }
-      />
+    // Desktop windows load the navigation preference over IPC. Wait for it so a collapsed
+    // window never paints the expanded width first; browser storage is ready at once.
+    <Show when={navigation.ready()}>
       <div
-        class="flex-1 min-h-0 min-w-0 flex flex-col"
-        classList={{ "orchestra-workspace": desktop() }}
-        data-navigation={
-          desktop()
-            ? narrow() && !state.railRequested
-              ? "hidden"
-              : navigation.compact()
-                ? "compact"
-                : "expanded"
-            : undefined
-        }
+        class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text"
+        classList={{ "orchestra-shell": desktop() }}
+        style={{
+          "padding-top": "env(safe-area-inset-top, 0px)",
+          "padding-bottom": "env(safe-area-inset-bottom, 0px)",
+        }}
       >
-        <Show when={desktop()}>
-          <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
-        </Show>
-        <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
+        <Titlebar
+          navigation={
+            <Show when={desktop() && narrow()}>
+              <OrchestraNavigationToggle
+                compact={!state.railRequested}
+                constrained={false}
+                iconOnly
+                onToggle={() => setState("railRequested", (value) => !value)}
+              />
+            </Show>
+          }
+          update={update}
+          tabsMount={desktop() ? state.tabsMount : undefined}
+          debugTools={
+            import.meta.env.DEV
+              ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
+              : undefined
+          }
+        />
+        <div
+          class="flex-1 min-h-0 min-w-0 flex flex-col"
+          classList={{ "orchestra-workspace": desktop() }}
+          data-navigation={
+            desktop()
+              ? narrow() && !state.railRequested
+                ? "hidden"
+                : navigation.compact()
+                  ? "compact"
+                  : "expanded"
+              : undefined
+          }
+        >
           <Show when={desktop()}>
-            <div
-              id="orchestra-session-tabs"
-              class="orchestra-session-tabs"
-              ref={(element) => setState("tabsMount", element)}
-              hidden={layout.route().type !== "session" && layout.route().type !== "draft"}
-            />
+            <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
           </Show>
-          <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
-            <Suspense>{props.children}</Suspense>
-          </main>
+          <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
+            <Show when={desktop()}>
+              <div
+                id="orchestra-session-tabs"
+                class="orchestra-session-tabs"
+                ref={(element) => setState("tabsMount", element)}
+                hidden={layout.route().type !== "session" && layout.route().type !== "draft"}
+              />
+            </Show>
+            <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
+              <Suspense>{props.children}</Suspense>
+            </main>
+          </div>
         </div>
+        {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
+        <TabsInfoPopup />
+        <ToastRegion v2 />
       </div>
-      {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
-      <TabsInfoPopup />
-      <ToastRegion v2 />
-    </div>
+    </Show>
   )
 }
