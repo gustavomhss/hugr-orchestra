@@ -30,7 +30,9 @@ export function OrchestraNavigationTooltip(props: {
     >
       {props.children(Tooltip.Trigger)}
       <Tooltip.Portal>
-        <Tooltip.Content data-component="tooltip-v2">{props.value}</Tooltip.Content>
+        <Tooltip.Content data-component="tooltip-v2">
+          <bdi>{props.value}</bdi>
+        </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip>
   )

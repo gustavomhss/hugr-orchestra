@@ -149,7 +149,10 @@ export function DialogOrchestraGovernance(props: {
           <Show when={capability() === "available"}>
             <div>
               <dt>{language.t("orchestra.governance.agent")}</dt>
-              <dd>{language.t("orchestra.governance.agent.available")}</dd>
+              {/* Fact values lay out as flex rows; bare copy needs its own box to take its own direction. */}
+              <dd>
+                <span>{language.t("orchestra.governance.agent.available")}</span>
+              </dd>
             </div>
           </Show>
         </dl>
@@ -162,7 +165,7 @@ export function DialogOrchestraGovernance(props: {
               <p>{language.t("orchestra.governance.waiting.body")}</p>
             </div>
             <ButtonV2 size="small" variant="neutral" onClick={props.dispose}>
-              {language.t("orchestra.governance.waiting.action")}
+              <bdi>{language.t("orchestra.governance.waiting.action")}</bdi>
             </ButtonV2>
           </div>
         </Show>
@@ -215,9 +218,11 @@ export function DialogOrchestraGovernance(props: {
                 disabled={loadingEarlier()}
                 onClick={() => void sync.session.history.loadMore(props.sessionID)}
               >
-                {language.t(
-                  loadingEarlier() ? "orchestra.governance.loadingEarlier" : "orchestra.governance.loadEarlier",
-                )}
+                <bdi>
+                  {language.t(
+                    loadingEarlier() ? "orchestra.governance.loadingEarlier" : "orchestra.governance.loadEarlier",
+                  )}
+                </bdi>
               </ButtonV2>
             </div>
           </Show>
@@ -251,18 +256,20 @@ export function DialogOrchestraGovernance(props: {
               <div>
                 <dt>{language.t("orchestra.governance.own")}</dt>
                 <dd>
-                  <Switch fallback={language.t("orchestra.governance.own.unknown")}>
-                    <Match when={configured()}>
-                      {(source) => (
-                        <span title={source().directory}>
-                          {language.t("orchestra.governance.own.configured", { project: source().projectID })}
-                        </span>
-                      )}
-                    </Match>
-                    <Match when={own().state === "missing"}>{language.t("orchestra.governance.own.missing")}</Match>
-                    <Match when={own().state === "checking"}>{language.t("orchestra.governance.own.checking")}</Match>
-                    <Match when={own().state === "failed"}>{language.t("orchestra.governance.own.failed")}</Match>
-                  </Switch>
+                  <span>
+                    <Switch fallback={language.t("orchestra.governance.own.unknown")}>
+                      <Match when={configured()}>
+                        {(source) => (
+                          <span title={source().directory}>
+                            {language.t("orchestra.governance.own.configured", { project: source().projectID })}
+                          </span>
+                        )}
+                      </Match>
+                      <Match when={own().state === "missing"}>{language.t("orchestra.governance.own.missing")}</Match>
+                      <Match when={own().state === "checking"}>{language.t("orchestra.governance.own.checking")}</Match>
+                      <Match when={own().state === "failed"}>{language.t("orchestra.governance.own.failed")}</Match>
+                    </Switch>
+                  </span>
                 </dd>
               </div>
             </dl>
@@ -382,9 +389,11 @@ function Row(props: { record: GovernanceRecord; onShow: (turnID: string) => void
               aria-label={language.t("orchestra.governance.showRecord", { record: kind() })}
               onClick={() => props.onShow(turn())}
             >
-              {language.t(
-                props.record.state === "hold" ? "orchestra.governance.inspect" : "orchestra.governance.showInChat",
-              )}
+              <bdi>
+                {language.t(
+                  props.record.state === "hold" ? "orchestra.governance.inspect" : "orchestra.governance.showInChat",
+                )}
+              </bdi>
             </ButtonV2>
           )}
         </Show>
