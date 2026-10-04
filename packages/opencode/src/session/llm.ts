@@ -90,7 +90,7 @@ const live: Layer.Layer<
     const flags = yield* RuntimeFlags.Service
 
     const run = Effect.fn("LLM.run")(function* (request: StreamRequest) {
-      const contextMemory = request.contextMemory === true
+      const contextMemory = request.contextMemory === true || request.purpose === "context-maintenance"
       const input = request.purpose === "context-maintenance" ? yield* Effect.try({ try: () => ({
         ...request,
         ...structuredClone({ model: request.model, user: request.user, agent: request.agent,
@@ -125,7 +125,7 @@ const live: Layer.Layer<
         flags,
         isWorkflow,
       })
-      if (contextMemory) yield* LLMContextBudget.check(prepared, input.responseSchema)
+      if (contextMemory) yield* LLMContextBudget.check(prepared, input.responseSchema, isWorkflow ? prepared.system : undefined)
 
       // Wire up toolExecutor for DWS workflow models so that tool calls
       // from the workflow service are executed via opencode's tool system

@@ -1,5 +1,8 @@
 # Context Continuity
 
+The current implementation follows [working memory and transcript archive](context-continuity-memory.md).
+Earlier design notes below remain historical. The scalar-selector format and fixed 6,000-token cap were replaced.
+
 ## Purpose
 
 Keep one user conversation usable as context grows. Maintenance happens out of band; user keeps same session, timeline, and task.

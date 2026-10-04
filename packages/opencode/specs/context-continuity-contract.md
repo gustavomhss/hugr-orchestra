@@ -1,5 +1,8 @@
 # Context Continuity: Maintenance Fork Contract v1
 
+**Historical selector contract.** Superseded by [working memory and transcript archive](context-continuity-memory.md).
+The rules below describe the earlier experiment, not the current runtime.
+
 **Status: implemented v1; production Luna quality/adoption blocked.** Runtime pin:
 `26db4aca2cd21060e10aefe435c0fa6c8e33bac3` (2026-10-01). Mechanical validation and
 real private UI flows are verified within their recorded scope. Typed Luna phases

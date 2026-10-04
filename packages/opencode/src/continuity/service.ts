@@ -80,6 +80,8 @@ const layer = Layer.effect(
       if (!prepared.system.length) return prepared
       const artifact = current.contexts.get(input.sessionID)?.artifact
       if (!artifact) return { messages: input.messages, system: [] }
+      const item = current.sessions.get(input.sessionID)
+      const generation = item?.generation
       const user = input.messages.findLast((message) => message.info.role === "user")?.info
       if (!user || user.role !== "user") return { messages: input.messages, system: [] }
       const capacity = yield* provider.getModel(user.model.providerID, user.model.modelID).pipe(
@@ -92,7 +94,9 @@ const layer = Layer.effect(
         archive.read({ sessionID: input.sessionID, id: reference.id }).pipe(
           Effect.map((chunk) => !!chunk), Effect.catch(() => Effect.succeed(false)),
         ))
-      return available.every(Boolean) ? prepared : { messages: input.messages, system: [] }
+      const unchanged = current.sessions.get(input.sessionID) === item && item?.generation === generation &&
+        current.contexts.get(input.sessionID)?.artifact === artifact
+      return unchanged && available.every(Boolean) ? prepared : { messages: input.messages, system: [] }
     })
 
     const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")(function* (sessionID) {

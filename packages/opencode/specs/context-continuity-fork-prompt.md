@@ -1,10 +1,14 @@
 # Context Continuity: Producer System Prompt v1
 
+**Historical prompt.** Current protocol is `src/continuity/prompt.txt` (version 2),
+described in [working memory and transcript archive](context-continuity-memory.md).
+The former six-field protocol below is not loaded by the current runtime.
+
 **Status: implemented v1; production Luna quality/adoption blocked.** Source pin:
 `26db4aca2cd21060e10aefe435c0fa6c8e33bac3`. Mechanical and real private UI evidence
 does not establish typed-summary quality or merge approval.
 
-The executable prompt is [`src/continuity/prompt.txt`](../src/continuity/prompt.txt),
+At the historical source pin, the executable prompt was `src/continuity/prompt.txt`,
 headed `CONTEXT CONTINUITY PRODUCER PROTOCOL v1`. `src/continuity/fork.ts` appends
 the decoder-generated `V1 BODY SCHEMA` and receiver-specific `HOST SNAPSHOT RULES`.
 `src/session/llm/request.ts` restores the trusted role, snapshot and parameters after

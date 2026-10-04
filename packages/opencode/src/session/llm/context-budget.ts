@@ -13,13 +13,15 @@ export const check = Effect.fn("LLMContextBudget.check")(function* (input: {
   messages: readonly ModelMessage[]
   tools: Record<string, Tool>
   params: { options: Record<string, unknown> }
-}, responseSchema?: JSONSchema7) {
+}, responseSchema?: JSONSchema7, workflowSystem?: readonly string[]) {
   const serialized = yield* Effect.tryPromise({
     try: async () => {
       const tools = await Promise.all(Object.entries(input.tools).map(async ([name, tool]) => ({
         name, description: tool.description, inputSchema: await asSchema(tool.inputSchema).jsonSchema,
       })))
-      return JSON.stringify({ messages: input.messages, tools, options: input.params.options, responseSchema })
+      // Workflow adapters consume system out of band. Other adapters already
+      // carry it in messages or OAuth instructions and must not charge it twice.
+      return JSON.stringify({ messages: input.messages, tools, options: input.params.options, responseSchema, workflowSystem })
     },
     catch: overflow,
   })

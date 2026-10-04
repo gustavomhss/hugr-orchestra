@@ -45,7 +45,7 @@ function record(value: unknown): value is Record<string, unknown> {
 function request(contextMemory: boolean | undefined = true): LLM.StreamInput {
   const model = ProviderTest.model({ limit: { context: 40_000, input: 5000, output: 1000 } })
   const sessionID = SessionID.make("ses_context_capacity")
-  const execute = Object.assign(async () => { throw new Error("Unexpected tool execution") }, {
+  const execute = Object.assign(async (_input: { query: string }): Promise<string> => { throw new Error("Unexpected tool execution") }, {
     toJSON: () => { throw new Error("Tool execution function must not be serialized") },
   })
   return {
@@ -56,7 +56,7 @@ function request(contextMemory: boolean | undefined = true): LLM.StreamInput {
       model: { providerID: model.providerID, modelID: model.id }, time: { created: 0 }, system: "Live parent rule." },
     system: ["# Historical working memory\nKeep work local and read-only."],
     messages: [{ role: "user", content: "Continue from working memory." }],
-    tools: { lookup: tool({ description, inputSchema: jsonSchema(schema()), execute }) },
+    tools: { lookup: tool({ description, inputSchema: jsonSchema<{ query: string }>(schema()), execute }) },
   }
 }
 
@@ -89,7 +89,7 @@ function harness(value: LLM.StreamInput, options: {
       if (name === "experimental.chat.system.transform" && Array.isArray(output.system) && ["system", "combined"].includes(bloat))
         output.system.push(large("SYSTEM_BLOAT", size))
       if (name === "chat.params") {
-        if (options.lowerOutputParam) output.maxOutputTokens = 1
+        if (options.lowerOutputParam) Object.assign(output, { maxOutputTokens: 1 })
         if (record(output.options) && ["instructions", "combined"].includes(bloat)) output.options.instructions = large("OPTIONS_BLOAT", size)
         if (["description", "combined"].includes(bloat)) value.tools.lookup.description = large("DESCRIPTION_BLOAT", size)
         if (["schema", "combined"].includes(bloat)) {
@@ -124,7 +124,7 @@ function harness(value: LLM.StreamInput, options: {
       ? { type: "oauth" as const, access: "local", refresh: "local", expires: 0 } : undefined) })],
     [Config.node, Layer.mock(Config.Service, { get: () => Effect.succeed({ compaction: { auto: options.autoCompact ?? true } }) })],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalNativeLlm: options.native ?? false, experimentalEventSystem: true })],
-    ...(options.processor ? [[Snapshot.node, Layer.mock(Snapshot.Service, { track: () => Effect.void })] as const] : []),
+    ...(options.processor ? [[Snapshot.node, Layer.mock(Snapshot.Service, { track: () => Effect.succeed(undefined) })] as const] : []),
   ])
   return { layer, language, nativeRequests, selected, hooks, conversion,
     run: LLM.Service.use((llm) => llm.stream(value).pipe(Stream.runCollect)).pipe(Effect.provide(layer)) }
