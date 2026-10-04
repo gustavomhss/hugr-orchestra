@@ -572,7 +572,9 @@ export async function bootstrapDirectory(input: {
 }
 
 // Readers that need one resource must not wait for every other bootstrap read to succeed.
-// Runs of one directory overlap, so a read that outlives a newer run must not record its outcome.
+// Runs of one directory overlap, and every successful read writes its data, which no failed read
+// removes. So any run's success records "ready", and only the latest run's failure records "failed",
+// never over a success: the flag must not deny data a successful read put in the store.
 function settle(
   setStore: SetStoreFunction<State>,
   resource: keyof State["load"],
@@ -580,11 +582,9 @@ function settle(
   latest: () => boolean,
 ) {
   return read.then(
-    () => {
-      if (latest()) setStore("load", resource, "ready")
-    },
+    () => setStore("load", resource, "ready"),
     (error: unknown) => {
-      if (latest()) setStore("load", resource, "failed")
+      if (latest()) setStore("load", resource, (current) => (current === "ready" ? current : "failed"))
       throw error
     },
   )

@@ -76,6 +76,40 @@ function directoryState() {
   })
 }
 
+// One of several bootstrap runs of the same directory; its config and status reads settle with `gate`.
+function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<void>) {
+  return bootstrapDirectory({
+    directory: "/project",
+    scope: ServerScope.local,
+    mcp: false,
+    global: {
+      config: {} satisfies Config,
+      path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+      project: [{ id: "project", worktree: "/project" } as Project],
+      provider,
+    },
+    sdk: {
+      app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
+      config: { get: () => gate.then(() => ({ data: { share: "manual" } })) },
+      session: { status: () => gate.then(() => ({ data: {} })) },
+      vcs: { get: async () => ({ data: undefined }) },
+      permission: { list: async () => ({ data: [] }) },
+      question: { list: async () => ({ data: [] }) },
+      v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+      provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+    } as unknown as OpencodeClient,
+    api,
+    store: state[0],
+    setStore: state[1],
+    vcsCache: { setStore() {} } as unknown as VcsCache,
+    loadSessions() {},
+    loadActiveSessions: async () => ({}),
+    translate: (key) => key,
+    queryClient: new QueryClient(),
+    protocol: Promise.resolve("v1"),
+  })
+}
+
 describe("bootstrapDirectory", () => {
   test("uses legacy MCP endpoints while refreshing a v1 directory", async () => {
     const legacyConfigReads: string[] = []
@@ -325,6 +359,43 @@ describe("bootstrapDirectory", () => {
     older.reject(new Error("older read failed"))
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
+  })
+
+  test("a superseded run's successful read stays ready when the newer run's read fails, in either order", async () => {
+    // The older run's data lands in the store and a failed read never removes it, so "failed" would deny it.
+    for (const newerFirst of [true, false]) {
+      const state = directoryState()
+      const older = Promise.withResolvers<void>()
+      const newer = Promise.withResolvers<void>()
+      await overlappingRun(state, older.promise)
+      await overlappingRun(state, newer.promise)
+      await new Promise((resolve) => setTimeout(resolve, 80))
+      const outcomes = [() => older.resolve(), () => newer.reject(new Error("newer read failed"))]
+      for (const settle of newerFirst ? outcomes.toReversed() : outcomes) {
+        settle()
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      }
+      expect({ newerFirst, load: state[0].load, config: state[0].config }).toEqual({
+        newerFirst,
+        load: { agent: "ready", config: "ready", session_status: "ready" },
+        config: { share: "manual" },
+      })
+    }
+  })
+
+  test("only the latest run records a failure; an older run's failure waits for the newer outcome", async () => {
+    const state = directoryState()
+    const older = Promise.withResolvers<void>()
+    const newer = Promise.withResolvers<void>()
+    await overlappingRun(state, older.promise)
+    await overlappingRun(state, newer.promise)
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    older.reject(new Error("older read failed"))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(state[0].load).toEqual({ agent: "ready", config: "pending", session_status: "pending" })
+    newer.reject(new Error("newer read failed"))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(state[0].load).toEqual({ agent: "ready", config: "failed", session_status: "failed" })
   })
 })
 
