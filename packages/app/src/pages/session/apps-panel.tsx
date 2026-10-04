@@ -1,6 +1,7 @@
 import { createMediaQuery } from "@solid-primitives/media"
 import { createEffect, createMemo, on, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
+import { Portal } from "solid-js/web"
 import { useGlobal } from "@/context/global"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
@@ -65,7 +66,7 @@ export function AppsPanel(
     findResult: undefined as { requestID: number; activeMatchOrdinal: number; matches: number } | undefined,
     downloadsOpen: false,
     sidebarCollapsed: localStorage.getItem(sidebarCollapsedKey) === "true",
-    menu: undefined as { tab: Tab; x: number; y: number; invoker: HTMLButtonElement } | undefined,
+    menu: undefined as { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement } | undefined,
     profileCreating: false,
     profileDraft: "",
   })
@@ -105,7 +106,7 @@ export function AppsPanel(
       { defer: true },
     ),
   )
-  // The tab menu is drawn in place, not in a portal, and can reach over the browser.
+  // The tab menu can reach over the browser, so it registers itself wherever its portal mounts.
   createEffect(() => {
     if (view.menu && menuElement) onCleanup(dock.overlay(menuElement))
   })
@@ -119,7 +120,7 @@ export function AppsPanel(
     window.addEventListener("resize", resize.request)
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
-      if (!target || !root?.contains(target)) return
+      if (!target || !(root?.contains(target) || menuElement?.contains(target))) return
       const editable = !!target.closest("input, textarea, select, [contenteditable]")
       if (event.key === "Escape") {
         if (view.menu) closeMenu()
@@ -545,6 +546,7 @@ export function AppsPanel(
             tab={view.menu.tab}
             x={view.menu.x}
             y={view.menu.y}
+            rtl={view.menu.rtl}
             setElement={(element) => (menuElement = element)}
             canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
             canReload={capability("appDockCommand") && !view.menu.tab.crashed}
@@ -591,10 +593,10 @@ function TabButton(props: {
   tab: Tab
   active: () => TabIdentity | undefined
   select: (tab: Tab) => void
-  setMenu: (menu: { tab: Tab; x: number; y: number; invoker: HTMLButtonElement }) => void
+  setMenu: (menu: { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement }) => void
 }) {
   const openMenu = (x: number, y: number, invoker: HTMLButtonElement) =>
-    props.setMenu({ tab: props.tab, x, y, invoker })
+    props.setMenu({ tab: props.tab, x, y, rtl: getComputedStyle(invoker).direction === "rtl", invoker })
   const keydown = (event: KeyboardEvent) => {
     const current = event.currentTarget
     if (!(current instanceof HTMLButtonElement)) return
@@ -604,7 +606,7 @@ function TabButton(props: {
     } else if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
       event.preventDefault()
       const rect = current.getBoundingClientRect()
-      openMenu(rect.left + 8, rect.bottom + 4, current)
+      openMenu(getComputedStyle(current).direction === "rtl" ? rect.right - 8 : rect.left + 8, rect.bottom + 4, current)
     } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       const tabs = [...(current.parentElement?.querySelectorAll<HTMLButtonElement>("[role='tab']") ?? [])]
       const index = tabs.indexOf(current)
@@ -657,10 +659,14 @@ function TabButton(props: {
   )
 }
 
+// The menu opens with its inline-start corner at (x, y) in the viewport. It is portaled because the side
+// panel's tab panels use `contain: strict`, which makes them the containing block of a fixed descendant:
+// drawn in place, the menu lands offset by the panel's origin, clipped, and focusing it scrolls the panel.
 function TabMenu(props: {
   tab: Tab
   x: number
   y: number
+  rtl: boolean
   setElement: (element: HTMLDivElement) => void
   canDuplicate: boolean
   canReload: boolean
@@ -676,40 +682,46 @@ function TabMenu(props: {
 }) {
   let firstItem: HTMLButtonElement | undefined
   return (
-    <div
-      ref={props.setElement}
-      class="zen-tab-menu"
-      role="menu"
-      aria-label={`Actions for ${tabLabel(props.tab)}`}
-      style={{ left: `${props.x}px`, top: `${props.y}px` }}
-    >
-      <button
-        ref={(element) => {
-          firstItem = element
-          requestAnimationFrame(() => firstItem?.focus())
-        }}
-        type="button"
-        role="menuitem"
-        disabled={!props.canDuplicate}
-        onClick={props.onDuplicate}
+    <Portal>
+      <div
+        ref={props.setElement}
+        class="zen-tab-menu"
+        role="menu"
+        aria-label={`Actions for ${tabLabel(props.tab)}`}
+        style={
+          props.rtl
+            ? { right: `${document.documentElement.clientWidth - props.x}px`, top: `${props.y}px` }
+            : { left: `${props.x}px`, top: `${props.y}px` }
+        }
       >
-        Duplicate
-      </button>
-      <button type="button" role="menuitem" onClick={props.onTogglePin}>
-        {props.tab.pinned ? "Unpin" : "Pin"}
-      </button>
-      <button type="button" role="menuitem" disabled={!props.canReload} onClick={props.onReload}>
-        Reload
-      </button>
-      <button type="button" role="menuitem" disabled={!props.canClose} onClick={props.onClose}>
-        Close
-      </button>
-      <button type="button" role="menuitem" disabled={!props.hasOthers} onClick={props.onCloseOthers}>
-        Close others
-      </button>
-      <button type="button" role="menuitem" disabled={!props.hasRight} onClick={props.onCloseRight}>
-        Close right
-      </button>
-    </div>
+        <button
+          ref={(element) => {
+            firstItem = element
+            requestAnimationFrame(() => firstItem?.focus())
+          }}
+          type="button"
+          role="menuitem"
+          disabled={!props.canDuplicate}
+          onClick={props.onDuplicate}
+        >
+          Duplicate
+        </button>
+        <button type="button" role="menuitem" onClick={props.onTogglePin}>
+          {props.tab.pinned ? "Unpin" : "Pin"}
+        </button>
+        <button type="button" role="menuitem" disabled={!props.canReload} onClick={props.onReload}>
+          Reload
+        </button>
+        <button type="button" role="menuitem" disabled={!props.canClose} onClick={props.onClose}>
+          Close
+        </button>
+        <button type="button" role="menuitem" disabled={!props.hasOthers} onClick={props.onCloseOthers}>
+          Close others
+        </button>
+        <button type="button" role="menuitem" disabled={!props.hasRight} onClick={props.onCloseRight}>
+          Close right
+        </button>
+      </div>
+    </Portal>
   )
 }

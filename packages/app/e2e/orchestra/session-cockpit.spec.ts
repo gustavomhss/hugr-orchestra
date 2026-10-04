@@ -435,6 +435,83 @@ test("Arabic locale keeps pane order logical and code paths LTR", async ({ page 
   await shoot(page, "cockpit-arabic")
 })
 
+// The cockpit sits in side-panel tab panels with `contain: strict`, which become the containing block
+// of a fixed menu drawn inside them: the menu must still open at its trigger.
+test.describe("Dock tab menu at the cockpit's geometry", () => {
+  test.use({ viewport: { width: 1672, height: 941 } })
+
+  for (const locale of ["en", "ar"] as const) {
+    test(`the tab menu opens at its trigger (${locale === "ar" ? "RTL" : "LTR"})`, async ({ page }) => {
+      await setup(page, { bridge: true, locale })
+      await page.goto(`/server/${base64Encode(server)}/session/${parentID}`, { waitUntil: "domcontentloaded" })
+      await expectSessionTitle(page, parentTitle)
+      const rtl = locale === "ar"
+      await expect(page.locator("html")).toHaveAttribute("dir", rtl ? "rtl" : "ltr")
+      // Existing dictionary copy for the review toggle, not a translation supplied by this fixture.
+      await page.getByRole("button", { name: rtl ? "تبديل المراجعة" : "Toggle review", exact: true }).click()
+      const dock = dockCard(page)
+      await expect(dock).toBeVisible()
+      const address = dock.getByRole("textbox", { name: "Address" })
+      await address.fill("https://example.com/a")
+      await address.press("Enter")
+      await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toHaveAttribute("aria-selected", "true")
+      await dock.getByRole("button", { name: "+ New tab" }).click()
+      await expect(
+        dock.locator(".zen-tab", { has: page.locator(".zen-tab-title", { hasText: /^Page \/$/ }) }),
+      ).toHaveAttribute("aria-selected", "true")
+      const trigger = dock.locator(".zen-tab", { hasText: "Page /a" })
+      const menu = page.getByRole("menu", { name: "Actions for Page /a" })
+      const tab = await rect(trigger)
+
+      // A pointer opens the menu with its inline-start corner on the pointer.
+      const point = { x: Math.round(tab.left + tab.width / 2), y: Math.round(tab.top + tab.height / 2) }
+      await page.mouse.click(point.x, point.y, { button: "right" })
+      await expect(menu).toBeVisible()
+      await expect(menu.getByRole("menuitem", { name: "Duplicate" })).toBeFocused()
+      await expectAnchored(page, menu, { inline: point.x, block: point.y }, rtl)
+      await shoot(page, `tab-menu-pointer-${rtl ? "rtl" : "ltr"}`)
+      await page.keyboard.press("Escape")
+      await expect(menu).toHaveCount(0)
+      await expect(trigger).toBeFocused()
+
+      // The keyboard opens it under the trigger, from the trigger's inline-start edge.
+      await page.keyboard.press("Shift+F10")
+      await expect(menu).toBeVisible()
+      await expectAnchored(page, menu, { inline: rtl ? tab.right - 8 : tab.left + 8, block: tab.bottom + 4 }, rtl)
+      await shoot(page, `tab-menu-keyboard-${rtl ? "rtl" : "ltr"}`)
+      await menu.getByRole("menuitem", { name: "Pin", exact: true }).click()
+      await expect(menu).toHaveCount(0)
+      await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toContainText("Pinned")
+    })
+  }
+})
+
+async function rect(locator: Locator) {
+  return locator.evaluate((element) => element.getBoundingClientRect().toJSON() as DOMRect)
+}
+
+// The menu's inline-start corner is the anchor, and the whole menu is painted where it is laid out:
+// nothing clips or covers it, so both ends of every item hit that item.
+async function expectAnchored(page: Page, menu: Locator, anchor: { inline: number; block: number }, rtl: boolean) {
+  const box = await rect(menu)
+  expect({ inline: Math.round(rtl ? box.right : box.left), block: Math.round(box.top) }).toEqual({
+    inline: Math.round(anchor.inline),
+    block: Math.round(anchor.block),
+  })
+  const viewport = page.viewportSize()!
+  expect(box.left).toBeGreaterThanOrEqual(0)
+  expect(box.right).toBeLessThanOrEqual(viewport.width)
+  expect(box.bottom).toBeLessThanOrEqual(viewport.height)
+  const hits = await menu.getByRole("menuitem").evaluateAll((items) =>
+    items.flatMap((item) => {
+      const area = item.getBoundingClientRect()
+      const middle = area.top + area.height / 2
+      return [area.left + 4, area.right - 4].map((x) => document.elementFromPoint(x, middle) === item)
+    }),
+  )
+  expect(hits).toEqual(Array(12).fill(true))
+}
+
 function dockCard(page: Page) {
   return page.locator(".orchestra-dock-card")
 }
@@ -490,7 +567,7 @@ async function setup(
     many?: boolean
     empty?: boolean
     shell?: boolean
-    locale?: "ar"
+    locale?: "en" | "ar"
     reads?: string[]
     lists?: string[]
   },
