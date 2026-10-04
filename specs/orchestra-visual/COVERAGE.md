@@ -11,16 +11,37 @@ real, ou verificação/medição/aceite do dono ainda não feitos) e **out-of-sc
 (exige backend, scheduler ou dados inexistentes, ou foi adiado em
 [CHAPTERS-SCOPE.md](CHAPTERS-SCOPE.md)).
 
-Totais das linhas classificadas: 16 migrated,
+Totais das linhas classificadas na auditoria original: 16 migrated,
 5 inherits-theme, 104 pending,
 12 out-of-scope. A maior parte de "pending" é verificação
 (T2), medição de budgets e aceite do dono, não superfície ausente; as lacunas de
-produto estão nas listas "Pending work" de cada subépico.
+produto estão nas listas "Pending work" de cada subépico. Esses totais descrevem as
+tabelas da auditoria, que não foram reescritas. A cobertura do cockpit depois das
+ondas A e B está na seção "Situação atual".
 
-## Situação atual (atualizada em 2026-10-02, depois da auditoria)
+## Situação atual (atualizada em 2026-10-04, depois da onda B)
 
-Itens pendentes que já têm correção revisada (PRs no repositório novo
-`gusmhs/HuGR-Orchestra`, validados juntos na branch `wave2-integration`):
+### Hospedagem e CI
+
+- O remote `fork` é o GitLab `gmhelmold/hugr-orchestra`. O GitHub
+  `gusmhs/HuGR-Orchestra` (remote `github-archive`) passou a ser apenas arquivo, e a
+  conta parece sinalizada. Os números `#4`–`#25` desta seção são PRs desse
+  repositório GitHub; os números `!27`–`!38` são merge requests do GitLab.
+- O CI do GitLab nunca executou: a cota gratuita de computação se esgotou (568 de
+  400 minutos em outubro) e os runners compartilhados foram desativados. Os pipelines
+  criados ficaram presos sem runner (`stuck_pending_no_matching_runners`), sem
+  nenhum teste executado.
+- O dono escolheu um gate local que replica no macOS os jobs Linux do
+  `.gitlab-ci.yml`. As lanes Windows (`unit-windows` e `e2e-windows`) e o
+  `nix-eval` continuam sem prova.
+- Recibos do gate local para o candidato final: <!-- receipts: filled at merge -->
+
+### Correções da onda 2, integradas em `dev`
+
+Os itens pendentes da auditoria listados abaixo foram corrigidos por PRs do
+repositório GitHub `gusmhs/HuGR-Orchestra`, validados juntos na branch
+`wave2-integration` e integrados em `dev` (`fork/dev@76015a9dcd`), junto com o
+ajuste de CI #15, as fixtures Maestro do Windows #6 e a documentação #4:
 
 | Item da auditoria                                  | Correção                                                                               |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -33,45 +54,77 @@ Itens pendentes que já têm correção revisada (PRs no repositório novo
 | Regressão de scroll/streaming medida em 2026-10-02 | #25                                                                                    |
 | Suíte Orchestra no build de produção               | #19                                                                                    |
 
-Outras mudanças desde a auditoria:
+### Cockpit: ondas A e B
 
+A divisão adotada em 2026-10-02 foi entregue em duas ondas, ainda fora de `dev`:
+
+- **Onda A**, correções em superfícies existentes, integrada em
+  `wave-a-integration@ab4975dd55`: Tasks truth e Stop só da subtask com estados
+  pendente, erro e retry (S17/S18, !27), custo e uso desconhecidos no Contexto
+  (!31), checklists históricas confirmadas (S09, !33) e Resize/Hide do Dock
+  amarrados à aba e à geração (S16, !34).
+- **Onda B**, funcionalidades novas, publicada pela MR !37 a partir de
+  `wave-b-integration`. O candidato final, com as correções da revisão, é
+  `cockpit-review-fixes@607c2bf4c6`: cockpit simultâneo (S15/S18), evidência de
+  execução (S11), replay seguro e preparação de PR não enviada (S10), destino de
+  governança do Maestro com estados honestos de Own (S20/S19) e navegação compacta
+  (S06).
+- Ordem de merge: !38 (validação no GitLab), depois !27, !31, !33 e !34, e por fim
+  !37 redirecionada para `dev`.
 - **#132 S21 Janitor: adiado pelo dono.**
-- **Cockpit (#131 S06, S09, S10, S11; #132 S15, S16, S17, S18, S19, S20):
-  reverificado em 2026-10-02 contra `dev` e todas as branches do fork.** A base
-  existe (Tasks, Apps/Dock, Contexto, renderer de checklist, navegação); quase
-  tudo é PARCIAL. Divisão adotada: (A) correções de comportamento em superfícies
-  existentes — Tasks, Stop, Contexto, Resize/Hide do Dock, checklist histórica;
-  (B) funcionalidades novas — cockpit simultâneo, painéis locais no Dock, resumo de
-  testes, replay/preparação de PR, destino de governança do Maestro, modos
-  compactos — que dependem de decisão do dono. Resultado completo abaixo.
-
 - A tradução PT-BR dos labels do Orchestra (#133 S22) continua fora: as regras do
   handoff proíbem inventar traduções.
 
-### Reverificação do cockpit (2026-10-02)
+### Cobertura do cockpit depois da onda B (2026-10-04)
 
-| Item                                             | Status  | Evidence / gap                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. S11 — Execution evidence and local Dock panes | PARTIAL | Real command/output fallback exists in [message-part.tsx:2091](../../packages/session-ui/src/components/message-part.tsx:2091). Missing test-summary parsing/cards and Files/Docs/Terminal Dock switching; [apps-panel.tsx:190](../../packages/app/src/pages/session/apps-panel.tsx:190) renders the browser workspace. No completion found on another `fork` branch.                                                                                                                                                                                                                              |
-| 2. S15/S18 — Simultaneous cockpit                | PARTIAL | Apps and Tasks exist, but [session-side-panel.tsx:558](../../packages/app/src/pages/session/session-side-panel.tsx:558) mounts them under mutually exclusive active-tab conditions. Missing compact Dock above Tasks/Activity and shared Tasks projection. No completed branch implementation found.                                                                                                                                                                                                                                                                                               |
-| 3. S06 — Compact navigation/cockpit modes        | PARTIAL | Orchestra shell/navigation exists: [layout-new.tsx:48](../../packages/app/src/pages/layout-new.tsx:48), [sidebar.tsx:322](../../packages/app/src/orchestra/sidebar.tsx:322). [shell.css:28](../../packages/app/src/orchestra/shell.css:28) fixes navigation at 230px. Missing compact/collapsed presentation modes; none found on other branches.                                                                                                                                                                                                                                                  |
-| 4. S17 — Tasks truth                             | PARTIAL | Synced projection exists, but [tasks-data.ts:154](../../packages/app/src/pages/session/tasks-data.ts:154) treats idle children as completed; enrichment at line 184 ignores terminal errors. Orphans are pushed at both lines 220 and 238; lines 160/205 invent timestamps; lines 266/291 default unknown statistics to zero. Keys lack server qualification. Relevant branch versions retain these problems.                                                                                                                                                                                      |
-| 5. S18 — Precise task intervention               | PARTIAL | Open/Stop actions exist in [tasks-panel.tsx:218](../../packages/app/src/pages/session/tasks-panel.tsx:218). Navigation omits server identity; Stop falls back to the parent and swallows errors. Missing pending/error/retry states and expandable, virtualized inline detail. No completed branch implementation found.                                                                                                                                                                                                                                                                           |
-| 6. S19 — Honest Own/Atlas states                 | PARTIAL | Context statistics and internal Atlas grounding exist: [session-context-tab.tsx:141](../../packages/app/src/components/session/session-context-tab.tsx:141), [context-record.ts:99](../../packages/opencode/src/maestro/context-record.ts:99). Missing frontend unavailable/HOLD/stale identity/reason consumer. [session-context-usage.tsx:78](../../packages/app/src/components/session-context-usage.tsx:78) and line 131 still display unknown cost/usage as zero. `maestro-native` adds backend hardening, without that consumer.                                                             |
-| 7. S20 — Maestro governance destination          | MISSING | No frontend destination or unavailable/HOLD consumer found across 84 stored `fork` branch tips. Opened [navigation.ts:5](../../packages/app/src/orchestra/navigation.ts:5) and [use-session-commands.tsx:546](../../packages/app/src/pages/session/use-session-commands.tsx:546). Existing backend approval machinery and `maestro-native` commit `628f72404baaf1cd3f5adedf497e830e176503d9` do not supply the session destination.                                                                                                                                                                |
-| 8. S16 — Native Dock presentation safety         | PARTIAL | Generation-aware events/controller guards exist, but [apps-panel-controller.ts:12](../../packages/app/src/pages/session/apps-panel-controller.ts:12) and [ipc.ts:316](../../packages/desktop/src/main/ipc.ts:316) leave Resize/Hide unqualified. Unmerged `dock-overlay-safety`, commit `5433a51962d79357c3454e50e4d14e78e7c12236`, adds overlapping-overlay arbitration in `packages/app/src/pages/session/apps-panel-overlay.ts:16` and native occlusion in `packages/desktop/src/main/app-dock.ts:433`. Opened both; Resize/Hide binding remains missing there and on `feat/app-dock-chromium`. |
-| 9. S10 — Safe replay and unsent PR preparation   | MISSING | [submit.ts:510](../../packages/app/src/components/prompt-input/submit.ts:510) implements ordinary shell submission. Opened [session-composer-region.tsx:11](../../packages/app/src/pages/session/composer/session-composer-region.tsx:11): no evidence-triggered replay/PR-preparation callbacks. Missing busy/draft confirmation, captured session/workdir validation and unsent preparation. No branch implementation found.                                                                                                                                                                     |
-| 10. S09 — Confirmed historical checklists        | PARTIAL | Checklist renderer exists at [message-part.tsx:2525](../../packages/session-ui/src/components/message-part.tsx:2525), but `todowrite` is explicitly hidden at [line 1538](../../packages/session-ui/src/components/message-part.tsx:1538). Renderer also falls back to proposed input without confirmation gating. Composer shows current todos, not historical snapshots. No completed branch implementation found.                                                                                                                                                                               |
+Cada linha foi conferida contra o código do candidato `607c2bf4c6`; os caminhos
+são relativos a `packages/app/src/` quando não indicado de outra forma.
+**COVERED** significa implementado no candidato, com evidência no código e recibo
+escopado. Não significa merge em `dev`, verificação do candidato integrado nem
+aceite do dono.
 
-1. Fix Tasks truth, qualified navigation and child-only Stop with visible pending/error/retry.
-2. Bind native Resize/Hide to tab/generation; integrate the existing overlay-safety branch.
-3. Compose simultaneous Dock/Tasks/Activity and connect local Files/Docs/Terminal panes.
-4. Add execution summaries, safe replay and unsent PR-preparation actions.
-5. Expose honest Own/Atlas and Maestro destinations; preserve unknown metrics.
-6. Render confirmed historical checklist snapshots.
-7. Add compact Orchestra navigation/presentation modes.
+| Item                                             | Status                             | Evidence / gap                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. S11 — Execution evidence and local Dock panes | COVERED (wave B)                   | Runner detection and conservative test-summary parsing are in `pages/session/orchestra-evidence-parse.ts:36` and `:53`, bounded to a 64 KiB window (`:27`). Completed shell parts render result cards through `pages/session/orchestra-evidence.tsx:59`, wired in `pages/session.tsx:407` and `pages/session/timeline/message-timeline.tsx:1034`, with the raw output as fallback. The local Files, Docs and Terminal panes are `orchestra-evidence-files.tsx:14`, `orchestra-evidence-docs.tsx:15` and `orchestra-evidence-terminal.tsx:16`, mounted lazily by the cockpit Dock. Receipts: `specs/orchestra-visual/evidence/S11/result.json` and `evidence/S15/result.json`. The S11 receipt records full-stress timeline performance as not verified.                              |
+| 2. S15/S18 — Simultaneous cockpit                | COVERED (wave B)                   | With the Orchestra layout, the Apps tab is the cockpit (`pages/session/session-side-panel.tsx:163`, mounted at `:837`). `pages/session/orchestra-cockpit.tsx:46` stacks the compact Dock (`orchestra-dock.tsx:24`, panes Browser, Files, Docs and Terminal) above Tasks and Activity (`orchestra-activity.tsx:36`). Both cards read the single Tasks projection created at `session-side-panel.tsx:176`; Activity reads the Dock controller through `orchestra-dock-snapshot.ts:19`, and per-session presentation state lives in `orchestra-cockpit-state.ts`. Receipt: `evidence/S15/result.json`.                                                                                                                                                                                  |
+| 3. S06 — Compact navigation/cockpit modes        | COVERED (wave B)                   | `orchestra/compact-navigation.ts:7` persists the explicit collapse per window; `pages/layout-new.tsx:18`–`:20` and `:73`–`:80` derive the mode. `orchestra/shell.css:69` defaults to 230px, `:444` sets 208px for 768–1439px and `:452` sets 56px for the compact rail. Effective widths: 230px from 1440px, 208px at 1280–1439px, a forced 56px rail at 1024–1279px, a hidden rail opened on demand from the titlebar (56px) at 768–1023px, and the mobile layout below 768px. RTL uses logical properties and mirrors the toggle glyph (`shell.css:440`). Tests: `packages/app/e2e/orchestra/compact-navigation.spec.ts:96` and `compact-navigation-direction.spec.ts`. Receipts: `evidence/S06/result.json` and `evidence/S06/rtl-proof/result.json`; no 208px screenshot exists. |
+| 4. S17 — Tasks truth                             | COVERED (wave A, !27)              | `pages/session/tasks-data.ts:19` adds the `unknown` state and `:269` claims an outcome only from a record that proves it, so an idle child without evidence is unknown (`:277`–`:292`). Keys are server-qualified (`:22`), and missing times and statistics stay unknown (`:46`). The cockpit and the Tasks list share one projection (`session-side-panel.tsx:176`). Tests: `tasks-data.test.ts` and `packages/app/e2e/regression/session-tasks-truth.spec.ts`.                                                                                                                                                                                                                                                                                                                     |
+| 5. S18 — Precise task intervention               | COVERED (wave A, !27; wave B)      | `createTaskStops` (`pages/session/tasks-data.ts:225`) interrupts only the child session and keeps the pending or failed outcome on the server-qualified key. `tasks-panel.tsx:179`–`:192` shows the stopping state, the failure and Retry; `:276`–`:283` disables Stop while the request is pending. Wave B adds the bounded cockpit list (`orchestra-cockpit-list.tsx`) and exact task navigation (`orchestra-cockpit.tsx:28`). The S15 receipt covers 65 or more active tasks and child-only Stop.                                                                                                                                                                                                                                                                                 |
+| 6. S19 — Honest Own/Atlas states                 | COVERED, W1 subset (waves A and B) | `ownSource` (`pages/session/orchestra-governance-data.ts:171`) reports configured, missing, checking, failed or unknown, rendered in `orchestra-governance.tsx:250`–`:262`. Unknown Context cost (wave A, !31) returns `undefined` from `components/session/session-context-metrics.ts:74` and prints "—" through `session-context-format.ts:6`. The usage ring still draws an empty ring for unknown usage (`components/session-context-usage.tsx:111` and `:126`). Receipt: `evidence/S20/result.json` (historical Own/Atlas subset). W2 live enablement remains out of scope.                                                                                                                                                                                                     |
+| 7. S20 — Maestro governance destination          | COVERED for W1 (wave B)            | The sidebar Maestro entry (`orchestra/navigation.ts:9`, `orchestra/sidebar.tsx:321`) triggers the `maestro.governance` command (`pages/session/use-session-commands.tsx:529`). It opens a read-only, session-owned dialog (`:428`, `pages/session/orchestra-governance.tsx:57`), not a route. Capability comes from `maestroCapability` (`orchestra-governance-data.ts:162`); unavailable, unknown and HOLD states stay explicit, and the UI grants no approval. Receipt: `evidence/S20/result.json`. W2 live authority was not run.                                                                                                                                                                                                                                                 |
+| 8. S16 — Native Dock presentation safety         | COVERED for binding (wave A, !34)  | Resize, Hide and Show carry the tab and generation, and the desktop drops stale calls (`packages/desktop/src/main/ipc.ts:102`–`:129`); the controller sends that identity (`pages/session/apps-panel-controller.ts:421`). Hiding the native browser under overlays landed in `dev` with #23 (`apps-panel-overlay.ts`). Still open: the Dock tab menu offset under `contain: strict`, background-tab popups that attach a visible browser, and the native U01–U31 run on the integrated candidate.                                                                                                                                                                                                                                                                                    |
+| 9. S10 — Safe replay and unsent PR preparation   | COVERED (wave B)                   | `pages/session/composer/session-evidence-actions.ts:31` replays a captured shell command only after confirmation, never through the normal submit, and leaves the draft untouched. `replayBlock` (`:131`) refuses a different session or workdir, a blocked composer, a pending request, a busy session or a missing model. PR preparation inserts an unsent request into the composer and asks before appending to a non-empty draft (`pages/session/orchestra-evidence-actions.tsx:16` and `:179`). Receipt: `evidence/S11/result.json`.                                                                                                                                                                                                                                           |
+| 10. S09 — Confirmed historical checklists        | COVERED (wave A, !33)              | `packages/session-ui/src/components/confirmed-todos.ts` accepts only completed `todowrite` states with a valid checklist. `message-part.tsx:712` renders confirmed snapshots and `:1537` hides only unconfirmed ones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+
+### Pendências abertas
+
+1. Aceite visual do dono do bundle integrado, incluindo a barra lateral de 208px.
+   A regra CSS cobre 768–1439px, mas a largura de 208px só aparece em 1280–1439px:
+   abaixo de 1280px o layout força o trilho de 56px, e abaixo de 1024px o trilho
+   fica escondido atrás de um botão da titlebar. Não há captura de 208px.
+2. Janitor (S21): adiado pelo dono.
+3. Cabeçalho de Tasks: "Finished" (`orchestra.tasks.finished`, em
+   `packages/app/src/i18n/orchestra.ts:216`, usado em
+   `packages/app/src/pages/session/tasks-panel.tsx:506`) ou "Completed" (`session.tasks.completed`,
+   em `packages/app/src/i18n/en.ts:676`). Aguarda confirmação do dono.
+4. O menu de abas do Dock abre deslocado; a causa apontada é o `contain: strict`.
+5. Popups de abas do Dock em segundo plano anexam um navegador visível.
+6. Decisão do dono sobre o tema Graphite. O #12 alinhou os fundos do primeiro
+   paint, mas não há tema Graphite registrado em `packages/ui/src` nem em
+   `packages/app/src`.
+7. Prova de CI no Windows (`unit-windows` e `e2e-windows`) e do `nix-eval`.
+8. Benchmarks de performance pareados no candidato final.
+
+Verificação do candidato final: <!-- receipts: filled at merge -->
 
 As tabelas abaixo são a auditoria original de 2026-10-02 e não foram reescritas.
+Para S06, S09, S10, S11 e S15–S20, as linhas de implementação (W1 e T1) que
+descrevem código ausente foram superadas pela tabela "Cobertura do cockpit depois
+da onda B". As linhas de verificação (T2), medição, recibos de integração (I03–I08)
+e aceite do dono continuam valendo. A linha S24-W1-T1 cita `identity.spec.ts` em
+1400×900; no candidato, esse oracle roda em 1672×941
+(`packages/app/e2e/orchestra/identity.spec.ts:57`), acima do breakpoint da
+navegação compacta.
 
 ## #130 — Fundação visual, contratos e orçamentos
 
