@@ -436,6 +436,11 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   outline-offset: -2px;
 }
 
+/* The glyph draws its panel divider on the left; the navigation sits at inline-start. */
+.orchestra-navigation-toggle:dir(rtl) [data-slot="icon-svg"] {
+  transform: scaleX(-1);
+}
+
 @media (min-width: 768px) and (max-width: 1439px) {
   .orchestra-workspace {
     --orchestra-navigation-width: 208px;

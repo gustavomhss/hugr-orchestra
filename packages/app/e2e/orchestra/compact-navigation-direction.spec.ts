@@ -40,6 +40,11 @@ for (const scenario of cases) {
           ).toHaveAttribute("aria-pressed", String(scenario.direction === "rtl"))
 
         const toggle = sidebar.getByRole("button", { name: "Collapse sidebar", exact: true })
+        // The glyph draws its panel on the left, so it mirrors with the navigation.
+        await expect(toggle.locator("svg")).toHaveCSS(
+          "transform",
+          scenario.direction === "rtl" ? "matrix(-1, 0, 0, 1, 0, 0)" : "none",
+        )
         await toggle.focus()
         await page.keyboard.press("Enter")
         await expect(sidebar).toHaveCSS("width", "56px")
