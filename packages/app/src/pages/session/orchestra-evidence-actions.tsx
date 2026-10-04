@@ -60,11 +60,11 @@ export function EvidenceActions(props: ActionProps) {
     <div data-slot="evidence-actions">
       <button type="button" onClick={replay}>
         <Icon name="reset" size="small" aria-hidden="true" />
-        {language.t("orchestra.output.rerun")}
+        <bdi>{language.t("orchestra.output.rerun")}</bdi>
       </button>
       <button type="button" title={language.t("orchestra.pr.explanation")} onClick={prepare}>
         <Icon name="branch" size="small" aria-hidden="true" />
-        {language.t("orchestra.pr.prepare")}
+        <bdi>{language.t("orchestra.pr.prepare")}</bdi>
       </button>
     </div>
   )

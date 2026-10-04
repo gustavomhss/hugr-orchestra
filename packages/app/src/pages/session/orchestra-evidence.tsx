@@ -168,8 +168,8 @@ function EvidenceCard(props: {
               </button>
             )}
           </For>
-          <code dir="ltr" data-slot="evidence-command" title={props.evidence.source.command}>
-            {props.evidence.source.command}
+          <code data-slot="evidence-command" title={props.evidence.source.command}>
+            <bdi dir="ltr">{props.evidence.source.command}</bdi>
           </code>
         </div>
         <Show
@@ -199,12 +199,12 @@ function EvidenceCard(props: {
                       size="small"
                       aria-hidden="true"
                     />
-                    {stateLabel()}
+                    <bdi>{stateLabel()}</bdi>
                   </span>
                 </Match>
               </Switch>
               <button type="button" data-slot="evidence-link" onClick={showOutput}>
-                {language.t("orchestra.output.open")}
+                <bdi>{language.t("orchestra.output.open")}</bdi>
                 <Icon name="outline-square-arrow" size="small" aria-hidden="true" />
               </button>
             </div>
@@ -234,7 +234,11 @@ function EvidenceCard(props: {
                           <dt>{language.t(`orchestra.evidence.unit.${row.unit}`)}</dt>
                           <dd>
                             <For each={counts(row.counts!)}>
-                              {(item) => <span data-count={item.key}>{item.text}</span>}
+                              {(item) => (
+                                <span data-count={item.key}>
+                                  <bdi>{item.text}</bdi>
+                                </span>
+                              )}
                             </For>
                             <Show when={row.total !== undefined}>
                               <span data-slot="evidence-total">({row.total})</span>
@@ -286,17 +290,21 @@ function EvidenceCard(props: {
                     </div>
                   </Show>
                   <p data-slot="evidence-meta">
-                    {value().duration
-                      ? language.t("orchestra.evidence.reportedDuration", {
-                          runner: runner(),
-                          duration: value().duration!,
-                        })
-                      : language.t("orchestra.evidence.reported", { runner: runner() })}
+                    <bdi>
+                      {value().duration
+                        ? language.t("orchestra.evidence.reportedDuration", {
+                            runner: runner(),
+                            duration: value().duration!,
+                          })
+                        : language.t("orchestra.evidence.reported", { runner: runner() })}
+                    </bdi>
                   </p>
                   <p data-slot="evidence-meta">
-                    {props.evidence.durationMs === undefined
-                      ? language.t("orchestra.evidence.durationUnknown")
-                      : language.t("orchestra.evidence.duration", { duration: props.evidence.durationMs })}
+                    <bdi>
+                      {props.evidence.durationMs === undefined
+                        ? language.t("orchestra.evidence.durationUnknown")
+                        : language.t("orchestra.evidence.duration", { duration: props.evidence.durationMs })}
+                    </bdi>
                   </p>
                 </>
               )}
@@ -304,7 +312,9 @@ function EvidenceCard(props: {
           </div>
         </Show>
       </div>
-      <p data-slot="evidence-meta">{language.t("orchestra.evidence.revisionUnlinked")}</p>
+      <p data-slot="evidence-meta">
+        <bdi>{language.t("orchestra.evidence.revisionUnlinked")}</bdi>
+      </p>
       <EvidenceActions evidence={props.evidence} result={result()} actions={props.actions} />
     </section>
   )

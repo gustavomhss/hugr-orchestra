@@ -103,6 +103,26 @@ describe("parseTestOutput", () => {
     expect(summary?.duration).toBe("0.402s")
   })
 
+  test("Jest distinguishes reporter Console headings from an actual failed test named Console", async () => {
+    const passing = parseTestOutput("jest", await fixture("jest-console"))
+    expect(passing?.tests.counts).toEqual({ passed: 2 })
+    expect(passing?.failures).toEqual([])
+    const failing = parseTestOutput("jest", await fixture("jest-console-fail"))
+    expect(failing?.tests.counts).toEqual({ failed: 1, passed: 1 })
+    expect(failing?.failures).toEqual(["Console"])
+  })
+
+  test("rejects Bun failure records that contradict their totals", async () => {
+    expect(parseTestOutput("bun", await fixture("bun-ghost"))).toBeUndefined()
+  })
+
+  test("rejects Playwright failure rows that contradict their totals", async () => {
+    expect(parseTestOutput("playwright", await fixture("pw-extra-failure-row.invalid"))).toBeUndefined()
+    const failed = await fixture("pw-allfail")
+    expect(parseTestOutput("playwright", failed)?.failures).toEqual(["a.spec.ts:3:7 › approval › rejects empty"])
+    expect(parseTestOutput("playwright", failed + failed.split("\n").at(-2) + "\n")).toBeUndefined()
+  })
+
   test("playwright list, line and dot reporters", async () => {
     for (const name of ["pw-fail", "pw-line-fail", "pw-dot-fail"]) {
       const summary = parseTestOutput("playwright", await fixture(name))
@@ -134,6 +154,13 @@ describe("parseTestOutput", () => {
     const empty = parseTestOutput("pytest", await fixture("pytest-zero"))
     expect(empty?.tests.counts).toEqual({})
     expect(ranCount(empty!)).toBe(0)
+  })
+
+  test("pytest preserves full nodeids with spaces and rejects ambiguous delimiters", async () => {
+    expect(parseTestOutput("pytest", await fixture("pytest-nodeid-spaces"))?.failures).toEqual([
+      "pytest_nodeid_case.py::test_label[hello world]",
+    ])
+    expect(parseTestOutput("pytest", await fixture("pytest-nodeid-ambiguous"))).toBeUndefined()
   })
 
   test("go reports packages, not test counts", async () => {

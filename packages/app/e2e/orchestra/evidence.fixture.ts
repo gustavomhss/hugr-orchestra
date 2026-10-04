@@ -17,7 +17,7 @@ import { expectSessionTitle } from "../utils/waits"
 
 export const evidenceFixture = (name: string) =>
   readFile(new URL(`../../src/pages/session/orchestra-evidence-fixtures/${name}.txt`, import.meta.url), "utf8")
-export const editor = (page: Page) => page.getByRole("textbox", { name: "Prompt", exact: true })
+export const editor = (page: Page) => page.getByRole("textbox").and(page.locator('[data-component="prompt-input"]'))
 export const runCard = (page: Page, command = "bun test") =>
   page.getByRole("region", { name: `Test evidence for ${command}`, exact: true })
 export const screenshotRoot = "../../specs/orchestra-visual/evidence/S11"
@@ -33,6 +33,8 @@ export async function evidencePage(
     protocol?: "v1" | "v2"
     raw?: SessionMessageInfo[]
     secondServer?: string
+    scheme?: "light" | "dark"
+    locale?: "en" | "ar"
   } = {},
 ) {
   const writes: { url: string; body: Record<string, unknown> }[] = []
@@ -128,14 +130,15 @@ export async function evidencePage(
       route.fallback({ url: route.request().url().replace(input.secondServer!, server) }),
     )
   await page.addInitScript(
-    ({ server, directory, sessionID, secondServer }) => {
+    ({ server, directory, sessionID, secondServer, scheme, locale }) => {
       localStorage.setItem(
         "settings.v3",
         JSON.stringify({
           general: { newLayoutDesigns: true, shellToolPartsExpanded: true, shouldDisplayTabsToast: false },
         }),
       )
-      localStorage.setItem("opencode-color-scheme", "dark")
+      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
         "opencode.window.browser.dat:tabs",
@@ -150,7 +153,14 @@ export async function evidencePage(
         }),
       )
     },
-    { server, directory: root, sessionID, secondServer: input.secondServer },
+    {
+      server,
+      directory: root,
+      sessionID,
+      secondServer: input.secondServer,
+      scheme: input.scheme ?? "dark",
+      locale: input.locale ?? "en",
+    },
   )
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto(`/server/${Buffer.from(server).toString("base64url")}/session/${sessionID}`, {

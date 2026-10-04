@@ -1,4 +1,4 @@
-Godfile: 3561 source files, 301 warnings, 0 errors.
+Godfile: 3564 source files, 301 warnings, 0 errors.
 WARN .opencode/plugins/tui-smoke.tsx: 960 LOC exceeds hard limit 750; legacy base 960 LOC did not grow.
 WARN github/index.ts: 938 LOC exceeds hard limit 750; legacy base 938 LOC did not grow.
 WARN packages/app/e2e/performance/timeline-stability/fixture.ts: 538 LOC exceeds target 500.

@@ -5,6 +5,8 @@ import {
   failedCount,
   parseTestOutput,
   ranCount,
+  SUMMARY_WINDOW,
+  testOutputWindow,
   type TestRunner,
   type TestSummary,
 } from "./orchestra-evidence-parse"
@@ -34,6 +36,8 @@ export type ExecutionEvidence = {
 
 const TRUNCATED_PREFIX = "...output truncated..."
 export const EVIDENCE_CACHE_LIMIT = 32
+// Serialized key, revision and result combined; oversized entries simply bypass caching.
+export const EVIDENCE_CACHE_ENTRY_LIMIT = 8 * SUMMARY_WINDOW
 
 export function isShellTool(tool: string) {
   return tool === "bash" || tool === "shell"
@@ -89,6 +93,7 @@ export function readExecutionEvidence(
   const summary = parseTestOutput(runner, output)
   if (!summary) return
   const failed = failedCount(summary)
+  if (summary.failures.length > 0 && failed === 0) return
   // A clean exit next to reported failures is contradictory: keep the plain output.
   if (exit === 0 && failed > 0) return
   if (exit !== undefined && exit !== 0 && failed === 0 && ranCount(summary) > 0) return
@@ -115,7 +120,7 @@ function record(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value)
 }
 
-type CacheEntry = { revision: unknown[]; value: ExecutionEvidence | undefined }
+type CacheEntry = { revision: string; value: ExecutionEvidence | undefined; characters: number }
 
 function executionTime(part: ToolPart, source?: SessionMessageInfo) {
   if (source?.type === "shell") return { start: source.time.created, end: source.time.completed }
@@ -131,22 +136,25 @@ function executionTime(part: ToolPart, source?: SessionMessageInfo) {
   }
 }
 
-// Store updates may mutate the same state object, so the revision is the values the
-// result depends on: any output, exit or status change invalidates the parse.
+// Track only consumed text, total length, truncation and scalar execution metadata.
+// JSON serialization detaches tail substrings from their potentially huge backing
+// logs. Edits outside the parser's window do not change its result.
 function revision(part: ToolPart, source?: SessionMessageInfo) {
   const state = part.state
   const metadata = "metadata" in state && record(state.metadata) ? state.metadata : {}
   const input = state.input
   const time = executionTime(part, source)
-  return [
+  const output = source?.type === "shell" ? source.output?.output : "output" in state ? state.output : undefined
+  const fields = [
     state.status,
-    "output" in state ? state.output : undefined,
-    input.command,
-    input.workdir,
-    metadata.exit,
-    metadata.truncated,
-    metadata.outputPath,
-    metadata.status,
+    typeof input.command === "string" ? input.command : undefined,
+    typeof input.workdir === "string" ? input.workdir : undefined,
+    input.workdir === undefined || typeof input.workdir === "string",
+    Number.isSafeInteger(metadata.exit) ? metadata.exit : undefined,
+    typeof metadata.truncated === "boolean" ? metadata.truncated : undefined,
+    typeof metadata.outputPath === "string" ? metadata.outputPath : undefined,
+    metadata.status === undefined,
+    typeof metadata.status === "string" ? metadata.status : undefined,
     part.tool,
     part.messageID,
     part.callID,
@@ -159,38 +167,58 @@ function revision(part: ToolPart, source?: SessionMessageInfo) {
           source.command,
           source.status,
           source.exit,
-          source.output?.output,
           source.output?.truncated,
           source.time.created,
           source.time.completed,
         ]
       : []),
   ]
+  if (fields.some((field) => typeof field === "string" && field.length > SUMMARY_WINDOW)) return
+  return JSON.stringify([
+    ...fields,
+    output?.length,
+    output?.startsWith(TRUNCATED_PREFIX),
+    output === undefined ? undefined : testOutputWindow(output),
+  ])
 }
 
 // Bounded per-session cache so virtual rows remounting on scroll do not re-parse.
 export function createEvidenceCache(limit = EVIDENCE_CACHE_LIMIT) {
+  const capacity = Number.isSafeInteger(limit)
+    ? Math.min(EVIDENCE_CACHE_LIMIT, Math.max(0, limit))
+    : EVIDENCE_CACHE_LIMIT
   const entries = new Map<string, CacheEntry>()
   return {
     read(part: ToolPart, scope: { scope: string; directory: string }, source?: SessionMessageInfo) {
       // Live runs stream output on every delta; only completed revisions are parsed or kept.
-      if (part.state.status !== "completed") return
       const key = `${scope.scope}\0${scope.directory}\0${part.sessionID}\0${part.id}`
-      const next = revision(part, source)
       const hit = entries.get(key)
       entries.delete(key)
-      if (hit && hit.revision.length === next.length && hit.revision.every((value, index) => value === next[index])) {
+      if (part.state.status !== "completed") return
+      const next = revision(part, source)
+      if (next === undefined || key.length > SUMMARY_WINDOW || capacity === 0)
+        return readExecutionEvidence(part, scope, source)
+      if (hit && hit.revision === next) {
         entries.set(key, hit)
         return hit.value
       }
       const value = readExecutionEvidence(part, scope, source)
-      entries.set(key, { revision: next, value })
-      while (entries.size > limit) entries.delete(entries.keys().next().value!)
-      return value
+      const serialized = value === undefined ? undefined : JSON.stringify(value)
+      const characters = key.length + next.length + (serialized?.length ?? 0)
+      if (characters > EVIDENCE_CACHE_ENTRY_LIMIT) return value
+      // Detach result strings too: command/path fields and regex captures may be
+      // slices of a larger source buffer. Only this bounded copy enters the cache.
+      const stored = serialized === undefined ? undefined : (JSON.parse(serialized) as ExecutionEvidence)
+      entries.set(key, { revision: next, value: stored, characters })
+      while (entries.size > capacity) entries.delete(entries.keys().next().value!)
+      return stored
     },
     clear: () => entries.clear(),
     get size() {
       return entries.size
+    },
+    get retainedCharacters() {
+      return [...entries.values()].reduce((total, entry) => total + entry.characters, 0)
     },
   }
 }

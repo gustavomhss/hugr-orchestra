@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { evidenceFixture, evidencePage, runCard, screenshotRoot } from "./evidence.fixture"
+import { editor, evidenceFixture, evidencePage, runCard, screenshotRoot } from "./evidence.fixture"
 import { partUpdated, toolPart } from "../performance/timeline-stability/fixture"
 
 test.setTimeout(120_000)
@@ -88,6 +88,45 @@ test("evidence supports legacy tool parts and keeps incomplete or unknown output
   }
 })
 
+test("Jest console reporter output has no invented failing test", async ({ page }) => {
+  await evidencePage(page, { command: "jest --ci", output: await evidenceFixture("jest-console") })
+  const card = runCard(page, "jest --ci")
+  await expect(card).toHaveAttribute("data-state", "passed")
+  await expect(card.locator('[data-slot="evidence-failures"]')).toHaveCount(0)
+  await card.getByRole("tab", { name: "Output", exact: true }).click()
+  await expect(card.getByRole("tabpanel")).toContainText("diagnostic output")
+})
+
+test("pytest card keeps the complete parameterized failure nodeid", async ({ page }) => {
+  await evidencePage(page, {
+    command: "pytest",
+    output: await evidenceFixture("pytest-nodeid-spaces"),
+    metadata: { exit: 1 },
+  })
+  const card = runCard(page, "pytest")
+  await expect(card).toHaveAttribute("data-state", "failed")
+  await expect(card.getByRole("listitem")).toHaveText(["pytest_nodeid_case.py::test_label[hello world]"])
+  await expect(card.getByRole("listitem")).toHaveAttribute("title", "pytest_nodeid_case.py::test_label[hello world]")
+})
+
+for (const sample of [
+  { file: "bun-ghost", command: "bun test", exit: 0, text: "(fail) ghost" },
+  { file: "pw-extra-failure-row.invalid", command: "playwright test", exit: 1, text: "unrelated failure" },
+  { file: "pytest-nodeid-ambiguous", command: "pytest", exit: 1, text: "test_label[hello - world]" },
+]) {
+  test(`contradictory or ambiguous evidence stays raw: ${sample.file}`, async ({ page }) => {
+    await evidencePage(page, {
+      command: sample.command,
+      output: await evidenceFixture(sample.file),
+      metadata: { exit: sample.exit },
+    })
+    await expect(page.locator('[data-timeline-part-id="prt_evidence"] [data-component="bash-output"]')).toContainText(
+      sample.text,
+    )
+    await expect(runCard(page, sample.command)).toHaveCount(0)
+  })
+}
+
 test("partial output has no totals, keeps retained log, and never opens a saved path", async ({ page }) => {
   await evidencePage(page, { metadata: { truncated: true, outputPath: "/untrusted/out.txt" } })
   const card = runCard(page)
@@ -160,13 +199,72 @@ test("direct shell interruption and missing end never inherit normalized success
   await expect(runCard(page, "bun test b")).toContainText("Process duration not reported")
 })
 
-test("evidence keeps command direction and keyboard tabs in RTL", async ({ page }) => {
-  await evidencePage(page)
-  await page.evaluate(() => (document.documentElement.dir = "rtl"))
-  const card = runCard(page)
-  await expect(card.locator('[data-slot="evidence-command"]')).toHaveCSS("direction", "ltr")
-  await card.getByRole("tab", { name: "Test results", exact: true }).focus()
-  await page.keyboard.press("End")
-  await expect(card.getByRole("tab", { name: "Output", exact: true })).toBeFocused()
-  await expect(card.locator('[data-component="bash-output"]')).toHaveCSS("direction", "ltr")
-})
+for (const view of [
+  { name: "light-en", scheme: "light", locale: "en", direction: "ltr" },
+  { name: "rtl-en", scheme: "dark", locale: "en", direction: "rtl" },
+  { name: "rtl-ar", scheme: "dark", locale: "ar", direction: "rtl" },
+] as const) {
+  test(`evidence card identity and interactions: ${view.name}`, async ({ page }) => {
+    const fixture = await evidencePage(page, {
+      ...view,
+      output: await evidenceFixture("bun-fail"),
+      metadata: { exit: 1 },
+    })
+    await expect(page.locator("html")).toHaveAttribute("lang", view.locale)
+    await expect(page.locator("html")).toHaveAttribute("data-color-scheme", view.scheme)
+    // Force CSS direction independently of language in the production bundle.
+    // The Arabic case separately exercises the real locale/provider direction.
+    if (view.name === "rtl-en") await page.evaluate(() => (document.documentElement.dir = "rtl"))
+    await expect(page.locator("html")).toHaveAttribute("dir", view.direction)
+    await expect(page.locator("html")).toHaveAttribute("lang", view.locale)
+    await editor(page).fill("Keep draft / مسودة")
+    const card = runCard(page)
+    await expect(card).toHaveAttribute("data-state", "failed")
+    await expect(card).toHaveCSS("direction", view.direction)
+    await expect(card.locator('[data-slot="evidence-command"] bdi')).toHaveCSS("direction", "ltr")
+    await expect(card.locator('[data-slot="evidence-command"]')).toHaveCSS("direction", view.direction)
+    await expect(card.locator('[data-count="failed"] bdi')).toHaveCSS("direction", "ltr")
+    await expect(card.getByRole("listitem")).toHaveText(["approval > rejects empty", "top level failure"])
+    await page.evaluate(() => document.fonts.ready)
+    const before = await card.boundingBox()
+    const heading = await card.locator('[data-slot="evidence-tabs"]').boundingBox()
+    const command = await card.locator('[data-slot="evidence-command"]').boundingBox()
+    const end =
+      view.direction === "rtl" ? command!.x - heading!.x : heading!.x + heading!.width - command!.x - command!.width
+    expect(end).toBeCloseTo(13, 0)
+    const result = card.getByRole("tab", { name: "Test results", exact: true })
+    const output = card.getByRole("tab", { name: "Output", exact: true })
+    await result.focus()
+    await page.keyboard.press(view.direction === "rtl" ? "ArrowLeft" : "ArrowRight")
+    await expect(output).toBeFocused()
+    await expect(output).toHaveAttribute("aria-selected", "true")
+    await expect(card.locator('[data-component="bash-output"]')).toHaveCount(1)
+    await expect(card.locator('[data-component="bash-output"]')).toHaveCSS("direction", "ltr")
+    await expect(card.getByRole("tabpanel")).toContainText("(fail) approval > rejects empty")
+    await page.keyboard.press("Home")
+    await expect(result).toBeFocused()
+    await expect(result).toHaveAttribute("aria-selected", "true")
+    expect((await card.boundingBox())!.width).toBeCloseTo(before!.width, 1)
+    const geometry = await card
+      .getByRole("tab")
+      .evaluateAll((tabs) =>
+        tabs.map((tab) => ({ width: tab.getBoundingClientRect().width, height: tab.getBoundingClientRect().height })),
+      )
+    expect(geometry).toHaveLength(2)
+    geometry.forEach((tab) => {
+      expect(tab.width).toBeGreaterThanOrEqual(28)
+      expect(tab.height).toBeGreaterThanOrEqual(28)
+    })
+    await card.getByRole("button", { name: "Run tests again…", exact: true }).click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toHaveCSS("direction", view.direction)
+    await expect(dialog.locator("code")).toHaveText("bun test")
+    await expect(dialog.locator("code")).toHaveCSS("direction", "ltr")
+    // Existing common.cancel translation; evidence copy uses its approved English fallback.
+    await dialog.getByRole("button", { name: view.locale === "ar" ? "إلغاء" : "Cancel", exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+    await expect(editor(page)).toHaveText("Keep draft / مسودة")
+    expect(fixture.writes).toEqual([])
+    await page.screenshot({ path: `${screenshotRoot}/review-${view.name}.png` })
+  })
+}

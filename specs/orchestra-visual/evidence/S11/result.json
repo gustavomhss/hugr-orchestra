@@ -51,11 +51,15 @@
     "full_stress": "NOT_VERIFIED: original-base default 30x CPU / 320 turns / 160 deltas timed out at the 420000 ms completion check and reported metrics:null. Earlier attempts also hit build startup timeouts and an API-port mismatch. No budgets or guards were relaxed.",
     "acceptance": "Diagnostic only; full-load/quiet-host budget acceptance remains with integration."
   },
+  "screenshots_source_tree": "4bf3df4e8e4822ce3fe3d5a04812d07a4d29ae52",
   "screenshots": {
-    "failed-tests.png": "b635f14ea762702123b71dbf8c2c127a8eca459b2b652415fd4a7e776bd4619a",
-    "partial-output.png": "3d6c31a62ef0671344506b519e15638e7ecd685d301fc973cc47d3d960e236cd",
+    "failed-tests.png": "dff2e71dd038ee2de0a63ac09c76de386316cb5c53449143ab3e0639f0790a25",
+    "partial-output.png": "fc65126900706fbe8263a0609b89af0a0ae60a5c94054d6156cc625c74a9a3fe",
     "replay-confirmation.png": "47f525ed201872cef170a5f01164dc7bd4390471fc0644018fab2eac1e0e24b4",
-    "prepare-pr-unsent.png": "df40a3a618596ca9fcf3b863b9f5ca02ccaa395552adbbca192533ca5801b7a8"
+    "prepare-pr-unsent.png": "0f80b8433d71bce508e847376df68536ccc364efeb6594cb6d786971632ba09b",
+    "review-light-en.png": "1b19e0f1c21f2e3bff04401221881a268636da8a062c3897802a40bcbc2499b6",
+    "review-rtl-en.png": "caaea5f2475c188dd67d6057f4a7030706be7fd9539c4d89feaeacfd5a38735f",
+    "review-rtl-ar.png": "9fc18bfb054bb62da691820cdd743ad4b0089b282f9d8d1b7ab7bb4ace89a27b"
   },
   "framing_corrections": [
     "Printed totals are runner-reported evidence, never independent proof of success or validation of the current revision. Nonzero exit beside passing totals stays raw.",
@@ -88,6 +92,52 @@
         "browser_result": "Run command assertion failed: Expected: disabled; Received: enabled.",
         "restored": true,
         "restored_verification": "10 focused unit tests and 7 production browser tests passed after restoration. Rejected paths sent no request; valid POSIX/Windows paths each sent one exact-command request after confirmation and preserved the draft."
+      }
+    },
+    {
+      "id": "P1-P2-parser-cache-card-review",
+      "base_commit": "6dad5ac6b28f323f339a7dd02e7f6535f88c8290",
+      "verified_source_tree": "4bf3df4e8e4822ce3fe3d5a04812d07a4d29ae52",
+      "source_tree_scope": "packages/app; replay directory logic remains byte-identical to 6dad5ac.",
+      "fixes": [
+        "Jest failure names require a FAIL suite and a failure body. Reporter Console headings are excluded by context; a real failed test named Console remains supported.",
+        "pytest short-summary nodeids retain internal spaces. Ambiguous delimiters or truncated identifiers fall back to raw output.",
+        "Bun failure records cannot exceed its reported failures. Playwright named footer groups must match their declared counts before deduplication. The card adapter also rejects failure names beside zero reported failures.",
+        "Cache revisions contain a detached bounded output window, extent/truncation information and scalar metadata. Cached result strings are detached too; no full output or source-message object enters an entry.",
+        "RTL layout inherits direction while command text and English fallback phrases are isolated; command spacing, numbers and punctuation retain their intended placement."
+      ],
+      "cache_bounds": {
+        "parse_window_utf16_units": 65536,
+        "max_entries": 32,
+        "max_entry_serialized_utf16_units": 524288,
+        "oversized": "Bypass caching without truncating execution identity.",
+        "invalidation": "Same-length tail changes, output extent, truncation prefix/metadata, raw-shell status/exit, identity and timestamps invalidate. Changes outside consumed text with the same extent reuse the equivalent parsed result.",
+        "retention_proof": "Unit tests exercise megabyte logs, raw vs normalized output, LRU eviction and clear. Retained serialized key/revision/result footprint is checked, including an oversized escaped-field bypass. These are structural cache bounds, not process-RSS measurements."
+      },
+      "fixtures": "Actual Jest 30.2.0 Console pass/fail captures, pytest 9.0.3 space/ambiguous-nodeid captures, and Bun 1.3.14 misleading-stdout capture with reproducers. The Playwright extra-row fixture is explicitly an adversarial derivative, not claimed as standard-runner output. See orchestra-evidence-fixtures/README.md.",
+      "checks": [
+        { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/orchestra-evidence-parse.test.ts src/pages/session/orchestra-evidence-data.test.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 43, "failed": 0, "assertions": 258 },
+        { "cwd": "packages/app", "command": "bun typecheck && bun run typecheck:e2e", "exit": 0 },
+        { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence.spec.ts e2e/orchestra/evidence-actions.spec.ts --reporter=line", "exit": 0, "passed": 35, "failed": 0, "skipped": 0, "build": "production; isolated mocked API and SSE" },
+        { "cwd": "packages/app", "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence.spec.ts --grep 'complete parameterized failure nodeid|stays raw: pytest-nodeid-ambiguous' --reporter=line", "exit": 0, "passed": 2, "note": "Affected cases rechecked after trimming reporter-only trailing whitespace in captured pytest logs; all 43 units also reran on those final fixtures." },
+        { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "source_files": 3564, "warnings": 301, "errors": 0, "artifact": "godfile.log" }
+      ],
+      "mutation": {
+        "changes": "Removed Jest Console attribution, Bun/PW record-count checks, reintroduced whitespace-truncated pytest names, and replaced bounded revision text with full output while bypassing the entry budget.",
+        "unit_command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/orchestra-evidence-parse.test.ts src/pages/session/orchestra-evidence-data.test.ts --test-name-pattern 'Jest distinguishes|Bun failure records|Playwright failure rows|pytest preserves|bounded parse footprint|raw-shell authority'",
+        "unit_exit": 1,
+        "unit_result": "6 targeted assertions failed. Cache probes measured 1049187 and 1049277 serialized characters against a <131072 bound for their inputs.",
+        "browser_command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence.spec.ts --grep 'complete parameterized failure nodeid' --reporter=line",
+        "browser_exit": 1,
+        "browser_result": "Full nodeid assertion failed: expected test_label[hello world], received test_label[hello.",
+        "restored": true
+      },
+      "visual": {
+        "screenshots": ["review-light-en.png", "review-rtl-en.png", "review-rtl-ar.png"],
+        "interaction": "Production checks verify scheme/lang/dir, command inline-end spacing and LTR isolation, count isolation, keyboard tabs and output, hit areas, stable width, replay cancellation and draft preservation.",
+        "arabic_scope": "Real Arabic locale/provider and existing Arabic Cancel translation are exercised. Evidence labels keep the approved English fallback; this is not translation-completeness acceptance.",
+        "forced_rtl": "English test explicitly forces document direction without changing language; Arabic independently exercises locale/provider direction.",
+        "resolved_harness_failure": "An initial production run passed 32 cases but failed 3 visual cases because a dev-only debug toggle was unavailable. The fixture now forces document direction explicitly; the final 35-case production run passed."
       }
     }
   ],

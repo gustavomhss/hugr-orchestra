@@ -49,7 +49,7 @@ export function detectTestRunner(command: string): TestRunner | undefined {
 }
 
 export function parseTestOutput(runner: TestRunner, output: string): TestSummary | undefined {
-  const window = output.length > SUMMARY_WINDOW ? output.slice(-SUMMARY_WINDOW) : output
+  const window = testOutputWindow(output)
   const lines = stripAnsi(window).replace(/\r\n?/g, "\n").split("\n")
   while (lines.length > 0 && !lines.at(-1)!.trim()) lines.pop()
   if (lines.length === 0) return
@@ -62,6 +62,12 @@ export function parseTestOutput(runner: TestRunner, output: string): TestSummary
   if (window.length !== output.length) return
   if (runner === "go") return parseGo(lines)
   return parseCargo(lines)
+}
+
+export function testOutputWindow(output: string) {
+  // A substring can retain its entire backing log. Detach the bounded window so
+  // cached failure names cannot keep a multi-megabyte transcript alive either.
+  return output.length > SUMMARY_WINDOW ? output.slice(-SUMMARY_WINDOW).split("").join("") : output
 }
 
 export function failedCount(summary: TestSummary) {
@@ -147,11 +153,13 @@ function parseBun(lines: string[]): TestSummary | undefined {
   const files = count(footer[2]!)
   if (counts.passed === undefined || counts.failed === undefined || total === undefined || files === undefined) return
   if (sum(counts) !== total) return
+  const failures = lines.flatMap((line) => line.match(/^(?:\(fail\)|✗) (.+?)(?: \[[\d.]+m?s\])?$/)?.[1] ?? [])
+  if (failures.length > counts.failed) return
   return {
     runner: "bun",
     tests: { unit: "tests", counts, total },
     groups: { unit: "files", total: files },
-    failures: unique(lines.flatMap((line) => line.match(/^(?:\(fail\)|✗) (.+?)(?: \[[\d.]+m?s\])?$/)?.[1] ?? [])),
+    failures: unique(failures),
     duration: footer[3],
   }
 }
@@ -223,11 +231,28 @@ function parseJest(lines: string[]): TestSummary | undefined {
   const rest = lines.slice(index + 4)
   if (!suites || !tests || !snapshots || !time || !validDuration(time[1]!.replace(" ", ""))) return
   if (rest.length !== 1 || !/^Ran all test suites(?: matching .+)?\.$/.test(rest[0]!)) return
+  const failures: string[] = []
+  let suite: string | undefined
+  for (let row = 0; row < index; row++) {
+    const header = lines[row]!.match(/^(PASS|FAIL)\s+\S/)
+    if (header) suite = header[1]
+    const failure = lines[row]!.match(/^ {2}● (.+)$/)
+    if (!failure) continue
+    if (!suite) return
+    let detail = row + 1
+    while (detail < index && !lines[detail]!.trim()) detail++
+    // The reporter's Console section and a test literally named Console share a
+    // heading. Only the reporter's console-method body distinguishes the former.
+    if (failure[1] === "Console" && /^ {4}console\.\w+$/.test(lines[detail] ?? "")) continue
+    if (suite !== "FAIL" || failure[1] === "Test suite failed to run" || !/^ {4}\S/.test(lines[detail] ?? "")) return
+    failures.push(failure[1]!)
+  }
+  if (failures.length !== (tests.counts.failed ?? 0)) return
   return {
     runner: "jest",
     tests: { unit: "tests", counts: tests.counts, total: tests.total },
     groups: { unit: "suites", counts: suites.counts, total: suites.total },
-    failures: unique(lines.flatMap((line) => line.match(/^\s*● (.+)$/)?.[1] ?? [])),
+    failures: unique(failures),
     duration: time[1]!.replace(" ", ""),
   }
 }
@@ -258,6 +283,10 @@ function parsePlaywright(lines: string[]): TestSummary | undefined {
         if (key !== "passed" || duration || !validDuration(match[3])) return
         duration = match[3]
       }
+      // Failed/interrupted/flaky groups list their cases; other groups do not.
+      // Validate raw rows before deduplication can hide a contradictory footer.
+      const listed = key === "failed" || key === "interrupted" || key === "flaky"
+      if (pending.length !== (listed ? value : 0)) return
       if (key === "failed" || key === "interrupted") failures.push(...pending)
       pending.length = 0
       continue
@@ -305,10 +334,25 @@ function parsePytest(lines: string[]): TestSummary | undefined {
     }
   }
   if (footer[1] !== "no tests ran" && Object.keys(counts).length === 0) return
+  const failures: string[] = []
+  const start = lines.findIndex((line) => /^=+ short test summary info =+$/.test(line))
+  if (start < 0 && lines.some((line) => /^(FAILED|ERROR) /.test(line))) return
+  if (start >= 0) {
+    for (const line of lines.slice(start + 1, -1)) {
+      const match = line.match(/^(FAILED|ERROR) (.+)$/)
+      if (!match) continue
+      // Parameter IDs may contain spaces, including the reporter's own delimiter.
+      // Without an unambiguous boundary, preserve the original log instead.
+      const parts = match[2]!.split(" - ")
+      if (parts.length !== 2 || !parts[0] || parts[0] !== parts[0].trim() || /(?:\.\.\.|…)$/.test(parts[0])) return
+      failures.push(parts[0])
+    }
+  }
+  if (failures.length > (counts.failed ?? 0) + (counts.errors ?? 0)) return
   return {
     runner: "pytest",
     tests: { unit: "tests", counts },
-    failures: unique(lines.flatMap((line) => line.match(/^(?:FAILED|ERROR) (\S+)/)?.[1] ?? [])),
+    failures: unique(failures),
     duration: footer[2],
   }
 }
