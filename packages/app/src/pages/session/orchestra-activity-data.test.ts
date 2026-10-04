@@ -56,6 +56,47 @@ describe("deriveActivity", () => {
     ])
   })
 
+  test("a failure without an end time can be the latest, and otherwise never sinks below completed work", () => {
+    const old = task("failed-old", "error", { startTime: 1, endTime: 5 })
+    const completed = task("done", "completed", { endTime: 9 })
+    const running = task("running", "running", { startTime: 2 })
+    // A child transcript can prove a failure without stamping when it ended.
+    const latest = deriveActivity(
+      input({
+        tasks: { running: [running], finished: [old, completed, task("failed-new", "error", { startTime: 10 })] },
+      }),
+    )
+    expect(latest.map((item) => [item.key, item.rank])).toEqual([
+      ["failed-new", 0],
+      ["running", 1],
+      ["done", 2],
+      ["failed-old", 2],
+      ["janitor", 3],
+    ])
+
+    const older = deriveActivity(
+      input({
+        tasks: {
+          running: [running],
+          finished: [
+            task("failed-last", "error", { startTime: 15, endTime: 20 }),
+            completed,
+            task("failed-unstamped", "error", { startTime: 12 }),
+            task("silent", "unknown"),
+          ],
+        },
+      }),
+    )
+    expect(older.map((item) => [item.key, item.rank])).toEqual([
+      ["failed-last", 0],
+      ["running", 1],
+      ["failed-unstamped", 2],
+      ["done", 2],
+      ["silent", 3],
+      ["janitor", 3],
+    ])
+  })
+
   test("a Dock observation never outranks a pending request, but a crashed tab joins the errors", () => {
     const pending = task("asks", "needs-input", { startTime: 1 })
     const crashed = deriveActivity(

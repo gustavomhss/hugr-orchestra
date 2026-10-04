@@ -1,6 +1,6 @@
 import type { JanitorReport } from "@/utils/janitor-report"
 import type { DockSnapshot } from "./orchestra-dock-snapshot"
-import { newest, type TasksItem } from "./tasks-data"
+import { live, newest, type TasksItem } from "./tasks-data"
 
 /**
  * One typed Activity row. Agents and shells are the Tasks projection's own items; the Dock row is
@@ -26,12 +26,12 @@ const order = { agent: 0, shell: 1, dock: 2, janitor: 3 } as const
  * Intervention and errors first, then work in progress, then recent events with a known time,
  * then the rest; ties by kind and key. A Dock observation never outranks a pending request.
  * Activity holds every finished task of the session, so only the latest failure ranks as an error;
- * older ones rank as past events and never push work in progress out of the summary.
+ * older ones rank as past events, recorded end or not, and never push work in progress out of the summary.
  */
 export function deriveActivity(input: ActivityInput): ActivityItem[] {
   const failure = input.tasks.finished
     .filter((task) => task.state === "error")
-    .toSorted((a, b) => newest(a.endTime, b.endTime) || a.key.localeCompare(b.key))
+    .toSorted((a, b) => newest(taskTime(a), taskTime(b)) || a.key.localeCompare(b.key))
     .at(0)
   const tasks = [...input.tasks.running, ...input.tasks.finished].map(
     (task): ActivityItem => ({
@@ -39,7 +39,7 @@ export function deriveActivity(input: ActivityInput): ActivityItem[] {
       kind: task.kind,
       scope: "session",
       rank: taskRank(task, failure),
-      time: task.state === "running" || task.state === "needs-input" ? task.startTime : task.endTime,
+      time: taskTime(task),
       task,
     }),
   )
@@ -79,7 +79,15 @@ function janitorItem(input: ActivityInput): ActivityItem {
 function taskRank(task: TasksItem, failure: TasksItem | undefined) {
   if (task.state === "needs-input" || task === failure) return 0
   if (task.state === "running") return 1
-  return task.endTime === undefined ? 3 : 2
+  return task.state === "error" || task.endTime !== undefined ? 2 : 3
+}
+
+// A failure the server never stamped with an end time still failed after it started, so its start
+// time stands in, both to pick the latest failure and to place older ones among past events.
+function taskTime(task: TasksItem) {
+  if (live(task)) return task.startTime
+  if (task.state === "error") return task.endTime ?? task.startTime
+  return task.endTime
 }
 
 function dockRank(dock: DockSnapshot) {
