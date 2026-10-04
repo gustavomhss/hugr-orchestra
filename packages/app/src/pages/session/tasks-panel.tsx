@@ -79,6 +79,7 @@ function TaskRow(props: {
   onDismiss: (item: TasksItem) => void
 }) {
   const language = useLanguage()
+  const id = createUniqueId()
   // Rows can receive an updated item for the same key; read it through props, never a snapshot.
   const item = () => props.item
   const active = () => live(item())
@@ -100,10 +101,9 @@ function TaskRow(props: {
       data-state={item().state}
       data-kind={item().kind}
       role="button"
-      aria-label={
-        item().kind === "shell"
-          ? language.t(item().originUserMessageID ? "orchestra.tasks.openExecution" : "orchestra.tasks.openSession")
-          : undefined
+      // The row's content (headline, state, time) stays its name; where a shell row leads is its description.
+      aria-describedby={
+        item().kind !== "shell" ? undefined : item().originUserMessageID ? `${id}-open` : `${id}-open ${id}-source`
       }
       title={
         item().kind === "shell" && !item().originUserMessageID
@@ -285,6 +285,16 @@ function TaskRow(props: {
           </Show>
         </Show>
       </div>
+      <Show when={item().kind === "shell"}>
+        <span id={`${id}-open`} hidden>
+          {language.t(item().originUserMessageID ? "orchestra.tasks.openExecution" : "orchestra.tasks.openSession")}
+        </span>
+        <Show when={!item().originUserMessageID}>
+          <span id={`${id}-source`} hidden>
+            {language.t("orchestra.tasks.sourceMissing")}
+          </span>
+        </Show>
+      </Show>
     </div>
   )
 }

@@ -379,9 +379,9 @@ test("shell tasks and Activity reveal the confirmed originating turn without int
     if (new URL(request.url()).pathname.endsWith("/abort")) aborts.push(request.url())
   })
   await openCockpit(page)
-  const shell = page
-    .locator('[data-component="tasks-panel"]')
-    .getByRole("button", { name: "Open execution", exact: true })
+  // The row is named by what it shows; where it leads is its description.
+  const shell = page.locator('[data-component="tasks-panel"]').getByRole("button", { name: /^Inspect workspace/ })
+  await expect(shell).toHaveAccessibleDescription("Open execution")
   await expect(shell.getByRole("button", { name: "Stop task" })).toHaveCount(0)
   await shell.click()
   await expect(page).toHaveURL(
