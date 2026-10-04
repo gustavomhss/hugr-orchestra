@@ -56,6 +56,8 @@ export type TasksInput = {
   status: Record<string, SessionStatus | undefined>
   permission: Record<string, PermissionRequest[] | undefined>
   question: Record<string, QuestionRequest[] | undefined>
+  /** True only after a transcript page has loaded, with no page load in flight. */
+  loaded: (sessionID: string) => boolean
   /** True while older transcript pages exist that the store has not loaded. */
   more: (sessionID: string) => boolean
   /** Session cost/tokens are server data only on v2; the v1 compat layer zero-fills missing ones. */
@@ -85,6 +87,7 @@ export function createTasksData() {
       status: store.data.session_status,
       permission: store.data.permission,
       question: store.data.question,
+      loaded: store.session.history.loaded,
       more: store.session.history.more,
       aggregates: serverSDK().protocolKind() === "v2",
     })
@@ -194,7 +197,8 @@ function agentOutcome(
   if (last?.role !== "assistant") return { state: "unknown" }
   if (last.error?.name === "MessageAbortedError") return { state: "interrupted", endTime: last.time.completed }
   if (last.error) return { state: "error", endTime: last.time.completed }
-  if (last.finish && last.finish !== "tool-calls") return { state: "completed", endTime: last.time.completed }
+  if (last.finish && !["tool-calls", "unknown"].includes(last.finish))
+    return { state: "completed", endTime: last.time.completed }
   return { state: "unknown" }
 }
 
@@ -206,7 +210,7 @@ function agentStats(
 ): TaskStats {
   const messages = input.message[childID]
   const last = messages?.findLast((message): message is AssistantMessage => message.role === "assistant")
-  const complete = transcriptComplete(messages, input.more(childID))
+  const complete = input.loaded(childID) && transcriptComplete(messages, input.part, input.more(childID))
   const assistants = complete
     ? messages.filter((message): message is AssistantMessage => message.role === "assistant")
     : undefined
@@ -235,11 +239,15 @@ function agentStats(
 }
 
 /**
- * A transcript proves counts only when fully loaded: no older page remains and
- * every assistant turn's prompt is present (live events alone can start mid-run).
+ * A loaded transcript proves counts only when no older page remains, every
+ * message has parts, and every assistant turn's prompt is present.
  */
-function transcriptComplete(messages: Message[] | undefined, more: boolean): messages is Message[] {
-  if (!messages || more) return false
+function transcriptComplete(
+  messages: Message[] | undefined,
+  parts: TasksInput["part"],
+  more: boolean,
+): messages is Message[] {
+  if (!messages || more || messages.some((message) => parts[message.id] === undefined)) return false
   const prompts = new Set(messages.flatMap((message) => (message.role === "user" ? [message.id] : [])))
   return prompts.size > 0 && messages.every((message) => message.role === "user" || prompts.has(message.parentID))
 }

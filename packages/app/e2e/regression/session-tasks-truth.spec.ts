@@ -87,14 +87,43 @@ test("stop interrupts only the child and surfaces pending, failure and retry", a
   expect(aborts).toEqual([`/session/${child.running}/abort`, `/session/${child.running}/abort`])
 })
 
+test("opening a task keeps its owning server when the default server differs", async ({ page }) => {
+  const owner = new URL(server)
+  owner.hostname = "tasks-owner.test"
+  const requests: string[] = []
+  await setup(page, owner.origin)
+  await page.route(
+    (url) => url.pathname.includes(`/session/${child.running}`),
+    (route) => {
+      requests.push(route.request().url())
+      return route.fallback()
+    },
+  )
+  const panel = await openPanel(page, owner.origin)
+  expect(owner.origin).not.toBe(server)
+  await expect(row(panel, "Running task")).toHaveAttribute("data-state", "running")
+  const mark = requests.length
+  await row(panel, "Running task").locator('[data-slot="task-title"]').click()
+
+  await expect(page).toHaveURL(
+    new URL(`/server/${base64Encode(owner.origin)}/session/${child.running}`, page.url()).href,
+  )
+  await expectSessionTitle(page, "Running task")
+  await expect
+    .poll(() => requests.slice(mark).some((request) => new URL(request).pathname.endsWith("/message")))
+    .toBe(true)
+  const opened = requests.slice(mark)
+  expect(opened.map((request) => new URL(request).origin)).toEqual(opened.map(() => owner.origin))
+})
+
 function row(panel: ReturnType<Page["locator"]>, headline: string) {
   return panel.locator('[data-slot="task-row"]').filter({
     has: panel.page().locator('[data-slot="task-title"]', { hasText: headline }),
   })
 }
 
-async function openPanel(page: Page) {
-  await page.goto(`/server/${base64Encode(server)}/session/${parentID}`)
+async function openPanel(page: Page, owner = server) {
+  await page.goto(`/server/${base64Encode(owner)}/session/${parentID}`)
   await expectSessionTitle(page, parentTitle)
   // Once the side panel mounts, the running child auto-opens the Tasks tab.
   await page.getByRole("button", { name: "Toggle review" }).click()
@@ -107,7 +136,7 @@ async function openPanel(page: Page) {
   return panel
 }
 
-async function setup(page: Page) {
+async function setup(page: Page, owner = server) {
   await mockOpenCodeServer(page, {
     directory,
     project: {
@@ -147,13 +176,14 @@ async function setup(page: Page) {
       localStorage.setItem(
         "opencode.global.dat:server",
         JSON.stringify({
+          list: [server],
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
     },
-    { directory, server, sessionId: parentID },
+    { directory, server: owner, sessionId: parentID },
   )
 }
 
