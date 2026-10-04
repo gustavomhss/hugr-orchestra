@@ -194,17 +194,17 @@ O dono escolheu um gate local que replica no macOS os jobs Linux do
 partir de execuções reais do candidato final; não copiar números de recibos
 anteriores.
 
-| Check                                                           | Resultado                          |
-| --------------------------------------------------------------- | ---------------------------------- |
-| `godfile`                                                       | <!-- receipts: filled at merge --> |
-| `atlas`                                                         | <!-- receipts: filled at merge --> |
-| `unit-linux`                                                    | <!-- receipts: filled at merge --> |
-| `e2e-linux` (runner padrão, inclui os casos de desenvolvimento) | <!-- receipts: filled at merge --> |
-| `typecheck`                                                     | <!-- receipts: filled at merge --> |
-| `storybook` (só quando as regras de caminho do job se aplicam)  | <!-- receipts: filled at merge --> |
-| Suíte Orchestra no build de produção (`integration.config.ts`)  | <!-- receipts: filled at merge --> |
-| Dock nativo U01–U31 no candidato integrado                      | <!-- receipts: filled at merge --> |
-| `unit-windows`, `e2e-windows`, `nix-eval`                       | Sem prova                          |
+| Check                                                           | Resultado                                                                                                                                                                                                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `godfile`                                                       | Passou em `37514ef4a6`: `base.test.ts`, `core/test/godfile.test.ts` e `check:godfile` (só avisos legados). Nenhum arquivo afetado mudou depois.                                                                                             |
+| `atlas`                                                         | Guards passaram em `37514ef4a6`; vitest 4131/4147 com 1 timeout sob carga em `adapter-io/test/scanner.wp-11.w5.test.ts` (Atlas intocado pelo diff), reexecutado isolado 3× com 17/17.                                                       |
+| `unit-linux`                                                    | `bun turbo test --env-mode=loose` (todos os pacotes, macOS) passou em `37514ef4a6`; `atlas-boundary` e `client` `check:generated` passaram; `test:httpapi` 208/0. App no final `4d9899c487`: 1017 (`src`) e 68 (`test-browser`) sem falhas. |
+| `e2e-linux` (runner padrão, inclui os casos de desenvolvimento) | `CI=true` 319/319, 0 flaky em `833cf2507d`; delta `4d9899c487`: 19/19 nos specs afetados (`session-tasks-truth`, `session-cockpit`, `cockpit-review`).                                                                                      |
+| `typecheck`                                                     | `bun turbo typecheck --concurrency=1` 31/31 em `37514ef4a6`; `packages/app` `typecheck` e `typecheck:e2e` limpos em `4d9899c487`.                                                                                                           |
+| `storybook` (só quando as regras de caminho do job se aplicam)  | Build passou em `607c2bf4c6`; `packages/ui` e `packages/session-ui` não mudaram depois.                                                                                                                                                     |
+| Suíte Orchestra no build de produção (`integration.config.ts`)  | 300/300 em `833cf2507d` (19 casos `@development-only`/`@source-fixture` passam no runner padrão); delta `4d9899c487`: 19/19.                                                                                                                |
+| Dock nativo U01–U31 no candidato integrado                      | 31/31 em `a1698508f9` com Electron 42.3.3; `packages/desktop` não mudou depois.                                                                                                                                                             |
+| `unit-windows`, `e2e-windows`, `nix-eval`                       | Sem prova                                                                                                                                                                                                                                   |
 
 Os recibos escopados de cada lane, anteriores à integração, estão em
 `evidence/S06/`, `evidence/S11/`, `evidence/S15/` e `evidence/S20/`. Eles provam
@@ -295,8 +295,8 @@ GitLab `gmhelmold/hugr-orchestra`.
 5. **Verificação formal ainda sem automação:** budgets de CPU/memória/startup/
    streaming no CI, matriz visual contra o mock aprovado, contraste e anel de
    foco, hit zones nativas Windows/Linux. A medição A/B manual de 2026-10-02 está
-   resumida no PR #25. Recibos do candidato final:
-   <!-- receipts: filled at merge -->
+   resumida no PR #25. Recibos do candidato final: tabela do gate local acima;
+   budgets automatizados continuam inexistentes.
 6. **Aceite do dono:** identidade integrada, cada chapter da onda 1 e o bundle
    integrado das ondas A e B.
 7. **Entrega:** fechar a continuação do épico (#1, aberta no repositório GitHub hoje
@@ -362,9 +362,8 @@ whole-frame entre fontes/dados diferentes permanecem sem certificação.
 
 Os recibos das lanes da onda B registram medições diagnósticas de uma rodada
 (`evidence/S11/result.json` e `evidence/S15/result.json`), não qualificação de
-performance. Benchmarks pareados no candidato final continuam pendentes:
-
-<!-- receipts: filled at merge -->
+performance. Benchmarks pareados no candidato final continuam pendentes; nenhum
+foi executado no merge.
 
 ## 9. Preservação, worktrees e PRs abertos
 

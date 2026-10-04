@@ -34,7 +34,7 @@ ondas A e B está na seção "Situação atual".
 - O dono escolheu um gate local que replica no macOS os jobs Linux do
   `.gitlab-ci.yml`. As lanes Windows (`unit-windows` e `e2e-windows`) e o
   `nix-eval` continuam sem prova.
-- Recibos do gate local para o candidato final: <!-- receipts: filled at merge -->
+- Recibos do gate local para o candidato final `4d9899c487`: ver a tabela em `HANDOFF.md` §7 (E2E padrão 319/319, produção 300/300, Dock nativo 31/31, unit e typecheck verdes).
 
 ### Correções da onda 2, integradas em `dev`
 
@@ -115,7 +115,7 @@ aceite do dono.
 7. Prova de CI no Windows (`unit-windows` e `e2e-windows`) e do `nix-eval`.
 8. Benchmarks de performance pareados no candidato final.
 
-Verificação do candidato final: <!-- receipts: filled at merge -->
+Verificação do candidato final `4d9899c487`: gate local verde (tabela em `HANDOFF.md`); lanes Windows, `nix-eval` e benchmarks pareados sem prova.
 
 As tabelas abaixo são a auditoria original de 2026-10-02 e não foram reescritas.
 Para S06, S09, S10, S11 e S15–S20, as linhas de implementação (W1 e T1) que

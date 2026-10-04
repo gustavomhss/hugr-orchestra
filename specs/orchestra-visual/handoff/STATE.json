@@ -9,9 +9,20 @@
   },
   "ci": {
     "gitlab": "Never executed a test. The free compute quota was exhausted (568 of 400 minutes in October), so shared runners were disabled; the pipelines that were created stayed stuck_pending_no_matching_runners.",
-    "gate": "Local: the owner replicates the .gitlab-ci.yml Linux jobs on macOS.",
+    "gate": "Local: the owner chose to replicate the .gitlab-ci.yml Linux jobs on macOS instead of buying compute minutes.",
     "unproven": ["unit-windows", "e2e-windows", "nix-eval"],
-    "receipts": "<!-- receipts: filled at merge -->"
+    "receipts": {
+      "candidate": "4d9899c487",
+      "e2eDefault": "319/319, 0 flaky at 833cf2507d (CI=true); 19/19 affected specs at 4d9899c487",
+      "production": "300/300 at 833cf2507d; 19/19 affected specs at 4d9899c487",
+      "appUnit": "1017 src + 68 test-browser pass at 4d9899c487",
+      "typecheck": "turbo 31/31 at 37514ef4a6; app typecheck and typecheck:e2e clean at 4d9899c487",
+      "unitAllPackages": "bun turbo test pass at 37514ef4a6; httpapi 208/0; generated checks pass",
+      "godfile": "pass at 37514ef4a6 (legacy warnings only)",
+      "atlas": "guards pass; 4131/4147 with one load timeout in adapter-io scanner test, isolated rerun 17/17 x3; Atlas untouched",
+      "storybook": "build pass at 607c2bf4c6",
+      "nativeDock": "U01-U31 31/31 at a1698508f9, Electron 42.3.3; desktop untouched since"
+    }
   },
   "branch": "dev",
   "base": "fork/dev",
