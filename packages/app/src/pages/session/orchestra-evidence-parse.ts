@@ -22,6 +22,8 @@ export type TestSummary = {
 }
 
 // Summaries only read the end of retained output once per completed revision.
+// The window does not bound line length and parsing runs on the UI thread, so no
+// pattern may let two quantifiers, or an unanchored start, claim the same run.
 export const SUMMARY_WINDOW = 64 * 1024
 
 const COMPOSITION = /[|;&<>`\n\r]|\$\(/
@@ -32,7 +34,7 @@ const VITEST_INTERACTIVE = new Set(["watch", "dev", "bench", "init", "list"])
 // Only direct runner invocations qualify: package scripts, pipelines and other
 // shell composition stay output-only because the printed text cannot be attributed.
 export function detectTestRunner(command: string): TestRunner | undefined {
-  const text = command.trim().replace(/\s+2>&1$/, "")
+  const text = command.trim().replace(/(?<=\S)\s+2>&1$/, "")
   if (!text || COMPOSITION.test(text)) return
   const words = text.split(/\s+/)
   const start = words.findIndex((word) => !ENV_ASSIGNMENT.test(word))
@@ -172,7 +174,7 @@ const VITEST_LABELS: Record<string, TestCountKey> = {
 }
 
 function vitestRow(line: string | undefined, label: string) {
-  const match = line?.match(new RegExp(`^\\s*${label}\\s{2,}(.+) \\((\\d+)\\)$`))
+  const match = line?.match(new RegExp(`^\\s*${label}\\s{2,}(\\S.*) \\((\\d+)\\)$`))
   if (!match) return
   const counts = items(match[1]!, " | ", VITEST_LABELS)
   const total = count(match[2]!)
@@ -213,7 +215,7 @@ const JEST_LABELS: Record<string, TestCountKey> = {
 }
 
 function jestRow(line: string | undefined, label: string) {
-  const match = line?.match(new RegExp(`^${label}:\\s+(.+), (\\d+) total$`))
+  const match = line?.match(new RegExp(`^${label}:\\s+(\\S.*), (\\d+) total$`))
   if (!match) return
   const counts = items(match[1]!, ", ", JEST_LABELS)
   const total = count(match[2]!)
@@ -226,7 +228,7 @@ function parseJest(lines: string[]): TestSummary | undefined {
   if (index < 0 || lines.filter((line) => line.startsWith("Test Suites:")).length !== 1) return
   const suites = jestRow(lines[index], "Test Suites")
   const tests = jestRow(lines[index + 1], "Tests")
-  const snapshots = lines[index + 2]?.match(/^Snapshots:\s+.*\d+ total$/)
+  const snapshots = lines[index + 2]?.match(/^Snapshots:\s.*\d total$/)
   const time = lines[index + 3]?.match(/^Time:\s+([\d.]+ m?s)(?:, estimated .+)?$/)
   const rest = lines.slice(index + 4)
   if (!suites || !tests || !snapshots || !time || !validDuration(time[1]!.replace(" ", ""))) return
@@ -292,7 +294,7 @@ function parsePlaywright(lines: string[]): TestSummary | undefined {
       continue
     }
     if (!/^ {4}\S/.test(line)) break
-    pending.unshift(line.trim().replace(/\s*─+$/, ""))
+    pending.unshift(line.trim().replace(/\s─+$/, ""))
   }
   if (pending.length > 0 || Object.keys(counts).length === 0) return
   const running = lines.filter((line) => /^Running \d+ tests? using \d+ workers?/.test(line))

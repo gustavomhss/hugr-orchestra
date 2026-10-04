@@ -55,6 +55,15 @@ describe("detectTestRunner", () => {
     ])
       expect(detectTestRunner(command)).toBeUndefined()
   })
+
+  test("long whitespace runs cannot stall detection", () => {
+    const spaces = " ".repeat(60_000)
+    for (const command of [`bun test${spaces}x`, `bun test${spaces}2>&1`]) {
+      const start = performance.now()
+      expect(detectTestRunner(command)).toBe("bun")
+      expect(performance.now() - start).toBeLessThan(200)
+    }
+  })
 })
 
 describe("parseTestOutput", () => {
@@ -230,5 +239,30 @@ describe("parseTestOutput", () => {
     const bun = parseTestOutput("bun", padding + (await fixture("bun-pass")))
     expect(bun?.tests.counts).toEqual({ passed: 2, failed: 0 })
     expect(parseTestOutput("cargo", padding + (await fixture("cargo-pass")))).toBeUndefined()
+  })
+
+  test("long lines inside the window parse in linear time", async () => {
+    // Competing quantifiers used to backtrack polynomially: each of these lines took seconds.
+    const spaces = " ".repeat(60_000)
+    const box = "─".repeat(60_000)
+    const title = "a.spec.ts:3:7 › approval › rejects empty"
+    const jest = "Test Suites: 1 passed, 1 total\nTests: 1 passed, 1 total\n"
+    const playwright = await fixture("pw-fail")
+    const cases: [TestRunner, string, string[] | undefined][] = [
+      ["vitest", ` Test Files${spaces}x`, undefined],
+      ["vitest", ` Test Files  1 passed (1)\n      Tests${spaces}x`, undefined],
+      ["jest", `Test Suites:${spaces}x`, undefined],
+      ["jest", `Test Suites: 1 passed, 1 total\nTests:${spaces}x`, undefined],
+      ["jest", `${jest}Snapshots:${spaces}x`, undefined],
+      ["jest", `${jest}Snapshots: ${"1".repeat(60_000)}x`, undefined],
+      ["playwright", playwright.replace(`    ${title}`, `    ${title}${spaces}x`), [`${title}${spaces}x`]],
+      ["playwright", playwright.replace(`    ${title}`, `    ${title} ${box}x`), [`${title} ${box}x`]],
+    ]
+    for (const [runner, output, failures] of cases) {
+      const start = performance.now()
+      const summary = parseTestOutput(runner, output)
+      expect(performance.now() - start).toBeLessThan(200)
+      expect(summary?.failures).toEqual(failures)
+    }
   })
 })
