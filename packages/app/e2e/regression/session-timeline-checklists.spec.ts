@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test"
+import type { OpenCodeEvent } from "@opencode-ai/client/promise"
 import {
+  assistantID,
   assistantMessage,
+  directory,
   partUpdated,
+  sessionID,
   setupTimeline,
   status,
   textPart,
@@ -93,6 +97,90 @@ test("reveals a pending checklist only after successful confirmation", async ({ 
   await expect(snapshot.getByRole("checkbox", { name: "Confirmed step" })).toBeChecked()
   await expect(page.getByText("Proposed step", { exact: true })).toHaveCount(0)
   await expect(page.getByText("Running checklist call", { exact: true })).toBeVisible()
+})
+
+test("preserves live V2 structured checklists with truncated output", async ({ page }) => {
+  const proposed = { todos: [{ content: "Live proposal", status: "pending", priority: "high" }] }
+  const previous = [{ content: "Historical step", status: "pending", priority: "low" }]
+  const confirmed = [{ content: "Live confirmed step", status: "completed", priority: "high" }]
+  const timeline = await setupTimeline(page, {
+    protocol: "v2",
+    settings: { newLayoutDesigns: true },
+    messages: [
+      userMessage(),
+      assistantMessage(
+        [
+          toolPart("prt_v2_history", "todowrite", "completed", {}, { metadata: { todos: previous } }),
+          toolPart("prt_v2_live", "todowrite", "running", proposed),
+          toolPart("prt_v2_failed", "todowrite", "running", proposed),
+          textPart("prt_v2_text", "Waiting for confirmation"),
+        ],
+        { completed: false },
+      ),
+    ],
+  })
+  expect((await timeline.transport.waitForConnection()).path).toBe("/api/event")
+  const history = page.locator('[data-timeline-part-id="prt_v2_history"]')
+  const live = page.locator('[data-timeline-part-id="prt_v2_live"]')
+  await expect(history.getByText("Historical step", { exact: true })).toBeVisible()
+  await expect(history.getByLabel("Historical step", { exact: true })).not.toBeChecked()
+  await expect(page.getByText("Waiting for confirmation", { exact: true })).toBeVisible()
+  await expect(live).toHaveCount(0)
+
+  const send = (event: OpenCodeEvent) => timeline.transport.writeRaw(`data: ${JSON.stringify(event)}\n\n`)
+  await send({
+    id: "evt_v2_success",
+    type: "session.tool.success",
+    created: 1700000003000,
+    location: { directory },
+    durable: { aggregateID: sessionID, seq: 1, version: 2 },
+    data: {
+      sessionID,
+      assistantMessageID: assistantID,
+      callID: "prt_v2_live",
+      executed: false,
+      metadata: { todos: [] },
+      ...{ structured: { todos: confirmed } },
+      content: [{ type: "text", text: "[\n...output truncated..." }],
+    },
+  })
+  await expect(live.getByText("Live confirmed step", { exact: true })).toBeVisible()
+  const checkbox = live.getByLabel("Live confirmed step", { exact: true })
+  await expect(checkbox).toBeChecked()
+  await expect(checkbox).toHaveAttribute("aria-readonly", "true")
+  await checkbox.focus()
+  await checkbox.press("Space")
+  await expect(checkbox).toBeChecked()
+
+  await send({
+    id: "evt_v2_failed",
+    type: "session.tool.failed",
+    created: 1700000004000,
+    location: { directory },
+    durable: { aggregateID: sessionID, seq: 2, version: 2 },
+    data: {
+      sessionID,
+      assistantMessageID: assistantID,
+      callID: "prt_v2_failed",
+      executed: false,
+      error: { type: "ToolError", message: "Todo update failed" },
+      metadata: { todos: confirmed },
+    },
+  })
+  await send({
+    id: "evt_v2_text",
+    type: "session.text.ended",
+    created: 1700000005000,
+    location: { directory },
+    durable: { aggregateID: sessionID, seq: 3, version: 1 },
+    data: { sessionID, assistantMessageID: assistantID, ordinal: 0, text: "Confirmation processed" },
+  })
+  await expect(page.getByText("Confirmation processed", { exact: true })).toBeVisible()
+  await expect(page.locator('[data-timeline-part-id="prt_v2_failed"]')).toHaveCount(0)
+  await expect(page.getByText("Live proposal", { exact: true })).toHaveCount(0)
+  await expect(history.getByText("Historical step", { exact: true })).toBeVisible()
+  await expect(history.getByLabel("Historical step", { exact: true })).not.toBeChecked()
+  await expect(checkbox).toBeChecked()
 })
 
 test("virtualizes checklist history and preserves snapshot collapse state", async ({ page }) => {

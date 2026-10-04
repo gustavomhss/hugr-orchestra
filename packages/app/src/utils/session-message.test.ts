@@ -1,8 +1,108 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionMessageInfo } from "@opencode-ai/client/promise"
+import type {
+  OpenCodeEvent,
+  SessionMessageAssistant,
+  SessionMessageInfo,
+  SessionMessageToolStateCompleted,
+  SessionMessageUser,
+} from "@opencode-ai/client/promise"
+import { confirmedTodos } from "@opencode-ai/session-ui/confirmed-todos"
+import { createV2SessionReducer } from "../context/server-session-v2-reducer"
 import { normalizeSessionMessages } from "./session-message"
 
 describe("normalizeSessionMessages", () => {
+  test("preserves live V2 structured confirmation like REST without replacing historical snapshots", () => {
+    const previous = [{ content: "Earlier snapshot", status: "pending" }]
+    const todos = [{ content: "Confirmed task", status: "completed" }]
+    const input = { todos: [{ content: "Unconfirmed proposal", status: "pending" }] }
+    const source: [SessionMessageUser, SessionMessageAssistant] = [
+      { id: "msg_user", type: "user", text: "plan it", time: { created: 1 } },
+      {
+        id: "msg_assistant",
+        type: "assistant",
+        agent: "build",
+        model: { id: "model", providerID: "provider" },
+        time: { created: 2 },
+        content: [
+          {
+            id: "call_previous",
+            type: "tool",
+            name: "todowrite",
+            time: { created: 2, ran: 3, completed: 4 },
+            state: {
+              status: "completed",
+              input: {},
+              metadata: { todos: previous },
+              content: [{ type: "text", text: JSON.stringify(previous) }],
+            },
+          },
+          {
+            id: "call_live",
+            type: "tool",
+            name: "todowrite",
+            time: { created: 5, ran: 6 },
+            state: { status: "running", input, metadata: {} },
+          },
+        ],
+      },
+    ]
+    const snapshots = (messages: SessionMessageInfo[]) =>
+      normalizeSessionMessages("ses_1", messages)
+        .parts.get("msg_assistant")
+        ?.map((part) => {
+          if (part.type !== "tool") throw new Error("Expected a tool part")
+          return { id: part.id, todos: confirmedTodos(part.state) }
+        })
+    expect(snapshots(source)).toEqual([
+      { id: "call_previous", todos: previous },
+      { id: "call_live", todos: undefined },
+    ])
+    const state = {
+      status: "completed",
+      input,
+      metadata: { todos: [] },
+      ...{ structured: { todos } },
+      content: [{ type: "text", text: "[\n...output truncated..." }],
+    } satisfies SessionMessageToolStateCompleted
+    const event = {
+      id: "evt_success",
+      type: "session.tool.success",
+      created: 7,
+      location: { directory: "/repo" },
+      durable: { aggregateID: "ses_1", seq: 1, version: 2 },
+      data: {
+        sessionID: "ses_1",
+        assistantMessageID: "msg_assistant",
+        callID: "call_live",
+        executed: false,
+        metadata: state.metadata,
+        content: state.content,
+        // The bundled client predates native structured output.
+        ...{ structured: state.structured },
+      },
+    } satisfies OpenCodeEvent
+    const result = createV2SessionReducer().reduce(source, event)
+    if (!result) throw new Error("Expected a live reduction")
+    expect(result.touched).toEqual(["msg_assistant"])
+    const expected = [
+      { id: "call_previous", todos: previous },
+      { id: "call_live", todos },
+    ]
+    expect(snapshots(result.messages)).toEqual(expected)
+    expect(
+      snapshots([
+        source[0],
+        {
+          ...source[1],
+          content: source[1].content.map((tool) =>
+            tool.type === "tool" && tool.id === "call_live" ? { ...tool, state } : tool,
+          ),
+        },
+      ]),
+    ).toEqual(expected)
+    expect(snapshots(source)?.[1].todos).toBeUndefined()
+  })
+
   test("preserves confirmed structured todos when display output is truncated", () => {
     const todos = [{ content: "Confirmed task", status: "completed", priority: "high" }]
     const source = [
