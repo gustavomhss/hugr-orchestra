@@ -191,7 +191,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   const call = (context: ToolContext, op: string, args: Record<string, unknown>) => invoke(context, port, op, args, timeoutMs)
   const ref = tool.schema.union([tool.schema.number().min(1), tool.schema.string().min(3).max(256).startsWith("n:")])
   const target = tool.schema.object({
-    name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the control's accessible name"),
+    name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the control's accessible name; when several controls contain it, the one whose whole name equals it wins"),
     role: tool.schema.string().min(1).max(64).optional().describe("Exact roleName from dock_find/dock_read, e.g. push-button, entry"),
   })
 
@@ -216,8 +216,11 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   const act = async (context: ToolContext, query: NativeQuery, run: (item: NativeItem) => Promise<unknown> | string,
     attempt = 0): Promise<unknown> => {
     const result = await find(context, query)
-    if (result.found.length !== 1) return compactScan(result, result.found.length === 0 ? "target-not-found" : "target-ambiguous")
-    return Promise.resolve(run(result.found[0]!)).catch((error: unknown) => {
+    // Names are substring-matched, so "Open" also hits "Open Quick Access"; a unique exact name settles that.
+    const exact = result.found.filter((item) => item.name.trim().toLowerCase() === query.name.trim().toLowerCase())
+    const chosen = result.found.length === 1 ? result.found : exact
+    if (chosen.length !== 1) return compactScan(result, result.found.length === 0 ? "target-not-found" : "target-ambiguous")
+    return Promise.resolve(run(chosen[0]!)).catch((error: unknown) => {
       if (!(error instanceof NativeRPCError) || error.code !== "stale-ref" || error.outcome !== "not-dispatched" || attempt >= 1) throw error
       return act(context, query, run, attempt + 1)
     })

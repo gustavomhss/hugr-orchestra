@@ -577,7 +577,7 @@ test("dock_action target locates and acts in one call, refusing ambiguity withou
   expect(JSON.parse(String(await one.hooks.tool.dock_action.execute({ target: { name: "continue without" }, action: "press" }, context))))
     .toEqual({ dispatch: "acknowledged" })
   expect(one.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:b", actionID: "a:n:b" } })
-  const two = host(() => page([control("n:a", "Search"), control("n:b", "Search (Ctrl+Shift+F)")]))
+  const two = host(() => page([control("n:a", "Search files"), control("n:b", "Search (Ctrl+Shift+F)")]))
   expect(JSON.parse(String(await two.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "target-ambiguous", outcome: "not-dispatched", found: 2 })
   const actions = host(() => page([control("n:a", "Search", { actions: [{ id: "a1", name: "press" }, { id: "a2", name: "showContextMenu" }] })]))
@@ -605,4 +605,27 @@ test("dock_type target selects only fields with the requested native input capab
   expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
   expect(calls.at(-1)).toEqual({ op: "type", args: { ref: "n:field", text: "café 漢字 🧪", mode: "keyboard" } })
   await expect(hooks.tool.dock_type.execute({ text: "x" }, context)).resolves.toBe("dock_type requires ref or target")
+})
+
+test("dock_action target prefers the one control whose whole name equals the query among partial matches", async () => {
+  const { hooks, calls } = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : page([control("n:quick", "Open Quick Access"), control("n:open", " Open "), control("n:agents", "Open in Agents Window")]))
+  expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "open", role: "push-button" } }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(calls.filter((call) => call.op === "action")).toEqual([{ op: "action", args: { ref: "n:open", actionID: "a:n:open" } }])
+})
+
+test("dock_action target stays ambiguous without dispatch when two controls share the exact name", async () => {
+  const { hooks, calls } = host(() => page([control("n:a", "Open"), control("n:quick", "Open Quick Access"), control("n:b", "Open")]))
+  expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "Open", role: "push-button" } }, context))))
+    .toMatchObject({ code: "target-ambiguous", outcome: "not-dispatched", found: 3 })
+  expect(calls.every((call) => call.op === "read")).toBe(true)
+})
+
+test("dock_type target types into the exact-name field among partial matches", async () => {
+  const { hooks, calls } = host((op) => op === "type" ? { ok: true, value: { postcondition: "verified" } }
+    : page([field("n:files", "Search files by name"), field("n:search", "Search"), field("n:symbols", "Search symbols")]))
+  const result = await hooks.tool.dock_type.execute({ target: { name: "SEARCH" }, text: "x", mode: "keyboard" }, context)
+  expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
+  expect(calls.filter((call) => call.op === "type")).toEqual([{ op: "type", args: { ref: "n:search", text: "x", mode: "keyboard" } }])
 })
