@@ -253,3 +253,21 @@ describe("createSessionTabs", () => {
     })
   })
 })
+
+describe("createSessionTabs in the Orchestra cockpit", () => {
+  test("a persisted Tasks tab resolves to the Apps cockpit, and stays Tasks elsewhere", () => {
+    createRoot((dispose) => {
+      const [state] = createStore({ active: "tasks" as string | undefined, all: ["tasks"] })
+      const tabs = createMemo(() => ({ active: () => state.active, all: () => state.all }))
+      const input = { tabs, pathFromTab: () => undefined, normalizeTab: (tab: string) => tab, apps: () => true }
+      const cockpit = createSessionTabs({ ...input, cockpit: () => true })
+      const legacy = createSessionTabs(input)
+
+      expect(cockpit.activeTab()).toBe("apps")
+      expect(cockpit.closableTab()).toBeUndefined()
+      expect(legacy.activeTab()).toBe("tasks")
+      expect(legacy.closableTab()).toBe("tasks")
+      dispose()
+    })
+  })
+})

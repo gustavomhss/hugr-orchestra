@@ -32,6 +32,11 @@ export interface TasksItem {
   childId?: string
   /** Parent session that spawned the work. */
   sessionId: string
+  /** References from the loaded projection, not guessed from timestamps or call IDs. */
+  sourceMessageID?: string
+  sourcePartID?: string
+  callID?: string
+  originUserMessageID?: string
   /** Nested subagent count ((+N), Claude panel parity). */
   nested?: number
   stats?: TaskStats
@@ -95,14 +100,76 @@ export function createTasksData() {
 
   const liveCount = createMemo(() => items().running.length)
 
-  return { items, liveCount }
+  const ready = () => sync().ready && (!params.id || sync().data.message[params.id] !== undefined)
+  return { items, liveCount, ready }
+}
+
+/** The one Tasks projection a session owns; every Tasks and Activity view reads this instance. */
+export type TasksData = ReturnType<typeof createTasksData>
+
+/**
+ * The compact Tasks summary: active work first (needs input, then running; newest known start
+ * first, unknown starts after known ones, then by key). Finished work fills only the slots active
+ * work leaves free, failures first. Counts come from the whole collection, never from the rows shown.
+ */
+export function summarizeTasks(items: { running: TasksItem[]; finished: TasksItem[] }, limit = 3) {
+  const active = items.running.toSorted(
+    (a, b) =>
+      Number(b.state === "needs-input") - Number(a.state === "needs-input") ||
+      newest(a.startTime, b.startTime) ||
+      a.key.localeCompare(b.key),
+  )
+  const finished = items.finished.toSorted(
+    (a, b) =>
+      Number(b.state === "error") - Number(a.state === "error") ||
+      newest(a.endTime, b.endTime) ||
+      a.key.localeCompare(b.key),
+  )
+  const rows = [...active.slice(0, limit), ...finished.slice(0, Math.max(0, limit - active.length))]
+  return {
+    rows,
+    active: active.length,
+    needsInput: active.filter((item) => item.state === "needs-input").length,
+    hiddenFailures: finished.filter((item) => item.state === "error" && !rows.includes(item)).length,
+    total: active.length + finished.length,
+  }
+}
+
+/** Comparator for optional timestamps: newest first, unknown after every known one. */
+export function newest(a: number | undefined, b: number | undefined) {
+  if (a === undefined) return b === undefined ? 0 : 1
+  if (b === undefined) return -1
+  return b - a
 }
 
 export function deriveTasks(input: TasksInput) {
   const waiting = waitingRequests(input)
-  const calls = (input.message[input.sessionID] ?? []).flatMap((message) =>
-    (input.part[message.id] ?? []).filter((part): part is ToolPart => part.type === "tool"),
+  const messages = input.message[input.sessionID] ?? []
+  const users = new Set(
+    messages
+      .filter((message) => message.role === "user" && message.sessionID === input.sessionID)
+      .map((message) => message.id),
   )
+  const origins = new Map(
+    messages.flatMap((message) =>
+      message.role === "assistant" && message.sessionID === input.sessionID && users.has(message.parentID)
+        ? [[message.id, message.parentID] as const]
+        : [],
+    ),
+  )
+  const calls = messages.flatMap((message) =>
+    (input.part[message.id] ?? []).filter(
+      (part): part is ToolPart =>
+        part.type === "tool" && part.sessionID === input.sessionID && part.messageID === message.id,
+    ),
+  )
+  const source = (part: ToolPart | undefined) =>
+    part && {
+      sourceMessageID: part.messageID,
+      sourcePartID: part.id,
+      callID: part.callID,
+      originUserMessageID: origins.get(part.messageID),
+    }
   // The latest task call per child wins: resuming a task reuses its child session.
   const taskCalls = new Map(
     calls.flatMap((part) => {
@@ -115,9 +182,10 @@ export function deriveTasks(input: TasksInput) {
     ...input.sessions.flatMap((session) => (session.parentID === input.sessionID ? [session.id] : [])),
     ...taskCalls.keys(),
   ])
-  const agents = [...childIDs].map((childID) =>
-    agentItem(input, waiting, childID, sessions.get(childID), taskCalls.get(childID)),
-  )
+  const agents = [...childIDs].map((childID) => ({
+    ...agentItem(input, waiting, childID, sessions.get(childID), taskCalls.get(childID)),
+    ...source(taskCalls.get(childID)),
+  }))
   // Foreground shell tools surface as Shell cards while running.
   const shells = new Map(
     calls
@@ -125,12 +193,13 @@ export function deriveTasks(input: TasksInput) {
       .map((part): [string, TasksItem] => [
         part.callID,
         {
-          key: ScopedKey.from(input.scope, "shell", part.callID),
+          key: ScopedKey.from(input.scope, input.sessionID, "shell", part.callID),
           kind: "shell",
           headline: toolTitle(part.state) ?? part.tool,
           state: waiting.calls.has(part.callID) ? "needs-input" : "running",
           startTime: toolStart(part.state),
           sessionId: input.sessionID,
+          ...source(part),
         },
       ]),
   )
@@ -158,7 +227,7 @@ function agentItem(
   const callInput = call?.state.input ?? {}
   const outcome = agentOutcome(input, waiting, childID, call)
   return {
-    key: ScopedKey.from(input.scope, "agent", childID),
+    key: ScopedKey.from(input.scope, input.sessionID, "agent", childID),
     kind: "agent",
     // Child session titles read "<description> (@<agent> subagent)".
     headline:

@@ -21,10 +21,18 @@ import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
 import "./apps-panel.css"
 
 const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
+export type DockAddressDraft = { owner?: string; tab?: TabIdentity; value: string }
 
 // A view of the window's App Dock. The live tabs belong to the controller and the repository
 // profile in context, so unmounting this view hides the native browser instead of closing it.
-export function AppsPanel() {
+// The compact view is the cockpit's Dock card: tabs above the address bar and only the core controls.
+export function AppsPanel(
+  props: {
+    compact?: boolean
+    draft?: DockAddressDraft
+    onDraftChange?: (draft: DockAddressDraft | undefined) => void
+  } = {},
+) {
   const dock = appDockController()
   const api = dock.api
   const state = dock.state
@@ -158,6 +166,12 @@ export function AppsPanel() {
     })
   })
   const activeTab = () => state.tabs.find((tab) => sameTab(tab, state.active))
+  const address = () => {
+    const draft = props.draft
+    return draft && draft.owner === state.owner && (draft.tab ? sameTab(draft.tab, state.active) : !state.active)
+      ? draft.value
+      : state.url
+  }
   const activeCrashed = () => activeTab()?.crashed
   const bookmarked = () => !!activeTab() && state.bookmarks.some((item) => item.url === activeTab()!.url)
   const toggleSidebar = () => {
@@ -201,7 +215,7 @@ export function AppsPanel() {
   return (
     <div
       ref={root}
-      class={`zen-browser-shell ${view.sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}
+      class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
       data-status={state.status}
     >
       <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
@@ -300,6 +314,8 @@ export function AppsPanel() {
           class="zen-urlbar"
           onSubmit={(event) => {
             event.preventDefault()
+            dock.setURL(address())
+            props.onDraftChange?.(undefined)
             void dock.launch()
           }}
         >
@@ -322,7 +338,7 @@ export function AppsPanel() {
             &#8594;
           </button>
           <button
-            class={`zen-nav-button ${bookmarked() ? "is-active" : ""}`}
+            class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
             type="button"
             aria-label={bookmarked() ? "Remove bookmark" : "Add bookmark"}
             disabled={!!activeCrashed()}
@@ -332,13 +348,24 @@ export function AppsPanel() {
           </button>
           <input
             ref={addressInput}
-            value={state.url}
-            onInput={(event) => dock.setURL(event.currentTarget.value)}
+            value={address()}
+            dir="ltr"
+            onInput={(event) => {
+              const value = event.currentTarget.value
+              if (props.onDraftChange) props.onDraftChange({ owner: state.owner, tab: state.active, value })
+              dock.setURL(value)
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape") return
+              event.preventDefault()
+              props.onDraftChange?.(undefined)
+              dock.setURL(activeTab()?.url ?? "")
+            }}
             aria-label="Address"
             disabled={!!activeCrashed()}
           />
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Bookmarks"
             onClick={() => setView("libraryOpen", view.libraryOpen === "bookmarks" ? undefined : "bookmarks")}
@@ -346,7 +373,7 @@ export function AppsPanel() {
             &#9734;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="History"
             onClick={() => setView("libraryOpen", view.libraryOpen === "history" ? undefined : "history")}
@@ -354,7 +381,7 @@ export function AppsPanel() {
             &#8986;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Find in page"
             disabled={!!activeCrashed()}
@@ -363,7 +390,7 @@ export function AppsPanel() {
             &#8981;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Zoom out"
             disabled={!!activeCrashed()}
@@ -372,7 +399,7 @@ export function AppsPanel() {
             A-
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Zoom in"
             disabled={!!activeCrashed()}
@@ -381,7 +408,7 @@ export function AppsPanel() {
             A+
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Downloads"
             onClick={() => setView("downloadsOpen", !view.downloadsOpen)}
@@ -389,7 +416,7 @@ export function AppsPanel() {
             &#8595;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label={state.fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             disabled={!!activeCrashed()}
@@ -587,7 +614,14 @@ function TabButton(props: {
           ? tabs[0]
           : event.key === "End"
             ? tabs.at(-1)
-            : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]
+            : tabs[
+                (index +
+                  (event.key === (getComputedStyle(current).direction === "rtl" ? "ArrowLeft" : "ArrowRight")
+                    ? 1
+                    : -1) +
+                  tabs.length) %
+                  tabs.length
+              ]
       event.preventDefault()
       next?.focus()
       next?.click()
@@ -614,7 +648,9 @@ function TabButton(props: {
           new URL(props.tab.url).hostname.slice(0, 1).toUpperCase()
         )}
       </span>
-      <span class="zen-tab-title">{tabLabel(props.tab)}</span>
+      <bdi dir="auto" class="zen-tab-title">
+        {tabLabel(props.tab)}
+      </bdi>
       {props.tab.pinned ? "Pinned" : ""}
       {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
     </button>

@@ -1,0 +1,282 @@
+{
+  "recordedAt": "2026-10-03T22:44:06Z",
+  "verifiedAt": "2026-10-03T23:18:55.772Z",
+  "branch": "orchestra-cockpit",
+  "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
+  "implementationCommit": "4ee7710b3b3eaf88e04c4e23551cca38e2c4b0b3",
+  "inheritedCheckpoint": "2fbe540917",
+  "verdict": "scoped implementation verified; terminal creation seam and cold B review blockers resolved by the follow-up records",
+  "contractCoverage": {
+    "S15": "Anchored compact Dock with lazy Browser/Files/Docs/Terminal factories, qualified native view reuse, address drafts and roving keyboard tabs.",
+    "S18": "Simultaneous Tasks and typed Activity, one shared Tasks projection, truthful counts/outcomes, bounded inline detail, 65th-entity keyboard access, child-only Stop and exact loaded shell-origin navigation.",
+    "S11": "Local Files/Docs/Terminal panes only: shared file reader/cache/viewer, lazy docs folders, inert traversal links, MDX as text, external links through the platform, and one visible PTY renderer with bottom-panel handoff.",
+    "S25": "Cockpit wiring and additive tasks.toggle command only. Other evidence, navigation and governance integrations belong to their owners."
+  },
+  "environment": {
+    "os": "macOS 15.3.2 (24D81)",
+    "machine": "MacBookPro16,1",
+    "ramBytes": 17179869184,
+    "bun": "1.3.14 (0d9b296a)",
+    "node": "22.17.1",
+    "playwright": "1.59.1",
+    "browserProject": "chromium",
+    "dpr": 1,
+    "appPort": 4991,
+    "mockApiPort": 4096,
+    "buildCommand": "VITE_OPENCODE_SERVER_HOST=127.0.0.1 VITE_OPENCODE_SERVER_PORT=4096 bun run build -- --logLevel error",
+    "builtIndexSha256": "5f2376f7e1233cbf8fece55cb570805b374306f8a68e769b66578ac062e43946",
+    "serveCommand": "bun node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 4991 --strictPort",
+    "serverLifetime": "Each invocation owned and stopped only its own preview PID. User app/server processes were not restarted.",
+    "fixtures": "Actual production Solid renderer/controllers with deterministic mocked OpenCode HTTP, PTY WebSocket and desktop preload boundaries. No provider/model execution or Electron native-page rendering is claimed."
+  },
+  "checks": [
+    {
+      "cwd": "packages/app",
+      "command": "bun typecheck",
+      "exitCode": 0
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bun run typecheck:e2e",
+      "exitCode": 0
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bun test --conditions=solid --preload ./happydom.ts ./src/pages/session/tasks-data.test.ts ./src/pages/session/helpers.test.ts ./src/pages/session/orchestra-activity-data.test.ts ./src/pages/session/orchestra-dock-snapshot.test.ts ./src/pages/session/orchestra-evidence-docs-path.test.ts ./src/pages/session/orchestra-cockpit-state.test.ts ./src/pages/session/apps-panel-controller.test.ts ./src/pages/session/apps-panel-overlay.test.ts ./src/pages/session/apps-panel-resize.test.ts",
+      "passed": 72,
+      "failed": 0,
+      "files": 9,
+      "assertions": 259
+    },
+    {
+      "cwd": "packages/app",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/session-cockpit.spec.ts e2e/regression/session-tasks-truth.spec.ts e2e/orchestra/chapter-dock.spec.ts e2e/orchestra/identity.spec.ts --reporter=line",
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0,
+      "notes": "Reused the worktree's production preview. Includes original Tasks truth/Stop assertions, Dock profile/overlay tests and dark/light EN/AR 230/45/6 identity plus reduced-motion controls."
+    },
+    {
+      "cwd": "packages/app",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/session-cockpit.spec.ts --reporter=line",
+      "passed": 10,
+      "failed": 0,
+      "sourceCommit": "93bf770683040d2821b93f0425f1ac2b472fa76f",
+      "purpose": "Intermediate capture verification. Final screenshots were refreshed from the final 28-test run above."
+    },
+    {
+      "cwd": "packages/core",
+      "command": "bun test ./test/godfile.test.ts",
+      "passed": 9,
+      "failed": 0,
+      "purpose": "Existing guard teeth: new oversize files, legacy growth, invalid base and empty source discovery are rejected."
+    },
+    {
+      "cwd": ".",
+      "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile",
+      "sourceFiles": 3564,
+      "warnings": 302,
+      "errors": 0,
+      "notes": "No guard or waiver changes. Session side-panel legacy LOC shrank; new source files remain below 750 nonblank lines."
+    }
+  ],
+  "mutation": {
+    "file": "packages/app/src/pages/session/tasks-data.ts",
+    "change": "summarizeTasks.active: active.length -> Math.min(64, active.length)",
+    "before": { "unitPassed": 47, "unitFailed": 0, "targetedE2EPassed": 1, "targetedE2EFailed": 0 },
+    "mutated": {
+      "unitPassed": 46,
+      "unitFailed": 1,
+      "unitDiagnostic": "Expected: 65; Received: 64",
+      "unitTest": "summarizeTasks > the count covers every active entity, past what the summary shows",
+      "e2ePassed": 0,
+      "e2eFailed": 1,
+      "e2eDiagnostic": "Expected: \"65 tasks\"; Received: \"64 tasks\"",
+      "e2eCommand": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/session-cockpit.spec.ts --grep \"65 active tasks\" --reporter=line",
+      "productionBundleRebuilt": true
+    },
+    "restored": { "unitPassed": 72, "unitFailed": 0, "e2ePassed": 28, "e2eFailed": 0, "productionBundleRebuilt": true },
+    "scope": "Proves the active-count contract is observed in both the pure projection and the built UI. It does not independently certify every native or performance property."
+  },
+  "focusRegressionControl": {
+    "test": "address drafts survive title events and lazy pane switches; Escape restores the current URL",
+    "addedAssertion": "Focus an Activity task action, send a native Dock title event, observe the new native title, and require the original task action to remain focused.",
+    "beforeCommit": "93bf770683040d2821b93f0425f1ac2b472fa76f",
+    "before": "1 failed: Expected focused; Received inactive",
+    "fixCommit": "4ee7710b3b3eaf88e04c4e23551cca38e2c4b0b3",
+    "after": "Included in the final 28 passed, 0 failed production run. Summary rows now use entity keys rather than fresh projection object identities."
+  },
+  "performance": {
+    "status": "diagnostic collected; performance qualification inconclusive",
+    "scenario": "benchmarks v2 session tab switching with and without the review pane",
+    "runsPerMode": 1,
+    "reviewDiffs": 72,
+    "baseline": {
+      "runID": "cockpit-inherited-wip-single",
+      "source": "Inherited WIP before resumed edits, later preserved as 2fbe540917",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_SERVER_PORT=4991 PLAYWRIGHT_WORKERS=1 OPENCODE_PERFORMANCE=1 SESSION_TAB_SWITCH_RUNS=1 OPENCODE_PERFORMANCE_RUN_ID=cockpit-inherited-wip-single bunx playwright test e2e/performance/timeline/session-tab-switch-benchmark.spec.ts --grep \"benchmarks v2 session tab switching with and without the review pane\" --reporter=line",
+      "firstCorrectObservedMs": { "closedCold": 510.09999999403954, "closedHot": 173.29999999701977, "openCold": 215.90000000596046, "openHot": 310.59999999403954 },
+      "stableObservedMs": { "closedCold": 1322.5, "closedHot": 1492.2000000029802, "openCold": 2630.7000000029802, "openHot": 1477.8999999910593 }
+    },
+    "intermediateCandidate": {
+      "runID": "cockpit-final",
+      "source": "93bf770683040d2821b93f0425f1ac2b472fa76f; superseded by the focused-row regression fix below",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_SERVER_PORT=4096 PLAYWRIGHT_WORKERS=1 OPENCODE_PERFORMANCE=1 SESSION_TAB_SWITCH_RUNS=1 OPENCODE_PERFORMANCE_RUN_ID=cockpit-final bunx playwright test e2e/performance/timeline/session-tab-switch-benchmark.spec.ts --grep \"benchmarks v2 session tab switching with and without the review pane\" --reporter=line",
+      "firstCorrectObservedMs": { "closedCold": 213.5, "closedHot": 401.3999999910593, "openCold": 146.70000000298023, "openHot": 17.100000008940697 },
+      "stableObservedMs": { "closedCold": 313.20000000298023, "closedHot": 623.5, "openCold": 719.7999999970198, "openHot": 201.29999999701977 }
+    },
+    "candidate": {
+      "runID": "cockpit-final-focus",
+      "source": "4ee7710b3b3eaf88e04c4e23551cca38e2c4b0b3; same production bundle as final scoped E2E",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_SERVER_PORT=4096 PLAYWRIGHT_WORKERS=1 OPENCODE_PERFORMANCE=1 SESSION_TAB_SWITCH_RUNS=1 OPENCODE_PERFORMANCE_RUN_ID=cockpit-final-focus bunx playwright test e2e/performance/timeline/session-tab-switch-benchmark.spec.ts --grep \"benchmarks v2 session tab switching with and without the review pane\" --reporter=line",
+      "firstCorrectObservedMs": { "closedCold": 224, "closedHot": 12.099999994039536, "openCold": 28.899999991059303, "openHot": 361.20000000298023 },
+      "stableObservedMs": { "closedCold": 524.6000000089407, "closedHot": 493.3999999910593, "openCold": 443.29999999701977, "openHot": 767.2999999970198 }
+    },
+    "comparison": "Sampled settlement times decreased, but first-correct latency is mixed: final open/hot is higher than baseline, and intermediate closed/hot was also higher. One sample per mode, uncontrolled ambient load and different mocked API origins (baseline same-origin 4991, final explicit 4096) prevent a regression-budget verdict. This scenario measures session switching/review, not an expanded cockpit workload.",
+    "attempts": "The default production webServer build exceeded its 120s startup timeout. A subsequent five-run benchmark exceeded the outer execution deadline before reporting a complete result; neither attempt is counted as evidence. Standalone production builds and the complete one-run diagnostics above were used. Performance and other Playwright runs were serialized with the shared lock."
+  },
+  "screenshotProvenance": {
+    "sourceCommit": "4ee7710b3b3eaf88e04c4e23551cca38e2c4b0b3",
+    "spec": "packages/app/e2e/orchestra/session-cockpit.spec.ts",
+    "fixture": "setup()/parentMessages()/files/contents; session-cockpit-bridge.ts when bridge=true",
+    "capture": "Uncropped page.screenshot with animations disabled, after document.fonts.ready; Chromium, DPR1, zoom100, production preview on port4991.",
+    "default": { "viewport": [1440, 900], "theme": "dark", "locale": "en", "direction": "ltr", "nativeBridge": false },
+    "authority": "Product renderer captures with synthetic server/preload data, not design-reference PNGs and not native Electron content evidence. Paths are relative to this receipt."
+  },
+  "screenshots": [
+    { "path": "cockpit-web-unavailable.png", "pane": "Browser", "sha256": "58774aa514416b985bff2e49b9204ca324e346469292fa9de13ed1be9120fc6f" },
+    { "path": "cockpit-web.png", "pane": "Files", "selectedPath": "package.json", "sha256": "31adf4d5dea4d6c82a7b8ea55e7b8f29d0625b701b2646f16575b6ee2e5da052" },
+    { "path": "cockpit-docs.png", "pane": "Docs", "selectedPath": "docs/guide.md", "sha256": "4b0e6e0e80466226753b04dfc3172871a0278a04f4e000d617c7616a1a1f329c" },
+    { "path": "cockpit-desktop.png", "pane": "Browser", "viewport": [1180, 760], "nativeBridge": true, "sha256": "7b1cecc6d38ef9387e4873fb053d6df568ac8e698184f8a55d114f1c988ba1ec" },
+    { "path": "cockpit-desktop-light.png", "pane": "Browser", "viewport": [1180, 760], "nativeBridge": true, "theme": "light", "sha256": "33ea9c48c57ae2cced60728c7386f105be5fc213970c96a648139ad8adacbf2a" },
+    { "path": "cockpit-terminal.png", "pane": "Docs", "terminal": "Existing PTY handed back to the visible bottom panel after leaving Dock Terminal", "sha256": "08a209871d15dfe5327897e3624bf0ec82d18f30edfdc99905776be8e0b9d412" },
+    { "path": "cockpit-rtl-reduced-motion.png", "pane": "Browser", "direction": "rtl", "reducedMotion": true, "sha256": "a9439ad8c9284c1dd8533001b3edaf882ca3a5074f5fe4538ce6a0a911d418ab" },
+    { "path": "cockpit-arabic.png", "pane": "Docs", "selectedPath": "README.md", "locale": "ar", "direction": "rtl", "sha256": "ac63ef86cc11cd8feedc0a6f4d831f1390a4abab1543baf44a283ecde6b032fd" },
+    { "path": "cockpit-empty.png", "pane": "Files", "state": "Empty workspace, Tasks and Activity", "sha256": "3ff9da223a448ea55f0f1b27e3841a396d4a94c7acd82c2b86ba236be738edeb" }
+  ],
+  "scopeDeviations": [
+    "No code outside the inherited 29-file scope and supporting cockpit files. Added orchestra-cockpit-list.tsx, orchestra-cockpit-state.test.ts and session-cockpit-bridge.ts.",
+    "Production checks used an explicitly built worktree preview because cold Vite loads exceeded readiness timeouts. No assertions, gates or waivers were weakened.",
+    "The unchanged pre-push hook also ran repository-wide cached typechecks."
+  ],
+  "framingCorrection": "This was controller lifecycle and identity integration, not a cosmetic tab replacement. Inherited unit success missed virtualizer attachment/focus, shell origins and PTY handoff. Initial rerun failures also mixed Vite cold-load and build/API-origin mismatches with actual implementation gaps.",
+  "terminalCreationFollowUp": {
+    "recordedAt": "2026-10-03T23:58:24Z",
+    "baseCommit": "fd26b452bf55903704aacdbed027a729ceb813cc",
+    "sourceRevision": "The commit containing this follow-up record; exact tested source hashes are below.",
+    "authorization": "Lead authorizes minimal extension to packages/app/src/context/terminal.tsx plus its focused tests to expose terminal creation failure to cockpit.",
+    "outcome": "resolved",
+    "resolvedProblem": "terminal-create-error-seam",
+    "behavior": "new() fulfills a typed created/failed result for v1 and v2. Rejections retain legacy logging/focus cleanup; a response without a PTY ID also fails. The cockpit shows pending/disabled state, a localized Request failed alert with source diagnostics, and explicit Retry. Queued duplicate clicks are ignored and disposed/session-changed consumers cannot receive stale failure state.",
+    "sourceFiles": [
+      { "path": "packages/app/src/context/terminal.tsx", "sha256": "e2dcd6696810ac61575ff89d1c9d3a38e783eb7895034bd95ecd33605e2bb469" },
+      { "path": "packages/app/src/pages/session/orchestra-evidence-terminal.tsx", "sha256": "cb368a3041fceb9a06713727e5383327084c720eee459127b8d25ed75815e282" },
+      { "path": "packages/app/e2e/orchestra/terminal-create.spec.ts", "sha256": "85f30c597cbf963746c5ea9917c06774fff585a73636749c9c1c11ea0f7791a1" }
+    ],
+    "checks": {
+      "cwd": "packages/app",
+      "typecheck": { "command": "bun typecheck", "exitCode": 0 },
+      "testTypecheck": { "command": "bun run typecheck:e2e", "exitCode": 0 },
+      "format": { "command": "bunx prettier --check src/context/terminal.tsx src/pages/session/orchestra-evidence-terminal.tsx e2e/orchestra/terminal-create.spec.ts", "exitCode": 0 },
+      "build": { "command": "VITE_OPENCODE_SERVER_HOST=127.0.0.1 VITE_OPENCODE_SERVER_PORT=4096 bun run build -- --logLevel error", "exitCode": 0, "indexSha256": "3b45b2b9f2e83f200c8f35917130d63b6bffb3ed2a7e6541a402e765f699180f" },
+      "godfile": { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "errors": 0, "warnings": 302, "sourceFiles": 3565 },
+      "browser": {
+        "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/terminal-create.spec.ts e2e/orchestra/session-cockpit.spec.ts --grep \"creation|PTY ID|late failure|Terminal hands\" --reporter=line",
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "cases": [
+          "v1 HTTP failure: pending, duplicate suppression, visible diagnostic, explicit retry and one successful PTY",
+          "v2 HTTP failure: pending, duplicate suppression, visible diagnostic, explicit retry and one successful PTY",
+          "Successful response without a PTY ID: visible fallback failure and successful retry",
+          "Late failure after pane remount: no stale alert and successful new request",
+          "Existing fire-and-forget bottom-panel caller: handled failure, explicit next request and no pageerror",
+          "Existing Dock/bottom-panel PTY handoff"
+        ]
+      }
+    },
+    "mutation": {
+      "change": "In terminal.new() catch, replace return { status: \"failed\", error } with throw error; rebuild production bundle.",
+      "before": { "newBoundaryTestsPassed": 5, "failed": 0 },
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/terminal-create.spec.ts --grep \"v1:|legacy fire-and-forget\" --reporter=line",
+      "mutated": { "passed": 0, "failed": 2, "diagnostics": ["Cockpit alert with accessible name New terminal was not found", "Unhandled rejection detector: expected []; received [\"legacy failure\"]"] },
+      "restored": { "passed": 6, "failed": 0, "productionBundleRebuilt": true },
+      "reach": "The mutation proves both visible failure propagation and detection of unhandled rejections when an existing consumer ignores the returned promise."
+    },
+    "screenshots": [
+      { "path": "terminal-create-v1-failed.png", "sha256": "5ecd7e1a8f3a6cd4c366c07133599dee4dbe0c8ae9e7e1df93246daa04835585", "protocol": "v1" },
+      { "path": "terminal-create-v2-failed.png", "sha256": "86619520bf00fdd420996b17344ebe0cd592204be21f7a7941598b31b97cb08e", "protocol": "v2" }
+    ],
+    "screenshotProvenance": "Final restored production run of terminal-create.spec.ts, mocked HTTP/PTY WebSocket boundaries, Chromium project with Playwright 1.59.1, 1440x900, DPR1, light, EN/LTR, animations disabled. Paths relative to this receipt.",
+    "scope": "Only the authorized terminal creation boundary, cockpit terminal consumer, focused regression spec and receipt/screenshots changed. Existing copy keys and error formatting are reused.",
+    "compilerOrApiObstacles": [],
+    "remainingFunctionalityProblems": [],
+    "integrationOwnership": "Per lead direction, native/performance qualification remains an integration task. The previous 28-case suite and performance benchmarks were not rerun for this follow-up."
+  },
+  "coldBReviewFollowUp": {
+    "recordedAt": "2026-10-04T03:13:58Z",
+    "baseCommit": "319ff0fdf8e4ef43dfa3062b17ce71fffd912552",
+    "sourceRevision": "The commit containing this follow-up record, identified by the source hashes below.",
+    "outcome": "resolved",
+    "fixes": [
+      "Tasks summary, running detail and finished detail iterate stable task keys and resolve each key reactively to the current projected object. The row DOM and focus survive unrelated child updates; model updates and server-qualified child navigation still use the fresh object.",
+      "The full Dock's persisted collapsed preference is excluded from the compact class calculation only. Full Dock reentry retains the preference and its expand control; compact tab names and New tab stay reachable.",
+      "Compact selected tabs and pane buttons use Orchestra selected-file material; the address input uses evidence material, pane-strip uses context material, and interactive hovers use rail-hover tokens. These paint-only rules add no backdrop filter or layout-affecting border.",
+      "Agent/model/detail values and browser titles are isolated with bdi and explicit auto/ltr direction according to their content.",
+      "A new capture shows the Terminal pane actually selected, with the live terminal renderer in the Dock and no bottom-panel renderer."
+    ],
+    "sourceFiles": [
+      { "path": "packages/app/src/pages/session/tasks-panel.tsx", "sha256": "bdb11f544098a754fde78cb22827b977b526ce03a368ec74de646ae0f9763f5b" },
+      { "path": "packages/app/src/pages/session/apps-panel.tsx", "sha256": "1fd3a1225a50c888cf4d14d2f9b27c210c9d4274edff2082f2151811827784ac" },
+      { "path": "packages/app/src/pages/session/orchestra-dock.css", "sha256": "365a8fefe27132928e5474d9f320ad0168becd76b6a714064f05d8f59b3a3920" },
+      { "path": "packages/app/e2e/orchestra/cockpit-review.spec.ts", "sha256": "a994e0db7562177ceca4521fc630d97eb0b767cbd6da7e9f51c01ceebd9b5a67" },
+      { "path": "packages/app/e2e/orchestra/session-cockpit.spec.ts", "sha256": "8fbc39335472ed088ce1336c03d989e783ad96cbe26e27411aa36a0a17a82c30" }
+    ],
+    "aIntegration": {
+      "inspectedCommit": "0e9693a906aa5ea4116c4cb437bc0bfde6f2dd83",
+      "action": "Read-only inspection; no merge or cherry-pick. A integration remains with the lead.",
+      "tasksDataBlobBeforeAndAfter": "2efdb0f0ecec3cfcdbee6faf5ac62bcc3bd789e6",
+      "mergeNotes": "Keep A's loaded: store.session.history.loaded binding, loaded/parts-completeness gate and unknown-finish handling. Keep server-qualified sessionHref open. This follow-up does not change tasks-data.ts or open/Stop handlers. Preserve the reactive TaskRow item accessor and keyed rendering when unioning A and B."
+    },
+    "checks": {
+      "cwd": "packages/app",
+      "typecheck": { "command": "bun typecheck", "exitCode": 0 },
+      "testTypecheck": { "command": "bun run typecheck:e2e", "exitCode": 0 },
+      "format": { "command": "bunx prettier --check src/pages/session/tasks-panel.tsx src/pages/session/apps-panel.tsx src/pages/session/orchestra-dock.css e2e/orchestra/cockpit-review.spec.ts e2e/orchestra/session-cockpit.spec.ts", "exitCode": 0 },
+      "unit": { "command": "bun test --conditions=solid --preload ./happydom.ts ./src/pages/session/tasks-data.test.ts ./src/pages/session/helpers.test.ts", "passed": 31, "failed": 0, "assertions": 98 },
+      "build": { "command": "VITE_OPENCODE_SERVER_HOST=127.0.0.1 VITE_OPENCODE_SERVER_PORT=4096 bun run build -- --logLevel error", "exitCode": 0, "indexSha256": "b4942d952792ed14da59cb95a175313202877eb909cda9e7cf5a45eb29f3cc03" },
+      "godfile": { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "errors": 0, "warnings": 302, "sourceFiles": 3566 },
+      "browser": { "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/cockpit-review.spec.ts e2e/orchestra/session-cockpit.spec.ts e2e/regression/session-tasks-truth.spec.ts --grep \"Tasks (summary|running detail|finished detail)|compact Dock|switching panes|65 active tasks|Terminal hands|tasks panel reports|stop interrupts\" --reporter=line", "passed": 11, "failed": 0, "skipped": 0 },
+      "fixtureIsolation": { "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/cockpit-review.spec.ts --reporter=line", "passed": 6, "failed": 0, "reason": "Explicit empty file-list fixture added for the Files/Browser reentry step; refreshed dark/light captures." }
+    },
+    "regressionAndMutation": {
+      "baseline": { "sourceCommit": "319ff0fdf8e4ef43dfa3062b17ce71fffd912552", "indexSha256": "3b45b2b9f2e83f200c8f35917130d63b6bffb3ed2a7e6541a402e765f699180f", "passed": 0, "failed": 6, "observed": "All three Tasks modes lost focus after a real session.updated event; compact tab names were hidden; selected materials mismatched in dark and light." },
+      "mutations": [
+        "Restore object-identity For iteration in Tasks summary while retaining reactive lookup.",
+        "Reapply is-sidebar-collapsed to compact Dock when the full preference is set.",
+        "Replace compact input evidence background with legacy surface-raised-stronger."
+      ],
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/cockpit-review.spec.ts --grep \"Tasks summary|collapsed preference|uses Orchestra materials\" --reporter=line",
+      "mutated": { "passed": 0, "failed": 4, "diagnostics": ["Expected focused; received inactive", "Expected visible; received hidden", "Dark input actual rgb(73, 72, 71)/none instead of evidence gradient", "Light input actual rgb(255, 255, 255)/none instead of evidence gradient"] },
+      "restored": { "passed": 11, "failed": 0, "productionBundleRebuilt": true },
+      "instrumentCorrection": "The material reference probe uses the target's token-inheriting parent because void inputs cannot render child probes. Equality still requires a bound token plus matching computed background color and image. The rebuilt legacy-input mutation failed in both themes after this correction."
+    },
+    "screenshots": [
+      { "path": "cockpit-materials-dark.png", "theme": "dark", "sha256": "e00997da435bddfe42bd12146ae95771cc414af9b2ed70e52df2d2d7378ad0bb" },
+      { "path": "cockpit-materials-light.png", "theme": "light", "sha256": "94f52eefb45e1f1ac9c7960514048f4c114627f104414217061664af2e9f9343" },
+      { "path": "cockpit-terminal-selected.png", "theme": "dark", "pane": "Terminal", "sha256": "f79d71cc4519e66f3eca98b0ed3eb31b531b58400876d5e734c860f128b2e727" }
+    ],
+    "screenshotProvenance": "Restored production bundle, Chromium/Playwright 1.59.1, 1440x900, DPR1, zoom100, EN/LTR, animations disabled. Materials: cockpit-review.spec.ts with controlled HTTP and native preload fixtures. Terminal: session-cockpit.spec.ts after Dock selection and one-renderer assertions, using the real terminal renderer with mocked PTY WebSocket output. Paths are relative to this receipt; the older cockpit-terminal.png remains a historical bottom-panel handoff capture.",
+    "remainingScopedBlockers": [],
+    "scopeDeviations": [],
+    "integrationOwnership": "A branch union, packaged native verification and overall performance acceptance remain with lead integration."
+  },
+  "openProblems": [
+    {
+      "id": "native-and-budget-qualification",
+      "owner": "lead integration (S16 / S23 / S24)",
+      "impact": "Browser/preload-boundary evidence does not re-certify packaged Electron clipping, native cookies, DPR2/zoom200 or the full P01-P12 performance campaign. Owner visual acceptance remains separate."
+    }
+  ],
+  "attribution": "The inherited checkpoint preserves Claude Opus 5.5 attribution. Subsequent implementation and verification commits do not attribute OpenAI work to Claude."
+}
