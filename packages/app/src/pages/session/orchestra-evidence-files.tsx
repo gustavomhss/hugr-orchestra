@@ -52,7 +52,7 @@ export function OrchestraEvidenceFiles(props: { path?: string; onPathChange: (pa
               </Match>
               <Match when={root()?.loaded && file.tree.children("").length === 0}>
                 <p class="orchestra-dock-note" role="status">
-                  {language.t("orchestra.dock.files.empty")}
+                  <span>{language.t("orchestra.dock.files.empty")}</span>
                 </p>
               </Match>
             </Switch>

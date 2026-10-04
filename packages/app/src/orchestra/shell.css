@@ -17,9 +17,10 @@
    English run takes the document's base direction and its leading or trailing punctuation
    lands on the wrong side, so each text slot resolves its base direction from its own
    content (Unicode P2/P3). Only text slots opt in: flex rows and icon placement stay with
-   the document, and slots that declare dir keep it. Chromium aligns plaintext lines by
-   their own direction, so a slot keeps the alignment its parent resolves instead;
-   -webkit-match-parent is the form Chromium resolves to a physical side. */
+   the document, and slots that declare dir keep it, as does the upstream browser the Dock
+   chapter embeds. Chromium aligns plaintext lines by their own direction, so a slot keeps
+   the alignment its parent resolves instead; -webkit-match-parent is the form Chromium
+   resolves to a physical side. */
 @layer components {
   :where(
     :is(
@@ -49,8 +50,41 @@
           .orchestra-governance-state,
           .orchestra-governance-note,
           .orchestra-governance-time
+        ),
+      .orchestra-dock-header h2,
+      :is(.orchestra-dock-note, .orchestra-dock-state) > :is(span, strong),
+      [data-component="tasks-panel"]
+        :is(
+          [data-slot="tasks-title"],
+          [data-slot="tasks-count"],
+          [data-slot="tasks-needs-input"],
+          [data-slot="task-section"],
+          [data-slot="task-meta"],
+          [data-slot="task-stop-status"] > span
+        ),
+      [data-component="orchestra-activity"]
+        :is(
+          [data-slot="activity-title"],
+          [data-slot="activity-kind"],
+          [data-slot="activity-meta"],
+          [data-slot="activity-empty"] > :is(strong, span)
+        ),
+      :is([data-component="orchestra-chapter"], [data-component="orchestra-kpis"])
+        :is(
+          h1,
+          h2,
+          h3,
+          p,
+          dt,
+          dd,
+          strong,
+          .agents-mode,
+          .agents-card-description,
+          .skills-status,
+          .env-filename,
+          .orchestra-dock-message > span
         )
-    ):not([dir])
+    ):not([dir], .orchestra-dock-browser *)
   ) {
     unicode-bidi: plaintext;
     text-align: match-parent;
