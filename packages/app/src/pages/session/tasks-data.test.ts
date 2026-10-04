@@ -488,6 +488,20 @@ describe("summarizeTasks", () => {
     expect(idle.rows).toEqual(idle.finished.slice(0, 3))
   })
 
+  test("the side panel lists the 12 newest finished tasks, however many failed before them", () => {
+    const failures = Array.from({ length: 12 }, (_, index) =>
+      item(`failed-${String(index).padStart(2, "0")}`, "error", { endTime: 1_000 + index }),
+    )
+    const summary = summarizeTasks({
+      running: [],
+      finished: [...failures, item("done", "completed", { endTime: 2_000 })],
+    })
+    const failed = failures.toReversed().map((row) => row.key)
+    expect(summary.recent.map((row) => row.key)).toEqual(["done", ...failed.slice(0, 11)])
+    // The cockpit's detail keeps every finished task, failures first.
+    expect(summary.finished.map((row) => row.key)).toEqual([...failed, "done"])
+  })
+
   test("the count covers every active entity, past what the summary shows", () => {
     const running = Array.from({ length: 65 }, (_, index) => item(`task-${String(index).padStart(2, "0")}`, "running"))
     const summary = summarizeTasks({ running, finished: [] })

@@ -112,7 +112,8 @@ export type TasksData = ReturnType<typeof createTasksData>
  * The compact Tasks summary: active work first (needs input, then running; newest known start
  * first, unknown starts after known ones, then by key). Finished work fills only the slots active
  * work leaves free, failures first. Counts come from the whole collection, never from the rows shown.
- * The detail lists every task in the same order, so the summary rows are its head.
+ * The detail lists every task in the same order, so the summary rows are its head. The side panel shows
+ * no counts, so `recent` holds only the 12 newest finished tasks, whatever their outcome.
  */
 export function summarizeTasks(items: { running: TasksItem[]; finished: TasksItem[] }, limit = 3) {
   const active = items.running.toSorted(
@@ -132,6 +133,7 @@ export function summarizeTasks(items: { running: TasksItem[]; finished: TasksIte
     rows,
     running: active,
     finished,
+    recent: items.finished.toSorted((a, b) => newest(a.endTime, b.endTime) || a.key.localeCompare(b.key)).slice(0, 12),
     active: active.length,
     needsInput: active.filter((item) => item.state === "needs-input").length,
     hiddenFailures: finished.filter((item) => item.state === "error" && !rows.includes(item)).length,

@@ -348,9 +348,9 @@ export function TasksPanel(
     }
   })
   const summary = createMemo(() => summarizeTasks(visible()))
-  // The cockpit counts every finished task, so its detail lists every one. The side panel shows no
-  // counts and has no virtual list, so it keeps only the first 12, failures first.
-  const finished = createMemo(() => (props.summary ? summary().finished : summary().finished.slice(0, 12)))
+  // The cockpit counts every finished task, so its detail lists every one, failures first. The side
+  // panel shows no counts and has no virtual list, so it keeps only the 12 newest.
+  const finished = createMemo(() => (props.summary ? summary().finished : summary().recent))
   const rows = createMemo(
     () => new Map([...visible().running, ...visible().finished].map((item) => [item.key, item] as const)),
   )
