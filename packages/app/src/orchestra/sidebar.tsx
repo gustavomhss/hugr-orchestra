@@ -358,6 +358,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                   <div class="orchestra-nav-rule" />
                 </Show>
                 <OrchestraNavigationTooltip
+                  compact={props.compact}
                   value={
                     item.chapter && !chapterPages[item.id]
                       ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
@@ -381,11 +382,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                             global.servers.health[profile().server]?.healthy === false))
                       }
                       aria-current={current(item.id) ? "page" : undefined}
-                      title={
-                        item.chapter && !chapterPages[item.id]
-                          ? `${item.chapter} · ${language.t("orchestra.rework.pending")}`
-                          : undefined
-                      }
                       onClick={() => {
                         if (item.id === "home") return navigate("/")
                         if (item.id === "chat") return openChat()
@@ -431,7 +427,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
             setState("profileOpen", open)
           }}
         >
-          <OrchestraNavigationTooltip value={language.t("orchestra.profile.choose")}>
+          <OrchestraNavigationTooltip compact={props.compact} value={language.t("orchestra.profile.choose")}>
             {(Trigger) => (
               <Trigger
                 as={DropdownMenu.Trigger}

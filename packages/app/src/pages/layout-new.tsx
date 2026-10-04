@@ -51,6 +51,7 @@ export default function NewLayout(props: ParentProps) {
             <OrchestraNavigationToggle
               compact={!state.railRequested}
               constrained={false}
+              iconOnly
               onToggle={() => setState("railRequested", (value) => !value)}
             />
           </Show>
