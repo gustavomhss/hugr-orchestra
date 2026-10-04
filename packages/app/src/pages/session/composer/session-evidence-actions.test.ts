@@ -43,6 +43,39 @@ describe("replayBlock", () => {
     expect(replayBlock({ source: { ...source, workdir: "." }, current, ...idle })).toBe("workdir")
   })
 
+  test("preserves POSIX backslashes and rejects backslash-relative workdirs", () => {
+    for (const entry of [
+      { directory: "/repo/a/b", workdir: "/repo/a\\b" },
+      { directory: "/repo/a\\b", workdir: "/repo/a/b" },
+      { directory: "/repo/a/b", workdir: "\\repo\\a\\b" },
+      { directory: "/repo/a/b", workdir: "\\\\repo\\a\\b" },
+      { directory: "/repo/a/b", workdir: "repo\\a\\b" },
+    ]) {
+      expect(sameDirectory(entry.workdir, entry.directory)).toBe(false)
+      expect(
+        replayBlock({ source: { ...source, ...entry }, current: { ...current, directory: entry.directory }, ...idle }),
+      ).toBe("workdir")
+    }
+    expect(sameDirectory("/repo/a\\b/", "/repo/a\\b")).toBe(true)
+    expect(sameDirectory("\\repo\\a\\b", "\\repo\\a\\b")).toBe(false)
+  })
+
+  test("allows matching Windows drive-rooted workdirs and rejects drive-relative ones", () => {
+    const directory = "C:/Repo/a/b"
+    for (const workdir of [directory, "C:\\Repo\\a\\b", "c:\\repo/a\\b\\"]) {
+      expect(sameDirectory(workdir, directory)).toBe(true)
+      expect(
+        replayBlock({ source: { ...source, directory, workdir }, current: { ...current, directory }, ...idle }),
+      ).toBeUndefined()
+    }
+    for (const workdir of ["C:Repo\\a\\b", "\\Repo\\a\\b", "D:\\Repo\\a\\b", "C:\\Repo\\a\\..\\b"]) {
+      expect(sameDirectory(workdir, directory)).toBe(false)
+      expect(
+        replayBlock({ source: { ...source, directory, workdir }, current: { ...current, directory }, ...idle }),
+      ).toBe("workdir")
+    }
+  })
+
   test("waits for an idle, unblocked session with a model", () => {
     expect(replayBlock({ source, current, ...idle, busy: true })).toBe("busy")
     expect(replayBlock({ source, current, ...idle, pending: true })).toBe("pending")

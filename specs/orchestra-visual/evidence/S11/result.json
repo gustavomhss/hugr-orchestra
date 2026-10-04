@@ -3,7 +3,7 @@
   "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
   "checkpoint": "061fd0da58",
   "verified_source_tree": "5d1b6a1bb28d540e2708f23355d34c92632ee6e4",
-  "source_tree_scope": "Compare packages/app against this Git tree; the final commit adds only evidence artifacts outside that subtree.",
+  "source_tree_scope": "Initial implementation tree verified in 6f6f58245a. Later review follow-ups record their own source trees and scoped checks below.",
   "branch": "orchestra-evidence",
   "date": "2026-10-03",
   "scope": ["S11/W03 execution summaries and raw fallback", "S10/W07 replay and unsent PR preparation"],
@@ -63,6 +63,33 @@
     "V2 transports command/id and owns agent/model on the session; compatibility may drop old session summary fields. PR preparation consumes loaded review data instead of fabricating them.",
     "Shared V2 test conversion put metadata in structured and omitted model discovery; evidence fixtures serve actual protocol shapes.",
     "Open dialogs can outlive session-page disposal; reactive invalidation is required in addition to confirm-time ownership checks."
+  ],
+  "review_followups": [
+    {
+      "id": "P2-posix-backslash-identity",
+      "base_commit": "6f6f58245a04d929f45551afc8cf5550ba386288",
+      "verified_source_tree": "43468a89e5567f166b04020ce9f304950c41818f",
+      "source_tree_scope": "packages/app; this follow-up commit additionally updates this receipt.",
+      "finding": "Unconditional backslash normalization could equate distinct POSIX workdirs and authorize replay in the wrong directory because the shell request has no workdir.",
+      "fix": "Recognize drive-qualified Windows roots before separator conversion. Preserve POSIX backslashes and reject backslash-relative aliases. Matching POSIX and drive-rooted Windows paths retain explicit-confirmation replay.",
+      "checks": [
+        { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 10, "failed": 0, "assertions": 59 },
+        { "cwd": "packages/app", "command": "bun typecheck && bun run typecheck:e2e", "exit": 0 },
+        { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence-actions.spec.ts --grep 'replay validates path identity|replay refuses unsupported working directory' --reporter=line", "exit": 0, "passed": 7, "failed": 0, "skipped": 0, "build": "production; isolated mocked API" },
+        { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "errors": 0, "artifact": "godfile.log" }
+      ],
+      "mutation": {
+        "change": "Temporarily restored unconditional backslash-to-slash replacement after the fix passed.",
+        "unit_command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/composer/session-evidence-actions.test.ts --test-name-pattern 'POSIX backslashes|Windows drive-rooted'",
+        "unit_exit": 1,
+        "unit_result": "POSIX assertion failed (Expected: false, Received: true); Windows positive control passed; 8 unrelated tests filtered out.",
+        "browser_command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence-actions.spec.ts --grep 'path identity: distinct POSIX backslash' --reporter=line",
+        "browser_exit": 1,
+        "browser_result": "Run command assertion failed: Expected: disabled; Received: enabled.",
+        "restored": true,
+        "restored_verification": "10 focused unit tests and 7 production browser tests passed after restoration. Rejected paths sent no request; valid POSIX/Windows paths each sent one exact-command request after confirmation and preserved the draft."
+      }
+    }
   ],
   "review": "Implementation-agent review and decoded screenshots; independent lead review and owner visual acceptance remain.",
   "integration": "Lead reconciles additive evidence i18n keys and performs branch integration. This receipt does not close unrelated S11 panes or the other B lanes."

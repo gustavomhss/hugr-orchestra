@@ -168,8 +168,10 @@ export function sameDirectory(left: string, right: string) {
 // Relative or dot-segment paths are not resolved here; they never count as the same directory.
 function canonicalDirectory(path: string) {
   if (!path || /[\0\r\n]/.test(path)) return
-  const value = path.replace(/\\/g, "/").replace(/\/{2,}/g, "/")
-  const windows = /^[A-Za-z]:\//.test(value)
+  // A drive root establishes Windows syntax; otherwise backslashes may be literal
+  // POSIX filename characters or part of a relative path, not separators.
+  const windows = /^[A-Za-z]:[\\/]/.test(path)
+  const value = (windows ? path.replace(/\\/g, "/") : path).replace(/\/{2,}/g, "/")
   if (!windows && !value.startsWith("/")) return
   if (value.split("/").some((segment) => segment === "." || segment === "..")) return
   const trimmed = value.length > 1 ? value.replace(/\/+$/, "") : value

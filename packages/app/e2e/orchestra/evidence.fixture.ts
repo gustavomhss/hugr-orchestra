@@ -28,6 +28,7 @@ export async function evidencePage(
     command?: string
     output?: string
     workdir?: string
+    directory?: string
     metadata?: Record<string, unknown>
     protocol?: "v1" | "v2"
     raw?: SessionMessageInfo[]
@@ -40,11 +41,12 @@ export async function evidencePage(
     writes.push({ url: request.url(), body: request.postDataJSON() })
   })
   const output = input.output ?? (await evidenceFixture("bun-pass"))
+  const root = input.directory ?? directory
   const server = `http://127.0.0.1:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
   const transport = await installSseTransport<unknown>(page, { server })
   const records = [
-    session({ summary: { files: 2, additions: 10, deletions: 3 } }),
-    session({ id: "ses_other", title: "Other session" }),
+    session({ directory: root, summary: { files: 2, additions: 10, deletions: 3 } }),
+    session({ directory: root, id: "ses_other", title: "Other session" }),
   ]
   const toolInput = {
     command: input.command ?? "bun test",
@@ -53,8 +55,8 @@ export async function evidencePage(
   const metadata = { exit: 0, truncated: false, ...input.metadata }
   await mockOpenCodeServer(page, {
     protocol: input.protocol ?? "v2",
-    directory,
-    project: project(),
+    directory: root,
+    project: { ...project(), worktree: root },
     provider: {
       all: [
         {
@@ -112,7 +114,7 @@ export async function evidencePage(
   // here, including model discovery, so evidence and composer exercise actual bindings.
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname
-    const location = { directory }
+    const location = { directory: root }
     if (path === "/api/provider")
       return route.fulfill({ json: { location, data: [{ id: "opencode", name: "OpenCode", settings: {} }] } })
     if (path === "/api/model") return route.fulfill({ json: { location, data: [model] } })
@@ -148,7 +150,7 @@ export async function evidencePage(
         }),
       )
     },
-    { server, directory, sessionID, secondServer: input.secondServer },
+    { server, directory: root, sessionID, secondServer: input.secondServer },
   )
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto(`/server/${Buffer.from(server).toString("base64url")}/session/${sessionID}`, {

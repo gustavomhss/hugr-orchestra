@@ -115,6 +115,39 @@ for (const workdir of ["/other/workspace", "packages/app", ""]) {
   })
 }
 
+for (const entry of [
+  { name: "distinct POSIX backslash", directory: "/repo/a/b", workdir: "/repo/a\\b", allowed: false },
+  { name: "backslash-relative POSIX", directory: "/repo/a/b", workdir: "\\repo\\a\\b", allowed: false },
+  { name: "matching POSIX", directory: "/repo/a/b", workdir: "/repo/a/b/", allowed: true },
+  { name: "matching Windows drive root", directory, workdir: "C:\\OpenCode\\TimelineStability\\", allowed: true },
+]) {
+  test(`replay validates path identity: ${entry.name}`, async ({ page }) => {
+    const fixture = await evidencePage(page, entry)
+    await editor(page).fill("Preserve this draft")
+    await runCard(page).getByRole("button", { name: "Run tests again…", exact: true }).click()
+    const dialog = page.getByRole("dialog")
+    const confirm = dialog.getByRole("button", { name: "Run command", exact: true })
+    await expect(dialog.getByText(entry.workdir, { exact: true })).toBeVisible()
+    if (!entry.allowed) {
+      await expect(confirm).toBeDisabled()
+      await expect(dialog).toContainText("different working directory")
+      await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+      await expect(editor(page)).toHaveText("Preserve this draft")
+      expect(fixture.writes).toEqual([])
+      return
+    }
+    await expect(confirm).toBeEnabled()
+    const response = page.waitForResponse((value) => value.url().endsWith(`/session/${sessionID}/shell`))
+    await confirm.click()
+    await response
+    await expect(dialog).toHaveCount(0)
+    await expect(editor(page)).toHaveText("Preserve this draft")
+    expect(fixture.writes).toHaveLength(1)
+    expect(fixture.writes[0]!.body.command).toBe("bun test")
+    expect(fixture.writes[0]!.body).not.toHaveProperty("workdir")
+  })
+}
+
 test("uncertain replay response remains visible without retry or draft loss", async ({ page }) => {
   const fixture = await evidencePage(page)
   await editor(page).fill("Keep after failure")
