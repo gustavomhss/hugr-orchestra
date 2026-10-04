@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal, type Accessor, type JSX } from "solid-js"
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, type Accessor, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createVirtualizer, defaultRangeExtractor } from "@tanstack/solid-virtual"
 
@@ -11,10 +11,13 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
   children: (item: Accessor<T>) => JSX.Element
 }) {
   const [root, setRoot] = createSignal<HTMLDivElement>()
+  const [body, setBody] = createSignal<HTMLDivElement>()
   const [view, setView] = createStore({
     focused: undefined as string | undefined,
     pending: undefined as string | undefined,
   })
+  // The node of the row that holds focus, to recognize it among removed nodes.
+  const holder = { row: undefined as HTMLElement | undefined }
   const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
     get count() {
       return props.items.length
@@ -31,11 +34,28 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
     },
     get rangeExtractor() {
       // The virtualizer memoizes ranges by extractor identity. Capture focus here so a keyboard
-      // jump mounts its destination before the native scroll event arrives.
-      const focused = props.items.findIndex((item) => item.key === view.focused)
+      // jump mounts its destination before the native scroll event arrives, and the row that still
+      // holds focus stays mounted until the destination takes it; unmounting it drops focus to the page.
+      const pinned = [view.focused, view.pending]
+        .map((key) => props.items.findIndex((item) => item.key === key))
+        .filter((index) => index >= 0)
       return (range: Parameters<typeof defaultRangeExtractor>[0]) => {
         const indexes = defaultRangeExtractor(range)
-        return focused < 0 || indexes.includes(focused) ? indexes : [...indexes, focused].sort((a, b) => a - b)
+        const first = indexes[0] ?? 0
+        const last = indexes.at(-1) ?? 0
+        const reach = range.endIndex - range.startIndex + 1 + range.overscan
+        // Arrow keys outrun the scroll event, so a row stepped to usually sits just past the window. Mount the
+        // rows between, up to the visible rows plus overscan: a gap there fills later by replacing the node
+        // after it. A farther pinned row (Home, End, or a focused row scrolled away from) leaves a gap and
+        // keeps the window bounded; the observer below repairs focus if filling that gap takes the row.
+        const joined = pinned.flatMap((index) => {
+          if (index > last && index - last <= reach)
+            return Array.from({ length: index - last }, (_, step) => last + 1 + step)
+          if (index < first && first - index <= reach)
+            return Array.from({ length: first - index }, (_, step) => index + step)
+          return [index]
+        })
+        return [...new Set([...indexes, ...joined])].sort((a, b) => a - b)
       }
     },
   })
@@ -60,6 +80,24 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
     })
   })
 
+  // Shifting the window can make the reconciler move or replace the focused row's node, and a focused
+  // node that leaves the document drops focus to the page. Put focus back on that entity's row.
+  createEffect(() => {
+    const element = body()
+    if (!element) return
+    const observer = new MutationObserver((records) => {
+      const removed = holder.row
+      if (!removed || !view.focused || !records.some((record) => [...record.removedNodes].includes(removed))) return
+      if (document.activeElement && document.activeElement !== document.body) return
+      const index = props.items.findIndex((item) => item.key === view.focused)
+      const row = removed.isConnected ? removed : root()?.querySelector<HTMLElement>(`[data-index="${index}"]`)
+      const target = row?.querySelector<HTMLElement>(':is(button, [role="button"])') ?? row
+      target?.focus({ preventScroll: true })
+    })
+    observer.observe(element, { childList: true })
+    onCleanup(() => observer.disconnect())
+  })
+
   return (
     <div
       ref={setRoot}
@@ -77,11 +115,11 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
               ? props.items.length - 1
               : Math.max(0, Math.min(props.items.length - 1, current + (event.key === "ArrowDown" ? 1 : -1)))
         event.preventDefault()
-        setView({ focused: props.items[index].key, pending: props.items[index].key })
+        setView("pending", props.items[index].key)
         virtualizer.scrollToIndex(index, { align: "auto" })
       }}
     >
-      <div style={{ position: "relative", height: `${virtualizer.getTotalSize()}px` }}>
+      <div ref={setBody} style={{ position: "relative", height: `${virtualizer.getTotalSize()}px` }}>
         <For each={keys()}>
           {(key) => (
             <Show when={rows().get(key)}>
@@ -103,10 +141,15 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
                       tabIndex={-1}
                       aria-posinset={row().index + 1}
                       aria-setsize={props.items.length}
-                      onFocusIn={() => setView("focused", String(key))}
+                      onFocusIn={(event) => {
+                        holder.row = event.currentTarget
+                        setView("focused", String(key))
+                      }}
                       onFocusOut={(event) => {
-                        if (!view.pending && !event.currentTarget.contains(event.relatedTarget as Node | null))
-                          setView("focused", undefined)
+                        // Focus that goes nowhere (a removed node, another window) keeps the row pinned.
+                        const next = event.relatedTarget
+                        if (view.pending || !(next instanceof Node) || event.currentTarget.contains(next)) return
+                        setView("focused", undefined)
                       }}
                       style={{
                         position: "absolute",
