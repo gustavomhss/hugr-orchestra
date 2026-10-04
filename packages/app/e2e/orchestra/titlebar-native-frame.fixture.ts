@@ -171,6 +171,7 @@ const dispose = render(() => {
           return createComponent(OrchestraNavigationToggle, {
             get compact() { return state.compact },
             constrained: false,
+            iconOnly: true,
             onToggle: () => setState("compact", (value) => !value),
           })
         },
