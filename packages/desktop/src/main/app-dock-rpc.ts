@@ -1,7 +1,26 @@
 import type { BrowserWindow } from "electron"
 import type { AppDock, DockBounds } from "./app-dock"
+import type { NativeWorkspacePlacement } from "./app-dock-api"
+import { AppDockNative } from "./app-dock-native"
+import { NativeDockProtocol } from "./app-dock-native-protocol"
 
 export type DockRPCReply = (message: unknown) => void
+
+export type WorkspacePreparation = (identity: NativeDockProtocol.Identity, placement: NativeWorkspacePlacement,
+  signal: AbortSignal) => Promise<{ target: NativeDockProtocol.Target; client: NativeDockProtocol.Client; confirm: NativeDockProtocol.Confirm }>
+
+type RequestWork = {
+  controller: AbortController
+  target?: Readonly<AppDockNative.DockIdentity>
+  workspace?: Readonly<NativeDockProtocol.Identity>
+}
+
+type WorkspaceScope = Readonly<{
+  identity: Readonly<NativeDockProtocol.Identity>
+  placement: NativeWorkspacePlacement
+  dock: AppDock
+  win: BrowserWindow
+}>
 
 type DockRPCRequest = Readonly<{
   type: "dock.rpc"
@@ -12,19 +31,26 @@ type DockRPCRequest = Readonly<{
 
 type DockRPCResult =
   | Readonly<{ type: "dock.rpc.result"; id: string; ok: true; value: unknown }>
-  | Readonly<{ type: "dock.rpc.result"; id: string; ok: false; error: Readonly<{ message: string }> }>
+  | Readonly<{ type: "dock.rpc.result"; id: string; ok: false; error: Readonly<{
+    message: string; backend?: "linux-atspi"; code?: string; outcome?: NativeDockProtocol.Outcome; result?: NativeDockProtocol.JSONValue
+    cleanup?: NativeDockProtocol.NativeError["cleanup"]
+  }> }>
 
 const sendResult = (reply: DockRPCReply, result: DockRPCResult) => reply(result)
 
-const errorResult = (id: string, message: string): DockRPCResult =>
-  Object.freeze({ type: "dock.rpc.result", id, ok: false, error: Object.freeze({ message }) })
+const errorResult = (id: string, error: unknown): DockRPCResult =>
+  Object.freeze({ type: "dock.rpc.result", id, ok: false, error: Object.freeze(error instanceof NativeDockProtocol.NativeError
+    ? { message: error.message, backend: error.backend, code: error.code, outcome: error.outcome,
+      ...(error.result === undefined ? {} : { result: error.result }),
+      ...(error.cleanup === undefined ? {} : { cleanup: cleanupEvidence(error.cleanup?.code) }) }
+    : { message: error instanceof Error ? error.message : String(error) }) })
 
 const isDockRPCRequest = (value: unknown): value is DockRPCRequest => {
   if (!value || typeof value !== "object") return false
   const request = value as Partial<DockRPCRequest>
   if (request.type !== "dock.rpc") return false
-  if (typeof request.id !== "string" || request.id.length === 0) return false
-  if (typeof request.op !== "string" || typeof request.args !== "object" || request.args === null) return false
+  if (typeof request.id !== "string" || request.id.length === 0 || request.id.length > 256) return false
+  if (typeof request.op !== "string" || !NativeDockProtocol.object(request.args)) return false
   return true
 }
 
@@ -50,23 +76,53 @@ const dockRef = (value: unknown, name: string) => {
 }
 
 export class AppDockRPC {
+  private readonly native = new AppDockNative.NativeDock()
+  private readonly nativeTargets = new Map<string, Readonly<AppDockNative.DockIdentity>>()
+  // Classification belongs to the viewer generation, independent of helper/reset lifetime.
+  private readonly workspaceIntents = new WeakMap<AppDock, Map<string, Readonly<{ senderID: number; generation: number }>>>()
+  private readonly requests = new Map<string, RequestWork>()
+  private readonly cancelled = new Map<string, ReturnType<typeof setTimeout>>()
+  private offRemoval?: () => void
   private appDock: AppDock | undefined
   private dockWindow: BrowserWindow | undefined
   private dockDestroyHooks = new Set<number>()
+  private workspacePreparation?: WorkspacePreparation
   private profileResolver: (senderID: number) => { profileID: string; storageKey: string } = (senderID: number) => ({
     profileID: "default",
     storageKey: `dock-bridge-${senderID}-default`,
   })
 
   setAppDock(instance: AppDock) {
+    this.offRemoval?.()
     this.appDock = instance
+    this.offRemoval = instance.onTabRemoved?.((identity) => {
+      const key = JSON.stringify([identity.senderID, identity.tabID])
+      const intents = this.workspaceIntents.get(instance)
+      if (intents?.get(key)?.generation === identity.generation) intents.delete(key)
+      this.abortTab(identity.senderID, identity.tabID, identity.generation)
+      const target = this.nativeTargets.get(key)
+      if (target?.generation !== identity.generation) return
+      void this.closeNativeTab(identity.senderID, identity.tabID, identity.generation).catch(() => {})
+    })
   }
 
   setWindow(win: BrowserWindow) {
     if (this.dockWindow && !this.dockWindow.isDestroyed()) return
     this.dockWindow = win
+    const dock = this.appDock
+    const senderID = win.webContents.id
     win.once("closed", () => {
       if (this.dockWindow === win) this.dockWindow = undefined
+      ;[dock, this.appDock].forEach((instance) => {
+        const intents = instance && this.workspaceIntents.get(instance)
+        intents?.forEach((intent, key) => { if (intent.senderID === senderID) intents.delete(key) })
+      })
+      this.requests.forEach((request) => {
+        if ((request.workspace ?? request.target)?.senderID === senderID) request.controller.abort()
+      })
+      this.nativeTargets.forEach((identity) => {
+        if (identity.senderID === senderID) void this.closeNativeTab(senderID, identity.tabID).catch(() => {})
+      })
     })
   }
 
@@ -74,14 +130,225 @@ export class AppDockRPC {
     this.profileResolver = resolver
   }
 
+  setWorkspacePreparation(prepare: WorkspacePreparation) {
+    this.workspacePreparation = prepare
+  }
+
   reset() {
+    this.offRemoval?.()
+    this.offRemoval = undefined
+    this.nativeTargets.clear()
+    this.cancelled.forEach(clearTimeout)
+    this.cancelled.clear()
     this.appDock = undefined
     this.dockWindow = undefined
     this.dockDestroyHooks.clear()
+    this.workspacePreparation = undefined
     this.profileResolver = (senderID: number) => ({
       profileID: "default",
       storageKey: `dock-bridge-${senderID}-default`,
     })
+    // Unsettled requests retain their UUID and capacity until their own finally.
+    this.requests.forEach((request) => request.controller.abort())
+    return this.native.reset()
+  }
+
+  async registerNative(identity: AppDockNative.DockIdentity, target: NativeDockProtocol.Target,
+    client: NativeDockProtocol.Client, confirm: NativeDockProtocol.Confirm) {
+    return this.bindNative(Object.freeze({ ...identity }), target, client, confirm)
+  }
+
+  private async bindNative(captured: Readonly<AppDockNative.DockIdentity>, target: NativeDockProtocol.Target,
+    client: NativeDockProtocol.Client, confirm: NativeDockProtocol.Confirm, refresh = false, signal?: AbortSignal) {
+    this.requireNativeTab(captured)
+    const key = JSON.stringify([captured.senderID, captured.tabID])
+    const prior = this.nativeTargets.get(key)
+    if (!refresh && prior && this.native.has(prior)) throw new NativeDockProtocol.NativeError("duplicate-bind", "Native tab is already registered")
+    if (!prior && this.nativeTargets.size >= 8) throw new NativeDockProtocol.NativeError("capacity", "Native tab registration capacity exhausted")
+    this.nativeTargets.set(key, captured)
+    const binding = await (refresh ? this.native.rebindWorkspace(captured, target, client, confirm, signal)
+      : this.native.bind(captured, target, client, confirm)).catch((error: unknown) => {
+      // NativeDock cleans its own pending slot; a rejected preflight still owns the old slot.
+      if (refresh && prior && this.nativeTargets.get(key) === captured) this.nativeTargets.set(key, prior)
+      throw error
+    })
+    try {
+      this.requireNativeTab(captured)
+      if (this.nativeTargets.get(key) !== captured)
+        throw new NativeDockProtocol.NativeError("wrong-scope", "Native tab was removed during binding")
+      return binding
+    } catch (error) {
+      if (this.nativeTargets.get(key) === captured)
+        await this.native.unbind(captured).catch((cleanup: unknown) => { throw AppDockNative.withCleanup(error, cleanup) })
+      // The viewer remains a native tab even when its helper/app is unavailable.
+      // A later default read must not silently return the visual viewer's DOM.
+      throw error
+    }
+  }
+
+  private requireNativeTab(identity: AppDockNative.DockIdentity) {
+    if (!this.appDock?.list(identity.senderID).some((tab) => tab.tabID === identity.tabID && tab.generation === identity.generation)
+        || this.profileResolver(identity.senderID).profileID !== identity.profileID)
+      throw new NativeDockProtocol.NativeError("wrong-scope", "Native registration requires a current Dock tab and profile")
+  }
+
+  private abortTab(senderID: number, tabID: string, generation?: number, except?: RequestWork) {
+    this.requests.forEach((request) => {
+      const identity = request.workspace ?? request.target
+      if (request !== except && identity?.senderID === senderID && identity.tabID === tabID
+          && (generation === undefined || identity.generation === generation)) request.controller.abort()
+    })
+  }
+
+  private closeNativeTab(senderID: number, tabID: string, generation?: number) {
+    this.abortTab(senderID, tabID, generation)
+    const key = JSON.stringify([senderID, tabID])
+    const target = this.nativeTargets.get(key)
+    if (generation !== undefined && target && target.generation !== generation) return Promise.resolve()
+    this.nativeTargets.delete(key)
+    return this.native.closeTab(senderID, tabID)
+  }
+
+  unregisterNative(senderID: number, tabID: string, except?: RequestWork) {
+    this.abortTab(senderID, tabID, undefined, except)
+    return this.native.closeTab(senderID, tabID)
+  }
+
+  private classifyWorkspace(dock: AppDock, senderID: number, tab: Pick<NativeDockProtocol.Identity, "tabID" | "generation">,
+    placement: NativeWorkspacePlacement | undefined) {
+    const key = JSON.stringify([senderID, tab.tabID])
+    const intents = this.workspaceIntents.get(dock)
+    if (placement) {
+      const current = intents ?? new Map<string, Readonly<{ senderID: number; generation: number }>>()
+      current.set(key, Object.freeze({ senderID, generation: tab.generation }))
+      this.workspaceIntents.set(dock, current)
+      return true
+    }
+    if (intents?.get(key)?.generation === tab.generation) return true
+    intents?.delete(key)
+    return false
+  }
+
+  private workspaceCurrent(scope: WorkspaceScope) {
+    const placement = scope.dock.nativeWorkspace?.(scope.identity.senderID, scope.identity.tabID)
+    return this.appDock === scope.dock && this.dockWindow === scope.win && !scope.win.isDestroyed()
+      && scope.dock.list(scope.identity.senderID).some((tab) => tab.tabID === scope.identity.tabID && tab.generation === scope.identity.generation)
+      && this.profileResolver(scope.identity.senderID).profileID === scope.identity.profileID
+      && placement?.runtimeID === scope.placement.runtimeID && placement.runtimeEpoch === scope.placement.runtimeEpoch
+      && placement.ready === scope.placement.ready
+  }
+
+  private requireWorkspace(scope: WorkspaceScope, request: RequestWork,
+    outcome: NativeDockProtocol.Outcome = "not-dispatched", result?: NativeDockProtocol.JSONValue) {
+    if (request.controller.signal.aborted)
+      throw new NativeDockProtocol.NativeError("cancelled", "Native workspace request cancelled", outcome, result)
+    try {
+      if (!this.workspaceCurrent(scope))
+        throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace changed during request", outcome, result)
+    } catch (error) {
+      throw requestError(error, result)
+    }
+  }
+
+  private requirePreparation(scope: WorkspaceScope, request: RequestWork, admission: AppDockNative.ClientAdmission) {
+    if (admission.signal.aborted) throw new NativeDockProtocol.NativeError("cancelled", "Native workspace preparation cancelled")
+    this.requireWorkspace(scope, request)
+  }
+
+  private workspaceTarget(identity: NativeDockProtocol.Identity, placement: NativeWorkspacePlacement) {
+    const target = this.nativeTargets.get(JSON.stringify([identity.senderID, identity.tabID]))
+    return target?.scopeKind === "workspace" && target.generation === identity.generation && target.profileID === identity.profileID
+      && target.runtimeID === placement.runtimeID && target.runtimeEpoch === placement.runtimeEpoch ? target : undefined
+  }
+
+  private async prepareWorkspace(scope: WorkspaceScope, request: RequestWork) {
+    const prepare = this.workspacePreparation
+    const key = JSON.stringify([scope.identity.senderID, scope.identity.tabID])
+    const prior = this.nativeTargets.get(key)
+    // Fence old callers before cancellation can settle during the read-only census.
+    // This retains the real old binding until validated rebind takes ownership.
+    if (prior?.scopeKind === "workspace") this.nativeTargets.set(key, Object.freeze({ ...prior }))
+    this.abortTab(scope.identity.senderID, scope.identity.tabID, undefined, request)
+    this.requireWorkspace(scope, request)
+    if (!prepare) throw new NativeDockProtocol.NativeError("not-ready", "Native workspace preparation is unavailable")
+    const admission = this.native.reserveClient(request.controller.signal)
+    const work = Promise.resolve().then(async () => {
+      this.requirePreparation(scope, request, admission)
+      const prepared = await prepare(scope.identity, scope.placement, admission.signal)
+      admission.adopt(prepared.client)
+      const state: { target?: Readonly<AppDockNative.DockIdentity> } = {}
+      try {
+        this.requirePreparation(scope, request, admission)
+        const proof = prepared.target
+        if (!NativeDockProtocol.object(proof) || !NativeDockProtocol.object(proof.runtime)
+            || proof.scopeKind !== "workspace" || proof.appID !== "workspace" || proof.launchEpoch !== proof.runtime.accessibilitySessionID
+            || proof.runtime.runtimeID !== scope.placement.runtimeID || proof.runtime.runtimeEpoch !== scope.placement.runtimeEpoch)
+          throw new NativeDockProtocol.NativeError("wrong-scope", "Prepared target does not match captured workspace")
+        const captured = Object.freeze({ ...scope.identity, runtimeID: proof.runtime.runtimeID, runtimeEpoch: proof.runtime.runtimeEpoch,
+          accessibilitySessionID: proof.runtime.accessibilitySessionID, scopeKind: "workspace" as const,
+          appID: proof.appID, launchEpoch: proof.launchEpoch, ownershipRevision: proof.ownershipRevision })
+        state.target = captured
+        await this.bindNative(captured, proof, prepared.client, async (proposal) => {
+          this.requirePreparation(scope, request, admission)
+          const roots = await prepared.confirm(proposal)
+          this.requirePreparation(scope, request, admission)
+          return roots
+        }, true, admission.signal)
+        this.requirePreparation(scope, request, admission)
+        if (this.nativeTargets.get(JSON.stringify([captured.senderID, captured.tabID])) !== captured)
+          throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace registration was replaced")
+        admission.complete()
+        return captured
+      } catch (error) {
+        const primary = preparationError(error)
+        try {
+          try {
+            if (state.target && this.nativeTargets.get(JSON.stringify([state.target.senderID, state.target.tabID])) === state.target)
+              await this.native.unbind(state.target)
+          } finally {
+            await this.native.releaseUnused(prepared.client)
+          }
+          admission.complete()
+        } catch (cleanup) {
+          throw AppDockNative.withCleanup(primary, cleanup)
+        }
+        throw primary
+      }
+    }).catch((error: unknown) => {
+      admission.fail(error)
+      throw preparationError(error)
+    })
+    // A timeout settles correlation, not resource ownership. The original work
+    // keeps its reservation and runs the same orphan cleanup when it returns.
+    return Promise.race([work, admission.completion.then(() => work, (error: unknown) => { throw preparationError(error) })])
+  }
+
+  private async dispatchWorkspace(scope: WorkspaceScope, request: RequestWork, op: string, args: Record<string, unknown>, admitted: () => void) {
+    if (!scope.placement.ready) throw new NativeDockProtocol.NativeError("not-ready", "Native workspace is not ready")
+    const target = op === "read" && args.rootRef === undefined && args.cursor === undefined
+      ? await this.prepareWorkspace(scope, request) : this.workspaceTarget(scope.identity, scope.placement)
+    try {
+      this.requireWorkspace(scope, request)
+      if (!target || !this.native.has(target)) throw new NativeDockProtocol.NativeError("not-ready", "Native workspace is not bound")
+      request.target = target
+      admitted()
+      this.requireWorkspace(scope, request)
+      if (this.nativeTargets.get(JSON.stringify([target.senderID, target.tabID])) !== target)
+        throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace registration was replaced")
+      const value = await this.native.dispatch(op, target, args, request.controller.signal)
+      this.requireWorkspace(scope, request, "unknown", value)
+      return value
+    } catch (error) {
+      const primary = requestError(error)
+      try {
+        if (target && this.nativeTargets.get(JSON.stringify([target.senderID, target.tabID])) === target
+            && (request.controller.signal.aborted || !this.workspaceCurrent(scope))) await this.native.unbind(target)
+      } catch (cleanup) {
+        throw new NativeDockProtocol.NativeError(primary.code, primary.message, primary.outcome, primary.result,
+          cleanupEvidence(cleanup instanceof NativeDockProtocol.NativeError ? cleanup.code : undefined))
+      }
+      throw primary
+    }
   }
 
   private dockSender(): { senderID: number; win: BrowserWindow } {
@@ -91,23 +358,106 @@ export class AppDockRPC {
   }
 
   handleDockRPC(message: unknown, reply: DockRPCReply): boolean {
+    if (NativeDockProtocol.object(message) && message.type === "dock.rpc.cancel" && typeof message.id === "string"
+        && message.id.length > 0 && message.id.length <= 256) {
+      const request = this.requests.get(message.id)
+      if (request) request.controller.abort()
+      if (!request && this.cancelled.size < 32 && !this.cancelled.has(message.id)) {
+        const id = message.id
+        this.cancelled.set(id, setTimeout(() => this.cancelled.delete(id), 15000))
+      }
+      return true
+    }
     if (!isDockRPCRequest(message)) return false
     const { id, op, args } = message
-    const promise = this.dispatch(op, args)
+    if (this.requests.has(id) || this.requests.size >= 32) {
+      sendResult(reply, errorResult(id, new NativeDockProtocol.NativeError("busy", "Dock request ID/capacity unavailable")))
+      return true
+    }
+    const request: RequestWork = { controller: new AbortController() }
+    if (this.cancelled.has(id)) {
+      clearTimeout(this.cancelled.get(id))
+      this.cancelled.delete(id)
+      request.controller.abort()
+    }
+    this.requests.set(id, request)
+    const promise = this.dispatch(op, args, request, () => reply(Object.freeze({ type: "dock.rpc.native-admitted",
+      id, backend: "linux-atspi", target: request.target })), () => reply(Object.freeze({ type: "dock.rpc.native-pending",
+      id, backend: "linux-atspi", scopeKind: "workspace" })))
       .then((value) => sendResult(reply, Object.freeze({ type: "dock.rpc.result", id, ok: true, value })))
-      .catch((error) => sendResult(reply, errorResult(id, error instanceof Error ? error.message : String(error))))
+      .catch((error) => sendResult(reply, errorResult(id, error)))
+      .finally(() => {
+        if (this.requests.get(id) === request) this.requests.delete(id)
+      })
     promise.catch(() => {})
     return true
   }
 
-  private async dispatch(op: string, args: Record<string, unknown>): Promise<unknown> {
+  private async dispatch(op: string, args: Record<string, unknown>, request: RequestWork,
+    admitted: () => void, pending: () => void): Promise<unknown> {
     if (!this.appDock) throw new Error("App Dock bridge is not initialized")
     const dock = this.appDock
     const { senderID, win } = this.dockSender()
 
+    const targetOps = ["activate", "read", "click", "type", "navigate", "go", "close", "scroll", "hover", "drag",
+      "clickAt", "scrollTo", "storage", "evaluate", "network", "wait", "screenshot", "keyboard", "action"]
+    if (targetOps.includes(op) && !(op === "close" && args.tabID === undefined && dock.list(senderID).length === 0)) {
+      const tabID = op === "activate" ? dockString(args.tabID, "tabID") : this.resolveTabID(dock, senderID, args)
+      const placement = dock.nativeWorkspace?.(senderID, tabID)
+      const tab = dock.list(senderID).find((tab) => tab.tabID === tabID)
+      if (placement && !tab) throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace viewer is not current")
+      const workspace = tab && this.classifyWorkspace(dock, senderID, tab, placement)
+      const stored = this.nativeTargets.get(JSON.stringify([senderID, tabID]))
+      const target = stored?.generation === tab?.generation ? stored : undefined
+      if (workspace && tab) {
+        request.workspace = Object.freeze({ senderID, tabID, generation: tab.generation, profileID: this.profileResolver(senderID).profileID })
+        pending()
+        if (request.controller.signal.aborted) throw new NativeDockProtocol.NativeError("cancelled", "Native workspace request cancelled")
+        if (!placement && !["close", "activate"].includes(op))
+          throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace authority is unavailable")
+        if (placement) {
+          const scope: WorkspaceScope = { identity: request.workspace, placement: Object.freeze({ runtimeID: placement.runtimeID,
+            runtimeEpoch: placement.runtimeEpoch, ready: placement.ready }), dock, win }
+          this.requireWorkspace(scope, request)
+          if (!["close", "activate"].includes(op)) return this.dispatchWorkspace(scope, request, op, { ...args, tabID }, admitted)
+        }
+      }
+      if (target && !workspace) {
+        request.target = target
+        admitted()
+        this.requireNativeTab(target)
+        if (request.controller.signal.aborted) throw new NativeDockProtocol.NativeError("cancelled", "Native request cancelled before dispatch")
+        if (!["close", "activate"].includes(op)) {
+          if (target.scopeKind === "workspace")
+            throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace authority is unavailable")
+          if (!this.native.has(target)) throw new NativeDockProtocol.NativeError("not-ready", "Native tab is not bound")
+          return this.native.dispatch(op, target, args, request.controller.signal)
+        }
+      }
+      if (!target && !workspace && nativeIntent(op, args))
+        throw new NativeDockProtocol.NativeError("wrong-scope", "Native selectors require a registered native tab")
+      if (!target && !workspace && op === "read" && ["rootRef", "cursor", "textOffset"].some((key) => args[key] !== undefined))
+        throw new NativeDockProtocol.NativeError("unsupported-operation", "Native read selectors cannot address a browser")
+      // Preserve the target captured at admission, including browser/default-active requests.
+      args = { ...args, tabID }
+    }
+
     switch (op) {
       case "list": {
-        return dock.list(senderID)
+        return dock.list(senderID).map((tab) => {
+          const placement = dock.nativeWorkspace?.(senderID, tab.tabID)
+          if (this.classifyWorkspace(dock, senderID, tab, placement)) {
+            const target = placement && this.workspaceTarget({ senderID, tabID: tab.tabID, generation: tab.generation,
+              profileID: this.profileResolver(senderID).profileID }, placement)
+            return { ...tab, ...(target && placement?.ready ? this.native.metadata(target)
+              : { backend: "linux-atspi", scopeKind: "workspace", nativeReadiness: "unbound" }) }
+          }
+          const identity = this.nativeTargets.get(JSON.stringify([senderID, tab.tabID]))
+          if (identity?.generation !== tab.generation) return tab
+          if (identity?.scopeKind === "workspace")
+            return { ...tab, backend: "linux-atspi", scopeKind: "workspace", nativeReadiness: "unbound" }
+          return identity ? { ...tab, ...this.native.metadata(identity) } : tab
+        })
       }
       case "activate": {
         const tabID = dockString(args.tabID, "tabID")
@@ -168,7 +518,13 @@ export class AppDockRPC {
       }
       case "close": {
         const tabID = args.tabID === undefined ? undefined : dockString(args.tabID, "tabID")
-        dock.close(senderID, win, tabID)
+        // Viewer removal emits synchronously; join the teardown we started first.
+        const closing = tabID ? this.closeNativeTab(senderID, tabID, request.workspace?.generation ?? request.target?.generation) : undefined
+        try {
+          dock.close(senderID, win, tabID)
+        } finally {
+          await closing
+        }
         return dock.list(senderID)
       }
       case "scroll": {
@@ -296,10 +652,43 @@ export function registerAppDockProfileResolver(resolver: () => { profileID: stri
   rpc.setProfileResolver(resolver)
 }
 
+export function registerAppDockWorkspacePreparation(prepare: WorkspacePreparation) {
+  rpc.setWorkspacePreparation(prepare)
+}
+
 export function resetAppDockRPC() {
-  rpc.reset()
+  return rpc.reset()
+}
+
+export function registerAppDockNativeBinding(identity: AppDockNative.DockIdentity, target: NativeDockProtocol.Target,
+  client: NativeDockProtocol.Client, confirm: NativeDockProtocol.Confirm) {
+  return rpc.registerNative(identity, target, client, confirm)
+}
+
+export function unregisterAppDockNativeBinding(senderID: number, tabID: string) {
+  return rpc.unregisterNative(senderID, tabID)
 }
 
 export function handleDockRPC(message: unknown, reply: DockRPCReply): boolean {
   return rpc.handleDockRPC(message, reply)
+}
+
+function nativeIntent(op: string, args: Record<string, unknown>) {
+  return op === "action" || [args.ref, args.fromRef, args.toRef, args.rootRef].some((ref) => typeof ref === "string")
+    || args.cursor !== undefined || args.textOffset !== undefined || args.mode !== undefined
+}
+
+function preparationError(error: unknown) {
+  return error instanceof NativeDockProtocol.NativeError ? error
+    : new NativeDockProtocol.NativeError("not-ready", "Native workspace preparation failed")
+}
+
+function requestError(error: unknown, result?: NativeDockProtocol.JSONValue) {
+  return error instanceof NativeDockProtocol.NativeError ? error
+    : new NativeDockProtocol.NativeError("transport-error", "Native workspace request failed", "unknown", result)
+}
+
+function cleanupEvidence(code: unknown) {
+  return Object.freeze({ code: typeof code === "string" && code.length > 0 && code.length <= 256 && !/[^A-Za-z0-9_-]/.test(code)
+    ? code : "native-cleanup-failed", outcome: "unknown" as const })
 }

@@ -53,6 +53,8 @@ export type AppDockEvent =
         favicon?: string
         loading: boolean
         audible: boolean
+        canGoBack: boolean
+        canGoForward: boolean
       }
     }
   | { type: "tab-opened"; payload: { tabID: string; generation: number; url: string } }
@@ -96,7 +98,7 @@ export type AppDockManifest = {
 
 export type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: AppDockManifest }
 
-export type ElectronAPI = {
+export type ElectronAPI = import("@opencode-ai/app/app-dock-linux").AppDockLinuxAPI & {
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },

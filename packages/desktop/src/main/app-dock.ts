@@ -34,6 +34,8 @@ export type AppDockState = AppDockIdentity & {
   favicon?: string
   loading: boolean
   audible: boolean
+  canGoBack: boolean
+  canGoForward: boolean
 }
 export type AppDockFindResult = AppDockIdentity & {
   requestID: number
@@ -86,12 +88,20 @@ export { panelBoundsToContent }
 
 export type AppDock = AppDockAPI
 
-export function createAppDock(options: { developmentMode?: () => boolean } = {}): AppDockAPI {
+export function createAppDock(options: {
+  developmentMode?: () => boolean
+  onVisibility?: (senderID: number, identity: AppDockIdentity, visible: boolean) => void
+  onClosed?: (senderID: number, identity: AppDockIdentity) => void
+  allowPopup?: (senderID: number, identity: AppDockIdentity, url: string) => boolean
+  onPopupOpened?: (senderID: number, parent: AppDockIdentity, tab: AppDockTab) => void
+  onExternalURL?: (senderID: number, identity: AppDockIdentity, url: string) => boolean | undefined
+} = {}): AppDockAPI {
   const developmentMode = options.developmentMode ?? (() => !app.isPackaged)
   const browserSessions = new Map<string, Session>()
   const configuredPartitions = new Set<string>()
   const retiredStorageKeys = new Set<string>()
   const tabs = new Map<number, Map<string, AppDockRecord>>()
+  const removalListeners = new Set<(identity: Readonly<{ senderID: number; tabID: string; generation: number }>) => void>()
   const readQueues = new Map<string, Promise<unknown>>()
   const navigationQueues = new Map<string, Promise<unknown>>()
   const refTargets = new Map<string, Map<number, { x: number; y: number; width: number; height: number; tag: string; name: string; href?: string; url: string }>>()
@@ -125,7 +135,11 @@ const layoutBounds = new Map<number, DockBounds>()
   const isCurrent = (senderID: number, tabID: string, tabGeneration: number) =>
     tabs.get(senderID)?.get(tabID)?.generation === tabGeneration
   const markInactive = (senderID: number, tabID: string, record: AppDockRecord) => {
-    record.view.webContents.setBackgroundThrottling(true)
+    // Electron can force a hidden widget shown when setting throttling. Enable
+    // it before the real hide transition and do not repeat it on hidden views.
+    if (!record.view.webContents.getBackgroundThrottling()) record.view.webContents.setBackgroundThrottling(true)
+    options.onVisibility?.(senderID, identity(tabID, record.generation), false)
+    record.view.setVisible(false)
     inactive.delete(`${senderID}:${tabID}`)
     inactive.set(`${senderID}:${tabID}`, { senderID, tabID })
   }
@@ -157,7 +171,9 @@ const layoutBounds = new Map<number, DockBounds>()
       }
     }
     record.view.webContents.close()
+    options.onClosed?.(senderID, identity(tabID, record.generation))
     tabs.get(senderID)?.delete(tabID)
+    removalListeners.forEach((listener) => listener(Object.freeze({ senderID, tabID, generation: record.generation })))
     generation++
     if (active.get(senderID) === tabID) active.delete(senderID)
   }
@@ -229,6 +245,7 @@ const layoutBounds = new Map<number, DockBounds>()
         }
         inactive.delete(`${senderID}:${nextTabID}`)
         active.set(senderID, nextTabID)
+        options.onVisibility?.(senderID, identity(nextTabID, next.generation), true)
         next.notify(Object.freeze({ type: "tab-selected", payload: identity(nextTabID, next.generation) }))
       }
     }
@@ -391,11 +408,18 @@ const layoutBounds = new Map<number, DockBounds>()
       title: target,
       loading: true,
       audible: false,
+      canGoBack: false,
+      canGoForward: false,
     }
     const snapshot = (): AppDockState => Object.freeze({ ...identity(id, tabGeneration), ...state })
     const update = (patch: Partial<Omit<AppDockState, "tabID" | "generation">>) => {
       if (!isCurrent(senderID, id, tabGeneration)) return
-      state = { ...state, ...patch }
+      state = {
+        ...state,
+        ...patch,
+        canGoBack: view.webContents.navigationHistory.canGoBack(),
+        canGoForward: view.webContents.navigationHistory.canGoForward(),
+      }
       notify(Object.freeze({ type: "state", payload: snapshot() }))
     }
     const cleanups: (() => void)[] = []
@@ -460,12 +484,31 @@ const layoutBounds = new Map<number, DockBounds>()
     })
     listen("media-started-playing", () => update({ audible: true }))
     listen("media-paused", () => update({ audible: false }))
+    const externalURL = (url: string) => {
+      if (!isCurrent(senderID, id, tabGeneration)) return false
+      const handled = options.onExternalURL?.(senderID, identity(id, tabGeneration), url)
+      if (handled === undefined) return false
+      if (!handled) notify(Object.freeze({ type: "navigation-error", payload: Object.freeze({ identity: identity(id, tabGeneration), code: "blocked", url: "slack://callback" }) }))
+      return true
+    }
     view.webContents.setWindowOpenHandler(({ url }) => {
+      if (externalURL(url)) return { action: "deny" }
       try {
+        if (!isCurrent(senderID, id, tabGeneration) || options.allowPopup?.(senderID, identity(id, tabGeneration), url) === false) {
+          throw new Error("App Dock popup blocked")
+        }
         const popupURL = appDockURL(url)
-        void open(senderID, win, popupURL, bounds, notify, profileStorage).then((tab) =>
-          notify(Object.freeze({ type: "tab-opened", payload: tab })),
-        )
+        void open(senderID, win, popupURL, layoutBounds.get(senderID) ?? bounds, notify, profileStorage)
+          .then((tab) => {
+            options.onPopupOpened?.(senderID, identity(id, tabGeneration), tab)
+            notify(Object.freeze({ type: "tab-opened", payload: tab }))
+          })
+          .catch(() => {
+            if (isCurrent(senderID, id, tabGeneration)) notify(Object.freeze({
+              type: "navigation-error",
+              payload: Object.freeze({ identity: identity(id, tabGeneration), code: "failed", url }),
+            }))
+          })
       } catch {
         notify(
           Object.freeze({
@@ -477,6 +520,7 @@ const layoutBounds = new Map<number, DockBounds>()
       return { action: "deny" }
     })
     listen("will-navigate", (event, url) => {
+      if (externalURL(url)) { event.preventDefault(); return }
       if (URL.canParse(url) && new URL(url).protocol === "https:") return
       event.preventDefault()
       const key = `${senderID}:${id}`
@@ -490,6 +534,7 @@ const layoutBounds = new Map<number, DockBounds>()
       )
     })
     listen("will-redirect", (event, url) => {
+      if (externalURL(url)) { event.preventDefault(); return }
       if (URL.canParse(url) && new URL(url).protocol === "https:") return
       event.preventDefault()
       const key = `${senderID}:${id}`
@@ -575,11 +620,12 @@ const layoutBounds = new Map<number, DockBounds>()
       view.setVisible(true)
       view.webContents.setBackgroundThrottling(false)
       active.set(senderID, id)
+      options.onVisibility?.(senderID, identity(id, tabGeneration), true)
     }
     for (const [tabID, other] of senderTabs) {
       if ((replacement?.selected ?? true) && tabID !== id) {
-        win.contentView.removeChildView(other.view)
         markInactive(senderID, tabID, other)
+        win.contentView.removeChildView(other.view)
       }
     }
     if (!(replacement?.selected ?? true)) markInactive(senderID, id, senderTabs.get(id)!)
@@ -597,6 +643,10 @@ const layoutBounds = new Map<number, DockBounds>()
   }
   return {
     open,
+    onTabRemoved(listener) {
+      removalListeners.add(listener)
+      return () => removalListeners.delete(listener)
+    },
     resize(senderID: number, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
       if (!usableBounds(bounds)) return
@@ -619,8 +669,8 @@ const layoutBounds = new Map<number, DockBounds>()
         if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
       }
       for (const [tabID, record] of tabs.get(senderID) ?? []) {
-        if (!record.win.isDestroyed()) record.win.contentView.removeChildView(record.view)
         markInactive(senderID, tabID, record)
+        if (!record.win.isDestroyed()) record.win.contentView.removeChildView(record.view)
       }
       active.delete(senderID)
     },
@@ -640,16 +690,18 @@ const layoutBounds = new Map<number, DockBounds>()
       }
       for (const [id, other] of tabs.get(senderID) ?? []) {
         if (id === tabID) {
-          win.contentView.addChildView(other.view)
+          if (!win.contentView.children.includes(other.view)) win.contentView.addChildView(other.view)
+          other.view.setVisible(true)
           other.view.webContents.setBackgroundThrottling(false)
           inactive.delete(`${senderID}:${id}`)
         } else {
-          win.contentView.removeChildView(other.view)
           markInactive(senderID, id, other)
+          win.contentView.removeChildView(other.view)
         }
       }
       record.view.setBounds(bounds)
       active.set(senderID, tabID)
+      options.onVisibility?.(senderID, identity(tabID, record.generation), true)
       record.notify(Object.freeze({ type: "tab-selected", payload: identity(tabID, record.generation) }))
     },
     activate(senderID: number, win: BrowserWindow, tabID: string) {
@@ -670,6 +722,11 @@ const layoutBounds = new Map<number, DockBounds>()
         (usableBounds(fallback) ? fallback : undefined)
       if (!bounds) throw new Error("App Dock host is not ready")
       this.select(senderID, win, tabID, bounds)
+    },
+    contents(senderID: number, tabID: string) {
+      const record = tabs.get(senderID)?.get(tabID)
+      if (!record || record.view.webContents.isDestroyed()) throw new Error("Unknown App Dock tab")
+      return record.view.webContents
     },
     async navigate(senderID: number, tabID: string, address: string): Promise<{ ok: boolean; url: string }> {
       const key = `${senderID}:${tabID}`

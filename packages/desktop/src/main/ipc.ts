@@ -1,8 +1,16 @@
 import { execFile } from "node:child_process"
 import { stat } from "node:fs/promises"
-import { basename, join } from "node:path"
-import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron"
+import { basename, join, resolve } from "node:path"
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell, webContents } from "electron"
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron"
+import type {
+  LinuxInstallResult,
+  LinuxLaunchResult,
+  LinuxOpenResult,
+  LinuxState,
+  LinuxWindowsResult,
+  LinuxFocusResult,
+} from "@opencode-ai/app/app-dock-linux"
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
 
@@ -37,8 +45,11 @@ import {
   type AppDockTab,
   type DockBounds,
 } from "./app-dock"
+import { AppDockLinux } from "./app-dock-linux"
+import { AppDockRuntime, RuntimeError } from "./app-dock-runtime"
 import { AppDockProfileRegistry } from "./app-dock-profile-registry"
-import { registerAppDockBridge, registerAppDockProfileResolver } from "./app-dock-rpc"
+import { registerAppDockBridge, registerAppDockProfileResolver, registerAppDockWorkspacePreparation } from "./app-dock-rpc"
+import { AppDockNativeWorkspace } from "./app-dock-native-workspace"
 
 const pickerFilters = (ext?: string[]) => {
   if (!ext || ext.length === 0) return undefined
@@ -46,6 +57,8 @@ const pickerFilters = (ext?: string[]) => {
 }
 
 const pickedFiles = createPickedFileAuthorizations()
+const linuxRuntimes = new Map<string, ReturnType<typeof AppDockRuntime.create>>()
+const linuxErrorCode = (error: unknown) => (error instanceof RuntimeError ? error.code : "failed")
 
 const appDockProfileID = (value: unknown) => {
   if (typeof value !== "string" || !/^[a-z0-9][a-z0-9-]{0,31}$/.test(value))
@@ -117,10 +130,12 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
   const payload = appDockEventRecord(source.payload)
   if (!hasExactKeys(source, ["type", "payload"])) throw new Error("Invalid App Dock event")
   if (source.type === "state") {
-    if (!(
-      hasExactKeys(payload, ["tabID", "generation", "url", "title", "loading", "audible"]) ||
-      hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible"])
-    )) {
+    if (
+      !(
+        hasExactKeys(payload, ["tabID", "generation", "url", "title", "loading", "audible", "canGoBack", "canGoForward"]) ||
+        hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible", "canGoBack", "canGoForward"])
+      )
+    ) {
       throw new Error("Invalid App Dock event")
     }
     const identity = appDockEventIdentity(payload)
@@ -133,6 +148,8 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
         favicon: appDockEventOptionalString(payload.favicon),
         loading: appDockEventBoolean(payload.loading),
         audible: appDockEventBoolean(payload.audible),
+        canGoBack: appDockEventBoolean(payload.canGoBack),
+        canGoForward: appDockEventBoolean(payload.canGoForward),
       },
     }
   }
@@ -260,8 +277,39 @@ type Deps = {
 }
 
 export function registerIpcHandlers(deps: Deps) {
-  const appDock = createAppDock()
-  registerAppDockBridge(appDock)
+  const root = join(app.getPath("userData"), "app-dock-linux")
+  const runtime =
+    linuxRuntimes.get(root) ??
+    AppDockRuntime.create({
+      root,
+      context: app.isPackaged
+        ? join(process.resourcesPath, "linux-runtime")
+        : resolve(import.meta.dirname, "../../resources/linux-runtime"),
+      image: app.isPackaged ? undefined : process.env.APP_DOCK_LINUX_IMAGE,
+      nativePayload: app.isPackaged
+        ? join(process.resourcesPath, "app-dock-accessibility")
+        : resolve(import.meta.dirname, "../../resources/linux/app-dock-accessibility"),
+    })
+  linuxRuntimes.set(root, runtime)
+  // These callbacks run after the coordinator is created, including for views it opens itself.
+  const appDock = createAppDock({
+    onVisibility: (senderID, identity, visible) => linux.visibility(senderID, identity, visible),
+    onClosed: (senderID, identity) => linux.closed(senderID, identity),
+    allowPopup: (senderID, identity, url) => linux.allowPopup(senderID, identity, url),
+    onPopupOpened: (senderID, parent, tab) => linux.popupOpened(senderID, parent, tab),
+    onExternalURL: (senderID, identity, url) => linux.externalURL(senderID, identity, url),
+  })
+  const linux = AppDockLinux.create({
+    dock: appDock,
+    runtime,
+    notify: (senderID, event) => {
+      const sender = webContents.fromId(senderID)
+      if (sender && !sender.isDestroyed()) sender.send("app-dock-event", toCloneableAppDockEvent(event))
+    },
+  })
+  const browserDock = linux.browser
+  registerAppDockBridge(browserDock)
+  registerAppDockWorkspacePreparation(AppDockNativeWorkspace.create(runtime))
   const appDockProfiles = AppDockProfileRegistry.load(app.getPath("userData"))
   const appDockDestroyHooks = new Set<number>()
   appDockProfiles.ensureActive("default")
@@ -298,8 +346,94 @@ export function registerIpcHandlers(deps: Deps) {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win || win.isDestroyed() || win.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame)
       throw new Error("Invalid App Dock sender")
+    const senderID = event.sender.id
+    if (!appDockDestroyHooks.has(senderID)) {
+      appDockDestroyHooks.add(senderID)
+      event.sender.once("destroyed", () => {
+        appDockDestroyHooks.delete(senderID)
+        linux.closeSender(senderID)
+        appDock.closeAll(senderID, win)
+      })
+    }
     return win
   }
+  ipcMain.handle(
+    "app-dock-linux-open",
+    (event: IpcMainInvokeEvent, bounds: unknown, profile: unknown = "default"): Promise<LinuxOpenResult> =>
+      Promise.resolve()
+        .then(async () => {
+          const win = appDockSender(event)
+          const contentBounds = panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor())
+          const profileStorage = appDockProfiles.ensureActive(appDockProfileID(profile))
+          const tab = await linux.open(event.sender.id, win, contentBounds, profileStorage)
+          return { status: "opened", tab } as const
+        })
+        .catch((error: unknown) => ({ status: "failed", code: linuxErrorCode(error) })),
+  )
+  ipcMain.handle(
+    "app-dock-linux-list",
+    (event: IpcMainInvokeEvent): Promise<LinuxState> =>
+      Promise.resolve()
+        .then(() => {
+          appDockSender(event)
+          return runtime.state()
+        })
+        .catch((error: unknown) => ({ phase: "error", apps: [], error: linuxErrorCode(error) })),
+  )
+  ipcMain.handle(
+    "app-dock-linux-install",
+    (event: IpcMainInvokeEvent): Promise<LinuxInstallResult> =>
+      Promise.resolve()
+        .then(async () => {
+          const win = appDockSender(event)
+          const result = await dialog.showOpenDialog(win, {
+            title: nativeT("desktop.dialog.chooseFile"),
+            properties: ["openFile"],
+            filters: pickerFilters(["deb"]),
+          })
+          if (result.canceled) return { status: "cancelled" } as const
+          appDockSender(event)
+          if (result.filePaths.length !== 1 || !result.filePaths[0]) throw new RuntimeError("invalid-package")
+          const apps = await runtime.install(result.filePaths[0])
+          return { status: "installed", apps } as const
+        })
+        .catch((error: unknown) => ({ status: "failed", code: linuxErrorCode(error) })),
+  )
+  ipcMain.handle(
+    "app-dock-linux-launch",
+    (event: IpcMainInvokeEvent, appID: unknown): Promise<LinuxLaunchResult> =>
+      Promise.resolve()
+        .then(async () => {
+          appDockSender(event)
+          if (
+            typeof appID !== "string" ||
+            appID.length > 512 ||
+            !appID.endsWith(".desktop") ||
+            /[\x00-\x1f/\\]/.test(appID)
+          ) {
+            throw new RuntimeError("failed")
+          }
+          await linux.launch(event.sender.id, appID)
+          return { status: "launched" } as const
+        })
+        .catch((error: unknown) => ({ status: "failed", code: linuxErrorCode(error) })),
+  )
+  ipcMain.handle("app-dock-linux-windows", (event: IpcMainInvokeEvent, tabID: unknown, generation: unknown): Promise<LinuxWindowsResult> =>
+    Promise.resolve().then(async () => {
+      appDockSender(event)
+      if (typeof generation !== "number" || !Number.isSafeInteger(generation) || generation <= 0) throw new RuntimeError("failed")
+      return { status: "ready", windows: await linux.windows(event.sender.id, { tabID: appDockID(tabID, "tab"), generation }) } as const
+    }).catch((error: unknown) => ({ status: "failed", code: linuxErrorCode(error) })),
+  )
+  ipcMain.handle("app-dock-linux-focus", (event: IpcMainInvokeEvent, tabID: unknown, generation: unknown, windowID: unknown): Promise<LinuxFocusResult> =>
+    Promise.resolve().then(async () => {
+      appDockSender(event)
+      if (typeof generation !== "number" || !Number.isSafeInteger(generation) || generation <= 0 ||
+        typeof windowID !== "number" || !Number.isSafeInteger(windowID) || windowID <= 0) throw new RuntimeError("failed")
+      await linux.focus(event.sender.id, { tabID: appDockID(tabID, "tab"), generation }, windowID)
+      return { status: "focused" } as const
+    }).catch((error: unknown) => ({ status: "failed", code: linuxErrorCode(error) })),
+  )
   ipcMain.handle(
     "app-dock-open",
     async (event: IpcMainInvokeEvent, address: unknown, bounds: unknown, profile: unknown = "default") => {
@@ -318,7 +452,7 @@ export function registerIpcHandlers(deps: Deps) {
       }
       let tab: AppDockTab
       try {
-        tab = await appDock.open(
+        tab = await browserDock.open(
           event.sender.id,
           win,
           address,
@@ -328,20 +462,17 @@ export function registerIpcHandlers(deps: Deps) {
         )
       } catch (error) {
         if (!event.sender.isDestroyed())
-          pendingEvents.forEach((appDockEvent) => event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)))
+          pendingEvents.forEach((appDockEvent) =>
+            event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)),
+          )
         throw error
       }
       opened = true
       if (!event.sender.isDestroyed()) {
         event.sender.send("app-dock-event", toCloneableAppDockEvent({ type: "tab-opened", payload: tab }))
-        pendingEvents.forEach((appDockEvent) => event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)))
-      }
-      if (!appDockDestroyHooks.has(event.sender.id)) {
-        appDockDestroyHooks.add(event.sender.id)
-        event.sender.once("destroyed", () => {
-          appDockDestroyHooks.delete(event.sender.id)
-          appDock.closeAll(event.sender.id, win)
-        })
+        pendingEvents.forEach((appDockEvent) =>
+          event.sender.send("app-dock-event", toCloneableAppDockEvent(appDockEvent)),
+        )
       }
       return tab
     },
@@ -351,14 +482,14 @@ export function registerIpcHandlers(deps: Deps) {
     appDock.resize(event.sender.id, panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()))
   })
   ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent) => {
-    appDock.hide(event.sender.id, appDockSender(event))
+    browserDock.hide(event.sender.id, appDockSender(event))
   })
   ipcMain.handle("app-dock-close", (event: IpcMainInvokeEvent) => {
-    appDock.closeAll(event.sender.id, appDockSender(event))
+    browserDock.closeAll(event.sender.id, appDockSender(event))
   })
   ipcMain.handle("app-dock-list", (event: IpcMainInvokeEvent) => {
     appDockSender(event)
-    return appDock.list(event.sender.id).map((tab) => ({
+    return browserDock.list(event.sender.id).map((tab) => ({
       tabID: tab.tabID,
       generation: tab.generation,
       url: tab.url,
@@ -366,11 +497,11 @@ export function registerIpcHandlers(deps: Deps) {
     }))
   })
   ipcMain.handle("app-dock-close-tab", (event: IpcMainInvokeEvent, tabID: unknown) => {
-    appDock.close(event.sender.id, appDockSender(event), appDockID(tabID, "tab"))
+    browserDock.close(event.sender.id, appDockSender(event), appDockID(tabID, "tab"))
   })
   ipcMain.handle("app-dock-recover-tab", (event: IpcMainInvokeEvent, tabID: unknown) => {
     appDockSender(event)
-    return appDock.recover(event.sender.id, appDockID(tabID, "tab"))
+    return browserDock.recover(event.sender.id, appDockID(tabID, "tab"))
   })
   ipcMain.handle(
     "app-dock-close-tabs",
@@ -380,12 +511,12 @@ export function registerIpcHandlers(deps: Deps) {
       if (scope !== "others" && scope !== "right") throw new Error("Invalid App Dock close scope")
       if (order !== undefined && (!Array.isArray(order) || order.some((item) => typeof item !== "string")))
         throw new Error("Invalid App Dock tab order")
-      appDock.closeTabs(event.sender.id, id, scope, order)
+      browserDock.closeTabs(event.sender.id, id, scope, order)
     },
   )
   ipcMain.handle("app-dock-select", (event: IpcMainInvokeEvent, tabID: unknown, bounds: unknown) => {
     const win = appDockSender(event)
-    appDock.select(
+    browserDock.select(
       event.sender.id,
       win,
       appDockID(tabID, "tab"),
@@ -395,30 +526,30 @@ export function registerIpcHandlers(deps: Deps) {
   ipcMain.handle("app-dock-navigate", (event: IpcMainInvokeEvent, tabID: unknown, address: unknown) => {
     appDockSender(event)
     if (typeof address !== "string") throw new Error("Invalid App Dock address")
-    return appDock.navigate(event.sender.id, appDockID(tabID, "tab"), address)
+    return browserDock.navigate(event.sender.id, appDockID(tabID, "tab"), address)
   })
   ipcMain.handle("app-dock-command", (event: IpcMainInvokeEvent, tabID: unknown, command: unknown) => {
     appDockSender(event)
     if (command !== "back" && command !== "forward" && command !== "reload") throw new Error("Invalid App Dock command")
-    return appDock.command(event.sender.id, appDockID(tabID, "tab"), command)
+    return browserDock.command(event.sender.id, appDockID(tabID, "tab"), command)
   })
   ipcMain.handle("app-dock-find", (event: IpcMainInvokeEvent, tabID: unknown, text: unknown, forward: unknown) => {
     appDockSender(event)
     if (typeof text !== "string") throw new Error("Invalid App Dock find text")
     if (typeof forward !== "boolean") throw new Error("Invalid App Dock find direction")
-    return appDock.find(event.sender.id, appDockID(tabID, "tab"), text, forward, (result: AppDockFindResult) => {
+    return browserDock.find(event.sender.id, appDockID(tabID, "tab"), text, forward, (result: AppDockFindResult) => {
       if (!event.sender.isDestroyed()) event.sender.send("app-dock-find-result", result)
     })
   })
   ipcMain.handle("app-dock-stop-find", (event: IpcMainInvokeEvent, tabID: unknown) => {
     appDockSender(event)
-    appDock.stopFind(event.sender.id, appDockID(tabID, "tab"))
+    browserDock.stopFind(event.sender.id, appDockID(tabID, "tab"))
   })
   ipcMain.handle("app-dock-zoom", (event: IpcMainInvokeEvent, tabID: unknown, factor?: unknown) => {
     appDockSender(event)
     if (factor !== undefined && (typeof factor !== "number" || !Number.isFinite(factor) || factor <= 0))
       throw new Error("Invalid App Dock zoom")
-    return appDock.zoom(event.sender.id, appDockID(tabID, "tab"), factor)
+    return browserDock.zoom(event.sender.id, appDockID(tabID, "tab"), factor)
   })
   ipcMain.handle("app-dock-cancel-download", (event: IpcMainInvokeEvent, id: unknown) => {
     appDockSender(event)
@@ -677,6 +808,12 @@ export function registerIpcHandlers(deps: Deps) {
       relaunch: deps.relaunch,
     })
   })
+  return {
+    stopLinuxRuntime: () => {
+      appDockDestroyHooks.forEach((senderID) => linux.invalidate(senderID))
+      return runtime.stop()
+    },
+  }
 }
 
 export function sendMenuCommand(win: BrowserWindow, id: string) {

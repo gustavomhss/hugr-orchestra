@@ -1,9 +1,58 @@
 /* Ported from Zen Browser dev @ 412731f37e567223097101d9fae9f9d364708b6b.
  * MPL-2.0 source: src/zen/common/styles/zen-theme.css,
  * src/zen/tabs/zen-tabs/vertical-tabs.css, src/zen/spaces/zen-workspaces.css. */
+.zen-browser-frame {
+  display: flex;
+  flex-direction: column;
+  container: app-dock / inline-size;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.zen-dock-modes {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 6px;
+  border-block-end: 1px solid var(--border-weak);
+}
+
+.zen-dock-modes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 34px;
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-weak);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.zen-dock-modes button.is-active {
+  color: var(--text-strong);
+  background: var(--surface-raised-stronger);
+  border-color: var(--border-strong);
+  font-weight: 600;
+}
+
+.zen-dock-modes button:focus-visible,
+.zen-window-picker:focus-visible {
+  outline: 2px solid var(--text-strong);
+  outline-offset: -2px;
+}
+
 .zen-browser-shell {
   --zen-toolbox-padding: 6px;
-  --zen-sidebar-width: 250px;
+  --zen-sidebar-width: 196px;
   --zen-element-separation: 6px;
   --zen-tab-radius: 8px;
   --zen-panel-radius: 14px;
@@ -16,13 +65,42 @@
     sans-serif;
   display: flex;
   width: 100%;
-  height: 100%;
+  flex: 1;
   min-width: 0;
   min-height: 0;
   gap: var(--zen-toolbox-padding);
   padding: var(--zen-toolbox-padding);
   color: var(--text-strong);
   background-color: var(--v2-background-bg-base, var(--surface-base));
+}
+
+.zen-workspace-kind {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.zen-window-picker {
+  flex: 1;
+  min-inline-size: 60px;
+  block-size: 28px;
+  border: 1px solid var(--border-weak);
+  border-radius: 7px;
+  padding-inline: 8px;
+  background: var(--surface-base);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 12px;
+}
+
+.zen-browser-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.zen-urlbar:has(.zen-browser-tools) {
+  flex-wrap: wrap;
 }
 
 .zen-browser-sidebar {
@@ -203,7 +281,7 @@
 }
 
 .zen-workspace-add {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-size: 16px;
 }
 
@@ -238,7 +316,7 @@
   border-radius: var(--zen-tab-radius);
   color: var(--text-weak);
   background: transparent;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -373,6 +451,27 @@
   background: var(--v2-background-bg-layer-01, var(--surface-raised-base));
 }
 
+.zen-native-toolbar {
+  display: flex;
+  min-block-size: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block: 3px;
+  padding-inline: 10px 6px;
+  border-radius: var(--zen-panel-radius);
+  background: var(--v2-background-bg-layer-01, var(--surface-raised-base));
+  font-size: 12px;
+}
+
+.zen-native-toolbar strong {
+  max-inline-size: 160px;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .zen-urlbar input {
   min-width: 0;
   height: 28px;
@@ -497,7 +596,7 @@
   border-radius: 8px;
   color: var(--text-strong);
   background: transparent;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -639,7 +738,7 @@
   border-radius: 6px;
   color: var(--text-strong);
   background: transparent;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -658,7 +757,7 @@
   outline-offset: 1px;
 }
 
-@media (max-width: 640px) {
+@container app-dock (max-width: 640px) {
   .zen-browser-shell {
     gap: 3px;
     padding: 3px;
@@ -697,7 +796,7 @@
   }
 
   .zen-findbar {
-    right: 6px;
+    inset-inline-end: 6px;
   }
 
   .zen-findbar input {
@@ -705,7 +804,7 @@
   }
 }
 
-@media (max-width: 460px) {
+@container app-dock (max-width: 460px) {
   .zen-browser-shell {
     flex-direction: column;
   }

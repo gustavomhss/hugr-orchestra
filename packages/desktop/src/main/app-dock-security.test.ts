@@ -493,11 +493,7 @@ async function child() {
     invoke(ipcWin.webContents.mainFrame, "app-dock-open", [url, bounds, profileID])
   const navigate = (tabID: string, url: string) =>
     invoke(ipcWin.webContents.mainFrame, "app-dock-navigate", [tabID, url])
-  const viewContents = () =>
-    webContents
-      .getAllWebContents()
-      .filter((item) => item !== ipcWin.webContents && !item.isDestroyed())
-      .at(-1)
+  const viewContents = () => attachedContents(ipcWin)
   let completed = false
   try {
     const u01Start = await eventCount()
@@ -718,6 +714,8 @@ async function child() {
       "Invalid App Dock command",
     )
     pass("U15", "invalid IPC command enum rejected")
+    ipcWin.show()
+    check(ipcWin.isVisible(), "ticker owner window must be visible to exercise detached-view visibility")
     const ticker = await open(`${site.base}/ticker`, "e2e-profile-fresh")
     const tickerContents = viewContents()
     check(attached(ipcWin, tickerContents), "open App Dock view is not attached")
@@ -740,6 +738,7 @@ async function child() {
       hidden.count - beforeHide.count <= 1,
       `hidden ticker was not throttled: ${beforeHide.count} -> ${hidden.count}`,
     )
+    check(await execute("view:hidden-visibility", tickerContents, "document.hidden"), "detached App Dock view still reports visible document")
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [ticker.tabID, bounds])
     check(attached(ipcWin, tickerContents), "select does not reattach hidden App Dock view")
     const resumedAt = performance.now()
