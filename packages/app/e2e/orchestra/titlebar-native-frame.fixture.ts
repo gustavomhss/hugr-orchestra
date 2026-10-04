@@ -24,7 +24,7 @@ export type NativeFrameFixture = {
     disconnected: number
     targets: string[]
   }
-  update(value: { zoom?: number; fullscreen?: boolean; newLayout?: boolean }): void
+  update(value: { zoom?: number; fullscreen?: boolean; newLayout?: boolean; direction?: "ltr" | "rtl" }): void
   move(left: number, top: number, height: number): void
   stream(): Promise<void>
   dispose(): void
@@ -38,9 +38,14 @@ const titlebar = normalizePath(fileURLToPath(new URL("../../src/components/title
 const nativeFrame = normalizePath(
   fileURLToPath(new URL("../../src/components/orchestra/native-frame.ts", import.meta.url)),
 )
+const navigation = normalizePath(fileURLToPath(new URL("../../src/orchestra/navigation-toggle.tsx", import.meta.url)))
+const navigationTooltip = normalizePath(
+  fileURLToPath(new URL("../../src/orchestra/navigation-tooltip.tsx", import.meta.url)),
+)
+const shellCSS = normalizePath(fileURLToPath(new URL("../../src/orchestra/shell.css", import.meta.url)))
 const stateModule = `
 import { createStore } from "solid-js/store"
-export const [state, setState] = createStore({ zoom: 1, fullscreen: false, newLayout: true })
+export const [state, setState] = createStore({ zoom: 1, fullscreen: false, newLayout: true, direction: "ltr", compact: true })
 export const records = { frames: [], reads: 0, requests: 0, completed: 0, cancelled: 0, observers: 0, disconnected: 0, targets: [] }
 export const callbacks = { raf: [], observers: [] }
 const params = new URLSearchParams(location.search)
@@ -71,7 +76,10 @@ export const useLayout = () => ({
   mobileSidebar: { opened: () => false },
 })
 export const useCommand = () => ({ register: () => {}, keybind: () => "", keybindParts: () => [] })
-export const useLanguage = () => ({ direction: () => "ltr", t: (key) => key })
+export const useLanguage = () => ({ direction: () => state.direction, t: (key) => ({
+  "orchestra.nav.expand": "Expand sidebar",
+  "orchestra.nav.collapse": "Collapse sidebar",
+})[key] ?? key })
 export const useTheme = () => ({ mode: () => "dark", setColorScheme: () => {} })
 export const useGlobal = () => ({ servers: { list: () => [] } })
 export const useServer = () => ({ key: "local" })
@@ -98,9 +106,14 @@ export const WindowsAppMenu = () => null
 export const TitlebarTabStrip = () => null
 `
 const entryModule = `
+import { createEffect } from "solid-js"
 import { createComponent, render } from "solid-js/web"
+import { I18nProvider } from "@kobalte/core/i18n"
 import { Titlebar } from ${JSON.stringify(titlebar)}
-import { setState, records, callbacks } from "frame:state"
+import { OrchestraNavigationToggle } from ${JSON.stringify(navigation)}
+import { state, setState, records, callbacks } from "frame:state"
+const navigationEnabled = new URLSearchParams(location.search).has("navigation")
+if (navigationEnabled) await import(${JSON.stringify(shellCSS)})
 const nativeRAF = window.requestAnimationFrame.bind(window)
 const nativeCancel = window.cancelAnimationFrame.bind(window)
 const pending = new Set()
@@ -147,7 +160,24 @@ window.ResizeObserver = class extends NativeObserver {
 }
 const shell = document.querySelector(".orchestra-shell")
 if (!shell) throw new Error("Native titlebar fixture shell is missing")
-const dispose = render(() => createComponent(Titlebar, {}), shell)
+const dispose = render(() => {
+  createEffect(() => { document.documentElement.dir = state.direction })
+  return createComponent(I18nProvider, {
+    get locale() { return state.direction === "rtl" ? "ar" : "en" },
+    get children() {
+      return createComponent(Titlebar, {
+        get navigation() {
+          if (!navigationEnabled) return
+          return createComponent(OrchestraNavigationToggle, {
+            get compact() { return state.compact },
+            constrained: false,
+            onToggle: () => setState("compact", (value) => !value),
+          })
+        },
+      })
+    },
+  })
+}, shell)
 const header = shell.querySelector("header")
 if (!header) throw new Error("Titlebar did not render its header")
 header.setAttribute("aria-label", "Native titlebar fixture")
@@ -262,6 +292,8 @@ export function nativeFrameViteConfig(cache: string) {
         enforce: "pre",
         resolveId(source, importer) {
           if (source.startsWith("frame:")) return `\0${source}`
+          if ((importer === navigation || importer === navigationTooltip) && source === "@/context/language")
+            return "\0frame:providers"
           if (importer !== titlebar) return
           if (source === "./orchestra/native-frame") return nativeFrame
           if (source === "@/components/titlebar-session-events")
@@ -322,7 +354,8 @@ export function nativeFrameViteConfig(cache: string) {
               * { box-sizing: border-box } body { margin: 0 }
               .orchestra-shell { display: flex; flex-direction: column; width: calc(100% - 24px);
                 height: calc(100vh - 24px); margin: 12px; border: 1px solid; overflow: hidden }
-              header { position: relative; display: flex; height: 45px; flex-shrink: 0 }
+              header { position: relative; display: flex; height: 45px; flex-shrink: 0; -webkit-app-region: drag }
+              header > div { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0 }
             </style></head><body><div class="orchestra-shell"></div>
             <script type="module" src="/@id/__x00__frame:entry"></script></body></html>`)
           })

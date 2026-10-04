@@ -139,6 +139,45 @@ test("keeps physical coordinates in RTL and skips frame machinery on unsupported
   }
 })
 
+test("navigation child remains no-drag and outside physical macOS controls in both directions", async ({ page }) => {
+  await open(page, "?navigation")
+  const header = page.getByRole("banner", { name: "Native titlebar fixture", exact: true })
+  for (const direction of ["ltr", "rtl"] as const) {
+    for (const zoom of [1, 1.25, 2]) {
+      await update(page, { direction, zoom })
+      await expect(page.locator("html")).toHaveAttribute("dir", direction)
+      const toggle = header.getByRole("button", { name: "Expand sidebar", exact: true })
+      await expect(toggle).toBeVisible()
+      await expect(toggle).toHaveCSS("-webkit-app-region", "no-drag")
+      await expect(header).toHaveCSS("-webkit-app-region", "drag")
+      const frame = await header.boundingBox()
+      expect(frame).not.toBeNull()
+      const bounds = await toggle.boundingBox()
+      expect(bounds).not.toBeNull()
+      const padding = await header.evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingLeft))
+      expect(padding).toBeCloseTo(84 / zoom, 2)
+      expect(bounds!.x).toBeGreaterThanOrEqual(frame!.x + padding - 1)
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(frame!.x + frame!.width)
+      expect(
+        await toggle.evaluate((element) => {
+          const rect = element.getBoundingClientRect()
+          return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2))
+        }),
+      ).toBe(true)
+      await toggle.focus()
+      await page.keyboard.press("Enter")
+      const collapse = header.getByRole("button", { name: "Collapse sidebar", exact: true })
+      await expect(collapse).toBeFocused()
+      await expect(collapse).toHaveAttribute("aria-expanded", "true")
+      expect(await header.boundingBox()).toEqual(frame)
+      await collapse.click()
+      await expect(toggle).toHaveAttribute("aria-expanded", "false")
+      await settled(page)
+      expect((await snapshot(page)).frames).toEqual([{ left: 13, top: 13, height: 45 }])
+    }
+  }
+})
+
 test("chat text streaming does not request geometry; unchanged window geometry does not resend", async ({ page }) => {
   const before = await snapshot(page)
   expect(before.frames).toEqual([{ left: 13, top: 13, height: 45 }])

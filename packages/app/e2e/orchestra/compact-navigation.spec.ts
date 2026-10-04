@@ -1,13 +1,11 @@
-import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { expect, test } from "@playwright/test"
+import { setupCompactNavigation } from "./compact-navigation.fixture"
 
-const directory = "/work/compact-navigation"
-const server = "http://127.0.0.1:4096"
 test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
 
 test("collapse preserves names, focus, routes, profile and titlebar geometry across reload", async ({ page }) => {
   test.setTimeout(120_000)
-  await setup(page)
+  await setupCompactNavigation(page)
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   const header = page.locator('[data-slot="titlebar-v2"]')
@@ -66,7 +64,10 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await page.locator('[data-slot="orchestra-theme-toggle"]').click()
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "light")
   await page.screenshot({ path: test.info().outputPath("compact-light.png"), animations: "disabled" })
-  await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
+  await page.getByRole("button", { name: "DIR: LTR", exact: true }).click()
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
+  await expect(page.locator("html")).toHaveAttribute("lang", "en")
+  await expect(page.getByRole("button", { name: "DIR: RTL", exact: true })).toHaveAttribute("aria-pressed", "true")
   await expect
     .poll(async () => {
       const nav = await sidebar.boundingBox()
@@ -86,7 +87,7 @@ test("responsive compact mode restores the choice and leaves mobile navigation a
   page,
   context,
 }) => {
-  await setup(page)
+  await setupCompactNavigation(page)
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   await expect(sidebar).toHaveCSS("width", "230px")
@@ -105,7 +106,7 @@ test("responsive compact mode restores the choice and leaves mobile navigation a
   await expect(sidebar).toHaveCSS("width", "230px")
   await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click()
   const other = await context.newPage()
-  await setup(other)
+  await setupCompactNavigation(other)
   await other.goto("/")
   await expect(other.locator('[data-component="orchestra-sidebar"]')).toHaveCSS("width", "230px")
   await expect(sidebar).toHaveCSS("width", "56px")
@@ -128,43 +129,3 @@ test("responsive compact mode restores the choice and leaves mobile navigation a
   await page.setViewportSize({ width: 1672, height: 941 })
   await expect(sidebar).toHaveCSS("width", "56px")
 })
-
-async function setup(page: Page) {
-  await mockOpenCodeServer(page, {
-    directory,
-    project: {
-      id: "compact-project",
-      name: "Compact project",
-      worktree: directory,
-      vcs: "git",
-      time: { created: 1, updated: 1 },
-      sandboxes: [],
-    },
-    provider: { all: [], connected: [], default: {} },
-    sessions: [],
-    pageMessages: () => ({ items: [] }),
-  })
-  await page.addInitScript(
-    ({ directory, server }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
-      localStorage.setItem(
-        "opencode.global.dat:server",
-        JSON.stringify({
-          list: [server],
-          projects: {
-            local: [{ worktree: directory, expanded: true }],
-            [server]: [{ worktree: directory, expanded: true }],
-          },
-          lastProject: { local: directory, [server]: directory },
-        }),
-      )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", "dark")
-      localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-    },
-    { directory, server },
-  )
-}

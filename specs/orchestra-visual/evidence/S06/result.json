@@ -1,5 +1,9 @@
 {
   "scope": "S06 compact desktop navigation only",
+  "follow_up": {
+    "receipt": "rtl-proof/result.json",
+    "supersedes": "Arabic locale navigation and provider-driven English RTL now have follow-up evidence, superseding the DOM-only RTL scope below. Linguistic translation quality, Hebrew coverage and other historical limits remain unclaimed."
+  },
   "contract_items": [
     "S06-W1-T1 (compact navigation slice)",
     "S06-W1-T2 (compact navigation proof slice)",

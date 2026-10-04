@@ -456,24 +456,30 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       <DropdownMenu.GroupLabel class="orchestra-profile-group">
                         <bdi>{serverName(group.conn)}</bdi>
                       </DropdownMenu.GroupLabel>
-                      <For each={group.projects()}>
-                        {(project) => (
-                          <DropdownMenu.RadioItem
-                            class="orchestra-profile-item"
-                            value={`${group.key}\n${project.worktree}`}
-                            disabled={
-                              !layout.ready() || !tabs.ready() || global.servers.health[group.key]?.healthy === false
-                            }
-                            onSelect={() => afterProfileClose(() => selectProject(group.conn, project))}
-                          >
-                            <DropdownMenu.ItemLabel class="orchestra-profile-item-name">
-                              <bdi>{displayName(project)}</bdi>
-                            </DropdownMenu.ItemLabel>
-                            <DropdownMenu.ItemIndicator>
-                              <Icon name="check" />
-                            </DropdownMenu.ItemIndicator>
-                          </DropdownMenu.RadioItem>
-                        )}
+                      {/* Enrichment replaces project objects on refresh; keep keyboard targets keyed by worktree. */}
+                      <For each={group.projects().map((project) => project.worktree)}>
+                        {(worktree) => {
+                          const project = createMemo(
+                            () => group.projects().find((project) => project.worktree === worktree)!,
+                          )
+                          return (
+                            <DropdownMenu.RadioItem
+                              class="orchestra-profile-item"
+                              value={`${group.key}\n${worktree}`}
+                              disabled={
+                                !layout.ready() || !tabs.ready() || global.servers.health[group.key]?.healthy === false
+                              }
+                              onSelect={() => afterProfileClose(() => selectProject(group.conn, project()))}
+                            >
+                              <DropdownMenu.ItemLabel class="orchestra-profile-item-name">
+                                <bdi>{displayName(project())}</bdi>
+                              </DropdownMenu.ItemLabel>
+                              <DropdownMenu.ItemIndicator>
+                                <Icon name="check" />
+                              </DropdownMenu.ItemIndicator>
+                            </DropdownMenu.RadioItem>
+                          )
+                        }}
                       </For>
                       <DropdownMenu.Item
                         class="orchestra-profile-item orchestra-profile-add"
