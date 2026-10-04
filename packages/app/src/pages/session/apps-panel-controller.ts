@@ -428,8 +428,6 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     owns: (element: HTMLElement | undefined) => !!element && element === host,
     // Bounds measured for one tab; the desktop drops them once another tab or generation is attached.
     resize: (tab: TabIdentity, next: Bounds) => dock?.appDockResize(identity(tab), next) ?? Promise.resolve(),
-    // An overlay drawn inside the app tree rather than a portal covers the Dock while registered.
-    overlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     retry() {
       if (state.owner !== undefined && state.status === "failed") void load(state.owner)
     },

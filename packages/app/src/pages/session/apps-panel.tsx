@@ -106,10 +106,6 @@ export function AppsPanel(
       { defer: true },
     ),
   )
-  // The tab menu can reach over the browser, so it registers itself wherever its portal mounts.
-  createEffect(() => {
-    if (view.menu && menuElement) onCleanup(dock.overlay(menuElement))
-  })
   onMount(() => {
     const unsubscribeFind = api?.appDockFindResult?.((result) => {
       if (sameTab(result, state.active) && result.requestID === findRequestID) setView("findResult", result)
@@ -662,6 +658,8 @@ function TabButton(props: {
 // The menu opens with its inline-start corner at (x, y) in the viewport. It is portaled because the side
 // panel's tab panels use `contain: strict`, which makes them the containing block of a fixed descendant:
 // drawn in place, the menu lands offset by the panel's origin, clipped, and focusing it scrolls the panel.
+// The portal's container is a child of the body, where the Dock's overlay watch already sees it and
+// hides the native browser under it.
 function TabMenu(props: {
   tab: Tab
   x: number
