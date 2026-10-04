@@ -211,7 +211,9 @@ export function SessionSidePanel(props: {
       // mounted tab strip selects Tasks instead of falling back to Review.
       view().reviewPanel.open()
       tabs().open("tasks")
-      queueMicrotask(() => tabs().setActive("tasks"))
+      // App Dock views only stay attached while Apps is the active tab; stealing
+      // focus here would hide the dock mid-turn and break the agent's dock tools.
+      if (tabs().active() !== "apps") queueMicrotask(() => tabs().setActive("tasks"))
     }
   })
   const panelTabs = tabState.panelTabs
