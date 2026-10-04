@@ -442,33 +442,19 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
 
   for (const locale of ["en", "ar"] as const) {
     test(`the tab menu opens at its trigger (${locale === "ar" ? "RTL" : "LTR"})`, async ({ page }) => {
-      await setup(page, { bridge: true, locale })
-      await page.goto(`/server/${base64Encode(server)}/session/${parentID}`, { waitUntil: "domcontentloaded" })
-      await expectSessionTitle(page, parentTitle)
-      const rtl = locale === "ar"
-      await expect(page.locator("html")).toHaveAttribute("dir", rtl ? "rtl" : "ltr")
-      // Existing dictionary copy for the review toggle, not a translation supplied by this fixture.
-      await page.getByRole("button", { name: rtl ? "تبديل المراجعة" : "Toggle review", exact: true }).click()
+      const rtl = await openTabs(page, locale, 2)
       const dock = dockCard(page)
-      await expect(dock).toBeVisible()
-      const address = dock.getByRole("textbox", { name: "Address" })
-      await address.fill("https://example.com/a")
-      await address.press("Enter")
-      await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toHaveAttribute("aria-selected", "true")
-      await dock.getByRole("button", { name: "+ New tab" }).click()
-      await expect(
-        dock.locator(".zen-tab", { has: page.locator(".zen-tab-title", { hasText: /^Page \/$/ }) }),
-      ).toHaveAttribute("aria-selected", "true")
       const trigger = dock.locator(".zen-tab", { hasText: "Page /a" })
       const menu = page.getByRole("menu", { name: "Actions for Page /a" })
       const tab = await rect(trigger)
+      const start = rtl ? "right" : "left"
 
       // A pointer opens the menu with its inline-start corner on the pointer.
       const point = { x: Math.round(tab.left + tab.width / 2), y: Math.round(tab.top + tab.height / 2) }
       await page.mouse.click(point.x, point.y, { button: "right" })
       await expect(menu).toBeVisible()
       await expect(menu.getByRole("menuitem", { name: "Duplicate" })).toBeFocused()
-      await expectAnchored(page, menu, { inline: point.x, block: point.y }, rtl)
+      await expectAnchored(page, menu, point, { x: start, y: "top" })
       await shoot(page, `tab-menu-pointer-${rtl ? "rtl" : "ltr"}`)
       await page.keyboard.press("Escape")
       await expect(menu).toHaveCount(0)
@@ -477,29 +463,113 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
       // The keyboard opens it under the trigger, from the trigger's inline-start edge.
       await page.keyboard.press("Shift+F10")
       await expect(menu).toBeVisible()
-      await expectAnchored(page, menu, { inline: rtl ? tab.right - 8 : tab.left + 8, block: tab.bottom + 4 }, rtl)
+      await expectAnchored(
+        page,
+        menu,
+        { x: rtl ? tab.right - 8 : tab.left + 8, y: tab.bottom + 4 },
+        { x: start, y: "top" },
+      )
       await shoot(page, `tab-menu-keyboard-${rtl ? "rtl" : "ltr"}`)
       await menu.getByRole("menuitem", { name: "Pin", exact: true }).click()
       await expect(menu).toHaveCount(0)
       await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toContainText("Pinned")
     })
+
+    // The Dock card sits at the window's inline-end edge, so the last tab's menu would leave the window.
+    test(`the tab menu flips inside the window at its edges (${locale === "ar" ? "RTL" : "LTR"})`, async ({ page }) => {
+      const rtl = await openTabs(page, locale, 4)
+      const dock = dockCard(page)
+      const tabs = dock.locator(".zen-tab")
+      const menu = page.getByRole("menu", { name: "Actions for Page /" })
+      const width = page.viewportSize()!.width
+      const end = rtl ? "left" : "right"
+      const tab = await rect(tabs.nth(3))
+
+      const point = { x: Math.round(rtl ? tab.left + 4 : tab.right - 4), y: Math.round(tab.top + tab.height / 2) }
+      // The menu is at least 180px wide, so opening toward the inline end would cross the window's edge.
+      expect(rtl ? point.x - 180 : width - point.x).toBeLessThan(rtl ? 0 : 180)
+      await page.mouse.click(point.x, point.y, { button: "right" })
+      await expect(menu).toBeVisible()
+      await expectAnchored(page, menu, point, { x: end, y: "top" })
+      await shoot(page, `tab-menu-edge-pointer-${rtl ? "rtl" : "ltr"}`)
+      const size = await rect(menu)
+      await page.keyboard.press("Escape")
+      await expect(menu).toHaveCount(0)
+
+      // From the keyboard it flips only if it would not fit from the trigger's inline-start edge.
+      const start = rtl ? tab.right - 8 : tab.left + 8
+      const fits = rtl ? start - size.width >= 0 : start + size.width <= width
+      await tabs.nth(3).focus()
+      await page.keyboard.press("Shift+F10")
+      await expect(menu).toBeVisible()
+      await expectAnchored(
+        page,
+        menu,
+        { x: start, y: tab.bottom + 4 },
+        { x: fits ? (rtl ? "right" : "left") : end, y: "top" },
+      )
+      await page.keyboard.press("Escape")
+      await expect(menu).toHaveCount(0)
+
+      // In a short window the menu opens upward from the pointer instead.
+      await page.setViewportSize({ width, height: 460 })
+      const short = await rect(tabs.nth(3))
+      const low = { x: Math.round(rtl ? short.left + 4 : short.right - 4), y: Math.round(short.bottom - 2) }
+      expect(low.y + size.height).toBeGreaterThan(460)
+      await page.mouse.click(low.x, low.y, { button: "right" })
+      await expect(menu).toBeVisible()
+      await expectAnchored(page, menu, low, { x: end, y: "bottom" })
+      await shoot(page, `tab-menu-edge-short-${rtl ? "rtl" : "ltr"}`)
+    })
   }
 })
+
+// Opens the cockpit with a page tab and `count - 1` new tabs after it, the last one selected and every
+// title loaded.
+async function openTabs(page: Page, locale: "en" | "ar", count: number) {
+  await setup(page, { bridge: true, locale })
+  await page.goto(`/server/${base64Encode(server)}/session/${parentID}`, { waitUntil: "domcontentloaded" })
+  await expectSessionTitle(page, parentTitle)
+  const rtl = locale === "ar"
+  await expect(page.locator("html")).toHaveAttribute("dir", rtl ? "rtl" : "ltr")
+  // Existing dictionary copy for the review toggle, not a translation supplied by this fixture.
+  await page.getByRole("button", { name: rtl ? "تبديل المراجعة" : "Toggle review", exact: true }).click()
+  const dock = dockCard(page)
+  await expect(dock).toBeVisible()
+  const address = dock.getByRole("textbox", { name: "Address" })
+  await address.fill("https://example.com/a")
+  await address.press("Enter")
+  await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toHaveAttribute("aria-selected", "true")
+  for (let index = 1; index < count; index++) {
+    await dock.getByRole("button", { name: "+ New tab" }).click()
+    await expect(dock.locator(".zen-tab")).toHaveCount(index + 1)
+    // The page's title arrives after the tab: wait for it, so no tab re-renders under an open menu.
+    await expect(dock.locator(".zen-tab").nth(index).locator(".zen-tab-title")).toHaveText("Page /")
+    await expect(dock.locator(".zen-tab").nth(index)).toHaveAttribute("aria-selected", "true")
+  }
+  return rtl
+}
 
 async function rect(locator: Locator) {
   return locator.evaluate((element) => element.getBoundingClientRect().toJSON() as DOMRect)
 }
 
-// The menu's inline-start corner is the anchor, and the whole menu is painted where it is laid out:
-// nothing clips or covers it, so both ends of every item hit that item.
-async function expectAnchored(page: Page, menu: Locator, anchor: { inline: number; block: number }, rtl: boolean) {
+// The named corner of the menu sits on the anchor and the menu lies inside the window. It is painted
+// where it is laid out: nothing clips or covers it, so both ends of every item hit that item.
+async function expectAnchored(
+  page: Page,
+  menu: Locator,
+  anchor: { x: number; y: number },
+  corner: { x: "left" | "right"; y: "top" | "bottom" },
+) {
   const box = await rect(menu)
-  expect({ inline: Math.round(rtl ? box.right : box.left), block: Math.round(box.top) }).toEqual({
-    inline: Math.round(anchor.inline),
-    block: Math.round(anchor.block),
+  expect({ x: Math.round(box[corner.x]), y: Math.round(box[corner.y]) }).toEqual({
+    x: Math.round(anchor.x),
+    y: Math.round(anchor.y),
   })
   const viewport = page.viewportSize()!
   expect(box.left).toBeGreaterThanOrEqual(0)
+  expect(box.top).toBeGreaterThanOrEqual(0)
   expect(box.right).toBeLessThanOrEqual(viewport.width)
   expect(box.bottom).toBeLessThanOrEqual(viewport.height)
   const hits = await menu.getByRole("menuitem").evaluateAll((items) =>
