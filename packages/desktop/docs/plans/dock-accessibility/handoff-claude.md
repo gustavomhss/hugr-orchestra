@@ -381,4 +381,6 @@ O trabalho saiu do worktree do lead (outra sessão edita lá) para `_worktrees/d
 
 **Como subir o app dev (não óbvio):** o `predev` quebra (`install-electron` não existe). Rode `OPENCODE_VERSION=1.18.27 bun script/build-node.ts` em `packages/opencode` (sem isso a versão sai `0.0.0-<branch>` e o tier grátis recusa), depois `electron-vite dev` em `packages/desktop` com `ELECTRON_EXEC_PATH` (binário do `dock-runtime`), `APP_DOCK_LINUX_IMAGE=orchestra-native-code:20261004` (imagem derivada com Code 1.140.0) e `OPENCODE_DB` isolado, para não migrar o banco real do usuário.
 
-**Ainda aberto:** W06 no harness com o fluxo de Configurações; prova com modelo mais forte; cobertura de busca para páginas do navegador (`dock_find` hoje é só nativo); revisão fria das mudanças acima.
+**Configurações no app real (mesmo VS Code, mesmo agente):** abrir Manage → Settings, buscar `@id:files.trimTrailingWhitespace` (keyboard, verified), marcar a caixa com `dock_action` target + `mode: "observed"` em 2m23s; oráculo independente via `docker exec`: `~/.config/Code/User/settings.json` passou de ausente para `{"files.trimTrailingWhitespace": true}`. Restauração (desmarcar) em 36s; o arquivo voltou para `{}`. Sem controle negativo nesta rodada no app real (o controle de ação suprimida existe só no harness).
+
+**Ainda aberto:** controle negativo e receipt durável da rodada no app real; W06 completo no harness com as ferramentas novas; prova com modelo mais forte; cobertura de busca para páginas do navegador (`dock_find` hoje é só nativo); revisão fria das mudanças acima.
