@@ -4,24 +4,32 @@ import { createSignal } from "solid-js"
 import { createComponent, render } from "solid-js/web"
 
 // Bun compiles JSX for React. Compile both rings with Solid's own Babel preset so the test renders their real SVG.
+// The ?solid specifier scopes the plugin to these imports and keeps a React-compiled copy loaded elsewhere out.
 const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 Bun.plugin({
   name: "solid-progress-circle",
   setup(build) {
-    build.onLoad({ filter: /\/progress-circle(-v2)?\.tsx$/ }, async (args) => {
-      const result = await solid("@babel/core").transformAsync(await Bun.file(args.path).text(), {
-        filename: args.path,
-        presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
-        parserOpts: { plugins: ["jsx", "typescript"] },
-        configFile: false,
-        babelrc: false,
-      })
+    build.onLoad({ filter: /\/progress-circle(-v2)?\.tsx\?solid$/ }, async (args) => {
+      const result = await solid("@babel/core").transformAsync(
+        await Bun.file(args.path.replace(/\?solid$/, "")).text(),
+        {
+          filename: args.path,
+          presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
+          parserOpts: { plugins: ["jsx", "typescript"] },
+          configFile: false,
+          babelrc: false,
+        },
+      )
       return { contents: result.code, loader: "ts" }
     })
   },
 })
-const { ProgressCircle } = await import("@opencode-ai/ui/progress-circle")
-const { ProgressCircleV2 } = await import("@opencode-ai/ui/v2/progress-circle-v2")
+const { ProgressCircle }: typeof import("@opencode-ai/ui/progress-circle") = await import(
+  `${Bun.resolveSync("@opencode-ai/ui/progress-circle", import.meta.dir)}?solid`
+)
+const { ProgressCircleV2 }: typeof import("@opencode-ai/ui/v2/progress-circle-v2") = await import(
+  `${Bun.resolveSync("@opencode-ai/ui/v2/progress-circle-v2", import.meta.dir)}?solid`
+)
 
 for (const ring of [
   {
