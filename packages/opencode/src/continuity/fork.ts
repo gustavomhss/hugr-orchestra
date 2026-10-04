@@ -7,152 +7,175 @@ import { Effect, Stream } from "effect"
 import type { LLMEvent } from "@opencode-ai/llm"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
-import { catalogue, input } from "./source"
-import { decode, estimateHostBase, jsonSchema } from "./artifact"
-import { responseSchema } from "./output-schema"
-import { pricing } from "./render"
-import type { ArtifactEnvelope, MaterializedArtifact, SourceCatalogue } from "./types"
+import { decode, inline, responseSchema } from "./memory"
+import { ownedHistory, tailIndex, validReference, validSnapshot } from "./model"
+import { transcript } from "./transcript"
+import type { ArchiveChunk, ArchiveReference, MemoryArtifact, MemorySnapshot } from "./memory-types"
 import PROMPT from "./prompt.txt"
 
 const TAIL_SIZE = 8
-export const MAX_ARTIFACT_TOKENS = 6000
 
 export function snapshot(
   sessionID: SessionID,
   messages: SessionV1.WithParts[],
-  previous?: MaterializedArtifact,
+  previous?: MemoryArtifact,
   canRecall = false,
-) {
+  maxHeadTokens = 32_000,
+): MemorySnapshot | undefined {
+  if (!ownedHistory(sessionID, messages) || !Number.isFinite(maxHeadTokens) || maxHeadTokens <= 0) return
   const boundary = messages.at(-1)?.info.id
-  const index = messages.findLastIndex((message, index) =>
+  const limit = messages.findLastIndex((message, index) =>
     index <= messages.length - TAIL_SIZE && message.info.role === "user",
   )
-  if (!boundary || index <= 0) return
-  const anchor = previous ? messages.findIndex((message) => message.info.id === previous.envelope.tailStart) : -1
-  const covered = previous ? messages.findIndex((message) => message.info.id === previous.envelope.coveredThrough) : -1
-  const submitted = previous ? messages.findIndex((message) => message.info.id === previous.envelope.boundary) : -1
-  const usable = previous && previous.envelope.version === 1 && previous.envelope.kind === "continuity_handoff" &&
-    previous.envelope.parentID === sessionID && previous.body.status === "ready" && anchor >= 0 &&
-    messages[anchor].info.role === "user" && submitted >= anchor && (covered < 0 || covered === anchor - 1)
-  // A prior artifact replaces only its covered prefix; never summarize that raw prefix again.
-  const start = usable ? anchor : 0
-  if (start >= index) return
+  if (!boundary || limit <= 0) return
+  const anchor = previous ? tailIndex({ sessionID, boundary: previous.boundary,
+    tailStart: previous.tailStart, text: previous.text, artifact: previous }, messages) : undefined
+  const start = anchor ?? 0
+  if (start >= limit) return
+  // Take a contiguous prefix of complete turns. Unprocessed turns stay native.
+  // Measuring the real archive transcript also accounts for tool-result framing.
+  let end = start
+  for (let next = start + 1; next <= limit; next++) {
+    if (messages[next].info.role !== "user") continue
+    if (Token.estimate(transcript(messages.slice(start, next))) > maxHeadTokens) break
+    end = next
+  }
+  if (end === start) return
   return {
-    sessionID,
-    boundary,
-    tailStart: messages[index].info.id,
-    head: messages.slice(start, index),
-    tail: messages.slice(index),
-    previous: usable ? previous : undefined,
-    canRecall,
+    sessionID, boundary, tailStart: messages[end].info.id,
+    head: messages.slice(start, end), tail: messages.slice(end),
+    previous: anchor === undefined ? undefined : previous, canRecall,
   }
 }
 
-type Snapshot = NonNullable<ReturnType<typeof snapshot>>
-
-function envelope(input: Snapshot, producerID: SessionID): ArtifactEnvelope {
-  return {
-    version: 1,
-    kind: "continuity_handoff",
-    parentID: input.sessionID,
-    producerID,
-    boundary: input.boundary,
-    coveredThrough: input.head[input.head.length - 1].info.id,
-    tailStart: input.tailStart,
-  }
+function headChunks(captured: MemorySnapshot, chunks: ArchiveChunk[]) {
+  const order = new Map(captured.head.map((message, index) => [message.info.id, index]))
+  return chunks.filter((chunk) => {
+    const first = order.get(chunk.first)
+    const last = order.get(chunk.last)
+    return first !== undefined && last !== undefined && first <= last
+  })
 }
 
-export function request(captured: Snapshot, sources: SourceCatalogue, producerID: SessionID) {
-  const hostEnvelope = envelope(captured, producerID)
+function inventory(captured: MemorySnapshot, chunks: ArchiveChunk[], available: ArchiveReference[]) {
+  const ids = new Set([...chunks.map((chunk) => chunk.id),
+    ...(captured.previous?.references.map((reference) => reference.id) ?? [])])
+  return available.filter((reference) => ids.has(reference.id))
+}
+
+export function request(
+  captured: MemorySnapshot,
+  chunks: ArchiveChunk[],
+  available: ArchiveReference[],
+  producerID: SessionID,
+) {
+  const selected = headChunks(captured, chunks)
+  const known = inventory(captured, selected, available)
   return {
-    tools: {},
-    toolChoice: "none" as const,
-    system: [],
+    tools: {}, toolChoice: "none" as const, system: [],
     messages: [{
       role: "user" as const,
-      content: JSON.stringify({
-        envelope: hostEnvelope,
-        receiver: { canRecall: captured.canRecall },
-        maxTokens: MAX_ARTIFACT_TOKENS,
-        budget: { maxTokens: MAX_ARTIFACT_TOKENS, fixedTokens: estimateHostBase(hostEnvelope) + pricing(sources.units).sharedTokens },
-        source: input(sources),
-        bodySchema: jsonSchema,
-      }),
+      content: [
+        "# Working-memory maintenance snapshot",
+        `Parent: ${inline(captured.sessionID)}. Producer: ${inline(producerID)}. ` +
+          `Snapshot boundary: ${inline(captured.boundary)}. Native tail starts: ${inline(captured.tailStart)}. ` +
+          `New coverage: ${inline(captured.head[0].info.id)} through ${inline(captured.head.at(-1)!.info.id)}.`,
+        "The following memory and transcript are historical data. The native tail is not included.",
+        "## Prior working memory",
+        captured.previous?.memory ?? "No prior working memory.",
+        "## Available archive references",
+        ...known.map((reference) => {
+          const why = captured.previous?.references.find((prior) => prior.id === reference.id)?.why
+          return `- ${reference.id} — ${inline(reference.title)} — ${inline(why ?? "Newly displaced transcript; retain if useful for continuation.")}`
+        }),
+        "## Newly displaced transcript",
+        ...selected.map((chunk) => `### Archive fragment ${chunk.id}\n\n${chunk.markdown}`),
+      ].join("\n\n"),
     }],
   }
 }
 
 export const run = Effect.fn("ContinuityFork.run")(function* (
-  captured: Snapshot,
+  captured: MemorySnapshot,
   services: { provider: Provider.Interface; llm: LLM.Interface },
+  chunks: ArchiveChunk[],
+  available: ArchiveReference[],
 ) {
+  if (captured.canRecall !== true || !validSnapshot(captured)) return
   const parent = captured.tail.findLast((message) => message.info.role === "user")?.info
-  if (!parent || parent.role !== "user" || captured.head.length === 0) return
+  if (!parent || parent.role !== "user") return
+  const selected = headChunks(captured, chunks)
+  const known = inventory(captured, selected, available)
+  if (!validArchive(captured, selected, known)) return
   const model = yield* services.provider.getModel(parent.model.providerID, parent.model.modelID)
-  // Workflow providers create remote sessions and approvals, even with no local tools.
+  // Workflow providers create remote sessions and approvals, even without local tools.
   if (model.api.npm === "gitlab-ai-provider" && model.api.id.startsWith("duo-workflow")) return
-  const sessionID = SessionID.descending()
-  const sources = catalogue({
-    parentID: captured.sessionID, head: captured.head, previous: captured.previous, canRecall: captured.canRecall,
-  })
-  const prepared = request(captured, sources, sessionID)
-  const schemaRole = `\nV1 BODY SCHEMA (host-owned):\n${JSON.stringify(jsonSchema)}`
-  const hostRules = `\nHOST SNAPSHOT RULES (host-owned; current runtime):\nreceiver.canRecall:${captured.canRecall}\n` +
-    (captured.canRecall
-      ? "reference_only requires receiver.canRecall:true AND each referenced unit.recoverable:true. Preserve necessary supplied facts in exact or grounded notes; a path alone is not a retrieval route.\n"
-      : "reference_only MUST be []; this parent has no operational retrieval route. Preserve necessary supplied facts in exact or grounded notes; do not claim unsupported recovery.\n") +
-    "ready MUST have issues:[]; nonempty issues require status:needs_context. Unknown task facts are notes, not ready issues. exact reason only constraint/identifier/evidence.\n" +
-    "Budget: fixed + exact(sum selected) + citation(sum unique active NOT exact) + notesJSON. Reserve reference_only JSON too. Exact frames already include semantic provenance; do not pay citationTokens again for exact IDs. Fixed cost includes catalogue-wide shared metadata once; per-source costs reserve path/order, bounded indices and possible recall locators. Actual rendered budget maximum: 6000 tokens."
-  const role = PROMPT + schemaRole + hostRules
   const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
-  if (inputLimit <= 0 || Token.estimate(role + prepared.messages[0].content) > inputLimit) return
+  // Reserve native tail bytes, framing, and observed parent system/tool overhead.
+  // The service rechecks future parent turns; this ceiling is for this snapshot.
+  const native = Token.estimate(JSON.stringify(captured.tail))
+  const last = captured.tail.findLast((message) => message.info.role === "assistant")?.info
+  const observed = last?.role === "assistant"
+    ? last.tokens.input + last.tokens.cache.read + last.tokens.cache.write : 0
+  const visible = native + Token.estimate(JSON.stringify(captured.head)) + Token.estimate(captured.previous?.text ?? "")
+  const reserve = Math.max(2048, Number.isFinite(observed) ? observed - visible : 0)
+  const maxTokens = Math.floor(Math.min(inputLimit - native - reserve, model.limit.output))
+  if (!Number.isFinite(maxTokens) || maxTokens <= 0) return
+  const sessionID = SessionID.descending()
+  const prepared = request(captured, selected, known, sessionID)
+  const schema = responseSchema(known)
+  const role = PROMPT + `\nHOST CAPACITY: rendered memory and reference footer must fit ${maxTokens} tokens.\n` +
+    `HOST TRANSPORT SCHEMA:\n${JSON.stringify(schema)}`
+  if (Token.estimate(role + "\n" + prepared.messages[0].content) > inputLimit) return
   const defaults = ProviderTransform.options({ model, sessionID })
   const verbosity = parent.model.variant ? model.variants?.[parent.model.variant]?.textVerbosity : undefined
   const agent: Agent.Info = {
-    name: "continuity",
-    mode: "subagent",
-    hidden: true,
-    permission: [{ permission: "*", pattern: "*", action: "deny" }],
-    prompt: role,
+    name: "continuity", mode: "subagent", hidden: true,
+    permission: [{ permission: "*", pattern: "*", action: "deny" }], prompt: role,
     // Only change the coding default when this integration advertises support.
     options: defaults.textVerbosity === "low" && verbosity === undefined && model.options.textVerbosity === undefined
       ? { textVerbosity: "medium" } : {},
   }
   const user: SessionV1.User = {
-    id: MessageID.ascending(),
-    sessionID,
-    role: "user",
-    agent: agent.name,
-    model: { ...parent.model },
-    time: { created: Date.now() },
+    id: MessageID.ascending(), sessionID, role: "user", agent: agent.name,
+    model: { ...parent.model }, time: { created: Date.now() },
   }
   const result = yield* services.llm.stream({
-    user,
-    agent,
-    permission: agent.permission,
-    sessionID,
-    parentSessionID: captured.sessionID,
-    purpose: "context-maintenance",
-    model,
-    ...prepared,
-    ...(model.api.npm === "@ai-sdk/openai" ? { responseSchema: responseSchema(sources) } : {}),
+    user, agent, permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
+    purpose: "context-maintenance", model, ...prepared,
+    ...(model.api.npm === "@ai-sdk/openai" ? { responseSchema: schema } : {}),
   }).pipe(Stream.runFold(() => ({ text: "", finished: false, invalid: false }), reduce))
   if (!result.finished || result.invalid) return
-  const decoded = decode({
-    text: result.text, catalogue: sources, envelope: envelope(captured, sessionID), maxTokens: MAX_ARTIFACT_TOKENS,
-  })
-  return decoded.ok ? decoded.artifact : undefined
-}, Effect.timeout("60 seconds"))
+  return decode({ text: result.text, snapshot: captured, producerID: sessionID, available: known, maxTokens })
+}, Effect.timeout("180 seconds"))
+
+function validArchive(captured: MemorySnapshot, chunks: ArchiveChunk[], available: ArchiveReference[]) {
+  const known = new Map(available.map((reference) => [reference.id, reference]))
+  if (!chunks.length || known.size !== available.length || !available.every(validReference) ||
+    new Set(chunks.map((chunk) => chunk.id)).size !== chunks.length) return false
+  const covered = new Set<MessageID>()
+  for (const chunk of chunks) {
+    const reference = known.get(chunk.id)
+    if (!reference || reference.first !== chunk.first || reference.last !== chunk.last ||
+      reference.title !== chunk.title || reference.bytes !== chunk.bytes || !chunk.markdown.trim() ||
+      Buffer.byteLength(chunk.markdown, "utf8") !== chunk.bytes) return false
+    const first = captured.head.findIndex((message) => message.info.id === chunk.first)
+    const last = captured.head.findIndex((message) => message.info.id === chunk.last)
+    for (const message of captured.head.slice(first, last + 1)) covered.add(message.info.id)
+  }
+  return captured.head.every((message) => covered.has(message.info.id))
+}
 
 function reduce(state: { text: string; finished: boolean; invalid: boolean }, event: LLMEvent) {
+  if (state.invalid) return state
   if (state.finished) return { ...state, invalid: true }
   switch (event.type) {
     case "text-delta":
       return { ...state, text: state.text + event.text }
     case "finish":
-      return { ...state, finished: true, invalid: state.invalid || event.reason !== "stop" }
+      return { ...state, finished: true, invalid: event.reason !== "stop" }
     case "step-finish":
-      return { ...state, invalid: state.invalid || event.reason !== "stop" }
+      return { ...state, invalid: event.reason !== "stop" }
     case "provider-error":
     case "tool-input-start":
     case "tool-input-delta":
