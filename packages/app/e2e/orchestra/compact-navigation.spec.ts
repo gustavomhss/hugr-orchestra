@@ -64,6 +64,16 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await page.locator('[data-slot="orchestra-theme-toggle"]').click()
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "light")
   await page.screenshot({ path: test.info().outputPath("compact-light.png"), animations: "disabled" })
+})
+
+// English direction override is exposed through the development DebugBar.
+// Production direction and portal geometry are covered with the actual Arabic locale.
+test("English RTL override preserves compact navigation geometry", { tag: "@development-only" }, async ({ page }) => {
+  await setupCompactNavigation(page, { scheme: "light" })
+  await page.goto("/")
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click()
+  await expect(sidebar).toHaveCSS("width", "56px")
   await page.getByRole("button", { name: "DIR: LTR", exact: true }).click()
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
   await expect(page.locator("html")).toHaveAttribute("lang", "en")
