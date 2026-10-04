@@ -10,6 +10,7 @@ import { promisify } from "node:util"
 import { DockerEngine } from "./docker-engine"
 import type { AppDockNativeRuntime } from "./app-dock-native-runtime"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
+import { LinuxWorkspaceAccess } from "./linux-workspace-access"
 
 const exec = promisify(execFile)
 const label = "io.orchestra.app-dock"
@@ -77,6 +78,7 @@ export function create(options: { root: string; context: string; image?: string;
     native: undefined as (Awaited<ReturnType<typeof AppDockNativeRuntime.create>> & {
       runtime: NativeDockProtocol.RuntimeIdentity; session: AppDockNativeRuntime.Options["session"]; endpoint: string; imageID: string
     }) | undefined,
+    accessKey: undefined as string | undefined,
   }
 
   const command = (args: string[], timeout = 20_000, extraEnv = {}) =>
@@ -453,7 +455,37 @@ export function create(options: { root: string; context: string; image?: string;
     })
   }
 
+  const access = LinuxWorkspaceAccess.create({
+    prepare: () => serialize(async () => {
+      if (!(await readMetadata(root))) throw new Error("workspace-not-configured")
+      const metadata = await load()
+      const container = await owned(metadata)
+      if (!container?.State.Running) throw new Error("workspace-not-running")
+      const key = placement(container)
+      if (current.accessKey !== key) {
+        await docker(metadata, ["cp", "--", resolve(options.context, "workspace-access.py"), `${container.Id}:/opt/orchestra/workspace-access.py`])
+        await docker(metadata, ["exec", "--user", "root", container.Id, "chown", "0:0", "/opt/orchestra/workspace-access.py"])
+        await docker(metadata, ["exec", "--user", "root", container.Id, "chmod", "0644", "/opt/orchestra/workspace-access.py"])
+        current.accessKey = key
+      }
+      return { endpoint: metadata.endpoint, containerID: container.Id, key }
+    }),
+    verify: async connection => {
+      const metadata = await load()
+      const container = await owned(metadata)
+      if (!container?.State.Running || metadata.endpoint !== connection.endpoint || container.Id !== connection.containerID || placement(container) !== connection.key)
+        throw new Error("workspace-changed")
+    },
+  })
+
   return {
+    access,
+    dispose: async () => {
+      await access.close()
+      await closeNative()
+      current.engine?.client.close()
+      current.engine = undefined
+    },
     workspaceScope: () => serialize(async () => {
       const metadata = await load()
       const container = await owned(metadata)
@@ -609,8 +641,11 @@ export function create(options: { root: string; context: string; image?: string;
         if (!(await catalogue(metadata, container)).some((app) => app.id === appID)) throw new RuntimeError("failed")
         await guest(metadata, container, ["launch", appID])
       }),
-    stop: () =>
-      serialize(async () => {
+    stop: async () => {
+      // Reap access outside the mutation queue: an admitted run may still be
+      // waiting for its serialized ownership/deployment check.
+      await access.close()
+      return serialize(async () => {
         if (!current.metadata && !(await readMetadata(root))) return
         await closeNative()
         await stopOwned(await load())
@@ -618,7 +653,8 @@ export function create(options: { root: string; context: string; image?: string;
         current.engine?.client.close()
         current.engine = undefined
         current.state = { phase: "stopped", apps: current.state.apps }
-      }),
+      })
+    },
   }
 }
 

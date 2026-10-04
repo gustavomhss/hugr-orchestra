@@ -14,6 +14,16 @@ permission/status rows and context changes resample native bounds independently
 of an occluded renderer's ResizeObserver. Back/Forward follow the actual native
 navigation history rather than remaining enabled on an empty history.
 
+The global dialog stack also detaches native views, including the model picker,
+provider connection and API-key dialogs. Views stay hidden through stacked-dialog
+closure and are restored only when the last global dialog and local overlay close.
+This controls Electron's native surfaces rather than relying on DOM z-index.
+
+Development build versions retain the source package's semantic version plus
+their preview channel and timestamp. This lets free-tier providers check the
+actual client compatibility instead of rejecting a recent build stamped `0.0.0`.
+Explicit version overrides remain unchanged.
+
 1. Start a local Linux Docker engine (Docker Desktop on macOS/Windows).
 2. Open the desktop's App Dock and select **Linux** in the sidebar.
 3. Select **Install** and choose an official Linux `.deb` package matching the
@@ -124,12 +134,24 @@ ordinary HTTPS admission boundary remains intact; unsupported external schemes
 retain the existing behavior. The forwarding bridge does not stop guest apps or
 replace Slack Desktop with its web version.
 
-The local real Electron/Docker test covers default-handler handoff, an actual
-Gio URI receiver, return to Linux, unrelated-tab rejection, replay rejection and
-callback exclusion from renderer events. Removing URI delivery fails the named
-receiver check. A live smoke opened the actual Slack sign-in page in Browser
-while retaining the installed Slack Desktop in Linux; no account login was
-performed by the test.
+Desktop sign-in pages can dispatch their callback from a hidden iframe.
+`will-frame-navigate` intercepts these callbacks using the same claim checks as
+main-frame navigation and popup interception; `will-navigate` alone cannot see
+subframe navigation.
+
+The local real Electron/Docker test covers default-handler handoff, iframe and
+popup callbacks into an actual Gio URI receiver, return to Linux, unrelated-tab
+rejection, replay rejection and callback exclusion from renderer events. Removing
+the frame hook fails the iframe receiver check; removing URI delivery also fails
+the receiver check. These fixtures do not perform account authentication.
+
+After the user completed browser authentication, a separate live check recovered
+the stopped owned workspace and launched the original Slack Desktop. Its native
+window displayed the Portuguese workspace-naming onboarding page. Browser login
+was not repeated. This proves the native app progressed past sign-in with the
+persisted session; completed workspace setup and normal channel use were not
+part of that check. When graphics return to the connection page, open Linux
+again to recover the workspace and then select the installed app.
 
 ## Display lifecycle
 
