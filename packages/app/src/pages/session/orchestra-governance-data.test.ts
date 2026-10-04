@@ -395,20 +395,37 @@ describe("maestroCapability", () => {
     options: {},
   })
   test("requires the native Maestro agent and waits for the agent list", () => {
-    expect(maestroCapability([agent("build"), agent("maestro", true)], true)).toBe("available")
-    expect(maestroCapability([agent("maestro")], true)).toBe("available")
-    expect(maestroCapability([agent("maestro", false)], true)).toBe("unavailable")
-    expect(maestroCapability([agent("build")], true)).toBe("unavailable")
-    expect(maestroCapability([], false)).toBe("checking")
+    expect(maestroCapability([agent("build"), agent("maestro", true)], "ready")).toBe("available")
+    expect(maestroCapability([agent("maestro")], "pending")).toBe("available")
+    expect(maestroCapability([agent("maestro", false)], "ready")).toBe("unavailable")
+    expect(maestroCapability([agent("build")], "ready")).toBe("unavailable")
+    expect(maestroCapability([], "ready")).toBe("unavailable")
+    expect(maestroCapability([], "pending")).toBe("checking")
+  })
+
+  test("reports a failed agent read as unknown instead of checking forever", () => {
+    expect(maestroCapability([], "failed")).toBe("unknown")
+    expect(maestroCapability([agent("build")], "failed")).toBe("unavailable")
   })
 })
 
 describe("ownSource", () => {
   test("separates unknown, missing and configured Own sources", () => {
     const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
-    expect(ownSource(config, false).state).toBe("unknown")
-    expect(ownSource({}, true).state).toBe("unknown")
-    expect(ownSource({ share: "manual" }, true).state).toBe("missing")
-    expect(ownSource(config, true)).toEqual({ state: "configured", projectID: "atlas-project", directory: "/atlas" })
+    expect(ownSource(config, "v2", "ready").state).toBe("unknown")
+    expect(ownSource({}, "v1", "ready").state).toBe("unknown")
+    expect(ownSource({ share: "manual" }, "v1", "ready").state).toBe("missing")
+    expect(ownSource(config, "v1", "ready")).toEqual({
+      state: "configured",
+      projectID: "atlas-project",
+      directory: "/atlas",
+    })
+  })
+
+  test("follows the project config read, not unrelated bootstrap reads", () => {
+    const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
+    expect(ownSource(config, undefined, "ready").state).toBe("checking")
+    expect(ownSource(config, "v1", "pending").state).toBe("checking")
+    expect(ownSource(config, "v1", "failed").state).toBe("failed")
   })
 })

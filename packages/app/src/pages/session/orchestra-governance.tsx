@@ -90,10 +90,8 @@ export function DialogOrchestraGovernance(props: {
     { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   )
   const session = () => sync.session.get(props.sessionID)
-  const capability = createMemo(() =>
-    maestroCapability(sync.data.agent, sync.data.agent.length > 0 || sync.status === "complete"),
-  )
-  const own = createMemo(() => ownSource(sync.data.config, protocol() === "v1" && sync.status === "complete"))
+  const capability = createMemo(() => maestroCapability(sync.data.agent, sync.data.load.agent))
+  const own = createMemo(() => ownSource(sync.data.config, protocol(), sync.data.load.config))
   const configured = () => {
     const source = own()
     if (source.state === "configured") return source
@@ -169,6 +167,11 @@ export function DialogOrchestraGovernance(props: {
           <Match when={capability() === "checking"}>
             <p class="orchestra-governance-empty" role="status">
               {language.t("orchestra.governance.checking")}
+            </p>
+          </Match>
+          <Match when={capability() === "unknown"}>
+            <p class="orchestra-governance-empty" role="status">
+              {language.t("orchestra.governance.capabilityUnknown")}
             </p>
           </Match>
           <Match when={capability() === "unavailable"}>
@@ -253,6 +256,8 @@ export function DialogOrchestraGovernance(props: {
                       )}
                     </Match>
                     <Match when={own().state === "missing"}>{language.t("orchestra.governance.own.missing")}</Match>
+                    <Match when={own().state === "checking"}>{language.t("orchestra.governance.own.checking")}</Match>
+                    <Match when={own().state === "failed"}>{language.t("orchestra.governance.own.failed")}</Match>
                   </Switch>
                 </dd>
               </div>

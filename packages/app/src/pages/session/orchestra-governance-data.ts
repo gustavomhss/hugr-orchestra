@@ -8,6 +8,8 @@ import type {
   ToolStateCompleted,
 } from "@opencode-ai/sdk/v2/client"
 import type { SessionMessageAssistantTool, SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { State } from "@/context/global-sync/types"
+import type { ServerProtocol } from "@/utils/server-protocol"
 
 // Session message APIs retain tool results, not a current Maestro read projection. Session history
 // exposes Session events; the legacy /sync/history dump is unscoped across aggregates. These are
@@ -154,15 +156,20 @@ export function readGovernance(input: {
   }
 }
 
-export function maestroCapability(agents: readonly Agent[], loaded: boolean) {
+export function maestroCapability(agents: readonly Agent[], read: State["load"]["agent"]) {
   if (agents.some((agent) => agent.name === "maestro" && agent.native !== false)) return "available"
-  if (!loaded) return "checking"
-  return "unavailable"
+  // A listed agent proves some read completed, even one outside this directory's bootstrap.
+  if (read === "ready" || agents.length > 0) return "unavailable"
+  if (read === "failed") return "unknown"
+  return "checking"
 }
 
 // Project config is only read from servers on the v1 protocol; elsewhere its absence says nothing.
-export function ownSource(config: Config | undefined, reported: boolean) {
-  if (!reported || !config || Object.keys(config).length === 0) return { state: "unknown" as const }
+export function ownSource(config: Config, protocol: ServerProtocol | undefined, read: State["load"]["config"]) {
+  if (protocol === "v2") return { state: "unknown" as const }
+  if (protocol === undefined || read === "pending") return { state: "checking" as const }
+  if (read === "failed") return { state: "failed" as const }
+  if (Object.keys(config).length === 0) return { state: "unknown" as const }
   const atlas = config.maestro?.atlas
   if (!atlas) return { state: "missing" as const }
   return { state: "configured" as const, projectID: atlas.projectID, directory: atlas.directory }

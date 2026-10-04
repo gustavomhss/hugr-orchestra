@@ -32,6 +32,11 @@ export type ProjectMeta = {
 
 export type State = {
   status: "loading" | "partial" | "complete"
+  // Outcome of the latest bootstrap read of each resource; `status` only completes once every read succeeds.
+  load: {
+    agent: "pending" | "ready" | "failed"
+    config: "pending" | "ready" | "failed"
+  }
   agent: Agent[]
   command: CommandInfo[]
   reference: ReferenceInfo[]

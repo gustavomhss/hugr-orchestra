@@ -309,6 +309,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.governance.agent": "Maestro agent",
   "orchestra.governance.agent.available": "Offered by this server",
   "orchestra.governance.checking": "Checking whether this server offers Maestro…",
+  "orchestra.governance.capabilityUnknown": "Could not check whether this server offers Maestro.",
   "orchestra.governance.unavailable.title": "Maestro is not available on this server",
   "orchestra.governance.unavailable.body":
     "The loaded agent list does not offer native Maestro. Older servers may not support it. Historical results below remain readable.",
@@ -345,6 +346,8 @@ export const ORCHESTRA_COPY = {
   "orchestra.governance.own.configured": "Configured for Atlas project {{project}}. Not verified here.",
   "orchestra.governance.own.missing": "Not configured for this project. Grounded plans hold.",
   "orchestra.governance.own.unknown": "Not reported by this server",
+  "orchestra.governance.own.checking": "Reading this project's configuration…",
+  "orchestra.governance.own.failed": "Could not read this project's configuration.",
   "orchestra.governance.empty": "No result found in this session's messages. Durable records may still exist.",
   "orchestra.governance.emptyLoaded": "No result found in the loaded messages.",
   "orchestra.governance.workCard.unavailable":

@@ -41,6 +41,7 @@ const api = {
 function directoryState() {
   return createStore<State>({
     status: "loading",
+    load: { agent: "pending", config: "pending" },
     agent: [],
     command: [],
     reference: [],
@@ -180,6 +181,58 @@ describe("bootstrapDirectory", () => {
     await new Promise((resolve) => setTimeout(resolve, 80))
 
     expect(store.status).toBe("complete")
+  })
+  test("records agent and config reads apart from unrelated failures", async () => {
+    const run = async (agents: () => Promise<unknown>) => {
+      const [store, setStore] = directoryState()
+      await bootstrapDirectory({
+        directory: "/project",
+        scope: ServerScope.local,
+        mcp: false,
+        global: {
+          config: {} satisfies Config,
+          path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+          project: [{ id: "project", worktree: "/project" } as Project],
+          provider,
+        },
+        sdk: {
+          app: { agents },
+          config: { get: async () => ({ data: { share: "manual" } }) },
+          session: { status: async () => ({ data: {} }) },
+          vcs: {
+            get: async () => {
+              throw new Error("vcs unavailable")
+            },
+          },
+          permission: { list: async () => ({ data: [] }) },
+          question: { list: async () => ({ data: [] }) },
+          v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+          provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+        } as unknown as OpencodeClient,
+        api,
+        store,
+        setStore,
+        vcsCache: { setStore() {} } as unknown as VcsCache,
+        loadSessions() {},
+        translate: (key) => key,
+        queryClient: new QueryClient(),
+        protocol: Promise.resolve("v1"),
+      })
+      expect(store.load).toEqual({ agent: "pending", config: "pending" })
+      await new Promise((resolve) => setTimeout(resolve, 80))
+      return store
+    }
+
+    const loaded = await run(async () => ({ data: [{ name: "maestro", mode: "primary" }] }))
+    expect(loaded.status).toBe("partial")
+    expect(loaded.load).toEqual({ agent: "ready", config: "ready" })
+    expect(loaded.config).toEqual({ share: "manual" })
+    expect(loaded.agent.map((agent) => agent.name)).toEqual(["maestro"])
+
+    const failed = await run(async () => {
+      throw new Error("agents unavailable")
+    })
+    expect(failed.load).toEqual({ agent: "failed", config: "ready" })
   })
 })
 

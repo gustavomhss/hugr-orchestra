@@ -375,14 +375,22 @@ export async function bootstrapDirectory(input: {
     const slow = [
       () => Promise.resolve(input.loadSessions(input.directory)),
       () =>
-        input.queryClient
-          .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
-          .then((data) => input.setStore("agent", data)),
+        settle(
+          input.setStore,
+          "agent",
+          input.queryClient
+            .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
+            .then((data) => input.setStore("agent", data)),
+        ),
       () =>
-        retry(async () => {
-          if ((await input.protocol) !== "v1") return
-          return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
-        }),
+        settle(
+          input.setStore,
+          "config",
+          retry(async () => {
+            if ((await input.protocol) !== "v1") return
+            return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
+          }),
+        ),
       () =>
         retry(() =>
           (async () => {
@@ -551,4 +559,15 @@ export async function bootstrapDirectory(input: {
 
     if (loading && slowErrs.length === 0) input.setStore("status", "complete")
   })()
+}
+
+// Readers that need one resource must not wait for every other bootstrap read to succeed.
+function settle(setStore: SetStoreFunction<State>, resource: keyof State["load"], read: Promise<unknown>) {
+  return read.then(
+    () => setStore("load", resource, "ready"),
+    (error: unknown) => {
+      setStore("load", resource, "failed")
+      throw error
+    },
+  )
 }
