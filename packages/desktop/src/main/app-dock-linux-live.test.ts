@@ -228,33 +228,38 @@ Path('/home/dock/bridge-callback.py').write_text('import sys, json\\nfrom pathli
     const loginAddress = loginServer.address()
     assert(loginAddress && typeof loginAddress !== "string")
     const loginURL = `https://127.0.0.1:${loginAddress.port}/login`
-    const beforeLogin = new Set(dock.list(sender).map(tab => tab.tabID))
-    await guest(["python3", "-c", `import os, runpy, subprocess
+    for (const transport of ["iframe", "popup"] as const) {
+      const beforeLogin = new Set(dock.list(sender).map(tab => tab.tabID))
+      await guest(["rm", "-f", "/home/dock/bridge-callback.json"])
+      await guest(["python3", "-c", `import os, runpy, subprocess
 env={**os.environ,**runpy.run_path('/opt/orchestra/workspace.py')['session_environment']()}
 from gi.repository import Gio
 assert Gio.AppInfo.get_default_for_type('x-scheme-handler/https',False).get_id()=='orchestra-browser.desktop'
 os.environ.update(env)
 assert Gio.AppInfo.launch_default_for_uri(${JSON.stringify(loginURL)},None)
 `])
-    await wait(async () => dock.list(sender).some(tab => !beforeLogin.has(tab.tabID) && tab.url === loginURL), "guest URL opened in native Dock browser")
-    const loginTab = dock.list(sender).find(tab => !beforeLogin.has(tab.tabID) && tab.url === loginURL)!
-    assert(!linux.has(sender, loginTab.tabID), "Authentication page replaced the Linux viewer")
-    assert.equal(linux.externalURL(sender, { tabID: "unrelated", generation: 1 }, callbackControl), false)
-    await assert.rejects(guest(["test", "-f", "/home/dock/bridge-callback.json"]))
-    const loginContents = dock.contents(sender, loginTab.tabID)
-    await wait(async () => !loginContents.isLoadingMainFrame(), "native login browser completed load")
-    await loginContents.executeJavaScript(`window.open(${JSON.stringify(callbackControl)});true`)
-    await wait(async () => {
-      const result = await guest(["python3", "-c", "from pathlib import Path; print(Path('/home/dock/bridge-callback.json').read_text())"]).catch(() => undefined)
-      return !!result && JSON.parse(result.stdout)[0] === callbackControl
-    }, "URI delivered to actual Gio desktop handler")
-    assert.equal(linux.externalURL(sender, loginTab, callbackControl), false, "Callback claim was replayable")
-    await wait(async () => dock.list(sender).find(item => item.tabID === tab.tabID)?.active === true, "callback returned to Linux workspace")
-    assert(!JSON.stringify(events).includes(callbackControl), "URI credential entered renderer events")
-    dock.close(sender, win, loginTab.tabID)
+      await wait(async () => dock.list(sender).some(tab => !beforeLogin.has(tab.tabID) && tab.url === loginURL), "guest URL opened in native Dock browser")
+      const loginTab = dock.list(sender).find(tab => !beforeLogin.has(tab.tabID) && tab.url === loginURL)!
+      assert(!linux.has(sender, loginTab.tabID), "Authentication page replaced the Linux viewer")
+      assert.equal(linux.externalURL(sender, { tabID: "unrelated", generation: 1 }, callbackControl), false)
+      await assert.rejects(guest(["test", "-f", "/home/dock/bridge-callback.json"]))
+      const loginContents = dock.contents(sender, loginTab.tabID)
+      await wait(async () => !loginContents.isLoadingMainFrame(), "native login browser completed load")
+      await loginContents.executeJavaScript(transport === "iframe"
+        ? `const frame=document.createElement("iframe");frame.hidden=true;frame.src=${JSON.stringify(callbackControl)};document.body.append(frame);true`
+        : `window.open(${JSON.stringify(callbackControl)});true`)
+      await wait(async () => {
+        const result = await guest(["python3", "-c", "from pathlib import Path; print(Path('/home/dock/bridge-callback.json').read_text())"]).catch(() => undefined)
+        return !!result && JSON.parse(result.stdout)[0] === callbackControl
+      }, `${transport} URI delivered to actual Gio desktop handler`)
+      assert.equal(linux.externalURL(sender, loginTab, callbackControl), false, "Callback claim was replayable")
+      await wait(async () => dock.list(sender).find(item => item.tabID === tab.tabID)?.active === true, "callback returned to Linux workspace")
+      assert(!JSON.stringify(events).includes(callbackControl), "URI credential entered renderer events")
+      dock.close(sender, win, loginTab.tabID)
+    }
     loginServer.closeAllConnections()
     await new Promise<void>(resolve => loginServer.close(()=>resolve()))
-    evidence["browser-login-bridge"] = { guestDefaultBrowser: true, dockBrowser: true, gioCallback: true, unrelatedRejected: true, oneUse: true, returnedToLinux: true, callbackExcluded: true }
+    evidence["browser-login-bridge"] = { guestDefaultBrowser: true, dockBrowser: true, gioCallback: true, iframeCallback: true, popupCallback: true, unrelatedRejected: true, oneUse: true, returnedToLinux: true, callbackExcluded: true }
 
     const title = `Orchestra Linux flow ${randomUUID()}`
     assert(!(await windows(tab.tabID)).some((window) => window.title === title))
@@ -720,6 +725,14 @@ async function parent() {
                   return { contents: text.replace(before, "undefined"), loader: "ts" }
                 })
               }
+              if (mutation === "callback-frame") {
+                build.onLoad({ filter: /app-dock\.ts$/ }, async args => {
+                  const text = await Bun.file(args.path).text()
+                  const before = 'listen("will-frame-navigate", details => {\n      if (externalURL(details.url)) details.preventDefault()\n    })'
+                  assert.equal(text.split(before).length, 2)
+                  return { contents: text.replace(before, "undefined"), loader: "ts" }
+                })
+              }
               const before =
                 mutation === "close"
                   ? "if (intents.get(senderID) === view.intent) invalidate(senderID)"
@@ -735,12 +748,12 @@ async function parent() {
                     ? 'win.on("resize", resize)'
                   : mutation === "window-focus"
                     ? "win.set_maximized(true);win.focus();return client.focused_wid===win.wid;"
-                  : mutation === "callback-delivery"
+                  : mutation === "callback-delivery" || mutation === "callback-frame"
                     ? "return true;"
                     : undefined
               assert(before, "Unknown Linux integration mutation")
               build.onLoad({ filter: /app-dock-linux\.ts$/ }, async (args) => {
-                if (mutation === "callback-delivery") return undefined
+                if (mutation === "callback-delivery" || mutation === "callback-frame") return undefined
                 const text = await Bun.file(args.path).text()
                 assert.equal(text.split(before).length, mutation === "popup" ? 3 : 2, "Mutation source shape changed")
                 return {

@@ -5,6 +5,7 @@ import type { EventEmitter } from "node:events"
 import { appDockURL, appDockZoom, panelBoundsToContent, type DockBounds } from "./app-dock-utils"
 export type { DockBounds } from "./app-dock-utils"
 import { buildScrollScript, buildHoverScript, buildDragScript, buildClickAtProbeScript, buildClickScript, buildElementPointScript, buildFocusScript, buildReadElementScript, buildSnapshotScript, buildTypeScript, buildScrollToScript, buildStorageScript, buildEvaluateScript, buildNetworkScript } from "./app-dock-browser"
+import type { SnapshotFormat, SnapshotMode } from "./app-dock-browser"
 import type { AppDockAPI } from "./app-dock-api"
 
 export type AppDockIdentity = Readonly<{ tabID: string; generation: number }>
@@ -519,6 +520,11 @@ const layoutBounds = new Map<number, DockBounds>()
       }
       return { action: "deny" }
     })
+    // Desktop sign-in pages can dispatch their URI from a hidden iframe.
+    // will-navigate covers only the main frame.
+    listen("will-frame-navigate", details => {
+      if (externalURL(details.url)) details.preventDefault()
+    })
     listen("will-navigate", (event, url) => {
       if (externalURL(url)) { event.preventDefault(); return }
       if (URL.canParse(url) && new URL(url).protocol === "https:") return
@@ -980,15 +986,15 @@ const layoutBounds = new Map<number, DockBounds>()
       if (!isCurrent(senderID, tabID, generation)) throw new Error("App Dock tab changed during execution")
       return value
     },
-    read(senderID: number, tabID: string, budget: number, maxText: number) {
+    read(senderID: number, tabID: string, budget: number, maxText: number, shape?: { mode?: SnapshotMode; format?: SnapshotFormat; actionable?: boolean; visible?: boolean }) {
       const key = `${senderID}:${tabID}`
       const namespace = refNamespaces.get(key) ?? 1
-      const flightKey = `${key}:${namespace}:${budget}:${maxText}`
+      const flightKey = `${key}:${namespace}:${budget}:${maxText}:${JSON.stringify(shape ?? null)}`
       const pending = readQueues.get(flightKey)
       if (pending) return pending
       const snapshot = (attempt: number): Promise<unknown> => {
         const currentNamespace = refNamespaces.get(key) ?? 1
-        return this.execute(senderID, tabID, buildSnapshotScript({ budget, maxText, namespace: currentNamespace })).then((value) => {
+        return this.execute(senderID, tabID, buildSnapshotScript({ budget, maxText, namespace: currentNamespace, ...shape })).then((value) => {
           if (refNamespaces.get(key) !== currentNamespace) {
             if (attempt === 0) return snapshot(1)
             throw new Error("App Dock page changed during read")

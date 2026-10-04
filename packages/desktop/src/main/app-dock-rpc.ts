@@ -3,6 +3,7 @@ import type { AppDock, DockBounds } from "./app-dock"
 import type { NativeWorkspacePlacement } from "./app-dock-api"
 import { AppDockNative } from "./app-dock-native"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
+import type { SnapshotFormat, SnapshotMode } from "./app-dock-browser"
 
 export type DockRPCReply = (message: unknown) => void
 
@@ -70,6 +71,19 @@ const dockNumber = (value: unknown, name: string, min: number, max: number) => {
   if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`Invalid App Dock ${name}`)
   return Math.max(min, Math.min(max, Math.round(value)))
 }
+
+const dockEnum = (value: unknown, name: string, allowed: string[]) => {
+  if (typeof value !== "string" || !allowed.includes(value)) throw new Error(`Invalid App Dock ${name}`)
+  return value
+}
+
+const dockBoolean = (value: unknown, name: string) => {
+  if (typeof value !== "boolean") throw new Error(`Invalid App Dock ${name}`)
+  return value
+}
+
+const browserReadShape = ["mode", "format", "actionable", "visible"]
+
 const dockRef = (value: unknown, name: string) => {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) throw new Error(`Invalid App Dock ${name}`)
   return value
@@ -409,6 +423,9 @@ export class AppDockRPC {
       const workspace = tab && this.classifyWorkspace(dock, senderID, tab, placement)
       const stored = this.nativeTargets.get(JSON.stringify([senderID, tabID]))
       const target = stored?.generation === tab?.generation ? stored : undefined
+      // Browser snapshot shape has no AT-SPI equivalent; never drop it silently.
+      if ((workspace || target) && op === "read" && browserReadShape.some((key) => args[key] !== undefined))
+        throw new NativeDockProtocol.NativeError("unsupported-operation", "Browser read shape cannot address a native tab")
       if (workspace && tab) {
         request.workspace = Object.freeze({ senderID, tabID, generation: tab.generation, profileID: this.profileResolver(senderID).profileID })
         pending()
@@ -468,7 +485,14 @@ export class AppDockRPC {
         const tabID = this.resolveTabID(dock, senderID, args)
         const budget = args.budget === undefined ? 100 : dockNumber(args.budget, "budget", 1, 500)
         const maxText = args.maxText === undefined ? 1500 : dockNumber(args.maxText, "maxText", 0, 20000)
-        return dock.read(senderID, tabID, budget, maxText)
+        if (browserReadShape.every((key) => args[key] === undefined))
+          return dock.read(senderID, tabID, budget, maxText)
+        return dock.read(senderID, tabID, budget, maxText, {
+          ...(args.mode === undefined ? {} : { mode: dockEnum(args.mode, "read mode", ["full", "a11y", "skeleton"]) as SnapshotMode }),
+          ...(args.format === undefined ? {} : { format: dockEnum(args.format, "read format", ["json", "tree", "csv"]) as SnapshotFormat }),
+          ...(args.actionable === undefined ? {} : { actionable: dockBoolean(args.actionable, "read actionable") }),
+          ...(args.visible === undefined ? {} : { visible: dockBoolean(args.visible, "read visible") }),
+        })
       }
       case "click": {
         const tabID = this.resolveTabID(dock, senderID, args)
@@ -675,7 +699,7 @@ export function handleDockRPC(message: unknown, reply: DockRPCReply): boolean {
 
 function nativeIntent(op: string, args: Record<string, unknown>) {
   return op === "action" || [args.ref, args.fromRef, args.toRef, args.rootRef].some((ref) => typeof ref === "string")
-    || args.cursor !== undefined || args.textOffset !== undefined || args.mode !== undefined
+    || args.cursor !== undefined || args.textOffset !== undefined || (op !== "read" && args.mode !== undefined)
 }
 
 function preparationError(error: unknown) {

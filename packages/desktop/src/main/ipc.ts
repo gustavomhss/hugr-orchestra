@@ -47,6 +47,7 @@ import {
 } from "./app-dock"
 import { AppDockLinux } from "./app-dock-linux"
 import { AppDockRuntime, RuntimeError } from "./app-dock-runtime"
+import { LinuxWorkspaceRPC } from "./linux-workspace-rpc"
 import { AppDockProfileRegistry } from "./app-dock-profile-registry"
 import { registerAppDockBridge, registerAppDockProfileResolver, registerAppDockWorkspacePreparation } from "./app-dock-rpc"
 import { AppDockNativeWorkspace } from "./app-dock-native-workspace"
@@ -291,6 +292,7 @@ export function registerIpcHandlers(deps: Deps) {
         : resolve(import.meta.dirname, "../../resources/linux/app-dock-accessibility"),
     })
   linuxRuntimes.set(root, runtime)
+  LinuxWorkspaceRPC.register(runtime.access)
   // These callbacks run after the coordinator is created, including for views it opens itself.
   const appDock = createAppDock({
     onVisibility: (senderID, identity, visible) => linux.visibility(senderID, identity, visible),
