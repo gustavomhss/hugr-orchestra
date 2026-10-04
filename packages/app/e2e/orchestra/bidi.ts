@@ -1,5 +1,7 @@
 import { expect, type Locator } from "@playwright/test"
 
+type Box = { left: number; right: number }
+
 // Horizontal extent of every character of the element's first text node, as painted.
 export async function glyphs(locator: Locator) {
   return locator.evaluate((element) => {
@@ -14,14 +16,15 @@ export async function glyphs(locator: Locator) {
   })
 }
 
-// A trailing mark of an English run sits after its last letter, to the right.
-export function expectTrailing(boxes: { left: number; right: number }[], index: number) {
-  expect(boxes[index]!.left).toBeGreaterThanOrEqual(boxes[index - 1]!.right - 0.5)
+// The characters at these indexes are painted from left to right, as an English run reads.
+export function expectInOrder(boxes: Box[], ...indexes: number[]) {
+  for (const [index, next] of indexes.slice(1).entries())
+    expect(boxes[next]!.left).toBeGreaterThanOrEqual(boxes[indexes[index]!]!.right - 0.5)
 }
 
-// A leading mark of an English run sits before its first letter, to the left.
-export function expectLeading(boxes: { left: number; right: number }[]) {
-  expect(boxes[0]!.right).toBeLessThanOrEqual(boxes[1]!.left + 0.5)
+// The closing mark of `text` paints after its last letter, at the inline end of the English run.
+export function expectTrailing(boxes: Box[], text: string) {
+  expectInOrder(boxes, text.length - 2, text.length - 1)
 }
 
 // Every painted line starts at the slot's inline-start edge for the document direction.

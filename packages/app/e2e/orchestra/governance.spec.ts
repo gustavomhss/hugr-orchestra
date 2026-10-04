@@ -215,10 +215,10 @@ for (const locale of ["en", "ar"] as const) {
     await expect(dialog.getByText("مراجعة approval / خطة-42", { exact: true })).toHaveCSS("unicode-bidi", "isolate")
     // Untranslated copy keeps its own punctuation while the dialog keeps RTL alignment.
     const description = dialog.locator('[data-slot="dialog-description"]')
-    expectTrailing(await glyphs(description), (await description.textContent())!.length - 1)
+    expectTrailing(await glyphs(description), (await description.textContent())!)
     await expectStartAligned(description, "rtl")
     const own = "Configured for Atlas project atlas-hugr. Not verified here."
-    expectTrailing(await glyphs(dialog.getByText(own, { exact: true })), own.length - 1)
+    expectTrailing(await glyphs(dialog.getByText(own, { exact: true })), own)
     await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
     await expect
       .poll(() => dialog.evaluate((element) => element.getBoundingClientRect().height <= innerHeight * 0.8 + 1))
