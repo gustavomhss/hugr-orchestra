@@ -6,6 +6,7 @@ import {
   createOpenReviewFile,
   createOpenSessionFileTab,
   createSessionTabs,
+  createSidePanelTabs,
   focusTerminalById,
   getTabReorderIndex,
   shouldShowFileTree,
@@ -267,6 +268,26 @@ describe("createSessionTabs in the Orchestra cockpit", () => {
       expect(cockpit.closableTab()).toBeUndefined()
       expect(legacy.activeTab()).toBe("tasks")
       expect(legacy.closableTab()).toBe("tasks")
+      dispose()
+    })
+  })
+
+  test("side panel commands cannot close the cockpit or a file tab hidden behind Apps", () => {
+    createRoot((dispose) => {
+      const panel = (active: string, cockpit: boolean) =>
+        createSidePanelTabs({
+          tabs: createMemo(() => ({ active: () => active, all: () => ["file://src/a.ts", "tasks"] })),
+          pathFromTab: (tab) => (tab.startsWith("file://") ? tab.slice("file://".length) : undefined),
+          normalizeTab: (tab) => tab,
+          cockpit: () => cockpit,
+        })
+
+      expect(panel("tasks", true).activeTab()).toBe("apps")
+      expect(panel("tasks", true).closableTab()).toBeUndefined()
+      expect(panel("tasks", false).closableTab()).toBe("tasks")
+      expect(panel("apps", true).closableTab()).toBeUndefined()
+      expect(panel("apps", false).closableTab()).toBeUndefined()
+      expect(panel("apps", false).activeFileTab()).toBeUndefined()
       dispose()
     })
   })

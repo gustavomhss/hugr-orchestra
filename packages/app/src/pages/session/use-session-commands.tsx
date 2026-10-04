@@ -14,7 +14,7 @@ import { useTerminal } from "@/context/terminal"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { findLast } from "@opencode-ai/core/util/array"
-import { createSessionTabs } from "@/pages/session/helpers"
+import { createSidePanelTabs } from "@/pages/session/helpers"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { Message, Part, UserMessage } from "@opencode-ai/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
@@ -83,13 +83,14 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (!tab.startsWith("file://")) return tab
     return file.tab(tab)
   }
-  const tabState = createSessionTabs({
+  const tabState = createSidePanelTabs({
     tabs,
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: actions.review,
     hasReview,
     fileBrowser: actions.fileBrowser,
+    cockpit: settings.general.newLayoutDesigns,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab
