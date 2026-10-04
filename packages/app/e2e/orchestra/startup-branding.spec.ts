@@ -10,7 +10,7 @@ test.setTimeout(120_000)
 
 for (const scheme of ["light", "dark"] as const) {
   for (const stage of ["window", "initialization", "error"] as const) {
-    test(`${scheme}: Orchestra branding during ${stage}`, async ({ page }) => {
+    test(`${scheme}: Orchestra branding during ${stage}`, { tag: "@source-fixture" }, async ({ page }) => {
       await page.addInitScript(
         ({ scheme, stage }) => {
           localStorage.setItem("opencode-color-scheme", scheme)

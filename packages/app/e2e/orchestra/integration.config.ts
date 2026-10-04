@@ -12,7 +12,9 @@ export default defineConfig({
   testIgnore: "**/performance/**",
   // The default development runner still executes these real DebugBar cases.
   // Production verifies locale-driven RTL without adding debug controls to its bundle.
-  grepInvert: /@development-only/,
+  grepInvert: /@development-only|@source-fixture/,
+  // Specs read this to prove debug-only controls are absent from the built bundle.
+  metadata: { ...config.metadata, bundle: "production" },
   outputDir: "../test-results/orchestra-integration",
   workers: 1,
   retries: 0,

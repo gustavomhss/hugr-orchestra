@@ -20,7 +20,6 @@ export const evidenceFixture = (name: string) =>
 export const editor = (page: Page) => page.getByRole("textbox").and(page.locator('[data-component="prompt-input"]'))
 export const runCard = (page: Page, command = "bun test") =>
   page.getByRole("region", { name: `Test evidence for ${command}`, exact: true })
-export const screenshotRoot = "../../specs/orchestra-visual/evidence/S11"
 
 export async function evidencePage(
   page: Page,

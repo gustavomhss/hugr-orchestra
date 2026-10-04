@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { attachImage, editor, evidenceFixture, evidencePage, runCard, screenshotRoot } from "./evidence.fixture"
+import { attachImage, editor, evidenceFixture, evidencePage, runCard } from "./evidence.fixture"
 import { directory, partUpdated, sessionID, status, toolPart } from "../performance/timeline-stability/fixture"
 
 test.setTimeout(120_000)
@@ -42,7 +42,7 @@ test("replay confirms exact command, preserves draft and attachment, and creates
   expect(fixture.writes[0]!.body).toMatchObject({ command: "bun test" })
   expect(fixture.writes[0]!.body.id).toEqual(expect.any(String))
   expect(fixture.writes[0]!.body.id).not.toBe("prt_evidence")
-  await page.screenshot({ path: `${screenshotRoot}/replay-confirmation.png` })
+  await page.screenshot({ path: test.info().outputPath("replay-confirmation.png") })
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
   await editor(page).fill("Newer draft edit")
   // Closing the dialog does not unlock the controller while transport is pending.
@@ -247,7 +247,7 @@ test("prepare PR uses real session summary and remains unsent", async ({ page })
   await expect(editor(page)).toContainText("Selected test run: `bun test`")
   await expect(editor(page)).toContainText("ask me to confirm before any commit, push or publication")
   await expect(editor(page)).toBeFocused()
-  await page.screenshot({ path: `${screenshotRoot}/prepare-pr-unsent.png` })
+  await page.screenshot({ path: test.info().outputPath("prepare-pr-unsent.png") })
   expect(fixture.writes).toEqual([])
 })
 

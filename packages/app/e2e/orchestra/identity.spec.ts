@@ -52,7 +52,10 @@ if (
   throw new Error(`Unknown Orchestra identity mutation: ${mutation}`)
 }
 
-test.use({ viewport: { width: 1400, height: 900 }, deviceScaleFactor: 1, serviceWorkers: "block" })
+// The expanded identity oracle stays above the compact-navigation breakpoint.
+// Dedicated navigation cases verify the 208px and 56px responsive modes.
+const viewport = { width: 1672, height: 941 }
+test.use({ viewport, deviceScaleFactor: 1, serviceWorkers: "block" })
 
 for (const scheme of ["dark", "light"] as const) {
   for (const locale of ["en", "ar"] as const) {
@@ -146,7 +149,7 @@ for (const scheme of ["dark", "light"] as const) {
       const menuBox = await readBox(menu)
       expect(menuBox.top, "profile menu stays within viewport").toBeGreaterThanOrEqual(0)
       expect(menuBox.left).toBeGreaterThanOrEqual(0)
-      expect(menuBox.right).toBeLessThanOrEqual(1400)
+      expect(menuBox.right).toBeLessThanOrEqual(viewport.width)
       expect(menuBox.height, "profile menu is nonempty").toBeGreaterThan(0)
       await page.keyboard.press("Escape")
       await expect(profile).toHaveAttribute("aria-expanded", "false")
@@ -338,7 +341,7 @@ async function setupIdentity(page: Page, input: { scheme: "dark" | "light"; loca
     messages,
     locale: input.locale ?? "en",
     settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
-    viewport: { width: 1400, height: 900 },
+    viewport,
   })
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", input.scheme)
   await expect(page.locator("html")).toHaveAttribute("dir", input.locale === "ar" ? "rtl" : "ltr")

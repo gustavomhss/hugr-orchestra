@@ -16,9 +16,20 @@ Three `@development-only` cases operate the real DebugBar direction override to
 exercise English with forced RTL. DebugBar is intentionally absent from production.
 The normal `playwright.config.ts` runner, used by CI, executes all three; the
 production runner executes English LTR and actual Arabic RTL with provider/portal
-alignment, keyboard and focus checks. Neither changing only `html.dir` nor adding
-a debug button to a production bundle substitutes for those proofs.
+alignment, keyboard and focus checks, and asserts that no DebugBar direction
+control ships. Neither changing only `html.dir` nor adding a debug button to a
+production bundle substitutes for those proofs.
 
-The native-frame and dialog-lifetime specs also compile isolated real components
-with fixture providers. Passing them is not packaged Electron or OS hit-zone proof.
+Sixteen `@source-fixture` cases in `governance-lifetime.spec.ts`,
+`theme-first-paint.spec.ts` and `startup-branding.spec.ts` import unbundled
+fixture or renderer modules through Vite. Run them on the development server;
+they do not exist in production assets. All nineteen development/source cases
+remain in the default CI runner:
+
+```sh
+PLAYWRIGHT_PORT=5031 bunx playwright test --grep '@development-only|@source-fixture'
+```
+
+The native-frame spec starts its own isolated real-component server and also
+runs alongside production verification. Passing it is not packaged Electron or OS hit-zone proof.
 Recorded screenshots and benchmark receipts must name their tested source/bundle.

@@ -31,12 +31,13 @@ for (const scenario of cases) {
         await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)
         await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
         // The override control belongs to DebugBar; locale-driven direction also
-        // runs against the unchanged production bundle where DebugBar is absent.
-        if (scenario.override)
-          await expect(page.getByRole("button", { name: "DIR: RTL", exact: true })).toHaveAttribute(
-            "aria-pressed",
-            "true",
-          )
+        // runs against the unchanged production bundle, which must not ship DebugBar.
+        if (test.info().config.metadata.bundle === "production")
+          await expect(page.getByRole("button", { name: /^DIR: / })).toHaveCount(0)
+        else
+          await expect(
+            page.getByRole("button", { name: `DIR: ${scenario.direction.toUpperCase()}`, exact: true }),
+          ).toHaveAttribute("aria-pressed", String(scenario.direction === "rtl"))
 
         const toggle = sidebar.getByRole("button", { name: "Collapse sidebar", exact: true })
         await toggle.focus()

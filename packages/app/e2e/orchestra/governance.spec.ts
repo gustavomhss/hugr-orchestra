@@ -202,6 +202,7 @@ for (const locale of ["en", "ar"] as const) {
     await expect(page.locator("html")).toHaveAttribute("lang", locale)
     const composer = page.locator('[contenteditable="true"][data-component="prompt-input"]')
     await composer.fill("Keep my ordinary edit draft")
+    await page.locator('[data-slot="titlebar-v2"]').getByRole("button", { name: "Expand sidebar", exact: true }).click()
     const entry = page
       .locator('[data-component="orchestra-sidebar"]')
       .getByRole("button", { name: "Maestro", exact: true })

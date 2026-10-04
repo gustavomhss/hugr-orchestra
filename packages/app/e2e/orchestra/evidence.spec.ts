@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { editor, evidenceFixture, evidencePage, runCard, screenshotRoot } from "./evidence.fixture"
+import { editor, evidenceFixture, evidencePage, runCard } from "./evidence.fixture"
 import { partUpdated, toolPart } from "../performance/timeline-stability/fixture"
 
 test.setTimeout(120_000)
@@ -60,7 +60,7 @@ for (const sample of [
     await expect(card.getByRole("listitem").filter({ hasText: sample.failure })).toHaveCount(1)
     await expect(card).toContainText("Exit 1")
     await expect(card).toContainText("not linked to the current revision")
-    if (sample.command === "bun test") await page.screenshot({ path: `${screenshotRoot}/failed-tests.png` })
+    if (sample.command === "bun test") await page.screenshot({ path: test.info().outputPath("failed-tests.png") })
     await card.getByRole("tab", { name: "Test results", exact: true }).focus()
     await page.keyboard.press("ArrowRight")
     await expect(card.getByRole("tab", { name: "Output", exact: true })).toBeFocused()
@@ -135,7 +135,7 @@ test("partial output has no totals, keeps retained log, and never opens a saved 
   await expect(card.locator("[data-count]")).toHaveCount(0)
   await expect(card).toContainText("/untrusted/out.txt")
   await expect(card.getByRole("link")).toHaveCount(0)
-  await page.screenshot({ path: `${screenshotRoot}/partial-output.png` })
+  await page.screenshot({ path: test.info().outputPath("partial-output.png") })
   await card.getByRole("button", { name: "View original output" }).click()
   await expect(card.getByRole("tabpanel")).toContainText("Ran 2 tests across 1 file.")
 })
@@ -265,6 +265,6 @@ for (const view of [
     await expect(dialog).toHaveCount(0)
     await expect(editor(page)).toHaveText("Keep draft / مسودة")
     expect(fixture.writes).toEqual([])
-    await page.screenshot({ path: `${screenshotRoot}/review-${view.name}.png` })
+    await page.screenshot({ path: test.info().outputPath(`review-${view.name}.png`) })
   })
 }
