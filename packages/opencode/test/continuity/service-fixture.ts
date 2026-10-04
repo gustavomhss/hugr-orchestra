@@ -8,6 +8,7 @@ import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Database } from "@opencode-ai/core/database/database"
+import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Global } from "@opencode-ai/core/global"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -94,6 +95,7 @@ type Held = Effect.Success<ReturnType<typeof held>>
 
 export function environment<A = never, E = never>(plans: Held[], options: {
   getModel?: Provider.Interface["getModel"]
+  archive?: (actual: Archive.Interface) => Archive.Interface
   node?: LayerNode.Node<A, E, LayerNode.Tag | undefined>
 } = {}) {
   const llm = LayerNode.make({ service: LLM.Service, deps: [Session.node, BackgroundJob.node],
@@ -128,12 +130,20 @@ export function environment<A = never, E = never>(plans: Held[], options: {
       }))) })
     })),
   })
+  const wrap = options.archive
+  const archive = wrap ? LayerNode.make({ service: Archive.Service, deps: [FSUtil.node],
+    layer: Layer.effect(Archive.Service, Effect.gen(function* () {
+      const actual = yield* Archive.Service
+      return wrap(actual)
+    })).pipe(Layer.provide(Archive.layer)),
+  }) : undefined
   return AppNodeBuilder.build(LayerNode.group([
     SessionContinuity.node, Session.node, BackgroundJob.node, SessionProjector.node,
     Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, Archive.node, Agent.node, Truncate.node,
     ...(options.node ? [options.node] : []),
   ]), [
     [LLM.node, llm],
+    ...(archive ? [[Archive.node, archive] as const] : []),
     [Provider.node, Layer.mock(Provider.Service, { getModel: options.getModel ?? ((providerID, modelID) => {
       expect(providerID).toBe(model.providerID)
       expect(modelID).toBe(model.id)

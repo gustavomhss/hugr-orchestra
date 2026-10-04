@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { Cause, Effect, Exit, Layer, Stream } from "effect"
 import { jsonSchema, tool, type JSONSchema7 } from "ai"
 import { convertArrayToReadableStream, MockLanguageModelV3 } from "ai/test"
+import { GitLabWorkflowLanguageModel } from "gitlab-ai-provider"
 import type { LanguageModelV3StreamPart } from "@ai-sdk/provider"
 import { LLMEvent, type LLMRequest } from "@opencode-ai/llm"
 import { LLMClient } from "@opencode-ai/llm/route"
@@ -26,6 +27,7 @@ import { Snapshot } from "@/snapshot"
 import { Token } from "@/util/token"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
+import { TestInstance } from "../fixture/fixture"
 
 const it = testEffect(Layer.empty)
 const message = "Working-memory request exceeds model input capacity"
@@ -62,7 +64,7 @@ function request(contextMemory: boolean | undefined = true): LLM.StreamInput {
 
 function harness(value: LLM.StreamInput, options: {
   native?: boolean; oauth?: boolean; bloat?: Bloat; asyncSchema?: boolean; lowerOutputParam?: boolean;
-  processor?: boolean; autoCompact?: boolean; size?: number
+  processor?: boolean; autoCompact?: boolean; size?: number; workflow?: boolean; workingDirectory?: string
 } = {}) {
   const nativeRequests: LLMRequest[] = []
   const selected: Provider.Model[] = []
@@ -104,9 +106,17 @@ function harness(value: LLM.StreamInput, options: {
   const blockedFetch: typeof fetch = Object.assign(async () => { throw new Error("Unexpected provider HTTP call") }, {
     preconnect: () => { throw new Error("Unexpected provider preconnect") },
   })
+  if (options.workflow && !options.workingDirectory) throw new Error("Workflow fixture needs an isolated directory")
+  const workflow = options.workflow ? new GitLabWorkflowLanguageModel("duo-workflow", {
+    provider: "gitlab.workflow", instanceUrl: "https://workflow.invalid", getHeaders: () => ({}), fetch: blockedFetch,
+  }, { workingDirectory: options.workingDirectory }) : undefined
+  if (workflow) {
+    workflow.doStream = (input) => language.doStream(input)
+    workflow.doGenerate = async () => { throw new Error("Unexpected workflow generation") }
+  }
   const provider = ProviderTest.fake({ model: value.model,
     info: ProviderTest.info({ options: { apiKey: "capture-only", ...(options.oauth ? { fetch: blockedFetch } : {}) } }, value.model),
-    getLanguage: (model) => Effect.sync(() => { selected.push(structuredClone(model)); return language }),
+    getLanguage: (model) => Effect.sync(() => { selected.push(structuredClone(model)); return workflow ?? language }),
   })
   const client = Layer.succeed(LLMClient.Service, LLMClient.Service.of({
     prepare: () => Effect.die(new Error("Unexpected native prepare")), generate: () => Effect.die(new Error("Unexpected native generate")),
@@ -126,7 +136,7 @@ function harness(value: LLM.StreamInput, options: {
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalNativeLlm: options.native ?? false, experimentalEventSystem: true })],
     ...(options.processor ? [[Snapshot.node, Layer.mock(Snapshot.Service, { track: () => Effect.succeed(undefined) })] as const] : []),
   ])
-  return { layer, language, nativeRequests, selected, hooks, conversion,
+  return { layer, language, workflow, nativeRequests, selected, hooks, conversion,
     run: LLM.Service.use((llm) => llm.stream(value).pipe(Stream.runCollect)).pipe(Effect.provide(layer)) }
 }
 
@@ -276,3 +286,74 @@ for (const autoCompact of [true, false]) it.instance(`actual processor maps guar
     expect(handle.message.time.completed).toBeDefined()
   }).pipe(Effect.provide(check.layer))
 }), 30_000)
+
+for (const native of [false, true]) for (const origin of ["model", "variant"] as const) it.instance(`unmarked maintenance counts configured ${origin} instructions before ${native ? "native" : "SDK"} dispatch`, () => Effect.gen(function* () {
+  const make = (maintenance: boolean, text: string) => {
+    const value = request(false)
+    delete value.contextMemory
+    if (maintenance) value.purpose = "context-maintenance"
+    if (origin === "model") value.model.options.instructions = text
+    if (origin === "variant") {
+      value.user.model.variant = "memory-variant"
+      value.model.variants = { "memory-variant": { instructions: text } }
+    }
+    return value
+  }
+  const text = large(`CONFIGURED_${origin}`)
+  const blocked = harness(make(true, text), { native })
+  const exit = yield* blocked.run.pipe(Effect.exit)
+  expect(blocked.language.doStreamCalls).toHaveLength(0)
+  expect(blocked.nativeRequests).toHaveLength(0)
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) overflow(exit.cause)
+  const small = harness(make(true, "Configured maintenance instruction"), { native })
+  yield* small.run
+  const smallCall = native ? small.nativeRequests[0] : small.language.doStreamCalls[0]
+  expect(smallCall.providerOptions?.openai?.instructions).toBe("Configured maintenance instruction")
+  expect(smallCall.tools ?? []).toEqual([])
+  const parent = harness(make(false, text), { native })
+  yield* parent.run
+  expect(parent.language.doStreamCalls).toHaveLength(native ? 0 : 1)
+  expect(parent.nativeRequests).toHaveLength(native ? 1 : 0)
+  expect((native ? parent.nativeRequests[0] : parent.language.doStreamCalls[0]).providerOptions?.openai?.instructions).toBe(text)
+}))
+
+it.instance("workflow system outside messages participates in capacity before any workflow dispatch", () => Effect.gen(function* () {
+  const instance = yield* TestInstance
+  const make = (memory: boolean) => {
+    const value = request(memory)
+    value.model.api.npm = "gitlab-ai-provider"
+    return value
+  }
+  const options = { workflow: true, workingDirectory: instance.directory, bloat: "system" as const }
+  const blocked = harness(make(true), options)
+  expect(blocked.workflow).toBeInstanceOf(GitLabWorkflowLanguageModel)
+  const exit = yield* blocked.run.pipe(Effect.exit)
+  expect(blocked.language.doStreamCalls).toHaveLength(0)
+  expect(blocked.nativeRequests).toHaveLength(0)
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) overflow(exit.cause)
+  const parent = harness(make(false), options)
+  yield* parent.run
+  expect(parent.language.doStreamCalls).toHaveLength(1)
+  expect(parent.language.doStreamCalls[0].prompt.some((entry) => entry.role === "system")).toBe(false)
+  expect(JSON.stringify(parent.language.doStreamCalls[0].prompt)).not.toContain("SYSTEM_BLOAT")
+  expect(parent.workflow?.systemPrompt).toContain("SYSTEM_BLOAT")
+}))
+
+for (const native of [false, true]) for (const oauth of [false, true]) it.instance(`near-bound non-workflow system is charged once; native=${native}, oauth=${oauth}`, () => Effect.gen(function* () {
+  const value = request()
+  value.model.limit.input = 2200
+  const check = harness(value, { native, oauth, bloat: "system", size: 6000 })
+  const events = yield* check.run
+  expect(events.some((event) => event.type === "finish" && event.reason === "stop")).toBe(true)
+  expect(check.language.doStreamCalls).toHaveLength(native ? 0 : 1)
+  expect(check.nativeRequests).toHaveLength(native ? 1 : 0)
+  const frame = native ? { system: check.nativeRequests[0].system, messages: check.nativeRequests[0].messages,
+    tools: check.nativeRequests[0].tools, options: check.nativeRequests[0].providerOptions }
+    : { messages: check.language.doStreamCalls[0].prompt, tools: check.language.doStreamCalls[0].tools,
+      options: check.language.doStreamCalls[0].providerOptions }
+  expect(JSON.stringify(frame)).toContain("SYSTEM_BLOAT")
+  expect(Token.estimate(JSON.stringify(frame))).toBeLessThan(2200)
+  expect(Token.estimate(JSON.stringify(frame)) + Token.estimate(large("SYSTEM_BLOAT", 6000))).toBeGreaterThan(2200)
+}))
