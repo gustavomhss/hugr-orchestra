@@ -68,12 +68,15 @@ export function SessionContextUsage(props: SessionContextUsageProps) {
 
   const formatter = createMemo(() => createSessionContextFormatter(language.intl()))
 
-  const context = createMemo(() => getSessionContext(messages(), [...providers.all().values()]))
+  const context = createMemo(() => getSessionContext(messages(), [...providers.all().values()], sync().data.part))
   const cost = createMemo(() => {
     return formatter().currency(
-      getSessionCost(info()?.cost, params.id ? sync().data.message[params.id] : undefined, [
-        ...providers.all().values(),
-      ]),
+      getSessionCost(
+        info()?.cost,
+        params.id ? sync().data.message[params.id] : undefined,
+        [...providers.all().values()],
+        sync().data.part,
+      ),
     )
   })
   const contextVisible = createMemo(() => view().reviewPanel.opened() && tabState.activeTab() === "context")
