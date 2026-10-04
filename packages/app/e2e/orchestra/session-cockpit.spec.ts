@@ -2,7 +2,17 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
 import type { DockCall } from "./session-cockpit-bridge"
-import { child, directory, parentID, parentTitle, server, setupCockpit } from "./session-cockpit.fixture"
+import {
+  child,
+  directory,
+  dockCard,
+  openCockpit,
+  pane,
+  parentID,
+  parentTitle,
+  server,
+  setupCockpit,
+} from "./session-cockpit.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -603,22 +613,6 @@ async function expectAnchored(
     }),
   )
   expect(hits).toEqual(Array(12).fill(true))
-}
-
-function dockCard(page: Page) {
-  return page.locator(".orchestra-dock-card")
-}
-
-function pane(dock: Locator, name: string) {
-  return dock.getByRole("tablist", { name: "Dock panes" }).getByRole("tab", { name, exact: true })
-}
-
-async function openCockpit(page: Page) {
-  await page.goto(`/server/${base64Encode(server)}/session/${parentID}`, { waitUntil: "domcontentloaded" })
-  await expectSessionTitle(page, parentTitle)
-  // Once the side panel mounts, the running child opens the cockpit.
-  await page.getByRole("button", { name: "Toggle review" }).click()
-  await expect(dockCard(page)).toBeVisible()
 }
 
 async function calls(page: Page) {

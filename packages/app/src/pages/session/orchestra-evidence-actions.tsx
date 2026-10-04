@@ -16,8 +16,12 @@ type ActionProps = { evidence: ExecutionEvidence; result: string; actions: Evide
 export function EvidenceActions(props: ActionProps) {
   const dialog = useDialog()
   const language = useLanguage()
+  // Focus returns to the action that opened the dialog, unless closing it moved focus on purpose:
+  // Add to draft hands focus to the composer and must keep it.
   const restore = (trigger: HTMLElement) => () =>
     requestAnimationFrame(() => {
+      const active = document.activeElement
+      if (active && active !== document.body && !active.closest('[role="dialog"]')) return
       if (trigger.isConnected) trigger.focus()
     })
 
