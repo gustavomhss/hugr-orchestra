@@ -6,7 +6,7 @@
   "contract_commit": "e5b5bf9c446ed0ae3eddb841e38c7ebdb06f957a",
   "source_commit": "8868cd226614f8794a3d424d1ad2935470f608b1",
   "verification": "PASS: scoped local tests, not live governance enablement or full visual-campaign acceptance",
-  "review": "Implementation agent reviewed code and screenshots; no independent reviewer claim. Lead integration review remains separate.",
+  "review": "Initial delivery was self-reviewed. Independent cold review reported route-disposal P2; the verified follow-up is recorded below. No independent review of the follow-up is claimed.",
   "api_audit": [
     {
       "source": "packages/opencode/src/tool/maestro-{admission,plan,context,validation,review,approval,authorization}.ts",
@@ -80,6 +80,62 @@
   "display_limits": "Only loaded session history is read. Catalog/presentation previews retain at most 16,384 UTF-16 code units with a partial marker. Source navigation requires a loaded user turn in the same session. No durable-record total is inferred.",
   "performance": "NOT_RUN: owner explicitly excluded performance/full-suite runs for this task",
   "native": "NOT_RUN: browser consumer verification only",
+  "follow_up_P2": {
+    "base_commit": "4dc72693ef95b749aafe852caebc5623e69b92a9",
+    "source_commit": "94f050734ccc29d155467d90d90e9186ae7129a4",
+    "status": "PASS: scoped local route-lifetime regression verification",
+    "finding": "The governance effect observed a plain session-ownership generation. Disposing the route did not rerun that effect, and the shared dialog's detached root survived on Home or a different server.",
+    "fix": [
+      "Added opt-in useDialog.showOwned tied to the calling Solid owner's cleanup. Cleanup removes its exact dialog ID, including a hidden lower root or a root whose sibling is closing.",
+      "Dialog factories receive an exact-ID disposer. Governance uses it for invalidation and source navigation; stale disposers cannot close another owner's replacement or newer dialog.",
+      "Disposed callers cannot reopen owned dialogs. Focus restoration is skipped after ownership is lost.",
+      "The existing Maestro sidebar handler now checks for a session route before using cached commands. This is the only additional sidebar change for the compact-nav integrator."
+    ],
+    "regressions": [
+      "Real app: session to Home through SPA popstate, dialog and overlay removed, Home Maestro entry remains usable; a navigation-request positive control confirms no document reload.",
+      "Real app: cross-server keyed remount with the same Session ID, old dialog removed, new server reader reached and a fresh dialog opened.",
+      "Real shared DialogProvider and Dialog components: preserve replacement from another scope, remove hidden owned root under a newer stacked dialog, cleanup during a sibling close, reject late open from a disposed owner, and ignore an old disposer after the next server opens its dialog."
+    ],
+    "checks": [
+      {
+        "cwd": "packages/app",
+        "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4993 bunx playwright test e2e/orchestra/governance.spec.ts e2e/orchestra/governance-lifetime.spec.ts --reporter=line",
+        "exit": 0,
+        "result": "13 pass, 0 fail",
+        "log": "lifetime-playwright.log"
+      },
+      { "cwd": "packages/app", "command": "bun typecheck", "exit": 0 },
+      { "cwd": "packages/app", "command": "bun run typecheck:e2e", "exit": 0 },
+      { "cwd": "packages/ui", "command": "bun typecheck", "exit": 0 },
+      { "cwd": "packages/app", "command": "bun test src/pages/session/orchestra-governance-data.test.ts", "exit": 0, "result": "16 pass, 0 fail" },
+      { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "result": "3553 source files, 302 warnings, 0 errors", "log": "lifetime-godfile.log" }
+    ],
+    "mutations": [
+      {
+        "change": "Replace governance's showOwned call with show",
+        "selection": "governance.spec.ts --grep 'route disposal|cross-server remount'",
+        "exit": 1,
+        "result": "Both regressions failed: expected zero old governance dialogs, received one.",
+        "restored": true,
+        "log": "lifetime-mutation-route.log"
+      },
+      {
+        "change": "Replace the exact-ID remove lookup with stack.at(-1)",
+        "selection": "governance-lifetime.spec.ts --grep 'replacement owned|newer stacked'",
+        "exit": 1,
+        "result": "Both protections failed: the replacement disappeared and the old hidden root remained.",
+        "restored": true,
+        "log": "lifetime-mutation-identity.log"
+      }
+    ],
+    "log_normalization": "Trailing spaces in Playwright test-title lines removed; assertions and results preserved.",
+    "artifacts_sha256": {
+      "lifetime-playwright.log": "85c8009a7cecfdbc16b28f0851bc370ba89f8b585be725ed0925abc93b3afb82",
+      "lifetime-mutation-route.log": "4fcc48e53ef508772323ca75292d0e884741c1b798f1e5776224df7113493f90",
+      "lifetime-mutation-identity.log": "c0914291e491860e2ffdcbd1b4e43ddfddc0674d1048bd516ac8dc9b6cdf4797",
+      "lifetime-godfile.log": "2a4e4330f7afa0fa5e9ae570952114b70fcfd39e44f1df031332864f59b573e3"
+    }
+  },
   "artifacts_sha256": {
     "governance-dark.png": "2faeaf324e633cb1e159951f844445231de6de4a1fd3e64fdac6db1b6e636996",
     "governance-dark-scrolled.png": "84ab57dea54019acc5b44ba6bf8c29f1bc07a34947b5a4505bea6eee92dd5541",
