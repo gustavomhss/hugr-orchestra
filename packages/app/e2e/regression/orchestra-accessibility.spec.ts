@@ -152,6 +152,8 @@ for (const scheme of ["dark", "light"] as const) {
     if (scheme === "dark") await expectArrowRoving(page, running, 65)
     if (scheme === "dark") await expectHeldArrow(page, running, 25)
     if (scheme === "dark") await expectBoundedWindow(page, running, 65)
+    if (scheme === "dark") await expectControlRestored(page, running, 65)
+    if (scheme === "dark") await expectNoFocusSteal(page, running, 65, tasks.locator('[data-slot="tasks-title"]'))
     results.push(...(await measureContrast(page, expandedText)))
     await tasks.getByRole("button", { name: "Show less" }).press("Enter")
 
@@ -392,15 +394,81 @@ async function expectBoundedWindow(page: Page, list: Locator, size: number) {
   await expect.poll(position).toBe("2")
   for (const _ of Array.from({ length: 6 })) await page.keyboard.press("PageDown")
   await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)
-  // 320px shows about three rows and overscan adds three on each side. The focused row adds one, or joins
-  // the window through at most the visible rows plus overscan when it is that close.
-  await expect.poll(() => rows.count(), "rows mounted after paging").toBeLessThanOrEqual(16)
+  // The window holds the rows that can show in the viewport plus three overscan rows on each side. A
+  // focused row outside it adds one, or joins it through at most the visible rows plus overscan.
+  const bound = await list.evaluate((element) => {
+    const heights = [...element.querySelectorAll("[data-cockpit-row]")].map((row) => row.getBoundingClientRect().height)
+    const visible = Math.ceil(element.clientHeight / Math.min(...heights)) + 1
+    return 2 * visible + 3 * 3
+  })
+  await expect.poll(() => rows.count(), "rows mounted after paging").toBeLessThanOrEqual(bound)
+  const detached = await scrollAwayAndBack(list, size, "2", async () => {
+    await expect.poll(() => rows.count(), "rows mounted after dragging to the end").toBeLessThanOrEqual(bound)
+  })
+  expect(detached, "the reconciler takes the focused row's node on the way back").toBe(true)
+  await expect.poll(position, "focus stays on its row").toBe("2")
+}
+
+// Focus on a control inside a row (a task's Stop button) comes back to that control, not to the row,
+// whose Enter would open the task.
+async function expectControlRestored(page: Page, list: Locator, size: number) {
+  const control = () =>
+    page.evaluate(
+      () =>
+        `${document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.getAttribute("data-slot")} @ ${document.activeElement?.closest("[aria-posinset]")?.getAttribute("aria-posinset")}`,
+    )
+  await page.keyboard.press("Home")
+  await expect.poll(() => focusedRow(page)).toBe("1")
+  await page.keyboard.press("ArrowDown")
+  await expect.poll(() => focusedRow(page)).toBe("2")
+  await page.keyboard.press("Tab")
+  await expect.poll(control).toBe("Stop task @ 2")
+  expect(await scrollAwayAndBack(list, size, "2"), "the reconciler takes the focused row's node").toBe(true)
+  await expect.poll(control, "focus returns to the same control").toBe("Stop task @ 2")
+}
+
+// Clicking text that takes no focus is a deliberate leave: a later reconcile of the list must not pull
+// focus back into it.
+async function expectNoFocusSteal(page: Page, list: Locator, size: number, outside: Locator) {
+  await page.keyboard.press("Shift+Tab")
+  await expect.poll(() => focusedRow(page)).toBe("2")
+  await outside.click()
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true)
+  await scrollAwayAndBack(list, size, "2")
+  await expect(list.locator('[aria-posinset="1"]')).toHaveCount(1)
+  expect(
+    await list.evaluate((element) => element.contains(document.activeElement)),
+    "focus stays where the click left it",
+  ).toBe(false)
+}
+
+// Scrolls the list to its end, then back to the top, the way a scrollbar drag does. Returns whether the
+// reconciler detached the node of the row at `row` before the first row mounted again, the moment focus
+// would drop to the page.
+async function scrollAwayAndBack(list: Locator, size: number, row: string, atEnd?: () => Promise<void>) {
+  // Keyboard navigation scrolls through the virtualizer, which keeps steering back to the navigated row
+  // until its position holds; the row's actionability wait for a stable box outlasts that.
+  await list.locator(`[aria-posinset="${row}"]`).scrollIntoViewIfNeeded()
   await list.evaluate((element) => element.scrollTo({ top: element.scrollHeight }))
   await expect(list.locator(`[aria-posinset="${size}"]`)).toHaveCount(1)
-  await expect.poll(() => rows.count(), "rows mounted after dragging to the end").toBeLessThanOrEqual(16)
-  await list.evaluate((element) => element.scrollTo({ top: 0 }))
-  await expect(list.locator('[aria-posinset="1"]')).toHaveCount(1)
-  await expect.poll(position, "focus stays on its row").toBe("2")
+  await atEnd?.()
+  return list.evaluate(
+    (element, row) =>
+      new Promise<boolean>((resolve) => {
+        const node = element.querySelector(`[aria-posinset="${row}"]`)
+        const seen = { taken: false }
+        const observer = new MutationObserver((records) => {
+          seen.taken =
+            seen.taken || records.some((record) => [...record.removedNodes].some((removed) => removed === node))
+          if (!element.querySelector('[aria-posinset="1"]')) return
+          observer.disconnect()
+          resolve(seen.taken)
+        })
+        observer.observe(element.firstElementChild!, { childList: true })
+        element.scrollTo({ top: 0 })
+      }),
+    row,
+  )
 }
 
 // Opens the dialog from `trigger` with the keyboard once per closing path (Escape, then each named button)
