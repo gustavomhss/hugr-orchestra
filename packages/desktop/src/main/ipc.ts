@@ -155,7 +155,7 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
       },
     }
   }
-  if (source.type === "tab-opened") {
+  if (source.type === "tab-opened" || source.type === "tab-opened-background") {
     if (
       !hasExactKeys(payload, ["tabID", "generation", "url"]) ||
       typeof payload.tabID !== "string" ||
@@ -167,7 +167,7 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
       throw new Error("Invalid App Dock event")
     }
     return {
-      type: "tab-opened",
+      type: source.type,
       payload: {
         tabID: payload.tabID,
         generation: appDockEventNumber(payload.generation),

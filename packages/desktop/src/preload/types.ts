@@ -64,7 +64,7 @@ export type AppDockEvent =
         audible: boolean
       }
     }
-  | { type: "tab-opened"; payload: { tabID: string; generation: number; url: string } }
+  | { type: "tab-opened" | "tab-opened-background"; payload: { tabID: string; generation: number; url: string } }
   | {
       type: "tab-crashed"
       payload: { identity: { tabID: string; generation: number }; reason: "crashed" | "killed" | "oom" }

@@ -37,7 +37,7 @@ export type AppDockDownload = AppDockIdentity & {
 }
 export type AppDockEvent =
   | Readonly<{ type: "state"; payload: AppDockState }>
-  | Readonly<{ type: "tab-opened"; payload: AppDockTab }>
+  | Readonly<{ type: "tab-opened" | "tab-opened-background"; payload: AppDockTab }>
   | Readonly<{
       type: "tab-crashed"
       payload: { identity: AppDockIdentity; reason: "crashed" | "killed" | "oom" }
@@ -154,10 +154,10 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
     bounds: DockBounds,
     notify: (event: AppDockEvent) => void,
     profileStorage: ProfileStorage,
-    replacement?: Readonly<{ tabID: string; selected: boolean }>,
+    placement?: Readonly<{ tabID: string; selected: boolean }>,
   ): Promise<AppDockTab> => {
     if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
-    const id = replacement?.tabID ?? randomUUID()
+    const id = placement?.tabID ?? randomUUID()
     const tabGeneration = ++generation
     let target: string
     try {
@@ -265,7 +265,7 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
       })
       configuredPartitions.add(partition)
     }
-    ensureViewCapacity(senderID, replacement?.selected ?? true)
+    ensureViewCapacity(senderID, placement?.selected ?? true)
     const view = new WebContentsView({
       webPreferences: {
         contextIsolation: true,
@@ -341,8 +341,11 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
     view.webContents.setWindowOpenHandler(({ url }) => {
       try {
         const popupURL = appDockURL(url)
-        void open(senderID, win, popupURL, bounds, notify, profileStorage).then((tab) =>
-          notify(Object.freeze({ type: "tab-opened", payload: tab })),
+        // Only the tab on screen may attach a view. A popup from a background tab, or from any tab while
+        // the Dock is hidden, opens behind it and waits for the user to select it.
+        const selected = active.get(senderID) === id && isCurrent(senderID, id, tabGeneration)
+        void open(senderID, win, popupURL, bounds, notify, profileStorage, { tabID: randomUUID(), selected }).then(
+          (tab) => notify(Object.freeze({ type: selected ? "tab-opened" : "tab-opened-background", payload: tab })),
         )
       } catch {
         notify(
@@ -395,19 +398,19 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
     senderTabs.set(id, { view, win, storageKey, generation: tabGeneration, state: snapshot, notify, cleanups })
     tabByContents.set(view.webContents.id, { senderID, tabID: id, generation: tabGeneration })
     tabs.set(senderID, senderTabs)
-    if (replacement?.selected ?? true) {
+    if (placement?.selected ?? true) {
       win.contentView.addChildView(view)
       view.setVisible(!occluded.has(senderID))
       view.webContents.setBackgroundThrottling(false)
       active.set(senderID, id)
     }
     for (const [tabID, other] of senderTabs) {
-      if ((replacement?.selected ?? true) && tabID !== id) {
+      if ((placement?.selected ?? true) && tabID !== id) {
         win.contentView.removeChildView(other.view)
         markInactive(senderID, tabID, other)
       }
     }
-    if (!(replacement?.selected ?? true)) markInactive(senderID, id, senderTabs.get(id)!)
+    if (!(placement?.selected ?? true)) markInactive(senderID, id, senderTabs.get(id)!)
     void view.webContents.loadURL(target).catch(() =>
       notify(
         Object.freeze({

@@ -7,7 +7,7 @@ import { tmpdir } from "node:os"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { createRequire } from "node:module"
 
-const required = Array.from({ length: 31 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
+const required = Array.from({ length: 32 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
 const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock/s1.json")
 const schemes = ["http://127.0.0.1/", "file:///etc/passwd", "javascript:document.title='pwned'", "data:text/html,pwned"]
@@ -890,6 +890,82 @@ async function child() {
     await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(popupOpened.payload)])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupOpened.payload.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupSource.tabID])
+
+    // Only the tab on screen may attach a view. A popup from a background tab, or from any tab while the
+    // Dock is hidden, opens behind it and is attached only when it is selected.
+    const u32Start = await eventCount()
+    const u32Profile = "popup-background-profile"
+    const u32Opener = await open(site.base, u32Profile)
+    const u32OpenerContents = attachedContents(ipcWin)
+    const u32Front = await open(site.base, u32Profile)
+    const u32FrontContents = attachedContents(ipcWin)
+    check(u32OpenerContents && u32FrontContents && u32OpenerContents !== u32FrontContents, "U32 App Dock views missing")
+    check(!attached(ipcWin, u32OpenerContents), "U32 opener is not a background tab")
+    const u32Popup = async (from: Electron.WebContents, url: string) => {
+      await waitFor(
+        async () => (await execute("view:u32-opener-ready", from, "document.readyState === 'complete'")) === true,
+        "U32 opener load",
+      )
+      await execute("view:u32-window-open", from, `window.open(${JSON.stringify(url)}); undefined`)
+      let contents: Electron.WebContents | undefined
+      await waitFor(() => {
+        contents = webContents.getAllWebContents().find((item) => !item.isDestroyed() && item.getURL() === url)
+        return contents !== undefined
+      }, `U32 popup WebContents ${url}`)
+      return contents!
+    }
+    const u32BackgroundURL = `${site.base}/popup-target?u32=background`
+    const u32BackgroundContents = await u32Popup(u32OpenerContents, u32BackgroundURL)
+    check(
+      ipcWin.contentView.children.length === 1 && attached(ipcWin, u32FrontContents),
+      "U32 popup from a background tab displaced the tab on screen",
+    )
+    check(!attached(ipcWin, u32BackgroundContents), "U32 popup from a background tab attached a view")
+    check(!attached(ipcWin, u32OpenerContents), "U32 background opener attached a view")
+    const u32Background = await waitEvent(
+      u32Start,
+      (event) => event.type === "tab-opened-background" && event.payload.url === u32BackgroundURL,
+      "U32 background popup tab-opened-background",
+    )
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(u32Front)])
+    check(attachedContents(ipcWin) === undefined, "U32 hide left a view attached")
+    const u32HiddenURL = `${site.base}/popup-target?u32=hidden`
+    const u32HiddenContents = await u32Popup(u32FrontContents, u32HiddenURL)
+    check(attachedContents(ipcWin) === undefined, "U32 popup attached a view while the Dock was hidden")
+    const u32Hidden = await waitEvent(
+      u32Start,
+      (event) => event.type === "tab-opened-background" && event.payload.url === u32HiddenURL,
+      "U32 hidden popup tab-opened-background",
+    )
+    await readEvents()
+    check(
+      [u32Background, u32Hidden].every(
+        (event) =>
+          Object.keys(event.payload).length === 3 &&
+          typeof event.payload.tabID === "string" &&
+          event.payload.tabID.length > 0 &&
+          Number.isSafeInteger(event.payload.generation) &&
+          event.payload.generation >= 1 &&
+          JSON.stringify(structuredClone(event.payload)) === JSON.stringify(event.payload),
+      ) && !events.slice(u32Start).some((event) => event.type === "tab-opened"),
+      "U32 background popup event is not a cloneable public tab identity, or announced a selected tab",
+    )
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u32Background.payload), bounds])
+    check(
+      ipcWin.contentView.children.length === 1 && attached(ipcWin, u32BackgroundContents),
+      "U32 selecting the background popup did not attach only its view",
+    )
+    await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u32Hidden.payload), bounds])
+    check(
+      ipcWin.contentView.children.length === 1 && attached(ipcWin, u32HiddenContents),
+      "U32 selecting the hidden popup did not attach only its view",
+    )
+    pass(
+      "U32",
+      "popups from a background tab or a hidden Dock open unattached as tab-opened-background; selecting attaches only them",
+    )
+    for (const opened of [u32Hidden.payload, u32Background.payload, u32Front, u32Opener])
+      await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [opened.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightA.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightC.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightTarget.tabID])
