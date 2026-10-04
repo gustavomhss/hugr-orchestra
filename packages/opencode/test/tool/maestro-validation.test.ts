@@ -92,6 +92,7 @@ describe("Maestro validation tools", () => {
             planRevisionID: { type: "string", allOf: [{ minLength: 1 }] },
             contextRecordID: { type: "string", allOf: [{ minLength: 1 }] },
             contextHash: { type: "string", allOf: [{ minLength: 1 }] },
+            checks: { description: expect.stringContaining("unique check IDs ordered lexicographically") },
           },
         },
       })

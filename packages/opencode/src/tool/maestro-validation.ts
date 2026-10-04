@@ -28,7 +28,9 @@ const ValidationParameters = Schema.Struct({
   workCard: Schema.String,
   routedMemberID: Schema.String,
   validatorVersion: Schema.String,
-  checks: Schema.Array(Check),
+  checks: Schema.Array(Check).annotate({
+    description: "Nonempty observed evidence, with unique check IDs ordered lexicographically by ID. Do not claim unobserved checks passed.",
+  }),
 })
 
 const ReviewParameters = Schema.Struct({

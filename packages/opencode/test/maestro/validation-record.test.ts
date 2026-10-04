@@ -11,7 +11,7 @@ import { ProjectSchema } from "@opencode-ai/core/project/schema"
 import { AbsolutePath } from "@opencode-ai/core/schema"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
-import { Effect, FileSystem, Schema } from "effect"
+import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { eq } from "drizzle-orm"
 import { rm } from "node:fs/promises"
 import path from "node:path"
@@ -178,9 +178,33 @@ function expectReviewRejection(error: { _tag: string }, reason: string) {
   expect(error._tag).toBe("MaestroReviewRejected")
   if (!("reason" in error) || typeof error.reason !== "string") throw new Error("expected review rejection")
   expect(error.reason).toBe(reason)
+  expect("message" in error && error.message).toBe(`MaestroReviewRejected: ${reason}`)
 }
 
 describe("Maestro validation receipt", () => {
+  it.instance(
+    "exposes rejected check order through Error.message without persisting invalid validation",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* prepare()
+        const checks = [
+          { id: "scope", status: "PASS" as const, detail: "observed scope" },
+          { id: "grounding", status: "PASS" as const, detail: "observed context" },
+        ]
+        const rejected = yield* recordValidation({ ...input, checks }).pipe(Effect.exit)
+        expect(Exit.isFailure(rejected)).toBe(true)
+        if (!Exit.isFailure(rejected)) throw new Error("noncanonical checks were admitted")
+        const error = Cause.squash(rejected.cause)
+        expect(error instanceof Error && error.message).toBe("MaestroValidationRejected: checks-not-deterministic")
+        const database = yield* Database.Service
+        expect(yield* database.db.select().from(EventTable).all().pipe(Effect.orDie)).toHaveLength(0)
+        const valid = yield* recordValidation({ ...input, checks: [...checks].reverse() })
+        expect(valid.outcome).toBe("VALID")
+        expect(yield* readValidation(valid.id)).toEqual(valid)
+      }),
+    { git: true },
+  )
+
   it.instance(
     "derives project and canonical Maestro actor from durable Session",
     () =>
