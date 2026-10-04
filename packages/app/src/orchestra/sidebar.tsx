@@ -36,6 +36,9 @@ const icons = {
   chat: '<path d="M2.6 3.6h10.8v6.9H6.9l-3.1 2.3v-2.3H2.6z"/>',
   agents:
     '<circle cx="5.4" cy="4.6" r="2.1"/><circle cx="11.4" cy="5" r="1.7"/><path d="M1.6 13.2c.3-2.2 1.9-3.4 3.8-3.4s3.5 1.2 3.8 3.4M9.9 9.9c2.2-.3 3.9 1 4.3 3.3"/>',
+  // Official design icon (design/icons/maestro.svg) drawn on a 20-unit grid.
+  maestro:
+    '<g transform="scale(.8)" stroke-width="1.75"><path d="M13.332 8.7487C11.4911 8.7487 9.9987 7.25631 9.9987 5.41536M6.66536 11.2487C8.50631 11.2487 9.9987 12.7411 9.9987 14.582M9.9987 2.78209L9.9987 17.0658M16.004 15.0475C17.1255 14.5876 17.9154 13.4849 17.9154 12.1978C17.9154 11.3363 17.5615 10.5575 16.9913 9.9987C17.5615 9.43991 17.9154 8.66108 17.9154 7.79962C17.9154 6.21199 16.7136 4.90504 15.1702 4.73878C14.7858 3.21216 13.4039 2.08203 11.758 2.08203C11.1171 2.08203 10.5162 2.25337 9.9987 2.55275C9.48117 2.25337 8.88032 2.08203 8.23944 2.08203C6.59353 2.08203 5.21157 3.21216 4.82722 4.73878C3.28377 4.90504 2.08203 6.21199 2.08203 7.79962C2.08203 8.66108 2.43585 9.43991 3.00609 9.9987C2.43585 10.5575 2.08203 11.3363 2.08203 12.1978C2.08203 13.4849 2.87191 14.5876 3.99339 15.0475C4.46688 16.7033 5.9917 17.9154 7.79962 17.9154C8.61335 17.9154 9.36972 17.6698 9.9987 17.2488C10.6277 17.6698 11.384 17.9154 12.1978 17.9154C14.0057 17.9154 15.5305 16.7033 16.004 15.0475Z"/></g>',
   mcp: '<path d="M5 2v3M11 2v3M3 5h10v3a5 5 0 0 1-10 0V5ZM8 13v2"/>',
   skills: '<path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>',
   plugins: '<path d="M2 3h4a2 2 0 1 1 4 0h4v4a2 2 0 1 0 0 4v3h-4a2 2 0 1 0-4 0H2V3Z"/>',
@@ -309,6 +312,25 @@ export function OrchestraSidebar() {
     ))
   }
 
+  function openMaestro() {
+    // Governance belongs to the open session; the session page registers its command.
+    if (
+      layout.route().type === "session" &&
+      command.options.some((option) => option.id === "maestro.governance" && !option.disabled)
+    )
+      return command.trigger("maestro.governance")
+    void dialog.show(() => (
+      <Dialog class="orchestra-pending-dialog">
+        <DialogHeader>
+          <DialogTitle>{language.t("orchestra.governance.title")}</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <DialogTitleGroup description={language.t("orchestra.governance.noSession")} />
+        </DialogBody>
+      </Dialog>
+    ))
+  }
+
   function afterProfileClose(action: () => void) {
     dismiss.preventTriggerRestore()
     setState("profileOpen", false)
@@ -350,6 +372,7 @@ export function OrchestraSidebar() {
                   onClick={() => {
                     if (item.id === "home") return navigate("/")
                     if (item.id === "chat") return openChat()
+                    if (item.id === "maestro") return openMaestro()
                     if (item.id === "search") return command.show()
                     if (item.id === "settings") return command.trigger("settings.open")
                     if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")

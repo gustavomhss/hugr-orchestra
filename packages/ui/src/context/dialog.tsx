@@ -16,7 +16,7 @@ import {
 import { Dialog as Kobalte } from "@kobalte/core/dialog"
 import { makeEventListener } from "@solid-primitives/event-listener"
 
-type DialogElement = () => JSX.Element
+type DialogElement = (dispose: () => void) => JSX.Element
 
 type Active = {
   id: string
@@ -40,6 +40,13 @@ function init() {
     timer.current = undefined
   })
 
+  const remove = (id: string) => {
+    const current = stack().find((item) => item.id === id)
+    if (!current) return
+    current.dispose()
+    setStack((items) => items.filter((item) => item.id !== id))
+  }
+
   const close = (id?: string) => {
     const items = stack()
     const current = id ? items.find((item) => item.id === id) : items.at(-1)
@@ -56,8 +63,7 @@ function init() {
 
     timer.current = setTimeout(() => {
       timer.current = undefined
-      current.dispose()
-      setStack((items) => items.filter((item) => item.id !== closed))
+      remove(closed)
       lock.value = false
     }, 100)
   }
@@ -113,7 +119,7 @@ function init() {
                   "pointer-events": "none",
                 }}
               >
-                {element()}
+                {element(() => remove(id))}
               </div>
             </Kobalte.Portal>
           </Kobalte>
@@ -125,6 +131,7 @@ function init() {
 
     const active: Active = { id, node, dispose, owner, onClose, setClosing }
     setStack((items) => [...items, active])
+    return id
   }
 
   const push = (element: DialogElement, owner: Owner, onClose?: () => void) => {
@@ -144,12 +151,13 @@ function init() {
       timer.current = undefined
     }
     lock.value = false
-    mount(element, owner, onClose, 0)
+    return mount(element, owner, onClose, 0)
   }
 
   return {
     stack,
     close,
+    remove,
     show,
     push,
   }
@@ -178,6 +186,12 @@ export function useDialog() {
     throw new Error("useDialog must be used within a DialogProvider")
   }
 
+  const owned = { id: undefined as string | undefined, disposed: false }
+  onCleanup(() => {
+    owned.disposed = true
+    if (owned.id) ctx.remove(owned.id)
+  })
+
   return {
     get active() {
       return ctx.stack().at(-1)
@@ -185,6 +199,13 @@ export function useDialog() {
     show(element: DialogElement, onClose?: () => void) {
       const base = ctx.stack().at(-1)?.owner ?? owner
       return startTransition(() => ctx.show(element, base, onClose))
+    },
+    // Dialog roots are detached. Opt in to the calling owner's lifetime, never the active stack owner.
+    showOwned(element: DialogElement, onClose?: () => void) {
+      return startTransition(() => {
+        if (owned.disposed) return
+        owned.id = ctx.show(element, owner, onClose)
+      })
     },
     push(element: DialogElement, onClose?: () => void) {
       const base = ctx.stack().at(-1)?.owner ?? owner

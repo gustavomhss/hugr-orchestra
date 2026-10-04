@@ -1,0 +1,23 @@
+bun test v1.3.14 (0d9b296a)
+
+src/pages/session/orchestra-governance-data.test.ts:
+351 |       { id: "msg_user", type: "user" as const, time: { created: 1 }, text: "Review this plan" },
+352 |       { id: "msg_a", type: "assistant" as const, agent: "maestro", model: { id: "m", providerID: "p" }, time: { created: 2 }, content: tools },
+353 |     ]
+354 |     const normalized = normalizeSessionMessages(sessionID, source)
+355 |     const result = readGovernance({ sessionID, source, messages: normalized.messages, parts: (id) => normalized.parts.get(id)?.toReversed() })
+356 |     expect(result.approval.state).toBe("approved")
+                                        ^
+error: expect(received).toBe(expected)
+
+Expected: "approved"
+Received: "awaiting"
+
+      at <anonymous> (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-governance/packages/app/src/pages/session/orchestra-governance-data.test.ts:356:35)
+(fail) readGovernance > current server content order wins over lexically sorted opaque call IDs [77.47ms]
+
+ 0 pass
+ 15 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [4.37s]
