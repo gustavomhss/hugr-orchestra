@@ -1,5 +1,6 @@
 import { Flag } from "@opencode-ai/core/flag/flag"
 import { Effect } from "effect"
+import { mkdirSync } from "fs"
 import path from "path"
 
 const preserveExerciseGlobalRoot = !!process.env.OPENCODE_HTTPAPI_EXERCISE_GLOBAL
@@ -13,6 +14,8 @@ process.env.XDG_CACHE_HOME = path.join(exerciseGlobalRoot, "cache")
 process.env.OPENCODE_DISABLE_SHARE = "true"
 export const exerciseConfigDirectory = path.join(exerciseGlobalRoot, "config", "opencode")
 export const exerciseDataDirectory = path.join(exerciseGlobalRoot, "data", "opencode")
+export const exerciseProbeDirectory = path.join(exerciseGlobalRoot, "probe")
+mkdirSync(exerciseProbeDirectory, { recursive: true })
 
 const preserveExerciseDatabase = !!process.env.OPENCODE_HTTPAPI_EXERCISE_DB
 export const exerciseDatabasePath =
