@@ -1,4 +1,3 @@
-import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { Icon } from "@opencode-ai/ui/icon"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { Dialog, DialogBody, DialogHeader, DialogTitleGroup } from "@opencode-ai/ui/v2/dialog-v2"
@@ -57,21 +56,22 @@ const approvals = {
 export function DialogOrchestraGovernance(props: {
   sessionID: string
   current: () => boolean
+  dispose: () => void
   onShowMessage: (turnID: string) => void
 }) {
   const sync = useSync()()
   const language = useLanguage()
-  const dialog = useDialog()
   const protocol = useServerProtocol()
   const id = createUniqueId()
   createEffect(() => {
-    if (!props.current()) dialog.close()
+    if (!props.current()) props.dispose()
   })
   // The shared dialog stack has no trigger for Kobalte to refocus, so return focus to the opener (W09)
   // once the dialog DOM is gone, unless something else has taken focus meanwhile.
   const origin = document.activeElement
   onCleanup(() =>
     requestAnimationFrame(() => {
+      if (!props.current()) return
       if (!(origin instanceof HTMLElement) || !origin.isConnected) return
       if (document.activeElement && document.activeElement !== document.body) return
       origin.focus({ preventScroll: true })
@@ -159,7 +159,7 @@ export function DialogOrchestraGovernance(props: {
               <strong>{language.t("orchestra.governance.waiting.title")}</strong>
               <p>{language.t("orchestra.governance.waiting.body")}</p>
             </div>
-            <ButtonV2 size="small" variant="neutral" onClick={() => dialog.close()}>
+            <ButtonV2 size="small" variant="neutral" onClick={props.dispose}>
               {language.t("orchestra.governance.waiting.action")}
             </ButtonV2>
           </div>

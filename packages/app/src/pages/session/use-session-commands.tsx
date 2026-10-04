@@ -431,12 +431,13 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     void openDialog(
       () => import("./orchestra-governance"),
       (x) =>
-        dialog.show(() => (
+        dialog.showOwned((dispose) => (
           <x.DialogOrchestraGovernance
             sessionID={sessionID}
             current={owner.current}
+            dispose={dispose}
             onShowMessage={(id) => {
-              dialog.close()
+              dispose()
               owner.run(() => navigate(`${route}#message-${id}`, { replace: true }))
             }}
           />

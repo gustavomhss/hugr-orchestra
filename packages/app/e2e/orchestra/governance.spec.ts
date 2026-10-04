@@ -240,6 +240,88 @@ test("without an open session the entry explains how to reach governance", async
   await expect(page).toHaveURL(/\/$/)
 })
 
+test("route disposal closes governance when the session leaves for Home", async ({ page }) => {
+  await setup(page, { agents: [build, maestro], config, messages: governedMessages() })
+  const documents: string[] = []
+  page.on("request", (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url())
+  })
+  await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
+  await expectSessionTitle(page, title)
+  await page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Maestro", exact: true })
+    .click()
+  const dialog = page.getByRole("dialog", { name: "Maestro governance" })
+  await expect(dialog.locator('[data-kind="presentation"]')).toContainText("apr_1")
+
+  // Host/browser navigation can happen with a modal open. Exercise the real SPA router, not a reload.
+  await page.evaluate(() => {
+    window.history.pushState(null, "", "/")
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  })
+  await expect(page).toHaveURL(/\/$/)
+  await expect(dialog).toHaveCount(0)
+  await expect(page.locator('[data-component="dialog-overlay"]')).toHaveCount(0)
+  await expect(
+    page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Home", exact: true }),
+  ).toHaveAttribute("aria-current", "page")
+  expect(documents).toHaveLength(1)
+  await page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Maestro", exact: true })
+    .click()
+  await expect(dialog).toContainText("Open a session in Chat to see its Maestro governance.")
+})
+
+test("cross-server remount closes old governance even when the session ID is reused", async ({ page }) => {
+  const other = new URL(server)
+  other.hostname = other.hostname === "localhost" ? "127.0.0.1" : "localhost"
+  const second = other.origin
+  const requests = await setup(page, {
+    agents: [build, maestro],
+    config,
+    messages: governedMessages(),
+    otherServer: second,
+  })
+  const documents: string[] = []
+  page.on("request", (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url())
+  })
+  await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
+  await expectSessionTitle(page, title)
+  const entry = page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Maestro", exact: true })
+  await entry.click()
+  const dialog = page.getByRole("dialog", { name: "Maestro governance" })
+  await expect(dialog.locator('[data-kind="presentation"]')).toContainText("apr_1")
+  const previous = await dialog.getAttribute("id")
+  expect(previous).toBeTruthy()
+  const destination = `/server/${base64Encode(second)}/session/${sessionID}`
+  await page.evaluate((href) => {
+    window.history.pushState(null, "", href)
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }, destination)
+  await expect(page).toHaveURL(new RegExp(`${destination}$`))
+  await expect(dialog).toHaveCount(0)
+  await expectSessionTitle(page, title)
+  await expect
+    .poll(() =>
+      requests.some(
+        (request) =>
+          new URL(request.url).origin === second && new URL(request.url).pathname === `/session/${sessionID}`,
+      ),
+    )
+    .toBe(true)
+  expect(documents).toHaveLength(1)
+  await entry.click()
+  await expect(dialog.locator('[data-kind="presentation"]')).toContainText("apr_1")
+  await expect(dialog).not.toHaveAttribute("id", previous!)
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
+})
+
 function governedMessages() {
   const tool = (id: string, name: string, state: Record<string, unknown>) => ({
     id,
@@ -367,11 +449,12 @@ async function setup(
     messages: unknown[]
     currentMessages?: unknown[]
     questions?: unknown[]
+    otherServer?: string
   },
 ) {
   const requests: { url: string; method: string }[] = []
   await page.addInitScript(
-    ({ server, scheme, locale }) => {
+    ({ server, scheme, locale, otherServer }) => {
       localStorage.setItem("opencode.settings.dat:defaultServerUrl", server)
       localStorage.setItem(
         "settings.v3",
@@ -382,8 +465,9 @@ async function setup(
       localStorage.setItem("opencode-theme-id", "oc-2")
       localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
+      if (otherServer) localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [otherServer] }))
     },
-    { server, scheme: input.scheme ?? "dark", locale: input.locale ?? "en" },
+    { server, scheme: input.scheme ?? "dark", locale: input.locale ?? "en", otherServer: input.otherServer },
   )
   await mockOpenCodeServer(page, {
     directory,
@@ -427,7 +511,7 @@ async function setup(
   // Registered after the shared mock so these answers take precedence for the server origin.
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url())
-    if (url.origin !== server) return route.fallback()
+    if (url.origin !== server && url.origin !== input.otherServer) return route.fallback()
     requests.push({ url: url.toString(), method: route.request().method() })
     const json = (body: unknown) =>
       route.fulfill({

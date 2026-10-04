@@ -314,7 +314,10 @@ export function OrchestraSidebar() {
 
   function openMaestro() {
     // Governance belongs to the open session; the session page registers its command.
-    if (command.options.some((option) => option.id === "maestro.governance" && !option.disabled))
+    if (
+      layout.route().type === "session" &&
+      command.options.some((option) => option.id === "maestro.governance" && !option.disabled)
+    )
       return command.trigger("maestro.governance")
     void dialog.show(() => (
       <Dialog class="orchestra-pending-dialog">
