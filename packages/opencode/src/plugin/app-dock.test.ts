@@ -548,7 +548,7 @@ test("dock_find pages native continuations itself and returns compact matches fr
     : args.cursor === "c1" ? page([control("n:b", "Sign In")], "c2") : page([control("n:c", "Continue without Signing In")], "c3"))
   const result = JSON.parse(String(await hooks.tool.dock_find.execute({ name: "continue WITHOUT" }, context)))
   expect(calls).toEqual([{ op: "read", args: { budget: 500, maxText: 0 } }, { op: "read", args: { cursor: "c1" } }, { op: "read", args: { cursor: "c2" } }])
-  expect(result).toEqual({ found: 1, pagesScanned: 3, restarts: 0, items: [{ ref: "n:c", role: "push-button",
+  expect(result).toEqual({ found: 1, pagesScanned: 3, restarts: 0, searchComplete: false, items: [{ ref: "n:c", role: "push-button",
     name: "Continue without Signing In", states: [], actions: [{ id: "a:n:c", name: "press" }], can: ["action", "observedAction"] }] })
 })
 
@@ -588,10 +588,10 @@ test("dock_action target locates and acts in one call, refusing ambiguity withou
 })
 
 test("target mutation retries only a certainly-undispatched stale ref, never an unknown outcome", async () => {
-  const stale = host((op, _args, index) => op === "action" ? (index === 1 ? nativeError("stale-ref") : { ok: true, value: { dispatch: "acknowledged" } })
+  const stale = host((op, _args, index) => op === "action" ? (index === 2 ? nativeError("stale-ref") : { ok: true, value: { dispatch: "acknowledged" } })
     : page([control("n:a", "Continue without Signing In")]))
   expect(JSON.parse(String(await stale.hooks.tool.dock_action.execute({ target: { name: "continue" } }, context)))).toEqual({ dispatch: "acknowledged" })
-  expect(stale.calls.map((call) => call.op)).toEqual(["read", "action", "read", "action"])
+  expect(stale.calls.map((call) => call.op)).toEqual(["read", "read", "action", "read", "read", "action"])
   const unknown = host((op) => op === "action" ? nativeError("stale-ref", "unknown") : page([control("n:a", "Continue")]))
   expect(JSON.parse(String(await unknown.hooks.tool.dock_action.execute({ target: { name: "continue" } }, context))))
     .toMatchObject({ code: "stale-ref", outcome: "unknown" })
@@ -628,4 +628,57 @@ test("dock_type target types into the exact-name field among partial matches", a
   const result = await hooks.tool.dock_type.execute({ target: { name: "SEARCH" }, text: "x", mode: "keyboard" }, context)
   expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
   expect(calls.filter((call) => call.op === "type")).toEqual([{ op: "type", args: { ref: "n:search", text: "x", mode: "keyboard" } }])
+})
+
+test("dock_action target decides over the whole tree and acts on a later-page exact name with the rescan's ref", async () => {
+  const { hooks, calls } = host((op, args, index) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([control("n:quick", "Open Quick Access")], "c") : page([control(`n:open-${index}`, "Open")]))
+  expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "Open" } }, context)))).toEqual({ dispatch: "acknowledged" })
+  expect(calls.map((call) => call.op)).toEqual(["read", "read", "read", "read", "action"])
+  expect(calls.at(-1)).toEqual({ op: "action", args: { ref: "n:open-3", actionID: "a:n:open-3" } })
+})
+
+test("dock_action target acts on a lone partial match only when it is the single match in the whole tree", async () => {
+  const pages = (last: unknown[]) => host((op, args) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([control("n:quick", "Open Quick Access")], "c1")
+    : args.cursor === "c1" ? page([control("n:explorer", "Explorer")], "c2") : page(last))
+  const lone = pages([control("n:other", "Terminal")])
+  await lone.hooks.tool.dock_action.execute({ target: { name: "open" } }, context)
+  expect(lone.calls.filter((call) => call.op === "action")).toEqual([{ op: "action", args: { ref: "n:quick", actionID: "a:n:quick" } }])
+  const later = pages([control("n:open", "Open")])
+  await later.hooks.tool.dock_action.execute({ target: { name: "open" } }, context)
+  expect(later.calls.filter((call) => call.op === "action")).toEqual([{ op: "action", args: { ref: "n:open", actionID: "a:n:open" } }])
+})
+
+test("dock_action target refuses to act on a search cut off by the page bound", async () => {
+  const { hooks, calls } = host((_op, _args, index) => page([control(`n:${index}`, index === 0 ? "Open" : "Explorer")], `c${index}`))
+  expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "open" } }, context))))
+    .toMatchObject({ code: "target-search-incomplete", outcome: "not-dispatched", found: 1, pagesScanned: 48, searchComplete: false })
+  expect(calls.length).toBe(48)
+  expect(calls.every((call) => call.op === "read")).toBe(true)
+})
+
+test("dock_action target refuses without dispatch when the rescan no longer finds the same control", async () => {
+  const run = (second: unknown[]) => {
+    const dock = host((op, _args, index) => index === 0 ? page([control("n:quick", "Open Quick Access"), control("n:open", "Open")])
+      : op === "action" ? { ok: true, value: { dispatch: "acknowledged" } } : page(second))
+    return dock.hooks.tool.dock_action.execute({ target: { name: "open" } }, context)
+      .then((result) => ({ result: JSON.parse(String(result)), actions: dock.calls.filter((call) => call.op === "action").length }))
+  }
+  for (const second of [[control("n:quick", "Open Quick Access")], [control("n:open", "Open"), control("n:open2", "Open")]])
+    expect(await run(second)).toMatchObject({ result: { code: "target-changed", outcome: "not-dispatched", item: { name: "Open" } }, actions: 0 })
+  expect(await run([control("n:fresh", "Open")])).toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
+})
+
+test("dock_find marks an early stop with more pages as an incomplete search", async () => {
+  const early = host(() => page([control("n:a", "Open")], "c"))
+  expect(JSON.parse(String(await early.hooks.tool.dock_find.execute({ name: "open" }, context))))
+    .toMatchObject({ found: 1, pagesScanned: 1, searchComplete: false })
+  expect(early.calls.length).toBe(1)
+  const last = host(() => page([control("n:a", "Open")]))
+  const complete = JSON.parse(String(await last.hooks.tool.dock_find.execute({ name: " Open " }, context)))
+  expect(complete).toMatchObject({ found: 1 })
+  expect(complete).not.toHaveProperty("searchComplete")
+  const blank = host(() => page([control("n:a", "Open")]))
+  expect(JSON.parse(String(await blank.hooks.tool.dock_find.execute({ name: "  " }, context)))).toMatchObject({ found: 0 })
 })

@@ -143,7 +143,9 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
 
 type NativeQuery = { name: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
-type NativeScan = { found: NativeItem[]; pages: number; complete: boolean; reasons: unknown; restarts?: number }
+// occurrence counts earlier matches with the same name and roleName on the same page, so a rescan can re-identify the control.
+type NativeMatch = { item: NativeItem; page: number; occurrence: number }
+type NativeScan = { found: NativeMatch[]; pages: number; more: boolean; complete: boolean; reasons: unknown; restarts?: number }
 
 // Bounds one scan at 48 helper pages (~6000 controls); each page is still one bounded native request.
 const MAX_FIND_PAGES = 48
@@ -158,7 +160,8 @@ function nativePage(value: unknown) {
 
 function matches(item: unknown, query: NativeQuery): item is NativeItem {
   if (!object(item) || typeof item.ref !== "string" || typeof item.name !== "string" || typeof item.roleName !== "string") return false
-  if (!item.name.toLowerCase().includes(query.name.toLowerCase())) return false
+  const name = query.name.trim().toLowerCase()
+  if (name.length === 0 || !item.name.toLowerCase().includes(name)) return false
   if (query.role !== undefined && item.roleName !== query.role) return false
   if (query.capability === undefined) return true
   const capability = object(item.capabilities) ? item.capabilities[query.capability] : undefined
@@ -181,8 +184,8 @@ function compactItem(item: NativeItem) {
 const compactScan = (scan: NativeScan, code?: string) => toJSON({
   ...(code ? { code, outcome: "not-dispatched" } : {}),
   found: scan.found.length, pagesScanned: scan.pages, restarts: scan.restarts ?? 0,
-  ...(scan.found.length === 0 ? { searchComplete: scan.complete, reasons: scan.reasons } : {}),
-  items: scan.found.slice(0, 20).map(compactItem),
+  ...(scan.found.length === 0 ? { searchComplete: scan.complete, reasons: scan.reasons } : scan.more ? { searchComplete: false } : {}),
+  items: scan.found.slice(0, 20).map((match) => compactItem(match.item)),
 })
 
 export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: number } = {}): Hooks {
@@ -197,30 +200,44 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
 
   // A model turn takes far longer than a native continuation lives, so the tool,
   // not the model, pages: each page is requested immediately after the previous one.
-  // Every native request keeps its own limits; only read-only scans are restarted.
-  const find = (context: ToolContext, query: NativeQuery, restarts = 0): Promise<NativeScan> =>
-    scan(context, query, call(context, "read", { budget: 500, maxText: query.maxText ?? 0 }), 1).catch((error: unknown) => {
+  // Every native request keeps its own limits; only read-only scans are restarted. `until` stops the scan early.
+  const find = (context: ToolContext, query: NativeQuery, until: (scan: NativeScan) => boolean, restarts = 0): Promise<NativeScan> =>
+    scan(context, query, until, call(context, "read", { budget: 500, maxText: query.maxText ?? 0 }),
+      { found: [], pages: 0, more: true, complete: false, reasons: [] }).catch((error: unknown) => {
       if (!(error instanceof NativeRPCError) || !["cursor-stale", "stale-ref"].includes(error.code) || restarts >= 2) throw error
-      return find(context, query, restarts + 1)
+      return find(context, query, until, restarts + 1)
     }).then((result) => ({ ...result, restarts: result.restarts ?? restarts }))
-  const scan = async (context: ToolContext, query: NativeQuery, next: Promise<unknown>, pages: number): Promise<NativeScan> => {
+  const scan = async (context: ToolContext, query: NativeQuery, until: (scan: NativeScan) => boolean, next: Promise<unknown>,
+    previous: NativeScan): Promise<NativeScan> => {
     const page = nativePage(await next)
-    const found = page.items.filter((item) => matches(item, query))
-    if (found.length > 0 || !page.hasMore || typeof page.cursor !== "string" || pages >= MAX_FIND_PAGES)
-      return { found, pages, complete: found.length > 0 || (!page.hasMore && page.coverage.complete === true),
-        reasons: page.coverage.reasons }
-    return scan(context, query, call(context, "read", { cursor: page.cursor }), pages + 1)
+    const pages = previous.pages + 1
+    const matched = page.items.filter((item) => matches(item, query))
+    const more = page.hasMore === true
+    const result = { pages, more, complete: !more && page.coverage.complete === true, reasons: page.coverage.reasons,
+      found: [...previous.found, ...matched.map((item, index) => ({ item, page: pages,
+        occurrence: matched.slice(0, index).filter((other) => other.name === item.name && other.roleName === item.roleName).length }))] }
+    if (until(result) || !more || typeof page.cursor !== "string" || pages >= MAX_FIND_PAGES) return result
+    return scan(context, query, until, call(context, "read", { cursor: page.cursor }), result)
   }
   // Locate and mutate within one tool call so UI churn between model turns cannot stale the ref.
+  // Uniqueness is decided over the whole tree, then a fresh scan re-identifies the winner and supplies a current ref.
   // Only a certainly-undispatched stale target is located again; unknown outcomes are never replayed.
   const act = async (context: ToolContext, query: NativeQuery, run: (item: NativeItem) => Promise<unknown> | string,
     attempt = 0): Promise<unknown> => {
-    const result = await find(context, query)
+    const all = await find(context, query, () => false)
+    if (all.more) return compactScan(all, "target-search-incomplete")
     // Names are substring-matched, so "Open" also hits "Open Quick Access"; a unique exact name settles that.
-    const exact = result.found.filter((item) => item.name.trim().toLowerCase() === query.name.trim().toLowerCase())
-    const chosen = result.found.length === 1 ? result.found : exact
-    if (chosen.length !== 1) return compactScan(result, result.found.length === 0 ? "target-not-found" : "target-ambiguous")
-    return Promise.resolve(run(chosen[0]!)).catch((error: unknown) => {
+    const exact = all.found.filter((match) => match.item.name.trim().toLowerCase() === query.name.trim().toLowerCase())
+    const winner = all.found.length === 1 ? all.found[0] : exact.length === 1 ? exact[0] : undefined
+    if (winner === undefined) return compactScan(all, all.found.length === 0 ? "target-not-found" : "target-ambiguous")
+    const fresh = await find(context, query, (scan) => scan.pages >= winner.page)
+    const twins = (scan: NativeScan) => scan.found.filter((match) => match.page === winner.page
+      && match.item.name === winner.item.name && match.item.roleName === winner.item.roleName)
+    const current = twins(fresh).find((match) => match.occurrence === winner.occurrence)
+    // A same-named control appearing on that page would shift occurrence indexes onto a different control.
+    if (current === undefined || twins(fresh).length !== twins(all).length)
+      return toJSON({ code: "target-changed", outcome: "not-dispatched", item: compactItem(winner.item) })
+    return Promise.resolve(run(current.item)).catch((error: unknown) => {
       if (!(error instanceof NativeRPCError) || error.code !== "stale-ref" || error.outcome !== "not-dispatched" || attempt >= 1) throw error
       return act(context, query, run, attempt + 1)
     })
@@ -276,14 +293,14 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       }),
       dock_find: tool({
         description:
-          "Find controls in the native Linux workspace by accessible name (case-insensitive substring) and optional roleName. The tool pages the whole accessibility tree itself and returns compact matches from one fresh observation, with refs usable immediately by dock_action/dock_type. Prefer dock_action/dock_type with `target` to locate and act in one call, because native refs expire when the app changes.",
+          "Find controls in the native Linux workspace by accessible name (case-insensitive substring) and optional roleName. The tool pages the accessibility tree itself and returns compact matches from the first page that has any, with refs usable immediately by dock_action/dock_type; searchComplete:false means later pages were not searched. Prefer dock_action/dock_type with `target` to locate and act in one call, because native refs expire when the app changes.",
         args: {
           name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the accessible name"),
           role: tool.schema.string().min(1).max(64).optional().describe("Exact roleName, e.g. push-button, entry, check-box"),
           includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
         },
         execute: (args, context) =>
-          find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) })
+          find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) }, (scan) => scan.found.length > 0)
             .then((result) => compactScan(result), toolError),
       }),
       dock_wait: tool({
