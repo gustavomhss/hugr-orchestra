@@ -39,7 +39,13 @@ body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tabs"] {
   color: var(--evidence-heading);
 }
 
-body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tabs"] > button {
+/* The command sits beside the tablist, not in it; the tabs keep the header's spacing. */
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] {
+  display: flex;
+  gap: 4px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] > button {
   block-size: 28px;
   padding-inline: 10px;
   border: 1px solid transparent;
@@ -50,12 +56,12 @@ body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tabs"] > bu
   white-space: nowrap;
 }
 
-body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tabs"] > button:hover {
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] > button:hover {
   background: var(--orchestra-rail-tab-hover-background, var(--orchestra-overlay-hover));
   color: var(--orchestra-rail-tab-hover, var(--orchestra-body));
 }
 
-body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tabs"] > button[aria-selected="true"] {
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] > button[aria-selected="true"] {
   border-color: var(--orchestra-border-muted);
   background: var(--orchestra-rail-tab-active, var(--orchestra-surface-active));
   color: var(--orchestra-rail-tab-active-text, var(--orchestra-text));
