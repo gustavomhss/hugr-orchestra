@@ -29,6 +29,7 @@ import * as OtelTracer from "@effect/opentelemetry/Tracer"
 import { LLMAISDK } from "./llm/ai-sdk"
 import { LLMNativeRuntime } from "./llm/native-runtime"
 import { LLMRequestPrep } from "./llm/request"
+import { LLMContextBudget } from "./llm/context-budget"
 import { PromptGuard } from "./prompt-guard"
 
 export const OUTPUT_TOKEN_MAX = ProviderTransform.OUTPUT_TOKEN_MAX
@@ -47,6 +48,8 @@ export type StreamInput = {
   retries?: number
   toolChoice?: "auto" | "required" | "none"
   responseSchema?: JSONSchema7
+  /** Internal marker: this parent request contains applied working memory. */
+  contextMemory?: boolean
   /** Internal request isolation; agent names do not confer maintenance privileges. */
   purpose?: "context-maintenance"
 }
@@ -87,6 +90,7 @@ const live: Layer.Layer<
     const flags = yield* RuntimeFlags.Service
 
     const run = Effect.fn("LLM.run")(function* (request: StreamRequest) {
+      const contextMemory = request.contextMemory === true
       const input = request.purpose === "context-maintenance" ? yield* Effect.try({ try: () => ({
         ...request,
         ...structuredClone({ model: request.model, user: request.user, agent: request.agent,
@@ -121,6 +125,7 @@ const live: Layer.Layer<
         flags,
         isWorkflow,
       })
+      if (contextMemory) yield* LLMContextBudget.check(prepared, input.responseSchema)
 
       // Wire up toolExecutor for DWS workflow models so that tool calls
       // from the workflow service are executed via opencode's tool system
