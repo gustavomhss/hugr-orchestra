@@ -11,7 +11,7 @@ import { MessageV2 } from "@/session/message-v2"
 import { Archive } from "./archive"
 import { chunks } from "./transcript"
 import { Token } from "@/util/token"
-import { Cause, Context, Effect, Layer } from "effect"
+import { Cause, Context, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
 import { run, snapshot } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
@@ -29,7 +29,7 @@ type Entry = {
   refresh: boolean
   archived?: MessageID
 }
-type State = { sessions: Map<SessionID, Entry>; contexts: ReturnType<typeof create> }
+type State = { sessions: Map<SessionID, Entry>; contexts: ReturnType<typeof create>; scope: Scope.Scope }
 
 export interface Interface {
   readonly prepare: (input: { sessionID: SessionID; messages: SessionV1.WithParts[]; canRecall?: boolean }) => Effect.Effect<{
@@ -69,7 +69,10 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const llm = yield* LLM.Service
     const archive = yield* Archive.Service
-    const state = yield* InstanceState.make(() => Effect.succeed<State>({ sessions: new Map(), contexts: create() }))
+    const state = yield* InstanceState.make(() => Effect.gen(function* () {
+      const scope = yield* Scope.Scope
+      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope }
+    }))
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
       const current = yield* InstanceState.get(state)
@@ -119,11 +122,13 @@ const layer = Layer.effect(
       current.sessions.delete(sessionID)
     })
 
-    const schedule = (current: State, sessionID: SessionID, pending: Pending): Effect.Effect<void> =>
+    const schedule = (current: State, sessionID: SessionID, pending: Pending,
+      expected?: { entry: Entry; generation: number }): Effect.Effect<void> =>
       Effect.gen(function* () {
         const message = pending.message
         const active = yield* Effect.sync(() => {
-          const item = entry(current, sessionID)
+          const item = current.sessions.get(sessionID)
+          if (!item || expected && (item !== expected.entry || item.generation !== expected.generation)) return
           if (item.active || item.safe !== message.id || item.attempted === message.id) return
           const previous = current.contexts.get(sessionID)
           if (previous && !hasArtifact(previous)) {
@@ -141,7 +146,7 @@ const layer = Layer.effect(
         if (!active) return
 
         const finish = Effect.gen(function* () {
-          const pending = yield* Effect.sync(() => {
+          const next = yield* Effect.sync(() => {
             const item = current.sessions.get(sessionID)
             if (!item || item.active !== active) return
             item.active = undefined
@@ -149,9 +154,17 @@ const layer = Layer.effect(
             item.pending = undefined
             // New users clear the safe boundary; retry only a new completed turn.
             if (!pending || item.safe !== pending.message.id || item.attempted === pending.message.id) return
-            return pending
+            return { pending, entry: item, generation: item.generation }
           })
-          if (pending) yield* schedule(current, sessionID, pending)
+          // A cancelled worker still carries its interrupt cause in this finalizer.
+          // Admit the queued turn in a fresh fiber, owned by this instance's cache
+          // scope (not the old job/request). Defer execution until scope ownership
+          // is registered; schedule rechecks the captured entry/generation atomically.
+          if (next) yield* schedule(current, sessionID, next.pending, next).pipe(
+            Scope.provide(current.scope),
+            Effect.forkIn(current.scope),
+            Effect.asVoid,
+          )
         })
 
         yield* Effect.suspend(() =>

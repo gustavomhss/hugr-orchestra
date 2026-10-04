@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import { createHash } from "node:crypto"
-import { Deferred, Effect, Fiber, Stream } from "effect"
+import { Deferred, Effect, Fiber, Scheduler, Stream } from "effect"
 import { ModelV2 } from "@opencode-ai/core/model"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { LLMEvent } from "@opencode-ai/llm"
@@ -10,11 +10,13 @@ import { Transcript } from "@/continuity/transcript"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
 import { Provider } from "@/provider/provider"
+import { InstanceStore } from "@/project/instance-store"
 import type { LLM } from "@/session/llm"
 import { PartID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { Token } from "@/util/token"
 import { ProviderTest } from "../fake/provider"
+import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, it, pollWithTimeout } from "../lib/effect"
 import { captured, provider } from "./memory-fixture"
 import { FIRST, SECOND, applyFirst, begin, complete, entered, environment, fragments, held, jobFor, packet, prepare, seed, terminal } from "./service-fixture"
@@ -237,7 +239,8 @@ for (const action of ["advance", "cancel", "forget-rearm"] as const) it.instance
       expect(yield* Effect.sync(() => cancel.pollUnsafe())).toBeUndefined()
     }
     if (action === "forget-rearm") yield* continuity.forget(sessionID)
-    yield* complete(yield* begin(sessionID, "NEWER_BOUNDARY"), "NEWER_REPLY", action === "forget-rearm" ? 50_000 : 100)
+    const newer = yield* complete(yield* begin(sessionID, "NEWER_BOUNDARY"), "NEWER_REPLY", action === "forget-rearm" ? 50_000 : 100)
+    yield* continuity.start({ sessionID, message: newer, canRecall: true })
     const rearmed = action === "forget-rearm" ? yield* entered(fresh) : undefined
     if (!rearmed) expect(yield* Deferred.isDone(fresh.entered)).toBe(false)
     expect(yield* Deferred.isDone(stale.closed)).toBe(false)
@@ -247,6 +250,7 @@ for (const action of ["advance", "cancel", "forget-rearm"] as const) it.instance
     expect(yield* Deferred.isDone(stale.closed)).toBe(true)
     expect((yield* prepare(sessionID)).system).toEqual(action === "forget-rearm" ? [] : original.system)
     const next = rearmed ?? (yield* entered(fresh))
+    expect((yield* jobs.list()).filter((job) => job.id.includes(`:${newer.id}:`)).map((job) => job.id)).toEqual([next.jobID])
     expect((yield* jobs.get(next.jobID))?.status).toBe("running")
     yield* Deferred.succeed(fresh.release, undefined)
     yield* terminal(next.jobID, "completed", "applied")
@@ -254,5 +258,87 @@ for (const action of ["advance", "cancel", "forget-rearm"] as const) it.instance
     expect(after.system[0]).toContain(SECOND)
     expect(after.system[0]).not.toContain("STALE_TERMINAL_RESULT")
     expect(after.messages.at(-1)?.parts.some((part) => part.type === "text" && part.text === "NEWER_REPLY")).toBe(true)
+    yield* continuity.start({ sessionID, message: newer, canRecall: true })
+    expect((yield* jobs.list()).filter((job) => job.id.includes(`:${newer.id}:`)).map((job) => job.id)).toEqual([next.jobID])
   }).pipe(Effect.provide(environment([first, stale, fresh])))
+}), 60_000)
+
+function dispatchGate() {
+  const tasks: { task: () => void; priority: number }[] = []
+  const normal = new Scheduler.MixedScheduler()
+  let paused = false
+  const scheduler: Scheduler.Scheduler = {
+    executionMode: "async", shouldYield: () => false,
+    makeDispatcher: () => {
+      const dispatcher = normal.makeDispatcher()
+      return {
+        scheduleTask(task, priority) {
+          if (paused) { tasks.push({ task, priority }); return }
+          dispatcher.scheduleTask(task, priority)
+        },
+        flush() { if (!paused) dispatcher.flush() },
+      }
+    },
+  }
+  return { scheduler, tasks, pause() { paused = true }, flush() {
+    paused = false
+    for (const { task } of tasks.splice(0).sort((a, b) => a.priority - b.priority)) task()
+  } }
+}
+
+for (const action of ["deliver", "duplicate", "advance", "invalidate", "forget", "dispose"] as const) it.instance(`G4 queued dispatch rechecks admission and instance lifetime before start: ${action}`, () => Effect.gen(function* () {
+  const first = yield* held(FIRST)
+  const old = yield* held("# Work\nOld terminal snapshot", { holdCleanup: true })
+  const fresh = yield* held(SECOND)
+  const gate = dispatchGate()
+  yield* Effect.addFinalizer(() => Effect.sync(gate.flush))
+  yield* Effect.gen(function* () {
+    const sessionID = yield* seed()
+    yield* applyFirst(sessionID, first)
+    const jobs = yield* BackgroundJob.Service
+    const continuity = yield* SessionContinuity.Service
+    const user = yield* begin(sessionID, "DEFER_DISPATCH")
+    yield* complete(user, "OLD_STOP", 50_000).pipe(Effect.provideService(Scheduler.Scheduler, gate.scheduler))
+    const hit = yield* entered(old)
+    yield* Deferred.succeed(old.release, undefined)
+    yield* awaitWithTimeout(Deferred.await(old.closing), "Old transport never reached finalization", "15 seconds")
+    const newer = yield* complete(yield* begin(sessionID, "QUEUED_SAFE_TURN"), "QUEUED_REPLY", 100)
+    gate.pause()
+    yield* Deferred.succeed(old.cleanup, undefined)
+    yield* terminal(hit.jobID, "completed", "discarded")
+    expect(yield* Deferred.isDone(old.closed)).toBe(true)
+    expect(gate.tasks.length).toBeGreaterThan(0)
+    expect(yield* Deferred.isDone(fresh.entered)).toBe(false)
+    const before = (yield* jobs.list()).map((job) => job.id)
+    expect(before.some((id) => id.includes(`:${newer.id}:`))).toBe(false)
+    if (action === "advance") yield* begin(sessionID, "UNFINISHED_NEW_USER")
+    if (action === "invalidate") yield* continuity.invalidate(sessionID)
+    if (action === "forget") yield* continuity.forget(sessionID)
+    if (action === "dispose") {
+      const instance = yield* TestInstance
+      const store = yield* InstanceStore.Service
+      yield* store.disposeDirectory(instance.directory)
+      // A fresh instance/registry must not receive the old queued callback.
+      yield* store.provide({ directory: instance.directory }, Effect.gen(function* () {
+        expect(yield* jobs.list()).toEqual([])
+        gate.flush()
+        expect(yield* jobs.list()).toEqual([])
+        expect(yield* Deferred.isDone(fresh.entered)).toBe(false)
+      }))
+      return
+    }
+    if (action === "duplicate") yield* continuity.start({ sessionID, message: newer, canRecall: true })
+    gate.flush()
+    if (action !== "deliver" && action !== "duplicate") {
+      expect((yield* jobs.list()).map((job) => job.id)).toEqual(before)
+      expect(yield* Deferred.isDone(fresh.entered)).toBe(false)
+      return
+    }
+    const delivered = yield* entered(fresh)
+    expect(delivered.jobID).toContain(`:${newer.id}:`)
+    expect((yield* jobs.list()).filter((job) => job.id.includes(`:${newer.id}:`))).toHaveLength(1)
+    yield* Deferred.succeed(fresh.release, undefined)
+    yield* terminal(delivered.jobID, "completed", "applied")
+    expect((yield* prepare(sessionID)).system[0]).toContain(SECOND)
+  }).pipe(Effect.provide(environment([first, old, fresh])))
 }), 60_000)
