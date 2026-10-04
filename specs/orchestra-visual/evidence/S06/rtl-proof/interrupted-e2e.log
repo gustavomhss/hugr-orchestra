@@ -1,0 +1,14 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "5004"[0m
+
+
+Running 16 tests using 1 worker
+
+[1A[2K[1/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR dark: navigation, tooltips and profile portal agree
+[1A[2K[2/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR light: navigation, tooltips and profile portal agree
+[1A[2K[3/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL dark: navigation, tooltips and profile portal agree
+[1A[2K[4/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL light: navigation, tooltips and profile portal agree
+[1A[2K[5/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › Arabic RTL dark: navigation, tooltips and profile portal agree
+[1A[2K[6/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › Arabic RTL light: navigation, tooltips and profile portal agree
+[1A[2K[7/16] [chromium] › e2e/orchestra/compact-navigation.spec.ts:6:1 › collapse preserves names, focus, routes, profile and titlebar geometry across reload
+[1A[2K[8/16] [chromium] › e2e/orchestra/compact-navigation.spec.ts:86:1 › responsive compact mode restores the choice and leaves mobile navigation available
+[1A[2K[9/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:78:1 › reports real header bounds and coalesces header, shell and window changes

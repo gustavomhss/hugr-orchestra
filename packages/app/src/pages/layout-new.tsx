@@ -7,13 +7,22 @@ import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
 import { useLayout } from "@/context/layout"
 import { usePlatform } from "@/context/platform"
 import { OrchestraSidebar } from "@/orchestra/sidebar"
+import { createOrchestraNavigation } from "@/orchestra/compact-navigation"
+import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { setV2Toast, ToastRegion } from "@/utils/toast"
 
 export default function NewLayout(props: ParentProps) {
   const platform = usePlatform()
   const layout = useLayout()
   const desktop = createMediaQuery("(min-width: 768px)")
-  const [state, setState] = createStore({ debugTools: true, tabsMount: undefined as HTMLElement | undefined })
+  const constrained = createMediaQuery("(max-width: 1279px)")
+  const narrow = createMediaQuery("(max-width: 1023px)")
+  const navigation = createOrchestraNavigation({ platform, constrained })
+  const [state, setState] = createStore({
+    debugTools: true,
+    railRequested: false,
+    tabsMount: undefined as HTMLElement | undefined,
+  })
 
   createEffect(() => setV2Toast(true))
 
@@ -37,6 +46,15 @@ export default function NewLayout(props: ParentProps) {
       }}
     >
       <Titlebar
+        navigation={
+          <Show when={desktop() && narrow()}>
+            <OrchestraNavigationToggle
+              compact={!state.railRequested}
+              constrained={false}
+              onToggle={() => setState("railRequested", (value) => !value)}
+            />
+          </Show>
+        }
         update={update}
         tabsMount={desktop() ? state.tabsMount : undefined}
         debugTools={
@@ -45,9 +63,21 @@ export default function NewLayout(props: ParentProps) {
             : undefined
         }
       />
-      <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-workspace": desktop() }}>
+      <div
+        class="flex-1 min-h-0 min-w-0 flex flex-col"
+        classList={{ "orchestra-workspace": desktop() }}
+        data-navigation={
+          desktop()
+            ? narrow() && !state.railRequested
+              ? "hidden"
+              : navigation.compact()
+                ? "compact"
+                : "expanded"
+            : undefined
+        }
+      >
         <Show when={desktop()}>
-          <OrchestraSidebar />
+          <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
         </Show>
         <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
           <Show when={desktop()}>
