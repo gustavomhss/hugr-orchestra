@@ -45,10 +45,10 @@ variables:
 godfile:
   extends: .bun-linux
   script:
-    - git fetch origin "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
-    - GODFILE_BASE_REF=$(git rev-parse --verify FETCH_HEAD)
+    - GODFILE_BASE_REF=$(node .gitlab/base.mjs godfile)
     - export GODFILE_BASE_REF
     - chown -R node:node "$CI_PROJECT_DIR"
+    - runuser -u node -- bun test --timeout 30000 --cwd .gitlab base.test.ts
     - runuser -u node -- bun --cwd packages/core test test/godfile.test.ts
     - runuser -u node -- bun run check:godfile
 

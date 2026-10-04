@@ -19,8 +19,14 @@ not prevent Windows or E2E from starting. No deployment jobs are defined.
 Branch pushes, merge requests and explicitly requested branch pipelines run validation.
 An open MR suppresses its duplicate push pipeline. Default-branch runs are not canceled
 by later commits; other obsolete runs are interruptible. Full git history is fetched.
-Atlas MR baselines use the fetched native target branch; other pipelines use their SHA,
-matching the existing push/dispatch baseline contract. An unresolved commit fails.
+Both MR baselines fetch the native target project URL and exact `refs/heads/<target>`;
+they never fetch the source fork's `origin`. `CI_MERGE_REQUEST_PROJECT_ID`, project URL,
+source project ID, IID and target branch must agree with the native GitLab MR API.
+Missing metadata, identity/ref mismatches, denied API access or a failed fetch fail closed.
+Public metadata is read anonymously; private targets use the existing job token access.
+Push/default Godfile still fetches `origin`'s default branch; non-MR Atlas still uses the
+pipeline SHA. The adversarial fork fixture in `base.test.ts` exercises both real gates
+against an older target and a source `dev` at HEAD, including a no-op acceptance control.
 
 Bun comes from `package.json` (`1.3.14`) using x64 baseline archives. Node is pinned to
 `24.15.0` on both platforms, including after Bun setup: `24.16` hangs Playwright extraction.
