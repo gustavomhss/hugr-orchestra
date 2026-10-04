@@ -141,9 +141,10 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
     }
     return false
   }
+  const viewCapacity = (senderID: number, selected: boolean) =>
+    inactive.size + (selected ? Number(active.has(senderID)) : 1) <= MAX_INACTIVE_TABS
   const ensureViewCapacity = (senderID: number, selected: boolean) => {
-    const inactiveNeeded = selected ? Number(active.has(senderID)) : 1
-    while (inactive.size + inactiveNeeded > MAX_INACTIVE_TABS) {
+    while (!viewCapacity(senderID, selected)) {
       if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
     }
   }
@@ -344,6 +345,9 @@ export function createAppDock(options: { developmentMode?: () => boolean } = {})
         // Only the tab on screen may attach a view. A popup from a background tab, or from any tab while
         // the Dock is hidden, opens behind it and waits for the user to select it.
         const selected = active.get(senderID) === id && isCurrent(senderID, id, tabGeneration)
+        // A page can chain popups without a click, so a popup never evicts the user's tabs to make room:
+        // at the view cap it is blocked instead.
+        if (!viewCapacity(senderID, selected)) throw new Error("App Dock tab limit reached")
         void open(senderID, win, popupURL, bounds, notify, profileStorage, { tabID: randomUUID(), selected }).then(
           (tab) => notify(Object.freeze({ type: selected ? "tab-opened" : "tab-opened-background", payload: tab })),
         )

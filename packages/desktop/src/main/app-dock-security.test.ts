@@ -7,7 +7,7 @@ import { tmpdir } from "node:os"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { createRequire } from "node:module"
 
-const required = Array.from({ length: 32 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
+const required = Array.from({ length: 33 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
 const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock/s1.json")
 const schemes = ["http://127.0.0.1/", "file:///etc/passwd", "javascript:document.title='pwned'", "data:text/html,pwned"]
@@ -1162,6 +1162,55 @@ async function child() {
         (await execute("u28:retained-lru", attachedContents(ipcWin), "location.href")) ===
         `${site.base}/ticker?capacity=a0`,
       "U28 recently selected tab remains usable",
+    )
+    // U28 left both windows at the 20 inactive view cap. A popup never makes room for itself: it is
+    // refused as blocked, whether a background tab or the tab on screen opens it.
+    const u33Start = await eventCount()
+    const u33Live = () =>
+      JSON.stringify(
+        webContents
+          .getAllWebContents()
+          .filter((item) => !item.isDestroyed())
+          .map((item) => item.id)
+          .sort((left, right) => left - right),
+      )
+    const u33Before = u33Live()
+    const u33Background = webContents
+      .getAllWebContents()
+      .find((item) => !item.isDestroyed() && item.getURL() === `${site.base}/ticker?capacity=a1`)
+    check(u33Background && !attached(ipcWin, u33Background), "U33 background tab missing")
+    for (const [from, url] of [
+      [u33Background!, `${site.base}/popup-target?u33=background`],
+      [u28ActiveContents, `${site.base}/popup-target?u33=active`],
+    ] as const) {
+      await execute("view:u33-window-open", from, `window.open(${JSON.stringify(url)}); undefined`)
+      await waitFor(async () => {
+        await readEvents()
+        return (
+          events.slice(u33Start).some((event) => event.type === "navigation-error" && event.payload.url === url) ||
+          webContents.getAllWebContents().some((item) => !item.isDestroyed() && item.getURL() === url)
+        )
+      }, `U33 popup outcome ${url}`)
+      check(u33Live() === u33Before, `U33 popup ${url} at the view cap evicted a tab or opened a view`)
+      check(
+        events
+          .slice(u33Start)
+          .some(
+            (event) =>
+              event.type === "navigation-error" && event.payload.code === "blocked" && event.payload.url === url,
+          ),
+        `U33 popup ${url} at the view cap was not refused as blocked`,
+      )
+    }
+    check(
+      !events.slice(u33Start).some((event) => event.type === "tab-opened" || event.type === "tab-opened-background") &&
+        attached(ipcWin, u28ActiveContents) &&
+        attached(ipcWinB, u28ActiveB),
+      "U33 a popup at the view cap announced a tab or displaced an active one",
+    )
+    pass(
+      "U33",
+      "at the 20 inactive view cap, popups from a background or the active tab are refused; nothing is evicted",
     )
 
     const u28DownloadStart = await eventCount()
