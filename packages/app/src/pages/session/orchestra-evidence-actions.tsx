@@ -165,15 +165,17 @@ function ReplayDialog(props: ActionProps & { owner: EvidenceOwner }) {
       </DialogBody>
       <DialogFooter>
         <ButtonV2 variant="ghost" onClick={copy}>
-          {language.t(state.copied ? "orchestra.evidence.rerun.copied" : "orchestra.evidence.rerun.copy")}
+          <bdi>{language.t(state.copied ? "orchestra.evidence.rerun.copied" : "orchestra.evidence.rerun.copy")}</bdi>
         </ButtonV2>
         <ButtonV2 variant="ghost" onClick={() => dialog.close()}>
-          {language.t("common.cancel")}
+          <bdi>{language.t("common.cancel")}</bdi>
         </ButtonV2>
         <ButtonV2 variant="contrast" disabled={state.request !== "idle" || !!blocked()} onClick={run}>
-          {language.t(
-            state.request === "sending" ? "orchestra.evidence.rerun.sending" : "orchestra.evidence.rerun.confirm",
-          )}
+          <bdi>
+            {language.t(
+              state.request === "sending" ? "orchestra.evidence.rerun.sending" : "orchestra.evidence.rerun.confirm",
+            )}
+          </bdi>
         </ButtonV2>
       </DialogFooter>
     </DialogV2>
@@ -194,10 +196,10 @@ function AppendDialog(props: { owner: EvidenceOwner; onConfirm: () => void }) {
       </DialogHeader>
       <DialogFooter>
         <ButtonV2 variant="ghost" onClick={() => dialog.close()}>
-          {language.t("common.cancel")}
+          <bdi>{language.t("common.cancel")}</bdi>
         </ButtonV2>
         <ButtonV2 variant="contrast" onClick={props.onConfirm}>
-          {language.t("orchestra.pr.append.confirm")}
+          <bdi>{language.t("orchestra.pr.append.confirm")}</bdi>
         </ButtonV2>
       </DialogFooter>
     </DialogV2>

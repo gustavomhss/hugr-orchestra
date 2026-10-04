@@ -14,6 +14,7 @@ import {
   setupGovernance,
   title,
 } from "./governance.fixture"
+import { expectStartAligned, expectTrailing, glyphs } from "./bidi"
 
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -219,6 +220,12 @@ for (const locale of ["en", "ar"] as const) {
     await expect(dialog).toBeVisible()
     await expect(dialog.getByTitle(sessionID, { exact: true })).toHaveCSS("direction", "ltr")
     await expect(dialog.getByText("مراجعة approval / خطة-42", { exact: true })).toHaveCSS("unicode-bidi", "isolate")
+    // Untranslated copy keeps its own punctuation while the dialog keeps RTL alignment.
+    const description = dialog.locator('[data-slot="dialog-description"]')
+    expectTrailing(await glyphs(description), (await description.textContent())!)
+    await expectStartAligned(description, "rtl")
+    const own = "Configured for Atlas project atlas-hugr. Not verified here."
+    expectTrailing(await glyphs(dialog.getByText(own, { exact: true })), own)
     await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
     await expect
       .poll(() => dialog.evaluate((element) => element.getBoundingClientRect().height <= innerHeight * 0.8 + 1))
