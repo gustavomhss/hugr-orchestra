@@ -26,6 +26,16 @@ const source = createSourceFile(
 const expressions = new Map<string, string>()
 const visit = (node: import("typescript").Node) => {
   if (
+    isCallExpression(node) &&
+    isIdentifier(node.expression) &&
+    node.expression.text === "createEffect" &&
+    node.arguments[0] &&
+    isArrowFunction(node.arguments[0]) &&
+    node.arguments[0].getText(source).includes("surface.hidden")
+  ) {
+    expressions.set("surface", node.arguments[0].getText(source))
+  }
+  if (
     isVariableDeclaration(node) &&
     isIdentifier(node.name) &&
     node.initializer &&
@@ -51,9 +61,14 @@ function bind<T>(name: string, bindings: Record<string, unknown>) {
   if (!text) throw new Error(`Missing production closure: ${name}`)
   if (process.env.APP_DOCK_PANEL_RESIZE_MUTATION === "1" && name === "openLinux")
     expect(text.split("resize()")).toHaveLength(2)
-  const expression = process.env.APP_DOCK_PANEL_RESIZE_MUTATION === "1" && name === "openLinux"
+  const resized = process.env.APP_DOCK_PANEL_RESIZE_MUTATION === "1" && name === "openLinux"
     ? text.replace("resize()", "")
     : text
+  if (process.env.APP_DOCK_PANEL_DIALOG_MUTATION === "1" && name === "surface")
+    expect(resized.split(" || !!dialog.active")).toHaveLength(2)
+  const expression = process.env.APP_DOCK_PANEL_DIALOG_MUTATION === "1" && name === "surface"
+    ? resized.replace(" || !!dialog.active", "")
+    : resized
   const mutated = process.env.APP_DOCK_PANEL_ADMISSION_MUTATION === "1" && name === "admitBrowserTab"
   if (mutated) expect(expression.split("items.some(item => sameTab(item, tab)) ? items : [...items, tab]")).toHaveLength(2)
   return new Function(
@@ -216,4 +231,50 @@ test("closing last browser tab stays in Browser even when main selects Linux as 
   expect(state.mode).toBe("browser")
   expect(state.active).toBeUndefined()
   expect(state.hidden).toBe(1)
+})
+
+test("global stacked dialogs hide Linux and restore its same view only after the last dialog closes", () => {
+  const calls: Array<{ type: string; tabID?: string; bounds?: unknown }> = []
+  const state = { dialogs: 1, menu: false, active: linux as Tab | undefined }
+  const surface = { hidden: false }
+  const effect = bind<() => void>("surface", {
+    dialog: { get active() { return state.dialogs > 0 ? {} : undefined } },
+    menu: () => state.menu,
+    profileCreating: () => false,
+    navigation: { mode: "linux", more: false, windowError: false },
+    libraryOpen: () => undefined,
+    downloadsOpen: () => false,
+    findOpen: () => false,
+    error: () => undefined,
+    permission: () => undefined,
+    activeCrashed: () => undefined,
+    active: () => state.active,
+    activeTab: () => state.active,
+    untrack: (run: () => void) => run(),
+    resize: () => undefined,
+    disposed: false,
+    host: document.createElement("div"),
+    bounds: () => ({ x: 100, y: 80, width: 600, height: 700 }),
+    isLinux: bind<(url: string) => boolean>("isLinux", {}),
+    surface,
+    api: () => ({
+      appDockHide: () => { calls.push({ type: "hide" }) },
+      appDockSelect: (tabID: string, bounds: unknown) => { calls.push({ type: "select", tabID, bounds }) },
+    }),
+  })
+  effect()
+  expect(calls).toEqual([{ type: "hide" }])
+  state.dialogs = 2
+  effect()
+  state.dialogs = 1
+  effect()
+  expect(calls.every(call => call.type === "hide")).toBe(true)
+  state.dialogs = 0
+  state.menu = true
+  effect()
+  expect(calls.every(call => call.type === "hide")).toBe(true)
+  state.menu = false
+  effect()
+  expect(calls.at(-1)).toEqual({ type: "select", tabID: linux.tabID, bounds: { x: 100, y: 80, width: 600, height: 700 } })
+  expect(surface.hidden).toBe(false)
 })

@@ -266,6 +266,35 @@ test("browser envelopes omit additive native fields and preserve coordinate prec
   await Promise.all([read, type, click])
 })
 
+test("browser dock_read forwards tree-shape args exactly and keeps browser error and timeout semantics", async () => {
+  const f = fakePort()
+  const hooks = createAppDockHooks(f.port) as Required<Hooks>
+  const read = tool.schema.object(hooks.tool.dock_read.args)
+  expect(read.safeParse({ mode: "skeleton", format: "csv", actionable: true, visible: false }).success).toBe(true)
+  expect(read.safeParse({ mode: "observed" }).success).toBe(false)
+  expect(read.safeParse({ format: "xml" }).success).toBe(false)
+  const shaped = hooks.tool.dock_read.execute({ budget: 50, mode: "a11y", format: "tree", actionable: true, visible: false }, context)
+  const rejected = hooks.tool.dock_read.execute({ format: "csv" }, context)
+  await turn()
+  const args = (f.sent[0] as Envelope).args
+  expect(args).toEqual({ budget: 50, maxText: undefined, mode: "a11y", format: "tree", actionable: true, visible: false })
+  expect(Object.keys(args)).toEqual(["budget", "maxText", "mode", "format", "actionable", "visible"])
+  f.deliver({ type: "dock.rpc.result", id: (f.sent[0] as Envelope).id, ok: false, error: { message: "Browser read failed" } })
+  await expect(shaped).resolves.toBe("Browser read failed")
+  // A native binding rejects shape args; the rejection stays visible instead of being ignored.
+  const id = (f.sent[1] as Envelope).id
+  f.deliver({ type: "dock.rpc.native-pending", id, backend: "linux-atspi", scopeKind: "workspace" })
+  f.deliver({ type: "dock.rpc.result", id, ok: false,
+    error: { backend: "linux-atspi", code: "unsupported-operation", message: "format is browser-only", outcome: "not-dispatched" } })
+  expect(JSON.parse(String(await rejected))).toEqual({ backend: "linux-atspi", code: "unsupported-operation", message: "format is browser-only", outcome: "not-dispatched" })
+  // The browser shape `mode` is not native input policy: a browser read timeout stays plain text and posts no cancel.
+  const slow = fakePort()
+  const timed = (createAppDockHooks(slow.port, { timeoutMs: 25 }) as Required<Hooks>).tool.dock_read.execute({ mode: "skeleton" }, context)
+  await expect(timed).resolves.toBe("App Dock read request timed out")
+  await turn()
+  expect(slow.sent.map((sent) => (sent as Envelope).type)).toEqual(["dock.rpc"])
+})
+
 test("native read selectors/action/default click/input mode are wired without implicit action or keyboard fallback", async () => {
   const f = fakePort()
   const permissions: unknown[] = []

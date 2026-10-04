@@ -1,5 +1,6 @@
 import { createEffect, createSignal, onCleanup, onMount, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
 import type { AppDockLinuxAPI, LinuxOpenResult, LinuxWindow } from "../../app-dock-linux"
 import { useLanguage } from "../../context/language"
 import { createLinuxMenuController, LinuxMenu } from "./linux-menu"
@@ -126,6 +127,7 @@ const bounds = (element: HTMLElement): Bounds => {
 
 export function AppsPanel() {
   const language = useLanguage()
+  const dialog = useDialog()
   const [profiles, setProfiles] = createSignal<Profile[]>(defaultProfiles)
   const [profile, setProfile] = createSignal("default")
   const [profileCreating, setProfileCreating] = createSignal(false)
@@ -721,7 +723,7 @@ export function AppsPanel() {
   })
   const surface = { hidden: false }
   createEffect(() => {
-    const hidden = !!menu() || profileCreating() || navigation.more || !!libraryOpen() || downloadsOpen()
+    const hidden = !!menu() || profileCreating() || navigation.more || !!libraryOpen() || downloadsOpen() || !!dialog.active
     const tab = active()
     const mode = navigation.mode
     findOpen()

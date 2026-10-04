@@ -68,7 +68,9 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
   const id = randomUUID()
   const router = routerFor(port)
   const native = op === "action" || (typeof args.ref === "string" && args.ref.startsWith("n:"))
-    || args.rootRef !== undefined || args.cursor !== undefined || args.textOffset !== undefined || args.mode !== undefined
+    || args.rootRef !== undefined || args.cursor !== undefined || args.textOffset !== undefined
+    // dock_read's mode is the browser tree shape; only action/type modes are native input policy.
+    || ((op === "action" || op === "type") && args.mode !== undefined)
   if (router.size >= 32) return Promise.reject(native
     ? new NativeRPCError("capacity", "App Dock request capacity exhausted", "not-dispatched")
     : new Error("App Dock request capacity exhausted"))
@@ -235,7 +237,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       }),
       dock_read: tool({
         description:
-          "Read the App Dock browser page or bound native app as a structured accessibility snapshot. Browser refs are numeric; native refs are opaque n: strings. Use refs with dock_click / dock_action / dock_type. Re-read after changes; native observations are non-atomic and refs may expire. Native-only rootRef, cursor and textOffset select a bounded read page; native cursors expire within seconds, so prefer dock_find to locate native controls.",
+          "Read the App Dock browser page or bound native app as a structured accessibility snapshot. Browser refs are numeric; native refs are opaque n: strings. Use refs with dock_click / dock_action / dock_type. Re-read after changes; native observations are non-atomic and refs may expire. Browser pages return a semantic tree where every item carries a stable numeric `ref`, a revalidatable semantic `path`, `parentRef`/`children`, `actionable` and `visible`; a `path` is a selector to revalidate, not a durable identity, so re-read and report ambiguity instead of assuming the first match. Browser-only mode/format/actionable/visible shape the tree (mode=skeleton or a11y omits geometry; format=tree adds `treeText`, format=csv adds `csv`) and are rejected on a native binding. Native-only rootRef, cursor and textOffset select a bounded read page; native cursors expire within seconds, so prefer dock_find to locate native controls.",
         args: {
           budget: tool.schema.number().min(1).max(500).optional().describe(
             "Maximum interactive elements to return (default 100)",
@@ -246,12 +248,28 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           rootRef: tool.schema.string().min(3).max(256).startsWith("n:").optional().describe("Native subtree ref"),
           cursor: tool.schema.string().min(1).max(256).optional().describe("Native continuation cursor from dock_read"),
           textOffset: tool.schema.number().int().min(0).optional().describe("Native text character offset"),
+          mode: tool.schema.enum(["full", "a11y", "skeleton"]).optional().describe(
+            "Browser only: full keeps x/y/width/height (default); a11y and skeleton omit geometry",
+          ),
+          format: tool.schema.enum(["json", "tree", "csv"]).optional().describe(
+            "Browser only: json (default) returns items; tree adds indented treeText; csv adds a flat csv table",
+          ),
+          actionable: tool.schema.boolean().optional().describe(
+            "Browser only: keep actionable controls plus the context ancestors that keep parentRef/children closed",
+          ),
+          visible: tool.schema.boolean().optional().describe(
+            "Browser only: keep currently visible nodes plus their context ancestors",
+          ),
         },
         execute: (args, context) =>
           call(context, "read", { budget: args.budget, maxText: args.maxText,
             ...(args.rootRef === undefined ? {} : { rootRef: args.rootRef }),
             ...(args.cursor === undefined ? {} : { cursor: args.cursor }),
-            ...(args.textOffset === undefined ? {} : { textOffset: args.textOffset }) }).then(toJSON, toolError),
+            ...(args.textOffset === undefined ? {} : { textOffset: args.textOffset }),
+            ...(args.mode === undefined ? {} : { mode: args.mode }),
+            ...(args.format === undefined ? {} : { format: args.format }),
+            ...(args.actionable === undefined ? {} : { actionable: args.actionable }),
+            ...(args.visible === undefined ? {} : { visible: args.visible }) }).then(toJSON, toolError),
       }),
       dock_find: tool({
         description:
