@@ -41,6 +41,9 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
   })
   const rows = createMemo(() => new Map(virtualizer.getVirtualItems().map((item) => [item.key, item])))
   const keys = createMemo(() => virtualizer.getVirtualItems().map((item) => item.key))
+  // When the list shrinks, a row can update before the virtualizer drops or renumbers it, so a row reads
+  // its entity by key: an index from the previous list may now be past the end or name another entity.
+  const items = createMemo(() => new Map(props.items.map((item) => [item.key, item])))
   createEffect(() => {
     const key = view.pending
     if (!key || !keys().includes(key)) return
@@ -80,27 +83,38 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
           {(key) => (
             <Show when={rows().get(key)}>
               {(row) => (
-                <div
-                  ref={(element) => queueMicrotask(() => virtualizer.measureElement(element))}
-                  data-index={row().index}
-                  data-cockpit-row=""
-                  role="listitem"
-                  aria-posinset={row().index + 1}
-                  aria-setsize={props.items.length}
-                  onFocusIn={() => setView("focused", String(key))}
-                  onFocusOut={(event) => {
-                    if (!view.pending && !event.currentTarget.contains(event.relatedTarget as Node | null))
-                      setView("focused", undefined)
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: "0",
-                    "inset-inline": "0",
-                    transform: `translateY(${row().start}px)`,
-                  }}
-                >
-                  {props.children(() => props.items[row().index])}
-                </div>
+                <Show when={items().get(String(key))}>
+                  {(item) => (
+                    <div
+                      ref={(element) =>
+                        queueMicrotask(() => {
+                          // A row removed before this runs keeps its last index, which may now name another
+                          // entity or none; measuring it would size the wrong row or throw.
+                          if (props.items[Number(element.dataset.index)]?.key === key)
+                            virtualizer.measureElement(element)
+                        })
+                      }
+                      data-index={row().index}
+                      data-cockpit-row=""
+                      role="listitem"
+                      aria-posinset={row().index + 1}
+                      aria-setsize={props.items.length}
+                      onFocusIn={() => setView("focused", String(key))}
+                      onFocusOut={(event) => {
+                        if (!view.pending && !event.currentTarget.contains(event.relatedTarget as Node | null))
+                          setView("focused", undefined)
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: "0",
+                        "inset-inline": "0",
+                        transform: `translateY(${row().start}px)`,
+                      }}
+                    >
+                      {props.children(item)}
+                    </div>
+                  )}
+                </Show>
               )}
             </Show>
           )}
