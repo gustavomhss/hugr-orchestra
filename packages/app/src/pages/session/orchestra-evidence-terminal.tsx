@@ -11,8 +11,8 @@ import { createSessionOwnership } from "./session-ownership"
 // The Dock's Terminal pane shows the workspace's active terminal; it never starts one by itself. One
 // PTY has at most one renderer: choosing this pane moves an open bottom terminal here and leaving it
 // moves it back, while opening the bottom panel meanwhile hands the terminal over to it. A pane that is
-// only restored leaves an open bottom terminal where it is. Closing or leaving the pane never ends the
-// process.
+// only restored leaves an open bottom terminal where it is until Show here moves it. Closing or leaving
+// the pane never ends the process.
 export function OrchestraEvidenceTerminal(props: { takeover: boolean }) {
   const terminal = useTerminal()
   const language = useLanguage()
@@ -20,15 +20,16 @@ export function OrchestraEvidenceTerminal(props: { takeover: boolean }) {
   const session = useSessionLayout()
   const owner = layout.view(session.sessionKey())
   const ownership = createSessionOwnership(session.sessionKey)
-  const bottom = props.takeover && owner.terminal.opened()
-  if (bottom) owner.terminal.close()
-  onCleanup(() => {
-    if (bottom && !owner.terminal.opened()) owner.terminal.open()
-  })
   const [state, setState] = createStore({
     error: undefined as string | undefined,
     creationError: undefined as string | undefined,
     creating: false,
+    // Whether this pane took the terminal from the bottom panel, which gets it back when the pane leaves.
+    took: props.takeover && owner.terminal.opened(),
+  })
+  if (state.took) owner.terminal.close()
+  onCleanup(() => {
+    if (state.took && !owner.terminal.opened()) owner.terminal.open()
   })
   const active = createMemo(() => terminal.all().find((pty) => pty.id === terminal.active())?.id)
   const create = () => {
@@ -63,7 +64,13 @@ export function OrchestraEvidenceTerminal(props: { takeover: boolean }) {
           fallback={
             <div class="orchestra-dock-state" role="status">
               <span>{language.t("orchestra.dock.terminal.elsewhere")}</span>
-              <button type="button" onClick={() => owner.terminal.close()}>
+              <button
+                type="button"
+                onClick={() => {
+                  setState("took", true)
+                  owner.terminal.close()
+                }}
+              >
                 {language.t("orchestra.dock.terminal.showHere")}
               </button>
             </div>
