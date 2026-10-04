@@ -694,18 +694,18 @@
     background: transparent;
   }
 
-  /* Apps keeps its native browser's geometry. Only non-native rail content gets
-   * the reference's 16px inset and 38px tab bar. */
+  /* Every rail tab, the Apps cockpit included, gets the reference's 16px inset and
+   * 38px tab bar; the cockpit's Dock card measures its native browser host itself. */
   body[data-new-layout]
     [data-session-layout="surface"]
-    [data-component="session-side-panel"]:not([data-active-tab="apps"])
+    [data-component="session-side-panel"]
     [data-component="tabs"][data-scope="session-side-panel"] {
     padding: 16px;
   }
 
   body[data-new-layout]
     [data-session-layout="surface"]
-    [data-component="session-side-panel"]:not([data-active-tab="apps"])
+    [data-component="session-side-panel"]
     [data-slot="session-side-panel-tab-bar"] {
     min-block-size: 38px;
     block-size: 38px;
@@ -718,7 +718,7 @@
 
   body[data-new-layout]
     [data-session-layout="surface"]
-    [data-component="session-side-panel"]:not([data-active-tab="apps"])
+    [data-component="session-side-panel"]
     [data-scope="session-side-panel"]
     > [data-slot="session-side-panel-tab-bar"]
     > [data-slot="tabs-list"] {
@@ -742,7 +742,7 @@
 
   body[data-new-layout]
     [data-session-layout="surface"]
-    [data-component="session-side-panel"]:not([data-active-tab="apps"])
+    [data-component="session-side-panel"]
     [data-slot="tabs-trigger-wrapper"] {
     block-size: 26px;
     padding-inline: 9px;
@@ -806,7 +806,7 @@
     color: var(--orchestra-rail-badge-active-text);
   }
 
-  body[data-new-layout] [data-session-layout="surface"] [data-session-tab]:not([data-session-tab="apps"]) {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab] {
     min-block-size: 0;
     background: transparent;
   }
@@ -939,7 +939,7 @@
 
   body[data-new-layout]
     [data-session-layout="surface"]
-    [data-slot="task-row"][data-state="failed"]
+    [data-slot="task-row"][data-state="error"]
     [data-slot="task-mark"] {
     color: var(--orchestra-evidence-delete);
   }

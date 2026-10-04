@@ -46,7 +46,7 @@ import { FileTabContent } from "@/pages/session/file-tabs"
 import {
   SESSION_OPEN_FILE_TAB,
   createOpenSessionFileTab,
-  createSessionTabs,
+  createSidePanelTabs,
   getTabReorderIndex,
   shouldShowFileTree,
   type Sizing,
@@ -57,6 +57,7 @@ import { SessionFileBrowserTab, type SessionFileBrowserState } from "@/pages/ses
 import { FILE_TREE_WIDTH_MIN, LegacyFileTreePanel } from "./legacy-file-tree-panel"
 import { TasksPanel } from "./tasks-panel"
 import { AppsPanel } from "./apps-panel"
+import { OrchestraCockpit } from "./orchestra-cockpit"
 import { createTasksData } from "./tasks-data"
 
 type ReviewDiff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
@@ -159,29 +160,31 @@ export function SessionSidePanel(props: {
     setActive: tabs().setActive,
   })
 
-  const tabState = createSessionTabs({
+  // Orchestra's Apps tab is the cockpit, where Tasks show beside the Dock instead of in a tab of their own.
+  const cockpit = () => settings.general.newLayoutDesigns()
+  const tabState = createSidePanelTabs({
     tabs,
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: reviewTab,
     hasReview: props.canReview,
     fileBrowser: () => !!props.fileBrowserState,
-    apps: () => true,
+    cockpit,
   })
   const contextOpen = tabState.contextOpen
   const tasksOpen = tabState.tasksOpen
   const tasksData = createTasksData()
   const openFileOpen = tabState.openFileOpen
 
-  // Auto-open the tasks tab while background work is live (Claude tasks-pane
-  // parity). Lives here — not in TasksPanel — because the panel only mounts
-  // once its tab is already active. Level-triggered (not edge-triggered) so
-  // remounts and HMR can't miss it; a manual close snoozes until work drains.
+  // Auto-open the tasks tab (Orchestra's cockpit) while background work is live
+  // (Claude tasks-pane parity). Lives here — not in TasksPanel — because the panel
+  // only mounts once its tab is already active. Level-triggered (not edge-triggered)
+  // so remounts and HMR can't miss it; leaving the tab snoozes until work drains.
   let wasOpen = false
   let snoozed = false
   createEffect(() => {
     const n = tasksData.liveCount()
-    const open = tasksOpen()
+    const open = cockpit() ? tabState.activeTab() === "apps" : tasksOpen()
     if (n === 0) {
       snoozed = false
       wasOpen = open
@@ -191,10 +194,11 @@ export function SessionSidePanel(props: {
     wasOpen = open
     if (!open && !snoozed) {
       // Panel first, then tab, then focus in a microtask so the freshly
-      // mounted tab strip selects Tasks instead of falling back to Review.
+      // mounted tab strip selects that tab instead of falling back to Review.
+      const tab = cockpit() ? "apps" : "tasks"
       view().reviewPanel.open()
-      tabs().open("tasks")
-      queueMicrotask(() => tabs().setActive("tasks"))
+      tabs().open(tab)
+      queueMicrotask(() => tabs().setActive(tab))
     }
   })
   const panelTabs = tabState.panelTabs
@@ -562,7 +566,7 @@ export function SessionSidePanel(props: {
                               class="flex flex-col h-full overflow-hidden contain-strict"
                             >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                                <TasksPanel />
+                                <TasksPanel data={tasksData} />
                               </div>
                             </Tabs.Content>
                           </Show>
@@ -686,44 +690,13 @@ export function SessionSidePanel(props: {
                                 </div>
                               </Tabs.Trigger>
                             </Show>
-                            <Show when={tasksOpen()}>
-                              <Tabs.Trigger
-                                value="tasks"
-                                closeButton={
-                                  <TooltipV2
-                                    value={
-                                      <>
-                                        {language.t("common.closeTab")}
-                                        <Show when={closeTabKeybind().length > 0}>
-                                          <KeybindV2 keys={closeTabKeybind()} variant="neutral" />
-                                        </Show>
-                                      </>
-                                    }
-                                    placement="bottom"
-                                    gutter={10}
-                                  >
-                                    <IconButton
-                                      icon="close-small"
-                                      variant="ghost"
-                                      class="h-5 w-5"
-                                      onClick={() => tabs().close("tasks")}
-                                      aria-label={language.t("common.closeTab")}
-                                    />
-                                  </TooltipV2>
-                                }
-                                hideCloseButton
-                                onMiddleClick={() => tabs().close("tasks")}
-                              >
-                                <div class="flex items-center gap-2">
-                                  <div>{language.t("session.tab.tasks")}</div>
-                                  <Show when={tasksData.liveCount() > 0}>
-                                    <div data-slot="session-side-panel-tab-count">{tasksData.liveCount()}</div>
-                                  </Show>
-                                </div>
-                              </Tabs.Trigger>
-                            </Show>
                             <Tabs.Trigger value="apps">
-                              <div>Apps</div>
+                              <div class="flex items-center gap-2">
+                                <div>Apps</div>
+                                <Show when={tasksData.liveCount() > 0}>
+                                  <div data-slot="session-side-panel-tab-count">{tasksData.liveCount()}</div>
+                                </Show>
+                              </div>
                             </Tabs.Trigger>
                             <For each={panelTabs()}>
                               {(tab) => (
@@ -855,24 +828,13 @@ export function SessionSidePanel(props: {
                           </Tabs.Content>
                         </Show>
 
-                        <Show when={activeTab() === "tasks"}>
-                          <Tabs.Content
-                            data-session-tab="tasks"
-                            value="tasks"
-                            class="flex flex-col h-full overflow-hidden contain-strict"
-                          >
-                            <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                              <TasksPanel />
-                            </div>
-                          </Tabs.Content>
-                        </Show>
                         <Show when={activeTab() === "apps"}>
                           <Tabs.Content
                             data-session-tab="apps"
                             value="apps"
                             class="flex flex-col h-full overflow-hidden contain-strict"
                           >
-                            <AppsPanel />
+                            <OrchestraCockpit tasks={tasksData} />
                           </Tabs.Content>
                         </Show>
 

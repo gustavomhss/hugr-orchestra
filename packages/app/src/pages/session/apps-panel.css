@@ -658,6 +658,69 @@
   outline-offset: 1px;
 }
 
+/* The cockpit's compact Dock card: one column, the tab list as a scrolling strip above the address
+ * bar, and only back/forward/reload/address/open/close in it. The full Dock page keeps the rest. */
+.zen-browser-shell.is-compact {
+  flex-direction: column;
+  padding: 0;
+}
+
+.zen-browser-shell.is-compact .zen-browser-sidebar {
+  width: auto;
+  flex: none;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.zen-browser-shell.is-compact .zen-workspace-indicator,
+.zen-browser-shell.is-compact .zen-tab-section-label,
+.zen-browser-shell.is-compact .zen-nav-extra {
+  display: none;
+}
+
+.zen-browser-shell.is-compact .zen-tabs {
+  flex-direction: row;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.zen-browser-shell.is-compact .zen-tab {
+  min-width: 72px;
+  min-height: 28px;
+  flex: 0 1 150px;
+  padding: 3px 8px;
+}
+
+.zen-browser-shell.is-compact .zen-tab.is-active {
+  transform: none;
+}
+
+.zen-browser-shell.is-compact .zen-new-tab {
+  min-height: 28px;
+  flex: none;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.zen-browser-shell.is-compact :is(.zen-urlbar, .zen-browser-host) {
+  border-radius: 8px;
+}
+
+.zen-browser-shell.is-compact .zen-urlbar {
+  gap: 1px;
+  padding: 3px 4px;
+}
+
+.zen-browser-shell.is-compact :is(.zen-nav-button, .zen-open-button) {
+  padding: 0 6px;
+}
+
 @media (max-width: 640px) {
   .zen-browser-shell {
     gap: 3px;

@@ -127,6 +127,8 @@ export function normalizeProviderList(
           write: cost?.cache.write ?? 0,
         },
       },
+      // Keep missing pricing distinguishable from explicit free pricing in Context metrics.
+      ...{ costAvailable: cost !== undefined },
       limit: model.limit,
       status: model.status,
       options: model.settings ?? {},

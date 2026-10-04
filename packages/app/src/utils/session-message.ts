@@ -125,7 +125,7 @@ function shellMessages(
   message: SessionMessageShell,
   agent: string,
   model: { id: string; providerID: string; variant?: string },
-): [UserMessage, AssistantMessage] {
+): [UserMessage, AssistantMessage & { synthetic: true }] {
   return [
     {
       id: message.id,
@@ -149,6 +149,7 @@ function shellMessages(
       path: { cwd: "", root: "" },
       cost: 0,
       tokens: emptyTokens,
+      synthetic: true,
     },
   ]
 }
@@ -238,7 +239,11 @@ function userParts(sessionID: string, message: SessionMessageUser): Part[] {
   ]
 }
 
-function assistantMessage(sessionID: string, parentID: string, message: SessionMessageAssistant): AssistantMessage {
+function assistantMessage(
+  sessionID: string,
+  parentID: string,
+  message: SessionMessageAssistant,
+): AssistantMessage & { costAvailable: boolean; tokensAvailable: boolean } {
   const error = message.error
     ? message.error.type.toLowerCase().includes("abort") || message.error.type.toLowerCase().includes("interrupt")
       ? { name: "MessageAbortedError" as const, data: { message: message.error.message } }
@@ -259,6 +264,8 @@ function assistantMessage(sessionID: string, parentID: string, message: SessionM
     path: { cwd: "", root: "" },
     cost: message.cost ?? 0,
     tokens: message.tokens ?? emptyTokens,
+    costAvailable: message.cost !== undefined,
+    tokensAvailable: message.tokens !== undefined,
     finish: message.finish,
   }
 }
@@ -347,8 +354,13 @@ function toolPart(sessionID: string, messageID: string, tool: SessionMessageAssi
       input: normalizeToolInput(tool.name, tool.state.input),
       output: tool.state.content.flatMap((item) => (item.type === "text" ? [item.text] : [])).join("\n"),
       title: tool.name,
-      // metadata: normalizeToolMetadata(tool.name, tool.state.structured),
-      metadata: normalizeToolMetadata(tool.name, tool.state.metadata ?? {}),
+      // Keep confirmed todo snapshots even when their display text was truncated.
+      metadata: normalizeToolMetadata(
+        tool.name,
+        tool.name === "todowrite" && "structured" in tool.state && record(tool.state.structured)
+          ? { ...tool.state.metadata, ...tool.state.structured }
+          : (tool.state.metadata ?? {}),
+      ),
       time: { start, end: tool.time.completed ?? start },
       attachments: attachments.length ? attachments : undefined,
     }

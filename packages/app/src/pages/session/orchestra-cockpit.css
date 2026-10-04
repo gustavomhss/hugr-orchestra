@@ -1,0 +1,224 @@
+/* The cockpit composition: the Dock anchored on top keeps a stable position for the native browser,
+ * and only the Tasks and Activity cards below it scroll. Cards reuse the Orchestra session tokens. */
+.orchestra-cockpit {
+  display: flex;
+  block-size: 100%;
+  min-block-size: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.orchestra-cockpit > .orchestra-dock-card {
+  block-size: clamp(240px, 50%, 470px);
+  flex: none;
+}
+
+.orchestra-cockpit-feed {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.orchestra-cockpit-list {
+  block-size: 320px;
+  max-block-size: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+.orchestra-cockpit [data-slot="activity-filter"] {
+  display: flex;
+  gap: 4px;
+  padding-inline: 11px;
+}
+
+.orchestra-cockpit [data-slot="activity-filter"] button {
+  min-block-size: 28px;
+  padding-inline: 6px;
+  color: var(--orchestra-task-meta);
+  font-size: 12px;
+}
+
+.orchestra-cockpit [data-slot="activity-filter"] [aria-pressed="true"] {
+  color: var(--orchestra-accent);
+}
+
+body[data-new-layout] [data-session-layout="surface"] .orchestra-cockpit [data-component="tasks-panel"] {
+  flex: none;
+}
+
+body[data-new-layout]
+  [data-session-layout="surface"]
+  .orchestra-cockpit
+  [data-component="tasks-panel"][data-attention] {
+  border-color: var(--orchestra-permission-border);
+}
+
+.orchestra-cockpit :is([data-slot="tasks-header"], [data-slot="activity-header"]) {
+  display: flex;
+  min-block-size: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 11px;
+  border-block-end: 1px solid var(--orchestra-task-rule);
+  font-size: 12px;
+}
+
+.orchestra-cockpit :is([data-slot="tasks-title"], [data-slot="activity-title"]) {
+  margin: 0;
+  color: var(--orchestra-task-title);
+  font-size: 13.5px;
+  font-weight: 560;
+}
+
+.orchestra-cockpit [data-slot="tasks-count"] {
+  color: var(--orchestra-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.orchestra-cockpit [data-slot="tasks-needs-input"] {
+  color: var(--orchestra-warm);
+  font-variant-numeric: tabular-nums;
+}
+
+.orchestra-cockpit :is([data-slot="tasks-failures"], [data-slot="tasks-view-all"], [data-slot="activity-view-all"]) {
+  min-block-size: 28px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--orchestra-accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.orchestra-cockpit [data-slot="tasks-failures"] {
+  color: var(--orchestra-evidence-delete);
+}
+
+.orchestra-cockpit :is([data-slot="tasks-view-all"], [data-slot="activity-view-all"]) {
+  margin-inline-start: auto;
+}
+
+.orchestra-cockpit :is([data-slot="tasks-empty"], [data-slot="activity-empty"]) {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 11px;
+  border-block-end: 1px solid var(--orchestra-task-rule);
+  color: var(--orchestra-task-meta);
+  font-size: 12px;
+}
+
+.orchestra-cockpit [data-slot="tasks-empty"] {
+  border-block-end: 0;
+}
+
+.orchestra-cockpit [data-slot="activity-empty"] strong {
+  color: var(--orchestra-task-title);
+  font-weight: 520;
+}
+
+body[data-new-layout] [data-session-layout="surface"] .orchestra-cockpit [data-slot="task-row"][data-compact] {
+  min-block-size: 44px;
+  padding-block: 7px;
+}
+
+.orchestra-cockpit [data-component="orchestra-activity"] {
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: 10px;
+  background: var(--orchestra-card-background);
+}
+
+.orchestra-cockpit [data-slot="activity-list"] {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.orchestra-cockpit [data-slot="activity-row"] {
+  display: grid;
+  inline-size: 100%;
+  min-block-size: 40px;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 11px;
+  border: 0;
+  border-block-end: 1px solid var(--orchestra-task-rule);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+.orchestra-cockpit li:last-child [data-slot="activity-row"] {
+  border-block-end: 0;
+}
+
+.orchestra-cockpit button[data-slot="activity-row"] {
+  cursor: pointer;
+}
+
+.orchestra-cockpit button[data-slot="activity-row"]:hover {
+  background: var(--orchestra-overlay-hover);
+}
+
+.orchestra-cockpit [data-slot="activity-mark"] {
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  place-items: center;
+  border: 1px solid var(--orchestra-task-mark-border);
+  border-radius: 7px;
+  background: var(--orchestra-task-mark-background);
+  color: var(--orchestra-task-mark-text);
+}
+
+.orchestra-cockpit [data-slot="activity-label"] {
+  display: flex;
+  min-inline-size: 0;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.orchestra-cockpit [data-slot="activity-kind"] {
+  flex: none;
+  color: var(--orchestra-task-meta);
+  font-size: 11px;
+}
+
+.orchestra-cockpit [data-slot="activity-kind"]:only-child,
+.orchestra-cockpit [data-slot="activity-name"] {
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--orchestra-task-title);
+  font-size: 13px;
+  text-overflow: ellipsis;
+}
+
+.orchestra-cockpit [data-slot="activity-meta"] {
+  color: var(--orchestra-task-meta);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.orchestra-cockpit [data-attention] [data-slot="activity-meta"] {
+  color: var(--orchestra-warm);
+}
+
+.orchestra-cockpit :is(button, [role="button"], [data-cockpit-row]):focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: -2px;
+}

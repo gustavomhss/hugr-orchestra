@@ -1,0 +1,31 @@
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+[0m
+fail.test.ts:
+[0m[1m1 |[0m [0m[35mimport[0m { describe, expect, test } [0m[35mfrom[0m [0m[32m"bun:test"[0m
+[0m[1m2 |[0m describe([0m[32m"approval"[0m, () => {
+[0m[1m3 |[0m   test([0m[32m"rejects empty"[0m, () => { expect([])[0m[3m[1m.toHaveLength[0m([0m[33m1[0m) })
+                                               [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1m[2mexpect([0m[31mreceived[0m[2m).[0mtoHaveLength[2m([0m[32mexpected[0m[2m)[0m
+
+Expected length: [32m1[0m
+Received length: [31m0[0m
+[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/repo/[0m[36mfail.test.ts[0m[2m:[0m[33m3[0m[2m:[33m44[0m[2m)[0m
+[0m[31m✗[0m [0mapproval[2m >[0m[1m rejects empty[0m [0m[2m[2.57ms[0m[2m][0m
+[0m[1m1 |[0m [0m[35mimport[0m { describe, expect, test } [0m[35mfrom[0m [0m[32m"bun:test"[0m
+[0m[1m2 |[0m describe([0m[32m"approval"[0m, () => {
+[0m[1m3 |[0m   test([0m[32m"rejects empty"[0m, () => { expect([])[0m[3m[1m.toHaveLength[0m([0m[33m1[0m) })
+[0m[1m4 |[0m   test([0m[32m"accepts value"[0m, () => { expect([0m[33m1[0m)[0m[3m[1m.toBe[0m([0m[33m1[0m) })
+[0m[1m5 |[0m })
+[0m[1m6 |[0m test([0m[32m"top level failure"[0m, () => { [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m"boom"[0m) })
+                                                            [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mboom[0m
+[0m      [2mat [0m[0m[2m<anonymous>[0m[2m ([0m[0m[36m[2m/repo/[0m[36mfail.test.ts[0m[2m:[0m[33m6[0m[2m:[33m57[0m[2m)[0m
+[0m[31m✗[0m[0m[1m top level failure[0m [0m[2m[0.29ms[0m[2m][0m
+
+[0m[32m 5 pass[0m
+ [0m[33m1 skip[0m
+ [0m[35m1 todo[0m
+[0m[31m 2 fail[0m
+ 6 expect() calls
+Ran 9 tests across 3 files. [0m[2m[[1m25.00ms[0m[2m][0m

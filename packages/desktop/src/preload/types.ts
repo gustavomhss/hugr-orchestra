@@ -111,14 +111,21 @@ export type ElectronAPI = {
     profile?: string,
   ) => Promise<{ tabID: string; generation: number; url: string }>
   appDockDeleteProfile: (profileID: string) => Promise<void>
-  appDockResize: (bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
-  appDockHide: () => Promise<void>
+  // Resize, Hide and Select name the tab and generation they target; the desktop ignores stale ones.
+  appDockResize: (
+    tab: { tabID: string; generation: number },
+    bounds: { x: number; y: number; width: number; height: number },
+  ) => Promise<void>
+  appDockHide: (tab: { tabID: string; generation: number }) => Promise<void>
   appDockOcclude: (occluded: boolean) => Promise<void>
   appDockClose: () => Promise<void>
   appDockCloseTab: (tabID: string) => Promise<void>
   appDockRecoverTab: (tabID: string) => Promise<{ tabID: string; generation: number; url: string }>
   appDockCloseTabs: (tabID: string, scope: "others" | "right", order?: string[]) => Promise<void>
-  appDockSelect: (tabID: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
+  appDockSelect: (
+    tab: { tabID: string; generation: number },
+    bounds: { x: number; y: number; width: number; height: number },
+  ) => Promise<void>
   appDockNavigate: (tabID: string, url: string) => Promise<void>
   appDockCommand: (tabID: string, command: "back" | "forward" | "reload") => Promise<void>
   appDockEvent: (callback: (event: AppDockEvent) => void) => () => void

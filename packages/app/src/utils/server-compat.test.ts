@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { createApiForServer, createSdkForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
+import { normalizeSessionInfo } from "./session"
 
 function setup(
   protocol: "v1" | "v2" | Promise<"v1" | "v2">,
@@ -56,6 +57,25 @@ function setup(
 }
 
 describe("createCompatibleApi", () => {
+  test("keeps missing legacy session cost unavailable after normalization", async () => {
+    const session = {
+      id: "ses_1",
+      slug: "ses_1",
+      projectID: "project",
+      directory: "/repo",
+      title: "Session",
+      version: "1",
+      time: { created: 1, updated: 1 },
+    }
+    const fetcher = Object.assign(async () => Response.json(session), { preconnect: fetch.preconnect })
+    const server = { url: "http://localhost:4096" }
+    const api = createCompatibleApi({
+      protocol: Promise.resolve("v1"),
+      current: createApiForServer({ server, fetch: fetcher }),
+      legacy: () => createSdkForServer({ server, fetch: fetcher, throwOnError: true }),
+    })
+    expect(normalizeSessionInfo(await api.session.get({ sessionID: session.id })).cost).toBeUndefined()
+  })
   /*
   test("routes V1 archive through the legacy session update", async () => {
     const { api, requests } = setup("v1")

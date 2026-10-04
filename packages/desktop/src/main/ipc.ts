@@ -99,6 +99,23 @@ const appDockEventOptionalString = (value: unknown) => {
 const hasExactKeys = (value: Record<string, unknown>, keys: string[]) =>
   Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key))
 
+// Resize, Hide and Show name the tab and generation they target, so the desktop can drop stale ones.
+const appDockTab = (value: unknown) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid App Dock tab")
+  const tab = value as Record<string, unknown>
+  if (
+    !hasExactKeys(tab, ["tabID", "generation"]) ||
+    typeof tab.tabID !== "string" ||
+    tab.tabID.length === 0 ||
+    typeof tab.generation !== "number" ||
+    !Number.isSafeInteger(tab.generation) ||
+    tab.generation < 1
+  ) {
+    throw new Error("Invalid App Dock tab")
+  }
+  return { tabID: tab.tabID, generation: tab.generation }
+}
+
 const appDockEventIdentity = (value: unknown) => {
   const identity = appDockEventRecord(value)
   if (
@@ -313,12 +330,16 @@ export function registerIpcHandlers(deps: Deps) {
       return tab
     },
   )
-  ipcMain.handle("app-dock-resize", (event: IpcMainInvokeEvent, bounds: unknown) => {
+  ipcMain.handle("app-dock-resize", (event: IpcMainInvokeEvent, tab: unknown, bounds: unknown) => {
     appDockSender(event)
-    appDock.resize(event.sender.id, panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()))
+    appDock.resize(
+      event.sender.id,
+      appDockTab(tab),
+      panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()),
+    )
   })
-  ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent) => {
-    appDock.hide(event.sender.id, appDockSender(event))
+  ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent, tab: unknown) => {
+    appDock.hide(event.sender.id, appDockSender(event), appDockTab(tab))
   })
   ipcMain.handle("app-dock-occlude", (event: IpcMainInvokeEvent, occluded: unknown) => {
     appDockSender(event)
@@ -346,12 +367,12 @@ export function registerIpcHandlers(deps: Deps) {
       appDock.closeTabs(event.sender.id, id, scope, order)
     },
   )
-  ipcMain.handle("app-dock-select", (event: IpcMainInvokeEvent, tabID: unknown, bounds: unknown) => {
+  ipcMain.handle("app-dock-select", (event: IpcMainInvokeEvent, tab: unknown, bounds: unknown) => {
     const win = appDockSender(event)
     appDock.select(
       event.sender.id,
       win,
-      appDockID(tabID, "tab"),
+      appDockTab(tab),
       panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()),
     )
   })

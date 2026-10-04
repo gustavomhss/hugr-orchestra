@@ -1,0 +1,36 @@
+[WebServer] $ vite --host "0.0.0.0" --port "4994"
+
+[WebServer] /usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor
+
+[WebServer] (node:43394) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 9 tests using 2 workers
+
+(node:43425) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43425) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/9] [chromium] › e2e/orchestra/compact-navigation.spec.ts:8:1 › collapse preserves names, focus, routes, profile and titlebar geometry across reload
+[2/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:78:1 › reports real header bounds and coalesces header, shell and window changes
+[3/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:96:1 › reactive zoom reads settled CSS geometry without converting to native points
+[4/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:109:1 › clears and restores frames for fullscreen, legacy and the 768px desktop boundary
+[5/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:129:1 › keeps physical coordinates in RTL and skips frame machinery on unsupported platforms
+[6/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:142:1 › chat text streaming does not request geometry; unchanged window geometry does not resend
+[7/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:157:1 › cleanup cancels pending RAF, disconnects observers and blocks late IPC
+[8/9] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:171:1 › hidden connected header clears native frame and restores measured placement
+[9/9] [chromium] › e2e/orchestra/compact-navigation.spec.ts:85:1 › responsive compact mode restores the choice and leaves mobile navigation available
+  9 passed (1.5m)

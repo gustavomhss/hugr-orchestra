@@ -10,15 +10,17 @@ export type AppDockAPI = {
     bounds: Bounds,
     profile?: string,
   ) => Promise<{ tabID: string; generation: number; url: string }>
-  appDockResize: (bounds: Bounds) => Promise<void>
-  appDockHide: () => Promise<void>
+  // Resize, Hide and Select name the tab and generation they target; the desktop applies one only
+  // while that tab is still the one attached to the window and ignores it otherwise.
+  appDockResize: (tab: TabIdentity, bounds: Bounds) => Promise<void>
+  appDockHide: (tab: TabIdentity) => Promise<void>
   // Older desktop builds lack occlusion; overlays then stay behind the native browser as before.
   appDockOcclude?: (occluded: boolean) => Promise<void>
   appDockClose: () => Promise<void>
   appDockCloseTab: (tabID: string) => Promise<void>
   appDockRecoverTab: (tabID: string) => Promise<{ tabID: string; generation: number; url: string }>
   appDockCloseTabs: (tabID: string, scope: "others" | "right", order?: string[]) => Promise<void>
-  appDockSelect: (tabID: string, bounds: Bounds) => Promise<void>
+  appDockSelect: (tab: TabIdentity, bounds: Bounds) => Promise<void>
   appDockNavigate: (tabID: string, url: string) => Promise<void>
   appDockCommand: (tabID: string, command: "back" | "forward" | "reload") => Promise<void>
   appDockEvent: (callback: (event: AppDockEvent) => void) => () => void
@@ -154,6 +156,8 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   let attachments = 0
   // Every owner change starts a new generation; work started under an older one must not land.
   let generation = 0
+  // An open reply must not replace a selection requested after that open.
+  let selection = 0
   let listening = false
   let overlays: ReturnType<typeof createAppDockOverlayWatch> | undefined
   let manifest: AppDockManifest | undefined
@@ -237,8 +241,9 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     }
     const first = result.tabs[0]
     setState({ status: "ready", tabs: result.tabs, active: first && identity(first), url: first?.url ?? home })
-    if (first && host) await dock.appDockSelect(first.tabID, bounds(host)).catch(fail(current))
-    if (!host) await dock.appDockHide().catch(() => undefined)
+    if (first && host) await dock.appDockSelect(identity(first), bounds(host)).catch(fail(current))
+    // Restoring attached each tab it opened in turn, so the last one is on screen until a view shows another.
+    await conceal(result.tabs.at(-1))
   }
   const restore = async (dock: AppDockAPI, owner: string, current: number) => {
     // One owner per window: the previous owner's tabs are already saved in the manifest, and a
@@ -288,8 +293,11 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       if (event.type === "tab-opened") {
         const tab = event.payload
         const tabs = state.tabs.some((item) => sameTab(item, tab)) ? state.tabs : [...state.tabs, tab]
+        selection++
         setState({ tabs, active: identity(tab), url: tab.url })
         if (state.status === "ready") void saveTabs(tabs)
+        void show(tab, generation)
+        void conceal(tab)
         return
       }
       if (event.type === "tab-crashed") {
@@ -312,6 +320,9 @@ export function createAppDockController(api: AppDockAPI | undefined) {
           if (wasActive) setState({ active: identity(recovered), url: recovered.url })
           if (sameTab(state.recovering, crashed)) setState("recovering", undefined)
         })
+        // Recovery can attach before its event arrives, after a Hide named the old generation.
+        if (wasActive) void show(recovered, generation)
+        void conceal(recovered)
         return
       }
       if (event.type === "navigation-error") {
@@ -355,6 +366,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     const profile = state.profile
     if (!dock || !host || !profile || state.status !== "ready") return
     const current = generation
+    const requested = ++selection
     const tab = await dock.appDockOpen(url, bounds(host), profile).catch(fail(current, fallback))
     if (!tab) return
     if (current !== generation) {
@@ -362,12 +374,25 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       return
     }
     const tabs = [...state.tabs, tab]
-    setState({ tabs, active: identity(tab), url: tab.url })
+    batch(() => {
+      setState("tabs", tabs)
+      if (requested === selection) setState({ active: identity(tab), url: tab.url })
+    })
     void saveTabs(tabs, profile)
+    // Opening attaches before replying; a later selection may already have replaced that view.
+    if (!activeTab()?.crashed) void show(state.active, current)
+    void conceal(tab)
   }
   const show = (tab: TabIdentity | undefined, current: number) => {
     if (!dock || !tab || !host) return
-    return dock.appDockSelect(tab.tabID, bounds(host)).catch(fail(current))
+    return dock.appDockSelect(identity(tab), bounds(host)).catch(fail(current))
+  }
+  // The desktop attaches every tab it opens (restored, new or a popup) and each tab it recovers in
+  // place. Conceal arrivals while no host or live selection can show them: an earlier Hide named
+  // the tab attached then and cannot reach a newer tab or recovery generation.
+  const conceal = (tab: TabIdentity | undefined) => {
+    if (dock && tab && (!host || !state.active || activeTab()?.crashed))
+      return dock.appDockHide(identity(tab)).catch(() => undefined)
   }
 
   return {
@@ -388,10 +413,12 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       return () => {
         if (token !== attachments) return
         host = undefined
-        void dock.appDockHide().catch(() => undefined)
+        void conceal(state.active)
       }
     },
     owns: (element: HTMLElement | undefined) => !!element && element === host,
+    // Bounds measured for one tab; the desktop drops them once another tab or generation is attached.
+    resize: (tab: TabIdentity, next: Bounds) => dock?.appDockResize(identity(tab), next) ?? Promise.resolve(),
     // An overlay drawn inside the app tree rather than a portal covers the Dock while registered.
     overlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     retry() {
@@ -452,6 +479,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       setState("tabs", remaining)
       void saveTabs(remaining)
       if (!sameTab(requested, state.active)) return
+      selection++
       setState({ active: next && identity(next), url: next?.url ?? home })
       await show(next, current)
     },
@@ -472,12 +500,17 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       void saveTabs(remaining)
       if (remaining.some((item) => sameTab(item, state.active))) return
       const next = remaining.at(-1)
+      selection++
       setState({ active: next && identity(next), url: next?.url ?? home })
       await show(next, current)
     },
     select(tab: Tab) {
+      const previous = state.active
+      selection++
       setState({ active: identity(tab), url: tab.url })
-      if (!tab.crashed) void show(tab, generation)
+      if (!tab.crashed) return void show(tab, generation)
+      // A crashed tab is not shown, so the tab shown before it must not stay on screen in its place.
+      if (dock && previous && !sameTab(previous, tab)) void dock.appDockHide(identity(previous)).catch(() => undefined)
     },
     togglePin(tab: Tab) {
       const tabs = state.tabs.map((item) => (sameTab(item, tab) ? { ...item, pinned: !item.pinned } : item))
