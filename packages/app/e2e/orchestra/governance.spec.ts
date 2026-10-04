@@ -2,6 +2,7 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
+import { expectStartAligned, expectTrailing, glyphs } from "./bidi"
 
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 const directory = "/repo/governance"
@@ -212,6 +213,12 @@ for (const locale of ["en", "ar"] as const) {
     await expect(dialog).toBeVisible()
     await expect(dialog.getByTitle(sessionID, { exact: true })).toHaveCSS("direction", "ltr")
     await expect(dialog.getByText("مراجعة approval / خطة-42", { exact: true })).toHaveCSS("unicode-bidi", "isolate")
+    // Untranslated copy keeps its own punctuation while the dialog keeps RTL alignment.
+    const description = dialog.locator('[data-slot="dialog-description"]')
+    expectTrailing(await glyphs(description), (await description.textContent())!.length - 1)
+    await expectStartAligned(description, "rtl")
+    const own = "Configured for Atlas project atlas-hugr. Not verified here."
+    expectTrailing(await glyphs(dialog.getByText(own, { exact: true })), own.length - 1)
     await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
     await expect
       .poll(() => dialog.evaluate((element) => element.getBoundingClientRect().height <= innerHeight * 0.8 + 1))
