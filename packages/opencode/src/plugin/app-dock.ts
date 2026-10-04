@@ -139,11 +139,87 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
     .ask({ permission: "dock", patterns: [op], always: [op], metadata: { operation: op } })
     .then(() => request(port, op, args, context.abort, timeoutMs))
 
+type NativeQuery = { name: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number }
+type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
+type NativeScan = { found: NativeItem[]; pages: number; complete: boolean; reasons: unknown; restarts?: number }
+
+// Bounds one scan at 48 helper pages (~6000 controls); each page is still one bounded native request.
+const MAX_FIND_PAGES = 48
+// AT-SPI state numbers that change what a model can do with a control.
+const STATES: Record<number, string> = { 4: "checked", 7: "editable", 10: "expanded", 12: "focused", 16: "modal", 20: "pressed", 23: "selected" }
+
+function nativePage(value: unknown) {
+  if (!object(value) || value.backend !== "linux-atspi" || !Array.isArray(value.items) || !object(value.coverage))
+    throw new NativeRPCError("unsupported-backend", "Search runs on the native Linux workspace; use dock_read for browser pages", "not-dispatched")
+  return value as { items: unknown[]; hasMore?: boolean; cursor?: unknown; coverage: { complete?: unknown; reasons?: unknown } }
+}
+
+function matches(item: unknown, query: NativeQuery): item is NativeItem {
+  if (!object(item) || typeof item.ref !== "string" || typeof item.name !== "string" || typeof item.roleName !== "string") return false
+  if (!item.name.toLowerCase().includes(query.name.toLowerCase())) return false
+  if (query.role !== undefined && item.roleName !== query.role) return false
+  if (query.capability === undefined) return true
+  const capability = object(item.capabilities) ? item.capabilities[query.capability] : undefined
+  return object(capability) && capability.supported === true
+}
+
+function compactItem(item: NativeItem) {
+  const capabilities = object(item.capabilities) ? item.capabilities : {}
+  return {
+    ref: item.ref,
+    role: item.roleName,
+    name: item.name,
+    ...(Array.isArray(item.states) ? { states: item.states.flatMap((state) => (STATES[Number(state)] ? [STATES[Number(state)]] : [])) } : {}),
+    ...(Array.isArray(item.actions) && item.actions.length ? { actions: item.actions } : {}),
+    can: Object.keys(capabilities).filter((key) => object(capabilities[key]) && capabilities[key].supported === true),
+    ...(typeof item.text === "string" && item.text ? { text: item.text } : {}),
+  }
+}
+
+const compactScan = (scan: NativeScan, code?: string) => toJSON({
+  ...(code ? { code, outcome: "not-dispatched" } : {}),
+  found: scan.found.length, pagesScanned: scan.pages, restarts: scan.restarts ?? 0,
+  ...(scan.found.length === 0 ? { searchComplete: scan.complete, reasons: scan.reasons } : {}),
+  items: scan.found.slice(0, 20).map(compactItem),
+})
+
 export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: number } = {}): Hooks {
   const timeoutMs = config.timeoutMs ?? 15000
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 15000) throw new Error("Invalid App Dock timeout")
   const call = (context: ToolContext, op: string, args: Record<string, unknown>) => invoke(context, port, op, args, timeoutMs)
   const ref = tool.schema.union([tool.schema.number().min(1), tool.schema.string().min(3).max(256).startsWith("n:")])
+  const target = tool.schema.object({
+    name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the control's accessible name"),
+    role: tool.schema.string().min(1).max(64).optional().describe("Exact roleName from dock_find/dock_read, e.g. push-button, entry"),
+  })
+
+  // A model turn takes far longer than a native continuation lives, so the tool,
+  // not the model, pages: each page is requested immediately after the previous one.
+  // Every native request keeps its own limits; only read-only scans are restarted.
+  const find = (context: ToolContext, query: NativeQuery, restarts = 0): Promise<NativeScan> =>
+    scan(context, query, call(context, "read", { budget: 500, maxText: query.maxText ?? 0 }), 1).catch((error: unknown) => {
+      if (!(error instanceof NativeRPCError) || !["cursor-stale", "stale-ref"].includes(error.code) || restarts >= 2) throw error
+      return find(context, query, restarts + 1)
+    }).then((result) => ({ ...result, restarts: result.restarts ?? restarts }))
+  const scan = async (context: ToolContext, query: NativeQuery, next: Promise<unknown>, pages: number): Promise<NativeScan> => {
+    const page = nativePage(await next)
+    const found = page.items.filter((item) => matches(item, query))
+    if (found.length > 0 || !page.hasMore || typeof page.cursor !== "string" || pages >= MAX_FIND_PAGES)
+      return { found, pages, complete: found.length > 0 || (!page.hasMore && page.coverage.complete === true),
+        reasons: page.coverage.reasons }
+    return scan(context, query, call(context, "read", { cursor: page.cursor }), pages + 1)
+  }
+  // Locate and mutate within one tool call so UI churn between model turns cannot stale the ref.
+  // Only a certainly-undispatched stale target is located again; unknown outcomes are never replayed.
+  const act = async (context: ToolContext, query: NativeQuery, run: (item: NativeItem) => Promise<unknown> | string,
+    attempt = 0): Promise<unknown> => {
+    const result = await find(context, query)
+    if (result.found.length !== 1) return compactScan(result, result.found.length === 0 ? "target-not-found" : "target-ambiguous")
+    return Promise.resolve(run(result.found[0]!)).catch((error: unknown) => {
+      if (!(error instanceof NativeRPCError) || error.code !== "stale-ref" || error.outcome !== "not-dispatched" || attempt >= 1) throw error
+      return act(context, query, run, attempt + 1)
+    })
+  }
   return {
     tool: {
       dock_list: tool({
@@ -159,7 +235,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       }),
       dock_read: tool({
         description:
-          "Read the App Dock browser page or bound native app as a structured accessibility snapshot. Browser refs are numeric; native refs are opaque n: strings. Use refs with dock_click / dock_action / dock_type. Re-read after changes; native observations are non-atomic and refs may expire. Native-only rootRef, cursor and textOffset select a bounded read page.",
+          "Read the App Dock browser page or bound native app as a structured accessibility snapshot. Browser refs are numeric; native refs are opaque n: strings. Use refs with dock_click / dock_action / dock_type. Re-read after changes; native observations are non-atomic and refs may expire. Native-only rootRef, cursor and textOffset select a bounded read page; native cursors expire within seconds, so prefer dock_find to locate native controls.",
         args: {
           budget: tool.schema.number().min(1).max(500).optional().describe(
             "Maximum interactive elements to return (default 100)",
@@ -176,6 +252,18 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             ...(args.rootRef === undefined ? {} : { rootRef: args.rootRef }),
             ...(args.cursor === undefined ? {} : { cursor: args.cursor }),
             ...(args.textOffset === undefined ? {} : { textOffset: args.textOffset }) }).then(toJSON, toolError),
+      }),
+      dock_find: tool({
+        description:
+          "Find controls in the native Linux workspace by accessible name (case-insensitive substring) and optional roleName. The tool pages the whole accessibility tree itself and returns compact matches from one fresh observation, with refs usable immediately by dock_action/dock_type. Prefer dock_action/dock_type with `target` to locate and act in one call, because native refs expire when the app changes.",
+        args: {
+          name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the accessible name"),
+          role: tool.schema.string().min(1).max(64).optional().describe("Exact roleName, e.g. push-button, entry, check-box"),
+          includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
+        },
+        execute: (args, context) =>
+          find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) })
+            .then((result) => compactScan(result), toolError),
       }),
       dock_wait: tool({
         description: "Wait for a bounded duration in the active App Dock tab. Native wait is a cancellable delay, not proof of application readiness.",
@@ -250,21 +338,44 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         },
       }),
       dock_action: tool({
-        description: "Invoke an advertised native actionID on a ref from dock_read. Default mode requires a stable eligible control. Explicit observed mode permits eligible controls below virtual ancestry, revalidates the current control, and never proves durable logical-record identity. Both modes are non-atomic; acknowledgement does not prove task completion.",
-        args: { ref: ref.describe("Element ref from dock_read"), actionID: tool.schema.string().min(1).max(256),
+        description: "Invoke an advertised native action, either by ref+actionID from dock_read/dock_find or by `target` (name/role) plus optional action name, which locates the control and acts in one call. Default mode requires a stable eligible control. Explicit observed mode permits eligible controls below virtual ancestry, revalidates the current control, and never proves durable logical-record identity. Both modes are non-atomic; acknowledgement does not prove task completion.",
+        args: { ref: ref.optional().describe("Element ref from dock_read or dock_find"),
+          actionID: tool.schema.string().min(1).max(256).optional().describe("actionID that belongs to ref"),
+          target: target.optional().describe("Locate the control by name instead of ref"),
+          action: tool.schema.string().min(1).max(256).optional().describe("With target: action name such as press or click; required when the control has several actions"),
           mode: tool.schema.enum(["stable", "observed"]).optional().describe("Native control identity policy (default stable)") },
-        execute: (args, context) => call(context, "action", { ref: args.ref, actionID: args.actionID,
-          ...(args.mode === undefined ? {} : { mode: args.mode }) }).then(toJSON, toolError),
+        execute: (args, context) => {
+          const mode = args.mode === undefined ? {} : { mode: args.mode }
+          if (args.target === undefined) {
+            if (args.ref === undefined || args.actionID === undefined) return Promise.resolve("dock_action requires ref and actionID, or target")
+            return call(context, "action", { ref: args.ref, actionID: args.actionID, ...mode }).then(toJSON, toolError)
+          }
+          return act(context, { ...args.target, capability: args.mode === "observed" ? "observedAction" : "action" }, (item) => {
+            const actions = (Array.isArray(item.actions) ? item.actions : []).filter((entry): entry is { id: string; name: string } =>
+              object(entry) && typeof entry.id === "string" && typeof entry.name === "string" && (args.action === undefined || entry.name === args.action))
+            if (actions.length !== 1) return toJSON({ code: "action-ambiguous", outcome: "not-dispatched", item: compactItem(item) })
+            return call(context, "action", { ref: item.ref, actionID: actions[0]!.id, ...mode }).then(toJSON)
+          }).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+        },
       }),
       dock_type: tool({
-        description: "Replace text in an editable App Dock element by ref from dock_read. Native mode defaults to semantic EditableText replacement; keyboard mode must be explicit and never serves as an automatic fallback. Unicode and empty text are valid.",
+        description: "Replace text in an editable App Dock element, by ref from dock_read/dock_find or by native `target` (name/role), which locates the field and types in one call. Native mode defaults to semantic EditableText replacement; keyboard mode must be explicit and never serves as an automatic fallback. Unicode and empty text are valid.",
         args: {
-          ref: ref.describe("Element ref from dock_read"),
+          ref: ref.optional().describe("Element ref from dock_read or dock_find"),
+          target: target.optional().describe("Locate the native field by name instead of ref"),
           text: tool.schema.string().describe("Text to type into the element"),
           mode: tool.schema.enum(["editable", "keyboard"]).optional().describe("Native input method (default editable)"),
         },
-        execute: (args, context) => call(context, "type", { ref: args.ref, text: args.text,
-          ...(args.mode === undefined ? {} : { mode: args.mode }) }).then(toJSON, toolError),
+        execute: (args, context) => {
+          const mode = args.mode === undefined ? {} : { mode: args.mode }
+          if (args.target === undefined) {
+            if (args.ref === undefined) return Promise.resolve("dock_type requires ref or target")
+            return call(context, "type", { ref: args.ref, text: args.text, ...mode }).then(toJSON, toolError)
+          }
+          return act(context, { ...args.target, capability: args.mode === "keyboard" ? "keyboardType" : "type" },
+            (item) => call(context, "type", { ref: item.ref, text: args.text, ...mode }).then(toJSON))
+            .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+        },
       }),
       dock_navigate: tool({
         description: "Navigate the active App Dock tab to a new address (https:// URL or a plain search query).",

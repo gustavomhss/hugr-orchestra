@@ -48,6 +48,7 @@ const toolNames = [
   "dock_list",
   "dock_activate",
   "dock_read",
+  "dock_find",
   "dock_wait",
   "dock_screenshot",
   "dock_scroll",
@@ -483,4 +484,96 @@ test("cancel post failure settles native request and removes abort listener/time
   expect(f.sent).toHaveLength(2)
   expect(remove.mock.calls.length).toBe(1)
   remove.mockRestore()
+})
+
+type Reply = { ok: true; value: unknown } | { ok: false; error: Record<string, unknown> }
+
+function host(respond: (op: string, args: Record<string, unknown>, index: number) => Reply) {
+  const f = fakePort()
+  const calls: { op: string; args: Record<string, unknown> }[] = []
+  f.port.postMessage = (message: unknown) => {
+    const envelope = message as Envelope
+    if (envelope.type !== "dock.rpc") return
+    calls.push({ op: envelope.op, args: envelope.args })
+    const reply = respond(envelope.op, envelope.args, calls.length - 1)
+    queueMicrotask(() => f.deliver({ type: "dock.rpc.result", id: envelope.id, ...reply }))
+  }
+  return { hooks: createAppDockHooks(f.port) as Required<Hooks>, calls }
+}
+
+const page = (items: unknown[], cursor?: string): Reply => ({ ok: true, value: {
+  backend: "linux-atspi", scopeKind: "workspace", observation: "obs", items, hasMore: cursor !== undefined,
+  ...(cursor === undefined ? {} : { cursor }), coverage: { complete: cursor === undefined, reasons: cursor === undefined ? [] : ["page-limit"] } } })
+const control = (ref: string, name: string, extra: Record<string, unknown> = {}) => ({
+  ref, name, role: 43, roleName: "push-button", states: [8, 11, 24], interfaces: [], actions: [{ id: `a:${ref}`, name: "press" }],
+  capabilities: { action: { supported: true, reason: "advertised-native-action" }, observedAction: { supported: true, reason: "x" },
+    type: { supported: false, reason: "x" }, keyboardType: { supported: false, reason: "x" } }, ...extra })
+const field = (ref: string, name: string) => control(ref, name, { role: 79, roleName: "entry", states: [7, 8, 12, 24], actions: [],
+  capabilities: { action: { supported: false, reason: "x" }, observedAction: { supported: false, reason: "x" },
+    type: { supported: true, reason: "x" }, keyboardType: { supported: true, reason: "x" } } })
+const nativeError = (code: string, outcome = "not-dispatched"): Reply =>
+  ({ ok: false, error: { backend: "linux-atspi", code, message: code, outcome } })
+
+test("dock_find pages native continuations itself and returns compact matches from the matching observation", async () => {
+  const { hooks, calls } = host((_op, args) => args.cursor === undefined ? page([control("n:a", "Explorer")], "c1")
+    : args.cursor === "c1" ? page([control("n:b", "Sign In")], "c2") : page([control("n:c", "Continue without Signing In")], "c3"))
+  const result = JSON.parse(String(await hooks.tool.dock_find.execute({ name: "continue WITHOUT" }, context)))
+  expect(calls).toEqual([{ op: "read", args: { budget: 500, maxText: 0 } }, { op: "read", args: { cursor: "c1" } }, { op: "read", args: { cursor: "c2" } }])
+  expect(result).toEqual({ found: 1, pagesScanned: 3, restarts: 0, items: [{ ref: "n:c", role: "push-button",
+    name: "Continue without Signing In", states: [], actions: [{ id: "a:n:c", name: "press" }], can: ["action", "observedAction"] }] })
+})
+
+test("dock_find restarts read-only scans after stale continuations and surfaces exhaustion", async () => {
+  const flaky = host((_op, args, index) => args.cursor !== undefined && index < 4 ? nativeError("cursor-stale")
+    : args.cursor === undefined ? page([control("n:x", "Other")], "c") : page([control("n:y", "Search")]))
+  expect(JSON.parse(String(await flaky.hooks.tool.dock_find.execute({ name: "search" }, context)))).toMatchObject({ found: 1, restarts: 2 })
+  expect(flaky.calls.filter((call) => call.args.cursor === undefined).length).toBe(3)
+  const stale = host((_op, args) => args.cursor === undefined ? page([], "c") : nativeError("cursor-stale"))
+  expect(JSON.parse(String(await stale.hooks.tool.dock_find.execute({ name: "search" }, context)))).toMatchObject({ code: "cursor-stale" })
+  expect(stale.calls.length).toBe(6)
+})
+
+test("dock_find reports an exhausted search and refuses browser snapshots", async () => {
+  const empty = host(() => page([control("n:a", "Explorer")]))
+  expect(JSON.parse(String(await empty.hooks.tool.dock_find.execute({ name: "missing" }, context))))
+    .toEqual({ found: 0, pagesScanned: 1, restarts: 0, searchComplete: true, reasons: [], items: [] })
+  const browser = host(() => ({ ok: true, value: { url: "https://example.com", items: [] } }))
+  expect(JSON.parse(String(await browser.hooks.tool.dock_find.execute({ name: "x" }, context)))).toMatchObject({ code: "unsupported-backend" })
+  expect(browser.calls.length).toBe(1)
+})
+
+test("dock_action target locates and acts in one call, refusing ambiguity without dispatch", async () => {
+  const one = host((op, args) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([control("n:a", "Explorer")], "c") : page([control("n:b", "Continue without Signing In")]))
+  expect(JSON.parse(String(await one.hooks.tool.dock_action.execute({ target: { name: "continue without" }, action: "press" }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(one.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:b", actionID: "a:n:b" } })
+  const two = host(() => page([control("n:a", "Search"), control("n:b", "Search (Ctrl+Shift+F)")]))
+  expect(JSON.parse(String(await two.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
+    .toMatchObject({ code: "target-ambiguous", outcome: "not-dispatched", found: 2 })
+  const actions = host(() => page([control("n:a", "Search", { actions: [{ id: "a1", name: "press" }, { id: "a2", name: "showContextMenu" }] })]))
+  expect(JSON.parse(String(await actions.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
+    .toMatchObject({ code: "action-ambiguous", outcome: "not-dispatched" })
+  expect([...two.calls, ...actions.calls].every((call) => call.op === "read")).toBe(true)
+  await expect(one.hooks.tool.dock_action.execute({ ref: "n:a" }, context)).resolves.toBe("dock_action requires ref and actionID, or target")
+})
+
+test("target mutation retries only a certainly-undispatched stale ref, never an unknown outcome", async () => {
+  const stale = host((op, _args, index) => op === "action" ? (index === 1 ? nativeError("stale-ref") : { ok: true, value: { dispatch: "acknowledged" } })
+    : page([control("n:a", "Continue without Signing In")]))
+  expect(JSON.parse(String(await stale.hooks.tool.dock_action.execute({ target: { name: "continue" } }, context)))).toEqual({ dispatch: "acknowledged" })
+  expect(stale.calls.map((call) => call.op)).toEqual(["read", "action", "read", "action"])
+  const unknown = host((op) => op === "action" ? nativeError("stale-ref", "unknown") : page([control("n:a", "Continue")]))
+  expect(JSON.parse(String(await unknown.hooks.tool.dock_action.execute({ target: { name: "continue" } }, context))))
+    .toMatchObject({ code: "stale-ref", outcome: "unknown" })
+  expect(unknown.calls.filter((call) => call.op === "action").length).toBe(1)
+})
+
+test("dock_type target selects only fields with the requested native input capability", async () => {
+  const { hooks, calls } = host((op) => op === "type" ? { ok: true, value: { postcondition: "verified" } }
+    : page([control("n:button", "Search"), field("n:field", "Search files by name")]))
+  const result = await hooks.tool.dock_type.execute({ target: { name: "search" }, text: "café 漢字 🧪", mode: "keyboard" }, context)
+  expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
+  expect(calls.at(-1)).toEqual({ op: "type", args: { ref: "n:field", text: "café 漢字 🧪", mode: "keyboard" } })
+  await expect(hooks.tool.dock_type.execute({ text: "x" }, context)).resolves.toBe("dock_type requires ref or target")
 })
