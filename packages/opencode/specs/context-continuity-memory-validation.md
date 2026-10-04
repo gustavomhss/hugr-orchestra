@@ -163,3 +163,28 @@ Real artifact file SHA-256:
 
 Later documentation/test-only closure does not constitute another model run.
 Current-head remote CI and merge authorization remain separate from this record.
+
+## Final reviewed integration
+
+Cold review found and closed an asynchronous admission race: invalidation, forget,
+advance or replacement while model/archive lookup was awaited could return an older
+pruned context. `prepare` now rechecks entry identity, generation and artifact after
+those awaits. Held-lookup/real-read tests and remove-fix mutations establish the
+fallback boundary. The final request guard also covers maintenance calls and counts
+workflow system content carried outside messages, without double-charging ordinary
+API-key/OAuth framing. Both runtime reviewers approved their repaired slices.
+
+The final scoped run completed **242 tests, zero failures** across 21 files, followed
+by a successful package typecheck after a test fixture's PromiseLike/Promise typing
+correction. Logs: `working-memory-final-tests.log` and
+`working-memory-final-typecheck-completed.log`. Successful earlier cases were grouped
+into this final integration gate rather than publishing each small change separately.
+
+After those runtime fixes, a fresh source build and full private Electron generation
+`memory-ui-v2/runs/memory-final-02/` passed the same actual workflow and calibrated
+owned-process cleanup. Source before/after fingerprint:
+`85c6e36e7a4714a1031819a3eb8c0c6d2696d06c025bf76cc5a8c3170a6478c2`.
+Runtime HEAD was `22c3a0629ba957781901fd7cf803ad8378a9b053` with the recorded test-only
+typing delta. These defensive runtime changes were not presented as another paid
+Luna measurement; the semantic pilot and its strict citation failure remain dated
+evidence at the earlier source fingerprint above.

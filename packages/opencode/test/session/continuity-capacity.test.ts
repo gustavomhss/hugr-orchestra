@@ -111,7 +111,7 @@ function harness(value: LLM.StreamInput, options: {
     provider: "gitlab.workflow", instanceUrl: "https://workflow.invalid", getHeaders: () => ({}), fetch: blockedFetch,
   }, { workingDirectory: options.workingDirectory }) : undefined
   if (workflow) {
-    workflow.doStream = (input) => language.doStream(input)
+    workflow.doStream = (input) => Promise.resolve(language.doStream(input))
     workflow.doGenerate = async () => { throw new Error("Unexpected workflow generation") }
   }
   const provider = ProviderTest.fake({ model: value.model,
