@@ -16,8 +16,14 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
     focused: undefined as string | undefined,
     pending: undefined as string | undefined,
   })
-  // The node of the row that holds focus, to recognize it among removed nodes.
-  const holder = { row: undefined as HTMLElement | undefined }
+  // The row that holds focus and the element inside it that has focus: the row is recognized among removed
+  // nodes, and focus returns to the same element (a task's Stop button, not the row that opens the task).
+  const holder = { row: undefined as HTMLElement | undefined, target: undefined as HTMLElement | undefined }
+  const release = () => {
+    setView("focused", undefined)
+    holder.row = undefined
+    holder.target = undefined
+  }
   const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
     get count() {
       return props.items.length
@@ -80,8 +86,16 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
     })
   })
 
-  // Shifting the window can make the reconciler move or replace the focused row's node, and a focused
-  // node that leaves the document drops focus to the page. Put focus back on that entity's row.
+  // A focused entity that leaves the list no longer pins a row, and the detached row is let go.
+  createEffect(() => {
+    const key = view.focused
+    if (key && !props.items.some((item) => item.key === key)) release()
+  })
+
+  // Shifting the window, or a reorder, can make the reconciler move or replace the focused row's node, and a
+  // focused node that leaves the document drops focus to the page. Solid's keyed list decides which nodes it
+  // moves and every DOM move detaches the node, while the rows must stay in visual order for Tab and reading
+  // order; so the node cannot be kept in place, and focus is put back on that entity's row instead.
   createEffect(() => {
     const element = body()
     if (!element) return
@@ -91,11 +105,24 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
       if (document.activeElement && document.activeElement !== document.body) return
       const index = props.items.findIndex((item) => item.key === view.focused)
       const row = removed.isConnected ? removed : root()?.querySelector<HTMLElement>(`[data-index="${index}"]`)
-      const target = row?.querySelector<HTMLElement>(':is(button, [role="button"])') ?? row
+      const target =
+        holder.target?.isConnected && row?.contains(holder.target)
+          ? holder.target
+          : (row?.querySelector<HTMLElement>(':is(button, [role="button"])') ?? row)
       target?.focus({ preventScroll: true })
     })
     observer.observe(element, { childList: true })
-    onCleanup(() => observer.disconnect())
+    // Pointing anywhere outside the list is a deliberate leave, even onto text that takes no focus, after
+    // which document.activeElement is the body just as when the reconciler takes the row.
+    const leave = (event: PointerEvent) => {
+      if (event.target instanceof Node && root()?.contains(event.target)) return
+      release()
+    }
+    document.addEventListener("pointerdown", leave, true)
+    onCleanup(() => {
+      observer.disconnect()
+      document.removeEventListener("pointerdown", leave, true)
+    })
   })
 
   return (
@@ -143,6 +170,7 @@ export function OrchestraCockpitList<T extends { key: string }>(props: {
                       aria-setsize={props.items.length}
                       onFocusIn={(event) => {
                         holder.row = event.currentTarget
+                        holder.target = event.target instanceof HTMLElement ? event.target : undefined
                         setView("focused", String(key))
                       }}
                       onFocusOut={(event) => {
