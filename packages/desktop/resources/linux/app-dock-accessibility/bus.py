@@ -32,6 +32,11 @@ def _error(error):
     return BusError("timeout" if code in (DBUS + ".NoReply", DBUS + ".Timeout", DBUS + ".TimedOut") else code or "provider-unavailable", error.message)
 
 
+def _typed(signature, parameters, reply):
+    parameters, reply = GLib.Variant(signature, parameters), GLib.VariantType.new(reply)
+    return parameters, reply
+
+
 class AtspiBus:
     """Tuple signatures include parentheses. Lifecycle callbacks must only mark dirty.
 
@@ -75,8 +80,9 @@ class AtspiBus:
             pending = self._pending.pop(future, None)
             if pending is None:
                 return False
-            pending[1].destroy()
-            pending[2].destroy()
+            for source in pending[1:]:
+                if source:
+                    source.destroy()
             if error:
                 pending[0].cancel()
                 future.set_exception(error)
@@ -102,11 +108,7 @@ class AtspiBus:
         timer.set_callback(lambda *_: self._finish(future, error=BusError("timeout", "Wire deadline expired")))
         dispatch.set_callback(begin)
         with self._lock:
-            if self._closed and not closing:
-                raise BusError("cancelled", "Bus is closed")
-            if len(self._pending) >= 16:
-                raise BusError("busy", "Pending wire operation limit reached")
-            self._pending[future] = (cancel, timer, dispatch)
+            self._admit(future, (cancel, timer, dispatch), closing)
             timer.attach(self._context)
             dispatch.attach(self._context)
         try:
@@ -114,6 +116,14 @@ class AtspiBus:
         except TimeoutError:
             self._finish(future, error=BusError("timeout", "GLib dispatch deadline expired"))
             return future.result()
+
+    def _admit(self, future, entry, closing=False):
+        # Callers hold _lock. Async wire work and blocking provider calls share one pending bound.
+        if self._closed and not closing:
+            raise BusError("cancelled", "Bus is closed")
+        if len(self._pending) >= 16:
+            raise BusError("busy", "Pending wire operation limit reached")
+        self._pending[future] = entry
 
     def _connect(self, address, future, cancel, session=False):
         def connected(_, result, *__):
@@ -153,7 +163,7 @@ class AtspiBus:
                 return
             self._finish(future, value)
 
-        parameters, reply = GLib.Variant(signature, parameters), GLib.VariantType.new(reply)
+        parameters, reply = _typed(signature, parameters, reply)
         self._active.add(future)
         connection.call(owner, path, interface, method, parameters, reply,
                         Gio.DBusCallFlags.NONE, timeout, cancel, completed, None)
@@ -166,8 +176,30 @@ class AtspiBus:
                    and signature.startswith("(") and GLib.VariantType.new(signature).is_definite()
                    for signature in (parameters_signature, reply_signature)):
             raise BusError("protocol-error", "Parameters and reply must have definite tuple signatures")
-        return self._wait(lambda f, c: self._invoke(self.connection, owner, path, interface, method, parameters_signature,
-                                                  parameters, reply_signature, timeout, f, c), timeout)
+        if current_thread() is self._thread:
+            raise BusError("busy", "Blocking bus operations are forbidden on the GLib thread")
+        try:
+            parameters, reply = _typed(parameters_signature, parameters, reply_signature)
+        except (TypeError, ValueError) as error:
+            raise BusError("protocol-error", error) from error
+        # Provider calls block only their caller. Skipping the wire-loop hop halves per-call
+        # CPU under the helper's CPU quota; close() still cancels them through _pending.
+        future, cancel = Future(), Gio.Cancellable.new()
+        with self._lock:
+            self._admit(future, (cancel, None, None))
+        try:
+            value = self.connection.call_sync(owner, path, interface, method, parameters, reply,
+                                              Gio.DBusCallFlags.NONE, timeout, cancel).unpack()
+        except GLib.Error as error:
+            if future.done():
+                raise future.exception() from None
+            raise _error(error) from None
+        finally:
+            with self._lock:
+                self._pending.pop(future, None)
+        if future.done():
+            raise future.exception()
+        return value
 
     def property(self, owner, path, interface, name):
         return self.call(owner, path, "org.freedesktop.DBus.Properties", "Get", "(ss)", (interface, name), "(v)")[0]
