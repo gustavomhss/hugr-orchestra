@@ -1,6 +1,6 @@
 import type { JanitorReport } from "@/utils/janitor-report"
 import type { DockSnapshot } from "./orchestra-dock-snapshot"
-import { live, newest, type TasksItem } from "./tasks-data"
+import { finishedTime, live, newest, type TasksItem } from "./tasks-data"
 
 /**
  * One typed Activity row. Agents and shells are the Tasks projection's own items; the Dock row is
@@ -86,8 +86,7 @@ function taskRank(task: TasksItem, failure: TasksItem | undefined) {
 // time stands in, both to pick the latest failure and to place older ones among past events.
 function taskTime(task: TasksItem) {
   if (live(task)) return task.startTime
-  if (task.state === "error") return task.endTime ?? task.startTime
-  return task.endTime
+  return finishedTime(task)
 }
 
 function dockRank(dock: DockSnapshot) {

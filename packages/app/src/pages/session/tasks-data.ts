@@ -125,7 +125,7 @@ export function summarizeTasks(items: { running: TasksItem[]; finished: TasksIte
   const finished = items.finished.toSorted(
     (a, b) =>
       Number(b.state === "error") - Number(a.state === "error") ||
-      newest(a.endTime, b.endTime) ||
+      newest(finishedTime(a), finishedTime(b)) ||
       a.key.localeCompare(b.key),
   )
   const rows = [...active.slice(0, limit), ...finished.slice(0, Math.max(0, limit - active.length))]
@@ -133,12 +133,20 @@ export function summarizeTasks(items: { running: TasksItem[]; finished: TasksIte
     rows,
     running: active,
     finished,
-    recent: items.finished.toSorted((a, b) => newest(a.endTime, b.endTime) || a.key.localeCompare(b.key)).slice(0, 12),
+    recent: items.finished
+      .toSorted((a, b) => newest(finishedTime(a), finishedTime(b)) || a.key.localeCompare(b.key))
+      .slice(0, 12),
     active: active.length,
     needsInput: active.filter((item) => item.state === "needs-input").length,
     hiddenFailures: finished.filter((item) => item.state === "error" && !rows.includes(item)).length,
     total: active.length + finished.length,
   }
+}
+
+/** When a finished task ended. A failure may never record an end (its last message never completed), so its start stands in. */
+export function finishedTime(task: TasksItem) {
+  if (task.state === "error") return task.endTime ?? task.startTime
+  return task.endTime
 }
 
 /** Comparator for optional timestamps: newest first, unknown after every known one. */

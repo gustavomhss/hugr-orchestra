@@ -502,6 +502,16 @@ describe("summarizeTasks", () => {
     expect(summary.finished.map((row) => row.key)).toEqual([...failed, "done"])
   })
 
+  test("a failure that never recorded an end time stays among the side panel's newest tasks", () => {
+    const completed = Array.from({ length: 12 }, (_, index) =>
+      item(`done-${String(index).padStart(2, "0")}`, "completed", { endTime: 10 + index }),
+    )
+    const failed = item("failed", "error", { startTime: 100 })
+    const summary = summarizeTasks({ running: [], finished: [...completed, failed] })
+    expect(summary.recent[0]).toBe(failed)
+    expect(summary.recent).toHaveLength(12)
+  })
+
   test("the count covers every active entity, past what the summary shows", () => {
     const running = Array.from({ length: 65 }, (_, index) => item(`task-${String(index).padStart(2, "0")}`, "running"))
     const summary = summarizeTasks({ running, finished: [] })
