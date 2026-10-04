@@ -39,8 +39,8 @@ function done(id: string, tool: string, metadata: Record<string, unknown>, outpu
   }
 }
 
-function read(messages: Message[], parts: Record<string, Part[]>) {
-  return readGovernance({ sessionID, messages, parts: (messageID) => parts[messageID] })
+function read(messages: Message[], parts: Record<string, Part[]>, working = true) {
+  return readGovernance({ sessionID, working, messages, parts: (messageID) => parts[messageID] })
 }
 
 describe("readGovernance", () => {
@@ -80,6 +80,39 @@ describe("readGovernance", () => {
     expect(result.approval.state).toBe("running")
     expect(JSON.stringify(result)).not.toContain("evt_model")
     expect(JSON.stringify(result)).not.toContain("apr_model")
+  })
+
+  test("an open call left in an idle session is an interrupted hold, not live work", () => {
+    const open = (id: string, tool: string, state: ToolPart["state"]): ToolPart => ({
+      id,
+      sessionID,
+      messageID: "msg_a",
+      type: "tool",
+      callID: `call_${id}`,
+      tool,
+      state,
+    })
+    const parts = {
+      msg_a: [
+        open("prt_present", "maestro_present_approval", { status: "running", input: {}, time: { start: 3 } }),
+        open("prt_decide", "maestro_record_approval", { status: "pending", input: {}, raw: "" }),
+      ],
+    }
+    const messages = [user("msg_user", 1), assistant("msg_a", 2)]
+    const live = read(messages, parts)
+    expect(live.records.map((record) => [record.state, record.reason, record.time])).toEqual([
+      ["running", undefined, 3],
+      ["running", undefined, 2],
+    ])
+    expect(live.approval.state).toBe("running")
+
+    const stopped = read(messages, parts, false)
+    expect(stopped.records.map((record) => [record.state, record.reason, record.time])).toEqual([
+      ["hold", "interrupted", 3],
+      ["hold", "interrupted", 2],
+    ])
+    expect(stopped.approval.state).toBe("hold")
+    expect(stopped.approval.record?.reason).toBe("interrupted")
   })
 
   test("reads each Maestro record with its identity, outcome and turn", () => {
@@ -312,6 +345,7 @@ describe("readGovernance", () => {
     const normalized = normalizeSessionMessages(sessionID, source)
     const result = readGovernance({
       sessionID,
+      working: false,
       source,
       messages: normalized.messages,
       parts: (id) => normalized.parts.get(id),
@@ -377,6 +411,7 @@ describe("readGovernance", () => {
     const normalized = normalizeSessionMessages(sessionID, source)
     const result = readGovernance({
       sessionID,
+      working: false,
       source,
       messages: normalized.messages,
       parts: (id) => normalized.parts.get(id)?.toReversed(),

@@ -379,5 +379,6 @@ export const ORCHESTRA_COPY = {
   "orchestra.governance.reason.synthetic": "Synthetic messages cannot confirm governance.",
   "orchestra.governance.reason.superseded":
     "A later presentation is recorded in the loaded history. This presentation cannot establish current approval.",
+  "orchestra.governance.reason.interrupted": "The session stopped before this step finished, so it counts for nothing.",
   "orchestra.governance.reason.unknown": "No reason was reported.",
 }

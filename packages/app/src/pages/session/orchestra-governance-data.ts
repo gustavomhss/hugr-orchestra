@@ -36,7 +36,7 @@ export type GovernanceRecord = {
   detail?: string
   output?: string
   partial?: boolean
-  reason?: "unreadable" | "foreign" | "synthetic" | "superseded"
+  reason?: "unreadable" | "foreign" | "synthetic" | "superseded" | "interrupted"
   messageID: string
   turnID?: string
   time?: number
@@ -96,6 +96,7 @@ const verdicts = ["APPROVE", "FIX_FIRST", "REJECT"]
 
 export function readGovernance(input: {
   sessionID: string
+  working: boolean
   messages: readonly Message[]
   source?: readonly SessionMessageInfo[]
   parts: (messageID: string) => readonly Part[] | undefined
@@ -122,7 +123,9 @@ export function readGovernance(input: {
     const ordered = source ? Array.from(source.keys()).flatMap((id) => byID.get(id) ?? []) : parts
     return ordered.flatMap((part) => {
       const record =
-        part.type === "tool" ? governanceRecord(input.sessionID, message, part, source?.get(part.id)) : undefined
+        part.type === "tool"
+          ? governanceRecord(input.sessionID, input.working, message, part, source?.get(part.id))
+          : undefined
       return record
         ? [
             {
@@ -187,6 +190,7 @@ function approvalState(record: GovernanceRecord | undefined): ApprovalState {
 
 function governanceRecord(
   sessionID: string,
+  working: boolean,
   message: AssistantMessage,
   part: ToolPart,
   source?: SessionMessageAssistantTool,
@@ -208,8 +212,12 @@ function governanceRecord(
     (source.name !== part.tool || (part.state.status !== "pending" && source.state.status !== part.state.status))
   )
     return { ...base, state: "hold", reason: "unreadable" }
-  if (part.state.status === "pending") return { ...base, state: "running", time: message.time.created }
-  if (part.state.status === "running") return { ...base, state: "running", time: part.state.time.start }
+  if (part.state.status === "pending" || part.state.status === "running") {
+    const time = part.state.status === "running" ? part.state.time.start : message.time.created
+    // A server that stopped mid-call can leave the part open after its session went idle.
+    if (!working) return { ...base, state: "hold", reason: "interrupted", time }
+    return { ...base, state: "running", time }
+  }
   if (part.state.status === "error")
     return {
       ...base,

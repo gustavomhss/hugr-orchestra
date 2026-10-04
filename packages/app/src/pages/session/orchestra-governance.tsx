@@ -39,6 +39,7 @@ const reasons = {
   foreign: "orchestra.governance.reason.foreign",
   synthetic: "orchestra.governance.reason.synthetic",
   superseded: "orchestra.governance.reason.superseded",
+  interrupted: "orchestra.governance.reason.interrupted",
 } as const
 
 const approvals = {
@@ -82,6 +83,7 @@ export function DialogOrchestraGovernance(props: {
     () =>
       readGovernance({
         sessionID: props.sessionID,
+        working: sync.data.session_working(props.sessionID),
         messages: sync.data.message[props.sessionID] ?? [],
         source: protocol() === "v2" ? sync.data.session_message[props.sessionID] : undefined,
         parts: (messageID) => sync.data.part[messageID],
