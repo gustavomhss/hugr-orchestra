@@ -5,7 +5,7 @@
   "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
   "implementationCommit": "4ee7710b3b3eaf88e04c4e23551cca38e2c4b0b3",
   "inheritedCheckpoint": "2fbe540917",
-  "verdict": "scoped implementation verified; terminal creation error seam needs lead decision",
+  "verdict": "scoped implementation verified; terminal creation error seam resolved by terminalCreationFollowUp",
   "contractCoverage": {
     "S15": "Anchored compact Dock with lazy Browser/Files/Docs/Terminal factories, qualified native view reuse, address drafts and roving keyboard tabs.",
     "S18": "Simultaneous Tasks and typed Activity, one shared Tasks projection, truthful counts/outcomes, bounded inline detail, 65th-entity keyboard access, child-only Stop and exact loaded shell-origin navigation.",
@@ -160,17 +160,63 @@
     "The unchanged pre-push hook also ran repository-wide cached typechecks."
   ],
   "framingCorrection": "This was controller lifecycle and identity integration, not a cosmetic tab replacement. Inherited unit success missed virtualizer attachment/focus, shell origins and PTY handoff. Initial rerun failures also mixed Vite cold-load and build/API-origin mismatches with actual implementation gaps.",
+  "terminalCreationFollowUp": {
+    "recordedAt": "2026-10-03T23:58:24Z",
+    "baseCommit": "fd26b452bf55903704aacdbed027a729ceb813cc",
+    "sourceRevision": "The commit containing this follow-up record; exact tested source hashes are below.",
+    "authorization": "Lead authorizes minimal extension to packages/app/src/context/terminal.tsx plus its focused tests to expose terminal creation failure to cockpit.",
+    "outcome": "resolved",
+    "resolvedProblem": "terminal-create-error-seam",
+    "behavior": "new() fulfills a typed created/failed result for v1 and v2. Rejections retain legacy logging/focus cleanup; a response without a PTY ID also fails. The cockpit shows pending/disabled state, a localized Request failed alert with source diagnostics, and explicit Retry. Queued duplicate clicks are ignored and disposed/session-changed consumers cannot receive stale failure state.",
+    "sourceFiles": [
+      { "path": "packages/app/src/context/terminal.tsx", "sha256": "e2dcd6696810ac61575ff89d1c9d3a38e783eb7895034bd95ecd33605e2bb469" },
+      { "path": "packages/app/src/pages/session/orchestra-evidence-terminal.tsx", "sha256": "cb368a3041fceb9a06713727e5383327084c720eee459127b8d25ed75815e282" },
+      { "path": "packages/app/e2e/orchestra/terminal-create.spec.ts", "sha256": "85f30c597cbf963746c5ea9917c06774fff585a73636749c9c1c11ea0f7791a1" }
+    ],
+    "checks": {
+      "cwd": "packages/app",
+      "typecheck": { "command": "bun typecheck", "exitCode": 0 },
+      "testTypecheck": { "command": "bun run typecheck:e2e", "exitCode": 0 },
+      "format": { "command": "bunx prettier --check src/context/terminal.tsx src/pages/session/orchestra-evidence-terminal.tsx e2e/orchestra/terminal-create.spec.ts", "exitCode": 0 },
+      "build": { "command": "VITE_OPENCODE_SERVER_HOST=127.0.0.1 VITE_OPENCODE_SERVER_PORT=4096 bun run build -- --logLevel error", "exitCode": 0, "indexSha256": "3b45b2b9f2e83f200c8f35917130d63b6bffb3ed2a7e6541a402e765f699180f" },
+      "godfile": { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "errors": 0, "warnings": 302, "sourceFiles": 3565 },
+      "browser": {
+        "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/terminal-create.spec.ts e2e/orchestra/session-cockpit.spec.ts --grep \"creation|PTY ID|late failure|Terminal hands\" --reporter=line",
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "cases": [
+          "v1 HTTP failure: pending, duplicate suppression, visible diagnostic, explicit retry and one successful PTY",
+          "v2 HTTP failure: pending, duplicate suppression, visible diagnostic, explicit retry and one successful PTY",
+          "Successful response without a PTY ID: visible fallback failure and successful retry",
+          "Late failure after pane remount: no stale alert and successful new request",
+          "Existing fire-and-forget bottom-panel caller: handled failure, explicit next request and no pageerror",
+          "Existing Dock/bottom-panel PTY handoff"
+        ]
+      }
+    },
+    "mutation": {
+      "change": "In terminal.new() catch, replace return { status: \"failed\", error } with throw error; rebuild production bundle.",
+      "before": { "newBoundaryTestsPassed": 5, "failed": 0 },
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/terminal-create.spec.ts --grep \"v1:|legacy fire-and-forget\" --reporter=line",
+      "mutated": { "passed": 0, "failed": 2, "diagnostics": ["Cockpit alert with accessible name New terminal was not found", "Unhandled rejection detector: expected []; received [\"legacy failure\"]"] },
+      "restored": { "passed": 6, "failed": 0, "productionBundleRebuilt": true },
+      "reach": "The mutation proves both visible failure propagation and detection of unhandled rejections when an existing consumer ignores the returned promise."
+    },
+    "screenshots": [
+      { "path": "terminal-create-v1-failed.png", "sha256": "5ecd7e1a8f3a6cd4c366c07133599dee4dbe0c8ae9e7e1df93246daa04835585", "protocol": "v1" },
+      { "path": "terminal-create-v2-failed.png", "sha256": "86619520bf00fdd420996b17344ebe0cd592204be21f7a7941598b31b97cb08e", "protocol": "v2" }
+    ],
+    "screenshotProvenance": "Final restored production run of terminal-create.spec.ts, mocked HTTP/PTY WebSocket boundaries, Chromium project with Playwright 1.59.1, 1440x900, DPR1, light, EN/LTR, animations disabled. Paths relative to this receipt.",
+    "scope": "Only the authorized terminal creation boundary, cockpit terminal consumer, focused regression spec and receipt/screenshots changed. Existing copy keys and error formatting are reused.",
+    "compilerOrApiObstacles": [],
+    "remainingFunctionalityProblems": [],
+    "integrationOwnership": "Per lead direction, native/performance qualification remains an integration task. The previous 28-case suite and performance benchmarks were not rerun for this follow-up."
+  },
   "openProblems": [
     {
-      "id": "terminal-create-error-seam",
-      "owner": "lead / terminal controller owner",
-      "evidence": "packages/app/src/context/terminal.tsx:324-357: new() returns void and its catch only cancels focus and logs Failed to create terminal.",
-      "impact": "An explicit New terminal request can fail without a visible creation error. Dock connection failures do have an error and explicit retry, and pane navigation never clones or auto-creates a PTY.",
-      "decisionRequested": "Authorize the out-of-scope terminal controller return/error seam, or route this fix to its owner. No alternate PTY creation API was invented."
-    },
-    {
       "id": "native-and-budget-qualification",
-      "owner": "S16 / S23 / S24 lead integration",
+      "owner": "lead integration (S16 / S23 / S24)",
       "impact": "Browser/preload-boundary evidence does not re-certify packaged Electron clipping, native cookies, DPR2/zoom200 or the full P01-P12 performance campaign. Owner visual acceptance remains separate."
     }
   ],

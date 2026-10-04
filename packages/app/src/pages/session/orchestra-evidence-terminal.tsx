@@ -5,6 +5,8 @@ import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { useTerminal } from "@/context/terminal"
 import { useSessionLayout } from "@/pages/session/session-layout"
+import { errorMessage } from "@/pages/layout/helpers"
+import { createSessionOwnership } from "./session-ownership"
 
 // The Dock's Terminal pane shows the workspace's active terminal; it never starts one by itself. One
 // PTY has at most one renderer: selecting this pane moves an open bottom terminal here and leaving it
@@ -14,14 +16,36 @@ export function OrchestraEvidenceTerminal() {
   const terminal = useTerminal()
   const language = useLanguage()
   const layout = useLayout()
-  const owner = layout.view(useSessionLayout().sessionKey())
+  const session = useSessionLayout()
+  const owner = layout.view(session.sessionKey())
+  const ownership = createSessionOwnership(session.sessionKey)
   const bottom = owner.terminal.opened()
   if (bottom) owner.terminal.close()
   onCleanup(() => {
     if (bottom && !owner.terminal.opened()) owner.terminal.open()
   })
-  const [state, setState] = createStore({ error: undefined as string | undefined })
+  const [state, setState] = createStore({
+    error: undefined as string | undefined,
+    creationError: undefined as string | undefined,
+    creating: false,
+  })
   const active = createMemo(() => terminal.all().find((pty) => pty.id === terminal.active())?.id)
+  const create = () => {
+    if (state.creating) return
+    const attempt = ownership.capture()
+    setState({ creating: true, creationError: undefined })
+    void terminal.new({ focus: true }).then((result) =>
+      attempt.run(() => {
+        setState({
+          creating: false,
+          creationError:
+            result.status === "failed"
+              ? errorMessage(result.error, language.t("error.chain.unknown")) || language.t("error.chain.unknown")
+              : undefined,
+        })
+      }),
+    )
+  }
 
   return (
     <div class="orchestra-dock-local" data-pane="terminal">
@@ -59,10 +83,21 @@ export function OrchestraEvidenceTerminal() {
               when={active()}
               keyed
               fallback={
-                <div class="orchestra-dock-state" role="status">
-                  <span>{language.t("orchestra.dock.terminal.empty")}</span>
-                  <button type="button" onClick={() => terminal.new({ focus: true })}>
-                    {language.t("command.terminal.new")}
+                <div
+                  class="orchestra-dock-state"
+                  role={state.creationError ? "alert" : "status"}
+                  aria-label={state.creationError ? language.t("command.terminal.new") : undefined}
+                >
+                  <Show when={state.creationError}>
+                    <strong>{language.t("common.requestFailed")}</strong>
+                  </Show>
+                  <span>
+                    {state.creating
+                      ? language.t("terminal.loading")
+                      : (state.creationError ?? language.t("orchestra.dock.terminal.empty"))}
+                  </span>
+                  <button type="button" disabled={state.creating} aria-busy={state.creating} onClick={create}>
+                    {language.t(state.creationError ? "orchestra.dock.retry" : "command.terminal.new")}
                   </button>
                 </div>
               }
