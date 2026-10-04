@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import type { AssistantMessage, Message, Part, Session, UserMessage } from "@opencode-ai/sdk/v2/client"
+import {
+  createOpencodeClient,
+  type AssistantMessage,
+  type Message,
+  type Part,
+  type Session,
+  type UserMessage,
+} from "@opencode-ai/sdk/v2/client"
 import { ServerConnection } from "@/context/server"
+import { createServerSession } from "@/context/server-session"
 import { ServerScope } from "@/utils/server-scope"
 import { deriveTasks, type TasksInput } from "./tasks-data"
 
@@ -224,6 +232,117 @@ describe("deriveTasks rows", () => {
 })
 
 describe("deriveTasks stats", () => {
+  test("event-only child totals stay unknown until the real store loads all history and parts", async () => {
+    const child = session("ses_a", { parentID: parent })
+    const latest = [
+      { ...user(child.id, "msg_latest_user"), time: { created: 5_000 } },
+      assistant(child.id, "msg_latest_assistant", {
+        parentID: "msg_latest_user",
+        finish: "stop",
+        time: { created: 6_000, completed: 7_000 },
+      }),
+    ].map((info) => ({
+      info,
+      parts: [{ id: `prt_${info.id}`, sessionID: child.id, messageID: info.id, type: "text" as const, text: "Latest" }],
+    }))
+    const pages = [Promise.withResolvers<Response>(), Promise.withResolvers<Response>()]
+    const requests: string[] = []
+    const store = createServerSession(
+      createOpencodeClient({
+        baseUrl: "http://tasks.test",
+        throwOnError: true,
+        fetch: (async (request) => {
+          const url = new URL(request instanceof Request ? request.url : String(request))
+          expect(url.pathname).toBe(`/session/${child.id}/message`)
+          requests.push(url.search)
+          const page = pages[requests.length - 1]
+          if (!page) throw new Error("Unexpected history request")
+          return page.promise
+        }) as typeof fetch,
+      }),
+    )
+    store.remember(child)
+    latest.forEach(({ info, parts }) => {
+      store.apply({ type: "message.updated", properties: { info } })
+      parts.forEach((part) => store.apply({ type: "message.part.updated", properties: { part } }))
+    })
+    const stats = () =>
+      only(
+        setup({
+          sessions: [child],
+          message: store.data.message,
+          part: store.data.part,
+          loaded: store.history.loaded,
+          more: store.history.more,
+          aggregates: false,
+        }),
+      ).stats
+    const unknown = { toolCalls: undefined, fails: undefined, tokens: undefined, cost: undefined }
+    expect(store.history.loaded(child.id)).toBe(false)
+    expect(store.history.more(child.id)).toBe(false)
+    expect(requests).toEqual([])
+    expect(stats()).toMatchObject(unknown)
+
+    const initial = store.sync(child.id)
+    expect(store.history.loading(child.id)).toBe(true)
+    expect(store.history.loaded(child.id)).toBe(false)
+    pages[0]!.resolve(Response.json(latest, { headers: { "x-next-cursor": "older" } }))
+    await initial
+    expect(store.history.loaded(child.id)).toBe(true)
+    expect(store.history.more(child.id)).toBe(true)
+    expect(stats()).toMatchObject(unknown)
+
+    const older = store.history.loadMore(child.id)
+    expect(store.history.loaded(child.id)).toBe(false)
+    pages[1]!.resolve(
+      Response.json([
+        {
+          info: user(child.id, "msg_user"),
+          parts: [{ id: "prt_user", sessionID: child.id, messageID: "msg_user", type: "text", text: "Earlier task" }],
+        },
+        {
+          info: assistant(child.id, "msg_older_assistant", {
+            cost: 0.25,
+            tokens: { ...tokens, input: 10, output: 20 },
+          }),
+          parts: [
+            {
+              ...tool("msg_older_assistant", "c_failed", "bash", {
+                status: "error",
+                input: {},
+                error: "failed",
+                time: { start: 2_100, end: 2_200 },
+              }),
+              sessionID: child.id,
+            },
+          ],
+        },
+      ]),
+    )
+    await older
+    expect(requests).toHaveLength(2)
+    expect(new URLSearchParams(requests[1]).get("before")).toBe("older")
+    expect(store.history.loaded(child.id)).toBe(true)
+    expect(store.history.more(child.id)).toBe(false)
+    expect(stats()).toMatchObject({ toolCalls: 1, fails: 1, tokens: { input: 10, output: 20 }, cost: 0.25 })
+
+    store.evict(child.id)
+    expect(store.history.loaded(child.id)).toBe(false)
+    expect(stats()).toMatchObject(unknown)
+  })
+
+  test("loaded message records without their parts do not prove totals", () => {
+    const stats = only(
+      setup({
+        sessions: [session("ses_a", { parentID: parent })],
+        message: { ses_a: [user("ses_a", "msg_user"), assistant("ses_a", "msg_a2", { finish: "stop" })] },
+        part: { msg_user: [] },
+        loaded: () => true,
+      }),
+    ).stats
+    expect(stats).toMatchObject({ toolCalls: undefined, fails: undefined, tokens: undefined, cost: undefined })
+  })
+
   test("an unloaded transcript leaves counts unknown while session aggregates stay known", () => {
     const child = session("ses_a", {
       parentID: parent,
@@ -279,9 +398,8 @@ describe("deriveTasks stats", () => {
     }
     const more = (id: string) => id === "ses_a"
     expect(
-      only(
-        setup({ sessions: [child], message: paged, part: { msg_user: [], msg_a2: [] }, loaded: () => true, more }),
-      ).stats?.toolCalls,
+      only(setup({ sessions: [child], message: paged, part: { msg_user: [], msg_a2: [] }, loaded: () => true, more }))
+        .stats?.toolCalls,
     ).toBeUndefined()
   })
 })
