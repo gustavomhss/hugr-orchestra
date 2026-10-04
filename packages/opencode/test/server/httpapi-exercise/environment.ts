@@ -14,7 +14,9 @@ process.env.XDG_CACHE_HOME = path.join(exerciseGlobalRoot, "cache")
 process.env.OPENCODE_DISABLE_SHARE = "true"
 export const exerciseConfigDirectory = path.join(exerciseGlobalRoot, "config", "opencode")
 export const exerciseDataDirectory = path.join(exerciseGlobalRoot, "data", "opencode")
-export const exerciseProbeDirectory = path.join(exerciseGlobalRoot, "probe")
+// Always in the system temp directory: auth probes create git worktrees wherever git root discovery lands, so
+// the probe directory must not follow OPENCODE_HTTPAPI_EXERCISE_GLOBAL into a checkout.
+export const exerciseProbeDirectory = path.join(process.env.TMPDIR ?? "/tmp", `opencode-httpapi-probe-${process.pid}`)
 mkdirSync(exerciseProbeDirectory, { recursive: true })
 
 const preserveExerciseDatabase = !!process.env.OPENCODE_HTTPAPI_EXERCISE_DB
@@ -38,6 +40,7 @@ export const cleanupExercisePaths = Effect.promise(async () => {
       ),
     )
   }
+  await fs.rm(exerciseProbeDirectory, { recursive: true, force: true }).catch(() => undefined)
   if (!preserveExerciseGlobalRoot)
     await fs.rm(exerciseGlobalRoot, { recursive: true, force: true }).catch(() => undefined)
 })
