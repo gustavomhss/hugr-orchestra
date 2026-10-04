@@ -139,10 +139,13 @@ function ReplayDialog(props: ActionProps & { owner: EvidenceOwner }) {
           <dd dir="ltr">{source.workdir ?? source.directory}</dd>
           <dt>{language.t("orchestra.evidence.rerun.session")}</dt>
           <dd>
-            {props.actions.sessionTitle(source.sessionID) ?? source.sessionID} · {props.actions.server()}
+            <bdi>{props.actions.sessionTitle(source.sessionID) ?? source.sessionID}</bdi> ·{" "}
+            <bdi dir="ltr">{props.actions.server()}</bdi>
           </dd>
           <dt>{language.t("orchestra.evidence.rerun.origin")}</dt>
-          <dd>{props.result}</dd>
+          <dd>
+            <bdi>{props.result}</bdi>
+          </dd>
         </dl>
         <p data-slot="evidence-replay-note">{language.t("orchestra.evidence.rerun.warning")}</p>
         <Show when={blocked()}>

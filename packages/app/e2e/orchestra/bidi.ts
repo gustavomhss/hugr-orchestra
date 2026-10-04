@@ -2,22 +2,28 @@ import { expect, type Locator } from "@playwright/test"
 
 type Box = { left: number; right: number }
 
-// Horizontal extent of every character of the element's first text node, as painted.
+// Horizontal extent of every character of the element's text, as painted, indexed like textContent.
 export async function glyphs(locator: Locator) {
   return locator.evaluate((element) => {
-    const node = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode() as Text
-    return Array.from({ length: node.length }, (_, index) => {
-      const range = document.createRange()
-      range.setStart(node, index)
-      range.setEnd(node, index + 1)
-      const box = range.getBoundingClientRect()
-      return { left: box.left, right: box.right }
-    })
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+    const nodes: Text[] = []
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text)
+    return nodes.flatMap((node) =>
+      Array.from({ length: node.length }, (_, index) => {
+        const range = document.createRange()
+        range.setStart(node, index)
+        range.setEnd(node, index + 1)
+        const box = range.getBoundingClientRect()
+        return { left: box.left, right: box.right }
+      }),
+    )
   })
 }
 
 // The characters at these indexes are painted from left to right, as an English run reads.
 export function expectInOrder(boxes: Box[], ...indexes: number[]) {
+  // A hidden or unpainted character has an empty box, which would satisfy any order.
+  for (const index of indexes) expect(boxes[index]!.right).toBeGreaterThan(boxes[index]!.left)
   for (const [index, next] of indexes.slice(1).entries())
     expect(boxes[next]!.left).toBeGreaterThanOrEqual(boxes[indexes[index]!]!.right - 0.5)
 }

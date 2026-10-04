@@ -34,6 +34,7 @@ export async function evidencePage(
     secondServer?: string
     scheme?: "light" | "dark"
     locale?: "en" | "ar"
+    title?: string
   } = {},
 ) {
   const writes: { url: string; body: Record<string, unknown> }[] = []
@@ -46,7 +47,7 @@ export async function evidencePage(
   const server = `http://127.0.0.1:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
   const transport = await installSseTransport<unknown>(page, { server })
   const records = [
-    session({ directory: root, summary: { files: 2, additions: 10, deletions: 3 } }),
+    session({ directory: root, title: input.title ?? title, summary: { files: 2, additions: 10, deletions: 3 } }),
     session({ directory: root, id: "ses_other", title: "Other session" }),
   ]
   const toolInput = {
@@ -166,7 +167,7 @@ export async function evidencePage(
     waitUntil: "domcontentloaded",
   })
   await transport.waitForConnection()
-  await expectSessionTitle(page, title)
+  await expectSessionTitle(page, input.title ?? title)
   await expect(editor(page)).toBeEditable()
   return { transport, send: (event: unknown) => transport.send(event), writes, sessionID, records }
 }
