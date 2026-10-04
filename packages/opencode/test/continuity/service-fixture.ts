@@ -79,29 +79,40 @@ export function body(input: { messages?: unknown }, memory: string, reference?: 
   return { memory, references: selected ? [{ id: selected.id, why: "Recover recorded evidence before verification." }] : [] }
 }
 
-export function held(memory = FIRST, options: { reference?: string; raw?: boolean; output?: Stream.Stream<LLMEvent, unknown> } = {}) {
+export function held(memory = FIRST, options: { reference?: string; raw?: boolean; output?: Stream.Stream<LLMEvent, unknown>; holdCleanup?: boolean } = {}) {
   return Effect.gen(function* () {
     const release = yield* Deferred.make<void>()
-    yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
+    const cleanup = yield* Deferred.make<void>()
+    yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Deferred.succeed(cleanup, undefined))))
     return { memory, respond: (request: LLM.StreamInput) => options.raw ? memory : JSON.stringify(body(request, memory, options.reference)),
       output: options.output ?? Stream.make(LLMEvent.finish({ reason: "stop" })),
       entered: yield* Deferred.make<{ request: LLM.StreamInput; jobID: string }>(), release,
-      closed: yield* Deferred.make<void>() }
+      closed: yield* Deferred.make<void>(), closing: yield* Deferred.make<void>(), cleanup, holdCleanup: options.holdCleanup === true }
   })
 }
 type Held = Effect.Success<ReturnType<typeof held>>
 
-export function environment(plans: Held[]) {
+export function environment<A = never, E = never>(plans: Held[], options: {
+  getModel?: Provider.Interface["getModel"]
+  node?: LayerNode.Node<A, E, LayerNode.Tag | undefined>
+} = {}) {
   const llm = LayerNode.make({ service: LLM.Service, deps: [Session.node, BackgroundJob.node],
     layer: Layer.effect(LLM.Service, Effect.gen(function* () {
       const jobs = yield* BackgroundJob.Service
+      yield* Effect.addFinalizer(() => Effect.forEach(plans, (plan) =>
+        Deferred.succeed(plan.release, undefined).pipe(Effect.andThen(Deferred.succeed(plan.cleanup, undefined))),
+      ).pipe(Effect.asVoid))
       const enteredJobs = new Set<string>()
       let index = 0
       return LLM.Service.of({ stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
         const plan = plans[index++]
         if (!plan) return Stream.fail(new Error("Unexpected maintenance request"))
         // Mirror LLM.stream's scoped transport cleanup, not only normal stream completion.
-        yield* Effect.addFinalizer(() => Deferred.succeed(plan.closed, undefined))
+        yield* Effect.addFinalizer(() => Effect.gen(function* () {
+          yield* Deferred.succeed(plan.closing, undefined)
+          if (plan.holdCleanup) yield* Deferred.await(plan.cleanup)
+          yield* Deferred.succeed(plan.closed, undefined)
+        }))
         const text = plan.respond(request)
         return Stream.concat(Stream.make(LLMEvent.textStart({ id: "memory" }), LLMEvent.textDelta({ id: "memory", text })),
           Stream.unwrap(Effect.gen(function* () {
@@ -120,13 +131,14 @@ export function environment(plans: Held[]) {
   return AppNodeBuilder.build(LayerNode.group([
     SessionContinuity.node, Session.node, BackgroundJob.node, SessionProjector.node,
     Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, Archive.node, Agent.node, Truncate.node,
+    ...(options.node ? [options.node] : []),
   ]), [
     [LLM.node, llm],
-    [Provider.node, Layer.mock(Provider.Service, { getModel: (providerID, modelID) => {
+    [Provider.node, Layer.mock(Provider.Service, { getModel: options.getModel ?? ((providerID, modelID) => {
       expect(providerID).toBe(model.providerID)
       expect(modelID).toBe(model.id)
       return Effect.succeed(model)
-    } })],
+    }) })],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
     [Plugin.node, Layer.mock(Plugin.Service, { init: () => Effect.void, list: () => Effect.succeed([]), trigger: (_name, _input, output) => Effect.succeed(output) })],
   ])
