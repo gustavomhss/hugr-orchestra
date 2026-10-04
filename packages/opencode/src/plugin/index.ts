@@ -35,6 +35,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstallationChannel } from "@opencode-ai/core/installation/version"
 import { HuGRComposerPlugin } from "./hugr-composer"
 import { AppDockPlugin } from "./app-dock"
+import { LinuxWorkspacePlugin } from "./linux-workspace"
 
 type State = {
   hooks: Hooks[]
@@ -84,7 +85,7 @@ function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
     XaiAuthPlugin,
     CerebrasPlugin,
     HuGRComposerPlugin,
-    ...(process.env.OPENCODE_CLIENT === "desktop" ? [AppDockPlugin] : []),
+    ...(process.env.OPENCODE_CLIENT === "desktop" ? [AppDockPlugin, LinuxWorkspacePlugin] : []),
   ]
 }
 

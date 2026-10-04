@@ -83,7 +83,7 @@ export async function spawnLocalServer(
   await access(sidecar)
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
-    env: createSidecarEnv(),
+    env: { ...createSidecarEnv(), ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux") },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
   })

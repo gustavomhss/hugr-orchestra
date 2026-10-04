@@ -10,6 +10,7 @@
     "email": "hello@opencode.ai"
   },
   "scripts": {
+    "linux": "bun scripts/linux-workspace.ts",
     "typecheck": "tsgo -b",
     "test:app-dock:e2e": "bun run src/main/app-dock-security.test.ts",
     "test:app-dock:tools": "bun run src/main/app-dock-tools.test.ts",

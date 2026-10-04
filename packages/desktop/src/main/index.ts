@@ -16,6 +16,7 @@ import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
 import { handleDockRPC } from "./app-dock-rpc"
+import { LinuxWorkspaceRPC } from "./linux-workspace-rpc"
 import { forwardInitializationFailure } from "./initialization"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
 import { createMenu } from "./menu"
@@ -397,8 +398,11 @@ const main = Effect.gen(function* () {
         userDataPath: app.getPath("userData"),
         onStdout: (message) => writeLog("server", "stdout", { message }),
         onStderr: (message) => writeLog("server", "stderr", { message }, "warn"),
-        onExit: (code) => writeLog("utility", "sidecar exited", { code }, "warn"),
-        onMessage: handleDockRPC,
+        onExit: (code) => {
+          writeLog("utility", "sidecar exited", { code }, "warn")
+          void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn"))
+        },
+        onMessage: (message, reply) => { if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply) },
       }),
     )
     server = listener
