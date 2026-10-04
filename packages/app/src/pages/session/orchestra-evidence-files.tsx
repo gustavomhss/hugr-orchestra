@@ -7,24 +7,19 @@ import { useFile } from "@/context/file"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { SessionFileView } from "@/pages/session/file-tabs"
-import { useSessionLayout } from "./session-layout"
 
 // The Dock's Files pane: the current workspace's tree and one file, both read through the shared
-// file context, so contents and listings are the same cached copies the side panel tabs use. A failed
-// listing or read keeps its error; there is no placeholder tree.
+// file context, so contents and listings are the same cached copies the side panel tabs use. Viewing a
+// file here opens no session tab. A failed listing or read keeps its error; there is no placeholder tree.
 export function OrchestraEvidenceFiles(props: { path?: string; onPathChange: (path: string | undefined) => void }) {
   const file = useFile()
   const language = useLanguage()
   const sdk = useSDK()
-  const { tabs } = useSessionLayout()
   const root = () => file.tree.state("")
 
   createEffect(() => {
     const path = props.path
-    if (!path) return
-    const tab = file.tab(path)
-    if (!tabs().all().includes(tab)) tabs().setAll([...tabs().all(), tab])
-    void file.load(path)
+    if (path) void file.load(path)
   })
 
   return (
