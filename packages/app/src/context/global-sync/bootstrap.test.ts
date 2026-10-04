@@ -283,6 +283,49 @@ describe("bootstrapDirectory", () => {
       }
     }
   })
+
+  test("an older bootstrap run that fails late cannot overwrite a newer run's read outcomes", async () => {
+    const [store, setStore] = directoryState()
+    const run = (read: () => Promise<unknown>) =>
+      bootstrapDirectory({
+        directory: "/project",
+        scope: ServerScope.local,
+        mcp: false,
+        global: {
+          config: {} satisfies Config,
+          path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+          project: [{ id: "project", worktree: "/project" } as Project],
+          provider,
+        },
+        sdk: {
+          app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
+          config: { get: read },
+          session: { status: read },
+          vcs: { get: async () => ({ data: undefined }) },
+          permission: { list: async () => ({ data: [] }) },
+          question: { list: async () => ({ data: [] }) },
+          v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+          provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+        } as unknown as OpencodeClient,
+        api,
+        store,
+        setStore,
+        vcsCache: { setStore() {} } as unknown as VcsCache,
+        loadSessions() {},
+        loadActiveSessions: async () => ({}),
+        translate: (key) => key,
+        queryClient: new QueryClient(),
+        protocol: Promise.resolve("v1"),
+      })
+    const older = Promise.withResolvers<never>()
+    await run(() => older.promise)
+    await run(async () => ({ data: {} }))
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
+    older.reject(new Error("older read failed"))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
+  })
 })
 
 describe("config queries", () => {

@@ -372,6 +372,7 @@ export async function bootstrapDirectory(input: {
   const revKey = ScopedKey.from(input.scope, input.directory)
   const rev = (providerRev.get(revKey) ?? 0) + 1
   providerRev.set(revKey, rev)
+  const latest = () => providerRev.get(revKey) === rev
   ;(async () => {
     const slow = [
       () => Promise.resolve(input.loadSessions(input.directory)),
@@ -382,6 +383,7 @@ export async function bootstrapDirectory(input: {
           input.queryClient
             .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
             .then((data) => input.setStore("agent", data)),
+          latest,
         ),
       () =>
         settle(
@@ -391,11 +393,12 @@ export async function bootstrapDirectory(input: {
             if ((await input.protocol) !== "v1") return
             return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
           }),
+          latest,
         ),
       async () => {
         // v2 statuses come from the server-wide active session seed, whose failure is not this directory's.
         if ((await input.protocol) !== "v1")
-          return settle(input.setStore, "session_status", input.loadActiveSessions()).catch(() => undefined)
+          return settle(input.setStore, "session_status", input.loadActiveSessions(), latest).catch(() => undefined)
         return settle(
           input.setStore,
           "session_status",
@@ -422,6 +425,7 @@ export async function bootstrapDirectory(input: {
               Object.keys(statuses).map((sessionID) => input.session!.resolve(sessionID).catch(() => undefined)),
             )
           }),
+          latest,
         )
       },
       !seededProject &&
@@ -568,11 +572,19 @@ export async function bootstrapDirectory(input: {
 }
 
 // Readers that need one resource must not wait for every other bootstrap read to succeed.
-function settle(setStore: SetStoreFunction<State>, resource: keyof State["load"], read: Promise<unknown>) {
+// Runs of one directory overlap, so a read that outlives a newer run must not record its outcome.
+function settle(
+  setStore: SetStoreFunction<State>,
+  resource: keyof State["load"],
+  read: Promise<unknown>,
+  latest: () => boolean,
+) {
   return read.then(
-    () => setStore("load", resource, "ready"),
+    () => {
+      if (latest()) setStore("load", resource, "ready")
+    },
     (error: unknown) => {
-      setStore("load", resource, "failed")
+      if (latest()) setStore("load", resource, "failed")
       throw error
     },
   )
