@@ -132,9 +132,12 @@ function TaskRow(props: {
           class="truncate text-strong"
           style={{ "font-size": "13px", "font-weight": "400", "line-height": "130%", "letter-spacing": "-0.04px" }}
         >
-          <bdi>{item().headline || language.t("session.tasks.subagent")}</bdi>
+          <bdi dir="auto">{item().headline || language.t("session.tasks.subagent")}</bdi>
           <Show when={item().nested}>
-            <span class="text-text-weak"> (+{item().nested})</span>
+            <bdi dir="ltr" class="text-text-weak">
+              {" "}
+              (+{item().nested})
+            </bdi>
           </Show>
         </div>
         <div data-slot="task-meta" class="text-12-regular text-text-weak mt-[3px] truncate tabular-nums">
@@ -147,20 +150,22 @@ function TaskRow(props: {
             {language.t(taskStateLabel[item().state])}
           </span>
           {" · "}
-          <span data-slot="task-time" class="text-12-mono text-text-weaker">
+          <bdi dir="ltr" data-slot="task-time" class="text-12-mono text-text-weaker">
             {time()}
-          </span>
+          </bdi>
           <Show when={item().agent}>
             <span>
               {" · "}
-              <span style={{ color: "var(--text-interactive-base)" }}>@{item().agent}</span>
+              <bdi dir="auto" style={{ color: "var(--text-interactive-base)" }}>
+                @{item().agent}
+              </bdi>
             </span>
           </Show>
           <Show when={props.compact && item().stats?.model}>
             {(model) => (
               <span>
                 {" · "}
-                <bdi dir="ltr" title={model()}>
+                <bdi dir="auto" title={model()}>
                   {model()}
                 </bdi>
               </span>
@@ -195,42 +200,54 @@ function TaskRow(props: {
               <Show when={stats().model}>
                 <div class="flex items-center gap-1">
                   <span class="text-text-weaker">{language.t("session.tasks.stats.model")}:</span>
-                  <span class="font-mono text-text-base">{stats().model}</span>
+                  <bdi dir="auto" class="font-mono text-text-base">
+                    {stats().model}
+                  </bdi>
                 </div>
               </Show>
               <Show when={stats().agent}>
                 <div class="flex items-center gap-1">
                   <span class="text-text-weaker">{language.t("session.tasks.stats.agent")}:</span>
-                  <span class="font-mono text-text-base">{stats().agent}</span>
+                  <bdi dir="auto" class="font-mono text-text-base">
+                    {stats().agent}
+                  </bdi>
                 </div>
               </Show>
               <div data-slot="task-stat-tools" class="flex items-center gap-1">
                 <span class="text-text-weaker">{language.t("session.tasks.stats.tools")}:</span>
-                <span class="font-mono text-text-base">{count(stats().toolCalls)}</span>
+                <bdi dir="ltr" class="font-mono text-text-base">
+                  {count(stats().toolCalls)}
+                </bdi>
               </div>
               <Show when={(stats().fails ?? 0) > 0}>
                 <div class="flex items-center gap-1" style={{ color: "var(--v2-state-fg-danger)" }}>
                   <span class="text-text-weaker">{language.t("session.tasks.stats.fails")}:</span>
-                  <span class="font-mono text-text-base">{count(stats().fails)}</span>
+                  <bdi dir="ltr" class="font-mono text-text-base">
+                    {count(stats().fails)}
+                  </bdi>
                 </div>
               </Show>
               <Show when={stats().fails === 0 && (stats().toolCalls ?? 0) > 0}>
                 <div class="flex items-center gap-1" style={{ color: "var(--v2-state-fg-success)" }}>
                   <span class="text-text-weaker">{language.t("session.tasks.stats.fails")}:</span>
-                  <span class="font-mono text-text-base">{count(0)}</span>
+                  <bdi dir="ltr" class="font-mono text-text-base">
+                    {count(0)}
+                  </bdi>
                 </div>
               </Show>
               <div data-slot="task-stat-tokens" class="flex items-center gap-1">
                 <span class="text-text-weaker">{language.t("session.tasks.stats.tokens")}:</span>
-                <span class="font-mono text-text-base">
+                <bdi dir="ltr" class="font-mono text-text-base">
                   <Show when={stats().tokens} fallback={unknown()}>
                     {(tokens) => `↓${count(tokens().input)} ↑${count(tokens().output)}`}
                   </Show>
-                </span>
+                </bdi>
               </div>
               <div data-slot="task-stat-cost" class="flex items-center gap-1">
                 <span class="text-text-weaker">{language.t("session.tasks.stats.cost")}:</span>
-                <span class="font-mono text-text-base">{money(stats().cost)}</span>
+                <bdi dir="ltr" class="font-mono text-text-base">
+                  {money(stats().cost)}
+                </bdi>
               </div>
             </div>
           )}
@@ -318,6 +335,9 @@ export function TasksPanel(
     }
   })
   const summary = createMemo(() => summarizeTasks(visible()))
+  const rows = createMemo(
+    () => new Map([...visible().running, ...visible().finished].map((item) => [item.key, item] as const)),
+  )
   const expanded = () => !props.summary || props.summary.expanded()
   createEffect(
     on(
@@ -358,16 +378,20 @@ export function TasksPanel(
     ])
   }
 
-  const row = (item: TasksItem, compact = false) => (
-    <TaskRow
-      item={item}
-      tick={view.tick}
-      compact={compact}
-      stop={stops[item.key]}
-      onOpen={openItem}
-      onStop={stopItem}
-      onDismiss={dismissItem}
-    />
+  const row = (key: string, compact = false) => (
+    <Show when={rows().get(key)}>
+      {(item) => (
+        <TaskRow
+          item={item()}
+          tick={view.tick}
+          compact={compact}
+          stop={stops[key]}
+          onOpen={openItem}
+          onStop={stopItem}
+          onDismiss={dismissItem}
+        />
+      )}
+    </Show>
   )
 
   return (
@@ -441,14 +465,17 @@ export function TasksPanel(
             </Show>
           }
         >
-          <Show when={expanded()} fallback={<For each={summary().rows}>{(item) => row(item, true)}</For>}>
+          <Show
+            when={expanded()}
+            fallback={<For each={summary().rows.map((item) => item.key)}>{(key) => row(key, true)}</For>}
+          >
             <Show when={visible().running.length > 0}>
               <div data-slot="task-section" class="text-12-medium text-text-weak px-1 pb-1 pt-2">
                 {language.t("session.tasks.running")}
               </div>
               <Show
                 when={props.summary && summary().total > 30}
-                fallback={<For each={visible().running}>{(item) => row(item)}</For>}
+                fallback={<For each={visible().running.map((item) => item.key)}>{(key) => row(key)}</For>}
               >
                 <OrchestraCockpitList
                   items={visible().running}
@@ -474,7 +501,7 @@ export function TasksPanel(
                   ? language.t("orchestra.tasks.recent", { count: visible().finished.length })
                   : language.t("orchestra.tasks.finished")}
               </div>
-              <For each={visible().finished}>{(item) => row(item)}</For>
+              <For each={visible().finished.map((item) => item.key)}>{(key) => row(key)}</For>
             </Show>
           </Show>
         </Show>

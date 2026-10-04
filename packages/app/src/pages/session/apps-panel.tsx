@@ -215,7 +215,7 @@ export function AppsPanel(
   return (
     <div
       ref={root}
-      class={`zen-browser-shell ${view.sidebarCollapsed ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
+      class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
       data-status={state.status}
     >
       <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
@@ -648,7 +648,9 @@ function TabButton(props: {
           new URL(props.tab.url).hostname.slice(0, 1).toUpperCase()
         )}
       </span>
-      <span class="zen-tab-title">{tabLabel(props.tab)}</span>
+      <bdi dir="auto" class="zen-tab-title">
+        {tabLabel(props.tab)}
+      </bdi>
       {props.tab.pinned ? "Pinned" : ""}
       {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
     </button>

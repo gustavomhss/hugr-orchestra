@@ -301,6 +301,8 @@ test("Terminal hands one existing PTY renderer between Dock and bottom panel", a
   await expect(dock.locator('[data-component="terminal"] canvas')).toBeVisible()
   await expect(page.locator('#terminal-panel [data-component="terminal"]')).toHaveCount(0)
   await expect(page.locator('[data-component="terminal"]')).toHaveCount(1)
+  await expect(pane(dock, "Terminal")).toHaveAttribute("aria-selected", "true")
+  await shoot(page, "cockpit-terminal-selected")
   await pane(dock, "Docs").click()
   await expect(page.locator('#terminal-panel [data-component="terminal"] canvas')).toBeVisible()
   await expect(page.locator('[data-component="terminal"]')).toHaveCount(1)

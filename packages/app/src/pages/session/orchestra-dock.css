@@ -54,7 +54,7 @@
   padding: 2px;
   border: 1px solid var(--orchestra-session-rule, var(--border-weaker-base));
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--orchestra-context-background, var(--surface-base));
 }
 
 .orchestra-dock-tabs [role="tab"] {
@@ -78,7 +78,7 @@
 }
 
 .orchestra-dock-tabs [role="tab"][aria-selected="true"] {
-  background: var(--orchestra-rail-tab-active, var(--surface-raised-stronger));
+  background: var(--orchestra-file-active, var(--surface-raised-stronger));
   color: var(--orchestra-rail-tab-active-text, var(--text-strong));
   box-shadow: inset 0 1px 0 var(--orchestra-rail-tab-highlight, transparent);
 }
@@ -100,6 +100,37 @@
   block-size: auto;
   min-block-size: 0;
   flex: 1;
+}
+
+/* Compact browser controls share the session's selected-file and evidence materials. Paint stays
+ * on the controls: a backdrop filter on their ancestor would rebind the fixed native-tab menu. */
+.orchestra-dock-card .zen-browser-shell.is-compact .zen-tab.is-active {
+  background: var(--orchestra-file-active);
+  color: var(--orchestra-rail-tab-active-text);
+  box-shadow:
+    inset 0 0 0 1px var(--orchestra-file-active-border),
+    var(--orchestra-evidence-highlight);
+}
+
+.orchestra-dock-card
+  .zen-browser-shell.is-compact
+  :is(.zen-tab:not(.is-active), .zen-new-tab, .zen-nav-button:not(:disabled), .zen-open-button:not(:disabled)):hover {
+  background: var(--orchestra-rail-tab-hover-background);
+  color: var(--orchestra-rail-tab-hover);
+  box-shadow: var(--orchestra-evidence-highlight);
+}
+
+.orchestra-dock-card .zen-browser-shell.is-compact .zen-urlbar input {
+  background: var(--orchestra-evidence-background);
+  color: var(--orchestra-session-heading);
+  box-shadow:
+    inset 0 0 0 1px var(--orchestra-context-border),
+    var(--orchestra-evidence-highlight);
+}
+
+.orchestra-dock-card .zen-browser-shell.is-compact .zen-urlbar input:focus-visible {
+  outline-color: var(--orchestra-accent);
+  outline-offset: -2px;
 }
 
 .orchestra-dock-note {

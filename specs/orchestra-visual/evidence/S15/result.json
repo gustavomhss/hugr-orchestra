@@ -5,7 +5,7 @@
   "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
   "implementationCommit": "4ee7710b3b3eaf88e04c4e23551cca38e2c4b0b3",
   "inheritedCheckpoint": "2fbe540917",
-  "verdict": "scoped implementation verified; terminal creation error seam resolved by terminalCreationFollowUp",
+  "verdict": "scoped implementation verified; terminal creation seam and cold B review blockers resolved by the follow-up records",
   "contractCoverage": {
     "S15": "Anchored compact Dock with lazy Browser/Files/Docs/Terminal factories, qualified native view reuse, address drafts and roving keyboard tabs.",
     "S18": "Simultaneous Tasks and typed Activity, one shared Tasks projection, truthful counts/outcomes, bounded inline detail, 65th-entity keyboard access, child-only Stop and exact loaded shell-origin navigation.",
@@ -212,6 +212,64 @@
     "compilerOrApiObstacles": [],
     "remainingFunctionalityProblems": [],
     "integrationOwnership": "Per lead direction, native/performance qualification remains an integration task. The previous 28-case suite and performance benchmarks were not rerun for this follow-up."
+  },
+  "coldBReviewFollowUp": {
+    "recordedAt": "2026-10-04T03:13:58Z",
+    "baseCommit": "319ff0fdf8e4ef43dfa3062b17ce71fffd912552",
+    "sourceRevision": "The commit containing this follow-up record, identified by the source hashes below.",
+    "outcome": "resolved",
+    "fixes": [
+      "Tasks summary, running detail and finished detail iterate stable task keys and resolve each key reactively to the current projected object. The row DOM and focus survive unrelated child updates; model updates and server-qualified child navigation still use the fresh object.",
+      "The full Dock's persisted collapsed preference is excluded from the compact class calculation only. Full Dock reentry retains the preference and its expand control; compact tab names and New tab stay reachable.",
+      "Compact selected tabs and pane buttons use Orchestra selected-file material; the address input uses evidence material, pane-strip uses context material, and interactive hovers use rail-hover tokens. These paint-only rules add no backdrop filter or layout-affecting border.",
+      "Agent/model/detail values and browser titles are isolated with bdi and explicit auto/ltr direction according to their content.",
+      "A new capture shows the Terminal pane actually selected, with the live terminal renderer in the Dock and no bottom-panel renderer."
+    ],
+    "sourceFiles": [
+      { "path": "packages/app/src/pages/session/tasks-panel.tsx", "sha256": "bdb11f544098a754fde78cb22827b977b526ce03a368ec74de646ae0f9763f5b" },
+      { "path": "packages/app/src/pages/session/apps-panel.tsx", "sha256": "1fd3a1225a50c888cf4d14d2f9b27c210c9d4274edff2082f2151811827784ac" },
+      { "path": "packages/app/src/pages/session/orchestra-dock.css", "sha256": "365a8fefe27132928e5474d9f320ad0168becd76b6a714064f05d8f59b3a3920" },
+      { "path": "packages/app/e2e/orchestra/cockpit-review.spec.ts", "sha256": "a994e0db7562177ceca4521fc630d97eb0b767cbd6da7e9f51c01ceebd9b5a67" },
+      { "path": "packages/app/e2e/orchestra/session-cockpit.spec.ts", "sha256": "8fbc39335472ed088ce1336c03d989e783ad96cbe26e27411aa36a0a17a82c30" }
+    ],
+    "aIntegration": {
+      "inspectedCommit": "0e9693a906aa5ea4116c4cb437bc0bfde6f2dd83",
+      "action": "Read-only inspection; no merge or cherry-pick. A integration remains with the lead.",
+      "tasksDataBlobBeforeAndAfter": "2efdb0f0ecec3cfcdbee6faf5ac62bcc3bd789e6",
+      "mergeNotes": "Keep A's loaded: store.session.history.loaded binding, loaded/parts-completeness gate and unknown-finish handling. Keep server-qualified sessionHref open. This follow-up does not change tasks-data.ts or open/Stop handlers. Preserve the reactive TaskRow item accessor and keyed rendering when unioning A and B."
+    },
+    "checks": {
+      "cwd": "packages/app",
+      "typecheck": { "command": "bun typecheck", "exitCode": 0 },
+      "testTypecheck": { "command": "bun run typecheck:e2e", "exitCode": 0 },
+      "format": { "command": "bunx prettier --check src/pages/session/tasks-panel.tsx src/pages/session/apps-panel.tsx src/pages/session/orchestra-dock.css e2e/orchestra/cockpit-review.spec.ts e2e/orchestra/session-cockpit.spec.ts", "exitCode": 0 },
+      "unit": { "command": "bun test --conditions=solid --preload ./happydom.ts ./src/pages/session/tasks-data.test.ts ./src/pages/session/helpers.test.ts", "passed": 31, "failed": 0, "assertions": 98 },
+      "build": { "command": "VITE_OPENCODE_SERVER_HOST=127.0.0.1 VITE_OPENCODE_SERVER_PORT=4096 bun run build -- --logLevel error", "exitCode": 0, "indexSha256": "b4942d952792ed14da59cb95a175313202877eb909cda9e7cf5a45eb29f3cc03" },
+      "godfile": { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "errors": 0, "warnings": 302, "sourceFiles": 3566 },
+      "browser": { "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/cockpit-review.spec.ts e2e/orchestra/session-cockpit.spec.ts e2e/regression/session-tasks-truth.spec.ts --grep \"Tasks (summary|running detail|finished detail)|compact Dock|switching panes|65 active tasks|Terminal hands|tasks panel reports|stop interrupts\" --reporter=line", "passed": 11, "failed": 0, "skipped": 0 },
+      "fixtureIsolation": { "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/cockpit-review.spec.ts --reporter=line", "passed": 6, "failed": 0, "reason": "Explicit empty file-list fixture added for the Files/Browser reentry step; refreshed dark/light captures." }
+    },
+    "regressionAndMutation": {
+      "baseline": { "sourceCommit": "319ff0fdf8e4ef43dfa3062b17ce71fffd912552", "indexSha256": "3b45b2b9f2e83f200c8f35917130d63b6bffb3ed2a7e6541a402e765f699180f", "passed": 0, "failed": 6, "observed": "All three Tasks modes lost focus after a real session.updated event; compact tab names were hidden; selected materials mismatched in dark and light." },
+      "mutations": [
+        "Restore object-identity For iteration in Tasks summary while retaining reactive lookup.",
+        "Reapply is-sidebar-collapsed to compact Dock when the full preference is set.",
+        "Replace compact input evidence background with legacy surface-raised-stronger."
+      ],
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4991 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/cockpit-review.spec.ts --grep \"Tasks summary|collapsed preference|uses Orchestra materials\" --reporter=line",
+      "mutated": { "passed": 0, "failed": 4, "diagnostics": ["Expected focused; received inactive", "Expected visible; received hidden", "Dark input actual rgb(73, 72, 71)/none instead of evidence gradient", "Light input actual rgb(255, 255, 255)/none instead of evidence gradient"] },
+      "restored": { "passed": 11, "failed": 0, "productionBundleRebuilt": true },
+      "instrumentCorrection": "The material reference probe uses the target's token-inheriting parent because void inputs cannot render child probes. Equality still requires a bound token plus matching computed background color and image. The rebuilt legacy-input mutation failed in both themes after this correction."
+    },
+    "screenshots": [
+      { "path": "cockpit-materials-dark.png", "theme": "dark", "sha256": "e00997da435bddfe42bd12146ae95771cc414af9b2ed70e52df2d2d7378ad0bb" },
+      { "path": "cockpit-materials-light.png", "theme": "light", "sha256": "94f52eefb45e1f1ac9c7960514048f4c114627f104414217061664af2e9f9343" },
+      { "path": "cockpit-terminal-selected.png", "theme": "dark", "pane": "Terminal", "sha256": "f79d71cc4519e66f3eca98b0ed3eb31b531b58400876d5e734c860f128b2e727" }
+    ],
+    "screenshotProvenance": "Restored production bundle, Chromium/Playwright 1.59.1, 1440x900, DPR1, zoom100, EN/LTR, animations disabled. Materials: cockpit-review.spec.ts with controlled HTTP and native preload fixtures. Terminal: session-cockpit.spec.ts after Dock selection and one-renderer assertions, using the real terminal renderer with mocked PTY WebSocket output. Paths are relative to this receipt; the older cockpit-terminal.png remains a historical bottom-panel handoff capture.",
+    "remainingScopedBlockers": [],
+    "scopeDeviations": [],
+    "integrationOwnership": "A branch union, packaged native verification and overall performance acceptance remain with lead integration."
   },
   "openProblems": [
     {
