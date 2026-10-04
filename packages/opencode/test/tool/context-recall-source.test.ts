@@ -7,18 +7,17 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { Effect, Layer } from "effect"
 import { Agent } from "@/agent/agent"
+import { Archive } from "@/continuity/archive"
 import { Session } from "@/session/session"
 import { MessageID, PartID } from "@/session/schema"
 import { ContextRecallTool } from "@/tool/context-recall"
 import { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
-import { catalogue, input } from "@/continuity/source"
-import type { JsonValue } from "@/continuity/types"
 import { testEffect } from "../lib/effect"
 
 const it = testEffect(Layer.empty)
 const layer = LayerNode.compile(
-  LayerNode.group([Session.node, SessionProjector.node, Agent.node, Truncate.node, Database.node]),
+  LayerNode.group([Session.node, SessionProjector.node, Agent.node, Truncate.node, Database.node, Archive.node]),
 )
 const seed = Effect.gen(function* () {
   const session = yield* Session.Service
@@ -49,6 +48,7 @@ const seed = Effect.gen(function* () {
 function response(output: string) {
   return JSON.parse(output) as {
     status: string
+    source: { message_id: string; part_id?: string }
     content: string
     complete: boolean
     offset: number
@@ -61,23 +61,16 @@ function response(output: string) {
 const recover = Effect.fn("RecallSourceTest.recover")(function* (
   tool: Tool.InferDef<typeof ContextRecallTool>,
   ctx: Tool.Context,
-  locator: { messageID: string; partID: string | null },
+  source: { message_id: MessageID; part_id?: PartID },
 ) {
   const pages: string[] = []
   let offset = 0
   while (true) {
-    const result = yield* tool.execute(
-      {
-        message_id: locator.messageID,
-        ...(locator.partID === null ? {} : { part_id: locator.partID }),
-        offset,
-        limit: 8000,
-      },
-      ctx,
-    )
+    const result = yield* tool.execute({ ...source, offset, limit: 8000 }, ctx)
     expect(Buffer.byteLength(result.output, "utf8")).toBeLessThanOrEqual(8000)
     expect(result.output).not.toContain("QQQQ")
     const page = response(result.output)
+    expect(page.source).toEqual(source)
     expect(page.offset).toBe(offset)
     pages.push(page.content)
     if (page.complete) {
@@ -92,7 +85,7 @@ const recover = Effect.fn("RecallSourceTest.recover")(function* (
 })
 
 describe("context_recall source recovery", () => {
-  it.instance("recovers catalogued tool input and parsed-output leaf values through all pages", () =>
+  it.instance("recovers stored tool input and literal captured output through all pages by original IDs", () =>
     Effect.gen(function* () {
       const f = yield* seed
       const input = { filepath: "/recorded/only/config.json", huge: "😀\\\n".repeat(5000), nested: { enabled: false } }
@@ -113,20 +106,16 @@ describe("context_recall source recovery", () => {
           metadata: { exit: 1, truncated: true, outputPath: "/volatile/captured.txt" },
         },
       })
-      // These are host catalogue selectors, not additional context_recall arguments.
-      const locators = [
-        { messageID: part.messageID, partID: part.id, field: "part", path: ["state", "input", "filepath"] },
-        { messageID: part.messageID, partID: part.id, field: "part", path: ["state", "output", "receipt", "code"] },
-      ]
-      const record = (yield* recover(f.tool, f.ctx, locators[0])).parts[0]
+      const source = { message_id: part.messageID, part_id: part.id }
+      const record = (yield* recover(f.tool, f.ctx, source)).parts[0]
+      expect(record.source).toEqual(source)
       expect(record.input).toEqual(input)
       expect(record.output).toBe(output)
-      const outputRecord = (yield* recover(f.tool, f.ctx, locators[1])).parts[0]
-      expect(JSON.parse(String(outputRecord.output)).receipt.code).toBe("RAW-LEAF-ZX19")
+      expect(JSON.parse(String(record.output)).receipt).toEqual({ code: "RAW-LEAF-ZX19", exit: 1 })
       expect(record.original_extent).toBe("truncated")
       expect(record.extent).toBe("stored_preview")
       expect(record.saved_file).toMatchObject({ availability: "unverified", lifetime: "volatile" })
-      const system = yield* recover(f.tool, f.ctx, { messageID: f.user.id, partID: null })
+      const system = yield* recover(f.tool, f.ctx, { message_id: f.user.id })
       expect(system.info.system).toBe(f.user.system)
       const pending = yield* f.session.updatePart({
         ...part,
@@ -136,7 +125,7 @@ describe("context_recall source recovery", () => {
           raw: '{"filepath":"/recorded/only/config.json"}',
         },
       })
-      const pendingRecord = (yield* recover(f.tool, f.ctx, { messageID: pending.messageID, partID: pending.id }))
+      const pendingRecord = (yield* recover(f.tool, f.ctx, { message_id: pending.messageID, part_id: pending.id }))
         .parts[0]
       expect(pendingRecord.input).toEqual({ filepath: input.filepath })
       expect(pendingRecord.raw).toBe(pending.state.raw)
@@ -166,11 +155,11 @@ describe("context_recall source recovery", () => {
         agent: "catalogued-agent",
         command: "recorded-command",
       })
-      expect((yield* recover(f.tool, f.ctx, { messageID: agent.messageID, partID: agent.id })).parts[0].name).toBe(
+      expect((yield* recover(f.tool, f.ctx, { message_id: agent.messageID, part_id: agent.id })).parts[0].name).toBe(
         agent.name,
       )
       expect(
-        (yield* recover(f.tool, f.ctx, { messageID: subtask.messageID, partID: subtask.id })).parts[0],
+        (yield* recover(f.tool, f.ctx, { message_id: subtask.messageID, part_id: subtask.id })).parts[0],
       ).toMatchObject({
         prompt: subtask.prompt,
         description: subtask.description,
@@ -208,66 +197,70 @@ describe("context_recall source recovery", () => {
           text: { value: "not catalogued", start: 0, end: 14 },
         },
       ]
-      for (const scheme of ["data", "DATA"]) for (const source of sources) {
-        const file = yield* f.session.updatePart({
-          id: PartID.ascending(),
-          sessionID: f.chat.id,
-          messageID: f.user.id,
-          type: "file",
-          mime: "image/png",
-          filename: "catalogued-image.png",
-          url: `${scheme}:image/png;base64,${"Q".repeat(20000)}`,
-          source,
-        })
-        expect(file.url).toContain("QQQQ") // Positive control: stored bytes exist before either serializer.
-        const captured = catalogue({ parentID: f.chat.id, head: [{ info: f.user, parts: [file] }], canRecall: true })
-        const selected = captured.units.find((unit) => unit.locator.partID === file.id)!
-        const expectedSource: JsonValue = source.type === "resource"
-          ? { type: "resource", clientName: source.clientName,
-            uri: source.uri === "https://recorded.invalid/image.png" ? source.uri : "[inline attachment]" }
-          : source.type === "symbol"
-            ? { type: "symbol", path: source.path, name: source.name, range: source.range, kind: source.kind }
-            : { type: "file", path: source.path }
-        expect(selected.value).toEqual({ type: "file", mime: file.mime, filename: file.filename,
-          url: "[inline attachment]", source: expectedSource })
-        expect(JSON.stringify(input(captured))).not.toContain("QQQQ")
-        const document = yield* recover(f.tool, f.ctx, selected.locator)
-        const record = document.parts[0]
-        expect(record).toMatchObject({
-          availability: "metadata_only",
-          extent: "media_metadata_only",
-          original_extent: "unknown",
-          inline: true,
-        })
-        expect(record.encoded_chars).toBe(file.url.length)
-        const recordedSource = record.file_source as Record<string, unknown>
-        expect(recordedSource).toEqual(expectedSource)
-        expect(JSON.stringify(document).includes("QQQQ")).toBe(false)
-        expect(record.resource_availability).toBe("unverified")
-        const tool = yield* f.session.updatePart({
-          id: PartID.ascending(),
-          sessionID: f.chat.id,
-          messageID: f.user.id,
-          type: "tool",
-          tool: "read",
-          callID: "media_receipt",
-          state: {
-            status: "completed",
-            input: {},
-            output: "stored media receipt",
-            title: "receipt",
-            metadata: {},
-            time: { start: 1, end: 2 },
-            attachments: [file],
-          },
-        })
-        const receipt = (yield* recover(f.tool, f.ctx, { messageID: tool.messageID, partID: tool.id })).parts[0]
-        expect(receipt.attachments).toEqual([record])
-        const observation = catalogue({ parentID: f.chat.id, head: [{ info: f.user, parts: [tool] }] })
-        expect(observation.units.find((unit) => unit.locator.partID === tool.id)?.value)
-          .toMatchObject({ state: { attachments: [selected.value] } })
-        expect(JSON.stringify(input(observation))).not.toContain("QQQQ")
-      }
+      for (const scheme of ["data", "DATA"])
+        for (const source of sources) {
+          const file = yield* f.session.updatePart({
+            id: PartID.ascending(),
+            sessionID: f.chat.id,
+            messageID: f.user.id,
+            type: "file",
+            mime: "image/png",
+            filename: "recorded-image.png",
+            url: `${scheme}:image/png;base64,${"Q".repeat(20000)}`,
+            source,
+          })
+          expect(file.url).toContain("QQQQ") // Positive control: stored bytes exist before recall redaction.
+          const stored = yield* f.session.getPart({ sessionID: f.chat.id, messageID: file.messageID, partID: file.id })
+          expect(stored).toMatchObject({ type: "file", url: file.url, source })
+          const expectedSource =
+            source.type === "resource"
+              ? {
+                  type: "resource",
+                  clientName: source.clientName,
+                  uri: source.uri === "https://recorded.invalid/image.png" ? source.uri : "[inline attachment]",
+                }
+              : source.type === "symbol"
+                ? { type: "symbol", path: source.path, name: source.name, range: source.range, kind: source.kind }
+                : { type: "file", path: source.path }
+          const document = yield* recover(f.tool, f.ctx, { message_id: file.messageID, part_id: file.id })
+          const record = document.parts[0]
+          expect(record).toMatchObject({
+            source: { message_id: file.messageID, part_id: file.id },
+            type: "file",
+            mime: file.mime,
+            filename: file.filename,
+            availability: "metadata_only",
+            extent: "media_metadata_only",
+            original_extent: "unknown",
+            inline: true,
+          })
+          expect(record.encoded_chars).toBe(file.url.length)
+          expect(record.file_source).toEqual(expectedSource)
+          expect(record.locator).toBeUndefined()
+          expect(JSON.stringify(document).includes("QQQQ")).toBe(false)
+          expect(record.resource_availability).toBe("unverified")
+          const tool = yield* f.session.updatePart({
+            id: PartID.ascending(),
+            sessionID: f.chat.id,
+            messageID: f.user.id,
+            type: "tool",
+            tool: "read",
+            callID: "media_receipt",
+            state: {
+              status: "completed",
+              input: {},
+              output: "stored media receipt",
+              title: "receipt",
+              metadata: {},
+              time: { start: 1, end: 2 },
+              attachments: [file],
+            },
+          })
+          const receipt = (yield* recover(f.tool, f.ctx, { message_id: tool.messageID, part_id: tool.id })).parts[0]
+          expect(receipt.source).toEqual({ message_id: tool.messageID, part_id: tool.id })
+          expect(receipt.output).toBe("stored media receipt")
+          expect(receipt.attachments).toEqual([record])
+        }
     }).pipe(Effect.provide(layer)),
   )
 

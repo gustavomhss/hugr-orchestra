@@ -6,6 +6,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { Effect, Exit, Layer, Schema } from "effect"
 import { Agent } from "@/agent/agent"
+import { Archive } from "@/continuity/archive"
 import { Session } from "@/session/session"
 import { MessageID, PartID } from "@/session/schema"
 import { ContextRecallTool, Parameters } from "@/tool/context-recall"
@@ -18,9 +19,10 @@ import { testEffect } from "../lib/effect"
 
 const it = testEffect(Layer.empty)
 const layer = LayerNode.compile(
-  LayerNode.group([Session.node, SessionProjector.node, Agent.node, Truncate.node, Database.node]),
+  LayerNode.group([Session.node, SessionProjector.node, Agent.node, Truncate.node, Database.node, Archive.node]),
 )
 const ref = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
+const archiveModes = [{ reference: "a".repeat(64) }, { archive_query: "archive" }, { archive_list: true }] as const
 const seed = Effect.gen(function* () {
   const session = yield* Session.Service
   const chat = yield* session.create()
@@ -93,6 +95,9 @@ describe("context_recall", () => {
         anyOf: [
           { additionalProperties: false, required: ["message_id"] },
           { additionalProperties: false, required: ["query"] },
+          { additionalProperties: false, required: ["reference"] },
+          { additionalProperties: false, required: ["archive_query"] },
+          { additionalProperties: false, required: ["archive_list"] },
         ],
       })
       const part = reply((yield* f.tool.execute({ message_id: f.user.id, part_id: f.text.id }, f.ctx)).output)
@@ -297,7 +302,7 @@ describe("context_recall", () => {
     }).pipe(Effect.provide(layer)),
   )
 
-  test("rejects both/neither modes, unknown capabilities and invalid integer ranges", () => {
+  test("rejects mixed legacy/archive modes, unknown capabilities and invalid integer ranges", () => {
     const decode = Schema.decodeUnknownSync(Parameters)
     expect(decode({ message_id: "msg_known", part_id: "prt_known", offset: 0, limit: 1 })).toEqual({
       message_id: "msg_known",
@@ -306,6 +311,7 @@ describe("context_recall", () => {
       limit: 1,
     })
     expect(decode({ query: "exact receipt" })).toEqual({ query: "exact receipt" })
+    for (const mode of archiveModes) expect(decode(mode)).toEqual(mode)
     for (const input of [
       {},
       { message_id: "msg_known", query: "both" },
@@ -316,6 +322,9 @@ describe("context_recall", () => {
       { query: "x", limit: 1.5 },
       { query: "x", limit: 8001 },
       { message_id: "msg_known", offset: "1" },
+      ...[{ message_id: "msg_known" }, { query: "legacy" }].flatMap((legacy) =>
+        archiveModes.map((archive) => ({ ...legacy, ...archive })),
+      ),
       ...["session_id", "sessionID", "externalURL", "url", "filePath", "filepath", "command", "args", "commands"].map(
         (key) => ({ message_id: "msg_known", [key]: "forbidden" }),
       ),
@@ -324,16 +333,20 @@ describe("context_recall", () => {
     }
   })
 
-  it.instance("tool execution also rejects unknown fields before permission or SQL read", () =>
+  it.instance("tool execution rejects unknown fields and mixed modes before permission or storage reads", () =>
     Effect.gen(function* () {
       const f = yield* seed
-      const out = yield* f.tool
-        .execute(
-          { message_id: f.user.id, session_id: f.chat.id } as Tool.InferParameters<typeof ContextRecallTool>,
-          f.ctx,
-        )
-        .pipe(Effect.exit)
-      expect(Exit.isFailure(out)).toBe(true)
+      for (const input of [
+        { message_id: f.user.id, session_id: f.chat.id },
+        ...[{ message_id: f.user.id }, { query: "legacy" }].flatMap((legacy) =>
+          archiveModes.map((archive) => ({ ...legacy, ...archive })),
+        ),
+      ]) {
+        const out = yield* f.tool
+          .execute(input as Tool.InferParameters<typeof ContextRecallTool>, f.ctx)
+          .pipe(Effect.exit)
+        expect(Exit.isFailure(out)).toBe(true)
+      }
       expect(f.asks).toEqual([])
     }).pipe(Effect.provide(layer)),
   )
@@ -360,6 +373,7 @@ describe("context_recall", () => {
             Agent.node,
             Truncate.node,
             Database.node,
+            Archive.node,
           ]),
         ),
       ),
