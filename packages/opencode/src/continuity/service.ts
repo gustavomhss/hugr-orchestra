@@ -7,6 +7,9 @@ import { Provider } from "@/provider/provider"
 import { LLM } from "@/session/llm"
 import type { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
+import { MessageV2 } from "@/session/message-v2"
+import { Archive } from "./archive"
+import { chunks } from "./transcript"
 import { Cause, Context, Effect, Layer } from "effect"
 import { create } from "./context"
 import { run, snapshot } from "./fork"
@@ -23,6 +26,7 @@ type Entry = {
   pending?: Pending
   attempted?: MessageID
   refresh: boolean
+  archived?: MessageID
 }
 type State = { sessions: Map<SessionID, Entry>; contexts: ReturnType<typeof create> }
 
@@ -63,11 +67,20 @@ const layer = Layer.effect(
     const background = yield* BackgroundJob.Service
     const provider = yield* Provider.Service
     const llm = yield* LLM.Service
+    const archive = yield* Archive.Service
     const state = yield* InstanceState.make(() => Effect.succeed<State>({ sessions: new Map(), contexts: create() }))
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
       const current = yield* InstanceState.get(state)
-      return yield* Effect.sync(() => current.contexts.prepare(input.sessionID, input.messages, input.canRecall))
+      const prepared = current.contexts.prepare(input.sessionID, input.messages, input.canRecall)
+      if (!prepared.system.length) return prepared
+      const artifact = current.contexts.get(input.sessionID)?.artifact
+      if (!artifact) return { messages: input.messages, system: [] }
+      const available = yield* Effect.forEach(artifact.references, (reference) =>
+        archive.read({ sessionID: input.sessionID, id: reference.id }).pipe(
+          Effect.map((chunk) => !!chunk), Effect.catch(() => Effect.succeed(false)),
+        ))
+      return available.every(Boolean) ? prepared : { messages: input.messages, system: [] }
     })
 
     const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")(function* (sessionID) {
@@ -88,6 +101,7 @@ const layer = Layer.effect(
       const item = entry(current, sessionID)
       item.attempted = undefined
       item.refresh = true
+      item.archived = undefined
     })
 
     const forget: Interface["forget"] = Effect.fn("SessionContinuity.forget")(function* (sessionID) {
@@ -139,6 +153,18 @@ const layer = Layer.effect(
             metadata: { sessionId: sessionID, background: true },
             run: Effect.gen(function* () {
               const history = yield* sessions.messages({ sessionID })
+              const currentEntry = current.sessions.get(sessionID)
+              const archived = currentEntry?.archived
+              const archivedIndex = archived ? history.findIndex((message) => message.info.id === archived) : -1
+              // Archive captured public history once; future maintenance appends only
+              // new completed records. Edits/reverts clear the publication cursor.
+              yield* archive.publish({ sessionID, messages: history.slice(archivedIndex + 1) })
+              if (currentEntry?.generation === active.generation) currentEntry.archived = history.at(-1)?.info.id
+              const activeHistory = MessageV2.filterCompacted(history.toReversed())
+              const model = yield* provider.getModel(message.providerID, message.modelID)
+              const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
+              const headBudget = Math.max(0, Math.min(32_000, Math.floor(inputLimit / 2)))
+              const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall })
               const selected = yield* Effect.sync(() => {
                 const item = current.sessions.get(sessionID)
                 if (
@@ -149,22 +175,31 @@ const layer = Layer.effect(
                   history.at(-1)?.info.id !== active.boundary
                 )
                   return
-                const prepared = current.contexts.prepare(sessionID, history, pending.canRecall)
                 const previous = current.contexts.get(sessionID)
                 // Full history is required for incompatible or unavailable prior coverage.
                 if (previous && !hasArtifact(previous)) current.contexts.discard(sessionID)
                 return snapshot(
                   sessionID,
-                  history,
+                  activeHistory,
                   prepared.system.length ? previous?.artifact : undefined,
                   pending.canRecall,
+                  headBudget,
                 )
               })
               if (!selected) {
                 yield* diagnostic(sessionID, active.boundary, "no-current-snapshot")
                 return "discarded"
               }
-              const artifact = yield* run(selected, { provider, llm })
+              const selectedChunks = chunks(sessionID, selected.head)
+              const previousRefs = selected.previous?.references ?? []
+              const available = [...new Map([...selectedChunks, ...previousRefs].map((ref) => [ref.id, ref])).values()]
+              for (const reference of available) {
+                if (!(yield* archive.read({ sessionID, id: reference.id }))) {
+                  yield* diagnostic(sessionID, active.boundary, "archive-unavailable")
+                  return "discarded"
+                }
+              }
+              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available)
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
                 return "discarded"
@@ -182,10 +217,10 @@ const layer = Layer.effect(
                 )
                   return false
                 if (
-                  artifact.envelope.parentID !== sessionID ||
-                  artifact.envelope.boundary !== selected.boundary ||
-                  artifact.envelope.tailStart !== selected.tailStart ||
-                  artifact.envelope.coveredThrough !== selected.head.at(-1)?.info.id
+                  artifact.parentID !== sessionID ||
+                  artifact.boundary !== selected.boundary ||
+                  artifact.tailStart !== selected.tailStart ||
+                  artifact.coveredThrough !== selected.head.at(-1)?.info.id
                 )
                   return false
                 if (
@@ -198,7 +233,7 @@ const layer = Layer.effect(
                   })
                 )
                   return false
-                item.refresh = false
+                item.refresh = !!snapshot(sessionID, activeHistory, artifact, pending.canRecall, headBudget)
                 return true
               })
               if (!applied) {
@@ -235,7 +270,7 @@ const layer = Layer.effect(
 
     const start: Interface["start"] = Effect.fn("SessionContinuity.start")((input) =>
       Effect.gen(function* () {
-        if (!isSafe(input.message) || input.message.sessionID !== input.sessionID) return
+        if (!isSafe(input.message) || input.message.sessionID !== input.sessionID || input.canRecall !== true) return
         const pending: Pending = { message: input.message, canRecall: input.canRecall === true }
         const current = yield* InstanceState.get(state)
         const idle = yield* Effect.sync(() => {
@@ -270,5 +305,5 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node],
+  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node],
 })

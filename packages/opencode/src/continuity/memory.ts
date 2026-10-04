@@ -60,7 +60,7 @@ export function responseSchema(available: ArchiveReference[]): JSONSchema7 {
   return {
     type: "object", additionalProperties: false, required: ["memory", "references"],
     properties: {
-      memory: { type: "string", minLength: 1 },
+      memory: { type: "string", pattern: "[\\s\\S]" },
       references: {
         type: "array", maxItems: ids.length,
         items: {
@@ -69,7 +69,7 @@ export function responseSchema(available: ArchiveReference[]): JSONSchema7 {
             // Avoid provider enum limits on large archives; local membership is authoritative.
             id: ids.length > 0 && ids.length <= 64
               ? { type: "string", enum: ids } : { type: "string", pattern: "^[a-f0-9]{64}$" },
-            why: { type: "string", minLength: 1 },
+            why: { type: "string", pattern: "[\\s\\S]" },
           },
         },
       },

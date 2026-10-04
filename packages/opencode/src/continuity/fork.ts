@@ -7,6 +7,7 @@ import { Effect, Stream } from "effect"
 import type { LLMEvent } from "@opencode-ai/llm"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
+import { createHash } from "node:crypto"
 import { decode, inline, responseSchema } from "./memory"
 import { ownedHistory, tailIndex, validReference, validSnapshot } from "./model"
 import { transcript } from "./transcript"
@@ -158,7 +159,8 @@ function validArchive(captured: MemorySnapshot, chunks: ArchiveChunk[], availabl
     const reference = known.get(chunk.id)
     if (!reference || reference.first !== chunk.first || reference.last !== chunk.last ||
       reference.title !== chunk.title || reference.bytes !== chunk.bytes || !chunk.markdown.trim() ||
-      Buffer.byteLength(chunk.markdown, "utf8") !== chunk.bytes) return false
+      Buffer.byteLength(chunk.markdown, "utf8") !== chunk.bytes ||
+      createHash("sha256").update(chunk.markdown).digest("hex") !== chunk.id) return false
     const first = captured.head.findIndex((message) => message.info.id === chunk.first)
     const last = captured.head.findIndex((message) => message.info.id === chunk.last)
     for (const message of captured.head.slice(first, last + 1)) covered.add(message.info.id)

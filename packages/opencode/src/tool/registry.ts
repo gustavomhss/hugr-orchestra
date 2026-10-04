@@ -10,6 +10,7 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
+import { Archive } from "@/continuity/archive"
 import { TaskTool } from "./task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
 import { MaestroRecordAdmissionTool } from "./maestro-admission"
@@ -541,6 +542,7 @@ export const node = LayerNode.make({
     RuntimeFlags.node,
     MCP.node,
     Database.node,
+    Archive.node,
     Ripgrep.node,
   ],
 })

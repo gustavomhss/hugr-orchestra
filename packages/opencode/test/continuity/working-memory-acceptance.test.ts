@@ -29,14 +29,18 @@ test("durable Markdown fragments preserve captured text, have content IDs, and s
     expect(written).toEqual(planned)
     expect(yield* archive.publish({ sessionID, messages })).toEqual(written)
     for (const fragment of written) expect(yield* archive.read({ sessionID, id: fragment.id })).toEqual(fragment)
-    const snapshot = { sessionID, boundary: messages[0].info.id, tailStart: MessageID.make("msg_tail"),
-      head: messages, tail: [], canRecall: true }
+    const tail = [{ info: { ...messages[0].info, id: MessageID.make("msg_tail") }, parts: [] }]
+    const snapshot = { sessionID, boundary: tail[0].info.id, tailStart: tail[0].info.id,
+      head: messages, tail, canRecall: true }
     const first = decode({ text: JSON.stringify({ memory: "# Work\nRead-only verification succeeded; deployment awaits approval.",
       references: [{ id: written[0].id, why: "Verification details if deployment is requested." }] }),
       snapshot, producerID: SessionID.descending(), available: written, maxTokens: 100000 })
     expect(first).toBeDefined()
     const next = decode({ text: JSON.stringify({ memory: "# Work\nDeployment remains awaiting approval. Verification details are no longer active.", references: [] }),
-      snapshot: { ...snapshot, previous: first }, producerID: SessionID.descending(), available: written, maxTokens: 100000 })
+      snapshot: { ...snapshot, previous: first, head: tail,
+        boundary: MessageID.make("msg_next_tail"), tailStart: MessageID.make("msg_next_tail"),
+        tail: [{ info: { ...messages[0].info, id: MessageID.make("msg_next_tail") }, parts: [] }] },
+      producerID: SessionID.descending(), available: written, maxTokens: 100000 })
     expect(next?.references).toEqual([])
     const inventory = yield* archive.list(sessionID)
     expect(inventory.map((entry) => entry.id)).toEqual(written.map((entry) => entry.id))
