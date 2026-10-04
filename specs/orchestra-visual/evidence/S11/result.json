@@ -1,0 +1,146 @@
+{
+  "status": "SCOPED_VERIFIED",
+  "base": "5582b99a8e0097e67866a7713f41bf0beef1d973",
+  "checkpoint": "061fd0da58",
+  "verified_source_tree": "5d1b6a1bb28d540e2708f23355d34c92632ee6e4",
+  "source_tree_scope": "Initial implementation tree verified in 6f6f58245a. Later review follow-ups record their own source trees and scoped checks below.",
+  "branch": "orchestra-evidence",
+  "date": "2026-10-03",
+  "scope": ["S11/W03 execution summaries and raw fallback", "S10/W07 replay and unsent PR preparation"],
+  "contract": "Latest resume brief extends the older Bun-only W03 contract to captured Bun, Vitest, Jest, Playwright, pytest, Go and Cargo formats. DS19 plus current Orchestra tokens guide presentation.",
+  "environment": { "os": "Darwin 24.3.0", "machine": "MacBookPro16,1", "logical_cpus": 12, "bun": "1.3.14", "playwright": "1.59.1", "browser": "Chromium", "screenshots": "1400x900, DPR 1, dark" },
+  "checks": [
+    { "cwd": "packages/app", "command": "bun typecheck", "exit": 0 },
+    { "cwd": "packages/app", "command": "bun run typecheck:e2e", "exit": 0 },
+    { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/orchestra-evidence-parse.test.ts src/pages/session/orchestra-evidence-data.test.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 32, "failed": 0, "assertions": 183 },
+    { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/components/prompt-input/submit.test.ts", "exit": 0, "passed": 8, "note": "Separate process: this existing suite's global module mocks contaminated an initial combined run (missing checksum export). No new module mocks were introduced." },
+    { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence.spec.ts e2e/orchestra/evidence-actions.spec.ts --reporter=line", "exit": 0, "passed": 24, "failed": 0, "skipped": 0, "build": "production; isolated mocked API and SSE; no paid provider" },
+    { "cwd": "packages/app", "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 bunx playwright test --config evidence-benchmark.config.ts session-timeline-checklists.spec.ts --reporter=line", "exit": 0, "passed": 5, "note": "Temporary preview-only config reused the production bundle. Existing historical snapshot, live confirmation and virtualization/collapse regressions. Config removed after use." },
+    { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "source_files": 3561, "warnings": 301, "errors": 0, "artifact": "godfile.log" }
+  ],
+  "mutation": {
+    "file": "packages/app/src/pages/session/composer/session-evidence-actions.ts",
+    "change": "Temporarily removed if (input.busy) return busy from replayBlock.",
+    "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence-actions.spec.ts --grep 'busy state is rechecked' --reporter=line",
+    "exit": 1,
+    "failure": "expect(dialog).toContainText: expected This session is working; received enabled Run command without that reason",
+    "restored": true,
+    "restored_verification": "Targeted browser run passed, then all 24 production E2E tests passed with the restored guard."
+  },
+  "coverage": [
+    "Runner-specific counts and failing names; Go reports packages, not invented test totals",
+    "Unknown formats, unsupported commands, incomplete footers, unknown completeness, contradictions, partial output and unknown exit",
+    "Raw shell status/call identity and absent timestamps override normalized display values",
+    "Bounded 64 KiB parsing and 32-entry cache; revision invalidation and clear",
+    "Replay confirmation/cancel, exact command/new ID, double click, pending request lock, busy recheck and unsupported workdir",
+    "Captured command survives part revision; session switch and same-ID server switch invalidate confirmation",
+    "Draft text, caret and attachment survive replay; uncertain response never retries; late response cannot close a newer dialog",
+    "Replay creates one new evidence card without replacing the original; synthetic shell projection duplicates filtered",
+    "PR draft uses loaded review paths/counts, branch and selected result; empty/append/cancel/later edits; no session mutation request",
+    "Keyboard tabs, LTR command/output islands in RTL, retained raw viewer and non-navigable saved path"
+  ],
+  "dependency": "strip-ansi 7.1.2 is now a direct app dependency, reusing the exact package already used by session-ui's raw shell renderer. bun.lock adds only that workspace edge; no runner/reporting framework.",
+  "performance": {
+    "baseline": "benchmark-baseline.json",
+    "candidate": "benchmark-candidate.json",
+    "candidate_source_tree": "4c18f11513ea437fc2aa6c35493c55b6746d1390",
+    "scope": "Same final parser/timeline code; sampled before final dialog padding and pending-request copy polish. Those changes were rechecked in the final production E2E run.",
+    "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 TIMELINE_CPU_THROTTLE=1 TIMELINE_DELTA_COUNT=32 TIMELINE_HISTORY_TURNS=40 bunx playwright test --config evidence-benchmark.config.ts timeline/session-timeline-benchmark.spec.ts --grep 'streams assistant text in v2 with review pane closed' --reporter=line",
+    "baseline_method": "Recovered from git archive of base packages/app inside this worktree, using unchanged shared packages/dependencies. Initial pre-edit baseline attempts failed; this is a recovered baseline, not a claimed pre-edit measurement.",
+    "comparison": "32/32 deltas both runs; completion 8134.1 -> 8103.2 ms. Both reported zero blank samples, drift and row/markdown replacement. RAF-gap p95 increased 83.4 -> 166.6 ms; one noisy sample per side cannot establish latency equivalence.",
+    "full_stress": "NOT_VERIFIED: original-base default 30x CPU / 320 turns / 160 deltas timed out at the 420000 ms completion check and reported metrics:null. Earlier attempts also hit build startup timeouts and an API-port mismatch. No budgets or guards were relaxed.",
+    "acceptance": "Diagnostic only; full-load/quiet-host budget acceptance remains with integration."
+  },
+  "screenshots_source_tree": "4bf3df4e8e4822ce3fe3d5a04812d07a4d29ae52",
+  "screenshots": {
+    "failed-tests.png": "dff2e71dd038ee2de0a63ac09c76de386316cb5c53449143ab3e0639f0790a25",
+    "partial-output.png": "fc65126900706fbe8263a0609b89af0a0ae60a5c94054d6156cc625c74a9a3fe",
+    "replay-confirmation.png": "47f525ed201872cef170a5f01164dc7bd4390471fc0644018fab2eac1e0e24b4",
+    "prepare-pr-unsent.png": "0f80b8433d71bce508e847376df68536ccc364efeb6594cb6d786971632ba09b",
+    "review-light-en.png": "1b19e0f1c21f2e3bff04401221881a268636da8a062c3897802a40bcbc2499b6",
+    "review-rtl-en.png": "caaea5f2475c188dd67d6057f4a7030706be7fd9539c4d89feaeacfd5a38735f",
+    "review-rtl-ar.png": "9fc18bfb054bb62da691820cdd743ad4b0089b282f9d8d1b7ab7bb4ace89a27b"
+  },
+  "framing_corrections": [
+    "Printed totals are runner-reported evidence, never independent proof of success or validation of the current revision. Nonzero exit beside passing totals stays raw.",
+    "The original Jest example was documented, not captured; replaced with real Jest 30.2.0 output and reproducible cases.",
+    "V2 transports command/id and owns agent/model on the session; compatibility may drop old session summary fields. PR preparation consumes loaded review data instead of fabricating them.",
+    "Shared V2 test conversion put metadata in structured and omitted model discovery; evidence fixtures serve actual protocol shapes.",
+    "Open dialogs can outlive session-page disposal; reactive invalidation is required in addition to confirm-time ownership checks."
+  ],
+  "review_followups": [
+    {
+      "id": "P2-posix-backslash-identity",
+      "base_commit": "6f6f58245a04d929f45551afc8cf5550ba386288",
+      "verified_source_tree": "43468a89e5567f166b04020ce9f304950c41818f",
+      "source_tree_scope": "packages/app; this follow-up commit additionally updates this receipt.",
+      "finding": "Unconditional backslash normalization could equate distinct POSIX workdirs and authorize replay in the wrong directory because the shell request has no workdir.",
+      "fix": "Recognize drive-qualified Windows roots before separator conversion. Preserve POSIX backslashes and reject backslash-relative aliases. Matching POSIX and drive-rooted Windows paths retain explicit-confirmation replay.",
+      "checks": [
+        { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 10, "failed": 0, "assertions": 59 },
+        { "cwd": "packages/app", "command": "bun typecheck && bun run typecheck:e2e", "exit": 0 },
+        { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence-actions.spec.ts --grep 'replay validates path identity|replay refuses unsupported working directory' --reporter=line", "exit": 0, "passed": 7, "failed": 0, "skipped": 0, "build": "production; isolated mocked API" },
+        { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "errors": 0, "artifact": "godfile.log" }
+      ],
+      "mutation": {
+        "change": "Temporarily restored unconditional backslash-to-slash replacement after the fix passed.",
+        "unit_command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/composer/session-evidence-actions.test.ts --test-name-pattern 'POSIX backslashes|Windows drive-rooted'",
+        "unit_exit": 1,
+        "unit_result": "POSIX assertion failed (Expected: false, Received: true); Windows positive control passed; 8 unrelated tests filtered out.",
+        "browser_command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence-actions.spec.ts --grep 'path identity: distinct POSIX backslash' --reporter=line",
+        "browser_exit": 1,
+        "browser_result": "Run command assertion failed: Expected: disabled; Received: enabled.",
+        "restored": true,
+        "restored_verification": "10 focused unit tests and 7 production browser tests passed after restoration. Rejected paths sent no request; valid POSIX/Windows paths each sent one exact-command request after confirmation and preserved the draft."
+      }
+    },
+    {
+      "id": "P1-P2-parser-cache-card-review",
+      "base_commit": "6dad5ac6b28f323f339a7dd02e7f6535f88c8290",
+      "verified_source_tree": "4bf3df4e8e4822ce3fe3d5a04812d07a4d29ae52",
+      "source_tree_scope": "packages/app; replay directory logic remains byte-identical to 6dad5ac.",
+      "fixes": [
+        "Jest failure names require a FAIL suite and a failure body. Reporter Console headings are excluded by context; a real failed test named Console remains supported.",
+        "pytest short-summary nodeids retain internal spaces. Ambiguous delimiters or truncated identifiers fall back to raw output.",
+        "Bun failure records cannot exceed its reported failures. Playwright named footer groups must match their declared counts before deduplication. The card adapter also rejects failure names beside zero reported failures.",
+        "Cache revisions contain a detached bounded output window, extent/truncation information and scalar metadata. Cached result strings are detached too; no full output or source-message object enters an entry.",
+        "RTL layout inherits direction while command text and English fallback phrases are isolated; command spacing, numbers and punctuation retain their intended placement."
+      ],
+      "cache_bounds": {
+        "parse_window_utf16_units": 65536,
+        "max_entries": 32,
+        "max_entry_serialized_utf16_units": 524288,
+        "oversized": "Bypass caching without truncating execution identity.",
+        "invalidation": "Same-length tail changes, output extent, truncation prefix/metadata, raw-shell status/exit, identity and timestamps invalidate. Changes outside consumed text with the same extent reuse the equivalent parsed result.",
+        "retention_proof": "Unit tests exercise megabyte logs, raw vs normalized output, LRU eviction and clear. Retained serialized key/revision/result footprint is checked, including an oversized escaped-field bypass. These are structural cache bounds, not process-RSS measurements."
+      },
+      "fixtures": "Actual Jest 30.2.0 Console pass/fail captures, pytest 9.0.3 space/ambiguous-nodeid captures, and Bun 1.3.14 misleading-stdout capture with reproducers. The Playwright extra-row fixture is explicitly an adversarial derivative, not claimed as standard-runner output. See orchestra-evidence-fixtures/README.md.",
+      "checks": [
+        { "cwd": "packages/app", "command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/orchestra-evidence-parse.test.ts src/pages/session/orchestra-evidence-data.test.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 43, "failed": 0, "assertions": 258 },
+        { "cwd": "packages/app", "command": "bun typecheck && bun run typecheck:e2e", "exit": 0 },
+        { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence.spec.ts e2e/orchestra/evidence-actions.spec.ts --reporter=line", "exit": 0, "passed": 35, "failed": 0, "skipped": 0, "build": "production; isolated mocked API and SSE" },
+        { "cwd": "packages/app", "command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence.spec.ts --grep 'complete parameterized failure nodeid|stays raw: pytest-nodeid-ambiguous' --reporter=line", "exit": 0, "passed": 2, "note": "Affected cases rechecked after trimming reporter-only trailing whitespace in captured pytest logs; all 43 units also reran on those final fixtures." },
+        { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "source_files": 3564, "warnings": 301, "errors": 0, "artifact": "godfile.log" }
+      ],
+      "mutation": {
+        "changes": "Removed Jest Console attribution, Bun/PW record-count checks, reintroduced whitespace-truncated pytest names, and replaced bounded revision text with full output while bypassing the entry budget.",
+        "unit_command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/orchestra-evidence-parse.test.ts src/pages/session/orchestra-evidence-data.test.ts --test-name-pattern 'Jest distinguishes|Bun failure records|Playwright failure rows|pytest preserves|bounded parse footprint|raw-shell authority'",
+        "unit_exit": 1,
+        "unit_result": "6 targeted assertions failed. Cache probes measured 1049187 and 1049277 serialized characters against a <131072 bound for their inputs.",
+        "browser_command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence.spec.ts --grep 'complete parameterized failure nodeid' --reporter=line",
+        "browser_exit": 1,
+        "browser_result": "Full nodeid assertion failed: expected test_label[hello world], received test_label[hello.",
+        "restored": true
+      },
+      "visual": {
+        "screenshots": ["review-light-en.png", "review-rtl-en.png", "review-rtl-ar.png"],
+        "interaction": "Production checks verify scheme/lang/dir, command inline-end spacing and LTR isolation, count isolation, keyboard tabs and output, hit areas, stable width, replay cancellation and draft preservation.",
+        "arabic_scope": "Real Arabic locale/provider and existing Arabic Cancel translation are exercised. Evidence labels keep the approved English fallback; this is not translation-completeness acceptance.",
+        "forced_rtl": "English test explicitly forces document direction without changing language; Arabic independently exercises locale/provider direction.",
+        "resolved_harness_failure": "An initial production run passed 32 cases but failed 3 visual cases because a dev-only debug toggle was unavailable. The fixture now forces document direction explicitly; the final 35-case production run passed."
+      }
+    }
+  ],
+  "review": "Implementation-agent review and decoded screenshots; independent lead review and owner visual acceptance remain.",
+  "integration": "Lead reconciles additive evidence i18n keys and performs branch integration. This receipt does not close unrelated S11 panes or the other B lanes."
+}

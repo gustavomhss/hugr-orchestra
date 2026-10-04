@@ -1,0 +1,31 @@
+FAIL ./jest-console-fail.case.cjs
+  ● Console
+
+    console.log
+      diagnostic before failure
+
+      at Object.<anonymous> (jest-console-fail.case.cjs:2:11)
+
+  ● Console
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      1 | test("Console", () => {
+      2 |   console.log("diagnostic before failure")
+    > 3 |   expect(false).toBe(true)
+        |                 ^
+      4 | })
+      5 |
+
+      at Object.<anonymous> (jest-console-fail.case.cjs:3:17)
+
+PASS ./jest-pass.case.cjs
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 1 passed, 2 total
+Snapshots:   0 total
+Time:        0.38 s, estimated 1 s
+Ran all test suites.

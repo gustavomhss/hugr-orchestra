@@ -1,0 +1,10 @@
+bun test v1.3.14 (0d9b296a)
+
+bun-ghost.case.ts:
+(fail) ghost [1.00ms]
+(pass) prints a misleading failure record [2.88ms]
+
+ 1 pass
+ 0 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [141.00ms]
