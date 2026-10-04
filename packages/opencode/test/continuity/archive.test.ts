@@ -8,7 +8,7 @@ import { Archive } from "@/continuity/archive"
 import { chunks, transcript } from "@/continuity/transcript"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { testEffect } from "../lib/effect"
-import { failure, fixture, payload, tool, user } from "./archive-fixture"
+import { failure, fixture, instrument, payload, tool, user } from "./archive-fixture"
 
 const it = testEffect(LayerNode.compile(FSUtil.node))
 
@@ -92,32 +92,43 @@ describe("hashed session archive on real filesystem", () => {
     expect(yield* f.fs.exists(f.dir)).toBe(true)
   }))
 
-  it.live("missing indexed file is unavailable and publication cannot silently repair it", () => Effect.gen(function* () {
+  it.live("missing requested file fails; metadata listing and unrelated publication remain available", () => Effect.gen(function* () {
     const f = yield* fixture()
     const input = { sessionID: f.sessionID, messages: [user(f.sessionID)] }
     const [value] = yield* f.archive.publish(input)
+    const refs = yield* f.archive.list(f.sessionID)
     expect(yield* f.archive.read({ sessionID: f.sessionID, id: value.id })).toEqual(value)
     const index = yield* f.fs.readFileString(f.index)
     yield* f.fs.remove(f.file(value.id))
     yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-unavailable")
-    yield* failure(f.archive.list(f.sessionID), "archive-unavailable")
+    expect(yield* f.archive.list(f.sessionID)).toEqual(refs)
     yield* failure(f.archive.publish(input), "archive-unavailable")
     expect(yield* f.fs.exists(f.file(value.id))).toBe(false)
     expect(yield* f.fs.readFileString(f.index)).toBe(index)
+    const [added] = yield* f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "unrelated")] })
+    expect((yield* f.archive.list(f.sessionID)).map((ref) => ref.id)).toEqual([value.id, added.id])
+    expect(yield* f.archive.read({ sessionID: f.sessionID, id: added.id })).toEqual(added)
+    yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-unavailable")
+    expect(yield* f.fs.exists(f.file(value.id))).toBe(false)
   }))
 
   it.live("hash mutation control: same-size payload alteration fails without immutable repair", () => Effect.gen(function* () {
     const f = yield* fixture()
     const input = { sessionID: f.sessionID, messages: [user(f.sessionID)] }
     const [value] = yield* f.archive.publish(input)
+    const refs = yield* f.archive.list(f.sessionID)
     expect(yield* f.archive.read({ sessionID: f.sessionID, id: value.id })).toEqual(value)
     const changed = value.markdown.replace("captured observation", "tampered observation")
     expect(changed).not.toBe(value.markdown)
     expect(Buffer.byteLength(changed)).toBe(value.bytes)
     yield* f.fs.writeFileString(f.file(value.id), changed)
     yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-corrupt-hash")
-    yield* failure(f.archive.list(f.sessionID), "archive-corrupt-hash")
+    expect(yield* f.archive.list(f.sessionID)).toEqual(refs)
     yield* failure(f.archive.publish(input), "archive-corrupt-hash")
+    const [added] = yield* f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "unrelated")] })
+    expect((yield* f.archive.list(f.sessionID)).map((ref) => ref.id)).toEqual([value.id, added.id])
+    expect(yield* f.archive.read({ sessionID: f.sessionID, id: added.id })).toEqual(added)
+    yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-corrupt-hash")
     expect(yield* f.fs.readFileString(f.file(value.id))).toBe(changed)
   }))
 
@@ -149,12 +160,17 @@ describe("hashed session archive on real filesystem", () => {
     for (const text of bad) {
       yield* f.fs.writeFileString(f.index, text)
       yield* failure(f.archive.list(f.sessionID), "archive-corrupt-index")
+      yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-corrupt-index")
+      yield* failure(f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "unrelated")] }), "archive-corrupt-index")
+      expect(yield* f.fs.readFileString(f.index)).toBe(text)
     }
     for (const item of [{ ...ref, bytes: ref.bytes + 1 }, { ...ref, title: "forged title" },
       { ...ref, first: "msg_forged", last: "msg_forged" }]) {
       yield* f.fs.writeFileString(f.index, JSON.stringify({ ...index, references: [item] }))
       yield* failure(f.archive.read({ sessionID: f.sessionID, id: value.id }), "archive-corrupt-content")
-      yield* failure(f.archive.list(f.sessionID), "archive-corrupt-content")
+      // Listing validates descriptor shape, not its agreement with bytes in the fragment.
+      expect(yield* f.archive.list(f.sessionID)).toEqual([item])
+      yield* failure(f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID)] }), "archive-corrupt-content")
     }
     yield* f.fs.writeFileString(f.index, JSON.stringify(index))
     expect(yield* f.archive.list(f.sessionID)).toEqual([ref])
@@ -175,7 +191,8 @@ describe("hashed session archive on real filesystem", () => {
       expect(yield* f.fs.readFileString(other)).toBe(original)
       yield* f.fs.remove(target)
       yield* f.fs.symlink(path.join(outside, "missing"), target)
-      yield* failure(f.archive.list(f.sessionID), "archive-unsafe-path")
+      if (target === f.index) yield* failure(f.archive.list(f.sessionID), "archive-unsafe-path")
+      if (target !== f.index) expect(yield* f.archive.list(f.sessionID)).toHaveLength(1)
       yield* f.fs.remove(target)
       yield* f.fs.writeFileString(target, original)
     }
@@ -195,6 +212,62 @@ describe("hashed session archive on real filesystem", () => {
     yield* f.fs.remove(f.dir)
     yield* f.fs.rename(moved, f.dir)
     expect(yield* f.archive.list(f.sessionID)).toHaveLength(1)
+  }))
+
+  it.live("rechecks target real paths even when a symlink replaces an inventoried file", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const [value] = yield* f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID)] })
+    const outside = yield* f.fs.makeTempDirectoryScoped()
+    const target = path.join(outside, "same-content.md")
+    yield* f.fs.writeFileString(target, value.markdown)
+    const changed = yield* Archive.Service.pipe(Effect.provide(Layer.fresh(Archive.layer)), Effect.provideService(FSUtil.Service, {
+      ...f.fs,
+      readDirectoryEntries: (dir) => Effect.gen(function* () {
+        const entries = yield* f.fs.readDirectoryEntries(dir)
+        if (dir === f.dir) {
+          yield* f.fs.remove(f.file(value.id))
+          yield* f.fs.symlink(target, f.file(value.id))
+        }
+        return entries
+      }),
+    }))
+    yield* failure(changed.read({ sessionID: f.sessionID, id: value.id }), "archive-unsafe-path")
+    expect(yield* f.fs.readFileString(target)).toBe(value.markdown)
+  }))
+
+  it.live("I/O budget stays fixed as retained history grows; real filesystem counters are calibrated", () => Effect.gen(function* () {
+    const measurements: { retained: number; operation: string; scans: number; sessionScans: number; fragmentReads: number }[] = []
+    for (const retained of [4, 64]) {
+      const f = yield* fixture()
+      const old = yield* f.archive.publish({ sessionID: f.sessionID,
+        messages: Array.from({ length: retained }, (_, index) => user(f.sessionID, `old${index}`)) })
+      expect(old).toHaveLength(retained)
+      const meter = instrument(f.fs)
+      expect(yield* meter.fs.readDirectoryEntries(f.dir)).toHaveLength(retained + 1)
+      expect(Buffer.from(yield* meter.fs.readFile(f.file(old[0].id))).toString()).toBe(old[0].markdown)
+      expect(meter.calls).toEqual({ scans: [f.dir], reads: [f.file(old[0].id)] })
+      const measured = yield* Archive.Service.pipe(Effect.provide(Layer.fresh(Archive.layer)), Effect.provideService(FSUtil.Service, meter.fs))
+      const measure = Effect.fnUntraced(function* (operation: string, work: Effect.Effect<unknown, Archive.ArchiveError>, ids: string[]) {
+        meter.reset()
+        const result = yield* work
+        const sessionScans = meter.calls.scans.filter((dir) => dir === f.dir).length
+        const fragmentReads = meter.calls.reads.filter((file) => file.endsWith(".md")).length
+        measurements.push({ retained, operation, scans: meter.calls.scans.length, sessionScans, fragmentReads })
+        expect(sessionScans).toBe(1)
+        expect(meter.calls.scans.length).toBeLessThanOrEqual(5)
+        expect([...meter.calls.reads].sort()).toEqual([f.index, ...ids.map(f.file)].sort())
+        return result
+      })
+      const messages = Array.from({ length: 5 }, (_, index) => user(f.sessionID, `new${index}`))
+      const expected = chunks(f.sessionID, messages)
+      const input = { sessionID: f.sessionID, messages }
+      expect(yield* measure("append", measured.publish(input), expected.map((value) => value.id))).toEqual(expected)
+      expect(yield* measure("retry", measured.publish(input), expected.map((value) => value.id))).toEqual(expected)
+      expect(yield* measure("list", measured.list(f.sessionID), [])).toHaveLength(retained + expected.length)
+      expect(yield* measure("read", measured.read({ sessionID: f.sessionID, id: old[0].id }), [old[0].id])).toEqual(old[0])
+      expect(yield* measure("unknown", measured.read({ sessionID: f.sessionID, id: "0".repeat(64) }), [])).toBeUndefined()
+    }
+    console.info("archive-io-measurements", JSON.stringify(measurements))
   }))
 
   it.live("index interruption exposes no partial batch and old references survive restart", () => Effect.gen(function* () {

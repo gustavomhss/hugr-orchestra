@@ -17,8 +17,12 @@ export class ArchiveError extends Schema.TaggedErrorClass<ArchiveError>()("Conti
 }) {}
 
 export interface Interface {
+  /** Publishes input chunks, verifying existing input IDs without reading unrelated retained fragments. */
   readonly publish: (input: { sessionID: SessionID; messages: SessionV1.WithParts[] }) => Effect.Effect<ArchiveChunk[], ArchiveError>
+  /** Returns own-session index descriptors after schema/membership validation, without checking fragment
+   * availability, hashes, or descriptor agreement with stored content. */
   readonly list: (sessionID: SessionID) => Effect.Effect<ArchiveReference[], ArchiveError>
+  /** Verifies the requested fragment's hash, ownership and descriptors; callers must read active refs before pruning. */
   readonly read: (input: { sessionID: SessionID; id: string }) => Effect.Effect<ArchiveChunk | undefined, ArchiveError>
 }
 
@@ -26,6 +30,7 @@ export class Service extends Context.Service<Service, Interface>()("@opencode/Co
 
 // Shared across fresh service instances; entries live only while callers hold/wait for them.
 const locks = new Map<string, { semaphore: Semaphore.Semaphore; users: number }>()
+type Inventory = { dir: string; entries: Map<string, FSUtil.DirEntry["type"]> }
 
 export const layer = Layer.effect(Service, Effect.gen(function* () {
   const fs = yield* FSUtil.Service
@@ -50,26 +55,37 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
     return target
   })
 
-  const file = Effect.fnUntraced(function* (dir: string, name: string) {
-    // Resolve before opening. Reject symlinks, including dangling links and directories.
+  const inventory = Effect.fnUntraced(function* (dir: string) {
     if ((yield* fs.realPath(dir)) !== dir) return yield* new ArchiveError({ reason: "archive-unsafe-path" })
-    const entry = (yield* fs.readDirectoryEntries(dir)).find((entry) => entry.name === name)
-    if (!entry) return undefined
-    const target = path.join(dir, name)
-    if (entry.type !== "file" || (yield* fs.realPath(target)) !== target)
+    // One scan per operation; never share a stale inventory across calls or service instances.
+    return { dir, entries: new Map((yield* fs.readDirectoryEntries(dir)).map((entry) => [entry.name, entry.type])) }
+  })
+
+  const file = Effect.fnUntraced(function* (files: Inventory, name: string) {
+    if ((yield* fs.realPath(files.dir)) !== files.dir) return yield* new ArchiveError({ reason: "archive-unsafe-path" })
+    const type = files.entries.get(name)
+    if (type !== undefined && type !== "file") return yield* new ArchiveError({ reason: "archive-unsafe-path" })
+    const target = path.join(files.dir, name)
+    const resolved = yield* fs.realPath(target).pipe(Effect.catchReason("PlatformError", "NotFound", (_reason, error) =>
+      type === undefined ? Effect.succeed(undefined) : Effect.fail(error)))
+    if (resolved === undefined) return undefined
+    if (resolved !== target) return yield* new ArchiveError({ reason: "archive-unsafe-path" })
+    // An entry created after the scan is inspected individually, not with another directory scan.
+    if (type === undefined && (yield* fs.stat(target)).type !== "File")
       return yield* new ArchiveError({ reason: "archive-unsafe-path" })
+    files.entries.set(name, "file")
     return target
   })
 
-  const index = Effect.fnUntraced(function* (dir: string, sessionID: SessionID) {
-    const target = yield* file(dir, "index.json")
+  const index = Effect.fnUntraced(function* (files: Inventory, sessionID: SessionID) {
+    const target = yield* file(files, "index.json")
     if (!target) return [] as ArchiveReference[]
     const text = yield* fs.readFileString(target)
     return yield* checked(() => readManifest(text, sessionID), "archive-corrupt-index")
   })
 
-  const readChunk = Effect.fnUntraced(function* (dir: string, sessionID: SessionID, ref: ArchiveReference) {
-    const target = yield* file(dir, `${ref.id}.md`)
+  const readChunk = Effect.fnUntraced(function* (files: Inventory, sessionID: SessionID, ref: ArchiveReference) {
+    const target = yield* file(files, `${ref.id}.md`)
     if (!target) return yield* new ArchiveError({ reason: "archive-unavailable" })
     const bytes = yield* fs.readFile(target)
     const text = yield* checked(() => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes), "archive-corrupt-content")
@@ -89,18 +105,21 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
     }).pipe(Effect.ensuring(fs.remove(temp, { force: true }).pipe(Effect.ignore)))
   })
 
-  const immutable = Effect.fnUntraced(function* (dir: string, sessionID: SessionID, value: ArchiveChunk) {
-    if (yield* file(dir, `${value.id}.md`)) {
-      yield* readChunk(dir, sessionID, value)
+  const immutable = Effect.fnUntraced(function* (files: Inventory, sessionID: SessionID, value: ArchiveChunk) {
+    if (yield* file(files, `${value.id}.md`)) {
+      yield* readChunk(files, sessionID, value)
       return
     }
-    yield* temporary(dir, value.markdown, (temp) => Effect.gen(function* () {
-      yield* file(dir, `${value.id}.md`)
+    yield* temporary(files.dir, value.markdown, (temp) => Effect.gen(function* () {
+      yield* file(files, `${value.id}.md`)
       // Hard-link publication is atomic and cannot overwrite an existing immutable ID.
-      yield* fs.link(temp, path.join(dir, `${value.id}.md`)).pipe(
-        Effect.catchReason("PlatformError", "AlreadyExists", () => Effect.void),
+      const linked = yield* fs.link(temp, path.join(files.dir, `${value.id}.md`)).pipe(
+        Effect.as(true), Effect.catchReason("PlatformError", "AlreadyExists", () => Effect.succeed(false)),
       )
-      yield* readChunk(dir, sessionID, value)
+      // macOS may resolve an inode to its other hard-link name while the staging link is live.
+      yield* fs.remove(temp)
+      if (linked) files.entries.set(`${value.id}.md`, "file")
+      yield* readChunk(files, sessionID, value)
     }))
   })
 
@@ -111,19 +130,23 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
       return yield* serialized(path.join(Global.Path.data, hash(input.sessionID)), Effect.gen(function* () {
         const dir = yield* directory(input.sessionID, true)
         if (!dir) return yield* new ArchiveError({ reason: "archive-unavailable" })
-        const retained = yield* index(dir, input.sessionID)
-        for (const ref of retained) yield* readChunk(dir, input.sessionID, ref)
+        const files = yield* inventory(dir)
+        const retained = yield* index(files, input.sessionID)
         const refs = new Map(retained.map((ref) => [ref.id, ref]))
         for (const value of values) {
-          yield* immutable(dir, input.sessionID, value)
+          const existing = refs.get(value.id)
+          // An indexed missing/corrupt input must fail rather than be silently reconstructed.
+          if (existing) yield* readChunk(files, input.sessionID, existing)
+          if (!existing) yield* immutable(files, input.sessionID, value)
           const { markdown, ...ref } = value
           refs.set(ref.id, ref)
         }
         if (refs.size !== retained.length) {
           const content = JSON.stringify({ version: 1, sessionID: input.sessionID, references: [...refs.values()] }, null, 2) + "\n"
           yield* temporary(dir, content, (temp) => Effect.gen(function* () {
-            yield* file(dir, "index.json")
+            yield* file(files, "index.json")
             yield* fs.rename(temp, path.join(dir, "index.json"))
+            files.entries.set("index.json", "file")
           }))
         }
         return values
@@ -132,18 +155,18 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
     list: Effect.fn("ContinuityArchive.list")(function* (sessionID: SessionID) {
       const dir = yield* directory(sessionID, false)
       if (!dir) return []
-      const refs = yield* index(dir, sessionID)
-      for (const ref of refs) yield* readChunk(dir, sessionID, ref)
-      return refs
+      const files = yield* inventory(dir)
+      return yield* index(files, sessionID)
     }, Effect.mapError(unavailable)),
     read: Effect.fn("ContinuityArchive.read")(function* (input: Parameters<Interface["read"]>[0]) {
       yield* checked(() => identity(input.sessionID, "ses"))
       if (!hashPattern.test(input.id)) return undefined
       const dir = yield* directory(input.sessionID, false)
       if (!dir) return undefined
-      const refs = yield* index(dir, input.sessionID)
+      const files = yield* inventory(dir)
+      const refs = yield* index(files, input.sessionID)
       const ref = refs.find((ref) => ref.id === input.id)
-      return ref ? yield* readChunk(dir, input.sessionID, ref) : undefined
+      return ref ? yield* readChunk(files, input.sessionID, ref) : undefined
     }, Effect.mapError(unavailable)),
   })
 }))

@@ -43,6 +43,21 @@ export const fixture = Effect.fnUntraced(function* () {
     file: (id: string) => path.join(dir, `${id}.md`) }
 })
 
+export function instrument(fs: FSUtil.Interface) {
+  const calls = { scans: [] as string[], reads: [] as string[] }
+  return {
+    calls,
+    reset: () => { calls.scans.length = 0; calls.reads.length = 0 },
+    fs: FSUtil.Service.of({
+      ...fs,
+      readDirectoryEntries: (dir) => Effect.suspend(() => { calls.scans.push(dir); return fs.readDirectoryEntries(dir) }),
+      readDirectory: (dir, options) => Effect.suspend(() => { calls.scans.push(dir); return fs.readDirectory(dir, options) }),
+      readFile: (file) => Effect.suspend(() => { calls.reads.push(file); return fs.readFile(file) }),
+      readFileString: (file, encoding) => Effect.suspend(() => { calls.reads.push(file); return fs.readFileString(file, encoding) }),
+    }),
+  }
+}
+
 // Independent frame reader: use the declared byte length, never the implementation's decoder.
 export function payload(value: ArchiveChunk) {
   const bytes = Buffer.from(value.markdown)
