@@ -414,3 +414,24 @@ test("NativeDock reset is reusable, repeated joins share pending work, and close
   await closing
   await expect(native.bind(f.identity(), target, fresh.client, confirm)).rejects.toMatchObject({ code: "closed" })
 })
+
+test("browser read shape reaches the browser and invalid shape is rejected", async () => {
+  const f = fixture()
+  expect(await f.request("shape-ok", "read", { mode: "a11y", format: "tree", actionable: true, visible: false }))
+    .toMatchObject({ ok: true, value: { browser: true } })
+  expect(f.viewer.browserReads).toBe(1)
+  expect(await f.request("shape-bad", "read", { mode: "native" })).toMatchObject({ ok: false })
+  expect(f.viewer.browserReads).toBe(1)
+})
+
+test("browser read shape is rejected on a native binding without reaching the helper", async () => {
+  const f = fixture()
+  const { wire, client } = await f.client()
+  await f.rpc.registerNative(f.identity(), target, client, confirm)
+  const before = wire.requests.length
+  for (const args of [{ mode: "skeleton" }, { format: "csv" }, { actionable: true }, { visible: true }])
+    expect(await f.request(`native-${Object.keys(args)[0]}`, "read", args))
+      .toMatchObject({ ok: false, error: { code: "unsupported-operation" } })
+  expect(wire.requests.slice(before).filter((request) => request.op === "read")).toHaveLength(0)
+  expect(f.viewer.browserReads).toBe(0)
+})
