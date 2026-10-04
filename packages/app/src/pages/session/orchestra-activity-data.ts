@@ -25,14 +25,20 @@ const order = { agent: 0, shell: 1, dock: 2, janitor: 3 } as const
 /**
  * Intervention and errors first, then work in progress, then recent events with a known time,
  * then the rest; ties by kind and key. A Dock observation never outranks a pending request.
+ * Activity holds every finished task of the session, so only the latest failure ranks as an error;
+ * older ones rank as past events and never push work in progress out of the summary.
  */
 export function deriveActivity(input: ActivityInput): ActivityItem[] {
+  const failure = input.tasks.finished
+    .filter((task) => task.state === "error")
+    .toSorted((a, b) => newest(a.endTime, b.endTime) || a.key.localeCompare(b.key))
+    .at(0)
   const tasks = [...input.tasks.running, ...input.tasks.finished].map(
     (task): ActivityItem => ({
       key: task.key,
       kind: task.kind,
       scope: "session",
-      rank: taskRank(task),
+      rank: taskRank(task, failure),
       time: task.state === "running" || task.state === "needs-input" ? task.startTime : task.endTime,
       task,
     }),
@@ -70,8 +76,8 @@ function janitorItem(input: ActivityInput): ActivityItem {
   }
 }
 
-function taskRank(task: TasksItem) {
-  if (task.state === "needs-input" || task.state === "error") return 0
+function taskRank(task: TasksItem, failure: TasksItem | undefined) {
+  if (task.state === "needs-input" || task === failure) return 0
   if (task.state === "running") return 1
   return task.endTime === undefined ? 3 : 2
 }

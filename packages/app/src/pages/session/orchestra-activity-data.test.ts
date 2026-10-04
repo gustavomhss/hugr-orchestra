@@ -40,6 +40,22 @@ describe("deriveActivity", () => {
     ])
   })
 
+  test("only the latest failure outranks work in progress; older failures never hide it", () => {
+    const failures = [4, 3, 2, 1].map((end) => task(`failed-${end}`, "error", { endTime: end }))
+    const items = deriveActivity(
+      input({ tasks: { running: [task("running", "running", { startTime: 5 })], finished: failures } }),
+    )
+    // Every failure stays in the list, and so in its count; the older ones read as past events.
+    expect(items.map((item) => [item.key, item.rank])).toEqual([
+      ["failed-4", 0],
+      ["running", 1],
+      ["failed-3", 2],
+      ["failed-2", 2],
+      ["failed-1", 2],
+      ["janitor", 3],
+    ])
+  })
+
   test("a Dock observation never outranks a pending request, but a crashed tab joins the errors", () => {
     const pending = task("asks", "needs-input", { startTime: 1 })
     const crashed = deriveActivity(
