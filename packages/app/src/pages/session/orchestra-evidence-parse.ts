@@ -294,7 +294,7 @@ function parsePlaywright(lines: string[]): TestSummary | undefined {
       continue
     }
     if (!/^ {4}\S/.test(line)) break
-    pending.unshift(line.trim().replace(/\s─+$/, ""))
+    pending.unshift(line.replace(/(?<!─)─+\s*$/, "").trim())
   }
   if (pending.length > 0 || Object.keys(counts).length === 0) return
   const running = lines.filter((line) => /^Running \d+ tests? using \d+ workers?/.test(line))

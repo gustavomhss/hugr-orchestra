@@ -146,6 +146,17 @@ describe("parseTestOutput", () => {
     expect(parseTestOutput("playwright", await fixture("pw-zero"))).toBeUndefined()
   })
 
+  test("playwright failure rows drop their trailing rule however it is spaced", async () => {
+    const playwright = await fixture("pw-fail")
+    for (const [row, title] of [
+      ["title  ───", "title"],
+      ["a───", "a"],
+    ]) {
+      const summary = parseTestOutput("playwright", playwright.replace(/^ {4}a\.spec\.ts.*$/m, `    ${row}`))
+      expect(summary?.failures).toEqual([title])
+    }
+  })
+
   test("pytest verbose, quiet and empty sessions", async () => {
     const summary = parseTestOutput("pytest", await fixture("pytest-fail"))
     expect(summary?.tests.counts).toEqual({ failed: 2, passed: 3, skipped: 1 })
@@ -257,6 +268,7 @@ describe("parseTestOutput", () => {
       ["jest", `${jest}Snapshots: ${"1".repeat(60_000)}x`, undefined],
       ["playwright", playwright.replace(`    ${title}`, `    ${title}${spaces}x`), [`${title}${spaces}x`]],
       ["playwright", playwright.replace(`    ${title}`, `    ${title} ${box}x`), [`${title} ${box}x`]],
+      ["playwright", playwright.replace(`    ${title}`, `    ${title}${box}x`), [`${title}${box}x`]],
     ]
     for (const [runner, output, failures] of cases) {
       const start = performance.now()
