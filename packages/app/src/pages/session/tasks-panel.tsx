@@ -1,12 +1,14 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
-import { base64Encode } from "@opencode-ai/core/util/encode"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Mark } from "@opencode-ai/ui/logo"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { ServerConnection } from "@/context/server"
+import { useServerSDK } from "@/context/server-sdk"
+import { sessionHref } from "@/utils/session-route"
 import { createTasksData, live, type TasksItem } from "./tasks-data"
 
 type StopState = "pending" | "failed"
@@ -241,6 +243,7 @@ function TaskRow(props: {
 export function TasksPanel() {
   const language = useLanguage()
   const sdk = useSDK()
+  const serverSDK = useServerSDK()
   const navigate = useNavigate()
   const { items } = createTasksData()
   const [dismissed, setDismissed] = createSignal<Set<string>>(new Set())
@@ -264,9 +267,7 @@ export function TasksPanel() {
   })
 
   const openItem = (item: TasksItem) => {
-    const dir = sdk().directory
-    if (!dir) return
-    navigate(`/${base64Encode(dir)}/session/${item.childId ?? item.sessionId}`)
+    navigate(sessionHref(ServerConnection.key(serverSDK().server), item.childId ?? item.sessionId))
   }
 
   // Stop interrupts the child session only — never the parent — and keeps the

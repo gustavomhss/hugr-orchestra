@@ -86,6 +86,7 @@ function setup(input: Partial<TasksInput> & { calls?: Part[] }): TasksInput {
     status: {},
     permission: {},
     question: {},
+    loaded: () => false,
     more: () => false,
     aggregates: true,
     ...input,
@@ -169,6 +170,19 @@ describe("deriveTasks state", () => {
     ])
   })
 
+  test("an unknown finish reason does not prove completion", () => {
+    const item = only(
+      setup({
+        sessions: [session("ses_a", { parentID: parent })],
+        message: {
+          ses_a: [user("ses_a", "msg_user"), assistant("ses_a", "msg_a2", { finish: "unknown" })],
+        },
+      }),
+    )
+    expect(item.state).toBe("unknown")
+    expect(item.endTime).toBeUndefined()
+  })
+
   test("live status and pending requests win over a finished call", () => {
     const result = deriveTasks(
       setup({
@@ -237,7 +251,14 @@ describe("deriveTasks stats", () => {
       [parent]: [],
       ses_a: [user("ses_a", "msg_user"), assistant("ses_a", "msg_a2", { finish: "stop" })],
     }
-    const stats = only(setup({ sessions: [session("ses_a", { parentID: parent })], message })).stats
+    const stats = only(
+      setup({
+        sessions: [session("ses_a", { parentID: parent })],
+        message,
+        part: { msg_user: [], msg_a2: [] },
+        loaded: () => true,
+      }),
+    ).stats
     expect(stats).toMatchObject({ toolCalls: 0, fails: 0, tokens: { input: 0, output: 0 }, cost: 0 })
     expect(stats?.model).toBe("prov/model-x")
   })
@@ -248,13 +269,19 @@ describe("deriveTasks stats", () => {
       [parent]: [],
       ses_a: [assistant("ses_a", "msg_a2", { finish: "stop" })],
     }
-    expect(only(setup({ sessions: [child], message: midRun })).stats?.toolCalls).toBeUndefined()
+    expect(
+      only(setup({ sessions: [child], message: midRun, part: { msg_a2: [] }, loaded: () => true })).stats?.toolCalls,
+    ).toBeUndefined()
 
     const paged: Record<string, Message[]> = {
       [parent]: [],
       ses_a: [user("ses_a", "msg_user"), assistant("ses_a", "msg_a2", { finish: "stop" })],
     }
     const more = (id: string) => id === "ses_a"
-    expect(only(setup({ sessions: [child], message: paged, more })).stats?.toolCalls).toBeUndefined()
+    expect(
+      only(
+        setup({ sessions: [child], message: paged, part: { msg_user: [], msg_a2: [] }, loaded: () => true, more }),
+      ).stats?.toolCalls,
+    ).toBeUndefined()
   })
 })
