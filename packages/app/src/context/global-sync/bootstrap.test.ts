@@ -41,7 +41,7 @@ const api = {
 function directoryState() {
   return createStore<State>({
     status: "loading",
-    load: { agent: "pending", config: "pending" },
+    load: { agent: "pending", config: "pending", session_status: "pending" },
     agent: [],
     command: [],
     reference: [],
@@ -132,6 +132,7 @@ describe("bootstrapDirectory", () => {
       setStore,
       vcsCache: { setStore() {} } as unknown as VcsCache,
       loadSessions() {},
+      loadActiveSessions: async () => ({}),
       translate: (key) => key,
       queryClient: new QueryClient(),
       protocol: Promise.resolve("v1"),
@@ -171,6 +172,7 @@ describe("bootstrapDirectory", () => {
       setStore,
       vcsCache: { setStore() {} } as unknown as VcsCache,
       loadSessions() {},
+      loadActiveSessions: async () => ({}),
       translate: (key) => key,
       queryClient: new QueryClient(),
       protocol: Promise.resolve("v2"),
@@ -214,25 +216,72 @@ describe("bootstrapDirectory", () => {
         setStore,
         vcsCache: { setStore() {} } as unknown as VcsCache,
         loadSessions() {},
+        loadActiveSessions: async () => ({}),
         translate: (key) => key,
         queryClient: new QueryClient(),
         protocol: Promise.resolve("v1"),
       })
-      expect(store.load).toEqual({ agent: "pending", config: "pending" })
+      expect(store.load).toEqual({ agent: "pending", config: "pending", session_status: "pending" })
       await new Promise((resolve) => setTimeout(resolve, 80))
       return store
     }
 
     const loaded = await run(async () => ({ data: [{ name: "maestro", mode: "primary" }] }))
     expect(loaded.status).toBe("partial")
-    expect(loaded.load).toEqual({ agent: "ready", config: "ready" })
+    expect(loaded.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
     expect(loaded.config).toEqual({ share: "manual" })
     expect(loaded.agent.map((agent) => agent.name)).toEqual(["maestro"])
 
     const failed = await run(async () => {
       throw new Error("agents unavailable")
     })
-    expect(failed.load).toEqual({ agent: "failed", config: "ready" })
+    expect(failed.load).toEqual({ agent: "failed", config: "ready", session_status: "ready" })
+  })
+
+  test("records the v1 status read and the v2 active session seed, which stays out of the bootstrap outcome", async () => {
+    for (const protocol of ["v1", "v2"] as const) {
+      for (const outcome of ["ready", "failed"] as const) {
+        const read = Promise.withResolvers<{ data: {} }>()
+        const [store, setStore] = directoryState()
+        await bootstrapDirectory({
+          directory: "/project",
+          scope: ServerScope.local,
+          mcp: false,
+          global: {
+            config: {} satisfies Config,
+            path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+            project: [{ id: "project", worktree: "/project" } as Project],
+            provider,
+          },
+          sdk: {
+            app: { agents: async () => ({ data: [] }) },
+            config: { get: async () => ({ data: {} }) },
+            session: { status: () => read.promise },
+            vcs: { get: async () => ({ data: undefined }) },
+            permission: { list: async () => ({ data: [] }) },
+            question: { list: async () => ({ data: [] }) },
+            v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+            provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+          } as unknown as OpencodeClient,
+          api,
+          store,
+          setStore,
+          vcsCache: { setStore() {} } as unknown as VcsCache,
+          loadSessions() {},
+          loadActiveSessions: () => read.promise,
+          translate: (key) => key,
+          queryClient: new QueryClient(),
+          protocol: Promise.resolve(protocol),
+        })
+        await new Promise((resolve) => setTimeout(resolve, 80))
+        expect(store.load.session_status).toBe("pending")
+        if (outcome === "ready") read.resolve({ data: {} })
+        if (outcome === "failed") read.reject(new Error("status unavailable"))
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        expect([protocol, store.load.session_status]).toEqual([protocol, outcome])
+        if (protocol === "v2") expect(store.status).toBe("complete")
+      }
+    }
   })
 })
 

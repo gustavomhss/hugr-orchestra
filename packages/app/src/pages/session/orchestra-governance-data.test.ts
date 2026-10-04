@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { Agent, AssistantMessage, Config, Message, Part, ToolPart, UserMessage } from "@opencode-ai/sdk/v2/client"
 import { normalizeSessionMessages } from "@/utils/session-message"
 import type { SessionMessageAssistantTool } from "@opencode-ai/client/promise"
-import { maestroCapability, ownSource, readGovernance } from "./orchestra-governance-data"
+import { maestroCapability, ownSource, readGovernance, sessionWorking } from "./orchestra-governance-data"
 
 const sessionID = "ses_governance"
 
@@ -113,6 +113,21 @@ describe("readGovernance", () => {
     ])
     expect(stopped.approval.state).toBe("hold")
     expect(stopped.approval.record?.reason).toBe("interrupted")
+
+    const unread = readGovernance({ sessionID, working: undefined, messages, parts: () => parts.msg_a })
+    expect(unread.records.map((record) => [record.state, record.reason, record.time])).toEqual([
+      ["running", "unconfirmed", 3],
+      ["running", "unconfirmed", 2],
+    ])
+    expect(unread.approval.state).toBe("running")
+  })
+
+  test("a session without a status is only idle once the status read succeeded", () => {
+    expect(sessionWorking(true, "pending")).toBe(true)
+    expect(sessionWorking(true, "failed")).toBe(true)
+    expect(sessionWorking(false, "ready")).toBe(false)
+    expect(sessionWorking(false, "pending")).toBeUndefined()
+    expect(sessionWorking(false, "failed")).toBeUndefined()
   })
 
   test("reads each Maestro record with its identity, outcome and turn", () => {

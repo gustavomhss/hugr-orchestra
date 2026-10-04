@@ -36,7 +36,7 @@ export type GovernanceRecord = {
   detail?: string
   output?: string
   partial?: boolean
-  reason?: "unreadable" | "foreign" | "synthetic" | "superseded" | "interrupted"
+  reason?: "unreadable" | "foreign" | "synthetic" | "superseded" | "interrupted" | "unconfirmed"
   messageID: string
   turnID?: string
   time?: number
@@ -96,7 +96,7 @@ const verdicts = ["APPROVE", "FIX_FIRST", "REJECT"]
 
 export function readGovernance(input: {
   sessionID: string
-  working: boolean
+  working: boolean | undefined
   messages: readonly Message[]
   source?: readonly SessionMessageInfo[]
   parts: (messageID: string) => readonly Part[] | undefined
@@ -159,6 +159,12 @@ export function readGovernance(input: {
   }
 }
 
+// Statuses stay empty until their read lands, so a session without one is only idle once that read succeeded.
+export function sessionWorking(working: boolean, read: State["load"]["session_status"]) {
+  if (working) return true
+  if (read === "ready") return false
+}
+
 export function maestroCapability(agents: readonly Agent[], read: State["load"]["agent"]) {
   if (agents.some((agent) => agent.name === "maestro" && agent.native !== false)) return "available"
   // A listed agent proves some read completed, even one outside this directory's bootstrap.
@@ -190,7 +196,7 @@ function approvalState(record: GovernanceRecord | undefined): ApprovalState {
 
 function governanceRecord(
   sessionID: string,
-  working: boolean,
+  working: boolean | undefined,
   message: AssistantMessage,
   part: ToolPart,
   source?: SessionMessageAssistantTool,
@@ -215,7 +221,8 @@ function governanceRecord(
   if (part.state.status === "pending" || part.state.status === "running") {
     const time = part.state.status === "running" ? part.state.time.start : message.time.created
     // A server that stopped mid-call can leave the part open after its session went idle.
-    if (!working) return { ...base, state: "hold", reason: "interrupted", time }
+    if (working === false) return { ...base, state: "hold", reason: "interrupted", time }
+    if (working === undefined) return { ...base, state: "running", reason: "unconfirmed", time }
     return { ...base, state: "running", time }
   }
   if (part.state.status === "error")

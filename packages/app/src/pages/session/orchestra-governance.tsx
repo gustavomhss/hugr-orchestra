@@ -9,6 +9,7 @@ import {
   maestroCapability,
   ownSource,
   readGovernance,
+  sessionWorking,
   type ApprovalState,
   type GovernanceKind,
   type GovernanceRecord,
@@ -40,6 +41,7 @@ const reasons = {
   synthetic: "orchestra.governance.reason.synthetic",
   superseded: "orchestra.governance.reason.superseded",
   interrupted: "orchestra.governance.reason.interrupted",
+  unconfirmed: "orchestra.governance.reason.unconfirmed",
 } as const
 
 const approvals = {
@@ -83,7 +85,7 @@ export function DialogOrchestraGovernance(props: {
     () =>
       readGovernance({
         sessionID: props.sessionID,
-        working: sync.data.session_working(props.sessionID),
+        working: sessionWorking(sync.data.session_working(props.sessionID), sync.data.load.session_status),
         messages: sync.data.message[props.sessionID] ?? [],
         source: protocol() === "v2" ? sync.data.session_message[props.sessionID] : undefined,
         parts: (messageID) => sync.data.part[messageID],

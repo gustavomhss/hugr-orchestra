@@ -36,6 +36,7 @@ export type State = {
   load: {
     agent: "pending" | "ready" | "failed"
     config: "pending" | "ready" | "failed"
+    session_status: "pending" | "ready" | "failed"
   }
   agent: Agent[]
   command: CommandInfo[]

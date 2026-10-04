@@ -347,6 +347,7 @@ export async function bootstrapDirectory(input: {
   setStore: SetStoreFunction<State>
   vcsCache: VcsCache
   loadSessions: (directory: string) => Promise<void> | void
+  loadActiveSessions: () => Promise<unknown>
   translate: (key: string, vars?: Record<string, string | number>) => string
   global: {
     config: Config
@@ -391,10 +392,14 @@ export async function bootstrapDirectory(input: {
             return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
           }),
         ),
-      () =>
-        retry(() =>
-          (async () => {
-            if ((await input.protocol) !== "v1") return
+      async () => {
+        // v2 statuses come from the server-wide active session seed, whose failure is not this directory's.
+        if ((await input.protocol) !== "v1")
+          return settle(input.setStore, "session_status", input.loadActiveSessions()).catch(() => undefined)
+        return settle(
+          input.setStore,
+          "session_status",
+          retry(async () => {
             const x = await input.sdk.session.status()
             if (!input.session) {
               input.setStore("session_status", x.data!)
@@ -416,8 +421,9 @@ export async function bootstrapDirectory(input: {
             await Promise.all(
               Object.keys(statuses).map((sessionID) => input.session!.resolve(sessionID).catch(() => undefined)),
             )
-          })(),
-        ),
+          }),
+        )
+      },
       !seededProject &&
         (() =>
           retry(() => input.api.project.current({ location: { directory: input.directory } })).then((project) =>
