@@ -1,4 +1,5 @@
 import { createMemo } from "solid-js"
+import { createStore } from "solid-js/store"
 import type {
   AssistantMessage,
   Message,
@@ -212,6 +213,29 @@ export function deriveTasks(input: TasksInput) {
 
 export function live(item: Pick<TasksItem, "state">) {
   return item.state === "running" || item.state === "needs-input"
+}
+
+export type StopState = "pending" | "failed"
+
+/**
+ * Stop interrupts the child session only — never the parent — and keeps the outcome visible: pending
+ * while in flight, failed with retry on rejection. Task keys are server and session qualified, so an
+ * outcome that settles after the view moved to another session still lands on its own row.
+ */
+export function createTaskStops(interrupt: (sessionID: string) => Promise<unknown>) {
+  const [stops, setStops] = createStore<Record<string, StopState | undefined>>({})
+  return {
+    state: (key: string) => stops[key],
+    stop(item: TasksItem) {
+      const sessionID = item.childId
+      if (!sessionID || stops[item.key] === "pending") return
+      setStops(item.key, "pending")
+      interrupt(sessionID).then(
+        () => setStops(item.key, undefined),
+        () => setStops(item.key, "failed"),
+      )
+    },
+  }
 }
 
 function agentItem(

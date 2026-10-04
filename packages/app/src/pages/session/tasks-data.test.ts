@@ -10,7 +10,7 @@ import {
 import { ServerConnection } from "@/context/server"
 import { createServerSession } from "@/context/server-session"
 import { ServerScope } from "@/utils/server-scope"
-import { deriveTasks, summarizeTasks, type TasksInput, type TasksItem } from "./tasks-data"
+import { createTaskStops, deriveTasks, summarizeTasks, type TasksInput, type TasksItem } from "./tasks-data"
 
 const parent = "ses_parent"
 const tokens = { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
@@ -516,5 +516,41 @@ describe("task origins", () => {
       }),
     )
     expect(a.key).not.toBe(b.key)
+  })
+})
+
+describe("createTaskStops", () => {
+  test("an outcome that settles after another session's stop still lands on its own row", async () => {
+    const interrupts: { sessionID: string; settle: PromiseWithResolvers<void> }[] = []
+    const stops = createTaskStops((sessionID) => {
+      const settle = Promise.withResolvers<void>()
+      interrupts.push({ sessionID, settle })
+      return settle.promise
+    })
+    const a = only(setup({ calls: [taskCall("c1", "ses_child_a", "running")] }))
+    const call = taskCall("c1", "ses_child_b", "running")
+    const b = only(
+      setup({
+        sessionID: "ses_other",
+        part: { msg_parent: [{ ...call, sessionID: "ses_other" }] },
+        message: { ses_other: [assistant("ses_other", "msg_parent")] },
+      }),
+    )
+
+    stops.stop(a)
+    stops.stop(a)
+    stops.stop(b)
+    expect(interrupts.map((interrupt) => interrupt.sessionID)).toEqual(["ses_child_a", "ses_child_b"])
+    expect([stops.state(a.key), stops.state(b.key)]).toEqual(["pending", "pending"])
+
+    interrupts[0]!.settle.resolve()
+    await interrupts[0]!.settle.promise
+    expect([stops.state(a.key), stops.state(b.key)]).toEqual([undefined, "pending"])
+
+    interrupts[1]!.settle.reject(new Error("refused"))
+    await interrupts[1]!.settle.promise.catch(() => undefined)
+    expect(stops.state(b.key)).toBe("failed")
+    stops.stop(b)
+    expect(stops.state(b.key)).toBe("pending")
   })
 })

@@ -9,12 +9,16 @@ import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
 import { sessionHref } from "@/utils/session-route"
-import { createTasksData, live, summarizeTasks, type TasksData, type TasksItem } from "./tasks-data"
+import {
+  createTaskStops,
+  createTasksData,
+  live,
+  summarizeTasks,
+  type StopState,
+  type TasksData,
+  type TasksItem,
+} from "./tasks-data"
 import { OrchestraCockpitList } from "./orchestra-cockpit-list"
-import { createSessionOwnership } from "./session-ownership"
-import { useSessionLayout } from "./session-layout"
-
-type StopState = "pending" | "failed"
 
 export const taskStateLabel = {
   running: "session.tasks.state.running",
@@ -298,14 +302,13 @@ export function TasksPanel(
   // Views mounted beside each other read the projection their session owner created.
   const data = props.data ?? createTasksData()
   const items = data.items
-  const ownership = createSessionOwnership(useSessionLayout().sessionKey)
   const [view, setView] = createStore({
     dismissed: [] as string[],
     tick: 0,
     visible: false,
     foreground: !document.hidden,
   })
-  const [stops, setStops] = createStore<Record<string, StopState | undefined>>({})
+  const stops = createTaskStops((sessionID) => sdk().api.session.interrupt({ sessionID }))
   const listID = createUniqueId()
   let root: HTMLDivElement | undefined
 
@@ -357,19 +360,8 @@ export function TasksPanel(
     navigate(sessionHref(ServerConnection.key(serverSDK().server), item.childId ?? item.sessionId))
   }
 
-  // Stop interrupts the child session only — never the parent — and keeps the
-  // outcome visible: pending while in flight, failed with retry on rejection.
   const stopItem = (item: TasksItem) => {
-    const sessionID = item.childId
-    if (!sessionID || !items().running.includes(item) || stops[item.key] === "pending") return
-    const owner = ownership.capture()
-    setStops(item.key, "pending")
-    sdk()
-      .api.session.interrupt({ sessionID })
-      .then(
-        () => owner.run(() => setStops(item.key, undefined)),
-        () => owner.run(() => setStops(item.key, "failed")),
-      )
+    if (items().running.includes(item)) stops.stop(item)
   }
 
   const dismissItem = (item: TasksItem) => {
@@ -387,7 +379,7 @@ export function TasksPanel(
           item={item()}
           tick={view.tick}
           compact={compact}
-          stop={stops[key]}
+          stop={stops.state(key)}
           onOpen={openItem}
           onStop={stopItem}
           onDismiss={dismissItem}
@@ -488,7 +480,7 @@ export function TasksPanel(
                     <TaskRow
                       item={item()}
                       tick={view.tick}
-                      stop={stops[item().key]}
+                      stop={stops.state(item().key)}
                       onOpen={openItem}
                       onStop={stopItem}
                       onDismiss={dismissItem}
