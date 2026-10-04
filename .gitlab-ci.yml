@@ -1,0 +1,148 @@
+# Extension: run the existing product validation contracts on GitLab-hosted runners.
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      auto_cancel:
+        on_new_commit: none
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+stages: [test]
+
+default:
+  interruptible: true
+  timeout: 90m
+
+variables:
+  GIT_DEPTH: "0"
+  GIT_AUTHOR_NAME: opencode
+  GIT_AUTHOR_EMAIL: bot@opencode.ai
+  GIT_COMMITTER_NAME: opencode
+  GIT_COMMITTER_EMAIL: bot@opencode.ai
+  GITHUB_ACTIONS: "false"
+  OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "false"
+
+.linux:
+  image: node:24.15.0-bookworm
+  tags: [saas-linux-small-amd64]
+
+.bun-linux:
+  extends: .linux
+  before_script:
+    - source .gitlab/setup-linux.sh
+
+.windows:
+  tags: [saas-windows-medium-amd64]
+  variables:
+    OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
+  before_script:
+    - . .gitlab/setup-windows.ps1
+
+godfile:
+  extends: .bun-linux
+  script:
+    - git fetch origin "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
+    - GODFILE_BASE_REF=$(git rev-parse --verify FETCH_HEAD)
+    - export GODFILE_BASE_REF
+    - bun --cwd packages/core test test/godfile.test.ts
+    - bun run check:godfile
+
+# Full Atlas is deliberate: no GitHub PR-number waiver or ambiguous diff can skip it.
+atlas:
+  extends: .linux
+  script:
+    - cd foundation/atlas
+    - npm ci
+    - npm run typecheck
+    - source ../../.gitlab/atlas-base.sh
+    - npm run godfile-guard
+    - npm run layer-guard
+    - npm run reference-model-guard
+    - npm run spec-conformance-guard
+    - npm run id-integrity
+    - npm run command-doc-guard
+    - npm run wiring-guard
+    - npm run adr-citation-guard
+    - npm run req-clause-guard
+    - npm run ears-coamend-guard
+    - npm run doc-transcript-guard
+    - npm run service-gate-guard
+    - npm run own-snapshot-guard
+    - node --test scripts/materialize-own-snapshot.test.mjs
+    - npm test -- harness/gates/own-snapshot-guard.test.mjs
+    - npm test
+
+unit-linux:
+  extends: .bun-linux
+  script:
+    - bun --cwd packages/atlas-boundary run check:generated
+    # Pass the environment-only git identity and watcher setting into every package.
+    - node .gitlab/run.mjs 2700 . bun turbo test --env-mode=loose
+    - bun --cwd packages/client run check:generated
+    - node .gitlab/run.mjs 900 packages/opencode bun run test:httpapi
+
+unit-windows:
+  extends: .windows
+  script:
+    - node .gitlab/run.mjs 2700 . bun turbo test --env-mode=loose
+
+.e2e:
+  variables:
+    PLAYWRIGHT_BROWSERS_PATH: "$CI_PROJECT_DIR/.playwright-browsers"
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - packages/app/e2e/test-results/
+      - packages/app/e2e/playwright-report/
+
+e2e-linux:
+  extends: [.bun-linux, .e2e]
+  script:
+    - cd packages/app
+    - bunx playwright install-deps chromium
+    - bunx playwright install chromium
+    - node ../../.gitlab/run.mjs 2700 . bun run test:e2e:local
+
+e2e-windows:
+  extends: [.windows, .e2e]
+  script:
+    - cd packages/app
+    - bunx playwright install chromium
+    - node ../../.gitlab/run.mjs 2700 . bun run test:e2e:local
+
+typecheck:
+  extends: .bun-linux
+  script:
+    - bun turbo typecheck --concurrency=1
+
+nix-eval:
+  tags: [saas-linux-small-amd64]
+  image:
+    name: nixos/nix:2.28.5
+    entrypoint: [""]
+  timeout: 15m
+  variables:
+    NIX_CONFIG: "experimental-features = nix-command flakes"
+  script:
+    - bash .gitlab/nix-eval.sh
+
+storybook:
+  extends: .bun-linux
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "push" && $CI_PIPELINE_SOURCE != "merge_request_event"'
+    - changes:
+        - .gitlab-ci.yml
+        - .gitlab/**/*
+        - .github/workflows/storybook.yml
+        - package.json
+        - bun.lock
+        - packages/storybook/**/*
+        - packages/ui/**/*
+        - packages/session-ui/**/*
+  script:
+    - bun --cwd packages/storybook build
