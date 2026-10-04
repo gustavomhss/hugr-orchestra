@@ -17,75 +17,78 @@
    English run takes the document's base direction and its leading or trailing punctuation
    lands on the wrong side, so each text slot resolves its base direction from its own
    content (Unicode P2/P3). Only text slots opt in: flex rows and icon placement stay with
-   the document, and slots that declare dir keep it, as does the upstream browser the Dock
-   chapter embeds. Chromium aligns plaintext lines by their own direction, so a slot keeps
-   the alignment its parent resolves instead; -webkit-match-parent is the form Chromium
-   resolves to a physical side. */
+   the document, user values inside slots are isolated in markup, the governance reason
+   keeps its declared dir, and the Dock chapter's embedded upstream browser is left alone.
+   Chromium aligns plaintext lines by their own direction, so a slot keeps the alignment its
+   parent resolves instead; -webkit-match-parent is the form Chromium resolves to a physical
+   side. Keep this list flat, with class or slot ancestors: a generic element nested in
+   :is() or :where() lands in Chromium's universal rule bucket and slows every recalc. */
 @layer components {
-  :where(
-    :is(
-      [data-slot="orchestra-titlebar-caption"],
-      [data-slot="orchestra-titlebar-breadcrumb"] > span,
-      [data-slot="orchestra-brand-descriptor"],
-      .orchestra-nav-label,
-      .orchestra-sidebar-footer,
-      .orchestra-profile-empty,
-      [data-orchestra-evidence] > p,
-      [data-orchestra-evidence] [data-slot="evidence-result"] :is(p, dt, [data-slot="evidence-failures"] > span),
-      :is(.orchestra-evidence-dialog, .orchestra-governance-dialog, .orchestra-pending-dialog)
-        :is(
-          [data-slot="dialog-header-title"],
-          [data-slot="dialog-title"],
-          [data-slot="dialog-description"],
-          h3,
-          dt,
-          dd,
-          dd > span,
-          p,
-          strong
-        ),
-      .orchestra-governance-dialog
-        :is(
-          .orchestra-governance-kind,
-          .orchestra-governance-state,
-          .orchestra-governance-note,
-          .orchestra-governance-time
-        ),
-      .orchestra-dock-header h2,
-      :is(.orchestra-dock-note, .orchestra-dock-state) > :is(span, strong),
-      [data-component="tasks-panel"]
-        :is(
-          [data-slot="tasks-title"],
-          [data-slot="tasks-count"],
-          [data-slot="tasks-needs-input"],
-          [data-slot="task-section"],
-          [data-slot="task-meta"],
-          [data-slot="task-stop-status"] > span
-        ),
-      [data-component="orchestra-activity"]
-        :is(
-          [data-slot="activity-title"],
-          [data-slot="activity-kind"],
-          [data-slot="activity-meta"],
-          [data-slot="activity-empty"] > :is(strong, span)
-        ),
-      :is([data-component="orchestra-chapter"], [data-component="orchestra-kpis"])
-        :is(
-          h1,
-          h2,
-          h3,
-          p,
-          dt,
-          dd,
-          strong,
-          .agents-mode,
-          .agents-card-description,
-          .skills-status,
-          .env-filename,
-          .orchestra-dock-message > span
-        )
-    ):not([dir], .orchestra-dock-browser *)
-  ) {
+  [data-slot="orchestra-titlebar-caption"],
+  [data-slot="orchestra-titlebar-breadcrumb"] > span,
+  [data-slot="orchestra-brand-descriptor"],
+  .orchestra-nav-label,
+  .orchestra-sidebar-footer,
+  .orchestra-profile-empty,
+  [data-orchestra-evidence] > p,
+  [data-slot="evidence-result"] > p,
+  [data-slot="evidence-partial"] > p,
+  [data-slot="evidence-row"] > dt,
+  [data-slot="evidence-failures"] > span,
+  .orchestra-evidence-dialog [data-slot="dialog-title"],
+  .orchestra-evidence-dialog [data-slot="dialog-description"],
+  .orchestra-evidence-dialog dt,
+  .orchestra-evidence-dialog p,
+  .orchestra-governance-dialog [data-slot="dialog-title"],
+  .orchestra-governance-dialog [data-slot="dialog-description"],
+  .orchestra-governance-dialog h3,
+  .orchestra-governance-dialog dt,
+  .orchestra-governance-dialog dd > span,
+  .orchestra-governance-dialog p:not([dir]),
+  .orchestra-governance-dialog strong,
+  .orchestra-governance-kind,
+  .orchestra-governance-state,
+  .orchestra-governance-note,
+  .orchestra-governance-time,
+  .orchestra-pending-dialog [data-slot="dialog-header-title"],
+  .orchestra-pending-dialog [data-slot="dialog-description"],
+  .orchestra-pending-dialog p,
+  .orchestra-dock-header > h2,
+  .orchestra-dock-note > span,
+  .orchestra-dock-state > span,
+  .orchestra-dock-state > strong,
+  [data-slot="tasks-title"],
+  [data-slot="tasks-count"],
+  [data-slot="tasks-needs-input"],
+  [data-slot="task-section"],
+  [data-slot="task-meta"],
+  [data-slot="task-stop-status"] > span,
+  [data-slot="activity-title"],
+  [data-slot="activity-kind"],
+  [data-slot="activity-meta"],
+  [data-slot="activity-empty"] > strong,
+  [data-slot="activity-empty"] > span,
+  [data-slot="orchestra-chapter-empty"],
+  .orchestra-chapter:not([data-chapter="dock"]) h1,
+  .orchestra-chapter:not([data-chapter="dock"]) h2,
+  .orchestra-chapter:not([data-chapter="dock"]) h3,
+  .orchestra-chapter:not([data-chapter="dock"]) p,
+  .orchestra-chapter:not([data-chapter="dock"]) dt,
+  .orchestra-chapter:not([data-chapter="dock"]) dd,
+  .orchestra-chapter:not([data-chapter="dock"]) strong,
+  .orchestra-kpis h2,
+  .orchestra-kpis h3,
+  .orchestra-kpis p,
+  .orchestra-kpis dt,
+  .orchestra-kpis dd,
+  .orchestra-dock > header > h1,
+  .orchestra-dock > header > p,
+  .orchestra-dock-toolbar > p,
+  .orchestra-dock-message > p,
+  .orchestra-dock-message > span,
+  .agents-mode,
+  .agents-card-description,
+  .skills-status {
     unicode-bidi: plaintext;
     text-align: match-parent;
     text-align: -webkit-match-parent;
