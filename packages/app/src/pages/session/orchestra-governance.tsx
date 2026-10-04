@@ -301,6 +301,7 @@ function Records(props: { records: GovernanceRecord[]; empty: string; onShow: (t
 
 function Row(props: { record: GovernanceRecord; onShow: (turnID: string) => void }) {
   const language = useLanguage()
+  const id = createUniqueId()
   const time = createMemo(() =>
     props.record.time === undefined
       ? undefined
@@ -326,7 +327,9 @@ function Row(props: { record: GovernanceRecord; onShow: (turnID: string) => void
       />
       <div class="orchestra-governance-record-main">
         <div class="orchestra-governance-record-head">
-          <span class="orchestra-governance-kind">{kind()}</span>
+          <span class="orchestra-governance-kind" id={`${id}-kind`}>
+            {kind()}
+          </span>
           <span class="orchestra-governance-state">{language.t(states[props.record.state])}</span>
           <Show when={props.record.outcome}>{(outcome) => <code dir="ltr">{outcome()}</code>}</Show>
         </div>
@@ -376,10 +379,13 @@ function Row(props: { record: GovernanceRecord; onShow: (turnID: string) => void
         </Show>
         <Show when={props.record.turnID}>
           {(turn) => (
+            // The visible action leads the name (WCAG 2.5.3 label in name); the record kind then tells
+            // otherwise identical actions apart.
             <ButtonV2
+              id={`${id}-show`}
               size="small"
               variant="ghost"
-              aria-label={language.t("orchestra.governance.showRecord", { record: kind() })}
+              aria-labelledby={`${id}-show ${id}-kind`}
               onClick={() => props.onShow(turn())}
             >
               {language.t(

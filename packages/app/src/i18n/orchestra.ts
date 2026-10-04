@@ -359,7 +359,6 @@ export const ORCHESTRA_COPY = {
   "orchestra.governance.source": "Source message",
   "orchestra.governance.sourceUnavailable": "Source turn is not in the loaded history.",
   "orchestra.governance.showInChat": "Show in chat",
-  "orchestra.governance.showRecord": "Show {{record}} in chat",
   "orchestra.governance.kind.admission": "Admission",
   "orchestra.governance.kind.catalog": "Atlas catalog check",
   "orchestra.governance.kind.plan": "Plan revision",

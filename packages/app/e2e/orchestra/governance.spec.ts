@@ -151,7 +151,7 @@ test("Show in chat moves to the record's turn through the existing message hash"
   await expect(dialog.locator('[data-kind="validation"]')).toHaveAttribute("data-state", "recorded")
   await expect(dialog.locator('[data-kind="presentation"]')).toContainText("Time not reported")
   await expect(dialog).not.toContainText("evt_proposed")
-  await dialog.getByRole("button", { name: "Show Validation record in chat" }).click()
+  await dialog.getByRole("button", { name: "Show in chat Validation record", exact: true }).click()
   await expect(dialog).toHaveCount(0)
   await expect(page).toHaveURL(new RegExp(`/session/${sessionID}#message-msg_user_1$`))
   expect(errors).toEqual([])
