@@ -1,18 +1,24 @@
 import { expect, test } from "bun:test"
+import { createRequire } from "node:module"
 import { createMemo, createRenderEffect, createSignal } from "solid-js"
 import { createComponent, render } from "solid-js/web"
-import solid from "vite-plugin-solid"
 
-// Bun compiles JSX for React. Compile the list with Solid's own transform so the test drives the real
-// component, its virtualizer and its keyed rows.
-const transform = solid().transform as (source: string, id: string) => Promise<{ code: string }>
+// Bun compiles JSX for React. Compile the list with Solid's own Babel preset so the test drives the real
+// component, its virtualizer and its keyed rows. Importing vite here breaks when another file loaded first.
+const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 Bun.plugin({
   name: "solid-cockpit-list",
   setup(build) {
-    build.onLoad({ filter: /orchestra-cockpit-list\.tsx$/ }, async (args) => ({
-      contents: (await transform(await Bun.file(args.path).text(), args.path)).code,
-      loader: "ts",
-    }))
+    build.onLoad({ filter: /orchestra-cockpit-list\.tsx$/ }, async (args) => {
+      const result = await solid("@babel/core").transformAsync(await Bun.file(args.path).text(), {
+        filename: args.path,
+        presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
+        parserOpts: { plugins: ["jsx", "typescript"] },
+        configFile: false,
+        babelrc: false,
+      })
+      return { contents: result.code, loader: "ts" }
+    })
   },
 })
 const { OrchestraCockpitList } = await import("@/pages/session/orchestra-cockpit-list")

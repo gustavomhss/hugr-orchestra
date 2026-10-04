@@ -46,7 +46,7 @@ import { FileTabContent } from "@/pages/session/file-tabs"
 import {
   SESSION_OPEN_FILE_TAB,
   createOpenSessionFileTab,
-  createSessionTabs,
+  createSidePanelTabs,
   getTabReorderIndex,
   shouldShowFileTree,
   type Sizing,
@@ -162,14 +162,13 @@ export function SessionSidePanel(props: {
 
   // Orchestra's Apps tab is the cockpit, where Tasks show beside the Dock instead of in a tab of their own.
   const cockpit = () => settings.general.newLayoutDesigns()
-  const tabState = createSessionTabs({
+  const tabState = createSidePanelTabs({
     tabs,
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: reviewTab,
     hasReview: props.canReview,
     fileBrowser: () => !!props.fileBrowserState,
-    apps: () => true,
     cockpit,
   })
   const contextOpen = tabState.contextOpen
