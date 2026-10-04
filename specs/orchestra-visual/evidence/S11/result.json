@@ -139,6 +139,32 @@
         "forced_rtl": "English test explicitly forces document direction without changing language; Arabic independently exercises locale/provider direction.",
         "resolved_harness_failure": "An initial production run passed 32 cases but failed 3 visual cases because a dev-only debug toggle was unavailable. The fixture now forces document direction explicitly; the final 35-case production run passed."
       }
+    },
+    {
+      "id": "root-kind-and-parent-traversal",
+      "base_commit": "e5e98ff8552fd412dadd4fb4ff2a745fe628a9d0",
+      "verified_source_tree": "c0010ad16325129de54b9a87e0f80cbb86700bd7",
+      "source_tree_scope": "packages/app; the commit additionally updates this receipt.",
+      "policy": "Compare validated spellings rather than claim filesystem canonicalization. Preserve leading/root and internal separator runs and case. Only drive-qualified Windows paths normalize slash style, and one trailing separator may be removed without consuming the root. UNC spelling remains opaque. Reject dot/parent segments, including ambiguous UNC separator interpretations. Literal workdir '.' is accepted only after the captured absolute directory/server/session match is validated.",
+      "matrix": "Closed adversarial cases cover exact POSIX and literal backslashes, UNC vs root-relative in both directions, different shares/servers, single/double/triple roots, drive-relative paths, Windows slash variants, case ambiguity, parent traversal, and known/unknown current-directory cases.",
+      "symlink_probe": "A real temporary link targets another directory's child. The test proves that resolved target's parent differs from the session directory even though lexical path.resolve(link/..) equals it, then verifies replay refusal. The initial probe used realpath(link/..), but the local wrapper normalized away '..'; the final probe resolves the link itself. Production performs no filesystem resolution.",
+      "checks": [
+        { "cwd": "packages/app", "command": "env TMPDIR=/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode bun test --conditions=solid --preload ./happydom.ts src/pages/session/composer/session-evidence-actions.test.ts", "exit": 0, "passed": 49, "failed": 0, "assertions": 141 },
+        { "cwd": "packages/app", "command": "bun typecheck && bun run typecheck:e2e", "exit": 0 },
+        { "cwd": "packages/app", "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_SERVER_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test --config e2e/orchestra/evidence.config.ts e2e/orchestra/evidence-actions.spec.ts --grep 'replay validates path identity|replay refuses unsupported working directory' --reporter=line", "exit": 0, "passed": 11, "failed": 0, "skipped": 0, "build": "production; isolated mocked API" },
+        { "cwd": ".", "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile", "exit": 0, "errors": 0, "artifact": "godfile.log" }
+      ],
+      "mutation": {
+        "change": "Restored repeated-slash collapse in the comparison key.",
+        "unit_command": "bun test --conditions=solid --preload ./happydom.ts src/pages/session/composer/session-evidence-actions.test.ts --test-name-pattern 'matrix: (UNC vs root relative|root relative vs UNC|exact slash UNC|single vs double root)'",
+        "unit_exit": 1,
+        "unit_result": "Three root-distinction assertions failed; exact UNC positive control passed.",
+        "browser_command": "e2e-lock.sh env PLAYWRIGHT_PORT=4992 PLAYWRIGHT_WORKERS=1 bunx playwright test e2e/orchestra/evidence-actions.spec.ts --grep 'path identity: UNC root distinction' --reporter=line",
+        "browser_exit": 1,
+        "browser_result": "Run command was enabled where the UNC/root distinction requires disabled.",
+        "restored": true,
+        "restored_verification": "All 49 focused units and 11 production path guards passed."
+      }
     }
   ],
   "review": "Implementation-agent review and decoded screenshots; independent lead review and owner visual acceptance remain.",

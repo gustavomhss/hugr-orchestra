@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { mkdir, mkdtemp, realpath, rm, symlink } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import { submitShellCommand } from "@/components/prompt-input/submit"
 import type { ImageAttachmentPart, Prompt } from "@/context/prompt"
 import { ORCHESTRA_COPY } from "@/i18n/orchestra"
@@ -40,7 +43,10 @@ describe("replayBlock", () => {
     expect(replayBlock({ source: { ...source, workdir: "/repo/" }, current, ...idle })).toBeUndefined()
     expect(replayBlock({ source: { ...source, workdir: "/repo/packages/app" }, current, ...idle })).toBe("workdir")
     expect(replayBlock({ source: { ...source, workdir: "packages/app" }, current, ...idle })).toBe("workdir")
-    expect(replayBlock({ source: { ...source, workdir: "." }, current, ...idle })).toBe("workdir")
+    expect(replayBlock({ source: { ...source, workdir: "." }, current, ...idle })).toBeUndefined()
+    expect(
+      replayBlock({ source: { ...source, workdir: "." }, current: { ...current, directory: "/other" }, ...idle }),
+    ).toBe("session")
   })
 
   test("preserves POSIX backslashes and rejects backslash-relative workdirs", () => {
@@ -62,7 +68,7 @@ describe("replayBlock", () => {
 
   test("allows matching Windows drive-rooted workdirs and rejects drive-relative ones", () => {
     const directory = "C:/Repo/a/b"
-    for (const workdir of [directory, "C:\\Repo\\a\\b", "c:\\repo/a\\b\\"]) {
+    for (const workdir of [directory, "C:\\Repo\\a\\b", "C:\\Repo/a\\b\\"]) {
       expect(sameDirectory(workdir, directory)).toBe(true)
       expect(
         replayBlock({ source: { ...source, directory, workdir }, current: { ...current, directory }, ...idle }),
@@ -84,13 +90,85 @@ describe("replayBlock", () => {
   })
 })
 
-test("sameDirectory compares canonical absolute paths only", () => {
+test("sameDirectory compares validated directory spellings", () => {
   expect(sameDirectory("/repo", "/repo/")).toBe(true)
-  expect(sameDirectory("/repo//", "/repo")).toBe(true)
-  expect(sameDirectory("C:\\Repo\\", "c:/repo")).toBe(true)
+  expect(sameDirectory("/repo//", "/repo")).toBe(false)
+  expect(sameDirectory("C:\\Repo\\", "C:/Repo")).toBe(true)
   expect(sameDirectory("/repo/../repo", "/repo")).toBe(false)
   expect(sameDirectory("repo", "repo")).toBe(false)
   expect(sameDirectory("/Repo", "/repo")).toBe(false)
+})
+
+for (const [name, directory, workdir, block] of [
+  ["exact POSIX", "/repo", "/repo", undefined],
+  ["POSIX trailing separator", "/repo", "/repo/", undefined],
+  ["POSIX root", "/", "/", undefined],
+  ["POSIX current directory", "/repo", ".", undefined],
+  ["current root directory", "/", ".", undefined],
+  ["literal dot in name", "/repo/.cache", "/repo/.cache", undefined],
+  ["literal POSIX backslash", "/repo/a\\b", "/repo/a\\b", undefined],
+  ["distinct POSIX backslash", "/repo/a/b", "/repo/a\\b", "workdir"],
+  ["backslash relative", "/repo/a/b", "\\repo\\a\\b", "workdir"],
+  ["exact slash UNC", "//server/share/repo", "//server/share/repo", undefined],
+  ["UNC vs root relative", "//server/share/repo", "/server/share/repo", "workdir"],
+  ["root relative vs UNC", "/server/share/repo", "//server/share/repo", "workdir"],
+  ["different UNC share", "//server/share/repo", "//server/other/repo", "workdir"],
+  ["different UNC server", "//server/share/repo", "//other/share/repo", "workdir"],
+  ["ambiguous UNC separator conversion", "//server/share/repo", "\\\\server\\share\\repo", "workdir"],
+  ["UNC current directory", "//server/share/repo", ".", undefined],
+  ["single vs double root", "/", "//", "workdir"],
+  ["double vs triple root", "//", "///", "workdir"],
+  ["triple root spelling", "///repo", "/repo", "workdir"],
+  ["internal separator run", "/repo/a/b", "/repo/a//b", "workdir"],
+  ["trailing separator run", "/repo", "/repo//", "workdir"],
+  ["Windows slash variant", "C:/Repo", "C:\\Repo", undefined],
+  ["Windows drive root", "C:/", "C:\\", undefined],
+  ["Windows current directory", "C:/Repo", ".", undefined],
+  ["unproven Windows case equivalence", "C:/Repo", "C:/repo", "workdir"],
+  ["drive relative", "C:/foo", "C:foo", "workdir"],
+  ["bare drive relative", "C:/", "C:", "workdir"],
+  ["different drive", "C:/foo", "D:/foo", "workdir"],
+  ["symlink parent traversal", "/repo", "/repo/link/..", "workdir"],
+  ["lexically cancelling parent traversal", "/repo/a", "/repo/a/../a", "workdir"],
+  ["parent traversal in captured directory", "/repo/link/..", "/repo/link/..", "session"],
+  ["UNC parent traversal", "//server/share/repo", "//server/share/link/../repo", "workdir"],
+  ["ambiguous UNC parent traversal", "//server/share/repo", "//server/share/link\\..\\repo", "workdir"],
+  ["Windows parent traversal", "C:/Repo", "C:\\Repo\\link\\..", "workdir"],
+  ["unknown current directory", "", ".", "session"],
+  ["drive-relative captured directory", "C:foo", ".", "session"],
+  ["relative captured directory", ".", ".", "session"],
+  ["nonliteral current directory spelling", "/repo", "./", "workdir"],
+] as const) {
+  test(`closed directory identity matrix: ${name}`, () => {
+    expect(sameDirectory(workdir, directory)).toBe(block === undefined)
+    expect(
+      replayBlock({ source: { ...source, directory, workdir }, current: { ...current, directory }, ...idle }),
+    ).toBe(block)
+  })
+}
+
+test("rejects parent traversal when a real symlink target has a different parent", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "orchestra-replay-path-"))
+  try {
+    const directory = path.join(root, "current")
+    const other = path.join(root, "other")
+    await mkdir(directory)
+    await mkdir(path.join(other, "child"), { recursive: true })
+    await symlink(path.join(other, "child"), path.join(directory, "link"), "junction")
+    const workdir = `${directory}${path.sep}link${path.sep}..`
+    // Some realpath wrappers normalize '..' before inspecting links. Resolve the
+    // link itself to establish the counterexample independently of that behavior.
+    const target = await realpath(path.join(directory, "link"))
+    expect(target).toBe(await realpath(path.join(other, "child")))
+    expect(path.dirname(target)).not.toBe(await realpath(directory))
+    expect(path.resolve(workdir)).toBe(directory)
+    expect(sameDirectory(workdir, directory)).toBe(false)
+    expect(
+      replayBlock({ source: { ...source, directory, workdir }, current: { ...current, directory }, ...idle }),
+    ).toBe("workdir")
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
 })
 
 describe("draft helpers", () => {

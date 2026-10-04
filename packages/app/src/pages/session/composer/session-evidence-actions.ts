@@ -153,29 +153,33 @@ export function evidenceSessionMatches(
   return (
     !!source.scope &&
     !!source.sessionID &&
-    canonicalDirectory(source.directory) !== undefined &&
+    directoryIdentity(source.directory) !== undefined &&
     source.scope === current.scope &&
     source.sessionID === current.sessionID &&
     source.directory === current.directory
   )
 }
 
-export function sameDirectory(left: string, right: string) {
-  const a = canonicalDirectory(left)
-  return a !== undefined && a === canonicalDirectory(right)
+export function sameDirectory(workdir: string, directory: string) {
+  const target = directoryIdentity(directory)
+  return target !== undefined && (workdir === "." || directoryIdentity(workdir) === target)
 }
 
-// Relative or dot-segment paths are not resolved here; they never count as the same directory.
-function canonicalDirectory(path: string) {
+// This is a spelling comparison, not filesystem canonicalization. Parent traversal
+// can cross symlinks; repeated separators can change root kind; case can matter.
+function directoryIdentity(path: string) {
   if (!path || /[\0\r\n]/.test(path)) return
-  // A drive root establishes Windows syntax; otherwise backslashes may be literal
-  // POSIX filename characters or part of a relative path, not separators.
   const windows = /^[A-Za-z]:[\\/]/.test(path)
-  const value = (windows ? path.replace(/\\/g, "/") : path).replace(/\/{2,}/g, "/")
-  if (!windows && !value.startsWith("/")) return
-  if (value.split("/").some((segment) => segment === "." || segment === "..")) return
-  const trimmed = value.length > 1 ? value.replace(/\/+$/, "") : value
-  return windows ? trimmed.toLowerCase() : trimmed
+  if (!windows && !path.startsWith("/")) return
+  // Slash-rooted UNC spelling is opaque: do not infer Windows equivalence, but
+  // reject traversal under either possible separator interpretation.
+  if (
+    path.split(windows || path.startsWith("//") ? /[\\/]/ : /\//).some((segment) => segment === "." || segment === "..")
+  )
+    return
+  const value = windows ? path.replace(/\\/g, "/") : path
+  const root = windows ? 3 : value.match(/^\/+/)![0].length
+  return value.length > root && value.endsWith("/") ? value.slice(0, -1) : value
 }
 
 function replayKey(source: EvidenceSource) {

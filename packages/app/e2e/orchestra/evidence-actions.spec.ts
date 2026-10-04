@@ -120,6 +120,10 @@ for (const entry of [
   { name: "backslash-relative POSIX", directory: "/repo/a/b", workdir: "\\repo\\a\\b", allowed: false },
   { name: "matching POSIX", directory: "/repo/a/b", workdir: "/repo/a/b/", allowed: true },
   { name: "matching Windows drive root", directory, workdir: "C:\\OpenCode\\TimelineStability\\", allowed: true },
+  { name: "UNC root distinction", directory: "//server/share/repo", workdir: "/server/share/repo", allowed: false },
+  { name: "UNC different share", directory: "//server/share/repo", workdir: "//server/other/repo", allowed: false },
+  { name: "parent traversal", directory: "/repo", workdir: "/repo/link/..", allowed: false },
+  { name: "literal current directory", directory: "/repo", workdir: ".", allowed: true },
 ]) {
   test(`replay validates path identity: ${entry.name}`, async ({ page }) => {
     const fixture = await evidencePage(page, entry)
