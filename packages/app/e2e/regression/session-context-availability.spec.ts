@@ -89,12 +89,19 @@ for (const newLayoutDesigns of [false, true]) {
       await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
       await expectSessionTitle(page, title)
       const button = page.getByRole("button", { name: "View context usage", exact: true })
-      await button.hover()
-      const tooltip = page.getByRole("tooltip")
-      await expect(tooltip).toContainText(`Cost${scenario.cost}`)
-      await expect(tooltip).toContainText(`Tokens${scenario.tokens}`)
-      await expect(tooltip).toContainText(`Usage${scenario.usage}`)
-      await button.click()
+      // The approved layout has no usage ring: Context is a permanent rail tab, open on a fresh profile.
+      if (newLayoutDesigns) {
+        await expect(button).toHaveCount(0)
+        await page.getByRole("tab", { name: "Context", exact: true }).click()
+      }
+      if (!newLayoutDesigns) {
+        await button.hover()
+        const tooltip = page.getByRole("tooltip")
+        await expect(tooltip).toContainText(`Cost${scenario.cost}`)
+        await expect(tooltip).toContainText(`Tokens${scenario.tokens}`)
+        await expect(tooltip).toContainText(`Usage${scenario.usage}`)
+        await button.click()
+      }
       const panel = page.getByRole("tabpanel", { name: "Context", exact: true })
       await expect(panel.getByText("Total Cost", { exact: true }).locator("..")).toHaveText(
         `Total Cost${scenario.cost}`,
@@ -104,7 +111,7 @@ for (const newLayoutDesigns of [false, true]) {
       )
       await expect(panel.getByText("Usage", { exact: true }).locator("..")).toHaveText(`Usage${scenario.usage}`)
       // Unknown usage dashes the ring's track; any reported value, 0% included, keeps it solid.
-      for (const ring of [button, page.getByRole("tab", { name: "Context", exact: true })]) {
+      for (const ring of newLayoutDesigns ? [] : [button, page.getByRole("tab", { name: "Context", exact: true })]) {
         const track = ring.locator("circle").first()
         if (scenario.usage === "—") await expect(track).not.toHaveCSS("stroke-dasharray", "none")
         if (scenario.usage !== "—") await expect(track).toHaveCSS("stroke-dasharray", "none")

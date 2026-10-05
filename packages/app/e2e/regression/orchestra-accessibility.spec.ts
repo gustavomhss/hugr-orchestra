@@ -13,7 +13,7 @@ import {
   setupGovernance,
   title,
 } from "../orchestra/governance.fixture"
-import { dockCard, openCockpit, pane, setupCockpit } from "../orchestra/session-cockpit.fixture"
+import { dockCard, openCockpit, pane, railTab, setupCockpit } from "../orchestra/session-cockpit.fixture"
 import {
   auditAccessibility,
   expectTabOrder,
@@ -137,8 +137,15 @@ for (const scheme of ["dark", "light"] as const) {
       await expect(pane(dock, name)).toBeFocused()
       await expect(pane(dock, name)).toHaveAttribute("aria-selected", "true")
     }
-    const results = await measureContrast(page, cockpitText)
+    const results = await measureContrast(page, dockText)
     results.push(...(await measureContrast(page, [ring("Dock tab focus ring", `${cockpit} [role="tab"]`)])))
+
+    // Tasks and Activity live in the Tasks tab; the same container class names both rail panels.
+    await railTab(page, "tasks").click()
+    await expect(dockCard(page)).toHaveCount(0)
+    expect(await auditAccessibility(page, [cockpit])).toEqual([])
+    await expectTabOrder(page, [cockpit], { trap: false })
+    results.push(...(await measureContrast(page, feedText)))
 
     // Controls are operated from the keyboard so the rows measured next show their focus ring.
     const tasks = page.locator('[data-component="tasks-panel"]')
@@ -569,11 +576,14 @@ const menuText: ContrastTarget[] = [
   { name: "menu add project", selector: `${profileMenu} .orchestra-profile-add` },
 ]
 
-const cockpitText: ContrastTarget[] = [
+const dockText: ContrastTarget[] = [
   { name: "Dock title", selector: `${cockpit} .orchestra-dock-header h2` },
   { name: "Dock selected pane", selector: `${cockpit} [role="tab"][aria-selected="true"]` },
   { name: "Dock pane", selector: `${cockpit} .orchestra-dock-tabs [role="tab"][aria-selected="false"]` },
   { name: "Dock status", selector: `${cockpit} .orchestra-dock-pane [role="status"]` },
+]
+
+const feedText: ContrastTarget[] = [
   { name: "Tasks title", selector: `${cockpit} [data-slot="tasks-title"]` },
   { name: "Tasks count", selector: `${cockpit} [data-slot="tasks-count"]` },
   { name: "Tasks failures", selector: `${cockpit} [data-slot="tasks-failures"]` },

@@ -41,6 +41,8 @@ export type FollowupDraft = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
+  // An explicit V2 delivery mode; omitted, the server steers.
+  delivery?: "steer" | "queue"
 }
 
 type FollowupSendInput = {
@@ -98,6 +100,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
           providerID: input.draft.model.providerID,
           variant: input.draft.variant,
         },
+        delivery: input.draft.delivery,
         files: await Promise.all(
           images.map(async (attachment) => ({
             uri: await blobDataUrl(attachment.blob, attachment.mime),
@@ -173,6 +176,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       agent: input.draft.agent,
       model: input.draft.model,
       variant: input.draft.variant,
+      delivery: input.draft.delivery,
       legacyParts: requestParts,
       text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
       files: requestParts.flatMap((part) => {
@@ -249,6 +253,7 @@ type PromptSubmitInput = {
   onAbort?: () => void
   onSubmit?: () => void
   model?: ModelSelection
+  delivery?: Accessor<"steer" | "queue" | undefined>
 }
 
 export function createPromptSubmit(input: PromptSubmitInput) {
@@ -491,6 +496,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       agent,
       model,
       variant,
+      delivery: isNewSession ? undefined : input.delivery?.(),
     }
 
     const clearInput = () => {
@@ -555,6 +561,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             arguments: args.join(" "),
             agent,
             model: { id: model.modelID, providerID: model.providerID, variant },
+            delivery: draft.delivery,
             files: await Promise.all(
               images.map(async (attachment) => ({
                 uri: await blobDataUrl(attachment.blob, attachment.mime),

@@ -189,3 +189,21 @@
     display: none;
   }
 }
+
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-compose-tools"]
+    > [data-action="prompt-delivery"][data-delivery="queue"] {
+    border-color: var(--mx-blue, #9abfe5);
+    color: var(--mx-blue, #9abfe5);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-compose-tools"]
+    > [data-action="prompt-delivery"][aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: default;
+  }
+}

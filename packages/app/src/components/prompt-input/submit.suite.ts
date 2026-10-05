@@ -499,6 +499,47 @@ describe("prompt submit worktree selection", () => {
     ])
   })
 
+  test("sends the composer's delivery choice with prompts and commands to an existing session", async () => {
+    params = { id: "session-1" }
+    commands.push({ name: "review" })
+    const submit = (delivery: "steer" | "queue" | undefined) =>
+      createPromptSubmit({
+        prompt,
+        info: () => ({ id: "session-1" }),
+        imageAttachments: () => [],
+        commentCount: () => 0,
+        autoAccept: () => false,
+        mode: () => "normal",
+        working: () => false,
+        editor: () => undefined,
+        queueScroll: () => undefined,
+        promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+        addToHistory: () => undefined,
+        resetHistoryNavigation: () => undefined,
+        setMode: () => undefined,
+        setPopover: () => undefined,
+        delivery: () => delivery,
+      })
+    const event = { preventDefault: () => undefined } as unknown as Event
+
+    await submit("queue").handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(1)
+    expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "ls", delivery: "queue" })
+
+    // Without a choice (a V1 server), no delivery field is sent at all.
+    promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
+    await submit(undefined).handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs[1]).not.toHaveProperty("delivery", expect.anything())
+
+    promptValue = [{ type: "text", content: "/review staged changes", start: 0, end: 22 }]
+    await submit("steer").handleSubmit(event)
+    expect(sentCommands).toHaveLength(1)
+    expect(sentCommands[0]).toMatchObject({ command: "review", delivery: "steer" })
+  })
+
   test("submits slash commands through the current session API", async () => {
     params = { id: "session-1" }
     variant = "high"

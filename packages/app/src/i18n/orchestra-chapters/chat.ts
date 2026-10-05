@@ -15,4 +15,31 @@ export const CHAT_COPY = {
   "orchestra.chat.menu.export": "Export session",
   "orchestra.chat.menu.archive": "Archive session",
   "orchestra.chat.menu.delete": "Delete session",
+  "orchestra.chat.models.all": "All models",
+  "orchestra.chat.models.count": "{{count}} models",
+  "orchestra.chat.delivery.steer": "Steer",
+  "orchestra.chat.delivery.queue": "Queue",
+  "orchestra.chat.delivery.steerHint":
+    "Steer: the next prompt joins the running work at its next turn boundary. Select to queue it instead.",
+  "orchestra.chat.delivery.queueHint":
+    "Queue: the next prompt waits until the running work would otherwise stop. Select to steer it instead.",
+  "orchestra.chat.pr.create": "Create PR",
+  "orchestra.chat.pr.title": "Create pull request",
+  "orchestra.chat.pr.description": "Preview the proposal. No remote pull request is created.",
+  "orchestra.chat.pr.previewTitle": "Pull request preview",
+  "orchestra.chat.pr.titleField": "Title",
+  "orchestra.chat.pr.from": "From branch",
+  "orchestra.chat.pr.base": "Base branch",
+  "orchestra.chat.pr.body": "Description",
+  "orchestra.chat.pr.summary": "Summary",
+  "orchestra.chat.pr.files": "Files",
+  "orchestra.chat.pr.noFiles": "No changed files in this view.",
+  "orchestra.chat.pr.submit": "Create preview",
+  "orchestra.chat.pr.cancel": "Cancel",
+  "orchestra.chat.pr.close": "Close dialog",
+  "orchestra.chat.pr.download": "Download proposal",
+  "orchestra.chat.pr.notSent":
+    "Nothing was sent: Orchestra has no GitHub or GitLab connection yet. Download the proposal as Markdown and open the pull request from your host.",
+  "orchestra.chat.delivery.unsupported":
+    "This server delivers every prompt as a steer; queueing needs a server that speaks the V2 protocol.",
 }

@@ -4,7 +4,7 @@ import { expectSessionTitle } from "../utils/waits"
 import { expectInOrder, expectStartAligned, expectTrailing, glyphs } from "./bidi"
 import { setupCompactNavigation } from "./compact-navigation.fixture"
 import { evidencePage, runCard } from "./evidence.fixture"
-import { dockCard, pane, parentID, parentTitle, server, setupCockpit } from "./session-cockpit.fixture"
+import { dockCard, pane, parentID, parentTitle, railTab, server, setupCockpit } from "./session-cockpit.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -91,6 +91,9 @@ for (const scenario of scenarios) {
   }) => {
     await setupCockpit(page, { bridge: true, many: true, locale: scenario.locale })
     await openSession(page, scenario.review)
+    // Live work opens the Tasks tab; the Dock lives alone in Apps.
+    await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+    await railTab(page, "apps").click()
     const dock = dockCard(page)
     await expect(dock).toBeVisible()
     await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)
@@ -98,6 +101,7 @@ for (const scenario of scenarios) {
     await expect(dock.getByRole("status")).toHaveText(browsing)
     expectTrailing(await glyphs(dock.getByRole("status")), browsing)
 
+    await railTab(page, "tasks").click()
     const tasks = page.locator('[data-component="tasks-panel"][data-variant="summary"]')
     const count = tasks.locator('[data-slot="tasks-count"]')
     await expect(count).toHaveText("65 tasks")
@@ -121,21 +125,21 @@ for (const scenario of scenarios) {
   }) => {
     await setupCockpit(page, { bridge: false, empty: true, locale: scenario.locale })
     await openSession(page, scenario.review)
-    await page
-      .locator('[data-slot="session-side-panel-tab-bar"]')
-      .getByRole("tab", { name: "Apps", exact: true })
-      .click()
+    await railTab(page, "apps").click()
     const dock = dockCard(page)
     const unavailable =
       "The embedded browser requires the desktop app. Files, docs and terminal remain available when supported."
     expectTrailing(await glyphs(dock.getByText(unavailable, { exact: true })), unavailable)
 
+    // Activity lives in the Tasks tab.
+    await railTab(page, "tasks").click()
     const events = "Events appear here as they arrive from their sources."
     const body = page.getByRole("region", { name: "Activity" }).getByText(events, { exact: true })
     expectTrailing(await glyphs(body), events)
     // The empty state stretches the sentence across the card, so its line shows the alignment.
     await expectStartAligned(body, scenario.direction)
 
+    await railTab(page, "apps").click()
     await pane(dock, "Files").click()
     const files = "This workspace has no files to show."
     await expect(dock.getByRole("status")).toHaveText(files)

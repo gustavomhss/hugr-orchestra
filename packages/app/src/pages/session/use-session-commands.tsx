@@ -21,6 +21,7 @@ import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { createSessionOwnership } from "./session-ownership"
 import { useLocal } from "@/context/local"
+import { cockpitView, updateCockpitView } from "./orchestra-cockpit-state"
 
 export type SessionCommandContext = {
   navigateMessageByOffset: (offset: number) => void
@@ -601,12 +602,10 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       id: "tasks.toggle",
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
-        // Orchestra's rail keeps a permanent Tasks tab: reveal it, or leave it for Review when shown.
+        // Orchestra's rail keeps a permanent Tasks tab: reveal it and toggle the Tasks detail.
         if (settings.general.newLayoutDesigns()) {
-          if (view().reviewPanel.opened() && tabs().active() === "tasks") {
-            tabs().setActive("review")
-            return
-          }
+          const shown = view().reviewPanel.opened() && tabs().active() === "tasks"
+          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
           view().reviewPanel.open()
           tabs().open("tasks")
           tabs().setActive("tasks")
