@@ -155,7 +155,7 @@ it.instance("native team prompts use roster return cards", () =>
 )
 
 it.instance(
-  "native team config only permits model variant and temperature",
+  "native team config only permits model, variant, temperature and label",
   () =>
     Effect.gen(function* () {
       const lucy = yield* load((service) => service.get("lucy"))
@@ -163,10 +163,11 @@ it.instance(
       expect(String(lucy.model?.modelID)).toBe("claude-3")
       expect(lucy.variant).toBe("fast")
       expect(lucy.temperature).toBe(0.2)
-      expect(lucy.name).toBe("Lucy")
+      expect(lucy.id).toBe("lucy")
+      expect(lucy.name).toBe("Not Lucy")
       expect(lucy.mode).toBe("subagent")
       expect(lucy.native).toBe(true)
-      expect(lucy.prompt).toStartWith("You are Lucy, cold code reviewer.")
+      expect(lucy.prompt).toStartWith("You are Not Lucy, cold code reviewer.")
       expect(evaluate(lucy, "edit")).toBe("deny")
     }),
   {

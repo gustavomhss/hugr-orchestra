@@ -67,6 +67,13 @@ export type RosterMember = {
 
 export type Roster = readonly RosterMember[]
 
+// Seat prompts are label templates: the host renders the configured display label (F1.2), so the roster holds none.
+export const LABEL = "{{label}}"
+
+export function renderPrompt(member: RosterMember, label: string) {
+  return member.prompt?.replaceAll(LABEL, label)
+}
+
 export type RosterLookup =
   | { status: "FOUND"; member: RosterMember }
   | { status: "HOLD"; reason: "malformed-member-id" | "unknown-member-id" }
