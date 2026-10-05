@@ -1487,7 +1487,6 @@ export type GlobalEvent = {
             headSHA: string
             worktree: string
             changedPaths: Array<string>
-            bytes: string
           }
           verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
           findings: Array<{
@@ -4586,7 +4585,7 @@ export type SyncEventMaestroReviewReceived = {
   type: "sync"
   id: string
   syncEvent: {
-    type: "maestro.review.received.1"
+    type: "maestro.review.received.2"
     id: string
     seq: number
     aggregateID: string
@@ -4613,7 +4612,6 @@ export type SyncEventMaestroReviewReceived = {
         headSHA: string
         worktree: string
         changedPaths: Array<string>
-        bytes: string
       }
       verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
       findings: Array<{
@@ -6556,7 +6554,6 @@ export type MaestroReviewReceived = {
       headSHA: string
       worktree: string
       changedPaths: Array<string>
-      bytes: string
     }
     verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
     findings: Array<{
@@ -8263,7 +8260,6 @@ export type EventMaestroReviewReceived = {
       headSHA: string
       worktree: string
       changedPaths: Array<string>
-      bytes: string
     }
     verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
     findings: Array<{
