@@ -157,27 +157,36 @@ for (const scenario of scenarios) {
     await expect(env).toBeVisible()
     await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)
 
-    const title = env.getByRole("heading", { name: ".env", level: 1 })
+    // The page frame (title, description) wraps the env body; dialogs portal outside both.
+    const screen = page.locator('[data-mx-page="orchestra-env"]')
+    const title = screen.getByRole("heading", { name: ".env", level: 1 })
     expectInOrder(await glyphs(title), 0, 1)
     await expectStartAligned(title, scenario.direction)
     const crumb = page.locator('[data-slot="orchestra-titlebar-breadcrumb"] > span').last()
     await expect(crumb).toHaveText(".env")
     expectInOrder(await glyphs(crumb), 0, 1)
 
-    const description = "Open, edit, and download your environment keys."
-    const intro = env.getByText(description, { exact: true })
+    const description = "Your project's environment keys. Open, edit, and download a .env file."
+    const intro = screen.getByText(description, { exact: true })
     expectTrailing(await glyphs(intro), description)
     await expectStartAligned(intro, scenario.direction)
-    const empty = "Open a local file or add your first key."
-    expectTrailing(await glyphs(env.getByText(empty, { exact: true })), empty)
+    // The empty state is two sentences separated by a line break, each ending in its own period.
+    const empty = "No environment keys yet."
+    const hint = "Open a .env file or add a key to start from an empty list."
+    await expect(env.locator(".mx-empty")).toHaveText(empty + hint)
+    const lines = await glyphs(env.locator(".mx-empty"))
+    expectTrailing(lines, empty)
+    expectTrailing(lines, empty + hint)
 
     // A file name reads left to right whatever its first letter: the Arabic name (itself right to
-    // left, so its last letter paints first), then ".env".
+    // left, so its last letter paints first), then ".env". View file titles the preview with it.
     const name = `${project.split(" ")[0]}.env`
     await page
       .getByLabel("Open .env", { exact: true })
       .setInputFiles({ name, mimeType: "text/plain", buffer: Buffer.from("KEY=value\n") })
-    const filename = env.locator(".env-filename")
+    await expect(env.locator('[data-env-key="KEY"]')).toBeVisible()
+    await env.getByRole("button", { name: "View file", exact: true }).click()
+    const filename = page.getByRole("dialog").getByRole("heading", { level: 2 }).locator("bdi")
     await expect(filename).toHaveText(name)
     const extension = name.indexOf(".")
     expectInOrder(await glyphs(filename), extension - 1, 0, extension, extension + 1, extension + 2, extension + 3)
