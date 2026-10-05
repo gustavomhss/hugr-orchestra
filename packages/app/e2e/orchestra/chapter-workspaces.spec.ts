@@ -45,7 +45,7 @@ for (const scheme of ["dark", "light"] as const) {
       .poll(() => drafts(page))
       .toEqual([expect.objectContaining({ type: "draft", server: serverA, directory: sandboxes[0] })])
     await expect(page.getByRole("textbox", { name: "Prompt", exact: true })).toHaveText("")
-    await expect(workspaceTrigger(page)).toBeVisible()
+    await expect(workspaceTrigger(page, "one")).toBeVisible()
     await expect.poll(() => mock.requests.some((request) => request.directory === sandboxes[0])).toBe(true)
 
     await openChapter(page, false)
@@ -55,15 +55,38 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(card(page, sandboxes[0]).locator(".mx-card-foot .mx-btn")).toHaveText(["Open Chat", "Configure"])
     await expect(card(page, root).locator(".mx-card-foot .mx-btn")).toHaveText(["Use workspace", "Configure"])
 
-    // A draft opened at the repository root (Home's own New session) defaults to the selected workspace.
+    // A draft opened at the repository root (Home's own New session) defaults to the selected workspace. On V2 the
+    // project's sandboxes are empty, so this also proves the default accepts a workspace listed only by directories.
+    await openHomeDraft(page)
+    await expect.poll(async () => (await drafts(page)).at(-1)).toEqual(expect.objectContaining({ directory: root }))
+    await expect(workspaceTrigger(page, "one")).toBeVisible()
+
+    // Picking Local in the draft's own menu wins over the profile default.
+    await workspaceTrigger(page, "one").click()
+    await page.getByRole("menuitem", { name: "Local repository", exact: true }).click()
+    await expect(workspaceTrigger(page, "Local")).toBeVisible()
+
+    // Another server keeps its own choice: the same repository path on Server B still starts Local.
     await page
       .locator('[data-component="orchestra-sidebar"]')
       .getByRole("button", { name: "Home", exact: true })
       .click()
-    await page.getByRole("button", { name: "New session", exact: true }).first().click()
-    await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
-    await expect.poll(async () => (await drafts(page)).at(-1)).toEqual(expect.objectContaining({ directory: root }))
-    await expect(workspaceTrigger(page)).toBeVisible()
+    await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
+    await page.getByRole("menuitemradio").filter({ hasText: "Server B repository" }).click()
+    await expect(page.locator("#orchestra-profile-name")).toHaveText("Server B repository")
+    await openHomeDraft(page)
+    await expect.poll(async () => (await drafts(page)).at(-1)).toEqual(expect.objectContaining({ server: serverB }))
+    await expect(workspaceTrigger(page, "Local")).toBeVisible()
+
+    // A workspace the server no longer lists stops being the default after the screen reloads it.
+    await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
+    await page.getByRole("menuitemradio").filter({ hasText: "Server A repository" }).click()
+    mock.state.sandboxes[serverA].splice(0, 1)
+    await openChapter(page, false)
+    await expect(page.locator(".mx-card code")).toHaveText([root, sandboxes[1]])
+    await expect(card(page, root).locator(".mx-badge.good")).toHaveText("Active")
+    await openHomeDraft(page)
+    await expect(workspaceTrigger(page, "Local")).toBeVisible()
     expect(writes(mock.requests)).toEqual([])
   })
 }
@@ -71,9 +94,16 @@ for (const scheme of ["dark", "light"] as const) {
 test("rename stays local to the profile, survives reload and resets to the folder name", async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
-  await card(page, sandboxes[1]).getByRole("button", { name: "Configure", exact: true }).click()
+  // Keyboard activation opens the dialog with focus on its close button, as in the mock.
+  await card(page, sandboxes[1]).getByRole("button", { name: "Configure", exact: true }).focus()
+  await page.keyboard.press("Enter")
   const dialog = page.getByRole("dialog", { name: "Configure two", exact: true })
   await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole("button", { name: "Close dialog", exact: true })).toBeFocused()
+  await expect(dialog.getByRole("textbox", { name: "Branch", exact: true })).toHaveAttribute(
+    "placeholder",
+    "Not reported by this server",
+  )
   await expect(dialog.locator(".mx-dialog-head p")).toHaveText(
     "Placement for this profile's work. New workspaces are git worktrees of this repository.",
   )
@@ -99,6 +129,11 @@ test("rename stays local to the profile, survives reload and resets to the folde
   await renamed.getByRole("textbox", { name: "Name", exact: true }).fill("two")
   await renamed.getByRole("button", { name: "Save", exact: true }).click()
   await expect(card(page, sandboxes[1]).locator("h3")).toHaveText("two")
+
+  await card(page, sandboxes[1]).getByRole("button", { name: "Use workspace", exact: true }).focus()
+  await page.keyboard.press("Space")
+  await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  await expect.poll(() => drafts(page)).toEqual([expect.objectContaining({ server: serverA, directory: sandboxes[1] })])
   expect(writes(mock.requests)).toEqual([])
 })
 
@@ -108,22 +143,35 @@ for (const protocol of ["v1", "v2"] as const) {
   }) => {
     const mock = await setup(page, { protocol })
     await openChapter(page)
-    const created = protocol === "v1" ? "/worktrees/feature-a" : "/repos/orchestra-workspaces/feature-a"
+    const created =
+      protocol === "v1"
+        ? "/data/opencode/worktree/project-Server A repository/feature-a"
+        : "/repos/orchestra-workspaces/feature-a"
 
     await page.getByRole("button", { name: "New workspace", exact: true }).click()
     const dialog = page.getByRole("dialog", { name: "New workspace", exact: true })
     await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole("button", { name: "Close dialog", exact: true })).toBeFocused()
     await expect(dialog.getByRole("combobox", { name: "Type", exact: true })).toHaveValue("sandbox")
-    const directory = dialog.getByRole("textbox", { name: "Directory", exact: true })
     if (protocol === "v1") {
+      const directory = dialog.getByRole("textbox", { name: "Directory", exact: true })
       await expect(directory).toHaveValue("")
       await expect(directory).toHaveAttribute("placeholder", "Chosen by the server")
       await expect(directory).toHaveAttribute("readonly", "")
+      await expect(dialog.getByRole("textbox", { name: "Branch", exact: true })).toHaveAttribute(
+        "placeholder",
+        "Created with the worktree",
+      )
       await dialog.getByRole("textbox", { name: "Name", exact: true }).fill("Feature A")
     }
     if (protocol === "v2") {
+      const directory = dialog.getByRole("textbox", { name: "Parent directory", exact: true })
       await expect(directory).toHaveValue("/repos/orchestra-workspaces")
       await expect(directory).not.toHaveAttribute("readonly", "")
+      await expect(dialog.getByRole("textbox", { name: "Branch", exact: true })).toHaveAttribute(
+        "placeholder",
+        "Detached HEAD",
+      )
       await dialog.getByRole("textbox", { name: "Name", exact: true }).fill("nested/name")
       await dialog.getByRole("button", { name: "Save", exact: true }).click()
       await expect(dialog.getByRole("alert")).toHaveText("Enter a parent directory and a name without slashes.")
@@ -137,13 +185,16 @@ for (const protocol of ["v1", "v2"] as const) {
     }
     await dialog.getByRole("button", { name: "Save", exact: true }).click()
     await expect(dialog).toBeHidden()
+    // V2 records the copy only in the project's directory table, never in `sandboxes`; it must survive the reload.
     await expect(card(page, created)).toBeVisible()
+    await expect(page.locator(".mx-card")).toHaveCount(4)
     await expect(card(page, created).locator("h3")).toHaveText(protocol === "v1" ? "Feature A" : "feature-a")
     await expect(card(page, created).locator(".mx-badge")).toHaveText(
       protocol === "v1" ? ["sandbox", "opencode/feature-a", "Idle"] : ["sandbox", "Idle"],
     )
     const creates = writes(mock.requests).filter((request) => request.method === "POST")
-    expect(creates.at(-1)).toEqual(
+    expect(creates).toEqual([
+      ...(protocol === "v2" ? [expect.objectContaining({ method: "POST" })] : []),
       expect.objectContaining(
         protocol === "v1"
           ? { path: "/experimental/worktree", directory: root, body: { name: "Feature A" } }
@@ -153,57 +204,106 @@ for (const protocol of ["v1", "v2"] as const) {
               body: { strategy: "git_worktree", directory: "/repos/orchestra-workspaces", name: "feature-a" },
             },
       ),
-    )
+    ])
     expect(new URL(creates.at(-1)?.url ?? "").origin).toBe(serverA)
 
-    // Root, the active workspace and directories the server cannot remove never offer deletion.
+    // The root never offers deletion; a directory the server did not create says so instead of offering it.
     await card(page, root).getByRole("button", { name: "Configure", exact: true }).click()
     await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toHaveCount(0)
+    await expect(page.getByRole("dialog").locator(".mx-note")).toHaveCount(0)
     await page.keyboard.press("Escape")
-    if (protocol === "v2") {
+    // On V1 `/sandboxes/one` has a branch yet lies outside the server's worktree folder, so it is not removable.
+    const external = protocol === "v1" ? sandboxes[0] : sandboxes[1]
+    await card(page, external).getByRole("button", { name: "Configure", exact: true }).click()
+    await expect(page.getByRole("dialog").locator(".mx-note")).toHaveText(
+      "This server cannot remove this directory. Remove it with git.",
+    )
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toHaveCount(0)
+    await page.keyboard.press("Escape")
+    if (protocol === "v1") {
       await card(page, sandboxes[1]).getByRole("button", { name: "Configure", exact: true }).click()
-      await expect(page.getByRole("dialog").locator(".mx-note")).toHaveText(
-        "This server cannot remove this directory. Remove it with git.",
-      )
-      await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toHaveCount(
-        0,
-      )
+      const branch = page.getByRole("dialog").getByRole("textbox", { name: "Branch", exact: true })
+      await expect(branch).toHaveValue("")
+      await expect(branch).toHaveAttribute("placeholder", "No branch")
       await page.keyboard.press("Escape")
     }
 
     await card(page, created).getByRole("button", { name: "Configure", exact: true }).click()
     await page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true }).click()
     const confirm = page.getByRole("dialog", { name: "Delete workspace?", exact: true })
-    await expect(confirm.locator(".mx-dialog-head p")).toHaveText(
+    await expect(confirm.getByRole("button", { name: "Close dialog", exact: true })).toBeFocused()
+    await expect(confirm.locator(".mx-dialog-head p")).toHaveText("Removes this git worktree and its files from disk.")
+    await expect(confirm.locator(".mx-note")).toHaveText(
       protocol === "v1"
-        ? "Removes this git worktree, its files and its branch from disk."
-        : "Removes this git worktree and its files from disk.",
+        ? `Uncommitted changes in ${created} are lost. Its branch opencode/feature-a is deleted too; commits not merged elsewhere are lost.`
+        : `If ${created} has uncommitted changes, you are asked again before they are discarded.`,
     )
-    await expect(confirm.locator(".mx-note")).toHaveText(`Uncommitted changes in ${created} are lost.`)
     await confirm.getByRole("button", { name: "Cancel", exact: true }).click()
     await expect(confirm).toBeHidden()
     await expect(card(page, created)).toBeVisible()
     expect(writes(mock.requests).filter((request) => request.method === "DELETE")).toEqual([])
 
+    // A failed removal keeps the confirmation open with the server's reason and leaves the card in place.
+    mock.state.failRemove = protocol === "v1" ? "Failed to remove git worktree" : "Project copy directory unavailable"
     await card(page, created).getByRole("button", { name: "Configure", exact: true }).click()
     await page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true }).click()
     await confirm.getByRole("button", { name: "Confirm", exact: true }).click()
+    await expect(confirm.getByRole("alert")).toHaveText(mock.state.failRemove)
+    await expect(confirm).toBeVisible()
+    await expect(card(page, created)).toBeVisible()
+    mock.state.failRemove = undefined
+
+    // V2 refuses a dirty copy until the user confirms discarding its changes; V1 always forces.
+    if (protocol === "v2") mock.state.dirty = true
+    await confirm.getByRole("button", { name: "Confirm", exact: true }).click()
+    if (protocol === "v2") {
+      const force = page.getByRole("dialog", { name: "Discard uncommitted changes?", exact: true })
+      await expect(force.locator(".mx-dialog-head p")).toHaveText(
+        "This workspace has uncommitted or untracked changes.",
+      )
+      await expect(force.locator(".mx-note")).toHaveText(`Deleting ${created} now discards those changes permanently.`)
+      await expect(force.getByRole("button", { name: "Close dialog", exact: true })).toBeFocused()
+      await expect(card(page, created)).toBeVisible()
+      await force.getByRole("button", { name: "Delete anyway", exact: true }).click()
+      await expect(force).toBeHidden()
+    }
     await expect(confirm).toBeHidden()
     await expect(card(page, created)).toHaveCount(0)
     await expect(page.locator(".mx-card code")).toHaveText([root, ...sandboxes])
-    expect(writes(mock.requests).filter((request) => request.method === "DELETE")).toEqual([
-      expect.objectContaining(
-        protocol === "v1"
-          ? { path: "/experimental/worktree", directory: root, body: { directory: created } }
-          : {
-              path: "/experimental/project/project-Server A repository/copy",
-              directory: root,
-              body: { directory: created, force: true },
-            },
+    const body = (force: boolean) => (protocol === "v1" ? { directory: created } : { directory: created, force })
+    const path = protocol === "v1" ? "/experimental/worktree" : "/experimental/project/project-Server A repository/copy"
+    expect(writes(mock.requests).filter((request) => request.method === "DELETE")).toEqual(
+      (protocol === "v1" ? [false, false] : [false, false, true]).map((force) =>
+        expect.objectContaining({ path, directory: root, body: body(force) }),
       ),
-    ])
+    )
   })
 }
+
+test("v2: the active workspace never offers deletion until another workspace is active", async ({ page }) => {
+  const mock = await setup(page)
+  await openChapter(page)
+  await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toBeVisible()
+  await page.keyboard.press("Escape")
+
+  await card(page, sandboxes[0]).getByRole("button", { name: "Use workspace", exact: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  await openChapter(page, false)
+  await expect(card(page, sandboxes[0]).locator(".mx-badge.good")).toHaveText("Active")
+  await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
+  await expect(page.getByRole("dialog", { name: "Configure one", exact: true })).toBeVisible()
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toHaveCount(0)
+  await expect(page.getByRole("dialog").locator(".mx-note")).toHaveCount(0)
+  await page.keyboard.press("Escape")
+
+  await card(page, root).getByRole("button", { name: "Use workspace", exact: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  await openChapter(page, false)
+  await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toBeVisible()
+  expect(writes(mock.requests)).toEqual([])
+})
 
 test("same paths on a second server remain isolated while a first-server response is pending", async ({ page }) => {
   const mock = await setup(page)
@@ -214,7 +314,7 @@ test("same paths on a second server remain isolated while a first-server respons
   const chapter = page.locator(".orchestra-workspaces")
   await expect(chapter.getByRole("status")).toHaveText("Loading workspaces…")
   await expect(chapter.getByRole("button", { name: "New workspace", exact: true })).toBeDisabled()
-  await expect.poll(() => mock.pending.length).toBe(1)
+  await expect.poll(() => mock.pending.length).toBeGreaterThan(0)
   await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
   await page.getByRole("menuitemradio").filter({ hasText: "Server B repository" }).click()
   await expect(chapter.locator(".mx-card")).toHaveCount(2)
@@ -269,12 +369,19 @@ function card(page: Page, directory: string) {
   return page.locator(`.orchestra-workspaces .mx-card[data-directory="${directory}"]`)
 }
 
-// The new-session composer's workspace menu trigger shows the folder name of the chosen sandbox.
-function workspaceTrigger(page: Page) {
+// The new-session composer's workspace menu trigger shows "Local" or the chosen sandbox's folder name.
+function workspaceTrigger(page: Page, label: string) {
   return page
     .locator('[data-component="session-new-design"]')
     .getByRole("button")
-    .filter({ hasText: /^\s*one\s*$/ })
+    .filter({ hasText: new RegExp(`^\\s*${label}\\s*$`), visible: true })
+}
+
+// Home's own New session control (not the titlebar's), which opens a draft at the profile's repository root.
+async function openHomeDraft(page: Page) {
+  await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Home", exact: true }).click()
+  await page.locator('[data-action="home-new-session"]').filter({ visible: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
 }
 
 function writes(requests: Request[]) {
@@ -306,6 +413,10 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     empty: false,
     delay: false,
     failCreate: undefined as string | undefined,
+    failRemove: undefined as string | undefined,
+    // V2 refuses to remove a copy with uncommitted changes unless the request is forced.
+    dirty: false,
+    // Non-root directories per server: V1 reports them as project sandboxes, V2 in the project's directory table.
     sandboxes: { [serverA]: [...sandboxes], [serverB]: [sandboxes[1]] } as Record<string, string[]>,
     // Directories the V2 server created with a copy strategy and can therefore remove.
     managed: new Set([sandboxes[0]]),
@@ -352,7 +463,11 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
       body: request.postDataJSON() ?? undefined,
     })
     const list = state.sandboxes[url.origin]
-    const current = project(url.origin === serverA ? "Server A repository" : "Server B repository", list)
+    // V2 core keeps `sandboxes` empty; its workspaces come from the directory table below.
+    const current = project(
+      url.origin === serverA ? "Server A repository" : "Server B repository",
+      protocol === "v1" ? list : [],
+    )
     if (["/global/event", "/event", "/api/event"].includes(url.pathname))
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
     if (url.pathname === "/global/health")
@@ -375,7 +490,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
       }
       return respond()
     }
-    if (url.pathname === "/experimental/worktree") return worktree(route, request.method(), list)
+    if (url.pathname === "/experimental/worktree") return worktree(route, request.method(), list, current.id)
     if (url.pathname.endsWith("/directories") && url.pathname.startsWith("/api/project/"))
       return json(route, [
         { directory: root },
@@ -387,10 +502,9 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     if (/^\/experimental\/project\/[^/]+\/copy$/.test(url.pathname)) return copy(route, request.method(), list)
     if (url.pathname === "/vcs") {
       const directory = requestDirectory(url) ?? root
-      return json(route, {
-        branch: directory === root ? "dev" : `opencode/${directory.split("/").at(-1)}`,
-        default_branch: "dev",
-      })
+      // `/sandboxes/two` is on a detached HEAD, so V1 reports no branch for it.
+      const branch = directory === root ? "dev" : `opencode/${directory.split("/").at(-1)}`
+      return json(route, { branch: directory === sandboxes[1] ? null : branch, default_branch: "dev" })
     }
     if (url.pathname === "/project/current") return json(route, current)
     if (url.pathname === "/api/project/current") return json(route, { id: current.id, directory: root })
@@ -427,15 +541,18 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     return json(route, {})
   })
 
-  // V1 worktree endpoints: list every linked worktree, create under the server's own directory, remove by path.
-  function worktree(route: Route, method: string, list: string[]) {
+  // V1 worktree endpoints: list the project's sandboxes, create under `<data>/worktree/<projectID>`, remove by path.
+  function worktree(route: Route, method: string, list: string[], projectID: string) {
     const body = route.request().postDataJSON() as { name?: string; directory?: string } | null
     if (method === "GET") return json(route, list)
     if (method === "POST") {
       const name = (body?.name ?? "").toLowerCase().replaceAll(" ", "-")
-      list.push(`/worktrees/${name}`)
-      return json(route, { name, branch: `opencode/${name}`, directory: `/worktrees/${name}` })
+      const directory = `/data/opencode/worktree/${projectID}/${name}`
+      list.push(directory)
+      return json(route, { name, branch: `opencode/${name}`, directory })
     }
+    if (state.failRemove)
+      return json(route, { name: "WorktreeRemoveFailedError", data: { message: state.failRemove } }, 400)
     list.splice(list.indexOf(body?.directory ?? ""), 1)
     return json(route, true)
   }
@@ -450,8 +567,16 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
       state.managed.add(directory)
       return json(route, { directory })
     }
-    list.splice(list.indexOf(body.directory), 1)
-    state.managed.delete(body.directory)
+    const remove = body as { directory: string; force: boolean }
+    if (state.failRemove) return json(route, { name: "ProjectCopyError", data: { message: state.failRemove } }, 400)
+    if (state.dirty && !remove.force)
+      return json(
+        route,
+        { name: "ProjectCopyError", data: { message: "contains modified or untracked files", forceRequired: true } },
+        400,
+      )
+    list.splice(list.indexOf(remove.directory), 1)
+    state.managed.delete(remove.directory)
     return route.fulfill({ status: 204, headers: cors })
   }
 

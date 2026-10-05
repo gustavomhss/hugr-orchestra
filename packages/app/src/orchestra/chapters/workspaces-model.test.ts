@@ -3,9 +3,9 @@ import {
   activeWorkspace,
   copyTarget,
   defaultCopyParent,
+  forceRequired,
   homeRelative,
   preferredSandbox,
-  removableWorkspaces,
   repositoryProject,
   repositoryWorkspaces,
   workspaceFailure,
@@ -31,24 +31,67 @@ describe("repositoryProject", () => {
 })
 
 describe("repositoryWorkspaces", () => {
-  test("lists the root first, then its sandboxes, with folder names", () => {
+  test("V1 lists the root first, then its sandboxes, with folder names", () => {
     expect(repositoryWorkspaces(projects[0])).toEqual([
-      { directory: "/repos/orchestra", folder: "orchestra", root: true },
-      { directory: "/sandboxes/one", folder: "one", root: false },
-      { directory: "/sandboxes/two", folder: "two", root: false },
+      { directory: "/repos/orchestra", folder: "orchestra", root: true, removable: false },
+      { directory: "/sandboxes/one", folder: "one", root: false, removable: false },
+      { directory: "/sandboxes/two", folder: "two", root: false, removable: false },
+    ])
+  })
+
+  test("V1 offers deletion only for worktrees in the server's own worktree folder for this project", () => {
+    const project = {
+      id: "abc",
+      worktree: "/repos/orchestra",
+      sandboxes: [
+        "/data/opencode/worktree/abc/feature",
+        "/data/opencode/worktree/other/feature",
+        "/repos/orchestra-clone",
+        "/data/opencode/worktree/abc/feature/nested",
+        "C:\\data\\opencode\\worktree\\abc\\fix",
+      ],
+    }
+    expect(repositoryWorkspaces(project).map((item) => [item.folder, item.removable])).toEqual([
+      ["orchestra", false],
+      ["feature", true],
+      ["feature", false],
+      ["orchestra-clone", false],
+      ["nested", false],
+      ["fix", true],
+    ])
+  })
+
+  test("V2 lists the project's directory table, including copies missing from sandboxes", () => {
+    const directories = [
+      { directory: "/copies/new", strategy: "git_worktree" },
+      { directory: "/repos/orchestra/" },
+      { directory: "/repos/opened" },
+    ]
+    expect(repositoryWorkspaces({ ...projects[0], sandboxes: [] }, directories)).toEqual([
+      { directory: "/repos/orchestra", folder: "orchestra", root: true, removable: false },
+      { directory: "/copies/new", folder: "new", root: false, removable: true },
+      { directory: "/repos/opened", folder: "opened", root: false, removable: false },
+    ])
+    expect(repositoryWorkspaces(projects[0], [])).toEqual([
+      { directory: "/repos/orchestra", folder: "orchestra", root: true, removable: false },
     ])
   })
 
   test("normalizes Windows paths for names and deduplication without changing directories", () => {
-    expect(repositoryWorkspaces({ worktree: "C:\\repo", sandboxes: ["C:\\trees\\one", "C:/trees/one/"] })).toEqual([
-      { directory: "C:\\repo", folder: "repo", root: true },
-      { directory: "C:\\trees\\one", folder: "one", root: false },
+    const project = { id: "p", worktree: "C:\\repo", sandboxes: ["C:\\trees\\one", "C:/trees/one/"] }
+    expect(repositoryWorkspaces(project).map((item) => [item.directory, item.folder])).toEqual([
+      ["C:\\repo", "repo"],
+      ["C:\\trees\\one", "one"],
     ])
   })
 
   test("deduplicates the root and handles a project without sandboxes", () => {
-    expect(repositoryWorkspaces({ worktree: "/repo", sandboxes: ["/repo/", "/tree", "/tree"] })).toHaveLength(2)
-    expect(repositoryWorkspaces({ worktree: "/repo" })).toEqual([{ directory: "/repo", folder: "repo", root: true }])
+    expect(repositoryWorkspaces({ id: "p", worktree: "/repo", sandboxes: ["/repo/", "/tree", "/tree"] })).toHaveLength(
+      2,
+    )
+    expect(repositoryWorkspaces({ id: "p", worktree: "/repo" })).toEqual([
+      { directory: "/repo", folder: "repo", root: true, removable: false },
+    ])
   })
 })
 
@@ -62,19 +105,23 @@ describe("active workspace", () => {
     expect(activeWorkspace([], "/sandboxes/two")).toBeUndefined()
   })
 
-  test("new drafts default only to a sandbox the project still lists, spelled as listed", () => {
-    expect(preferredSandbox(["C:\\trees\\one"], "C:/trees/one/")).toBe("C:\\trees\\one")
-    expect(preferredSandbox(projects[0].sandboxes, "/repos/orchestra")).toBeUndefined()
-    expect(preferredSandbox(projects[0].sandboxes, "/sandboxes/removed")).toBeUndefined()
-    expect(preferredSandbox(projects[0].sandboxes)).toBeUndefined()
+  test("a root draft defaults only to a listed workspace, and only once the saved choice has loaded", () => {
+    const listed = { ready: true, sandboxes: ["C:\\trees\\one"], known: ["/copies/new"] }
+    expect(preferredSandbox({ ...listed, stored: "C:/trees/one/" })).toBe("C:\\trees\\one")
+    expect(preferredSandbox({ ...listed, stored: "/copies/new" })).toBe("/copies/new")
+    expect(preferredSandbox({ ...listed, stored: "/copies/new", ready: false })).toBeUndefined()
+    expect(preferredSandbox({ ...listed, stored: "/sandboxes/removed" })).toBeUndefined()
+    expect(preferredSandbox({ ...listed, stored: undefined })).toBeUndefined()
+    expect(preferredSandbox({ ready: true, sandboxes: [], stored: "/copies/new" })).toBeUndefined()
   })
 })
 
-test("only server-removable directories offer deletion", () => {
-  const directories = [{ directory: "/sandboxes/one", strategy: "git_worktree" }, { directory: "/sandboxes/two/" }]
-  expect(removableWorkspaces("v1", directories)).toEqual(["/sandboxes/one", "/sandboxes/two"])
-  expect(removableWorkspaces("v2", directories)).toEqual(["/sandboxes/one"])
-  expect(removableWorkspaces("v2", [])).toEqual([])
+test("recognizes only V2's dirty-tree refusal as a request to force", () => {
+  expect(forceRequired({ name: "ProjectCopyError", data: { message: "dirty", forceRequired: true } })).toBe(true)
+  expect(forceRequired({ name: "ProjectCopyError", data: { message: "missing" } })).toBe(false)
+  expect(forceRequired({ data: { forceRequired: "true" } })).toBe(false)
+  expect(forceRequired(new Error("Transport"))).toBe(false)
+  expect(forceRequired(undefined)).toBe(false)
 })
 
 test("V2 copies need a parent directory and a single path segment", () => {
