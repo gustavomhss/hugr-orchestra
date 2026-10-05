@@ -2903,6 +2903,36 @@ export type ProviderAuthError1 = {
   }
 }
 
+export type SessionActivitySession = {
+  id: string
+  title: string
+  parentID: string
+  created: number
+  updated: number
+  additions: number
+  deletions: number
+  files: number
+}
+
+export type SessionActivityFact = {
+  bucket: number
+  sessionID: string
+  providerID: string
+  modelID: string
+  user: number
+  assistant: number
+  failed: number
+  activeMs: number
+  tokens: number
+  cost: number
+}
+
+export type SessionActivity = {
+  edges: Array<number>
+  sessions: Array<SessionActivitySession>
+  facts: Array<SessionActivityFact>
+}
+
 export type NotFoundError = {
   name: "NotFoundError"
   data: {
@@ -11223,6 +11253,38 @@ export type SessionStatusResponses = {
 }
 
 export type SessionStatusResponse = SessionStatusResponses[keyof SessionStatusResponses]
+
+export type SessionActivityData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    /**
+     * Comma-separated ascending epoch-millisecond bucket boundaries (2 to 64)
+     */
+    edges: string
+  }
+  url: "/session/activity"
+}
+
+export type SessionActivityErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type SessionActivityError = SessionActivityErrors[keyof SessionActivityErrors]
+
+export type SessionActivityResponses = {
+  /**
+   * Session activity
+   */
+  200: SessionActivity
+}
+
+export type SessionActivityResponse = SessionActivityResponses[keyof SessionActivityResponses]
 
 export type SessionDeleteData = {
   body?: never

@@ -177,6 +177,8 @@ import type {
   QuestionV2Reply,
   SessionAbortErrors,
   SessionAbortResponses,
+  SessionActivityErrors,
+  SessionActivityResponses,
   SessionChildrenErrors,
   SessionChildrenResponses,
   SessionCommandErrors,
@@ -3482,6 +3484,38 @@ export class Session2 extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<SessionStatusResponses, SessionStatusErrors, ThrowOnError>({
       url: "/session/status",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get session activity
+   *
+   * Aggregate user and assistant messages of the sessions in this directory into one fact per bucket, session and model. Buckets are [edges[i], edges[i + 1]).
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      edges: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "edges" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SessionActivityResponses, SessionActivityErrors, ThrowOnError>({
+      url: "/session/activity",
       ...options,
       ...params,
     })

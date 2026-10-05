@@ -6,6 +6,8 @@ import { Command } from "@/command"
 import { Permission } from "@/permission"
 import { SessionShare } from "@/share/session"
 import { Session } from "@/session/session"
+import { SessionActivity } from "@/session/activity"
+import { Database } from "@opencode-ai/core/database/database"
 import { SessionCompaction } from "@/session/compaction"
 import { MessageV2 } from "@/session/message-v2"
 import { SessionPrompt } from "@/session/prompt"
@@ -23,6 +25,7 @@ import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder, HttpApiError, HttpApiSchema } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 import {
+  ActivityQuery,
   CommandPayload,
   DiffQuery,
   ForkPayload,
@@ -60,6 +63,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     const summary = yield* SessionSummary.Service
     const events = yield* EventV2Bridge.Service
     const scope = yield* Scope.Scope
+    const database = yield* Database.Service
 
     const list = Effect.fn("SessionHttpApi.list")(function* (ctx: { query: typeof ListQuery.Type }) {
       const directory = ctx.query.directory ? yield* InstanceState.directory : undefined
@@ -76,6 +80,14 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
 
     const status = Effect.fn("SessionHttpApi.status")(function* () {
       return Object.fromEntries(yield* statusSvc.list())
+    })
+
+    const activity = Effect.fn("SessionHttpApi.activity")(function* (ctx: { query: typeof ActivityQuery.Type }) {
+      const edges = SessionActivity.parseEdges(ctx.query.edges)
+      if (!edges) return yield* new HttpApiError.BadRequest({})
+      return yield* SessionActivity.collect({ directory: yield* InstanceState.directory, edges }).pipe(
+        Effect.provideService(Database.Service, database),
+      )
     })
 
     const requireSession = Effect.fn("SessionHttpApi.requireSession")(function* (sessionID: SessionID) {
@@ -413,6 +425,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     return handlers
       .handle("list", list)
       .handle("status", status)
+      .handle("activity", activity)
       .handle("get", get)
       .handle("children", children)
       .handle("todo", todo)
