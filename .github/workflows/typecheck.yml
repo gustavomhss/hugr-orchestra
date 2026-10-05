@@ -18,6 +18,15 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # Saved by cache-warm on dev; see the Turbo cache note in test.yml.
+      - name: Restore Turbo cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json', 'bun.lock') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json', 'bun.lock') }}-
+
       - name: Run typecheck
         # Standard private runners have 2 vCPUs and ~8 GB RAM. tsgo already uses every core, and the
         # opencode package alone peaks near 5 GB, so Turbo's default 10 parallel tasks exhaust memory
