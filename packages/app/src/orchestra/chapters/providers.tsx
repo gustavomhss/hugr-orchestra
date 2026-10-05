@@ -82,6 +82,27 @@ function ProvidersScreen(props: ChapterPageProps) {
     busy: {} as Record<string, boolean>,
   })
 
+  // Label helpers come before the memos below: those run at creation and read them when data is already cached.
+  const note = (card: ProviderCard) => {
+    const key = noteKey(card.base)
+    if (key) return language.t(key)
+    if (card.custom) return language.t("orchestra.providers.note.custom")
+    return language.t("orchestra.providers.note.models", { count: card.models.length })
+  }
+  const noteText = (id: string) => {
+    const key = noteKey(id)
+    return key ? language.t(key) : undefined
+  }
+  const status = (card: ProviderCard) =>
+    language.t(card.connected ? "orchestra.providers.status.connected" : "orchestra.providers.status.disconnected")
+  const method = (card: ProviderCard) => {
+    if (card.method === "apiKey") return language.t("provider.connect.method.apiKey")
+    if (card.method === "environment") return language.t("settings.providers.tag.environment")
+    if (card.method === "custom") return language.t("settings.providers.tag.custom")
+    if (card.method === "credential") return language.t("orchestra.providers.method.credential")
+    return language.t("settings.providers.tag.config")
+  }
+
   // Read the resource only once settled: an unsettled read would suspend the whole chapter route.
   const v2Data = () => (v2.state === "ready" || v2.state === "refreshing" ? v2.latest : undefined)
   const data = createMemo(() => {
@@ -121,26 +142,6 @@ function ProvidersScreen(props: ChapterPageProps) {
     return routes().find((card) => card.id === preferred.providerID)?.name ?? preferred.providerID
   })
   const baseName = (card: ProviderCard) => data()?.catalog.find((entry) => entry.id === card.base)?.name ?? card.name
-
-  const note = (card: ProviderCard) => {
-    const key = noteKey(card.base)
-    if (key) return language.t(key)
-    if (card.custom) return language.t("orchestra.providers.note.custom")
-    return language.t("orchestra.providers.note.models", { count: card.models.length })
-  }
-  const noteText = (id: string) => {
-    const key = noteKey(id)
-    return key ? language.t(key) : undefined
-  }
-  const status = (card: ProviderCard) =>
-    language.t(card.connected ? "orchestra.providers.status.connected" : "orchestra.providers.status.disconnected")
-  const method = (card: ProviderCard) => {
-    if (card.method === "apiKey") return language.t("provider.connect.method.apiKey")
-    if (card.method === "environment") return language.t("settings.providers.tag.environment")
-    if (card.method === "custom") return language.t("settings.providers.tag.custom")
-    if (card.method === "credential") return language.t("orchestra.providers.method.credential")
-    return language.t("settings.providers.tag.config")
-  }
 
   const refresh = async () => {
     await sync().refreshProviders()

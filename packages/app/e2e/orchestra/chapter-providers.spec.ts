@@ -203,19 +203,19 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
   await expect(
     dialog.getByText("It is saved in this server's config, for every profile.", { exact: false }),
   ).toBeVisible()
-  await expect(dialog.getByLabel("Base URL")).toHaveValue("http://localhost:8080/v1")
-  await dialog.getByLabel("Model ID").fill("qwen")
+  await expect(dialog.getByLabel("Base URL", { exact: true })).toHaveValue("http://localhost:8080/v1")
+  await dialog.getByLabel("Model ID", { exact: true }).fill("qwen")
   // Catalog, disabled card and config keys all count: "LMStudio" derives the configured `lmstudio` id.
   for (const name of ["Anthropic", "Local", "LMStudio"]) {
-    await dialog.getByLabel("Name").fill(name)
+    await dialog.getByLabel("Name", { exact: true }).fill(name)
     await dialog.getByRole("button", { name: "Connect" }).click()
     await expect(dialog.getByRole("alert")).toHaveText("Choose a unique provider name.")
   }
-  await dialog.getByLabel("Name").fill("My LLM")
-  await dialog.getByLabel("Base URL").fill("ftp://nope")
+  await dialog.getByLabel("Name", { exact: true }).fill("My LLM")
+  await dialog.getByLabel("Base URL", { exact: true }).fill("ftp://nope")
   await dialog.getByRole("button", { name: "Connect" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Enter a valid endpoint URL.")
-  await dialog.getByLabel("Base URL").fill("http://localhost:8080/v1")
+  await dialog.getByLabel("Base URL", { exact: true }).fill("http://localhost:8080/v1")
   await dialog.getByRole("button", { name: "Connect" }).click()
   await expect(dialog).toHaveCount(0)
   expect(patches(mock).at(-1)).toEqual({
@@ -320,7 +320,7 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await expect(method).toBeDisabled()
   await dialog.getByRole("button", { name: "Connect" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Enter the authorization code to continue.")
-  await dialog.getByLabel("Authorization code").fill("code-123")
+  await dialog.getByLabel("Authorization code", { exact: true }).fill("code-123")
   await dialog.getByRole("button", { name: "Connect" }).click()
   await expect(dialog).toHaveCount(0)
   expect(
@@ -330,7 +330,7 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await card.getByRole("button", { name: "Configure" }).click()
   await method.selectOption({ label: "Sign in on this device" })
   await dialog.getByRole("button", { name: "Connect" }).click()
-  const confirmation = dialog.getByLabel("Confirmation code")
+  const confirmation = dialog.getByLabel("Confirmation code", { exact: true })
   await expect(confirmation).toHaveValue("ABCD-1234")
   await expect(dialog.getByRole("status")).toHaveText("Waiting for authorization…")
   await expect(dialog.getByRole("button", { name: "Connect" })).toHaveCount(0)
@@ -348,12 +348,12 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
 
   await card.getByRole("button", { name: "Configure" }).click()
   await method.selectOption({ label: "Enterprise sign-in" })
-  await expect(dialog.getByLabel("Deployment")).toHaveValue("cloud")
-  await expect(dialog.getByLabel("Host")).toHaveCount(0)
-  await dialog.getByLabel("Deployment").selectOption("self")
-  await dialog.getByLabel("Host").fill("https://sso.example.test")
+  await expect(dialog.getByLabel("Deployment", { exact: true })).toHaveValue("cloud")
+  await expect(dialog.getByLabel("Host", { exact: true })).toHaveCount(0)
+  await dialog.getByLabel("Deployment", { exact: true }).selectOption("self")
+  await dialog.getByLabel("Host", { exact: true }).fill("https://sso.example.test")
   await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByLabel("Authorization code")).toBeVisible()
+  await expect(dialog.getByLabel("Authorization code", { exact: true })).toBeVisible()
   expect(body(oauth("prompted")[0]).inputs).toEqual({ deployment: "self", host: "https://sso.example.test" })
   await dialog.getByRole("button", { name: "Cancel" }).click()
 

@@ -76,7 +76,8 @@ function MxDialog(props: {
           </div>
         </Show>
         <footer class="mx-dialog-foot">
-          <Dialog.CloseButton type="button" class="mx-btn">
+          {/* Kobalte names a close button "Dismiss" unless told otherwise; keep the visible word as its name. */}
+          <Dialog.CloseButton type="button" class="mx-btn" aria-label={language.t("common.cancel")}>
             {language.t("common.cancel")}
           </Dialog.CloseButton>
           <Show when={props.submit}>
