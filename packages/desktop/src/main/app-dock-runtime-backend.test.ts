@@ -28,6 +28,7 @@ async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
   const state = {
     workspace: "workspace" in input ? input.workspace : running(pinned),
     terminate: async () => {},
+    copy: async () => {},
   }
   const backend: Backend = {
     locate: async (saved) => {
@@ -61,6 +62,7 @@ async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
       return { stdout: "{}", stderr: "" }
     },
     copy: async (_metadata, workspace, source, target) => {
+      await state.copy()
       calls.push(`copy ${basename(source)} ${workspace.id}:${target}`)
     },
     command: () => {
@@ -129,4 +131,34 @@ test("a helper whose channel cannot terminate is reaped through the backend befo
   f.state.terminate = async () => {}
   await f.runtime.dispose()
   expect(f.helpers.map((helper) => helper.reaped)).toEqual([1, 0])
+})
+
+test("a workspace left running by an earlier app session gets the current workspace.py before its first helper exec", async () => {
+  const f = await fixture({ pin: pinned })
+
+  expect((await f.runtime.state()).phase).toBe("ready")
+  await f.runtime.launch("x.desktop")
+  expect(f.calls.filter((call) => call.includes("workspace.py"))).toEqual([
+    `copy workspace.py ${pinned}:/opt/orchestra/workspace.py`,
+    `exec root ${pinned} chown 0:0 /opt/orchestra/workspace.py`,
+    `exec root ${pinned} chmod 0644 /opt/orchestra/workspace.py`,
+    `exec dock ${pinned} python3 /opt/orchestra/workspace.py list`,
+    `exec dock ${pinned} python3 /opt/orchestra/workspace.py launch x.desktop`,
+  ])
+})
+
+test("a failed workspace.py refresh blocks the helper exec and is retried on the next use", async () => {
+  const f = await fixture({ pin: pinned })
+  f.state.copy = () => Promise.reject(new Error("copy failed"))
+
+  expect((await f.runtime.state()).phase).toBe("error")
+  expect(f.calls).toEqual([])
+  f.state.copy = async () => {}
+  expect((await f.runtime.state()).phase).toBe("ready")
+  expect(f.calls).toEqual([
+    `copy workspace.py ${pinned}:/opt/orchestra/workspace.py`,
+    `exec root ${pinned} chown 0:0 /opt/orchestra/workspace.py`,
+    `exec root ${pinned} chmod 0644 /opt/orchestra/workspace.py`,
+    `exec dock ${pinned} python3 /opt/orchestra/workspace.py list`,
+  ])
 })

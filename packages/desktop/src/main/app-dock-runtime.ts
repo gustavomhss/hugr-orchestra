@@ -44,6 +44,8 @@ export function create(options: { root: string; context: string; image?: string;
     browserBridge: undefined as { key: string; endpoint: string; token: string } | undefined,
     native: undefined as NativeHandle | undefined,
     accessKey: undefined as string | undefined,
+    // Workspace whose workspace.py was refreshed in this app session.
+    refreshed: undefined as { id: string; done: Promise<void> } | undefined,
     nativeStart: undefined as Promise<NativeHandle> | undefined,
     // Bumped by stop/dispose so a helper admitted across a teardown is reaped, not published.
     nativeEpoch: 0,
@@ -123,7 +125,27 @@ export function create(options: { root: string; context: string; image?: string;
     // Callers verify ownership once per serialized operation. Exec targets its immutable ID,
     // so a name replacement cannot redirect a later command to a different container.
     if (metadata.containerID !== container.id) throw new RuntimeError("failed")
-    return backend.exec(metadata, container, { user: admin ? "root" : "dock", argv: ["python3", helper, ...args], timeout })
+    return refresh(metadata, container).then(() =>
+      backend.exec(metadata, container, { user: admin ? "root" : "dock", argv: ["python3", helper, ...args], timeout }))
+  }
+  // A workspace left running by an earlier app session still has that session's workspace.py.
+  // Refresh it once per workspace before the first helper exec; running processes keep their
+  // loaded code and later execs use the new file. A failed refresh is retried on the next use.
+  const refresh = (metadata: Metadata, container: Workspace) => {
+    if (current.refreshed?.id !== container.id) {
+      const done = provision(metadata, container, "workspace.py").catch((error: unknown) => {
+        if (current.refreshed?.done === done) current.refreshed = undefined
+        throw error
+      })
+      current.refreshed = { id: container.id, done }
+    }
+    return current.refreshed.done
+  }
+  // Trusted helper code is root-owned and read-only for the workspace user.
+  const provision = async (metadata: Metadata, container: Workspace, name: string) => {
+    await backend.copy(metadata, container, resolve(options.context, name), `/opt/orchestra/${name}`)
+    await backend.exec(metadata, container, { user: "root", argv: ["chown", "0:0", `/opt/orchestra/${name}`] })
+    await backend.exec(metadata, container, { user: "root", argv: ["chmod", "0644", `/opt/orchestra/${name}`] })
   }
   const bridgeCommand = (metadata: Metadata, container: Workspace, command: "configure" | "callback", input: unknown) => new Promise<void>((resolve, reject) => {
     const host = backend.command(metadata.endpoint, container.id, { user: "dock", argv: ["python3", "/opt/orchestra/browser-bridge.py", command] })
@@ -234,6 +256,7 @@ export function create(options: { root: string; context: string; image?: string;
         // Refresh the trusted helper before a cold start so persisted workspaces
         // receive crash-recovery fixes without replacing their installation.
         await backend.copy(metadata, container, resolve(options.context, "workspace.py"), helper)
+        current.refreshed = { id: container.id, done: Promise.resolve() }
         started.value = true
         await backend.start(metadata, container)
       }
@@ -325,9 +348,7 @@ export function create(options: { root: string; context: string; image?: string;
       if (!container?.running) throw new Error("workspace-not-running")
       const key = placement(container)
       if (current.accessKey !== key) {
-        await backend.copy(metadata, container, resolve(options.context, "workspace-access.py"), "/opt/orchestra/workspace-access.py")
-        await backend.exec(metadata, container, { user: "root", argv: ["chown", "0:0", "/opt/orchestra/workspace-access.py"] })
-        await backend.exec(metadata, container, { user: "root", argv: ["chmod", "0644", "/opt/orchestra/workspace-access.py"] })
+        await provision(metadata, container, "workspace-access.py")
         current.accessKey = key
       }
       return { endpoint: metadata.endpoint, workspaceID: container.id, key }
