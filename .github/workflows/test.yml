@@ -195,14 +195,11 @@ jobs:
       - name: Enable JUnit timings
         run: printf "\n[test.reporter]\njunit = '%s'\n" "$RUNNER_TEMP/junit-opencode-${{ matrix.shard }}.xml" >> packages/opencode/bunfig.toml
 
-      # Same prerequisite as opencode#test in turbo.json (^build).
-      - name: Build test dependencies
-        run: bun turbo build --filter=opencode^...
-
       - name: Run opencode tests
         timeout-minutes: 30
         working-directory: packages/opencode
-        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/3
+        # --parallel runs files in isolated worker processes; test/preload.ts gives each its own data dir.
+        run: bun test --timeout 30000 --only-failures --parallel=4 --shard=${{ matrix.shard }}/3
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
@@ -244,13 +241,14 @@ jobs:
 
       # Turbo 2 keeps its local cache in .turbo/cache. Only cache-warm saves it (on dev), so every
       # pull_request run restores the same dev-scoped entry instead of short-lived PR-scoped copies.
+      # Turbo checks each entry against its own task hash, so the key only selects the newest blob.
       - name: Restore Turbo cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json', 'bun.lock') }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json', 'bun.lock') }}-
+            turbo-${{ runner.os }}-
 
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
       - name: Check generated Atlas boundary
@@ -352,7 +350,9 @@ jobs:
         run: bun run test:e2e:local --shard=${{ matrix.shard }}/3
         env:
           CI: true
-        # One worker per shard; the unsharded suite took 20-30 minutes.
+          # The backend is mocked per page, so Linux shards run two browsers; Windows keeps one.
+          PLAYWRIGHT_WORKERS: ${{ runner.os == 'Linux' && '2' || '1' }}
+        # The unsharded single-worker suite took 20-30 minutes.
         timeout-minutes: 30
 
       - name: Upload Playwright artifacts
