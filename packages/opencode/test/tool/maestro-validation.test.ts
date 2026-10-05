@@ -179,8 +179,7 @@ describe("Maestro validation tools", () => {
             headSHA: "b".repeat(40),
             worktree: "/tmp/worktree",
             changedPaths: [],
-            encoding: "base64" as const,
-            bytes: "cHJvb2Y=",
+            sha256: "a".repeat(64),
           },
           checks: validation.checks,
         } as never

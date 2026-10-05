@@ -457,7 +457,13 @@ const layer = Layer.effect(
             if (agent.hidden === true) throw new Error(`default agent "${c.default_agent}" is hidden`)
             return agent
           }
-          const visible = Object.values(agents).find((a) => a.mode !== "subagent" && a.hidden !== true)
+          // Primary-capable specialist seats are chosen explicitly, never as the implicit default.
+          const visible = Object.values(agents).find(
+            (a) =>
+              a.mode !== "subagent" &&
+              a.hidden !== true &&
+              !roster.some((member) => member.memberId === a.id && member.nativeProfile),
+          )
           if (!visible) throw new Error("no primary visible agent found")
           return visible
         })
