@@ -1,4 +1,5 @@
 import { describe, expect } from "bun:test"
+import fsp from "node:fs/promises"
 import path from "node:path"
 import { Deferred, Effect, Fiber, Layer } from "effect"
 import { systemError } from "effect/PlatformError"
@@ -209,7 +210,8 @@ describe("hashed session archive on real filesystem", () => {
     yield* failure(f.archive.list(f.sessionID), "archive-unsafe-path")
     yield* failure(f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "new")] }), "archive-unsafe-path")
     expect((yield* f.fs.readDirectory(moved)).sort()).toHaveLength(2)
-    yield* f.fs.remove(f.dir)
+    // Remove only the link. Windows deletes directory links with rmdir; a recursive remove fails there.
+    yield* Effect.promise(() => process.platform === "win32" ? fsp.rmdir(f.dir) : fsp.unlink(f.dir))
     yield* f.fs.rename(moved, f.dir)
     expect(yield* f.archive.list(f.sessionID)).toHaveLength(1)
   }))
