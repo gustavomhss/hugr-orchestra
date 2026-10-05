@@ -68,6 +68,8 @@
     border-radius: 7px;
     background: transparent;
     color: var(--orchestra-tab-text);
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
     font-size: 12px;
     line-height: 16px;
     transition:
@@ -197,7 +199,8 @@
 
   [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
     color: var(--orchestra-toolbar-brand);
-    font-weight: 520;
+    font-family: var(--mx-emphasis, "Mx Inter Medium", var(--orchestra-font-family-sans));
+    font-weight: 600;
   }
 
   [data-slot="orchestra-titlebar-caption"] {
