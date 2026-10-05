@@ -395,7 +395,6 @@ describe("App Dock controller", () => {
   })
 })
 
-
 describe("App Dock controller with the Linux workspace", () => {
   const workspace = (tabID: string, generation: number) => ({ tabID, generation, url: "appdock://linux" as const })
   const ready = async () => {
@@ -471,11 +470,19 @@ describe("App Dock controller with the Linux workspace", () => {
     dock.emit({ type: "tab-opened", payload: { ...tab("tab-1", 1), url: "https://example.com/a" } })
     dock.emit({
       type: "state",
-      payload: { ...tab("tab-1", 1), url: "https://example.com/loaded", title: "Loaded", loading: false, audible: false },
+      payload: {
+        ...tab("tab-1", 1),
+        url: "https://example.com/loaded",
+        title: "Loaded",
+        loading: false,
+        audible: false,
+      },
     })
     release.resolve()
     await launching
-    expect(controller.state.tabs.map((item) => [item.tabID, item.url])).toEqual([["tab-1", "https://example.com/loaded"]])
+    expect(controller.state.tabs.map((item) => [item.tabID, item.url])).toEqual([
+      ["tab-1", "https://example.com/loaded"],
+    ])
     expect(controller.state.url).toBe("https://example.com/loaded")
   })
 

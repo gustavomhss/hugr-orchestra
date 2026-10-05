@@ -73,12 +73,7 @@ export function TabMenu(props: {
           items[(next + items.length) % items.length]?.focus()
         }}
       >
-        <button
-          type="button"
-          role="menuitem"
-          disabled={!props.canDuplicate}
-          onClick={props.onDuplicate}
-        >
+        <button type="button" role="menuitem" disabled={!props.canDuplicate} onClick={props.onDuplicate}>
           Duplicate
         </button>
         <button type="button" role="menuitem" onClick={props.onTogglePin}>

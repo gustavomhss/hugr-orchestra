@@ -413,7 +413,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   }
 
   const bumpLinux = () => setState("linuxIntent", (value) => value + 1)
-  const placement = (tab: Tab | TabIdentity & { url: string }) =>
+  const placement = (tab: Tab | (TabIdentity & { url: string })) =>
     isLinux(tab.url) ? { mode: "linux" as const } : { mode: "browser" as const, lastBrowser: identity(tab) }
 
   const open = async (url: string, fallback = "Could not open App Dock") => {
@@ -434,8 +434,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     const tabs = known ? state.tabs : [...state.tabs, tab]
     batch(() => {
       setState("tabs", tabs)
-      if (requested === selection)
-        setState({ active: identity(tab), url: known?.url ?? tab.url, ...placement(tab) })
+      if (requested === selection) setState({ active: identity(tab), url: known?.url ?? tab.url, ...placement(tab) })
     })
     void saveTabs(tabs, profile)
     // Opening attaches before replying; a later selection may already have replaced that view.
