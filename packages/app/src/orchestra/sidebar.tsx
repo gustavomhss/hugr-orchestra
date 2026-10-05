@@ -137,9 +137,19 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
               !!directory &&
               (pathKey(project.worktree) === directory ||
                 project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory)),
-          ),
+          ) ??
+        (group && target.directory ? copyOwner(group.conn, group.projects(), target.directory) : undefined),
     }
   })
+
+  // A V2 project copy (a workspace) never appears in `sandboxes`, but its directory's bootstrap already asked the
+  // server which project owns it. Reading that answer passively keeps a draft in a copy on its repository profile,
+  // so chapters opened from it get the repository root.
+  function copyOwner(conn: ServerConnection.Any, projects: LocalProject[], directory: string) {
+    const id = global.ensureServerCtx(conn).sync.peek(directory, { bootstrap: false })[0].project
+    if (!id || id === "global") return
+    return projects.find((project) => project.id === id)
+  }
 
   // The profile card only reads: passive reads must not initialize (bootstrap) the selected directory.
   // The agent list shares the bootstrap's query cache.

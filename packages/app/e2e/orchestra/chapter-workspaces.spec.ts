@@ -13,6 +13,8 @@ const project = (name: string, sandboxes: string[]) => ({
   worktree: root,
   sandboxes,
   vcs: "git",
+  // A project that already has a color; without one, the V1 shell PATCHes a generated color on load.
+  icon: { color: "mint" },
   time: { created: 1, updated: 1 },
 })
 
@@ -47,6 +49,8 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(page.getByRole("textbox", { name: "Prompt", exact: true })).toHaveText("")
     await expect(workspaceTrigger(page, "one")).toBeVisible()
     await expect.poll(() => mock.requests.some((request) => request.directory === sandboxes[0])).toBe(true)
+    // A draft in a workspace stays on its repository profile, even on V2 where the copy is not a project sandbox.
+    await expect(page.locator("#orchestra-profile-name")).toHaveText("Server A repository")
 
     await openChapter(page, false)
     await expect(card(page, sandboxes[0]).locator(".mx-badge")).toHaveText(["sandbox", "Active"])
@@ -55,8 +59,9 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(card(page, sandboxes[0]).locator(".mx-card-foot .mx-btn")).toHaveText(["Open Chat", "Configure"])
     await expect(card(page, root).locator(".mx-card-foot .mx-btn")).toHaveText(["Use workspace", "Configure"])
 
-    // A draft opened at the repository root (Home's own New session) defaults to the selected workspace. On V2 the
-    // project's sandboxes are empty, so this also proves the default accepts a workspace listed only by directories.
+    // A fresh draft at the repository root (Chat from Home, then New session) defaults to the selected workspace. On
+    // V2 the project's sandboxes are empty, so this also proves the default accepts a workspace listed only by
+    // directories.
     await openHomeDraft(page)
     await expect.poll(async () => (await drafts(page)).at(-1)).toEqual(expect.objectContaining({ directory: root }))
     await expect(workspaceTrigger(page, "one")).toBeVisible()
@@ -81,8 +86,12 @@ for (const scheme of ["dark", "light"] as const) {
     // A workspace the server no longer lists stops being the default after the screen reloads it.
     await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
     await page.getByRole("menuitemradio").filter({ hasText: "Server A repository" }).click()
+    // From a draft the switch opens Server A's own draft asynchronously; the chapter must open on that profile.
+    await expect(page.locator("#orchestra-profile-name")).toHaveText("Server A repository")
     mock.state.sandboxes[serverA].splice(0, 1)
     await openChapter(page, false)
+    // Server B lists the same two cards, so name the profile before reading them.
+    await expect(page.locator(".orchestra-workspaces .mx-toolbar .mx-badge")).toHaveText("Server A repository")
     await expect(page.locator(".mx-card code")).toHaveText([root, sandboxes[1]])
     await expect(card(page, root).locator(".mx-badge.good")).toHaveText("Active")
     await openHomeDraft(page)
@@ -289,6 +298,7 @@ test("v2: the active workspace never offers deletion until another workspace is 
 
   await card(page, sandboxes[0]).getByRole("button", { name: "Use workspace", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  await expect(page.locator("#orchestra-profile-name")).toHaveText("Server A repository")
   await openChapter(page, false)
   await expect(card(page, sandboxes[0]).locator(".mx-badge.good")).toHaveText("Active")
   await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
@@ -302,6 +312,25 @@ test("v2: the active workspace never offers deletion until another workspace is 
   await openChapter(page, false)
   await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
   await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toBeVisible()
+  expect(writes(mock.requests)).toEqual([])
+})
+
+test("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
+  const mock = await setup(page)
+  await openChapter(page)
+  // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
+  await page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Workspaces", exact: true })
+    .hover()
+  await expect(page.getByRole("tooltip")).toHaveText("Work in progress, revisit before production")
+  await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).focus()
+  await page.keyboard.press("Enter")
+  const dialog = page.getByRole("dialog", { name: "Configure one", exact: true })
+  await expect(dialog).toBeVisible()
+  await expect(page.getByRole("tooltip")).toHaveCount(1)
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
   expect(writes(mock.requests)).toEqual([])
 })
 
@@ -377,11 +406,23 @@ function workspaceTrigger(page: Page, label: string) {
     .filter({ hasText: new RegExp(`^\\s*${label}\\s*$`), visible: true })
 }
 
-// Home's own New session control (not the titlebar's), which opens a draft at the profile's repository root.
+// Home is the KPI dashboard and has no New session of its own. From Home, Chat opens the selected profile's chat (one
+// of its drafts, or a new one at the repository root) and the tab bar's New session starts a fresh draft there.
 async function openHomeDraft(page: Page) {
-  await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Home", exact: true }).click()
-  await page.locator('[data-action="home-new-session"]').filter({ visible: true }).click()
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  await sidebar.getByRole("button", { name: "Home", exact: true }).click()
+  await expect.poll(() => new URL(page.url()).pathname).toBe("/")
+  await sidebar.getByRole("button", { name: "Chat", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  const chat = new URL(page.url()).searchParams.get("draftId")
+  await page
+    .locator('[data-slot="orchestra-tab-controls"]')
+    .getByRole("button", { name: "New session", exact: true })
+    .click()
+  await expect.poll(() => new URL(page.url()).searchParams.get("draftId")).not.toBe(chat)
+  await expect
+    .poll(async () => (await drafts(page)).at(-1)?.draftID)
+    .toBe(new URL(page.url()).searchParams.get("draftId"))
 }
 
 function writes(requests: Request[]) {
