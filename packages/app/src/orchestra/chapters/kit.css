@@ -29,7 +29,8 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --mx-soft: rgba(60, 87, 118, 0.045);
   --mx-raised: rgba(255, 255, 255, 0.63);
   --mx-modal: #f8fafc;
-  --mx-dim: #697586;
+  /* WCAG AA on the light glass panel (owner decision); the mock uses #697586. */
+  --mx-dim: #48515c;
   --mx-strong: #263341;
   --mx-blue: #376ea5;
   --mx-good: #3d7e5e;
