@@ -24,7 +24,7 @@ function deferred<T>() {
 // Deterministic Protocol.Client boundary only: no helper, runtime, or application claims.
 class BoundaryClient implements NativeDockProtocol.Client {
   hello: NativeDockProtocol.Hello = { backend: "linux-atspi", helperEpoch: "helper", sessionID: "session",
-    limits: { ...NativeDockProtocol.limits }, operations: ["bind", "read", "action", "type", "unbind", "cancel", "shutdown"] }
+    limits: { ...NativeDockProtocol.limits }, operations: ["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"] }
   readonly calls: NativeDockProtocol.Call[] = []
   readonly signals: Array<AbortSignal | undefined> = []
   private readonly inflight = new Set<(error: NativeDockProtocol.NativeError) => void>()
@@ -502,17 +502,22 @@ test("read/click/action/type carry only captured binding and explicit native arg
   }
   await f.dock.dispatch("type", identity(), { ref: "n:input", text: "", mode: "keyboard" })
   expect(f.client.calls.at(-1)).toEqual({ op: "type", args: { ref: "n:input", text: "", mode: "keyboard" }, ...scope })
+  await f.dock.dispatch("keyboard", identity(), { ref: "n:window", keys: "ctrl+comma", type: "keyDown" })
+  expect(f.client.calls.at(-1)).toEqual({ op: "key", args: { ref: "n:window", keys: "ctrl+comma" }, ...scope })
 })
 
 test("numeric native refs, invalid args and browser-only operations fail before client work", async () => {
   const f = fixture()
   await f.dock.bind(identity(), target(), f.client, confirm)
   for (const op of ["click", "action", "type"]) await expect(f.dock.dispatch(op, identity(), { ref: 7, text: "text", actionID: "action" })).rejects.toMatchObject({ code: "wrong-scope" })
-  for (const op of ["list", "activate", "close", "navigate", "go", "open", "clickAt", "screenshot", "scroll", "keyboard", "evaluate", "storage", "network", "hover", "drag"])
+  for (const op of ["list", "activate", "close", "navigate", "go", "open", "clickAt", "screenshot", "scroll", "evaluate", "storage", "network", "hover", "drag"])
     await expect(f.dock.dispatch(op, identity(), {})).rejects.toMatchObject({ code: "unsupported-operation" })
   for (const args of [{ budget: 501 }, { maxText: -1 }, { rootRef: 7 }, { cursor: "" }, { textOffset: -1 }])
     await expect(f.dock.dispatch("read", identity(), args)).rejects.toMatchObject({ code: "invalid-argument" })
   await expect(f.dock.dispatch("action", identity(), { ref: "n:button" })).rejects.toMatchObject({ code: "invalid-argument" })
+  await expect(f.dock.dispatch("keyboard", identity(), {})).rejects.toMatchObject({ code: "wrong-scope" })
+  for (const keys of [undefined, "", "x".repeat(65), 7])
+    await expect(f.dock.dispatch("keyboard", identity(), { ref: "n:window", keys })).rejects.toMatchObject({ code: "invalid-argument" })
   await expect(f.dock.dispatch("type", identity(), { ref: "n:input", text: "", mode: "fallback" })).rejects.toMatchObject({ code: "invalid-argument" })
   expect(f.client.calls.length).toBe(2)
 })
@@ -633,7 +638,7 @@ class WireChannel implements NativeDockProtocol.Channel {
   onData(listener: (data: Uint8Array) => void) {
     this.data = listener
     queueMicrotask(() => this.send("hello", { backend: "linux-atspi", helperEpoch: "helper", sessionID: "session",
-      limits: { ...NativeDockProtocol.limits }, operations: ["bind", "read", "action", "type", "unbind", "cancel", "shutdown"],
+      limits: { ...NativeDockProtocol.limits }, operations: ["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"],
       processIdentity: target().processIdentities[0], ...(this.scopeKinds === undefined ? {} : { scopeKinds: this.scopeKinds }) }))
     return () => { this.data = undefined }
   }

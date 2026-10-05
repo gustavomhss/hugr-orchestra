@@ -40,7 +40,7 @@ class Wire implements NativeDockProtocol.Channel {
     queueMicrotask(() => this.reply("hello", {
       backend: "linux-atspi", helperEpoch: this.epoch, sessionID: "session",
       limits: { ...NativeDockProtocol.limits },
-      operations: ["bind", "read", "action", "type", "unbind", "cancel", "shutdown"],
+      operations: ["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"],
     }))
     return () => { this.data = undefined }
   }

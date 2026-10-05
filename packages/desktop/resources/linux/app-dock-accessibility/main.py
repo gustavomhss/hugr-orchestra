@@ -13,14 +13,14 @@ import sys
 from threading import Event, Lock, Thread
 from time import monotonic
 
-from actions import invoke, replace_text
+from actions import invoke, press, replace_text
 from bindings import BindingStore, word
 from bus import AtspiBus, BusError
 from context import LIMITS, RequestContext, process_identity
 from refs import RefRegistry, SCOPE_KINDS
 from snapshot import read
 
-OPERATIONS = ("bind", "read", "action", "type", "unbind", "cancel", "shutdown")
+OPERATIONS = ("bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown")
 
 
 class Helper:
@@ -84,6 +84,7 @@ class Helper:
                     args = request["args"]
                     value = read(context, args) if request["op"] == "read" else (
                         invoke(context, args["ref"], args.get("actionID"), args.get("mode", "stable")) if request["op"] == "action" else
+                        press(context, args["ref"], args["keys"]) if request["op"] == "key" else
                         replace_text(context, args["ref"], args["text"], args.get("mode", "editable")))
                 terminal = {"value": value}
             except BusError as error:
@@ -186,7 +187,7 @@ def _request(request, epoch, sequence):
 
 
 def _scope(request):
-    if request["op"] in ("read", "action", "type", "unbind"):
+    if request["op"] in ("read", "action", "type", "key", "unbind"):
         if not word(request.get("bindingID")) or not word(request.get("bindingEpoch")):
             raise BusError("wrong-scope", "Native binding identity is required")
         return
@@ -201,6 +202,10 @@ def _arguments(op, args):
         return
     if op == "read":
         return  # snapshot._query validates the bounded discriminated read arguments.
+    if op == "key":
+        if set(args) != {"ref", "keys"} or not word(args.get("ref")) or not args["ref"].startswith("n:") or not isinstance(args.get("keys"), str):
+            raise BusError("protocol-error", "Key combination requires an opaque ref and keys")
+        return
     if op in ("action", "type"):
         allowed = {"ref", "actionID", "mode"} if op == "action" else {"ref", "text", "mode"}
         if set(args) - allowed or not word(args.get("ref")) or not args["ref"].startswith("n:"):

@@ -853,3 +853,24 @@ test("dock_find lists a role without a name and dock_action takes an actionID pa
     .toEqual({ dispatch: "acknowledged" })
   expect(dock.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:a", actionID: "a:n:a" } })
 })
+
+test("dock_keyboard sends native key combinations to a ref, a target or the one active window", async () => {
+  const frame = (ref: string, name: string, active: boolean) => control(ref, name, { roleName: "frame", role: 23,
+    states: active ? [1, 8, 24] : [8, 24], actions: [] })
+  const dock = host((op) => op === "keyboard" ? { ok: true, value: { method: "keys", dispatch: "acknowledged" } }
+    : page([frame("n:code", "Welcome - Visual Studio Code", true), frame("n:term", "xterm", false), control("n:a", "Open")]))
+  const sent = () => dock.calls.filter((call) => call.op === "keyboard").map((call) => call.args)
+  expect(JSON.parse(String(await dock.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
+    .toMatchObject({ dispatch: "acknowledged" })
+  expect(JSON.parse(String(await dock.hooks.tool.dock_keyboard.execute({ keys: "Escape", ref: "n:a" }, context))))
+    .toMatchObject({ dispatch: "acknowledged" })
+  await dock.hooks.tool.dock_keyboard.execute({ keys: "F1", target: { name: "xterm", role: "frame" } }, context)
+  expect(sent()).toEqual([{ ref: "n:code", keys: "ctrl+comma" }, { ref: "n:a", keys: "Escape" }, { ref: "n:term", keys: "F1" }])
+  await dock.hooks.tool.dock_keyboard.execute({ type: "keyDown", key: "Enter" }, context)
+  expect(sent().at(-1)).toEqual({ type: "keyDown", key: "Enter" })
+  expect(await dock.hooks.tool.dock_keyboard.execute({ key: "Enter" }, context)).toContain("needs type and key")
+  const idle = host(() => page([frame("n:term", "xterm", false)]))
+  expect(JSON.parse(String(await idle.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
+    .toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
+  expect(idle.calls.every((call) => call.op === "read")).toBe(true)
+})

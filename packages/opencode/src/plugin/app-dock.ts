@@ -159,7 +159,9 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
     })
 }
 
-type NativeQuery = { name?: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number }
+// window: only an active frame, dialog or window (where native key combinations land).
+type NativeQuery = { name?: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number;
+  window?: boolean }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
 // occurrence counts earlier matches with the same name and roleName on the same page, and index is the item's position
 // on that page, so a rescan can re-identify the control.
@@ -173,7 +175,7 @@ const MAX_FIND_PAGES = 48
 // Bounds all scans, restarts and retries of one dock_find/dock_action/dock_type call; nothing is dispatched after it.
 const FIND_DEADLINE_MS = 90000
 // AT-SPI state numbers that change what a model can do with a control.
-const STATES: Record<number, string> = { 4: "checked", 7: "editable", 10: "expanded", 12: "focused", 16: "modal", 20: "pressed", 23: "selected" }
+const STATES: Record<number, string> = { 1: "active", 4: "checked", 7: "editable", 10: "expanded", 12: "focused", 16: "modal", 20: "pressed", 23: "selected" }
 
 function nativePage(value: unknown) {
   if (!object(value) || value.backend !== "linux-atspi" || !Array.isArray(value.items) || !object(value.coverage))
@@ -194,6 +196,8 @@ const roleKey = (role: string) => role.toLowerCase().replace(/[^a-z0-9]/g, "")
 
 function fits(item: NativeItem, query: NativeQuery) {
   if (query.role !== undefined && roleKey(item.roleName) !== roleKey(query.role)) return false
+  if (query.window && !(["frame", "dialog", "window"].includes(roleKey(item.roleName)) && Array.isArray(item.states)
+    && item.states.includes(1))) return false
   return query.capability === undefined || supports(item, query.capability)
 }
 
@@ -204,6 +208,8 @@ function supports(item: NativeItem, capability: string) {
 
 // A target that names real controls but excludes them by role or input mode must say so, or models keep guessing.
 function missed(scan: NativeScan, query: NativeQuery) {
+  if (query.window) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
+    hint: "No app window is active in the Linux workspace; pass ref or target for the window, or ask the user to click the app" })
   if (scan.found.length === 0) return compactScan(scan, "target-not-found")
   const items = scan.found.map((match) => match.item)
   const roles = [...new Set(items.map((item) => item.roleName))]
@@ -429,13 +435,27 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           call(context, "scroll", { direction: args.direction, amount: args.amount }).then(toJSON, toolError),
       }),
       dock_keyboard: tool({
-        description: "Dispatch a keyDown or keyUp event to the active App Dock tab.",
+        description: "Press keys. Browser tabs: `type` keyDown/keyUp with `key`. Linux workspace: `keys` as one combination such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target` (a focusable control there takes focus first). The effect is defined by the app and never verified, so read again afterwards.",
         args: {
-          type: tool.schema.enum(["keyDown", "keyUp"]),
-          key: tool.schema.string().min(1),
+          type: tool.schema.enum(["keyDown", "keyUp"]).optional().describe("Browser only"),
+          key: tool.schema.string().min(1).optional().describe("Browser only: one key name"),
+          keys: tool.schema.string().min(1).max(64).optional().describe("Linux workspace: modifiers and one key joined by +, e.g. ctrl+shift+p"),
+          ref: ref.optional().describe("Linux workspace: a control in the window that should receive the keys"),
+          target: target.optional().describe("Linux workspace: locate that control by name instead of ref"),
         },
-        execute: (args, context) =>
-          call(context, "keyboard", { type: args.type, key: args.key }).then(toJSON, toolError),
+        execute: (args, context) => {
+          if (args.keys === undefined) {
+            if (args.type === undefined || args.key === undefined)
+              return Promise.resolve("dock_keyboard needs type and key for a browser tab, or keys for the Linux workspace")
+            return call(context, "keyboard", { type: args.type, key: args.key }).then(toJSON, toolError)
+          }
+          const keys = args.keys
+          if (args.ref !== undefined) return call(context, "keyboard", { ref: args.ref, keys }).then(toJSON, toolError)
+          // Without a ref the keys go to the one active window, located the same way a target is.
+          const query: NativeQuery = args.target ?? { window: true }
+          return exclusive(() => act(context, query, (item, clock) => call(context, "keyboard", { ref: item.ref, keys }, clock).then(toJSON),
+            { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+        },
       }),
       dock_evaluate: tool({
         description: "Evaluate JavaScript in the active App Dock tab.",

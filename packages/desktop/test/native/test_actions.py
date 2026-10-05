@@ -84,7 +84,8 @@ def fixture():
     </node>"""
 
     def native_states(path):
-        values = wire["states"] if path == field_path else wire.get("focusStates", [8, 12, 24, 25]) if path == focus_path else [1, 8, 24, 25]
+        values = (wire["states"] if path == field_path else wire.get("focusStates", [8, 12, 24, 25]) if path == focus_path
+                  else wire.get("windowStates", [1, 8, 24, 25]) if path == window_path else [1, 8, 24, 25])
         return [sum(1 << (s % 32) for s in values if s // 32 == word) for word in range(2)]
 
     def method(connection, sender, path, interface, name, parameters, invocation):

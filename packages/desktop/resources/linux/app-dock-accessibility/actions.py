@@ -100,6 +100,31 @@ def replace_text(context, ref, text, mode="editable"):
         raise
 
 
+def press(context, ref, keys):
+    """Send one key combination to the owned window holding ref; the app decides what it means."""
+    record = context.registry.resolve(ref, context)
+    context.registry.invalidate(context.binding)
+    keyboard.parse_keys(keys)  # Refuse unknown or server-level combinations before any native call.
+    evidence = context.require_owned(record)
+    try:
+        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence))
+    except BusError as error:
+        if hasattr(error, "result"):
+            error.result = _keys_result(error.result)
+        raise
+
+
+def _keys_result(result):
+    focus = result.get("focus", {})
+    bounded = {"method": "keys", "keys": str(result.get("keys", ""))[:64], "dispatch": result["dispatch"],
+               "postcondition": "unverified", "focus": {"requested": bool(focus.get("requested")),
+               "confirmed": bool(focus.get("confirmed")), "externalRaces": "unfenced"},
+               "controllerCalls": result.get("controllerCalls", 0)}
+    if "modifierRelease" in result:
+        bounded["modifierRelease"] = str(result["modifierRelease"])[:LIMITS["field"]]
+    return bounded
+
+
 def _target(context, record, mode=None, observed=False):
     evidence = context.require_owned(record)
     live = states(context.call(record["owner"], record["path"], A + "Accessible", "GetState", reply="(au)")[0])

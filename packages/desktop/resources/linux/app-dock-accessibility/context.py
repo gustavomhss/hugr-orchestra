@@ -87,9 +87,11 @@ class RequestContext:
 
     def cleanup_call(self, owner, path, interface, method, signature, parameters, reply, timeout_ms=None):
         # Releasing modifiers must still run after cancellation/deadline exhaustion.
-        if (path, interface, method, signature, parameters, reply) != (
+        # Only KEY_UNLOCKMODIFIERS of shortcut modifier bits (Shift, Control, Mod1, Mod4) qualifies.
+        mask = parameters[0] if isinstance(parameters, tuple) and parameters else None
+        if (path, interface, method, signature, parameters[1:] if mask is not None else None, reply) != (
                 "/org/a11y/atspi/registry/deviceeventcontroller", A + "DeviceEventController",
-                "GenerateKeyboardEvent", "(isu)", (4, "", 6), "()"):
+                "GenerateKeyboardEvent", "(isu)", ("", 6), "()") or type(mask) is not int or not mask or mask & ~(1 | 4 | 8 | 64):
             raise BusError("unsupported-operation", "Only modifier cleanup may bypass request cancellation")
         return self.bus.call(owner, path, interface, method, signature, parameters, reply, 500)
 

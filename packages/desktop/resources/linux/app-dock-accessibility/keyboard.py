@@ -22,6 +22,14 @@ DBUS = ("org.freedesktop.DBus", "/org/freedesktop/DBus")
 DEC = "/org/a11y/atspi/registry/deviceeventcontroller"
 _locks, _guard = WeakValueDictionary(), Lock()
 MAX_TEXT, MAX_CALLS = 1500, LIMITS["keyboardCalls"]
+# X11 modifier masks and the keysyms a shortcut may name; single printable ASCII characters are their own keysym.
+MODIFIERS = {"ctrl": 4, "control": 4, "shift": 1, "alt": 8, "super": 64}
+KEYSYMS = {"return": 0xFF0D, "enter": 0xFF0D, "escape": 0xFF1B, "esc": 0xFF1B, "tab": 0xFF09, "backspace": 0xFF08,
+           "delete": 0xFFFF, "insert": 0xFF63, "home": 0xFF50, "end": 0xFF57, "left": 0xFF51, "up": 0xFF52,
+           "right": 0xFF53, "down": 0xFF54, "pageup": 0xFF55, "pagedown": 0xFF56, "space": 0x20, "plus": 0x2B,
+           "comma": 0x2C, "period": 0x2E, "slash": 0x2F, "minus": 0x2D, "equal": 0x3D, "semicolon": 0x3B,
+           "backslash": 0x5C, "grave": 0x60, "apostrophe": 0x27, "bracketleft": 0x5B, "bracketright": 0x5D,
+           **{f"f{n}": 0xFFBE + n - 1 for n in range(1, 13)}}
 
 
 def replace_text(bus, node, text, timeout_ms, allowed_window=None):
@@ -298,6 +306,110 @@ def _value(call, ref):
     return value
 
 
+def parse_keys(keys):
+    """Map "ctrl+shift+p" style shortcuts to an X11 modifier mask and one keysym."""
+    if not isinstance(keys, str) or not 1 <= len(keys) <= 64 or any(ord(c) < 32 or ord(c) > 126 for c in keys):
+        raise BusError("protocol-error", "Key combination must be short printable ASCII")
+    *names, key = [part.strip().lower() for part in keys.split("+")]
+    mask = 0
+    for name in names:
+        if name not in MODIFIERS or mask & MODIFIERS[name]:
+            raise BusError("unsupported-operation", "Unknown or repeated modifier in key combination")
+        mask |= MODIFIERS[name]
+    keysym = KEYSYMS.get(key, ord(key) if len(key) == 1 and 32 < ord(key) < 127 else None)
+    if keysym is None:
+        raise BusError("unsupported-operation", "Unknown key name in key combination")
+    # Server-level sequences (zap, virtual terminal switch) act outside the workspace session.
+    if mask & 4 and mask & 8 and (key == "backspace" or key in KEYSYMS and key.startswith("f") and key[1:].isdigit()):
+        raise BusError("unsupported-operation", "Server control key combinations are not allowed")
+    return mask, keysym
+
+
+def press_keys(bus, node, keys, timeout_ms, allowed_window):
+    """One shortcut into an owned, active window. Its effect is application-defined, so it is never verified."""
+    mask, keysym = parse_keys(keys)
+    if type(timeout_ms) is not int or not 1 <= timeout_ms <= 60000:
+        raise BusError("protocol-error", "Invalid keyboard deadline")
+    if not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+        raise BusError("unsupported-operation", "Key combinations require an X11 accessibility session")
+    if (not isinstance(node, dict) or not isinstance(node.get("owner"), str) or not node["owner"].startswith(":")
+            or not isinstance(node.get("path"), str) or max(len(node["owner"]), len(node["path"])) > 256):
+        raise BusError("ownership-unresolved", "A unique exporter and native path are required")
+    if not isinstance(allowed_window, dict):
+        raise BusError("protocol-error", "Owned window evidence is required")
+    deadline = monotonic() + timeout_ms / 1000
+    result = {"method": "keys", "keys": keys, "dispatch": "unknown", "postcondition": "unverified",
+              "focus": {"requested": False, "confirmed": False, "externalRaces": "unfenced"}, "controllerCalls": 0}
+    counter = [0]
+
+    def call(ref, interface, method, signature="()", parameters=(), reply="()"):
+        remaining = int((deadline - monotonic()) * 1000)
+        if remaining <= 0 or counter[0] >= MAX_CALLS:
+            raise BusError("timeout", "Keyboard query/deadline budget exhausted")
+        counter[0] += 1
+        value = bus.call(*ref, interface, method, signature, parameters, reply, min(1000, remaining))
+        return value[0] if reply != "()" else None
+
+    with _guard:
+        lock = _locks.get(bus.connection.get_guid())
+        if lock is None:
+            lock = Lock()
+            _locks[bus.connection.get_guid()] = lock
+    if not lock.acquire(timeout=max(0, deadline - monotonic())):
+        raise BusError("busy", "Keyboard session is already executing")
+    try:
+        ref = node["owner"], node["path"]
+        pid = call(DBUS, DBUS[0], "GetConnectionUnixProcessID", "(s)", (ref[0],), "(u)")
+        if allowed_window.get("owner") != ref[0] or allowed_window.get("pid") != pid:
+            raise BusError("wrong-scope", "Exporter does not match owned window evidence")
+        _, window = _ancestry(call, ref)
+        if not window or allowed_window.get("path") != window:
+            raise BusError("wrong-scope", "Target ancestry does not confirm the owned window")
+
+        def active():
+            current = _states(call, (ref[0], window))
+            if 6 in current:
+                raise BusError("defunct", "Owned window is defunct")
+            if 1 not in current:
+                raise BusError("focus-unconfirmed", "Owned window is not active")
+
+        active()
+        target = _states(call, ref)
+        if 6 in target:
+            raise BusError("defunct", "Target is defunct")
+        if call(ref, A + "Accessible", "GetRole", reply="(u)") == 40:
+            raise BusError("protected-text", "Key combinations are not sent to protected controls")
+        # A focusable anchor takes focus first; a window or frame anchor leaves focus where the app has it.
+        if 11 in target and 12 not in target and A + "Component" in call(ref, A + "Accessible", "GetInterfaces", reply="(as)"):
+            result["focus"]["requested"] = True
+            if not call(ref, A + "Component", "GrabFocus", reply="(b)") or 12 not in _states(call, ref):
+                raise BusError("focus-unconfirmed", "Provider did not focus the key target")
+        result["focus"]["confirmed"] = 12 in _states(call, ref)
+        active()
+        controller = call(DBUS, DBUS[0], "GetNameOwner", "(s)", ("org.a11y.atspi.Registry",), "(s)"), DEC
+
+        def generate(code, kind):
+            active()
+            result["controllerCalls"] += 1
+            call(controller, A + "DeviceEventController", "GenerateKeyboardEvent", "(isu)", (code, "", kind))
+
+        try:
+            if mask:
+                generate(mask, 5)  # KEY_LOCKMODIFIERS
+            generate(keysym, 3)  # KEY_SYM: press and release
+        finally:
+            if mask and result["controllerCalls"]:
+                _release(bus, controller, result, mask)
+        result["dispatch"] = "acknowledged"
+        return result
+    except BusError as error:
+        result["dispatch"] = "unknown" if result["controllerCalls"] or result["focus"]["requested"] else "not-dispatched"
+        error.result = result
+        raise
+    finally:
+        lock.release()
+
+
 def _segments(text):
     for ascii_run, characters in groupby(text, lambda c: ord(c) < 128):
         if ascii_run:
@@ -310,11 +422,11 @@ def _send_segment(generate, segment):
     generate(0, segment, 4)
 
 
-def _release(bus, controller, result):
+def _release(bus, controller, result, mask=4):
     # Separate finite cleanup budget also runs after the operation deadline.
     result["controllerCalls"] += 1
     try:
-        getattr(bus, "cleanup_call", bus.call)(*controller, A + "DeviceEventController", "GenerateKeyboardEvent", "(isu)", (4, "", 6), "()", 500)
+        getattr(bus, "cleanup_call", bus.call)(*controller, A + "DeviceEventController", "GenerateKeyboardEvent", "(isu)", (mask, "", 6), "()", 500)
     except BusError as error:
         result["modifierRelease"] = error.code
         raise

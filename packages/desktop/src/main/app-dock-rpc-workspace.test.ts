@@ -50,7 +50,7 @@ class Wire implements NativeDockProtocol.Channel {
     this.data = listener
     queueMicrotask(() => this.reply("hello", { backend: "linux-atspi", helperEpoch: this.epoch, sessionID: "session",
       scopeKinds: ["application", "workspace"], limits: { ...NativeDockProtocol.limits },
-      operations: ["bind", "read", "action", "type", "unbind", "cancel", "shutdown"] }))
+      operations: ["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"] }))
     return () => { this.data = undefined }
   }
   onExit(listener: (exit: NativeDockProtocol.Exit) => void) { this.exit = listener; return () => { this.exit = undefined } }
@@ -384,8 +384,10 @@ test("workspace: selectors and mutations use a current binding and never invoke 
   await f.json("dock_read", { rootRef: "n:root" })
   await f.json("dock_read", { cursor: "cursor" })
   await f.json("dock_action", { ref: "n:root", actionID: "action" })
+  await f.json("dock_keyboard", { ref: "n:root", keys: "ctrl+comma" })
   expect(f.calls).toHaveLength(1)
-  expect(f.clients[0]!.wire.requests.map((request) => request.op)).toEqual(["bind", "bind", "read", "read", "read", "action"])
+  expect(f.clients[0]!.wire.requests.map((request) => request.op)).toEqual(["bind", "bind", "read", "read", "read", "action", "key"])
+  expect(f.clients[0]!.wire.requests.at(-1)?.args).toEqual({ ref: "n:root", keys: "ctrl+comma" })
   expect(f.viewer.browserReads).toBe(0)
 })
 

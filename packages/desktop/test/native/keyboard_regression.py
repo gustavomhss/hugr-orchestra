@@ -9,6 +9,7 @@ import hashlib
 import os
 from pathlib import Path
 from threading import Event
+from time import monotonic, sleep
 import subprocess
 import sys
 import tempfile
@@ -279,6 +280,116 @@ class KeyboardRegressionTest(NativeFixtureTest):
                 self.assertEqual([], context.events, "Verified no-op dispatched keyboard events")
 
 
+class KeyCombinationTest(NativeFixtureTest):
+    context = KeyboardRegressionTest.context
+    evidence = KeyboardRegressionTest.evidence
+
+    def setUp(self):
+        super().setUp()
+        # Bare Xvfb has no window manager to give the fixture X input focus; Xpra does this in the workspace.
+        subprocess.run(["xdotool", "search", "--sync", "--name", "W2-B GTK fixture", "windowfocus", "--sync"],
+                       check=True, capture_output=True, timeout=10)
+
+    def press(self, name, keys, context=None):
+        context = context or self.context()
+        return context, keyboard.press_keys(context, self.nodes[name], keys, context.remaining(), self.evidence(context, name))
+
+    def entry(self, expected):
+        deadline = monotonic() + 3
+        value = self.command("receipt")["entry"]
+        while value != expected and monotonic() < deadline:
+            sleep(0.05)
+            value = self.command("receipt")["entry"]
+        return value
+
+    def test_keys_reach_real_gtk_entry(self):
+        self.command("edit", name="entry", text="abc")
+        # set_text leaves the cursor at the start; select-all, shift and plain keysyms each change the text visibly.
+        for keys, expected in (("x", "xabc"), ("End", "xabc"), ("BackSpace", "xab"), ("ctrl+a", "xab"),
+                               ("BackSpace", ""), ("shift+q", "Q")):
+            context, result = self.press("entry", keys)
+            self.assertEqual(("acknowledged", "unverified"), (result["dispatch"], result["postcondition"]))
+            self.assertTrue(result["focus"]["confirmed"], "Key target never held native focus")
+            self.assertEqual(expected, self.entry(expected), "Real GTK did not consume the key combination " + keys)
+            mask = keyboard.parse_keys(keys)[0]
+            self.assertEqual([(mask, "", 6)] if mask else [], context.cleanup, "Modifier lock was not released exactly once")
+
+    def test_keys_refuse_before_any_dispatch(self):
+        for keys in ("ctrl+alt+BackSpace", "ctrl+alt+F2", "ctrl+hyper+a", "ctrl+ctrl+a", "ctrl+", "\x1b"):
+            with self.subTest(keys=keys):
+                context = self.context()
+                outcome = None
+                try:
+                    self.press("entry", keys, context)
+                except BusError as error:
+                    outcome = error
+                self.assertEqual([], context.events, "Refused key combination reached the controller")
+                self.assertIn(getattr(outcome, "code", None), ("unsupported-operation", "protocol-error"))
+        for name, setup, code in (("protected", {}, "protected-text"),
+                                  ("wire", {"states": [8, 11, 24, 25], "windowStates": [8, 24, 25]}, "focus-unconfirmed")):
+            with self.subTest(node=name):
+                self.command("reset")
+                self.command("wire", **setup)
+                context = self.context()
+                with self.assertRaises(BusError) as caught:
+                    self.press(name, "Escape", context)
+                self.assertEqual(code, caught.exception.code)
+                self.assertEqual([], context.events, "Key combination dispatched to an unsafe target")
+                self.assertEqual("not-dispatched", caught.exception.result["dispatch"])
+
+    def test_window_lost_after_modifier_lock_releases_and_stops(self):
+        self.command("wire", states=[8, 12, 24, 25])
+        test = self
+
+        class DropWindowAfterLock(TappedContext):
+            def call(self, owner, path, interface, method, signature="()", parameters=(), reply="()", timeout_ms=None):
+                value = super().call(owner, path, interface, method, signature, parameters, reply, timeout_ms)
+                if method == "GenerateKeyboardEvent" and parameters == (5, "", 5):
+                    test.command("wire", windowStates=[8, 24, 25])
+                return value
+
+        context = DropWindowAfterLock(self.bus, None, self.binding, 8000)
+        outcome = None
+        try:
+            self.press("wire", "ctrl+shift+p", context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([(5, "", 5)], context.events, "Key was sent after the owned window lost activity")
+        self.assertEqual([(5, "", 6)], context.cleanup, "Shortcut modifiers must still be released")
+        self.assertIsInstance(outcome, BusError)
+        self.assertEqual("focus-unconfirmed", outcome.code)
+        self.assertEqual("unknown", outcome.result["dispatch"])
+
+
+def key_controls():
+    source = (SOURCE / "keyboard.py").read_text()
+    digest = hashlib.sha256(source.encode()).hexdigest()
+    controls = [
+        ("no-active-recheck", "        def generate(code, kind):\n            active()\n", "        def generate(code, kind):\n",
+         "test_window_lost_after_modifier_lock_releases_and_stops", "Key was sent after the owned window lost activity"),
+        ("no-release", "            if mask and result[\"controllerCalls\"]:\n                _release(bus, controller, result, mask)",
+         "            if False:\n                pass", "test_window_lost_after_modifier_lock_releases_and_stops",
+         "Shortcut modifiers must still be released"),
+        ("server-combos", '    if mask & 4 and mask & 8 and (', '    if False and (',
+         "test_keys_refuse_before_any_dispatch", "Refused key combination reached the controller"),
+    ]
+    with tempfile.TemporaryDirectory(prefix="native-key-controls-") as directory:
+        for name, old, new, test, assertion in controls:
+            if source.count(old) != 1:
+                raise AssertionError("Key mutation anchor missing or ambiguous: " + name)
+            path = Path(directory) / (name + ".py")
+            path.write_text(source.replace(old, new))
+            run = subprocess.run([sys.executable, str(Path(__file__).resolve()), "KeyCombinationTest." + test],
+                                 env=dict(os.environ, A11Y_KEYBOARD_MODULE=str(path)), capture_output=True, text=True, timeout=60)
+            output = run.stdout + run.stderr
+            if run.returncode == 0 or "AssertionError" not in output or assertion not in output or test not in output:
+                raise AssertionError("Key mutation did not produce named failure: " + name + "\n" + output)
+            print("MUTATION " + name + ": named assertion failed: " + assertion, flush=True)
+    if hashlib.sha256((SOURCE / "keyboard.py").read_bytes()).hexdigest() != digest:
+        raise AssertionError("Production keyboard changed during key controls")
+    print("RESTORED: key source SHA256 " + digest, flush=True)
+
+
 def mutation_controls():
     source = (SOURCE / "keyboard.py").read_text()
     digest = hashlib.sha256(source.encode()).hexdigest()
@@ -341,6 +452,9 @@ def focus_controls():
 
 
 if __name__ == "__main__":
+    if "--key-mutations" in sys.argv:
+        key_controls()
+        sys.exit(0)
     if "--focus-mutations" in sys.argv:
         focus_controls()
         sys.exit(0)

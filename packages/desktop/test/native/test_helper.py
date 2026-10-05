@@ -384,6 +384,20 @@ class HelperTests(unittest.TestCase):
             require(len(replies) == 1 and replies[0]["id"] == request["id"]
                     and replies[0]["error"]["code"] == "protocol-error", "H2-fresh-arguments-correlation")
 
+    def test_key_operation_requires_binding_and_exact_arguments(self):
+        with Channel(self.api, self.config) as channel:
+            request = channel.send("key", {"ref": "n:x", "keys": "Escape"})
+            reply = json.loads(channel.output.line())
+            require(reply["id"] == request["id"] and reply["error"]["code"] == "wrong-scope", "K1-key-needs-binding")
+        # A malformed envelope ends the helper, so each case gets its own channel.
+        for args in ({"ref": "n:x"}, {"ref": "n:x", "keys": 1}, {"ref": "n:x", "keys": "Escape", "mode": "observed"},
+                     {"ref": "invalid-ref", "keys": "Escape"}):
+            with Channel(self.api, self.config) as channel:
+                request = channel.send("key", args, channel.bind())
+                replies = channel.finish()
+                require(len(replies) == 1 and replies[0]["id"] == request["id"]
+                        and replies[0]["error"]["code"] == "protocol-error", "K1-key-arguments")
+
     def test_draining_output_successive_operations(self):
         with Channel(self.api, self.config) as channel:
             binding = channel.bind()

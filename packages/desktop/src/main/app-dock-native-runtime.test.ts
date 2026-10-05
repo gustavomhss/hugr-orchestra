@@ -158,7 +158,7 @@ async function fixture() {
         response.end()
         const hello = Buffer.from(JSON.stringify({ v: 1, id: "hello", ok: true, value: {
           backend: "linux-atspi", helperEpoch: "fixture-helper", sessionID: state.badHello ? "wrong-session" : sessionID,
-          limits: NativeDockProtocol.limits, operations: ["bind", "read", "action", "type", "unbind", "cancel", "shutdown"],
+          limits: NativeDockProtocol.limits, operations: ["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"],
           processIdentity: state.helloIdentity,
         } }) + "\n")
         const header = Buffer.alloc(8)

@@ -545,7 +545,7 @@ test("NativeClient 1s grace reports failure while channel still awaits actual re
   await until(() => transport.state.starts === 1)
   attach.socket.write(mux(Buffer.from(JSON.stringify({ v: 1, id: "hello", ok: true, value: {
     backend: "linux-atspi", helperEpoch: "epoch", sessionID: "session", limits: NativeDockProtocol.limits,
-    operations: ["bind", "read", "action", "type", "unbind", "cancel", "shutdown"],
+    operations: ["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"],
   } }) + "\n")))
   const native = await client
   expect(native.hello.sessionID).toBe("session")

@@ -2,7 +2,7 @@ export type JSONValue = null | boolean | number | string | JSONValue[] | { [key:
 export type JSONObject = { [key: string]: JSONValue }
 export type NativeRef = `n:${string}`
 export type Outcome = "not-dispatched" | "unknown"
-export type Operation = "bind" | "read" | "action" | "type" | "unbind" | "cancel" | "shutdown"
+export type Operation = "bind" | "read" | "action" | "type" | "key" | "unbind" | "cancel" | "shutdown"
 export type Identity = { senderID: number; tabID: string; generation: number; profileID: string }
 export type Handle = { owner: string; path: string }
 export type ProcessIdentity = { pid: number; startTicks: number; bootID: string; pidNamespace: string; mountNamespace: string }
@@ -104,7 +104,7 @@ export function hello(value: JSONValue): Hello {
       || !object(value.limits) || value.limits.frameBytes !== limits.frameBytes || value.limits.pending !== limits.pending
       || value.limits.timeoutMs !== limits.timeoutMs || !Object.values(value.limits).every((item) => typeof item === "number" && Number.isSafeInteger(item) && item > 0)
       || !Array.isArray(operations) || !operations.every((op) => typeof op === "string")
-       || !["bind", "read", "action", "type", "unbind", "cancel", "shutdown"].every((op) => operations.includes(op))
+       || !["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"].every((op) => operations.includes(op))
        || (value.scopeKinds !== undefined && (!Array.isArray(value.scopeKinds) || value.scopeKinds.length < 1 || value.scopeKinds.length > 2
          || new Set(value.scopeKinds).size !== value.scopeKinds.length || !value.scopeKinds.every((kind) => kind === "application" || kind === "workspace")))
       || (process !== undefined && (!object(process)

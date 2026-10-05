@@ -552,10 +552,16 @@ function operation(op: string, args: Record<string, unknown>): NativeDockProtoco
     return { op, args: Object.fromEntries(["budget", "maxText", "rootRef", "cursor", "textOffset"]
       .filter((field) => args[field] !== undefined).map((field) => [field, args[field]])) as NativeDockProtocol.JSONObject }
   }
-  if (!["click", "action", "type"].includes(op))
+  if (!["click", "action", "type", "keyboard"].includes(op))
     throw new NativeDockProtocol.NativeError("unsupported-operation", `Native dock does not support ${op}`)
   if (!NativeDockProtocol.isNativeRef(args.ref))
     throw new NativeDockProtocol.NativeError("wrong-scope", "Native operations require an opaque native ref")
+  // A native key combination goes to the owned window holding ref; the helper parses and refuses unsafe ones.
+  if (op === "keyboard") {
+    if (typeof args.keys !== "string" || args.keys.length < 1 || args.keys.length > 64)
+      throw new NativeDockProtocol.NativeError("invalid-argument", "Native keyboard requires keys such as ctrl+comma")
+    return { op: "key", args: { ref: args.ref, keys: args.keys } }
+  }
   if (op !== "type") {
     if (op === "action" && !word(args.actionID))
       throw new NativeDockProtocol.NativeError("invalid-argument", "Native action requires an actionID")
