@@ -64,10 +64,18 @@ sessão Linux. Se ela falhar, terminal, arquivos, apps e Slack continuam; só `d
     `stop()`/`dispose()` invalidam admissões em voo e esperam por elas. Com isso entrou o
     pré-aquecimento ao abrir a view Linux (commit do branch `helper-prewarm`).
   - Provas: `test_runtime_session.py` 25/0 com 16 mutações mortas (2 novas); desktop typecheck 0;
-    testes sem Docker verdes. **Pendente:** `src/main/app-dock-runtime-native.test.ts` (Docker real:
-    fila livre durante a admissão, `stop()` no meio da admissão sem helper sobrando, sessão sem
-    acessibilidade com imagem `orchestra-native-noa11y:20261004`) não rodou até o fim: o Docker
-    Desktop foi encerrado por fora durante a rodada.
+    testes sem Docker verdes. `src/main/app-dock-runtime-native.test.ts` (Docker real) 4/0: fila livre
+    durante a admissão, `stop()` e `dispose()` no meio da admissão sem helper sobrando, sessão sem
+    acessibilidade (imagem `orchestra-native-noa11y:20261004`, igual à i1 sem o serviço
+    `org.a11y.Bus`). Mutações mortas: fila presa durante a admissão, `dispose()` sem esperar, sem as
+    duas checagens de época, guest abortando sem acessibilidade. Não cobertas por teste: a espera em
+    `stop()` (a admissão já falha sozinha quando o workspace para) e `marks=false` (o `state()` se
+    corrige na leitura seguinte).
+  - App real: abrir a view Linux subiu o helper sozinho (workspace em 12 s, helper em 61 s, nenhuma
+    chamada do agente) com a lista de apps visível. A rodada do agente (`dock_action` target +
+    `dock_find`) falhou com `native-preparation-timeout`/`ownership-unresolved`: com load 120–200 no
+    host, o censo `native-scope` do guest levou 1,8–5,0 s contra o prazo de 5 s. Limite não afrouxado;
+    repetir com o host aliviado.
 - `73621152dc` plugin: segunda passada do `target` cobre a árvore inteira e precisa escolher o mesmo
   controle pela mesma regra (homônimo surgindo em outra página recusa `target-changed`); tempo de
   espera pela permissão empurra o prazo; `dock_find` sinaliza travessia parcial mesmo com resultados.
