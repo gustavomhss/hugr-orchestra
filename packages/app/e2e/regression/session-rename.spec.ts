@@ -28,6 +28,38 @@ test.beforeEach(async ({ page }) => {
     session.title = payload.title
     await route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
   })
+  // Home lists the profile's sessions by recorded activity; every session has one turn in the last bar.
+  await page.route(/\/session\/activity\?/, async (route) => {
+    const edges = new URL(route.request().url()).searchParams.get("edges")!.split(",").map(Number)
+    await route.fulfill({
+      headers: { "access-control-allow-origin": "*" },
+      json: {
+        edges,
+        sessions: sessions.map((session) => ({
+          id: session.id,
+          title: session.title,
+          parentID: null,
+          created: session.time.created,
+          updated: session.time.updated,
+          additions: null,
+          deletions: null,
+          files: null,
+        })),
+        facts: sessions.map((session, index) => ({
+          bucket: edges.length - 2,
+          sessionID: session.id,
+          providerID: null,
+          modelID: null,
+          user: 1,
+          assistant: 0,
+          failed: 0,
+          activeMs: 0,
+          tokens: 1_000 * (index + 1),
+          cost: 0,
+        })),
+      },
+    })
+  })
   await page.addInitScript((directory) => {
     localStorage.setItem(
       "opencode.global.dat:server",
@@ -36,9 +68,13 @@ test.beforeEach(async ({ page }) => {
         lastProject: { local: directory },
       }),
     )
+    localStorage.setItem(
+      "opencode.global.dat:layout",
+      JSON.stringify({ home: { selection: { server: "http://127.0.0.1:4096", directory } } }),
+    )
   }, fixture.directory)
   await page.goto("/")
-  await page.locator('[data-component="home-session-row"]').filter({ hasText: fixture.expected.targetTitle }).click()
+  await page.locator('[data-component="home-impact-row"]').filter({ hasText: fixture.expected.targetTitle }).click()
   await expect(page.getByRole("heading", { name: fixture.expected.targetTitle, exact: true })).toBeVisible()
 })
 
@@ -117,13 +153,13 @@ test("renames and closes the session tab from its context menu", async ({ page }
   await expect(renamed).toBeHidden()
   await page.getByRole("button", { name: "Home", exact: true }).click()
   await expect(
-    page.locator('[data-component="home-session-row"]').filter({ hasText: "Renamed from tab" }),
+    page.locator('[data-component="home-impact-row"]').filter({ hasText: "Renamed from tab" }),
   ).toBeVisible()
 })
 
 test("renames an inactive tab without switching sessions", async ({ page }) => {
   await page.getByRole("button", { name: "Home", exact: true }).click()
-  await page.locator('[data-component="home-session-row"]').filter({ hasText: fixture.expected.sourceTitle }).click()
+  await page.locator('[data-component="home-impact-row"]').filter({ hasText: fixture.expected.sourceTitle }).click()
   await expect(page.getByRole("heading", { name: fixture.expected.sourceTitle, exact: true })).toBeVisible()
   const tab = page.locator('[data-slot="titlebar-tabs"] a').filter({ hasText: fixture.expected.targetTitle })
   await tab.click({ button: "right" })

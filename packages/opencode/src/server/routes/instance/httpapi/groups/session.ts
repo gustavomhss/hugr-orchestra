@@ -3,6 +3,7 @@ import { Permission } from "@/permission"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 
 import { Session } from "@/session/session"
+import { SessionActivity } from "@/session/activity"
 import { MessageV2 } from "@/session/message-v2"
 import { SessionPrompt } from "@/session/prompt"
 import { SessionRevert } from "@/session/revert"
@@ -39,6 +40,12 @@ export const ListQuery = Schema.Struct({
 export const DiffQuery = Schema.Struct({
   ...WorkspaceRoutingQueryFields,
   ...Struct.omit(SessionSummary.DiffInput.fields, ["sessionID"]),
+})
+export const ActivityQuery = Schema.Struct({
+  ...WorkspaceRoutingQueryFields,
+  edges: Schema.String.annotate({
+    description: `Comma-separated ascending epoch-millisecond bucket boundaries (2 to ${SessionActivity.MAX_EDGES})`,
+  }),
 })
 export const MessagesQuery = Schema.Struct({
   ...WorkspaceRoutingQueryFields,
@@ -78,6 +85,7 @@ export const PermissionResponsePayload = Schema.Struct({
 export const SessionPaths = {
   list: root,
   status: `${root}/status`,
+  activity: `${root}/activity`,
   get: `${root}/:sessionID`,
   children: `${root}/:sessionID/children`,
   todo: `${root}/:sessionID/todo`,
@@ -127,6 +135,18 @@ export const SessionApi = HttpApi.make("session")
             identifier: "session.status",
             summary: "Get session status",
             description: "Retrieve the current status of all sessions, including active, idle, and completed states.",
+          }),
+        ),
+        HttpApiEndpoint.get("activity", SessionPaths.activity, {
+          query: ActivityQuery,
+          success: described(SessionActivity.Activity, "Session activity"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "session.activity",
+            summary: "Get session activity",
+            description:
+              "Aggregate user and assistant messages of the sessions in this directory into one fact per bucket, session and model. Buckets are [edges[i], edges[i + 1]).",
           }),
         ),
         HttpApiEndpoint.get("get", SessionPaths.get, {

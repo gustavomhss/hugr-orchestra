@@ -2698,6 +2698,53 @@ export type VcsApplyError = {
   }
 }
 
+export type VcsActivityTotals = {
+  commits: number
+  merges: number
+  authors: number
+  additions: number
+  deletions: number
+  filesChanged: number
+}
+
+export type VcsActivityDay = {
+  /**
+   * Server-local YYYY-MM-DD of the commit author time
+   */
+  day: string
+  commits: number
+  merges: number
+  additions: number
+  deletions: number
+}
+
+export type VcsActivityPath = {
+  path: string
+  changes: number
+}
+
+export type VcsActivityCommit = {
+  hash: string
+  subject: string
+  time: number
+}
+
+export type VcsActivity = {
+  repository: boolean
+  since: number
+  until: number
+  totals: VcsActivityTotals
+  days: Array<VcsActivityDay>
+  topPaths: Array<VcsActivityPath>
+  recent: Array<VcsActivityCommit>
+  ahead: number | null
+  behind: number | null
+  /**
+   * True when a commit, output or time bound cut the scan short
+   */
+  truncated: boolean
+}
+
 export type Command = {
   name: string
   description?: string
@@ -2901,6 +2948,36 @@ export type ProviderAuthError1 = {
     message?: string
     kind?: string
   }
+}
+
+export type SessionActivitySession = {
+  id: string
+  title: string
+  parentID: string
+  created: number
+  updated: number
+  additions: number
+  deletions: number
+  files: number
+}
+
+export type SessionActivityFact = {
+  bucket: number
+  sessionID: string
+  providerID: string
+  modelID: string
+  user: number
+  assistant: number
+  failed: number
+  activeMs: number
+  tokens: number
+  cost: number
+}
+
+export type SessionActivity = {
+  edges: Array<number>
+  sessions: Array<SessionActivitySession>
+  facts: Array<SessionActivityFact>
 }
 
 export type NotFoundError = {
@@ -9965,6 +10042,36 @@ export type VcsApplyResponses = {
 
 export type VcsApplyResponse = VcsApplyResponses[keyof VcsApplyResponses]
 
+export type VcsActivityData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    since: number
+    until?: number
+  }
+  url: "/vcs/activity"
+}
+
+export type VcsActivityErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type VcsActivityError = VcsActivityErrors[keyof VcsActivityErrors]
+
+export type VcsActivityResponses = {
+  /**
+   * VCS activity
+   */
+  200: VcsActivity
+}
+
+export type VcsActivityResponse = VcsActivityResponses[keyof VcsActivityResponses]
+
 export type CommandListData = {
   body?: never
   path?: never
@@ -11223,6 +11330,38 @@ export type SessionStatusResponses = {
 }
 
 export type SessionStatusResponse = SessionStatusResponses[keyof SessionStatusResponses]
+
+export type SessionActivityData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    /**
+     * Comma-separated ascending epoch-millisecond bucket boundaries (2 to 64)
+     */
+    edges: string
+  }
+  url: "/session/activity"
+}
+
+export type SessionActivityErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type SessionActivityError = SessionActivityErrors[keyof SessionActivityErrors]
+
+export type SessionActivityResponses = {
+  /**
+   * Session activity
+   */
+  200: SessionActivity
+}
+
+export type SessionActivityResponse = SessionActivityResponses[keyof SessionActivityResponses]
 
 export type SessionDeleteData = {
   body?: never

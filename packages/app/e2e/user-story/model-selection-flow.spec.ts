@@ -87,7 +87,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(profile.getByText(directory, { exact: true })).toBeVisible()
   await expect(profile).toHaveAttribute("aria-expanded", "false")
 
-  const newSession = page.locator('[data-action="home-new-session"]')
+  // Home is the KPI dashboard; Chat opens a draft for the selected profile that has no session yet.
+  const newSession = page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Chat", exact: true })
   await expect(newSession).toHaveCount(1)
   await expect(newSession).toBeEnabled()
   await newSession.click()

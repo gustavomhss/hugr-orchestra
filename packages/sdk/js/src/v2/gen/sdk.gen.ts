@@ -177,6 +177,8 @@ import type {
   QuestionV2Reply,
   SessionAbortErrors,
   SessionAbortResponses,
+  SessionActivityErrors,
+  SessionActivityResponses,
   SessionChildrenErrors,
   SessionChildrenResponses,
   SessionCommandErrors,
@@ -385,6 +387,8 @@ import type {
   V2SessionWaitResponses,
   V2SkillListErrors,
   V2SkillListResponses,
+  VcsActivityErrors,
+  VcsActivityResponses,
   VcsApplyErrors,
   VcsApplyResponses,
   VcsDiffErrors,
@@ -2150,6 +2154,40 @@ export class Vcs extends HeyApiClient {
     })
   }
 
+  /**
+   * Get VCS activity
+   *
+   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      since: number
+      until?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "since" },
+            { in: "query", key: "until" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<VcsActivityResponses, VcsActivityErrors, ThrowOnError>({
+      url: "/vcs/activity",
+      ...options,
+      ...params,
+    })
+  }
+
   private _diff?: Diff
   get diff2(): Diff {
     return (this._diff ??= new Diff({ client: this.client }))
@@ -3482,6 +3520,38 @@ export class Session2 extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<SessionStatusResponses, SessionStatusErrors, ThrowOnError>({
       url: "/session/status",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get session activity
+   *
+   * Aggregate user and assistant messages of the sessions in this directory into one fact per bucket, session and model. Buckets are [edges[i], edges[i + 1]).
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      edges: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "edges" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SessionActivityResponses, SessionActivityErrors, ThrowOnError>({
+      url: "/session/activity",
       ...options,
       ...params,
     })

@@ -1148,6 +1148,17 @@ const scenarios: Scenario[] = [
     .seeded((ctx) => ctx.session({ title: "Status session" }))
     .json(200, object),
   http.protected
+    .get("/session/activity", "session.activity")
+    .seeded((ctx) => ctx.session({ title: "Activity session" }))
+    .at((ctx) => ({ path: `/session/activity?edges=0,${Number.MAX_SAFE_INTEGER}`, headers: ctx.headers() }))
+    .json(200, (body) => {
+      object(body)
+      array(body.edges)
+      array(body.sessions)
+      array(body.facts)
+      check(body.edges.length === 2, "activity should echo its bucket edges")
+    }),
+  http.protected
     .post("/session", "session.create")
     .mutating()
     .at((ctx) => ({ path: "/session", headers: ctx.headers(), body: { title: "Created session" } }))
