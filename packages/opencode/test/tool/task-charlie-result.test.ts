@@ -221,6 +221,9 @@ describe("tool.task charlie-result", () => {
     ["no block", "Done. Changed the repository query and ran the unit check."],
     ["invalid JSON", "Done.\n\n```charlie-result\n{ outcome: done }\n```"],
     ["an unknown blocker kind", final({ ...blocked, blockers: [{ kind: "design", reason: "x" }] })],
+    ["an unknown outcome", final({ ...card, outcome: "partial" })],
+    ["an unknown change kind", final({ ...card, changes: [{ ...card.changes[0], change: "renamed" }] })],
+    ["an unknown check status", final({ ...card, checks: [{ ...card.checks[0], status: "passed" }] })],
   ] as const) {
     it.instance(`leaves worker fields empty for ${name}`, () =>
       Effect.gen(function* () {
