@@ -1,5 +1,5 @@
-import { Tooltip } from "@kobalte/core/tooltip"
-import { createEffect, createSignal, type JSX } from "solid-js"
+import { Tooltip, useTooltipContext } from "@kobalte/core/tooltip"
+import { createEffect, createSignal, onCleanup, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
 import "@opencode-ai/ui/v2/tooltip-v2.css"
 
@@ -28,6 +28,7 @@ export function OrchestraNavigationTooltip(props: {
       closeDelay={0}
       ignoreSafeArea
     >
+      <PressCancelsOpening />
       {props.children(Tooltip.Trigger)}
       <Tooltip.Portal>
         <Tooltip.Content data-component="tooltip-v2">
@@ -36,4 +37,17 @@ export function OrchestraNavigationTooltip(props: {
       </Tooltip.Portal>
     </Tooltip>
   )
+}
+
+// Kobalte keeps a hover's pending open running through a click, so a pressed item showed its tooltip after the
+// press, behind any modal dialog the click opened, where the closing tooltip's layer took that dialog's first Escape.
+// A press cancels the pending open; the tooltip returns on the next hover or keyboard focus.
+function PressCancelsOpening() {
+  const context = useTooltipContext()
+  const press = (event: PointerEvent) => {
+    if (event.target instanceof Node && context.isTargetOnTooltip(event.target)) context.cancelOpening()
+  }
+  document.addEventListener("pointerdown", press, true)
+  onCleanup(() => document.removeEventListener("pointerdown", press, true))
+  return null
 }

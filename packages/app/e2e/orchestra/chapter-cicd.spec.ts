@@ -134,6 +134,23 @@ test("profiles on different servers keep separate inventories and discard a late
   expect(mutations).toEqual([])
 })
 
+test("the pressed WIP item opens no tooltip that would take a dialog's Escape", async ({ page }) => {
+  await setup(page)
+  // Clicks the CI/CD item and leaves the pointer on it.
+  await openChapter(page)
+  // A timer queued now fires after the 400ms tooltip open delay that the hover started before the click.
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 450)))
+  await expect(page.getByRole("tooltip")).toHaveCount(0)
+  const source = await openSource(page, ".github/workflows/ci.yml")
+  await page.keyboard.press("Escape")
+  await expect(source).toHaveCount(0)
+  // Positive control: hovering a WIP item without pressing it still explains the mark.
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Hooks", exact: true }).hover()
+  await expect(
+    page.getByRole("tooltip", { name: "Work in progress, revisit before production", exact: true }),
+  ).toBeVisible()
+})
+
 test("switching profiles during inventory loading discards the old list", async ({ page }) => {
   const pending = Promise.withResolvers<void>()
   const started = Promise.withResolvers<void>()
