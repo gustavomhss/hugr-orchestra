@@ -1,2 +1,31 @@
 // Copy owned by the workspaces screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
-export const WORKSPACES_COPY = {}
+export const WORKSPACES_COPY = {
+  "orchestra.workspaces.heading": "Where the work",
+  "orchestra.workspaces.headingAccent": "actually runs.",
+  "orchestra.workspaces.new": "New workspace",
+  "orchestra.workspaces.use": "Use workspace",
+  "orchestra.workspaces.configure": "Configure",
+  "orchestra.workspaces.active": "Active",
+  "orchestra.workspaces.idle": "Idle",
+  "orchestra.workspaces.retry": "Try again",
+  "orchestra.workspaces.dialog.configure": "Configure {{name}}",
+  "orchestra.workspaces.dialog.description":
+    "Placement for this profile's work. New workspaces are git worktrees of this repository.",
+  "orchestra.workspaces.dialog.close": "Close dialog",
+  "orchestra.workspaces.field.name": "Name",
+  "orchestra.workspaces.field.directory": "Directory",
+  "orchestra.workspaces.field.branch": "Branch",
+  "orchestra.workspaces.field.type": "Type",
+  "orchestra.workspaces.field.serverDirectory": "Chosen by the server",
+  "orchestra.workspaces.field.newBranch": "Created with the worktree",
+  "orchestra.workspaces.field.detached": "Detached HEAD",
+  "orchestra.workspaces.field.unknownBranch": "Not reported by this server",
+  "orchestra.workspaces.field.invalidDirectory": "Enter a parent directory and a name without slashes.",
+  "orchestra.workspaces.delete": "Delete workspace",
+  "orchestra.workspaces.external": "This server cannot remove this directory. Remove it with git.",
+  "orchestra.workspaces.confirm.title": "Delete workspace?",
+  "orchestra.workspaces.confirm.description": "Removes this git worktree and its files from disk.",
+  "orchestra.workspaces.confirm.descriptionBranch": "Removes this git worktree, its files and its branch from disk.",
+  "orchestra.workspaces.confirm.note": "Uncommitted changes in {{path}} are lost.",
+  "orchestra.workspaces.confirm.action": "Confirm",
+}

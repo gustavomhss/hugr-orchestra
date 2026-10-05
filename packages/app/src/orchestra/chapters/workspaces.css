@@ -1,66 +1,88 @@
-.orchestra-workspaces {
-  padding: 28px;
-  overflow: auto;
-  color: var(--orchestra-text);
+/* Workspaces keeps the mock's `.inner` + `.mast.slim` heading (app.html #viewWorkspaces); the body uses the kit. */
+.orchestra-workspaces .ws-inner {
+  inline-size: min(1020px, calc(100% - 72px));
+  margin: 0 auto;
+  padding: 52px 0 72px;
 }
-.orchestra-workspaces h1 {
-  font-size: 28px;
-  line-height: 1.2;
-  font-weight: 500;
-}
-.orchestra-workspaces header p {
-  margin-block-start: 10px;
-  color: var(--orchestra-body);
-}
-.workspaces-toolbar {
+.orchestra-workspaces .ws-mast {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-block: 28px;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-block-end: 22px;
 }
-.workspaces-list [data-slot="radio-v2-items"] {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 16px;
+.orchestra-workspaces .ws-kicker {
+  color: #788899;
+  font-size: 11px;
+  font-weight: 580;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.workspaces-list [data-slot="radio-v2-label"] {
-  margin-block-end: 16px;
-  color: var(--orchestra-muted);
-  font-size: 13px;
+.orchestra-workspaces .ws-mast h1 {
+  margin: 9px 0 0;
+  color: #ebeff3;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
 }
-.workspaces-card {
+.orchestra-workspaces .ws-mast h1 span {
+  color: #8e9cab;
+  font-weight: 450;
+}
+html[data-color-scheme="light"] .orchestra-workspaces .ws-kicker {
+  color: #6f7883;
+}
+html[data-color-scheme="light"] .orchestra-workspaces .ws-mast h1 {
+  color: #171c23;
+}
+html[data-color-scheme="light"] .orchestra-workspaces .ws-mast h1 span {
+  color: #666f7a;
+}
+/* The mock renders the path in the browser's default monospace at the paragraph size. */
+.orchestra-workspaces .mx-card code {
+  font-family: monospace;
+  font-size: inherit;
+  overflow-wrap: anywhere;
+}
+.orchestra-workspaces .mx-empty .mx-link {
+  font-size: inherit;
+}
+.ws-icon {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Native modal dialog: the kit's flex display must not reveal it while closed, and the app's
+   margin reset would otherwise pin it to the top-left corner instead of centering it. */
+.ws-dialog {
+  margin: auto;
+}
+.ws-dialog:not([open]) {
+  display: none;
+}
+.ws-dialog::backdrop {
+  background: var(--mx-backdrop);
+  backdrop-filter: blur(5px);
+}
+.ws-dialog form {
   display: flex;
+  max-block-size: calc(100vh - 66px);
   flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px;
-  border: 1px solid var(--orchestra-border);
-  border-radius: 9px;
-  background: var(--orchestra-surface);
+  margin: 0;
 }
-.workspaces-card[data-selected="true"] {
-  border-color: var(--orchestra-accent);
+/* Directory, branch and type come from git; only the name is editable after creation. */
+.ws-dialog .mx-field input[readonly],
+.ws-dialog .mx-field select:disabled {
+  color: var(--mx-dim);
+  opacity: 1;
 }
-.workspaces-card:focus-within {
-  outline: 2px solid var(--orchestra-accent);
-  outline-offset: 3px;
-}
-.workspaces-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.workspaces-card [data-slot="radio-v2-item-label-text"] {
-  font-size: 16px;
-  font-weight: 500;
-  overflow-wrap: anywhere;
-}
-.workspaces-card code {
-  color: var(--orchestra-body);
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-.workspaces-state {
-  color: var(--orchestra-body);
+.ws-dialog .ws-note {
+  margin: 0;
 }
