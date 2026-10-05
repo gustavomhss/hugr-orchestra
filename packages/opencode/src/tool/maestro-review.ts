@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Database } from "@opencode-ai/core/database/database"
@@ -5,7 +6,7 @@ import { Session } from "@/session/session"
 import { Config } from "@/config/config"
 import { SessionID } from "@/session/schema"
 import { Git } from "@/git"
-import { findReview, readValidation, workCardHash } from "@/maestro/validation-record"
+import { REVIEW_ARTIFACT_MAX_BYTES, findReview, readValidation, workCardHash } from "@/maestro/validation-record"
 import { contextIsCurrent, readContext } from "@/maestro/context-record"
 import type { TaskPromptOps } from "@/tool/task"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -92,11 +93,17 @@ export const MaestroRequestReviewTool = Tool.define(
               "--",
               ".",
             ],
-            { cwd: worktree },
+            { cwd: worktree, maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES },
           )
-          if (names.exitCode !== 0 || names.truncated || diff.exitCode !== 0 || diff.truncated)
+          if (diff.truncated)
+            return yield* Effect.fail(
+              new Error(
+                `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes; narrow the review base or split the work card`,
+              ),
+            )
+          if (names.exitCode !== 0 || names.truncated || diff.exitCode !== 0 || diff.stdout.length === 0)
             return yield* Effect.fail(new Error("Review artifact diff unavailable"))
-          const artifactBytes = Buffer.from(diff.stdout).toString("base64")
+          const sha256 = createHash("sha256").update(diff.stdout).digest("hex")
           const ops = ctx.extra?.promptOps as TaskPromptOps | undefined
           if (!ops) return yield* Effect.fail(new Error("Review delegation requires promptOps"))
           const child = yield* sessions.create({ parentID: ctx.sessionID, agent: "lucy" })
@@ -122,7 +129,8 @@ export const MaestroRequestReviewTool = Tool.define(
                     `validationRecordID: ${params.validationRecordID}`,
                     `work card:\n${params.workCard}`,
                     `reviewMethodVersion: ${params.reviewMethodVersion}`,
-                    `artifact JSON: ${JSON.stringify({ baseSHA, headSHA, worktree, changedPaths, encoding: "base64", bytes: artifactBytes })}`,
+                    `artifact JSON: ${JSON.stringify({ baseSHA, headSHA, worktree, changedPaths, sha256 })}`,
+                    `diff under review (git diff --binary --full-index ${baseSHA} ${headSHA}; read it, do not copy it into the receipt):\n${diff.text()}`,
                     `checks JSON: ${JSON.stringify(validation.checks)}`,
                     ...("skills" in context
                       ? context.skills.map(

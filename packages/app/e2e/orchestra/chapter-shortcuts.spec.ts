@@ -3,18 +3,12 @@ import { mockOpenCodeServer } from "../utils/mock-server"
 
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/shortcuts"
-// The page formats bindings like every other app surface: Mac glyphs, otherwise Ctrl+ text.
-const mac = process.platform === "darwin"
-const label = {
-  mac: { k: "⌘K", p: "⇧⌘P", t: "⌘T", n: "⌘N", b: "⌘B", y: "⇧⌘Y" },
-  other: { k: "Ctrl+K", p: "Ctrl+Shift+P", t: "Ctrl+T", n: "Ctrl+N", b: "Ctrl+B", y: "Ctrl+Shift+Y" },
-}[mac ? "mac" : "other"]
 
 test("edit captures a combination, rejects conflicts, fires the new binding instead of the old default and resets", async ({
   page,
 }) => {
   await setup(page, "dark")
-  await openShortcuts(page)
+  const keys = await openShortcuts(page)
   const chapter = page.locator('[data-chapter="shortcuts"]')
   const drafts = page.locator('[data-tab-key^="draft:"]')
   await expect(chapter.getByRole("heading", { level: 1 })).toHaveText("Shortcuts")
@@ -23,14 +17,14 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await expect(chapter.locator(".mx-toolbar .mx-badge bdi")).toHaveText("Shortcut repository")
   await expect(row(page, "command.palette").locator("strong")).toHaveText("Command palette")
   await expect(row(page, "command.palette").locator("small")).toHaveText("General shortcut")
-  await expect(row(page, "command.palette").locator("kbd")).toHaveText([label.k, label.p])
+  await expect(row(page, "command.palette").locator("kbd")).toHaveText([keys.label.k, keys.label.p])
   await expect(row(page, "tab.new").locator("strong")).toHaveText("New session")
-  await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.t, label.n])
-  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([label.b])
+  await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.t, keys.label.n])
+  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([keys.label.b])
 
   // Positive control: the registered default opens a new session draft from this page.
   await chapter.getByRole("heading", { level: 1 }).click()
-  await page.keyboard.press("ControlOrMeta+n")
+  await page.keyboard.press(`${keys.mod}+n`)
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await expect(drafts).toHaveCount(1)
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Shortcuts", exact: true }).click()
@@ -43,24 +37,26 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await expect(dialog).toContainText("Shortcut for New session. Existing assignments remain unchanged until Save.")
   const field = dialog.getByRole("textbox", { name: "Key combination" })
   await expect(field).toBeFocused()
-  await expect(field).toHaveValue(`${label.t}, ${label.n}`)
+  await expect(field).toHaveValue(`${keys.label.t}, ${keys.label.n}`)
 
   // The dialog suspends command keybinds: Home's combination is captured (the field shows it),
   // and Home does not run behind the dialog.
-  await page.keyboard.press("ControlOrMeta+b")
-  await expect(field).toHaveValue(label.b)
+  await page.keyboard.press(`${keys.mod}+b`)
+  await expect(field).toHaveValue(keys.label.b)
   await stays(page, () => Promise.resolve(new URL(page.url()).pathname), "/orchestra/shortcuts")
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Shortcut already in use: Home")
   await expect(dialog).toBeVisible()
   await stays(page, () => keybinds(page), {})
+  // A rejected Save hands focus back to the field, so the next combination is captured directly.
+  await expect(field).toBeFocused()
 
-  await page.keyboard.press("ControlOrMeta+Shift+Y")
-  await expect(field).toHaveValue(label.y)
+  await page.keyboard.press(`${keys.mod}+Shift+Y`)
+  await expect(field).toHaveValue(keys.label.y)
   await expect(dialog.getByRole("alert")).toBeHidden()
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
-  await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.y])
+  await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.y])
   // The row stayed mounted, so focus returns to the Edit button that opened the dialog.
   await expect(edit).toBeFocused()
   await expect.poll(() => keybinds(page)).toEqual({ "tab.new": "mod+shift+y" })
@@ -69,23 +65,23 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   // order, so once the new combination's draft exists a draft from the old defaults would too:
   // the count must reach 2 and stay there.
   await chapter.getByRole("heading", { level: 1 }).click()
-  await page.keyboard.press("ControlOrMeta+n")
-  await page.keyboard.press("ControlOrMeta+t")
-  await page.keyboard.press("ControlOrMeta+Shift+Y")
+  await page.keyboard.press(`${keys.mod}+n`)
+  await page.keyboard.press(`${keys.mod}+t`)
+  await page.keyboard.press(`${keys.mod}+Shift+Y`)
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await expect(drafts).toHaveCount(2)
   await stays(page, () => drafts.count(), 2)
 
   // The binding is stored, not page state: it survives a reload.
   await page.goto("/orchestra/shortcuts", { waitUntil: "domcontentloaded" })
-  await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.y])
+  await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.y])
   await page.screenshot({ path: test.info().outputPath("dark.png") })
 
   await chapter.getByRole("button", { name: "Reset to defaults" }).click()
-  await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.t, label.n])
+  await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.t, keys.label.n])
   await expect.poll(() => keybinds(page)).toEqual({})
   await chapter.getByRole("heading", { level: 1 }).click()
-  await page.keyboard.press("ControlOrMeta+n")
+  await page.keyboard.press(`${keys.mod}+n`)
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await expect(drafts).toHaveCount(3)
 })
@@ -94,7 +90,7 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   page,
 }) => {
   await setup(page, "light")
-  await openShortcuts(page)
+  const keys = await openShortcuts(page)
   const chapter = page.locator('[data-chapter="shortcuts"]')
   const search = chapter.getByRole("searchbox", { name: "Search Shortcuts" })
   await expect(search).toHaveAttribute("placeholder", "Search shortcuts")
@@ -102,7 +98,7 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   await expect(chapter.locator("[data-shortcut-id]")).toHaveCount(1)
   await expect(row(page, "command.palette")).toBeVisible()
   // Bindings are searchable by their visible label.
-  await search.fill(label.b)
+  await search.fill(keys.label.b)
   await expect(row(page, "home.toggle")).toBeVisible()
   await expect(row(page, "tab.new")).toHaveCount(0)
   await expect(row(page, "command.palette")).toHaveCount(0)
@@ -117,12 +113,12 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   const field = dialog.getByRole("textbox", { name: "Key combination" })
   await edit.click()
   await expect(field).toBeFocused()
-  await page.keyboard.press("ControlOrMeta+Shift+Y")
-  await expect(field).toHaveValue(label.y)
+  await page.keyboard.press(`${keys.mod}+Shift+Y`)
+  await expect(field).toHaveValue(keys.label.y)
   await dialog.getByRole("button", { name: "Cancel" }).click()
   await expect(dialog).toHaveCount(0)
   await expect(edit).toBeFocused()
-  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([label.b])
+  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([keys.label.b])
   await stays(page, () => keybinds(page), {})
 
   await edit.click()
@@ -149,11 +145,11 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   // Capturing the registered default again drops the override instead of storing a copy.
   await edit.click()
   await expect(field).toBeFocused()
-  await page.keyboard.press("ControlOrMeta+b")
-  await expect(field).toHaveValue(label.b)
+  await page.keyboard.press(`${keys.mod}+b`)
+  await expect(field).toHaveValue(keys.label.b)
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
-  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([label.b])
+  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([keys.label.b])
   await expect.poll(() => keybinds(page)).toEqual({})
 
   // A combination freed by unassigning can be taken by another command without a conflict.
@@ -166,14 +162,14 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   await expect.poll(() => keybinds(page)).toEqual({ "home.toggle": "none" })
   await row(page, "tab.new").getByRole("button", { name: "Edit New session shortcut" }).click()
   await expect(field).toBeFocused()
-  await page.keyboard.press("ControlOrMeta+b")
-  await expect(field).toHaveValue(label.b)
+  await page.keyboard.press(`${keys.mod}+b`)
+  await expect(field).toHaveValue(keys.label.b)
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
-  await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.b])
+  await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.b])
   await expect.poll(() => keybinds(page)).toEqual({ "home.toggle": "none", "tab.new": "mod+b" })
   await chapter.getByRole("heading", { level: 1 }).click()
-  await page.keyboard.press("ControlOrMeta+b")
+  await page.keyboard.press(`${keys.mod}+b`)
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
 })
 
@@ -198,6 +194,18 @@ async function openShortcuts(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Shortcuts", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/shortcuts$/)
+  return platformKeys(page)
+}
+
+// The app picks its mod key and key labels from navigator.platform, which the browser's device
+// emulation sets independently of the host OS, so read it from the page rather than the runner.
+async function platformKeys(page: Page) {
+  const mac = await page.evaluate(() => /(Mac|iPod|iPhone|iPad)/.test(navigator.platform))
+  if (mac) return { mod: "Meta", label: { k: "⌘K", p: "⇧⌘P", t: "⌘T", n: "⌘N", b: "⌘B", y: "⇧⌘Y" } }
+  return {
+    mod: "Control",
+    label: { k: "Ctrl+K", p: "Ctrl+Shift+P", t: "Ctrl+T", n: "Ctrl+N", b: "Ctrl+B", y: "Ctrl+Shift+Y" },
+  }
 }
 
 async function setup(page: Page, scheme: "dark" | "light") {

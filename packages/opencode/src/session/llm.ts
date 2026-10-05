@@ -6,7 +6,7 @@ import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { serviceUse } from "@opencode-ai/core/effect/service-use"
 import { Context, Effect, Layer } from "effect"
 import * as Stream from "effect/Stream"
-import { streamText, wrapLanguageModel, type ModelMessage, type Tool } from "ai"
+import { streamText, wrapLanguageModel, Output, jsonSchema, type JSONSchema7, type ModelMessage, type Tool } from "ai"
 import type { LLMEvent } from "@opencode-ai/llm"
 import { LLMClient } from "@opencode-ai/llm/route"
 import type { LLMClientService } from "@opencode-ai/llm/route"
@@ -29,6 +29,7 @@ import * as OtelTracer from "@effect/opentelemetry/Tracer"
 import { LLMAISDK } from "./llm/ai-sdk"
 import { LLMNativeRuntime } from "./llm/native-runtime"
 import { LLMRequestPrep } from "./llm/request"
+import { LLMContextBudget } from "./llm/context-budget"
 import { PromptGuard } from "./prompt-guard"
 
 export const OUTPUT_TOKEN_MAX = ProviderTransform.OUTPUT_TOKEN_MAX
@@ -46,6 +47,11 @@ export type StreamInput = {
   tools: Record<string, Tool>
   retries?: number
   toolChoice?: "auto" | "required" | "none"
+  responseSchema?: JSONSchema7
+  /** Internal marker: this parent request contains applied working memory. */
+  contextMemory?: boolean
+  /** Internal request isolation; agent names do not confer maintenance privileges. */
+  purpose?: "context-maintenance"
 }
 
 export type StreamRequest = StreamInput & {
@@ -83,7 +89,14 @@ const live: Layer.Layer<
     const llmClient = yield* LLMClient.Service
     const flags = yield* RuntimeFlags.Service
 
-    const run = Effect.fn("LLM.run")(function* (input: StreamRequest) {
+    const run = Effect.fn("LLM.run")(function* (request: StreamRequest) {
+      const contextMemory = request.contextMemory === true || request.purpose === "context-maintenance"
+      const input = request.purpose === "context-maintenance" ? yield* Effect.try({ try: () => ({
+        ...request,
+        ...structuredClone({ model: request.model, user: request.user, agent: request.agent,
+          system: request.system, messages: request.messages, permission: request.permission, responseSchema: request.responseSchema }),
+      }), catch: (cause) => cause }) : request
+      const toolChoice = input.purpose === "context-maintenance" ? "none" : input.toolChoice
       yield* Effect.logInfo("stream", {
         providerID: input.model.providerID,
         modelID: input.model.id,
@@ -112,6 +125,7 @@ const live: Layer.Layer<
         flags,
         isWorkflow,
       })
+      if (contextMemory) yield* LLMContextBudget.check(prepared, input.responseSchema, isWorkflow ? prepared.system : undefined)
 
       // Wire up toolExecutor for DWS workflow models so that tool calls
       // from the workflow service are executed via opencode's tool system
@@ -227,13 +241,14 @@ const live: Layer.Layer<
       yield* PromptGuard.check(input.sessionID, input.small !== true)
       if (flags.experimentalNativeLlm) {
         const native = LLMNativeRuntime.stream({
-          model: input.model,
+          model: prepared.model,
           provider: item,
           auth: info,
           llmClient,
           messages: prepared.messages,
           tools: prepared.tools,
-          toolChoice: input.toolChoice,
+          toolChoice,
+          responseSchema: input.responseSchema,
           temperature: prepared.params.temperature,
           topP: prepared.params.topP,
           topK: prepared.params.topK,
@@ -315,10 +330,11 @@ const live: Layer.Layer<
           temperature: prepared.params.temperature,
           topP: prepared.params.topP,
           topK: prepared.params.topK,
-          providerOptions: ProviderTransform.providerOptions(input.model, prepared.params.options),
+          providerOptions: ProviderTransform.providerOptions(prepared.model, prepared.params.options),
           activeTools: Object.keys(prepared.tools).filter((x) => x !== "invalid"),
           tools: prepared.tools,
-          toolChoice: input.toolChoice,
+          toolChoice,
+          output: input.responseSchema ? Output.object({ name: "response", schema: jsonSchema(input.responseSchema) }) : undefined,
           maxOutputTokens: prepared.params.maxOutputTokens,
           abortSignal: input.abort,
           headers: prepared.headers,
@@ -334,7 +350,7 @@ const live: Layer.Layer<
                     // @ts-expect-error
                     args.params.prompt = ProviderTransform.message(
                       args.params.prompt,
-                      input.model,
+                      prepared.model,
                       prepared.messageTransformOptions,
                     )
                   }
