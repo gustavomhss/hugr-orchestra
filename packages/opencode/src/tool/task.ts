@@ -18,7 +18,7 @@ import { Database } from "@opencode-ai/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { reserveDispatch } from "@/maestro/dispatch"
 import { authorizationTaskIntentHash } from "@/maestro/authorization"
-import { nativeProfiles, roster } from "@/maestro/roster"
+import { canonicalMemberId, nativeProfiles, roster } from "@/maestro/roster"
 import { Permission } from "@/permission"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Git } from "@/git"
@@ -219,7 +219,7 @@ export const TaskTool = Tool.define(
       const resumed = params.task_id
         ? yield* sessions.get(SessionID.make(params.task_id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
         : undefined
-      if (resumed && (resumed.parentID !== ctx.sessionID || resumed.agent !== nextID)) {
+      if (resumed && (resumed.parentID !== ctx.sessionID || canonicalMemberId(resumed.agent) !== nextID)) {
         return yield* Effect.fail(new Error("Task resume denied: task is not direct child for selected agent"))
       }
       if (params.governed) {
@@ -364,7 +364,7 @@ export const TaskTool = Tool.define(
       const reserved = governedChildID
         ? yield* sessions.get(governedChildID).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
         : undefined
-      if (reserved && (reserved.parentID !== ctx.sessionID || reserved.agent !== nextID)) {
+      if (reserved && (reserved.parentID !== ctx.sessionID || canonicalMemberId(reserved.agent) !== nextID)) {
         return yield* Effect.fail(new Error("Governed Task denied: reservation-child-mismatch"))
       }
       if (params.authorizationID && !reserved) {
@@ -408,7 +408,10 @@ export const TaskTool = Tool.define(
                 .pipe(Effect.catchCause(() => Effect.fail(new Error("Governed Task denied: reservation-child-hold"))))
             }),
           ))
-      if (governedChildID && (nextSession.parentID !== ctx.sessionID || nextSession.agent !== nextID)) {
+      if (
+        governedChildID &&
+        (nextSession.parentID !== ctx.sessionID || canonicalMemberId(nextSession.agent) !== nextID)
+      ) {
         return yield* Effect.fail(new Error("Governed Task denied: reservation-child-mismatch"))
       }
       if (

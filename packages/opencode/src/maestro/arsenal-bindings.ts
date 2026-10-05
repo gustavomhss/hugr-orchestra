@@ -50,6 +50,7 @@ import { EffectBridge } from "@/effect/bridge"
 import { ArsenalVerification } from "@/maestro/arsenal-verification"
 import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
+import { canonicalMemberId } from "./roster"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -316,7 +317,7 @@ export const make = Effect.gen(function* () {
       )(calls[0].data)
       if (Option.isNone(call)) return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-invalid" })
       const actor = yield* agents.get(call.value.state.input.subagent_type)
-      if ((actor.id ?? actor.name) !== child.agent)
+      if ((actor.id ?? actor.name) !== canonicalMemberId(child.agent))
         return yield* new ToolSafety.Denied({ reason: "completion-native-task-agent-mismatch" })
       const rows = yield* database.db
         .select()
@@ -339,7 +340,7 @@ export const make = Effect.gen(function* () {
           reserved.sessionID !== session.id ||
           reserved.parentSessionID !== session.id ||
           reserved.projectID !== session.projectID ||
-          reserved.agent !== child.agent ||
+          canonicalMemberId(reserved.agent) !== canonicalMemberId(child.agent) ||
           (input.planID !== undefined && reserved.planRevisionID !== input.planID) ||
           !isDeepStrictEqual(reserved.permission, child.permission)
         )
@@ -363,7 +364,7 @@ export const make = Effect.gen(function* () {
           validation.projectID !== session.projectID ||
           reserved.sessionID !== session.id ||
           reserved.projectID !== session.projectID ||
-          reserved.routedMemberID !== child.agent ||
+          canonicalMemberId(reserved.routedMemberID) !== canonicalMemberId(child.agent) ||
           authorization.sessionID !== session.id ||
           authorization.projectID !== session.projectID ||
           (input.planID !== undefined && validation.planRevisionID !== input.planID) ||

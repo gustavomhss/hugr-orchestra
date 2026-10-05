@@ -15,9 +15,10 @@ import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { lookupRouteGrant } from "./route-grant"
-import { omit } from "remeda"
+import { omit, pick } from "remeda"
 import {
-  BACKEND_DEFAULT_LABEL,
+  canonicalMemberId,
+  LEGACY_BACKEND_ID,
   lookupRosterMember,
   nativeProfiles,
   renderPrompt,
@@ -159,13 +160,12 @@ function legacy(member: RosterMember) {
 // those records verifiable without spelling the former name; it moves with the default label, as v1 already does.
 function preRename(member: RosterMember): RosterMember {
   if (member.memberId !== "backend") return member
-  const former = BACKEND_DEFAULT_LABEL.toLowerCase()
   return {
     ...member,
-    memberId: former,
-    returnCard: `${former}-result`,
-    nativeProfile: former as RosterMember["nativeProfile"],
-    prompt: member.prompt?.replaceAll("backend-result", `${former}-result`),
+    memberId: LEGACY_BACKEND_ID,
+    returnCard: `${LEGACY_BACKEND_ID}-result`,
+    nativeProfile: LEGACY_BACKEND_ID as RosterMember["nativeProfile"],
+    prompt: member.prompt?.replaceAll("backend-result", `${LEGACY_BACKEND_ID}-result`),
   }
 }
 
@@ -379,9 +379,31 @@ function sameValidation(existing: ValidationRecord, wanted: ValidationData) {
   const reviewer = roster.find((candidate) => candidate.memberId === "lucy")
   if (!reviewer?.nativeProfile) return false
   return (
-    isDeepStrictEqual({ ...recorded, rosterHash: wanted.rosterHash, reviewPolicyHash: wanted.reviewPolicyHash }, wanted) &&
+    isDeepStrictEqual(
+      {
+        ...recorded,
+        routedMemberID: canonicalMemberId(recorded.routedMemberID),
+        grantHash: wanted.grantHash,
+        rosterHash: wanted.rosterHash,
+        reviewPolicyHash: wanted.reviewPolicyHash,
+      },
+      wanted,
+    ) &&
+    sameGrant(recorded, wanted) &&
     verifyRosterHash(recorded.rosterHash, roster) !== undefined &&
     verifyReviewPolicyHash(recorded.reviewPolicyHash, reviewer, nativeProfiles[reviewer.nativeProfile]) !== undefined
+  )
+}
+
+// A record routed to the backend seat under its former id hashed that seat's grant under the former id as well.
+function sameGrant(recorded: Pick<ValidationRecord, "grantHash" | "routedMemberID">, wanted: ValidationData) {
+  if (recorded.grantHash === wanted.grantHash) return true
+  const member = roster.find((candidate) => candidate.memberId === "backend")
+  return (
+    recorded.routedMemberID === LEGACY_BACKEND_ID &&
+    member !== undefined &&
+    recorded.grantHash ===
+      hash(pick(preRename(member), ["memberId", "role", "abilityClass", "returnCard", "forbiddenActions"]))
   )
 }
 

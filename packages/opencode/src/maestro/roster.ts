@@ -26,6 +26,17 @@ export const backendSkills = Object.freeze({
 // `agent.backend.name` or HUGR_BACKEND_NAME replaces it, and test/agent/specialist-name-guard.test.ts pins it.
 export const BACKEND_DEFAULT_LABEL = "Charlie"
 
+// Data written before the backend seat got its stable `backend` id carries its former id, which was the lowercased
+// default label. It is derived, never spelled, and only read: `canonicalMemberId` maps it to `backend` wherever a stored
+// or user-supplied member id enters, and every write uses `backend`.
+export const LEGACY_BACKEND_ID = BACKEND_DEFAULT_LABEL.toLowerCase()
+
+export function canonicalMemberId(id: string): string
+export function canonicalMemberId(id: string | undefined): string | undefined
+export function canonicalMemberId(id: string | undefined) {
+  return id === LEGACY_BACKEND_ID ? "backend" : id
+}
+
 export const nativeProfiles = Object.freeze({
   execution: Object.freeze({
     "*": "deny",
@@ -189,7 +200,7 @@ export function createRoster(members: readonly RosterMember[]): Roster {
   const memberIds = new Set<string>()
   return Object.freeze(
     members.map((member) => {
-      if (!canonicalMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
+      if (!wellFormedMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
       if (memberIds.has(member.memberId)) throw new Error(`Roster memberId must be unique: ${member.memberId}`)
       memberIds.add(member.memberId)
       return Object.freeze({ ...member, forbiddenActions: Object.freeze([...member.forbiddenActions]) })
@@ -198,14 +209,14 @@ export function createRoster(members: readonly RosterMember[]): Roster {
 }
 
 export function lookupRosterMember(memberId: unknown, members: Roster = roster): RosterLookup {
-  if (!canonicalMemberId(memberId)) {
+  if (!wellFormedMemberId(memberId)) {
     return { status: "HOLD", reason: "malformed-member-id" }
   }
-  const member = members.find((candidate) => candidate.memberId === memberId)
+  const member = members.find((candidate) => candidate.memberId === canonicalMemberId(memberId))
   if (!member) return { status: "HOLD", reason: "unknown-member-id" }
   return { status: "FOUND", member }
 }
 
-function canonicalMemberId(value: unknown): value is string {
+function wellFormedMemberId(value: unknown): value is string {
   return typeof value === "string" && /^[a-z]+(?:-[a-z]+)*$/.test(value)
 }

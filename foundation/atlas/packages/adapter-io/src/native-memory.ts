@@ -67,8 +67,12 @@ import type { ScannerBinarySpec } from "./scanner.js"
 export interface AtlasBinding {
   readonly storage: { readonly projectID: string; readonly root: string }
   readonly source: { readonly worktree: string; readonly revision: string }
-  /** The stable roster member id (clause 2). The ONLY owner this surface reads or writes as. */
+  /** The stable roster member id (clause 2). The ONLY owner this surface writes as, and the owner it reads as. */
   readonly memoryOwner: MemberId
+  /** Ids the SAME member's records were written under before its id was renamed. `recall` and `resolveFold` read a
+   *  record owned by one of them as the binding owner's; nothing is ever written or minted under them, and the stored
+   *  record is served unchanged. NOT in clause 1's field set — added for a harness seat rename. */
+  readonly legacyOwners?: readonly MemberId[]
   /** Execution provenance. Carried for the host's receipt; never written into an entry or record (clause 3). */
   readonly execution: {
     readonly actor: { readonly memberId: string; readonly projectId: string; readonly sessionId: string }
@@ -153,6 +157,7 @@ export interface NativeMemory {
 export function createNativeMemory(input: AtlasBinding): NativeMemory {
   const binding = freezeBinding(input)
   const owner = binding.memoryOwner
+  const owners = new Set([owner, ...(binding.legacyOwners ?? [])])
   const store = createDurableMemory(binding.storage.root)
 
   function resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict {
@@ -193,7 +198,7 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
   }
 
   function project(unit: ResumeUnit, ref: RecordRef, record: MemoryRecord): FoldVerdict {
-    if (record.owner !== owner)
+    if (!owners.has(record.owner))
       return refuse("foreign-owner", `record ${ref.eventId} belongs to '${record.owner}', not '${owner}'`)
     if (!isOwnUnit(record, unit))
       return refuse("unit-mismatch", `record ${ref.eventId} is not the ${unit.kind} '${unit.id}'`)
@@ -203,7 +208,9 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
 
   function isOwnUnit(record: MemoryRecord, unit: ResumeUnit): boolean {
     const e = record.entry as { readonly taskId?: unknown; readonly prId?: unknown }
-    return record.owner === owner && record.kind === unit.kind && (unit.kind === "task" ? e.taskId : e.prId) === unit.id
+    return (
+      owners.has(record.owner) && record.kind === unit.kind && (unit.kind === "task" ? e.taskId : e.prId) === unit.id
+    )
   }
 
   return {
@@ -227,8 +234,14 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       const read = store.read()
       const state = storeStateOf(read)
       if (state === "unavailable") return { records: [], refs: [], store: state }
-      // The owner is set HERE, after narrowing, from the binding — a caller-supplied `owner` never survives.
-      const records = createMemoryRead({ store: frozen(read, store.path), actor: owner }).recall({ ...q, owner })
+      // The owner is set HERE, after narrowing, from the binding — a caller-supplied `owner` never survives. Each
+      // owner the binding reads as is recalled separately, and the union is served in the store's own order.
+      const matched = new Set(
+        [...owners].flatMap((o) =>
+          createMemoryRead({ store: frozen(read, store.path), actor: o }).recall({ ...q, owner: o }),
+        ),
+      )
+      const records = read.store.filter((r) => matched.has(r))
       const refOf = new Map(
         [...read.log.entries()].map(([eventId, ev]) => [ev.payload, { contentHash: ev.contentHash, eventId }]),
       )
@@ -339,6 +352,13 @@ function scannerFor(binding: AtlasBinding): { readonly scanner?: NamedScanner } 
 function freezeBinding(input: AtlasBinding): AtlasBinding {
   if (typeof input.memoryOwner !== "string" || input.memoryOwner === "") {
     throw new Error("native-memory: AtlasBinding.memoryOwner must be a non-empty roster member id")
+  }
+  if (
+    input.legacyOwners !== undefined &&
+    (!Array.isArray(input.legacyOwners) ||
+      input.legacyOwners.some((o) => typeof o !== "string" || o === "" || o === input.memoryOwner))
+  ) {
+    throw new Error("native-memory: AtlasBinding.legacyOwners must be non-empty ids other than memoryOwner")
   }
   if (typeof input.storage?.root !== "string" || !input.storage.root.startsWith("/")) {
     throw new Error("native-memory: AtlasBinding.storage.root must be an absolute path")

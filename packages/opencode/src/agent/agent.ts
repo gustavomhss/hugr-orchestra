@@ -32,7 +32,15 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
-import { roster, nativeProfiles, backendSkills, renderPrompt, type RosterMember } from "@/maestro/roster"
+import {
+  roster,
+  nativeProfiles,
+  backendSkills,
+  canonicalMemberId,
+  LEGACY_BACKEND_ID,
+  renderPrompt,
+  type RosterMember,
+} from "@/maestro/roster"
 import { containsPath } from "@/project/instance-context"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -323,7 +331,26 @@ const layer = Layer.effect(
           ),
         }
 
-        for (const [key, value] of Object.entries(cfg.agent ?? {})) {
+        // Config written before the backend seat's rename keys the seat by its former id. That key still configures the
+        // seat, never a custom agent, and warns on the channel invalid labels use; when `agent.backend` is also set, it wins.
+        const legacyBackend = cfg.agent?.[LEGACY_BACKEND_ID]
+        const backendKey = legacyBackend && !cfg.agent?.backend ? LEGACY_BACKEND_ID : "backend"
+        const agentConfig = Object.fromEntries(
+          Object.entries(cfg.agent ?? {}).flatMap(([key, value]) => {
+            if (key !== LEGACY_BACKEND_ID) return [[key, value] as const]
+            return backendKey === LEGACY_BACKEND_ID ? [["backend", value] as const] : []
+          }),
+        )
+        if (legacyBackend) {
+          const message =
+            backendKey === LEGACY_BACKEND_ID
+              ? `Deprecated configuration agent.${LEGACY_BACKEND_ID}: rename it to agent.backend.`
+              : `Deprecated configuration agent.${LEGACY_BACKEND_ID} is ignored: agent.backend is also set and takes precedence.`
+          yield* Effect.logWarning("deprecated native seat configuration", { path: `agent.${LEGACY_BACKEND_ID}` })
+          yield* events.publish(SessionV1.Event.Error, { error: new NamedError.Unknown({ message }).toObject() })
+        }
+
+        for (const [key, value] of Object.entries(agentConfig)) {
           // Native seats accept only model, variant, temperature and their display label (resolved below).
           if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
             const item = agents[key]
@@ -368,10 +395,11 @@ const layer = Layer.effect(
           backend: flags.backendName === undefined ? undefined : { path: "HUGR_BACKEND_NAME", value: flags.backendName },
         }
         for (const member of roster.filter((member) => member.nativeProfile && member.prompt)) {
-          const configured = cfg.agent?.[member.memberId]?.name
+          const configured = agentConfig[member.memberId]?.name
+          const key = member.memberId === "backend" ? backendKey : member.memberId
           const source =
             overrides[member.memberId] ??
-            (configured === undefined ? undefined : { path: `agent.${member.memberId}.name`, value: configured })
+            (configured === undefined ? undefined : { path: `agent.${key}.name`, value: configured })
           if (!source) continue
           const label = typeof source.value === "string" ? source.value.trim() : ""
           const problem = labelProblem(
@@ -405,8 +433,9 @@ const layer = Layer.effect(
           )
         }
 
+        // Stored sessions, messages and Task calls may name the backend seat by its former id.
         const get = Effect.fnUntraced(function* (agent: string) {
-          return agents[agent]
+          return agents[canonicalMemberId(agent)]
         })
 
         const list = Effect.fnUntraced(function* () {

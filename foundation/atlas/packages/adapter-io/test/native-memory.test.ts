@@ -354,3 +354,25 @@ describe("clause 25 — reconcile answers an unknown outcome from the store", ()
     expect(mem.reconcile(taskEntry("T1", "x"))).toEqual({ present: false, store: "partial" })
   })
 })
+
+describe("legacyOwners — a renamed member reads its earlier records, and writes only as itself", () => {
+  it("recall and resolveFold read a legacy-owned record as the binding owner's; writes keep memoryOwner", () => {
+    createDurableMemory(root).append({ owner: "former", kind: "task", entry: taskEntry("T1", "old") })
+    createDurableMemory(root).append({ owner: "other", kind: "task", entry: taskEntry("T1", "foreign") })
+    const mem = createNativeMemory(binding({ legacyOwners: ["former"] }))
+
+    const got = mem.recall({ kind: "task", taskId: "T1" })
+    expect(got.records.map((r) => r.owner)).toEqual(["former"])
+    const v = mem.resolveFold({ kind: "task", id: "T1" }, got.refs[0])
+    expect(v.ok && v.record.owner).toBe("former")
+    expect(createNativeMemory(binding()).recall({ kind: "task", taskId: "T1" }).records).toEqual([])
+
+    const written = mem.write(taskEntry("T2", "new"))
+    expect(written.ok && written.record.owner).toBe("backend")
+  })
+
+  it("refuses a binding whose legacy owners are empty or repeat memoryOwner", () => {
+    expect(() => createNativeMemory(binding({ legacyOwners: [""] }))).toThrow(/legacyOwners/)
+    expect(() => createNativeMemory(binding({ legacyOwners: ["backend"] }))).toThrow(/legacyOwners/)
+  })
+})

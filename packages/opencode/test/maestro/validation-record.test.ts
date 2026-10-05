@@ -25,7 +25,7 @@ import {
   recordValidation,
   reviewPolicyHash,
 } from "../../src/maestro/validation-record"
-import { nativeProfiles, roster } from "../../src/maestro/roster"
+import { LEGACY_BACKEND_ID, nativeProfiles, roster } from "../../src/maestro/roster"
 import { disposeAllInstances, provideInstance, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -319,6 +319,50 @@ describe("Maestro validation receipt", () => {
           yield* db.select().from(EventTable).where(eq(EventTable.id, current.id)).get().pipe(Effect.orDie),
         ).toEqual(before)
         expect(yield* readValidation(current.id)).toEqual({ id: current.id, ...v2 })
+      }),
+    { git: true },
+  )
+
+  it.instance(
+    "routes the former backend id to the backend seat and records it as backend",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* prepare()
+        const receipt = yield* recordValidation({ ...input, routedMemberID: LEGACY_BACKEND_ID })
+        expect(receipt.routedMemberID).toBe("backend")
+        expect(yield* recordValidation(input)).toEqual(receipt)
+      }),
+    { git: true },
+  )
+
+  it.instance(
+    "an exact retry of a record routed under the former backend id still matches it",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* prepare()
+        const current = yield* recordValidation(input)
+        const { db } = yield* Database.Service
+        const { id, ...recorded } = current
+        // The seat's grant and the roster as an earlier build hashed them, under the former id (at 263a9a27d4).
+        const preRename = {
+          ...recorded,
+          routedMemberID: LEGACY_BACKEND_ID,
+          grantHash: "3caa5f971b07cfad4c9647ff7a0ad77d022490d9e0c7cae9f334b7d1412c3928",
+          rosterHash: "5a2df5f95e6c6783322fcf59f39af317639f9fdec9ad1a704e4b9ad75661ea3a",
+        }
+        yield* db.update(EventTable).set({ data: preRename }).where(eq(EventTable.id, id)).run().pipe(Effect.orDie)
+
+        expect(yield* recordValidation(input)).toEqual({ id, ...preRename })
+        expect(yield* recordValidation({ ...input, routedMemberID: LEGACY_BACKEND_ID })).toEqual({ id, ...preRename })
+
+        // The former grant hash is accepted only for a record routed under the former id.
+        yield* db
+          .update(EventTable)
+          .set({ data: { ...preRename, routedMemberID: "backend" } })
+          .where(eq(EventTable.id, id))
+          .run()
+          .pipe(Effect.orDie)
+        expect(yield* recordValidation(input).pipe(Effect.flip)).toMatchObject({ _tag: "MaestroValidationConflict" })
       }),
     { git: true },
   )
