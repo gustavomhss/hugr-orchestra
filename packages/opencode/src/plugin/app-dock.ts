@@ -174,11 +174,40 @@ function matches(item: unknown, query: NativeQuery): item is NativeItem {
   if (!object(item) || typeof item.ref !== "string" || typeof item.name !== "string" || typeof item.roleName !== "string") return false
   const name = query.name.trim().toLowerCase()
   if (name.length === 0 || !item.name.toLowerCase().includes(name)) return false
-  if (query.role !== undefined && item.roleName !== query.role) return false
-  if (query.capability === undefined) return true
-  const capability = object(item.capabilities) ? item.capabilities[query.capability] : undefined
-  return object(capability) && capability.supported === true
+  return fits(item as NativeItem, query)
 }
+
+// Toolkits and models spell roles differently ("check-box", "checkbox", "check box"), so only letters and digits count.
+const roleKey = (role: string) => role.toLowerCase().replace(/[^a-z0-9]/g, "")
+
+function fits(item: NativeItem, query: NativeQuery) {
+  if (query.role !== undefined && roleKey(item.roleName) !== roleKey(query.role)) return false
+  return query.capability === undefined || supports(item, query.capability)
+}
+
+function supports(item: NativeItem, capability: string) {
+  const entry = object(item.capabilities) ? item.capabilities[capability] : undefined
+  return object(entry) && entry.supported === true
+}
+
+// A target that names real controls but excludes them by role or input mode must say so, or models keep guessing.
+function missed(scan: NativeScan, query: NativeQuery) {
+  if (scan.found.length === 0) return compactScan(scan, "target-not-found")
+  const items = scan.found.map((match) => match.item)
+  const roles = [...new Set(items.map((item) => item.roleName))]
+  const hints = [
+    ...(query.role !== undefined && !items.some((item) => roleKey(item.roleName) === roleKey(query.role!))
+      ? [`No control with this name has role "${query.role}"; roles found: ${roles.join(", ")}`] : []),
+    ...(query.capability === "action" && items.some((item) => supports(item, "observedAction"))
+      ? ['Controls with this name only support observed actions; retry with mode: "observed"'] : []),
+    ...(query.capability === "type" && items.some((item) => supports(item, "keyboardType"))
+      ? ['Fields with this name only accept keyboard input; retry with mode: "keyboard"'] : []),
+  ]
+  return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0, nameMatches: items.length,
+    ...(hints.length ? { hints } : {}), nearMisses: items.slice(0, 10).map(compactItem) })
+}
+
+const only = (scan: NativeScan, query: NativeQuery): NativeScan => ({ ...scan, found: scan.found.filter((match) => fits(match.item, query)) })
 
 function compactItem(item: NativeItem) {
   const capabilities = object(item.capabilities) ? item.capabilities : {}
@@ -261,12 +290,15 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   // never replayed.
   const act = async (context: ToolContext, query: NativeQuery, run: (item: NativeItem, clock: Clock) => Promise<unknown> | string,
     clock: Clock, attempt = 0): Promise<unknown> => {
-    const all = await find(context, query, () => false, clock)
+    // Scans match by name only; role and input mode filter afterwards so a miss can report what it excluded.
+    const loose = { name: query.name, maxText: query.maxText }
+    const named = await find(context, loose, () => false, clock)
+    const all = only(named, query)
     // A provider error or skipped subtree can end a traversal without more pages, so uniqueness needs full coverage.
     if (!all.complete) return compactScan(all, "target-search-incomplete")
     const winner = pick(all, query)
-    if (winner === undefined) return compactScan(all, all.found.length === 0 ? "target-not-found" : "target-ambiguous")
-    const fresh = await find(context, query, () => false, clock)
+    if (winner === undefined) return all.found.length === 0 ? missed(named, query) : compactScan(all, "target-ambiguous")
+    const fresh = only(await find(context, loose, () => false, clock), query)
     if (Date.now() >= clock.deadline) return compactScan(expired(all), "target-search-incomplete")
     if (!fresh.complete) return compactScan(fresh, "target-search-incomplete")
     const current = pick(fresh, query)
@@ -425,13 +457,14 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         execute: (args, context) => {
           const mode = args.mode === undefined ? {} : { mode: args.mode }
           if (args.target === undefined) {
-            if (args.ref === undefined || args.actionID === undefined) return Promise.resolve("dock_action requires ref and actionID, or target")
+            if (args.ref === undefined || args.actionID === undefined) return Promise.resolve("dock_action with ref needs the actionID from that item's actions (dock_find/dock_read); or pass target {name, role} with an action name to locate and act in one call")
             return call(context, "action", { ref: args.ref, actionID: args.actionID, ...mode }).then(toJSON, toolError)
           }
           return act(context, { ...args.target, capability: args.mode === "observed" ? "observedAction" : "action" }, (item, clock) => {
             const actions = (Array.isArray(item.actions) ? item.actions : []).filter((entry): entry is { id: string; name: string } =>
               object(entry) && typeof entry.id === "string" && typeof entry.name === "string" && (args.action === undefined || entry.name === args.action))
-            if (actions.length !== 1) return toJSON({ code: "action-ambiguous", outcome: "not-dispatched", item: compactItem(item) })
+            if (actions.length !== 1) return toJSON({ code: "action-ambiguous", outcome: "not-dispatched", item: compactItem(item),
+              hint: `Pass action as one of: ${(Array.isArray(item.actions) ? item.actions : []).flatMap((entry) => object(entry) && typeof entry.name === "string" ? [entry.name] : []).join(", ") || "(none advertised)"}` })
             return call(context, "action", { ref: item.ref, actionID: actions[0]!.id, ...mode }, clock).then(toJSON)
           }, { deadline: Date.now() + findDeadlineMs }).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },

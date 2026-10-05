@@ -425,7 +425,7 @@ export class AppDockRPC {
       const target = stored?.generation === tab?.generation ? stored : undefined
       // Browser snapshot shape has no AT-SPI equivalent; never drop it silently.
       if ((workspace || target) && op === "read" && browserReadShape.some((key) => args[key] !== undefined))
-        throw new NativeDockProtocol.NativeError("unsupported-operation", "Browser read shape cannot address a native tab")
+        throw new NativeDockProtocol.NativeError("unsupported-operation", "mode, format, actionable and visible apply to browser pages only; omit them when reading the Linux workspace")
       if (workspace && tab) {
         request.workspace = Object.freeze({ senderID, tabID, generation: tab.generation, profileID: this.profileResolver(senderID).profileID })
         pending()

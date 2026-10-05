@@ -586,7 +586,7 @@ test("dock_action target locates and acts in one call, refusing ambiguity withou
   expect(JSON.parse(String(await actions.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "action-ambiguous", outcome: "not-dispatched" })
   expect([...two.calls, ...actions.calls].every((call) => call.op === "read")).toBe(true)
-  await expect(one.hooks.tool.dock_action.execute({ ref: "n:a" }, context)).resolves.toBe("dock_action requires ref and actionID, or target")
+  await expect(one.hooks.tool.dock_action.execute({ ref: "n:a" }, context)).resolves.toContain("needs the actionID")
 })
 
 test("target mutation retries only a certainly-undispatched stale ref, never an unknown outcome", async () => {
@@ -771,4 +771,34 @@ test("dock_find reports a partial traversal even when it found matches", async (
   const partial = host(() => page([control("n:a", "Open")], undefined, { complete: false, reasons: ["null-child"] }))
   expect(JSON.parse(String(await partial.hooks.tool.dock_find.execute({ name: "open" }, context))))
     .toMatchObject({ found: 1, searchComplete: false, reasons: ["null-child"] })
+})
+
+test("dock_action target accepts role spellings models use and reports controls its filters excluded", async () => {
+  const box = (ref: string, extra: Record<string, unknown> = {}) => control(ref, "files.trimTrailingWhitespace", {
+    roleName: "check-box", actions: [{ id: `a:${ref}`, name: "check" }],
+    capabilities: { action: { supported: false, reason: "virtual-ancestry" }, observedAction: { supported: true, reason: "x" },
+      type: { supported: false, reason: "x" }, keyboardType: { supported: false, reason: "x" } }, ...extra })
+  const run = (args: Record<string, unknown>) => {
+    const dock = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } } : page([box("n:box")]))
+    return dock.hooks.tool.dock_action.execute(args as never, context)
+      .then((result) => ({ result: JSON.parse(String(result)), actions: dock.calls.filter((call) => call.op === "action").length }))
+  }
+  // Default mode excludes a control that only supports observed actions; the miss names it and says how to retry.
+  expect(await run({ target: { name: "files.trimTrailingWhitespace", role: "check-box" } })).toMatchObject({ result: {
+    code: "target-not-found", outcome: "not-dispatched", found: 0, nameMatches: 1,
+    hints: ['Controls with this name only support observed actions; retry with mode: "observed"'],
+    nearMisses: [{ ref: "n:box", role: "check-box", can: ["observedAction"] }] }, actions: 0 })
+  for (const role of ["checkbox", "Check Box", "check_box"])
+    expect(await run({ target: { name: "files.trimTrailingWhitespace", role }, mode: "observed" }))
+      .toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
+  expect(await run({ target: { name: "files.trimTrailingWhitespace", role: "toggle" }, mode: "observed" })).toMatchObject({ result: {
+    code: "target-not-found", hints: ['No control with this name has role "toggle"; roles found: check-box'] }, actions: 0 })
+})
+
+test("action-ambiguous names the actions the model can pass", async () => {
+  const dock = host(() => page([field("n:search", "Search settings")].map((item) => ({ ...item,
+    actions: [{ id: "a1", name: "activate" }, { id: "a2", name: "showContextMenu" }],
+    capabilities: { ...item.capabilities, action: { supported: true, reason: "x" } } }))))
+  expect(JSON.parse(String(await dock.hooks.tool.dock_action.execute({ target: { name: "search settings" }, action: "press" }, context))))
+    .toMatchObject({ code: "action-ambiguous", hint: "Pass action as one of: activate, showContextMenu" })
 })
