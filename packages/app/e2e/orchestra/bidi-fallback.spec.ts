@@ -190,6 +190,21 @@ for (const scenario of scenarios) {
     await expect(filename).toHaveText(name)
     const extension = name.indexOf(".")
     expectInOrder(await glyphs(filename), extension - 1, 0, extension, extension + 1, extension + 2, extension + 3)
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+
+    // The portaled confirmation keeps its English sentences in order, ending punctuation last.
+    await env.locator('[data-env-key="KEY"]').getByRole("button", { name: "Remove", exact: true }).click()
+    const confirm = page.getByRole("dialog")
+    const removal = "The key is removed from this draft. Download to save the file."
+    const subtitle = confirm.locator(".mx-dialog-head p")
+    await expect(subtitle).toHaveText(removal)
+    expectTrailing(await glyphs(subtitle), removal)
+    await expectStartAligned(subtitle, scenario.direction)
+    // The profile name is isolated (FSI…PDI), so the period follows its last letter.
+    const note = `This changes the .env draft for \u2068Compact project\u2069.`
+    await expect(confirm.locator(".mx-note")).toHaveText(note)
+    expectInOrder(await glyphs(confirm.locator(".mx-note")), 0, 1, note.length - 3, note.length - 1)
     await page.screenshot({ path: test.info().outputPath(`bidi-chapter-${scenario.locale}.png`) })
   })
 }

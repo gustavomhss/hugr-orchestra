@@ -23,14 +23,7 @@ export default function EnvPage(props: ChapterPageProps) {
     search: "",
     revealed: {} as Record<number, boolean>,
     dialog: "" as "" | "edit" | "view" | "remove",
-    draft: {
-      index: undefined as number | undefined,
-      name: "",
-      key: "",
-      value: "",
-      multiline: false,
-      error: "" as "" | "invalid" | "duplicate" | "readonly",
-    },
+    draft: blank(),
   })
   const entries = createMemo(() => envEntries(state.lines))
   const rows = createMemo(() => {
@@ -48,12 +41,17 @@ export default function EnvPage(props: ChapterPageProps) {
       )
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
+  // First-strong isolate (FSI…PDI): a profile name cannot reorder the English copy around it.
+  const named = () => `\u2068${profile()}\u2069`
   const lifetime = { disposed: false, import: 0 }
   onCleanup(() => {
     lifetime.disposed = true
     lifetime.import++
   })
   let input: HTMLInputElement | undefined
+  let add: HTMLButtonElement | undefined
+  // The dialog has no Kobalte trigger, so focus returns to the control that opened it.
+  let opener: HTMLElement | undefined
   const available =
     typeof File !== "undefined" &&
     typeof File.prototype.arrayBuffer === "function" &&
@@ -63,7 +61,7 @@ export default function EnvPage(props: ChapterPageProps) {
 
   async function open(file: File) {
     const request = ++lifetime.import
-    setState({ loading: true, error: "", dialog: "" })
+    setState({ loading: true, error: "", dialog: "", draft: blank() })
     const result = await file
       .arrayBuffer()
       .then((bytes) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes))
@@ -80,7 +78,8 @@ export default function EnvPage(props: ChapterPageProps) {
     setState({ lines: result.lines, filename: file.name, revealed: {} })
   }
 
-  function edit(index?: number) {
+  function edit(target: HTMLElement, index?: number) {
+    opener = target
     const assignment = index === undefined ? undefined : state.lines[index]?.assignment
     setState({
       error: "",
@@ -107,6 +106,7 @@ export default function EnvPage(props: ChapterPageProps) {
     setState({
       lines: result.lines,
       dialog: "",
+      draft: blank(),
       revealed: index === undefined ? state.revealed : { ...state.revealed, [index]: false },
     })
   }
@@ -122,7 +122,12 @@ export default function EnvPage(props: ChapterPageProps) {
         return [[line > index ? line - 1 : line, value]]
       }),
     )
-    setState({ lines: removeEnv(state.lines, index), dialog: "", revealed, error: "" })
+    setState({ lines: removeEnv(state.lines, index), dialog: "", draft: blank(), revealed, error: "" })
+  }
+
+  // Closing drops the draft so a value typed or shown in the dialog does not linger in the store.
+  function close() {
+    setState({ dialog: "", draft: blank() })
   }
 
   function download() {
@@ -147,7 +152,7 @@ export default function EnvPage(props: ChapterPageProps) {
     return language.t("orchestra.env.dialog.edit", { key: state.draft.name })
   }
   const subtitle = () => {
-    if (state.dialog === "view") return language.t("orchestra.env.dialog.preview", { profile: profile() })
+    if (state.dialog === "view") return language.t("orchestra.env.dialog.preview", { profile: named() })
     if (state.dialog === "remove") return language.t("orchestra.env.dialog.removeHint")
     return language.t("orchestra.env.dialog.editHint")
   }
@@ -156,7 +161,7 @@ export default function EnvPage(props: ChapterPageProps) {
   return (
     <MxPage
       id="orchestra-env"
-      eyebrow={language.t("orchestra.env.eyebrow", { profile: profile() })}
+      eyebrow={language.t("orchestra.env.eyebrow", { profile: named() })}
       title={language.t("orchestra.env.title")}
       description={language.t("orchestra.env.description")}
       action={
@@ -192,17 +197,26 @@ export default function EnvPage(props: ChapterPageProps) {
           </MxBadge>
         </div>
         <div class="mx-toolbar">
-          <button type="button" class="mx-btn" disabled={busy()} onClick={() => edit()}>
+          <button
+            type="button"
+            class="mx-btn"
+            ref={add}
+            disabled={busy()}
+            onClick={(event) => edit(event.currentTarget)}
+          >
             {language.t("orchestra.env.add")}
           </button>
-          <button type="button" class="mx-btn" disabled={busy()} onClick={download}>
+          <button type="button" class="mx-btn" disabled={busy() || !state.lines.length} onClick={download}>
             {language.t("orchestra.env.download")}
           </button>
           <button
             type="button"
             class="mx-btn"
             disabled={state.loading}
-            onClick={() => setState({ dialog: "view", error: "" })}
+            onClick={(event) => {
+              opener = event.currentTarget
+              setState({ dialog: "view", error: "" })
+            }}
           >
             {language.t("orchestra.env.view")}
           </button>
@@ -264,20 +278,26 @@ export default function EnvPage(props: ChapterPageProps) {
                   >
                     {language.t(state.revealed[row.index] ? "orchestra.env.hide" : "orchestra.env.reveal")}
                   </button>
-                  <button type="button" class="mx-btn" disabled={state.loading} onClick={() => edit(row.index)}>
+                  <button
+                    type="button"
+                    class="mx-btn"
+                    disabled={state.loading}
+                    onClick={(event) => edit(event.currentTarget, row.index)}
+                  >
                     {language.t("orchestra.env.edit")}
                   </button>
                   <button
                     type="button"
                     class="mx-btn"
                     disabled={state.loading}
-                    onClick={() =>
+                    onClick={(event) => {
+                      opener = event.currentTarget
                       setState({
                         dialog: "remove",
                         error: "",
-                        draft: { ...state.draft, index: row.index, name: row.assignment.key },
+                        draft: { ...blank(), index: row.index, name: row.assignment.key },
                       })
-                    }
+                    }}
                   >
                     {language.t("orchestra.env.remove")}
                   </button>
@@ -293,11 +313,20 @@ export default function EnvPage(props: ChapterPageProps) {
         </Show>
         <p class="mx-note">{language.t("orchestra.env.memory")}</p>
       </div>
-      <Dialog open={!!state.dialog} onOpenChange={(open) => !open && setState("dialog", "")}>
+      <Dialog open={!!state.dialog} onOpenChange={(open) => !open && close()}>
         <Dialog.Portal>
           <Dialog.Overlay class="env-dialog-backdrop" />
           <div class="env-dialog-layer">
-            <Dialog.Content class="mx-dialog env-dialog" data-env-dialog={state.dialog}>
+            <Dialog.Content
+              class="mx-dialog env-dialog"
+              data-env-dialog={state.dialog}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault()
+                // Rows are recreated after Save or Remove; their opener is gone, so use Add key.
+                const target = opener?.isConnected ? opener : add
+                target?.focus()
+              }}
+            >
               <form
                 autocomplete="off"
                 onSubmit={(event) => {
@@ -314,7 +343,11 @@ export default function EnvPage(props: ChapterPageProps) {
                     </Dialog.Title>
                     <Dialog.Description>{subtitle()}</Dialog.Description>
                   </div>
-                  <Dialog.CloseButton class="mx-link" aria-label={language.t("orchestra.env.dialog.close")}>
+                  <Dialog.CloseButton
+                    class="mx-link"
+                    data-slot="dialog-close-button"
+                    aria-label={language.t("orchestra.env.dialog.close")}
+                  >
                     <svg class="env-icon" viewBox="0 0 16 16" aria-hidden="true">
                       <path d="m4 4 8 8m0-8-8 8" />
                     </svg>
@@ -368,11 +401,14 @@ export default function EnvPage(props: ChapterPageProps) {
                     </pre>
                   </Show>
                   <Show when={state.dialog === "remove"}>
-                    <p class="mx-note">{language.t("orchestra.env.dialog.removeNote", { profile: profile() })}</p>
+                    <p class="mx-note">{language.t("orchestra.env.dialog.removeNote", { profile: named() })}</p>
                   </Show>
                 </div>
                 <footer class="mx-dialog-foot">
-                  <Dialog.CloseButton class="mx-btn">{language.t("orchestra.env.cancel")}</Dialog.CloseButton>
+                  {/* Kobalte's CloseButton labels itself "Dismiss", which would hide the visible "Cancel". */}
+                  <button type="button" class="mx-btn" onClick={close}>
+                    {language.t("orchestra.env.cancel")}
+                  </button>
                   <Show when={state.dialog === "edit" || state.dialog === "remove"}>
                     <button type="submit" class="mx-btn primary">
                       {language.t(state.dialog === "remove" ? "orchestra.env.dialog.confirm" : "orchestra.env.apply")}
@@ -386,4 +422,15 @@ export default function EnvPage(props: ChapterPageProps) {
       </Dialog>
     </MxPage>
   )
+}
+
+function blank() {
+  return {
+    index: undefined as number | undefined,
+    name: "",
+    key: "",
+    value: "",
+    multiline: false,
+    error: "" as "" | "invalid" | "duplicate" | "readonly",
+  }
 }

@@ -108,7 +108,8 @@ for (const scheme of ["dark", "light"]) {
     const requests = await setup(page, scheme)
     const chapter = page.locator('[data-component="env-page"]')
     const screen = page.locator('[data-mx-page="orchestra-env"]')
-    await expect(screen.locator(".mx-eyebrow")).toHaveText("Env A / profile configuration")
+    // The profile name is a first-strong isolate inside the copy.
+    await expect(screen.locator(".mx-eyebrow")).toHaveText("\u2068Env A\u2069 / profile configuration")
     await expect(screen.getByRole("heading", { name: ".env", level: 1 })).toBeVisible()
     await expect(screen.locator(".mx-heading").getByRole("button", { name: "Open .env", exact: true })).toHaveClass(
       /primary/,
@@ -118,7 +119,10 @@ for (const scheme of ["dark", "light"]) {
     await expect(chapter.locator(".mx-empty")).toHaveText(
       "No environment keys yet.Open a .env file or add a key to start from an empty list.",
     )
+    // Nothing to download until a file is opened or a key is added.
+    await expect(chapter.getByRole("button", { name: "Download .env", exact: true })).toBeDisabled()
     await importFile(page)
+    await expect(chapter.getByRole("button", { name: "Download .env", exact: true })).toBeEnabled()
     await expect(chapter).not.toContainText(secret)
     expect(await bytes(page)).toEqual(Buffer.from(fixture))
     await expect(chapter.locator(".mx-empty")).toHaveCount(0)
@@ -155,6 +159,9 @@ for (const scheme of ["dark", "light"]) {
     expect(layout.clipped).toEqual(["ellipsis nowrap hidden", "ellipsis nowrap hidden"])
     await token.getByRole("button", { name: "Hide", exact: true }).click()
     await expect(token).not.toContainText(secret)
+    // Saving an edit masks that key again, even when it was shown before editing.
+    await token.getByRole("button", { name: "Show", exact: true }).click()
+    await expect(token).toContainText(`${secret}#hash`)
     // The approved edit dialog shows the selected key's current value; the list stays masked.
     await token.getByRole("button", { name: "Edit", exact: true }).click()
     const dialog = page.getByRole("dialog")
@@ -166,16 +173,33 @@ for (const scheme of ["dark", "light"]) {
     await dialog.getByRole("button", { name: "Save", exact: true }).click()
     await expect(dialog).toHaveCount(0)
     await expect(token).not.toContainText(secret)
+    await expect(token).toContainText("••••••••••••")
+    await expect(token.getByRole("button", { name: "Show", exact: true })).toBeVisible()
+    // Saving recreates the rows, so focus falls back to Add key instead of the document body.
+    await expect(page.getByRole("button", { name: "Add key", exact: true })).toBeFocused()
+    // Removing a key keeps every other row's reveal state on the row it belongs to.
+    const last = page.locator('[data-env-key="LAST"]')
+    const multi = page.locator('[data-env-key="MULTI"]')
+    await last.getByRole("button", { name: "Show", exact: true }).click()
+    await expect(last).toContainText("no-newline")
     const removed = page.locator('[data-env-key="REMOVE"]')
     await removed.getByRole("button", { name: "Remove", exact: true }).click()
     await expect(dialog.getByRole("heading", { name: "Remove REMOVE?", exact: true })).toBeVisible()
-    await expect(dialog).toContainText("This changes the .env draft for Env A.")
+    await expect(dialog).toContainText("This changes the .env draft for \u2068Env A\u2069.")
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
     await expect(dialog).toHaveCount(0)
     await expect(removed).toHaveCount(1)
+    // Cancel leaves the rows in place, so focus returns to the Remove button that opened the dialog.
+    await expect(removed.getByRole("button", { name: "Remove", exact: true })).toBeFocused()
     await removed.getByRole("button", { name: "Remove", exact: true }).click()
     await dialog.getByRole("button", { name: "Confirm", exact: true }).click()
     await expect(removed).toHaveCount(0)
+    await expect(last).toContainText("no-newline")
+    await expect(last.getByRole("button", { name: "Hide", exact: true })).toBeVisible()
+    await expect(multi).toContainText("••••••••••••")
+    await expect(multi).not.toContainText("first")
+    await expect(multi.getByRole("button", { name: "Show", exact: true })).toBeVisible()
+    await last.getByRole("button", { name: "Hide", exact: true }).click()
     await expect(chapter.locator(".mx-toolbar").nth(1).locator(".mx-badge")).toHaveText("3 keys")
     await page.getByRole("button", { name: "Add key", exact: true }).click()
     await expect(dialog.getByRole("heading", { name: "Add environment key", exact: true })).toBeVisible()
@@ -196,12 +220,13 @@ for (const scheme of ["dark", "light"]) {
     // View file previews exactly the bytes Download writes, then closes without leaving values on the page.
     await chapter.getByRole("button", { name: "View file", exact: true }).click()
     await expect(dialog.getByRole("heading", { name: ".env", exact: true })).toBeVisible()
-    await expect(dialog).toContainText("Env A · current preview")
+    await expect(dialog).toContainText("\u2068Env A\u2069 · current preview")
     // Exact text, not whitespace-normalized: every line break of the file is shown.
     await expect(dialog.locator("pre")).toHaveJSProperty("textContent", edited.replaceAll("\r\n", "\n"))
     await expect(dialog.getByRole("button", { name: "Save", exact: true })).toHaveCount(0)
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
     await expect(dialog).toHaveCount(0)
+    await expect(chapter.getByRole("button", { name: "View file", exact: true })).toBeFocused()
     await expect(chapter).not.toContainText(secret)
     // Search filters by key name only, so typing never probes hidden values.
     const search = chapter.getByRole("textbox", { name: "Search .env", exact: true })
