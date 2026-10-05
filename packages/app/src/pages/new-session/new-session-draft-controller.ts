@@ -10,6 +10,7 @@ import { createPromptInputController, createPromptProjectControls } from "@/page
 import { createPromptModelSelection } from "@/pages/session/composer/prompt-model-selection"
 import { useSessionKey } from "@/pages/session/session-layout"
 import { useComposerCommands } from "@/pages/session/use-composer-commands"
+import { agentKey } from "@/context/local-agent"
 
 export function createNewSessionDraftController(workspace: { worktree: () => string; resetWorktree: () => void }) {
   const prompt = usePrompt()
@@ -25,11 +26,11 @@ export function createNewSessionDraftController(workspace: { worktree: () => str
   createEffect(() => {
     if (!prompt.ready()) return
     if (seed.applied) {
-      prompt.capture().store[1]("agent", local.agent.current()?.name)
+      prompt.capture().store[1]("agent", local.agent.key())
       return
     }
     const agent = prompt.capture().store[0]().agent
-    if (!agent || !local.agent.list().some((item) => item.name === agent)) return
+    if (!agent || !local.agent.list().some((item) => agentKey(item) === agent)) return
     local.agent.set(agent, { draftID: searchParams.draftId })
     setSeed("applied", true)
   })

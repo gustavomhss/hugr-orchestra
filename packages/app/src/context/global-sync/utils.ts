@@ -15,6 +15,7 @@ export const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 export function normalizeAgentList(input: AgentListOutput["data"] | Agent[]): Agent[] {
   if (input.every((agent) => !("request" in agent))) return input as Agent[]
   return (input as AgentListOutput["data"]).map((agent) => ({
+    id: agent.id,
     name: agent.id,
     description: agent.description,
     mode: agent.mode,

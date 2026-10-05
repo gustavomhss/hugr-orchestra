@@ -30,6 +30,7 @@ import { draftVersion, pendingSelection } from "@/components/draft-subagent-mode
 import { createSessionTabs } from "@/pages/session/helpers"
 import { showToast } from "@/utils/toast"
 import { PromptInputV2, type PromptInputV2Suggestion } from "@opencode-ai/session-ui/v2/prompt-input"
+import { agentKey, agentMention } from "@/context/local-agent"
 import {
   createPromptInputV2Controller,
   createPromptInputV2State,
@@ -279,10 +280,10 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     ...props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
       .map((agent) => ({
-        id: `agent:${agent.name}`,
+        id: `agent:${agentKey(agent)}`,
         kind: "agent" as const,
         label: `@${agent.name}`,
-        mention: { type: "agent" as const, name: agent.name, content: `@${agent.name}`, start: 0, end: 0 },
+        mention: agentMention(agent),
       })),
     ...resources(),
     ...recent().map((path) => ({
@@ -392,7 +393,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       get agent() {
         return props.controls.agents.visible && props.controls.agents.options.length > 0
           ? {
-              options: () => props.controls.agents.options.map((name) => ({ id: name, label: name })),
+              options: () => props.controls.agents.options,
               current: () => props.controls.agents.current,
               onSelect: (value: string) => props.controls.agents.select(value),
               keybind: () => command.keybindParts("agent.cycle"),

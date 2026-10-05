@@ -11,6 +11,7 @@ import { useTabs } from "@/context/tabs"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
 import type { ChapterPageProps } from "../chapter-route"
 import { agentRoster, agentUnavailable } from "./agents-roster"
+import { agentKey } from "@/context/local-agent"
 import "./agents.css"
 
 export default function Agents(props: ChapterPageProps) {
@@ -49,7 +50,7 @@ export default function Agents(props: ChapterPageProps) {
     if (query.isSuccess && query.data) sync().set("agent", reconcile(query.data))
   })
   const roster = createMemo(() => agentRoster(sync().data.agent))
-  const selected = createMemo(() => roster().find((item) => item.agent.name === state.selected) ?? roster()[0])
+  const selected = createMemo(() => roster().find((item) => agentKey(item.agent) === state.selected) ?? roster()[0])
   const mode = (item: ReturnType<typeof agentRoster>[number]) =>
     language.t(
       item.subagent
@@ -89,8 +90,8 @@ export default function Agents(props: ChapterPageProps) {
                       <ButtonV2
                         class="agents-card"
                         variant="ghost"
-                        aria-pressed={selected()?.agent.name === item.agent.name}
-                        onClick={() => setState("selected", item.agent.name)}
+                        aria-pressed={selected() === item}
+                        onClick={() => setState("selected", agentKey(item.agent))}
                       >
                         <span class="agents-card-top">
                           <strong>
@@ -188,7 +189,7 @@ export default function Agents(props: ChapterPageProps) {
                               { server: ServerConnection.key(props.server), directory: props.directory },
                               undefined,
                               undefined,
-                              item().agent.name,
+                              agentKey(item().agent),
                             )
                             .catch(() => setState({ opening: false, failed: true }))
                         }}

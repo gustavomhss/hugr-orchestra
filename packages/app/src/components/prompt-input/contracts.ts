@@ -12,8 +12,9 @@ export type PromptInputSubmission = {
 
 export type PromptInputControls = {
   agents: {
-    available: { name: string; hidden?: boolean; mode: string }[]
-    options: string[]
+    available: { id?: string; name: string; hidden?: boolean; mode: string }[]
+    // Each option's id is the agent's stable id; its label is the display name.
+    options: { id: string; label: string }[]
     current: string
     loading: boolean
     visible: boolean

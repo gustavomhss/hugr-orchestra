@@ -8,7 +8,7 @@ import { useSettings } from "@/context/settings"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { Persist, persisted } from "@/utils/persist"
-import { agentChoiceVisible, hasCustomAgent, resolveAgent } from "./local-agent"
+import { agentChoiceVisible, agentKey, hasCustomAgent, resolveAgent } from "./local-agent"
 import { cycleModelVariant, getConfiguredAgentVariant, resolveModelVariant } from "./model-variant"
 import { useSDK } from "./sdk"
 import { useSync } from "./sync"
@@ -95,7 +95,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         variant?: string | null
       }
     }>({
-      current: list()[0]?.name,
+      current: list().map(agentKey)[0],
       explicitDraft: undefined,
       draft: undefined,
       last: undefined,
@@ -124,8 +124,8 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         if (store.current !== undefined) setStore("current", undefined)
         return
       }
-      if (items.some((item) => item.name === store.current)) return
-      setStore("current", items[0]?.name)
+      if (items.some((item) => agentKey(item) === store.current)) return
+      setStore("current", items.map(agentKey)[0])
     })
 
     const scope = createMemo<State | undefined>(() => {
@@ -194,6 +194,11 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       current() {
         return pickAgent(agent.visible() ? (scope()?.agent ?? store.current) : "build")
       },
+      // The selected agent's stable id, which every stored selection and payload uses.
+      key() {
+        const item = agent.current()
+        return item && agentKey(item)
+      },
       set(name: string | undefined, options?: { draftID?: string }) {
         const item = pickAgent(name)
         if (!item) {
@@ -203,16 +208,16 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
         batch(() => {
           if (options?.draftID) setStore("explicitDraft", options.draftID)
-          setStore("current", item.name)
+          setStore("current", agentKey(item))
           setStore("last", {
             type: "agent",
-            agent: item.name,
+            agent: agentKey(item),
             model: item.model,
             variant: item.variant ?? null,
           })
           const prev = scope()
           const next = {
-            agent: item.name,
+            agent: agentKey(item),
             model: item.model ?? prev?.model,
             variant: item.variant ?? prev?.variant,
           } satisfies State
@@ -231,12 +236,12 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
 
-        let next = items.findIndex((item) => item.name === agent.current()?.name) + direction
+        let next = items.findIndex((item) => agentKey(item) === agent.key()) + direction
         if (next < 0) next = items.length - 1
         if (next >= items.length) next = 0
         const item = items[next]
         if (!item) return
-        agent.set(item.name)
+        agent.set(agentKey(item))
       },
     }
 
@@ -265,7 +270,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const snapshot = () => {
       const model = current()
       return {
-        agent: agent.current()?.name,
+        agent: agent.key(),
         model: model ? { providerID: model.provider.id, modelID: model.id } : undefined,
         variant: selected(),
       } satisfies State
@@ -273,7 +278,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
     const write = (next: Partial<State>) => {
       const state = {
-        ...(scope() ?? { agent: agent.current()?.name }),
+        ...(scope() ?? { agent: agent.key() }),
         ...next,
       } satisfies State
 
@@ -313,7 +318,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           batch(() => {
             setStore("last", {
               type: "model",
-              agent: agent.current()?.name,
+              agent: agent.key(),
               model: item ?? null,
               variant: selected(),
             })
@@ -357,7 +362,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
               const model = current()
               setStore("last", {
                 type: "variant",
-                agent: agent.current()?.name,
+                agent: agent.key(),
                 model: model ? { providerID: model.provider.id, modelID: model.id } : null,
                 variant: value ?? null,
               })

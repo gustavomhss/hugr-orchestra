@@ -25,6 +25,7 @@ const optimistic: Array<{
 const optimisticSeeded: boolean[] = []
 const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 const promoted: Array<{ directory: string; sessionID: string }> = []
+const promotedAgents: Array<string | undefined> = []
 const sentShell: Array<{ sessionID: string; id?: string; command: string }> = []
 const syncedDirectories: string[] = []
 const promotedDrafts: Array<{ draftID: string; server: string; sessionId: string }> = []
@@ -149,11 +150,13 @@ beforeAll(async () => {
         variant: { current: () => variant },
       },
       agent: {
-        current: () => ({ name: "agent" }),
+        // A seat renamed from its default label: payloads must carry the stable id, never the label.
+        current: () => ({ id: "charlie", name: "Pikachu" }),
       },
       session: {
-        promote(directory: string, sessionID: string) {
+        promote(directory: string, sessionID: string, state: { agent?: string }) {
           promoted.push({ directory, sessionID })
+          promotedAgents.push(state.agent)
         },
       },
     }),
@@ -291,6 +294,7 @@ beforeEach(() => {
   optimistic.length = 0
   optimisticSeeded.length = 0
   promoted.length = 0
+  promotedAgents.length = 0
   promotedDrafts.length = 0
   sentPrompts.length = 0
   promptInputs.length = 0
@@ -341,12 +345,12 @@ describe("prompt submit worktree selection", () => {
     expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
     expect(sessionCreateInputs).toEqual([
       {
-        agent: "agent",
+        agent: "charlie",
         model: { id: "model", providerID: "provider", variant: undefined },
         location: { directory: "/repo/worktree-a" },
       },
       {
-        agent: "agent",
+        agent: "charlie",
         model: { id: "model", providerID: "provider", variant: undefined },
         location: { directory: "/repo/worktree-b" },
       },
@@ -361,6 +365,8 @@ describe("prompt submit worktree selection", () => {
       { directory: "/repo/worktree-a", sessionID: "session-1" },
       { directory: "/repo/worktree-b", sessionID: "session-2" },
     ])
+    expect(promotedAgents).toEqual(["charlie", "charlie"])
+    expect(JSON.stringify([sessionCreateInputs, sentShell])).not.toContain("Pikachu")
     expect(syncedDirectories).toEqual(["/repo/worktree-a", "/repo/worktree-a", "/repo/worktree-b", "/repo/worktree-b"])
   })
 
@@ -482,7 +488,7 @@ describe("prompt submit worktree selection", () => {
     expect(optimistic).toHaveLength(1)
     expect(optimistic[0]).toMatchObject({
       message: {
-        agent: "agent",
+        agent: "charlie",
         model: { providerID: "provider", modelID: "model", variant: "high" },
       },
     })
@@ -530,7 +536,7 @@ describe("prompt submit worktree selection", () => {
         id: expect.stringMatching(/^msg_/),
         command: "review",
         arguments: "staged changes",
-        agent: "agent",
+        agent: "charlie",
         model: { id: "model", providerID: "provider", variant: "high" },
         files: [],
       },

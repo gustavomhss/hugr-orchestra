@@ -16,6 +16,7 @@ import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
 import { useProviders } from "@/hooks/use-providers"
 import { pathKey } from "@/utils/path-key"
+import { agentKey } from "@/context/local-agent"
 
 export function createPromptInputController(input: {
   sessionKey: Accessor<string>
@@ -37,8 +38,8 @@ export function createPromptInputController(input: {
     return {
       agents: {
         available: sync().data.agent,
-        options: local.agent.list().map((agent) => agent.name),
-        current: local.agent.current()?.name ?? "",
+        options: local.agent.list().map((agent) => ({ id: agentKey(agent), label: agent.name })),
+        current: local.agent.key() ?? "",
         loading: agentsQuery.isLoading,
         visible: local.agent.visible(),
         select: local.agent.set,
