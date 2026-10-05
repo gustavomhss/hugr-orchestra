@@ -35,6 +35,7 @@ type Reservation = {
   client?: NativeDockProtocol.Client
   finished: boolean
   timer?: ReturnType<typeof setTimeout>
+  watchdog?: ReturnType<typeof setTimeout>
 }
 
 const scopeFields = [
@@ -53,16 +54,20 @@ export class NativeDock {
   private resetting?: Reset
   private closing?: Promise<void>
 
-  reserveClient(signal?: AbortSignal): ClientAdmission {
+  // With capMs the preparation may outlive one call: its watchdog still settles completion (and so reset and
+  // aborting callers) at limits.timeoutMs, but it aborts the work only at capMs. A late client still enters the
+  // same bounded cleanup either way.
+  reserveClient(signal?: AbortSignal, options: { capMs?: number } = {}): ClientAdmission {
     if (this.closing) throw new NativeDockProtocol.NativeError("closed", "Native dock is closed")
     if (signal?.aborted) throw new NativeDockProtocol.NativeError("cancelled", "Native preparation cancelled before acquisition")
     if (this.clientOccupancy() >= NativeDockProtocol.limits.pending || this.reservations.size >= NativeDockProtocol.limits.pending)
       throw new NativeDockProtocol.NativeError("capacity", "Native client cleanup capacity exhausted")
     const reservation: Reservation = { controller: new AbortController(), completion: Promise.withResolvers<void>(), finished: false }
-    const deadline = performance.now() + NativeDockProtocol.limits.timeoutMs
+    const deadline = performance.now() + (options.capMs ?? NativeDockProtocol.limits.timeoutMs)
     const abort = () => reservation.controller.abort()
     const detach = () => {
       clearTimeout(reservation.timer)
+      clearTimeout(reservation.watchdog)
       reservation.timer = undefined
       signal?.removeEventListener("abort", abort)
     }
@@ -86,7 +91,10 @@ export class NativeDock {
     const expired = () => {
       if (reservation.timer !== undefined && performance.now() >= deadline) timeout()
     }
-    reservation.timer = setTimeout(timeout, NativeDockProtocol.limits.timeoutMs)
+    reservation.timer = setTimeout(timeout, options.capMs ?? NativeDockProtocol.limits.timeoutMs)
+    if (options.capMs !== undefined)
+      reservation.watchdog = setTimeout(() => reservation.completion.reject(new NativeDockProtocol.NativeError(
+        "native-preparation-timeout", "Native preparation deadline expired", "unknown")), NativeDockProtocol.limits.timeoutMs)
     this.reservations.add(reservation)
     reservation.completion.promise.catch(() => {})
     signal?.addEventListener("abort", abort, { once: true })

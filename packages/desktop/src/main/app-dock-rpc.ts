@@ -16,6 +16,14 @@ type RequestWork = {
   workspace?: Readonly<NativeDockProtocol.Identity>
 }
 
+type Preparation = {
+  epoch: string
+  request: RequestWork
+  completion: Promise<void>
+  waiters: Set<RequestWork>
+  work: Promise<Readonly<AppDockNative.DockIdentity>>
+}
+
 type WorkspaceScope = Readonly<{
   identity: Readonly<NativeDockProtocol.Identity>
   placement: NativeWorkspacePlacement
@@ -95,6 +103,7 @@ export class AppDockRPC {
   // Classification belongs to the viewer generation, independent of helper/reset lifetime.
   private readonly workspaceIntents = new WeakMap<AppDock, Map<string, Readonly<{ senderID: number; generation: number }>>>()
   private readonly requests = new Map<string, RequestWork>()
+  private readonly preparations = new Map<string, Preparation>()
   private readonly cancelled = new Map<string, ReturnType<typeof setTimeout>>()
   private offRemoval?: () => void
   private appDock: AppDock | undefined
@@ -275,17 +284,46 @@ export class AppDockRPC {
       && target.runtimeID === placement.runtimeID && target.runtimeEpoch === placement.runtimeEpoch ? target : undefined
   }
 
-  private async prepareWorkspace(scope: WorkspaceScope, request: RequestWork) {
-    const prepare = this.workspacePreparation
+  // Preparing a cold helper can take longer than one call's deadline on a loaded machine, and restarting it for
+  // every call would never finish. One preparation per tab and workspace epoch therefore outlives a call that only
+  // timed out, up to PREPARATION_CAP_MS, and later calls join it. Cancellation keeps its old meaning: when the last
+  // waiting call is aborted, the tab closes, the workspace changes or the bridge resets, the preparation is
+  // aborted and callers settle after its cleanup or its watchdog, as before.
+  private prepareWorkspace(scope: WorkspaceScope, request: RequestWork) {
     const key = JSON.stringify([scope.identity.senderID, scope.identity.tabID])
+    const epoch = JSON.stringify([scope.identity.generation, scope.identity.profileID, scope.placement.runtimeID,
+      scope.placement.runtimeEpoch])
+    const running = this.preparations.get(key)
+    // Only a preparation every caller has left (they timed out) is joined; overlapping calls still fence their
+    // predecessor and discover again, so a read never answers from an older census than it asked for.
+    if (running?.epoch === epoch && running.waiters.size === 0 && !running.request.controller.signal.aborted) {
+      this.requireWorkspace(scope, request)
+      return waitPreparation(running, request)
+    }
     const prior = this.nativeTargets.get(key)
     // Fence old callers before cancellation can settle during the read-only census.
     // This retains the real old binding until validated rebind takes ownership.
     if (prior?.scopeKind === "workspace") this.nativeTargets.set(key, Object.freeze({ ...prior }))
     this.abortTab(scope.identity.senderID, scope.identity.tabID, undefined, request)
     this.requireWorkspace(scope, request)
+    const prepare = this.workspacePreparation
     if (!prepare) throw new NativeDockProtocol.NativeError("not-ready", "Native workspace preparation is unavailable")
-    const admission = this.native.reserveClient(request.controller.signal)
+    const preparation: RequestWork = { controller: new AbortController(), workspace: scope.identity }
+    const id = `preparation:${key}`
+    this.requests.set(id, preparation)
+    const admission = this.native.reserveClient(preparation.controller.signal, { capMs: PREPARATION_CAP_MS })
+    const entry = { epoch, request: preparation, completion: admission.completion, waiters: new Set<RequestWork>(),
+      work: this.prepareOnce(scope, preparation, prepare, admission) }
+    this.preparations.set(key, entry)
+    void entry.work.finally(() => {
+      if (this.requests.get(id) === preparation) this.requests.delete(id)
+      if (this.preparations.get(key) === entry) this.preparations.delete(key)
+    }).catch(() => {})
+    return waitPreparation(entry, request)
+  }
+
+  private prepareOnce(scope: WorkspaceScope, request: RequestWork, prepare: WorkspacePreparation,
+    admission: AppDockNative.ClientAdmission) {
     const work = Promise.resolve().then(async () => {
       this.requirePreparation(scope, request, admission)
       const prepared = await prepare(scope.identity, scope.placement, admission.signal)
@@ -332,9 +370,7 @@ export class AppDockRPC {
       admission.fail(error)
       throw preparationError(error)
     })
-    // A timeout settles correlation, not resource ownership. The original work
-    // keeps its reservation and runs the same orphan cleanup when it returns.
-    return Promise.race([work, admission.completion.then(() => work, (error: unknown) => { throw preparationError(error) })])
+    return work
   }
 
   private async dispatchWorkspace(scope: WorkspaceScope, request: RequestWork, op: string, args: Record<string, unknown>, admitted: () => void) {
@@ -734,4 +770,35 @@ function requestError(error: unknown, result?: NativeDockProtocol.JSONValue) {
 function cleanupEvidence(code: unknown) {
   return Object.freeze({ code: typeof code === "string" && code.length > 0 && code.length <= 256 && !/[^A-Za-z0-9_-]/.test(code)
     ? code : "native-cleanup-failed", outcome: "unknown" as const })
+}
+
+const PREPARATION_CAP_MS = 60_000
+
+// A call waits for a shared preparation up to its own deadline and then leaves it running. The last waiting call
+// to be aborted cancels it and, like a lone call before, settles after its cleanup or its watchdog.
+function waitPreparation(entry: Preparation, request: RequestWork) {
+  const settled = Promise.withResolvers<Readonly<AppDockNative.DockIdentity>>()
+  entry.waiters.add(request)
+  const leave = () => {
+    clearTimeout(timer)
+    request.controller.signal.removeEventListener("abort", abort)
+    entry.waiters.delete(request)
+  }
+  const timer = setTimeout(() => {
+    leave()
+    settled.reject(new NativeDockProtocol.NativeError("native-preparation-timeout",
+      "The Linux workspace is still starting its accessibility helper; try again in a few seconds", "unknown"))
+  }, NativeDockProtocol.limits.timeoutMs)
+  function abort() {
+    leave()
+    if (entry.waiters.size > 0)
+      return settled.reject(new NativeDockProtocol.NativeError("cancelled", "Native workspace request cancelled"))
+    entry.request.controller.abort()
+    settled.resolve(Promise.race([entry.work,
+      entry.completion.then(() => entry.work, (error: unknown) => { throw preparationError(error) })]))
+  }
+  request.controller.signal.addEventListener("abort", abort, { once: true })
+  if (request.controller.signal.aborted) abort()
+  entry.work.then((value) => { leave(); settled.resolve(value) }, (error: unknown) => { leave(); settled.reject(error) })
+  return settled.promise
 }

@@ -554,6 +554,24 @@ test("workspace: preparation watchdog fails caller/reset, retains capacity, and 
   await Promise.allSettled([recovered.completion])
 }, 30000)
 
+test("workspace: a cold helper slower than one call keeps preparing, and the next call joins it", async () => {
+  const f = fixture()
+  const gate = f.gate()
+  const entered = f.gate()
+  f.prepare(async () => { entered.resolve(); await gate.promise; return f.acquire() })
+  const first = f.json("dock_read")
+  await entered.promise
+  expect(await first).toMatchObject({ code: "native-preparation-timeout" })
+  expect(f.calls[0]!.signal.aborted).toBe(false)
+  const second = f.json("dock_read")
+  await turn()
+  gate.resolve()
+  expect(await second).toMatchObject({ backend: "linux-atspi", scopeKind: "workspace" })
+  expect(f.calls).toHaveLength(1)
+  expect(f.clients).toHaveLength(1)
+  expect(f.clients[0]!.wire.terminations).toBe(0)
+}, 30000)
+
 test("scoped callers reach their own world whatever tab the user has selected", async () => {
   const f = fixture()
   f.prepare(() => f.acquire())
