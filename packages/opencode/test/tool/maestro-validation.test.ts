@@ -184,7 +184,7 @@ describe("Maestro validation tools", () => {
             bytes: "cHJvb2Y=",
           },
           checks: validation.checks,
-        }
+        } as never
         for (const caller of [context("Pikachu", "build"), context("Pikachu", "Pikachu"), context("Lucy", "Lucy")]) {
           const rejected = yield* Effect.exit(def.execute(review, caller))
           expect(Exit.isFailure(rejected) && Cause.pretty(rejected.cause)).toContain(

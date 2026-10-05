@@ -22,9 +22,10 @@ Bun.plugin({
       })
       const contents = result.code.replace(
         /(from\s+)(["'])([^"']+)\2/g,
-        (match: string, lead: string, quote: string, spec: string) => {
+        (match: string, lead: string, _quote: string, spec: string) => {
           const resolved = Bun.resolveSync(spec, path.dirname(file))
-          return resolved.endsWith(".tsx") ? `${lead}${quote}${resolved}?solid${quote}` : match
+          // JSON-quote the path: Windows paths carry backslashes that a raw string literal would read as escapes.
+          return resolved.endsWith(".tsx") ? `${lead}${JSON.stringify(`${resolved}?solid`)}` : match
         },
       )
       return { contents, loader: "ts" }
