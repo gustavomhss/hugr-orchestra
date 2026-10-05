@@ -113,14 +113,30 @@ nome e filtra depois, o erro lista os controles excluídos com dica (papel errad
 teclado), papel compara só letras e dígitos, `action-ambiguous` lista as ações, e as mensagens de
 `ref` sem `actionID` e de formato de leitura do navegador dizem o que fazer.
 
+Terceira rodada aberta (~02:25, MiMo, sessão nova): concluiu em ~19 min, conferido por fora. Sem a
+view Linux aberta o modelo se perdeu (`App Dock has no open tabs`, `linux_exec` com `failed` opaco,
+abriu `code.visualstudio.com` no navegador); com ela aberta, todo par de chamadas paralelas teve uma
+`cancelled`, e `unstable-ref`/`unsupported-interface` não diziam o que fazer. Correções:
+- `662695bbaf`: dicas por código (`unstable-ref` → modo `observed`, `unsupported-interface` → modo
+  `keyboard`, `stale-ref` → `target`, aba do navegador ativa, sem abas) e no plugin Linux
+  (`workspace-not-running`/`not-configured`/`unavailable`); o acesso de terminal a um workspace parado
+  mantém o motivo em vez de `failed` e não marca mais o workspace como erro.
+- `6a7c80ebf4`: causa do cancelamento é deliberada no host (cada leitura nova reprova a posse e cerca
+  as outras requisições da aba); o plugin agora enfileira as varreduras de várias etapas (`dock_find`
+  e `target`), com o prazo contando a partir do início de cada chamada. Leituras isoladas e o
+  navegador mantêm a concorrência.
+A quarta rodada não rodou: o app dev parou em `app.whenReady()` às 03:00 com o Mac ocioso.
+
 ## Pendências (próximas fatias)
 
 0. Ergonomia (pela regra do dono), em ordem de custo para o modelo:
-   - chamadas paralelas se cancelando na admissão nativa (`rebindWorkspace` substitui e aborta as anteriores);
-   - preparação por chamada (censo `native-scope` por `docker exec`, 2–5 s com load) torna cada chamada lenta;
+   - repetir a rodada aberta com as correções acima (Linux aberto e VS Code rodando antes da tarefa);
+   - preparação por chamada (censo `native-scope` por `docker exec`, 2–5 s com load) torna cada leitura nova lenta;
    - o agente não consegue abrir o workspace Linux sozinho se o usuário não abriu a view;
+   - fechar o app para o workspace Linux (o VS Code aberto se perde entre sessões do app);
    - papéis sem nome (`atspi-role-116`) no snapshot do helper;
-   - recusa de permissão encerra o turno do agente.
+   - `xdotool` não entrega teclado ao VS Code (sem gerenciador de janelas) e o screenshot do guest sai preto;
+   - recusa de permissão encerra o turno do agente; o Big Pickle chegou a inventar uma conclusão sem chamar ferramenta.
 
 
 1. Rodar `app-dock-runtime-native.test.ts` com Docker (ver acima) e provar no app real: abrir a view
