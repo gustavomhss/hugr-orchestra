@@ -1,3 +1,19 @@
+import { HOME_COPY } from "./orchestra-chapters/home"
+import { SHELL_COPY } from "./orchestra-chapters/shell"
+import { MCP_COPY } from "./orchestra-chapters/mcp"
+import { SKILLS_COPY } from "./orchestra-chapters/skills"
+import { PLUGINS_COPY } from "./orchestra-chapters/plugins"
+import { HOOKS_COPY } from "./orchestra-chapters/hooks"
+import { PROVIDERS_COPY } from "./orchestra-chapters/providers"
+import { SHORTCUTS_COPY } from "./orchestra-chapters/shortcuts"
+import { CICD_COPY } from "./orchestra-chapters/cicd"
+import { SCHEDULE_COPY } from "./orchestra-chapters/schedule"
+import { ENV_COPY } from "./orchestra-chapters/env"
+import { AGENTS_COPY } from "./orchestra-chapters/agents"
+import { WORKSPACES_COPY } from "./orchestra-chapters/workspaces"
+import { DOCK_COPY } from "./orchestra-chapters/dock"
+import { SETTINGS_COPY } from "./orchestra-chapters/settings"
+
 // Preserve approved identity copy across locales; inherited product labels retain their translations.
 export const ORCHESTRA_COPY = {
   "orchestra.nav.expand": "Expand sidebar",
@@ -381,4 +397,19 @@ export const ORCHESTRA_COPY = {
   "orchestra.governance.reason.interrupted": "The session stopped before this step finished, so it counts for nothing.",
   "orchestra.governance.reason.unconfirmed": "Whether the session is still working on this step is not confirmed.",
   "orchestra.governance.reason.unknown": "No reason was reported.",
+  ...HOME_COPY,
+  ...SHELL_COPY,
+  ...MCP_COPY,
+  ...SKILLS_COPY,
+  ...PLUGINS_COPY,
+  ...HOOKS_COPY,
+  ...PROVIDERS_COPY,
+  ...SHORTCUTS_COPY,
+  ...CICD_COPY,
+  ...SCHEDULE_COPY,
+  ...ENV_COPY,
+  ...AGENTS_COPY,
+  ...WORKSPACES_COPY,
+  ...DOCK_COPY,
+  ...SETTINGS_COPY,
 }
