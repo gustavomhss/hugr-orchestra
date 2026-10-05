@@ -1,3 +1,4 @@
+import { Option, Schema } from "effect"
 import { batch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { pathKey } from "@/utils/path-key"
@@ -110,6 +111,42 @@ const required = [
   "appDockUpdateManifest",
 ] as const
 
+// A repository's own browser profiles: its default native profile ("Personal") plus the ones created
+// in its Dock, whose native IDs extend the repository's. The desktop creates a native profile when its
+// first tab opens, so names and the selection are kept here, keyed by the repository profile.
+const repositoryProfilesKey = "opencode.app-dock.repository-profiles"
+const decodeRepositoryProfiles = Schema.decodeUnknownOption(
+  Schema.fromJsonString(
+    Schema.Record(
+      Schema.String,
+      Schema.Struct({
+        profiles: Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),
+        selected: Schema.String,
+      }),
+    ),
+  ),
+)
+const savedRepositories = () =>
+  Option.getOrUndefined(decodeRepositoryProfiles(localStorage.getItem(repositoryProfilesKey) ?? ""))
+const validProfileID = (id: string) => /^[a-z0-9][a-z0-9-]{0,31}$/.test(id)
+const repositoryProfiles = (owner: string) => {
+  const saved = savedRepositories()?.[owner]
+  const profiles: Profile[] = [
+    { id: owner, name: "Personal" },
+    ...(saved?.profiles ?? []).filter((item) => item.id.startsWith(`${owner}-`) && validProfileID(item.id)),
+  ]
+  const selected = profiles.find((item) => item.id === saved?.selected)?.id ?? owner
+  return { profiles, selected }
+}
+const saveRepository = (owner: string, profiles: Profile[], selected: string) =>
+  localStorage.setItem(
+    repositoryProfilesKey,
+    JSON.stringify({
+      ...savedRepositories(),
+      [owner]: { profiles: profiles.filter((item) => item.id !== owner), selected },
+    }),
+  )
+
 export const tabLabel = (tab: Tab) => tab.title || new URL(tab.url).hostname
 export const sameTab = (left: TabIdentity | undefined, right: TabIdentity | undefined) =>
   !!left && !!right && left.tabID === right.tabID && left.generation === right.generation
@@ -167,10 +204,13 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   const frame = () => (host ? bounds(host) : { x: 0, y: 0, width: 1, height: 1 })
   const applyManifest = (next: AppDockManifest) => {
     manifest = next
-    setState({
-      profiles: next.profiles,
-      bookmarks: libraryEntries(next.bookmarks),
-      history: libraryEntries(next.history).map((entry) => ({ ...entry, visitedAt: Date.now() })),
+    batch(() => {
+      // A repository lists only its own browser profiles; the manifest holds every repository's.
+      if (!state.owner) setState("profiles", next.profiles)
+      setState({
+        bookmarks: libraryEntries(next.bookmarks),
+        history: libraryEntries(next.history).map((entry) => ({ ...entry, visitedAt: Date.now() })),
+      })
     })
   }
   const updateManifest = (change: (current: AppDockManifest) => AppDockManifest) => {
@@ -216,9 +256,11 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   const load = async (owner: string) => {
     if (!dock) return
     const current = ++generation
+    const repository = owner ? repositoryProfiles(owner) : undefined
     setState({
       owner,
-      profile: owner || undefined,
+      profile: repository?.selected,
+      profiles: repository?.profiles ?? state.profiles,
       status: "loading",
       url: home,
       tabs: [],
@@ -230,7 +272,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       fullscreen: false,
       recovering: undefined,
     })
-    const result = await restore(dock, owner, current).then(
+    const result = await restore(dock, repository?.selected, current).then(
       (tabs) => ({ tabs }),
       (cause: unknown) => ({ cause }),
     )
@@ -245,14 +287,14 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     // Restoring attached each tab it opened in turn, so the last one is on screen until a view shows another.
     await conceal(result.tabs.at(-1))
   }
-  const restore = async (dock: AppDockAPI, owner: string, current: number) => {
+  const restore = async (dock: AppDockAPI, selected: string | undefined, current: number) => {
     // One owner per window: the previous owner's tabs are already saved in the manifest, and a
     // fresh controller may find tabs that a reloaded renderer left behind.
     await dock.appDockClose()
     const snapshot = await dock.appDockGetManifest()
     if (current !== generation) return []
     applyManifest(snapshot)
-    const profile = owner || snapshot.activeProfileID
+    const profile = selected ?? snapshot.activeProfileID
     setState("profile", profile)
     const restored: Tab[] = []
     for (const saved of (snapshot.tabs[profile] ?? []).filter((tab) => isHTTPS(tab.url))) {
@@ -426,14 +468,24 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       }
     },
     owns: (element: HTMLElement | undefined) => !!element && element === host,
+    // A popover drawn inside the Dock's own tree over the page area hides the native browser while open.
+    registerOverlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     // Bounds measured for one tab; the desktop drops them once another tab or generation is attached.
     resize: (tab: TabIdentity, next: Bounds) => dock?.appDockResize(identity(tab), next) ?? Promise.resolve(),
     retry() {
       if (state.owner !== undefined && state.status === "failed") void load(state.owner)
     },
-    // Manual browser profiles exist only outside Orchestra, where no repository owns the Dock.
+    // Inside Orchestra a repository switches among its own browser profiles; outside it, the
+    // manifest's active browser profile follows the choice.
     async switchProfile(next: string) {
-      if (state.owner !== "" || next === state.profile || state.status !== "ready") return
+      if (!dock || next === state.profile || state.status !== "ready") return
+      const owner = state.owner
+      if (owner) {
+        if (!state.profiles.some((item) => item.id === next)) return
+        saveRepository(owner, state.profiles, next)
+        return load(owner)
+      }
+      if (owner !== "") return
       const current = ++generation
       setState("status", "loading")
       await updateManifest((manifest) =>
@@ -442,12 +494,19 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       if (current === generation) await load("")
     },
     createProfile(name: string) {
-      const id = name
+      const slug = name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
-        .slice(0, 32)
-      if (!id || state.profiles.some((item) => item.id === id)) return false
+      const owner = state.owner
+      // A repository's new profile extends its native ID, within the desktop's 32-character IDs.
+      const id = owner ? `${owner}-${slug}`.slice(0, 32).replace(/-+$/, "") : slug.slice(0, 32)
+      if (!dock || !slug || !validProfileID(id) || state.profiles.some((item) => item.id === id)) return false
+      if (owner) {
+        saveRepository(owner, [...state.profiles, { id, name }], id)
+        void load(owner)
+        return true
+      }
       void updateManifest((current) => ({
         ...current,
         profiles: [...current.profiles, { id, name }],
