@@ -3,16 +3,19 @@ import type { ServerConnection } from "@/context/server"
 import type { ServerSDK } from "@/context/server-sdk"
 import { authTokenFromCredentials } from "@/utils/server"
 import { mcpErrorDetail } from "./mcp-actions"
-import type { McpServerConfig } from "./mcp-model"
+import { type McpEntry, mcpEntry, type McpServerConfig } from "./mcp-model"
+
+type Fetch = (url: URL, init: RequestInit) => Promise<Response>
 
 // One profile's MCP reads and writes. V1 servers expose status, config, tools and profile config
 // writes; V2 servers expose status, connection and config writes through the current API.
+// Query functions return null, never undefined, when the server cannot answer.
 export function createMcpSource(input: {
   server: ServerConnection.Any
   directory: string
   sdk: DirectorySDK
   serverSDK: ServerSDK
-  fetch: (url: URL, init: RequestInit) => Promise<Response>
+  fetch: Fetch
 }) {
   const v1 = () => input.serverSDK.protocol.then((protocol) => protocol === "v1")
   const location = { directory: input.directory }
@@ -20,41 +23,50 @@ export function createMcpSource(input: {
 
   return {
     v1,
-    async config(): Promise<Record<string, unknown>> {
+    // The server's resolved config, reduced to type/command/url before anything caches it.
+    async config(): Promise<Record<string, McpEntry>> {
       if (!(await v1())) return {}
-      return (await input.sdk.client.config.get()).data?.mcp ?? {}
+      const servers = (await input.sdk.client.config.get()).data?.mcp ?? {}
+      return Object.fromEntries(Object.entries(servers).map(([name, value]) => [name, mcpEntry(value)]))
     },
-    // Undefined means the server cannot say which tools a server offers.
-    async tools() {
-      if (!(await v1())) return
+    // The profile files' own entries, unresolved; the only source the Configure dialog prefills from.
+    async entries(): Promise<Record<string, McpEntry> | null> {
+      if (!(await v1())) return null
+      const value = await request(input, "GET", "/mcp/config")
+      if (!value || typeof value !== "object") return {}
+      return Object.fromEntries(Object.entries(value).map(([name, entry]) => [name, mcpEntry(entry)]))
+    },
+    async tools(): Promise<Record<string, string[]> | null> {
+      if (!(await v1())) return null
       return toolNames(await request(input, "GET", "/mcp/tools"))
     },
     async connect(name: string) {
-      if (await v1()) return input.sdk.client.mcp.connect({ name })
-      return api().connect({ server: name, location })
+      if (await v1()) return void (await input.sdk.client.mcp.connect({ name }))
+      await api().connect({ server: name, location })
     },
     async disconnect(name: string) {
-      if (await v1()) return input.sdk.client.mcp.disconnect({ name })
-      return api().disconnect({ server: name, location })
+      if (await v1()) return void (await input.sdk.client.mcp.disconnect({ name }))
+      await api().disconnect({ server: name, location })
     },
-    authenticate(name: string) {
-      return input.sdk.client.mcp.auth.authenticate({ name })
+    async authenticate(name: string) {
+      await input.sdk.client.mcp.auth.authenticate({ name })
     },
     async save(name: string, config: McpServerConfig) {
-      if (await v1()) return request(input, "PUT", `/mcp/${encodeURIComponent(name)}/config`, { config })
-      return api().add({ server: name, location, config })
+      if (await v1()) return void (await request(input, "PUT", `/mcp/${encodeURIComponent(name)}/config`, { config }))
+      await api().add({ server: name, location, config })
     },
     async remove(name: string) {
-      if (await v1()) return request(input, "DELETE", `/mcp/${encodeURIComponent(name)}/config`)
-      return api().remove({ server: name, location })
+      if (await v1()) return void (await request(input, "DELETE", `/mcp/${encodeURIComponent(name)}/config`))
+      await api().remove({ server: name, location })
     },
   }
 }
 
-// The legacy SDK predates the profile config routes, so they are called directly with the same
-// directory routing and credentials the SDK uses.
-async function request(
-  input: { server: ServerConnection.Any; directory: string; fetch: (url: URL, init: RequestInit) => Promise<Response> },
+// TODO: move these calls to the legacy SDK once it is regenerated with the /mcp config and tools
+// routes (its generated types are at their size waiver today).
+/** Builds a request with the directory routing and credentials the legacy SDK would send. */
+export function mcpRequest(
+  input: { server: ServerConnection.Any; directory: string },
   method: "GET" | "PUT" | "DELETE",
   path: string,
   body?: unknown,
@@ -69,18 +81,24 @@ async function request(
       "authorization",
       `Basic ${authTokenFromCredentials({ username: input.server.http.username, password: input.server.http.password })}`,
     )
-  const response = await input.fetch(url, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
+  return { url, init: { method, headers, body: body === undefined ? undefined : JSON.stringify(body) } }
+}
+
+async function request(
+  input: { server: ServerConnection.Any; directory: string; fetch: Fetch },
+  method: "GET" | "PUT" | "DELETE",
+  path: string,
+  body?: unknown,
+) {
+  const prepared = mcpRequest(input, method, path, body)
+  const response = await input.fetch(prepared.url, prepared.init)
   const value: unknown = await response.json().catch(() => undefined)
   if (!response.ok) throw new Error(mcpErrorDetail(value) ?? `${response.status} ${response.statusText}`.trim())
   return value
 }
 
 function toolNames(value: unknown) {
-  if (!value || typeof value !== "object") return
+  if (!value || typeof value !== "object") return {}
   return Object.fromEntries(
     Object.entries(value).flatMap(([name, tools]) =>
       Array.isArray(tools) ? [[name, tools.filter((tool): tool is string => typeof tool === "string")]] : [],

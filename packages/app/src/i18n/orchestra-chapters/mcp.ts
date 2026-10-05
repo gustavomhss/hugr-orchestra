@@ -14,7 +14,15 @@ export const MCP_COPY = {
   "orchestra.mcp.tools": "Tools",
   "orchestra.mcp.enable": "Enable {{name}}",
   "orchestra.mcp.configureTitle": "Configure {{name}}",
-  "orchestra.mcp.editSubtitle": "Connect tools to this profile. Saving writes this profile's OpenCode config.",
+  "orchestra.mcp.editSubtitle":
+    "Connect tools to this profile. Saving updates its OpenCode config and restarts its MCP servers.",
+  "orchestra.mcp.configUnavailable":
+    "Current configuration unavailable from this server. You can remove this server here.",
+  "orchestra.mcp.configOutside":
+    "This server is configured outside this profile. Saving adds this profile's own entry for it.",
+  "orchestra.mcp.invalidName": "Enter a name. Names cannot be . or .. or contain / or \\.",
+  "orchestra.mcp.note":
+    "Switches apply until the server restarts. Saving or removing a server restarts this profile's MCP servers.",
   "orchestra.mcp.name": "Name",
   "orchestra.mcp.transport": "Transport",
   "orchestra.mcp.endpoint": "Command or server URL",

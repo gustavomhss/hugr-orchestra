@@ -65,6 +65,7 @@ export const mcpScenarios: Scenario[] = [
     .at((ctx) => ({ path: route("/mcp/{name}/disconnect", { name: "httpapi-missing" }), headers: ctx.headers() }))
     .json(404, object, "status"),
   http.protected.get("/mcp/tools", "mcp.tools").json(200, object, "status"),
+  http.protected.get("/mcp/config", "mcp.config.list").json(200, object, "status"),
   http.protected
     .put("/mcp/{name}/config", "mcp.config.update")
     .mutating()

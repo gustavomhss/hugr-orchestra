@@ -34,6 +34,7 @@ import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@opencode-ai/schema/mcp-event"
 import { McpBrowser } from "./browser"
+import { Status } from "./status"
 
 const DEFAULT_TIMEOUT = 30_000
 const CLIENT_OPTIONS = {
@@ -80,31 +81,7 @@ function createClient(directory: string) {
   return client
 }
 
-const StatusConnected = Schema.Struct({ status: Schema.Literal("connected") }).annotate({
-  identifier: "MCPStatusConnected",
-})
-const StatusDisabled = Schema.Struct({ status: Schema.Literal("disabled") }).annotate({
-  identifier: "MCPStatusDisabled",
-})
-const StatusFailed = Schema.Struct({ status: Schema.Literal("failed"), error: Schema.String }).annotate({
-  identifier: "MCPStatusFailed",
-})
-const StatusNeedsAuth = Schema.Struct({ status: Schema.Literal("needs_auth") }).annotate({
-  identifier: "MCPStatusNeedsAuth",
-})
-const StatusNeedsClientRegistration = Schema.Struct({
-  status: Schema.Literal("needs_client_registration"),
-  error: Schema.String,
-}).annotate({ identifier: "MCPStatusNeedsClientRegistration" })
-
-export const Status = Schema.Union([
-  StatusConnected,
-  StatusDisabled,
-  StatusFailed,
-  StatusNeedsAuth,
-  StatusNeedsClientRegistration,
-]).annotate({ identifier: "MCPStatus", discriminator: "status" })
-export type Status = Schema.Schema.Type<typeof Status>
+export { Status }
 
 // Store transports for OAuth servers to allow finishing auth
 type TransportWithAuth = StreamableHTTPClientTransport | SSEClientTransport
@@ -166,6 +143,8 @@ export interface Interface {
   readonly clients: () => Effect.Effect<Record<string, MCPClient>>
   readonly instructions: () => Effect.Effect<ServerInstructions[]>
   readonly tools: () => Effect.Effect<Record<string, McpTool>>
+  /** Cached tool definitions per connected server, keyed by server name rather than prefixed tool name. */
+  readonly catalog: () => Effect.Effect<Record<string, readonly MCPToolDef[]>>
   readonly prompts: () => Effect.Effect<Record<string, PromptInfo & { client: string }>>
   readonly resources: (clientName?: string) => Effect.Effect<Record<string, ResourceInfo & { client: string }>>
   readonly resourceTemplates: (
@@ -663,6 +642,11 @@ const layer = Layer.effect(
       return s.config[name]?.timeout ?? staticTimeout ?? fallback
     }
 
+    const catalog = Effect.fn("MCP.catalog")(function* () {
+      const s = yield* InstanceState.get(state)
+      return Object.fromEntries(Object.entries(s.defs).filter(([name]) => s.status[name]?.status === "connected"))
+    })
+
     const tools = Effect.fn("MCP.tools")(function* () {
       const result: Record<string, McpTool> = {}
       const s = yield* InstanceState.get(state)
@@ -974,6 +958,7 @@ const layer = Layer.effect(
       clients,
       instructions,
       tools,
+      catalog,
       prompts,
       resources,
       resourceTemplates,
