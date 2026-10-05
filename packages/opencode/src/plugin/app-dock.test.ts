@@ -813,3 +813,17 @@ test("native errors that have a known next step carry it as a hint", async () =>
   const empty = host((): Reply => ({ ok: false, error: { message: "App Dock has no open tabs" } }))
   expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toContain("Apps > Linux workspace")
 })
+
+test("parallel native scans run one after another instead of fencing each other's pages", async () => {
+  const dock = host((op, args) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([control("n:x", "Explorer")], "c") : page([control("n:y", "Open")]))
+  const [first, second] = await Promise.all([
+    dock.hooks.tool.dock_find.execute({ name: "open" }, context),
+    dock.hooks.tool.dock_action.execute({ target: { name: "open" } }, context),
+  ])
+  expect(JSON.parse(String(first))).toMatchObject({ found: 1 })
+  expect(JSON.parse(String(second))).toEqual({ dispatch: "acknowledged" })
+  // A fresh read starts a new observation; it must never land between another call's fresh read and its cursor pages.
+  expect(dock.calls.map((call) => call.args.cursor === undefined ? `${call.op}:fresh` : `${call.op}:page`)).toEqual([
+    "read:fresh", "read:page", "read:fresh", "read:page", "read:fresh", "read:page", "action:fresh"])
+})

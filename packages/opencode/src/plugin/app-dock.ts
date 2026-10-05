@@ -295,6 +295,14 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     if (Date.now() >= clock.deadline) return expired(result)
     return scan(context, query, until, clock, call(context, "read", { cursor: page.cursor }, clock), result)
   }
+  // Every fresh native read re-proves workspace ownership and fences other requests on the tab, so multi-step
+  // scans a model issues in parallel cancel each other. Run them one at a time; a call's deadline starts when it runs.
+  const queue = { tail: Promise.resolve() as Promise<unknown> }
+  const exclusive = <T>(run: () => Promise<T>) => {
+    const result = queue.tail.then(run)
+    queue.tail = result.then(() => undefined, () => undefined)
+    return result
+  }
   // Locate and mutate within one tool call so UI churn between model turns cannot stale the ref.
   // Uniqueness is decided over the whole tree, then a second whole-tree scan must pick the same control by the same
   // rule and supplies a current ref. Only a certainly-undispatched stale target is located again; unknown outcomes are
@@ -383,8 +391,8 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
         },
         execute: (args, context) =>
-          find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) }, (scan) => scan.found.length > 0,
-            { deadline: Date.now() + findDeadlineMs }).then((result) => compactScan(result), toolError),
+          exclusive(() => find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) },
+            (scan) => scan.found.length > 0, { deadline: Date.now() + findDeadlineMs })).then((result) => compactScan(result), toolError),
       }),
       dock_wait: tool({
         description: "Wait for a bounded duration in the active App Dock tab. Native wait is a cancellable delay, not proof of application readiness.",
@@ -471,13 +479,14 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             if (args.ref === undefined || args.actionID === undefined) return Promise.resolve("dock_action with ref needs the actionID from that item's actions (dock_find/dock_read); or pass target {name, role} with an action name to locate and act in one call")
             return call(context, "action", { ref: args.ref, actionID: args.actionID, ...mode }).then(toJSON, toolError)
           }
-          return act(context, { ...args.target, capability: args.mode === "observed" ? "observedAction" : "action" }, (item, clock) => {
+          const wanted = args.target
+          return exclusive(() => act(context, { ...wanted, capability: args.mode === "observed" ? "observedAction" : "action" }, (item, clock) => {
             const actions = (Array.isArray(item.actions) ? item.actions : []).filter((entry): entry is { id: string; name: string } =>
               object(entry) && typeof entry.id === "string" && typeof entry.name === "string" && (args.action === undefined || entry.name === args.action))
             if (actions.length !== 1) return toJSON({ code: "action-ambiguous", outcome: "not-dispatched", item: compactItem(item),
               hint: `Pass action as one of: ${(Array.isArray(item.actions) ? item.actions : []).flatMap((entry) => object(entry) && typeof entry.name === "string" ? [entry.name] : []).join(", ") || "(none advertised)"}` })
             return call(context, "action", { ref: item.ref, actionID: actions[0]!.id, ...mode }, clock).then(toJSON)
-          }, { deadline: Date.now() + findDeadlineMs }).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+          }, { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
       dock_type: tool({
@@ -494,9 +503,10 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             if (args.ref === undefined) return Promise.resolve("dock_type requires ref or target")
             return call(context, "type", { ref: args.ref, text: args.text, ...mode }).then(toJSON, toolError)
           }
-          return act(context, { ...args.target, capability: args.mode === "keyboard" ? "keyboardType" : "type" },
+          const wanted = args.target
+          return exclusive(() => act(context, { ...wanted, capability: args.mode === "keyboard" ? "keyboardType" : "type" },
             (item, clock) => call(context, "type", { ref: item.ref, text: args.text, ...mode }, clock).then(toJSON),
-            { deadline: Date.now() + findDeadlineMs })
+            { deadline: Date.now() + findDeadlineMs }))
             .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
