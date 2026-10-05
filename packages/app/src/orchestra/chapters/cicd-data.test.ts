@@ -112,6 +112,10 @@ describe("workflow inventory", () => {
       status: "empty",
       paths: [],
     })
+    expect(await loadWorkflows(async () => [entry("ci/.gitlab-ci.yml"), entry("my.gitlab-ci.yml")])).toEqual({
+      status: "empty",
+      paths: [],
+    })
   })
 
   test("a failing .github listing is an error even when GitLab CI exists", async () => {

@@ -54,7 +54,16 @@ export default function Cicd(props: ChapterPageProps) {
       )
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
-  const branch = () => sync().child(props.directory)[0].vcs?.branch ?? ""
+  // V2 has no VCS route yet; the legacy route still answers on current servers and is only a form default.
+  const [vcs] = createResource(() =>
+    sdk()
+      .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
+      .then(
+        (result) => result.data?.branch,
+        () => undefined,
+      ),
+  )
+  const branch = () => vcs() ?? sync().child(props.directory, { bootstrap: false })[0].vcs?.branch ?? ""
   const matches = (text: string) => text.toLowerCase().includes(query().trim().toLowerCase())
   const trigger = (value: "manual" | "push" | "pullRequest") => language.t(`orchestra.cicd.trigger.${value}`)
 

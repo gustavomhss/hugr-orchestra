@@ -22,6 +22,10 @@ html[data-color-scheme="light"] .mx-page[data-mx-page="cicd"] {
 .mx-dialog.cicd-dialog:not([open]) {
   display: none;
 }
+/* The app's reset zeroes margins; restore the native modal centering the mock relies on. */
+.mx-dialog.cicd-dialog {
+  margin: auto;
+}
 .cicd-dialog::backdrop {
   background: var(--mx-backdrop, rgba(3, 9, 16, 0.55));
   backdrop-filter: blur(5px);
@@ -47,7 +51,9 @@ html[data-color-scheme="light"] .mx-page[data-mx-page="cicd"] {
   background: var(--mx-soft);
   cursor: pointer;
 }
+/* The app's reset zeroes input margins; the mock keeps the native checkbox margin. */
 .cicd-choice input {
+  margin: 3px 3px 3px 4px;
   accent-color: var(--cicd-accent);
 }
 
