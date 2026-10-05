@@ -260,14 +260,13 @@ export function ProviderConnectDialog(props: {
         <select
           name="method"
           disabled={loading() || state.busy || !!state.attempt}
-          value={String(state.method)}
           onChange={(event) =>
             setState({ method: Number(event.currentTarget.value), error: undefined, attempt: undefined, code: "" })
           }
         >
           <For each={methods()}>
             {(item, index) => (
-              <option value={String(index())}>
+              <option value={String(index())} selected={index() === state.method}>
                 {item.type === "oauth" ? item.label : language.t("provider.connect.method.apiKey")}
               </option>
             )}
@@ -307,11 +306,14 @@ export function ProviderConnectDialog(props: {
                 {(select) => (
                   <select
                     name={select().key}
-                    value={prompts().values[select().key]}
                     onChange={(event) => setState("answers", select().key, event.currentTarget.value)}
                   >
                     <For each={select().options}>
-                      {(option) => <option value={option.value}>{option.label}</option>}
+                      {(option) => (
+                        <option value={option.value} selected={option.value === prompts().values[select().key]}>
+                          {option.label}
+                        </option>
+                      )}
                     </For>
                   </select>
                 )}

@@ -67,6 +67,9 @@ function ProvidersScreen(props: ChapterPageProps) {
           .then((result) => result.data ?? undefined)
           .catch(() => undefined),
       ])
+      // A malformed reply becomes this page's load error with Retry instead of crashing the whole app.
+      if (![providerList.data, integrations.data, models.data].every(Array.isArray))
+        throw new Error("The server returned an unexpected provider catalog.")
       return { providers: providerList.data, integrations: integrations.data, models: models.data, preferred }
     },
   )
@@ -320,13 +323,21 @@ function ProvidersScreen(props: ChapterPageProps) {
               <span>{language.t("orchestra.providers.route")}</span>
               <select
                 data-providers-route
-                value={route()}
                 disabled={state.route !== undefined}
                 aria-describedby="orchestra-providers-route-scope"
                 onChange={(event) => void chooseRoute(event.currentTarget.value)}
               >
-                <option value="">{language.t("orchestra.providers.route.placeholder")}</option>
-                <For each={routes()}>{(card) => <option value={card.id}>{card.name}</option>}</For>
+                {/* Selection lives on the options: a select value set before its option exists is lost. */}
+                <option value="" selected={route() === ""}>
+                  {language.t("orchestra.providers.route.placeholder")}
+                </option>
+                <For each={routes()}>
+                  {(card) => (
+                    <option value={card.id} selected={card.id === route()}>
+                      {card.name}
+                    </option>
+                  )}
+                </For>
               </select>
             </label>
             <p id="orchestra-providers-route-scope" class="mx-note">
