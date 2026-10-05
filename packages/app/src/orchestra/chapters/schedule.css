@@ -23,3 +23,11 @@
   flex-direction: column;
   margin: 0;
 }
+.mx-card p.schedule-missed {
+  color: var(--mx-bad);
+}
+/* The mock leaves the dialog close button on the UA focus ring. */
+.schedule-dialog .mx-dialog-head .mx-link:focus-visible {
+  outline: auto;
+  outline-offset: 0;
+}

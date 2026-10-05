@@ -7,7 +7,8 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.empty": "No scheduled tasks.",
   "orchestra.schedule.emptyHint": "Create a one-off or recurring task.",
   "orchestra.schedule.noMatches": "No scheduled tasks match your search.",
-  "orchestra.schedule.note": "Saved on this device for this profile · due tasks run only while this page is open.",
+  "orchestra.schedule.note":
+    "Saved on this device for this profile · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed.",
   "orchestra.schedule.cadence.once": "Once",
   "orchestra.schedule.cadence.hourly": "Every hour",
   "orchestra.schedule.cadence.daily": "Daily",
@@ -18,6 +19,7 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.runs.one": "{{count}} run",
   "orchestra.schedule.runs.other": "{{count}} runs",
   "orchestra.schedule.last": "Last: {{date}}",
+  "orchestra.schedule.missed": "Missed: {{date}}",
   "orchestra.schedule.openSession": "Open session",
   "orchestra.schedule.run": "Run now",
   "orchestra.schedule.edit": "Edit",
