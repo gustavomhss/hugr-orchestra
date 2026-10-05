@@ -187,10 +187,17 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     display: none;
   }
 
+  /* Every main view is one glass panel, as the reference's .main.glass: chapter pages carry
+     .orchestra-glass, and Home's container takes the same shared glass here. */
   .orchestra-shell [data-component="orchestra-home"] {
     margin-block: 0;
     margin-inline: 0;
+    border: 1px solid var(--glass-border);
     border-radius: 9px;
+    background: var(--glass-background);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
   }
 
   .orchestra-shell [data-slot="orchestra-home-grid"] {

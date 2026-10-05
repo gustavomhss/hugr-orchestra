@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Locator } from "@playwright/test"
 import { setupCompactNavigation } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
@@ -32,6 +32,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   )
   await expect(crumb.last()).toHaveText("home")
   await expect(crumb.last()).toHaveCSS("font-size", "12px")
+  await expectMainGlass(page.locator('[data-component="orchestra-home"]'))
   await toggle.focus()
   await page.keyboard.press("Enter")
   await expect(sidebar).toHaveCSS("width", "56px")
@@ -62,6 +63,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await page.keyboard.press("Enter")
   await expect(page.getByRole("heading", { name: "MCP", exact: true })).toBeVisible()
   await expect(crumb.last()).toHaveText("MCP")
+  await expectMainGlass(page.locator('[data-component="orchestra-chapter"]'))
   await expect(sidebar.getByRole("button", { name: "MCP", exact: true })).toHaveAttribute("aria-current", "page")
   await sidebar.getByRole("button", { name: "Choose repository profile" }).click()
   await expect(page.getByRole("menuitemradio", { name: "Compact project", exact: true })).toBeVisible()
@@ -87,6 +89,19 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "light")
   await page.screenshot({ path: test.info().outputPath("compact-light.png"), animations: "disabled" })
 })
+
+// Every main view is one panel of the shared sidebar glass, one 6px gutter from the sidebar.
+async function expectMainGlass(main: Locator) {
+  const sidebar = main.page().locator('[data-component="orchestra-sidebar"]')
+  for (const property of ["background-image", "backdrop-filter", "border-top-color", "box-shadow", "border-radius"])
+    expect(await main.evaluate((element, name) => getComputedStyle(element).getPropertyValue(name), property)).toBe(
+      await sidebar.evaluate((element, name) => getComputedStyle(element).getPropertyValue(name), property),
+    )
+  const panel = (await main.boundingBox())!
+  const nav = (await sidebar.boundingBox())!
+  expect(panel.x - (nav.x + nav.width)).toBeCloseTo(6, 1)
+  expect(panel.y).toBeCloseTo(nav.y, 1)
+}
 
 // English direction override is exposed through the development DebugBar.
 // Production direction and portal geometry are covered with the actual Arabic locale.
