@@ -1,5 +1,5 @@
 import { getFilename } from "@opencode-ai/core/util/path"
-import { createMemo, For, onCleanup, onMount, Show } from "solid-js"
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -24,10 +24,12 @@ export default function Skills(props: ChapterPageProps) {
     status: "loading" as "loading" | "ready" | "error" | "unavailable",
     skills: [] as SkillEntry[],
     query: "",
-    dialog: undefined as SkillDialogState | undefined,
     // A saved file the server has not listed yet (its configuration predates the skill folder).
     pending: undefined as string | undefined,
   })
+  // A signal, not a store field: setting a store path to an object merges into the previous object, so the keyed
+  // dialog would not remount and the previous dialog's pending close event would clear the next one.
+  const [dialog, setDialog] = createSignal<SkillDialogState>()
   // No server setting decides which skills a profile offers, so availability is this app's per-profile choice,
   // keyed by skill file location because names can repeat across folders.
   const [local, setLocal] = persisted(
@@ -102,7 +104,8 @@ export default function Skills(props: ChapterPageProps) {
     if (!result?.data) return writeFailure(result?.response?.status, result?.error)
     const saved = "data" in result.data ? result.data.data : result.data
     if (abort.signal.aborted) return
-    setState({ dialog: undefined, pending: saved.location })
+    setDialog(undefined)
+    setState("pending", saved.location)
     await load().catch(() => refresh())
   }
 
@@ -118,7 +121,8 @@ export default function Skills(props: ChapterPageProps) {
     ).catch(() => undefined)
     if (!result?.response?.ok) return writeFailure(result?.response?.status, result?.error)
     if (abort.signal.aborted) return
-    setState({ dialog: undefined, pending: undefined })
+    setDialog(undefined)
+    setState("pending", undefined)
     setLocal("disabled", (locations) => locations.filter((location) => location !== skill.location))
     await load().catch(() => refresh())
   }
@@ -142,7 +146,7 @@ export default function Skills(props: ChapterPageProps) {
           type="button"
           class="mx-btn primary"
           disabled={state.status !== "ready"}
-          onClick={() => setState("dialog", { type: "add" })}
+          onClick={() => setDialog({ type: "add" })}
         >
           {language.t("orchestra.skills.add")}
         </button>
@@ -204,7 +208,7 @@ export default function Skills(props: ChapterPageProps) {
                     <button
                       type="button"
                       class="mx-btn"
-                      onClick={() => setState("dialog", { type: "edit", skill, access: access() })}
+                      onClick={() => setDialog({ type: "edit", skill, access: access() })}
                     >
                       {language.t(access() === "edit" ? "orchestra.skills.read" : "orchestra.skills.readOnly")}
                     </button>
@@ -239,14 +243,14 @@ export default function Skills(props: ChapterPageProps) {
       <Show when={state.status === "ready" && state.skills.length}>
         <p class="mx-note">{language.t("orchestra.skills.localNote")}</p>
       </Show>
-      <Show when={state.dialog} keyed>
-        {(dialog) => (
+      <Show when={dialog()} keyed>
+        {(current) => (
           <SkillDialog
-            state={dialog}
-            onClose={() => setState("dialog", undefined)}
+            state={current}
+            onClose={() => setDialog(undefined)}
             onSave={save}
             onRemove={remove}
-            onAskRemove={(skill) => setState("dialog", { type: "remove", skill })}
+            onAskRemove={(skill) => setDialog({ type: "remove", skill })}
           />
         )}
       </Show>

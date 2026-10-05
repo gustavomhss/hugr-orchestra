@@ -71,6 +71,27 @@ for (const protocol of ["v1", "v2"] as const) {
     await dialog.getByRole("button", { name: "Cancel" }).click()
     await expect(dialog).toHaveCount(0)
 
+    // Closing a dialog queues its close event; opening the next dialog before that event runs must not let it
+    // close the new one (keyboard users hit this when they press Escape and then Enter quickly).
+    await cards.first().getByRole("button", { name: "Read & edit" }).click()
+    await expect(dialog.locator("h2")).toHaveText(`Edit ${catalog[0].name}`)
+    await page.evaluate(async () => {
+      const previous = document.querySelector("dialog")
+      const next = Array.from(document.querySelectorAll<HTMLButtonElement>(".skills-card .mx-btn")).find(
+        (button) => button.textContent === "Read",
+      )
+      if (!previous?.open || !next) throw new Error("expected an open dialog and a Read button")
+      const closed = new Promise((resolve) => previous.addEventListener("close", resolve, { once: true }))
+      previous.close()
+      next.click()
+      await Promise.race([closed, new Promise((resolve) => setTimeout(resolve, 1000))])
+    })
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog.locator("h2")).toHaveText(`Read ${catalog[1].name}`)
+    await expect(instructions).toHaveValue(catalog[1].content)
+    await dialog.getByRole("button", { name: "Cancel" }).click()
+    await expect(dialog).toHaveCount(0)
+
     const search = chapter.getByRole("textbox", { name: "Search skills" })
     await search.fill("  PUBLIC  ")
     await expect(cards).toHaveCount(1)
