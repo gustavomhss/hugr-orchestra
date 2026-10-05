@@ -481,10 +481,11 @@ export function create(options: { root: string; context: string; image?: string;
   return {
     access,
     dispose: async () => {
-      await access.close()
+      const closed = await access.close().then(() => undefined, (error: unknown) => error)
       await closeNative()
       current.engine?.client.close()
       current.engine = undefined
+      if (closed) throw closed
     },
     workspaceScope: () => serialize(async () => {
       const metadata = await load()
@@ -643,9 +644,10 @@ export function create(options: { root: string; context: string; image?: string;
       }),
     stop: async () => {
       // Reap access outside the mutation queue: an admitted run may still be
-      // waiting for its serialized ownership/deployment check.
-      await access.close()
-      return serialize(async () => {
+      // waiting for its serialized ownership/deployment check. Its failure must
+      // not skip helper/container teardown, so it is rethrown afterwards.
+      const closed = await access.close().then(() => undefined, (error: unknown) => error)
+      await serialize(async () => {
         if (!current.metadata && !(await readMetadata(root))) return
         await closeNative()
         await stopOwned(await load())
@@ -654,6 +656,7 @@ export function create(options: { root: string; context: string; image?: string;
         current.engine = undefined
         current.state = { phase: "stopped", apps: current.state.apps }
       })
+      if (closed) throw closed
     },
   }
 }
