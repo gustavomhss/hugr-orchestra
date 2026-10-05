@@ -42,14 +42,23 @@ painel Apps e plugin `app-dock.ts`.
 - **Recolhimento do helper:** helper `accessibility` rodando antes de fechar o app e 0 depois.
 - A frente A provou sua correção de versão: o build se carimba `1.18.27-<branch>-<data>` e o free tier aceita.
 
+### Revisão fria (Claude; codex sem cota até 9/out) e correções
+
+Todas integradas e verificadas pelo lead (diff, testes por nome, mutação própria):
+- Aba Tasks roubava o foco mesmo com a correção anterior (o `open()` já ativava a aba): agora entra via `setAll` sem ativar quando Apps está ativa. Provado no app real com um subagente em segundo plano.
+- `target` agia após varredura incompleta: agora recusa (`target-search-incomplete`) se a cobertura da árvore inteira não fechar; identidade da segunda passada inclui posição, `depth` e `scopeDepth`; prazo total de 90s por chamada. No VS Code real a varredura fecha completa e as ações passam (7/7).
+- `stop()`/`dispose()` pulavam o encerramento do helper/container se `access.close()` falhasse: agora encerram sempre e repassam a falha.
+- `bus.py`: `OverflowError` de parâmetro fora da faixa vira `protocol-error`, com fixture que falha sem a correção.
+
 ## Pendências (próximas fatias)
 
-1. **Pré-aquecer o helper nativo** quando o Linux abre no App Dock: sob carga alta (load 16–19) a partida a frio passou do prazo de 15s da ferramenta (`transport-timeout`). Não afrouxar o prazo.
-2. `target`: página final com `coverage.complete: false` sem `hasMore` ainda permite agir; controle homônimo surgindo em outra página entre as passadas não é detectado; custo de até 96 leituras por ação.
-3. Teste Docker dedicado para `stop()`/`dispose()` recolherem o helper (hoje provado só no app real).
-4. Decisão de produto: o `workspace.py` estrito faz toda a sessão Linux (inclusive `linux_exec` e Slack) depender do barramento de acessibilidade subir.
-5. W06 no harness com as ferramentas novas; pacote empacotado (`extraResources`); Windows/arm64; performance P01–P05.
-6. Nome com atalho de teclado ("Settings Ctrl+,") impede casamento exato; avaliar normalização explícita.
+1. **Pré-aquecer o helper** sem passar pela fila do runtime. A tentativa `helper-prewarm` (branch guardado, não integrado) mostrou que a fila marca o workspace como "erro" em qualquer falha e segura lista de apps/launch/Slack durante a partida a frio. Precisa de um caminho de aquecimento fora da fila.
+2. `target`: controle homônimo surgindo em outra página entre as passadas ainda não é detectado; o prazo de 90s inclui o tempo do pedido de permissão; `dock_find` não sinaliza cobertura parcial quando acha resultados.
+3. Teste Docker dedicado para `stop()`/`dispose()` com terminal abrindo (a correção não tem teste).
+4. Falha do helper nativo (via fila do runtime) marca o workspace inteiro como "erro" na UI.
+5. Decisão de produto: o `workspace.py` estrito faz toda a sessão Linux depender do barramento de acessibilidade.
+6. W06 no harness com as ferramentas novas; pacote empacotado (`extraResources`); Windows/arm64; performance.
+7. Nome com atalho ("Settings Ctrl+,") impede casamento exato.
 
 ## Regras herdadas das duas frentes
 
