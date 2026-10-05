@@ -57,7 +57,7 @@ import { SessionFileBrowserTab, type SessionFileBrowserState } from "@/pages/ses
 import { FILE_TREE_WIDTH_MIN, LegacyFileTreePanel } from "./legacy-file-tree-panel"
 import { TasksPanel } from "./tasks-panel"
 import { AppsPanel } from "./apps-panel"
-import { OrchestraCockpit } from "./orchestra-cockpit"
+import { OrchestraCockpit, OrchestraTaskFeed } from "./orchestra-cockpit"
 import { createTasksData } from "./tasks-data"
 
 type ReviewDiff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
@@ -167,7 +167,7 @@ export function SessionSidePanel(props: {
     review: reviewTab,
     hasReview: props.canReview,
     fileBrowser: () => !!props.fileBrowserState,
-    // The approved rail gives Tasks its own tab beside the Apps cockpit.
+    // The approved rail gives Tasks its own tab beside Apps, which hosts only the Dock.
     cockpit: () => false,
   })
   const contextOpen = tabState.contextOpen
@@ -175,7 +175,7 @@ export function SessionSidePanel(props: {
   const tasksData = createTasksData()
   const openFileOpen = tabState.openFileOpen
 
-  // Auto-open the Apps cockpit (its Tasks card sits beside the Dock) while background work is live
+  // Auto-open the Tasks tab while background work is live
   // (Claude tasks-pane parity). Lives here — not in TasksPanel — because the panel
   // only mounts once its tab is already active. Level-triggered (not edge-triggered)
   // so remounts and HMR can't miss it; leaving the tab snoozes until work drains.
@@ -183,7 +183,7 @@ export function SessionSidePanel(props: {
   let snoozed = false
   createEffect(() => {
     const n = tasksData.liveCount()
-    const open = ["apps", "tasks"].includes(tabState.activeTab())
+    const open = tasksOpen()
     if (n === 0) {
       snoozed = false
       wasOpen = open
@@ -195,8 +195,8 @@ export function SessionSidePanel(props: {
       // Panel first, then tab, then focus in a microtask so the freshly
       // mounted tab strip selects that tab instead of falling back to Review.
       view().reviewPanel.open()
-      tabs().open("apps")
-      queueMicrotask(() => tabs().setActive("apps"))
+      tabs().open("tasks")
+      queueMicrotask(() => tabs().setActive("tasks"))
     }
   })
   const panelTabs = tabState.panelTabs
@@ -804,7 +804,7 @@ export function SessionSidePanel(props: {
                             value="tasks"
                             class="flex flex-col h-full overflow-hidden contain-strict"
                           >
-                            <TasksPanel data={tasksData} />
+                            <OrchestraTaskFeed tasks={tasksData} onShowBrowser={() => activateTab("apps")} />
                           </Tabs.Content>
                         </Show>
 
@@ -814,7 +814,7 @@ export function SessionSidePanel(props: {
                             value="apps"
                             class="flex flex-col h-full overflow-hidden contain-strict"
                           >
-                            <OrchestraCockpit tasks={tasksData} />
+                            <OrchestraCockpit />
                           </Tabs.Content>
                         </Show>
 

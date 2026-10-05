@@ -1264,8 +1264,41 @@
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-component="session-side-panel"]
-    :is(.session-review-v2-sidebar-toggle-slot, .session-review-v2-open-in-app-slot:empty) {
+    .session-review-v2-open-in-app-slot:empty {
     display: none;
+  }
+
+  /* The file-list toggle stays a real control; it reads as one more 24px rail glyph before Review. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot {
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot::before,
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot::after {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot
+    button {
+    inline-size: 24px;
+    min-inline-size: 24px;
+    block-size: 24px;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: none;
+    color: #7f8d9d;
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-open-file"] {

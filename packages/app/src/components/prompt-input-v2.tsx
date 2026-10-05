@@ -29,6 +29,7 @@ import { effectiveModelState, hasModelScope } from "@/components/subagent-model-
 import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
+import { useSessionDelivery } from "@/pages/session/composer/delivery"
 import { showToast } from "@/utils/toast"
 import { PromptInputV2, type PromptInputV2Suggestion } from "@opencode-ai/session-ui/v2/prompt-input"
 import {
@@ -66,7 +67,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
         subagentModelsControl={
           <>
             <Show when={props.sessionID}>
-              <OrchestraComposeTools controller={props.controller} />
+              {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
             </Show>
             <PromptInputV2SubagentModelsControl sessionID={props.sessionID} />
           </>
@@ -234,6 +235,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     onAbort: props.onAbort,
     onSubmit: props.onSubmit,
     model: props.controls.model.selection,
+    delivery: useSessionDelivery(() => props.controls.session.id).delivery,
   })
 
   const referenceDescription = (reference: ReferenceInfo) =>
@@ -528,7 +530,13 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
         data-control-type="dialog"
         onClick={open}
       >
-        <span class="truncate leading-4">{language.t("session.tasks.models.label", { count: label() })}</span>
+        <span class="truncate leading-4">
+          {props.sessionID
+            ? hasModelScope(rules())
+              ? language.t("orchestra.chat.models.count", { count: label() })
+              : language.t("orchestra.chat.models.all")
+            : language.t("session.tasks.models.label", { count: label() })}
+        </span>
         <span class="-ml-0.5 -mr-1 flex shrink-0">
           <Icon name="chevron-down" />
         </span>

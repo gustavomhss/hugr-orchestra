@@ -92,7 +92,8 @@ test("opens and searches project files inline", async ({ page }) => {
   const panel = page.locator("#review-panel")
   const sidebar = panel.locator('[data-slot="session-review-v2-sidebar"]')
   const sidebarToggle = panel.getByRole("button", { name: "Toggle file tree" })
-  const contextButton = page.getByRole("button", { name: "View context usage" })
+  // Context is a permanent rail tab in the approved layout.
+  const contextButton = panel.getByRole("tab", { name: "Context" })
   await contextButton.click()
   await expect(panel.getByRole("tab", { name: "Context" })).toHaveAttribute("data-selected", "")
   await panel.getByRole("button", { name: "Open file" }).click()

@@ -11,6 +11,8 @@ import { useSessionLayout } from "@/pages/session/session-layout"
 import { ReviewPanelV2, type ReviewPanelV2Props } from "@/pages/session/v2/review-panel-v2"
 import { filterRenderableDiff, reviewDiffNeedsLoad } from "@/pages/session/v2/review-diff-kinds"
 import { showToast } from "@/utils/toast"
+import { OrchestraPullRequest } from "@/pages/session/orchestra-pull-request"
+import { downloadText } from "@/pages/session/orchestra-pull-request-data"
 import "@/orchestra/chapters/kit.css"
 
 export function createOrchestraReviewPanel() {
@@ -54,12 +56,7 @@ export function createOrchestraReviewPanel() {
         showToast({ title: language.t("orchestra.chat.exportDiffEmpty") })
         return
       }
-      const url = URL.createObjectURL(new Blob([text.endsWith("\n") ? text : text + "\n"], { type: "text/x-diff" }))
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `${layout.params.id ?? "changes"}.diff`
-      link.click()
-      URL.revokeObjectURL(url)
+      downloadText(`${layout.params.id ?? "changes"}.diff`, text.endsWith("\n") ? text : text + "\n", "text/x-diff")
     }
 
     const ReviewFile = (fileProps: FileProps) => (
@@ -89,6 +86,7 @@ export function createOrchestraReviewPanel() {
             </button>
           </div>
           <div data-slot="orchestra-review-actions">
+            <OrchestraPullRequest sessionID={layout.params.id} files={diffs} />
             <button
               type="button"
               class="mx-btn"
