@@ -72,6 +72,46 @@ fields, decode, checks and template, `memory-types.ts`, `prompt.txt` producer in
 design), `specs/context-continuity-memory.md` (v2, owner intent), this brief, and
 `specs/context-continuity-memory-research.md` (research digest).
 
+## 2a. Who reads the memory: Maestro
+
+The primary long-running session is **Maestro**, Orchestra's orchestration agent (prompt
+`src/agent/prompt/maestro.txt`, roster `src/maestro/roster.ts`, governance in `src/maestro/`).
+Maestro acts as project manager, product owner, tech lead and CEO at once. It does not
+necessarily do the work itself. When it delegates, it knows exactly what it wants, and it uses
+its team to make sure the work was done the way it wants.
+
+The team (roster role → what each returns):
+
+| Member | Role | Returns |
+| --- | --- | --- |
+| Charlie | backend execution | implementation card, gates, diff receipt |
+| Patty | frontend execution | implementation card, sensory evidence, diff receipt |
+| Lucy | cold review | cited APPROVE / FIX_FIRST / REJECT card |
+| Bobby | architecture | seam/contract verdict |
+| Billy | security | threat verdict and cited controls |
+| Jimmy | exploration | grounded findings card |
+| Rosie | documentation | docs evidence card |
+| Frankie | process audit | audit verdict |
+
+**The team members never talk to each other; they talk only to Maestro.** Maestro is the
+single hub. Everything one member produces that another needs (Charlie's diff for Lucy's
+review, Jimmy's findings for Charlie's brief, Bobby's contract verdict for both) passes
+through Maestro's context. If Maestro's working memory loses it, no one else has it.
+
+What this means for the format (decide how, without over-engineering):
+
+- Maestro's memory is about directing work, not only doing it: what was delegated to whom,
+  with what brief and acceptance criteria, in what state, what came back (return cards,
+  verdicts), whether it was verified against what Maestro wanted, and what is still owed.
+- The owner's intent and product decisions must survive exactly, because Maestro turns them
+  into briefs for the team.
+- Review and verification outcomes (APPROVE / FIX_FIRST / REJECT, gates, audit verdicts) are
+  first-class: they decide what can merge or ship.
+- Cross-member dependencies are Maestro's responsibility: which output feeds which next
+  delegation.
+- Member sessions are usually shorter, but the same format applies to them; it must still
+  work for a single agent doing hands-on work (as in worked example A).
+
 ## 3. What the owner wants
 
 Owner intent, as recorded in `specs/context-continuity-memory.md`:
