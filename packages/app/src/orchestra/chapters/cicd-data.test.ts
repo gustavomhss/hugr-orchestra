@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { loadWorkflows, workflowFailure, workflowFiles } from "./cicd-data"
+import { loadWorkflows, pipelineScript, plainLog, tailLog, workflowFailure, workflowFiles } from "./cicd-data"
 
 const entry = (path: string, type: "file" | "directory" = "file") => ({ path, type })
 
@@ -81,6 +81,48 @@ describe("workflow inventory", () => {
     ).toEqual({ status: "ready", paths: [".github/workflows/ci.yml"] })
   })
 
+  test("detects a root GitLab CI file before GitHub workflows", async () => {
+    const paths: string[] = []
+    expect(
+      await loadWorkflows(async (path) => {
+        paths.push(path)
+        if (path === "") return [entry(".gitlab-ci.yml"), entry(".github", "directory")]
+        if (path === ".github") return [entry(".github/workflows", "directory")]
+        return [entry(".github/workflows/test.yml")]
+      }),
+    ).toEqual({ status: "ready", paths: [".gitlab-ci.yml", ".github/workflows/test.yml"] })
+    expect(paths).toEqual(["", ".github", ".github/workflows"])
+  })
+
+  test("GitLab CI alone is ready without listing .github; lookalikes are ignored", async () => {
+    const paths: string[] = []
+    expect(
+      await loadWorkflows(async (path) => {
+        paths.push(path)
+        return [
+          entry(".gitlab-ci.yml"),
+          entry(".gitlab-ci.yaml"),
+          entry("ci/.gitlab-ci.yml"),
+          entry(".gitlab-ci.yml.bak"),
+        ]
+      }),
+    ).toEqual({ status: "ready", paths: [".gitlab-ci.yml"] })
+    expect(paths).toEqual([""])
+    expect(await loadWorkflows(async () => [entry(".gitlab-ci.yml", "directory")])).toEqual({
+      status: "empty",
+      paths: [],
+    })
+  })
+
+  test("a failing .github listing is an error even when GitLab CI exists", async () => {
+    expect(
+      await loadWorkflows(async (path) => {
+        if (path === "") return [entry(".gitlab-ci.yml"), entry(".github", "directory")]
+        throw new Error("UnexpectedStatus", { cause: { status: 500 } })
+      }),
+    ).toEqual({ status: "error", paths: [] })
+  })
+
   test("request failure is an error, never an empty inventory", async () => {
     expect(
       await loadWorkflows(async () => {
@@ -102,5 +144,30 @@ describe("workflow inventory", () => {
     expect(workflowFailure({ status: 501 })).toBe("unavailable")
     expect(workflowFailure({ status: 403 })).toBe("error")
     expect(workflowFailure({ status: 500 })).toBe("error")
+  })
+})
+
+describe("pipeline runs", () => {
+  test("the script waits for the attach gate, then runs every command line with errexit", () => {
+    expect(pipelineScript("bun run build\nbun test")).toBe(
+      "IFS= read -r orchestra_ready\nset -e\nbun run build\nbun test",
+    )
+  })
+
+  test("plain log drops escape sequences, the echoed gate and redrawn progress", () => {
+    expect(
+      plainLog(
+        "\r\n\x1b[32m✓\x1b[0m build\r\nprogress 10%\rprogress 100%\r\n\x1b]0;title\x07done\ttab\x07\r\n\r\n",
+      ),
+    ).toBe("✓ build\nprogress 100%\ndone\ttab")
+  })
+
+  test("plain log keeps blank lines inside output and text without a gate echo", () => {
+    expect(plainLog("first\n\nsecond")).toBe("first\n\nsecond")
+  })
+
+  test("logs keep their tail within the limit", () => {
+    expect(tailLog("abcdef", 10)).toBe("abcdef")
+    expect(tailLog("abcdef", 3)).toBe("…\ndef")
   })
 })
