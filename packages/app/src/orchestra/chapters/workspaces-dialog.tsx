@@ -89,10 +89,12 @@ export function WorkspacesDialog(props: {
       ref={(element) => (refs.dialog = element)}
       class="mx-dialog ws-dialog"
       aria-labelledby="workspaces-dialog-title"
-      // Escape belongs to this modal. Layers below it (e.g. a navigation tooltip left open under the pointer) listen
-      // on the document and cancel the key there, which would leave the dialog open with nothing visible closing.
+      // A Kobalte layer behind this modal (a navigation tooltip still open or animating out) takes Escape on the
+      // document and cancels the native close. The modal is the top layer, so it takes Escape first.
       on:keydown={(event) => {
-        if (event.key === "Escape") event.stopPropagation()
+        if (event.key !== "Escape" || event.defaultPrevented) return
+        event.preventDefault()
+        props.onClose()
       }}
       onCancel={(event) => {
         event.preventDefault()

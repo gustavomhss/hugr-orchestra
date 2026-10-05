@@ -86,8 +86,12 @@ for (const scheme of ["dark", "light"] as const) {
     // A workspace the server no longer lists stops being the default after the screen reloads it.
     await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
     await page.getByRole("menuitemradio").filter({ hasText: "Server A repository" }).click()
+    // From a draft the switch opens Server A's own draft asynchronously; the chapter must open on that profile.
+    await expect(page.locator("#orchestra-profile-name")).toHaveText("Server A repository")
     mock.state.sandboxes[serverA].splice(0, 1)
     await openChapter(page, false)
+    // Server B lists the same two cards, so name the profile before reading them.
+    await expect(page.locator(".orchestra-workspaces .mx-toolbar .mx-badge")).toHaveText("Server A repository")
     await expect(page.locator(".mx-card code")).toHaveText([root, sandboxes[1]])
     await expect(card(page, root).locator(".mx-badge.good")).toHaveText("Active")
     await openHomeDraft(page)
@@ -308,6 +312,25 @@ test("v2: the active workspace never offers deletion until another workspace is 
   await openChapter(page, false)
   await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
   await expect(page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true })).toBeVisible()
+  expect(writes(mock.requests)).toEqual([])
+})
+
+test("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
+  const mock = await setup(page)
+  await openChapter(page)
+  // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
+  await page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Workspaces", exact: true })
+    .hover()
+  await expect(page.getByRole("tooltip")).toHaveText("Work in progress, revisit before production")
+  await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).focus()
+  await page.keyboard.press("Enter")
+  const dialog = page.getByRole("dialog", { name: "Configure one", exact: true })
+  await expect(dialog).toBeVisible()
+  await expect(page.getByRole("tooltip")).toHaveCount(1)
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
   expect(writes(mock.requests)).toEqual([])
 })
 
