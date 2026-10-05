@@ -84,7 +84,10 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(project).toHaveCount(1)
   await project.click()
   await expect(profile).toContainText("NewProject")
-  await expect(profile.getByText(directory, { exact: true })).toBeVisible()
+  // The approved card reads the new profile's agents and branch; its full directory stays verbatim in the title.
+  const meta = profile.locator("small")
+  await expect(meta).toHaveText("1 agent · main")
+  await expect(meta).toHaveAttribute("title", directory)
   await expect(profile).toHaveAttribute("aria-expanded", "false")
 
   // Home is the KPI dashboard; Chat opens a draft for the selected profile that has no session yet.
@@ -130,7 +133,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(page).toHaveURL(draftURL.href)
   await expect(draftTab).toHaveCount(1)
   await expect(profile).toContainText("NewProject")
-  await expect(profile.getByText(directory, { exact: true })).toBeVisible()
+  await expect(meta).toHaveText("1 agent · main")
+  await expect(meta).toHaveAttribute("title", directory)
   await expect(modelControl).toHaveText("Go Model 1")
   await expect(editor).toHaveText(draft)
   expect(connections).toEqual([{ integrationID: "opencode-go", body: { key: "mock-go-api-key" } }])
