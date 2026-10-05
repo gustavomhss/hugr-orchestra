@@ -168,7 +168,8 @@ export function KpiDashboard(props: {
   })
   const git = createMemo(() => {
     const data = repositoryData()
-    if (!data) return
+    // A directory outside git has no commit counts, whatever days the response carries.
+    if (!data?.repository) return
     // Git days and activity buckets are both the server's local days.
     return summarizeGit(data, gitWindow(prefs.period, loaded()?.days.at(-1) ?? localEnd(Date.now()), data))
   })
