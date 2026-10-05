@@ -48,6 +48,20 @@ export type Event =
   | EventSessionNextRevertStaged
   | EventSessionNextRevertCleared
   | EventSessionNextRevertCommitted
+  | EventMaestroApprovalPresented
+  | EventMaestroApprovalDecided
+  | EventMaestroApprovalConsumed
+  | EventMaestroApprovalReserved
+  | EventMaestroAdmissionDecided
+  | EventMaestroPlanRevisionRecorded
+  | EventMaestroContextRecorded
+  | EventMaestroClarificationDecided
+  | EventMaestroScopeDecided
+  | EventMaestroHeldEntered
+  | EventMaestroValidationRecorded
+  | EventMaestroReviewReceived
+  | EventMaestroAuthorizationGranted
+  | EventMaestroDispatchReserved
   | EventMessagePartDelta
   | EventSessionDiff
   | EventSessionError
@@ -644,6 +658,16 @@ export type Prompt = {
   agents?: Array<PromptAgentAttachment>
 }
 
+export type SessionStepTokens = {
+  input: number
+  output: number
+  reasoning: number
+  cache: {
+    read: number
+    write: number
+  }
+}
+
 export type Pty = {
   id: string
   title: string
@@ -932,15 +956,8 @@ export type GlobalEvent = {
           assistantMessageID: string
           finish: string
           cost: number
-          tokens: {
-            input: number
-            output: number
-            reasoning: number
-            cache: {
-              read: number
-              write: number
-            }
-          }
+          usageKnown?: boolean
+          tokens: SessionStepTokens
           snapshot?: string
           files?: Array<string>
         }
@@ -1188,6 +1205,335 @@ export type GlobalEvent = {
           timestamp: number
           sessionID: string
           messageID: string
+        }
+      }
+    | {
+        id: string
+        type: "maestro.approval.presented"
+        properties: {
+          id: string
+          sessionID: string
+          assistantMessageID: string
+          callID: string
+          planRevisionID: string
+          validationRecordID: string
+          projectID: string
+          memberID: string
+          revisionHash: string
+          validationHash: string
+          contextHash: string
+          policyHash: string
+          taskHash: string
+          intent: {
+            subagentType: string
+            prompt: string
+            model?: string
+            taskID?: string
+          }
+          methodVersion: string
+          plan: string
+          provenance: string
+          assumptions: Array<string>
+          validationLedger: string
+          contextState: "CURRENT"
+        }
+      }
+    | {
+        id: string
+        type: "maestro.approval.decided"
+        properties: {
+          sessionID: string
+          projectID: string
+          memberID: string
+          presentationID: string
+          presentationMessageID: string
+          approvalMessageID: string
+          planRevisionID: string
+          validationRecordID: string
+          revisionHash: string
+          validationHash: string
+          contextHash: string
+          policyHash: string
+          taskHash: string
+          methodVersion: string
+          outcome: "APPROVED" | "DECLINED"
+          decisionTime: number
+        }
+      }
+    | {
+        id: string
+        type: "maestro.approval.consumed"
+        properties: {
+          sessionID: string
+          presentationID: string
+          approvalMessageID: string
+          taskHash: string
+          callID: string
+          childSessionID: string
+        }
+      }
+    | {
+        id: string
+        type: "maestro.approval.reserved"
+        properties: {
+          sessionID: string
+          presentationID: string
+          approvalMessageID: string
+          projectID: string
+          memberID: string
+          planRevisionID: string
+          validationRecordID: string
+          revisionHash: string
+          validationHash: string
+          contextHash: string
+          policyHash: string
+          taskHash: string
+          callID: string
+          childSessionID: string
+          parentSessionID: string
+          agent: string
+          permission: Array<{
+            permission: string
+            pattern: string
+            action: "allow" | "deny" | "ask"
+          }>
+        }
+      }
+    | {
+        id: string
+        type: "maestro.admission.decided"
+        properties: {
+          sessionID: string
+          messageID: string
+          methodVersion: string
+          outcome: "ORIENT" | "CLARIFY" | "READY_TO_DRAFT"
+          reason?: "invalid-assessment" | "missing-usable-goal" | "material-blocker" | "active-work-conflict"
+          assessment?: {
+            kind: "orient" | "work"
+            goal?: string
+            known: Array<{
+              text: string
+              source: "stakeholder" | "orientation"
+            }>
+            proposals: Array<{
+              text: string
+              source: "maestro"
+            }>
+            unknowns: Array<string>
+            uncertainty: string
+            activeWorkEffect: "none" | "new-scope-or-revision"
+            reason: string
+          }
+        }
+      }
+    | {
+        id: string
+        type: "maestro.plan_revision.recorded"
+        properties: {
+          id: string
+          sessionID: string
+          admissionMessageID: string
+          methodVersion: string
+          revision: "v2"
+          goal: {
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }
+          acceptance: Array<{
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }>
+          scope: Array<{
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }>
+          constraints: Array<{
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }>
+          reviewRequirement: {
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }
+          contextRequirement: "PENDING"
+          assumptions: Array<{
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }>
+          risks: Array<{
+            value: string
+            source: "stakeholder" | "maestro" | "orientation"
+          }>
+          status: "PROPOSED"
+          revisionHash: string
+          createdAt: number
+          grounding: MaestroGrounding
+        }
+      }
+    | {
+        id: string
+        type: "maestro.context.recorded"
+        properties: {
+          id: string
+          sessionID: string
+          planRevisionID: string
+          projectID: string
+          directory: string
+          mode: "GROUNDED"
+          branch: string
+          headSHA: string
+          changedPaths: Array<string>
+          currentEvidenceIdentityHash: string
+          contextHash: string
+          status: "CURRENT"
+          createdAt: number
+          planRevisionHash: string
+          sourceIdentityHash: string
+          toolPlan: MaestroContextToolPlan
+          skills: Array<MaestroLoadedOwnSkill>
+        }
+      }
+    | {
+        id: string
+        type: "maestro.clarification.decided"
+        properties: {
+          sessionID: string
+          projectID: string
+          mode: "maestro"
+          predecessorID: string
+          methodVersion: string
+          decision: string
+          question: string
+        }
+      }
+    | {
+        id: string
+        type: "maestro.scope.decided"
+        properties: {
+          sessionID: string
+          projectID: string
+          mode: "maestro"
+          predecessorID: string
+          methodVersion: string
+          scopeID: string
+        }
+      }
+    | {
+        id: string
+        type: "maestro.held.entered"
+        properties: {
+          sessionID: string
+          projectID: string
+          mode: "maestro"
+          predecessorID: string
+          reason: string
+        }
+      }
+    | {
+        id: string
+        type: "maestro.validation.recorded"
+        properties: {
+          sessionID: string
+          planRevisionID: string
+          contextRecordID: string
+          contextHash: string
+          reviewBaseSHA: string
+          projectID: string
+          workCardID: string
+          workCard: string
+          workCardHash: string
+          routedMemberID: string
+          rosterHash: string
+          grantHash: string
+          reviewPolicyHash: string
+          actor: {
+            version: "rfc8785-v1"
+            bytes: string
+            sha256: string
+          }
+          validatorID: "maestro"
+          validatorVersion: string
+          checks: Array<{
+            id: string
+            status: "PASS" | "FAIL" | "HOLD"
+            detail: string
+          }>
+          outcome: "VALID" | "INVALID" | "HOLD"
+        }
+      }
+    | {
+        id: string
+        type: "maestro.review.received"
+        properties: {
+          sessionID: string
+          projectID: string
+          validationRecordID: string
+          workCardHash: string
+          routedMemberID: string
+          rosterHash: string
+          grantHash: string
+          reviewPolicyHash: string
+          actor: {
+            version: "rfc8785-v1"
+            bytes: string
+            sha256: string
+          }
+          reviewerID: "lucy"
+          reviewMethodVersion: string
+          artifact: {
+            workCardHash: string
+            sha256: string
+            baseSHA: string
+            headSHA: string
+            worktree: string
+            changedPaths: Array<string>
+          }
+          verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
+          findings: Array<{
+            path: string
+            line: number
+            message: string
+          }>
+        }
+      }
+    | {
+        id: string
+        type: "maestro.authorization.granted"
+        properties: {
+          sessionID: string
+          projectID: string
+          approvalMessageID: string
+          validationRecordID: string
+          workCardHash: string
+          routedMemberID: string
+          rosterHash: string
+          grantHash: string
+          reviewPolicyHash: string
+          actor: {
+            version: "rfc8785-v1"
+            bytes: string
+            sha256: string
+          }
+          reviewerID: "lucy"
+          taskIntentHash: string
+          methodVersion: string
+        }
+      }
+    | {
+        id: string
+        type: "maestro.dispatch.reserved"
+        properties: {
+          sessionID: string
+          authorizationID: string
+          childSessionID: string
+          projectID: string
+          routedMemberID: string
+          taskIntentHash: string
+          permission: Array<{
+            permission: string
+            pattern: string
+            action: "allow" | "deny" | "ask"
+          }>
         }
       }
     | {
@@ -1636,6 +1982,20 @@ export type GlobalEvent = {
     | SyncEventSessionNextRevertStaged
     | SyncEventSessionNextRevertCleared
     | SyncEventSessionNextRevertCommitted
+    | SyncEventMaestroApprovalPresented
+    | SyncEventMaestroApprovalDecided
+    | SyncEventMaestroApprovalConsumed
+    | SyncEventMaestroApprovalReserved
+    | SyncEventMaestroAdmissionDecided
+    | SyncEventMaestroPlanRevisionRecorded
+    | SyncEventMaestroContextRecorded
+    | SyncEventMaestroClarificationDecided
+    | SyncEventMaestroScopeDecided
+    | SyncEventMaestroHeldEntered
+    | SyncEventMaestroValidationRecorded
+    | SyncEventMaestroReviewReceived
+    | SyncEventMaestroAuthorizationGranted
+    | SyncEventMaestroDispatchReserved
 }
 
 /**
@@ -1905,6 +2265,7 @@ export type Config = {
     paths?: Array<string>
     urls?: Array<string>
   }
+  maestro?: ConfigMaestro
   references?: {
     [key: string]: string | ConfigV2ReferenceGit | ConfigV2ReferenceLocal
   }
@@ -2351,6 +2712,7 @@ export type Command = {
 }
 
 export type Agent = {
+  id?: string
   name: string
   description?: string
   mode: "subagent" | "primary" | "all"
@@ -2899,6 +3261,20 @@ export type V2Event =
   | SessionNextRevertStaged
   | SessionNextRevertCleared
   | SessionNextRevertCommitted
+  | MaestroApprovalPresented
+  | MaestroApprovalDecided
+  | MaestroApprovalConsumed
+  | MaestroApprovalReserved
+  | MaestroAdmissionDecided
+  | MaestroPlanRevisionRecorded
+  | MaestroContextRecorded
+  | MaestroClarificationDecided
+  | MaestroScopeDecided
+  | MaestroHeldEntered
+  | MaestroValidationRecorded
+  | MaestroReviewReceived
+  | MaestroAuthorizationGranted
+  | MaestroDispatchReserved
   | MessagePartDelta
   | SessionDiff
   | SessionError
@@ -3120,6 +3496,61 @@ export type RevertState = {
   snapshot?: string
   diff?: string
   files?: Array<FileDiff>
+}
+
+export type MaestroGrounding = {
+  catalogVersion: string
+  snapshot: string
+  sourceRevision: string
+  sourceIdentityHash: string
+  units: Array<string>
+}
+
+export type MaestroContextToolPlan = {
+  version: "context-tool-plan-v1"
+  actor: {
+    projectId: string
+    sessionId: string
+    memberId: string
+  }
+  actorBytes: string
+  planRevision: {
+    id: string
+    hash: string
+  }
+  catalogVersion: string
+  headSnapshot: string
+  sourceRevision: string
+  territories: Array<string>
+  actions: Array<{
+    unit: string
+    skillName: string
+    operation: "load-skill"
+    path: string
+    contentHash: string
+    receiptHash: string
+  }>
+  pointers: Array<{
+    unit: string
+    drillUnits: Array<string>
+    manifest: Array<{
+      kind: "pack" | "memory" | "knowledge" | "drill"
+      name: string
+      digest: string
+      pull: string
+      hits: number
+    }>
+    pullReachable: Array<string>
+  }>
+  hash: string
+}
+
+export type MaestroLoadedOwnSkill = {
+  unit: string
+  name: string
+  content: string
+  contentHash: string
+  receiptHash: string
 }
 
 export type PermissionV2Source = {
@@ -3490,15 +3921,8 @@ export type SyncEventSessionNextStepEnded = {
       assistantMessageID: string
       finish: string
       cost: number
-      tokens: {
-        input: number
-        output: number
-        reasoning: number
-        cache: {
-          read: number
-          write: number
-        }
-      }
+      usageKnown?: boolean
+      tokens: SessionStepTokens
       snapshot?: string
       files?: Array<string>
     }
@@ -3823,6 +4247,441 @@ export type SyncEventSessionNextRevertCommitted = {
       sessionID: string
       messageID: string
     }
+  }
+}
+
+export type SyncEventMaestroApprovalPresented = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.approval.presented.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      id: string
+      sessionID: string
+      assistantMessageID: string
+      callID: string
+      planRevisionID: string
+      validationRecordID: string
+      projectID: string
+      memberID: string
+      revisionHash: string
+      validationHash: string
+      contextHash: string
+      policyHash: string
+      taskHash: string
+      intent: {
+        subagentType: string
+        prompt: string
+        model?: string
+        taskID?: string
+      }
+      methodVersion: string
+      plan: string
+      provenance: string
+      assumptions: Array<string>
+      validationLedger: string
+      contextState: "CURRENT"
+    }
+  }
+}
+
+export type SyncEventMaestroApprovalDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.approval.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      projectID: string
+      memberID: string
+      presentationID: string
+      presentationMessageID: string
+      approvalMessageID: string
+      planRevisionID: string
+      validationRecordID: string
+      revisionHash: string
+      validationHash: string
+      contextHash: string
+      policyHash: string
+      taskHash: string
+      methodVersion: string
+      outcome: "APPROVED" | "DECLINED"
+      decisionTime: number
+    }
+  }
+}
+
+export type SyncEventMaestroApprovalConsumed = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.approval.consumed.2"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      presentationID: string
+      approvalMessageID: string
+      taskHash: string
+      callID: string
+      childSessionID: string
+    }
+  }
+}
+
+export type SyncEventMaestroApprovalReserved = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.approval.reserved.2"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      presentationID: string
+      approvalMessageID: string
+      projectID: string
+      memberID: string
+      planRevisionID: string
+      validationRecordID: string
+      revisionHash: string
+      validationHash: string
+      contextHash: string
+      policyHash: string
+      taskHash: string
+      callID: string
+      childSessionID: string
+      parentSessionID: string
+      agent: string
+      permission: Array<{
+        permission: string
+        pattern: string
+        action: "allow" | "deny" | "ask"
+      }>
+    }
+  }
+}
+
+export type SyncEventMaestroAdmissionDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.admission.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      messageID: string
+      methodVersion: string
+      outcome: "ORIENT" | "CLARIFY" | "READY_TO_DRAFT"
+      reason?: "invalid-assessment" | "missing-usable-goal" | "material-blocker" | "active-work-conflict"
+      assessment?: {
+        kind: "orient" | "work"
+        goal?: string
+        known: Array<{
+          text: string
+          source: "stakeholder" | "orientation"
+        }>
+        proposals: Array<{
+          text: string
+          source: "maestro"
+        }>
+        unknowns: Array<string>
+        uncertainty: string
+        activeWorkEffect: "none" | "new-scope-or-revision"
+        reason: string
+      }
+    }
+  }
+}
+
+export type SyncEventMaestroPlanRevisionRecorded = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.plan_revision.recorded.2"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      id: string
+      sessionID: string
+      admissionMessageID: string
+      methodVersion: string
+      revision: "v2"
+      goal: {
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }
+      acceptance: Array<{
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }>
+      scope: Array<{
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }>
+      constraints: Array<{
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }>
+      reviewRequirement: {
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }
+      contextRequirement: "PENDING"
+      assumptions: Array<{
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }>
+      risks: Array<{
+        value: string
+        source: "stakeholder" | "maestro" | "orientation"
+      }>
+      status: "PROPOSED"
+      revisionHash: string
+      createdAt: number
+      grounding: MaestroGrounding
+    }
+  }
+}
+
+export type SyncEventMaestroContextRecorded = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.context.recorded.2"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      id: string
+      sessionID: string
+      planRevisionID: string
+      projectID: string
+      directory: string
+      mode: "GROUNDED"
+      branch: string
+      headSHA: string
+      changedPaths: Array<string>
+      currentEvidenceIdentityHash: string
+      contextHash: string
+      status: "CURRENT"
+      createdAt: number
+      planRevisionHash: string
+      sourceIdentityHash: string
+      toolPlan: MaestroContextToolPlan
+      skills: Array<MaestroLoadedOwnSkill>
+    }
+  }
+}
+
+export type SyncEventMaestroClarificationDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.clarification.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      projectID: string
+      mode: "maestro"
+      predecessorID: string
+      methodVersion: string
+      decision: string
+      question: string
+    }
+  }
+}
+
+export type SyncEventMaestroScopeDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.scope.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      projectID: string
+      mode: "maestro"
+      predecessorID: string
+      methodVersion: string
+      scopeID: string
+    }
+  }
+}
+
+export type SyncEventMaestroHeldEntered = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.held.entered.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      projectID: string
+      mode: "maestro"
+      predecessorID: string
+      reason: string
+    }
+  }
+}
+
+export type SyncEventMaestroValidationRecorded = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.validation.recorded.3"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      planRevisionID: string
+      contextRecordID: string
+      contextHash: string
+      reviewBaseSHA: string
+      projectID: string
+      workCardID: string
+      workCard: string
+      workCardHash: string
+      routedMemberID: string
+      rosterHash: string
+      grantHash: string
+      reviewPolicyHash: string
+      actor: {
+        version: "rfc8785-v1"
+        bytes: string
+        sha256: string
+      }
+      validatorID: "maestro"
+      validatorVersion: string
+      checks: Array<{
+        id: string
+        status: "PASS" | "FAIL" | "HOLD"
+        detail: string
+      }>
+      outcome: "VALID" | "INVALID" | "HOLD"
+    }
+  }
+}
+
+export type SyncEventMaestroReviewReceived = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.review.received.2"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      projectID: string
+      validationRecordID: string
+      workCardHash: string
+      routedMemberID: string
+      rosterHash: string
+      grantHash: string
+      reviewPolicyHash: string
+      actor: {
+        version: "rfc8785-v1"
+        bytes: string
+        sha256: string
+      }
+      reviewerID: "lucy"
+      reviewMethodVersion: string
+      artifact: {
+        workCardHash: string
+        sha256: string
+        baseSHA: string
+        headSHA: string
+        worktree: string
+        changedPaths: Array<string>
+      }
+      verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
+      findings: Array<{
+        path: string
+        line: number
+        message: string
+      }>
+    }
+  }
+}
+
+export type SyncEventMaestroAuthorizationGranted = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.authorization.granted.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      projectID: string
+      approvalMessageID: string
+      validationRecordID: string
+      workCardHash: string
+      routedMemberID: string
+      rosterHash: string
+      grantHash: string
+      reviewPolicyHash: string
+      actor: {
+        version: "rfc8785-v1"
+        bytes: string
+        sha256: string
+      }
+      reviewerID: "lucy"
+      taskIntentHash: string
+      methodVersion: string
+    }
+  }
+}
+
+export type SyncEventMaestroDispatchReserved = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.dispatch.reserved.2"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      sessionID: string
+      authorizationID: string
+      childSessionID: string
+      projectID: string
+      routedMemberID: string
+      taskIntentHash: string
+      permission: Array<{
+        permission: string
+        pattern: string
+        action: "allow" | "deny" | "ask"
+      }>
+    }
+  }
+}
+
+export type ConfigMaestro = {
+  atlas?: {
+    projectID: string
+    directory: string
+    sourceDirectory?: string
   }
 }
 
@@ -4388,15 +5247,8 @@ export type SessionNextStepEnded = {
     assistantMessageID: string
     finish: string
     cost: number
-    tokens: {
-      input: number
-      output: number
-      reasoning: number
-      cache: {
-        read: number
-        write: number
-      }
-    }
+    usageKnown?: boolean
+    tokens: SessionStepTokens
     snapshot?: string
     files?: Array<string>
   }
@@ -5300,6 +6152,475 @@ export type SessionNextCompactionDelta = {
     sessionID: string
     messageID: string
     text: string
+  }
+}
+
+export type MaestroApprovalPresented = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.approval.presented"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    id: string
+    sessionID: string
+    assistantMessageID: string
+    callID: string
+    planRevisionID: string
+    validationRecordID: string
+    projectID: string
+    memberID: string
+    revisionHash: string
+    validationHash: string
+    contextHash: string
+    policyHash: string
+    taskHash: string
+    intent: {
+      subagentType: string
+      prompt: string
+      model?: string
+      taskID?: string
+    }
+    methodVersion: string
+    plan: string
+    provenance: string
+    assumptions: Array<string>
+    validationLedger: string
+    contextState: "CURRENT"
+  }
+}
+
+export type MaestroApprovalDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.approval.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    projectID: string
+    memberID: string
+    presentationID: string
+    presentationMessageID: string
+    approvalMessageID: string
+    planRevisionID: string
+    validationRecordID: string
+    revisionHash: string
+    validationHash: string
+    contextHash: string
+    policyHash: string
+    taskHash: string
+    methodVersion: string
+    outcome: "APPROVED" | "DECLINED"
+    decisionTime: number
+  }
+}
+
+export type MaestroApprovalConsumed = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.approval.consumed"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    presentationID: string
+    approvalMessageID: string
+    taskHash: string
+    callID: string
+    childSessionID: string
+  }
+}
+
+export type MaestroApprovalReserved = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.approval.reserved"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    presentationID: string
+    approvalMessageID: string
+    projectID: string
+    memberID: string
+    planRevisionID: string
+    validationRecordID: string
+    revisionHash: string
+    validationHash: string
+    contextHash: string
+    policyHash: string
+    taskHash: string
+    callID: string
+    childSessionID: string
+    parentSessionID: string
+    agent: string
+    permission: Array<{
+      permission: string
+      pattern: string
+      action: "allow" | "deny" | "ask"
+    }>
+  }
+}
+
+export type MaestroAdmissionDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.admission.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    messageID: string
+    methodVersion: string
+    outcome: "ORIENT" | "CLARIFY" | "READY_TO_DRAFT"
+    reason?: "invalid-assessment" | "missing-usable-goal" | "material-blocker" | "active-work-conflict"
+    assessment?: {
+      kind: "orient" | "work"
+      goal?: string
+      known: Array<{
+        text: string
+        source: "stakeholder" | "orientation"
+      }>
+      proposals: Array<{
+        text: string
+        source: "maestro"
+      }>
+      unknowns: Array<string>
+      uncertainty: string
+      activeWorkEffect: "none" | "new-scope-or-revision"
+      reason: string
+    }
+  }
+}
+
+export type MaestroPlanRevisionRecorded = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.plan_revision.recorded"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    id: string
+    sessionID: string
+    admissionMessageID: string
+    methodVersion: string
+    revision: "v2"
+    goal: {
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }
+    acceptance: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    scope: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    constraints: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    reviewRequirement: {
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }
+    contextRequirement: "PENDING"
+    assumptions: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    risks: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    status: "PROPOSED"
+    revisionHash: string
+    createdAt: number
+    grounding: MaestroGrounding
+  }
+}
+
+export type MaestroContextRecorded = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.context.recorded"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    id: string
+    sessionID: string
+    planRevisionID: string
+    projectID: string
+    directory: string
+    mode: "GROUNDED"
+    branch: string
+    headSHA: string
+    changedPaths: Array<string>
+    currentEvidenceIdentityHash: string
+    contextHash: string
+    status: "CURRENT"
+    createdAt: number
+    planRevisionHash: string
+    sourceIdentityHash: string
+    toolPlan: MaestroContextToolPlan
+    skills: Array<MaestroLoadedOwnSkill>
+  }
+}
+
+export type MaestroClarificationDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.clarification.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    projectID: string
+    mode: "maestro"
+    predecessorID: string
+    methodVersion: string
+    decision: string
+    question: string
+  }
+}
+
+export type MaestroScopeDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.scope.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    projectID: string
+    mode: "maestro"
+    predecessorID: string
+    methodVersion: string
+    scopeID: string
+  }
+}
+
+export type MaestroHeldEntered = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.held.entered"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    projectID: string
+    mode: "maestro"
+    predecessorID: string
+    reason: string
+  }
+}
+
+export type MaestroValidationRecorded = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.validation.recorded"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    planRevisionID: string
+    contextRecordID: string
+    contextHash: string
+    reviewBaseSHA: string
+    projectID: string
+    workCardID: string
+    workCard: string
+    workCardHash: string
+    routedMemberID: string
+    rosterHash: string
+    grantHash: string
+    reviewPolicyHash: string
+    actor: {
+      version: "rfc8785-v1"
+      bytes: string
+      sha256: string
+    }
+    validatorID: "maestro"
+    validatorVersion: string
+    checks: Array<{
+      id: string
+      status: "PASS" | "FAIL" | "HOLD"
+      detail: string
+    }>
+    outcome: "VALID" | "INVALID" | "HOLD"
+  }
+}
+
+export type MaestroReviewReceived = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.review.received"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    projectID: string
+    validationRecordID: string
+    workCardHash: string
+    routedMemberID: string
+    rosterHash: string
+    grantHash: string
+    reviewPolicyHash: string
+    actor: {
+      version: "rfc8785-v1"
+      bytes: string
+      sha256: string
+    }
+    reviewerID: "lucy"
+    reviewMethodVersion: string
+    artifact: {
+      workCardHash: string
+      sha256: string
+      baseSHA: string
+      headSHA: string
+      worktree: string
+      changedPaths: Array<string>
+    }
+    verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
+    findings: Array<{
+      path: string
+      line: number
+      message: string
+    }>
+  }
+}
+
+export type MaestroAuthorizationGranted = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.authorization.granted"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    projectID: string
+    approvalMessageID: string
+    validationRecordID: string
+    workCardHash: string
+    routedMemberID: string
+    rosterHash: string
+    grantHash: string
+    reviewPolicyHash: string
+    actor: {
+      version: "rfc8785-v1"
+      bytes: string
+      sha256: string
+    }
+    reviewerID: "lucy"
+    taskIntentHash: string
+    methodVersion: string
+  }
+}
+
+export type MaestroDispatchReserved = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.dispatch.reserved"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    sessionID: string
+    authorizationID: string
+    childSessionID: string
+    projectID: string
+    routedMemberID: string
+    taskIntentHash: string
+    permission: Array<{
+      permission: string
+      pattern: string
+      action: "allow" | "deny" | "ask"
+    }>
   }
 }
 
@@ -6375,15 +7696,8 @@ export type EventSessionNextStepEnded = {
     assistantMessageID: string
     finish: string
     cost: number
-    tokens: {
-      input: number
-      output: number
-      reasoning: number
-      cache: {
-        read: number
-        write: number
-      }
-    }
+    usageKnown?: boolean
+    tokens: SessionStepTokens
     snapshot?: string
     files?: Array<string>
   }
@@ -6652,6 +7966,349 @@ export type EventSessionNextRevertCommitted = {
     timestamp: number
     sessionID: string
     messageID: string
+  }
+}
+
+export type EventMaestroApprovalPresented = {
+  id: string
+  type: "maestro.approval.presented"
+  properties: {
+    id: string
+    sessionID: string
+    assistantMessageID: string
+    callID: string
+    planRevisionID: string
+    validationRecordID: string
+    projectID: string
+    memberID: string
+    revisionHash: string
+    validationHash: string
+    contextHash: string
+    policyHash: string
+    taskHash: string
+    intent: {
+      subagentType: string
+      prompt: string
+      model?: string
+      taskID?: string
+    }
+    methodVersion: string
+    plan: string
+    provenance: string
+    assumptions: Array<string>
+    validationLedger: string
+    contextState: "CURRENT"
+  }
+}
+
+export type EventMaestroApprovalDecided = {
+  id: string
+  type: "maestro.approval.decided"
+  properties: {
+    sessionID: string
+    projectID: string
+    memberID: string
+    presentationID: string
+    presentationMessageID: string
+    approvalMessageID: string
+    planRevisionID: string
+    validationRecordID: string
+    revisionHash: string
+    validationHash: string
+    contextHash: string
+    policyHash: string
+    taskHash: string
+    methodVersion: string
+    outcome: "APPROVED" | "DECLINED"
+    decisionTime: number
+  }
+}
+
+export type EventMaestroApprovalConsumed = {
+  id: string
+  type: "maestro.approval.consumed"
+  properties: {
+    sessionID: string
+    presentationID: string
+    approvalMessageID: string
+    taskHash: string
+    callID: string
+    childSessionID: string
+  }
+}
+
+export type EventMaestroApprovalReserved = {
+  id: string
+  type: "maestro.approval.reserved"
+  properties: {
+    sessionID: string
+    presentationID: string
+    approvalMessageID: string
+    projectID: string
+    memberID: string
+    planRevisionID: string
+    validationRecordID: string
+    revisionHash: string
+    validationHash: string
+    contextHash: string
+    policyHash: string
+    taskHash: string
+    callID: string
+    childSessionID: string
+    parentSessionID: string
+    agent: string
+    permission: Array<{
+      permission: string
+      pattern: string
+      action: "allow" | "deny" | "ask"
+    }>
+  }
+}
+
+export type EventMaestroAdmissionDecided = {
+  id: string
+  type: "maestro.admission.decided"
+  properties: {
+    sessionID: string
+    messageID: string
+    methodVersion: string
+    outcome: "ORIENT" | "CLARIFY" | "READY_TO_DRAFT"
+    reason?: "invalid-assessment" | "missing-usable-goal" | "material-blocker" | "active-work-conflict"
+    assessment?: {
+      kind: "orient" | "work"
+      goal?: string
+      known: Array<{
+        text: string
+        source: "stakeholder" | "orientation"
+      }>
+      proposals: Array<{
+        text: string
+        source: "maestro"
+      }>
+      unknowns: Array<string>
+      uncertainty: string
+      activeWorkEffect: "none" | "new-scope-or-revision"
+      reason: string
+    }
+  }
+}
+
+export type EventMaestroPlanRevisionRecorded = {
+  id: string
+  type: "maestro.plan_revision.recorded"
+  properties: {
+    id: string
+    sessionID: string
+    admissionMessageID: string
+    methodVersion: string
+    revision: "v2"
+    goal: {
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }
+    acceptance: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    scope: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    constraints: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    reviewRequirement: {
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }
+    contextRequirement: "PENDING"
+    assumptions: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    risks: Array<{
+      value: string
+      source: "stakeholder" | "maestro" | "orientation"
+    }>
+    status: "PROPOSED"
+    revisionHash: string
+    createdAt: number
+    grounding: MaestroGrounding
+  }
+}
+
+export type EventMaestroContextRecorded = {
+  id: string
+  type: "maestro.context.recorded"
+  properties: {
+    id: string
+    sessionID: string
+    planRevisionID: string
+    projectID: string
+    directory: string
+    mode: "GROUNDED"
+    branch: string
+    headSHA: string
+    changedPaths: Array<string>
+    currentEvidenceIdentityHash: string
+    contextHash: string
+    status: "CURRENT"
+    createdAt: number
+    planRevisionHash: string
+    sourceIdentityHash: string
+    toolPlan: MaestroContextToolPlan
+    skills: Array<MaestroLoadedOwnSkill>
+  }
+}
+
+export type EventMaestroClarificationDecided = {
+  id: string
+  type: "maestro.clarification.decided"
+  properties: {
+    sessionID: string
+    projectID: string
+    mode: "maestro"
+    predecessorID: string
+    methodVersion: string
+    decision: string
+    question: string
+  }
+}
+
+export type EventMaestroScopeDecided = {
+  id: string
+  type: "maestro.scope.decided"
+  properties: {
+    sessionID: string
+    projectID: string
+    mode: "maestro"
+    predecessorID: string
+    methodVersion: string
+    scopeID: string
+  }
+}
+
+export type EventMaestroHeldEntered = {
+  id: string
+  type: "maestro.held.entered"
+  properties: {
+    sessionID: string
+    projectID: string
+    mode: "maestro"
+    predecessorID: string
+    reason: string
+  }
+}
+
+export type EventMaestroValidationRecorded = {
+  id: string
+  type: "maestro.validation.recorded"
+  properties: {
+    sessionID: string
+    planRevisionID: string
+    contextRecordID: string
+    contextHash: string
+    reviewBaseSHA: string
+    projectID: string
+    workCardID: string
+    workCard: string
+    workCardHash: string
+    routedMemberID: string
+    rosterHash: string
+    grantHash: string
+    reviewPolicyHash: string
+    actor: {
+      version: "rfc8785-v1"
+      bytes: string
+      sha256: string
+    }
+    validatorID: "maestro"
+    validatorVersion: string
+    checks: Array<{
+      id: string
+      status: "PASS" | "FAIL" | "HOLD"
+      detail: string
+    }>
+    outcome: "VALID" | "INVALID" | "HOLD"
+  }
+}
+
+export type EventMaestroReviewReceived = {
+  id: string
+  type: "maestro.review.received"
+  properties: {
+    sessionID: string
+    projectID: string
+    validationRecordID: string
+    workCardHash: string
+    routedMemberID: string
+    rosterHash: string
+    grantHash: string
+    reviewPolicyHash: string
+    actor: {
+      version: "rfc8785-v1"
+      bytes: string
+      sha256: string
+    }
+    reviewerID: "lucy"
+    reviewMethodVersion: string
+    artifact: {
+      workCardHash: string
+      sha256: string
+      baseSHA: string
+      headSHA: string
+      worktree: string
+      changedPaths: Array<string>
+    }
+    verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
+    findings: Array<{
+      path: string
+      line: number
+      message: string
+    }>
+  }
+}
+
+export type EventMaestroAuthorizationGranted = {
+  id: string
+  type: "maestro.authorization.granted"
+  properties: {
+    sessionID: string
+    projectID: string
+    approvalMessageID: string
+    validationRecordID: string
+    workCardHash: string
+    routedMemberID: string
+    rosterHash: string
+    grantHash: string
+    reviewPolicyHash: string
+    actor: {
+      version: "rfc8785-v1"
+      bytes: string
+      sha256: string
+    }
+    reviewerID: "lucy"
+    taskIntentHash: string
+    methodVersion: string
+  }
+}
+
+export type EventMaestroDispatchReserved = {
+  id: string
+  type: "maestro.dispatch.reserved"
+  properties: {
+    sessionID: string
+    authorizationID: string
+    childSessionID: string
+    projectID: string
+    routedMemberID: string
+    taskIntentHash: string
+    permission: Array<{
+      permission: string
+      pattern: string
+      action: "allow" | "deny" | "ask"
+    }>
   }
 }
 

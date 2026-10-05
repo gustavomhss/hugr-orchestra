@@ -76,6 +76,11 @@ const layer: Layer.Layer<Service, never, Project.Service | InstanceBootstrap.Ser
         yield* Deferred.done(entry.deferred, exit).pipe(Effect.asVoid)
       })
 
+    // Closing the store interrupts in-flight boots before the disposeAll finalizer awaits their
+    // entries, so an interrupted boot must still settle its entry or every waiter hangs.
+    const abandonLoad = (directory: string, entry: Entry) =>
+      removeEntry(directory, entry).pipe(Effect.andThen(Deferred.interrupt(entry.deferred)), Effect.asVoid)
+
     const emitDisposed = (input: { directory: string; project?: string }) =>
       Effect.sync(() =>
         GlobalBus.emit("event", {
@@ -117,7 +122,10 @@ const layer: Layer.Layer<Service, never, Project.Service | InstanceBootstrap.Ser
           yield* Effect.gen(function* () {
             yield* Effect.logInfo("creating instance", { directory: directory })
             yield* completeLoad(directory, input, entry)
-          }).pipe(Effect.forkIn(scope, { startImmediately: true }))
+          }).pipe(
+            Effect.onInterrupt(() => abandonLoad(directory, entry)),
+            Effect.forkIn(scope, { startImmediately: true }),
+          )
           return yield* restore(Deferred.await(entry.deferred))
         }),
       ).pipe(Effect.withSpan("InstanceStore.load"))
@@ -138,7 +146,10 @@ const layer: Layer.Layer<Service, never, Project.Service | InstanceBootstrap.Ser
               yield* emitDisposed({ directory, project: input.project?.id })
             }
             yield* completeLoad(directory, input, entry)
-          }).pipe(Effect.forkIn(scope, { startImmediately: true }))
+          }).pipe(
+            Effect.onInterrupt(() => abandonLoad(directory, entry)),
+            Effect.forkIn(scope, { startImmediately: true }),
+          )
           return yield* restore(Deferred.await(entry.deferred))
         }),
       ).pipe(Effect.withSpan("InstanceStore.reload"))

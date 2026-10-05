@@ -9,6 +9,7 @@ import { httpClient } from "../effect/app-node-platform"
 import { FSUtil } from "../fs-util"
 import { Global } from "../global"
 import { which } from "../util/which"
+import { EffectFlock } from "../util/effect-flock"
 
 export namespace RipgrepBinary {
   const VERSION = "15.1.0"
@@ -34,6 +35,7 @@ export namespace RipgrepBinary {
       const fs = yield* FSUtil.Service
       const http = HttpClient.filterStatusOk(yield* HttpClient.HttpClient)
       const spawner = yield* ChildProcessSpawner
+      const flock = yield* EffectFlock.Service
 
       const run = Effect.fnUntraced(function* (command: string, args: string[]) {
         const handle = yield* spawner.spawn(ChildProcess.make(command, args, { extendEnv: true, stdin: "ignore" }))
@@ -56,13 +58,20 @@ export namespace RipgrepBinary {
         const dir = yield* fs.makeTempDirectoryScoped({ directory: Global.Path.bin, prefix: "ripgrep-" })
 
         if (config.extension === "zip") {
-          const shell = (yield* Effect.sync(() => which("powershell.exe") ?? which("pwsh.exe"))) ?? "powershell.exe"
-          const result = yield* run(shell, [
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            `$global:ProgressPreference = 'SilentlyContinue'; Expand-Archive -LiteralPath '${archive.replaceAll("'", "''")}' -DestinationPath '${dir.replaceAll("'", "''")}' -Force`,
-          ])
+          const tar =
+            process.platform === "win32"
+              ? yield* Effect.sync(() =>
+                  which("tar.exe", { Path: path.join(process.env.SystemRoot ?? "C:\\Windows", "System32") }),
+                )
+              : yield* Effect.sync(() => which("tar"))
+          const result = tar
+            ? yield* run(tar, ["-xf", archive, "-C", dir])
+            : yield* run((yield* Effect.sync(() => which("powershell.exe") ?? which("pwsh.exe"))) ?? "powershell.exe", [
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                `$global:ProgressPreference = 'SilentlyContinue'; Expand-Archive -LiteralPath '${archive.replaceAll("'", "''")}' -DestinationPath '${dir.replaceAll("'", "''")}' -Force`,
+              ])
           if (result.code !== 0)
             throw new Error(
               result.stderr.trim() || result.stdout.trim() || `ripgrep extraction failed with code ${result.code}`,
@@ -105,19 +114,27 @@ export namespace RipgrepBinary {
             const url = `https://github.com/BurntSushi/ripgrep/releases/download/${VERSION}/${filename}`
             const archive = path.join(Global.Path.bin, filename)
 
-            yield* Effect.logInfo("downloading ripgrep", { url })
-            yield* fs.ensureDir(Global.Path.bin).pipe(Effect.orDie)
-            const bytes = yield* HttpClientRequest.get(url).pipe(
-              http.execute,
-              Effect.flatMap((response) => response.arrayBuffer),
-              Effect.mapError((cause) => (cause instanceof Error ? cause : new Error(String(cause)))),
-            )
-            if (bytes.byteLength === 0) throw new Error(`failed to download ripgrep from ${url}`)
+            return yield* flock.withLock(
+              Effect.gen(function* () {
+                if (yield* fs.isFile(target)) return target
 
-            yield* fs.writeWithDirs(archive, new Uint8Array(bytes))
-            yield* extract(archive, config, target)
-            yield* fs.remove(archive, { force: true }).pipe(Effect.ignore)
-            return target
+                yield* Effect.logInfo("downloading ripgrep", { url })
+                yield* fs.ensureDir(Global.Path.bin).pipe(Effect.orDie)
+                const bytes = yield* HttpClientRequest.get(url).pipe(
+                  http.execute,
+                  Effect.flatMap((response) => response.arrayBuffer),
+                  Effect.mapError((cause) => (cause instanceof Error ? cause : new Error(String(cause)))),
+                )
+                if (bytes.byteLength === 0) throw new Error(`failed to download ripgrep from ${url}`)
+
+                yield* fs.writeWithDirs(archive, new Uint8Array(bytes))
+                yield* extract(archive, config, target)
+                yield* fs.remove(archive, { force: true }).pipe(Effect.ignore)
+                return target
+              }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error))))),
+              `ripgrep-bootstrap:${platformKey}`,
+              Global.Path.bin,
+            )
           }),
         ),
       })
@@ -127,6 +144,6 @@ export namespace RipgrepBinary {
   export const node = makeGlobalNode({
     service: Service,
     layer: layer,
-    deps: [FSUtil.node, httpClient, CrossSpawnSpawner.node],
+    deps: [FSUtil.node, httpClient, CrossSpawnSpawner.node, EffectFlock.node],
   })
 }

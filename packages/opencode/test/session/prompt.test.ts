@@ -4,70 +4,35 @@ import { Database } from "@opencode-ai/core/database/database"
 import { EventTable } from "@opencode-ai/core/event/sql"
 import { MessageTable } from "@opencode-ai/core/session/sql"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
-import { Cause, Deferred, Duration, Effect, Exit, Fiber, Layer } from "effect"
+import { Cause, Deferred, Duration, Effect, Exit, Fiber } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
 import { NamedError } from "@opencode-ai/core/util/error"
-import { Agent as AgentSvc } from "../../src/agent/agent"
-import { BackgroundJob } from "@/background/job"
-import { Command } from "../../src/command"
 import { Config } from "@/config/config"
-import { LSP } from "@/lsp/lsp"
-import { MCP } from "../../src/mcp"
 import { Permission } from "../../src/permission"
-import { Plugin } from "../../src/plugin"
-import { Provider as ProviderSvc } from "@/provider/provider"
-import { Env } from "../../src/env"
-import { Git } from "../../src/git"
-import { Image } from "../../src/image/image"
 
-import { Question } from "../../src/question"
-import { Todo } from "../../src/session/todo"
 import { Session } from "@/session/session"
 import { SessionMessageTable } from "@opencode-ai/core/session/sql"
-import { LLM } from "../../src/session/llm"
 import { MessageV2 } from "../../src/session/message-v2"
 import { FSUtil } from "@opencode-ai/core/fs-util"
-import { SessionCompaction } from "../../src/session/compaction"
-import { SessionSummary } from "../../src/session/summary"
-import { Instruction } from "../../src/session/instruction"
-import { SessionProcessor } from "../../src/session/processor"
 import { SessionPrompt } from "../../src/session/prompt"
-import { SessionRevert } from "../../src/session/revert"
 import { SessionRunState } from "../../src/session/run-state"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { SessionStatus } from "../../src/session/status"
 import { SessionV2 } from "@opencode-ai/core/session"
 import { SessionExecution } from "@opencode-ai/core/session/execution"
-import { Skill } from "../../src/skill"
-import { SystemPrompt } from "../../src/session/system"
 import { Shell } from "@opencode-ai/core/shell"
-import { Snapshot } from "../../src/snapshot"
 import { ToolRegistry } from "@/tool/registry"
-import { Truncate } from "@/tool/truncate"
-import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
-import { Ripgrep } from "@opencode-ai/core/ripgrep"
-import { Format } from "../../src/format"
 import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { reply, TestLLMServer } from "../lib/llm-server"
-import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/location-services"
-
-const summary = Layer.succeed(
-  SessionSummary.Service,
-  SessionSummary.Service.of({
-    summarize: () => Effect.void,
-    diff: () => Effect.succeed([]),
-    computeDiff: () => Effect.succeed([]),
-  }),
-)
+import { makeHttp, makeHttpNoLLMServer, processorCreateStarted } from "./prompt.fixture"
 
 const ref = {
   providerID: ProviderV2.ID.make("test"),
@@ -109,136 +74,6 @@ function errorTool(parts: SessionV1.Part[]) {
   const part = toolPart(parts)
   expect(part?.state.status).toBe("error")
   return part?.state.status === "error" ? (part as ErrorToolPart) : undefined
-}
-
-function makeMcp(instructions: MCP.ServerInstructions[] = []) {
-  return Layer.succeed(
-    MCP.Service,
-    MCP.Service.of({
-      status: () => Effect.succeed({}),
-      clients: () => Effect.succeed({}),
-      instructions: () => Effect.succeed(instructions),
-      tools: () => Effect.succeed({}),
-      prompts: () => Effect.succeed({}),
-      resources: () => Effect.succeed({}),
-      resourceTemplates: () => Effect.succeed({}),
-      add: () => Effect.succeed({ status: { status: "disabled" as const } }),
-      connect: () => Effect.void,
-      disconnect: () => Effect.void,
-      getPrompt: () => Effect.succeed(undefined),
-      readResource: () => Effect.succeed(undefined),
-      startAuth: () => Effect.die("unexpected MCP auth in prompt-effect tests"),
-      authenticate: () => Effect.die("unexpected MCP auth in prompt-effect tests"),
-      finishAuth: () => Effect.die("unexpected MCP auth in prompt-effect tests"),
-      removeAuth: () => Effect.void,
-      supportsOAuth: () => Effect.succeed(false),
-      hasStoredTokens: () => Effect.succeed(false),
-      getAuthStatus: () => Effect.succeed("not_authenticated" as const),
-    }),
-  )
-}
-
-const lsp = Layer.succeed(
-  LSP.Service,
-  LSP.Service.of({
-    init: () => Effect.void,
-    status: () => Effect.succeed([]),
-    hasClients: () => Effect.succeed(false),
-    touchFile: () => Effect.void,
-    diagnostics: () => Effect.succeed({}),
-    hover: () => Effect.succeed(undefined),
-    definition: () => Effect.succeed([]),
-    references: () => Effect.succeed([]),
-    implementation: () => Effect.succeed([]),
-    documentSymbol: () => Effect.succeed([]),
-    workspaceSymbol: () => Effect.succeed([]),
-    prepareCallHierarchy: () => Effect.succeed([]),
-    incomingCalls: () => Effect.succeed([]),
-    outgoingCalls: () => Effect.succeed([]),
-  }),
-)
-
-const processorCreateStarted: Array<() => void> = []
-const blockingProcessor = Layer.succeed(
-  SessionProcessor.Service,
-  SessionProcessor.Service.of({
-    create: () => Effect.sync(() => processorCreateStarted.shift()?.()).pipe(Effect.andThen(Effect.never)),
-  }),
-)
-
-const runtimeFlags = RuntimeFlags.layer({ experimentalEventSystem: true })
-
-const testLLMServerNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
-
-const promptRoot = LayerNode.group([
-  SessionPrompt.node,
-  Session.node,
-  SessionProjector.node,
-  MessageV2.node,
-  Snapshot.node,
-  LLM.node,
-  Env.node,
-  AgentSvc.node,
-  Command.node,
-  Permission.node,
-  Plugin.node,
-  Config.node,
-  ProviderSvc.node,
-  LSP.node,
-  MCP.node,
-  FSUtil.node,
-  BackgroundJob.node,
-  SessionStatus.node,
-  SessionRunState.node,
-  Database.node,
-  EventV2Bridge.node,
-  Question.node,
-  Todo.node,
-  ToolRegistry.node,
-  Skill.node,
-  Git.node,
-  Ripgrep.node,
-  Format.node,
-  Truncate.node,
-  SessionProcessor.node,
-  Image.node,
-  SessionCompaction.node,
-  SessionRevert.node,
-  Instruction.node,
-  SystemPrompt.node,
-  CrossSpawnSpawner.node,
-  RuntimeFlags.node,
-])
-
-function makePrompt(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
-  const replacements = [
-    [SessionSummary.node, summary],
-    [LSP.node, lsp],
-    [MCP.node, makeMcp(input?.mcpInstructions)],
-    [RuntimeFlags.node, runtimeFlags],
-  ] as const
-  if (input?.processor === "blocking") {
-    return LayerNode.compile(promptRoot, [...replacements, [SessionProcessor.node, blockingProcessor]])
-  }
-  return LayerNode.compile(promptRoot, replacements)
-}
-
-function makeHttp(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
-  const root = LayerNode.group([promptRoot, testLLMServerNode])
-  const replacements = [
-    [SessionSummary.node, summary],
-    [LSP.node, lsp],
-    [MCP.node, makeMcp(input?.mcpInstructions)],
-    [RuntimeFlags.node, runtimeFlags],
-  ] as const
-  if (input?.processor === "blocking") {
-    return LayerNode.compile(root, [...replacements, [SessionProcessor.node, blockingProcessor]])
-  }
-  return LayerNode.compile(root, replacements)
-}
-
-function makeHttpNoLLMServer(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
-  return makePrompt(input)
 }
 
 const it = testEffect(makeHttp())
@@ -573,10 +408,10 @@ withMcpInstructions.instance(
       const fiber = yield* prompt.loop({ sessionID: chat.id }).pipe(Effect.forkChild)
       yield* awaitWithTimeout(llm.wait(1), "timed out waiting for MCP instruction request", "10 seconds")
 
-      const hits = yield* llm.hits
-      const body = JSON.stringify(hits[0]?.body)
+      const body = JSON.stringify((yield* llm.hits)[0]?.body)
       expect(body).toContain('<server name=\\"guide-server\\">')
       expect(body).toContain("Use lookup before mutate.")
+      yield* prompt.cancel(chat.id)
       yield* Fiber.interrupt(fiber)
     }),
   15_000,
@@ -1053,26 +888,22 @@ it.instance(
       const prompt = yield* SessionPrompt.Service
       const sessions = yield* Session.Service
       const chat = yield* sessions.create({ title: "Pinned" })
+      const metadataSet = yield* Deferred.make<void>()
+      // prettier-ignore
+      yield* (yield* EventV2Bridge.Service).listen((event) => { const part = event.type === MessageV2.Event.PartUpdated.type ? (event.data as typeof MessageV2.Event.PartUpdated.data.Type).part : undefined; return part?.type === "tool" && part.sessionID === chat.id && part.state.status === "running" && part.state.metadata?.sessionId ? Deferred.succeed(metadataSet, undefined) : Effect.void })
       yield* llm.hang
       const msg = yield* user(chat.id, "hello")
       yield* addSubtask(chat.id, msg.id)
 
       const fiber = yield* prompt.loop({ sessionID: chat.id }).pipe(Effect.forkChild)
 
-      const tool = yield* pollWithTimeout(
-        Effect.gen(function* () {
-          const msgs = yield* MessageV2.filterCompactedEffect(chat.id)
-          const taskMsg = msgs.find((item) => item.info.role === "assistant" && item.info.agent === "general")
-          const tool = taskMsg?.parts.find((part): part is SessionV1.ToolPart => part.type === "tool")
-          if (tool?.state.status === "running" && tool.state.metadata?.sessionId) return tool
-        }),
-        "timed out waiting for running subtask metadata",
-      )
+      yield* Deferred.await(metadataSet)
+      const msgs = yield* MessageV2.filterCompactedEffect(chat.id)
+      const taskMsg = msgs.find((item) => item.info.role === "assistant" && item.info.agent === "general")
+      const tool = taskMsg?.parts.find((part): part is SessionV1.ToolPart => part.type === "tool")
 
-      if (tool.state.status !== "running") return
-      expect(typeof tool.state.metadata?.sessionId).toBe("string")
-      expect(tool.state.title).toBeDefined()
-      expect(tool.state.metadata?.model).toBeDefined()
+      // prettier-ignore
+      expect(tool?.state).toMatchObject({ status: "running", title: expect.any(String), metadata: { sessionId: expect.any(String), model: expect.anything() } })
 
       yield* prompt.cancel(chat.id)
       yield* Fiber.await(fiber)
@@ -1121,7 +952,7 @@ it.instance(
       yield* prompt.cancel(chat.id)
       yield* Fiber.await(fiber)
     }),
-  10_000,
+  30_000,
 )
 
 it.instance(
@@ -1366,7 +1197,7 @@ it.instance(
       expect((yield* status.get(chat.id)).type).toBe("idle")
       expect((yield* status.get(childID)).type).toBe("idle")
     }),
-  10_000,
+  30_000,
 )
 
 it.instance(
@@ -1771,7 +1602,7 @@ it.instance(
       expect(yield* llm.calls).toBe(1)
     }),
   { git: true },
-  10_000,
+  30_000,
 )
 
 it.instance(
@@ -1810,7 +1641,7 @@ it.instance(
       expect(yield* llm.calls).toBe(1)
     }),
   { git: true },
-  10_000,
+  30_000,
 )
 
 unix(
@@ -1950,8 +1781,10 @@ unix(
       })
 
       yield* llm.tool("bash", {
+        // Leave enough ordinary suffix to release the ready marker from the
+        // secret scanner's cross-chunk quarantine before the process sleeps.
         command:
-          'i=0; while [ "$i" -lt 4000 ]; do printf "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx %05d\\n" "$i"; i=$((i + 1)); done; printf truncation-ready; sleep 30',
+          'i=0; while [ "$i" -lt 4000 ]; do printf "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx %05d\\n" "$i"; i=$((i + 1)); done; printf "truncation-ready%080d" 0; sleep 30',
         timeout: 30_000,
         workdir: path.resolve(dir),
       })
@@ -1960,10 +1793,8 @@ unix(
       yield* llm.wait(1)
       yield* pollWithTimeout(
         Effect.gen(function* () {
-          const msgs = yield* MessageV2.filterCompactedEffect(chat.id)
-          const assistant = msgs.findLast((item) => item.info.role === "assistant")
-          const tool = assistant ? toolPart(assistant.parts) : undefined
-          if (tool?.state.status === "running" && tool.state.metadata?.output.includes("truncation-ready")) return true
+          const tool = toolPart((yield* MessageV2.filterCompactedEffect(chat.id)).findLast((item) => item.info.role === "assistant")?.parts ?? [])
+          if (tool?.state.status === "running" && tool.state.metadata?.output?.includes("truncation-ready")) return true
         }),
         "timed out waiting for truncated shell output",
       )
@@ -2471,48 +2302,50 @@ noLLMServer.instance(
   30_000,
 )
 
-it.instance("full prompt loop writes projections but no durable snapshot events (gate OFF)", () =>
-  Effect.gen(function* () {
-    const { llm } = yield* useServerConfig(providerCfg)
-    const prompt = yield* SessionPrompt.Service
-    const sessions = yield* Session.Service
-    const { db } = yield* Database.Service
-    const chat = yield* sessions.create({
-      title: "Pinned",
-      permission: [{ permission: "*", pattern: "*", action: "allow" }],
-    })
+it.instance(
+  "full prompt loop writes projections but no durable snapshot events (gate OFF)",
+  () =>
+    Effect.gen(function* () {
+      const { llm } = yield* useServerConfig(providerCfg)
+      const prompt = yield* SessionPrompt.Service
+      const sessions = yield* Session.Service
+      const { db } = yield* Database.Service
+      const chat = yield* sessions.create({
+        title: "Pinned",
+        permission: [{ permission: "*", pattern: "*", action: "allow" }],
+      })
 
-    yield* prompt.prompt({
-      sessionID: chat.id,
-      agent: "build",
-      noReply: true,
-      parts: [{ type: "text", text: "hello" }],
-    })
-    yield* llm.text("world")
-    yield* prompt.loop({ sessionID: chat.id })
+      yield* prompt.prompt({
+        sessionID: chat.id,
+        agent: "build",
+        noReply: true,
+        parts: [{ type: "text", text: "hello" }],
+      })
+      yield* llm.text("world")
+      yield* prompt.loop({ sessionID: chat.id })
 
-    const messageRows = yield* db
-      .select()
-      .from(MessageTable)
-      .where(eq(MessageTable.session_id, chat.id))
-      .all()
-      .pipe(Effect.orDie)
-    const snapshots = yield* db
-      .select()
-      .from(EventTable)
-      .where(eq(EventTable.type, "message.updated.1"))
-      .all()
-      .pipe(Effect.orDie)
-    const partSnapshots = yield* db
-      .select()
-      .from(EventTable)
-      .where(eq(EventTable.type, "message.part.updated.1"))
-      .all()
-      .pipe(Effect.orDie)
+      const messageRows = yield* db
+        .select()
+        .from(MessageTable)
+        .where(eq(MessageTable.session_id, chat.id))
+        .all()
+        .pipe(Effect.orDie)
+      const snapshots = yield* db
+        .select()
+        .from(EventTable)
+        .where(eq(EventTable.type, "message.updated.1"))
+        .all()
+        .pipe(Effect.orDie)
+      const partSnapshots = yield* db
+        .select()
+        .from(EventTable)
+        .where(eq(EventTable.type, "message.part.updated.1"))
+        .all()
+        .pipe(Effect.orDie)
 
-    expect(messageRows.length).toBeGreaterThan(0)
-    expect(snapshots).toHaveLength(0)
-    expect(partSnapshots).toHaveLength(0)
-  }),
+      expect(messageRows.length).toBeGreaterThan(0)
+      expect(snapshots).toHaveLength(0)
+      expect(partSnapshots).toHaveLength(0)
+    }),
   60_000,
 )

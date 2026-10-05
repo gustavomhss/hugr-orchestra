@@ -98,6 +98,7 @@ export async function setupTimeline(
     deviceScaleFactor?: number
     seedHistory?: boolean
     protocol?: "v1" | "v2"
+    onPrompt?: (input: { sessionID: string; body: unknown }) => void
   } = {},
 ) {
   const sessions = input.sessions ?? [session()]
@@ -124,6 +125,7 @@ export async function setupTimeline(
     pageMessages: () => ({
       items: messages,
     }),
+    onPrompt: input.onPrompt,
   })
   await page.addInitScript((settings) => {
     localStorage.setItem(

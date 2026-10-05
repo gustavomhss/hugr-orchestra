@@ -1,0 +1,61 @@
+{
+  "what": "Re-check of the A4 report's OPEN FINDING: 'negation's 0-false-admit is proven non-vacuous by nothing on the operating (dist-form) index'. Drives the SHIPPED semantic mutation-bench on a freshly rebuilt operating index at current master and reads the non-vacuity teeth directly. Judge-free: the label comes from the independent tsc oracle, no LLM anywhere.",
+  "why": "BENCHMARKS.md (PR #258) published that open finding as a stated limit. This probe tests whether the limit is still true. It is NOT: the finding was closed by #192 (WP-C1, 2026-08-18), which re-anchored the teeth onto the leg that is load-bearing on a dist-form index. The A4 report (same date) predates that commit and was never amended.",
+  "rev": "b889db6c927ac1c482a17669ad2851876183b356 (master)",
+  "measured_utc": "2026-08-29",
+  "recipe": [
+    "npx tsc -b",
+    "npx scip-typescript index --output .atlas/index.scip",
+    "ATLAS_SEM_BENCH=1 npx vitest run packages/adapter-io/test/semantic-bench.test.ts --pool=forks --poolOptions.forks.singleFork=true"
+  ],
+  "environment": {
+    "node": "v22.17.1",
+    "npm": "10.9.2",
+    "typescript": "5.9.3",
+    "scip-typescript": "0.4.0",
+    "vitest": "2.1.9",
+    "index_scip_bytes": 20307116,
+    "build_state": "dist-form (tsc -b BEFORE the index) — the operating recipe"
+  },
+  "population": {
+    "targets": 1534,
+    "scopes": 19,
+    "negation_rows_driven": 1404,
+    "negation_TRUE_denominator": 1200,
+    "checkability_note": "SUPERSEDED 2026-08-29 (later the same day): the bench now prints the raw numerator/denominator beside every percentage (packages/adapter-io/test/support/bench-scorer.ts carries falseAdmitNum/Den and recallNum/Den through; semantic-bench.test.ts prints them on every per-arm line and both negation diagnostic lines). The fractions above are therefore MEASURED, read off the run, not inferred. The earlier inference is preserved here because it was CONFIRMED exactly: this artifact previously derived 25/204 and 0/204 arithmetically from the rounded percentages, and the instrumented re-run printed 25/204 and 0/204. Recorded as evidence that the arithmetic was sound, not to claim inference is as good as measurement — it is not, which is why the instrument was changed.",
+    "negation_FALSE_denominator": 204
+  },
+  "headline": {
+    "negation_door_falseAdmit": "0.00% == 0/204 (MEASURED — the bench now prints raw counts)",
+    "negation_teeth_callersBlind_falseAdmit": "12.25% == 25/204 (MEASURED — the bench now prints raw counts)",
+    "verdict": "NON-VACUOUS. Blinding gate (c) (`reverseCallers` forced to []) — one leg of the byte-identical shipped door, nothing else touched — drives the negation false-admit from 0.00% to 12.25%. The shipped assertion `expect(teeth.negation.falseAdmit).toBeGreaterThan(s.negation.falseAdmit)` (semantic-bench.test.ts) is LIVE and GREEN, not the `expect(0).toBeGreaterThan(0)` the A4 report found.",
+    "why_not_tautological": "Blinding `reverseCallers` defeats ONLY gate (c), the final refutation step. Rows already abstained by gates (b0)/(b1)/(b2) (scope-open / escape-open / dynamic-reach) abstain identically under both doors, so a rise is NOT guaranteed by construction: if every FALSE row were caught upstream of gate (c) this teeth would legitimately measure 0 and the assertion would FAIL. It rises because gate (c) is the leg actually carrying the soundness on this index."
+  },
+  "the_stale_leg": {
+    "negation_gateOff_diagnostic_falseAdmit": "0.00% == 0/204 (MEASURED)",
+    "reading": "The #99 collapsed-local opaque gate — the leg the A4 report probed — is NOT load-bearing on a dist-form index: `canonicalizeSymbol` resolves the cross-package refs instead of collapsing them onto opaque `local` symbols, so gate (c) refutes them first. It remains load-bearing on a dist-ABSENT index (where it measures 132/163 = 80.98%). The bench still measures and PRINTS this leg, labelled REPORTED-not-asserted."
+  },
+  "secondary_finding_header_vs_proven": {
+    "raw_header_rates": {
+      "count": "100.00%",
+      "relation": "100.00%",
+      "dependency": "100.00%"
+    },
+    "reading": "These raw per-arm rates count EVERY admit, including the unsealed `justified` advisory tier. Since #210 (abstain ⇒ justified, never drop), a grounded claim the oracle cannot refute is admitted as an advisory BY DESIGN and carries no soundness claim. The soundness assertions range over the PROVEN-SEALED subset only (`d.proven`). Reading the raw header rate as a soundness number is a category error — the two tiers are measured differently by construction.",
+    "proven_sealed_dependency_false_admits": 369,
+    "proven_sealed_property_asserted_green": "every one of the 369 is backed by a REAL in-scope tsc reference (the call-vs-reference oracle gap), i.e. 0 fabricated edges. This is the live mechanical form of the A4 report's one-time hand adjudication of 318 rows."
+  },
+  "suite_result": "packages/adapter-io/test/semantic-bench.test.ts — 15 passed, 2 todo, 264s (single fork).",
+  "honesty": "Scope of the teeth, as the test states it: it proves the 0 is earned for the rows the door decides by REFUTATION. Rows that abstain (scope-open / escape-open) are non-admitted for conservative reasons this mutation does not disturb; their contribution to the 0 is a refusal, not a proof. Both numbers are printed by the bench.",
+  "population_drift_vs_the_A4_report": "The A4 report measured the negation FALSE pool at n=163 on rev 9eb4d7f (2026-08-17). This run measures 204 FALSE rows on rev b889db6 (2026-08-29) — the repo grew (targets 1333 -> 1534) and the planted pool grew with it. So BENCHMARKS.md's headline '0 / 163' is the A4 artifact's population, not this run's; the door's false-admit is 0 on BOTH (0/163 there, 0/204 here). Flagged so the two populations are not read as one.",
+  "instrumented_rerun": {
+    "when": "2026-08-29, after the raw-count change landed on master (ae751ab)",
+    "printed": {
+      "negation_door": "falseAdmit=0.00% (0/204)  recallTrue=35.67% (428/1200)  n=1404",
+      "negation_teeth_callersBlind": "falseAdmit=12.25% (25/204)",
+      "negation_gateOff_diagnostic": "falseAdmit=0.00% (0/204)"
+    },
+    "suite": "15 passed, 2 todo (single fork)",
+    "reading": "Identical to the pre-instrumentation run in every figure. The instrument changed; the measurement did not."
+  }
+}

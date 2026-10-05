@@ -35,7 +35,7 @@ function normalize(text: string): string {
       [new RegExp(`<TMPDIR>${PATH_SEP}oc-cli-[A-Za-z0-9]+`, "g"), "<HOME>"],
       [/\s+\[string\] \[default: "<HOME>"\]/g, ' [string] [default: "<HOME>"]'],
     ],
-  })
+  }).trimEnd()
 }
 
 // Top-level commands. Order matches what `opencode --help` prints today;
@@ -101,7 +101,7 @@ describe("opencode CLI help-text snapshots", () => {
         const topLevel = yield* opencode.spawn(["--help"], { env: SNAPSHOT_ENV })
         expect(topLevel.exitCode).toBe(0)
         expect(topLevel.stderr.endsWith("\n")).toBe(true)
-        expect(topLevel.stderr).toContain("--mini")
+        expect(topLevel.stderr).toContain("--pure")
         expect(topLevel.stderr).not.toContain("--thinking")
         expect(topLevel.stderr).not.toContain("--variant")
         expect(topLevel.stderr).not.toContain("--demo")
@@ -126,10 +126,10 @@ describe("opencode CLI help-text snapshots", () => {
         )
 
         for (const { argv, result } of results) {
-          // yargs writes --help to stderr, not stdout. Snapshotting stderr
-          // means our test catches the help body; stdout for these commands
-          // is expected to be empty.
-          expect(normalize(result.stderr)).toMatchSnapshot(`opencode ${argv.join(" ")} --help`)
+          // Top-level help uses `show()` and writes stderr. Lazy command help
+          // comes from yargs during command loading and writes stdout.
+          expect(result.stderr).toBe("")
+          expect(normalize(result.stdout)).toMatchSnapshot(`opencode ${argv.join(" ")} --help`)
         }
         if (failures.length > 0) {
           throw new Error(`Help text failed for:\n  ${failures.join("\n  ")}`)

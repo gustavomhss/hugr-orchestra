@@ -1393,11 +1393,9 @@ export function createServerSession(
       })
     },
     history: {
+      loaded: (sessionID: string) => meta.limit[sessionID] !== undefined && !meta.loading[sessionID],
       more: (sessionID: string) =>
-        data.message[sessionID] !== undefined &&
-        meta.limit[sessionID] !== undefined &&
-        !meta.complete[sessionID] &&
-        !!meta.cursor[sessionID],
+        meta.limit[sessionID] !== undefined && !meta.complete[sessionID] && !!meta.cursor[sessionID],
       loading: (sessionID: string) => meta.loading[sessionID] ?? false,
       async loadMore(sessionID: string, count = historyMessagePageSize) {
         touch(sessionID)

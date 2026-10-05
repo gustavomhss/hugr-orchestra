@@ -1,4 +1,4 @@
-import { useNavigate } from "@solidjs/router"
+import { useLocation, useNavigate } from "@solidjs/router"
 import { useCommand, type CommandOption } from "@/context/command"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { previewSelectedLines } from "@opencode-ai/session-ui/pierre/selection-bridge"
@@ -14,12 +14,13 @@ import { useTerminal } from "@/context/terminal"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { findLast } from "@opencode-ai/core/util/array"
-import { createSessionTabs } from "@/pages/session/helpers"
+import { createSidePanelTabs } from "@/pages/session/helpers"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { Message, Part, UserMessage } from "@opencode-ai/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { createSessionOwnership } from "./session-ownership"
+import { cockpitView, updateCockpitView } from "./orchestra-cockpit-state"
 import { useLocal } from "@/context/local"
 
 export type SessionCommandContext = {
@@ -51,6 +52,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   const layout = useLayout()
   const local = useLocal()
   const navigate = useNavigate()
+  const location = useLocation()
   const { params, sessionKey, tabs, view } = useSessionLayout()
   const sessionOwnership = createSessionOwnership(sessionKey)
   const sessionArchive = useSessionArchive()
@@ -81,13 +83,14 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (!tab.startsWith("file://")) return tab
     return file.tab(tab)
   }
-  const tabState = createSessionTabs({
+  const tabState = createSidePanelTabs({
     tabs,
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: actions.review,
     hasReview,
     fileBrowser: actions.fileBrowser,
+    cockpit: settings.general.newLayoutDesigns,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab
@@ -421,6 +424,29 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     )
   }
 
+  // Read-only S20 destination; "Show in chat" reuses the existing #message-<id> navigation.
+  const openGovernance = () => {
+    const sessionID = params.id
+    if (!sessionID) return
+    const owner = sessionOwnership.capture()
+    const route = `${location.pathname}${location.search}`
+    void openDialog(
+      () => import("./orchestra-governance"),
+      (x) =>
+        dialog.showOwned((dispose) => (
+          <x.DialogOrchestraGovernance
+            sessionID={sessionID}
+            current={owner.current}
+            dispose={dispose}
+            onShowMessage={(id) => {
+              dispose()
+              owner.run(() => navigate(`${route}#message-${id}`, { replace: true }))
+            }}
+          />
+        )),
+    )
+  }
+
   const shareCmds = () => {
     if (sync().data.config.share === "disabled") return []
     return [
@@ -500,6 +526,13 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       onSelect: exportSession,
     }),
     sessionCommand({
+      id: "maestro.governance",
+      title: language.t("orchestra.governance.command"),
+      description: language.t("orchestra.governance.command.description"),
+      disabled: !params.id,
+      onSelect: openGovernance,
+    }),
+    sessionCommand({
       id: "session.archive",
       title: language.t("command.session.archive"),
       keybind: "mod+shift+backspace",
@@ -569,6 +602,15 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       id: "tasks.toggle",
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
+        // Orchestra shows Tasks in the cockpit beside the Dock: reveal it and toggle the Tasks detail.
+        if (settings.general.newLayoutDesigns()) {
+          const shown = view().reviewPanel.opened() && tabs().active() === "apps"
+          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
+          view().reviewPanel.open()
+          tabs().open("apps")
+          tabs().setActive("apps")
+          return
+        }
         if (tabs().active() === "tasks") {
           tabs().close("tasks")
           return

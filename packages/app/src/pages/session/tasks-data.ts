@@ -1,311 +1,411 @@
 import { createMemo } from "solid-js"
+import { createStore } from "solid-js/store"
+import type {
+  AssistantMessage,
+  Message,
+  Part,
+  PermissionRequest,
+  QuestionRequest,
+  Session,
+  SessionStatus,
+} from "@opencode-ai/sdk/v2/client"
+import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
+import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { useSessionLayout } from "./session-layout"
-import type { Part } from "@opencode-ai/sdk/v2/client"
 
-type TaskToolState = Extract<Part, { type: "tool" }>["state"]
+type ToolPart = Extract<Part, { type: "tool" }>
 
-export type TasksItemState = "running" | "needs-input" | "completed" | "failed"
+export type TasksItemState = "running" | "needs-input" | "completed" | "error" | "interrupted" | "unknown"
 
 export interface TasksItem {
-  /** Stable key: child session id for subagents, callID for shell tools. */
+  /** Server-qualified key, so rows from two servers never collide. */
   key: string
   kind: "agent" | "shell"
   headline: string
   agent?: string
   state: TasksItemState
-  startTime: number
+  /** Undefined when no synced record says when the work started. */
+  startTime?: number
+  /** Undefined unless a terminal record carries the end time. */
   endTime?: number
   /** Child session id — the official join key (task.ts metadata.sessionId). */
   childId?: string
   /** Parent session that spawned the work. */
   sessionId: string
+  /** References from the loaded projection, not guessed from timestamps or call IDs. */
+  sourceMessageID?: string
+  sourcePartID?: string
+  callID?: string
+  originUserMessageID?: string
   /** Nested subagent count ((+N), Claude panel parity). */
   nested?: number
-  /** Live aggregates scanned from the child session transcript. */
   stats?: TaskStats
 }
 
+/** Undefined fields are unknown; numbers are values the synced data proves, zeros included. */
 export interface TaskStats {
   model?: string
   agent?: string
-  toolCalls: number
-  fails: number
-  tokensIn: number
-  tokensOut: number
-  cost: number
+  toolCalls?: number
+  fails?: number
+  tokens?: { input: number; output: number }
+  cost?: number
+}
+
+export type TasksInput = {
+  scope: ServerScope
+  sessionID: string
+  sessions: readonly Session[]
+  message: Record<string, Message[] | undefined>
+  part: Record<string, Part[] | undefined>
+  status: Record<string, SessionStatus | undefined>
+  permission: Record<string, PermissionRequest[] | undefined>
+  question: Record<string, QuestionRequest[] | undefined>
+  /** True only after a transcript page has loaded, with no page load in flight. */
+  loaded: (sessionID: string) => boolean
+  /** True while older transcript pages exist that the store has not loaded. */
+  more: (sessionID: string) => boolean
+  /** Session cost/tokens are server data only on v2; the v1 compat layer zero-fills missing ones. */
+  aggregates: boolean
 }
 
 /**
  * Derives the background-work list for the current session from the already
- * synced reactive stores — sessions (incl. children via parentID),
- * message parts, session status and pending permissions.
- *
- * No fetching, no polling, no event wiring: every input below is a synced
- * store, so the panel updates automatically with the transcript.
+ * synced reactive stores — sessions (incl. children via parentID), message
+ * parts, session status and pending requests. No fetching, no polling.
  */
-
-const toolTitle = (state: TaskToolState): string | undefined => {
-  if (state.status === "completed" || state.status === "running") return state.title
-  return undefined
-}
-
-const toolStart = (state: TaskToolState): number | undefined => {
-  if (state.status === "pending") return undefined
-  return state.time.start
-}
-
-const toolEnd = (state: TaskToolState): number | undefined => {
-  if (state.status === "completed" || state.status === "error") return state.time.end
-  return undefined
-}
-
-const toolMetadata = (part: Extract<Part, { type: "tool" }>): Record<string, unknown> => {
-  if (part.state.status === "pending") return (part.metadata ?? {}) as Record<string, unknown>
-  return (part.metadata ?? part.state.metadata ?? {}) as Record<string, unknown>
-}
-
 export function createTasksData() {
   const sync = useSync()
+  const serverSDK = useServerSDK()
   const { params } = useSessionLayout()
-  const sessionID = createMemo(() => params.id)
-
-  const children = createMemo(() => {
-    const sid = sessionID()
-    if (!sid) return []
-    return (sync().data.session ?? []).filter((s) => s.parentID === sid)
-  })
-
-  const taskParts = createMemo(() => {
-    const sid = sessionID()
-    if (!sid) return []
-    const messages = sync().data.session_message ?? {}
-    const partsByMessage = sync().data.part ?? {}
-    const out: { part: Extract<Part, { type: "tool" }>; messageID: string }[] = []
-    for (const msg of messages[sid] ?? []) {
-      for (const part of partsByMessage[msg.id] ?? []) {
-        if (part.type !== "tool") continue
-        if (part.tool !== "task" && part.tool !== "bash" && part.tool !== "shell") continue
-        out.push({ part, messageID: msg.id })
-      }
-    }
-    return out
-  })
-
-  const grandchildren = createMemo(() => {
-    const map = new Map<string, number>()
-    for (const s of sync().data.session ?? []) {
-      if (!s.parentID) continue
-      map.set(s.parentID, (map.get(s.parentID) ?? 0) + 1)
-    }
-    return map
-  })
-
-  /* Pending permissions indexed both ways: PermissionRequest carries the
-     owning sessionID and, when raised by a tool call, tool.callID. */
-  const pendingPermissions = createMemo(() => {
-    const sessions = new Set<string>()
-    const calls = new Set<string>()
-    for (const [sid, reqs] of Object.entries(sync().data.permission ?? {})) {
-      if (!reqs || reqs.length === 0) continue
-      sessions.add(sid)
-      for (const req of reqs) {
-        if (req.tool) calls.add(req.tool.callID)
-      }
-    }
-    return { sessions, calls }
-  })
 
   const items = createMemo(() => {
-    const sid = sessionID()
-    if (!sid) return { running: [] as TasksItem[], finished: [] as TasksItem[] }
-    const data = sync().data
-    const perms = pendingPermissions()
-const nested = grandchildren()
-  const running: TasksItem[] = []
-  const finished: TasksItem[] = []
-  // Agent cards are keyed by child session id. `children()` is the
-  // authoritative source; task tool parts enrich (description/agent/model)
-  // or fall back to an orphan card when the child session is not synced
-  // yet. Shells stay callID-keyed.
-  const agentByChild = new Map<string, TasksItem>()
-  const seen = new Set<string>()
-
-  // Child session titles are titled "<description> (@<agent> subagent)".
-  const cleanTitle = (title: string) => title.replace(/ \(@[^)]* subagent\)$/, "")
-
-  const needsInput = (childId: string | undefined, callID: string): boolean =>
-      (childId !== undefined && perms.sessions.has(childId)) || perms.calls.has(callID)
-
-    const stateOf = (
-      childId: string | undefined,
-      callID: string,
-      toolState: string,
-    ): TasksItemState => {
-      if (needsInput(childId, callID)) return "needs-input"
-      if (toolState === "error") return "failed"
-      if (toolState === "completed") return "completed"
-      return "running"
-    }
-
-    const push = (item: TasksItem) => {
-      if (item.state === "running" || item.state === "needs-input") running.push(item)
-      else finished.push(item)
-    }
-
-    for (const child of children()) {
-      const working = data.session_working(child.id)
-      const live = perms.sessions.has(child.id) ? "needs-input" : working ? "running" : "completed"
-      const item: TasksItem = {
-        key: child.id,
-        kind: "agent",
-        headline: cleanTitle(child.title || ""),
-        state: live,
-        startTime: child.time.created ?? Date.now(),
-        childId: child.id,
-        sessionId: sid,
-        nested: nested.get(child.id) || undefined,
-        stats: childStats(data, child.id),
-      }
-      agentByChild.set(child.id, item)
-      seen.add(child.id)
-    }
-
-    for (const { part } of taskParts()) {
-      const st = part.state.status
-      if (part.tool === "task") {
-        const meta = toolMetadata(part)
-        const childId = typeof meta.sessionId === "string" ? meta.sessionId : undefined
-        const input = (part.state.input ?? {}) as Record<string, unknown>
-        const headline =
-          toolTitle(part.state) ??
-          (typeof input.description === "string" && input.description.length > 0
-            ? input.description
-            : "")
-        const agent =
-          typeof input.subagent_type === "string" && input.subagent_type.length > 0
-            ? input.subagent_type
-            : undefined
-
-        if (childId) {
-          const existing = agentByChild.get(childId)
-          if (existing) {
-            // Enrich the children-derived card with task-call details.
-            if (headline) existing.headline = headline
-            if (agent) existing.agent = agent
-            if (!existing.stats?.model) {
-              const toolModel = meta.model as { modelID?: string; providerID?: string } | undefined
-              if (toolModel?.modelID && toolModel?.providerID) {
-                const stats = existing.stats ?? { toolCalls: 0, fails: 0, tokensIn: 0, tokensOut: 0, cost: 0 }
-                stats.model = shortModel(toolModel.providerID, toolModel.modelID)
-                existing.stats = stats
-              }
-            }
-            continue
-          }
-          // Child session not in the store yet — orphan card keyed by child id.
-          const orphan: TasksItem = {
-            key: childId,
-            kind: "agent",
-            headline: headline || childId,
-            agent,
-            state: stateOf(childId, part.callID, st),
-            startTime: toolStart(part.state) ?? Date.now(),
-            endTime:
-              st === "completed" || st === "error" ? (toolEnd(part.state) ?? Date.now()) : undefined,
-            childId,
-            sessionId: sid,
-            nested: nested.get(childId) || undefined,
-            stats: childStats(data, childId),
-          }
-          const toolModel = meta.model as { modelID?: string; providerID?: string } | undefined
-          if (!orphan.stats?.model && toolModel?.modelID && toolModel?.providerID) {
-            const s = orphan.stats ?? { toolCalls: 0, fails: 0, tokensIn: 0, tokensOut: 0, cost: 0 }
-            s.model = shortModel(toolModel.providerID, toolModel.modelID)
-            orphan.stats = s
-          }
-          agentByChild.set(childId, orphan)
-          seen.add(childId)
-          push(orphan)
-        }
-      } else {
-        // Foreground shell tools surface as Shell cards while running.
-        if (st !== "running" && st !== "pending") continue
-        if (seen.has(part.callID)) continue
-        seen.add(part.callID)
-        running.push({
-          key: part.callID,
-          kind: "shell",
-          headline: toolTitle(part.state) ?? part.tool,
-          state: perms.calls.has(part.callID) ? "needs-input" : "running",
-          startTime: toolStart(part.state) ?? Date.now(),
-          sessionId: sid,
-        })
-      }
-    }
-
-    for (const item of agentByChild.values()) {
-      push(item)
-    }
-
-    running.sort((a, b) => b.startTime - a.startTime)
-    finished.sort((a, b) => (b.endTime ?? 0) - (a.endTime ?? 0))
-    return { running: running, finished: finished.slice(0, 12) }
+    const sessionID = params.id
+    if (!sessionID) return { running: [] as TasksItem[], finished: [] as TasksItem[] }
+    const store = sync()
+    return deriveTasks({
+      scope: serverSDK().scope,
+      sessionID,
+      sessions: store.data.session ?? [],
+      message: store.data.message,
+      part: store.data.part,
+      status: store.data.session_status,
+      permission: store.data.permission,
+      question: store.data.question,
+      loaded: store.session.history.loaded,
+      more: store.session.history.more,
+      aggregates: serverSDK().protocolKind() === "v2",
+    })
   })
 
   const liveCount = createMemo(() => items().running.length)
 
-  return { items, liveCount }
+  const ready = () => sync().ready && (!params.id || sync().data.message[params.id] !== undefined)
+  return { items, liveCount, ready }
 }
 
-function shortModel(providerID: string, modelID: string): string {
-  const short = modelID.replace(/^(anthropic|openai|google|opencode)-/i, "")
-  return `${providerID}/${short}`
-}
+/** The one Tasks projection a session owns; every Tasks and Activity view reads this instance. */
+export type TasksData = ReturnType<typeof createTasksData>
 
-/** Scans a child session transcript into live aggregates. Pure derivation
-    over the synced message/part stores — no fetching. */
-export function childStats(
-  data: {
-    session_message: Record<string, { id: string }[] | undefined>
-    part: Record<string, Part[] | undefined>
-  },
-  childId: string,
-): TaskStats {
-  const stats: TaskStats = { toolCalls: 0, fails: 0, tokensIn: 0, tokensOut: 0, cost: 0 }
-  const messages = data.session_message[childId] ?? []
-  for (const msg of messages) {
-    const full = msg as unknown as {
-      type?: string
-      role?: string
-      modelID?: string
-      providerID?: string
-      model?: { id?: string; providerID?: string }
-      modelId?: string
-      providerId?: string
-      model_id?: string
-      provider_id?: string
-      agent?: string
-      tokens?: { input?: number; output?: number }
-      cost?: number
-    }
-    if (full.type === "assistant" || full.role === "assistant") {
-      // Two sync shapes coexist: promise-client messages carry
-      // `type: "assistant"` + `model: { id, providerID }`; the v1 shape
-      // carries flat `modelID/providerID`. Read both.
-      const modelID = full.model?.id ?? full.modelID ?? full.modelId ?? full.model_id
-      const providerID = full.model?.providerID ?? full.providerID ?? full.providerId ?? full.provider_id
-      if (modelID && providerID) stats.model = shortModel(providerID, modelID)
-      if (full.agent) stats.agent = full.agent
-      stats.tokensIn += full.tokens?.input ?? 0
-      stats.tokensOut += full.tokens?.output ?? 0
-      stats.cost += full.cost ?? 0
-    }
-    for (const part of data.part[msg.id] ?? []) {
-      if (part.type !== "tool") continue
-      stats.toolCalls += 1
-      if (part.state.status === "error") stats.fails += 1
-    }
+/**
+ * The compact Tasks summary: active work first (needs input, then running; newest known start
+ * first, unknown starts after known ones, then by key). Finished work fills only the slots active
+ * work leaves free, failures first. Counts come from the whole collection, never from the rows shown.
+ * The detail lists every task in the same order, so the summary rows are its head. The side panel shows
+ * no counts, so `recent` holds only the 12 newest finished tasks, whatever their outcome.
+ */
+export function summarizeTasks(items: { running: TasksItem[]; finished: TasksItem[] }, limit = 3) {
+  const active = items.running.toSorted(
+    (a, b) =>
+      Number(b.state === "needs-input") - Number(a.state === "needs-input") ||
+      newest(a.startTime, b.startTime) ||
+      a.key.localeCompare(b.key),
+  )
+  const finished = items.finished.toSorted(
+    (a, b) =>
+      Number(b.state === "error") - Number(a.state === "error") ||
+      newest(finishedTime(a), finishedTime(b)) ||
+      a.key.localeCompare(b.key),
+  )
+  const rows = [...active.slice(0, limit), ...finished.slice(0, Math.max(0, limit - active.length))]
+  return {
+    rows,
+    running: active,
+    finished,
+    recent: items.finished
+      .toSorted((a, b) => newest(finishedTime(a), finishedTime(b)) || a.key.localeCompare(b.key))
+      .slice(0, 12),
+    active: active.length,
+    needsInput: active.filter((item) => item.state === "needs-input").length,
+    hiddenFailures: finished.filter((item) => item.state === "error" && !rows.includes(item)).length,
+    total: active.length + finished.length,
   }
-  return stats
+}
+
+/** When a finished task ended. A failure may never record an end (its last message never completed), so its start stands in. */
+export function finishedTime(task: TasksItem) {
+  if (task.state === "error") return task.endTime ?? task.startTime
+  return task.endTime
+}
+
+/** Comparator for optional timestamps: newest first, unknown after every known one. */
+export function newest(a: number | undefined, b: number | undefined) {
+  if (a === undefined) return b === undefined ? 0 : 1
+  if (b === undefined) return -1
+  return b - a
+}
+
+export function deriveTasks(input: TasksInput) {
+  const waiting = waitingRequests(input)
+  const messages = input.message[input.sessionID] ?? []
+  const users = new Set(
+    messages
+      .filter((message) => message.role === "user" && message.sessionID === input.sessionID)
+      .map((message) => message.id),
+  )
+  const origins = new Map(
+    messages.flatMap((message) =>
+      message.role === "assistant" && message.sessionID === input.sessionID && users.has(message.parentID)
+        ? [[message.id, message.parentID] as const]
+        : [],
+    ),
+  )
+  const calls = messages.flatMap((message) =>
+    (input.part[message.id] ?? []).filter(
+      (part): part is ToolPart =>
+        part.type === "tool" && part.sessionID === input.sessionID && part.messageID === message.id,
+    ),
+  )
+  const source = (part: ToolPart | undefined) =>
+    part && {
+      sourceMessageID: part.messageID,
+      sourcePartID: part.id,
+      callID: part.callID,
+      originUserMessageID: origins.get(part.messageID),
+    }
+  // The latest task call per child wins: resuming a task reuses its child session.
+  const taskCalls = new Map(
+    calls.flatMap((part) => {
+      const childID = part.tool === "task" ? text(toolMetadata(part).sessionId) : undefined
+      return childID ? [[childID, part] as const] : []
+    }),
+  )
+  const sessions = new Map(input.sessions.map((session) => [session.id, session]))
+  const childIDs = new Set([
+    ...input.sessions.flatMap((session) => (session.parentID === input.sessionID ? [session.id] : [])),
+    ...taskCalls.keys(),
+  ])
+  const agents = [...childIDs].map((childID) => ({
+    ...agentItem(input, waiting, childID, sessions.get(childID), taskCalls.get(childID)),
+    ...source(taskCalls.get(childID)),
+  }))
+  // Foreground shell tools surface as Shell cards while running.
+  const shells = new Map(
+    calls
+      .filter((part) => (part.tool === "bash" || part.tool === "shell") && !terminal(part.state))
+      .map((part): [string, TasksItem] => [
+        part.callID,
+        {
+          key: ScopedKey.from(input.scope, input.sessionID, "shell", part.callID),
+          kind: "shell",
+          headline: toolTitle(part.state) ?? part.tool,
+          state: waiting.calls.has(part.callID) ? "needs-input" : "running",
+          startTime: toolStart(part.state),
+          sessionId: input.sessionID,
+          ...source(part),
+        },
+      ]),
+  )
+  const all = [...agents, ...shells.values()]
+  return {
+    running: all.filter(live).sort((a, b) => (b.startTime ?? 0) - (a.startTime ?? 0)),
+    finished: all.filter((item) => !live(item)).sort((a, b) => (b.endTime ?? 0) - (a.endTime ?? 0)),
+  }
+}
+
+export function live(item: Pick<TasksItem, "state">) {
+  return item.state === "running" || item.state === "needs-input"
+}
+
+export type StopState = "pending" | "failed"
+
+/**
+ * Stop interrupts the child session only — never the parent — and keeps the outcome visible: pending
+ * while in flight, failed with retry on rejection. Task keys are server and session qualified, so an
+ * outcome that settles after the view moved to another session still lands on its own row.
+ */
+export function createTaskStops(interrupt: (sessionID: string) => Promise<unknown>) {
+  const [stops, setStops] = createStore<Record<string, StopState | undefined>>({})
+  return {
+    state: (key: string) => stops[key],
+    stop(item: TasksItem) {
+      const sessionID = item.childId
+      if (!sessionID || stops[item.key] === "pending") return
+      setStops(item.key, "pending")
+      interrupt(sessionID).then(
+        () => setStops(item.key, undefined),
+        () => setStops(item.key, "failed"),
+      )
+    },
+  }
+}
+
+function agentItem(
+  input: TasksInput,
+  waiting: ReturnType<typeof waitingRequests>,
+  childID: string,
+  child: Session | undefined,
+  call: ToolPart | undefined,
+): TasksItem {
+  const callInput = call?.state.input ?? {}
+  const outcome = agentOutcome(input, waiting, childID, call)
+  return {
+    key: ScopedKey.from(input.scope, input.sessionID, "agent", childID),
+    kind: "agent",
+    // Child session titles read "<description> (@<agent> subagent)".
+    headline:
+      (call && toolTitle(call.state)) ||
+      text(callInput.description) ||
+      (child ? (child.title ?? "").replace(/ \(@[^)]* subagent\)$/, "") : childID),
+    agent: text(callInput.subagent_type),
+    state: outcome.state,
+    startTime: child?.time.created ?? (call ? toolStart(call.state) : undefined),
+    endTime: outcome.endTime,
+    childId: childID,
+    sessionId: input.sessionID,
+    nested: input.sessions.filter((session) => session.parentID === childID).length || undefined,
+    stats: agentStats(input, childID, child, call),
+  }
+}
+
+/** Claims an outcome only from a record that proves it; otherwise "unknown". */
+function agentOutcome(
+  input: TasksInput,
+  waiting: ReturnType<typeof waitingRequests>,
+  childID: string,
+  call: ToolPart | undefined,
+): { state: TasksItemState; endTime?: number } {
+  if (waiting.sessions.has(childID) || (call && waiting.calls.has(call.callID))) return { state: "needs-input" }
+  if ((input.status[childID]?.type ?? "idle") !== "idle") return { state: "running" }
+  // A background task call completes as soon as its job starts, so only the
+  // child transcript can prove how the child itself ended.
+  if (call && toolMetadata(call).background !== true) {
+    if (call.state.status === "completed") return { state: "completed", endTime: call.state.time.end }
+    if (call.state.status === "error")
+      return { state: interruptedCall(call) ? "interrupted" : "error", endTime: call.state.time.end }
+    return { state: "running" }
+  }
+  const last = input.message[childID]?.at(-1)
+  if (last?.role !== "assistant") return { state: "unknown" }
+  if (last.error?.name === "MessageAbortedError") return { state: "interrupted", endTime: last.time.completed }
+  if (last.error) return { state: "error", endTime: last.time.completed }
+  if (last.finish && !["tool-calls", "unknown"].includes(last.finish))
+    return { state: "completed", endTime: last.time.completed }
+  return { state: "unknown" }
+}
+
+function agentStats(
+  input: TasksInput,
+  childID: string,
+  child: Session | undefined,
+  call: ToolPart | undefined,
+): TaskStats {
+  const messages = input.message[childID]
+  const last = messages?.findLast((message): message is AssistantMessage => message.role === "assistant")
+  const complete = input.loaded(childID) && transcriptComplete(messages, input.part, input.more(childID))
+  const assistants = complete
+    ? messages.filter((message): message is AssistantMessage => message.role === "assistant")
+    : undefined
+  const tools = complete
+    ? messages.flatMap((message) => (input.part[message.id] ?? []).filter((part) => part.type === "tool"))
+    : undefined
+  const callModel = toolMetadata(call).model
+  const aggregate = input.aggregates ? child : undefined
+  return {
+    model:
+      (last && shortModel(last.providerID, last.modelID)) ??
+      (child?.model && shortModel(child.model.providerID, child.model.id)) ??
+      (isRecord(callModel) ? shortModel(text(callModel.providerID), text(callModel.modelID)) : undefined),
+    agent: last?.agent || child?.agent || undefined,
+    toolCalls: tools?.length,
+    fails: tools?.filter((part) => part.state.status === "error").length,
+    // Session aggregates are server-maintained; a complete transcript is the only other proof.
+    tokens: aggregate?.tokens
+      ? { input: aggregate.tokens.input, output: aggregate.tokens.output }
+      : assistants && {
+          input: assistants.reduce((sum, message) => sum + message.tokens.input, 0),
+          output: assistants.reduce((sum, message) => sum + message.tokens.output, 0),
+        },
+    cost: aggregate?.cost ?? assistants?.reduce((sum, message) => sum + message.cost, 0),
+  }
+}
+
+/**
+ * A loaded transcript proves counts only when no older page remains, every
+ * message has parts, and every assistant turn's prompt is present.
+ */
+function transcriptComplete(
+  messages: Message[] | undefined,
+  parts: TasksInput["part"],
+  more: boolean,
+): messages is Message[] {
+  if (!messages || more || messages.some((message) => parts[message.id] === undefined)) return false
+  const prompts = new Set(messages.flatMap((message) => (message.role === "user" ? [message.id] : [])))
+  return prompts.size > 0 && messages.every((message) => message.role === "user" || prompts.has(message.parentID))
+}
+
+/** Pending permissions and questions, indexed by owning session and by raising tool call. */
+function waitingRequests(input: TasksInput) {
+  const requests = [
+    ...Object.values(input.permission).flatMap((list) => list ?? []),
+    ...Object.values(input.question).flatMap((list) => list ?? []),
+  ]
+  return {
+    sessions: new Set(requests.map((request) => request.sessionID)),
+    calls: new Set(requests.flatMap((request) => (request.tool ? [request.tool.callID] : []))),
+  }
+}
+
+// processor.ts marks parent aborts; task.ts reports a cancelled child as "Task cancelled".
+function interruptedCall(call: ToolPart) {
+  if (call.state.status !== "error") return false
+  return (
+    toolMetadata(call).interrupted === true ||
+    call.state.error === "Tool execution aborted" ||
+    call.state.error === "Task cancelled"
+  )
+}
+
+function terminal(state: ToolPart["state"]) {
+  return state.status === "completed" || state.status === "error"
+}
+
+function toolTitle(state: ToolPart["state"]) {
+  if (state.status === "completed" || state.status === "running") return state.title || undefined
+  return undefined
+}
+
+function toolStart(state: ToolPart["state"]) {
+  if (state.status === "pending") return undefined
+  return state.time.start
+}
+
+function toolMetadata(part: ToolPart | undefined): Record<string, unknown> {
+  if (!part) return {}
+  if (part.state.status === "pending") return part.metadata ?? {}
+  return part.metadata ?? part.state.metadata ?? {}
+}
+
+function shortModel(providerID: string | undefined, modelID: string | undefined) {
+  if (!providerID || !modelID) return undefined
+  return `${providerID}/${modelID.replace(/^(anthropic|openai|google|opencode)-/i, "")}`
+}
+
+function text(value: unknown) {
+  return typeof value === "string" && value.length > 0 ? value : undefined
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value)
 }

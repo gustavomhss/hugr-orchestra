@@ -1,6 +1,7 @@
 import windowState from "electron-window-state"
 import { resolveThemeVariant } from "@opencode-ai/ui/theme/resolve"
 import type { DesktopTheme } from "@opencode-ai/ui/theme/types"
+import type { NativeTitlebarFrame } from "@opencode-ai/app/native-titlebar"
 import oc2ThemeJson from "../../../ui/src/theme/themes/oc-2.json"
 import { randomUUID } from "node:crypto"
 import { rmSync } from "node:fs"
@@ -17,6 +18,7 @@ import { createWindowRegistry } from "./window-registry"
 import { safeWindowURL } from "./window-state"
 import { resolveExternalURL, resolveLocalFilePath } from "./external-url"
 import { registerAppDockWindow } from "./app-dock-rpc"
+import { requireTitlebarFrame, titlebarFramePosition } from "./titlebar-frame"
 
 const root = dirname(fileURLToPath(import.meta.url))
 const rendererRoot = join(root, "../renderer")
@@ -52,6 +54,7 @@ let relaunchHandler = () => {
   app.exit(0)
 }
 const titlebarThemes = new WeakMap<BrowserWindow, Partial<TitlebarTheme>>()
+const titlebarFrames = new WeakMap<BrowserWindow, NativeTitlebarFrame>()
 const pinchZoomEnabled = new WeakMap<BrowserWindow, boolean>()
 const windowIDs = new WeakMap<BrowserWindow, string>()
 const registry = createWindowRegistry<BrowserWindow>({
@@ -125,8 +128,22 @@ export function setTitlebar(win: BrowserWindow, theme: Partial<TitlebarTheme> = 
 }
 
 export function updateTitlebar(win: BrowserWindow) {
+  if (win.isDestroyed() || win.webContents.isDestroyed()) return
+  if (process.platform === "darwin") {
+    if (win.isFullScreen()) return
+    win.setWindowButtonPosition(titlebarFramePosition(titlebarFrames.get(win), win.webContents.getZoomFactor()))
+    return
+  }
   if (process.platform !== "win32") return
   win.setTitleBarOverlay(overlay(titlebarThemes.get(win), win.webContents.getZoomFactor()))
+}
+
+export function setTitlebarFrame(win: BrowserWindow, value: unknown) {
+  if (win.isDestroyed() || win.webContents.isDestroyed()) return
+  const frame = requireTitlebarFrame(value, win.getContentBounds(), win.webContents.getZoomFactor())
+  if (frame) titlebarFrames.set(win, frame)
+  if (!frame) titlebarFrames.delete(win)
+  updateTitlebar(win)
 }
 
 export function setPinchZoomEnabled(enabled: boolean) {
@@ -535,6 +552,7 @@ function wireZoom(win: BrowserWindow) {
 function wireFullscreen(win: BrowserWindow) {
   const send = (fullscreen: boolean) => {
     if (win.isDestroyed() || win.webContents.isDestroyed()) return
+    if (process.platform === "darwin" && !fullscreen) updateTitlebar(win)
     win.webContents.send("window-fullscreen-changed", fullscreen)
   }
 

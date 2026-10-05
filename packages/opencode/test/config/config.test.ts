@@ -6,6 +6,7 @@ import { Cause, Effect, Exit, Layer, Logger, Option } from "effect"
 import { NamedError } from "@opencode-ai/core/util/error"
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http"
 import { Config } from "@/config/config"
+import { ConfigCacheTest } from "../fixture/config-cache"
 import { ConfigManaged } from "@/config/managed"
 import { ConfigParse } from "../../src/config/parse"
 import { ConfigV2Compat } from "../../src/config/v2-compat"
@@ -265,10 +266,7 @@ async function check(map: (dir: string) => string) {
   if (process.platform !== "win32") return
   await using globalTmp = await tmpdir()
   await using tmp = await tmpdir({ git: true, config: { snapshot: true } })
-  const prev = Global.Path.config
-  ;(Global.Path as { config: string }).config = globalTmp.path
-  await clear()
-  try {
+  await ConfigCacheTest.withDirectory(globalTmp.path, clear, async () => {
     await writeConfig(globalTmp.path, {
       $schema: "https://opencode.ai/config.json",
       snapshot: false,
@@ -276,17 +274,12 @@ async function check(map: (dir: string) => string) {
     await withTestInstance({
       directory: map(tmp.path),
       fn: async (ctx) => {
-        const cfg = await load(ctx)
-        expect(cfg.snapshot).toBe(true)
+        expect((await load(ctx)).snapshot).toBe(true)
         expect(ctx.directory).toBe(Filesystem.resolve(tmp.path))
         expect(ctx.project.id).not.toBe(ProjectV2.ID.global)
       },
     })
-  } finally {
-    await InstanceRuntime.disposeAllInstances()
-    ;(Global.Path as { config: string }).config = prev
-    await clear()
-  }
+  }, () => InstanceRuntime.disposeAllInstances())
 }
 
 it.instance("loads config with defaults when no files exist", () =>

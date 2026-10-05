@@ -262,16 +262,42 @@ exports[`tool parameters JSON Schema (wire shape) read 1`] = `
       "type": "string",
     },
     "limit": {
-      "description": "The maximum number of lines to read (defaults to 2000)",
-      "maximum": 9007199254740991,
-      "minimum": 0,
-      "type": "integer",
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        {
+          "type": "string",
+        },
+      ],
+      "description": "Maximum number of lines to read (defaults to 2000)",
     },
     "offset": {
-      "description": "The line number to start reading from (1-indexed)",
-      "maximum": 9007199254740991,
-      "minimum": 0,
-      "type": "integer",
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "exclusiveMaximum": 0,
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+          ],
+        },
+        {
+          "type": "string",
+        },
+      ],
+      "description": "Line number to start reading from (1-indexed). Negative values read from end (for example, -3 reads last 3 lines).",
     },
   },
   "required": [
@@ -301,6 +327,10 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "authorizationID": {
+      "description": "AuthorizationGranted ID for current team dispatch.",
+      "type": "string",
+    },
     "background": {
       "description": "Run the agent in the background. You will be notified when it completes. DO NOT sleep, poll, or proactively check on its progress",
       "type": "boolean",
@@ -311,6 +341,62 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
     },
     "description": {
       "description": "A short (3-5 words) description of the task",
+      "type": "string",
+    },
+    "governed": {
+      "description": "Exact approval binding required only for an explicit governed Task.",
+      "properties": {
+        "approvalMessageID": {
+          "type": "string",
+        },
+        "contextHash": {
+          "type": "string",
+        },
+        "memberID": {
+          "type": "string",
+        },
+        "planRevisionID": {
+          "type": "string",
+        },
+        "policyHash": {
+          "type": "string",
+        },
+        "projectID": {
+          "type": "string",
+        },
+        "revisionHash": {
+          "type": "string",
+        },
+        "sessionID": {
+          "type": "string",
+        },
+        "taskHash": {
+          "type": "string",
+        },
+        "validationHash": {
+          "type": "string",
+        },
+        "validationRecordID": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "sessionID",
+        "projectID",
+        "memberID",
+        "approvalMessageID",
+        "planRevisionID",
+        "revisionHash",
+        "validationRecordID",
+        "validationHash",
+        "contextHash",
+        "policyHash",
+        "taskHash",
+      ],
+      "type": "object",
+    },
+    "model": {
+      "description": "Run the subagent on a specific model as 'providerID/modelID' (e.g. 'openrouter/deepseek/deepseek-chat', 'groq/llama-3.3-70b-versatile'). Overrides the subagent's configured model and the parent session model. The provider part also selects credentials: OAuth subscriptions (Claude Max, ChatGPT) and API keys resolve per providerID at run time — use a custom provider alias in opencode.json to pin a second key for the same backend.",
       "type": "string",
     },
     "prompt": {

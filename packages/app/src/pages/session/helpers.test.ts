@@ -6,6 +6,7 @@ import {
   createOpenReviewFile,
   createOpenSessionFileTab,
   createSessionTabs,
+  createSidePanelTabs,
   focusTerminalById,
   getTabReorderIndex,
   planTasksTab,
@@ -273,6 +274,44 @@ describe("createSessionTabs", () => {
       expect(result.openFileOpen()).toBe(false)
       expect(result.panelTabs()).toEqual(["file://src/a.ts"])
       expect(result.activeTab()).toBe("file://src/a.ts")
+      dispose()
+    })
+  })
+})
+
+describe("createSessionTabs in the Orchestra cockpit", () => {
+  test("a persisted Tasks tab resolves to the Apps cockpit, and stays Tasks elsewhere", () => {
+    createRoot((dispose) => {
+      const [state] = createStore({ active: "tasks" as string | undefined, all: ["tasks"] })
+      const tabs = createMemo(() => ({ active: () => state.active, all: () => state.all }))
+      const input = { tabs, pathFromTab: () => undefined, normalizeTab: (tab: string) => tab, apps: () => true }
+      const cockpit = createSessionTabs({ ...input, cockpit: () => true })
+      const legacy = createSessionTabs(input)
+
+      expect(cockpit.activeTab()).toBe("apps")
+      expect(cockpit.closableTab()).toBeUndefined()
+      expect(legacy.activeTab()).toBe("tasks")
+      expect(legacy.closableTab()).toBe("tasks")
+      dispose()
+    })
+  })
+
+  test("side panel commands cannot close the cockpit or a file tab hidden behind Apps", () => {
+    createRoot((dispose) => {
+      const panel = (active: string, cockpit: boolean) =>
+        createSidePanelTabs({
+          tabs: createMemo(() => ({ active: () => active, all: () => ["file://src/a.ts", "tasks"] })),
+          pathFromTab: (tab) => (tab.startsWith("file://") ? tab.slice("file://".length) : undefined),
+          normalizeTab: (tab) => tab,
+          cockpit: () => cockpit,
+        })
+
+      expect(panel("tasks", true).activeTab()).toBe("apps")
+      expect(panel("tasks", true).closableTab()).toBeUndefined()
+      expect(panel("tasks", false).closableTab()).toBe("tasks")
+      expect(panel("apps", true).closableTab()).toBeUndefined()
+      expect(panel("apps", false).closableTab()).toBeUndefined()
+      expect(panel("apps", false).activeFileTab()).toBeUndefined()
       dispose()
     })
   })

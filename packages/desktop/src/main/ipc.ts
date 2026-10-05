@@ -31,11 +31,13 @@ import {
   openLocalFileURL,
   setPinchZoomEnabled,
   setTitlebar,
+  setTitlebarFrame,
   updateTitlebar,
 } from "./windows"
 import type { UpdaterController } from "./updater-controller"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 import { createDesktopDraftStore } from "./draft-store"
+import { registerJanitorIpcHandlers } from "./janitor-ipc"
 import { nativeT } from "./native-translations"
 import {
   createAppDock,
@@ -113,6 +115,23 @@ const appDockEventOptionalString = (value: unknown) => {
 const hasExactKeys = (value: Record<string, unknown>, keys: string[]) =>
   Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key))
 
+// Resize, Hide and Show name the tab and generation they target, so the desktop can drop stale ones.
+const appDockTab = (value: unknown) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid App Dock tab")
+  const tab = value as Record<string, unknown>
+  if (
+    !hasExactKeys(tab, ["tabID", "generation"]) ||
+    typeof tab.tabID !== "string" ||
+    tab.tabID.length === 0 ||
+    typeof tab.generation !== "number" ||
+    !Number.isSafeInteger(tab.generation) ||
+    tab.generation < 1
+  ) {
+    throw new Error("Invalid App Dock tab")
+  }
+  return { tabID: tab.tabID, generation: tab.generation }
+}
+
 const appDockEventIdentity = (value: unknown) => {
   const identity = appDockEventRecord(value)
   if (
@@ -154,7 +173,7 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
       },
     }
   }
-  if (source.type === "tab-opened") {
+  if (source.type === "tab-opened" || source.type === "tab-opened-background") {
     if (
       !hasExactKeys(payload, ["tabID", "generation", "url"]) ||
       typeof payload.tabID !== "string" ||
@@ -166,7 +185,7 @@ const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
       throw new Error("Invalid App Dock event")
     }
     return {
-      type: "tab-opened",
+      type: source.type,
       payload: {
         tabID: payload.tabID,
         generation: appDockEventNumber(payload.generation),
@@ -479,12 +498,21 @@ export function registerIpcHandlers(deps: Deps) {
       return tab
     },
   )
-  ipcMain.handle("app-dock-resize", (event: IpcMainInvokeEvent, bounds: unknown) => {
+  ipcMain.handle("app-dock-resize", (event: IpcMainInvokeEvent, tab: unknown, bounds: unknown) => {
     appDockSender(event)
-    appDock.resize(event.sender.id, panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()))
+    appDock.resize(
+      event.sender.id,
+      appDockTab(tab),
+      panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()),
+    )
   })
-  ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent) => {
-    browserDock.hide(event.sender.id, appDockSender(event))
+  ipcMain.handle("app-dock-hide", (event: IpcMainInvokeEvent, tab: unknown) => {
+    browserDock.hide(event.sender.id, appDockSender(event), appDockTab(tab))
+  })
+  ipcMain.handle("app-dock-occlude", (event: IpcMainInvokeEvent, occluded: unknown) => {
+    appDockSender(event)
+    if (typeof occluded !== "boolean") throw new Error("Invalid App Dock occlusion")
+    appDock.occlude(event.sender.id, occluded)
   })
   ipcMain.handle("app-dock-close", (event: IpcMainInvokeEvent) => {
     browserDock.closeAll(event.sender.id, appDockSender(event))
@@ -516,12 +544,12 @@ export function registerIpcHandlers(deps: Deps) {
       browserDock.closeTabs(event.sender.id, id, scope, order)
     },
   )
-  ipcMain.handle("app-dock-select", (event: IpcMainInvokeEvent, tabID: unknown, bounds: unknown) => {
+  ipcMain.handle("app-dock-select", (event: IpcMainInvokeEvent, tab: unknown, bounds: unknown) => {
     const win = appDockSender(event)
     browserDock.select(
       event.sender.id,
       win,
-      appDockID(tabID, "tab"),
+      appDockTab(tab),
       panelBoundsToContent(appDockBounds(bounds), event.sender.getZoomFactor()),
     )
   })
@@ -653,6 +681,7 @@ export function registerIpcHandlers(deps: Deps) {
     const store = getStore(name)
     return Object.keys(store.store).length
   })
+  registerJanitorIpcHandlers({ ipcMain, app, BrowserWindow, getStore })
   ipcMain.handle("draft-get", (_event, key: string) => drafts.get(key))
   ipcMain.handle("draft-set", (_event, key: string, value: string) => drafts.set(key, value))
   ipcMain.handle("draft-delete", (_event, key: string) => drafts.set(key, null))
@@ -809,6 +838,12 @@ export function registerIpcHandlers(deps: Deps) {
       checkForUpdates: () => void deps.showUpdater(),
       relaunch: deps.relaunch,
     })
+  })
+  ipcMain.handle("set-titlebar-frame", (event: IpcMainInvokeEvent, frame: unknown) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win || win.isDestroyed() || win.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame)
+      throw new Error("Invalid titlebar frame sender")
+    setTitlebarFrame(win, frame)
   })
   return {
     stopLinuxRuntime: () => {

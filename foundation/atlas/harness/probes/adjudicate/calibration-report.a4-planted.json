@@ -1,0 +1,142 @@
+{
+  "amended": {
+    "wp": "WP-C3",
+    "date": "2026-08-18",
+    "summary": "Table-2 false-admit figures (dependency 1.30%, count 5.52%) are reported under two named definitions, not a bare rate. Definition A (gate's own documented predicate, witnessed reference-existence): all three structural arms 0-false-admit (dependency 0/23702, count 0/163, negation 0/163). Definition B (bench's stricter, undocumented CALL-only label): dependency 309/23702=1.30%, count 9/163=5.52%, negation 0/163=0%, relation 452/452=100%. Line-by-line adjudication of all 318 Definition-B rows found 0/318 genuine unsoundness -- every one is a labelling gap between the bench's isCallee check and the gate's reference-existence predicate, not an unwitnessed admit. Recall figures are unaffected and unchanged. No bench run was repeated; all figures trace to the artifact already committed at 99575cd plus code read at the cited file:line locations.",
+    "did_not_change": [
+      "recall figures",
+      "reproduction recipe",
+      "both build-state tables' existence",
+      "the fixture-pin drift finding",
+      "Table 1 (dist-absent) raw numbers -- not row-level adjudicated in this pass, flagged unconfirmed, not reclassified"
+    ]
+  },
+  "kind": "a4-planted-recall (196b sound mutation-bench)",
+  "method_doc": "docs/design/95-benchmark-methodology.md",
+  "wp": "WP-B2",
+  "instrument": {
+    "test_file": "packages/adapter-io/test/semantic-bench.test.ts",
+    "scorer": "packages/adapter-io/test/support/bench-scorer.ts",
+    "mutation_contract": "packages/adapter-io/test/support/mutation-contract.ts",
+    "driver": "packages/adapter-io/test/support/sem-bench-driver.ts",
+    "fixture_self_proof": "packages/adapter-io/test/support/semantic-bench-fixture.json",
+    "fixture_pin_md5": "daa42ed88403e13b8ab1197adab9f0d3",
+    "judge_in_correctness_loop": false,
+    "oracle": "ts.createProgram (independent tsc program), no LLM anywhere in the label or scoring path",
+    "arms_covered": ["count", "relation", "dependency", "negation"],
+    "arms_not_covered": ["advisory", "predicate (semantic slots — no sound oracle; see scopeLimit disclaimer)"]
+  },
+  "reproduction": {
+    "git_sha": "9eb4d7feaec5eada3df2f33f691c5fe3f8ca5350",
+    "worktree_branch": "bench/a4-planted",
+    "node": "v22.17.1",
+    "npm": "10.9.2",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9",
+    "scip_typescript": "0.4.0",
+    "commands": [
+      "npm install",
+      "npx tsc -b",
+      "scip-typescript index --output .atlas/index.scip",
+      "ATLAS_SEM_BENCH=1 npx vitest run packages/adapter-io/test/semantic-bench.test.ts"
+    ],
+    "verified_by_second_independent_run": true,
+    "note": "run twice end-to-end (fresh `rm .atlas/index.scip` + re-index + re-test) for BOTH build states below; numbers were byte-for-byte identical (numerators/denominators) across both runs of each state. A third dist-form rebuild (done to extract raw numerator/denominator counts) produced a slightly different index.scip file size (16,994,791 vs 16,980,163 bytes — non-deterministic scip-typescript output, e.g. ordering/timestamps) but IDENTICAL bench numbers, so the metric is stable even though the artifact bytes are not."
+  },
+  "build_states_measured": {
+    "dist_absent": {
+      "label": "scip-typescript index run BEFORE `tsc -b` populates packages/*/dist — the literal recipe in the test file header. This is the MISBUILD state per docs/design/95-benchmark-methodology.md L92-95.",
+      "index_scip_bytes": 16306497,
+      "targets": 1333,
+      "scopes": 19,
+      "perArm": {
+        "count": {
+          "falseAdmit": { "num": 0, "den": 163, "rate": 0.0 },
+          "recallTrue": { "num": 7, "den": 163, "rate": 0.04294 },
+          "n": 326
+        },
+        "relation": {
+          "falseAdmit": { "num": 452, "den": 452, "rate": 1.0 },
+          "recallTrue": { "num": 452, "den": 452, "rate": 1.0 },
+          "n": 904
+        },
+        "dependency": {
+          "falseAdmit": { "num": 18, "den": 23702, "rate": 0.00076 },
+          "recallTrue": { "num": 7, "den": 163, "rate": 0.04294 },
+          "n": 23865
+        },
+        "negation": {
+          "falseAdmit": { "num": 0, "den": 163, "rate": 0.0 },
+          "recallTrue": { "num": 51, "den": 1200, "rate": 0.0425 },
+          "n": 1363
+        }
+      },
+      "negation_teeth_gate_off": { "falseAdmit": { "num": 132, "den": 163, "rate": 0.8098 } },
+      "dependency_false_admits_call_eligible": "not separately re-checked in this state (the shipped assertion loop stops at first violation; the doc's committed comment for this regime cites 0.07% on an earlier, smaller population, all oracle-definition-gap type/reference symbols, no fabricated caller)",
+      "test_suite_result": "GREEN (all AC-6 assertions pass in this build state)"
+    },
+    "dist_form": {
+      "label": "scip-typescript index run AFTER `tsc -b` — the OPERATING/committed-form recipe the methodology doc names as intended (L88-91, L98-102).",
+      "index_scip_bytes_by_run": [16980163, 16980163, 16994791],
+      "targets": 1333,
+      "scopes": 19,
+      "falseAdmit_two_definitions": {
+        "definitionA": "unsoundness under the gate's own documented predicate: verifyDependency (packages/genesis/src/verify-fact.ts:96) admits on reverseCallers(target) intersect sourceScope != empty; reverseCallers (packages/index/src/symbol-reverse.ts:120, 'if (occ.role !== \"reference\") continue;') counts ANY SCIP reference occurrence (import/type-position/instanceof-operand/re-export) as a witness, not only a call. verifyCount (packages/genesis/src/verify-count.ts:84-90) proves the same lower bound over the same witness set. Unsound under A = admitted with ZERO reference witness in the flipped scope.",
+        "definitionB": "mismatch vs the bench's CALL-only label: isCallee (packages/adapter-io/test/support/neg-bench-lib.ts:81-84) labels FALSE only when the target has no CallExpression/NewExpression callee occurrence in scope; it does not check references. A row can be Def-B-false while Def-A-true.",
+        "adjudication": "all 318 Def-B rows (309 dependency + 9 count) adjudicated line-by-line, cold-seat-verified, spot-cold-checked against source: 0/318 genuine unsoundness. dependency: 309/309 have a real non-definition SCIP reference occurrence of the target in scope, corroborated by tsc's own refFiles; 0/309 have a call in scope. Of these, 2 also trip the bench's separate whole-program call-eligibility proxy (callFiles>0 anywhere, not necessarily in-scope): isGrounded (witness: import at packages/adapter-io/src/compose.ts:24) and DegenerateAnchorError (witness: import at packages/adapter-io/src/governed-promote.ts:54, instanceof operand at :111) -- both witnesses are references, never calls, same gap class as the other 307. count: 9/9 are boundary cases where atLeast == in-scope-call-count + 1 while in-scope references (the gate's actual witness set) >= atLeast."
+      },
+      "perArm": {
+        "count": {
+          "falseAdmitDefA": { "num": 0, "den": 163, "rate": 0.0 },
+          "falseAdmitDefB": { "num": 9, "den": 163, "rate": 0.05521 },
+          "recallTrue": { "num": 163, "den": 163, "rate": 1.0 },
+          "n": 326
+        },
+        "relation": {
+          "falseAdmitDefA": "n/a -- admitRelation states no truth/direction predicate; nothing to be unsound against",
+          "falseAdmitDefB": { "num": 452, "den": 452, "rate": 1.0 },
+          "recallTrue": { "num": 452, "den": 452, "rate": 1.0 },
+          "n": 904
+        },
+        "dependency": {
+          "falseAdmitDefA": { "num": 0, "den": 23702, "rate": 0.0 },
+          "falseAdmitDefB": { "num": 309, "den": 23702, "rate": 0.01304 },
+          "recallTrue": { "num": 163, "den": 163, "rate": 1.0 },
+          "n": 23865
+        },
+        "negation": {
+          "falseAdmitDefA": { "num": 0, "den": 163, "rate": 0.0 },
+          "falseAdmitDefB": { "num": 0, "den": 163, "rate": 0.0 },
+          "recallTrue": { "num": 428, "den": 1200, "rate": 0.35667 },
+          "n": 1363
+        }
+      },
+      "negation_teeth_gate_off": { "falseAdmit": { "num": 0, "den": 163, "rate": 0.0 } },
+      "negation_teeth_open_finding": "NOT FIXED HERE, flagged for the code owner (another seat triaging): on this build+index, negation_teeth_gate_off equals s.negation.falseAdmit (both 0/163), so the shipped non-vacuity assertion at packages/adapter-io/test/semantic-bench.test.ts:252 ('expect(teeth.negation.falseAdmit!).toBeGreaterThan(s.negation.falseAdmit!)') reduces to expect(0).toBeGreaterThan(0) on this exact operating-index state. Negation's 0-false-admit is proven non-vacuous only on the dist-absent misbuild (Table 1, gate-off 132/163), not on the dist-form/operating index measured here.",
+      "dependency_false_admits_call_eligible": {
+        "total_dependency_false_admits_defB": 309,
+        "call_eligible_count": 2,
+        "call_eligible_symbols": ["isGrounded (callFiles=1)", "DegenerateAnchorError (callFiles=1)"],
+        "reading": "AMENDED (WP-C3, 2026-08-18): the original 'reading' here called this a 'residual real unsoundness' -- that was itself an overclaim, corrected by row-level adjudication. Both call_eligible_symbols are witnessed ONLY by reference occurrences (compose.ts:24 import; governed-promote.ts:54 import + :111 instanceof), never by a call, in the flipped scope. callFiles>0 means tsc found a call SOMEWHERE in the whole program, not necessarily in the scope the claim asserts -- it is a different, looser proxy than the in-scope witness the gate actually checks, and the bench's own tighter in-scope check (0/309 have an in-scope call) is definitive. This is Definition B (mismatch vs bench's call label), not Definition A (gate's own reference predicate, on which these 2 rows are also sound: 0 unwitnessed). The shipped AC-6 assertion FAILS because it is written to Definition B (see test_suite_result), not because the door admitted an unwitnessed fact."
+      },
+      "test_suite_result": "RED — AC-6 fails: 'dependency false-admit on a CALL-ELIGIBLE symbol (isGrounded) ... expected 1 to be +0'. This assertion checks Definition B (callFiles), not Definition A (reference witness). Also count.falseAdmitDefB=9/163 is nonzero (assertion for count sits after the failing dependency loop in the same `it`, so vitest never reaches it, but the printed number is real); count.falseAdmitDefA=0/163."
+    }
+  },
+  "scope_limit_disclaimer": "SOUND HEADLINE = structural arms only (count / dependency / negation vs the independent tsc oracle). The relation arm is MEASURED, not guaranteed (no direction oracle: admitRelation has no way to reject a reversed edge, so both falseAdmit and recallTrue print 100% by construction). Semantic slots (invariant / sideeffect / advisory prose) tsc cannot witness are NOT covered here at all.",
+  "limits": [
+    "recall over PLANTED mutations on a synthetic-labelled fixture, not recall over arbitrary real-world facts",
+    "covers only the 4 oracle-bearing shapes (count, relation, dependency, negation); advisory/predicate prose has no sound oracle and is out of scope",
+    "recall is INDEX-BUILD-DEPENDENT by roughly an order of magnitude (count/dependency recall 4.29% dist-absent vs 100% dist-form; negation recall 4.25% vs 35.67%) — a bare percentage without the build recipe is not a citable number",
+    "AMENDED (WP-C3): on the dist-form (intended/operating) index at git sha 9eb4d7f, the shipped AC-6 assertion (written to Definition B, the bench's call-only label) is RED for dependency (309/23702=1.30% Def-B mismatch) and count (9/163=5.52% Def-B mismatch). Under Definition A, the gate's own documented witnessed-reference-existence predicate, all three structural arms measured are 0-false-admit (dependency 0/23702, count 0/163, negation 0/163) -- adjudicated 0/318 genuine unsoundness. The methodology doc's 0-FP claim holds under the predicate it names; it does not hold under the bench's stricter, undocumented call-only label, which is what AC-6 surfaces failing.",
+    "relation's 100%/100% is a construction artifact of admitRelation having no direction oracle, not evidence of either soundness or unsoundness; Definition A is n/a for relation (no truth predicate stated)",
+    "this report measures ONE git sha (9eb4d7f) and TWO index builds; it does not sweep git history or other index tools",
+    "Table 1 (dist-absent)'s dependency false-admits (18/23702) were NOT row-level adjudicated the way Table 2's 318 were -- unconfirmed whether they are the same Definition-B gap pattern; not reclassified",
+    "OPEN, not fixed here: on the dist-form index, negation's non-vacuity teeth assertion (semantic-bench.test.ts:252) reduces to expect(0).toBeGreaterThan(0) because gate-ON and gate-OFF false-admit are both 0/163 on this build; non-vacuity is demonstrated only on the dist-absent misbuild"
+  ],
+  "what_the_brief_got_wrong": [
+    "the brief characterized bench-scorer's independence rule and per-arm two-co-primary output correctly; that part is accurate as described",
+    "the brief implied the test 'currently only console.log's these' numbers and asked for the smallest capture change — true; I did NOT edit the shipped test file. I added two throwaway, uncommitted test files under packages/adapter-io/test/_tmp-*.test.ts that reimplement the SAME accumulation bench-scorer.ts already does (to get raw numerators/denominators the console.log line omits), ran them, captured stdout, then deleted them before commit. Zero diff to the shipped instrument.",
+    "the brief's framing implied the dist-form vs dist-absent question was primarily about RECALL swinging (per the doc's L79-102 example). That is true, but this run surfaced a second effect the brief did not anticipate: on the dist-form (operating) index at the CURRENT git sha, AC-6 is no longer green for dependency and count. CORRECTION (WP-C3, 2026-08-18): the phrase 'a genuine soundness regression/finding' written here was itself an overclaim in the pessimistic direction. Line-by-line adjudication of all 318 flagged rows found AC-6 fails because it checks call-existence (Definition B), a stricter and undocumented label than the gate's own witnessed-reference-existence predicate (Definition A) -- 0/318 rows are admitted without a witness under the predicate the gate actually implements. It is a labelling-vs-gate mismatch, not evidence the door admits an unwitnessed fact.",
+    "the fixture pin's `substrate.rev` field says `e35dcce`, an OLDER commit than this worktree's HEAD (9eb4d7f). The pin's own comment clarifies the tsc oracle is 'a deterministic pure function of the checked-out src at this rev' (i.e. whatever is checked out, not the pinned annotation), and nothing in AC-7 enforces that the checked-out src matches `e35dcce` — only the SYNTHETIC self-proof fixture bytes (semantic-bench-fixture.json) are hash-pinned, not the substrate. So the numbers in this report are for 9eb4d7f, not e35dcce, and that drift is exactly why the doc's committed AC-6 comments (e.g. 'dependency = 0.08% residual...17/23577') no longer match this run's Definition-B counts (18/23702 dist-absent, 309/23702 dist-form) — the population grew and the assertion's Definition-B check now trips on this larger population, per the correction above. This is worth flagging to the code owner, not something I fixed (out of scope for a measurement WP)."
+  ]
+}

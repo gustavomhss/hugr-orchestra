@@ -16,6 +16,7 @@ import {
   useLanguage,
 } from "@opencode-ai/app"
 import type { UpdaterState } from "@opencode-ai/app/updater"
+import { HugrSplash } from "@opencode-ai/app/orchestra/brand"
 import * as Sentry from "@sentry/solid"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { createMemoryHistory, MemoryRouter, type BaseRouterProps } from "@solidjs/router"
@@ -29,7 +30,6 @@ import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./
 import { windowFullscreen } from "./window-fullscreen"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
-import { Splash } from "@opencode-ai/ui/logo"
 import { useTheme } from "@opencode-ai/ui/theme/context"
 
 const root = document.getElementById("root")
@@ -295,6 +295,7 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     webviewZoom,
 
     windowFullscreen,
+    setTitlebarFrame: (frame) => window.api.setTitlebarFrame(frame),
 
     getPinchZoomEnabled: () => window.api.getPinchZoomEnabled(),
 
@@ -326,7 +327,7 @@ listenForDeepLinks()
 function LoadingSplash() {
   return (
     <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base">
-      <Splash class="w-16 h-20 opacity-50 animate-pulse" />
+      <HugrSplash class="opacity-50 animate-pulse" />
     </div>
   )
 }

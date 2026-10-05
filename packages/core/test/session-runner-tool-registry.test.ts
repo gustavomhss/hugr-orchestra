@@ -15,6 +15,7 @@ import { testEffect } from "./lib/effect"
 const bounds: ToolOutputStore.BoundInput[] = []
 const retentionFailure = new ToolOutputStore.StorageError({ operation: "write", cause: new Error("disk full") })
 const outputStore = Layer.mock(ToolOutputStore.Service, {
+  limits: () => Effect.succeed({ maxBytes: 50_000, maxLines: 2_000 }),
   bound: (input) => {
     if (input.toolCallID === "call-retention-failure") return Effect.fail(retentionFailure)
     return Effect.sync(() => bounds.push(input)).pipe(
@@ -252,17 +253,24 @@ describe("ToolRegistry", () => {
       bounds.length = 0
       const service = yield* ToolRegistry.Service
       yield* service.register({ bounded: make() })
-      expect(
-        yield* settleTool(service, {
-          sessionID,
-          ...identity,
-          call: { type: "tool-call", id: "call-bounded", name: "bounded", input: { text: "complete" } },
-        }),
-      ).toEqual({
-        result: { type: "text", value: "bounded reference" },
-        output: { structured: {}, content: [{ type: "text", text: "bounded reference" }] },
+      const settlement = yield* settleTool(service, {
+        sessionID,
+        ...identity,
+        call: { type: "tool-call", id: "call-bounded", name: "bounded", input: { text: "complete" } },
+      })
+      expect(settlement).toMatchObject({
+        result: { type: "text" },
+        output: { structured: {}, content: [{ type: "text" }] },
         outputPaths: ["/managed/generic"],
       })
+      if (settlement.result.type !== "text") throw new Error("Expected bounded text settlement")
+      const value = settlement.result.value
+      if (typeof value !== "string") throw new Error("Expected bounded text value")
+      expect(value).toContain("bounded reference")
+      expect(value).toContain("/managed/generic")
+      expect(value).toContain("Context pressure:")
+      expect(Buffer.byteLength(value)).toBeLessThanOrEqual(50_000)
+      expect(settlement.output?.content[0]).toEqual({ type: "text", text: value })
       expect(bounds).toHaveLength(1)
     }),
   )

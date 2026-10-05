@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, untrack, type JSX } from "solid-js"
+import { For, Show, createEffect, createMemo, onCleanup, untrack, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { DragDropProvider as DndKitProvider, PointerSensor } from "@dnd-kit/solid"
@@ -18,7 +18,6 @@ import { Tabs } from "@opencode-ai/ui/tabs"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Icon } from "@opencode-ai/ui/icon"
 import { TooltipKeybind } from "@opencode-ai/ui/tooltip"
-import { ResizeHandle } from "@opencode-ai/ui/resize-handle"
 import { Mark } from "@opencode-ai/ui/logo"
 import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
 import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
@@ -28,7 +27,6 @@ import type { FileDiffInfo } from "@opencode-ai/client/promise"
 import { ConstrainDragYAxis, getDraggableId } from "@/utils/solid-dnd"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 
-import FileTree from "@/components/file-tree"
 import { normalizeFileTreeV2Path } from "@/components/file-tree-v2-model"
 import { SessionContextUsage } from "@/components/session-context-usage"
 
@@ -48,7 +46,7 @@ import { FileTabContent } from "@/pages/session/file-tabs"
 import {
   SESSION_OPEN_FILE_TAB,
   createOpenSessionFileTab,
-  createSessionTabs,
+  createSidePanelTabs,
   getTabReorderIndex,
   planTasksTab,
   shouldShowFileTree,
@@ -57,13 +55,14 @@ import {
 import { setSessionHandoff } from "@/pages/session/handoff"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { SessionFileBrowserTab, type SessionFileBrowserState } from "@/pages/session/v2/session-file-browser-tab"
+import { FILE_TREE_WIDTH_MIN, LegacyFileTreePanel } from "./legacy-file-tree-panel"
 import { TasksPanel } from "./tasks-panel"
 import { AppsPanel } from "./apps-panel"
+import { OrchestraCockpit } from "./orchestra-cockpit"
 import { createTasksData } from "./tasks-data"
 
 type ReviewDiff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
 type RenderDiff = FileDiffInfo | (SnapshotFileDiff & { file: string }) | VcsFileDiff
-const FILE_TREE_WIDTH_MIN = 240
 
 function renderDiff(value: ReviewDiff): value is RenderDiff {
   return typeof value.file === "string"
@@ -144,21 +143,6 @@ export function SessionSidePanel(props: {
     return out
   })
 
-  const empty = (msg: string) => (
-    <div class="h-full flex flex-col">
-      <div class="h-6 shrink-0" aria-hidden />
-      <div class="flex-1 pb-64 flex items-center justify-center text-center">
-        <div class="text-12-regular text-text-weak">{msg}</div>
-      </div>
-    </div>
-  )
-
-  const nofiles = createMemo(() => {
-    const state = file.tree.state("")
-    if (!state?.loaded) return false
-    return file.tree.children("").length === 0
-  })
-
   const normalizeTab = (tab: string) => {
     if (!tab.startsWith("file://")) return tab
     return file.tab(tab)
@@ -177,29 +161,31 @@ export function SessionSidePanel(props: {
     setActive: tabs().setActive,
   })
 
-  const tabState = createSessionTabs({
+  // Orchestra's Apps tab is the cockpit, where Tasks show beside the Dock instead of in a tab of their own.
+  const cockpit = () => settings.general.newLayoutDesigns()
+  const tabState = createSidePanelTabs({
     tabs,
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: reviewTab,
     hasReview: props.canReview,
     fileBrowser: () => !!props.fileBrowserState,
-    apps: () => true,
+    cockpit,
   })
   const contextOpen = tabState.contextOpen
   const tasksOpen = tabState.tasksOpen
   const tasksData = createTasksData()
   const openFileOpen = tabState.openFileOpen
 
-  // Auto-open the tasks tab while background work is live (Claude tasks-pane
-  // parity). Lives here — not in TasksPanel — because the panel only mounts
-  // once its tab is already active. Level-triggered (not edge-triggered) so
-  // remounts and HMR can't miss it; a manual close snoozes until work drains.
+  // Auto-open the tasks tab (Orchestra's cockpit) while background work is live
+  // (Claude tasks-pane parity). Lives here — not in TasksPanel — because the panel
+  // only mounts once its tab is already active. Level-triggered (not edge-triggered)
+  // so remounts and HMR can't miss it; leaving the tab snoozes until work drains.
   let wasOpen = false
   let snoozed = false
   createEffect(() => {
     const n = tasksData.liveCount()
-    const open = tasksOpen()
+    const open = cockpit() ? tabState.activeTab() === "apps" : tasksOpen()
     if (n === 0) {
       snoozed = false
       wasOpen = open
@@ -212,14 +198,15 @@ export function SessionSidePanel(props: {
       // which would detach an active App Dock and break the agent's dock tools.
       const plan = untrack(() => planTasksTab({ active: tabs().active(), all: tabs().all() }))
       // Panel first, then tab, then focus in a microtask so the freshly
-      // mounted tab strip selects Tasks instead of falling back to Review.
+      // mounted tab strip selects that tab instead of falling back to Review.
+      const tab = cockpit() ? "apps" : "tasks"
       view().reviewPanel.open()
-      if (!plan.activate) {
+      if (tab === "tasks" && !plan.activate) {
         tabs().setAll(plan.all)
         return
       }
-      tabs().open("tasks")
-      queueMicrotask(() => tabs().setActive("tasks"))
+      tabs().open(tab)
+      queueMicrotask(() => tabs().setActive(tab))
     }
   })
   const panelTabs = tabState.panelTabs
@@ -228,11 +215,6 @@ export function SessionSidePanel(props: {
   const activeFileTab = tabState.activeFileTab
 
   const fileTreeTab = () => layout.fileTree.tab()
-
-  const setFileTreeTabValue = (value: string) => {
-    if (value !== "changes" && value !== "all") return
-    layout.fileTree.setTab(value)
-  }
 
   const showAllFiles = () => {
     if (fileTreeTab() !== "changes") return
@@ -331,6 +313,8 @@ export function SessionSidePanel(props: {
     <Show when={isDesktop() && !(settings.general.newLayoutDesigns() && !params.id)}>
       <aside
         id="review-panel"
+        data-component="session-side-panel"
+        data-active-tab={activeTab()}
         aria-label={language.t("session.panel.reviewAndFiles")}
         aria-hidden={!open()}
         inert={!open()}
@@ -350,6 +334,7 @@ export function SessionSidePanel(props: {
       >
         <Show when={open()}>
           <div
+            data-slot="session-side-panel-content"
             class="size-full flex"
             classList={{
               "border-l border-border-weaker-base": !settings.general.newLayoutDesigns(),
@@ -357,6 +342,7 @@ export function SessionSidePanel(props: {
           >
             <Show when={reviewOpen()}>
               <div
+                data-slot="session-side-panel-main"
                 class="relative min-w-0 h-full flex-1 overflow-hidden"
                 classList={{
                   "bg-v2-background-bg-base": settings.general.newLayoutDesigns(),
@@ -364,6 +350,7 @@ export function SessionSidePanel(props: {
                 }}
               >
                 <div
+                  data-slot="session-side-panel-shell"
                   class="size-full min-w-0 h-full"
                   classList={{
                     "bg-v2-background-bg-base": settings.general.newLayoutDesigns(),
@@ -381,8 +368,8 @@ export function SessionSidePanel(props: {
                       >
                         <DragDropSensors />
                         <ConstrainDragYAxis />
-                        <Tabs value={activeTab()} onChange={activateTab}>
-                          <div class="sticky top-0 shrink-0 flex">
+                        <Tabs data-scope="session-side-panel" value={activeTab()} onChange={activateTab}>
+                          <div data-slot="session-side-panel-tab-bar" class="sticky top-0 shrink-0 flex">
                             <Tabs.List
                               ref={(el: HTMLDivElement) => {
                                 const stop = createFileTabListSync({ el, contextOpen })
@@ -398,7 +385,7 @@ export function SessionSidePanel(props: {
                                   <div class="flex items-center gap-1.5">
                                     <div>{language.t("session.tab.review")}</div>
                                     <Show when={props.hasReview()}>
-                                      <div>{props.reviewCount()}</div>
+                                      <div data-slot="session-side-panel-tab-count">{props.reviewCount()}</div>
                                     </Show>
                                   </div>
                                 </Tabs.Trigger>
@@ -456,12 +443,14 @@ export function SessionSidePanel(props: {
                                   <div class="flex items-center gap-2">
                                     <div>{language.t("session.tab.tasks")}</div>
                                     <Show when={tasksData.liveCount() > 0}>
-                                      <div>{tasksData.liveCount()}</div>
+                                      <div data-slot="session-side-panel-tab-count">{tasksData.liveCount()}</div>
                                     </Show>
                                   </div>
                                 </Tabs.Trigger>
                               </Show>
-                              <Tabs.Trigger value="apps"><div>Apps</div></Tabs.Trigger>
+                              <Tabs.Trigger value="apps">
+                                <div>Apps</div>
+                              </Tabs.Trigger>
                               <SortableProvider ids={openedTabs()}>
                                 <For each={panelTabs()}>
                                   {(tab) => (
@@ -542,6 +531,7 @@ export function SessionSidePanel(props: {
                               aria-labelledby={reviewTabID}
                               tabIndex={props.reviewHasFocusableContent() ? undefined : 0}
                               data-slot="tabs-content"
+                              data-session-tab="review"
                               class="flex flex-col h-full overflow-hidden contain-strict"
                             >
                               {props.reviewPanel()}
@@ -549,7 +539,11 @@ export function SessionSidePanel(props: {
                           </Show>
 
                           <Show when={activeTab() === "empty"}>
-                            <Tabs.Content value="empty" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <Tabs.Content
+                              data-session-tab="empty"
+                              value="empty"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                                 <div class="h-full px-6 pb-42 -mt-4 flex flex-col items-center justify-center text-center gap-6">
                                   <Mark class="w-14 opacity-10" />
@@ -562,7 +556,11 @@ export function SessionSidePanel(props: {
                           </Show>
 
                           <Show when={activeTab() === "context"}>
-                            <Tabs.Content value="context" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <Tabs.Content
+                              data-session-tab="context"
+                              value="context"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                                 <SessionContextTab />
                               </div>
@@ -570,14 +568,24 @@ export function SessionSidePanel(props: {
                           </Show>
 
                           <Show when={activeTab() === "tasks"}>
-                            <Tabs.Content value="tasks" class="flex flex-col h-full overflow-hidden contain-strict">
+                            <Tabs.Content
+                              data-session-tab="tasks"
+                              value="tasks"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
                               <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                                <TasksPanel />
+                                <TasksPanel data={tasksData} />
                               </div>
                             </Tabs.Content>
                           </Show>
                           <Show when={activeTab() === "apps"}>
-                            <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict"><AppsPanel /></Tabs.Content>
+                            <Tabs.Content
+                              data-session-tab="apps"
+                              value="apps"
+                              class="flex flex-col h-full overflow-hidden contain-strict"
+                            >
+                              <AppsPanel />
+                            </Tabs.Content>
                           </Show>
 
                           <Show when={activeFileTab()} keyed>
@@ -626,8 +634,11 @@ export function SessionSidePanel(props: {
                         tabs().move(source.id.toString(), source.index)
                       }}
                     >
-                      <Tabs value={activeTab()} onChange={activateTab}>
-                        <div class="session-review-v2-tabs-bar sticky top-0 shrink-0 flex items-center">
+                      <Tabs data-scope="session-side-panel" value={activeTab()} onChange={activateTab}>
+                        <div
+                          data-slot="session-side-panel-tab-bar"
+                          class="session-review-v2-tabs-bar sticky top-0 shrink-0 flex items-center"
+                        >
                           <Tabs.List
                             ref={(el: HTMLDivElement) => {
                               tabList = el
@@ -687,43 +698,14 @@ export function SessionSidePanel(props: {
                                 </div>
                               </Tabs.Trigger>
                             </Show>
-                            <Show when={tasksOpen()}>
-                              <Tabs.Trigger
-                                value="tasks"
-                                closeButton={
-                                  <TooltipV2
-                                    value={
-                                      <>
-                                        {language.t("common.closeTab")}
-                                        <Show when={closeTabKeybind().length > 0}>
-                                          <KeybindV2 keys={closeTabKeybind()} variant="neutral" />
-                                        </Show>
-                                      </>
-                                    }
-                                    placement="bottom"
-                                    gutter={10}
-                                  >
-                                    <IconButton
-                                      icon="close-small"
-                                      variant="ghost"
-                                      class="h-5 w-5"
-                                      onClick={() => tabs().close("tasks")}
-                                      aria-label={language.t("common.closeTab")}
-                                    />
-                                  </TooltipV2>
-                                }
-                                hideCloseButton
-                                onMiddleClick={() => tabs().close("tasks")}
-                              >
-                                <div class="flex items-center gap-2">
-                                  <div>{language.t("session.tab.tasks")}</div>
-                                  <Show when={tasksData.liveCount() > 0}>
-                                    <div>{tasksData.liveCount()}</div>
-                                  </Show>
-                                </div>
-                              </Tabs.Trigger>
-                            </Show>
-                            <Tabs.Trigger value="apps"><div>Apps</div></Tabs.Trigger>
+                            <Tabs.Trigger value="apps">
+                              <div class="flex items-center gap-2">
+                                <div>Apps</div>
+                                <Show when={tasksData.liveCount() > 0}>
+                                  <div data-slot="session-side-panel-tab-count">{tasksData.liveCount()}</div>
+                                </Show>
+                              </div>
+                            </Tabs.Trigger>
                             <For each={panelTabs()}>
                               {(tab) => (
                                 <Show
@@ -818,6 +800,7 @@ export function SessionSidePanel(props: {
                             aria-labelledby={reviewTabID}
                             tabIndex={props.reviewHasFocusableContent() ? undefined : 0}
                             data-slot="tabs-content"
+                            data-session-tab="review"
                             class="flex flex-col h-full overflow-hidden contain-strict"
                           >
                             {props.reviewPanel()}
@@ -825,7 +808,11 @@ export function SessionSidePanel(props: {
                         </Show>
 
                         <Show when={activeTab() === "empty"}>
-                          <Tabs.Content value="empty" class="flex flex-col h-full overflow-hidden contain-strict">
+                          <Tabs.Content
+                            data-session-tab="empty"
+                            value="empty"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
                             <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                               <div class="h-full px-6 pb-42 -mt-4 flex flex-col items-center justify-center text-center gap-6">
                                 <Mark class="w-14 opacity-10" />
@@ -838,22 +825,25 @@ export function SessionSidePanel(props: {
                         </Show>
 
                         <Show when={activeTab() === "context"}>
-                          <Tabs.Content value="context" class="flex flex-col h-full overflow-hidden contain-strict">
+                          <Tabs.Content
+                            data-session-tab="context"
+                            value="context"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
                             <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
                               <SessionContextTab />
                             </div>
                           </Tabs.Content>
                         </Show>
 
-                        <Show when={activeTab() === "tasks"}>
-                          <Tabs.Content value="tasks" class="flex flex-col h-full overflow-hidden contain-strict">
-                            <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                              <TasksPanel />
-                            </div>
-                          </Tabs.Content>
-                        </Show>
                         <Show when={activeTab() === "apps"}>
-                          <Tabs.Content value="apps" class="flex flex-col h-full overflow-hidden contain-strict"><AppsPanel /></Tabs.Content>
+                          <Tabs.Content
+                            data-session-tab="apps"
+                            value="apps"
+                            class="flex flex-col h-full overflow-hidden contain-strict"
+                          >
+                            <OrchestraCockpit tasks={tasksData} />
+                          </Tabs.Content>
                         </Show>
 
                         <Show when={fileBrowserMounted()}>
@@ -861,6 +851,7 @@ export function SessionSidePanel(props: {
                             id={fileBrowserTabPanelID}
                             role="tabpanel"
                             data-slot="tabs-content"
+                            data-session-tab="files"
                             class="h-full min-h-0 overflow-hidden"
                             classList={{ hidden: !fileBrowserVisible() }}
                             inert={!fileBrowserVisible() || undefined}
@@ -887,107 +878,21 @@ export function SessionSidePanel(props: {
             </Show>
 
             <Show when={fileOpen()}>
-              <div
-                id="file-tree-panel"
-                class="relative min-w-0 h-full shrink-0 overflow-hidden"
-                classList={{
-                  "transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
-                    !props.size.active(),
-                }}
-                style={{ width: treeWidth() }}
-              >
-                <div
-                  class="h-full flex flex-col overflow-hidden group/filetree"
-                  classList={{ "border-l border-border-weaker-base": reviewOpen() }}
-                >
-                  <Tabs
-                    variant="pill"
-                    value={fileTreeTab()}
-                    onChange={setFileTreeTabValue}
-                    class="h-full"
-                    data-scope="filetree"
-                  >
-                    <Tabs.List>
-                      <Tabs.Trigger value="changes" class="flex-1" classes={{ button: "w-full" }}>
-                        <Show
-                          when={settings.general.newLayoutDesigns()}
-                          fallback={
-                            <>
-                              {props.reviewCount()}{" "}
-                              {language.t(
-                                props.reviewCount() === 1 ? "session.review.change.one" : "session.review.change.other",
-                              )}
-                            </>
-                          }
-                        >
-                          {language.t("session.review.filesChanged", { count: props.reviewCount() })}
-                        </Show>
-                      </Tabs.Trigger>
-                      <Tabs.Trigger value="all" class="flex-1" classes={{ button: "w-full" }}>
-                        {language.t("session.files.all")}
-                      </Tabs.Trigger>
-                    </Tabs.List>
-                    <Show when={fileTreeTab() === "changes"}>
-                      <Tabs.Content value="changes" class="bg-background-stronger px-3 py-0">
-                        <Switch>
-                          <Match when={props.hasReview() || !props.diffsReady()}>
-                            <Show
-                              when={props.diffsReady()}
-                              fallback={
-                                <div class="px-2 py-2 text-12-regular text-text-weak">
-                                  {language.t("common.loading")}
-                                  {language.t("common.loading.ellipsis")}
-                                </div>
-                              }
-                            >
-                              <FileTree
-                                path=""
-                                class="pt-3"
-                                allowed={diffFiles()}
-                                kinds={kinds()}
-                                draggable={false}
-                                active={props.activeDiff}
-                                onFileClick={(node) => props.focusReviewDiff(node.path)}
-                              />
-                            </Show>
-                          </Match>
-                        </Switch>
-                      </Tabs.Content>
-                    </Show>
-                    <Show when={fileTreeTab() === "all"}>
-                      <Tabs.Content value="all" class="bg-background-stronger px-3 py-0">
-                        <Switch>
-                          <Match when={nofiles()}>{empty(language.t("session.files.empty"))}</Match>
-                          <Match when={true}>
-                            <FileTree
-                              path=""
-                              class="pt-3"
-                              modified={diffFiles()}
-                              kinds={kinds()}
-                              onFileClick={(node) => openTab(file.tab(node.path))}
-                            />
-                          </Match>
-                        </Switch>
-                      </Tabs.Content>
-                    </Show>
-                  </Tabs>
-                </div>
-                <Show when={fileOpen()}>
-                  <div onPointerDown={() => props.size.start()}>
-                    <ResizeHandle
-                      direction="horizontal"
-                      edge="start"
-                      size={fileTreeWidth()}
-                      min={FILE_TREE_WIDTH_MIN}
-                      max={480}
-                      onResize={(width) => {
-                        props.size.touch()
-                        layout.fileTree.resize(width)
-                      }}
-                    />
-                  </div>
-                </Show>
-              </div>
+              <LegacyFileTreePanel
+                fileOpen={fileOpen}
+                treeWidth={treeWidth}
+                fileTreeWidth={fileTreeWidth}
+                reviewOpen={reviewOpen}
+                size={props.size}
+                reviewCount={props.reviewCount}
+                hasReview={props.hasReview}
+                diffsReady={props.diffsReady}
+                diffFiles={diffFiles}
+                kinds={kinds}
+                activeDiff={props.activeDiff}
+                focusReviewDiff={props.focusReviewDiff}
+                openTab={openTab}
+              />
             </Show>
           </div>
         </Show>

@@ -49,11 +49,20 @@ function fromBunStream(name: string, get: () => ReadableStream<Uint8Array>) {
 // chunk, push to a tail buffer, swallow stream errors (the child closing the
 // pipe is normal). `log: true` surfaces a real protocol error to logs so a
 // regression doesn't silently disappear.
-function forkStderrDrain(stream: ReadableStream<Uint8Array>, into: string[]) {
+function forkStderrDrain(
+  stream: ReadableStream<Uint8Array>,
+  into: string[],
+  onOutput?: (output: string) => Effect.Effect<void>,
+) {
   return Effect.forkScoped(
     fromBunStream("stderr", () => stream).pipe(
       Stream.decodeText(),
-      Stream.runForEach((chunk) => Effect.sync(() => into.push(chunk))),
+      Stream.runForEach((chunk) =>
+        Effect.sync(() => {
+          into.push(chunk)
+          return into.join("")
+        }).pipe(Effect.andThen((output) => onOutput?.(output) ?? Effect.void)),
+      ),
       Effect.ignore({ log: true }),
     ),
   )
@@ -140,6 +149,9 @@ export type AcpOpts = SpawnOpts & {
 }
 
 export type AcpHandle = {
+  // Resolves only after ACP has installed its stdio connection. Requests sent
+  // before then spend their protocol deadline waiting for source CLI bootstrap.
+  readonly ready: Effect.Effect<void>
   // Writes a single JSON-RPC message to the child's stdin as one ndjson line.
   readonly send: (msg: object) => Effect.Effect<void>
   // Resolves with the next parsed JSON-RPC line from the child's stdout.
@@ -206,7 +218,7 @@ export function withCliFixture<A, E>(
 
     const spawn = Effect.fn("opencode.spawn")(function* (args: string[], opts?: SpawnOpts) {
       const start = Date.now()
-      const timeoutMs = opts?.timeoutMs ?? 30_000
+      const timeoutMs = opts?.timeoutMs ?? 60_000
       // stdin: "ignore" so the child doesn't see a piped stdin and block
       // on `Bun.stdin.text()` (see src/cli/cmd/run.ts — non-TTY stdin is
       // consumed as the prompt). The old Process.run wrapper defaulted to
@@ -397,7 +409,9 @@ export function withCliFixture<A, E>(
         Effect.sync(() =>
           Bun.spawn(["bun", "run", cliEntry, ...argv], {
             cwd: opts?.cwd ?? home,
-            env: { ...process.env, ...env, ...opts?.env },
+            // ACPProfile supplies a stderr-only connection-ready marker for
+            // this harness. It keeps request deadlines scoped to protocol work.
+            env: { ...process.env, ...env, ...opts?.env, OPENCODE_ACP_PROFILE: "1" },
             stdin: "pipe",
             stdout: "pipe",
             stderr: "pipe",
@@ -423,7 +437,12 @@ export function withCliFixture<A, E>(
       )
 
       const stderrChunks: string[] = []
-      yield* forkStderrDrain(proc.stderr, stderrChunks)
+      const ready = yield* Deferred.make<void>()
+      yield* forkStderrDrain(proc.stderr, stderrChunks, (output) =>
+        output.includes("[acp-profile] cli.acp.connection.create.mark")
+          ? Deferred.succeed(ready, undefined)
+          : Effect.void,
+      )
 
       // Each ndjson line becomes one queue entry. JSON.parse failures are
       // surfaced as the raw string so a malformed protocol message doesn't
@@ -448,6 +467,7 @@ export function withCliFixture<A, E>(
       )
 
       return {
+        ready: Deferred.await(ready),
         // `proc.stdin.write` returns `number | Promise<number>`. The promise
         // form is the backpressure signal — if we don't await it, rapid
         // successive sends can interleave under pipe-buffer-full conditions
@@ -522,6 +542,11 @@ export const cliIt = {
     body: (input: CliFixture) => Effect.Effect<A, E, Scope.Scope | HttpClient.HttpClient>,
     opts?: number | TestOptions,
   ) => it.live(name, () => withCliFixture(body), opts),
+  serial: <A, E>(
+    name: string,
+    body: (input: CliFixture) => Effect.Effect<A, E, Scope.Scope | HttpClient.HttpClient>,
+    opts?: number | TestOptions,
+  ) => test.serial(name, () => Effect.runPromise(Effect.scoped(withCliFixture(body))), opts),
   concurrent: <A, E>(
     name: string,
     body: (input: CliFixture) => Effect.Effect<A, E, Scope.Scope | HttpClient.HttpClient>,

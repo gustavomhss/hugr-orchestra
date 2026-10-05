@@ -41,6 +41,7 @@ const api = {
 function directoryState() {
   return createStore<State>({
     status: "loading",
+    load: { agent: "pending", config: "pending", session_status: "pending" },
     agent: [],
     command: [],
     reference: [],
@@ -72,6 +73,40 @@ function directoryState() {
     session_message: {},
     part: {},
     part_text_accum_delta: {},
+  })
+}
+
+// One of several bootstrap runs of the same directory; its config and status reads settle with `gate`.
+function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<void>) {
+  return bootstrapDirectory({
+    directory: "/project",
+    scope: ServerScope.local,
+    mcp: false,
+    global: {
+      config: {} satisfies Config,
+      path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+      project: [{ id: "project", worktree: "/project" } as Project],
+      provider,
+    },
+    sdk: {
+      app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
+      config: { get: () => gate.then(() => ({ data: { share: "manual" } })) },
+      session: { status: () => gate.then(() => ({ data: {} })) },
+      vcs: { get: async () => ({ data: undefined }) },
+      permission: { list: async () => ({ data: [] }) },
+      question: { list: async () => ({ data: [] }) },
+      v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+      provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+    } as unknown as OpencodeClient,
+    api,
+    store: state[0],
+    setStore: state[1],
+    vcsCache: { setStore() {} } as unknown as VcsCache,
+    loadSessions() {},
+    loadActiveSessions: async () => ({}),
+    translate: (key) => key,
+    queryClient: new QueryClient(),
+    protocol: Promise.resolve("v1"),
   })
 }
 
@@ -131,6 +166,7 @@ describe("bootstrapDirectory", () => {
       setStore,
       vcsCache: { setStore() {} } as unknown as VcsCache,
       loadSessions() {},
+      loadActiveSessions: async () => ({}),
       translate: (key) => key,
       queryClient: new QueryClient(),
       protocol: Promise.resolve("v1"),
@@ -170,6 +206,7 @@ describe("bootstrapDirectory", () => {
       setStore,
       vcsCache: { setStore() {} } as unknown as VcsCache,
       loadSessions() {},
+      loadActiveSessions: async () => ({}),
       translate: (key) => key,
       queryClient: new QueryClient(),
       protocol: Promise.resolve("v2"),
@@ -180,6 +217,185 @@ describe("bootstrapDirectory", () => {
     await new Promise((resolve) => setTimeout(resolve, 80))
 
     expect(store.status).toBe("complete")
+  })
+  test("records agent and config reads apart from unrelated failures", async () => {
+    const run = async (agents: () => Promise<unknown>) => {
+      const [store, setStore] = directoryState()
+      await bootstrapDirectory({
+        directory: "/project",
+        scope: ServerScope.local,
+        mcp: false,
+        global: {
+          config: {} satisfies Config,
+          path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+          project: [{ id: "project", worktree: "/project" } as Project],
+          provider,
+        },
+        sdk: {
+          app: { agents },
+          config: { get: async () => ({ data: { share: "manual" } }) },
+          session: { status: async () => ({ data: {} }) },
+          vcs: {
+            get: async () => {
+              throw new Error("vcs unavailable")
+            },
+          },
+          permission: { list: async () => ({ data: [] }) },
+          question: { list: async () => ({ data: [] }) },
+          v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+          provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+        } as unknown as OpencodeClient,
+        api,
+        store,
+        setStore,
+        vcsCache: { setStore() {} } as unknown as VcsCache,
+        loadSessions() {},
+        loadActiveSessions: async () => ({}),
+        translate: (key) => key,
+        queryClient: new QueryClient(),
+        protocol: Promise.resolve("v1"),
+      })
+      expect(store.load).toEqual({ agent: "pending", config: "pending", session_status: "pending" })
+      await new Promise((resolve) => setTimeout(resolve, 80))
+      return store
+    }
+
+    const loaded = await run(async () => ({ data: [{ name: "maestro", mode: "primary" }] }))
+    expect(loaded.status).toBe("partial")
+    expect(loaded.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
+    expect(loaded.config).toEqual({ share: "manual" })
+    expect(loaded.agent.map((agent) => agent.name)).toEqual(["maestro"])
+
+    const failed = await run(async () => {
+      throw new Error("agents unavailable")
+    })
+    expect(failed.load).toEqual({ agent: "failed", config: "ready", session_status: "ready" })
+  })
+
+  test("records the v1 status read and the v2 active session seed, which stays out of the bootstrap outcome", async () => {
+    for (const protocol of ["v1", "v2"] as const) {
+      for (const outcome of ["ready", "failed"] as const) {
+        const read = Promise.withResolvers<{ data: {} }>()
+        const [store, setStore] = directoryState()
+        await bootstrapDirectory({
+          directory: "/project",
+          scope: ServerScope.local,
+          mcp: false,
+          global: {
+            config: {} satisfies Config,
+            path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+            project: [{ id: "project", worktree: "/project" } as Project],
+            provider,
+          },
+          sdk: {
+            app: { agents: async () => ({ data: [] }) },
+            config: { get: async () => ({ data: {} }) },
+            session: { status: () => read.promise },
+            vcs: { get: async () => ({ data: undefined }) },
+            permission: { list: async () => ({ data: [] }) },
+            question: { list: async () => ({ data: [] }) },
+            v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+            provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+          } as unknown as OpencodeClient,
+          api,
+          store,
+          setStore,
+          vcsCache: { setStore() {} } as unknown as VcsCache,
+          loadSessions() {},
+          loadActiveSessions: () => read.promise,
+          translate: (key) => key,
+          queryClient: new QueryClient(),
+          protocol: Promise.resolve(protocol),
+        })
+        await new Promise((resolve) => setTimeout(resolve, 80))
+        expect(store.load.session_status).toBe("pending")
+        if (outcome === "ready") read.resolve({ data: {} })
+        if (outcome === "failed") read.reject(new Error("status unavailable"))
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        expect([protocol, store.load.session_status]).toEqual([protocol, outcome])
+        if (protocol === "v2") expect(store.status).toBe("complete")
+      }
+    }
+  })
+
+  test("an older bootstrap run that fails late cannot overwrite a newer run's read outcomes", async () => {
+    const [store, setStore] = directoryState()
+    const run = (read: () => Promise<unknown>) =>
+      bootstrapDirectory({
+        directory: "/project",
+        scope: ServerScope.local,
+        mcp: false,
+        global: {
+          config: {} satisfies Config,
+          path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+          project: [{ id: "project", worktree: "/project" } as Project],
+          provider,
+        },
+        sdk: {
+          app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
+          config: { get: read },
+          session: { status: read },
+          vcs: { get: async () => ({ data: undefined }) },
+          permission: { list: async () => ({ data: [] }) },
+          question: { list: async () => ({ data: [] }) },
+          v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+          provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+        } as unknown as OpencodeClient,
+        api,
+        store,
+        setStore,
+        vcsCache: { setStore() {} } as unknown as VcsCache,
+        loadSessions() {},
+        loadActiveSessions: async () => ({}),
+        translate: (key) => key,
+        queryClient: new QueryClient(),
+        protocol: Promise.resolve("v1"),
+      })
+    const older = Promise.withResolvers<never>()
+    await run(() => older.promise)
+    await run(async () => ({ data: {} }))
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
+    older.reject(new Error("older read failed"))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
+  })
+
+  test("a superseded run's successful read stays ready when the newer run's read fails, in either order", async () => {
+    // The older run's data lands in the store and a failed read never removes it, so "failed" would deny it.
+    for (const newerFirst of [true, false]) {
+      const state = directoryState()
+      const older = Promise.withResolvers<void>()
+      const newer = Promise.withResolvers<void>()
+      await overlappingRun(state, older.promise)
+      await overlappingRun(state, newer.promise)
+      await new Promise((resolve) => setTimeout(resolve, 80))
+      const outcomes = [() => older.resolve(), () => newer.reject(new Error("newer read failed"))]
+      for (const settle of newerFirst ? outcomes.toReversed() : outcomes) {
+        settle()
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      }
+      expect({ newerFirst, load: state[0].load, config: state[0].config }).toEqual({
+        newerFirst,
+        load: { agent: "ready", config: "ready", session_status: "ready" },
+        config: { share: "manual" },
+      })
+    }
+  })
+
+  test("only the latest run records a failure; an older run's failure waits for the newer outcome", async () => {
+    const state = directoryState()
+    const older = Promise.withResolvers<void>()
+    const newer = Promise.withResolvers<void>()
+    await overlappingRun(state, older.promise)
+    await overlappingRun(state, newer.promise)
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    older.reject(new Error("older read failed"))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(state[0].load).toEqual({ agent: "ready", config: "pending", session_status: "pending" })
+    newer.reject(new Error("newer read failed"))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(state[0].load).toEqual({ agent: "ready", config: "failed", session_status: "failed" })
   })
 })
 

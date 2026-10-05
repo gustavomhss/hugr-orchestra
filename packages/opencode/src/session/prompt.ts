@@ -2,6 +2,12 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import path from "path"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
+import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AppProcess } from "@opencode-ai/core/process"
+import { Global } from "@opencode-ai/core/global"
+import { InstanceStore } from "@/project/instance-store"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { Git } from "@/git"
 import os from "os"
 import { SessionID, MessageID, PartID } from "./schema"
 import { MessageV2 } from "./message-v2"
@@ -45,6 +51,7 @@ import { Process } from "@/util/process"
 import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { TaskTool, type TaskPromptOps } from "@/tool/task"
+import { PromptGuard } from "./prompt-guard"
 import { SessionRunState } from "./run-state"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -54,7 +61,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import { SessionReminders } from "./reminders"
-import { SessionTools } from "./tools"
+import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@opencode-ai/llm"
 
 // @ts-ignore
@@ -140,12 +147,12 @@ const layer = Layer.effect(
     const events = yield* EventV2Bridge.Service
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
-    const { db } = database
+    const nativeHost = yield* ArsenalBindings.make
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
       return {
         cancel: (sessionID: SessionID) => cancel(sessionID),
         resolvePromptParts: (template: string) => resolvePromptParts(template),
-        prompt: (input: PromptInput) => prompt(input).pipe(Effect.catch(Effect.die)),
+        prompt: (input, options) => nativeHost.withSession(input.sessionID, PromptGuard.wrap(prompt)(input, options)),
       } satisfies TaskPromptOps
     })
 
@@ -612,7 +619,7 @@ const layer = Layer.effect(
     })
 
     const currentModel = Effect.fnUntraced(function* (sessionID: SessionID) {
-      const current = yield* db
+      const current = yield* database.db
         .select({ model: SessionTable.model })
         .from(SessionTable)
         .where(eq(SessionTable.id, sessionID))
@@ -659,7 +666,7 @@ const layer = Layer.effect(
         sessionID: input.sessionID,
         time: { created: Date.now() },
         tools: input.tools,
-        agent: ag.name,
+        agent: ag.id ?? ag.name,
         model: {
           providerID: model.providerID,
           modelID: model.modelID,
@@ -1187,8 +1194,8 @@ const layer = Layer.effect(
             id: MessageID.ascending(),
             parentID: lastUser.id,
             role: "assistant",
-            mode: agent.name,
-            agent: agent.name,
+            mode: agent.id ?? agent.name,
+            agent: agent.id ?? agent.name,
             variant: lastUser.model.variant,
             path: { cwd: ctx.directory, root: ctx.worktree },
             cost: 0,
@@ -1219,26 +1226,13 @@ const layer = Layer.effect(
             .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
 
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
-            const lastUserMsg = msgs.findLast((m) => m.info.role === "user")
-            const bypassAgentCheck = lastUserMsg?.parts.some((p) => p.type === "agent") ?? false
-            const promptOps = yield* ops()
-
-            const tools = yield* SessionTools.resolve({
+            const tools = yield* SessionNativeTools.resolve({
               agent,
               session,
               model,
               processor: handle,
-              bypassAgentCheck,
               messages: msgs,
-              promptOps,
-            }).pipe(
-              Effect.provideService(Plugin.Service, plugin),
-              Effect.provideService(Permission.Service, permission),
-              Effect.provideService(ToolRegistry.Service, registry),
-              Effect.provideService(MCP.Service, mcp),
-              Effect.provideService(Truncate.Service, truncate),
-              Effect.provideService(RuntimeFlags.Service, flags),
-            )
+            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
 
             if (lastUser.format?.type === "json_schema") {
               tools["StructuredOutput"] = createStructuredOutputTool({
@@ -1469,7 +1463,7 @@ const layer = Layer.effect(
         ? [
             {
               type: "subtask" as const,
-              agent: agent.name,
+              agent: agent.id ?? agent.name,
               description: cmd.description ?? "",
               command: input.command,
               model: { providerID: taskModel.providerID, modelID: taskModel.modelID },
@@ -1478,7 +1472,8 @@ const layer = Layer.effect(
           ]
         : [...uniqueTemplateParts, ...(input.parts ?? [])]
 
-      const userAgent = isSubtask ? (input.agent ?? (yield* agents.defaultInfo()).name) : agent.name
+      const defaultAgent = isSubtask ? yield* agents.defaultInfo() : undefined
+      const userAgent = isSubtask ? (input.agent ?? defaultAgent!.id ?? defaultAgent!.name) : (agent.id ?? agent.name)
       const userModel = isSubtask
         ? input.model
           ? Provider.parseModel(input.model)
@@ -1510,10 +1505,10 @@ const layer = Layer.effect(
 
     return Service.of({
       cancel,
-      prompt,
-      loop,
-      shell,
-      command,
+      prompt: (input) => nativeHost.withSession(input.sessionID, prompt(input)),
+      loop: (input) => nativeHost.withSession(input.sessionID, loop(input)),
+      shell: (input) => nativeHost.withSession(input.sessionID, shell(input)),
+      command: (input) => nativeHost.withSession(input.sessionID, command(input)),
       resolvePromptParts,
     })
   }),
@@ -1653,6 +1648,11 @@ export const node = LayerNode.make({
     EventV2Bridge.node,
     RuntimeFlags.node,
     Database.node,
+    AppProcess.node,
+    Global.node,
+    InstanceStore.node,
+    ArsenalObservations.node,
+    Git.node,
   ],
 })
 

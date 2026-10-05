@@ -1,14 +1,28 @@
-import { createEffect, Suspense, type ParentProps } from "solid-js"
+import { createMediaQuery } from "@solid-primitives/media"
+import { createEffect, Show, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DebugBar } from "@/components/debug-bar"
 import { TabsInfoPopup } from "@/components/help-button"
 import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
+import { useLayout } from "@/context/layout"
 import { usePlatform } from "@/context/platform"
+import { OrchestraSidebar } from "@/orchestra/sidebar"
+import { createOrchestraNavigation } from "@/orchestra/compact-navigation"
+import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { setV2Toast, ToastRegion } from "@/utils/toast"
 
 export default function NewLayout(props: ParentProps) {
   const platform = usePlatform()
-  const [state, setState] = createStore({ debugTools: true })
+  const layout = useLayout()
+  const desktop = createMediaQuery("(min-width: 768px)")
+  const constrained = createMediaQuery("(max-width: 1279px)")
+  const narrow = createMediaQuery("(max-width: 1023px)")
+  const navigation = createOrchestraNavigation({ platform, constrained })
+  const [state, setState] = createStore({
+    debugTools: true,
+    railRequested: false,
+    tabsMount: undefined as HTMLElement | undefined,
+  })
 
   createEffect(() => setV2Toast(true))
 
@@ -23,27 +37,70 @@ export default function NewLayout(props: ParentProps) {
   }
 
   return (
-    <div
-      class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text"
-      style={{
-        "padding-top": "env(safe-area-inset-top, 0px)",
-        "padding-bottom": "env(safe-area-inset-bottom, 0px)",
-      }}
-    >
-      <Titlebar
-        update={update}
-        debugTools={
-          import.meta.env.DEV
-            ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
-            : undefined
-        }
-      />
-      <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
-        <Suspense>{props.children}</Suspense>
-      </main>
-      {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
-      <TabsInfoPopup />
-      <ToastRegion v2 />
-    </div>
+    // Desktop windows load the navigation preference over IPC. Wait for it so a collapsed
+    // window never paints the expanded width first; browser storage is ready at once.
+    <Show when={navigation.ready()}>
+      <div
+        class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text"
+        classList={{ "orchestra-shell": desktop() }}
+        style={{
+          "padding-top": "env(safe-area-inset-top, 0px)",
+          "padding-bottom": "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        <Titlebar
+          navigation={
+            <Show when={desktop() && narrow()}>
+              <OrchestraNavigationToggle
+                compact={!state.railRequested}
+                constrained={false}
+                iconOnly
+                onToggle={() => setState("railRequested", (value) => !value)}
+              />
+            </Show>
+          }
+          update={update}
+          tabsMount={desktop() ? state.tabsMount : undefined}
+          debugTools={
+            import.meta.env.DEV
+              ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
+              : undefined
+          }
+        />
+        <div
+          class="flex-1 min-h-0 min-w-0 flex flex-col"
+          classList={{ "orchestra-workspace": desktop() }}
+          data-navigation={
+            desktop()
+              ? narrow() && !state.railRequested
+                ? "hidden"
+                : navigation.compact()
+                  ? "compact"
+                  : "expanded"
+              : undefined
+          }
+        >
+          <Show when={desktop()}>
+            <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
+          </Show>
+          <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
+            <Show when={desktop()}>
+              <div
+                id="orchestra-session-tabs"
+                class="orchestra-session-tabs"
+                ref={(element) => setState("tabsMount", element)}
+                hidden={layout.route().type !== "session" && layout.route().type !== "draft"}
+              />
+            </Show>
+            <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
+              <Suspense>{props.children}</Suspense>
+            </main>
+          </div>
+        </div>
+        {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
+        <TabsInfoPopup />
+        <ToastRegion v2 />
+      </div>
+    </Show>
   )
 }

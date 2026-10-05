@@ -30,17 +30,17 @@ export default async () => plugin
 
 ### Input
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `sessionID` | `string` | Unique session identifier |
-| `cwd` | `string` | Working directory of the session |
-| `agent` | `string` | Agent name (empty string if unset) |
+| Field       | Type     | Description                                  |
+| ----------- | -------- | -------------------------------------------- |
+| `sessionID` | `string` | Unique session identifier                    |
+| `cwd`       | `string` | Working directory of the session             |
+| `agent`     | `string` | Agent name (empty string if unset)           |
 | `timestamp` | `number` | Unix epoch (ms) when the session was created |
 
 ### Output
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field      | Type                      | Description                                                                                                        |
+| ---------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `metadata` | `Record<string, unknown>` | Plugin tags merged into the session record. Reserved keys (`sessionID`, `cwd`, `agent`, `timestamp`) are rejected. |
 
 ## `stop`
@@ -67,23 +67,22 @@ export default async () => plugin
 
 ### Input
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `sessionID` | `string` | Session the turn belongs to |
-| `agent` | `string` | Agent name that produced the turn |
-| `messageID` | `string` | ID of the final assistant message |
-| `reason` | `"completed" \| "aborted" \| "error"` | How the turn ended |
+| Field       | Type                                  | Description                       |
+| ----------- | ------------------------------------- | --------------------------------- |
+| `sessionID` | `string`                              | Session the turn belongs to       |
+| `agent`     | `string`                              | Agent name that produced the turn |
+| `messageID` | `string`                              | ID of the final assistant message |
+| `reason`    | `"completed" \| "aborted" \| "error"` | How the turn ended                |
 
 ### Output
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field      | Type      | Description                                                                                                                                  |
+| ---------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `continue` | `boolean` | If `true`, the loop re-iterates with the same context instead of returning. Honored only when `reason === "completed"`. Defaults to `false`. |
 
 <Warning>
-  Setting `output.continue = true` re-runs the same `lastUser` through the LLM
-  with no synthetic prompt. Use sparingly — the loop will not re-ask the user
-  for input. To break out of a continued loop, your plugin must not set
+  Setting `output.continue = true` re-runs the same `lastUser` through the LLM with no synthetic prompt. Use sparingly —
+  the loop will not re-ask the user for input. To break out of a continued loop, your plugin must not set
   `output.continue = true` on a subsequent turn.
 </Warning>
 
@@ -99,9 +98,7 @@ import type { Hooks } from "@opencode-ai/plugin"
 
 const plugin: Hooks = {
   "session.end": async (input) => {
-    console.log(
-      `session ${input.sessionID} ended after ${input.duration_ms}ms (${input.reason})`,
-    )
+    console.log(`session ${input.sessionID} ended after ${input.duration_ms}ms (${input.reason})`)
   },
 }
 
@@ -110,17 +107,17 @@ export default async () => plugin
 
 ### Input
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `sessionID` | `string` | Session being deleted |
-| `duration_ms` | `number` | Wall-clock time since `session.start` |
-| `turn_count` | `number` | Number of agent turns completed in this session |
-| `reason` | `"user_exit" \| "error" \| "timeout"` | Why the session is ending |
+| Field         | Type                                  | Description                                     |
+| ------------- | ------------------------------------- | ----------------------------------------------- |
+| `sessionID`   | `string`                              | Session being deleted                           |
+| `duration_ms` | `number`                              | Wall-clock time since `session.start`           |
+| `turn_count`  | `number`                              | Number of agent turns completed in this session |
+| `reason`      | `"user_exit" \| "error" \| "timeout"` | Why the session is ending                       |
 
 ### Output
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field     | Type      | Description                                                                                           |
+| --------- | --------- | ----------------------------------------------------------------------------------------------------- |
 | `cleanup` | `boolean` | If `false`, the runtime defers forced cleanup for up to 5 seconds (hard ceiling). Defaults to `true`. |
 
 ## Error handling

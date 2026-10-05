@@ -12,6 +12,7 @@ import { ReadToolFileSystem } from "./read-filesystem"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
+import { ToolSafety } from "../tool-safety"
 
 export const name = "read"
 const SUPPORTED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"])
@@ -95,12 +96,13 @@ const layer = Layer.effectDiscard(
               Effect.mapError((error) => {
                 const message =
                   error instanceof ReadToolFileSystem.BinaryFileError ||
+                  error instanceof ToolSafety.Denied ||
                   error instanceof ReadToolFileSystem.MediaIngestLimitError ||
                   error instanceof Image.DecodeError ||
                   error instanceof Image.SizeError
                     ? error.message
                     : `Unable to read ${input.path}`
-                return new ToolFailure({ message })
+                return new ToolFailure({ message, ...(error instanceof ToolSafety.Denied ? { error } : {}) })
               }),
             )
           },

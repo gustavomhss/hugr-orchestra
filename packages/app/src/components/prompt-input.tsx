@@ -1219,9 +1219,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     const directory = sdk().directory
     if (!directory) return
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => (
-        <x.DialogSubagentModels sessionID={props.controls.session.id} directory={directory} />
-      ))
+      dialog.show(() => <x.DialogSubagentModels sessionID={props.controls.session.id} directory={directory} />)
     })
   }
   const accepting = createMemo(() => {
@@ -1813,10 +1811,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         </TooltipKeybind>
                       </div>
                     </Show>
-                    <Tooltip
-                      placement="top"
-                      value={language.t("dialog.subagentModels.title")}
-                    >
+                    <Tooltip placement="top" value={language.t("dialog.subagentModels.title")}>
                       <Button
                         variant="ghost"
                         size="normal"

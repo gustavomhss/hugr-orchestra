@@ -341,7 +341,7 @@ export interface Hooks {
    * - `output.continue` allows a plugin to request another turn
    *   (advanced; default false). Only honored when `reason === "completed"`.
    */
-  "stop"?: (
+  stop?: (
     input: {
       sessionID: string
       agent: string

@@ -1,0 +1,28 @@
+# Atlas — code owners for the ADMIN-OWNED governance surface.
+#
+# SCOPE IS DELIBERATELY NARROW. This file exists to gate the files that decide WHO MAY WRITE
+# KNOWLEDGE — nothing else. A broad pattern here would put owner review on the critical path of
+# every ordinary change, which is how a lock gets removed for being in the way.
+#
+# WHAT THIS DOES NOT DO — read this before trusting it:
+#   1. CODEOWNERS is INERT until branch protection sets `require_code_owner_reviews: true` on the
+#      default branch. Merely committing this file gates nothing. See docs/governance/policy-lock.md.
+#   2. It cannot distinguish two actors sharing ONE GitHub identity. If automation pushes with the
+#      same credentials as the owner named below, this file does not constrain the automation — the
+#      review requirement is satisfied by the identity, not by the human. Separating those identities
+#      is the precondition that makes this lock mean what it says.
+#   3. A team named here gates nothing unless that team has been granted access to THIS repository.
+#      `@HuGR-Labs/atlas-admins` exists and contains the owner, but at the time of writing it holds
+#      no repo grant — hence the individual owner is named alongside it, so the rule is live either
+#      way. Removing the individual is safe ONLY after the team grant is confirmed.
+
+# The governance policy itself: authz scopes (KNOW-11 owner-scoped write), the T0 heuristic, and the
+# near-duplicate threshold. `.atlas/policy.json` names the actors authorized to write each scope;
+# whoever can edit it can appoint themselves, which is precisely why it is gated here.
+/.atlas/                      @HuGR-Labs/atlas-admins @gmhelmold
+
+# The lock cannot be quietly removed by the thing it constrains.
+/.github/CODEOWNERS           @HuGR-Labs/atlas-admins @gmhelmold
+
+# The document that states what the lock is and how it is verified.
+/docs/governance/             @HuGR-Labs/atlas-admins @gmhelmold

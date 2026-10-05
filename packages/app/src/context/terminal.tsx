@@ -21,6 +21,8 @@ export type LocalPTY = {
   cursor?: number
 }
 
+export type TerminalCreateResult = { status: "created"; id: string } | { status: "failed"; error?: unknown }
+
 const WORKSPACE_KEY = "__workspace__"
 const MAX_TERMINAL_SESSIONS = 20
 
@@ -321,7 +323,8 @@ function createWorkspaceTerminalSession(
         setStore("all", [])
       })
     },
-    new(options?: { focus?: boolean }) {
+    // Always fulfill: existing fire-and-forget callers must not gain unhandled rejections.
+    new(options?: { focus?: boolean }): Promise<TerminalCreateResult> {
       const nextNumber = pickNextTerminalNumber()
       const focusRequest = options?.focus ? requestFocus(undefined, true) : undefined
 
@@ -331,12 +334,12 @@ function createWorkspaceTerminalSession(
         }
         return (await sdk.api.pty.create({ location, title: defaultTitle(nextNumber) })).data
       }
-      doCreate()
-        .then((data) => {
+      return doCreate()
+        .then((data): TerminalCreateResult => {
           const id = data?.id
           if (!id) {
             if (focusRequest !== undefined) cancelFocus(focusRequest)
-            return
+            return { status: "failed" }
           }
           const newTerminal = {
             id,
@@ -350,10 +353,12 @@ function createWorkspaceTerminalSession(
               setUi("focus", { request: focusRequest, id, pending: false })
             }
           })
+          return { status: "created", id }
         })
-        .catch((error: unknown) => {
+        .catch((error: unknown): TerminalCreateResult => {
           if (focusRequest !== undefined) cancelFocus(focusRequest)
           console.error("Failed to create terminal", error)
+          return { status: "failed", error }
         })
     },
     update(pty: Partial<LocalPTY> & { id: string }) {

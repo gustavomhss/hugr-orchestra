@@ -9,6 +9,8 @@
     "./app-dock-linux": "./src/app-dock-linux.ts",
     "./i18n/desktop-native": "./src/i18n/desktop-native.ts",
     "./updater": "./src/updater.ts",
+    "./native-titlebar": "./src/native-titlebar.ts",
+    "./orchestra/brand": "./src/orchestra/brand.tsx",
     "./wsl/types": "./src/wsl/types.ts",
     "./vite": "./vite.js",
     "./index.css": "./src/index.css"
@@ -28,6 +30,7 @@
     "test:e2e:local": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report e2e/playwright-report",
+    "test:orchestra": "playwright test --config e2e/orchestra/playwright.config.ts",
     "test:stability": "bun test ./e2e/performance/unit/visual-stability.test.ts && playwright test --config e2e/performance/timeline-stability/playwright.config.ts",
     "test:bench": "bun test ./e2e/performance/unit && playwright test --config e2e/performance/playwright.config.ts"
   },
@@ -93,6 +96,7 @@
     "solid-js": "catalog:",
     "solid-list": "catalog:",
     "solid-presence": "0.2.0",
+    "strip-ansi": "7.1.2",
     "tailwindcss": "catalog:"
   }
 }

@@ -176,6 +176,7 @@ const createToolContext = Effect.fn("Cli.debug.agent.createToolContext")(functio
     messageID,
     callID: PartID.ascending(),
     agent: agent.name,
+    agentID: agent.id,
     abort: new AbortController().signal,
     messages: [],
     metadata: () => Effect.void,

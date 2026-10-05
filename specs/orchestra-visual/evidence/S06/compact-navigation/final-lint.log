@@ -1,0 +1,191 @@
+
+  ! typescript-eslint(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly.
+    ,-[src/orchestra/compact-navigation.ts:22:54]
+ 21 |     ready: Promise.resolve(init),
+ 22 |     compact: createMemo(() => input.constrained() || state.collapsed === true),
+    :                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+ 23 |     toggle: () => {
+    `----
+
+  ! typescript-eslint(consistent-return): Function 'version' expected no return value.
+    ,-[src/pages/layout-new.tsx:33:7]
+ 32 |       if (state?.status !== "ready") return
+ 33 |       return state.version
+    :       ^^^^^^^^^^^^^^^^^^^^
+ 34 |     },
+    `----
+
+  ! typescript-eslint(consistent-return): Function 'matchRoute' expected no return value.
+     ,-[src/components/titlebar.tsx:251:17]
+ 250 |               if (route.type === "draft") {
+ 251 |                 return tabsStore.find((item) => item.type === "draft" && item.draftID === route.draftID)
+     :                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 252 |               }
+     `----
+
+  ! typescript-eslint(consistent-return): Function 'matchRoute' expected no return value.
+     ,-[src/components/titlebar.tsx:258:27]
+ 257 |                 )
+ 258 |                 if (main) return main
+     :                           ^^^^^^^^^^^
+ 259 |                 const s = session()
+     `----
+
+  ! typescript-eslint(consistent-return): Function 'matchRoute' expected no return value.
+     ,-[src/components/titlebar.tsx:265:31]
+ 264 |                   )
+ 265 |                   if (parent) return parent
+     :                               ^^^^^^^^^^^^^
+ 266 |                 }
+     `----
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/orchestra/sidebar.tsx:215:22]
+ 214 |         if (requests.disposed || requests.profile !== current || layout.route() !== route) return
+ 215 |         if (project) selectProject(conn, project, draft)
+     :                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 216 |       },
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/orchestra/sidebar.tsx:250:7]
+ 249 |     if (project) {
+ 250 |       selectProject(conn, project, true)
+     :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 251 |       return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(consistent-return): Function expected no return value.
+     ,-[src/components/titlebar.tsx:304:15]
+ 303 |                   )
+ 304 |               return { server: key, directory: project?.worktree ?? directory }
+     :               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 305 |             })
+     `----
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/components/titlebar.tsx:341:17]
+ 340 |                     : undefined
+ 341 |                 tabs.newDraft({ server: selected.server, directory: selected.directory }, "", model)
+     :                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 342 |                 return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/components/titlebar.tsx:351:17]
+ 350 |                 const model = tabs.stateValue<PromptSession>(sessionTab, "prompt")?.model.current()
+ 351 |                 tabs.newDraft({ server: sessionTab.server, directory: activeSession.directory }, "", model)
+     :                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 352 |                 return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/components/titlebar.tsx:358:17]
+ 357 |                 const model = tabs.stateValue<PromptSession>(activeTab, "prompt")?.model.current()
+ 358 |                 tabs.newDraft({ server: activeTab.server, directory: activeTab.directory }, "", model)
+     :                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 359 |                 return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/components/titlebar.tsx:372:19]
+ 371 |                 if (conn && project) {
+ 372 |                   tabs.newDraft({ server: ServerConnection.key(conn), directory: project.worktree }, "")
+     :                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 373 |                   return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/components/titlebar.tsx:379:17]
+ 378 |               if (current) {
+ 379 |                 tabs.newDraft({ server: server.key, directory: current.worktree }, "")
+     :                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 380 |                 return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/components/titlebar.tsx:389:15]
+ 388 |
+ 389 |               tabs.newDraft({ server: fallback.server, directory: fallback.project.worktree }, "")
+     :               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 390 |             }
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/orchestra/sidebar.tsx:446:33]
+ 445 |               data-component="orchestra-profile-picker"
+ 446 |               onCloseAutoFocus={dismiss.onCloseAutoFocus}
+     :                                 ^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                             |           `-- This reference may be unbound and lose `this` context
+ 447 |               onPointerDownOutside={dismiss.preventTriggerRestore}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/orchestra/sidebar.tsx:447:37]
+ 446 |               onCloseAutoFocus={dismiss.onCloseAutoFocus}
+ 447 |               onPointerDownOutside={dismiss.preventTriggerRestore}
+     :                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                                   |              `-- This reference may be unbound and lose `this` context
+ 448 |               onFocusOutside={dismiss.preventTriggerRestore}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/orchestra/sidebar.tsx:448:31]
+ 447 |               onPointerDownOutside={dismiss.preventTriggerRestore}
+ 448 |               onFocusOutside={dismiss.preventTriggerRestore}
+     :                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                             |              `-- This reference may be unbound and lose `this` context
+ 449 |             >
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/components/titlebar.tsx:576:30]
+ 575 |                     class="titlebar-icon rounded-md"
+ 576 |                     onClick={layout.mobileSidebar.toggle}
+     :                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                           |             `-- This reference may be unbound and lose `this` context
+ 577 |                     aria-label={language.t("sidebar.menu.toggle")}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/components/titlebar.tsx:588:30]
+ 587 |                     class="titlebar-icon rounded-md"
+ 588 |                     onClick={layout.mobileSidebar.toggle}
+     :                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                           |             `-- This reference may be unbound and lose `this` context
+ 589 |                     aria-label={language.t("sidebar.menu.toggle")}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/components/titlebar.tsx:604:30]
+ 603 |                     class="group/sidebar-toggle titlebar-icon w-8 h-6 p-0 box-border"
+ 604 |                     onClick={layout.sidebar.toggle}
+     :                              ^^^^^^^^^^^^^^^^^^^^^|
+     :                                        |          `-- This reference may be unbound and lose `this` context
+ 605 |                     aria-label={language.t("command.sidebar.toggle")}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of negating it.
+    ,-[src/orchestra/compact-navigation.ts:26:29]
+ 25 |       if (input.constrained()) return
+ 26 |       setState({ collapsed: state.collapsed !== true })
+    :                             ^^^^^^^^^^^^^^^^^^^^^^^^
+ 27 |     },
+    `----
+
+Found 21 warnings and 0 errors.
+Finished in 5.4s on 10 files with 130 rules using 12 threads.

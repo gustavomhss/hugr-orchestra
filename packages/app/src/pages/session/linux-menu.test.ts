@@ -359,13 +359,15 @@ test("Linux tab menu ref focuses the first enabled menuitem in DOM order", async
   } = await import("typescript")
   // The menu is private. Execute its actual ref callback without exporting or copying UI code.
   const source = createSourceFile(
-    "apps-panel.tsx",
-    await Bun.file(`${process.env.APP_DOCK_REVIEW_UI_SOURCE ?? import.meta.dir}/apps-panel.tsx`).text(),
+    "apps-panel-tab-menu.tsx",
+    await Bun.file(`${process.env.APP_DOCK_REVIEW_UI_SOURCE ?? import.meta.dir}/apps-panel-tab-menu.tsx`).text(),
     ScriptTarget.Latest,
     true,
     ScriptKind.TSX,
   )
-  const menu = source.statements.find((node) => isFunctionDeclaration(node) && node.name?.text === "TabMenu")
+  const menu = source.statements.find(
+    (node) => isFunctionDeclaration(node) && node.name?.text === "TabMenu" && !!node.body,
+  )
   if (!menu) throw new Error("TabMenu function not found")
   const refs: string[] = []
   const visit = (node: import("typescript").Node) => {
@@ -399,7 +401,7 @@ test("Linux tab menu ref focuses the first enabled menuitem in DOM order", async
   const mounted: HTMLDivElement[] = []
   const ref = new Function(
     "props",
-    `${new Bun.Transpiler({ loader: "ts" }).transformSync(`const ref = ${refs[0]!}`)}\nreturn ref;`,
+    `let menu;\n${new Bun.Transpiler({ loader: "ts" }).transformSync(`const ref = ${refs[0]!}`)}\nreturn ref;`,
   )({
     setElement: (element: HTMLDivElement) => mounted.push(element),
   }) as (element: HTMLDivElement) => void

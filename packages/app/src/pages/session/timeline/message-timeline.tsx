@@ -77,6 +77,8 @@ import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
+import type { ExecutionEvidenceInput } from "../orchestra-evidence"
+import { withoutShellProjections } from "../orchestra-evidence-data"
 
 const emptyMessages: MessageType[] = []
 const emptyParts: PartType[] = []
@@ -99,11 +101,8 @@ const taskDescription = (part: PartType, sessionID: string) => {
 }
 
 const boundaryTarget = (root: HTMLElement, target: EventTarget | null) => {
-  const current = target instanceof Element ? target : undefined
-  const nested = current?.closest("[data-scrollable]")
-  if (!nested || nested === root) return root
-  if (!(nested instanceof HTMLElement)) return root
-  return nested
+  const nested = target instanceof Element ? target.closest("[data-scrollable]") : undefined
+  return nested instanceof HTMLElement ? nested : root
 }
 
 const markBoundaryGesture = (input: {
@@ -113,20 +112,15 @@ const markBoundaryGesture = (input: {
   onMarkScrollGesture: (target?: EventTarget | null) => void
 }) => {
   const target = boundaryTarget(input.root, input.target)
-  if (target === input.root) {
-    input.onMarkScrollGesture(input.root)
-    return
-  }
-  if (
+  const mark =
+    target === input.root ||
     shouldMarkBoundaryGesture({
       delta: input.delta,
       scrollTop: target.scrollTop,
       scrollHeight: target.scrollHeight,
       clientHeight: target.clientHeight,
     })
-  ) {
-    input.onMarkScrollGesture(input.root)
-  }
+  if (mark) input.onMarkScrollGesture(input.root)
 }
 
 function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSummaries: boolean }) {
@@ -255,6 +249,7 @@ export function MessageTimeline(props: {
   setRevealMessage?: (fn: (id: string) => void) => void
   setScrollToEnd?: (fn: () => void) => void
   setHistoryAnchor?: (handlers: { capture: () => void; restore: (done: boolean) => void }) => void
+  renderExecutionEvidence?: (input: ExecutionEvidenceInput) => JSX.Element | undefined
 }) {
   let touchGesture: number | undefined
 
@@ -286,7 +281,7 @@ export function MessageTimeline(props: {
     if (!id) return []
     const visible = new Set(props.userMessages.map((message) => message.id))
     const boundary = sessionMessages().find((message) => message.role === "user" && !visible.has(message.id))?.id
-    const messages = sync().data.session_message[id] ?? []
+    const messages = withoutShellProjections(sync().data.session_message[id] ?? [])
     if (!boundary) return messages
     const index = messages.findIndex((message) => message.id === boundary)
     return index < 0 ? messages : messages.slice(0, index)
@@ -1019,21 +1014,25 @@ export function MessageTimeline(props: {
       <Show when={message()}>
         {(message) => (
           <Show when={part()}>
-            {(part) => (
-              <MessagePart
-                part={part()}
-                message={message()}
-                showAssistantCopyPartID={assistantCopyPartID(row().userMessageID)}
-                turnDurationMs={turnDurationMs(row().userMessageID)}
-                useV2Actions={settings.general.newLayoutDesigns()}
-                defaultOpen={defaultOpen()}
-                toolOpen={toolOpen[part().id] ?? defaultOpen()}
-                onToolOpenChange={(open) => setToolOpen(part().id, open)}
-                deferToolContent
-                virtualizeDiff={false}
-                onContentRendered={onSizeChange}
-              />
-            )}
+            {(part) => {
+              const output = () => (
+                <MessagePart
+                  part={part()}
+                  message={message()}
+                  showAssistantCopyPartID={assistantCopyPartID(row().userMessageID)}
+                  turnDurationMs={turnDurationMs(row().userMessageID)}
+                  useV2Actions={settings.general.newLayoutDesigns()}
+                  defaultOpen={defaultOpen()}
+                  toolOpen={toolOpen[part().id] ?? defaultOpen()}
+                  onToolOpenChange={(open) => setToolOpen(part().id, open)}
+                  deferToolContent
+                  virtualizeDiff={false}
+                  onContentRendered={onSizeChange}
+                />
+              )
+              const openOutput = () => setToolOpen(part().id, true)
+              return props.renderExecutionEvidence?.({ part, message, output, openOutput, onSizeChange }) ?? output()
+            }}
           </Show>
         )}
       </Show>

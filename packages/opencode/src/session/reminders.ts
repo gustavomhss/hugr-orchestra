@@ -20,11 +20,15 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
   const flags = yield* RuntimeFlags.Service
   const fsys = yield* FSUtil.Service
   const sessions = yield* Session.Service
+  const agentID = input.agent.id ?? input.agent.name
+  const isPlanMessage = (message: SessionV1.WithParts) =>
+    message.info.role === "assistant" &&
+    (message.info.agent === "plan" || (agentID === "plan" && message.info.agent === input.agent.name))
   const userMessage = input.messages.findLast((msg) => msg.info.role === "user")
   if (!userMessage) return input.messages
 
   if (!flags.experimentalPlanMode) {
-    if (input.agent.name === "plan") {
+    if (agentID === "plan") {
       userMessage.parts.push({
         id: PartID.ascending(),
         messageID: userMessage.info.id,
@@ -34,8 +38,8 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
         synthetic: true,
       })
     }
-    const wasPlan = input.messages.some((msg) => msg.info.role === "assistant" && msg.info.agent === "plan")
-    if (wasPlan && input.agent.name === "build") {
+    const wasPlan = input.messages.some(isPlanMessage)
+    if (wasPlan && agentID === "build") {
       userMessage.parts.push({
         id: PartID.ascending(),
         messageID: userMessage.info.id,
@@ -49,7 +53,7 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
   }
 
   const assistantMessage = input.messages.findLast((msg) => msg.info.role === "assistant")
-  if (input.agent.name !== "plan" && assistantMessage?.info.agent === "plan") {
+  if (agentID !== "plan" && assistantMessage && isPlanMessage(assistantMessage)) {
     const ctx = yield* InstanceState.context
     const plan = Session.plan(input.session, ctx)
     const exists = yield* fsys.existsSafe(plan)
@@ -67,7 +71,7 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
     return input.messages
   }
 
-  if (input.agent.name !== "plan" || assistantMessage?.info.agent === "plan") return input.messages
+  if (agentID !== "plan" || (assistantMessage && isPlanMessage(assistantMessage))) return input.messages
 
   const ctx = yield* InstanceState.context
   const plan = Session.plan(input.session, ctx)

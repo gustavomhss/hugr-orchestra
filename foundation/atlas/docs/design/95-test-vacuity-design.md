@@ -1,0 +1,27 @@
+# #95 — the TEST-VACUITY fact shape (ADR-0015 D5)
+
+The sixth greenfield fact family, grounded in **ADR-0015 D5** (`docs/adr/ADR-0015-grounding-tokens-are-typed-by-fact-shape.md`). A test-vacuity fact is a **SINGLE-ANCHOR PROVEN** record — _"named test `testName` in unit `unitKey` has all its assertion-shaped calls inside `catch` clauses and no assertion-count guard"_ — a **SYNTACTIC** property that is a pure function of the unit's AST. Unlike a transition (which has **no** mechanical HEAD oracle and is sealed `justified`), a test-vacuity fact **HAS** a mechanical HEAD oracle (`scanTestVacuity`, `adapter-io/src/test-vacuity.ts`), so it is **sealed `proven`** — the single-anchor AST-substrate analogue of a proven `depends-on` relation.
+
+## The design (the sub-decisions)
+
+- **D-TV1: seal = `proven`.** There IS a mechanical HEAD oracle (a tree-sitter scan re-derives the property from the unit's bytes), so the honest seal is `proven`, exactly as a proven `depends-on` relation (D2/#99a/ADR-0021). NEVER `justified` — that seal is for facts nothing at HEAD can re-run (a transition's historical claim). The seal carries a re-runnable **`TestVacuityWitness`** (the proven `shape` + the `testName` the re-run must still find), so a proven node is never `unverifiable` (the #240 trap).
+- **D-TV2: NO `check` — a different substrate.** The `Check = {index-query} | {assertion}` vocabulary and the predicate `VerifyKind = dependency|count|definition|negation` dispatch are entirely SCIP/symbol-reverse. The test-vacuity oracle is raw **tree-sitter** over the unit AST — a different substrate, living in adapter-io, INJECTED (mirror `verifyRelation`), never re-run inside genesis. So a test-vacuity fact carries NO `check`, is NOT a `PredicateNode`, and never enters the predicate lifecycle. It joins advisory/relation/negation/transition on the `family !== 'predicate'` UPDATE branch (re-evidencing the same `testVacuityKey` is an in-place UPDATE, never a SUPERSEDE-by-routing).
+- **D-TV3: identity = the (unitKey, testName) PAIR; freshness = the single unit anchor.** `unitKey` + `testName` are the identity legs (a unit may hold MANY named vacuous tests, each its own node — a distinct `testVacuityKey`). The grounding is SINGLE-anchor (exactly one entry, the unit; its `subtreeHash` the freshness leg) — unlike a relation (2-ended) or a transition (a 2-rev pair). Reverify (Wave 1a) RE-RUNS `scanTestVacuity` over the unit at HEAD and re-proves iff a fact with this `testName`+`shape` still appears (else `broken`).
+- **D-TV4: the `shape` vocabulary is closed/additive-only.** `assertion-only-in-catch`, `no-assertion-in-test` and `assertion-never-invoked` today; a new shape is a `cv` bump, exactly like `RelationKind`. The normative list lives in `reference/atlas-knowledge.md` — a member added to the union without a row there is an undocumented widening.
+
+## The template — the transition + relation families, mirrored
+
+The scaffolding (type, key, union/family widening, router/upsert/projection carriers, barrels, ADR) mirrors the **transition** family landing (`transition-types.ts`, `transition-key.ts`, the `GroundedFact`/`NodeFamily` widening, the row carriers). The **`proven` seal + witness** mirrors the **relation** family (`RelationWitness`; a proven fact carries its re-runnable derivation) — NOT the transition seal, which is `justified` with no oracle.
+
+| concern                       | transition (#234)                                             | test-vacuity (#95)                                                                                   |
+| ----------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| node type                     | `transition-types.ts` `TransitionNode`                        | `test-vacuity-types.ts` `TestVacuityNode` (re-exported byte-identically from `types.ts`)             |
+| `GroundedFact` / `NodeFamily` | `'transition'` (fifth)                                        | `'test-vacuity'` (sixth)                                                                             |
+| identity leg                  | `transitionKey(unitKey,shaBefore,shaAfter)` — directed triple | `testVacuityKey(unitKey,testName)` — a PAIR (directed n/a); `MalformedTestVacuityError` on empty leg |
+| seal                          | `justified`, NO oracle (D-T1)                                 | **`proven`**, tree-sitter oracle + `TestVacuityWitness` (D-TV1)                                      |
+| grounding                     | 2-rev pair, never re-checked                                  | SINGLE unit anchor, re-run at HEAD by reverify                                                       |
+| routing                       | check-less ⇒ UPDATE                                           | check-less ⇒ UPDATE (same `family !== 'predicate'` branch)                                           |
+
+## Scope (this WP = L1 only)
+
+This is the taproot PR: the TYPE, its identity key, the union/family widening, the write-side carrier arms (router/upsert/projection), the witness type, barrels, the ADR, and the minimal compile arms every exhaustive `switch(kind)`/`NodeFamily` site needs. The admit/seal (Wave 1a), the read leg (Wave 1b), and `compose.ts`/CLI/e2e (Wave 2) are OUT of scope. The oracle `adapter-io/src/test-vacuity.ts` stays a declared reference-model (`shipped:null`) until Wave 1a wires a caller.

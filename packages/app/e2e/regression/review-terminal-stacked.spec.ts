@@ -149,6 +149,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
   await expect(page.locator("#review-panel")).toBeVisible()
+  await page.getByRole("tab", { name: /Files Changed/ }).click()
   await expectTree(page, 8, "git-0.ts")
 
   await selectMode(page, "Git changes", "Branch changes")

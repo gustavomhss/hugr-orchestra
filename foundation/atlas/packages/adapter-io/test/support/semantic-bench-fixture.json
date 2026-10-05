@@ -1,0 +1,53 @@
+{
+  "_note": "FROZEN synthetic self-proof fixture (#196b WP-1, AC-3/AC-7). Hand-written 4-cell (+2) proof that the scorer is correct BEFORE any substrate/model spend. Editing this file WITHOUT re-pinning semantic-bench-fixture.pin.json fails the AC-7 freeze gate. The cells cover {TRUE,admitted},{TRUE,dropped},{FALSE,admitted},{FALSE,abstained} plus an AC-14 un-groundable TRUE and a FALSE drop, so a numerator/denominator swap OR a drop-vs-abstain / anchor-exclusion confusion changes the numbers and goes RED.",
+  "arm": "dependency",
+  "rows": [
+    {
+      "cell": "TRUE-admitted",
+      "claim": { "arm": "dependency", "target": "X", "scope": "s" },
+      "label": "TRUE",
+      "kind": "base"
+    },
+    {
+      "cell": "TRUE-dropped-truth",
+      "claim": { "arm": "dependency", "target": "Y", "scope": "s" },
+      "label": "TRUE",
+      "kind": "base"
+    },
+    {
+      "cell": "TRUE-ungroundable",
+      "claim": { "arm": "dependency", "target": "Z", "scope": "s" },
+      "label": "TRUE",
+      "kind": "base"
+    },
+    {
+      "cell": "FALSE-admitted",
+      "claim": { "arm": "dependency", "target": "P", "scope": "s" },
+      "label": "FALSE",
+      "kind": "dependency-assert-absent"
+    },
+    {
+      "cell": "FALSE-abstained",
+      "claim": { "arm": "dependency", "target": "Q", "scope": "s" },
+      "label": "FALSE",
+      "kind": "dependency-assert-absent"
+    },
+    {
+      "cell": "FALSE-dropped",
+      "claim": { "arm": "dependency", "target": "R", "scope": "s" },
+      "label": "FALSE",
+      "kind": "dependency-assert-absent"
+    }
+  ],
+  "outcomes": [
+    { "admitted": true },
+    { "admitted": false, "anchorFailed": false },
+    { "admitted": false, "anchorFailed": true },
+    { "admitted": true },
+    { "admitted": false, "anchorFailed": false },
+    { "admitted": false, "anchorFailed": false }
+  ],
+  "expected": {
+    "dependency": { "falseAdmitNum": 1, "falseAdmitDen": 3, "recallNum": 1, "recallDen": 2, "n": 6 }
+  }
+}

@@ -86,6 +86,11 @@ delete process.env["OTEL_RESOURCE_ATTRIBUTES"]
 // Use in-memory sqlite
 process.env["OPENCODE_DB"] = ":memory:"
 
+// Seed the installed workspace SDK before any real bootstrap can populate the
+// shared config with a registry copy. Arsenal factory proofs require this identity.
+const { prepareArsenalSDK } = await import("./maestro/arsenal-fixture")
+await prepareArsenalSDK(path.join(dir, "sdk-fixture"), path.join(dir, "config", "opencode"))
+
 // Now safe to import from src/
 const { initProjectors } = await import("../src/server/projectors")
 

@@ -129,3 +129,7 @@ const prompt = createPromptState()
 export function usePrompt() {
   return prompt
 }
+
+export function PromptProvider(props: { children?: unknown }) {
+  return props.children
+}

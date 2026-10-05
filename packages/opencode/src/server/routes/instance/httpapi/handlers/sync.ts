@@ -78,25 +78,31 @@ export const syncHandlers = HttpApiBuilder.group(InstanceHttpApi, "sync", (handl
     })
 
     const history = Effect.fn("SyncHttpApi.history")(function* (ctx: { payload: typeof HistoryPayload.Type }) {
-      return yield* db.transaction(
-        (tx) =>
-          Effect.gen(function* () {
-            yield* ensureSyncAvailable(tx)
-            const exclude = Object.entries(ctx.payload)
-            return yield* tx
-              .select()
-              .from(EventTable)
-              .where(
-                exclude.length > 0
-                  ? not(or(...exclude.map(([id, seq]) => and(eq(EventTable.aggregate_id, id), lte(EventTable.seq, seq))))!)
-                  : undefined,
-              )
-              .orderBy(asc(EventTable.seq))
-              .all()
-              .pipe(Effect.orDie)
-          }),
-        { behavior: "immediate" },
-      ).pipe(Effect.catchTag("SqlError", (error) => Effect.die(error)))
+      return yield* db
+        .transaction(
+          (tx) =>
+            Effect.gen(function* () {
+              yield* ensureSyncAvailable(tx)
+              const exclude = Object.entries(ctx.payload)
+              return yield* tx
+                .select()
+                .from(EventTable)
+                .where(
+                  exclude.length > 0
+                    ? not(
+                        or(
+                          ...exclude.map(([id, seq]) => and(eq(EventTable.aggregate_id, id), lte(EventTable.seq, seq))),
+                        )!,
+                      )
+                    : undefined,
+                )
+                .orderBy(asc(EventTable.seq))
+                .all()
+                .pipe(Effect.orDie)
+            }),
+          { behavior: "immediate" },
+        )
+        .pipe(Effect.catchTag("SqlError", (error) => Effect.die(error)))
     })
 
     return handlers.handle("start", start).handle("replay", replay).handle("steal", steal).handle("history", history)

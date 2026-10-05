@@ -1,0 +1,710 @@
+<title>Memória de Projeto — como funciona</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+    --score-paper: #eae5d8;
+    --score-line: #b9b09a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141210;
+      --paper-2: #1b1812;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #2c2820;
+      --line-soft: #241f18;
+      --accent: #d8a94b;
+      --accent-2: #e4be68;
+      --panel: #1b1812;
+      --code-bg: #0e0c09;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141210;
+    --paper-2: #1b1812;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #2c2820;
+    --line-soft: #241f18;
+    --accent: #d8a94b;
+    --accent-2: #e4be68;
+    --panel: #1b1812;
+    --code-bg: #0e0c09;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 19px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.82em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(48px, 8vw, 88px) 0 clamp(30px, 5vw, 48px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 20px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.3rem, 6vw, 3.6rem);
+    line-height: 1.03;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+    line-height: 1.35;
+    color: var(--ink);
+    max-width: 26ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .punch .hl {
+    color: var(--accent);
+  }
+
+  section {
+    padding: clamp(38px, 6vw, 56px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.4rem, 3.2vw, 2rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .big1 {
+    font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .big1 .hl {
+    color: var(--accent);
+  }
+  p {
+    margin: 0 0 14px;
+  }
+  p.lead {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+  }
+
+  /* injected vs consultable */
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 22px;
+  }
+  @media (max-width: 620px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .box {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .box.inj {
+    border-top: 3px solid var(--block);
+  }
+  .box.con {
+    border-top: 3px solid var(--seal);
+  }
+  .box .h {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.82rem;
+    margin-bottom: 8px;
+  }
+  .box.inj .h {
+    color: var(--block);
+  }
+  .box.con .h {
+    color: var(--seal);
+  }
+  .box p {
+    font-size: 0.96rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .box b {
+    color: var(--ink);
+  }
+
+  /* the example file */
+  .file {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .file .bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-2);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .file .bar .dots {
+    display: flex;
+    gap: 5px;
+  }
+  .file .bar .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    background: var(--line);
+  }
+  .file pre {
+    margin: 0;
+    padding: 18px 18px;
+    overflow-x: auto;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+  .file .rule {
+    color: var(--ink);
+  }
+  .file .rule b {
+    color: var(--seal);
+    font-weight: 700;
+  }
+  .file .never b {
+    color: var(--block);
+  }
+  .file .meta {
+    color: var(--muted);
+  }
+  .file .cmt {
+    color: var(--muted);
+  }
+  .cap-tag {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* template fields */
+  .tpl {
+    margin-top: 8px;
+    display: grid;
+    gap: 10px;
+  }
+  .fld {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 14px;
+    align-items: baseline;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  @media (max-width: 560px) {
+    .fld {
+      grid-template-columns: 1fr;
+      gap: 3px;
+    }
+  }
+  .fld .k {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .fld .k .opt {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.85em;
+  }
+  .fld .d {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .fld .d b {
+    color: var(--ink);
+  }
+
+  .score {
+    background: var(--score-paper);
+    border: 1px solid var(--score-line);
+    border-radius: 12px;
+    padding: 24px 16px;
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+  .score pre.mermaid {
+    margin: 0;
+    text-align: center;
+    min-width: 480px;
+  }
+  .score-cap {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: #6a6350;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  /* rules list */
+  .rules {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .r {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 15px 18px;
+  }
+  .r .n {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    flex: none;
+  }
+  .r .t {
+    font-size: 0.98rem;
+  }
+  .r .t b {
+    color: var(--ink);
+  }
+  .r .t span {
+    color: var(--ink-soft);
+  }
+
+  .oneline {
+    background: color-mix(in srgb, var(--accent) 9%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-top: 8px;
+    font-size: 1.12rem;
+    font-weight: 600;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .oneline .hl {
+    color: var(--accent);
+  }
+
+  footer {
+    padding: 36px 0 64px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span><span class="label">Atlas · memory · project memory</span>
+    </div>
+    <h1 class="wordmark">Memória de <span class="set">Projeto</span></h1>
+    <p class="punch">
+      O caderninho de <span class="hl">"sempre / nunca"</span> de cada membro — sussurrado no ouvido dele
+      <span class="hl">a cada turno.</span>
+    </p>
+  </div>
+</header>
+
+<!-- 1 the one idea -->
+<section>
+  <div class="wrap">
+    <p class="big1">
+      A memória de projeto é <span class="hl">INJETADA</span>, não consultada. Ela está
+      <span class="hl">sempre lá</span>, em todo turno — o membro não pede.
+    </p>
+    <div class="two">
+      <div class="box inj">
+        <div class="h">INJETADA · memória de projeto</div>
+        <p>
+          Entra sozinha em <b>todo</b> contexto do membro. Ele nunca pede — ela já está no prompt.
+          <b>Por isso tem que ser minúscula e só o essencial:</b> se inchar, envenena cada turno.
+        </p>
+      </div>
+      <div class="box con">
+        <div class="h">CONSULTÁVEL · task · pr · logbook</div>
+        <p>
+          Fica guardada; o membro <b>pede quando precisa</b>. Custa só no acesso, então pode ser rica.
+          <b>A de projeto é o oposto:</b> pequena, porque o custo é pago sempre.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 1.5 three slabs injected -->
+<section>
+  <div class="wrap">
+    <h2>O que é injetado tem três slabs: Awareness · Orientação · Regras</h2>
+    <p class="lead">
+      No começo do turno o membro recebe <b>três coisas</b> — e elas não se misturam. As duas primeiras são
+      <b>compartilhadas + derivadas</b> (não são memória escrita, então não podem apodrecer); só a terceira é uma
+      memória escrita, privada dele.
+    </p>
+    <div class="two">
+      <div class="box con" style="border-top-color: var(--accent-2)">
+        <div class="h" style="color: var(--accent-2)">AWARENESS · self-model do projeto · derivado do root</div>
+        <p>
+          O que o projeto <b>É</b>: mission · constitution · terrain · ontology · taste. Um
+          <b>rollup dos nós de topo do Atlas</b> (grounded, <code>node@sha</code>), <b>byte-idêntico</b> pra todo
+          membro. <b>Não é memória escrita</b> — é montado do root, então nunca fica stale.
+        </p>
+      </div>
+      <div class="box con">
+        <div class="h">ORIENTAÇÃO · compartilhada · derivada do log</div>
+        <p>
+          Onde o projeto <b>está AGORA</b>: goal + last/current + state. Vem do <b>walt</b> (goal) + fold sobre o
+          <b>event log</b> (estado). Byte-idêntica pra todo membro, sempre atual, nunca envelhece.
+        </p>
+      </div>
+      <div class="box" style="border-top: 3px solid var(--accent)">
+        <div class="h" style="color: var(--accent)">REGRAS · privadas do membro · a ÚNICA escrita</div>
+        <p>
+          As "sempre / nunca" que <b>ELE</b> aprendeu (o resto deste doc). A <b>única memória de projeto escrita</b>.
+          Não compartilhada — a do <code>charlie</code> não polui o <code>lucy</code>.
+        </p>
+      </div>
+    </div>
+    <div class="file" style="margin-top: 16px">
+      <div class="bar">
+        <span class="dots"><i></i><i></i><i></i></span> awareness (rollup do root · byte-idêntica)
+        <span class="cap-tag">~400 tok</span>
+      </div>
+      <pre><span class="cmt"># derivada do Atlas root — grounded node@sha, não escrita à mão</span>
+
+<span class="meta">mission      </span> sistema de billing idempotente ponta-a-ponta
+<span class="rule"><b>constitution</b></span> nenhum efeito de pagamento sem Idempotency-Key <span class="cmt">(T0)</span>
+<span class="meta">terrain      </span> gateway · worker · reconcile · ledger — T0: gateway, ledger
+<span class="meta">ontology     </span> seat · território · pack · poke · tier · kit
+<span class="meta">taste        </span> expand/contract · sem prosa livre · gate verde ou FAILED
+</pre>
+    </div>
+    <div class="file" style="margin-top: 16px">
+      <div class="bar">
+        <span class="dots"><i></i><i></i><i></i></span> orientação (montada · derivada do log)
+        <span class="cap-tag">~250 tok</span>
+      </div>
+      <pre><span class="cmt"># injetada em TODOS, a cada turno — situational awareness barata</span>
+
+<span class="meta">goal    </span> migrar o billing pra idempotência ponta-a-ponta   <span class="cmt">(walt · Definição)</span>
+<span class="rule"><b>last</b>    </span> WP-12 · Idempotency-Key no gateway — <b>selado</b>
+<span class="rule"><b>current</b> </span> WP-13 · retries idempotentes no worker — em andamento
+<span class="meta">state   </span> 3/5 territórios de billing cobertos · falta worker + reconcile
+</pre>
+    </div>
+    <div class="note">
+      <span class="label">Por que vale muito</span> Awareness (o que o projeto É) + Orientação (onde está) são
+      <b>derivadas e byte-idênticas</b> — situational awareness barata que <b>mata o drift</b>, sem nenhuma memória
+      escrita pra apodrecer. Os três slabs cabem fácil sob o teto de injeção.
+      <b>O resto deste doc é a terceira slab, a única escrita: as regras.</b>
+    </div>
+  </div>
+</section>
+
+<!-- 2 concrete example -->
+<section>
+  <div class="wrap">
+    <h2>Como é na prática</h2>
+    <p class="lead">
+      A memória de projeto do <code>charlie</code> (classe build). Cada linha é uma regra <b>imperativa</b> — "sempre"
+      ou "nunca" — com o escopo onde vale e um contador de uso.
+    </p>
+    <div class="file">
+      <div class="bar">
+        <span class="dots"><i></i><i></i><i></i></span> atlas/members/charlie/memory/project.md
+        <span class="cap-tag">≤ ~500 tok</span>
+      </div>
+      <pre><span class="cmt"># regras que entram em todo turno do charlie</span>
+
+<span class="never">- <b>nunca</b> logar o header Authorization</span>          <span class="meta">scope: src/http/**   hits: 12</span>
+<span class="rule">- <b>sempre</b> rodar `pnpm typecheck` antes de selar</span>   <span class="meta">scope: *             hits: 40</span>
+<span class="rule">- migrations aqui são <b>expand/contract</b> só</span>        <span class="meta">scope: db/**         hits:  7</span>
+</pre>
+    </div>
+    <p class="lead" style="margin-top: 16px">
+      É isso. Três linhas que valem ouro, não três parágrafos. <b>Específica e acionável</b> —
+      <code>"nunca logar o Authorization"</code>, não <code>"cuidado com segurança"</code>.
+    </p>
+  </div>
+</section>
+
+<!-- 3 the structure -->
+<section>
+  <div class="wrap">
+    <h2>A estrutura pré-definida</h2>
+    <p class="lead">Toda regra escreve contra este template fixo — <b>nunca prosa livre</b>. Quatro campos:</p>
+    <div class="tpl">
+      <div class="fld">
+        <div class="k">rule</div>
+        <div class="d"><b>uma linha imperativa.</b> "sempre X" / "nunca Y". Sem narrativa.</div>
+      </div>
+      <div class="fld">
+        <div class="k">scope</div>
+        <div class="d">
+          <b>onde vale</b> — um glob de path, uma fase, uma tool. É o que a torna relevante só onde importa.
+        </div>
+      </div>
+      <div class="fld">
+        <div class="k">grounding <span class="opt">(opcional)</span></div>
+        <div class="d"><b>um ponteiro</b> (arquivo@sha / PR / commit) que justifica a regra — de onde ela veio.</div>
+      </div>
+      <div class="fld">
+        <div class="k">hits</div>
+        <div class="d">
+          <b>quantas vezes evitou um erro.</b> Ordena as regras e comanda o decaimento — a que não é usada, some.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 the DAG -->
+<section>
+  <div class="wrap">
+    <h2>O ciclo — como uma regra entra e sai</h2>
+    <div class="score">
+      <pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'background':'#EAE5D8','primaryColor':'#EAE5D8','primaryTextColor':'#201D15','primaryBorderColor':'#9A6E28','lineColor':'#8f846a','fontFamily':'ui-monospace, Menlo, monospace','fontSize':'12px'}}}%%
+flowchart TD
+  L["lição de task / pr<br/>(consultável)"]
+  L -->|"generaliza? promoção deliberada"| C["candidato a regra"]
+  C --> G{"passa a barra?<br/>útil · não-óbvio · deduped · cabe no cap"}
+  G -->|"não"| X["descartado"]
+  G -->|"sim"| P[("MEMÓRIA DE PROJETO<br/>≤ ~500 tok · por membro")]
+  P ==>|"top-12 por hits · INJETADA em TODO turno"| M["o membro trabalha"]
+  M -->|"usou a regra: hits++"| P
+  P -->|"hits==0 em max(20 waves, 30 dias) → evicta"| A["arquivo<br/>(nunca deleta · re-spawnável)"]
+</pre>
+    </div>
+    <div class="score-cap">
+      Entra por promoção + barra de admissão. O set injetado é <b>slot fixo: top-12 por hits</b>. Sai por evicção —
+      hits==0 em max(20 waves, 30 dias) → arquivo — nunca é deletada.
+    </div>
+  </div>
+</section>
+
+<!-- 5 the rules -->
+<section>
+  <div class="wrap">
+    <h2>As regras que impedem virar lixo</h2>
+    <div class="rules">
+      <div class="r">
+        <span class="n">1</span>
+        <div class="t">
+          <b>Cap duro.</b>
+          <span
+            >~500 tokens no total por membro (o orquestrador ~800). 1–2 linhas por regra. Estourou → não entra.</span
+          >
+        </div>
+      </div>
+      <div class="r">
+        <span class="n">2</span>
+        <div class="t">
+          <b>Imperativa e específica.</b>
+          <span>"nunca logar o Authorization" entra; "cuidado com auth" é vago → recusado.</span>
+        </div>
+      </div>
+      <div class="r">
+        <span class="n">3</span>
+        <div class="t">
+          <b>Slot fixo: top-12 por hits.</b>
+          <span
+            >o set injetado são as 12 regras de maior <code>hits</code> (orq pode mais, sob ~800). Não é só cap de token
+            — é contagem de slot que ranqueia pra evicção.</span
+          >
+        </div>
+      </div>
+      <div class="r">
+        <span class="n">4</span>
+        <div class="t">
+          <b>Evicta, não morre.</b>
+          <span
+            >regra com <code>hits==0</code> em <code>max(20 waves, 30 dias)</code> sai pro arquivo — versionada,
+            re-spawnável. Nada se perde.</span
+          >
+        </div>
+      </div>
+      <div class="r">
+        <span class="n">5</span>
+        <div class="t">
+          <b>Por membro.</b>
+          <span
+            >a do charlie é do charlie; não polui o lucy nem o knowledge compartilhado. É memory, não knowledge.</span
+          >
+        </div>
+      </div>
+      <div class="r">
+        <span class="n">6</span>
+        <div class="t">
+          <b>Vem do trabalho.</b>
+          <span>nasce de uma lição de task/pr que se provou geral — promovida de propósito, não inventada.</span>
+        </div>
+      </div>
+    </div>
+    <div class="oneline" style="margin-top: 22px">
+      Injetada = <span class="hl">o menor conjunto de regras que ainda carrega o essencial.</span> Nada além disso anda
+      em todo turno.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      Atlas · memória de projeto · rascunho p/ validação. Números (cap ~500 / orq ~800) são draft, calibrados pelo
+      ledger. Spec: <code>docs/spec/memory.md §4.1</code>.
+    </p>
+  </div>
+</footer>

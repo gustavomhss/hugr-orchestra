@@ -69,6 +69,7 @@ export const DEFAULT_PROMPT: Prompt = [{ type: "text", content: "", start: 0, en
 export type PromptStore = {
   prompt: Prompt
   cursor?: number
+  agent?: string
   model?: PromptModel
   context: {
     items: (ContextItem & { key: string })[]
@@ -77,6 +78,7 @@ export type PromptStore = {
 
 type InitialPrompt = {
   prompt?: string
+  agent?: string
   model?: PromptModel
 }
 
@@ -181,6 +183,7 @@ function promptStore(initial?: InitialPrompt): PromptStore {
     prompt:
       text === undefined ? clonePrompt(DEFAULT_PROMPT) : [{ type: "text", content: text, start: 0, end: text.length }],
     cursor: text === undefined ? undefined : text.length,
+    agent: initial?.agent,
     model: initial?.model ? { ...initial.model } : undefined,
     context: {
       items: [],

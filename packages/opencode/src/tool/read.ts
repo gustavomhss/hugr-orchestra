@@ -1,13 +1,15 @@
 import { Effect, Option, Schema } from "effect"
 import { PositiveInt } from "@opencode-ai/core/schema"
-import * as path from "path"
-import * as Tool from "./tool"
+import path from "path"
+import { Tool } from "./tool"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import DESCRIPTION from "./read.txt"
 import { InstanceState } from "@/effect/instance-state"
 import { assertExternalDirectoryEffect } from "./external-directory"
 import { Instruction } from "../session/instruction"
 import { isPdfAttachment, sniffAttachmentMime } from "@/util/media"
+import { OutputInspector } from "@opencode-ai/core/output-inspector"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -159,6 +161,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
     ) {
       const lines: string[] = []
       const decoder = new TextDecoder("utf-8")
+      const inspector = OutputInspector.make()
       let pending = ""
       let line = byteStart ? start : 1
       let more = false
@@ -185,13 +188,13 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         bytes += size
       }
       const consume = (chunk: string) => {
-        pending += chunk
-        let index = pending.indexOf("\n")
-        while (index !== -1) {
-          take(pending.slice(0, index))
-          pending = pending.slice(index + 1)
+        const segments = chunk.split("\n")
+        for (const [index, segment] of segments.entries()) {
+          pending = Array.from(pending + segment).slice(0, MAX_LINE_LENGTH + 1).join("")
+          if (index === segments.length - 1) return
+          take(pending)
+          pending = ""
           if (done) return
-          index = pending.indexOf("\n")
         }
       }
       yield* Effect.scoped(
@@ -201,12 +204,16 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           while (!done) {
             const bytes = yield* file.readAlloc(CHUNK_BYTES)
             if (Option.isNone(bytes)) break
+            const reason = inspector.push(bytes.value)
+            if (reason) return yield* new ToolSafety.Denied({ reason })
             consume(decoder.decode(bytes.value, { stream: true }))
           }
           if (!done) {
             consume(decoder.decode())
             if (!done && pending.length) take(pending)
           }
+          const reason = inspector.finish()
+          if (reason) return yield* new ToolSafety.Denied({ reason })
         }),
       )
       return { lines, start, more, capped, ...(lines.length ? {} : { total: line - 1 }) } satisfies Page
@@ -220,11 +227,14 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           let total = 0
           let start: number | undefined
           let trailing = false
+          let overlap = new Uint8Array()
           while (position > 0) {
             const width = Math.min(CHUNK_BYTES, position)
             position -= width
             yield* file.seek(position, "start")
             const bytes = Option.getOrElse(yield* file.readAlloc(width), () => new Uint8Array())
+            yield* ToolSafety.inspect(Buffer.concat([bytes, overlap]).toString("utf8"))
+            overlap = bytes.slice(0, 128)
             if (position + bytes.length === size) trailing = bytes[bytes.length - 1] === 10
             for (let index = bytes.length - 1; index >= 0; index--) {
               if (bytes[index] !== 10) continue
@@ -368,7 +378,9 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         )
       if (page.capped && !page.lines.length)
         return yield* Effect.fail(
-          new Error(`One complete rendered line cannot fit under ${MAX_BYTES / 1024} KB output cap. Reduce system reminder or path size.`),
+          new Error(
+            `One complete rendered line cannot fit under ${MAX_BYTES / 1024} KB output cap. Reduce system reminder or path size.`,
+          ),
         )
       if (page.capped && explicit)
         return yield* Effect.fail(

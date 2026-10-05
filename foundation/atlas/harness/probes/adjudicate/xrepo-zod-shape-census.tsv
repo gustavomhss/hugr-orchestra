@@ -1,0 +1,76 @@
+01bb2d5f5309a0d9	SEMANTIC	-	runtime parse-rejection behavior of zod, not derivable from the shown unit's bytes
+02037698e06bfe9e	SEMANTIC	-	depends on runtime issue-count outcome of parse, not the unit AST
+024e7393bfe7f3e9	NEW_SHAPE	unasserted-parse-call	a parse call not wrapped in any expect/assertion is an AST-checkable test-hygiene shape
+037ae8169c08405e	SEMANTIC	-	runtime prototype-pollution behavior, needs execution not unit bytes
+03c26fae8b173c65	NEW_SHAPE	no-assertion-in-test	bare discarded expression plus commented-out assertions is a mechanical vacuous-test shape
+0461d8eba1c80786	SEMANTIC	-	runtime error-propagation behavior of safeParse, not decidable from the unit
+080094bbe3e06c39	SEMANTIC	-	runtime accept/throw behavior plus permissiveness interpretation
+088fec7ed5fbf8d9	NEW_SHAPE	identifier-value-in-branch	which identifier is pushed inside a CLI-flag branch is an AST value check
+0e9813850389681d	SEMANTIC	-	runtime literal/Symbol parse behavior, not from unit bytes
+106e494a80beed12	NEW_SHAPE	no-assertion-in-test	absence of any expect/toEqual call in the test body is AST-checkable
+1c744c42d1ef928b	SEMANTIC	-	runtime flatten() routing behavior, not the unit AST
+20f9e7d87893d455	NEW_SHAPE	regex-pattern-feature	presence of lookahead+backreference in a regex literal is a byte/pattern check
+24f0a8c68ff3534e	SEMANTIC	-	runtime multi-issue continuation behavior of parse
+25805ca71bdacb04	NEW_SHAPE	conditional-type-branches	enumerating which types a conditional type recurses into is an AST structure check
+292f54c0d35e2bab	SEMANTIC	-	interpretive claim about message wording differing across issue types
+2a4692c770e96905	NEW_SHAPE	enumerate-test-cases	which valid-parse benchmark cases exist for which variants is AST-enumerable
+2bdfc3609b75d5cb	SEMANTIC	-	runtime format() output shape, not the unit bytes
+371eadd603578ea8	NEW_SHAPE	type-alias-shape	whether Scalars is defined as Primitive|Primitive[] is a type-def AST check
+38e19ff733727785	SEMANTIC	-	runtime inclusive-boundary parse behavior
+3afd0e26975df934	SEMANTIC	-	runtime overwrite behavior of repeated min/max
+3dd3493eef7aede3	SEMANTIC	-	runtime sync-parse-throws-on-async-refine behavior
+3eea00a75e7f43d3	SEMANTIC	-	TS type resolution to never, interpretive/type-behavioral
+44397ce3ebe38a78	SEMANTIC	-	runtime independence from deleted globals, needs execution
+44740d769b445e7f	SEMANTIC	-	runtime thenable duck-typing acceptance behavior
+4b8582ac67a92702	NEW_SHAPE	empty-catch-block	try/catch with an empty catch block wrapping a call is an AST shape
+4ec6ad60ccea9a88	SEMANTIC	-	type-signature vs runtime-freezing mismatch, interpretive
+53f23a10801e379f	NEW_SHAPE	export-of-filename	an export whose value reads __filename is an AST/export check
+55088f13b3a3e8a6	SEMANTIC	-	generation-logic correlation between fields, interpretive/behavioral
+581926b0d5a95b06	SEMANTIC	-	precedence conclusion from array-order plus reverse plus loop overwrite is behavioral
+589867b1295b3194	SEMANTIC	-	runtime two-issue emission for a map entry
+5a69ca6b33f97ca9	SEMANTIC	-	runtime short-circuit-on-dirty issue behavior
+5bb30d1fe1fd5e99	SEMANTIC	-	runtime empty-string base64 validity
+5c15563b8bbccc5e	SEMANTIC	-	runtime instanceof-abstract-class parse behavior
+5d612de612ad847b	SEMANTIC	-	runtime nativeEnum member-matching behavior
+60df3b0d2f72712a	SEMANTIC	-	interpretive claim about an inverted predicate's intent
+6316e7994fef10c5	NEW_SHAPE	enumerate-test-cases	which union members have valid-parse cases is AST-enumerable
+66362514359919ad	SEMANTIC	-	runtime set-issue path shape, not the unit bytes
+66e865a4b99157fc	SEMANTIC	-	mirrors-the-Gregorian-rule interpretation, irreducibly semantic
+6d7ff6e7feea743f	SEMANTIC	-	structural-vs-identity classification conclusion is interpretive/behavioral
+78427ccba3d02442	SEMANTIC	-	runtime short-circuit-before-transform behavior
+7f3eec3e81356362	NEW_SHAPE	enumerate-test-cases	which string-length values a benchmark case parses is AST-enumerable
+842c0deb96d35c6b	NEW_SHAPE	commented-out-tests	only-a-no-op-test-executes with the rest commented out is an AST hygiene shape
+84bb7b49ccc54612	SEMANTIC	-	runtime intersection deep-merge failure behavior
+90036eaf038bb821	SEMANTIC	-	type-level branding input/output distinction, interpretive
+97dc71270f8b8877	SEMANTIC	-	runtime removeCatch/catch resolution behavior
+9d75a65d1b871203	SEMANTIC	-	filter-excludes-reverse-mappings conclusion is behavioral interpretation
+9f6a11f5d93975f0	SEMANTIC	-	the as-any-because-type-lacks-name rationale is interpretive
+a0336cd1b8d21149	SEMANTIC	-	runtime last-default-wins behavior
+a0faf2b4dbe863f0	SEMANTIC	-	runtime catchall-overrides-strict behavior
+a5c1532c2bdeff37	SEMANTIC	-	runtime flatten-vs-format path-handling divergence
+a60b9115149925f3	SEMANTIC	-	runtime parse success of two recursive-schema APIs
+a7dd6aebb6de58a4	SEMANTIC	-	runtime description-survives-wrapping behavior
+aa1517ec47148823	NEW_SHAPE	no-assertion-in-test	no expect call on any accessed getter is an AST vacuous-test check
+aa5b34c3745279ba	SEMANTIC	-	runtime optional-preserves-formErrors behavior across schemas
+aa5e17adcae364f4	SEMANTIC	-	runtime augment-overwrites-key behavior
+b2d4cf0307616454	SEMANTIC	-	type-error-but-runtime-accepted behavior, interpretive
+bcbc003c6ad79758	SEMANTIC	-	type-predicate narrowing behavior in the chain, type-behavioral
+bd9c0d673509f471	SEMANTIC	-	runtime bare-union-rejects-undefined behavior
+c02ce8ded5a44100	NEW_SHAPE	assertion-never-invoked	matcher member access without a call (toBeNull; not toBeNull()) is an AST shape
+c1a77ee926341d56	NEW_SHAPE	commented-out-tests	all substantive tests commented, only a no-op test runs, is an AST hygiene shape
+d3ece4400bd3b77a	SEMANTIC	-	runtime safeParseAsync-resolves-success-then-rejects behavior
+d56639c82b5edc54	SEMANTIC	-	asymmetric-fallback conclusion needs return-value/data-flow interpretation
+dd6136c661d238b4	SEMANTIC	-	runtime plain-vs-ZodError throw distinction
+dd7f1aede50756d5	NEW_SHAPE	assertion-only-in-catch	sole assertion inside catch with no path outside is an AST vacuous-test shape
+e28514c547520f79	SEMANTIC	-	reference-equality-across-getter-calls is runtime behavior
+e2eab6b4684cc3bd	NEW_SHAPE	unasserted-parse-call	parse called with no wrapping expect/assertion is AST-checkable
+e62b8f526a6b5b9d	NEW_SHAPE	assertion-only-in-catch	all asserts inside catch, no fail/expect.assertions outside, is an AST shape
+e7c44d5c89a6b9bd	SEMANTIC	-	runtime enum/nativeEnum discriminator acceptance behavior
+f2612aaf1dfc5a04	SEMANTIC	-	runtime synthesized union-failure issue shape
+f4294dc66b544ec8	SEMANTIC	-	does-not-exercise-this-binding conclusion is interpretive about test intent
+f74ff32453aaf9fd	SEMANTIC	-	runtime extra-args-ignored function-schema behavior
+f930528617bb08df	NEW_SHAPE	inline-construction-vs-helper	methods constructing new ZodString inline instead of calling _addCheck is an AST body check
+fa992a631fa1e0c6	SEMANTIC	-	type-inequality-but-value-never behavior, type-interpretive
+fd6abff7e1669c4b	NEW_SHAPE	module-level-mutable-singleton	one module-level let written by setter and read by getter is an AST data-flow shape
+fdb40e8b10554c10	EXISTING	depends-on	the .nonstrict() call resolves to ZodObject's definition via SCIP, proving the method exists
+ffc0cbfe6b48c99e	SEMANTIC	-	runtime deepPartial-drops-min-constraint behavior

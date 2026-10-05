@@ -20,6 +20,11 @@ import { Protected } from "./protected"
 declare const OPENCODE_LIBC: string | undefined
 
 const SUBSCRIBE_TIMEOUT_MS = 10_000
+type Timer = ReturnType<typeof setTimeout>
+type TimerApi = {
+  set: (callback: () => void, delay: number) => Timer
+  clear: (timer: Timer) => void
+}
 
 export const Event = FileSystemWatcher.Event
 
@@ -50,6 +55,33 @@ function protecteds(dir: string) {
 
 export const hasNativeBinding = () => !!watcher()
 
+export function closeSubscriptions(
+  pendingSubscriptions: Iterable<Promise<{ unsubscribe: () => Promise<void> }>>,
+  timeoutMs = SUBSCRIBE_TIMEOUT_MS,
+  timerApi: TimerApi = { set: setTimeout, clear: clearTimeout },
+) {
+  const cleanup = [...pendingSubscriptions].map((pending) =>
+    pending.then(
+      (subscription) => subscription.unsubscribe(),
+      () => undefined,
+    ),
+  )
+  return new Promise<void>((resolve) => {
+    let settled = false
+    const timer = timerApi.set(() => {
+      if (settled) return
+      settled = true
+      resolve()
+    }, timeoutMs)
+    Promise.allSettled(cleanup).then(() => {
+      if (settled) return
+      settled = true
+      timerApi.clear(timer)
+      resolve()
+    })
+  })
+}
+
 export interface Interface {}
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/v2/FileWatcher") {}
@@ -78,10 +110,8 @@ const layer = Layer.effect(
     const git = yield* Git.Service
     const context = yield* Effect.context()
     const runFork = Effect.runForkWith(context)
-    const subscriptions: ParcelWatcher.AsyncSubscription[] = []
-    yield* Effect.addFinalizer(() =>
-      Effect.promise(() => Promise.allSettled(subscriptions.map((subscription) => subscription.unsubscribe()))),
-    )
+    const pendingSubscriptions = new Set<Promise<ParcelWatcher.AsyncSubscription>>()
+    yield* Effect.addFinalizer(() => Effect.promise(() => closeSubscriptions(pendingSubscriptions)))
 
     const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
       for (const update of updates) {
@@ -93,11 +123,10 @@ const layer = Layer.effect(
 
     const subscribe = (directory: string, ignore: string[]) => {
       const pending = w.subscribe(directory, callback, { ignore, backend })
+      pendingSubscriptions.add(pending)
       return Effect.promise(() => pending).pipe(
-        Effect.tap((subscription) => Effect.sync(() => subscriptions.push(subscription))),
         Effect.timeout(SUBSCRIBE_TIMEOUT_MS),
         Effect.catchCause((cause) => {
-          pending.then((subscription) => subscription.unsubscribe()).catch(() => {})
           return Effect.logError("failed to subscribe", { directory, cause: Cause.pretty(cause) })
         }),
       )

@@ -1,10 +1,10 @@
 import { ToolOutput, type LLMEvent, type ProviderMetadata, type ToolResultValue, type Usage } from "@opencode-ai/llm"
 import { DateTime, Effect } from "effect"
-import { EventV2 } from "../../event"
-import { ModelV2 } from "../../model"
-import { SessionEvent } from "../event"
-import { SessionMessage } from "../message"
-import { SessionSchema } from "../schema"
+import { EventV2 } from "@opencode-ai/core/event"
+import { ModelV2 } from "@opencode-ai/core/model"
+import { SessionEvent } from "@opencode-ai/core/session/event"
+import { SessionMessage } from "@opencode-ai/core/session/message"
+import { SessionSchema } from "@opencode-ai/core/session/schema"
 
 type Input = {
   readonly sessionID: SessionSchema.ID
@@ -69,7 +69,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
   let assistantActive = false
   let assistantFailed = false
   let providerFailed = false
-  let stepSettlement: { readonly finish: string; readonly tokens: ReturnType<typeof tokens> } | undefined
+  let stepSettlement: { readonly finish: string; readonly tokens: ReturnType<typeof tokens>; readonly usageKnown: boolean } | undefined
 
   const startAssistant = Effect.fnUntraced(function* () {
     if (assistantMessageID !== undefined) return assistantMessageID
@@ -397,7 +397,11 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
         yield* flush()
         assistantActive = false
         if (stepSettlement) return yield* Effect.die("Duplicate step finish")
-        stepSettlement = { finish: event.reason, tokens: tokens(event.usage) }
+        stepSettlement = {
+          finish: event.reason,
+          tokens: tokens(event.usage),
+          usageKnown: event.usage !== undefined && [event.usage.nonCachedInputTokens, event.usage.outputTokens, event.usage.cacheReadInputTokens, event.usage.cacheWriteInputTokens].every((value) => value !== undefined && Number.isSafeInteger(value) && value >= 0) && (event.usage.reasoningTokens === undefined || Number.isSafeInteger(event.usage.reasoningTokens) && event.usage.reasoningTokens >= 0 && event.usage.outputTokens !== undefined && event.usage.reasoningTokens <= event.usage.outputTokens),
+        }
         return
       case "finish":
         return

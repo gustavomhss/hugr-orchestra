@@ -17,6 +17,9 @@ export const EventTable = sqliteTable(
     seq: integer().notNull(),
     type: text().notNull(),
     data: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
+    seal_version: integer(),
+    seal_prev: text(),
+    seal_hash: text(),
   },
   (table) => [
     uniqueIndex("event_aggregate_seq_idx").on(table.aggregate_id, table.seq),

@@ -1,9 +1,31 @@
 import path from "node:path"
 import { lstat, realpath } from "node:fs/promises"
 import { tool, type ToolContext } from "@opencode-ai/plugin"
+import { Option, Schema } from "effect"
 import type { HugrComposerClient } from "./client"
 
-function output(result: { content: ReadonlyArray<{ type: string; text?: string }>; structuredContent?: unknown }) {
+function output(result: {
+  content: ReadonlyArray<{ type: string; text?: string }>
+  structuredContent?: unknown
+  isError?: boolean
+}) {
+  const failure = (value: unknown) => {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return false
+    if ("ok" in value && value.ok === false) return true
+    if (!("error" in value) || value.error === null || value.error === undefined || value.error === false) return false
+    if (typeof value.error === "string") return value.error.trim().length > 0
+    if (Array.isArray(value.error)) return value.error.length > 0
+    if (typeof value.error === "object") return Object.keys(value.error).length > 0
+    return true
+  }
+  if (result.isError || failure(result.structuredContent)) throw new Error("HuGR Composer backend operation failed")
+  // Some MCP versions wrap the backend envelope in JSON text rather than structuredContent.
+  const failedText = result.content.some((item) => {
+    if (item.type !== "text" || !item.text) return false
+    const decoded = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(item.text)
+    return Option.isSome(decoded) && failure(decoded.value)
+  })
+  if (failedText) throw new Error("HuGR Composer backend operation failed")
   if (result.structuredContent !== undefined) return JSON.stringify(result.structuredContent, null, 2)
   const text = result.content.flatMap((item) => (item.type === "text" && item.text ? [item.text] : [])).join("\n\n")
   return text || JSON.stringify(result, null, 2)

@@ -8,11 +8,12 @@ Circular progress indicator for compact loading states.
 Pair with labels for clarity in dashboards.
 
 ### API
-- Required: \`percentage\` (0-100).
+- Required: \`percentage\` (0-100), or \`undefined\` when the value is unknown.
 - Optional: \`size\`, \`strokeWidth\`.
 
 ### Variants and states
 - Single visual style; size and stroke width adjust appearance.
+- Unknown (\`percentage\` is \`undefined\`): the track is dashed and no progress is drawn, so it never reads as 0%.
 
 ### Behavior
 - Percentage is clamped between 0 and 100.
@@ -54,6 +55,15 @@ export const States = {
       <mod.ProgressCircle percentage={0} size={32} />
       <mod.ProgressCircle percentage={50} size={32} />
       <mod.ProgressCircle percentage={100} size={32} />
+    </div>
+  ),
+}
+
+export const Unknown = {
+  render: () => (
+    <div style={{ display: "flex", gap: "16px", "align-items": "center" }}>
+      <mod.ProgressCircle percentage={undefined} size={32} />
+      <mod.ProgressCircle percentage={0} size={32} />
     </div>
   ),
 }

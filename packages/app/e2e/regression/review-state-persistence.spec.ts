@@ -18,6 +18,7 @@ test("restores review mode and selected file per session", async ({ page }) => {
   await page.goto(sessionHref(sessionA))
   await expectSessionTitle(page, titleA)
   await page.getByRole("button", { name: "Toggle review" }).click()
+  await page.getByRole("tab", { name: /Files Changed/ }).click()
 
   await selectMode(page, "Git changes", "Branch changes")
   await selectFile(page, "beta.ts")
@@ -36,6 +37,7 @@ test("restores review mode and selected file per session", async ({ page }) => {
 
   await page.reload()
   await expectSessionTitle(page, titleA)
+  await page.getByRole("tab", { name: /Files Changed/ }).click()
   await expect(page.getByRole("button", { name: "Branch changes" })).toBeVisible()
   await expectSelectedFile(page, "beta.ts")
 

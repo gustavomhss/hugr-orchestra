@@ -1,0 +1,118 @@
+/* Import after session.css: the approved final reference has a stacked 98px composer. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-layout="body"] {
+    padding: 1px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"] {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 10px;
+    min-block-size: 98px;
+    padding: 12px 14px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    > div[data-slot="prompt-input-v2-editor"] {
+    display: grid;
+    flex: 0 0 auto;
+    inline-size: 100%;
+    min-block-size: 28px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input"] {
+    grid-area: 1 / 1;
+    min-block-size: 28px;
+    padding-block: 4px;
+    padding-inline: 2px;
+    font-family: Arial, sans-serif;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input"]
+    + div {
+    grid-area: 1 / 1;
+    position: relative;
+    inset: auto;
+    padding-block-start: 4px;
+    padding-inline: 2px;
+    font-family: Arial, sans-serif;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    > div[data-slot="prompt-input-v2-toolbar"] {
+    flex: 0 0 auto;
+    inline-size: 100%;
+    max-inline-size: none;
+    block-size: 34px;
+    padding-inline: 0;
+    gap: 8px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    > div[data-slot="prompt-input-v2-toolbar"]
+    > div[data-slot="prompt-input-v2-controls"] {
+    gap: 8px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    [data-component="tooltip-v2-trigger"]:has(> [data-component="button-v2"]) {
+    min-inline-size: min(48px, 20%);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    [data-component="tooltip-v2-trigger"]:has(> :is([data-action="prompt-attach"], [data-action="prompt-submit"])) {
+    flex-shrink: 0;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    [data-component="tooltip-v2-trigger"]:has(> [data-action="prompt-model"]) {
+    margin-inline-start: auto;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    [data-action="prompt-attach"] {
+    inline-size: 32px;
+    block-size: 26px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    [data-component="button-v2"] {
+    min-inline-size: 0;
+    letter-spacing: normal;
+  }
+}

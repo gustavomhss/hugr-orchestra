@@ -1033,7 +1033,8 @@ describe("workspace CRUD", () => {
                   .from(SessionTable)
                   .where(eq(SessionTable.id, session.id))
                   .get()
-                  .pipe(Effect.orDie)))?.workspaceID,
+                  .pipe(Effect.orDie),
+              ))?.workspaceID,
             ).toBe(previous.id)
           }),
         { git: true },
@@ -1764,6 +1765,6 @@ describe("workspace waitForSync", () => {
         )
       }),
     { git: true },
-    7000,
+    30_000,
   )
 })

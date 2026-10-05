@@ -1,5 +1,5 @@
 import { $ } from "bun"
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { ConfigProvider, Deferred, Duration, Effect, Fiber, Layer, Option, Stream } from "effect"
@@ -15,11 +15,45 @@ import { location } from "../fixture/location"
 import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 
-const describeWatcher = Watcher.hasNativeBinding() && !process.env.CI ? describe : describe.skip
+const describeWatcher = Watcher.hasNativeBinding() ? describe : describe.skip
 
 type WatcherEvent = { file: string; event: "add" | "change" | "unlink" }
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([FSUtil.node, EventV2.node])))
+
+test("closes pending watcher subscriptions after they resolve", async () => {
+  let resolve: (subscription: { unsubscribe: () => Promise<void> }) => void = () => {}
+  let unsubscribed = false
+  const pending = new Promise<{ unsubscribe: () => Promise<void> }>((next) => {
+    resolve = next
+  })
+  const cleanup = Watcher.closeSubscriptions(new Set([pending]), 100)
+  resolve({ unsubscribe: async () => void (unsubscribed = true) })
+  await cleanup
+  expect(unsubscribed).toBe(true)
+})
+
+test("finishes resolved watcher cleanup before its deadline", async () => {
+  const pending = Promise.resolve({ unsubscribe: async () => {} })
+  let cleared = false
+  await Watcher.closeSubscriptions(new Set([pending]), 1_000, {
+    set: (callback, delay) => setTimeout(callback, delay),
+    clear: (timer) => {
+      cleared = true
+      clearTimeout(timer)
+    },
+  })
+  expect(cleared).toBe(true)
+})
+
+test("bounds watcher subscription teardown when native request never resolves", async () => {
+  const pending = new Promise<{ unsubscribe: () => Promise<void> }>(() => {})
+  const result = await Promise.race([
+    Watcher.closeSubscriptions(new Set([pending]), 10).then(() => "closed"),
+    new Promise((resolve) => setTimeout(() => resolve("hung"), 100)),
+  ])
+  expect(result).toBe("closed")
+})
 
 const configLayer = Layer.succeed(
   Config.Service,

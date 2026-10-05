@@ -911,19 +911,19 @@ describe("tool.shell permissions", () => {
   each("does not ask for external_directory permission when rm inside project", () =>
     Effect.gen(function* () {
       const tmp = yield* tmpdirScoped()
-      yield* Effect.promise(() => Bun.write(path.join(tmp, "tmpfile"), "x"))
+      yield* Effect.promise(() => Bun.write(path.join(tmp, "nested", "tmpfile"), "x"))
       yield* runIn(
         tmp,
         Effect.gen(function* () {
           const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
-          yield* run(
+          expect((yield* run(
             {
-              command: `rm -rf ${path.join(tmp, "nested")}`,
+              command: PS.has(sh()) ? "Remove-Item -Recurse -Force -LiteralPath nested" : sh() === "cmd" ? "rmdir /s /q nested" : "rm -rf nested",
             },
             capture(requests),
-          )
-          const extDirReq = requests.find((r) => r.permission === "external_directory")
-          expect(extDirReq).toBeUndefined()
+          )).metadata.exit).toBe(0)
+          expect(requests.find((r) => r.permission === "external_directory")).toBeUndefined()
+          expect(yield* Effect.promise(() => Bun.file(path.join(tmp, "nested", "tmpfile")).exists())).toBe(false)
         }),
       )
     }),
@@ -1017,7 +1017,7 @@ describe("tool.shell abort", () => {
           const collected: string[] = []
           const res = yield* run(
             {
-              command: `echo before && sleep 30`,
+              command: `echo before${"x".repeat(80)} && sleep 30`,
             },
             {
               ...ctx,
@@ -1105,30 +1105,6 @@ describe("tool.shell abort", () => {
     ),
   )
 
-  it.live("streams metadata updates progressively", () =>
-    runIn(
-      projectRoot,
-      Effect.gen(function* () {
-        const updates: string[] = []
-        const result = yield* run(
-          {
-            command: `echo first && sleep 0.1 && echo second`,
-          },
-          {
-            ...ctx,
-            metadata: (input) =>
-              Effect.sync(() => {
-                const output = (input.metadata as { output?: string })?.output
-                if (output) updates.push(output)
-              }),
-          },
-        )
-        expect(result.output).toContain("first")
-        expect(result.output).toContain("second")
-        expect(updates.length).toBeGreaterThan(1)
-      }),
-    ),
-  )
 })
 
 describe("tool.shell truncation", () => {

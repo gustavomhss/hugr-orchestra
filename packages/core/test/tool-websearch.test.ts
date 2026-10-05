@@ -95,6 +95,7 @@ const http = Layer.succeed(
 const permission = Layer.succeed(
   PermissionV2.Service,
   PermissionV2.Service.of({
+    askExplicit: () => Effect.die("Native askExplicit is unavailable in this normal-path fixture"),
     assert: (input) => Effect.sync(() => assertions.push(input)),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),

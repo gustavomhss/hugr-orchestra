@@ -1,6 +1,7 @@
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { Cause, Effect, Exit, Layer } from "effect"
 import { afterEach, describe, expect } from "bun:test"
@@ -8,6 +9,8 @@ import path from "path"
 import type { Permission } from "../../src/permission"
 import type { Tool } from "@/tool/tool"
 import { SkillTool } from "../../src/tool/skill"
+import { Session } from "@/session/session"
+import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { ToolRegistry } from "@/tool/registry"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { SessionID, MessageID } from "../../src/session/schema"
@@ -27,28 +30,13 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-const it = testEffect(LayerNode.compile(LayerNode.group([ToolRegistry.node, CrossSpawnSpawner.node, Ripgrep.node])))
+const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([ToolRegistry.node, Session.node, SessionProjector.node, CrossSpawnSpawner.node, Ripgrep.node])))
 
 describe("tool.skill", () => {
   it.instance("execute returns skill content block with files", () =>
     Effect.gen(function* () {
       const dir = (yield* TestInstance).directory
       const skill = path.join(dir, ".opencode", "skill", "tool-skill")
-      yield* Effect.promise(() =>
-        Bun.write(
-          path.join(skill, "SKILL.md"),
-          `---
-name: tool-skill
-description: Skill for tool tests.
----
-
-# Tool Skill
-
-Use this skill.
-`,
-        ),
-      )
-      yield* Effect.promise(() => Bun.write(path.join(skill, "scripts", "demo.txt"), "demo"))
 
       const home = process.env.OPENCODE_TEST_HOME
       process.env.OPENCODE_TEST_HOME = dir
@@ -71,8 +59,11 @@ Use this skill.
       expect(tool.description).not.toContain("Skill for tool tests.")
 
       const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({ agent: "build" })
       const ctx: Tool.Context = {
         ...baseCtx,
+        sessionID: session.id,
         ask: (req) =>
           Effect.sync(() => {
             requests.push(req)
@@ -91,6 +82,21 @@ Use this skill.
       expect(result.output).toContain(`Base directory for this skill: ${skill}`)
       expect(result.output).toContain(`<file>${file}</file>`)
     }),
+    {
+      init: (directory) => Effect.promise(async () => {
+        const skill = path.join(directory, ".opencode", "skill", "tool-skill")
+        await Bun.write(path.join(skill, "SKILL.md"), `---
+name: tool-skill
+description: Skill for tool tests.
+---
+
+# Tool Skill
+
+Use this skill.
+`)
+        await Bun.write(path.join(skill, "scripts", "demo.txt"), "demo")
+      }),
+    },
   )
 
   it.instance("execute preserves not found message", () =>
@@ -113,11 +119,14 @@ Use this skill.
       })).find((tool) => tool.id === SkillTool.id)
       if (!tool) throw new Error("Skill tool not found")
 
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({ agent: "build" })
       const exit = yield* tool
         .execute(
           { name: "missing-skill" },
           {
             ...baseCtx,
+            sessionID: session.id,
             ask: () => Effect.void,
           },
         )

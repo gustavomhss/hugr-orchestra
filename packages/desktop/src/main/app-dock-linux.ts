@@ -303,7 +303,7 @@ export function create(options: {
         requireIntent()
         if (alive && current(connected)) {
           bridge.owner = connected
-          options.dock.select(senderID, win, connected.tabID, bounds)
+          options.dock.select(senderID, win, { tabID: connected.tabID, generation: connected.generation! }, bounds)
           connected.contents!.focus()
           return prewarm({ tabID: connected.tabID, generation: connected.generation!, url: alias })
         }
@@ -449,7 +449,7 @@ export function create(options: {
             ))
           ) {
             requireView()
-            options.dock.select(senderID, win, view.tabID, bounds)
+            options.dock.select(senderID, win, { tabID: view.tabID, generation: view.generation! }, bounds)
             view.contents!.focus()
             return { tabID: view.tabID, generation: view.generation!, url: alias }
           }
@@ -603,7 +603,7 @@ export function create(options: {
         view.ready = true
         visibility(senderID, { tabID: view.tabID, generation: view.generation! }, view.visible)
         requireView()
-        options.dock.select(senderID, win, view.tabID, bounds)
+        options.dock.select(senderID, win, { tabID: view.tabID, generation: view.generation! }, bounds)
         view.contents!.focus()
         return { tabID: view.tabID, generation: view.generation!, url: alias }
       })().then(prewarm).catch((error: unknown) => {

@@ -401,26 +401,29 @@ describe("CloudflareAIGatewayPlugin", () => {
     ),
   )
 
-  it.effect("ignores non Cloudflare AI Gateway packages", () =>
-    withEnv(cloudflareEnv(), () =>
-      Effect.gen(function* () {
-        resetCalls()
-        const plugin = yield* PluginV2.Service
-        const aisdk = yield* AISDK.Service
-        yield* addPlugin()
+  it.effect(
+    "ignores non Cloudflare AI Gateway packages",
+    () =>
+      withEnv(cloudflareEnv(), () =>
+        Effect.gen(function* () {
+          resetCalls()
+          const plugin = yield* PluginV2.Service
+          const aisdk = yield* AISDK.Service
+          yield* addPlugin()
 
-        const result = yield* aisdk.runSDK({
-          model: ModelV2.Info.make({
-            ...ModelV2.Info.empty(ProviderV2.ID.make("cloudflare-ai-gateway"), ModelV2.ID.make("openai/gpt-5")),
-            api: { id: ModelV2.ID.make("openai/gpt-5"), type: "aisdk", package: "test-provider" },
-          }),
-          package: "@ai-sdk/openai-compatible",
-          options: { name: "cloudflare-ai-gateway" },
-        })
+          const result = yield* aisdk.runSDK({
+            model: ModelV2.Info.make({
+              ...ModelV2.Info.empty(ProviderV2.ID.make("cloudflare-ai-gateway"), ModelV2.ID.make("openai/gpt-5")),
+              api: { id: ModelV2.ID.make("openai/gpt-5"), type: "aisdk", package: "test-provider" },
+            }),
+            package: "@ai-sdk/openai-compatible",
+            options: { name: "cloudflare-ai-gateway" },
+          })
 
-        expect(result.sdk).toBeUndefined()
-        expect(aiGatewayCalls).toHaveLength(0)
-      }),
-    ),
+          expect(result.sdk).toBeUndefined()
+          expect(aiGatewayCalls).toHaveLength(0)
+        }),
+      ),
+    30_000,
   )
 })

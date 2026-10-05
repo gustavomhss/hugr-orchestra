@@ -13,7 +13,9 @@ import {
 
 export function createAcpClient(input: Pick<CliFixture, "opencode">, env?: Record<string, string>) {
   return Effect.gen(function* () {
-    return createJsonRpcAcpClient(yield* input.opencode.acp(env ? { env } : undefined))
+    const acp = yield* input.opencode.acp(env ? { env } : undefined)
+    yield* acp.ready
+    return createJsonRpcAcpClient(acp)
   })
 }
 

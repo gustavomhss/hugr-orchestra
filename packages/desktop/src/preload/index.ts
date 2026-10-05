@@ -20,13 +20,14 @@ const api: ElectronAPI = {
   appDockOpen: (url, bounds, profile) => ipcRenderer.invoke("app-dock-open", url, bounds, profile),
   appDockList: () => ipcRenderer.invoke("app-dock-list"),
   appDockDeleteProfile: (profileID) => ipcRenderer.invoke("app-dock-delete-profile", { profileID }),
-  appDockResize: (bounds) => ipcRenderer.invoke("app-dock-resize", bounds),
-  appDockHide: () => ipcRenderer.invoke("app-dock-hide"),
+  appDockResize: (tab, bounds) => ipcRenderer.invoke("app-dock-resize", tab, bounds),
+  appDockHide: (tab) => ipcRenderer.invoke("app-dock-hide", tab),
+  appDockOcclude: (occluded) => ipcRenderer.invoke("app-dock-occlude", occluded),
   appDockClose: () => ipcRenderer.invoke("app-dock-close"),
   appDockCloseTab: (tabID) => ipcRenderer.invoke("app-dock-close-tab", tabID),
   appDockRecoverTab: (tabID) => ipcRenderer.invoke("app-dock-recover-tab", tabID),
   appDockCloseTabs: (tabID, scope, order) => ipcRenderer.invoke("app-dock-close-tabs", tabID, scope, order),
-  appDockSelect: (tabID, bounds) => ipcRenderer.invoke("app-dock-select", tabID, bounds),
+  appDockSelect: (tab, bounds) => ipcRenderer.invoke("app-dock-select", tab, bounds),
   appDockNavigate: (tabID, url) => ipcRenderer.invoke("app-dock-navigate", tabID, url),
   appDockCommand: (tabID, command) => ipcRenderer.invoke("app-dock-command", tabID, command),
   appDockEvent: (callback) => {
@@ -115,6 +116,18 @@ const api: ElectronAPI = {
   draftDelete: (key) => ipcRenderer.invoke("draft-delete", key),
   draftBlobPut: (data) => ipcRenderer.invoke("draft-blob-put", data),
   draftBlobGet: (id) => ipcRenderer.invoke("draft-blob-get", id),
+  janitor: {
+    getReport: () => ipcRenderer.invoke("janitor-get-report"),
+    publish: (report, notify, source) => ipcRenderer.invoke("janitor-publish", report, notify, source),
+    snooze: (minutes, source) => ipcRenderer.invoke("janitor-snooze", minutes, source),
+    dismiss: (source) => ipcRenderer.invoke("janitor-dismiss", source),
+    onReport: (cb) => {
+      const handler = (_: unknown, report: string, notify = true, source: string | null = null) =>
+        cb({ report, notify, source })
+      ipcRenderer.on("janitor-report", handler)
+      return () => ipcRenderer.removeListener("janitor-report", handler)
+    },
+  },
 
   getWindowID: () => ipcRenderer.invoke("get-window-id"),
   onMenuCommand: (cb) => {
@@ -164,6 +177,7 @@ const api: ElectronAPI = {
     return () => ipcRenderer.removeListener("zoom-factor-changed", handler)
   },
   setTitlebar: (theme) => ipcRenderer.invoke("set-titlebar", theme),
+  setTitlebarFrame: (frame) => ipcRenderer.invoke("set-titlebar-frame", frame),
   runDesktopMenuAction: (action) => ipcRenderer.invoke("run-desktop-menu-action", action),
   setBackgroundColor: (color: string) => ipcRenderer.invoke("set-background-color", color),
   exportDebugLogs: () => ipcRenderer.invoke("export-debug-logs"),

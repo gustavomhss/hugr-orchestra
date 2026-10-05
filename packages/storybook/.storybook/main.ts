@@ -47,8 +47,15 @@ export default defineMain({
           { find: /^@\/context\/language$/, replacement: path.resolve(mocks, "app/context/language.ts") },
           { find: /^@\/context\/platform$/, replacement: path.resolve(mocks, "app/context/platform.ts") },
           { find: /^@\/context\/global-sync$/, replacement: path.resolve(mocks, "app/context/global-sync.ts") },
+          { find: /^@\/context\/global$/, replacement: path.resolve(mocks, "app/context/global.ts") },
           { find: /^@\/context\/server-sync$/, replacement: path.resolve(mocks, "app/context/server-sync.ts") },
           { find: /^@\/context\/server-sdk$/, replacement: path.resolve(mocks, "app/context/server-sdk.ts") },
+          { find: /^@\/context\/server$/, replacement: path.resolve(mocks, "app/context/server.ts") },
+          { find: /^@\/context\/tabs$/, replacement: path.resolve(mocks, "app/context/tabs.ts") },
+          {
+            find: /^@\/components\/janitor-pocket$/,
+            replacement: path.resolve(mocks, "app/components/janitor-pocket.tsx"),
+          },
           { find: /^@\/hooks\/use-providers$/, replacement: path.resolve(mocks, "app/hooks/use-providers.ts") },
           {
             find: /^@\/components\/dialog-select-model$/,

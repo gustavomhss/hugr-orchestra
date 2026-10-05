@@ -2,7 +2,14 @@ import { app, session, shell, WebContentsView } from "electron"
 import type { BrowserWindow, Session } from "electron"
 import { createHash, randomUUID } from "node:crypto"
 import type { EventEmitter } from "node:events"
-import { appDockURL, appDockZoom, panelBoundsToContent, type DockBounds } from "./app-dock-utils"
+import {
+  appDockAttached,
+  appDockShown,
+  appDockURL,
+  appDockZoom,
+  panelBoundsToContent,
+  type DockBounds,
+} from "./app-dock-utils"
 export type { DockBounds } from "./app-dock-utils"
 import { buildScrollScript, buildHoverScript, buildDragScript, buildClickAtProbeScript, buildClickScript, buildElementPointScript, buildFocusScript, buildReadElementScript, buildSnapshotScript, buildTypeScript, buildScrollToScript, buildStorageScript, buildEvaluateScript, buildNetworkScript } from "./app-dock-browser"
 import type { SnapshotFormat, SnapshotMode } from "./app-dock-browser"
@@ -53,7 +60,7 @@ export type AppDockDownload = AppDockIdentity & {
 }
 export type AppDockEvent =
   | Readonly<{ type: "state"; payload: AppDockState }>
-  | Readonly<{ type: "tab-opened"; payload: AppDockTab }>
+  | Readonly<{ type: "tab-opened" | "tab-opened-background"; payload: AppDockTab }>
   | Readonly<{ type: "tab-selected"; payload: AppDockIdentity }>
   | Readonly<{
       type: "tab-crashed"
@@ -117,7 +124,10 @@ export function createAppDock(options: {
   >()
   const terminalDownloads = new Map<string, number>()
   const active = new Map<number, string>()
-const layoutBounds = new Map<number, DockBounds>()
+  // Senders whose renderer draws an overlay over the Dock. Their views stay hidden until released,
+  // including views shown while it holds, because native views always paint above the renderer.
+  const occluded = new Set<number>()
+  const layoutBounds = new Map<number, DockBounds>()
   let lastLayoutBounds: DockBounds | undefined
   const inactive = new Map<string, { senderID: number; tabID: string }>()
   const refNamespaces = new Map<string, number>()
@@ -267,9 +277,10 @@ const layoutBounds = new Map<number, DockBounds>()
     }
     return false
   }
+  const viewCapacity = (senderID: number, selected: boolean) =>
+    inactive.size + (selected ? Number(active.has(senderID)) : 1) <= MAX_INACTIVE_TABS
   const ensureViewCapacity = (senderID: number, selected: boolean) => {
-    const inactiveNeeded = selected ? Number(active.has(senderID)) : 1
-    while (inactive.size + inactiveNeeded > MAX_INACTIVE_TABS) {
+    while (!viewCapacity(senderID, selected)) {
       if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
     }
   }
@@ -280,10 +291,10 @@ const layoutBounds = new Map<number, DockBounds>()
     bounds: DockBounds,
     notify: (event: AppDockEvent) => void,
     profileStorage: ProfileStorage,
-    replacement?: Readonly<{ tabID: string; selected: boolean }>,
+    placement?: Readonly<{ tabID: string; selected: boolean }>,
   ): Promise<AppDockTab> => {
     if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
-    const id = replacement?.tabID ?? randomUUID()
+    const id = placement?.tabID ?? randomUUID()
     const tabGeneration = ++generation
     refNamespaces.set(`${senderID}:${id}`, ++refNamespace)
     let target: string
@@ -394,7 +405,7 @@ const layoutBounds = new Map<number, DockBounds>()
       })
       configuredPartitions.add(partition)
     }
-    ensureViewCapacity(senderID, replacement?.selected ?? true)
+    ensureViewCapacity(senderID, placement?.selected ?? true)
     const view = new WebContentsView({
       webPreferences: {
         contextIsolation: true,
@@ -499,10 +510,19 @@ const layoutBounds = new Map<number, DockBounds>()
           throw new Error("App Dock popup blocked")
         }
         const popupURL = appDockURL(url)
-        void open(senderID, win, popupURL, layoutBounds.get(senderID) ?? bounds, notify, profileStorage)
+        // Only the tab on screen may attach a view. A popup from a background tab, or from any tab while
+        // the Dock is hidden, opens behind it and waits for the user to select it.
+        const selected = active.get(senderID) === id && isCurrent(senderID, id, tabGeneration)
+        // A page can chain popups without a click, so a popup never evicts the user's tabs to make room:
+        // at the view cap it is blocked instead.
+        if (!viewCapacity(senderID, selected)) throw new Error("App Dock tab limit reached")
+        void open(senderID, win, popupURL, layoutBounds.get(senderID) ?? bounds, notify, profileStorage, {
+          tabID: randomUUID(),
+          selected,
+        })
           .then((tab) => {
             options.onPopupOpened?.(senderID, identity(id, tabGeneration), tab)
-            notify(Object.freeze({ type: "tab-opened", payload: tab }))
+            notify(Object.freeze({ type: selected ? "tab-opened" : "tab-opened-background", payload: tab }))
           })
           .catch(() => {
             if (isCurrent(senderID, id, tabGeneration)) notify(Object.freeze({
@@ -613,7 +633,7 @@ const layoutBounds = new Map<number, DockBounds>()
     tabByContents.set(view.webContents.id, { senderID, tabID: id, generation: tabGeneration })
     tabs.set(senderID, senderTabs)
     installFullscreenWindowBridge(senderID, win)
-    if (replacement?.selected ?? true) {
+    if (placement?.selected ?? true) {
       const fullscreenTabID = fullscreenOwner.get(senderID)
       if (fullscreenTabID && fullscreenTabID !== id) {
         const fullscreenRecord = senderTabs.get(fullscreenTabID)
@@ -623,18 +643,18 @@ const layoutBounds = new Map<number, DockBounds>()
         if (!win.isDestroyed() && win.isFullScreen()) win.setFullScreen(false)
       }
       win.contentView.addChildView(view)
-      view.setVisible(true)
+      view.setVisible(!occluded.has(senderID))
       view.webContents.setBackgroundThrottling(false)
       active.set(senderID, id)
       options.onVisibility?.(senderID, identity(id, tabGeneration), true)
     }
     for (const [tabID, other] of senderTabs) {
-      if ((replacement?.selected ?? true) && tabID !== id) {
+      if ((placement?.selected ?? true) && tabID !== id) {
         markInactive(senderID, tabID, other)
         win.contentView.removeChildView(other.view)
       }
     }
-    if (!(replacement?.selected ?? true)) markInactive(senderID, id, senderTabs.get(id)!)
+    if (!(placement?.selected ?? true)) markInactive(senderID, id, senderTabs.get(id)!)
     void view.webContents.loadURL(target).catch(() => {
       if (!isCurrent(senderID, id, tabGeneration)) return
       notify(
@@ -653,15 +673,17 @@ const layoutBounds = new Map<number, DockBounds>()
       removalListeners.add(listener)
       return () => removalListeners.delete(listener)
     },
-    resize(senderID: number, bounds: DockBounds) {
+    resize(senderID: number, tab: AppDockIdentity, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
       if (!usableBounds(bounds)) return
+      const record = appDockAttached(tabs.get(senderID), active.get(senderID), tab)
+      if (!record) return
       layoutBounds.set(senderID, bounds)
       lastLayoutBounds = bounds
-      const tabID = active.get(senderID)
-      if (tabID) tabs.get(senderID)?.get(tabID)?.view.setBounds(bounds)
+      record.view.setBounds(bounds)
     },
-    hide(senderID: number, _win: BrowserWindow) {
+    hide(senderID: number, _win: BrowserWindow, tab: AppDockIdentity) {
+      if (!appDockAttached(tabs.get(senderID), active.get(senderID), tab)) return
       const fullscreenTabID = fullscreenOwner.get(senderID)
       const fullscreenRecord = fullscreenTabID ? tabs.get(senderID)?.get(fullscreenTabID) : undefined
       if (fullscreenRecord) {
@@ -680,12 +702,20 @@ const layoutBounds = new Map<number, DockBounds>()
       }
       active.delete(senderID)
     },
-    select(senderID: number, win: BrowserWindow, tabID: string, bounds: DockBounds) {
+    // Releasing occlusion shows the sender's active tab at release time, never a remembered one.
+    occlude(senderID: number, value: boolean) {
+      if (value) occluded.add(senderID)
+      else occluded.delete(senderID)
+      const tabID = active.get(senderID)
+      if (tabID) tabs.get(senderID)?.get(tabID)?.view.setVisible(!value)
+    },
+    select(senderID: number, win: BrowserWindow, tab: AppDockIdentity, bounds: DockBounds) {
       if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
+      const record = appDockShown(tabs.get(senderID), tab)
+      if (!record) return
+      const tabID = tab.tabID
       layoutBounds.set(senderID, bounds)
       lastLayoutBounds = bounds
-      const record = tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
       const fullscreenTabID = fullscreenOwner.get(senderID)
       if (fullscreenTabID && fullscreenTabID !== tabID) {
         const fullscreenRecord = tabs.get(senderID)?.get(fullscreenTabID)
@@ -697,7 +727,7 @@ const layoutBounds = new Map<number, DockBounds>()
       for (const [id, other] of tabs.get(senderID) ?? []) {
         if (id === tabID) {
           if (!win.contentView.children.includes(other.view)) win.contentView.addChildView(other.view)
-          other.view.setVisible(true)
+          other.view.setVisible(!occluded.has(senderID))
           other.view.webContents.setBackgroundThrottling(false)
           inactive.delete(`${senderID}:${id}`)
         } else {
@@ -727,7 +757,7 @@ const layoutBounds = new Map<number, DockBounds>()
       const bounds = (remembered && usableBounds(remembered) ? remembered : undefined) ?? rendered ??
         (usableBounds(fallback) ? fallback : undefined)
       if (!bounds) throw new Error("App Dock host is not ready")
-      this.select(senderID, win, tabID, bounds)
+      this.select(senderID, win, identity(tabID, record.generation), bounds)
     },
     contents(senderID: number, tabID: string) {
       const record = tabs.get(senderID)?.get(tabID)
@@ -1283,7 +1313,7 @@ const layoutBounds = new Map<number, DockBounds>()
       if (senderTabs.size === 0) tabs.delete(senderID)
       else if (!currentActive || closing.includes(currentActive)) {
         const bounds = layoutBounds.get(senderID) ?? targetRecord.view.getBounds()
-        this.select(senderID, targetRecord.win, tabID, bounds)
+        this.select(senderID, targetRecord.win, identity(tabID, targetRecord.generation), bounds)
       }
     },
     scroll(senderID: number, tabID: string, direction: "up" | "down" | "top" | "bottom", amount?: number) {

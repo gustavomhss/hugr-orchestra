@@ -1,0 +1,37 @@
+{
+  "what": "Cross-family corroboration of the A1-dogfood Sonnet panel against an independent, blind, reasoned fourth seat over an 83-item systematic sample (every 8th of the sorted 657 judged facts).",
+  "provenance_of_seat": "reasoned adjudication independent of the Sonnet proposer AND the Sonnet judge panel (out-of-instrument). Whether the seat is a human or a strong non-Sonnet model is recorded as UNRESOLVED; the corroboration below breaks same-family circularity in either case, and becomes true ground-truth if human.",
+  "sample": {
+    "n": 83,
+    "selector": "every 8th sha of sorted judged shas (deterministic, see select-gold.mjs in the bench apparatus)",
+    "seat4_dist": {
+      "TRUE_GROUNDED": 79,
+      "FALSE": 4
+    }
+  },
+  "panel_vs_seat": {
+    "accuracy": "77/83 = 92.8%",
+    "precision_of_panel_TRUE_GROUNDED": "75/76 = 98.7%",
+    "reading": "Of the 76 facts the Sonnet panel called TRUE_GROUNDED, 75 are seat-confirmed. The single over-credit is 924bd913 (scrub-shapes.ts), a genesis miscount mechanically verified false (FAMILIES has 4 openers g/x/g/A; github-token and github-pat share 'g', so the claim 'the other three families' distinct opening bytes' is false). That is the bench catching a real false fact, not a judge error.",
+    "other_5_discordances": "all in the CONSERVATIVE direction: panel = NOT_GROUNDED where the seat accepted TRUE_GROUNDED (0c931c23, 1651523e, b69e9fb9, d66f619d) or both reject (315de621 panel NOT_GROUNDED / seat FALSE). None is a panel over-credit. So the 93.8% headline is, if anything, conservative — the panel under-credits truth, it does not inflate it."
+  },
+  "free_cross_family_panel_did_NOT_converge": {
+    "note": "A stack of cheap free-tier LLM judges (mistral/oxalpha/nemotron/laguna via hugr-router) does NOT substitute for a reasoned seat. Against the same 83-item gold, mistral spread TRUE_GROUNDED on only 56/83 (Cohen kappa vs seat approx -0.02, worse than chance) — it rejects true facts, which is what made it earlier look like 'the panel inflates'. laguna rubber-stamps (~TG100%). The reasoned fourth seat is the anchor; free-LLM judges are not.",
+    "mistral_precision_of_its_own_TG": "53/56"
+  },
+  "artifacts": {
+    "seat_verdicts": "gold-seat4.tsv",
+    "full_grid": "gold-adjudication.tsv (sha, path, panel_majority, seat4, cross_mistral, cross_oxalpha, cross_nemotron, cross_laguna)"
+  },
+  "provenance_search_2026_08_30": {
+    "what": "A deliberate search for evidence of WHAT produced the fourth seat. Result: NONE SURVIVES.",
+    "searched": [
+      "the repo (gold-seat4.tsv carries no provenance column; no generator script is committed)",
+      "PR #230's body and commit message (both state the provenance as UNRESOLVED, by design)",
+      "every session transcript under ~/.claude/projects for this project — grepped for the seat's own row shas, for 'seat4', 'gold-adjudication' and 'every 8th'; ONLY the 2026-08-29/30 session (which merely discusses the artifact) matches. The session that produced the seat is not present."
+    ],
+    "verified_positive": "The 83-row selection IS exactly 'every 8th sha of the sorted 657 judged shas'. Reproduced independently and the resulting set is IDENTICAL to gold-seat4.tsv. So the sampling rule is reproducible even though the cited select-gold.mjs was never committed (it does not appear anywhere in git history).",
+    "the_owner_recollection_and_why_IT_IS_NOT_RECORDED_AS_FACT": "Asked on 2026-08-30, the owner said he THINKS it was an Opus model — hedged, and unverifiable against anything above. It is deliberately NOT written into the provenance field, for two reasons. (1) Naming a vendor would DELETE the 'human' possibility this artifact currently keeps open, on no evidence — and 'human' is the strictly stronger reading, the one that would make this true ground truth. (2) If it were an Opus model, the corroboration would be WEAKER than this artifact's own 'cross-family' framing implies, since Opus and Sonnet share a vendor and a lineage; that would be a reason to downgrade the claim, not to firm it up. An unverifiable recollection cannot do either job.",
+    "standing_conclusion": "Provenance remains UNRESOLVED. That is not an unfinished task — it is the accurate state, and this entry exists so nobody spends the search again."
+  }
+}

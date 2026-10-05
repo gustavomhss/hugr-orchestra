@@ -1,0 +1,32 @@
+
+Running 4 tests using 1 worker
+
+  ✘  1 a.spec.ts:3:7 › approval › rejects empty (9ms)
+  ✓  2 a.spec.ts:4:7 › approval › accepts value (9ms)
+  -  3 a.spec.ts:5:8 › approval › skipped
+  ✓  4 a.spec.ts:7:5 › works (4ms)
+
+
+  1) a.spec.ts:3:7 › approval › rejects empty ──────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoHaveLength[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected length: [32m1[39m
+    Received length: [31m0[39m
+    Received array:  [31m[][39m
+
+      1 | import { test, expect } from "@playwright/test"
+      2 | test.describe("approval", () => {
+    > 3 |   test("rejects empty", async () => { expect([]).toHaveLength(1) })
+        |                                                  ^
+      4 |   test("accepts value", async () => { expect(1).toBe(1) })
+      5 |   test.skip("skipped", async () => {})
+      6 | })
+        at /repo/a.spec.ts:3:50
+
+    Error Context: test-results/a-approval-rejects-empty/error-context.md
+
+  1 failed
+    a.spec.ts:3:7 › approval › rejects empty ───────────────────────────────────────────────────────
+  1 skipped
+  2 passed (1.9s)
