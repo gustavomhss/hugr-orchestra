@@ -163,7 +163,11 @@ describe("workflow inventory", () => {
 })
 
 // Production pins /bin/sh; dash is checked too where present because it lacks pipefail.
-const shells = ["/bin/sh", "/bin/dash", "/bin/bash"].filter((shell) => Bun.spawnSync([shell, "-c", ":"]).exitCode === 0)
+// Windows runners have no /bin shells (production uses Git for Windows' sh.exe there), and spawning a missing
+// executable throws instead of exiting non-zero, so only existing shells are probed.
+const shells = ["/bin/sh", "/bin/dash", "/bin/bash"].filter(
+  (shell) => Bun.which(shell) !== null && Bun.spawnSync([shell, "-c", ":"]).exitCode === 0,
+)
 const pipefail = (shell: string) => Bun.spawnSync([shell, "-c", "set -o pipefail"]).exitCode === 0
 
 async function execute(shell: string, command: string) {
@@ -182,7 +186,7 @@ async function execute(shell: string, command: string) {
 }
 
 describe("pipeline script", () => {
-  test("finds at least the production shell", () => {
+  test.skipIf(process.platform === "win32")("finds at least the production shell", () => {
     expect(shells).toContain("/bin/sh")
   })
 
