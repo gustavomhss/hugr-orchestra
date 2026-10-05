@@ -64,6 +64,8 @@ Drafts were authored by four read-only agents. Lead spot-checked: `registry.ts:2
 | S-3 | Resume fold missing or ambiguous → `packet` blocker; Atlas store partial or unavailable → `atlas` blocker. | Fills the kind F3 cl. 20 leaves unnamed. |
 | S-open | A required `lesson` with no real lesson: the TaskMemoryEntry template has no "none" value and inventing one is forbidden. Owner: Atlas template (A1/A2). | Raised by S-implement; continuity.md stays silent until decided. |
 
+| F4-BG | Background Task: the Task part keeps `terminal.reason: "running"`; the final `workResult` travels on the parent's existing completion notice. Amends F4 cl. 35. Delivery is best effort today. | Durable delivery is open (H5). |
+
 ## 3. Owner decisions pending
 
 | ID | Question | Blocks |
