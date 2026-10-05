@@ -276,13 +276,29 @@ export function create(options: { root: string; context: string; image?: string;
   }
   const closeNative = async (native = current.native) => {
     if (!native) return
-    try {
-      await native.client.close()
-    } finally {
-      // Client settlement can precede its channel's actual helper-container reap.
-      await native.channel.terminate()
-    }
+    const closed = await native.client.close().then(() => undefined, (error: unknown) => error)
+    // Client settlement can precede its channel's actual helper-container reap.
+    const terminated = await native.channel.terminate().then(() => undefined, (error: unknown) => error)
+    // The channel keeps a missed cleanup deadline as a permanent failure, so under host load every later
+    // admission would stay stuck on this dead helper. Reap its proven container directly; only proven
+    // removal releases the handle, otherwise the next call retries the reap.
+    if (terminated) await reapHelper(native)
     if (current.native === native) current.native = undefined
+    if (closed && !terminated) throw closed
+  }
+  const reapHelper = async (native: NativeHandle) => {
+    const client = engine(native.endpoint)
+    const path = `/containers/${native.containerID}`
+    const present = () => client.get<Container>(`${path}/json`, 4000).catch((error: unknown) => {
+      if (namedMissing(error, "container", native.containerID)) return undefined
+      throw new NativeDockProtocol.NativeError("helper-termination-failed", "Native helper cleanup failed", "unknown")
+    })
+    const found = await present()
+    if (!found) return
+    requireLabels(found.Config.Labels, native.runtime.runtimeID, "accessibility")
+    await client.delete(`${path}?force=true`, 4000).catch(() => undefined)
+    if (await present())
+      throw new NativeDockProtocol.NativeError("helper-termination-failed", "Native helper cleanup failed", "unknown")
   }
   const catalogue = async (metadata: Metadata, container: Container, refresh = false) => {
     // Ownership and limits were verified immediately before this call. Only the

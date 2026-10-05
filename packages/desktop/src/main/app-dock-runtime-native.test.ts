@@ -88,6 +88,36 @@ test.skipIf(!enabled || !image)(
   240_000,
 )
 
+test.skipIf(!enabled || !image)(
+  "a helper whose channel cleanup failed is reaped by ID instead of blocking later admissions",
+  async () => {
+    const fixture = await workspace(image!)
+    try {
+      await fixture.runtime.start()
+      const owner = await fixture.owner()
+      const stuck = await fixture.runtime.native()
+      const [stuckID] = await helpers(owner)
+      // Host load can push the channel past its cleanup deadline; the channel then keeps that failure forever.
+      const failed = new NativeDockProtocol.NativeError("helper-termination-failed", "Native helper cleanup failed", "unknown")
+      stuck.active = () => false
+      stuck.client.close = () => Promise.reject(failed)
+      stuck.channel.terminate = () => Promise.reject(failed)
+
+      const next = await fixture.runtime.native()
+      expect(next).not.toBe(stuck)
+      expect(next.active()).toBe(true)
+      const remaining = await helpers(owner)
+      expect(remaining).toHaveLength(1)
+      expect(remaining).not.toContain(stuckID)
+      await fixture.runtime.stop()
+      expect(await helpers(owner)).toEqual([])
+    } finally {
+      await fixture.remove()
+    }
+  },
+  240_000,
+)
+
 test.skipIf(!enabled || !degradedImage)(
   "a session without accessibility still starts the workspace and refuses only native calls",
   async () => {
