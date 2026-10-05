@@ -168,9 +168,10 @@ it.instance("G3 budget batches preserve every unfinished turn and low-token comp
     const chat = yield* sessions.create({ title: "Whole-turn backlog" })
     for (let i = 0; i < 8; i++) {
       const assistant = yield* complete(yield* begin(chat.id, `BATCH_USER_${i}`), `BATCH_ASSISTANT_${i}`, i === 7 ? 50_000 : 100)
+      // Single-line failed output stays verbatim under masking, so these turns still need producer batches.
       if (i < 4) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: assistant.id, type: "tool", tool: "bash", callID: `batch-${i}`,
         state: { status: "completed", input: { command: `read-only-${i}` }, output: `TOOL_TURN_${i} ` + "x".repeat(72_000), title: "Whole exchange",
-          metadata: { exit: 0 }, time: { start: 1, end: 2 } } })
+          metadata: { exit: 1 }, time: { start: 1, end: 2 } } })
     }
     const initial = yield* sessions.messages({ sessionID: chat.id })
     expect(Token.estimate(Transcript.transcript(initial.slice(0, 2)))).toBeLessThan(32_000)

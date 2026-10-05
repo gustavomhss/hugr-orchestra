@@ -17,6 +17,7 @@ import { create } from "./context"
 import { run, snapshot, type ParentRequest } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
 import { isSafe, settings, shouldStart, tokenCount } from "./trigger"
+import { apply as applyMasks, candidates as maskCandidates } from "./masking"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
 type Active = { generation: number; boundary: MessageID }
@@ -36,7 +37,12 @@ type State = {
   scope: Scope.Scope
   /** Latest parent model request per session, kept so maintenance can reuse its prompt cache. */
   requests: Map<SessionID, ParentRequest>
+  /** Masked tool part IDs per session, mapped to the archive reference with the full output. */
+  masks: Map<SessionID, Map<string, string>>
 }
+
+// Background memory starts this far below the trigger; masking alone that reaches it skips the fork.
+const PREPARE_MARGIN = 0.15
 
 // Requests hold whole message arrays; keep only the most recently active sessions.
 const MAX_OBSERVED_REQUESTS = 4
@@ -89,12 +95,20 @@ const layer = Layer.effect(
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
-      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map() }
+      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map(), masks: new Map() }
     }))
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
-      // Disabling continuity also stops using memory that was applied earlier.
+      // Disabling continuity also stops using memory and masks applied earlier.
       if (!(yield* enabled).enabled) return { messages: input.messages, system: [] }
+      const view = yield* memory(input)
+      // Stubs point at archived output; without recall the full history stays native.
+      if (input.canRecall !== true) return view
+      const masks = (yield* InstanceState.get(state)).masks.get(input.sessionID)
+      return masks?.size ? { ...view, messages: applyMasks(view.messages, masks) } : view
+    })
+
+    const memory = Effect.fn("SessionContinuity.memory")(function* (input: Parameters<Interface["prepare"]>[0]) {
       const current = yield* InstanceState.get(state)
       const prepared = current.contexts.prepare(input.sessionID, input.messages, input.canRecall)
       if (!prepared.system.length) return prepared
@@ -147,6 +161,7 @@ const layer = Layer.effect(
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
       current.requests.delete(sessionID)
+      current.masks.delete(sessionID)
       const item = entry(current, sessionID)
       item.attempted = undefined
       item.refresh = true
@@ -158,6 +173,7 @@ const layer = Layer.effect(
       current.contexts.discard(sessionID)
       current.sessions.delete(sessionID)
       current.requests.delete(sessionID)
+      current.masks.delete(sessionID)
     })
 
     const schedule = (current: State, sessionID: SessionID, pending: Pending,
@@ -232,6 +248,28 @@ const layer = Layer.effect(
               const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
               const headBudget = Math.max(0, Math.min(32_000, Math.floor(inputLimit / 2)))
               const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall })
+              // Mask old tool output first: it needs no model call and often frees enough on its own.
+              const references = yield* archive.list(sessionID)
+              const firstFragment = new Map<string, string>()
+              for (const reference of references) if (!firstFragment.has(reference.first)) firstFragment.set(reference.first, reference.id)
+              const masked = yield* Effect.sync(() => {
+                const item = current.sessions.get(sessionID)
+                if (!item || item.active !== active || item.generation !== active.generation) return 0
+                const masks = current.masks.get(sessionID) ?? new Map<string, string>()
+                let freed = 0
+                for (const candidate of maskCandidates(prepared.messages, masks)) {
+                  const reference = firstFragment.get(candidate.messageID)
+                  if (reference === undefined) continue
+                  masks.set(candidate.part.id, reference)
+                  freed += candidate.saved
+                }
+                if (masks.size) current.masks.set(sessionID, masks)
+                return freed
+              })
+              if (masked > 0 && tokenCount(message.tokens) - masked <= context * (options.trigger - PREPARE_MARGIN)) {
+                yield* Effect.logInfo("continuity masked tool output", { sessionID, freed: masked })
+                return "masked"
+              }
               const selected = yield* Effect.sync(() => {
                 const item = current.sessions.get(sessionID)
                 if (

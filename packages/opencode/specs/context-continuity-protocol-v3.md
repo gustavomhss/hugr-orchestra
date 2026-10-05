@@ -381,7 +381,13 @@ bootstrap confidence intervals.
    instruction is a user message on every provider for now; provider-specific placement
    (Anthropic mid-conversation system, OpenAI developer message) is a follow-up.
 2. Configuration keys and window-relative trigger; `enabled` default `true`.
-3. Observation masking (L1) with stubs and protected tools.
+3. Observation masking (L1) with stubs and protected tools. **Implemented**
+   (`continuity/masking.ts`): when maintenance runs, completed tool results older than the
+   last 5 user turns are masked in the model view (stored history is unchanged), except
+   `skill`, todo tools and `context_recall`. Failed output keeps its first 20 lines. Each
+   stub names the call and its archive reference for `context_recall`. Masks persist until
+   an edit, revert or session deletion, so the prefix stays stable between swaps. When
+   masking alone brings usage to `trigger - 0.15` or below, the fork is skipped.
 4. Continuity block as a message after system, host artifact trail and user ledger.
 5. Item store, delta operations, validation and the v3 producer instruction.
 6. Prepare/swap scheduling, opportunistic swap, price tiers, circuit breaker.

@@ -8,7 +8,7 @@ import { MessageV2 } from "@/session/message-v2"
 import { PartID } from "@/session/schema"
 import { SessionContinuity } from "@/continuity/service"
 import { awaitWithTimeout, it } from "../lib/effect"
-import { A, B, FIRST, SECOND, applyFirst, begin, complete, entered, environment, fragments, held, packet, prepare, seed, terminal } from "./service-fixture"
+import { A, B, FIRST, SECOND, applyFirst, begin, complete, entered, environment, fragments, held, jobFor, packet, prepare, seed, terminal } from "./service-fixture"
 
 it.instance("repeat maintenance receives prior Markdown and only newly displaced whole turns", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
@@ -232,3 +232,31 @@ it.instance("the default fixture trigger starts maintenance at the same usage", 
     expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toHaveLength(1)
   }).pipe(Effect.provide(environment([first])))
 }), 30_000)
+
+it.instance("masking old tool output alone skips the fork when it frees enough", () => Effect.gen(function* () {
+  yield* Effect.gen(function* () {
+    // The fixture window is 200,000 tokens at trigger 0.25: the fork is needed above 0.10 (20,000 tokens).
+    // Seed turn 0 carries ~40,000 tokens of tool output, so masking brings 50,000 below that line.
+    const output = "build log line\n".repeat(10_000)
+    const sessionID = yield* seed(B, A, output)
+    const sessions = yield* Session.Service
+    const history = yield* sessions.messages({ sessionID })
+    const job = yield* jobFor(sessionID, history.at(-1)!.info.id)
+    // No maintenance plan exists: a fork request would fail this job instead of returning "masked".
+    yield* terminal(job.id, "completed", "masked")
+    const prepared = yield* prepare(sessionID)
+    expect(prepared.system).toEqual([])
+    const tool = prepared.messages.flatMap((message) => message.parts).find((part) => part.type === "tool")
+    if (tool?.type !== "tool" || tool.state.status !== "completed") throw new Error("Expected tool part")
+    expect(tool.state.output).toStartWith(`build log line\n`)
+    expect(tool.state.output).toContain("masked")
+    const reference = /"reference":"([a-f0-9]{64})"/.exec(tool.state.output)?.[1]
+    expect(reference).toBeDefined()
+    const archive = yield* Archive.Service
+    expect((yield* archive.read({ sessionID, id: reference! }))?.markdown).toContain("build log line\nbuild log line")
+    // Stored history keeps the full output; masking only changes the model view.
+    const stored = (yield* sessions.messages({ sessionID })).flatMap((message) => message.parts).find((part) => part.type === "tool")
+    expect(stored?.type === "tool" && stored.state.status === "completed" && stored.state.output === output).toBe(true)
+    expect((yield* prepare(sessionID, false)).messages).toEqual(yield* sessions.messages({ sessionID }))
+  }).pipe(Effect.provide(environment([])))
+}), 60_000)
