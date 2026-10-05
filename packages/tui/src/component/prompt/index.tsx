@@ -57,6 +57,7 @@ import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
+import { agentKey } from "../../util/agent"
 
 registerOpencodeSpinner()
 
@@ -320,7 +321,7 @@ export function Prompt(props: PromptProps) {
       syncedSessionID = sessionID
 
       // Only set agent if it's a primary agent (not a subagent)
-      const isPrimaryAgent = local.agent.list().some((x) => x.name === msg.agent)
+      const isPrimaryAgent = local.agent.list().some((x) => agentKey(x) === msg.agent)
       if (msg.agent && isPrimaryAgent) {
         // Keep command line --agent if specified.
         if (!args.agent) local.agent.set(msg.agent)
@@ -1000,7 +1001,7 @@ export function Prompt(props: PromptProps) {
       const res = await sdk.client.session.create({
         directory,
         workspace: workspaceID,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: {
           providerID: selectedModel.providerID,
           id: selectedModel.modelID,
@@ -1060,7 +1061,7 @@ export function Prompt(props: PromptProps) {
       move.startSubmit()
       void sdk.client.session.shell({
         sessionID,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: {
           providerID: selectedModel.providerID,
           modelID: selectedModel.modelID,
@@ -1084,7 +1085,7 @@ export function Prompt(props: PromptProps) {
         sessionID,
         command: command.slice(1),
         arguments: args,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: `${selectedModel.providerID}/${selectedModel.modelID}`,
         variant,
         parts: nonTextParts.filter((x) => x.type === "file"),
@@ -1096,7 +1097,7 @@ export function Prompt(props: PromptProps) {
           {
             sessionID,
             ...selectedModel,
-            agent: agent.name,
+            agent: agentKey(agent),
             model: selectedModel,
             variant,
             parts: [
@@ -1290,7 +1291,7 @@ export function Prompt(props: PromptProps) {
     if (store.mode === "shell") return theme.primary
     const agent = local.agent.current()
     if (!agent) return theme.border
-    return local.agent.color(agent.name)
+    return local.agent.color(agentKey(agent))
   })
 
   const showVariant = createMemo(() => {
@@ -1322,9 +1323,9 @@ export function Prompt(props: PromptProps) {
   const spinnerDef = createMemo(() => {
     const agent =
       status().type !== "idle"
-        ? (local.agent.list().find((a) => a.name === lastUserMessage()?.agent) ?? local.agent.current())
+        ? (local.agent.list().find((a) => agentKey(a) === lastUserMessage()?.agent) ?? local.agent.current())
         : local.agent.current()
-    const color = agent ? local.agent.color(agent.name) : theme.border
+    const color = agent ? local.agent.color(agentKey(agent)) : theme.border
     return {
       frames: createFrames({
         color,

@@ -23,6 +23,7 @@ import { useFrecency } from "../../prompt/frecency"
 import { useBindings, useCommandSlashes, useOpencodeModeStack } from "../../keymap"
 import { displayCharAt, mentionTriggerIndex } from "../../prompt/display"
 import type { FileSystemEntry } from "@opencode-ai/sdk/v2"
+import { agentMention } from "../../util/agent"
 
 function removeLineRange(input: string) {
   const hashIndex = input.lastIndexOf("#")
@@ -406,15 +407,8 @@ export function Autocomplete(props: {
         (agent): AutocompleteOption => ({
           display: "@" + agent.name,
           onSelect: () => {
-            insertPart(agent.name, {
-              type: "agent",
-              name: agent.name,
-              source: {
-                start: 0,
-                end: 0,
-                value: "",
-              },
-            })
+            const mention = agentMention(agent)
+            insertPart(mention.text, mention.part)
           },
         }),
       )
