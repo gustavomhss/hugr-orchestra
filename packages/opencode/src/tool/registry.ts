@@ -241,7 +241,8 @@ const layer = Layer.effect(
                 const output = typeof result === "string" ? result : result.output
                 const metadata = typeof result === "string" ? {} : (result.metadata ?? {})
                 const attachments = typeof result === "string" ? undefined : result.attachments
-                const info = yield* agent.get(toolCtx.agent)
+                // Lookup by stable id (F1.10); `toolCtx.agent` is the display label.
+                const info = yield* agent.get(toolCtx.agentID ?? toolCtx.agent)
                 const out = yield* truncate.output(output, {}, info)
                 return {
                   title: typeof result === "string" ? "" : (result.title ?? ""),

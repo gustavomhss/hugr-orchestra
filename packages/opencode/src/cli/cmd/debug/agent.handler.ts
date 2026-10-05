@@ -159,7 +159,7 @@ const createToolContext = Effect.fn("Cli.debug.agent.createToolContext")(functio
     modelID: model.modelID,
     providerID: model.providerID,
     mode: "debug",
-    agent: agent.name,
+    agent: agent.id ?? agent.name,
     path: {
       cwd: ctx.directory,
       root: ctx.worktree,
