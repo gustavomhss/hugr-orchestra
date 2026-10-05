@@ -108,12 +108,23 @@ export function findConflict(rows: ShortcutRow[], id: string, config: string) {
   return rows.find((row) => row.id !== id && keybindSignatures(row.config).some((item) => next.has(item)))
 }
 
+// Saving the registered default again, or unassigning a command that has no default, drops the
+// override instead of storing a copy of the default.
+export function resetsOverride(row: Pick<ShortcutRow, "preset">, config: string) {
+  return config === (row.preset ?? "none")
+}
+
 export function keybindCombos(config: string | undefined) {
   if (!config || config === "none") return []
   return config
     .split(",")
     .map((combo) => combo.trim())
     .filter(Boolean)
+}
+
+// What a row shows, as search text: title, kind, then its key labels or the unassigned label.
+export function shortcutText(input: { title: string; kind: string; keys: string[]; unassigned: string }) {
+  return [input.title, input.kind, ...(input.keys.length ? input.keys : [input.unassigned])].join(" ")
 }
 
 export function filterShortcuts<T>(rows: T[], query: string, text: (row: T) => string) {

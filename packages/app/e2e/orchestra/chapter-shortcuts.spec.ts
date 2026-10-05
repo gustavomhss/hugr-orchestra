@@ -16,9 +16,11 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await setup(page, "dark")
   await openShortcuts(page)
   const chapter = page.locator('[data-chapter="shortcuts"]')
+  const drafts = page.locator('[data-tab-key^="draft:"]')
   await expect(chapter.getByRole("heading", { level: 1 })).toHaveText("Shortcuts")
-  await expect(chapter.locator(".mx-eyebrow")).toHaveText("Shortcut repository / profile configuration")
-  await expect(chapter.locator(".mx-toolbar .mx-badge")).toHaveText("Shortcut repository")
+  // The profile name is bidi-isolated (FSI ... PDI), the text form of <bdi>.
+  await expect(chapter.locator(".mx-eyebrow")).toHaveText("\u2068Shortcut repository\u2069 / profile configuration")
+  await expect(chapter.locator(".mx-toolbar .mx-badge bdi")).toHaveText("Shortcut repository")
   await expect(row(page, "command.palette").locator("strong")).toHaveText("Command palette")
   await expect(row(page, "command.palette").locator("small")).toHaveText("General shortcut")
   await expect(row(page, "command.palette").locator("kbd")).toHaveText([label.k, label.p])
@@ -30,11 +32,12 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await chapter.getByRole("heading", { level: 1 }).click()
   await page.keyboard.press("ControlOrMeta+n")
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
-  await expect(page.locator('[data-tab-key^="draft:"]')).toHaveCount(1)
+  await expect(drafts).toHaveCount(1)
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Shortcuts", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/shortcuts$/)
 
-  await row(page, "tab.new").getByRole("button", { name: "Edit New session shortcut" }).click()
+  const edit = row(page, "tab.new").getByRole("button", { name: "Edit New session shortcut" })
+  await edit.click()
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("heading", { name: "Press keys" })).toBeVisible()
   await expect(dialog).toContainText("Shortcut for New session. Existing assignments remain unchanged until Save.")
@@ -42,14 +45,15 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await expect(field).toBeFocused()
   await expect(field).toHaveValue(`${label.t}, ${label.n}`)
 
-  // The dialog suspends command keybinds: Home's combination is captured, not run.
+  // The dialog suspends command keybinds: Home's combination is captured (the field shows it),
+  // and Home does not run behind the dialog.
   await page.keyboard.press("ControlOrMeta+b")
   await expect(field).toHaveValue(label.b)
-  await expect(page).toHaveURL(/\/orchestra\/shortcuts$/)
+  await stays(page, () => Promise.resolve(new URL(page.url()).pathname), "/orchestra/shortcuts")
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Shortcut already in use: Home")
   await expect(dialog).toBeVisible()
-  expect(await keybinds(page)).toEqual({})
+  await stays(page, () => keybinds(page), {})
 
   await page.keyboard.press("ControlOrMeta+Shift+Y")
   await expect(field).toHaveValue(label.y)
@@ -57,16 +61,20 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
   await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.y])
+  // The row stayed mounted, so focus returns to the Edit button that opened the dialog.
+  await expect(edit).toBeFocused()
   await expect.poll(() => keybinds(page)).toEqual({ "tab.new": "mod+shift+y" })
 
-  // The replaced defaults no longer create drafts; the new combination does, exactly once.
+  // The replaced defaults no longer create drafts; the new combination does. Keys are handled in
+  // order, so once the new combination's draft exists a draft from the old defaults would too:
+  // the count must reach 2 and stay there.
   await chapter.getByRole("heading", { level: 1 }).click()
   await page.keyboard.press("ControlOrMeta+n")
   await page.keyboard.press("ControlOrMeta+t")
-  await expect(page).toHaveURL(/\/orchestra\/shortcuts$/)
   await page.keyboard.press("ControlOrMeta+Shift+Y")
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
-  await expect(page.locator('[data-tab-key^="draft:"]')).toHaveCount(2)
+  await expect(drafts).toHaveCount(2)
+  await stays(page, () => drafts.count(), 2)
 
   // The binding is stored, not page state: it survives a reload.
   await page.goto("/orchestra/shortcuts", { waitUntil: "domcontentloaded" })
@@ -76,14 +84,13 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await chapter.getByRole("button", { name: "Reset to defaults" }).click()
   await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.t, label.n])
   await expect.poll(() => keybinds(page)).toEqual({})
-  const before = page.url()
   await chapter.getByRole("heading", { level: 1 }).click()
   await page.keyboard.press("ControlOrMeta+n")
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
-  expect(page.url()).not.toBe(before)
+  await expect(drafts).toHaveCount(3)
 })
 
-test("search, cancel keeps the stored binding, Backspace unassigns and an unchanged Save writes nothing", async ({
+test("search, cancel keeps the stored binding, Backspace unassigns, the default again resets and an unchanged Save writes nothing", async ({
   page,
 }) => {
   await setup(page, "light")
@@ -109,19 +116,23 @@ test("search, cancel keeps the stored binding, Backspace unassigns and an unchan
   const dialog = page.getByRole("dialog")
   const field = dialog.getByRole("textbox", { name: "Key combination" })
   await edit.click()
+  await expect(field).toBeFocused()
   await page.keyboard.press("ControlOrMeta+Shift+Y")
   await expect(field).toHaveValue(label.y)
   await dialog.getByRole("button", { name: "Cancel" }).click()
   await expect(dialog).toHaveCount(0)
+  await expect(edit).toBeFocused()
   await expect(row(page, "home.toggle").locator("kbd")).toHaveText([label.b])
-  expect(await keybinds(page)).toEqual({})
+  await stays(page, () => keybinds(page), {})
 
   await edit.click()
+  await expect(field).toBeFocused()
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
-  expect(await keybinds(page)).toEqual({})
+  await stays(page, () => keybinds(page), {})
 
   await edit.click()
+  await expect(field).toBeFocused()
   await page.keyboard.press("Backspace")
   await expect(field).toHaveValue("")
   await expect(field).toHaveAttribute("placeholder", "Unassigned")
@@ -129,10 +140,34 @@ test("search, cancel keeps the stored binding, Backspace unassigns and an unchan
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(row(page, "home.toggle").locator("kbd")).toHaveText(["Unassigned"])
   await expect.poll(() => keybinds(page)).toEqual({ "home.toggle": "none" })
+  // The visible "Unassigned" label is searchable too.
+  await search.fill("unassigned")
+  await expect(chapter.locator("[data-shortcut-id]")).toHaveCount(1)
+  await expect(row(page, "home.toggle")).toBeVisible()
+  await search.fill("")
 
-  // The freed combination can now be taken by another command without a conflict.
-  await row(page, "tab.new").getByRole("button", { name: "Edit New session shortcut" }).click()
+  // Capturing the registered default again drops the override instead of storing a copy.
+  await edit.click()
+  await expect(field).toBeFocused()
   await page.keyboard.press("ControlOrMeta+b")
+  await expect(field).toHaveValue(label.b)
+  await dialog.getByRole("button", { name: "Save" }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(row(page, "home.toggle").locator("kbd")).toHaveText([label.b])
+  await expect.poll(() => keybinds(page)).toEqual({})
+
+  // A combination freed by unassigning can be taken by another command without a conflict.
+  await edit.click()
+  await expect(field).toBeFocused()
+  await page.keyboard.press("Backspace")
+  await expect(field).toHaveValue("")
+  await dialog.getByRole("button", { name: "Save" }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect.poll(() => keybinds(page)).toEqual({ "home.toggle": "none" })
+  await row(page, "tab.new").getByRole("button", { name: "Edit New session shortcut" }).click()
+  await expect(field).toBeFocused()
+  await page.keyboard.press("ControlOrMeta+b")
+  await expect(field).toHaveValue(label.b)
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
   await expect(row(page, "tab.new").locator("kbd")).toHaveText([label.b])
@@ -144,6 +179,15 @@ test("search, cancel keeps the stored binding, Backspace unassigns and an unchan
 
 function row(page: Page, id: string) {
   return page.locator(`[data-chapter="shortcuts"] [data-shortcut-id="${id}"]`)
+}
+
+// A negative check only means something once the effect it rules out had time to land: the value
+// must hold across a short window, not just at the first read.
+async function stays(page: Page, read: () => Promise<unknown>, expected: unknown) {
+  for (const _ of Array.from({ length: 8 })) {
+    expect(await read()).toEqual(expected)
+    await page.waitForTimeout(100)
+  }
 }
 
 function keybinds(page: Page) {

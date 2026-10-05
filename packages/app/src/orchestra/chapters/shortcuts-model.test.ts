@@ -8,6 +8,8 @@ import {
   keybindSignatures,
   shortcutGroup,
   shortcutRows,
+  shortcutText,
+  resetsOverride,
 } from "./shortcuts-model"
 
 const key = (
@@ -150,15 +152,40 @@ describe("display and search", () => {
     expect(keybindCombos(undefined)).toEqual([])
   })
 
+  test("search text is what the row shows, including the unassigned label", () => {
+    const base = { kind: "General shortcut", unassigned: "Unassigned" }
+    expect(shortcutText({ ...base, title: "New session", keys: ["⌘T", "⌘N"] })).toBe(
+      "New session General shortcut ⌘T ⌘N",
+    )
+    expect(shortcutText({ ...base, title: "Home", keys: [] })).toBe("Home General shortcut Unassigned")
+  })
+
   test("filters on the visible row text ignoring case and surrounding space", () => {
     const rows = [
-      { title: "New session", binding: "⌘T" },
-      { title: "Home", binding: "⌘B" },
+      { title: "New session", keys: ["⌘T", "⌘N"] },
+      { title: "Home", keys: [] },
     ]
-    const text = (row: (typeof rows)[number]) => `${row.title} ${row.binding}`
+    const text = (row: (typeof rows)[number]) =>
+      shortcutText({ title: row.title, kind: "General shortcut", keys: row.keys, unassigned: "Unassigned" })
     expect(filterShortcuts(rows, "  SESSION ", text)).toEqual([rows[0]])
-    expect(filterShortcuts(rows, "⌘b", text)).toEqual([rows[1]])
+    expect(filterShortcuts(rows, "⌘n", text)).toEqual([rows[0]])
+    expect(filterShortcuts(rows, " unassigned", text)).toEqual([rows[1]])
+    expect(filterShortcuts(rows, "general", text)).toEqual(rows)
     expect(filterShortcuts(rows, "", text)).toEqual(rows)
     expect(filterShortcuts(rows, "missing", text)).toEqual([])
+  })
+})
+
+describe("saving", () => {
+  test("a binding other than the default is stored as an override", () => {
+    expect(resetsOverride({ preset: "mod+b" }, "mod+shift+y")).toBe(false)
+    expect(resetsOverride({ preset: "mod+b" }, "none")).toBe(false)
+    expect(resetsOverride({}, "mod+shift+y")).toBe(false)
+  })
+
+  test("the default again, or unassigning a command without a default, drops the override", () => {
+    expect(resetsOverride({ preset: "mod+b" }, "mod+b")).toBe(true)
+    expect(resetsOverride({}, "none")).toBe(true)
+    expect(resetsOverride({ preset: undefined }, "none")).toBe(true)
   })
 })

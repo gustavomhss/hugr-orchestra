@@ -1,14 +1,6 @@
 /* Shortcuts screen additions to the shared kit: a row may carry several key combinations, the
    mock's `.ic` close glyph, and the mock dialog inside the app's dialog layer (the dialog-v2
    container defaults would otherwise win on size and paint). */
-
-/* The mock's body keeps the normal line height; the app body sets 24px, which would make the
-   eyebrow, row titles and field labels taller than the mock. */
-[data-mx-page="orchestra-shortcuts"],
-.shortcuts-dialog {
-  line-height: normal;
-}
-
 .shortcuts-keys {
   display: inline-flex;
   flex: none;

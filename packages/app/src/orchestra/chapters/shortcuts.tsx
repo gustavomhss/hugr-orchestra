@@ -2,7 +2,8 @@ import { Dialog } from "@kobalte/core/dialog"
 import { getFilename } from "@opencode-ai/core/util/path"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createComputed, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
+import { createStore, reconcile } from "solid-js/store"
 import { formatKeybind, useCommand } from "@/context/command"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -16,7 +17,9 @@ import {
   filterShortcuts,
   findConflict,
   keybindCombos,
+  resetsOverride,
   shortcutRows,
+  shortcutText,
   type ShortcutRow,
 } from "./shortcuts-model"
 import "./shortcuts.css"
@@ -30,18 +33,33 @@ export default function ShortcutsPage(props: ChapterPageProps) {
   const dialog = useDialog()
   const global = useGlobal()
   const [query, setQuery] = createSignal("")
-  const rows = createMemo(() =>
-    shortcutRows({
-      paletteTitle: language.t("command.palette"),
-      catalog: command.catalog,
-      options: command.options,
-      overrides: settings.current.keybinds ?? {},
-    }),
+  const [rows, setRows] = createStore<ShortcutRow[]>([])
+  // Reconcile by id so a saved binding updates its row in place: rows stay mounted and focus can
+  // return to the Edit button that opened the dialog.
+  createComputed(() =>
+    setRows(
+      reconcile(
+        shortcutRows({
+          paletteTitle: language.t("command.palette"),
+          catalog: command.catalog,
+          options: command.options,
+          overrides: settings.current.keybinds ?? {},
+        }),
+        { key: "id" },
+      ),
+    ),
   )
   const labels = (config: string | undefined) => keybindCombos(config).map((combo) => formatKeybind(combo, language.t))
   const kind = (row: ShortcutRow) => language.t(`orchestra.shortcuts.kind.${row.group}`)
   const visible = createMemo(() =>
-    filterShortcuts(rows(), query(), (row) => [row.title, kind(row), ...labels(row.config)].join(" ")),
+    filterShortcuts(rows, query(), (row) =>
+      shortcutText({
+        title: row.title,
+        kind: kind(row),
+        keys: labels(row.config),
+        unassigned: language.t("orchestra.shortcuts.unassigned"),
+      }),
+    ),
   )
   const profile = createMemo(() => {
     const directory = pathKey(props.directory)
@@ -55,15 +73,15 @@ export default function ShortcutsPage(props: ChapterPageProps) {
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
 
-  const edit = (row: ShortcutRow) =>
+  const edit = (row: ShortcutRow, trigger: HTMLElement) =>
     dialog.showOwned(() => (
       <ShortcutDialog
         row={row}
-        rows={rows}
+        rows={() => rows}
         labels={labels}
+        trigger={trigger}
         onSave={(config) => {
-          // Choosing the registered default again drops the override instead of pinning a copy of it.
-          if (config === row.preset) return settings.keybinds.reset(row.id)
+          if (resetsOverride(row, config)) return settings.keybinds.reset(row.id)
           settings.keybinds.set(row.id, config)
         }}
       />
@@ -72,7 +90,8 @@ export default function ShortcutsPage(props: ChapterPageProps) {
   return (
     <MxPage
       id="orchestra-shortcuts"
-      eyebrow={language.t("orchestra.shortcuts.eyebrow", { profile: profile() })}
+      // The kit's eyebrow is text; FSI/PDI isolate the profile name exactly as <bdi> does.
+      eyebrow={language.t("orchestra.shortcuts.eyebrow", { profile: `\u2068${profile()}\u2069` })}
       title={language.t("orchestra.shortcuts.title")}
       description={language.t("orchestra.shortcuts.description")}
       action={
@@ -124,7 +143,7 @@ export default function ShortcutsPage(props: ChapterPageProps) {
                   type="button"
                   class="mx-btn"
                   aria-label={language.t("orchestra.shortcuts.editLabel", { title: row.title })}
-                  onClick={() => edit(row)}
+                  onClick={(event) => edit(row, event.currentTarget)}
                 >
                   {language.t("orchestra.shortcuts.edit")}
                 </button>
@@ -145,12 +164,20 @@ function ShortcutDialog(props: {
   row: ShortcutRow
   rows: () => ShortcutRow[]
   labels: (config: string | undefined) => string[]
+  trigger: HTMLElement
   onSave: (config: string) => void
 }) {
   const language = useLanguage()
   const dialog = useDialog()
   const [draft, setDraft] = createSignal(props.row.config)
   const [error, setError] = createSignal("")
+  // The app's dialog layer has no Kobalte trigger to restore focus to, so hand it back to the Edit
+  // button once the dialog has unmounted (the row stays mounted because rows reconcile by id).
+  onCleanup(() =>
+    setTimeout(() => {
+      if (props.trigger.isConnected) props.trigger.focus()
+    }),
+  )
 
   const submit = () => {
     const config = draft()
