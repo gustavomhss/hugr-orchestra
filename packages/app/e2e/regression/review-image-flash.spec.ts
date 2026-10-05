@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible, expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 
 const directory = "C:/OpenCode/ReviewImageFlashRegression"
 const sessionID = "ses_review_image_flash_regression"
@@ -26,7 +25,6 @@ test("clicking an image file in the v2 review pane does not blank the panel", as
 })
 
 async function openReview(page: Page) {
-  await page.addInitScript(railDefaulted)
   await page.setViewportSize({ width: 960, height: 900 })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))

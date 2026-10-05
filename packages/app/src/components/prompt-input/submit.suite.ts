@@ -656,6 +656,42 @@ describe("prompt submit worktree selection", () => {
     expect(sentCommands[0]).toMatchObject({ command: "review", delivery: "steer" })
   })
 
+  test("a queued prompt sent while the session works gets no optimistic sent turn", async () => {
+    params = { id: "session-1" }
+    const submit = (working: boolean) =>
+      createPromptSubmit({
+        prompt,
+        info: () => ({ id: "session-1" }),
+        imageAttachments: () => [],
+        commentCount: () => 0,
+        autoAccept: () => false,
+        mode: () => "normal",
+        working: () => working,
+        editor: () => undefined,
+        queueScroll: () => undefined,
+        promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+        addToHistory: () => undefined,
+        resetHistoryNavigation: () => undefined,
+        setMode: () => undefined,
+        setPopover: () => undefined,
+        delivery: () => "queue",
+      })
+    const event = { preventDefault: () => undefined } as unknown as Event
+
+    await submit(true).handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(1)
+    expect(promptInputs[0]).toMatchObject({ delivery: "queue" })
+    expect(optimistic).toHaveLength(0)
+
+    // Idle, the queued prompt promotes at once, so it shows as sent like any prompt.
+    promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
+    await submit(false).handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(2)
+    expect(optimistic).toHaveLength(1)
+  })
+
   test("submits slash commands through the current session API", async () => {
     params = { id: "session-1" }
     variant = "high"

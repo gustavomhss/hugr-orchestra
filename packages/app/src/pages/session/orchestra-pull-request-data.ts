@@ -26,7 +26,7 @@ export function pullRequestProposal(input: {
   const title = input.title?.trim() ?? ""
   const lines = files.map((item) => {
     const measured = [item.additions, item.deletions].every((value) => Number.isSafeInteger(value) && value! >= 0)
-    return measured ? `- ${item.file} (+${item.additions} −${item.deletions})` : `- ${item.file}`
+    return measured ? `- ${codeSpan(item.file)} (+${item.additions} −${item.deletions})` : `- ${codeSpan(item.file)}`
   })
   return {
     title,
@@ -43,7 +43,10 @@ export function pullRequestProposal(input: {
 }
 
 export function pullRequestMarkdown(proposal: PullRequestProposal) {
-  const branches = proposal.from.trim() && proposal.base.trim() ? `\`${proposal.from.trim()}\` → \`${proposal.base.trim()}\`` : ""
+  const branches =
+    proposal.from.trim() && proposal.base.trim()
+      ? `${codeSpan(proposal.from.trim())} → ${codeSpan(proposal.base.trim())}`
+      : ""
   return [`# ${proposal.title.trim()}`, ...(branches ? ["", branches] : []), "", proposal.description.trim(), ""].join(
     "\n",
   )
@@ -59,13 +62,10 @@ export function pullRequestFilename(title: string) {
   return `${name || "pull-request"}-pr.md`
 }
 
-export function downloadText(filename: string, text: string, type: string) {
-  const url = URL.createObjectURL(new Blob([text], { type }))
-  const link = document.createElement("a")
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+// An inline code span whose fence is longer than any backtick run inside the text, padded when the
+// text itself starts or ends with a backtick (CommonMark).
+export function codeSpan(text: string) {
+  const fence = "`".repeat(Math.max(0, ...[...text.matchAll(/`+/g)].map((run) => run[0].length)) + 1)
+  const pad = text.startsWith("`") || text.endsWith("`") ? " " : ""
+  return `${fence}${pad}${text}${pad}${fence}`
 }

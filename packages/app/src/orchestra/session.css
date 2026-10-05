@@ -228,7 +228,6 @@
     z-index: 1;
   }
 
-
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
     margin: 0;
     padding: 0;
@@ -283,7 +282,6 @@
     [data-slot="session-turn-message-container"] {
     padding-inline: 30px;
   }
-
 
   body[data-new-layout] [data-session-layout="surface"] [data-component="user-message"] {
     align-items: flex-start;
@@ -698,6 +696,8 @@
     [data-slot="session-side-panel-tab-bar"] {
     min-block-size: 38px;
     block-size: 38px;
+    /* The shared bar is width: 100%; the mock's rule runs 6px past both padding edges. */
+    inline-size: calc(100% + 12px);
     margin-block: -4px 8px;
     margin-inline: -6px;
     gap: 2px;
@@ -1080,6 +1080,7 @@
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-brief"] {
+    max-inline-size: 450px;
     display: -webkit-box;
     margin: 5px 0 0;
     overflow: hidden;
@@ -1227,7 +1228,10 @@
     font: 12px / 16px var(--font-family-mono);
   }
 
-  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-body"] [data-slot="context-tool-group-summary"] {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    [data-slot="context-tool-group-summary"] {
     color: #8b9bab;
     font-size: 12px;
   }
@@ -1253,11 +1257,13 @@
   }
 
   /* The send control keeps the mock's blue even before a prompt is written. */
-  body[data-new-layout] [data-session-layout="surface"] [data-component="session-prompt-dock"] [data-action="prompt-submit"]:disabled {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-submit"]:disabled {
     opacity: 1;
   }
 }
-
 
 /* The approved rail tab bar: Review, Context, Tasks, Apps, file tabs, then the open-file "+". */
 @media (min-width: 768px) {
@@ -1329,14 +1335,6 @@
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-slot="session-side-panel-open-file"]
-    [data-component="icon-button-v2"]
-    svg {
-    transform: scale(1.25);
-  }
-
-  body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-slot="session-side-panel-open-file"]
     [data-component="icon-button-v2"]:hover {
     background: var(--orchestra-rail-tab-hover-background);
     color: var(--orchestra-rail-tab-hover);
@@ -1357,7 +1355,11 @@
     gap: 3px;
   }
 
-  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid .text-12-regular.text-text-weak {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .grid
+    .text-12-regular.text-text-weak {
     margin: 0;
     color: #7f8fa0;
     letter-spacing: normal;
@@ -1419,21 +1421,127 @@ body[data-new-layout] [data-orchestra-menu="session"] {
   box-shadow: var(--mx-pop-shadow, 0 14px 35px rgba(0, 0, 0, 0.24));
 }
 
-body[data-new-layout] [data-orchestra-menu="session"] [role="menuitem"] {
+/* menu-v2.css sizes the item at 28px and types its inner content slot, so both are overridden here. */
+body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"] {
+  block-size: auto;
   min-block-size: 0;
   padding: 8px 10px;
   border-radius: 5px;
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-slot="menu-v2-item-content"] {
   color: var(--mx-strong, #e1e9f0);
   font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
   font-optical-sizing: none;
   font-size: 12px;
   font-weight: 400;
+  line-height: normal;
+  letter-spacing: normal;
 }
 
-body[data-new-layout] [data-orchestra-menu="session"] [role="menuitem"]:is(:hover, [data-highlighted]) {
+body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"]:is(:hover, [data-highlighted]) {
   background: var(--mx-soft, rgba(170, 196, 220, 0.055));
 }
 
-body[data-new-layout] [data-orchestra-menu="session"] [data-danger] {
+body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="menu-v2-item-content"] {
   color: var(--mx-bad, #d99a94);
+}
+
+/* Header "•••": the mock writes three bullets in the 12px button text rather than a light glyph. */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    [data-component="icon-button-v2"]
+    > :is(svg, [data-component="icon"], span) {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    [data-component="icon-button-v2"]::before {
+    content: "•••";
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 12px;
+    line-height: 1;
+  }
+}
+
+/* Rail controls without a mock counterpart sit at the far end, quiet: the file-list toggle, then the
+ * mock's 22×24 "+" in its 15px glyph. */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-list"]
+    > .session-review-v2-sidebar-toggle-slot {
+    position: static;
+    order: 1;
+    margin-inline-start: auto;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-list"]
+    > [data-slot="session-side-panel-open-file"] {
+    position: static;
+    order: 2;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    :is(.session-review-v2-sidebar-toggle-slot, [data-slot="session-side-panel-open-file"])
+    [data-component="icon-button-v2"] {
+    inline-size: 22px;
+    min-inline-size: 22px;
+    block-size: 24px;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot
+    [data-component="icon-button-v2"]
+    svg {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]
+    > * {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::before {
+    content: "+";
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  /* The change-mode selector reads like the rail's other quiet controls. */
+  body[data-new-layout] [data-slot="orchestra-review-mode"] [data-slot="select-v2-value-text"] {
+    color: #8b9bab;
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-slot="orchestra-review-mode"]
+    [data-slot="select-v2-value-text"] {
+    color: #5f6874;
+  }
 }

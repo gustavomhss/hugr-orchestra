@@ -12,7 +12,8 @@ import { ReviewPanelV2, type ReviewPanelV2Props } from "@/pages/session/v2/revie
 import { filterRenderableDiff, reviewDiffNeedsLoad } from "@/pages/session/v2/review-diff-kinds"
 import { showToast } from "@/utils/toast"
 import { OrchestraPullRequest } from "@/pages/session/orchestra-pull-request"
-import { downloadText } from "@/pages/session/orchestra-pull-request-data"
+import { downloadText } from "@/utils/download"
+import { collectPatches, joinPatches } from "@/pages/session/review-export"
 import "@/orchestra/chapters/kit.css"
 
 export function createOrchestraReviewPanel() {
@@ -44,19 +45,15 @@ export function createOrchestraReviewPanel() {
     // Writes the changes this view lists as one unified diff, loading any patch the list only summarizes.
     const exportDiff = async () => {
       setExporting(true)
-      const patches = await Promise.all(
-        diffs().map(async (diff) => {
-          if (!reviewDiffNeedsLoad(diff)) return diff.patch ?? ""
-          const loaded = await props.loadDiff?.(diff.file, props.diffVersion).catch(() => undefined)
-          return loaded?.patch ?? diff.patch ?? ""
-        }),
-      ).finally(() => setExporting(false))
-      const text = patches.filter((patch) => patch.trim()).join("\n")
-      if (!text) {
-        showToast({ title: language.t("orchestra.chat.exportDiffEmpty") })
-        return
-      }
-      downloadText(`${layout.params.id ?? "changes"}.diff`, text.endsWith("\n") ? text : text + "\n", "text/x-diff")
+      const result = await collectPatches({
+        diffs: diffs(),
+        needsLoad: reviewDiffNeedsLoad,
+        load: async (diff) => (await props.loadDiff?.(diff.file, props.diffVersion))?.patch,
+      }).finally(() => setExporting(false))
+      if (result.skipped.length > 0)
+        showToast({ title: language.t("orchestra.chat.exportDiffSkipped", { count: result.skipped.length }) })
+      if (result.patches.length === 0) return
+      downloadText(`${layout.params.id ?? "changes"}.diff`, joinPatches(result.patches), "text/x-diff")
     }
 
     const ReviewFile = (fileProps: FileProps) => (
@@ -77,14 +74,12 @@ export function createOrchestraReviewPanel() {
         class="h-full min-h-0 flex flex-col"
       >
         <div data-slot="orchestra-review-head">
-          <div data-slot="orchestra-review-views">
-            <button type="button" aria-current="page" data-active="">
-              {language.t("orchestra.chat.filesChanged", { count: diffs().length })}
-            </button>
-            <button type="button" onClick={showAllFiles}>
-              {language.t("orchestra.chat.allFiles")}
-            </button>
-          </div>
+          <OrchestraReviewViews
+            view="changed"
+            count={diffs().length}
+            onChanged={() => undefined}
+            onAll={showAllFiles}
+          />
           <div data-slot="orchestra-review-actions">
             <OrchestraPullRequest sessionID={layout.params.id} files={diffs} />
             <button
@@ -120,4 +115,35 @@ export function createOrchestraReviewPanel() {
       </div>
     )
   }
+}
+
+// The rail's Files Changed / All files switch. Review shows the changed files; All files is the
+// session's file browser, and both views carry the switch so either can lead back to the other.
+export function OrchestraReviewViews(props: {
+  view: "changed" | "all"
+  count: number
+  onChanged: () => void
+  onAll: () => void
+}) {
+  const language = useLanguage()
+  return (
+    <div data-slot="orchestra-review-views">
+      <button
+        type="button"
+        aria-current={props.view === "changed" ? "page" : undefined}
+        data-active={props.view === "changed" ? "" : undefined}
+        onClick={() => props.onChanged()}
+      >
+        {language.t("orchestra.chat.filesChanged", { count: props.count })}
+      </button>
+      <button
+        type="button"
+        aria-current={props.view === "all" ? "page" : undefined}
+        data-active={props.view === "all" ? "" : undefined}
+        onClick={() => props.onAll()}
+      >
+        {language.t("orchestra.chat.allFiles")}
+      </button>
+    </div>
+  )
 }

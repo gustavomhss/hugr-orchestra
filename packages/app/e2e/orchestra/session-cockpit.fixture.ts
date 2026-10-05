@@ -3,7 +3,6 @@ import { expect, type Locator, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { installDockBridge } from "./session-cockpit-bridge"
 import { expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 
 export const directory = "/work/cockpit"
 const projectID = "proj_cockpit"
@@ -65,8 +64,8 @@ export async function setupCockpit(
         session(`ses_cockpit_extra_${index}`, `Background ${index}`, 1700000010000 + index, { parentID }),
       )
     : []
-  if (options.rail !== "fresh") await page.addInitScript(railDefaulted)
   await mockOpenCodeServer(page, {
+    freshRail: options.rail === "fresh",
     vcsDiff: options.vcsDiff,
     onPrompt: options.onPrompt,
     directory,

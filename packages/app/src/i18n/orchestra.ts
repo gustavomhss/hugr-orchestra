@@ -139,7 +139,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.sidebar.footer": "Build what matters.\nWith agents.",
   "orchestra.model.running": "Running",
   "orchestra.model.waiting": "Waiting for your response",
-  "orchestra.model.idle": "Stopped",
+  "orchestra.model.idle": "Idle",
   "orchestra.model.tooltip": "{{model}} · {{provider}} · {{activity}}",
   "orchestra.dock.loading": "Restoring tabs…",
   "orchestra.dock.empty": "No tabs open. Enter an address to start browsing.",

@@ -90,6 +90,8 @@ type FramedTimelineRow = Exclude<TimelineRow.TimelineRow, { _tag: "TurnGap" }>
 type TimelineRowByTag<T extends TimelineRow.TimelineRow["_tag"]> = Extract<TimelineRow.TimelineRow, { _tag: T }>
 
 const timelineFallbackItemSize = 60
+// The last measured session header height seeds the next timeline, so its scroll margin starts right.
+let lastHeaderHeight = 64
 const timelineCache = new Map<string, { measurements: VirtualItem[]; toolOpen: Record<string, boolean | undefined> }>()
 
 const taskDescription = (part: PartType, sessionID: string) => {
@@ -324,10 +326,17 @@ export function MessageTimeline(props: {
     return language.t("command.session.new")
   })
   const showHeader = createMemo(() => !!(titleValue() || parentID()))
-  const [headerHeight, setHeaderHeight] = createSignal(64)
-  // The header's brief is the session's opening request: its first written line.
+  const [headerHeight, setMeasuredHeader] = createSignal(lastHeaderHeight)
+  const setHeaderHeight = (height: number) => {
+    if (height > 0) lastHeaderHeight = height
+    setMeasuredHeader(height > 0 ? height : lastHeaderHeight)
+  }
+  // The header's brief is the session's opening request: its first written line. It shows only once
+  // the history reaches the session's start, so a loaded window never passes off a later prompt.
   const sessionBrief = createMemo(() => {
-    const first = props.userMessages[0]
+    const id = sessionID()
+    if (!id || sync().session.history.more(id)) return
+    const first = sessionMessages().find((message) => message.role === "user")
     if (!first) return
     return getMsgParts(first.id)
       .flatMap((part) => (part.type === "text" && !part.synthetic ? part.text.split(/\r?\n/) : []))
@@ -667,7 +676,6 @@ export function MessageTimeline(props: {
       })
     },
   }))
-
 
   createEffect(
     on(
@@ -1108,7 +1116,9 @@ export function MessageTimeline(props: {
         const assistantPartRow = row as Accessor<TimelineRowByTag<"AssistantPart">>
         const head = createMemo(() => {
           const group = assistantPartRow().group
-          const message = messageByID().get(group.type === "context" ? (group.refs[0]?.messageID ?? "") : group.ref.messageID)
+          const message = messageByID().get(
+            group.type === "context" ? (group.refs[0]?.messageID ?? "") : group.ref.messageID,
+          )
           return message?.role === "assistant" ? message : undefined
         })
         return (
@@ -1333,6 +1343,7 @@ export function MessageTimeline(props: {
             data-session-title
             ref={(element) => {
               // The virtualizer's scroll margin is this header's measured height (48px + 16px by default).
+              queueMicrotask(() => setHeaderHeight(element.offsetHeight))
               const observer = new ResizeObserver(() => setHeaderHeight(element.offsetHeight))
               observer.observe(element)
               onCleanup(() => observer.disconnect())

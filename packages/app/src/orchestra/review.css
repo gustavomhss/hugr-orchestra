@@ -155,7 +155,9 @@
 
 @media (min-width: 768px) {
   /* With no changes the file list has nothing to show; the empty state takes the panel. */
-  body[data-new-layout] [data-component="orchestra-review"][data-empty] [data-component="session-review-v2-sidebar-root"] {
+  body[data-new-layout]
+    [data-component="orchestra-review"][data-empty]
+    [data-component="session-review-v2-sidebar-root"] {
     display: none;
   }
 }
@@ -227,4 +229,17 @@ html[data-color-scheme="light"] .orchestra-pr-dialog {
 
 .orchestra-pr-dialog .mx-note {
   margin: 0 0 12px;
+}
+
+@media (min-width: 768px) {
+  /* All files carries the same switch above the session's file browser. */
+  body[data-new-layout] [data-session-tab="files"] > [data-slot="orchestra-files-head"] {
+    flex: none;
+    margin-block: 10px;
+  }
+
+  body[data-new-layout] [data-session-tab="files"] > :last-child {
+    flex: 1;
+    min-block-size: 0;
+  }
 }

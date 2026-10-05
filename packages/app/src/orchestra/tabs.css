@@ -161,7 +161,10 @@
       background 0.16s ease;
   }
 
-  [data-orchestra-tabs] [data-titlebar-tab]:is(:hover, [data-active="true"]) [data-slot="tab-close"] [data-component="icon-button-v2"] {
+  [data-orchestra-tabs]
+    [data-titlebar-tab]:is(:hover, [data-active="true"])
+    [data-slot="tab-close"]
+    [data-component="icon-button-v2"] {
     opacity: 0.55;
   }
 
@@ -170,7 +173,10 @@
     opacity: 1;
   }
 
-  html[data-color-scheme="light"] [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
+  html[data-color-scheme="light"]
+    [data-orchestra-tabs]
+    [data-slot="tab-close"]
+    [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
     background: rgba(40, 56, 74, 0.08);
   }
 

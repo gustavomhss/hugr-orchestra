@@ -58,6 +58,7 @@ import { FILE_TREE_WIDTH_MIN, LegacyFileTreePanel } from "./legacy-file-tree-pan
 import { TasksPanel } from "./tasks-panel"
 import { AppsPanel } from "./apps-panel"
 import { OrchestraCockpit, OrchestraTaskFeed } from "./orchestra-cockpit"
+import { OrchestraReviewViews } from "@/orchestra/review"
 import { createTasksData } from "./tasks-data"
 
 type ReviewDiff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
@@ -169,6 +170,7 @@ export function SessionSidePanel(props: {
     fileBrowser: () => !!props.fileBrowserState,
     // The approved rail gives Tasks its own tab beside Apps, which hosts only the Dock.
     cockpit: () => false,
+    permanent: settings.general.newLayoutDesigns,
   })
   const contextOpen = tabState.contextOpen
   const tasksOpen = tabState.tasksOpen
@@ -183,7 +185,8 @@ export function SessionSidePanel(props: {
   let snoozed = false
   createEffect(() => {
     const n = tasksData.liveCount()
-    const open = tasksOpen()
+    const active = tabState.activeTab()
+    const open = active === "tasks"
     if (n === 0) {
       snoozed = false
       wasOpen = open
@@ -191,7 +194,10 @@ export function SessionSidePanel(props: {
     }
     if (wasOpen && !open) snoozed = true
     wasOpen = open
-    if (!open && !snoozed) {
+    // Live work may take Review's place, never Apps, Context or a file the user is reading.
+    const reading =
+      active === "apps" || active === "context" || active === SESSION_OPEN_FILE_TAB || !!file.pathFromTab(active)
+    if (!open && !snoozed && !reading) {
       // Panel first, then tab, then focus in a microtask so the freshly
       // mounted tab strip selects that tab instead of falling back to Review.
       view().reviewPanel.open()
@@ -228,7 +234,7 @@ export function SessionSidePanel(props: {
   }
   const activateTab = (value: string) => {
     const next = normalizeTab(value)
-    if (next === "apps" || next === "context" || next === "tasks") tabs().open(next)
+    if (next === "apps") tabs().open("apps")
     const path = file.pathFromTab(next)
     if (path) void file.load(path)
     openReviewPanel()
@@ -643,7 +649,8 @@ export function SessionSidePanel(props: {
                                 </div>
                               )}
                             </Show>
-                            <Show when={reviewTab() && props.canReview()}>
+                            {/* Always present, so the tab strip never mounts without Review and falls back to another tab. */}
+                            <Show when={reviewTab()}>
                               <Tabs.Trigger
                                 value="review"
                                 id={reviewTabID}
@@ -824,10 +831,24 @@ export function SessionSidePanel(props: {
                             role="tabpanel"
                             data-slot="tabs-content"
                             data-session-tab="files"
-                            class="h-full min-h-0 overflow-hidden"
+                            class="h-full min-h-0 overflow-hidden flex flex-col"
                             classList={{ hidden: !fileBrowserVisible() }}
                             inert={!fileBrowserVisible() || undefined}
                           >
+                            <Show
+                              when={
+                                (browserTab() ?? activeFileTab() ?? SESSION_OPEN_FILE_TAB) === SESSION_OPEN_FILE_TAB
+                              }
+                            >
+                              <div data-slot="orchestra-files-head">
+                                <OrchestraReviewViews
+                                  view="all"
+                                  count={props.reviewCount()}
+                                  onChanged={() => activateTab("review")}
+                                  onAll={() => undefined}
+                                />
+                              </div>
+                            </Show>
                             <SessionFileBrowserTab
                               tab={browserTab() ?? activeFileTab() ?? SESSION_OPEN_FILE_TAB}
                               placeholder={

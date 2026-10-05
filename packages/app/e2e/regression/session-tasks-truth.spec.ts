@@ -2,7 +2,6 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 
 const directory = "C:/OpenCode/TasksTruth"
 const projectID = "proj_tasks_truth"
@@ -140,7 +139,6 @@ async function openPanel(page: Page, owner = server) {
 }
 
 async function setup(page: Page, owner = server) {
-  await page.addInitScript(railDefaulted)
   await mockOpenCodeServer(page, {
     directory,
     project: {

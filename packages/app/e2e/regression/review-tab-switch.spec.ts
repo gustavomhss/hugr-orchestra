@@ -2,7 +2,6 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible, expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 
 const directory = "C:/OpenCode/ReviewTabSwitch"
 const projectID = "proj_review_tab_switch"
@@ -76,7 +75,6 @@ async function readProbe(page: Page) {
 }
 
 async function setup(page: Page) {
-  await page.addInitScript(railDefaulted)
   await mockOpenCodeServer(page, {
     directory,
     project: {

@@ -1,7 +1,7 @@
 import { Show, type JSX } from "solid-js"
 import type { SetStoreFunction } from "solid-js/store"
 import { useMutation } from "@tanstack/solid-query"
-import { Popover as KobaltePopover } from "@kobalte/core/popover"
+import { Popover } from "@kobalte/core/popover"
 import { Button } from "@opencode-ai/ui/button"
 import { TextField } from "@opencode-ai/ui/text-field"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
@@ -105,7 +105,7 @@ export function SessionSharePopover(props: {
   }
 
   return (
-    <KobaltePopover
+    <Popover
       open={share.open}
       anchorRef={props.anchor}
       placement="bottom-end"
@@ -116,8 +116,8 @@ export function SessionSharePopover(props: {
         setShare("open", open)
       }}
     >
-      <KobaltePopover.Portal>
-        <KobaltePopover.Content
+      <Popover.Portal>
+        <Popover.Content
           data-component="popover-content"
           classList={{
             "flex w-80 max-w-none flex-col items-start gap-3 rounded-[10px] border-0 bg-v2-background-bg-layer-01 p-3 shadow-[var(--v2-elevation-floating)]":
@@ -145,9 +145,7 @@ export function SessionSharePopover(props: {
             fallback={
               <div class="flex flex-col p-3">
                 <div class="flex flex-col gap-1">
-                  <div class="text-13-medium text-text-strong">
-                    {language.t("session.share.popover.title")}
-                  </div>
+                  <div class="text-13-medium text-text-strong">{language.t("session.share.popover.title")}</div>
                   <div class="text-12-regular text-text-weak">
                     {shareUrl()
                       ? language.t("session.share.popover.description.shared")
@@ -222,12 +220,7 @@ export function SessionSharePopover(props: {
               <Show
                 when={shareUrl()}
                 fallback={
-                  <ButtonV2
-                    variant="contrast"
-                    class="w-full"
-                    onClick={shareSession}
-                    disabled={shareMutation.isPending}
-                  >
+                  <ButtonV2 variant="contrast" class="w-full" onClick={shareSession} disabled={shareMutation.isPending}>
                     {shareMutation.isPending
                       ? language.t("session.share.action.publishing")
                       : language.t("session.share.action.publish")}
@@ -282,8 +275,8 @@ export function SessionSharePopover(props: {
               </Show>
             </div>
           </Show>
-        </KobaltePopover.Content>
-      </KobaltePopover.Portal>
-    </KobaltePopover>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover>
   )
 }

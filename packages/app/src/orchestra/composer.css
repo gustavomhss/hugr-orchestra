@@ -38,7 +38,8 @@
     min-block-size: 28px;
     padding-block: 4px;
     padding-inline: 2px;
-    font-family: var(--orchestra-chat-font);
+    /* The mock's <input> keeps Chrome's default Arial. */
+    font-family: Arial, sans-serif;
   }
 
   body[data-new-layout]
@@ -51,7 +52,8 @@
     inset: auto;
     padding-block-start: 4px;
     padding-inline: 2px;
-    font-family: var(--orchestra-chat-font);
+    font-family: Arial, sans-serif;
+    font-weight: 500;
   }
 
   body[data-new-layout]
@@ -185,8 +187,78 @@
     [data-component="session-prompt-dock"]
     [data-slot="prompt-input-v2-controls"]
     [data-component="button-v2"]
-    :is([data-component="provider-icon"], [data-component="icon"]) {
+    :is([data-component="provider-icon"], [data-component="icon"], span:has(> [data-slot="icon-svg"])) {
     display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    [data-component="button-v2"] {
+    color: #aab7c4;
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
+    font-size: 12px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    [data-component="button-v2"] {
+    color: #4d5661;
+  }
+
+  /* The add menu draws the mock's 1.4px "+" (.ic) instead of the shared glyph. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-attach"]
+    svg {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-attach"]::before {
+    content: "";
+    inline-size: 16px;
+    block-size: 16px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M8 3v10M3 8h10'/%3E%3C/svg%3E")
+      center / 16px no-repeat;
+  }
+
+  /* The mock's tools sit 6px apart, the add menu included. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    > [data-slot="orchestra-compose-tools"] {
+    margin-inline-start: -2px;
+  }
+
+  /* Send is the mock's 34px blue key with a 15px "➤". */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-submit"][data-icon="arrow-up"]
+    [data-component="icon"] {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-submit"][data-icon="arrow-up"]::after {
+    content: "➤";
+    color: #fff;
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 15px;
+    line-height: 1;
   }
 }
 
