@@ -1,17 +1,17 @@
 import path from "path"
 import PROMPT_BILLY from "../agent/prompt/billy.txt"
 import PROMPT_BOBBY from "../agent/prompt/bobby.txt"
-import PROMPT_CHARLIE from "../agent/prompt/charlie.txt"
+import PROMPT_BACKEND from "../agent/prompt/backend.txt"
 import PROMPT_FRANKIE from "../agent/prompt/frankie.txt"
 import PROMPT_JIMMY from "../agent/prompt/jimmy.txt"
 import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
-import { CharlieSkillRoot } from "./charlie-skill-root"
+import { BackendSkillRoot } from "./backend-skill-root"
 
-// Charlie's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
-export const charlieSkills = Object.freeze({
-  root: CharlieSkillRoot.root,
+// The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
+export const backendSkills = Object.freeze({
+  root: BackendSkillRoot.root,
   names: Object.freeze([
     "backend-implement",
     "backend-api",
@@ -22,6 +22,10 @@ export const charlieSkills = Object.freeze({
   ] as const),
 })
 
+// The backend seat's default display label, its only literal name in the repository (F1.2): config
+// `agent.backend.name` or HUGR_BACKEND_NAME replaces it, and test/agent/specialist-name-guard.test.ts pins it.
+export const BACKEND_DEFAULT_LABEL = "Charlie"
+
 export const nativeProfiles = Object.freeze({
   execution: Object.freeze({
     "*": "deny",
@@ -31,9 +35,9 @@ export const nativeProfiles = Object.freeze({
     bash: "allow",
     edit: "allow",
   } as const),
-  // Charlie-only (F1.8): the execution set plus its six entry skills and access to their packaged root. Agent
+  // Backend-specialist-only (F1.8): the execution set plus its six entry skills and access to their packaged root. Agent
   // registration adds the worktree-relative edit deny that keeps that root read-only.
-  charlie: Object.freeze({
+  backend: Object.freeze({
     "*": "deny",
     read: "allow",
     glob: "allow",
@@ -42,9 +46,9 @@ export const nativeProfiles = Object.freeze({
     edit: "allow",
     skill: Object.freeze({
       "*": "deny",
-      ...Object.fromEntries(charlieSkills.names.map((name) => [name, "allow" as const])),
+      ...Object.fromEntries(backendSkills.names.map((name) => [name, "allow" as const])),
     }),
-    external_directory: Object.freeze({ "*": "deny", [path.join(charlieSkills.root, "*")]: "allow" } as const),
+    external_directory: Object.freeze({ "*": "deny", [path.join(backendSkills.root, "*")]: "allow" } as const),
   } as const),
   review: Object.freeze({
     "*": "deny",
@@ -89,11 +93,11 @@ export const roster = createRoster([
     forbiddenActions: ["product implementation", "self-approval", "self-review"],
   },
   {
-    displayName: "Charlie",
-    memberId: "charlie",
+    displayName: BACKEND_DEFAULT_LABEL,
+    memberId: "backend",
     role: "backend execution",
     abilityClass: "scoped repository write",
-    returnCard: "charlie-result",
+    returnCard: "backend-result",
     // Single source of the charter's Forbidden line; native-team.test.ts asserts the prompt renders it verbatim.
     forbiddenActions: [
       "investigation or diagnosis",
@@ -106,8 +110,8 @@ export const roster = createRoster([
       "working around permission denials or safety holds",
       "editing Atlas memory files",
     ],
-    nativeProfile: "charlie",
-    prompt: PROMPT_CHARLIE,
+    nativeProfile: "backend",
+    prompt: PROMPT_BACKEND,
   },
   {
     displayName: "Patty",

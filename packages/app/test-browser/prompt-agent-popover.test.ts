@@ -40,7 +40,7 @@ test("the @ picker shows a renamed seat's label and selects its id", () => {
   // Solid delegates click handlers to the document, so the picker must be attached to it.
   const host = document.body.appendChild(document.createElement("div"))
   const selected: AtOption[] = []
-  const options: AtOption[] = [{ type: "agent", name: "charlie", display: "Pikachu" }]
+  const options: AtOption[] = [{ type: "agent", name: "backend", display: "Pikachu" }]
   const dispose = render(
     () =>
       createComponent(PromptPopover, {
@@ -68,7 +68,7 @@ test("the @ picker shows a renamed seat's label and selects its id", () => {
     const button = host.querySelector("button")
     expect(button?.textContent).toBe("@Pikachu")
     button?.click()
-    expect(selected.map((item) => item.name)).toEqual(["charlie"])
+    expect(selected.map((item) => item.name)).toEqual(["backend"])
   } finally {
     dispose()
     host.remove()

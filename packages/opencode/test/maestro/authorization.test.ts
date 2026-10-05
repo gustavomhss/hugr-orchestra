@@ -82,7 +82,7 @@ it.instance(
         projectID: session.projectID,
         workCardID: "card_authorization",
         workCard: "# card\n",
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validation-v1",
         checks: [{ id: "route", status: "PASS", detail: "routed" }],
@@ -144,7 +144,7 @@ it.instance(
         contextHash: context.contextHash,
         policyHash: validation.reviewPolicyHash,
         taskHash: "e".repeat(64),
-        intent: { subagentType: "charlie", prompt: "implement card" },
+        intent: { subagentType: "backend", prompt: "implement card" },
         methodVersion: "request-approval-v1",
         plan: "implement card",
         provenance: "test",
@@ -251,7 +251,7 @@ it.instance(
       expect(reservations[0]).toMatchObject({
         sessionID: session.id,
         authorizationID: granted.id,
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
       })
       yield* Effect.promise(() => Bun.write(`${test.directory}/stale.txt`, "after reservation\n"))
       expect(yield* reserveDispatch({ sessionID: session.id, authorizationID: granted.id, permission: [] })).toEqual(

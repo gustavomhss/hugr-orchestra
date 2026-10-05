@@ -52,8 +52,8 @@ const createEmbeddedFileMap = async (root: string, include: (file: string) => bo
 }
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
-// Charlie's packaged skills (F6.12), extracted to a real directory at runtime by src/maestro/charlie-skill-root.ts.
-const charlieSkillsFileMap = await createEmbeddedFileMap(path.join(dir, "../charlie/skills"), () => true)
+// The backend specialist's packaged skills (F6.12), extracted to a real directory at runtime by src/maestro/backend-skill-root.ts.
+const backendSkillsFileMap = await createEmbeddedFileMap(path.join(dir, "../backend-specialist/skills"), () => true)
 const treeSitterWorker = await Bun.file(fileURLToPath(import.meta.resolve("@opentui/core/parser.worker"))).text()
 
 const allTargets: {
@@ -188,13 +188,13 @@ for (const item of targets) {
     files: {
       [treeSitterWorkerPath]: treeSitterWorker,
       ...(embeddedFileMap ? { "opencode-web-ui.gen.ts": embeddedFileMap } : {}),
-      "opencode-charlie-skills.gen.ts": charlieSkillsFileMap,
+      "opencode-backend-skills.gen.ts": backendSkillsFileMap,
     },
     entrypoints: [
       "./src/index.ts",
       workerPath,
       treeSitterWorkerPath,
-      "opencode-charlie-skills.gen.ts",
+      "opencode-backend-skills.gen.ts",
       ...(embeddedFileMap ? ["opencode-web-ui.gen.ts"] : []),
     ],
     define: {

@@ -9,10 +9,10 @@ import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import { provideTmpdirInstance, testInstanceStoreLayer } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
-// Conformance of the authored Charlie skill tree (specs/charlie/contracts/f5-f6-toolkit-skills.md, F6)
+// Conformance of the authored backend specialist skill tree (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md, F6)
 // through the real V1 discovery path: config `skills.paths` (F6.13), scanned and parsed by Skill.Service.
 
-const ROOT = path.resolve(import.meta.dir, "../../../charlie/skills")
+const ROOT = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
 const ENTRY_NAMES = [
   "backend-implement",
   "backend-api",
@@ -40,12 +40,12 @@ const discovered = Effect.gen(function* () {
   return (yield* skill.all()).filter((item) => item.location.startsWith(ROOT + path.sep))
 })
 
-const withCharlieSkills = <A, E, R>(self: Effect.Effect<A, E, R>) =>
+const withBackendSkills = <A, E, R>(self: Effect.Effect<A, E, R>) =>
   provideTmpdirInstance(() => self, { git: true, config: { skills: { paths: [ROOT] } } })
 
-describe("charlie skills", () => {
+describe("backend skills", () => {
   it.live("discovers backend-implement with its name and description", () =>
-    withCharlieSkills(
+    withBackendSkills(
       Effect.gen(function* () {
         const list = yield* discovered
         const entry = list.find((item) => item.name === "backend-implement")
@@ -64,7 +64,7 @@ describe("charlie skills", () => {
   )
 
   it.live("resolves every relative link inside the skill tree and reaches every reference", () =>
-    withCharlieSkills(
+    withBackendSkills(
       Effect.gen(function* () {
         const entries = yield* discovered
         expect(entries.length).toBeGreaterThan(0)
@@ -102,7 +102,7 @@ describe("charlie skills", () => {
   )
 
   it.live("keeps every entry body within the provisional size bound", () =>
-    withCharlieSkills(
+    withBackendSkills(
       Effect.gen(function* () {
         const entries = yield* discovered
         expect(entries.length).toBeGreaterThan(0)

@@ -1,4 +1,4 @@
-export * as CharlieSkillRoot from "./charlie-skill-root"
+export * as BackendSkillRoot from "./backend-skill-root"
 
 import { createHash, randomUUID } from "crypto"
 import fs from "fs/promises"
@@ -7,14 +7,14 @@ import { Global } from "@opencode-ai/core/global"
 import { InstallationVersion } from "@opencode-ai/core/installation/version"
 
 // The authored skill tree (F6.1). Running from source reads it in place.
-export const source = path.resolve(import.meta.dir, "../../../charlie/skills")
+export const source = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
 
 // Compiled builds embed the tree as a generated file map, tree-relative path -> embedded file (script/build.ts).
 // The embed lives on Bun's virtual filesystem, so it is copied to a real directory (F6.12) that the read tool and
 // sandboxed shells can reach. That directory is under the cache: ToolSafety's sandbox denies reads under data/state.
 const embedded = await import(
   // @ts-expect-error - generated file at build time
-  "opencode-charlie-skills.gen.ts"
+  "opencode-backend-skills.gen.ts"
 )
   .then((module) => module.default as Record<string, string>)
   .catch(() => undefined)
@@ -25,7 +25,7 @@ export const root = embedded ? await extract(embedded, Global.Path.cache, Instal
 // Versions never share a copy, so installs of different versions can run side by side. A partial, stale or
 // tampered copy is replaced whole: the tree is written to a sibling temp directory and renamed into place.
 export async function extract(files: Record<string, string>, cache: string, version: string) {
-  const dir = path.join(cache, "charlie-skills", version)
+  const dir = path.join(cache, "backend-skills", version)
   const entries = await Promise.all(
     Object.entries(files).map(async ([file, from]) => [file, await Bun.file(from).bytes()] as const),
   )

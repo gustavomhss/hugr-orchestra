@@ -108,7 +108,7 @@ const renamed = testEffect(
         directories: () => InstanceState.directory.pipe(Effect.map((dir) => [path.join(dir, ".opencode")])),
         get: () =>
           Effect.succeed({
-            agent: { maestro: { name: "Pikachu" }, charlie: { name: "Raichu" } },
+            agent: { maestro: { name: "Pikachu" }, backend: { name: "Raichu" } },
           }),
       }),
     ],
@@ -637,8 +637,8 @@ describe("tool.registry agent identity", () => {
     () =>
       Effect.gen(function* () {
         const run = yield* identityTool()
-        expect((yield* run(0, { agent: "Raichu", agentID: "charlie" })).output).toBe(
-          JSON.stringify({ agentID: "charlie", agent: "Raichu" }),
+        expect((yield* run(0, { agent: "Raichu", agentID: "backend" })).output).toBe(
+          JSON.stringify({ agentID: "backend", agent: "Raichu" }),
         )
         // A caller that predates ids passes only `agent`, which is then also the key.
         expect((yield* run(0, { agent: "build" })).output).toBe(JSON.stringify({ agentID: "build", agent: "build" }))

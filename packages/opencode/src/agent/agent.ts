@@ -32,7 +32,7 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
-import { roster, nativeProfiles, charlieSkills, renderPrompt, type RosterMember } from "@/maestro/roster"
+import { roster, nativeProfiles, backendSkills, renderPrompt, type RosterMember } from "@/maestro/roster"
 import { containsPath } from "@/project/instance-context"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -146,12 +146,12 @@ const layer = Layer.effect(
         })
 
         const user = Permission.fromConfig(cfg.permission ?? {})
-        // Charlie's profile grants external access to its packaged skill root; edit patterns are worktree-relative,
+        // The backend specialist's profile grants external access to its packaged skill root; edit patterns are worktree-relative,
         // so the deny that keeps that root read-only is rendered here. Inside the project it is ordinary source.
-        const charlieReadOnly = containsPath(charlieSkills.root, ctx)
+        const backendReadOnly = containsPath(backendSkills.root, ctx)
           ? []
           : Permission.fromConfig({
-              edit: { [path.join(path.relative(ctx.worktree, charlieSkills.root), "*")]: "deny" },
+              edit: { [path.join(path.relative(ctx.worktree, backendSkills.root), "*")]: "deny" },
             })
 
         const agents: Record<string, Info> = {
@@ -313,10 +313,10 @@ const layer = Layer.effect(
                   options: {},
                   permission: Permission.merge(
                     Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
-                    member.nativeProfile === "charlie" ? charlieReadOnly : [],
+                    member.nativeProfile === "backend" ? backendReadOnly : [],
                   ),
-                  // Charlie is primary-capable and still delegatable (F1.6); primary use adds no permissions.
-                  mode: member.memberId === "charlie" ? ("all" as const) : ("subagent" as const),
+                  // The backend specialist is primary-capable and still delegatable (F1.6); primary use adds no permissions.
+                  mode: member.memberId === "backend" ? ("all" as const) : ("subagent" as const),
                   native: true,
                 },
               ]),
@@ -365,7 +365,7 @@ const layer = Layer.effect(
         // routing. Config `agent.<id>.name` sets it, HUGR_BACKEND_NAME overrides it for the backend seat (F1-D2), and an
         // invalid label keeps the default and surfaces a configuration error instead of failing startup (F1-D1).
         const overrides: Record<string, { path: string; value: string } | undefined> = {
-          charlie: flags.backendName === undefined ? undefined : { path: "HUGR_BACKEND_NAME", value: flags.backendName },
+          backend: flags.backendName === undefined ? undefined : { path: "HUGR_BACKEND_NAME", value: flags.backendName },
         }
         for (const member of roster.filter((member) => member.nativeProfile && member.prompt)) {
           const configured = cfg.agent?.[member.memberId]?.name
@@ -538,7 +538,7 @@ function present(member: RosterMember, label: string) {
   return {
     name: label,
     description:
-      member.memberId === "charlie"
+      member.memberId === "backend"
         ? "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. It returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review."
         : `${label} native team specialist.`,
     prompt: renderPrompt(member, label),

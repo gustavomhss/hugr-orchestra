@@ -151,7 +151,7 @@ beforeAll(async () => {
       },
       agent: {
         // A seat renamed from its default label: payloads must carry the stable id, never the label.
-        current: () => ({ id: "charlie", name: "Pikachu" }),
+        current: () => ({ id: "backend", name: "Pikachu" }),
       },
       session: {
         promote(directory: string, sessionID: string, state: { agent?: string }) {
@@ -345,12 +345,12 @@ describe("prompt submit worktree selection", () => {
     expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
     expect(sessionCreateInputs).toEqual([
       {
-        agent: "charlie",
+        agent: "backend",
         model: { id: "model", providerID: "provider", variant: undefined },
         location: { directory: "/repo/worktree-a" },
       },
       {
-        agent: "charlie",
+        agent: "backend",
         model: { id: "model", providerID: "provider", variant: undefined },
         location: { directory: "/repo/worktree-b" },
       },
@@ -365,7 +365,7 @@ describe("prompt submit worktree selection", () => {
       { directory: "/repo/worktree-a", sessionID: "session-1" },
       { directory: "/repo/worktree-b", sessionID: "session-2" },
     ])
-    expect(promotedAgents).toEqual(["charlie", "charlie"])
+    expect(promotedAgents).toEqual(["backend", "backend"])
     expect(JSON.stringify([sessionCreateInputs, sentShell])).not.toContain("Pikachu")
     expect(syncedDirectories).toEqual(["/repo/worktree-a", "/repo/worktree-a", "/repo/worktree-b", "/repo/worktree-b"])
   })
@@ -488,7 +488,7 @@ describe("prompt submit worktree selection", () => {
     expect(optimistic).toHaveLength(1)
     expect(optimistic[0]).toMatchObject({
       message: {
-        agent: "charlie",
+        agent: "backend",
         model: { providerID: "provider", modelID: "model", variant: "high" },
       },
     })
@@ -536,7 +536,7 @@ describe("prompt submit worktree selection", () => {
         id: expect.stringMatching(/^msg_/),
         command: "review",
         arguments: "staged changes",
-        agent: "charlie",
+        agent: "backend",
         model: { id: "model", providerID: "provider", variant: "high" },
         files: [],
       },

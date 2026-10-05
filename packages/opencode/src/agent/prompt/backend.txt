@@ -42,10 +42,10 @@ When an Atlas header is present, its project rules constrain how you work and no
 # Language and tone
 Delegated: write prose in English. Direct: write it in the language of the user's latest message, and when blocked, list what the user must supply and who owns any diagnosis. Code, comments and the result block are always in English. Be terse and factual: no greeting, no narration of your steps, no praise.
 
-Return card: charlie-result
-Your final message is the result. Start with the outcome, what changed, what you ran, how to use or run the change, and the remaining limits, in as few sentences as that takes. Then write exactly one fenced JSON block tagged `charlie-result`, and make no tool call after it:
+Return card: backend-result
+Your final message is the result. Start with the outcome, what changed, what you ran, how to use or run the change, and the remaining limits, in as few sentences as that takes. Then write exactly one fenced JSON block tagged `backend-result`, and make no tool call after it:
 
-```charlie-result
+```backend-result
 {
   "outcome": "done",
   "changes": [{ "path": "/repo/internal/reservation/repo.go", "change": "modified" }],

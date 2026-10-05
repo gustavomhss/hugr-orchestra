@@ -10,6 +10,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { Cause, Deferred, Effect, Exit } from "effect"
 import { Agent } from "../../src/agent/agent"
+import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
 import { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Config } from "@/config/config"
@@ -27,7 +28,7 @@ import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
-// F4 cl.5-6 and F4-CH: the Task path decodes Charlie's `charlie-result` card into `metadata.workResult`.
+// F4 cl.5-6 and F4-CH: the Task path decodes the backend specialist's `backend-result` card into `metadata.workResult`.
 
 afterEach(async () => {
   await disposeAllInstances()
@@ -89,12 +90,12 @@ const blocked = {
   blockers: [{ kind: "packet", reason: "No write paths in the packet; the orchestrator must name them." }],
 }
 
-const fenced = (value: unknown) => "```charlie-result\n" + JSON.stringify(value, null, 2) + "\n```"
+const fenced = (value: unknown) => "```backend-result\n" + JSON.stringify(value, null, 2) + "\n```"
 const final = (value: unknown) => `Done. Changed the repository query and ran the unit check.\n\n${fenced(value)}`
 
-const seed = Effect.fn("TaskCharlieResultTest.seed")(function* () {
+const seed = Effect.fn("TaskBackendResultTest.seed")(function* () {
   const session = yield* Session.Service
-  const chat = yield* session.create({ title: "Charlie result" })
+  const chat = yield* session.create({ title: "Backend result" })
   const user = yield* session.updateMessage({
     id: MessageID.ascending(),
     role: "user",
@@ -135,8 +136,8 @@ function ops(text: string, childMessageIDs: string[], error?: NonNullable<Sessio
             role: "assistant" as const,
             parentID: input.messageID ?? MessageID.ascending(),
             sessionID: input.sessionID,
-            mode: input.agent ?? "charlie",
-            agent: input.agent ?? "charlie",
+            mode: input.agent ?? "backend",
+            agent: input.agent ?? "backend",
             cost: 0,
             path: { cwd: "/tmp", root: "/tmp" },
             tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -152,7 +153,7 @@ function ops(text: string, childMessageIDs: string[], error?: NonNullable<Sessio
   }
 }
 
-const dispatch = Effect.fn("TaskCharlieResultTest.dispatch")(function* (
+const dispatch = Effect.fn("TaskBackendResultTest.dispatch")(function* (
   text: string,
   options?: {
     subagent?: string
@@ -172,7 +173,7 @@ const dispatch = Effect.fn("TaskCharlieResultTest.dispatch")(function* (
       {
         description: "implement repo query",
         prompt: "packet",
-        subagent_type: options?.subagent ?? "charlie",
+        subagent_type: options?.subagent ?? "backend",
         ...(options?.background ? { background: true } : {}),
       },
       {
@@ -196,9 +197,9 @@ const dispatch = Effect.fn("TaskCharlieResultTest.dispatch")(function* (
 
 const workResult = (metadata: object) => ("workResult" in metadata ? metadata.workResult : undefined)
 
-// Runs a background Charlie Task whose child durably writes `text` as its final message, and returns the parent's
+// Runs a background backend specialist Task whose child durably writes `text` as its final message, and returns the parent's
 // completion notice: the existing background delivery (F4 cl.35) and the only place the final result can still land.
-const deliverBackground = Effect.fn("TaskCharlieResultTest.deliverBackground")(function* (
+const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(function* (
   text: string,
   error?: NonNullable<SessionV1.Assistant["error"]>,
 ) {
@@ -209,7 +210,7 @@ const deliverBackground = Effect.fn("TaskCharlieResultTest.deliverBackground")(f
   const result = yield* dispatch(text, {
     background: true,
     prompt: (input) =>
-      input.agent !== "charlie"
+      input.agent !== "backend"
         ? Deferred.succeed(notice, input).pipe(Effect.andThen(Effect.never))
         : Effect.gen(function* () {
             const info = yield* sessions.updateMessage({
@@ -217,8 +218,8 @@ const deliverBackground = Effect.fn("TaskCharlieResultTest.deliverBackground")(f
               role: "assistant",
               parentID: MessageID.ascending(),
               sessionID: input.sessionID,
-              mode: "charlie",
-              agent: "charlie",
+              mode: "backend",
+              agent: "backend",
               cost: 0,
               path: { cwd: "/tmp", root: "/tmp" },
               tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -251,13 +252,13 @@ const deliverBackground = Effect.fn("TaskCharlieResultTest.deliverBackground")(f
 
 const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [] }
 
-describe("tool.task charlie-result", () => {
+describe("tool.task backend-result", () => {
   it.instance("decodes a valid card into the work result", () =>
     Effect.gen(function* () {
       const result = yield* dispatch(final(card))
       if (!Exit.isSuccess(result.exit)) throw new Error("expected task success")
       expect(workResult(result.exit.value.metadata)).toEqual({
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: true, messageID: result.childMessageID },
         outcome: "done",
         changes: card.changes,
@@ -288,7 +289,7 @@ describe("tool.task charlie-result", () => {
     ["an extra top-level key", final({ ...card, verified: true })],
     ["an extra nested key", final({ ...card, changes: [{ ...card.changes[0], callIDs: ["call-1"] }] })],
     ["no block", "Done. Changed the repository query and ran the unit check."],
-    ["invalid JSON", "Done.\n\n```charlie-result\n{ outcome: done }\n```"],
+    ["invalid JSON", "Done.\n\n```backend-result\n{ outcome: done }\n```"],
     ["an unknown blocker kind", final({ ...blocked, blockers: [{ kind: "design", reason: "x" }] })],
     ["an unknown outcome", final({ ...card, outcome: "partial" })],
     ["an unknown change kind", final({ ...card, changes: [{ ...card.changes[0], change: "renamed" }] })],
@@ -299,7 +300,7 @@ describe("tool.task charlie-result", () => {
         const result = yield* dispatch(text)
         if (!Exit.isSuccess(result.exit)) throw new Error("expected task success")
         expect(workResult(result.exit.value.metadata)).toEqual({
-          schema: "charlie-work-result-v1",
+          schema: "backend-work-result-v1",
           card: { parsed: false, messageID: result.childMessageID },
           ...empty,
           terminal: { reason: "ended" },
@@ -350,22 +351,22 @@ describe("tool.task charlie-result", () => {
         expect(workResult(result.exit.value.metadata)).toMatchObject({ card: { parsed: true }, outcome: "done" })
         const sessions = yield* Session.Service
         const child = (yield* sessions.children(result.chat.id))[0]
-        expect(child?.agent).toBe("charlie")
+        expect(child?.agent).toBe("backend")
         expect(child?.title).toContain("(@Pikachu subagent)")
 
-        for (const label of ["Pikachu", "Charlie"]) {
+        for (const label of ["Pikachu", BACKEND_DEFAULT_LABEL]) {
           const byLabel = yield* dispatch(final(card), { subagent: label })
           expect(Exit.isFailure(byLabel.exit)).toBe(true)
           if (Exit.isFailure(byLabel.exit)) expect(Cause.pretty(byLabel.exit.cause)).toContain("Unknown agent type")
         }
 
         // The caller resolves by id: the renamed seat keeps its native profile, which denies delegation.
-        const caller = yield* dispatch(final(card), { caller: { agent: "Pikachu", agentID: "charlie" } })
+        const caller = yield* dispatch(final(card), { caller: { agent: "Pikachu", agentID: "backend" } })
         expect(Exit.isFailure(caller.exit)).toBe(true)
         if (Exit.isFailure(caller.exit))
           expect(Cause.squash(caller.exit.cause)).toBeInstanceOf(PermissionV1.DeniedError)
       }),
-    { config: { agent: { charlie: { name: "Pikachu" } } } },
+    { config: { agent: { backend: { name: "Pikachu" } } } },
   )
 
   it.instance("streams an unparsed work result when the child prompt is cancelled", () =>
@@ -373,7 +374,7 @@ describe("tool.task charlie-result", () => {
       const result = yield* dispatch(final(card), { prompt: () => Effect.interrupt })
       expect(Exit.isFailure(result.exit)).toBe(true)
       expect(result.streamed.at(-1)?.workResult).toEqual({
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: false },
         ...empty,
         terminal: { reason: "interrupted", hostDetail: "Task cancelled" },
@@ -386,7 +387,7 @@ describe("tool.task charlie-result", () => {
       const result = yield* dispatch(final(card), { prompt: () => Effect.die(new Error("child process died")) })
       expect(Exit.isFailure(result.exit)).toBe(true)
       expect(result.streamed.at(-1)?.workResult).toEqual({
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: false },
         ...empty,
         terminal: { reason: "failed", hostDetail: "child process died" },
@@ -406,8 +407,8 @@ describe("tool.task charlie-result", () => {
               role: "assistant",
               parentID: MessageID.ascending(),
               sessionID: input.sessionID,
-              mode: "charlie",
-              agent: "charlie",
+              mode: "backend",
+              agent: "backend",
               cost: 0,
               path: { cwd: "/tmp", root: "/tmp" },
               tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -421,14 +422,14 @@ describe("tool.task charlie-result", () => {
               messageID: message.id,
               sessionID: input.sessionID,
               type: "text",
-              text: "Done.\n\n```charlie-result\n{ \"outcome\": \"do",
+              text: "Done.\n\n```backend-result\n{ \"outcome\": \"do",
             })
             return yield* Effect.die(new Error("child process died"))
           }),
       })
       expect(Exit.isFailure(result.exit)).toBe(true)
       expect(result.streamed.at(-1)?.workResult).toEqual({
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: false, messageID: written[0] },
         ...empty,
         terminal: { reason: "failed", hostDetail: "child process died" },
@@ -454,7 +455,7 @@ describe("tool.task charlie-result", () => {
       // The Task part completed at start and keeps `running` (F4 amendment); the notice carries the final result.
       expect(workResult(result.started)).toMatchObject({ terminal: { reason: "running" } })
       expect(result.workResult).toEqual({
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: true, messageID: result.childMessageID },
         ...card,
         terminal: { reason: "ended" },
@@ -482,7 +483,7 @@ describe("tool.task charlie-result", () => {
       const result = yield* dispatch(final(card), { background: true, prompt: () => Effect.never })
       if (!Exit.isSuccess(result.exit)) throw new Error("expected background start")
       const expected = {
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: false },
         ...empty,
         terminal: { reason: "running", hostDetail: "Background task started" },

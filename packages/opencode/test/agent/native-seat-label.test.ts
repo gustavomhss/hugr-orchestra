@@ -11,7 +11,7 @@ import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { Skill } from "../../src/skill"
-import { charlieSkills } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, backendSkills } from "../../src/maestro/roster"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -52,13 +52,13 @@ const resolve = Effect.fn("NativeSeatLabelTest.resolve")(function* (id: string) 
 })
 
 const allowedSkills = (agent: Agent.Info) =>
-  charlieSkills.names.filter((name) => Permission.evaluate("skill", name, agent.permission).action === "allow")
+  backendSkills.names.filter((name) => Permission.evaluate("skill", name, agent.permission).action === "allow")
 
 describe("native seat label", () => {
   it.instance("defaults to the roster display name", () =>
     Effect.gen(function* () {
-      const result = yield* resolve("charlie")
-      expect(result.agent).toMatchObject({ id: "charlie", name: "Charlie", mode: "all", native: true })
+      const result = yield* resolve("backend")
+      expect(result.agent).toMatchObject({ id: "backend", name: BACKEND_DEFAULT_LABEL, mode: "all", native: true })
       expect(result.errors).toEqual([])
     }),
   )
@@ -67,19 +67,19 @@ describe("native seat label", () => {
     "config name renames the seat and keeps its identity, permissions and skills",
     () =>
       Effect.gen(function* () {
-        const result = yield* resolve("charlie")
-        expect(result.agent).toMatchObject({ id: "charlie", name: "Pikachu", mode: "all", native: true })
+        const result = yield* resolve("backend")
+        expect(result.agent).toMatchObject({ id: "backend", name: "Pikachu", mode: "all", native: true })
         expect(result.agent.prompt).toStartWith("You are the backend implementation specialist")
         expect(result.agent.prompt).not.toContain("Pikachu")
-        expect(allowedSkills(result.agent)).toEqual([...charlieSkills.names])
+        expect(allowedSkills(result.agent)).toEqual([...backendSkills.names])
         expect(Permission.evaluate("task", "*", result.agent.permission).action).toBe("deny")
         expect(Permission.evaluate("edit", "src/a.go", result.agent.permission).action).toBe("allow")
-        expect(result.list.filter((agent) => agent.id === "charlie").map((agent) => agent.name)).toEqual(["Pikachu"])
+        expect(result.list.filter((agent) => agent.id === "backend").map((agent) => agent.name)).toEqual(["Pikachu"])
         expect(yield* Agent.Service.use((service) => service.get("Pikachu"))).toBeUndefined()
-        expect(yield* Agent.Service.use((service) => service.get("Charlie"))).toBeUndefined()
+        expect(yield* Agent.Service.use((service) => service.get(BACKEND_DEFAULT_LABEL))).toBeUndefined()
         expect(result.errors).toEqual([])
       }),
-    { config: { agent: { charlie: { name: "  Pikachu  " } } } },
+    { config: { agent: { backend: { name: "  Pikachu  " } } } },
   )
 
   it.instance(
@@ -100,13 +100,13 @@ describe("native seat label", () => {
     "HUGR_BACKEND_NAME overrides the config label for the backend seat only",
     () =>
       Effect.gen(function* () {
-        const result = yield* resolve("charlie")
-        expect(result.agent).toMatchObject({ id: "charlie", name: "Pikachu" })
+        const result = yield* resolve("backend")
+        expect(result.agent).toMatchObject({ id: "backend", name: "Pikachu" })
         const patty = yield* Agent.Service.use((service) => service.get("patty"))
         expect(patty.name).toBe("Patty")
         expect(result.errors).toEqual([])
       }),
-    { config: { agent: { charlie: { name: "Raichu" } } } },
+    { config: { agent: { backend: { name: "Raichu" } } } },
   )
 
   for (const [name, label] of [
@@ -124,22 +124,22 @@ describe("native seat label", () => {
       `rejects ${name} and keeps the default label with a configuration error`,
       () =>
         Effect.gen(function* () {
-          const result = yield* resolve("charlie")
-          expect(result.agent).toMatchObject({ id: "charlie", name: "Charlie", mode: "all" })
+          const result = yield* resolve("backend")
+          expect(result.agent).toMatchObject({ id: "backend", name: BACKEND_DEFAULT_LABEL, mode: "all" })
           expect(result.errors).toHaveLength(1)
           expect(result.errors[0]?.name).toBe("UnknownError")
-          expect(result.errors[0]?.message).toStartWith("Invalid configuration agent.charlie.name: label ")
+          expect(result.errors[0]?.message).toStartWith("Invalid configuration agent.backend.name: label ")
         }),
-      { config: { agent: { charlie: { name: label }, custom: { name: "Reviewer Bot" } } } },
+      { config: { agent: { backend: { name: label }, custom: { name: "Reviewer Bot" } } } },
     )
   }
 
   withEnv(" ").instance("rejects an invalid HUGR_BACKEND_NAME without failing startup", () =>
     Effect.gen(function* () {
-      const result = yield* resolve("charlie")
-      expect(result.agent.name).toBe("Charlie")
+      const result = yield* resolve("backend")
+      expect(result.agent.name).toBe(BACKEND_DEFAULT_LABEL)
       expect(result.errors).toEqual([
-        { name: "UnknownError", message: 'Invalid configuration HUGR_BACKEND_NAME: label empty. Using "Charlie".' },
+        { name: "UnknownError", message: `Invalid configuration HUGR_BACKEND_NAME: label empty. Using "${BACKEND_DEFAULT_LABEL}".` },
       ])
     }),
   )
@@ -148,11 +148,11 @@ describe("native seat label", () => {
     "accepts 40 characters and the seat's own id",
     () =>
       Effect.gen(function* () {
-        const result = yield* resolve("charlie")
+        const result = yield* resolve("backend")
         expect(result.agent.name).toBe("x".repeat(40))
         expect((yield* Agent.Service.use((service) => service.get("rosie"))).name).toBe("ROSIE")
         expect(result.errors).toEqual([])
       }),
-    { config: { agent: { charlie: { name: "x".repeat(40) }, rosie: { name: "ROSIE" } } } },
+    { config: { agent: { backend: { name: "x".repeat(40) }, rosie: { name: "ROSIE" } } } },
   )
 })

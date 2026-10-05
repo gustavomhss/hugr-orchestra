@@ -51,7 +51,7 @@ const git = (...args: string[]): string => execFileSync("git", args, { cwd: repo
 // Setup appends straight through the durable store — the merge is a property of the LOG, and routing setup
 // through the write door would add two scanner subprocesses per record to a suite already bound by git's.
 function write(kind: "task" | "project", entry: MemoryEntry): void {
-  createDurableMemory(repo).append({ owner: "charlie", kind, entry })
+  createDurableMemory(repo).append({ owner: "backend", kind, entry })
 }
 
 /** The bound header over the merged log — the ranking a seat would actually be injected. */
@@ -59,8 +59,8 @@ function rulesHeader() {
   return createNativeMemory({
     storage: { projectID: "p", root: repo },
     source: { worktree: repo, revision: "HEAD" },
-    memoryOwner: "charlie",
-    execution: { actor: { memberId: "charlie", projectId: "p", sessionId: "s" }, executionSessionID: "s" },
+    memoryOwner: "backend",
+    execution: { actor: { memberId: "backend", projectId: "p", sessionId: "s" }, executionSessionID: "s" },
   }).header(AW, OR)
 }
 

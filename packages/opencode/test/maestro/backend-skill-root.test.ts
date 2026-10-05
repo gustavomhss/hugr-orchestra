@@ -2,16 +2,16 @@ import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Schema } from "effect"
-import { CharlieSkillRoot } from "@/maestro/charlie-skill-root"
-import { charlieSkills } from "@/maestro/roster"
+import { BackendSkillRoot } from "@/maestro/backend-skill-root"
+import { backendSkills } from "@/maestro/roster"
 import { tmpdir } from "../fixture/fixture"
 
-const SOURCE = path.resolve(import.meta.dir, "../../../charlie/skills")
+const SOURCE = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
 
-describe("charlie skill root", () => {
+describe("backend skill root", () => {
   test("running from source resolves the authored tree in place", async () => {
-    expect(CharlieSkillRoot.root).toBe(SOURCE)
-    expect(charlieSkills.root).toBe(SOURCE)
+    expect(BackendSkillRoot.root).toBe(SOURCE)
+    expect(backendSkills.root).toBe(SOURCE)
     expect(await fs.exists(path.join(SOURCE, "backend-implement", "SKILL.md"))).toBe(true)
   })
 
@@ -20,23 +20,23 @@ describe("charlie skill root", () => {
     const files = await embed(tmp.path, { "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
     const cache = path.join(tmp.path, "cache")
 
-    const dir = await CharlieSkillRoot.extract(files, cache, "1.0.0")
-    expect(dir).toBe(path.join(cache, "charlie-skills", "1.0.0"))
+    const dir = await BackendSkillRoot.extract(files, cache, "1.0.0")
+    expect(dir).toBe(path.join(cache, "backend-skills", "1.0.0"))
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
 
     // A verified copy is left alone: the directory is not replaced.
     const first = await fs.stat(dir)
-    expect(await CharlieSkillRoot.extract(files, cache, "1.0.0")).toBe(dir)
+    expect(await BackendSkillRoot.extract(files, cache, "1.0.0")).toBe(dir)
     expect((await fs.stat(dir)).ino).toBe(first.ino)
 
     await Bun.write(path.join(dir, "a", "references", "b.md"), "tampered")
-    await CharlieSkillRoot.extract(files, cache, "1.0.0")
+    await BackendSkillRoot.extract(files, cache, "1.0.0")
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
 
     // A partial copy (missing file) and a planted extra file are both redone.
     await fs.rm(path.join(dir, "a", "SKILL.md"))
     await Bun.write(path.join(dir, "a", "planted.md"), "x")
-    await CharlieSkillRoot.extract(files, cache, "1.0.0")
+    await BackendSkillRoot.extract(files, cache, "1.0.0")
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
     expect((await fs.readdir(path.dirname(dir))).toSorted()).toEqual(["1.0.0"])
   })
@@ -44,9 +44,9 @@ describe("charlie skill root", () => {
   test("each installation version keeps its own copy", async () => {
     await using tmp = await tmpdir()
     const cache = path.join(tmp.path, "cache")
-    const older = await CharlieSkillRoot.extract(await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
+    const older = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
     const before = await fs.stat(older)
-    const newer = await CharlieSkillRoot.extract(await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "1.1.0")
+    const newer = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "1.1.0")
 
     expect(newer).not.toBe(older)
     expect(await tree(older)).toEqual({ "a/SKILL.md": "v1" })
@@ -55,7 +55,7 @@ describe("charlie skill root", () => {
     expect((await fs.stat(older)).ino).toBe(before.ino)
   })
 
-  test("a compiled build's extracted backend-implement loads through the real skill service for charlie", async () => {
+  test("a compiled build's extracted backend-implement loads through the real skill service for backend", async () => {
     // A fresh process is needed: the root is resolved once, when the module is first imported.
     const child = Bun.spawn(
       [
@@ -66,8 +66,8 @@ describe("charlie skill root", () => {
         "--preload",
         "./test/preload.ts",
         "--preload",
-        "./test/maestro/fixtures/charlie-embedded-skills.ts",
-        "./test/maestro/charlie-seat-runtime.test.ts",
+        "./test/maestro/fixtures/backend-embedded-skills.ts",
+        "./test/maestro/backend-seat-runtime.test.ts",
         "--timeout",
         "90000",
       ],
@@ -80,20 +80,20 @@ describe("charlie skill root", () => {
     ])
     if (exit !== 0) throw new Error(`embedded seat child failed (${exit}):\n${stdout}\n${stderr}`)
 
-    const line = stdout.split("\n").find((value) => value.startsWith('{"charlieEmbedded":'))
+    const line = stdout.split("\n").find((value) => value.startsWith('{"backendEmbedded":'))
     if (!line) throw new Error(`embedded seat child printed no evidence:\n${stdout}`)
     const evidence = Schema.decodeUnknownSync(
       Schema.Struct({
-        charlieEmbedded: Schema.Struct({
+        backendEmbedded: Schema.Struct({
           root: Schema.String,
           source: Schema.String,
           extracted: Schema.Array(Schema.String),
         }),
       }),
-    )(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(line)).charlieEmbedded
+    )(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(line)).backendEmbedded
     expect(evidence.source).toBe(SOURCE)
     expect(evidence.root).not.toBe(SOURCE)
-    expect(evidence.root.endsWith(path.join("opencode", "charlie-skills", "local"))).toBe(true)
+    expect(evidence.root.endsWith(path.join("opencode", "backend-skills", "local"))).toBe(true)
     expect(evidence.extracted).toEqual(await relativeFiles(SOURCE))
     // Every seat-runtime case ran against the extracted root and none was skipped.
     expect(stderr).toMatch(/\b3 pass\b/)

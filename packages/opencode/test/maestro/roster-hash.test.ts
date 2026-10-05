@@ -14,10 +14,12 @@ import {
 const historical = {
   roster: "fab95c176e80b185e87f31599aa9f0008d4a35d9ff4c01f9a9d19cb8df149a45",
   reviewPolicy: "05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59",
+  // Produced by the v2 algorithm at 263a9a27d4, before the backend seat's stable id became `backend`.
+  preRenameRoster: "5a2df5f95e6c6783322fcf59f39af317639f9fdec9ad1a704e4b9ad75661ea3a",
 }
 
 const renamed = createRoster(
-  roster.map((member) => ({ ...member, displayName: member.memberId === "charlie" ? "Pikachu" : `${member.displayName} 2` })),
+  roster.map((member) => ({ ...member, displayName: member.memberId === "backend" ? "Pikachu" : `${member.displayName} 2` })),
 )
 const lucy = roster.find((member) => member.memberId === "lucy")!
 const profile = nativeProfiles.review
@@ -31,7 +33,7 @@ describe("roster hash", () => {
   test("a behavioral change still changes the hash", () => {
     const changed = createRoster(
       roster.map((member) =>
-        member.memberId === "charlie" ? { ...member, forbiddenActions: [...member.forbiddenActions, "x"] } : member,
+        member.memberId === "backend" ? { ...member, forbiddenActions: [...member.forbiddenActions, "x"] } : member,
       ),
     )
     expect(rosterHash(changed)).not.toBe(rosterHash(roster))
@@ -49,6 +51,12 @@ describe("roster hash", () => {
     expect(verifyRosterHash("0".repeat(64), roster)).toBeUndefined()
   })
 
+  test("records written before the backend seat's id rename still verify", () => {
+    expect(historical.preRenameRoster).not.toBe(rosterHash(roster))
+    expect(verifyRosterHash(historical.preRenameRoster, roster)).toBe("maestro-roster-v2")
+    expect(verifyRosterHash(historical.preRenameRoster, renamed)).toBe("maestro-roster-v2")
+  })
+
   test("review policy hash ignores the reviewer label and historical policy hashes verify as v1", () => {
     const relabeled = { ...lucy, displayName: "Not Lucy" }
     expect(reviewPolicyHash(relabeled, profile)).toBe(reviewPolicyHash(lucy, profile))
@@ -58,8 +66,8 @@ describe("roster hash", () => {
   })
 
   test("the route grant projection carries no label", () => {
-    const grant = lookupRouteGrant("charlie")
-    if (grant.status !== "ROUTED") throw new Error("expected charlie to route")
+    const grant = lookupRouteGrant("backend")
+    if (grant.status !== "ROUTED") throw new Error("expected backend to route")
     expect(Object.keys(grant.grant).toSorted()).toEqual([
       "abilityClass",
       "forbiddenActions",

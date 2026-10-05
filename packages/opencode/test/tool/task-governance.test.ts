@@ -166,7 +166,7 @@ it.instance(
         projectID: chat.projectID,
         workCardID: "card_task_test",
         workCard: "# Card\n",
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validation-v1",
         checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],
@@ -186,7 +186,7 @@ it.instance(
           reviewPolicyHash: validation.reviewPolicyHash,
           actor: validation.actor,
           reviewerID: "lucy",
-          taskIntentHash: authorizationTaskIntentHash({ subagentType: "charlie", prompt: "implement card" }),
+          taskIntentHash: authorizationTaskIntentHash({ subagentType: "backend", prompt: "implement card" }),
           methodVersion: "authorization-v1",
         },
         { id: authorizationID },
@@ -227,7 +227,7 @@ it.instance(
       const params = {
         description: "implement card",
         prompt: "implement card",
-        subagent_type: "charlie",
+        subagent_type: "backend",
         authorizationID,
       }
       const first = yield* def.execute(params, context).pipe(Effect.exit, Effect.forkChild({ startImmediately: true }))
@@ -245,7 +245,7 @@ it.instance(
       const result = successes[0].value
       const sessions = yield* Session.Service
       const child = (yield* sessions.children(chat.id))[0]
-      expect(child?.agent).toBe("charlie")
+      expect(child?.agent).toBe("backend")
       expect(result.metadata.sessionId).toBe(child?.id)
       expect(prompts).toBe(1)
       streamed.length = 0
@@ -254,7 +254,7 @@ it.instance(
       if (Exit.isFailure(incomplete)) expect(Cause.pretty(incomplete.cause)).toContain("reserved-child-incomplete")
       // F4 cl.6: a governed replay with no completed child message still streams a work result, with no card.
       expect(streamed.at(-1)?.workResult).toEqual({
-        schema: "charlie-work-result-v1",
+        schema: "backend-work-result-v1",
         card: { parsed: false },
         changes: [],
         checks: [],
@@ -268,7 +268,7 @@ it.instance(
         id: MessageID.ascending(),
         role: "user",
         sessionID: child.id,
-        agent: "charlie",
+        agent: "backend",
         model,
         time: { created: Date.now() },
       })
@@ -277,8 +277,8 @@ it.instance(
         role: "assistant",
         parentID: childUser.id,
         sessionID: child.id,
-        mode: "charlie",
-        agent: "charlie",
+        mode: "backend",
+        agent: "backend",
         cost: 0,
         path: { cwd: "/tmp", root: "/tmp" },
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -368,7 +368,7 @@ it.instance(
       expect(prompts).toBe(1)
       const changed = yield* Effect.exit(
         def.execute(
-          { description: "different", prompt: "different work", subagent_type: "charlie", authorizationID },
+          { description: "different", prompt: "different work", subagent_type: "backend", authorizationID },
           context,
         ),
       )
@@ -524,7 +524,7 @@ it.instance(
         )
       for (const [label, id] of [
         ["Lucy", "lucy"],
-        ["Charlie", "charlie"],
+        ["Backend", "backend"],
       ]) {
         const exit = yield* invoke(label, id).pipe(Effect.exit)
         expect(Exit.isFailure(exit)).toBe(true)
@@ -534,7 +534,7 @@ it.instance(
         expect(Exit.isFailure(unresolved)).toBe(true)
         if (Exit.isFailure(unresolved)) expect(Cause.pretty(unresolved.cause)).toContain(`Unknown Task caller: ${label}`)
       }
-      const byKey = yield* invoke("charlie").pipe(Effect.exit)
+      const byKey = yield* invoke("backend").pipe(Effect.exit)
       if (Exit.isFailure(byKey)) expect(Cause.squash(byKey.cause)).toBeInstanceOf(PermissionV1.DeniedError)
       expect(Exit.isFailure(byKey)).toBe(true)
       yield* invoke("custom")

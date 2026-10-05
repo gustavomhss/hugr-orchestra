@@ -5,11 +5,11 @@ import { findTaskAgent } from "./message-part-agent"
 describe("findTaskAgent", () => {
   const agents = [
     { id: "general", name: "general" },
-    { id: "charlie", name: "Pikachu" },
+    { id: "backend", name: "Pikachu" },
   ]
 
   test("resolves a renamed seat by id and keeps its label", () => {
-    expect(findTaskAgent("charlie", agents)?.name).toBe("Pikachu")
+    expect(findTaskAgent("backend", agents)?.name).toBe("Pikachu")
   })
 
   test("never resolves by label", () => {

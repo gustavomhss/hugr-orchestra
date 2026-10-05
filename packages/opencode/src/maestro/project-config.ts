@@ -66,7 +66,7 @@ const projectConfig: ProjectConfig = {
       type: "SingleSelect",
       options: [
         { id: "01b0cacc", memberId: "maestro" },
-        { id: "848d4e73", memberId: "charlie" },
+        { id: "848d4e73", memberId: "backend" },
         { id: "60a9b6ec", memberId: "patty" },
         { id: "11dd93df", memberId: "lucy" },
         { id: "37d9d703", memberId: "bobby" },

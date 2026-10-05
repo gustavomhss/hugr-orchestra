@@ -73,7 +73,7 @@ export interface ScannerBinarySpec {
 // trufflehog remains DOC-DERIVED and unmeasured -- it is not installed on this machine. That is stated here
 // rather than left to be assumed calibrated by association with the line above it.
 // Exported for `native-memory.ts`, which binds the SAME calibrated argv to an explicit binary path the
-// harness supplies (the Charlie toolkit fetches `gitleaks` on demand) before it falls back to PATH. A copy
+// harness supplies (the backend specialist toolkit fetches `gitleaks` on demand) before it falls back to PATH. A copy
 // of this table there would be the second, uncalibrated argv this comment exists to prevent.
 export const KNOWN_SCANNERS: readonly ScannerBinarySpec[] = [
   {

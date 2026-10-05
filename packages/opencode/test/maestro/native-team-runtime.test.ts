@@ -124,7 +124,7 @@ it.instance("native team enforces runtime writes, task bypass, and durable Maest
         )
       })
     const lucy = yield* agents.get("lucy")
-    const charlie = yield* agents.get("charlie")
+    const backend = yield* agents.get("backend")
     const file = path.join(directory, "native-team.txt")
 
     const lucyTools = yield* SessionTools.resolve({
@@ -139,9 +139,9 @@ it.instance("native team enforces runtime writes, task bypass, and durable Maest
     expect(lucyTools.write).toBeUndefined()
     expect(yield* Effect.promise(() => fs.exists(file))).toBe(false)
 
-    yield* executeWrite(charlie, file, "Charlie wrote this")
-    expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toBe("Charlie wrote this")
-    expect(metadataCalls).toContain("call_charlie")
+    yield* executeWrite(backend, file, "the backend specialist wrote this")
+    expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toBe("the backend specialist wrote this")
+    expect(metadataCalls).toContain("call_backend")
     expect(metadataCalls).not.toContain("call_lucy")
 
     const task = yield* TaskTool

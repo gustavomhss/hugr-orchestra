@@ -35,7 +35,7 @@ const config: ProjectConfig = {
       type: "SingleSelect",
       options: [
         { id: "01b0cacc", name: "Maestro" },
-        { id: "848d4e73", name: "Charlie" },
+        { id: "848d4e73", name: "Backend" },
         { id: "60a9b6ec", name: "Patty" },
         { id: "11dd93df", name: "Lucy" },
         { id: "37d9d703", name: "Bobby" },
@@ -101,7 +101,7 @@ describe("maestro.project-config", () => {
     const result = validateProjectConfig({ ...config, fields: renamed })
     if (result.status !== "VALID") throw new Error("expected a relabeled Seat option to validate")
     const seat = result.config.fields.find((field) => field.name === "Seat")
-    expect(seat?.options?.find((option) => option.memberId === "charlie")?.id).toBe("848d4e73")
+    expect(seat?.options?.find((option) => option.memberId === "backend")?.id).toBe("848d4e73")
     expect(seat?.options?.every((option) => option.name === undefined)).toBe(true)
     const moved = relabel((option) => (option.id === "848d4e73" ? { ...option, id: "deadbeef" } : option))
     expect(validateProjectConfig({ ...config, fields: moved })).toEqual({ status: "HOLD", reason: "field-mismatch" })

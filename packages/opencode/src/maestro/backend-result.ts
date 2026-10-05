@@ -1,9 +1,9 @@
-export * as CharlieResult from "./charlie-result"
+export * as BackendResult from "./backend-result"
 
 import { Option, Schema } from "effect"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
-// The worker-claim card Charlie ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
+// The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
 // Closed at every level: excess properties fail the decode.
 const Card = Schema.Struct({
   outcome: Schema.Literals(["done", "blocked"]),
@@ -45,7 +45,7 @@ type Terminal = {
 }
 
 export type WorkResult = {
-  schema: "charlie-work-result-v1"
+  schema: "backend-work-result-v1"
   card: { parsed: boolean; messageID?: string }
   outcome?: Card["outcome"]
   changes: Card["changes"]
@@ -57,7 +57,7 @@ export type WorkResult = {
 }
 
 /**
- * Assemble `charlie-work-result-v1` from the child's final message. Worker fields come only from a strictly decoded
+ * Assemble `backend-work-result-v1` from the child's final message. Worker fields come only from a strictly decoded
  * card; a missing, duplicated or invalid card leaves them empty. Host failure or interruption overrides the card,
  * and the card can only lower `ended` to `blocked` (F4 cl.11).
  */
@@ -66,7 +66,7 @@ export function assemble(message: SessionV1.WithParts): WorkResult {
   const card = text?.type === "text" ? parse(text.text) : undefined
   const host = terminal(message)
   return {
-    schema: "charlie-work-result-v1",
+    schema: "backend-work-result-v1",
     card: { parsed: card !== undefined, messageID: message.info.id },
     ...(card ? { outcome: card.outcome } : {}),
     changes: card?.changes ?? [],
@@ -91,7 +91,7 @@ export function hostEnded(input: {
   const base = input.message
     ? assemble(input.message)
     : {
-        schema: "charlie-work-result-v1" as const,
+        schema: "backend-work-result-v1" as const,
         card: { parsed: false },
         changes: [],
         checks: [],
@@ -103,8 +103,8 @@ export function hostEnded(input: {
 }
 
 function parse(text: string): Card | undefined {
-  if (text.split("```charlie-result").length !== 2) return
-  const block = /```charlie-result[ \t]*\r?\n([\s\S]*?)\r?\n```/.exec(text)?.[1]
+  if (text.split("```backend-result").length !== 2) return
+  const block = /```backend-result[ \t]*\r?\n([\s\S]*?)\r?\n```/.exec(text)?.[1]
   if (block === undefined) return
   return Option.getOrUndefined(
     Option.flatMap(decodeJson(block), (json) => decodeCard(json, { onExcessProperty: "error" })),

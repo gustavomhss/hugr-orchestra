@@ -139,7 +139,7 @@ const BUILTIN_LEDGER = {
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
   // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and
   // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
-  // (Orchestra's Charlie, through the installed boundary package, F3 work package A3), and the one in-tree
+  // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
   // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
   // the owner from `ATLAS_ACTOR ?? git user.email`. `shipped: null` is literal: inside this tree nothing runs
   // it but its suite. Measured with this gate's own analyser: 39 → 40 entries, dead-value-exports 142 → 144.

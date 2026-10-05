@@ -9,7 +9,7 @@ import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import path from "path"
 import { Global } from "@opencode-ai/core/global"
 import { InstanceState } from "../../src/effect/instance-state"
-import { charlieSkills, nativeProfiles, roster } from "../../src/maestro/roster"
+import { backendSkills, nativeProfiles, roster } from "../../src/maestro/roster"
 import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
@@ -26,8 +26,8 @@ const it = testEffect(
 
 const nativeTeam = [
   {
-    id: "charlie",
-    profile: "charlie",
+    id: "backend",
+    profile: "backend",
     mode: "all",
     prompt: "You are the backend implementation specialist on the Orchestra native team.",
   },
@@ -78,30 +78,30 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "edit")).toBe(seat.profile === "review" ? "deny" : "allow")
       const profile = Permission.fromConfig(nativeProfiles[seat.profile])
       expect(agent.permission.slice(0, profile.length)).toEqual(profile)
-      if (seat.id !== "charlie") expect(agent.permission).toEqual(profile)
+      if (seat.id !== "backend") expect(agent.permission).toEqual(profile)
     }
   }),
 )
 
-it.instance("charlie alone gets its entry skills and read-only skill root", () =>
+it.instance("backend alone gets its entry skills and read-only skill root", () =>
   Effect.gen(function* () {
-    const charlie = yield* load((service) => service.get("charlie"))
+    const backend = yield* load((service) => service.get("backend"))
     const check = (permission: string, pattern: string) =>
-      Permission.evaluate(permission, pattern, charlie.permission).action
+      Permission.evaluate(permission, pattern, backend.permission).action
 
-    expect(charlieSkills.root).toBe(path.resolve(import.meta.dir, "../../../charlie/skills"))
-    for (const name of charlieSkills.names) expect(check("skill", name)).toBe("allow")
+    expect(backendSkills.root).toBe(path.resolve(import.meta.dir, "../../../backend-specialist/skills"))
+    for (const name of backendSkills.names) expect(check("skill", name)).toBe("allow")
     expect(check("skill", "customize-opencode")).toBe("deny")
     expect(check("skill", "own_backend-implement")).toBe("deny")
-    expect(check("external_directory", path.join(charlieSkills.root, "backend-implement", "references", "*"))).toBe(
+    expect(check("external_directory", path.join(backendSkills.root, "backend-implement", "references", "*"))).toBe(
       "allow",
     )
-    expect(check("external_directory", path.join(path.dirname(charlieSkills.root), "*"))).toBe("deny")
+    expect(check("external_directory", path.join(path.dirname(backendSkills.root), "*"))).toBe("deny")
     expect(check("external_directory", path.join(Global.Path.tmp, "*"))).toBe("deny")
     const instance = yield* InstanceState.context
     expect(check("edit", "src/handler.go")).toBe("allow")
     expect(
-      check("edit", path.relative(instance.worktree, path.join(charlieSkills.root, "backend-implement", "SKILL.md"))),
+      check("edit", path.relative(instance.worktree, path.join(backendSkills.root, "backend-implement", "SKILL.md"))),
     ).toBe("deny")
     for (const denied of ["task", "question", "webfetch", "websearch", "todowrite", "maestro_record_review"])
       expect(check(denied, "*")).toBe("deny")
@@ -122,26 +122,26 @@ it.instance("charlie alone gets its entry skills and read-only skill root", () =
       grep: "allow",
       maestro_record_review: "allow",
     })
-    expect(roster.filter((member) => member.nativeProfile === "charlie").map((member) => member.memberId)).toEqual([
-      "charlie",
+    expect(roster.filter((member) => member.nativeProfile === "backend").map((member) => member.memberId)).toEqual([
+      "backend",
     ])
-    for (const seat of nativeTeam.filter((seat) => seat.id !== "charlie")) {
+    for (const seat of nativeTeam.filter((seat) => seat.id !== "backend")) {
       const agent = yield* load((service) => service.get(seat.id))
       expect(agent.mode).toBe("subagent")
-      for (const name of charlieSkills.names)
+      for (const name of backendSkills.names)
         expect(Permission.evaluate("skill", name, agent.permission).action).toBe("deny")
       expect(
-        Permission.evaluate("external_directory", path.join(charlieSkills.root, "*"), agent.permission).action,
+        Permission.evaluate("external_directory", path.join(backendSkills.root, "*"), agent.permission).action,
       ).toBe("deny")
     }
   }),
 )
 
-it.instance("charlie charter renders the roster Forbidden list verbatim", () =>
+it.instance("backend charter renders the roster Forbidden list verbatim", () =>
   Effect.sync(() => {
-    const charlie = roster.find((member) => member.memberId === "charlie")
-    expect(charlie?.prompt?.split("Forbidden:")).toHaveLength(2)
-    expect(charlie?.prompt).toEndWith(`\n\nForbidden: ${charlie?.forbiddenActions.join(", ")}.\n`)
+    const backend = roster.find((member) => member.memberId === "backend")
+    expect(backend?.prompt?.split("Forbidden:")).toHaveLength(2)
+    expect(backend?.prompt).toEndWith(`\n\nForbidden: ${backend?.forbiddenActions.join(", ")}.\n`)
   }),
 )
 
@@ -193,8 +193,8 @@ it.instance("native profiles reject runtime mutation", () =>
   Effect.gen(function* () {
     expect(Object.isFrozen(nativeProfiles)).toBe(true)
     expect(Object.isFrozen(nativeProfiles.review)).toBe(true)
-    expect(Object.isFrozen(nativeProfiles.charlie.skill)).toBe(true)
-    expect(Object.isFrozen(nativeProfiles.charlie.external_directory)).toBe(true)
+    expect(Object.isFrozen(nativeProfiles.backend.skill)).toBe(true)
+    expect(Object.isFrozen(nativeProfiles.backend.external_directory)).toBe(true)
     expect(Reflect.set(nativeProfiles.review, "edit", "allow")).toBe(false)
     expect(Reflect.set(nativeProfiles, "review", nativeProfiles.execution)).toBe(false)
 

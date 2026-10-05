@@ -2,7 +2,7 @@
 //
 // ── REFERENCE MODEL — NO PRODUCTION CALLERS INSIDE THIS TREE ─────────────────────────────────────────────
 // Declared in `harness/gates/reference-model-guard.mjs`. Its consumer is a HARNESS outside the Atlas tree
-// (Orchestra's Charlie, through the installed boundary package — F3 clause 27, work package A3), so no
+// (Orchestra's backend specialist, through the installed boundary package — F3 clause 27, work package A3), so no
 // module under `packages/*/src` calls it and none should: the CLI/MCP doors compose Memory through
 // `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3 clause 4 forbids
 // exactly that route here. The entry goes stale when an in-tree caller appears, and the gate says so.
@@ -77,7 +77,7 @@ export interface AtlasBinding {
   }
   readonly unit?: ResumeUnit
   readonly logicalResumeID?: string
-  /** An explicit scanner binary (the Charlie toolkit's fetched `gitleaks`), tried before PATH (clause 31).
+  /** An explicit scanner binary (the backend specialist toolkit's fetched `gitleaks`), tried before PATH (clause 31).
    *  NOT in clause 1's field set — added by the A1 brief; see the work package report. */
   readonly scanner?: { readonly name: ScannerBinarySpec["name"]; readonly command: string }
 }

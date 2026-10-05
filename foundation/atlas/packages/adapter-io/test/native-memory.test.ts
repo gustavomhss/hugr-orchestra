@@ -49,8 +49,8 @@ function binding(over: Partial<AtlasBinding> = {}): AtlasBinding {
   return {
     storage: { projectID: "proj", root },
     source: { worktree: root, revision: "deadbeef" },
-    memoryOwner: "charlie",
-    execution: { actor: { memberId: "charlie", projectId: "proj", sessionId: "ses_1" }, executionSessionID: "ses_1" },
+    memoryOwner: "backend",
+    execution: { actor: { memberId: "backend", projectId: "proj", sessionId: "ses_1" }, executionSessionID: "ses_1" },
     scanner: { name: "gitleaks", command: scanner("clean-gitleaks", 0) },
     ...over,
   }
@@ -79,7 +79,7 @@ describe("clauses 1-4 — the owner is forced from the binding", () => {
   it("a write is minted with the binding owner, and an entry carrying `owner` is refused, not re-owned", () => {
     const mem = createNativeMemory(binding())
     const ok = mem.write(taskEntry("T1", "x"))
-    expect(ok.ok && ok.record.owner).toBe("charlie")
+    expect(ok.ok && ok.record.owner).toBe("backend")
 
     const forged = mem.write({ ...taskEntry("T1", "y"), owner: "mallory" } as unknown as MemoryEntry)
     expect(forged).toMatchObject({ ok: false, refusal: "undetermined-kind" })
@@ -87,7 +87,7 @@ describe("clauses 1-4 — the owner is forced from the binding", () => {
       createDurableMemory(root)
         .read()
         .store.map((r) => r.owner),
-    ).toEqual(["charlie"])
+    ).toEqual(["backend"])
   })
 
   it("recall ignores a caller-supplied owner and returns only the bound owner's records", () => {
@@ -95,7 +95,7 @@ describe("clauses 1-4 — the owner is forced from the binding", () => {
     const mem = createNativeMemory(binding())
     mem.write(taskEntry("T1", "c"))
     const got = mem.recall({ kind: "task", taskId: "T1", owner: "mallory" } as never)
-    expect(got.records.map((r) => r.owner)).toEqual(["charlie"])
+    expect(got.records.map((r) => r.owner)).toEqual(["backend"])
     expect(got.store).toBe("complete")
   })
 
@@ -105,7 +105,7 @@ describe("clauses 1-4 — the owner is forced from the binding", () => {
     input.memoryOwner = "mallory"
     ;(input.storage as { root: string }).root = "/elsewhere"
     const v = mem.write(taskEntry("T1", "x"))
-    expect(v.ok && v.record.owner).toBe("charlie")
+    expect(v.ok && v.record.owner).toBe("backend")
     expect(Object.isFrozen(mem.binding.storage)).toBe(true)
     expect(createDurableMemory(root).read().store).toHaveLength(1)
   })
@@ -155,7 +155,7 @@ describe("clause 15 — exact fold resolution", () => {
     expect(v).toMatchObject({ ok: true, ref: newer.ref, fold: { stoppedAt: "s-new", lesson: "l-new" } })
 
     // The control: the existing first-match door answers the OLDEST checkpoint for the same unit.
-    const first = createMemoryRead({ store: createDurableMemory(root), actor: "charlie" }).spawnFold({
+    const first = createMemoryRead({ store: createDurableMemory(root), actor: "backend" }).spawnFold({
       kind: "task",
       id: "T1",
     })

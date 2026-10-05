@@ -210,21 +210,21 @@ describe("deriveTasks state", () => {
 
 describe("deriveTasks rows", () => {
   test("a renamed seat renders its label and keeps its stable id as the key", () => {
-    const call = taskCall("c1", "ses_charlie", "completed")
+    const call = taskCall("c1", "ses_backend", "completed")
     if (call.type !== "tool") throw new Error("expected a tool part")
-    call.state.input.subagent_type = "charlie"
+    call.state.input.subagent_type = "backend"
     const item = only(
       setup({
-        agents: [{ id: "charlie", name: "Pikachu" }],
-        sessions: [session("ses_charlie", { parentID: parent })],
+        agents: [{ id: "backend", name: "Pikachu" }],
+        sessions: [session("ses_backend", { parentID: parent })],
         message: {
           [parent]: [assistant(parent, "msg_parent")],
-          ses_charlie: [assistant("ses_charlie", "msg_child", { agent: "charlie", mode: "charlie" })],
+          ses_backend: [assistant("ses_backend", "msg_child", { agent: "backend", mode: "backend" })],
         },
         calls: [call],
       }),
     )
-    expect(item.agentID).toBe("charlie")
+    expect(item.agentID).toBe("backend")
     expect(item.agent).toBe("Pikachu")
     expect(item.stats?.agent).toBe("Pikachu")
     // An agent the client has not synced still shows its id rather than nothing.

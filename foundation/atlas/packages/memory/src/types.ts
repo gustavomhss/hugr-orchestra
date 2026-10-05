@@ -16,7 +16,7 @@ import type { EventLog, Node } from "@atlas/kernel"
 export type { InjectionKind, Budget, Pack, PackInvariant } from "@atlas/contracts"
 
 /**
- * A member identity — a seat (`charlie` / `lucy` / `jimmy` / …) OR the orchestrator. Every member owns
+ * A member identity — a seat (`backend` / `lucy` / `jimmy` / …) OR the orchestrator. Every member owns
  * its own private, decaying Memory (atlas-memory:7-11). [PINNED —no member-id brand frozen] The
  * reference names members by seat-string; no contracts brand exists, so transcribed as `string`, NOT
  * invented as a new brand. Flagged for a `MemberId` brand to be sourced if one is ratified.

@@ -56,7 +56,7 @@
 
 1. A memory write has its own outcome, separate from the change and the checks. A refused or uncertain write never changes your outcome, your changes or your check results, and never makes you rerun a tool or generator to recreate a note.
 2. After a failure where the entry may have been appended, reconcile before any retry. Retry only when reconciliation reports the entry absent from a `complete` store. Never append the same entry blindly again.
-3. Never report a refused or unconfirmed write as remembered. The host records memory receipts; the `charlie-result` card has no memory field.
+3. Never report a refused or unconfirmed write as remembered. The host records memory receipts; the `backend-result` card has no memory field.
 
 ## Tools and outputs
 

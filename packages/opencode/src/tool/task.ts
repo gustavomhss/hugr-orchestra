@@ -27,7 +27,7 @@ import { readAuthorization } from "@/maestro/authorization"
 import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
-import { CharlieResult } from "@/maestro/charlie-result"
+import { BackendResult } from "@/maestro/backend-result"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -452,7 +452,7 @@ export const TaskTool = Tool.define(
         ...(runInBackground ? { background: true } : {}),
       }
       const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
-      const workEvidence: { value?: CharlieResult.WorkResult } = {}
+      const workEvidence: { value?: BackendResult.WorkResult } = {}
 
       yield* ctx.metadata({
         title: params.description,
@@ -465,10 +465,10 @@ export const TaskTool = Tool.define(
         reason: "failed" | "interrupted" | "running",
         detail: string,
       ) {
-        if (nextID !== "charlie") return
+        if (nextID !== "backend") return
         workEvidence.value = workEvidence.value
           ? { ...workEvidence.value, terminal: { reason, hostDetail: detail } }
-          : CharlieResult.hostEnded({
+          : BackendResult.hostEnded({
               message: (yield* MessageV2.stream(nextSession.id)).findLast(
                 (message) => message.info.role === "assistant",
               ),
@@ -489,8 +489,8 @@ export const TaskTool = Tool.define(
                 message.info.role === "assistant" && message.info.finish !== undefined && !message.info.error,
             )
         const job = strictReplay ? yield* background.get(governedChildID) : undefined
-        if (nextID === "charlie" && completed?.info.role === "assistant") {
-          workEvidence.value = CharlieResult.assemble(completed)
+        if (nextID === "backend" && completed?.info.role === "assistant") {
+          workEvidence.value = BackendResult.assemble(completed)
           yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
         }
         if (
@@ -593,8 +593,8 @@ export const TaskTool = Tool.define(
           beforeModel ? { beforeModel } : undefined,
         )
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
-        if (nextID === "charlie") {
-          workEvidence.value = CharlieResult.assemble(result)
+        if (nextID === "backend") {
+          workEvidence.value = BackendResult.assemble(result)
           yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
         }
         if (result.info.role === "assistant" && result.info.error) {
@@ -634,19 +634,19 @@ export const TaskTool = Tool.define(
         // F4 cl.6/35: the Task part already completed with terminal `running`, so the completion notice carries the final
         // work result, read from the child's durable last assistant message (a resumed job may have run several turns).
         const last =
-          nextID === "charlie"
+          nextID === "backend"
             ? (yield* MessageV2.stream(nextSession.id).pipe(Effect.provideService(Database.Service, database))).findLast(
                 (message) => message.info.role === "assistant",
               )
             : undefined
         const workResult =
-          nextID !== "charlie"
+          nextID !== "backend"
             ? undefined
             : state === "error"
-              ? CharlieResult.hostEnded({ message: last, reason: "failed", detail: text })
+              ? BackendResult.hostEnded({ message: last, reason: "failed", detail: text })
               : last
-                ? CharlieResult.assemble(last)
-                : CharlieResult.hostEnded({ reason: "interrupted", detail: "No completed child message" })
+                ? BackendResult.assemble(last)
+                : BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" })
         yield* ops
           .prompt({
             sessionID: ctx.sessionID,

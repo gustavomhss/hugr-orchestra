@@ -16,7 +16,15 @@ import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { lookupRouteGrant } from "./route-grant"
 import { omit } from "remeda"
-import { lookupRosterMember, nativeProfiles, renderPrompt, roster, type Roster, type RosterMember } from "./roster"
+import {
+  BACKEND_DEFAULT_LABEL,
+  lookupRosterMember,
+  nativeProfiles,
+  renderPrompt,
+  roster,
+  type Roster,
+  type RosterMember,
+} from "./roster"
 import { contextIsCurrent, readContext } from "./context-record"
 
 type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
@@ -123,8 +131,8 @@ export function rosterHash(members: Roster) {
 
 /** The hash version a recorded roster hash verifies under against `members`, if any. */
 export function verifyRosterHash(recorded: string, members: Roster) {
-  if (recorded === rosterHash(members)) return ROSTER_V2
-  if (recorded === hash(members.map(legacy))) return "maestro-roster-v1"
+  if (recorded === rosterHash(members) || recorded === rosterHash(members.map(preRename))) return ROSTER_V2
+  if (recorded === hash(members.map((member) => legacy(preRename(member))))) return "maestro-roster-v1"
 }
 
 export function reviewPolicyHash(reviewer: RosterMember, profile: unknown) {
@@ -144,6 +152,21 @@ function behavior(member: RosterMember) {
 
 function legacy(member: RosterMember) {
   return member.prompt === undefined ? member : { ...member, prompt: renderPrompt(member, member.displayName) }
+}
+
+// Records written before the backend seat got its stable `backend` id hashed the seat under its former id, which was
+// the lowercased default label, as member id, native profile and return-card prefix. Projecting the seat back keeps
+// those records verifiable without spelling the former name; it moves with the default label, as v1 already does.
+function preRename(member: RosterMember): RosterMember {
+  if (member.memberId !== "backend") return member
+  const former = BACKEND_DEFAULT_LABEL.toLowerCase()
+  return {
+    ...member,
+    memberId: former,
+    returnCard: `${former}-result`,
+    nativeProfile: former as RosterMember["nativeProfile"],
+    prompt: member.prompt?.replaceAll("backend-result", `${former}-result`),
+  }
 }
 
 function validationEventID(input: Pick<RecordValidationInput, "sessionID" | "workCardID">) {

@@ -18,7 +18,7 @@ import { Glob } from "@opencode-ai/core/util/glob"
 import { Discovery } from "./discovery"
 import { isRecord } from "@/util/record"
 import { escapeHtml } from "@/util/html"
-import { charlieSkills, roster } from "@/maestro/roster"
+import { backendSkills, roster } from "@/maestro/roster"
 
 const CLAUDE_EXTERNAL_DIR = ".claude"
 const AGENTS_EXTERNAL_DIR = ".agents"
@@ -274,9 +274,9 @@ const discoverSkills = Effect.fnUntraced(function* (
     }
   }
 
-  // Charlie's skill root, scanned like a `skills.paths` entry (F6-D1) but kept out of the instance-wide list.
+  // The backend specialist's skill root, scanned like a `skills.paths` entry (F6-D1) but kept out of the instance-wide list.
   const seat: ScanState = { matches: new Set(), dirs: new Set() }
-  if (yield* fsys.isDir(charlieSkills.root)) yield* scan(seat, charlieSkills.root, SKILL_PATTERN)
+  if (yield* fsys.isDir(backendSkills.root)) yield* scan(seat, backendSkills.root, SKILL_PATTERN)
 
   return {
     matches: Array.from(state.matches),

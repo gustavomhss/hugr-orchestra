@@ -32,14 +32,14 @@ describe("renamed native seat", () => {
   // F1.11: a seat whose label is not its id is selected, stored and mentioned by id and rendered by label.
   const agents = [
     { id: "build", name: "build" },
-    { id: "charlie", name: "Pikachu" },
+    { id: "backend", name: "Pikachu" },
   ]
 
   test("selection resolves by id, never by label", () => {
-    expect(resolveAgent(agents, "charlie")?.name).toBe("Pikachu")
+    expect(resolveAgent(agents, "backend")?.name).toBe("Pikachu")
     expect(resolveAgent(agents, "Pikachu")?.id).toBe("build")
-    expect(resolveAgent(agents, "Charlie")?.id).toBe("build")
-    expect(agentKey(agents[1])).toBe("charlie")
+    expect(resolveAgent(agents, "Backend")?.id).toBe("build")
+    expect(agentKey(agents[1])).toBe("backend")
   })
 
   test("legacy agents without an id key on their name", () => {
@@ -48,7 +48,7 @@ describe("renamed native seat", () => {
   })
 
   test("a mention sends the id and shows the label", () => {
-    expect(agentMention(agents[1])).toEqual({ type: "agent", name: "charlie", content: "@Pikachu", start: 0, end: 0 })
+    expect(agentMention(agents[1])).toEqual({ type: "agent", name: "backend", content: "@Pikachu", start: 0, end: 0 })
   })
 })
 

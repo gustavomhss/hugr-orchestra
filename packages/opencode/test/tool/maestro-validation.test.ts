@@ -75,7 +75,7 @@ const validation = {
   projectID: "prj_validation_tool",
   workCardID: "card_validation_tool",
   workCard: "# Card\nTool boundary evidence.\n",
-  routedMemberID: "charlie",
+  routedMemberID: "backend",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],
 }

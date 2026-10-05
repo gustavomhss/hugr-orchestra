@@ -60,10 +60,10 @@ test("agent dialog lists a renamed seat by its label and selects its id", async 
                   <DialogProvider>
                     <DialogSelect
                       title="Select agent"
-                      current="charlie"
+                      current="backend"
                       options={[
                         agentOption({ id: "build", name: "build", native: true }),
-                        agentOption({ id: "charlie", name: "Pikachu", native: true }),
+                        agentOption({ id: "backend", name: "Pikachu", native: true }),
                       ]}
                       onSelect={(option) => selected.push(option.value)}
                     />
@@ -83,10 +83,10 @@ test("agent dialog lists a renamed seat by its label and selects its id", async 
       void app.renderOnce()
       return app.captureCharFrame().includes("Pikachu")
     })
-    expect(app.captureCharFrame()).not.toContain("charlie")
+    expect(app.captureCharFrame()).not.toContain("backend")
     app.mockInput.pressEnter()
     await wait(() => selected.length > 0)
-    expect(selected).toEqual(["charlie"])
+    expect(selected).toEqual(["backend"])
   } finally {
     app.renderer.destroy()
   }

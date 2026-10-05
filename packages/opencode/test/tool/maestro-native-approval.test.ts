@@ -53,7 +53,7 @@ const it = testEffect(
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 const intent = {
-  subagentType: "charlie",
+  subagentType: "backend",
   prompt: "  Implement exact card.\n",
   model: "test/test-model",
   taskID: "task_exact",
@@ -166,7 +166,7 @@ const evidence = Effect.fn("MaestroNativeApprovalTest.evidence")(function* (
     contextHash: context.contextHash,
     workCardID: `card_${revision}`,
     workCard,
-    routedMemberID: "charlie",
+    routedMemberID: "backend",
     validatorID: "maestro",
     validatorVersion: "validation-v1",
     checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],

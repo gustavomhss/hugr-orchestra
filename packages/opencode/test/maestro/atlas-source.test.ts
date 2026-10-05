@@ -116,7 +116,7 @@ const fixture = Effect.fn("AtlasTest.fixture")(function* (
   yield* fs.writeFileString(
     path.join(directory, "TERRITORY-CATALOG.json"),
     JSON.stringify(
-      publishTerritoryCatalog(projectID, [{ name: "backend", owner: "charlie", tier: "T1", globs: ["src/**"] }]),
+      publishTerritoryCatalog(projectID, [{ name: "backend", owner: "backend", tier: "T1", globs: ["src/**"] }]),
     ),
   )
   const output = yield* persist(directory, snapshot)
@@ -125,7 +125,7 @@ const fixture = Effect.fn("AtlasTest.fixture")(function* (
 
 function planFor(source: AtlasSource, session = { id: sessionID, projectID }) {
   const compiled = compileContextToolPlan({
-    actor: { memberId: "charlie", projectId: session.projectID, sessionId: session.id },
+    actor: { memberId: "backend", projectId: session.projectID, sessionId: session.id },
     revision: { id: "plan_atlas", hash: "a".repeat(64), projectId: session.projectID, sessionId: session.id },
     territories: ["backend"],
     units: [...units].reverse(),

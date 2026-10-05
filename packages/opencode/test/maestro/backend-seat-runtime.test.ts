@@ -31,7 +31,7 @@ import { type TaskPromptOps } from "@/tool/task"
 import { ToolRegistry } from "@/tool/registry"
 import { Truncate } from "@/tool/truncate"
 import { RuntimeFlags } from "@/effect/runtime-flags"
-import { charlieSkills } from "@/maestro/roster"
+import { backendSkills } from "@/maestro/roster"
 import { Git } from "@/git"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
@@ -120,17 +120,17 @@ const call = (tool: AITool | undefined, args: Record<string, unknown>) =>
     })
   }).pipe(Effect.exit)
 
-it.instance("charlie loads its entry skill, reads a companion and cannot load another skill", () =>
+it.instance("backend loads its entry skill, reads a companion and cannot load another skill", () =>
   Effect.gen(function* () {
     const agents = yield* Agent.Service
     const skills = yield* Skill.Service
-    const charlie = yield* agents.get("charlie")
-    const tools = yield* resolve(charlie)
+    const backend = yield* agents.get("backend")
+    const tools = yield* resolve(backend)
     expect(tools.skill).toBeDefined()
 
     // Seat skills stay out of the instance-wide list and are offered only to the native seat.
     expect((yield* skills.all()).map((item) => item.name)).not.toContain("backend-implement")
-    expect((yield* skills.available(charlie)).map((item) => item.name)).toEqual(["backend-implement"])
+    expect((yield* skills.available(backend)).map((item) => item.name)).toEqual(["backend-implement"])
     expect((yield* skills.available(yield* agents.get("build"))).map((item) => item.name)).not.toContain(
       "backend-implement",
     )
@@ -139,10 +139,10 @@ it.instance("charlie loads its entry skill, reads a companion and cannot load an
     expect(Exit.isSuccess(loaded)).toBe(true)
     if (Exit.isSuccess(loaded)) {
       expect(JSON.stringify(loaded.value)).toContain(`<skill_content name=\\"backend-implement\\">`)
-      expect(JSON.stringify(loaded.value)).toContain(path.join(charlieSkills.root, "backend-implement"))
+      expect(JSON.stringify(loaded.value)).toContain(path.join(backendSkills.root, "backend-implement"))
     }
 
-    const reference = path.join(charlieSkills.root, "backend-implement", "references", "continuity.md")
+    const reference = path.join(backendSkills.root, "backend-implement", "references", "continuity.md")
     const read = yield* call(tools.read, { filePath: reference })
     expect(Exit.isSuccess(read)).toBe(true)
     if (Exit.isSuccess(read)) expect(JSON.stringify(read.value)).toContain("continuity.md")
@@ -152,7 +152,7 @@ it.instance("charlie loads its entry skill, reads a companion and cannot load an
     if (Exit.isFailure(other)) expect(String(other.cause)).toContain("PermissionDeniedError")
 
     // The root is readable, never writable. Clean up if a regression lets the write through.
-    const probe = path.join(charlieSkills.root, "write-probe.md")
+    const probe = path.join(backendSkills.root, "write-probe.md")
     yield* Effect.addFinalizer(() => Effect.promise(() => fs.rm(probe, { force: true })))
     const write = yield* call(tools.write, { filePath: probe, content: "x" })
     expect(Exit.isFailure(write)).toBe(true)
@@ -177,7 +177,7 @@ it.instance("other native seats get no skill tool and no seat skills", () =>
 it.instance("native execution seats get a shell description without commit or tmp guidance", () =>
   Effect.gen(function* () {
     const agents = yield* Agent.Service
-    for (const id of ["charlie", "patty", "rosie"]) {
+    for (const id of ["backend", "patty", "rosie"]) {
       const description = (yield* resolve(yield* agents.get(id))).bash?.description ?? ""
       expect(description).toContain("Executes a given")
       expect(description).not.toContain("# Git and GitHub")
