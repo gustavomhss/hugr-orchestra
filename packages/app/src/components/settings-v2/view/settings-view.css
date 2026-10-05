@@ -1,0 +1,344 @@
+/* Routed Settings view, ported 1:1 from the approved mock (app.html `#viewSettings`, `.mast.slim`,
+   `.settings*`, `.perm-*`, `.agent*`). Everything is scoped to the view root so the mock's short
+   class names cannot leak. Light values follow the mock's `[data-scheme="light"]` overrides. */
+/* Type follows the kit (`.mx-page`): the mock's 501-599 weights render as Inter Medium with synthetic bold,
+   written here as `font-family: var(--mx-emphasis); font-weight: 600`. */
+.orchestra-settings .inner {
+  inline-size: min(1080px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 52px 0 72px;
+}
+.orchestra-settings .mast {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-block-end: 22px;
+}
+.orchestra-settings .kicker {
+  color: #788899;
+  font-size: 11px;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.orchestra-settings .mast h1 {
+  margin: 9px 0 0;
+  color: #ebeff3;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.orchestra-settings .mast h1 span {
+  color: #8e9cab;
+  font-weight: 450;
+}
+
+.orchestra-settings .settings {
+  display: grid;
+  grid-template-columns: 186px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+.orchestra-settings .settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  position: sticky;
+  inset-block-start: 0;
+}
+.orchestra-settings .settings-nav button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8c9daf;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: start;
+  cursor: pointer;
+}
+.orchestra-settings .settings-nav button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cdd6df;
+}
+.orchestra-settings .settings-nav button.on {
+  background: rgba(88, 134, 196, 0.16);
+  color: #dbe4ec;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+}
+.orchestra-settings .settings-nav button:focus-visible,
+.orchestra-settings .seg button:focus-visible {
+  outline: 1px solid var(--mx-blue);
+  outline-offset: 1px;
+}
+
+/* Direct children only: card titles and copy keep the kit's `.mx-card` styles, as in the mock. */
+.orchestra-settings .settings-sec {
+  margin-block-end: 22px;
+}
+.orchestra-settings .settings-sec > h3 {
+  margin: 0 0 3px;
+  color: #e2e9f0;
+  font-size: 14px;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+}
+.orchestra-settings .settings-sec > p {
+  margin: 0 0 11px;
+  color: #8c9daf;
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.orchestra-settings .perm-table {
+  overflow: hidden;
+  border: 1px solid rgba(163, 184, 203, 0.13);
+  border-radius: 9px;
+}
+.orchestra-settings .perm-tool {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-block-start: 1px solid rgba(160, 181, 200, 0.08);
+}
+.orchestra-settings .perm-tool:first-child {
+  border-block-start: 0;
+}
+.orchestra-settings .perm-tool .tname {
+  color: #c3ccd6;
+  font-size: 12.5px;
+}
+.orchestra-settings .perm-tool .tdesc {
+  color: #75859a;
+  font-size: 11.5px;
+}
+.orchestra-settings .perm-tool .seg {
+  margin-inline-start: auto;
+  display: flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid rgba(163, 184, 203, 0.16);
+  border-radius: 6px;
+}
+.orchestra-settings .perm-tool .seg button {
+  inline-size: 56px;
+  block-size: 24px;
+  border: 0;
+  background: transparent;
+  color: #8c9daf;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.orchestra-settings .perm-tool .seg button:disabled {
+  cursor: default;
+}
+.orchestra-settings .perm-tool .seg button + button {
+  border-inline-start: 1px solid rgba(160, 181, 200, 0.12);
+}
+.orchestra-settings .perm-tool .seg button.on {
+  background: rgba(88, 134, 196, 0.24);
+  color: #e4ecf3;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+}
+.orchestra-settings .perm-tool .seg button.on[data-v="deny"] {
+  background: rgba(201, 138, 132, 0.24);
+  color: #f0d9d7;
+}
+.orchestra-settings .perm-tool .seg button.on[data-v="allow"] {
+  background: rgba(111, 158, 122, 0.24);
+  color: #dcefe1;
+}
+
+.orchestra-settings .ic {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.orchestra-settings .mx-brand {
+  flex: none;
+  color: var(--mx-strong);
+}
+.orchestra-settings .mx-card h3 {
+  overflow-wrap: anywhere;
+}
+.orchestra-settings .mx-card p {
+  overflow-wrap: anywhere;
+}
+.orchestra-settings .agent-top b {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #dbe4ec;
+  font-size: 13.5px;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+}
+.orchestra-settings .agent-role {
+  margin-inline-start: auto;
+  color: #7f8fa0;
+  font: 10.5px var(--mx-mono);
+}
+.orchestra-settings .settings-route {
+  max-inline-size: 300px;
+}
+.orchestra-settings kbd.mx-badge[data-active] {
+  border-color: var(--mx-blue);
+  color: var(--mx-blue);
+}
+
+/* General and Servers are the app's own panels, drawn in the permission table's row style. */
+.orchestra-settings .settings-inherited .settings-v2-tab-title {
+  display: none;
+}
+.orchestra-settings .settings-inherited .settings-v2-tab-header {
+  position: static;
+  padding: 0;
+  background: none;
+}
+.orchestra-settings
+  .settings-inherited
+  .settings-v2-tab-header:has(.settings-v2-tab-header-row, .settings-v2-tab-search) {
+  margin-block-end: 12px;
+}
+.orchestra-settings .settings-inherited .settings-v2-tab-body {
+  gap: 22px;
+  padding: 0;
+}
+.orchestra-settings .settings-inherited .settings-v2-section {
+  gap: 8px;
+}
+.orchestra-settings .settings-inherited .settings-v2-section-title {
+  padding: 0;
+  color: #e2e9f0;
+  font-size: 12px;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+}
+.orchestra-settings .settings-inherited [data-component="settings-v2-list"] {
+  overflow: hidden;
+  border: 1px solid rgba(163, 184, 203, 0.13);
+  border-radius: 9px;
+  background: none;
+  box-shadow: none;
+  padding-inline: 0;
+}
+.orchestra-settings .settings-inherited [data-component="settings-v2-row"],
+.orchestra-settings .settings-inherited .settings-v2-servers-row {
+  gap: 12px;
+  padding: 9px 12px;
+  border-block-end: 0;
+  border-block-start: 1px solid rgba(160, 181, 200, 0.08);
+}
+.orchestra-settings .settings-inherited [data-component="settings-v2-row"]:first-child,
+.orchestra-settings .settings-inherited .settings-v2-servers-row:first-child {
+  border-block-start: 0;
+}
+.orchestra-settings .settings-inherited [data-slot="settings-v2-row-copy"] {
+  gap: 2px;
+}
+.orchestra-settings .settings-inherited [data-slot="settings-v2-row-title"] {
+  color: #c3ccd6;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: normal;
+}
+.orchestra-settings .settings-inherited [data-slot="settings-v2-row-description"] {
+  margin: 0;
+  color: #75859a;
+  font-size: 11.5px;
+  line-height: normal;
+}
+
+html[data-color-scheme="light"] .orchestra-settings .kicker {
+  color: #6f7883;
+}
+html[data-color-scheme="light"] .orchestra-settings .mast h1 {
+  color: #171c23;
+}
+html[data-color-scheme="light"] .orchestra-settings .mast h1 span {
+  color: #666f7a;
+}
+html[data-color-scheme="light"] .orchestra-settings .settings-nav button {
+  color: #5f6874;
+}
+html[data-color-scheme="light"] .orchestra-settings .settings-nav button.on {
+  background: rgba(88, 134, 196, 0.12);
+  color: #1f2833;
+}
+html[data-color-scheme="light"] .orchestra-settings .settings-nav button:hover {
+  background: rgba(40, 56, 74, 0.05);
+}
+html[data-color-scheme="light"] .orchestra-settings .settings-sec > h3,
+html[data-color-scheme="light"] .orchestra-settings .settings-inherited .settings-v2-section-title {
+  color: #1f2833;
+}
+html[data-color-scheme="light"] .orchestra-settings .settings-sec > p {
+  color: #6b7480;
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-table,
+html[data-color-scheme="light"] .orchestra-settings .settings-inherited [data-component="settings-v2-list"] {
+  border-color: rgba(70, 84, 98, 0.14);
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool,
+html[data-color-scheme="light"] .orchestra-settings .settings-inherited [data-component="settings-v2-row"],
+html[data-color-scheme="light"] .orchestra-settings .settings-inherited .settings-v2-servers-row {
+  border-block-start-color: rgba(70, 84, 98, 0.1);
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .tname,
+html[data-color-scheme="light"] .orchestra-settings .settings-inherited [data-slot="settings-v2-row-title"] {
+  color: #3a434e;
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .tdesc,
+html[data-color-scheme="light"] .orchestra-settings .settings-inherited [data-slot="settings-v2-row-description"] {
+  color: #6b7480;
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .seg {
+  border-color: rgba(70, 84, 98, 0.16);
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .seg button {
+  color: #5f6874;
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .seg button + button {
+  border-inline-start-color: rgba(70, 84, 98, 0.12);
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .seg button.on {
+  color: #1f2833;
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .seg button.on[data-v="deny"] {
+  background: rgba(156, 74, 66, 0.14);
+  color: #8a3f38;
+}
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .seg button.on[data-v="allow"] {
+  background: rgba(63, 122, 76, 0.14);
+  color: #2f5e3a;
+}
+html[data-color-scheme="light"] .orchestra-settings .agent-top b {
+  color: #1f2833;
+}
+html[data-color-scheme="light"] .orchestra-settings .agent-role {
+  color: #6b7480;
+}
+
+@media (max-width: 760px) {
+  .orchestra-settings .settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .orchestra-settings .settings-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
