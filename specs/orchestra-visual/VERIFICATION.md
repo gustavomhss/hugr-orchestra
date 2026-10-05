@@ -15,9 +15,8 @@ Campaign/resumption entry: [HANDOFF.md](HANDOFF.md).
   the recorded-usage section on Home. C03, C04, C05, C06 and C08 are deferred
   ([CHAPTERS-SCOPE.md](CHAPTERS-SCOPE.md)). No chapter has owner acceptance, and
   owner acceptance of the integrated identity is still pending.
-- Sidebar widths: 230px from 1440px. The wave B compact navigation, not yet in
-  `dev`, adds a 208px sidebar that is visible only at 1280–1439px. Its CSS rule
-  (`packages/app/src/orchestra/shell.css:444`) spans 768–1439px, but
+- Sidebar widths: 230px down to 1280px. Wave B briefly narrowed it to 208px at
+  1280–1439px; the owner chose 230px on 2026-10-05 and that step was removed.
   `packages/app/src/pages/layout-new.tsx:18` forces the 56px rail below 1280px,
   and at 768–1023px the rail is hidden behind a titlebar button.
 - The remote `fork` is now GitLab `gmhelmold/hugr-orchestra`, and GitLab CI has
@@ -37,7 +36,7 @@ The owner authorized publication and then a clean PR against current `dev`.
 
 - Official compact HuGR SVGs and continuous mountain photograph, byte-preserved.
 - Desktop frame, 230px sidebar, 45px toolbar, 6px gutters, shared dark/light glass.
-  (The 208px and 56px compact widths came later with wave B; see Current status.)
+  (The 56px compact rail came later with wave B; see Current status.)
 - Bottom repository profile picker with upward portal; independently scrolling navigation.
 - Session tabs below toolbar; per-session executed-model logos, running pulse and human-wait bounce.
 - Production reduced-motion behavior; real theme toggle and persisted scheme.
