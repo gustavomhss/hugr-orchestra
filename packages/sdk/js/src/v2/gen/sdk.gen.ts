@@ -3726,13 +3726,13 @@ export class Session2 extends HeyApiClient {
   /**
    * Get session activity
    *
-   * Aggregate user and assistant messages of the sessions in this directory into one fact per bucket, session and model. Buckets are [edges[i], edges[i + 1]).
+   * Aggregate the user and assistant messages of this project's sessions for a period into one fact per bucket, session and model, plus the wall clock of root-session assistant turns per bucket. Buckets are server-local days; a fixed period has the equal window before it as bucket 0.
    */
   public activity<ThrowOnError extends boolean = false>(
     parameters: {
       directory?: string
       workspace?: string
-      edges: string
+      period: "7d" | "30d" | "90d" | "all"
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -3743,7 +3743,7 @@ export class Session2 extends HeyApiClient {
           args: [
             { in: "query", key: "directory" },
             { in: "query", key: "workspace" },
-            { in: "query", key: "edges" },
+            { in: "query", key: "period" },
           ],
         },
       ],

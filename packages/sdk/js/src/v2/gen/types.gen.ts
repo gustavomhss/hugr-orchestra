@@ -2990,15 +2990,33 @@ export type SessionActivityFact = {
   user: number
   assistant: number
   failed: number
-  activeMs: number
   tokens: number
-  cost: number
 }
 
 export type SessionActivity = {
+  period: "7d" | "30d" | "90d" | "all"
+  /**
+   * Ascending bucket boundaries at server-local midnights; bucket i is [edges[i], edges[i + 1])
+   */
   edges: Array<number>
+  /**
+   * Server-local YYYY-MM-DD of each edge
+   */
+  days: Array<string>
+  /**
+   * True when bucket 0 is the equal window before the period
+   */
+  previous: boolean
+  /**
+   * Per bucket, wall clock during which any root-session assistant turn was running
+   */
+  activeMs: Array<number>
   sessions: Array<SessionActivitySession>
   facts: Array<SessionActivityFact>
+  /**
+   * True when more than 200000 messages were in range
+   */
+  truncated: boolean
 }
 
 export type NotFoundError = {
@@ -11557,10 +11575,7 @@ export type SessionActivityData = {
   query: {
     directory?: string
     workspace?: string
-    /**
-     * Comma-separated ascending epoch-millisecond bucket boundaries (2 to 64)
-     */
-    edges: string
+    period: "7d" | "30d" | "90d" | "all"
   }
   url: "/session/activity"
 }

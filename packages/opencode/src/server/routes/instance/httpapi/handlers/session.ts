@@ -8,6 +8,7 @@ import { SessionShare } from "@/share/session"
 import { Session } from "@/session/session"
 import { SessionActivity } from "@/session/activity"
 import { Database } from "@opencode-ai/core/database/database"
+import { ProjectV2 } from "@opencode-ai/core/project"
 import { SessionCompaction } from "@/session/compaction"
 import { MessageV2 } from "@/session/message-v2"
 import { SessionPrompt } from "@/session/prompt"
@@ -18,7 +19,7 @@ import { SessionSummary } from "@/session/summary"
 import { Todo } from "@/session/todo"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { NamedError } from "@opencode-ai/core/util/error"
-import { Cause, Effect, Option, Schema, Scope } from "effect"
+import { Cause, Clock, Effect, Option, Schema, Scope } from "effect"
 import * as Stream from "effect/Stream"
 import { InstanceState } from "@/effect/instance-state"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
@@ -83,11 +84,17 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     })
 
     const activity = Effect.fn("SessionHttpApi.activity")(function* (ctx: { query: typeof ActivityQuery.Type }) {
-      const edges = SessionActivity.parseEdges(ctx.query.edges)
-      if (!edges) return yield* new HttpApiError.BadRequest({})
-      return yield* SessionActivity.collect({ directory: yield* InstanceState.directory, edges }).pipe(
-        Effect.provideService(Database.Service, database),
-      )
+      const instance = yield* InstanceState.context
+      // Non-git directories share the global project, so they are scoped to their own directory.
+      const scope =
+        instance.project.id === ProjectV2.ID.global
+          ? { directory: instance.directory }
+          : { projectID: instance.project.id }
+      return yield* SessionActivity.collect({
+        scope,
+        period: ctx.query.period,
+        now: yield* Clock.currentTimeMillis,
+      }).pipe(Effect.provideService(Database.Service, database))
     })
 
     const requireSession = Effect.fn("SessionHttpApi.requireSession")(function* (sessionID: SessionID) {

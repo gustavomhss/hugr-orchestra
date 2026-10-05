@@ -43,9 +43,7 @@ export const DiffQuery = Schema.Struct({
 })
 export const ActivityQuery = Schema.Struct({
   ...WorkspaceRoutingQueryFields,
-  edges: Schema.String.annotate({
-    description: `Comma-separated ascending epoch-millisecond bucket boundaries (2 to ${SessionActivity.MAX_EDGES})`,
-  }),
+  period: SessionActivity.Period,
 })
 export const MessagesQuery = Schema.Struct({
   ...WorkspaceRoutingQueryFields,
@@ -146,7 +144,7 @@ export const SessionApi = HttpApi.make("session")
             identifier: "session.activity",
             summary: "Get session activity",
             description:
-              "Aggregate user and assistant messages of the sessions in this directory into one fact per bucket, session and model. Buckets are [edges[i], edges[i + 1]).",
+              "Aggregate the user and assistant messages of this project's sessions for a period into one fact per bucket, session and model, plus the wall clock of root-session assistant turns per bucket. Buckets are server-local days; a fixed period has the equal window before it as bucket 0.",
           }),
         ),
         HttpApiEndpoint.get("get", SessionPaths.get, {
