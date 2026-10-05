@@ -22,10 +22,10 @@ type Viewport = (typeof viewports)[number]
 type Rail = keyof typeof contract
 type Shot = { scheme: "dark" | "light"; locale: "en" | "ar"; viewports: Viewport[] }
 
-// The identity contract's navigation modes: 230px, 208px at 1280-1439px, a 56px rail, then no rail.
+// The identity contract's navigation modes: 230px down to 1280px, a 56px rail, then no rail.
 const viewports = [
   { width: 1672, height: 941, rail: "230px" },
-  { width: 1366, height: 768, rail: "208px" },
+  { width: 1366, height: 768, rail: "230px" },
   { width: 1152, height: 720, rail: "56px" },
   { width: 900, height: 700, rail: "hidden" },
 ] as const
@@ -33,7 +33,6 @@ const viewports = [
 // Recorded beside each measurement so a deviation reads straight from the manifest.
 const contract = {
   "230px": { sidebarWidth: 230, toolbarHeight: 45, logo: { width: 121, height: 32 } },
-  "208px": { sidebarWidth: 208, toolbarHeight: 45, logo: { width: 121, height: 32 } },
   "56px": { sidebarWidth: 56, toolbarHeight: 45, logo: { width: 32, height: 32 } },
   hidden: { sidebarWidth: null, toolbarHeight: 45, logo: null },
 }
@@ -87,7 +86,7 @@ async function captureHome(page: Page, shot: Shot) {
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   const tooltip = page.getByRole("tooltip")
   for (const [index, viewport] of shot.viewports.entries()) {
-    if (index === 0 && (viewport.rail === "230px" || viewport.rail === "208px")) {
+    if (index === 0 && viewport.rail === "230px") {
       await resize(page, viewport, viewport.rail)
       await sidebar.getByRole("button", { name: "Collapse sidebar", exact: true }).click()
     }

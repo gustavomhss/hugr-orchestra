@@ -101,8 +101,11 @@ test("responsive compact mode restores the choice and leaves mobile navigation a
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   await expect(sidebar).toHaveCSS("width", "230px")
+  // The owner keeps the full 230px navigation on common laptop widths, down to the rail breakpoint.
   await page.setViewportSize({ width: 1366, height: 768 })
-  await expect(sidebar).toHaveCSS("width", "208px")
+  await expect(sidebar).toHaveCSS("width", "230px")
+  await page.setViewportSize({ width: 1280, height: 768 })
+  await expect(sidebar).toHaveCSS("width", "230px")
   await page.setViewportSize({ width: 1152, height: 768 })
   await expect(sidebar).toHaveCSS("width", "56px")
   await expect(page.getByRole("button", { name: "Expand sidebar", exact: true })).toHaveAttribute(
