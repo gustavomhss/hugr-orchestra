@@ -6,6 +6,11 @@ on:
   pull_request:
     types: [labeled]
   workflow_dispatch:
+    inputs:
+      windows_e2e:
+        description: Also run the e2e suite on Windows (unit tests always run on Windows)
+        type: boolean
+        default: false
 
 concurrency:
   # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
@@ -304,11 +309,9 @@ jobs:
       matrix:
         # Each shard boots its own app server, so shards share no state.
         shard: [1, 2, 3]
-        settings:
-          - name: linux
-            host: ubuntu-latest
-          - name: windows
-            host: windows-latest
+        # e2e drives Chromium against a per-page mocked backend, so Windows repeats the Linux
+        # coverage; it runs only when dispatched with windows_e2e. Windows unit tests always run.
+        settings: ${{ fromJSON(inputs.windows_e2e && '[{"name":"linux","host":"ubuntu-latest"},{"name":"windows","host":"windows-latest"}]' || '[{"name":"linux","host":"ubuntu-latest"}]') }}
     runs-on: ${{ matrix.settings.host }}
     timeout-minutes: 40
     env:
