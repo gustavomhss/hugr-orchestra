@@ -210,6 +210,13 @@ jobs:
         working-directory: packages/atlas-boundary
         run: bun run check:generated
 
+      # Per-file timings show where suite time goes; the edit stays inside the runner checkout.
+      - name: Enable JUnit timings
+        run: |
+          for pkg in opencode core; do
+            printf "\n[test.reporter]\njunit = '%s'\n" "$RUNNER_TEMP/junit-$pkg.xml" >> "packages/$pkg/bunfig.toml"
+          done
+
       - name: Run unit tests
         timeout-minutes: 45
         run: GITHUB_ACTIONS=false bun turbo test
@@ -228,12 +235,23 @@ jobs:
         working-directory: packages/opencode
         run: bun run test:httpapi
 
+      - name: Upload JUnit timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: junit-${{ matrix.settings.name }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: ${{ runner.temp }}/junit-*.xml
+
   e2e:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: e2e (${{ matrix.settings.name }})
+    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/3)
     strategy:
       fail-fast: false
       matrix:
+        # Each shard boots its own app server, so shards share no state.
+        shard: [1, 2, 3]
         settings:
           - name: linux
             host: ubuntu-latest
@@ -284,17 +302,17 @@ jobs:
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
-        run: bun --cwd packages/app test:e2e:local
+        run: bun --cwd packages/app run test:e2e:local --shard=${{ matrix.shard }}/3
         env:
           CI: true
-        # One CI worker runs the whole suite; on 2-vCPU Windows runners it takes about 30 minutes.
-        timeout-minutes: 45
+        # One worker per shard; the unsharded suite took 20-30 minutes.
+        timeout-minutes: 30
 
       - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: playwright-${{ matrix.settings.name }}-${{ github.run_attempt }}
+          name: playwright-${{ matrix.settings.name }}-${{ matrix.shard }}-${{ github.run_attempt }}
           if-no-files-found: ignore
           retention-days: 7
           path: |
