@@ -7,7 +7,7 @@ import { Config } from "@/config/config"
 import { SessionID } from "@/session/schema"
 import { Git } from "@/git"
 import { REVIEW_ARTIFACT_MAX_BYTES, findReview, readValidation, workCardHash } from "@/maestro/validation-record"
-import { contextIsCurrent, readContext } from "@/maestro/context-record"
+import { contextIsCurrent, readContext, STALE_CONTEXT_NEXT_STEP } from "@/maestro/context-record"
 import type { TaskPromptOps } from "@/tool/task"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
@@ -42,7 +42,11 @@ export const MaestroRequestReviewTool = Tool.define(
             validation.sessionID !== ctx.sessionID ||
             validation.workCardHash !== workCardHash(params.workCard)
           ) {
-            return yield* Effect.fail(new Error("Review delegation validation mismatch"))
+            return yield* Effect.fail(
+              new Error(
+                "Review delegation validation mismatch: pass a validationRecordID recorded in this Session and the byte-identical workCard it validated.",
+              ),
+            )
           }
           if (!validation.contextRecordID || !validation.contextHash) {
             return yield* Effect.fail(new Error("Review delegation requires bound context"))
@@ -60,7 +64,9 @@ export const MaestroRequestReviewTool = Tool.define(
             context.changedPaths.length > 0 ||
             !(yield* contextIsCurrent(context))
           ) {
-            return yield* Effect.fail(new Error("Review delegation context is stale or dirty"))
+            return yield* Effect.fail(
+              new Error(`Review delegation context is stale or dirty: ${STALE_CONTEXT_NEXT_STEP}`),
+            )
           }
           const head = yield* git.run(["rev-parse", "HEAD"], { cwd: parent.directory })
           if (head.exitCode !== 0) return yield* Effect.fail(new Error("Review artifact requires Git HEAD"))
@@ -95,10 +101,11 @@ export const MaestroRequestReviewTool = Tool.define(
             ],
             { cwd: worktree, maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES },
           )
+          // The bound base comes from validation, never from the card, so a smaller card cannot shrink the diff.
           if (diff.truncated)
             return yield* Effect.fail(
               new Error(
-                `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes; narrow the review base or split the work card`,
+                `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: Lucy reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${baseSHA}..${headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
               ),
             )
           if (names.exitCode !== 0 || names.truncated || diff.exitCode !== 0 || diff.stdout.length === 0)
@@ -123,7 +130,8 @@ export const MaestroRequestReviewTool = Tool.define(
                       },
                     }
                   : {}),
-                parts: yield* ops.resolvePromptParts(
+                // Text that names an agent stays plain; as an agent part it would ask Lucy to delegate.
+                parts: (yield* ops.resolvePromptParts(
                   [
                     "Perform one read-only cold review.",
                     `validationRecordID: ${params.validationRecordID}`,
@@ -140,7 +148,7 @@ export const MaestroRequestReviewTool = Tool.define(
                     "You MUST call maestro_record_review exactly once with your evidence-based verdict, cited findings, exact artifact JSON, and exact checks JSON above. Do not answer with a review narrative.",
                     "Never edit files or include transcript/model history.",
                   ].join("\n\n"),
-                ),
+                )).filter((part) => part.type !== "agent"),
               },
               {
                 beforeModel: contextIsCurrent(context).pipe(

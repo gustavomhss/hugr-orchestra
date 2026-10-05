@@ -17,8 +17,28 @@ export class AtlasContextHeld extends Schema.TaggedErrorClass<AtlasContextHeld>(
   evidence: Schema.Array(Schema.String),
 }) {
   override get message() {
-    return `${this.reason}: ${this.evidence.join("; ")}`
+    const held = `${this.reason}: ${this.evidence.join("; ")}`
+    const next = nextSteps[this.reason]
+    return next ? `${held}. ${next}` : held
   }
+}
+
+// Holds a governed flow meets in practice; Atlas data itself is only fixed by the owner or a maintainer.
+const nextSteps: Record<string, string> = {
+  "provider-unconfigured":
+    "Atlas is not configured for this project (maestro.atlas), so governed work cannot proceed here; the owner decides.",
+  "provider-project-mismatch":
+    "maestro.atlas names another project, so governed work cannot proceed here; the owner decides.",
+  "artifacts-invalid":
+    "Own artifacts are stale against the current source or their snapshot and must be re-materialized by the owner or a maintainer before governed work can proceed.",
+  "source-revision-not-ancestor":
+    "The Own snapshot was built from a revision outside this branch's history; the owner or a maintainer must re-materialize it.",
+  "context-dirty": "Leave the working tree clean (untracked files count), then record the context again.",
+  "plan-grounding-stale":
+    "The Atlas source changed after this plan revision; call maestro_catalog_context again and record a new plan revision.",
+  "grounded-plan-required": "Record a new plan revision with verified Own unit IDs in units.",
+  "territory-unavailable": "Use exact territory names from maestro_catalog_context.",
+  "unit-unavailable": "Use exact unit IDs from maestro_catalog_context.",
 }
 
 export type AtlasSource = {

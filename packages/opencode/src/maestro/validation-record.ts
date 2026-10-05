@@ -74,7 +74,11 @@ export class ValidationConflictError extends Schema.TaggedErrorClass<ValidationC
     sessionID: Schema.String,
     workCardID: Schema.String,
   },
-) {}
+) {
+  override get message() {
+    return `${this._tag}: workCardID ${this.workCardID} is already recorded in this Session with different content. Record this validation under a new workCardID.`
+  }
+}
 
 export class ReviewRejectedError extends Schema.TaggedErrorClass<ReviewRejectedError>()("MaestroReviewRejected", {
   reason: Schema.String,
@@ -87,7 +91,11 @@ export class ReviewRejectedError extends Schema.TaggedErrorClass<ReviewRejectedE
 export class ReviewConflictError extends Schema.TaggedErrorClass<ReviewConflictError>()("MaestroReviewConflict", {
   sessionID: Schema.String,
   validationRecordID: Schema.String,
-}) {}
+}) {
+  override get message() {
+    return `${this._tag}: validation ${this.validationRecordID} already has a different review receipt. The first receipt stands; a new review needs a new validation with a new workCardID.`
+  }
+}
 
 function hash(value: unknown) {
   return createHash("sha256").update(stable(value)).digest("hex")

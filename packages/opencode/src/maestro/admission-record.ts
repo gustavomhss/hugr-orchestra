@@ -25,7 +25,11 @@ export class AdmissionConflictError extends Schema.TaggedErrorClass<AdmissionCon
     messageID: Schema.String,
     methodVersion: Schema.String,
   },
-) {}
+) {
+  override get message() {
+    return `${this._tag}: owner message ${this.messageID} already has a different ${this.methodVersion} admission. Reuse that first record; a new admission needs a new owner message.`
+  }
+}
 
 function eventID(input: Pick<RecordAdmissionInput, "sessionID" | "messageID" | "methodVersion">) {
   const key = [input.sessionID, input.messageID, input.methodVersion].join("\u0000")

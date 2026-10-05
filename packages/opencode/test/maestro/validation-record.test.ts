@@ -48,7 +48,8 @@ const base = {
   contextRecordID: "evt_context_validation",
   contextHash: "c".repeat(64),
   workCardID: "card_validation",
-  workCard: "# Card\nImplement exact behavior.\n",
+  workCard:
+    "# Card\n## Definition of Done\nThe exact behavior is implemented.\n## Invariants\nReceipts are immutable once recorded.\n## Quality Standards\nTypecheck passes.\n## Completeness Criteria\nBoth proof files are covered.\n## Success Criteria\nLucy can review the exact card bytes.\n",
   routedMemberID: "charlie",
   validatorID: "maestro",
   validatorVersion: "validation-v1",
@@ -220,9 +221,11 @@ describe("Maestro validation receipt", () => {
         expect(row?.type).toBe(EventV2.versionedType(MaestroEvent.Validation.RecordedV3.type, 3))
         expect(yield* readValidation(receipt.id)).toEqual(receipt)
         expect(yield* recordValidation(input)).toEqual(receipt)
-        expect(
-          yield* recordValidation({ ...input, workCard: `${input.workCard}changed\n` }).pipe(Effect.flip),
-        ).toMatchObject({ _tag: "MaestroValidationConflict" })
+        const conflict = yield* recordValidation({ ...input, workCard: `${input.workCard}changed\n` }).pipe(Effect.flip)
+        expect(conflict).toMatchObject({ _tag: "MaestroValidationConflict" })
+        expect(conflict instanceof Error && conflict.message).toBe(
+          `MaestroValidationConflict: workCardID ${input.workCardID} is already recorded in this Session with different content. Record this validation under a new workCardID.`,
+        )
         expect(receipt.actor).toEqual({
           version: "rfc8785-v1",
           bytes: `{"memberId":"maestro","projectId":"${input.projectID}","sessionId":"${input.sessionID}"}`,

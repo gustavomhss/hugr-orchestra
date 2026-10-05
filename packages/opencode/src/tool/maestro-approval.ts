@@ -4,11 +4,16 @@ import { Database } from "@opencode-ai/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Agent } from "@/agent/agent"
 import { readPlanRevision } from "@/maestro/plan-revision"
-import { contextIsCurrent, readContext } from "@/maestro/context-record"
+import {
+  contextIsCurrent,
+  DIRTY_CONTEXT_NEXT_STEP,
+  readContext,
+  STALE_CONTEXT_NEXT_STEP,
+} from "@/maestro/context-record"
 import { Git } from "@/git"
 import { Config } from "@/config/config"
 import { findReview, readValidation, validationRecordHash } from "@/maestro/validation-record"
-import { renderPresentation } from "@/maestro/approval"
+import { renderPresentation, type ApprovalResult } from "@/maestro/approval"
 import { taskHash } from "@/maestro/task-hash"
 import { Session } from "@/session/session"
 import { Tool } from "./tool"
@@ -80,9 +85,9 @@ export const MaestroPresentApprovalTool = Tool.define(
           if (validation.outcome !== "VALID")
             return yield* Effect.fail(new Error("Approval presentation requires VALID validation"))
           if (!(yield* contextIsCurrent(context)))
-            return yield* Effect.fail(new Error("Approval presentation context is stale"))
+            return yield* Effect.fail(new Error(`Approval presentation context is stale: ${STALE_CONTEXT_NEXT_STEP}`))
           if (context.changedPaths.length > 0)
-            return yield* Effect.fail(new Error("Approval presentation context is dirty"))
+            return yield* Effect.fail(new Error(`Approval presentation context is dirty: ${DIRTY_CONTEXT_NEXT_STEP}`))
           if (
             validation.planRevisionID !== plan.id ||
             validation.contextRecordID !== context.id ||
@@ -176,25 +181,35 @@ export const MaestroRecordApprovalTool = Tool.define(
             return yield* Effect.fail(new Error("Approval decision requires Maestro"))
           }
           const result = yield* recordApproval(ctx.sessionID)
+          // Short bounded outputs; the Bindings line must reach the model even under tiny truncation limits.
           switch (result.status) {
             case "APPROVED":
-            case "DECLINED":
+            case "DECLINED": {
+              const bindings = {
+                approvalMessageID: result.decision.approvalMessageID,
+                planRevisionID: result.decision.planRevisionID,
+              }
               return {
                 title: `Approval ${result.status.toLowerCase()}`,
-                metadata: { status: String(result.status), approvalMessageID: result.decision.approvalMessageID },
-                output: `${result.status}: exact plan revision ${result.decision.planRevisionID}`,
+                metadata: {
+                  status: String(result.status),
+                  approvalMessageID: bindings.approvalMessageID,
+                  truncated: false,
+                },
+                output: `${result.status}: exact plan revision ${bindings.planRevisionID}\n\nBindings: ${JSON.stringify(bindings)}`,
               }
+            }
             case "HOLD":
               return {
                 title: "Approval not recorded",
-                metadata: { status: String(result.status), approvalMessageID: "" },
-                output: `HOLD: ${result.reason}`,
+                metadata: { status: String(result.status), approvalMessageID: "", truncated: false },
+                output: `HOLD: ${result.reason}. ${holdNextSteps[result.reason]}`,
               }
             case "PENDING":
               return {
                 title: "Approval not recorded",
-                metadata: { status: String(result.status), approvalMessageID: "" },
-                output: `PENDING: ${result.kind}`,
+                metadata: { status: String(result.status), approvalMessageID: "", truncated: false },
+                output: `PENDING: ${result.kind}. ${pendingNextSteps[result.kind]}`,
               }
           }
         }).pipe(
@@ -206,3 +221,31 @@ export const MaestroRecordApprovalTool = Tool.define(
     }
   }),
 )
+
+// One next step per result that records no decision, checked against evaluateReply and recordApproval.
+const holdNextSteps: Record<Extract<ApprovalResult, { status: "HOLD" }>["reason"], string> = {
+  "presentation-message-mismatch":
+    "The newest presentation is not shown exactly as rendered in its message; present again with a new methodVersion, then end the turn and wait for the owner's exact reply.",
+  "presentation-not-current":
+    "Present again with a new methodVersion and end the turn; if it holds again, an earlier presentation shares its assistant message with another or was aborted or removed, which is permanent for this Session, so tell the owner.",
+  "reply-not-found": "No owner message exists yet; end the turn and wait for the owner's reply.",
+  "reply-session-mismatch": "Record approval only in the Session that presented.",
+  "reply-not-direct-user": "Only a direct owner message can answer; end the turn and wait for the owner's reply.",
+  "reply-synthetic":
+    "The latest user message is synthetic (a task result or compaction), not the owner's reply; if it arrived after the presentation, present again with a new methodVersion, then end the turn and wait for the owner's exact reply.",
+  "reply-not-after-presentation":
+    "The owner has not replied since the presentation; end the turn and wait for the owner.",
+  "reply-not-immediate":
+    "Another user message arrived between the presentation and this reply; present again with a new methodVersion, then end the turn and wait for the owner's exact reply.",
+  "reply-already-bound":
+    "This owner reply already decided another presentation; present again with a new methodVersion, then end the turn and wait for a new reply.",
+  "presentation-identity-invalid":
+    "The newest presentation record is malformed; present again with a new methodVersion, then end the turn and wait for the owner's exact reply.",
+}
+
+const pendingNextSteps: Record<Extract<ApprovalResult, { status: "PENDING" }>["kind"], string> = {
+  question:
+    "The owner asked a question instead of replying approve, aprovo, decline, declino, cancel or cancelar; answer it, then present again with a new methodVersion and ask for the exact word.",
+  ambiguous:
+    "The reply is not exactly approve, aprovo, decline, declino, cancel or cancelar; present again with a new methodVersion and ask for the exact word.",
+}

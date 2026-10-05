@@ -242,7 +242,21 @@ describe("Maestro native output bindings", () => {
         expect((yield* truncate.output(contextResult.output)).truncated).toBe(true)
         expect(contextResult.metadata.truncated).toBe(false)
 
-        const workCard = "# Card\nScope: src/owned.ts only.\nAcceptance: owned exports 1; exact Own verified.\n"
+        const workCard = [
+          "# Card",
+          "Scope: src/owned.ts only.",
+          "## Definition of Done",
+          "owned exports 1 and the exact Own receipt is verified.",
+          "## Invariants",
+          "No file outside src/owned.ts changes.",
+          "## Quality Standards",
+          "The Git blob and Own receipt are checked, not assumed.",
+          "## Completeness Criteria",
+          "The single exported constant is covered.",
+          "## Success Criteria",
+          "Lucy can review the bounded backend change against this card.",
+          "",
+        ].join("\n")
         const checks = [{ id: "source", status: "PASS" as const, detail: "Exact Git blob and Own receipt verified" }]
         const validationTool = yield* MaestroRecordValidationTool
         const validationDef = yield* validationTool.init()
@@ -305,8 +319,20 @@ describe("Maestro native output bindings", () => {
         yield* command(data.directory, ["commit", "-m", "source drift"])
         const stale = yield* Effect.exit(validationDef.execute(params, data.caller))
         expect(Exit.isFailure(stale)).toBe(true)
-        if (Exit.isFailure(stale)) expect(Cause.pretty(stale.cause)).toContain("Validation context is stale")
-        expect(Exit.isFailure(yield* Effect.exit(planDef.execute(data.input, data.caller)))).toBe(true)
+        if (Exit.isFailure(stale))
+          expect(Cause.pretty(stale.cause)).toContain(
+            "Validation context is stale: HEAD, the working tree or the Own source changed since the context was recorded; record a new plan revision",
+          )
+        const drifted = yield* Effect.exit(planDef.execute(data.input, data.caller))
+        expect(Exit.isFailure(drifted)).toBe(true)
+        if (Exit.isFailure(drifted)) {
+          expect(Cause.pretty(drifted.cause)).toContain(
+            "artifacts-invalid: source blob drift: module/backend -> src/owned.ts",
+          )
+          expect(Cause.pretty(drifted.cause)).toContain(
+            "Own artifacts are stale against the current source or their snapshot and must be re-materialized by the owner or a maintainer",
+          )
+        }
         expect(
           Exit.isFailure(yield* Effect.exit(contextDef.execute({ planRevisionID: plan.planRevisionID }, data.caller))),
         ).toBe(true)

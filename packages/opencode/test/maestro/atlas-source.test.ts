@@ -181,15 +181,16 @@ describe("Atlas static source", () => {
     () =>
       Effect.gen(function* () {
         const data = yield* fixture()
-        yield* expectHeld(
-          readAtlasSource(data.session).pipe(
-            Effect.provide(
-              Layer.mock(Config.Service, {
-                get: () => Effect.succeed({}),
-              }),
-            ),
+        const unconfigured = readAtlasSource(data.session).pipe(
+          Effect.provide(
+            Layer.mock(Config.Service, {
+              get: () => Effect.succeed({}),
+            }),
           ),
-          "provider-unconfigured",
+        )
+        yield* expectHeld(unconfigured, "provider-unconfigured")
+        expect((yield* Effect.flip(unconfigured)).message).toBe(
+          `provider-unconfigured: ${data.session.projectID}. Atlas is not configured for this project (maestro.atlas), so governed work cannot proceed here; the owner decides.`,
         )
         yield* expectHeld(
           readAtlasSource(data.session).pipe(

@@ -18,7 +18,7 @@ import { Agent } from "../../src/agent/agent"
 import { Config } from "../../src/config/config"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
 import { Git } from "../../src/git"
-import { readValidation, workCardHash } from "../../src/maestro/validation-record"
+import { readValidation, REVIEW_ARTIFACT_MAX_BYTES, workCardHash } from "../../src/maestro/validation-record"
 import { recordContext } from "../../src/maestro/context-record"
 import type { SessionPrompt } from "../../src/session/prompt"
 import { MessageID, PartID } from "../../src/session/schema"
@@ -34,6 +34,20 @@ import { testEffect } from "../lib/effect"
 afterEach(async () => disposeAllInstances())
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
+const workCard = [
+  "# Card",
+  "## Definition of Done",
+  "Lucy reviews the full branch diff.",
+  "## Invariants",
+  "The working tree stays clean from context to review.",
+  "## Quality Standards",
+  "Review evidence binds exact SHAs.",
+  "## Completeness Criteria",
+  "Every committed path in the branch delta is covered.",
+  "## Success Criteria",
+  "A durable review receipt exists for this card.",
+  "",
+].join("\n")
 const it = testEffect(
   LayerNode.compile(
     LayerNode.group([
@@ -125,7 +139,6 @@ describe("Maestro evidence tools", () => {
         // directory entry (an empty blob for new files, an unchanged size for edits). FileSystem writes close first.
         const fs = yield* FileSystem.FileSystem
         const first = path.join(test.directory, "first.txt")
-        const workCard = "# Card\nReview full branch diff.\n"
         const base = (yield* git.run(["rev-parse", "HEAD"], { cwd: test.directory })).text().trim()
         yield* fs.writeFileString(first, "first\n")
         yield* git.run(["add", "first.txt"], { cwd: test.directory })
@@ -408,8 +421,8 @@ describe("Maestro evidence tools", () => {
             reviewBaseSHA: "e".repeat(40),
             projectID: chat.projectID,
             workCardID: "card_stale_presentation",
-            workCard: "# Card\n",
-            workCardHash: workCardHash("# Card\n"),
+            workCard,
+            workCardHash: workCardHash(workCard),
             routedMemberID: "charlie",
             rosterHash: "f".repeat(64),
             grantHash: "1".repeat(64),
@@ -463,5 +476,98 @@ describe("Maestro evidence tools", () => {
       }),
     { git: true },
     15_000,
+  )
+
+  it.instance(
+    "names the oversized committed branch delta and who decides, never splitting the card",
+    () =>
+      Effect.gen(function* () {
+        const test = yield* TestInstance
+        const { chat, assistant } = yield* seed()
+        const events = yield* EventV2Bridge.Service
+        const git = yield* Git.Service
+        const fs = yield* FileSystem.FileSystem
+        const base = (yield* git.run(["rev-parse", "HEAD"], { cwd: test.directory })).text().trim()
+        yield* fs.writeFileString(path.join(test.directory, "large.txt"), `${"x".repeat(REVIEW_ARTIFACT_MAX_BYTES)}\n`)
+        yield* git.run(["add", "large.txt"], { cwd: test.directory })
+        expect((yield* git.run(["commit", "-m", "large"], { cwd: test.directory })).exitCode).toBe(0)
+        const planRevisionID = EventV2.ID.make("evt_plan_oversized_review")
+        yield* events.publish(
+          MaestroEvent.PlanRevision.Recorded,
+          {
+            id: planRevisionID,
+            sessionID: chat.id,
+            admissionMessageID: "msg_admission",
+            methodVersion: "draft-plan-v1",
+            revision: "v1",
+            goal: { value: "review an oversized branch", source: "maestro" },
+            acceptance: [{ value: "tests pass", source: "maestro" }],
+            scope: [{ value: "card", source: "maestro" }],
+            constraints: [],
+            reviewRequirement: { value: "Lucy", source: "maestro" },
+            contextRequirement: "PENDING",
+            assumptions: [],
+            risks: [],
+            status: "PROPOSED",
+            revisionHash: "f".repeat(64),
+            createdAt: 1,
+          },
+          { id: planRevisionID },
+        )
+        const context = yield* recordContext(planRevisionID, chat.id)
+        const validationRecordID = EventV2.ID.make("evt_maestro_validation_oversized_review")
+        yield* events.publish(
+          MaestroEvent.Validation.RecordedV3,
+          {
+            sessionID: chat.id,
+            planRevisionID,
+            contextRecordID: context.id,
+            contextHash: context.contextHash,
+            reviewBaseSHA: base,
+            projectID: chat.projectID,
+            workCardID: "card_oversized_review",
+            workCard,
+            workCardHash: workCardHash(workCard),
+            routedMemberID: "charlie",
+            rosterHash: "b".repeat(64),
+            grantHash: "c".repeat(64),
+            reviewPolicyHash: "d".repeat(64),
+            actor: { version: "rfc8785-v1", bytes: "actor", sha256: "e".repeat(64) },
+            validatorID: "maestro",
+            validatorVersion: "validation-v1",
+            checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],
+            outcome: "VALID",
+          },
+          { id: validationRecordID },
+        )
+        let delegations = 0
+        const tool = yield* MaestroRequestReviewTool
+        const def = yield* tool.init()
+        const exit = yield* def
+          .execute(
+            { validationRecordID, workCard, reviewMethodVersion: "review-v1" },
+            {
+              sessionID: chat.id,
+              messageID: assistant.id,
+              agent: "maestro",
+              agentID: "maestro",
+              abort: new AbortController().signal,
+              extra: { promptOps: promptOps(() => delegations++) },
+              messages: [],
+              metadata: () => Effect.void,
+              ask: () => Effect.void,
+            },
+          )
+          .pipe(Effect.exit)
+
+        expect(Exit.isFailure(exit)).toBe(true)
+        if (Exit.isFailure(exit))
+          expect(Cause.pretty(exit.cause)).toContain(
+            `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: Lucy reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${base}..${context.headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
+          )
+        expect(delegations).toBe(0)
+      }),
+    { git: true },
+    60_000,
   )
 })

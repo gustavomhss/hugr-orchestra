@@ -51,6 +51,9 @@ describe("Maestro admission record", () => {
       }).pipe(Effect.flip)
 
       expect(conflict._tag).toBe("MaestroAdmissionConflict")
+      expect(conflict instanceof Error && conflict.message).toBe(
+        "MaestroAdmissionConflict: owner message msg_01 already has a different admit-request-v1 admission. Reuse that first record; a new admission needs a new owner message.",
+      )
     }),
   )
 })

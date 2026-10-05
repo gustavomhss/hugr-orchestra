@@ -9,12 +9,40 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { decodeReview, readValidation, validationRecordHash } from "./validation-record"
 import { recordApproval } from "./approval-record"
 import { readPlanRevision } from "./plan-revision"
-import { contextIsCurrent, readContext } from "./context-record"
+import { contextIsCurrent, DIRTY_CONTEXT_NEXT_STEP, readContext, STALE_CONTEXT_NEXT_STEP } from "./context-record"
 
 export class AuthorizationRejectedError extends Schema.TaggedErrorClass<AuthorizationRejectedError>()(
   "MaestroAuthorizationRejected",
   { reason: Schema.String },
-) {}
+) {
+  override get message() {
+    const next = nextSteps[this.reason]
+    return next ? `${this._tag}: ${this.reason}. ${next}` : `${this._tag}: ${this.reason}`
+  }
+}
+
+// Each failed precondition names the one step that can satisfy it.
+const nextSteps: Record<string, string> = {
+  "validation-not-found": "Pass the validationRecordID from the maestro_record_validation Bindings line.",
+  "session-mismatch": "Authorize only a validation recorded in this Session.",
+  "validation-not-valid":
+    "Only a VALID validation can be authorized; fix the failing or held checks and record a new validation with a new workCardID.",
+  "validation-unbound":
+    "This validation has no plan revision or context binding; record a new validation with a new workCardID.",
+  "validation-evidence-mismatch":
+    "The validation no longer matches its plan revision or context; record a new validation from the current ones with a new workCardID.",
+  "context-not-current": STALE_CONTEXT_NEXT_STEP,
+  "context-dirty": DIRTY_CONTEXT_NEXT_STEP,
+  "review-not-approved":
+    "Authorization needs Lucy's APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
+  "approval-not-current":
+    "The owner's latest message must be the exact approve reply to the newest presentation; call maestro_record_approval to see why it is not.",
+  "approval-binding-mismatch":
+    "Pass approvalMessageID from the maestro_record_approval Bindings line and the validationRecordID that was presented.",
+  "presentation-not-found": "Present again with a new methodVersion and wait for the owner's exact reply.",
+  "presentation-binding-mismatch":
+    "The approved presentation no longer matches this validation; present again with a new methodVersion and wait for the owner's exact reply.",
+}
 
 export type AuthorizationInput = {
   sessionID: string

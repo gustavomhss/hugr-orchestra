@@ -74,11 +74,27 @@ const validation = {
   contextHash: "a".repeat(64),
   projectID: "prj_validation_tool",
   workCardID: "card_validation_tool",
-  workCard: "# Card\nTool boundary evidence.\n",
+  workCard: [
+    "# Card",
+    "## Definition of Done",
+    "Tool boundary evidence is recorded.",
+    "## Invariants",
+    "A rejected call persists no receipt.",
+    "## Quality Standards",
+    "Focused tool tests pass.",
+    "## Completeness Criteria",
+    "Every rejection path is exercised.",
+    "## Success Criteria",
+    "Maestro records validation only through the tool boundary.",
+    "",
+  ].join("\n"),
   routedMemberID: "charlie",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],
 }
+
+const headings =
+  "## Definition of Done, ## Invariants, ## Quality Standards, ## Completeness Criteria, ## Success Criteria"
 
 describe("Maestro validation tools", () => {
   direct.instance("advertises required non-empty plan and context bindings", () =>
@@ -159,6 +175,48 @@ describe("Maestro validation tools", () => {
       expect(Exit.isFailure(transcript) && String(Cause.squash(transcript.cause))).toContain("unknown parameter")
       expect(Exit.isFailure(history) && String(Cause.squash(history.cause))).toContain("unknown parameter")
       expect(yield* db.select().from(EventTable).all().pipe(Effect.orDie)).toHaveLength(0)
+    }),
+  )
+
+  direct.instance("rejects work cards that break the five-section contract before reading evidence", () =>
+    Effect.gen(function* () {
+      const tool = yield* MaestroRecordValidationTool
+      const def = yield* tool.init()
+      const success = "## Success Criteria\nMaestro records validation only through the tool boundary.\n"
+      const quality = "## Quality Standards\nFocused tool tests pass.\n"
+      const cards = [
+        [validation.workCard.replace(success, ""), "missing-section (## Success Criteria)"],
+        [`${validation.workCard}## Invariants\nA second copy.\n`, "duplicate-section (## Invariants)"],
+        [validation.workCard.replace(quality, "## Quality Standards\n"), "empty-section (## Quality Standards)"],
+        [
+          validation.workCard.replace("## Completeness Criteria", "### Completeness Criteria"),
+          "malformed-heading (## Completeness Criteria)",
+        ],
+        [
+          validation.workCard.replace(success, "").replace(quality, "## Quality Standards\n"),
+          "missing-section (## Success Criteria); empty-section (## Quality Standards)",
+        ],
+        ["# Card\nTool boundary evidence.\n", `missing-section (${headings})`],
+      ] as const
+      yield* Effect.forEach(cards, ([workCard, offending]) =>
+        Effect.gen(function* () {
+          const rejected = yield* Effect.exit(def.execute({ ...validation, workCard }, context("maestro")))
+          expect(Exit.isFailure(rejected)).toBe(true)
+          if (Exit.isFailure(rejected))
+            expect(Cause.pretty(rejected.cause)).toContain(
+              `Validation rejected workCard: ${offending}. Write exactly one non-empty section under each of these exact headings, each alone on its line at column zero and outside code fences: ${headings}.`,
+            )
+        }),
+      )
+      const { db } = yield* Database.Service
+      expect(yield* db.select().from(EventTable).all().pipe(Effect.orDie)).toHaveLength(0)
+      // A conforming card passes the contract gate and reaches the evidence checks.
+      const valid = yield* Effect.exit(def.execute(validation, context("maestro")))
+      expect(Exit.isFailure(valid)).toBe(true)
+      if (Exit.isFailure(valid)) {
+        expect(Cause.pretty(valid.cause)).toContain("Validation planRevisionID not found")
+        expect(Cause.pretty(valid.cause)).not.toContain("Validation rejected workCard")
+      }
     }),
   )
 
