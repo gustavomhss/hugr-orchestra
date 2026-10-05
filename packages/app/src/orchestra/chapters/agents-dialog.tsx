@@ -118,6 +118,13 @@ export function AgentDialog(props: {
         event.preventDefault()
         finish()
       }}
+      // A Kobalte layer behind this modal (a navigation tooltip still open or animating out) takes Escape on the
+      // document and cancels the native close. The modal is the top layer, so it takes Escape first.
+      on:keydown={(event) => {
+        if (event.key !== "Escape" || event.defaultPrevented) return
+        event.preventDefault()
+        finish()
+      }}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return
         const rect = event.currentTarget.getBoundingClientRect()
