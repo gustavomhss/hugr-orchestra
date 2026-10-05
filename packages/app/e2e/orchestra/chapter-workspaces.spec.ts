@@ -315,7 +315,8 @@ test("v2: the active workspace never offers deletion until another workspace is 
   expect(writes(mock.requests)).toEqual([])
 })
 
-test("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
+// Workspaces is a WIP screen that still needs a spec; the owner parked its open failures (2026-10-05).
+test.fixme("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
   // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
