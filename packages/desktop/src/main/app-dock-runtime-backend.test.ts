@@ -1,0 +1,132 @@
+import { afterEach, expect, test } from "bun:test"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { basename, join, resolve } from "node:path"
+import type { Backend, Helper, Metadata, Workspace } from "./app-dock-runtime-backend"
+import { AppDockRuntime } from "./app-dock-runtime"
+
+const owner = "11dc45b7-3ed8-40ea-a56e-232a1c39f381"
+const pinned = "a".repeat(64)
+const foreign = "d".repeat(64)
+const roots: string[] = []
+
+afterEach(async () => {
+  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
+})
+
+// The runtime only sees the Backend interface; this fake records every guest-facing call.
+async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
+  const root = await mkdtemp(join(tmpdir(), "orchestra-runtime-backend-"))
+  roots.push(root)
+  const metadata: Metadata = {
+    version: 1, owner, password: "b".repeat(64), dockerContext: "fake", endpoint: "unix:///fake/docker.sock",
+    ...(input.pin === undefined ? {} : { containerID: input.pin }),
+  }
+  await writeFile(join(root, "metadata.json"), JSON.stringify(metadata), { mode: 0o600 })
+  const calls: string[] = []
+  const helpers: Array<Helper & { reaped: number }> = []
+  const state = {
+    workspace: "workspace" in input ? input.workspace : running(pinned),
+    terminate: async () => {},
+  }
+  const backend: Backend = {
+    locate: async (saved) => {
+      if (!saved) throw new Error("fixture always has saved metadata")
+      return { dockerContext: saved.dockerContext, endpoint: saved.endpoint }
+    },
+    sandbox: async () => ({ path: "/fake/seccomp.json", value: {} }),
+    find: async () => state.workspace && { ...state.workspace },
+    ensureImage: async () => {
+      calls.push("ensureImage")
+      return "image"
+    },
+    ensureHome: async () => {
+      calls.push("ensureHome")
+    },
+    create: async () => {
+      calls.push("create")
+      return pinned
+    },
+    start: async (_metadata, workspace) => {
+      calls.push(`start ${workspace.id}`)
+    },
+    stop: async (_metadata, workspace) => {
+      calls.push(`stop ${workspace.id}`)
+    },
+    exec: async (_metadata, workspace, command) => {
+      calls.push(`exec ${command.user} ${workspace.id} ${command.argv.join(" ")}`)
+      if (command.argv.at(-1) === "list") return { stdout: JSON.stringify([{ id: "x.desktop", name: "X" }]), stderr: "" }
+      if (command.argv.at(-1) === "native-session")
+        return { stdout: JSON.stringify({ sessionID: "session", processIdentity: {}, environment: {} }), stderr: "" }
+      return { stdout: "{}", stderr: "" }
+    },
+    copy: async (_metadata, workspace, source, target) => {
+      calls.push(`copy ${basename(source)} ${workspace.id}:${target}`)
+    },
+    command: () => {
+      throw new Error("no long-lived process in these tests")
+    },
+    helper: async () => {
+      const helper = {
+        id: `helper-${helpers.length}`,
+        client: { hello: undefined as never, request: async () => null, close: async () => {} },
+        channel: { write: async () => {}, onData: () => () => {}, onExit: () => () => {}, terminate: () => state.terminate() },
+        payload: { files: [], sha256: "" },
+        active: () => true,
+        reaped: 0,
+        reap: async () => {
+          helper.reaped++
+        },
+      }
+      helpers.push(helper)
+      return helper
+    },
+    close: () => {},
+  }
+  const runtime = AppDockRuntime.create({
+    root, context: resolve("resources/linux-runtime"), nativePayload: join(root, "payload"), backend,
+  })
+  return { calls, helpers, state, runtime }
+}
+
+function running(id: string): Workspace {
+  return { id, image: `sha256:${"c".repeat(64)}`, running: true, startedAt: "2026-10-05T00:00:00Z", viewerPort: "40000" }
+}
+
+test("never re-creates a workspace whose pinned ID is gone", async () => {
+  const f = await fixture({ pin: pinned, workspace: undefined })
+
+  await expect(f.runtime.start()).rejects.toMatchObject({ code: "failed" })
+  expect(f.calls).toEqual([])
+})
+
+test("never copies or executes into a workspace the backend reports under a different ID than the pin", async () => {
+  const f = await fixture({ pin: pinned, workspace: running(foreign) })
+
+  // Terminal access provisions its helper with direct copy/exec, not through the guest helper path.
+  await expect(f.runtime.access.run({ argv: ["true"] })).rejects.toMatchObject({ code: "failed" })
+  expect((await f.runtime.state()).phase).toBe("error")
+  expect(f.calls).toEqual([])
+})
+
+test("never runs the workspace helper before the workspace ID is pinned", async () => {
+  const f = await fixture({ workspace: running(pinned) })
+
+  expect((await f.runtime.state()).phase).toBe("error")
+  expect(f.calls.filter((call) => call.startsWith("exec"))).toEqual([])
+})
+
+test("a helper whose channel cannot terminate is reaped through the backend before the next admission", async () => {
+  const f = await fixture({ pin: pinned })
+  const first = await f.runtime.native()
+  first.active = () => false
+  f.state.terminate = () => Promise.reject(new Error("cleanup deadline missed"))
+
+  const next = await f.runtime.native()
+  expect(next).not.toBe(first)
+  expect(f.helpers.map((helper) => helper.reaped)).toEqual([1, 0])
+
+  f.state.terminate = async () => {}
+  await f.runtime.dispose()
+  expect(f.helpers.map((helper) => helper.reaped)).toEqual([1, 0])
+})
