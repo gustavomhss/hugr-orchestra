@@ -185,11 +185,13 @@ export const MaestroRecordReviewTool = Tool.define(
       execute: (params: Schema.Schema.Type<typeof ReviewParameters>, ctx) =>
         Effect.gen(function* () {
           const agent = ctx.agentID ? yield* agents.get(ctx.agentID) : undefined
+          const reviewer = (yield* agents.get("lucy"))?.name ?? "lucy"
           if (agent?.id !== "lucy" || agent.native !== true) {
-            return yield* Effect.fail(new Error("Review recording requires Lucy"))
+            return yield* Effect.fail(new Error(`Review recording requires ${reviewer}`))
           }
           const child = yield* sessions.get(SessionID.make(ctx.sessionID))
-          if (!child.parentID) return yield* Effect.fail(new Error("Review recording requires Lucy child session"))
+          if (!child.parentID)
+            return yield* Effect.fail(new Error(`Review recording requires a ${reviewer} child session`))
           const record = yield* recordReview({ ...params, sessionID: child.parentID, reviewerID: "lucy" })
           return {
             title: `Review ${record.verdict}`,

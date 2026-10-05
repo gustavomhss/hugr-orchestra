@@ -101,7 +101,9 @@ export const MaestroPresentApprovalTool = Tool.define(
           }
           const review = yield* findReview(ctx.sessionID, validation.id)
           if (!review || review.data.verdict !== "APPROVE")
-            return yield* Effect.fail(new Error("Approval presentation requires Lucy APPROVE"))
+            return yield* Effect.fail(
+              new Error(`Approval presentation requires ${(yield* agents.get("lucy"))?.name ?? "lucy"} APPROVE`),
+            )
           const validationHash = validationRecordHash(validation)
           const canonicalTaskHash = taskHash({
             ..._params.intent,

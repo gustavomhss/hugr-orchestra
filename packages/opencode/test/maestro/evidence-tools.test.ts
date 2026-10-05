@@ -208,6 +208,7 @@ describe("Maestro evidence tools", () => {
         )
 
         expect(result.output).toContain("LUCY_NO_RECEIPT")
+        expect(result.title).toBe("Lucy review missing receipt")
         expect(prompt).toContain(`\"baseSHA\":\"${base}\"`)
         expect(prompt).toContain("first.txt")
         expect(prompt).toContain("second.txt")

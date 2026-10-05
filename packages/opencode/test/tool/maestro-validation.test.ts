@@ -163,6 +163,36 @@ describe("Maestro validation tools", () => {
     }),
   )
 
+  direct.instance(
+    "names the configured cold reviewer label and never authorizes by it",
+    () =>
+      Effect.gen(function* () {
+        const tool = yield* MaestroRecordReviewTool
+        const def = yield* tool.init()
+        const review = {
+          validationRecordID: "evt_validation",
+          workCard: validation.workCard,
+          reviewMethodVersion: "review-v1",
+          verdict: "APPROVE" as const,
+          findings: [],
+          artifact: {
+            baseSHA: "a".repeat(40),
+            headSHA: "b".repeat(40),
+            worktree: "/tmp/worktree",
+            changedPaths: [],
+            encoding: "base64" as const,
+            bytes: "cHJvb2Y=",
+          },
+          checks: validation.checks,
+        }
+        for (const caller of [context("Pikachu", "build"), context("Pikachu", "Pikachu"), context("Lucy", "Lucy")]) {
+          const rejected = yield* Effect.exit(def.execute(review, caller))
+          expect(Exit.isFailure(rejected) && Cause.pretty(rejected.cause)).toContain("Review recording requires Pikachu")
+        }
+      }),
+    { config: { agent: { lucy: { name: "Pikachu" } } } },
+  )
+
   direct.instance("uses stable native ID, never display name, for authorization", () =>
     Effect.gen(function* () {
       const tool = yield* MaestroRecordValidationTool
