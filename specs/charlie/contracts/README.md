@@ -24,6 +24,7 @@ Drafts were authored by four read-only agents. Lead spot-checked: `registry.ts:2
 | F1-D3 | Charlie is visible in the app/TUI agent picker by default. | H1/H4: primary-capable seat listed next to Build; direct use is first-class. |
 | F3-D5 | Atlas Memory and Knowledge are versioned in Git with the repository. A worktree's Memory has value only once its code merges; the canonical state is the default branch (`dev`/`main`). | Memory is written as tracked files inside the task worktree and merges with the code. Resume reads the branch's own Memory. A1 must make the Memory log merge-safe (append-only records with stable IDs, e.g. a union merge driver or one file per record) so parallel branches do not conflict. F4-O4 working-tree digest excludes the Atlas Memory paths so Memory writes never change the verified code delta. F3-D7 stands: writes come from the harness Atlas binding, not from Charlie's file tools. |
 | F6-D2 | Evaluator checkout E is a separate private repository `charlie-bench`, modeled on `maestro-bench`. Never installed with Charlie and never readable from candidate execution. | Q-family/Q-driver own it; Go fixture prep starts there. |
+| F5-OD | Engines are fetched **on demand**, not bundled in the install payload. Amends owner decision 4: "ready by default" now means no per-tool setup, not pre-downloaded. | The harness (not Charlie, whose sandbox blocks network) fetches an exact pinned version, verifies its checksum, and caches it in a shared per-user dir on first use. Offline hosts use an explicit prefetch command. F5 inventory/READY semantics become per-engine `absent → fetching → ready / failed`. T1–T4 produce pinned manifests + checksums instead of bundled payloads; T5/T6 shrink. |
 | F3-D9 | Ship `gitleaks` (MIT) in the Charlie toolkit as the pre-write secret scanner. | F5 engine list gains a tenth family; T1 pins version and targets. Memory writes are never refused `scanner-unavailable` on supported installs. |
 
 ## 2. Lead rulings (technical defaults; owner may override)
@@ -55,6 +56,13 @@ Drafts were authored by four read-only agents. Lead spot-checked: `registry.ts:2
 | F5-D7 | Exact host-version lock for the toolkit. | Simplest rollback/update story. |
 | F6-D1 | Register skills via V1 `skills.paths`. | P1: V2 adapter stays separate; one path to qualify. |
 | F6-D3 | First frozen tuple: Go `chi + pgx 5.8.0 + sqlc 1.31.1` (first slice). Other families freeze when their WP starts. | Matches the first demonstrable slice. |
+
+| F4-CH | Charter draft amends F4: the `charlie-result` card has no tool-call IDs (H5 binds by exact path and command+cwd; else `unbound`) and carries a closed `outcome: done \| blocked` that H5 maps to terminal `blocked`. | See `../charter-draft.md` CH-3, CH-7. |
+
+| S-1 | SKILL.md body cap is 1,000 words (amends F6, which set none); references carry detail. | Enforced by `packages/opencode/test/skill/charlie-skills.test.ts`. |
+| S-2 | Armed mode: the packet decides whether Charlie pre-runs checks; default is not to (charter wins). Amends F4-O5. | Avoids duplicate runs and keeps one rule in the prompt. |
+| S-3 | Resume fold missing or ambiguous → `packet` blocker; Atlas store partial or unavailable → `atlas` blocker. | Fills the kind F3 cl. 20 leaves unnamed. |
+| S-open | A required `lesson` with no real lesson: the TaskMemoryEntry template has no "none" value and inventing one is forbidden. Owner: Atlas template (A1/A2). | Raised by S-implement; continuity.md stays silent until decided. |
 
 ## 3. Owner decisions pending
 
