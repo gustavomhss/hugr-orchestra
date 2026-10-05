@@ -191,25 +191,24 @@ export const TaskTool = Tool.define(
         if (caller?.id !== "maestro" || caller.native !== true) {
           return yield* Effect.fail(new Error("Authorized Task requires Maestro"))
         }
-        const reservation = yield* reserveDispatch({
-          sessionID: ctx.sessionID,
-          authorizationID: params.authorizationID,
-          permission: childPermissions,
-        })
-        if (reservation.routedMemberID !== nextID) {
+        // The reservation is write-once and snapshots the child's permissions, so check the approved seat and
+        // intent before reserving; a wrong subagent_type would otherwise pin its snapshot and spend the approval.
+        const authorization = yield* readAuthorization(params.authorizationID)
+        if (authorization?.sessionID === ctx.sessionID && authorization.routedMemberID !== nextID) {
           return yield* Effect.fail(
             new Error(
-              `Authorized Task denied: routed-seat-mismatch. This authorization dispatches only ${reservation.routedMemberID}; retry with exactly the approved seat, prompt and model.`,
+              `Authorized Task denied: routed-seat-mismatch. This authorization dispatches only ${authorization.routedMemberID}; retry with exactly the approved seat, prompt and model.`,
             ),
           )
         }
         if (
-          reservation.taskIntentHash !==
-          authorizationTaskIntentHash({
-            subagentType: params.subagent_type,
-            prompt: params.prompt,
-            model: params.model,
-          })
+          authorization?.sessionID === ctx.sessionID &&
+          authorization.taskIntentHash !==
+            authorizationTaskIntentHash({
+              subagentType: params.subagent_type,
+              prompt: params.prompt,
+              model: params.model,
+            })
         ) {
           return yield* Effect.fail(
             new Error(
@@ -217,6 +216,11 @@ export const TaskTool = Tool.define(
             ),
           )
         }
+        const reservation = yield* reserveDispatch({
+          sessionID: ctx.sessionID,
+          authorizationID: params.authorizationID,
+          permission: childPermissions,
+        })
         governedChildID = SessionID.make(reservation.childSessionID)
         reservedChildPermissions = reservation.permission
         replayReserved = true
