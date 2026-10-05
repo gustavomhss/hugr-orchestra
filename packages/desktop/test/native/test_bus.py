@@ -263,6 +263,17 @@ class BusTests(unittest.TestCase):
                 self.assertEqual(caught.exception.code, "protocol-error")
         self.valid()
 
+    def test_out_of_range_parameters_never_reach_the_wire(self):
+        self.valid()
+        before = self.bus.trace_total
+        for signature, parameters in (("(u)", (-1,)), ("(i)", (2**31,))):
+            with self.subTest(signature=signature, parameters=parameters):
+                with self.assertRaises(self.wire.BusError) as caught:
+                    self.call("Delay", signature, parameters, "(s)", 80)
+                self.assertEqual(caught.exception.code, "protocol-error")
+        self.assertEqual(self.bus.trace_total, before)
+        self.valid()
+
     def test_timeout_no_retry(self):
         self.valid()
         started = monotonic()

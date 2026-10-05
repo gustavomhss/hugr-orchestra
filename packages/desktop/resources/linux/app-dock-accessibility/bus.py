@@ -180,7 +180,7 @@ class AtspiBus:
             raise BusError("busy", "Blocking bus operations are forbidden on the GLib thread")
         try:
             parameters, reply = _typed(parameters_signature, parameters, reply_signature)
-        except (TypeError, ValueError) as error:
+        except (TypeError, ValueError, OverflowError) as error:
             raise BusError("protocol-error", error) from error
         # Provider calls block only their caller. Skipping the wire-loop hop halves per-call
         # CPU under the helper's CPU quota; close() still cancels them through _pending.
