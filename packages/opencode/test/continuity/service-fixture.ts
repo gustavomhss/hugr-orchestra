@@ -58,11 +58,20 @@ export function wireMessages(input: { messages?: unknown }) {
 
 export function packet(input: { messages?: unknown }) {
   const content = wireMessages(input).findLast((message) => message.role === "user")?.content
-  if (!content?.startsWith("# Working-memory maintenance snapshot")) throw new Error("Expected Markdown maintenance packet")
+  if (!content?.startsWith("# Working-memory maintenance snapshot") && !content?.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
+    throw new Error("Expected Markdown maintenance packet")
   return content
 }
 
 export function fragments(markdown: string) {
+  // A replayed request carries the transcript in its cached prefix; the appended
+  // instruction lists references with the opening words of their first message.
+  if (markdown.startsWith("CONTEXT CONTINUITY CHECKPOINT")) {
+    const matches = [...markdown.matchAll(/^- ([a-f0-9]{64}) — (.*)$/gm)]
+    if (!matches.length) throw new Error("Missing real archive handles")
+    // Undo the host's Markdown escaping so scenarios can match their own literals.
+    return matches.map((match) => ({ id: match[1], text: match[2].replace(/\\(.)/g, "$1") }))
+  }
   const start = markdown.indexOf("## Newly displaced transcript\n")
   if (start < 0) throw new Error("Missing transcript heading")
   const text = markdown.slice(start)

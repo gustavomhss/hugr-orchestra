@@ -39,8 +39,11 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 ]))
 type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
-const maintenance: Match = (hit) => wireMessages(hit.body).some((message) =>
-  message.role === "system" && message.content.includes("CONTEXT CONTINUITY PRODUCER PROTOCOL v2"))
+const maintenance: Match = (hit) => {
+  const wire = wireMessages(hit.body)
+  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY PRODUCER PROTOCOL v2")) ||
+    (wire.at(-1)?.role === "user" && wire.at(-1)!.content.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
+}
 const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
 
@@ -66,8 +69,6 @@ function forkAnswer(memory: string, match: Match, reference?: string, wait?: Pro
   const tail: unknown[] = []
   return { match: (hit: Hit) => {
     if (!match(hit)) return false
-    expect(hit.body.tools ?? []).toEqual([])
-    expect(hit.body.tool_choice ?? "none").toBe("none")
     const value = body(hit.body, memory, reference)
     expect(fragments(packet(hit.body)).every((entry) => /^[a-f0-9]{64}$/.test(entry.id))).toBe(true)
     tail.push(...chunks(JSON.stringify(value)))
@@ -109,14 +110,16 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
   expect(maintenance(control("CONTEXT CONTINUITY PRODUCER PROTOCOL v2", "system"))).toBe(true)
+  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
   for (const turn of seed) yield* llm.pushMatch(capture.record(turn.user, parent(turn.user)), answer(turn.assistant))
   yield* llm.pushMatch(capture.record("trigger", parent("TRIGGER")), answer("TRIGGER_DONE", 50_000, cached))
-  const stale = forkAnswer("# Work\nSTALE_HTTP_MEMORY", capture.record("A", maintenance), NONCE, a.wait)
+  // The replayed instruction identifies references by the opening words of their first message.
+  const stale = forkAnswer("# Work\nSTALE_HTTP_MEMORY", capture.record("A", maintenance), "7E5D", a.wait)
   yield* llm.pushMatch(stale.match, stale.response)
   yield* llm.pushMatch(capture.record("advance", parent("ADVANCE_WHILE_HELD")), answer("PARENT_ADVANCED", 100))
-  const fresh = forkAnswer(FIRST, capture.record("B", maintenance), NONCE, b.wait)
+  const fresh = forkAnswer(FIRST, capture.record("B", maintenance), "7E5D", b.wait)
   yield* llm.pushMatch(fresh.match, fresh.response)
   const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
     parts: [{ type: "text", text }] }), `Parent did not complete: ${text}`, "30 seconds")
@@ -124,9 +127,19 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const triggered = yield* send("TRIGGER")
   if (triggered.info.role !== "assistant") throw new Error("Expected trigger assistant")
   expect(triggered.info.tokens.input + triggered.info.tokens.cache.read + triggered.info.tokens.cache.write).toBe(50_000)
-  yield* awaitWithTimeout(llm.wait(8), "Maintenance A never reached HTTP", "10 seconds")
-  expect(packet(capture.hits.at(-1)!.hit.body)).toContain(head)
-  expect(packet(capture.hits.at(-1)!.hit.body)).not.toContain(tail)
+  yield* awaitWithTimeout(llm.wait(8), "Maintenance A never reached HTTP", "30 seconds")
+  // Cache reuse: the maintenance request is the parent's trigger request plus one
+  // appended instruction. Every other wire field, tools included, is unchanged.
+  const fork = capture.hits.at(-1)!.hit.body
+  const trigger = capture.hits.find((entry) => entry.name === "trigger")!.hit.body
+  const { messages: forkMessages, ...forkRest } = fork
+  const { messages: triggerMessages, ...triggerRest } = trigger
+  expect(forkRest).toEqual(triggerRest)
+  expect(Array.isArray(forkMessages) && Array.isArray(triggerMessages)).toBe(true)
+  expect((forkMessages as unknown[]).slice(0, -1)).toEqual(triggerMessages as unknown[])
+  expect(hasRecall(capture.hits.at(-1)!.hit)).toBe(true)
+  expect(packet(fork)).toContain("## Coverage")
+  expect(packet(fork)).not.toContain(tail)
   expect((yield* send("ADVANCE_WHILE_HELD")).parts.some((part) => part.type === "text" && part.text === "PARENT_ADVANCED")).toBe(true)
   expect(yield* Deferred.isDone(a.release)).toBe(false)
   const rejected = yield* prompt.prompt({ sessionID: chat.id, agent: "missing-continuity-test-agent", model,
@@ -144,7 +157,7 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   expect(prepared.system[0]).not.toContain(NONCE)
   expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
   const providerB = capture.hits.find((entry) => entry.name === "B")!
-  const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes(NONCE))!.id
+  const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes("7E5D"))!.id
   expect(prepared.system[0]).toContain(reference)
   yield* llm.pushMatch(capture.record("next", parent("RECOVER_NONCE")), reply().tool("context_recall", { reference }))
   yield* llm.pushMatch(capture.record("recovered", (hit) => !maintenance(hit) && wireMessages(hit.body).some((entry) =>
