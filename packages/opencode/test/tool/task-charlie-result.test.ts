@@ -8,7 +8,7 @@ import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
-import { Effect, Exit } from "effect"
+import { Cause, Effect, Exit } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -21,6 +21,7 @@ import { TaskTool, type TaskPromptOps } from "../../src/tool/task"
 import { Truncate } from "@/tool/truncate"
 import { ToolRegistry } from "@/tool/registry"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Git } from "@/git"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances } from "../fixture/fixture"
@@ -37,7 +38,7 @@ const ref = {
   modelID: ModelV2.ID.make("test-model"),
 }
 
-const it = testEffect(
+const layer = (flags: Partial<RuntimeFlags.Info> = {}) =>
   TestAppNodeBuilder.build(
     LayerNode.group([
       filesystem,
@@ -57,8 +58,11 @@ const it = testEffect(
       RuntimeFlags.node,
       Ripgrep.node,
     ]),
-  ),
-)
+    [[RuntimeFlags.node, RuntimeFlags.layer(flags)]],
+  )
+
+const it = testEffect(layer())
+const background = testEffect(layer({ experimentalBackgroundSubagents: true }))
 
 const card = {
   outcome: "done",
@@ -150,22 +154,34 @@ function ops(text: string, childMessageIDs: string[], error?: NonNullable<Sessio
 
 const dispatch = Effect.fn("TaskCharlieResultTest.dispatch")(function* (
   text: string,
-  options?: { subagent?: string; error?: NonNullable<SessionV1.Assistant["error"]> },
+  options?: {
+    subagent?: string
+    error?: NonNullable<SessionV1.Assistant["error"]>
+    caller?: { agent: string; agentID: string }
+    background?: boolean
+    prompt?: TaskPromptOps["prompt"]
+  },
 ) {
   const { chat, assistant } = yield* seed()
   const def = yield* (yield* TaskTool).init()
   const streamed: Record<string, unknown>[] = []
   const childMessageIDs: string[] = []
+  const promptOps = ops(text, childMessageIDs, options?.error)
   const exit = yield* def
     .execute(
-      { description: "implement repo query", prompt: "packet", subagent_type: options?.subagent ?? "charlie" },
+      {
+        description: "implement repo query",
+        prompt: "packet",
+        subagent_type: options?.subagent ?? "charlie",
+        ...(options?.background ? { background: true } : {}),
+      },
       {
         sessionID: chat.id,
         messageID: assistant.id,
-        agent: "build",
-        agentID: "build",
+        agent: options?.caller?.agent ?? "build",
+        agentID: options?.caller?.agentID ?? "build",
         abort: new AbortController().signal,
-        extra: { promptOps: ops(text, childMessageIDs, options?.error) },
+        extra: { promptOps: options?.prompt ? { ...promptOps, prompt: options.prompt } : promptOps },
         messages: [],
         metadata: (input) =>
           Effect.sync(() => {
@@ -175,7 +191,7 @@ const dispatch = Effect.fn("TaskCharlieResultTest.dispatch")(function* (
       },
     )
     .pipe(Effect.exit)
-  return { exit, streamed, childMessageID: childMessageIDs[0] }
+  return { exit, streamed, childMessageID: childMessageIDs[0], chat }
 })
 
 const workResult = (metadata: object) => ("workResult" in metadata ? metadata.workResult : undefined)
@@ -270,6 +286,127 @@ describe("tool.task charlie-result", () => {
       if (!Exit.isSuccess(result.exit)) throw new Error("expected task success")
       expect(workResult(result.exit.value.metadata)).toBeUndefined()
       expect(result.streamed.some((item) => "workResult" in item)).toBe(false)
+    }),
+  )
+  it.instance(
+    "a renamed seat still routes by its stable id and never by a label",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* dispatch(final(card))
+        if (!Exit.isSuccess(result.exit)) throw new Error("expected task success")
+        expect(workResult(result.exit.value.metadata)).toMatchObject({ card: { parsed: true }, outcome: "done" })
+        const sessions = yield* Session.Service
+        const child = (yield* sessions.children(result.chat.id))[0]
+        expect(child?.agent).toBe("charlie")
+        expect(child?.title).toContain("(@Pikachu subagent)")
+
+        for (const label of ["Pikachu", "Charlie"]) {
+          const byLabel = yield* dispatch(final(card), { subagent: label })
+          expect(Exit.isFailure(byLabel.exit)).toBe(true)
+          if (Exit.isFailure(byLabel.exit)) expect(Cause.pretty(byLabel.exit.cause)).toContain("Unknown agent type")
+        }
+
+        // The caller resolves by id: the renamed seat keeps its native profile, which denies delegation.
+        const caller = yield* dispatch(final(card), { caller: { agent: "Pikachu", agentID: "charlie" } })
+        expect(Exit.isFailure(caller.exit)).toBe(true)
+        if (Exit.isFailure(caller.exit))
+          expect(Cause.squash(caller.exit.cause)).toBeInstanceOf(PermissionV1.DeniedError)
+      }),
+    { config: { agent: { charlie: { name: "Pikachu" } } } },
+  )
+
+  it.instance("streams an unparsed work result when the child prompt is cancelled", () =>
+    Effect.gen(function* () {
+      const result = yield* dispatch(final(card), { prompt: () => Effect.interrupt })
+      expect(Exit.isFailure(result.exit)).toBe(true)
+      expect(result.streamed.at(-1)?.workResult).toEqual({
+        schema: "charlie-work-result-v1",
+        card: { parsed: false },
+        ...empty,
+        terminal: { reason: "interrupted", hostDetail: "Task cancelled" },
+      })
+    }),
+  )
+
+  it.instance("streams an unparsed work result when the child dies before a final message", () =>
+    Effect.gen(function* () {
+      const result = yield* dispatch(final(card), { prompt: () => Effect.die(new Error("child process died")) })
+      expect(Exit.isFailure(result.exit)).toBe(true)
+      expect(result.streamed.at(-1)?.workResult).toEqual({
+        schema: "charlie-work-result-v1",
+        card: { parsed: false },
+        ...empty,
+        terminal: { reason: "failed", hostDetail: "child process died" },
+      })
+    }),
+  )
+
+  it.instance("a dying child keeps only what its last message actually says", () =>
+    Effect.gen(function* () {
+      const sessions = yield* Session.Service
+      const written: string[] = []
+      const result = yield* dispatch(final(card), {
+        prompt: (input) =>
+          Effect.gen(function* () {
+            const message = yield* sessions.updateMessage({
+              id: MessageID.ascending(),
+              role: "assistant",
+              parentID: MessageID.ascending(),
+              sessionID: input.sessionID,
+              mode: "charlie",
+              agent: "charlie",
+              cost: 0,
+              path: { cwd: "/tmp", root: "/tmp" },
+              tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+              modelID: ref.modelID,
+              providerID: ref.providerID,
+              time: { created: Date.now() },
+            })
+            written.push(message.id)
+            yield* sessions.updatePart({
+              id: PartID.ascending(),
+              messageID: message.id,
+              sessionID: input.sessionID,
+              type: "text",
+              text: "Done.\n\n```charlie-result\n{ \"outcome\": \"do",
+            })
+            return yield* Effect.die(new Error("child process died"))
+          }),
+      })
+      expect(Exit.isFailure(result.exit)).toBe(true)
+      expect(result.streamed.at(-1)?.workResult).toEqual({
+        schema: "charlie-work-result-v1",
+        card: { parsed: false, messageID: written[0] },
+        ...empty,
+        terminal: { reason: "failed", hostDetail: "child process died" },
+      })
+    }),
+  )
+
+  it.instance("a failed child's streamed result carries the host reason", () =>
+    Effect.gen(function* () {
+      const result = yield* dispatch(final(card), {
+        error: new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(),
+      })
+      expect(result.streamed.at(-1)?.workResult).toMatchObject({
+        card: { parsed: true },
+        terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") },
+      })
+    }),
+  )
+
+  background.instance("background mode returns a running work result with no worker fields", () =>
+    Effect.gen(function* () {
+      const result = yield* dispatch(final(card), { background: true, prompt: () => Effect.never })
+      if (!Exit.isSuccess(result.exit)) throw new Error("expected background start")
+      const expected = {
+        schema: "charlie-work-result-v1",
+        card: { parsed: false },
+        ...empty,
+        terminal: { reason: "running", hostDetail: "Background task started" },
+      }
+      expect(workResult(result.exit.value.metadata)).toEqual(expected)
+      expect(result.streamed.at(-1)?.workResult).toEqual(expected)
     }),
   )
 })

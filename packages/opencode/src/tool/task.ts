@@ -146,9 +146,10 @@ export const TaskTool = Tool.define(
       ctx: Tool.Context,
     ) {
       const cfg = yield* config.get()
-      const caller =
-        (yield* agent.get(ctx.agentID ?? ctx.agent)) ??
-        (!ctx.agentID ? (yield* agent.list()).find((candidate) => candidate.name === ctx.agent) : undefined)
+      // The caller resolves by stable id only (F1.10): a display label never identifies an agent, and an unresolved
+      // caller fails closed (F1.13) rather than skipping the native-seat deny below.
+      const caller = yield* agent.get(ctx.agentID ?? ctx.agent)
+      if (!caller) return yield* Effect.fail(new Error(`Unknown Task caller: ${ctx.agentID ?? ctx.agent}`))
       const nativeSeat = caller?.native
         ? roster.find((member) => member.memberId === caller.id && member.nativeProfile)
         : undefined
@@ -458,6 +459,25 @@ export const TaskTool = Tool.define(
         metadata,
       })
 
+      // F4 cl.6: when the host ends the Task before or instead of the child's final message, stream the work result
+      // it can stand behind: the card already assembled, else the child's last assistant message, else no card.
+      const hostResult = Effect.fn("TaskTool.hostResult")(function* (
+        reason: "failed" | "interrupted" | "running",
+        detail: string,
+      ) {
+        if (nextID !== "charlie") return
+        workEvidence.value = workEvidence.value
+          ? { ...workEvidence.value, terminal: { reason, hostDetail: detail } }
+          : CharlieResult.hostEnded({
+              message: (yield* MessageV2.stream(nextSession.id)).findLast(
+                (message) => message.info.role === "assistant",
+              ),
+              reason,
+              detail,
+            })
+        yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
+      })
+
       if (governedChildID && reserved) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
@@ -469,8 +489,10 @@ export const TaskTool = Tool.define(
                 message.info.role === "assistant" && message.info.finish !== undefined && !message.info.error,
             )
         const job = strictReplay ? yield* background.get(governedChildID) : undefined
-        const replayed = nextID === "charlie" && completed ? CharlieResult.assemble(completed) : undefined
-        if (replayed) yield* ctx.metadata({ metadata: { ...metadata, workResult: replayed } })
+        if (nextID === "charlie" && completed?.info.role === "assistant") {
+          workEvidence.value = CharlieResult.assemble(completed)
+          yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
+        }
         if (
           strictReplay &&
           (!completed ||
@@ -484,9 +506,13 @@ export const TaskTool = Tool.define(
             ) ||
             (job && job.status !== "completed"))
         ) {
-          return yield* Effect.fail(new Error(completionReceipt
-            ? "Tool safety HOLD: completion-worker-not-finished" : "Governed Task denied: reserved-child-incomplete"))
+          const failure = completionReceipt
+            ? "Tool safety HOLD: completion-worker-not-finished"
+            : "Governed Task denied: reserved-child-incomplete"
+          yield* hostResult("interrupted", failure)
+          return yield* Effect.fail(new Error(failure))
         }
+        if (!completed) yield* hostResult("interrupted", "No completed child message to replay")
         const output = completed?.parts.findLast((part) => part.type === "text")?.text ?? ""
         const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
         return {
@@ -494,7 +520,7 @@ export const TaskTool = Tool.define(
           metadata: {
             ...metadata,
             ...(verified ? { completion: verified } : {}),
-            ...(replayed ? { workResult: replayed } : {}),
+            ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
           },
           output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
         }
@@ -608,7 +634,7 @@ export const TaskTool = Tool.define(
         yield* ops
           .prompt({
             sessionID: ctx.sessionID,
-            agent: currentParent.agent ?? ctx.agent,
+            agent: currentParent.agent ?? ctx.agentID ?? ctx.agent,
             variant,
             parts: [
               {
@@ -641,12 +667,14 @@ export const TaskTool = Tool.define(
       })
 
       if (yield* background.extend({ id: nextSession.id, run: runTask() })) {
+        yield* hostResult("running", "Background task updated")
         return {
           title: params.description,
           metadata: {
             ...metadata,
             background: true,
             jobId: nextSession.id,
+            ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
           },
           output: renderOutput({
             sessionID: nextSession.id,
@@ -672,13 +700,16 @@ export const TaskTool = Tool.define(
         run: runTask().pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
       })
 
-      function backgroundResult() {
+      // The child is still running: the work result says so and carries no worker fields yet.
+      const backgroundResult = Effect.fn("TaskTool.backgroundResult")(function* () {
+        yield* hostResult("running", "Background task started")
         return {
           title: params.description,
           metadata: {
             ...metadata,
             background: true,
             jobId: info.id,
+            ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
           },
           output: renderOutput({
             sessionID: nextSession.id,
@@ -687,11 +718,11 @@ export const TaskTool = Tool.define(
             text: BACKGROUND_STARTED,
           }),
         }
-      }
+      })
 
       if (runInBackground) {
         yield* notify(info.id)
-        return backgroundResult()
+        return yield* backgroundResult()
       }
 
       const runCancel = yield* EffectBridge.make()
@@ -711,9 +742,16 @@ export const TaskTool = Tool.define(
               background.wait({ id: nextSession.id }).pipe(Effect.map((waited) => waited.info)),
               background.waitForPromotion(nextSession.id),
             )
-            if (result?.metadata?.background === true) return backgroundResult()
-            if (result?.status === "error") return yield* Effect.fail(new Error(result.error ?? "Task failed"))
-            if (result?.status === "cancelled") return yield* Effect.fail(new Error("Task cancelled"))
+            if (result?.metadata?.background === true) return yield* backgroundResult()
+            if (result?.status === "error") {
+              const failure = result.error ?? "Task failed"
+              yield* hostResult("failed", failure)
+              return yield* Effect.fail(new Error(failure))
+            }
+            if (result?.status === "cancelled") {
+              yield* hostResult("interrupted", "Task cancelled")
+              return yield* Effect.fail(new Error("Task cancelled"))
+            }
             return {
               title: params.description,
               metadata: {
@@ -726,8 +764,9 @@ export const TaskTool = Tool.define(
           }),
         (_, exit) =>
           Effect.gen(function* () {
-            if (Exit.hasInterrupts(exit))
-              yield* Effect.all([cancel, background.cancel(nextSession.id)], { discard: true })
+            if (!Exit.hasInterrupts(exit)) return
+            yield* hostResult("interrupted", "Task cancelled").pipe(Effect.catchCause(() => Effect.void))
+            yield* Effect.all([cancel, background.cancel(nextSession.id)], { discard: true })
           }).pipe(
             Effect.ensuring(
               Effect.sync(() => {

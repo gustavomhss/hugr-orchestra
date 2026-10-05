@@ -209,6 +209,7 @@ it.instance(
       )
       const def = yield* task.init()
       let prompts = 0
+      const streamed: Record<string, unknown>[] = []
       const context = {
         sessionID: chat.id,
         messageID: assistant.id,
@@ -217,7 +218,10 @@ it.instance(
         abort: new AbortController().signal,
         extra: { promptOps: stubOps(() => prompts++) },
         messages: [],
-        metadata: () => Effect.void,
+        metadata: (input: { metadata?: Record<string, unknown> }) =>
+          Effect.sync(() => {
+            if (input.metadata) streamed.push(input.metadata)
+          }),
         ask: () => Effect.void,
       }
       const params = {
@@ -244,9 +248,21 @@ it.instance(
       expect(child?.agent).toBe("charlie")
       expect(result.metadata.sessionId).toBe(child?.id)
       expect(prompts).toBe(1)
+      streamed.length = 0
       const incomplete = yield* def.execute(params, context).pipe(Effect.exit)
       expect(Exit.isFailure(incomplete)).toBe(true)
       if (Exit.isFailure(incomplete)) expect(Cause.pretty(incomplete.cause)).toContain("reserved-child-incomplete")
+      // F4 cl.6: a governed replay with no completed child message still streams a work result, with no card.
+      expect(streamed.at(-1)?.workResult).toEqual({
+        schema: "charlie-work-result-v1",
+        card: { parsed: false },
+        changes: [],
+        checks: [],
+        blockers: [],
+        risks: [],
+        nextActions: [],
+        terminal: { reason: "interrupted", hostDetail: "Governed Task denied: reserved-child-incomplete" },
+      })
       if (!child) throw new Error("missing child")
       const childUser = yield* sessions.updateMessage({
         id: MessageID.ascending(),
@@ -491,13 +507,14 @@ it.instance(
       const { chat, assistant } = yield* seed()
       const task = yield* TaskTool
       const def = yield* task.init()
-      const invoke = (caller: string) =>
+      const invoke = (caller: string, agentID?: string) =>
         def.execute(
           { description: "inspect bug", prompt: "look into the cache key path", subagent_type: "general" },
           {
             sessionID: chat.id,
             messageID: assistant.id,
             agent: caller,
+            ...(agentID ? { agentID } : {}),
             abort: new AbortController().signal,
             extra: { bypassAgentCheck: true, promptOps: stubOps() },
             messages: [],
@@ -505,11 +522,21 @@ it.instance(
             ask: () => Effect.void,
           },
         )
-      for (const caller of ["Lucy", "Charlie"]) {
-        const exit = yield* invoke(caller).pipe(Effect.exit)
+      for (const [label, id] of [
+        ["Lucy", "lucy"],
+        ["Charlie", "charlie"],
+      ]) {
+        const exit = yield* invoke(label, id).pipe(Effect.exit)
         expect(Exit.isFailure(exit)).toBe(true)
         if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBeInstanceOf(PermissionV1.DeniedError)
+        // A label is never an identity (F1.13): without an id the caller fails closed instead of being guessed.
+        const unresolved = yield* invoke(label).pipe(Effect.exit)
+        expect(Exit.isFailure(unresolved)).toBe(true)
+        if (Exit.isFailure(unresolved)) expect(Cause.pretty(unresolved.cause)).toContain(`Unknown Task caller: ${label}`)
       }
+      const byKey = yield* invoke("charlie").pipe(Effect.exit)
+      if (Exit.isFailure(byKey)) expect(Cause.squash(byKey.cause)).toBeInstanceOf(PermissionV1.DeniedError)
+      expect(Exit.isFailure(byKey)).toBe(true)
       yield* invoke("custom")
     }),
   { config: { agent: { custom: { mode: "subagent" } } } },

@@ -154,6 +154,7 @@ it.instance("native team enforces runtime writes, task bypass, and durable Maest
           messageID: message.id,
           callID: "call_lucy_task",
           agent: lucy.name,
+          agentID: lucy.id,
           abort: new AbortController().signal,
           extra: { bypassAgentCheck: true, promptOps },
           messages: [],

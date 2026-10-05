@@ -38,17 +38,35 @@ export type Card = Schema.Schema.Type<typeof Card>
 const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 const decodeCard = Schema.decodeUnknownOption(Card)
 
+type Terminal = {
+  reason: "ended" | "blocked" | "failed" | "interrupted" | "running"
+  // Verbatim host reason when the host, not the child's final message, ended the Task (F4 `terminal.hostDetail`).
+  hostDetail?: string
+}
+
+export type WorkResult = {
+  schema: "charlie-work-result-v1"
+  card: { parsed: boolean; messageID?: string }
+  outcome?: Card["outcome"]
+  changes: Card["changes"]
+  checks: Card["checks"]
+  blockers: Card["blockers"]
+  risks: Card["risks"]
+  nextActions: Card["nextActions"]
+  terminal: Terminal
+}
+
 /**
  * Assemble `charlie-work-result-v1` from the child's final message. Worker fields come only from a strictly decoded
  * card; a missing, duplicated or invalid card leaves them empty. Host failure or interruption overrides the card,
  * and the card can only lower `ended` to `blocked` (F4 cl.11).
  */
-export function assemble(message: SessionV1.WithParts) {
+export function assemble(message: SessionV1.WithParts): WorkResult {
   const text = message.parts.findLast((part) => part.type === "text")
   const card = text?.type === "text" ? parse(text.text) : undefined
   const host = terminal(message)
   return {
-    schema: "charlie-work-result-v1" as const,
+    schema: "charlie-work-result-v1",
     card: { parsed: card !== undefined, messageID: message.info.id },
     ...(card ? { outcome: card.outcome } : {}),
     changes: card?.changes ?? [],
@@ -56,10 +74,33 @@ export function assemble(message: SessionV1.WithParts) {
     blockers: card?.blockers ?? [],
     risks: card?.risks ?? [],
     nextActions: card?.nextActions ?? [],
-    terminal: { reason: host === "ended" && card?.outcome === "blocked" ? ("blocked" as const) : host },
+    terminal: { reason: host === "ended" && card?.outcome === "blocked" ? "blocked" : host },
   }
 }
-export type WorkResult = ReturnType<typeof assemble>
+
+/**
+ * The work result for a Task the host ended before or instead of the child's final message (F4 cl.6): cancellation,
+ * a failed or dead child, a background start, or a replay without a completed child message. Worker fields come only
+ * from the child's last assistant message, when there is one; nothing is fabricated.
+ */
+export function hostEnded(input: {
+  message?: SessionV1.WithParts
+  reason: "failed" | "interrupted" | "running"
+  detail: string
+}): WorkResult {
+  const base = input.message
+    ? assemble(input.message)
+    : {
+        schema: "charlie-work-result-v1" as const,
+        card: { parsed: false },
+        changes: [],
+        checks: [],
+        blockers: [],
+        risks: [],
+        nextActions: [],
+      }
+  return { ...base, terminal: { reason: input.reason, hostDetail: input.detail } }
+}
 
 function parse(text: string): Card | undefined {
   if (text.split("```charlie-result").length !== 2) return
