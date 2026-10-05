@@ -29,6 +29,8 @@ test.setTimeout(120_000)
 
 const sidebar = '[data-component="orchestra-sidebar"]'
 const profileMenu = '[data-component="orchestra-profile-picker"]'
+const home = '[data-component="orchestra-home"]'
+const chapter = '[data-component="orchestra-chapter"]'
 const cockpit = ".orchestra-cockpit"
 const dialog = '[role="dialog"]'
 const evidence = "[data-orchestra-evidence]"
@@ -43,9 +45,10 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(nav).toHaveCSS("width", "230px")
     await expect(nav.getByRole("button", { name: "Chat", exact: true })).toBeEnabled()
     await expect(nav.locator(".orchestra-profile-text small")).toHaveText("1 agent · main")
+    await expect(page.locator(home)).toHaveText(/\w/)
     expect(await auditAccessibility(page, [sidebar])).toEqual([])
     await expectTabOrder(page, [sidebar], { trap: false })
-    const results = await measureContrast(page, sidebarText)
+    const results = await measureContrast(page, [...sidebarText, { name: "Home text", selector: home }])
     await nav.getByRole("button", { name: "MCP", exact: true }).focus()
     results.push(...(await measureContrast(page, [ring("nav focus ring", `${sidebar} .orchestra-nav-button`)])))
     await nav.getByRole("button", { name: "Home", exact: true }).focus()
@@ -90,8 +93,13 @@ for (const scheme of ["dark", "light"] as const) {
           selector: `${sidebar} .orchestra-nav-button:not(:disabled) .orchestra-nav-icon`,
           kind: "graphic",
         },
+        { name: "compact toggle icon", selector: `${sidebar} .orchestra-navigation-toggle-icon`, kind: "graphic" },
       ])),
     )
+    // Chapter text sits on the same glass over the photograph, which darkens toward the panel's foot.
+    await nav.getByRole("button", { name: ".env", exact: true }).click()
+    await expect(page.getByRole("heading", { name: ".env", level: 1 })).toBeVisible()
+    results.push(...(await measureContrast(page, [{ name: "chapter text", selector: chapter }])))
     await report(results, `sidebar-${scheme}`)
   })
 }
