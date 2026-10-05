@@ -28,6 +28,7 @@ jobs:
           - name: windows
             host: windows-latest
     runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 60
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
     defaults:

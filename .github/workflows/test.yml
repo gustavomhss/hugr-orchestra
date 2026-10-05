@@ -20,10 +20,13 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # Every job has a timeout: a hung Windows build once held a runner past 40 minutes, and the
+  # GitHub default is 6 hours.
   godfile:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: godfile
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -44,6 +47,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: atlas scope
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       changed: ${{ steps.scope.outputs.changed }}
     steps:
@@ -82,6 +86,7 @@ jobs:
   atlas:
     name: atlas
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: atlas-scope
     # Atlas guards cover its vendor subtree; a failed scope detector fails this workflow rather than skipping it.
     if: github.event_name != 'pull_request' || needs.atlas-scope.outputs.changed == 'true'
@@ -176,6 +181,7 @@ jobs:
             host: windows-latest
         shard: [1, 2, 3]
     runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 35
     defaults:
       run:
         shell: bash
@@ -224,6 +230,7 @@ jobs:
           - name: windows
             host: windows-latest
     runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 35
     defaults:
       run:
         shell: bash
@@ -271,6 +278,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: httpapi exerciser
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -302,6 +310,7 @@ jobs:
           - name: windows
             host: windows-latest
     runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 40
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
     defaults:
