@@ -26,21 +26,29 @@ Normal source inspection is available, but cannot substitute for governed GROUND
    For new behavior, capture a meaningful failing baseline before implementation when runnable.
    Separate baseline-passing preservation checks from red-to-green proof; neither replaces the other.
    Mark untestable items `judged` with an accountable decision owner; never auto-green them.
-2. For substantial multi-package work, obtain independent cold coverage critique using
+2. Write the five criteria for each unit: Completeness, Success, Invariants, Quality and Definition of Done.
+   Small work keeps them implicit. An epic, a work package or governed work writes them under
+   `## Completeness Criteria`, `## Success Criteria`, `## Invariants`, `## Quality Standards` and
+   `## Definition of Done`; governed work cards must use exactly these headings, and validation rejects a card
+   without them. A child cites its parent's criteria and states only what it adds or changes; the parent closes
+   only after its children and the seam between them pass. Add a journey (the path of a user, a call or a
+   payload), an example or a counter-example only when it makes a criterion checkable; needing several of them
+   suggests splitting the unit.
+3. For substantial multi-package work, obtain independent cold coverage critique using
    [suite-review.md](suite-review.md). Give demand and acceptance items, not your plan or reasoning.
    Resolve missing, vague, and overreaching items. Recheck after changes; two unchanged gap-free rounds
    are a useful stopping rule for broad discovery, not proof of completeness or ceremony for small work.
    If review is unavailable, record UNKNOWN and preserve the unresolved coverage decision.
-3. Slice by responsibility, not line ranges. Each acceptance item has an owner; no orphan or scope-creep slice.
+4. Slice by responsibility, not line ranges. Each acceptance item has an owner; no orphan or scope-creep slice.
    Remove shared registries/manifests from worker ownership when existing project structure permits.
    Shared non-append writes require sequencing or re-slicing. Append-only union still needs integration review.
    Write-to-read edges are dependencies, not write conflicts; load `maestro-contract` for load-bearing seams.
-4. Use selected Arsenal operations below where helpful. Inspect returned coverage and diagnostics.
+5. Use selected Arsenal operations below where helpful. Inspect returned coverage and diagnostics.
    Missing acquisition, partial extraction, invalid input, or compiler failure cannot mean an empty success.
-5. Size by cohesive concepts, uncertainty, working set, and review cost. Split oversized nodes; combine
+6. Size by cohesive concepts, uncertainty, working set, and review cost. Split oversized nodes; combine
    tiny coupled nodes when handoff costs dominate. Resolve architectural forks before dispatch; workers
    surface new forks rather than silently widen scope. Choose model/budget from actual host provider metadata.
-6. Keep the symbol/partition artifact named `partitionPlan`. It is not durable prompt `PlanRevision`.
+7. Keep the symbol/partition artifact named `partitionPlan`. It is not durable prompt `PlanRevision`.
    Explicit governed mode still requires native admission, verified catalog scope/Own IDs, grounded context,
    validation, review, exact direct-user approval binding, and authorization before Task.
    Arsenal planning neither records that lifecycle nor grants its authority.

@@ -12,6 +12,7 @@ const names = [
   "maestro-loop",
   "maestro-repo-maintenance",
   "maestro-composer",
+  "maestro-governed",
 ]
 const frontmatter = z.object({
   name: z
@@ -52,24 +53,20 @@ describe("Maestro Arsenal playbooks", () => {
     )
   })
 
-  test("orientation keeps playbooks and catalogs on demand", async () => {
-    const prompt = await Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt")).text()
-    const orientation = prompt.split(/## On-demand Playbooks\r?\n/)[1]?.split(/\r?\n## Response/)[0]
-    expect(orientation).toBeDefined()
-    expect(orientation).toContain("Load only the playbook relevant to the current action")
-    expect(orientation).toContain("Do not preload all playbooks or full Arsenal/Composer catalogs.")
-    names.forEach((name) => expect(orientation).toContain(`\`${name}\``))
-    expect(orientation).toContain("For FastAPI infrastructure reuse through existing HuGRComposerPlugin")
-    expect(orientation).toContain("load `maestro-composer` when relevant")
-    expect(orientation).toContain("`maestro_arsenal_describe` before `maestro_arsenal_execute`")
-    expect(orientation).toContain("advice never grants execution or approval authority")
-    expect(prompt).toContain("Normal work is default.")
-    expect(prompt).toContain("Governed work is explicit")
-    expect(prompt).toContain("Keep judgment, integration, and final claims in this session.")
-    expect(prompt).toContain("Use these as a compact reasoning map, not mandatory ceremony")
+  // The prompt replaces the provider base prompt; procedures live in playbooks and tool descriptions, so it stays small.
+  test("Maestro prompt stays lean and names only shipped playbooks", async () => {
+    const file = Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt"))
+    expect(file.size).toBeLessThanOrEqual(8 * 1024)
+    const named = Array.from((await file.text()).matchAll(/`(frame-request|maestro-[a-z-]+)`/g), (match) => match[1]!)
+    expect(named).toContain("maestro-governed")
+    await Promise.all(
+      named.map(async (name) =>
+        expect(await Bun.file(path.join(root, ".opencode/skills", name, "SKILL.md")).exists()).toBe(true),
+      ),
+    )
   })
 
-  test.each(names.filter((name) => name !== "maestro-composer"))(
+  test.each(names.filter((name) => name !== "maestro-composer" && name !== "maestro-governed"))(
     "%s acquires selected native schemas before execution",
     async (name) => {
       const skill = await readSkill(name)
