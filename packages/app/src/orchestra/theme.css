@@ -8,7 +8,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-text: #eef1f5;
   --orchestra-body: #c7d0d9;
   --orchestra-muted: #8c9aaa;
-  --orchestra-faint: #687a8e;
+  --orchestra-faint: #7b8c9e;
   --orchestra-accent: #7ea5cc;
   --orchestra-warm: #c9b78f;
   --orchestra-success: #9dbfae;
@@ -66,7 +66,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-profile-chevron: #8fa0b2;
   --orchestra-sidebar-profile-logo: #2c70bd;
   --orchestra-brand-descriptor: #8c9db2;
-  --orchestra-sidebar-footer: #687a8e;
+  --orchestra-sidebar-footer: #7b8c9e;
 
   --orchestra-tab-text: #81909f;
   --orchestra-tab-hover-background: rgba(173, 196, 217, 0.045);
@@ -236,9 +236,9 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-text: #1a1f26;
   --orchestra-body: #454d58;
   --orchestra-muted: #6c7581;
-  --orchestra-faint: #8d949e;
+  --orchestra-faint: #68707a;
   --orchestra-accent: #3f6f9f;
-  --orchestra-warm: #8a7448;
+  --orchestra-warm: #846f45;
   --orchestra-success: #4f7d68;
   /* The reference leaves --danger unchanged in light mode. */
   --orchestra-danger: #d29e9b;
@@ -280,18 +280,19 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-sidebar-active-icon: #2f6bbf;
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(70, 84, 98, 0.2);
-  --orchestra-sidebar-key-text: #6e7783;
+  --orchestra-sidebar-secondary: #5c646e;
+  --orchestra-sidebar-key-text: var(--orchestra-sidebar-secondary);
   --orchestra-sidebar-rule: rgba(70, 84, 98, 0.16);
   --orchestra-sidebar-profile-background: rgba(255, 255, 255, 0.62);
   --orchestra-sidebar-profile-border: rgba(70, 84, 98, 0.2);
   --orchestra-sidebar-profile-hover-border: rgba(70, 84, 98, 0.3);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(40, 50, 62, 0.1);
   --orchestra-sidebar-profile-text: #1d232a;
-  --orchestra-sidebar-profile-muted: #6e7783;
+  --orchestra-sidebar-profile-muted: var(--orchestra-sidebar-secondary);
   --orchestra-sidebar-profile-chevron: #6b7480;
   --orchestra-sidebar-profile-logo: #2f6bbf;
-  --orchestra-brand-descriptor: #6e7783;
-  --orchestra-sidebar-footer: #828b96;
+  --orchestra-brand-descriptor: var(--orchestra-sidebar-secondary);
+  --orchestra-sidebar-footer: #59616a;
 
   --orchestra-tab-text: #5f6874;
   --orchestra-tab-hover-background: rgba(40, 56, 74, 0.035);
@@ -356,14 +357,10 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-log
 }
 
 .orchestra-brand [data-slot="orchestra-brand-descriptor"] {
-  color: var(--orchestra-brand-descriptor, #8c9db2);
+  color: var(--orchestra-brand-descriptor);
   font-size: 11px;
   line-height: 14px;
   letter-spacing: 0.01em;
-}
-
-html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-descriptor"] {
-  color: var(--orchestra-brand-descriptor, #6e7783);
 }
 
 .orchestra-brand-splash {

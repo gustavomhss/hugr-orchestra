@@ -20,7 +20,7 @@
     --orchestra-session-heading: #e9eef3;
     --orchestra-session-body: #c2ccd6;
     --orchestra-session-secondary: #93a2b2;
-    --orchestra-session-meta: #76879a;
+    --orchestra-session-meta: #7a8b9d;
     --orchestra-session-rule: rgba(160, 181, 200, 0.1);
     --orchestra-session-message-rule: rgba(160, 181, 200, 0.09);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(26, 36, 47, 0.66), rgba(19, 27, 36, 0.62));
@@ -115,7 +115,7 @@
     --orchestra-session-heading: #141920;
     --orchestra-session-body: #3f4854;
     --orchestra-session-secondary: #68717c;
-    --orchestra-session-meta: #6e7783;
+    --orchestra-session-meta: #666e79;
     --orchestra-session-rule: rgba(70, 84, 98, 0.12);
     --orchestra-session-message-rule: rgba(70, 84, 98, 0.1);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 249, 251, 0.7));
@@ -153,7 +153,7 @@
     --orchestra-task-mark-border: rgba(70, 84, 98, 0.16);
     --orchestra-task-mark-text: #5d6672;
     --orchestra-task-title: #20262e;
-    --orchestra-task-meta: #6b7480;
+    --orchestra-task-meta: #67707b;
     --orchestra-task-rule: rgba(70, 84, 98, 0.1);
     --orchestra-permission-background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(250, 247, 240, 0.94));
     --orchestra-permission-border: rgba(160, 130, 80, 0.34);
@@ -928,6 +928,28 @@
   body[data-new-layout] [data-session-layout="surface"] [data-slot="task-meta"] {
     color: var(--orchestra-task-meta);
     font: 11.5px / 16px var(--font-family-mono);
+  }
+
+  /* A finished row reads as secondary through its mark and title. The shared panel dims the whole
+   * row instead, which takes its time and stats below WCAG AA contrast. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"]) {
+    opacity: 1;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"], :hover)
+    [data-slot="task-mark"] {
+    opacity: 0.75;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"], :hover)
+    [data-slot="task-title"] {
+    color: color-mix(in srgb, var(--orchestra-task-title) 75%, transparent);
   }
 
   body[data-new-layout]

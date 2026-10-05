@@ -510,24 +510,7 @@ async function expectDialogReturn(page: Page, trigger: Locator, buttons: string[
 // owner instead of recolored here, each with the ratio measured when it was recorded. The test fails if any
 // other target fails, if a recorded one starts passing (remove the entry with the token change), and if a
 // recorded one measures lower than its baseline beyond sampling noise.
-const findings: Record<string, { ratio: number; cause: string }> = {
-  "sidebar-dark:sidebar footer": { ratio: 4.38, cause: "--orchestra-sidebar-footer #687a8e on the sidebar glass" },
-  "sidebar-dark:menu group label": { ratio: 3.88, cause: "--orchestra-faint #687a8e on the profile menu" },
-  "sidebar-light:brand descriptor": { ratio: 3.58, cause: "--orchestra-brand-descriptor #6e7783 on the glass" },
-  "sidebar-light:search key": { ratio: 3.85, cause: "--orchestra-sidebar-key-text #6e7783 on the key cap" },
-  "sidebar-light:profile path": { ratio: 4.07, cause: "--orchestra-sidebar-profile-muted #6e7783 on the profile" },
-  "sidebar-light:sidebar footer": { ratio: 2.59, cause: "--orchestra-sidebar-footer #828b96 on the sidebar glass" },
-  "sidebar-light:menu group label": { ratio: 3.05, cause: "--orchestra-faint #8d949e on the profile menu" },
-  "cockpit-dark:task meta": { ratio: 3.84, cause: "--orchestra-faint #687a8e for the task time" },
-  "cockpit-dark:task stats": { ratio: 2.77, cause: "--orchestra-faint #687a8e in finished rows at opacity 0.75" },
-  "cockpit-light:task meta": { ratio: 2.89, cause: "--orchestra-faint #8d949e for the task time" },
-  "cockpit-light:task stats": { ratio: 2.14, cause: "--orchestra-faint #8d949e in finished rows at opacity 0.75" },
-  "cockpit-light:Activity meta": { ratio: 4.36, cause: "--orchestra-warm #8a7448 for the row needing attention" },
-  "evidence-dark:evidence command": { ratio: 4.47, cause: "--orchestra-session-meta #76879a on the evidence card" },
-  "evidence-light:evidence command": { ratio: 4.46, cause: "--orchestra-session-meta #6e7783 on the evidence card" },
-  "evidence-light:evidence rows": { ratio: 4.4, cause: "--orchestra-session-meta #6e7783 on the evidence card" },
-  "evidence-light:evidence meta": { ratio: 4.14, cause: "--orchestra-session-meta #6e7783 on the evidence card" },
-}
+const findings: Record<string, { ratio: number; cause: string }> = {}
 
 async function report(results: ContrastResult[], name: string) {
   await writeFile(test.info().outputPath(`${name}-contrast.json`), JSON.stringify(results, null, 2))
