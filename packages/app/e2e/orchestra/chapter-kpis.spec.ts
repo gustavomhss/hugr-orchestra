@@ -13,22 +13,44 @@ const project = {
   sandboxes: [],
   time: { created: 1, updated: 1 },
 }
-const day = (month: number, date: number) => Date.UTC(2026, month - 1, date)
-// Fixed clock: 2026-10-04 15:00 UTC with the browser in UTC, so every window edge is a known midnight.
+const DAY = 86_400_000
+// Fixed clock: 2026-10-04 15:00 UTC with the browser in UTC, the same calendar the mocked server reports.
 const now = Date.UTC(2026, 9, 4, 15)
-const edges30 = [
-  day(8, 6),
-  day(9, 5),
-  day(9, 8),
-  day(9, 12),
-  day(9, 16),
-  day(9, 20),
-  day(9, 23),
-  day(9, 27),
-  day(10, 1),
-  day(10, 5),
+// Server-local days of each bucket edge, as session.activity reports them.
+const days30 = [
+  "2026-08-06",
+  "2026-09-05",
+  "2026-09-08",
+  "2026-09-12",
+  "2026-09-16",
+  "2026-09-20",
+  "2026-09-23",
+  "2026-09-27",
+  "2026-10-01",
+  "2026-10-05",
 ]
-const edges7 = [day(9, 21), ...Array.from({ length: 8 }, (_, index) => day(9, 28 + index))]
+const days7 = [
+  "2026-09-21",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-01",
+  "2026-10-02",
+  "2026-10-03",
+  "2026-10-04",
+  "2026-10-05",
+]
+const daysAll = [
+  "2026-09-01",
+  "2026-09-05",
+  "2026-09-09",
+  "2026-09-13",
+  "2026-09-18",
+  "2026-09-22",
+  "2026-09-26",
+  "2026-09-30",
+  "2026-10-05",
+]
 const records = Array.from({ length: 7 }, (_, index) => session(index + 1))
 const home = (page: Page) => page.locator('[data-component="orchestra-kpis"]')
 const tile = (page: Page, id: string) => home(page).locator(`[data-tile="${id}"]`)
@@ -49,6 +71,14 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(home(page).locator(".home-kicker")).toHaveText("Project · Recorded repo A")
     await expect(home(page).locator("h1")).toHaveText("What the agentsactually shipped.")
     await expect(home(page).getByRole("button", { name: "30d" })).toHaveAttribute("aria-pressed", "true")
+    // The mock's 520-580 weights render as static Inter Medium with synthetic bold.
+    await expect(home(page).locator(".home-kpi-label").first()).toHaveCSS("font-weight", "600")
+    expect(
+      await home(page)
+        .locator(".home-kpi-label")
+        .first()
+        .evaluate((element) => getComputedStyle(element).fontFamily),
+    ).toMatch(/^"Mx Inter Medium"/)
     // Held activity: Orchestra tiles show no number, Export is unavailable, git and PR tiles stand alone.
     for (const id of ["tokens", "hours", "messages", "models", "failed"])
       await expect(value(page, id)).toHaveAttribute("data-state", "loading")
@@ -90,6 +120,7 @@ for (const scheme of ["dark", "light"] as const) {
     ])
     expect(await bars(page, "commits")).toEqual(["50%", "0%", "0%", "0%", "0%", "0%", "0%", "100%"])
     expect(await bars(page, "tokens")).toEqual(["100%", "0%", "0%", "1%", "0%", "0%", "0%", "53%"])
+    expect(await bars(page, "hours")).toEqual(["100%", "0%", "0%", "0%", "0%", "0%", "0%", "33%"])
     expect(await rows(page).locator(".home-row-title").allTextContents()).toEqual([
       "Recorded session 1running",
       "Recorded session 2",
@@ -114,11 +145,10 @@ for (const scheme of ["dark", "light"] as const) {
     const models = home(page).locator('[data-component="home-model-row"]')
     expect(await models.locator(".home-chip").allTextContents()).toEqual(["gpt", "sonnet"])
     expect(await models.locator(".home-row-value").allTextContents()).toEqual(["1.2M", "600k"])
-    // One activity read per window, each with the hand-computed local-midnight edges.
     expect(requests.map((url) => [url.origin, url.pathname, url.searchParams.get("directory")])).toEqual([
       [serverA, "/session/activity", directory],
     ])
-    expect(requests[0]!.searchParams.get("edges")).toBe(edges30.join(","))
+    expect(requests[0]!.searchParams.get("period")).toBe("30d")
     await home(page).getByRole("button", { name: "View all" }).click()
     await expect(rows(page)).toHaveCount(7)
     await home(page).getByRole("button", { name: "Top 5" }).click()
@@ -127,6 +157,7 @@ for (const scheme of ["dark", "light"] as const) {
     await home(page).getByRole("button", { name: "Export" }).click()
     const file = await download
     expect(file.suggestedFilename()).toBe("Recorded repo A-metrics-30d.csv")
+    // Numbers are written as-is, negative changes included; only text is guarded against formulas.
     expect(await readFile((await file.path())!, "utf8")).toBe(
       [
         ["Period", "30d"],
@@ -151,7 +182,7 @@ for (const scheme of ["dark", "light"] as const) {
         ["openai/gpt", "1240000", "10"],
         ["anthropic/sonnet", "600000", "3"],
       ]
-        .map((row) => row.map((cell) => `"${cell.replace(/^-/, "'-")}"`).join(","))
+        .map((row) => row.map((cell) => `"${cell}"`).join(","))
         .join("\r\n") + "\r\n",
     )
     await page.screenshot({ path: testInfo.outputPath(`${scheme}.png`) })
@@ -161,7 +192,9 @@ for (const scheme of ["dark", "light"] as const) {
   })
 }
 
-test("period switch reads the new window, keeps the choice per profile and has no stale numbers", async ({ page }) => {
+test("period switch reads each period once while fresh, keeps the choice per profile and has no stale numbers", async ({
+  page,
+}) => {
   const requests: URL[] = []
   const gitRequests: URL[] = []
   await setup(page, { requests, gitRequests })
@@ -172,22 +205,27 @@ test("period switch reads the new window, keeps the choice per profile and has n
   await expect(value(page, "tokens")).toHaveText("50k")
   await expect(tile(page, "tokens").locator(".home-kpi-foot")).toHaveText("↗ newvs previous")
   await expect(value(page, "commits")).toHaveText("8")
-  expect(requests.at(-1)!.searchParams.get("edges")).toBe(edges7.join(","))
+  // Back to 30d inside the stale time: the cached read answers.
+  await home(page).getByRole("button", { name: "30d" }).click()
+  await expect(value(page, "tokens")).toHaveText("1.8M")
+  expect(requests.map((url) => url.searchParams.get("period"))).toEqual(["30d", "7d"])
+  // Git windows cover the previous period in any time zone; days outside it are not counted.
   expect(gitRequests.map((url) => [url.searchParams.get("since"), url.searchParams.get("until")])).toEqual([
-    [String(day(8, 6)), String(now)],
-    [String(day(9, 21)), String(now)],
+    [String(now - 62 * DAY), String(now)],
+    [String(now - 16 * DAY), String(now)],
   ])
+  await home(page).getByRole("button", { name: "7d" }).click()
+  await expect(value(page, "tokens")).toHaveText("50k")
   await page.reload()
   await expect(home(page).getByRole("button", { name: "7d" })).toHaveAttribute("aria-pressed", "true")
   await expect(value(page, "tokens")).toHaveText("50k")
-  // "All" first finds the oldest recorded session, then reads bars from its creation day.
+  // "All" is one read; the server starts it on the first recorded day.
   await home(page).getByRole("button", { name: "All" }).click()
   await expect(value(page, "tokens")).toHaveText("1.8M")
   await expect(tile(page, "tokens").locator(".home-kpi-foot")).toHaveText("since Sep 1, 2026")
-  expect(requests.slice(-2).map((url) => url.searchParams.get("edges"))).toEqual([
-    `0,${day(10, 5)}`,
-    [1, 5, 9, 13, 18, 22, 26, 30].map((date) => day(9, date)).concat(day(10, 5)).join(","),
-  ])
+  await expect(tile(page, "tokens").locator(".home-delta")).toHaveCount(0)
+  expect(requests.map((url) => url.searchParams.get("period"))).toEqual(["30d", "7d", "7d", "all"])
+  expect(gitRequests.at(-1)!.searchParams.get("since")).toBe("0")
 })
 
 test("app locale formats numbers while CSV keeps raw values", async ({ page }) => {
@@ -201,6 +239,7 @@ test("app locale formats numbers while CSV keeps raw values", async ({ page }) =
   await home(page).getByRole("button", { name: "Export" }).click()
   const csv = await readFile((await (await download).path())!, "utf8")
   expect(csv).toContain('"Tokens spent","1840000","tokens","23"\r\n')
+  expect(csv).toContain('"Hours worked","2","hours","-20"\r\n')
   expect(csv).toContain('"Recorded session 1","1200000","7","6","230","88"\r\n')
 })
 
@@ -257,10 +296,10 @@ test("failed activity hides totals and Retry reads the profile again", async ({ 
   expect(requests).toHaveLength(2)
 })
 
-test("empty, unavailable, non-git and partial states are explicit", async ({ page }) => {
+test("empty, unavailable, partial, non-git and partial-git states are explicit", async ({ page }) => {
   test.slow()
-  const git = { mode: "ok" as "ok" | "missing" | "none" | "truncated" }
-  const activity = { mode: "empty" as "empty" | "missing" }
+  const git = { mode: "ok" as "ok" | "missing" | "none" | "truncated" | "lines" }
+  const activity = { mode: "empty" as "empty" | "missing" | "truncated" }
   await setup(page, { git, activity })
   await page.goto("/")
   await expect(value(page, "tokens")).toHaveText("0")
@@ -275,46 +314,65 @@ test("empty, unavailable, non-git and partial states are explicit", async ({ pag
   await expect(value(page, "tokens")).toHaveText("Unavailable")
   await expect(value(page, "commits")).toHaveText("Unavailable")
   await expect(tile(page, "commits").locator(".home-kpi-foot")).toHaveText("this server cannot read commits")
+  activity.mode = "truncated"
   git.mode = "none"
   await page.reload()
+  for (const id of ["tokens", "hours", "messages", "models", "failed"])
+    await expect(value(page, id)).toHaveText("Partial")
+  await expect(rows(page)).toHaveCount(0)
+  await expect(home(page).getByRole("button", { name: "Export" })).toBeDisabled()
   await expect(value(page, "merges")).toHaveText("No repository")
   await expect(tile(page, "merges").locator(".home-kpi-foot")).toHaveText("not a git repository")
+  // Partial line totals do not affect commit counts.
+  activity.mode = "empty"
+  git.mode = "lines"
+  await page.reload()
+  await expect(value(page, "commits")).toHaveText("12")
+  await expect(value(page, "merges")).toHaveText("3")
   git.mode = "truncated"
   await page.reload()
   await expect(value(page, "commits")).toHaveText("Partial")
+  await expect(value(page, "merges")).toHaveText("Partial")
   await expect(tile(page, "commits").locator(".home-kpi-foot")).toHaveText("the history scan stopped at its limit")
   await expect(tile(page, "commits").locator(".home-bars i")).toHaveCount(0)
 })
 
-test("Configure tracking hides tiles for this profile and Export follows the shown tiles", async ({ page }) => {
+test("Configure tracking opens Providers and Manage opens the models settings", async ({ page }) => {
   await setup(page)
   await page.goto("/")
   await expect(value(page, "tokens")).toHaveText("1.8M")
-  await home(page).getByRole("button", { name: "Configure tracking" }).click()
-  const dialog = page.getByRole("dialog")
-  await expect(dialog).toContainText("Choose which metrics this project shows on Home and includes in Export.")
-  await dialog.getByRole("switch", { name: "Pull requests" }).click()
-  await dialog.getByRole("switch", { name: "Hours worked" }).click()
-  await expect(dialog.getByRole("switch", { name: "Pull requests" })).toHaveAttribute("aria-checked", "false")
-  await page.keyboard.press("Escape")
-  await expect(home(page).locator(".home-kpi")).toHaveCount(6)
-  await expect(tile(page, "pullRequests")).toHaveCount(0)
-  await page.reload()
-  await expect(value(page, "tokens")).toHaveText("1.8M")
-  await expect(home(page).locator(".home-kpi")).toHaveCount(6)
-  const download = page.waitForEvent("download")
-  await home(page).getByRole("button", { name: "Export" }).click()
-  const csv = await readFile((await (await download).path())!, "utf8")
-  expect(csv).not.toContain("Pull requests")
-  expect(csv).not.toContain("Hours worked")
-  expect(csv).toContain('"Merges","3","count",""\r\n')
-})
-
-test("Manage opens the models settings", async ({ page }) => {
-  await setup(page)
-  await page.goto("/")
   await home(page).getByRole("button", { name: "Manage" }).click()
   await expect(page.getByRole("dialog").getByRole("tab", { name: "Models", selected: true })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await home(page).getByRole("button", { name: "Configure tracking" }).click()
+  await expect(page).toHaveURL(/\/orchestra\/providers$/)
+  await expect(page.locator('[data-component="orchestra-chapter"][data-chapter="providers"]')).toBeVisible()
+})
+
+test("at 700px Home keeps the project list and lays tiles in two columns without horizontal scroll", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 700, height: 900 })
+  await setup(page)
+  await page.goto("/")
+  await expect(page.getByRole("button", { name: "Add project" }).first()).toBeVisible()
+  await expect(value(page, "tokens")).toHaveText("1.8M")
+  const boxes = await home(page)
+    .locator(".home-kpi")
+    .evaluateAll((items) => items.slice(0, 3).map((item) => item.getBoundingClientRect().toJSON() as DOMRect))
+  expect(boxes[0]!.top).toBe(boxes[1]!.top)
+  expect(boxes[1]!.left).toBeGreaterThan(boxes[0]!.right)
+  expect(boxes[2]!.top).toBeGreaterThanOrEqual(boxes[0]!.bottom)
+  expect(boxes[2]!.left).toBe(boxes[0]!.left)
+  expect(
+    await page.evaluate(() => ({
+      page: document.documentElement.scrollWidth <= window.innerWidth,
+      home: [...document.querySelectorAll('[data-component="orchestra-home"] *')].every(
+        (element) => element.getBoundingClientRect().right <= window.innerWidth + 0.5,
+      ),
+    })),
+  ).toEqual({ page: true, home: true })
 })
 
 test("no selected profile shows no KPIs and reads nothing", async ({ page }) => {
@@ -365,7 +423,7 @@ function session(value: number) {
     title: `Recorded session ${value}`,
     cost: 0,
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-    time: { created: day(9, value), updated: day(10, 4) },
+    time: { created: Date.UTC(2026, 8, value), updated: Date.UTC(2026, 9, 4) },
   }
 }
 
@@ -377,17 +435,19 @@ const fact = (bucket: number, value: number, input: Record<string, unknown>) => 
   user: 0,
   assistant: 0,
   failed: 0,
-  activeMs: 0,
   tokens: 0,
-  cost: 0,
   ...input,
 })
 const gpt = { providerID: "openai", modelID: "gpt" }
 
-// The 30d window: bucket 0 is the previous window, buckets 1..8 the bars.
-function activity30() {
+function response(period: string, days: string[], previous: boolean, facts: unknown[], activeMs?: number[]) {
   return {
-    edges: edges30,
+    period,
+    edges: days.map((day) => Date.parse(`${day}T00:00:00Z`)),
+    days,
+    previous,
+    activeMs: activeMs ?? days.slice(1).map(() => 0),
+    truncated: false,
     sessions: records.map((item) => ({
       id: item.id,
       title: item.title,
@@ -398,28 +458,31 @@ function activity30() {
       deletions: item.id === "ses_recorded_001" ? 88 : null,
       files: item.id === "ses_recorded_001" ? 6 : null,
     })),
-    facts: [
-      fact(0, 1, { ...gpt, user: 1, assistant: 2, tokens: 1_500_000, activeMs: 9_000_000 }),
-      fact(1, 1, { user: 2 }),
-      fact(1, 1, { ...gpt, assistant: 5, failed: 1, tokens: 1_200_000, activeMs: 5_400_000 }),
-      ...[4, 5, 6, 7].map((value) => fact(4, value, { ...gpt, user: 1, assistant: 1, tokens: (value - 3) * 1000 })),
-      fact(8, 2, { user: 1 }),
-      fact(8, 2, { providerID: "anthropic", modelID: "sonnet", assistant: 3, tokens: 600_000, activeMs: 1_800_000 }),
-      fact(8, 3, { ...gpt, assistant: 1, tokens: 30_000 }),
-    ],
+    facts,
   }
 }
 
-function activityFor(edges: number[]) {
-  if (edges.join(",") === edges30.join(",")) return activity30()
-  const base = activity30()
-  // "All" bars and the 7d window both carry everything in their last bar; 7d has an empty previous window.
-  const last = edges.length - 2
-  const total = base.facts.filter((item) => item.bucket > 0)
-  if (edges[0] === 0) return { ...base, edges, facts: total.map((item) => ({ ...item, bucket: 0 })) }
-  if (edges.join(",") === edges7.join(","))
-    return { ...base, edges, facts: [fact(last, 2, { ...gpt, assistant: 1, tokens: 50_000 })] }
-  return { ...base, edges, facts: total.map((item) => ({ ...item, bucket: last })) }
+// The 30d period: bucket 0 is the previous window, buckets 1..8 the bars.
+const facts30 = [
+  fact(0, 1, { ...gpt, user: 1, assistant: 2, tokens: 1_500_000 }),
+  fact(1, 1, { user: 2 }),
+  fact(1, 1, { ...gpt, assistant: 5, failed: 1, tokens: 1_200_000 }),
+  ...[4, 5, 6, 7].map((value) => fact(4, value, { ...gpt, user: 1, assistant: 1, tokens: (value - 3) * 1000 })),
+  fact(8, 2, { user: 1 }),
+  fact(8, 2, { providerID: "anthropic", modelID: "sonnet", assistant: 3, tokens: 600_000 }),
+  fact(8, 3, { ...gpt, assistant: 1, tokens: 30_000 }),
+]
+
+function activityFor(period: string) {
+  if (period === "7d") return response("7d", days7, true, [fact(7, 2, { ...gpt, assistant: 1, tokens: 50_000 })])
+  if (period === "all")
+    return response(
+      "all",
+      daysAll,
+      false,
+      facts30.filter((item) => item.bucket > 0).map((item) => ({ ...item, bucket: 7 })),
+    )
+  return response("30d", days30, true, facts30, [9_000_000, 5_400_000, 0, 0, 0, 0, 0, 0, 1_800_000])
 }
 
 function gitFor(since: number, mode: string) {
@@ -429,7 +492,7 @@ function gitFor(since: number, mode: string) {
     until: now,
     totals: { commits: 0, merges: 0, authors: 0, additions: 0, deletions: 0, filesChanged: 0 },
     days:
-      since === day(9, 21)
+      since === now - 16 * DAY
         ? [
             { day: "2026-09-25", commits: 2, merges: 0, additions: 1, deletions: 1 },
             { day: "2026-10-04", commits: 8, merges: 2, additions: 1, deletions: 1 },
@@ -443,7 +506,8 @@ function gitFor(since: number, mode: string) {
     recent: [],
     ahead: null,
     behind: null,
-    truncated: mode === "truncated",
+    truncated: mode === "truncated" || mode === "lines",
+    partial: { commits: mode === "truncated", lines: mode === "lines" },
   }
 }
 
@@ -459,8 +523,8 @@ async function setup(
     secondServer?: boolean
     secondDirectory?: boolean
     failure?: { enabled: boolean }
-    git?: { mode: "ok" | "missing" | "none" | "truncated" }
-    activity?: { mode: "empty" | "missing" }
+    git?: { mode: "ok" | "missing" | "none" | "truncated" | "lines" }
+    activity?: { mode: "empty" | "missing" | "truncated" }
     noSelection?: boolean
   } = {},
 ) {
@@ -522,18 +586,16 @@ async function setup(
       ])
     if (url.pathname === "/session/activity") {
       input.requests?.push(url)
-      const edges = url.searchParams.get("edges")!.split(",").map(Number)
+      const period = url.searchParams.get("period")!
       if (url.origin === serverB || url.searchParams.get("directory") === `${directory}-other`)
-        return json(route, {
-          edges,
-          sessions: [],
-          facts: [fact(edges.length - 2, 7, { ...gpt, assistant: 1, tokens: 777 })],
-        })
+        return json(route, response(period, days30, true, [fact(8, 7, { ...gpt, assistant: 1, tokens: 777 })]))
       if (input.activity?.mode === "missing") return json(route, {}, 404)
-      if (input.activity?.mode === "empty") return json(route, { edges, sessions: [], facts: [] })
+      if (input.activity?.mode === "empty") return json(route, response(period, days30, true, []))
+      if (input.activity?.mode === "truncated")
+        return json(route, { ...response(period, days30, true, facts30), truncated: true })
       await input.gate
       if (input.failure?.enabled) return json(route, {}, 500)
-      await json(route, activityFor(edges))
+      await json(route, activityFor(period))
       input.finished?.()
       return
     }

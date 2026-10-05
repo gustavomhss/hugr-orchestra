@@ -1,20 +1,24 @@
 import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { startTransition } from "solid-js"
-import { useSettingsCommand } from "@/components/settings-dialog"
+import { createMediaQuery } from "@solid-primitives/media"
+import { Show, startTransition } from "solid-js"
 import { useCommand } from "@/context/command"
 import { useLanguage } from "@/context/language"
 import { useTabs } from "@/context/tabs"
 import { OrchestraHome } from "@/orchestra/chapters/kpis-home"
 import { createHomeController } from "./home/home-controller"
+import { createHomeProjectsController } from "./home/home-projects-controller"
+import { HomeProjects } from "./home/home-projects"
+import { HomeUtilityNav } from "./home/home-projects-view"
 
 export function NewHome() {
+  const desktop = createMediaQuery("(min-width: 768px)")
   const home = createHomeController()
+  // Also registers the settings command the sidebar's Settings entry triggers.
+  const projects = createHomeProjectsController(home)
   const command = useCommand()
   const dialog = useDialog()
   const language = useLanguage()
   const tabs = useTabs()
-  // Home owns the palette and settings commands the sidebar's Search and Settings entries trigger.
-  useSettingsCommand()
   command.register("home.palette", () => [
     {
       id: "command.palette",
@@ -53,7 +57,32 @@ export function NewHome() {
         bg-v2-background-bg-base shadow-[var(--v2-elevation-raised)]
       `}
     >
-      <OrchestraHome home={home} />
+      <Show when={desktop()} fallback={<NarrowHome home={home} projects={projects} />}>
+        <OrchestraHome home={home} />
+      </Show>
+    </div>
+  )
+}
+
+// Narrow windows have no Orchestra sidebar, so Home keeps the project list above the dashboard.
+function NarrowHome(props: {
+  home: ReturnType<typeof createHomeController>
+  projects: ReturnType<typeof createHomeProjectsController>
+}) {
+  return (
+    <div data-slot="orchestra-home-narrow" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pt-3">
+      <div class="shrink-0">
+        <HomeProjects projects={props.projects} />
+      </div>
+      <div class="shrink-0">
+        <OrchestraHome home={props.home} />
+      </div>
+      <HomeUtilityNav
+        class="flex shrink-0 pb-3"
+        onOpenSettings={props.projects.utility.settings}
+        onOpenHelp={props.projects.utility.help}
+        language={props.projects.copy.language}
+      />
     </div>
   )
 }

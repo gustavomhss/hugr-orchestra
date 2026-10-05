@@ -63,8 +63,6 @@ export const HOME_COPY = {
   "orchestra.home.footerDetail": "— sessions recorded on this server and commits on this branch",
   "orchestra.home.export": "Export",
   "orchestra.home.configure": "Configure tracking",
-  "orchestra.home.configureDescription": "Choose which metrics this project shows on Home and includes in Export.",
-  "orchestra.home.configureDone": "Done",
   "orchestra.home.filename": "{{name}}-metrics-{{period}}.csv",
   "orchestra.home.csv.metric": "Metric",
   "orchestra.home.csv.value": "Value",

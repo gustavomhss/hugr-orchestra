@@ -29,6 +29,7 @@ export interface MockServerConfig {
   fileContent?: (path: string) => unknown | Promise<unknown>
   findFiles?: (input: { query: string; dirs?: string; limit?: number }) => unknown | Promise<unknown>
   sessionStatus?: Record<string, unknown> | (() => Record<string, unknown>)
+  activity?: (period: string) => unknown
 }
 
 export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
@@ -263,6 +264,24 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
     if (path in staticRoutes) return json(route, staticRoutes[path])
+    // Home's KPI reads; "activity" is a route, not a session ID.
+    if (path === "/session/activity") {
+      const period = url.searchParams.get("period") ?? "30d"
+      return json(route, config.activity?.(period) ?? sessionActivity(config.sessions, period))
+    }
+    if (path === "/vcs/activity")
+      return json(route, {
+        repository: true,
+        since: Number(url.searchParams.get("since") ?? 0),
+        until: Number(url.searchParams.get("until") ?? Date.now()),
+        totals: { commits: 0, merges: 0, authors: 0, additions: 0, deletions: 0, filesChanged: 0 },
+        days: [],
+        topPaths: [],
+        recent: [],
+        ahead: null,
+        behind: null,
+        truncated: false,
+      })
 
     const currentSessionMatch = path.match(/^\/api\/session\/([^/]+)$/)
     if (currentSessionMatch) {
@@ -337,6 +356,47 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
     if (url.port === targetPort && targetPort !== appPort) return json(route, {})
     return route.fallback()
   })
+}
+
+// Every root session has one user message on the last day of the period, in UTC days.
+export function sessionActivity(sessions: MockServerConfig["sessions"], period: string) {
+  const day = 86_400_000
+  const end = Math.floor(Date.now() / day) * day + day
+  const length = ({ "7d": 7, "30d": 30, "90d": 90 } as Record<string, number>)[period] ?? 1
+  const count = Math.min(8, length)
+  const start = end - length * day
+  const bars = Array.from({ length: count + 1 }, (_, index) => start + Math.floor((index * length) / count) * day)
+  const edges = period === "all" ? bars : [start - length * day, ...bars]
+  const roots = sessions.filter((session) => !session.parentID)
+  const time = (session: (typeof sessions)[number]) => (session.time ?? {}) as { created?: number; updated?: number }
+  return {
+    period,
+    edges,
+    days: edges.map((edge) => new Date(edge).toISOString().slice(0, 10)),
+    previous: period !== "all",
+    activeMs: edges.slice(1).map(() => 0),
+    truncated: false,
+    sessions: roots.map((session) => ({
+      id: session.id,
+      title: String(session.title ?? ""),
+      parentID: null,
+      created: time(session).created ?? 0,
+      updated: time(session).updated ?? time(session).created ?? 0,
+      additions: null,
+      deletions: null,
+      files: null,
+    })),
+    facts: roots.map((session) => ({
+      bucket: edges.length - 2,
+      sessionID: session.id,
+      providerID: null,
+      modelID: null,
+      user: 1,
+      assistant: 0,
+      failed: 0,
+      tokens: 0,
+    })),
+  }
 }
 
 function location(config: MockServerConfig) {

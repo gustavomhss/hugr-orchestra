@@ -1,4 +1,5 @@
 import { getFilename } from "@opencode-ai/core/util/path"
+import { useNavigate } from "@solidjs/router"
 import { createMemo, Show, startTransition } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
@@ -12,6 +13,7 @@ import { KpiDashboard } from "./kpis"
 export function OrchestraHome(props: { home: HomeController }) {
   const language = useLanguage()
   const tabs = useTabs()
+  const navigate = useNavigate()
   const owner = createMemo(
     () => {
       const selection = props.home.selection.value()
@@ -52,8 +54,11 @@ export function OrchestraHome(props: { home: HomeController }) {
           <KpiDashboard
             directory={owner.directory}
             sdk={owner.ctx.sdk}
+            queryClient={owner.ctx.queryClient}
             name={project() ? displayName(project()!) : getFilename(owner.directory)}
+            title={(sessionID, fallback) => owner.ctx.sync.session.peek(sessionID)?.title || fallback}
             running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
+            openProviders={() => navigate("/orchestra/providers")}
             openSession={(sessionID) => {
               owner.ctx.projects.open(owner.directory)
               owner.ctx.projects.touch(owner.directory)

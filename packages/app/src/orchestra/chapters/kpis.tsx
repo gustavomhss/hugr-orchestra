@@ -1,76 +1,90 @@
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { createEffect, createMemo, For, on, onCleanup, Show } from "solid-js"
+import type { QueryClient } from "@tanstack/solid-query"
+import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useSettingsDialog } from "@/components/settings-dialog"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
 import { Persist, persisted } from "@/utils/persist"
-import { MxToggle } from "./kit"
 import {
-  activityEdges,
-  addDays,
-  allRange,
   change,
   compact,
-  dayStart,
-  firstGitDay,
+  dayDate,
+  gitWindow,
   heights,
   hours,
+  localEnd,
   parseActivity,
   parseGit,
   PERIODS,
-  periodRange,
   summarizeActivity,
   summarizeGit,
   usageCsv,
+  type Activity,
+  type GitActivity,
   type Period,
-  type Range,
   type Totals,
 } from "./kpis-data"
+import "./kit.css"
 import "./kpis.css"
 
-export const TILES = ["tokens", "hours", "messages", "commits", "pullRequests", "merges", "models", "failed"] as const
-type Tile = (typeof TILES)[number]
-type Load = "loading" | "complete" | "error" | "unavailable"
+type Tile = "tokens" | "hours" | "messages" | "commits" | "pullRequests" | "merges" | "models" | "failed"
+type TileView = {
+  id: Tile
+  state?: string
+  value?: { text: string; unit: string; csv: string; raw: number }
+  change?: { text: string; trend: string; percent: number | undefined }
+  note: string
+  bars: number[]
+}
+type Outcome<T> =
+  | { status: "loading" }
+  | { status: "unavailable" }
+  | { status: "error" }
+  | { status: "complete"; data: T }
+
+// Reads stay fresh this long per profile and period, so switching periods back and forth is instant.
+const STALE_MS = 30_000
 
 export function KpiDashboard(props: {
   directory: string
   sdk: ServerSDK
+  queryClient: QueryClient
   name: string
+  // Live titles win over the cached read so a rename shows at once.
+  title: (sessionID: string, fallback: string) => string
   running: (sessionID: string) => boolean
   openSession: (sessionID: string) => void
+  openProviders: () => void
 }) {
   const language = useLanguage()
-  const dialog = useDialog()
   const openModels = useSettingsDialog("models")
   const client = props.sdk.createClient({ directory: props.directory })
   const [prefs, setPrefs, , ready] = persisted(
     Persist.serverWorkspace(props.sdk.scope, props.directory, "orchestra-home"),
-    createStore({ period: "30d" as Period, hidden: [] as Tile[] }),
+    createStore({ period: "30d" as Period }),
   )
-  const [state, setState] = createStore({
-    activity: {
-      status: "loading" as Load,
-      range: undefined as Range | undefined,
-      summary: undefined as ReturnType<typeof summarizeActivity> | undefined,
-    },
-    git: {
-      status: "loading" as Load | "none",
-      summary: undefined as ReturnType<typeof summarizeGit> | undefined,
-      since: undefined as number | undefined,
-    },
-    branch: undefined as string | undefined,
-    expanded: false,
-  })
+  const [activity, setActivity] = createSignal<Outcome<Activity>>({ status: "loading" })
+  const [repository, setRepository] = createSignal<Outcome<GitActivity>>({ status: "loading" })
+  const [state, setState] = createStore({ branch: undefined as string | undefined, expanded: false })
   const lifecycle = { abort: new AbortController() }
   onCleanup(() => lifecycle.abort.abort())
 
-  const numbers = (digits: number) =>
-    new Intl.NumberFormat(language.intl(), { minimumFractionDigits: digits, maximumFractionDigits: digits })
-  const number = (value: number, digits = 0) => numbers(digits).format(value)
-  const date = (time: number) => new Intl.DateTimeFormat(language.intl(), { month: "short", day: "numeric" }).format(time)
-  const since = (time: number) =>
+  const number = (value: number, digits = 0) =>
+    new Intl.NumberFormat(language.intl(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(
+      value,
+    )
+  const shortDate = (time: number) =>
+    new Intl.DateTimeFormat(language.intl(), { month: "short", day: "numeric" }).format(time)
+  const sinceDay = (day: string) =>
+    language.t("orchestra.home.note.since", {
+      date: new Intl.DateTimeFormat(language.intl(), {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      }).format(dayDate(day)),
+    })
+  const sinceTime = (time: number) =>
     language.t("orchestra.home.note.since", {
       date: new Intl.DateTimeFormat(language.intl(), { year: "numeric", month: "short", day: "numeric" }).format(time),
     })
@@ -79,17 +93,42 @@ export function KpiDashboard(props: {
     return { text: number(scaled.value, scaled.digits), unit: scaled.unit }
   }
 
+  // One cached read per profile, period and day. Only complete reads stay cached.
+  async function cached<T>(name: string, period: Period, read: (signal: AbortSignal) => Promise<Outcome<T>>) {
+    const queryKey = ["orchestra-home", props.directory, name, period, localEnd(Date.now())]
+    const result = await props.queryClient
+      .fetchQuery({ queryKey, queryFn: ({ signal }) => read(signal), staleTime: STALE_MS, retry: false })
+      .catch(() => ({ status: "error" }) as const)
+    if (result.status !== "complete") props.queryClient.removeQueries({ queryKey, exact: true })
+    return result
+  }
+
   function load(period: Period) {
     lifecycle.abort.abort()
     lifecycle.abort = new AbortController()
     const signal = lifecycle.abort.signal
-    setState({
-      activity: { status: "loading", range: undefined, summary: undefined },
-      git: { status: "loading", summary: undefined, since: undefined },
-      expanded: false,
+    setActivity({ status: "loading" })
+    setRepository({ status: "loading" })
+    setState("expanded", false)
+    void cached("activity", period, (abort) =>
+      outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
+    ).then((result) => {
+      if (!signal.aborted) setActivity(result)
     })
-    void loadActivity(period, signal)
-    void loadGit(period, signal)
+    // The git read covers the previous window in any time zone; days outside the window are not counted.
+    const now = Date.now()
+    const days = { "7d": 7, "30d": 30, "90d": 90, all: undefined }[period]
+    void cached("vcs", period, (abort) =>
+      outcome(
+        client.vcs.activity(
+          { directory: props.directory, since: days === undefined ? 0 : now - (2 * days + 2) * 86_400_000, until: now },
+          { signal: abort },
+        ),
+        parseGit,
+      ),
+    ).then((result) => {
+      if (!signal.aborted) setRepository(result)
+    })
     void client.vcs
       .get({ directory: props.directory }, { signal })
       .then((result) => {
@@ -98,43 +137,9 @@ export function KpiDashboard(props: {
       .catch(() => undefined)
   }
 
-  async function loadActivity(period: Period, signal: AbortSignal) {
-    const now = Date.now()
-    const fetch = (edges: readonly number[]) =>
-      outcome(client.session.activity({ directory: props.directory, edges: edges.join(",") }, { signal }), parseActivity)
-    const first =
-      period === "all" ? await fetch([0, addDays(dayStart(now), 1)]) : ({ status: "complete", data: undefined } as const)
-    if (signal.aborted) return
-    if (first.status !== "complete") return setState("activity", "status", first.status)
-    // "All" starts on the creation day of the oldest session with recorded messages.
-    const range =
-      period === "all"
-        ? allRange(Math.min(now, ...(first.data?.sessions.map((session) => session.created) ?? [])), now)
-        : periodRange(period, now)
-    const result = await fetch(activityEdges(range))
-    if (signal.aborted) return
-    if (result.status !== "complete") return setState("activity", "status", result.status)
-    setState("activity", { status: "complete", range, summary: summarizeActivity(result.data, range) })
-  }
-
-  async function loadGit(period: Period, signal: AbortSignal) {
-    const now = Date.now()
-    const fixed = period === "all" ? undefined : periodRange(period, now)
-    const from = fixed?.previous ?? 0
-    const result = await outcome(
-      client.vcs.activity({ directory: props.directory, since: from, until: now }, { signal }),
-      parseGit,
-    )
-    if (signal.aborted) return
-    if (result.status !== "complete") return setState("git", "status", result.status)
-    if (!result.data.repository) return setState("git", "status", "none")
-    const range = fixed ?? allRange(firstGitDay(result.data), now)
-    setState("git", {
-      status: "complete",
-      summary: summarizeGit(result.data, range),
-      // The server clamps long windows; the tile then says where its history starts.
-      since: result.data.since > from ? result.data.since : undefined,
-    })
+  function retry() {
+    props.queryClient.removeQueries({ queryKey: ["orchestra-home", props.directory] })
+    load(prefs.period)
   }
 
   createEffect(
@@ -149,63 +154,87 @@ export function KpiDashboard(props: {
     ),
   )
 
+  const loaded = () => {
+    const current = activity()
+    return current.status === "complete" ? current.data : undefined
+  }
+  const repositoryData = () => {
+    const current = repository()
+    return current.status === "complete" ? current.data : undefined
+  }
+  const summary = createMemo(() => {
+    const data = loaded()
+    return data ? summarizeActivity(data) : undefined
+  })
+  const git = createMemo(() => {
+    const data = repositoryData()
+    if (!data) return
+    // Git days and activity buckets are both the server's local days.
+    return summarizeGit(data, gitWindow(prefs.period, loaded()?.days.at(-1) ?? localEnd(Date.now()), data))
+  })
+  const truncated = () => loaded()?.truncated === true
+
   const changeView = (current: number, previous: number | undefined) => {
     const result = change(current, previous)
     if (!result) return
-    if (result.percent === undefined) return { text: language.t("orchestra.home.change.new"), trend: "up", percent: "" }
+    if (result.percent === undefined)
+      return { text: language.t("orchestra.home.change.new"), trend: "up", percent: undefined as number | undefined }
     const text =
       result.trend === "flat"
         ? language.t("orchestra.home.change.flat")
         : language.t(result.trend === "up" ? "orchestra.home.change.up" : "orchestra.home.change.down", {
             percent: number(Math.abs(result.percent)),
           })
-    return { text, trend: result.trend as string, percent: String(result.percent) }
+    return { text, trend: result.trend as string, percent: result.percent as number | undefined }
   }
 
+  const count = (value: number) => ({ text: number(value), unit: "", csv: language.t("orchestra.home.unit.count") })
+
   const tiles = createMemo(() => {
-    const summary = state.activity.status === "complete" ? state.activity.summary : undefined
-    const git = state.git.status === "complete" ? state.git.summary : undefined
-    const all = prefs.period === "all"
+    const current = summary()
+    const repository = git()
     const activity = (
       id: Tile,
       read: (totals: Totals) => number,
       view: (value: number) => { text: string; unit: string; csv: string; raw?: number },
       note: (totals: Totals) => string,
       delta = true,
-    ) => {
-      if (!summary) return { id, state: activityState(), note: "", bars: [] as number[] }
-      const current = read(summary.current)
+    ): TileView => {
+      if (!current || truncated()) return blank(id, activityState(), truncated() ? partialNote() : "")
+      const value = read(current.current)
       return {
         id,
-        value: { raw: current, ...view(current) },
-        change: delta ? changeView(current, summary.previous && read(summary.previous)) : undefined,
-        note: note(summary.current),
-        bars: heights(summary.bars.map(read)),
+        value: { raw: value, ...view(value) },
+        change: delta ? changeView(value, current.previous && read(current.previous)) : undefined,
+        note: note(current.current),
+        bars: heights(current.bars.map(read)),
       }
     }
-    const repository = (id: Tile, read: (totals: { commits: number; merges: number }) => number, note: string) => {
-      if (!git) return { id, state: gitState(), note: gitNote(), bars: [] as number[] }
+    const commits = (
+      id: Tile,
+      read: (totals: { commits: number; merges: number }) => number,
+      note: string,
+    ): TileView => {
+      if (!repository) return blank(id, gitState(), gitNote())
       // A scan cut short by the server's limits undercounts; it is not shown as a number.
-      if (git.truncated) return { id, state: "partial", note: language.t("orchestra.home.note.partial"), bars: [] }
-      const current = read(git.current)
+      if (repository.partial) return blank(id, "partial", partialNote())
+      const value = read(repository.current)
       return {
         id,
-        value: { text: number(current), unit: "", csv: language.t("orchestra.home.unit.count"), raw: current },
-        change: id === "commits" ? changeView(current, git.previous && read(git.previous)) : undefined,
-        note: [note, state.git.since === undefined ? "" : since(state.git.since)].filter(Boolean).join(" · "),
-        bars: heights(git.bars.map(read)),
+        value: { ...count(value), raw: value },
+        change: id === "commits" ? changeView(value, repository.previous && read(repository.previous)) : undefined,
+        note: [note, prefs.period === "all" && repositoryData()?.since ? sinceTime(repositoryData()!.since) : ""]
+          .filter(Boolean)
+          .join(" · "),
+        bars: heights(repository.bars.map(read)),
       }
     }
-    const count = (value: number) => ({ text: number(value), unit: "", csv: language.t("orchestra.home.unit.count") })
-    const list = [
+    return [
       activity(
         "tokens",
         (totals) => totals.tokens,
         (value) => ({ ...tokens(value), csv: language.t("orchestra.home.unit.tokens") }),
-        () =>
-          all && state.activity.range
-            ? since(state.activity.range.start)
-            : language.t("orchestra.home.note.tokens"),
+        () => (prefs.period === "all" && current ? sinceDay(current.start) : language.t("orchestra.home.note.tokens")),
       ),
       activity(
         "hours",
@@ -227,15 +256,15 @@ export function KpiDashboard(props: {
         count,
         () => language.t("orchestra.home.note.messages"),
       ),
-      repository(
+      commits(
         "commits",
         (totals) => totals.commits,
         state.branch
           ? language.t("orchestra.home.note.commits", { branch: state.branch })
           : language.t("orchestra.home.note.commitsCurrent"),
       ),
-      { id: "pullRequests" as Tile, state: "notConnected", note: language.t("orchestra.home.note.notConnected"), bars: [] },
-      repository("merges", (totals) => totals.merges, language.t("orchestra.home.note.merges")),
+      blank("pullRequests", "notConnected", language.t("orchestra.home.note.notConnected")),
+      commits("merges", (totals) => totals.merges, language.t("orchestra.home.note.merges")),
       activity(
         "models",
         (totals) => totals.models,
@@ -246,45 +275,54 @@ export function KpiDashboard(props: {
           }),
         false,
       ),
-      failedTile(summary),
-    ]
-    return list
-      .filter((tile) => !prefs.hidden.includes(tile.id))
-      .map((tile) => ({ ...tile, label: language.t(`orchestra.home.tile.${tile.id}`) }))
+      failedTile(),
+    ].map((tile) => ({ ...tile, label: language.t(`orchestra.home.tile.${tile.id}`) }))
   })
 
-  function failedTile(summary: ReturnType<typeof summarizeActivity> | undefined) {
-    if (!summary) return { id: "failed" as Tile, state: activityState(), note: "", bars: [] as number[] }
-    const current = summary.current
+  function failedTile(): TileView {
+    const current = summary()
+    if (!current || truncated()) return blank("failed", activityState(), truncated() ? partialNote() : "")
+    const totals = current.current
     return {
       id: "failed" as Tile,
-      value: { text: number(current.failed), unit: "", csv: language.t("orchestra.home.unit.count"), raw: current.failed },
+      value: { ...count(totals.failed), raw: totals.failed },
       // The mock puts the run total in the change slot.
-      change: { text: language.t("orchestra.home.note.failedOf", { count: number(current.runs) }), trend: "", percent: "" },
+      change: {
+        text: language.t("orchestra.home.note.failedOf", { count: number(totals.runs) }),
+        trend: "",
+        percent: undefined,
+      },
       note:
-        current.runs > 0
-          ? language.t("orchestra.home.note.failedRate", { percent: number((current.failed / current.runs) * 100, 1) })
+        totals.runs > 0
+          ? language.t("orchestra.home.note.failedRate", { percent: number((totals.failed / totals.runs) * 100, 1) })
           : "",
-      bars: heights(summary.bars.map((totals) => totals.failed)),
+      bars: heights(current.bars.map((bar) => bar.failed)),
     }
   }
 
+  function blank(id: Tile, tileState: string, note: string): TileView {
+    return { id, state: tileState, note, bars: [] }
+  }
+
   function activityState() {
-    return state.activity.status === "loading" ? "loading" : "unavailable"
+    if (truncated()) return "partial"
+    return activity().status === "loading" ? "loading" : "unavailable"
   }
 
   function gitState() {
-    if (state.git.status === "loading") return "loading"
-    if (state.git.status === "none") return "noRepository"
+    if (repository().status === "loading") return "loading"
+    if (repositoryData()?.repository === false) return "noRepository"
     return "unavailable"
   }
 
   function gitNote() {
-    if (state.git.status === "none") return language.t("orchestra.home.note.noRepository")
-    if (state.git.status === "unavailable") return language.t("orchestra.home.note.gitUnavailable")
-    if (state.git.status === "error") return language.t("orchestra.home.note.gitError")
+    if (repositoryData()?.repository === false) return language.t("orchestra.home.note.noRepository")
+    if (repository().status === "unavailable") return language.t("orchestra.home.note.gitUnavailable")
+    if (repository().status === "error") return language.t("orchestra.home.note.gitError")
     return ""
   }
+
+  const partialNote = () => language.t("orchestra.home.note.partial")
 
   const stateText = (value: string | undefined) => {
     if (value === "notConnected") return language.t("orchestra.home.state.notConnected")
@@ -294,14 +332,12 @@ export function KpiDashboard(props: {
     return ""
   }
 
-  const sessions = createMemo(() => {
-    const list = state.activity.summary?.sessions ?? []
-    return state.expanded ? list : list.slice(0, 5)
-  })
-  const models = createMemo(() => state.activity.summary?.models ?? [])
+  const ranked = createMemo(() => (truncated() ? [] : (summary()?.sessions ?? [])))
+  const sessions = createMemo(() => (state.expanded ? ranked() : ranked().slice(0, 5)))
+  const models = createMemo(() => (truncated() ? [] : (summary()?.models ?? [])))
   const sessionSub = (session: ReturnType<typeof sessions>[number]) =>
     [
-      date(session.updated),
+      shortDate(session.updated),
       session.files
         ? language.t("orchestra.home.sessionFiles", {
             count: number(session.files),
@@ -312,15 +348,18 @@ export function KpiDashboard(props: {
             count: number(session.messages),
           }),
     ].join(" · ")
+  const peak = (values: readonly number[]) => values.reduce((max, value) => Math.max(max, value), 1)
+  const exportable = () => activity().status === "complete" && !truncated()
 
   function exportCsv() {
-    const range = state.activity.range
-    if (state.activity.status !== "complete" || !range) return
-    const day = (time: number) => new Date(time - new Date(time).getTimezoneOffset() * 60_000).toISOString().slice(0, 10)
+    const data = loaded()
+    if (!data || truncated()) return
+    const days = data.days
+    const offset = data.previous ? 1 : 0
     const rows = [
       [language.t("orchestra.home.csv.period"), language.t(`orchestra.home.period.${prefs.period}`)],
-      [language.t("orchestra.home.csv.from"), day(range.start)],
-      [language.t("orchestra.home.csv.to"), day(addDays(range.end, -1))],
+      [language.t("orchestra.home.csv.from"), days[offset]!],
+      [language.t("orchestra.home.csv.to"), new Date(dayDate(days.at(-1)!) - 86_400_000).toISOString().slice(0, 10)],
       [
         language.t("orchestra.home.csv.metric"),
         language.t("orchestra.home.csv.value"),
@@ -328,8 +367,8 @@ export function KpiDashboard(props: {
         language.t("orchestra.home.csv.change"),
       ],
       ...tiles().map((tile) =>
-        "value" in tile && tile.value
-          ? [tile.label, tile.value.raw, tile.value.csv, tile.id === "failed" ? "" : (tile.change?.percent ?? "")]
+        tile.value
+          ? [tile.label, tile.value.raw, tile.value.csv, tile.change?.percent ?? ""]
           : [tile.label, stateText(tile.state), "", ""],
       ),
       [
@@ -341,14 +380,18 @@ export function KpiDashboard(props: {
         language.t("orchestra.home.csv.deletions"),
       ],
       ...sessions().map((session) => [
-        session.title,
+        props.title(session.id, session.title),
         session.tokens,
         session.messages,
         session.files ?? "",
         session.additions ?? "",
         session.deletions ?? "",
       ]),
-      [language.t("orchestra.home.csv.model"), language.t("orchestra.home.csv.tokens"), language.t("orchestra.home.csv.runs")],
+      [
+        language.t("orchestra.home.csv.model"),
+        language.t("orchestra.home.csv.tokens"),
+        language.t("orchestra.home.csv.runs"),
+      ],
       ...models().map((model) => [`${model.providerID}/${model.modelID}`, model.tokens, model.runs]),
     ]
     const url = URL.createObjectURL(new Blob([usageCsv(rows)], { type: "text/csv;charset=utf-8" }))
@@ -359,40 +402,12 @@ export function KpiDashboard(props: {
     setTimeout(() => URL.revokeObjectURL(url), 0)
   }
 
-  function configure() {
-    void dialog.show(() => (
-      <Dialog
-        title={language.t("orchestra.home.configure")}
-        description={language.t("orchestra.home.configureDescription")}
-      >
-        <div class="home-tracking" data-slot="home-tracking">
-          <For each={TILES}>
-            {(id) => (
-              <label>
-                <span>{language.t(`orchestra.home.tile.${id}`)}</span>
-                <MxToggle
-                  checked={!prefs.hidden.includes(id)}
-                  label={language.t(`orchestra.home.tile.${id}`)}
-                  onChange={(next) =>
-                    setPrefs("hidden", (hidden) => (next ? hidden.filter((item) => item !== id) : [...hidden, id]))
-                  }
-                />
-              </label>
-            )}
-          </For>
-        </div>
-      </Dialog>
-    ))
-  }
-
-  const peak = (values: readonly number[]) => Math.max(...values, 1)
-
   return (
     <section
       class="orchestra-home-dashboard"
       data-component="orchestra-kpis"
       aria-labelledby="orchestra-home-title"
-      aria-busy={state.activity.status === "loading" || state.git.status === "loading"}
+      aria-busy={activity().status === "loading" || repository().status === "loading"}
     >
       <div class="home-inner">
         <header class="home-mast">
@@ -407,18 +422,14 @@ export function KpiDashboard(props: {
           <div class="home-range" role="group" aria-label={language.t("orchestra.home.period")}>
             <For each={PERIODS}>
               {(period) => (
-                <button
-                  type="button"
-                  aria-pressed={prefs.period === period}
-                  onClick={() => setPrefs("period", period)}
-                >
+                <button type="button" aria-pressed={prefs.period === period} onClick={() => setPrefs("period", period)}>
                   {language.t(`orchestra.home.period.${period}`)}
                 </button>
               )}
             </For>
           </div>
         </header>
-        <Show when={state.activity.status === "loading"}>
+        <Show when={activity().status === "loading"}>
           <p class="orchestra-sr-only" role="status">
             {language.t("orchestra.home.loading")}
           </p>
@@ -429,7 +440,7 @@ export function KpiDashboard(props: {
               <article class="home-kpi" data-tile={tile.id}>
                 <div class="home-kpi-label">{tile.label}</div>
                 <Show
-                  when={"value" in tile && tile.value}
+                  when={tile.value}
                   fallback={
                     <div class="home-kpi-value" data-state={tile.state}>
                       {stateText(tile.state)}
@@ -446,10 +457,10 @@ export function KpiDashboard(props: {
                   )}
                 </Show>
                 <div class="home-kpi-foot">
-                  <Show when={"change" in tile && tile.change}>
-                    {(change) => (
-                      <span class="home-delta" data-trend={change().trend || undefined}>
-                        {change().text}
+                  <Show when={tile.change}>
+                    {(delta) => (
+                      <span class="home-delta" data-trend={delta().trend || undefined}>
+                        {delta().text}
                       </span>
                     )}
                   </Show>
@@ -462,15 +473,15 @@ export function KpiDashboard(props: {
             )}
           </For>
         </div>
-        <Show when={state.activity.status === "error"}>
+        <Show when={activity().status === "error"}>
           <p class="home-status" role="alert">
             <span>{language.t("orchestra.home.error")}</span>
-            <button type="button" onClick={() => load(prefs.period)}>
+            <button type="button" onClick={retry}>
               {language.t("orchestra.home.retry")}
             </button>
           </p>
         </Show>
-        <Show when={state.activity.status === "unavailable"}>
+        <Show when={activity().status === "unavailable"}>
           <p class="home-status" role="status">
             {language.t("orchestra.home.unavailable")}
           </p>
@@ -482,14 +493,14 @@ export function KpiDashboard(props: {
               <button
                 type="button"
                 aria-expanded={state.expanded}
-                disabled={(state.activity.summary?.sessions.length ?? 0) <= 5}
+                disabled={ranked().length <= 5}
                 onClick={() => setState("expanded", (value) => !value)}
               >
                 {language.t(state.expanded ? "orchestra.home.viewTop" : "orchestra.home.viewAll")}
               </button>
             </header>
             <div class="home-rows">
-              <Show when={state.activity.status === "complete" && sessions().length === 0}>
+              <Show when={exportable() && sessions().length === 0}>
                 <p class="home-empty">{language.t("orchestra.home.sessionsEmpty")}</p>
               </Show>
               <For each={sessions()}>
@@ -503,14 +514,18 @@ export function KpiDashboard(props: {
                   >
                     <div>
                       <div class="home-row-title">
-                        <bdi>{session.title}</bdi>
+                        <bdi>{props.title(session.id, session.title)}</bdi>
                         <Show when={props.running(session.id)}>
                           <span class="home-live">{language.t("orchestra.home.running")}</span>
                         </Show>
                       </div>
                       <div class="home-row-sub">{sessionSub(session)}</div>
                       <div class="home-track">
-                        <i style={{ width: `${Math.round((session.tokens / peak(sessions().map((item) => item.tokens))) * 100)}%` }} />
+                        <i
+                          style={{
+                            width: `${Math.round((session.tokens / peak(sessions().map((item) => item.tokens))) * 100)}%`,
+                          }}
+                        />
                       </div>
                     </div>
                     <div class="home-row-value">
@@ -531,7 +546,7 @@ export function KpiDashboard(props: {
               </button>
             </header>
             <div class="home-rows">
-              <Show when={state.activity.status === "complete" && models().length === 0}>
+              <Show when={exportable() && models().length === 0}>
                 <p class="home-empty">{language.t("orchestra.home.modelsEmpty")}</p>
               </Show>
               <For each={models()}>
@@ -545,7 +560,11 @@ export function KpiDashboard(props: {
                         </span>
                       </div>
                       <div class="home-track">
-                        <i style={{ width: `${Math.round((model.tokens / peak(models().map((item) => item.tokens))) * 100)}%` }} />
+                        <i
+                          style={{
+                            width: `${Math.round((model.tokens / peak(models().map((item) => item.tokens))) * 100)}%`,
+                          }}
+                        />
                       </div>
                     </div>
                     <div class="home-row-value">{`${tokens(model.tokens).text}${tokens(model.tokens).unit}`}</div>
@@ -561,11 +580,11 @@ export function KpiDashboard(props: {
             <b>{language.t("orchestra.home.footerSource")}</b> {language.t("orchestra.home.footerDetail")}
           </span>
           <span>
-            <button type="button" disabled={state.activity.status !== "complete"} onClick={exportCsv}>
+            <button type="button" disabled={!exportable()} onClick={exportCsv}>
               {language.t("orchestra.home.export")}
             </button>
             {" · "}
-            <button type="button" onClick={configure}>
+            <button type="button" onClick={props.openProviders}>
               {language.t("orchestra.home.configure")}
             </button>
           </span>
@@ -579,11 +598,11 @@ export function KpiDashboard(props: {
 async function outcome<T>(
   call: Promise<{ data?: unknown; response?: Response }>,
   parse: (value: unknown) => T | undefined,
-) {
+): Promise<Outcome<T>> {
   const result = await call.catch(() => undefined)
   const status = result?.response?.status
-  if (status !== undefined && [404, 405, 501].includes(status)) return { status: "unavailable" as const }
+  if (status !== undefined && [404, 405, 501].includes(status)) return { status: "unavailable" }
   const data = result?.response?.ok ? parse(result.data) : undefined
-  if (!data) return { status: "error" as const }
-  return { status: "complete" as const, data }
+  if (!data) return { status: "error" }
+  return { status: "complete", data }
 }
