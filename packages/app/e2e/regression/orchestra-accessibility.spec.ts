@@ -39,7 +39,7 @@ for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: sidebar and profile menu are named, keyboard-ordered, return focus and meet contrast`, async ({
     page,
   }) => {
-    await setupCompactNavigation(page, { scheme })
+    await setupCompactNavigation(page, { scheme, selected: true })
     await page.goto("/")
     const nav = page.locator(sidebar)
     await expect(nav).toHaveCSS("width", "230px")
@@ -331,6 +331,9 @@ test("Arabic RTL: evidence card keyboard order and dialog focus return", async (
 test("reduced motion stills Orchestra transitions and animations", async ({ page }) => {
   await setupCockpit(page, { bridge: false })
   await openCockpit(page)
+  // The running task's spinner lives in the Tasks tab; the Dock lives alone in Apps.
+  await railTab(page, "tasks").click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
   const scopes = [sidebar, cockpit, "#orchestra-session-tabs"]
   const tooltip = '[data-component="tooltip-v2"]'
   const nav = page.locator(sidebar)
@@ -351,6 +354,9 @@ test("reduced motion stills Orchestra transitions and animations", async ({ page
 
   await page.emulateMedia({ reducedMotion: "reduce" })
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true)
+  expect(moving(await motionInventory(page, scopes))).toEqual([])
+  await railTab(page, "apps").click()
+  await expect(dockCard(page)).toBeVisible()
   expect(moving(await motionInventory(page, scopes))).toEqual([])
   await nav.getByRole("button", { name: "Chat", exact: true }).focus()
   await nav.getByRole("button", { name: "MCP", exact: true }).focus()

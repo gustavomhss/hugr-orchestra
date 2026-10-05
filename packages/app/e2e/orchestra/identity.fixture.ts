@@ -6,6 +6,7 @@ import {
   sessionID,
   setupTimeline,
   textPart,
+  userID,
   userMessage,
 } from "../performance/timeline-stability/fixture"
 
@@ -58,7 +59,10 @@ export async function setupIdentity(
   })
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", input.scheme)
   await expect(page.locator("html")).toHaveAttribute("dir", input.locale === "ar" ? "rtl" : "ltr")
-  await expect(page.getByText("Build the timeline stability matrix.", { exact: true })).toBeVisible()
+  // The session header also briefs the first prompt; the oracle is the rendered user message itself.
+  await expect(
+    page.locator(`#message-${userID}`).getByText("Build the timeline stability matrix.", { exact: true }),
+  ).toBeVisible()
   await expect(
     page.locator(`[data-titlebar-tab] a[href="/server/${base64Encode(server)}/session/${sessionID}"]`),
   ).toHaveCount(1)
