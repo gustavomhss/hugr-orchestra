@@ -1335,13 +1335,6 @@
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-slot="session-side-panel-open-file"]
-    [data-component="icon-button-v2"]::after {
-    display: none;
-  }
-
-  body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-slot="session-side-panel-open-file"]
     [data-component="icon-button-v2"]:hover {
     background: var(--orchestra-rail-tab-hover-background);
     color: var(--orchestra-rail-tab-hover);
@@ -1476,7 +1469,8 @@ body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="
 }
 
 /* Rail controls without a mock counterpart sit at the far end, quiet: the file-list toggle, then the
- * mock's 22×24 "+" in its 15px glyph. */
+ * mock's "+" in its 15px glyph. Both keep a 24×24 box; the shared transparent hit box squares off
+ * the "+"'s rounded corners so its whole 24×24 target takes the pointer. */
 @media (min-width: 768px) {
   body[data-new-layout]
     [data-session-layout="surface"]
@@ -1502,8 +1496,8 @@ body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="
     [data-component="session-side-panel"]
     :is(.session-review-v2-sidebar-toggle-slot, [data-slot="session-side-panel-open-file"])
     [data-component="icon-button-v2"] {
-    inline-size: 22px;
-    min-inline-size: 22px;
+    inline-size: 24px;
+    min-inline-size: 24px;
     block-size: 24px;
     color: #7f8d9d;
   }
