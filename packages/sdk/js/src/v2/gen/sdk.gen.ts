@@ -5364,7 +5364,7 @@ export class File2 extends HeyApiClient {
   /**
    * Update agent file
    *
-   * Write the agent definition to this location's .opencode/agent directory and reload the registered agents.
+   * Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters: {

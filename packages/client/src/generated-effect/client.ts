@@ -51,6 +51,7 @@ type Endpoint2_2Input = {
   readonly system?: Endpoint2_2Request["payload"]["system"]
   readonly permission?: Endpoint2_2Request["payload"]["permission"]
   readonly disable?: Endpoint2_2Request["payload"]["disable"]
+  readonly revision?: Endpoint2_2Request["payload"]["revision"]
 }
 const Endpoint2_2 = (raw: RawClient["server.agent"]) => (input: Endpoint2_2Input) =>
   raw["agent.file.update"]({
@@ -64,6 +65,7 @@ const Endpoint2_2 = (raw: RawClient["server.agent"]) => (input: Endpoint2_2Input
       system: input["system"],
       permission: input["permission"],
       disable: input["disable"],
+      revision: input["revision"],
     },
   }).pipe(Effect.mapError(mapClientError))
 

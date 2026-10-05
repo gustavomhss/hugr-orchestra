@@ -58,7 +58,7 @@ describe("v2 agent file HttpApi", () => {
     expect(body.data).toMatchObject({ path: filepath, exists: true, steps: 7, permission: { bash: "deny" } })
     expect(await fs.readFile(filepath, "utf8")).toContain("Read the diff before answering.")
 
-    // The `.opencode` directory did not exist when the location opened; the write reopens it.
+    // The `.opencode` directory did not exist when the location opened; the reload still scans it.
     const reviewer = (await agents(tmp.path)).find((agent) => agent.id === "reviewer")
     expect(reviewer).toMatchObject({
       description: "Reviews the diff",
@@ -93,6 +93,7 @@ describe("v2 agent file HttpApi", () => {
     expect(((await before.json()) as { data: unknown }).data).toEqual({
       path: filepath,
       exists: true,
+      revision: expect.stringMatching(/^[0-9a-f]{64}$/),
       description: "Old",
       system: "Old prompt",
       permission: { edit: "deny" },
@@ -100,19 +101,46 @@ describe("v2 agent file HttpApi", () => {
 
     const saved = await request("/api/agent/docs/file", tmp.path, {
       method: "PUT",
-      body: JSON.stringify({ description: "Keeps docs current", mode: "primary", system: "New prompt" }),
+      body: JSON.stringify({
+        description: "Keeps docs current",
+        mode: "primary",
+        system: "New prompt",
+        permission: { edit: "deny" },
+      }),
     })
     expect(saved.status).toBe(200)
-    const content = await fs.readFile(filepath, "utf8")
-    expect(content).toContain("color: '#336699'")
-    expect(content).not.toContain("tools:")
-    expect(content).toContain("New prompt")
+    expect(await fs.readFile(filepath, "utf8")).toBe(
+      "---\ndescription: Keeps docs current\ncolor: '#336699'\nmode: primary\npermission:\n  edit: deny\n---\nNew prompt\n",
+    )
     await expect(fs.stat(path.join(tmp.path, ".opencode", "agent"))).rejects.toThrow()
     expect((await agents(tmp.path)).find((agent) => agent.id === "docs")).toMatchObject({
       description: "Keeps docs current",
       mode: "primary",
       system: "New prompt",
     })
+  })
+
+  test("a file without instructions keeps the built-in instructions on both protocols", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const legacy = async () =>
+      ((await (await request("/agent", tmp.path)).json()) as { name: string; prompt?: string }[]).find(
+        (agent) => agent.name === "explore",
+      )
+    const before = { v2: (await agents(tmp.path)).find((agent) => agent.id === "build"), v1: await legacy() }
+    expect(before.v2?.system).toBeTruthy()
+    expect(before.v1?.prompt).toBeTruthy()
+    for (const name of ["build", "explore"]) {
+      const saved = await request(`/api/agent/${name}/file`, tmp.path, {
+        method: "PUT",
+        body: JSON.stringify({ permission: { bash: "deny" } }),
+      })
+      expect(saved.status).toBe(200)
+    }
+    const build = (await agents(tmp.path)).find((agent) => agent.id === "build")
+    expect(build?.system).toBe(before.v2?.system)
+    expect(build?.permissions.at(-1)).toEqual({ action: "bash", resource: "*", effect: "deny" })
+    expect((await request("/instance/dispose", tmp.path, { method: "POST" })).status).toBe(200)
+    expect((await legacy())?.prompt).toBe(before.v1?.prompt)
   })
 
   test("disabling an agent removes it from the roster", async () => {
@@ -127,9 +155,71 @@ describe("v2 agent file HttpApi", () => {
     expect(await agents(tmp.path)).not.toContainEqual(expect.objectContaining({ id: "plan" }))
   })
 
+  test("edits the definition discovery applies last and refuses a stale revision", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const early = path.join(tmp.path, ".opencode", "agent", "docs.md")
+    const late = path.join(tmp.path, ".opencode", "agents", "docs.md")
+    await fs.mkdir(path.dirname(early), { recursive: true })
+    await fs.mkdir(path.dirname(late), { recursive: true })
+    await fs.writeFile(early, "---\ndescription: Early\n---\n")
+    await fs.writeFile(late, "---\ndescription: Late\n---\n")
+    const read = (await (await request("/api/agent/docs/file", tmp.path)).json()) as {
+      data: { path: string; revision: string; description: string }
+    }
+    expect(read.data).toMatchObject({ path: late, description: "Late" })
+
+    await fs.writeFile(late, "---\ndescription: Changed elsewhere\n---\n")
+    const stale = await request("/api/agent/docs/file", tmp.path, {
+      method: "PUT",
+      body: JSON.stringify({ description: "Mine", revision: read.data.revision }),
+    })
+    expect(stale.status).toBe(409)
+    expect(await fs.readFile(late, "utf8")).toContain("Changed elsewhere")
+
+    const fresh = (await (await request("/api/agent/docs/file", tmp.path)).json()) as { data: { revision: string } }
+    const saved = await request("/api/agent/docs/file", tmp.path, {
+      method: "PUT",
+      body: JSON.stringify({ description: "Mine", revision: fresh.data.revision }),
+    })
+    expect(saved.status).toBe(200)
+    expect(await fs.readFile(late, "utf8")).toBe("---\ndescription: Mine\n---\n")
+    expect(await fs.readFile(early, "utf8")).toBe("---\ndescription: Early\n---\n")
+    expect((await fs.readdir(path.dirname(late))).sort()).toEqual(["docs.md"])
+  })
+
+  test("never writes over unparseable, outside, case-colliding or unreadable files", async () => {
+    await using tmp = await tmpdir({ git: true })
+    await using outside = await tmpdir()
+    const folder = path.join(tmp.path, ".opencode", "agent")
+    await fs.mkdir(folder, { recursive: true })
+    const broken = path.join(folder, "broken.md")
+    await fs.writeFile(broken, "---\ndescription: [unclosed\n  - : :\n---\nBody\n")
+    const read = await request("/api/agent/broken/file", tmp.path)
+    expect(((await read.json()) as { data: unknown }).data).toMatchObject({ exists: true, invalid: true })
+    const put = (name: string) =>
+      request(`/api/agent/${name}/file`, tmp.path, { method: "PUT", body: JSON.stringify({ description: "x" }) })
+    expect((await put("broken")).status).toBe(400)
+    expect(await fs.readFile(broken, "utf8")).toContain("[unclosed")
+
+    await fs.writeFile(path.join(folder, "Plan.md"), "---\ndescription: Capital\n---\n")
+    expect((await put("plan")).status).toBe(400)
+    expect(await fs.readFile(path.join(folder, "Plan.md"), "utf8")).toContain("Capital")
+
+    await fs.symlink(outside.path, path.join(tmp.path, ".opencode", "agents"))
+    await fs.writeFile(path.join(outside.path, "escape.md"), "---\ndescription: Outside\n---\n")
+    expect((await put("escape")).status).toBe(400)
+    expect(await fs.readFile(path.join(outside.path, "escape.md"), "utf8")).toContain("Outside")
+
+    const locked = path.join(folder, "locked.md")
+    await fs.writeFile(locked, "---\ndescription: Locked\n---\n")
+    await fs.chmod(locked, 0o000)
+    expect((await request("/api/agent/locked/file", tmp.path)).status).toBe(500)
+    await fs.chmod(locked, 0o644)
+  })
+
   test("rejects names that are not a plain file name", async () => {
     await using tmp = await tmpdir({ git: true })
-    for (const name of ["../escape", ".hidden", "a b"]) {
+    for (const name of ["../escape", ".hidden", "a b", "con", "a".repeat(65)]) {
       const response = await request(`/api/agent/${encodeURIComponent(name)}/file`, tmp.path, {
         method: "PUT",
         body: JSON.stringify({ description: "x" }),

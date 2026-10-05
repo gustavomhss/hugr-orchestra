@@ -3167,6 +3167,12 @@ export type UnknownError1 = {
   ref?: string
 }
 
+export type ConflictError = {
+  _tag: "ConflictError"
+  message: string
+  resource?: string
+}
+
 export type SessionsResponse = {
   data: Array<SessionV2Info>
   cursor: {
@@ -3194,12 +3200,6 @@ export type PromptInput = {
   text: string
   files?: Array<PromptInputFileAttachment>
   agents?: Array<PromptAgentAttachment>
-}
-
-export type ConflictError = {
-  _tag: "ConflictError"
-  message: string
-  resource?: string
 }
 
 export type ServiceUnavailableError = {
@@ -4897,6 +4897,8 @@ export type AgentFilePermission =
 export type AgentFileInfo = {
   path: string
   exists: boolean
+  revision: string
+  invalid?: boolean
   description?: string
   mode?: "subagent" | "primary" | "all"
   model?: string
@@ -4918,6 +4920,7 @@ export type AgentFileInput = {
     [key: string]: AgentFilePermission
   }
   disable?: boolean
+  revision?: string
 }
 
 export type SessionV2Info = {
@@ -13408,6 +13411,10 @@ export type V2AgentFileGetErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
 }
 
 export type V2AgentFileGetError = V2AgentFileGetErrors[keyof V2AgentFileGetErrors]
@@ -13447,6 +13454,10 @@ export type V2AgentFileUpdateErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
   /**
    * UnknownError
    */

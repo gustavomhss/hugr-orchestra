@@ -29,6 +29,14 @@ export type UnknownError = {
 export const isUnknownError = (value: unknown): value is UnknownError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "UnknownError"
 
+export type ConflictError = {
+  readonly _tag: "ConflictError"
+  readonly message: string
+  readonly resource?: string | undefined
+}
+export const isConflictError = (value: unknown): value is ConflictError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ConflictError"
+
 export type InvalidCursorError = { readonly _tag: "InvalidCursorError"; readonly message: string }
 export const isInvalidCursorError = (value: unknown): value is InvalidCursorError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "InvalidCursorError"
@@ -40,14 +48,6 @@ export type SessionNotFoundError = {
 }
 export const isSessionNotFoundError = (value: unknown): value is SessionNotFoundError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "SessionNotFoundError"
-
-export type ConflictError = {
-  readonly _tag: "ConflictError"
-  readonly message: string
-  readonly resource?: string | undefined
-}
-export const isConflictError = (value: unknown): value is ConflictError =>
-  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ConflictError"
 
 export type ServiceUnavailableError = {
   readonly _tag: "ServiceUnavailableError"
@@ -164,6 +164,8 @@ export type AgentsGetFileOutput = {
   readonly data: {
     readonly path: string
     readonly exists: boolean
+    readonly revision: string
+    readonly invalid?: boolean
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
@@ -191,6 +193,7 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["description"]
   readonly mode?: {
     readonly description?: string
@@ -202,6 +205,7 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["mode"]
   readonly model?: {
     readonly description?: string
@@ -213,6 +217,7 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["model"]
   readonly steps?: {
     readonly description?: string
@@ -224,6 +229,7 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["steps"]
   readonly system?: {
     readonly description?: string
@@ -235,6 +241,7 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["system"]
   readonly permission?: {
     readonly description?: string
@@ -246,6 +253,7 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["permission"]
   readonly disable?: {
     readonly description?: string
@@ -257,7 +265,20 @@ export type AgentsUpdateFileInput = {
       readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
     }
     readonly disable?: boolean
+    readonly revision?: string
   }["disable"]
+  readonly revision?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+    readonly revision?: string
+  }["revision"]
 }
 
 export type AgentsUpdateFileOutput = {
@@ -269,6 +290,8 @@ export type AgentsUpdateFileOutput = {
   readonly data: {
     readonly path: string
     readonly exists: boolean
+    readonly revision: string
+    readonly invalid?: boolean
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
