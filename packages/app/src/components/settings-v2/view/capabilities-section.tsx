@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
+import { agentRoster } from "@/orchestra/chapters/agents-roster"
 import { MxBadge, MxToggle } from "@/orchestra/chapters/kit"
 import { showToast } from "@/utils/toast"
 import { SettingsSec } from "./settings-sec"
@@ -33,7 +34,7 @@ export function AgentsSection(props: { server: ServerConnection.Any; directory: 
   const navigate = useNavigate()
   const [opening, setOpening] = createSignal(false)
   const store = () => serverSync().child(props.directory)[0]
-  const agents = createMemo(() => store().agent.filter((agent) => !agent.hidden))
+  const agents = createMemo(() => agentRoster(store().agent))
   const openChat = (agent: string) => {
     setOpening(true)
     void tabs
@@ -71,17 +72,19 @@ export function AgentsSection(props: { server: ServerConnection.Any; directory: 
       >
         <div class="mx-grid">
           <For each={agents()}>
-            {(agent) => (
-              <article class="agent mx-card" data-mx-card data-agent={agent.name}>
+            {(item) => (
+              <article class="agent mx-card" data-mx-card data-agent={item.agent.name}>
                 <div class="agent-top mx-card-top">
                   <Mark path={marks.agent} />
-                  <b>{agent.name}</b>
-                  <span class="agent-role">{agent.mode}</span>
+                  <b>{item.agent.name}</b>
+                  <span class="agent-role">{item.agent.mode}</span>
                 </div>
-                <p>{agent.description ?? language.t("orchestra.settings.agents.noDescription")}</p>
+                <p class="agent-desc">
+                  {item.agent.description ?? language.t("orchestra.settings.agents.noDescription")}
+                </p>
                 <div class="mx-meta">
-                  <MxBadge>{agent.model?.modelID ?? language.t("orchestra.settings.agents.defaultModel")}</MxBadge>
-                  <Show when={agent.steps}>
+                  <MxBadge>{item.agent.model?.modelID ?? language.t("orchestra.settings.agents.defaultModel")}</MxBadge>
+                  <Show when={item.agent.steps}>
                     {(steps) => <MxBadge>{language.t("orchestra.settings.agents.steps", { count: steps() })}</MxBadge>}
                   </Show>
                   <MxBadge tone="good">{language.t("orchestra.settings.agents.available")}</MxBadge>
@@ -93,9 +96,9 @@ export function AgentsSection(props: { server: ServerConnection.Any; directory: 
                   <button
                     type="button"
                     class="mx-btn"
-                    disabled={agent.mode === "subagent" || opening() || !tabs.ready()}
-                    title={agent.mode === "subagent" ? language.t("orchestra.settings.agents.subagentNote") : undefined}
-                    onClick={() => openChat(agent.name)}
+                    disabled={!item.chat || opening() || !tabs.ready()}
+                    title={item.chat ? undefined : language.t("orchestra.settings.agents.subagentNote")}
+                    onClick={() => openChat(item.agent.name)}
                   >
                     {language.t("orchestra.settings.agents.openChat")}
                   </button>

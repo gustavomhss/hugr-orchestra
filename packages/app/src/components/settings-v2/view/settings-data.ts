@@ -38,12 +38,16 @@ export const PERMISSION_TOOLS = [
 export type PermissionTool = (typeof PERMISSION_TOOLS)[number]
 export const PERMISSION_ACTIONS = ["allow", "ask", "deny"] as const
 
-// The server starts every agent from these rules before applying the user's config
-// (packages/opencode/src/agent/agent.ts): everything is allowed except these two.
-const BUILT_IN: Partial<Record<PermissionTool, PermissionActionConfig>> = {
-  doom_loop: "ask",
-  external_directory: "ask",
-}
+type Rule = { key: string; pattern: string; action: PermissionActionConfig }
+
+// The server's own defaults (packages/opencode/src/agent/agent.ts). It evaluates them first, then each agent's
+// built-in rules (plan denies edits, for example), then the configured rules; the last matching rule wins. Only
+// their "*" defaults are listed: everything is allowed except doom_loop and external_directory, which ask.
+const BUILT_IN: Rule[] = [
+  { key: "*", pattern: "*", action: "allow" },
+  { key: "doom_loop", pattern: "*", action: "ask" },
+  { key: "external_directory", pattern: "*", action: "ask" },
+]
 
 export function permissionMap(config: unknown): Record<string, PermissionRuleConfig> {
   if (config && typeof config === "object" && !Array.isArray(config))
@@ -53,25 +57,59 @@ export function permissionMap(config: unknown): Record<string, PermissionRuleCon
   return {}
 }
 
+// The tool's default, as the server evaluates it: rules in key order, last match wins, and only rules that
+// cover every input ("*") decide the default.
 export function permissionAction(config: unknown, tool: PermissionTool): PermissionActionConfig {
-  const map = permissionMap(config)
-  return ruleDefault(map[tool]) ?? ruleDefault(map["*"]) ?? BUILT_IN[tool] ?? "allow"
+  return (
+    [...BUILT_IN, ...rules(config)].findLast((item) => item.pattern === "*" && matches(tool, item.key))?.action ?? "ask"
+  )
 }
 
-// Patterned rules keep their patterns; only their default changes.
-export function permissionUpdate(config: unknown, tool: PermissionTool, action: PermissionActionConfig) {
+// The server deep-merges a config patch: existing keys keep their place and new keys go last, at every level.
+// A write therefore cannot move a tool past a later wildcard rule, and a "*" added to a patterned rule would land
+// after (and override) its patterns. Both cases are reported instead of written.
+export function permissionWrite(
+  config: unknown,
+  tool: PermissionTool,
+  action: PermissionActionConfig,
+): { next: Record<string, PermissionRuleConfig> } | { locked: PermissionLock } {
   const map = permissionMap(config)
   const current = map[tool]
-  return { ...map, [tool]: typeof current === "object" ? { ...current, "*": action } : action }
+  if (typeof current === "object" && !("*" in current) && Object.keys(current).length > 0) return { locked: "patterns" }
+  const next = { ...map, [tool]: typeof current === "object" ? { ...current, "*": action } : action }
+  if (permissionAction(next, tool) !== action) return { locked: "shadowed" }
+  return { next }
+}
+export type PermissionLock = "patterns" | "shadowed"
+
+export function permissionLock(config: unknown, tool: PermissionTool) {
+  return PERMISSION_ACTIONS.flatMap((action) => {
+    const result = permissionWrite(config, tool, action)
+    return "locked" in result ? [result.locked] : []
+  })[0]
+}
+
+function rules(config: unknown): Rule[] {
+  return Object.entries(permissionMap(config)).flatMap(([key, value]) => {
+    if (typeof value === "string") return [{ key, pattern: "*", action: value }]
+    return Object.entries(value).flatMap(([pattern, action]) => {
+      const valid = actionOf(action)
+      return valid ? [{ key, pattern, action: valid }] : []
+    })
+  })
+}
+
+// The server's Wildcard.match: "*" matches any run, "?" one character.
+function matches(input: string, pattern: string) {
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".")
+  return new RegExp(`^${escaped}$`, "s").test(input)
 }
 
 function actionOf(value: unknown) {
   return PERMISSION_ACTIONS.find((item) => item === value)
-}
-
-function ruleDefault(value: PermissionRuleConfig | undefined) {
-  if (typeof value === "object") return actionOf(value["*"])
-  return actionOf(value)
 }
 
 function rule(value: unknown): value is PermissionRuleConfig {
