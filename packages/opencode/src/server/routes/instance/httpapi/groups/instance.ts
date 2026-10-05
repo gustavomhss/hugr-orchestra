@@ -154,7 +154,7 @@ export const InstanceApi = HttpApi.make("instance")
             identifier: "vcs.activity",
             summary: "Get VCS activity",
             description:
-              "Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals.",
+              "Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.",
           }),
         ),
         HttpApiEndpoint.get("command", InstancePaths.command, {
