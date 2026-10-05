@@ -57,7 +57,7 @@ import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
-import { agentKey } from "../../util/agent"
+import { agentKey, findAgent } from "../../util/agent"
 
 registerOpencodeSpinner()
 
@@ -1321,10 +1321,8 @@ export function Prompt(props: PromptProps) {
   })
 
   const spinnerDef = createMemo(() => {
-    const agent =
-      status().type !== "idle"
-        ? (local.agent.list().find((a) => agentKey(a) === lastUserMessage()?.agent) ?? local.agent.current())
-        : local.agent.current()
+    const active = status().type !== "idle" ? findAgent(local.agent.list(), lastUserMessage()?.agent) : undefined
+    const agent = active ?? local.agent.current()
     const color = agent ? local.agent.color(agentKey(agent)) : theme.border
     return {
       frames: createFrames({

@@ -27,7 +27,7 @@ import { readAuthorization } from "@/maestro/authorization"
 import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
-import { BackendResult } from "@/maestro/backend-result"
+import { BackendWork } from "@/maestro/backend-work"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -455,30 +455,15 @@ export const TaskTool = Tool.define(
         ...(runInBackground ? { background: true } : {}),
       }
       const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
-      const workEvidence: { value?: BackendResult.WorkResult } = {}
+      const work = BackendWork.track({
+        enabled: nextID === "backend",
+        sessionID: nextSession.id,
+        publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
+      })
 
       yield* ctx.metadata({
         title: params.description,
         metadata,
-      })
-
-      // F4 cl.6: when the host ends the Task before or instead of the child's final message, stream the work result
-      // it can stand behind: the card already assembled, else the child's last assistant message, else no card.
-      const hostResult = Effect.fn("TaskTool.hostResult")(function* (
-        reason: "failed" | "interrupted" | "running",
-        detail: string,
-      ) {
-        if (nextID !== "backend") return
-        workEvidence.value = workEvidence.value
-          ? { ...workEvidence.value, terminal: { reason, hostDetail: detail } }
-          : BackendResult.hostEnded({
-              message: (yield* MessageV2.stream(nextSession.id)).findLast(
-                (message) => message.info.role === "assistant",
-              ),
-              reason,
-              detail,
-            })
-        yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
       })
 
       if (governedChildID && reserved) {
@@ -492,10 +477,7 @@ export const TaskTool = Tool.define(
                 message.info.role === "assistant" && message.info.finish !== undefined && !message.info.error,
             )
         const job = strictReplay ? yield* background.get(governedChildID) : undefined
-        if (nextID === "backend" && completed?.info.role === "assistant") {
-          workEvidence.value = BackendResult.assemble(completed)
-          yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
-        }
+        if (completed?.info.role === "assistant") yield* work.record(completed)
         if (
           strictReplay &&
           (!completed ||
@@ -512,19 +494,15 @@ export const TaskTool = Tool.define(
           const failure = completionReceipt
             ? "Tool safety HOLD: completion-worker-not-finished"
             : "Governed Task denied: reserved-child-incomplete"
-          yield* hostResult("interrupted", failure)
+          yield* work.hostEnded("interrupted", failure)
           return yield* Effect.fail(new Error(failure))
         }
-        if (!completed) yield* hostResult("interrupted", "No completed child message to replay")
+        if (!completed) yield* work.hostEnded("interrupted", "No completed child message to replay")
         const output = completed?.parts.findLast((part) => part.type === "text")?.text ?? ""
         const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
         return {
           title: params.description,
-          metadata: {
-            ...metadata,
-            ...(verified ? { completion: verified } : {}),
-            ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
-          },
+          metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
           output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
         }
       }
@@ -596,10 +574,7 @@ export const TaskTool = Tool.define(
           beforeModel ? { beforeModel } : undefined,
         )
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
-        if (nextID === "backend") {
-          workEvidence.value = BackendResult.assemble(result)
-          yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
-        }
+        yield* work.record(result)
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -618,13 +593,7 @@ export const TaskTool = Tool.define(
         const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
         if (verified) {
           completionEvidence.value = verified
-          yield* ctx.metadata({
-            metadata: {
-              ...metadata,
-              completion: verified,
-              ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
-            },
-          })
+          yield* ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) })
         }
         return result.parts.findLast((item) => item.type === "text")?.text ?? ""
       })
@@ -634,22 +603,7 @@ export const TaskTool = Tool.define(
         text: string,
       ) {
         const currentParent = yield* sessions.get(ctx.sessionID)
-        // F4 cl.6/35: the Task part already completed with terminal `running`, so the completion notice carries the final
-        // work result, read from the child's durable last assistant message (a resumed job may have run several turns).
-        const last =
-          nextID === "backend"
-            ? (yield* MessageV2.stream(nextSession.id).pipe(Effect.provideService(Database.Service, database))).findLast(
-                (message) => message.info.role === "assistant",
-              )
-            : undefined
-        const workResult =
-          nextID !== "backend"
-            ? undefined
-            : state === "error"
-              ? BackendResult.hostEnded({ message: last, reason: "failed", detail: text })
-              : last
-                ? BackendResult.assemble(last)
-                : BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" })
+        const workResult = yield* work.notice(state, text).pipe(Effect.provideService(Database.Service, database))
         yield* ops
           .prompt({
             sessionID: ctx.sessionID,
@@ -687,15 +641,10 @@ export const TaskTool = Tool.define(
       })
 
       if (yield* background.extend({ id: nextSession.id, run: runTask() })) {
-        yield* hostResult("running", "Background task updated")
+        yield* work.hostEnded("running", "Background task updated")
         return {
           title: params.description,
-          metadata: {
-            ...metadata,
-            background: true,
-            jobId: nextSession.id,
-            ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
-          },
+          metadata: work.attach({ ...metadata, background: true, jobId: nextSession.id }),
           output: renderOutput({
             sessionID: nextSession.id,
             state: "running",
@@ -722,15 +671,10 @@ export const TaskTool = Tool.define(
 
       // The child is still running: the work result says so and carries no worker fields yet.
       const backgroundResult = Effect.fn("TaskTool.backgroundResult")(function* () {
-        yield* hostResult("running", "Background task started")
+        yield* work.hostEnded("running", "Background task started")
         return {
           title: params.description,
-          metadata: {
-            ...metadata,
-            background: true,
-            jobId: info.id,
-            ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
-          },
+          metadata: work.attach({ ...metadata, background: true, jobId: info.id }),
           output: renderOutput({
             sessionID: nextSession.id,
             state: "running",
@@ -765,27 +709,26 @@ export const TaskTool = Tool.define(
             if (result?.metadata?.background === true) return yield* backgroundResult()
             if (result?.status === "error") {
               const failure = result.error ?? "Task failed"
-              yield* hostResult("failed", failure)
+              yield* work.hostEnded("failed", failure)
               return yield* Effect.fail(new Error(failure))
             }
             if (result?.status === "cancelled") {
-              yield* hostResult("interrupted", "Task cancelled")
+              yield* work.hostEnded("interrupted", "Task cancelled")
               return yield* Effect.fail(new Error("Task cancelled"))
             }
             return {
               title: params.description,
-              metadata: {
+              metadata: work.attach({
                 ...metadata,
                 ...(completionEvidence.value ? { completion: completionEvidence.value } : {}),
-                ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
-              },
+              }),
               output: renderOutput({ sessionID: nextSession.id, state: "completed", text: result?.output ?? "" }),
             }
           }),
         (_, exit) =>
           Effect.gen(function* () {
             if (!Exit.hasInterrupts(exit)) return
-            yield* hostResult("interrupted", "Task cancelled").pipe(Effect.catchCause(() => Effect.void))
+            yield* work.hostEnded("interrupted", "Task cancelled").pipe(Effect.catchCause(() => Effect.void))
             yield* Effect.all([cancel, background.cancel(nextSession.id)], { discard: true })
           }).pipe(
             Effect.ensuring(

@@ -65,7 +65,7 @@ import { TodoWrite } from "./todo-write"
 import { animate } from "motion"
 import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
-import { findTaskAgent } from "./message-part-agent"
+import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
 
 async function writeClipboard(text: string): Promise<boolean> {
@@ -435,10 +435,7 @@ function tone(name: string) {
   return agentPalette[hash % agentPalette.length]
 }
 
-function taskAgent(
-  raw: unknown,
-  list?: readonly { id?: string; name: string; color?: string }[],
-): { name?: string; color?: string; v2Color?: string } {
+function taskAgent(raw: unknown, list?: readonly AgentEntry[]): { name?: string; color?: string; v2Color?: string } {
   if (typeof raw !== "string" || !raw) return {}
   const key = raw.toLowerCase()
   const item = findTaskAgent(raw, list)
@@ -593,7 +590,7 @@ function taskSession(
   input: Record<string, any>,
   parentID: string | undefined,
   sessions: Session[] | undefined,
-  agents?: readonly { id?: string; name: string; color?: string }[],
+  agents?: readonly AgentEntry[],
 ) {
   if (!parentID) return undefined
   const description = typeof input.description === "string" ? input.description : ""

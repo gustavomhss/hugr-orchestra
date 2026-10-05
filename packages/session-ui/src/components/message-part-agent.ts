@@ -1,3 +1,5 @@
+export type AgentEntry = { id?: string; name: string; color?: string }
+
 // A Task's `subagent_type` is the agent's stable id; its label is only rendered (F1.11). Agents without an id come
 // from servers that predate ids, where the name is the key and was matched case-insensitively.
 export function findTaskAgent<T extends { id?: string; name: string }>(raw: string, list: readonly T[] | undefined) {

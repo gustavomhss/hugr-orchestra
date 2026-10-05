@@ -19,7 +19,7 @@ import { mkdir, writeFile } from "node:fs/promises"
 import { useRoute, useRouteData } from "../../context/route"
 import { useProject } from "../../context/project"
 import { useSync } from "../../context/sync"
-import { agentKey } from "../../util/agent"
+import { agentTitle } from "../../util/agent"
 import { useEvent } from "../../context/event"
 import { SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
@@ -1560,11 +1560,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
               >
                 ▣{" "}
               </span>{" "}
-              <span style={{ fg: theme.text }}>
-                {Locale.titlecase(
-                  sync.data.agent.find((agent) => agentKey(agent) === props.message.mode)?.name ?? props.message.mode,
-                )}
-              </span>
+              <span style={{ fg: theme.text }}>{agentTitle(sync.data.agent, props.message.mode)}</span>
               <span style={{ fg: theme.textMuted }}> · {model()}</span>
               <Show when={duration()}>
                 <span style={{ fg: theme.textMuted }}> · {Locale.duration(duration())}</span>
@@ -2267,15 +2263,9 @@ function Task(props: ToolProps) {
   const content = createMemo(() => {
     const description = stringValue(props.input.description)
     if (!description) return ""
-    // `subagent_type` is the stable id; render the agent's label when it is known.
     const subagent = stringValue(props.input.subagent_type)
-    let content = [
-      formatSubagentTitle(
-        Locale.titlecase(sync.data.agent.find((agent) => agentKey(agent) === subagent)?.name ?? subagent ?? "General"),
-        description,
-        props.metadata.background === true,
-      ),
-    ]
+    const label = subagent === undefined ? "General" : agentTitle(sync.data.agent, subagent)
+    let content = [formatSubagentTitle(label, description, props.metadata.background === true)]
 
     const retrying = retry()
     if (isRunning() && retrying) {
