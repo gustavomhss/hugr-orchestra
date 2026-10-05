@@ -466,7 +466,7 @@ export class AppDockRPC {
 
     switch (op) {
       case "list": {
-        return dock.list(senderID).map((tab) => {
+        const tabs = dock.list(senderID).map((tab) => {
           const placement = dock.nativeWorkspace?.(senderID, tab.tabID)
           if (this.classifyWorkspace(dock, senderID, tab, placement)) {
             const target = placement && this.workspaceTarget({ senderID, tabID: tab.tabID, generation: tab.generation,
@@ -480,6 +480,9 @@ export class AppDockRPC {
             return { ...tab, backend: "linux-atspi", scopeKind: "workspace", nativeReadiness: "unbound" }
           return identity ? { ...tab, ...this.native.metadata(identity) } : tab
         })
+        // A scoped caller lists only its own world: the browser side never sees the Linux workspace tab.
+        if (world === undefined) return tabs
+        return tabs.filter((tab) => ("scopeKind" in tab && tab.scopeKind === "workspace") === (world === "linux"))
       }
       case "activate": {
         const tabID = dockString(args.tabID, "tabID")

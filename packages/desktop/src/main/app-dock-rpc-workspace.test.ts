@@ -563,6 +563,7 @@ test("scoped callers reach their own world whatever tab the user has selected", 
   expect(await f.json("ui_read", {}, linux)).toMatchObject({ backend: "linux-atspi", scopeKind: "workspace" })
   expect(f.viewer.browserReads).toBe(0)
   expect(await f.json("dock_read", {}, { agent: "build" })).toEqual({ backend: "browser", tabID: "browser" })
+  expect((await f.json("dock_list", {}, { agent: "build" }) as { tabID: string }[]).map((tab) => tab.tabID)).toEqual(["browser"])
   // Only the Linux tab left: a browser-scoped caller is refused instead of silently reading the workspace.
   f.viewer.tabs = f.viewer.tabs.filter((tab) => tab.tabID === "workspace")
   expect(await f.tool("dock_read", {}, { agent: "build" })).toContain("operated by the linux agent")

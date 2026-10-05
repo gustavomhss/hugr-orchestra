@@ -673,7 +673,7 @@ export const AppDockPlugin: Plugin = async (_input: PluginInput): Promise<Hooks>
 
 const LINUX_DESCRIPTION = "Operates the isolated Linux workspace in the App Dock: runs commands and edits files there, and uses the interface of any app open in it (VS Code, Slack, any Linux app). Give it a complete task in plain words; it returns what it did and what it verified."
 
-const LINUX_PROMPT = `You operate the user's isolated Linux workspace, a Linux desktop shown in the App Dock. You cannot reach the user's own computer, files or screen; everything you do happens inside the workspace.
+const LINUX_PROMPT = `You are opencode's Linux workspace agent. You operate the user's isolated Linux workspace, a Linux desktop shown in the App Dock. You cannot reach the user's own computer, files or screen; everything you do happens inside the workspace.
 
 Tools: linux_* run commands and read or write files inside the workspace; ui_* see and operate the apps open there through their accessibility tree.
 
