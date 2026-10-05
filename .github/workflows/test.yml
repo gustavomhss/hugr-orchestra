@@ -194,7 +194,11 @@ jobs:
         timeout-minutes: 30
         working-directory: packages/opencode
         # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
-        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/${{ matrix.shards }}
+        # Shards are balanced by measured time (script/test-shard.ts), not by file count; the
+        # assignment fails the step if the script fails instead of falling back to every file.
+        run: |
+          files=$(bun script/test-shard.ts ${{ matrix.name }} ${{ matrix.shard }} ${{ matrix.shards }})
+          bun test --timeout 30000 --only-failures $files
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
