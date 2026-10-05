@@ -734,3 +734,41 @@ test("dock_find marks an early stop with more pages as an incomplete search", as
   const blank = host(() => page([control("n:a", "Open")]))
   expect(JSON.parse(String(await blank.hooks.tool.dock_find.execute({ name: "  " }, context)))).toMatchObject({ found: 0 })
 })
+
+test("dock_action target refuses without dispatch when a homonym surfaces on another page between the scans", async () => {
+  const run = (first: (cursor: unknown) => Reply, second: (cursor: unknown) => Reply) => {
+    const pagesPerScan = 2
+    const dock = host((op, args, index) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+      : index < pagesPerScan ? first(args.cursor) : second(args.cursor))
+    return dock.hooks.tool.dock_action.execute({ target: { name: "open" } }, context)
+      .then((result) => ({ result: JSON.parse(String(result)), actions: dock.calls.filter((call) => call.op === "action").length }))
+  }
+  const changed = { result: { code: "target-changed", outcome: "not-dispatched", item: { name: "Open" } }, actions: 0 }
+  // Earlier page: the winner's own page is unchanged, so only a whole-tree recheck sees the new homonym.
+  expect(await run((cursor) => cursor === undefined ? page([control("n:x", "Explorer")], "c") : page([control("n:open", "Open")]),
+    (cursor) => cursor === undefined ? page([control("n:new", "Open")], "c") : page([control("n:open", "Open")]))).toMatchObject(changed)
+  // Later page: a scan that stops at the winner's page never reaches it.
+  expect(await run((cursor) => cursor === undefined ? page([control("n:open", "Open")], "c") : page([control("n:y", "Terminal")]),
+    (cursor) => cursor === undefined ? page([control("n:open", "Open")], "c") : page([control("n:new", "Open")]))).toMatchObject(changed)
+  expect(await run((cursor) => cursor === undefined ? page([control("n:open", "Open")], "c") : page([control("n:y", "Terminal")]),
+    (cursor) => cursor === undefined ? page([control("n:fresh", "Open")], "c") : page([control("n:y", "Terminal")])))
+    .toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
+})
+
+test("time waiting for a permission answer does not count against the tool-call deadline", async () => {
+  const asking = { ...context, ask: async (request: { patterns: string[] }) => {
+    if (request.patterns[0] === "action") await Bun.sleep(80)
+  } } as unknown as ToolContext
+  const { hooks, calls } = host((op, _args, index) => op === "action"
+    ? (index === 2 ? nativeError("stale-ref") : { ok: true, value: { dispatch: "acknowledged" } })
+    : page([control("n:a", "Continue")]), { findDeadlineMs: 40 })
+  expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "continue" } }, asking))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(calls.map((call) => call.op)).toEqual(["read", "read", "action", "read", "read", "action"])
+})
+
+test("dock_find reports a partial traversal even when it found matches", async () => {
+  const partial = host(() => page([control("n:a", "Open")], undefined, { complete: false, reasons: ["null-child"] }))
+  expect(JSON.parse(String(await partial.hooks.tool.dock_find.execute({ name: "open" }, context))))
+    .toMatchObject({ found: 1, searchComplete: false, reasons: ["null-child"] })
+})
