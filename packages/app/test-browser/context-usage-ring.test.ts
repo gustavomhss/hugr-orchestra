@@ -9,7 +9,7 @@ const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir
 Bun.plugin({
   name: "solid-progress-circle",
   setup(build) {
-    build.onLoad({ filter: /\/progress-circle(-v2)?\.tsx\?solid$/ }, async (args) => {
+    build.onLoad({ filter: /[\\/]progress-circle(-v2)?\.tsx\?solid$/ }, async (args) => {
       const result = await solid("@babel/core").transformAsync(
         await Bun.file(args.path.replace(/\?solid$/, "")).text(),
         {
