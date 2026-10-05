@@ -20,7 +20,7 @@
     --orchestra-session-heading: #e9eef3;
     --orchestra-session-body: #c2ccd6;
     --orchestra-session-secondary: #93a2b2;
-    --orchestra-session-meta: #76879a;
+    --orchestra-session-meta: #7a8b9d;
     --orchestra-session-rule: rgba(160, 181, 200, 0.1);
     --orchestra-session-message-rule: rgba(160, 181, 200, 0.09);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(26, 36, 47, 0.66), rgba(19, 27, 36, 0.62));
@@ -115,7 +115,7 @@
     --orchestra-session-heading: #141920;
     --orchestra-session-body: #3f4854;
     --orchestra-session-secondary: #68717c;
-    --orchestra-session-meta: #6e7783;
+    --orchestra-session-meta: #666e79;
     --orchestra-session-rule: rgba(70, 84, 98, 0.12);
     --orchestra-session-message-rule: rgba(70, 84, 98, 0.1);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 249, 251, 0.7));
@@ -153,7 +153,7 @@
     --orchestra-task-mark-border: rgba(70, 84, 98, 0.16);
     --orchestra-task-mark-text: #5d6672;
     --orchestra-task-title: #20262e;
-    --orchestra-task-meta: #6b7480;
+    --orchestra-task-meta: #67707b;
     --orchestra-task-rule: rgba(70, 84, 98, 0.1);
     --orchestra-permission-background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(250, 247, 240, 0.94));
     --orchestra-permission-border: rgba(160, 130, 80, 0.34);
@@ -228,17 +228,11 @@
     z-index: 1;
   }
 
-  /* The title remains 48px + 16px; these are the virtualizer's header offsets. */
-  body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
-    padding-inline: 30px;
-    background: linear-gradient(to bottom, var(--orchestra-evidence-solid) 48px, transparent);
-  }
-
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
     margin: 0;
     padding: 0;
     color: var(--orchestra-session-heading);
-    font-family: var(--orchestra-font-family-sans);
+    font-family: var(--orchestra-chat-font);
     font-size: 22px;
     font-weight: 600;
     line-height: 28px;
@@ -287,14 +281,6 @@
     [data-timeline-row]
     [data-slot="session-turn-message-container"] {
     padding-inline: 30px;
-  }
-
-  body[data-new-layout]
-    [data-session-layout="surface"]
-    :is([data-timeline-row="UserMessage"], [data-timeline-row="AssistantPart"])
-    [data-slot="session-turn-message-container"] {
-    padding-block: 14px;
-    border-block-start: 1px solid var(--orchestra-session-message-rule);
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-component="user-message"] {
@@ -652,8 +638,9 @@
     [data-component="button"] {
     block-size: 30px;
     border-radius: 7px;
+    font-family: var(--mx-emphasis, "Mx Inter Medium", var(--orchestra-font-family-sans));
     font-size: 12.5px;
-    font-weight: 520;
+    font-weight: 600;
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer-actions"] [data-variant="ghost"] {
@@ -709,6 +696,8 @@
     [data-slot="session-side-panel-tab-bar"] {
     min-block-size: 38px;
     block-size: 38px;
+    /* The shared bar is width: 100%; the mock's rule runs 6px past both padding edges. */
+    inline-size: calc(100% + 12px);
     margin-block: -4px 8px;
     margin-inline: -6px;
     gap: 2px;
@@ -922,12 +911,35 @@
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="task-title"] {
     color: var(--orchestra-task-title);
-    font-weight: 520 !important;
+    font-family: var(--mx-emphasis, "Mx Inter Medium", var(--orchestra-font-family-sans));
+    font-weight: 600 !important;
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="task-meta"] {
     color: var(--orchestra-task-meta);
     font: 11.5px / 16px var(--font-family-mono);
+  }
+
+  /* A finished row reads as secondary through its mark and title. The shared panel dims the whole
+   * row instead, which takes its time and stats below WCAG AA contrast. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"]) {
+    opacity: 1;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"], :hover)
+    [data-slot="task-mark"] {
+    opacity: 0.75;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"], :hover)
+    [data-slot="task-title"] {
+    color: color-mix(in srgb, var(--orchestra-task-title) 75%, transparent);
   }
 
   body[data-new-layout]
@@ -1009,5 +1021,534 @@
       [data-component="button-v2"] {
       font-weight: 500 !important;
     }
+  }
+}
+
+/* Conversation header and transcript entries of the approved session view (.conv-head, .msg). */
+@media (min-width: 768px) {
+  /* The mock's views inherit the system 16px/normal/400 type; every control sets its own size.
+   * "Mx Inter" picks the static Inter faces the mock renders with (kit.css); no optical sizes. */
+  body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-chat-font: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
+    font-family: var(--orchestra-chat-font);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    --orchestra-chat-who: #7ea5cc;
+    --orchestra-chat-button-border: rgba(163, 184, 203, 0.2);
+    --orchestra-chat-button-background: rgba(32, 43, 55, 0.7);
+    --orchestra-chat-button-text: #c7d2dc;
+    --orchestra-chat-button-hover-border: rgba(170, 192, 212, 0.34);
+    --orchestra-chat-button-hover-background: rgba(44, 58, 73, 0.8);
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-chat-who: #3f6f9f;
+    --orchestra-chat-button-border: rgba(70, 84, 98, 0.2);
+    --orchestra-chat-button-background: rgba(255, 255, 255, 0.6);
+    --orchestra-chat-button-text: #3a434e;
+    --orchestra-chat-button-hover-border: rgba(70, 84, 98, 0.32);
+    --orchestra-chat-button-hover-background: rgba(255, 255, 255, 0.85);
+  }
+
+  /* The header height is measured for the virtualizer's scroll margin. Like the mock's .conv-head it is
+   * transparent over the pane's glass; the timeline masks rows out beneath it (.scroll's 18px fade). */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
+    padding: 24px 30px 18px;
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-timeline-virtual-content] {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 18px);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-row"] {
+    block-size: auto;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-main"] {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
+    padding: 0;
+    border-radius: 6px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] h1[data-slot="session-title-child"]:hover {
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-brief"] {
+    max-inline-size: 450px;
+    display: -webkit-box;
+    margin: 5px 0 0;
+    overflow: hidden;
+    color: var(--orchestra-session-secondary);
+    font-size: 14px;
+    line-height: 17px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-actions"] {
+    gap: 8px;
+    padding-block-start: 2px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]) {
+    display: inline-flex;
+    min-inline-size: 48px;
+    block-size: 32px;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 13px;
+    border: 1px solid var(--orchestra-chat-button-border);
+    border-radius: 7px;
+    background: var(--orchestra-chat-button-background);
+    color: var(--orchestra-chat-button-text);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]):is(:hover, [aria-expanded="true"]) {
+    border-color: var(--orchestra-chat-button-hover-border);
+    background: var(--orchestra-chat-button-hover-background);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]):focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-timeline-row="TurnGap"] {
+    block-size: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"] {
+    display: grid;
+    inline-size: 100%;
+    align-self: stretch;
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"][data-head] {
+    padding-block-start: 14px;
+    border-block-start: 1px solid var(--orchestra-session-message-rule);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"][data-role="user"] {
+    padding-block-end: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"]:not([data-head]) > * {
+    grid-column: 2;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-mark"] {
+    display: grid;
+    inline-size: 30px;
+    block-size: 30px;
+    place-items: center;
+    border: 1px solid var(--orchestra-task-mark-border);
+    border-radius: 8px;
+    background: var(--orchestra-task-mark-background);
+    color: var(--orchestra-task-mark-text);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-mark"] svg {
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-body"] {
+    min-inline-size: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-meta"] {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-block-end: 4px;
+    line-height: 16px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-who"] {
+    color: var(--orchestra-chat-who);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-when"] {
+    color: var(--orchestra-session-meta);
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  /* Tool and tool-group rows read as the mock's .tool-trigger: 13px title, 12px monospace argument. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-component="tool-trigger"], [data-component="context-tool-group-trigger"]) {
+    min-block-size: 32px;
+    gap: 8px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
+    color: #c8d2dc;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-subtitle"], [data-slot="shell-submessage-value"]) {
+    color: #8b9bab;
+    font: 12px / 16px var(--font-family-mono);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    [data-slot="context-tool-group-summary"] {
+    color: #8b9bab;
+    font-size: 12px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
+    color: #3f4854;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is(
+      [data-slot="basic-tool-tool-subtitle"],
+      [data-slot="shell-submessage-value"],
+      [data-slot="context-tool-group-summary"]
+    ) {
+    color: #6b7480;
+  }
+
+  /* The send control keeps the mock's blue even before a prompt is written. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-submit"]:disabled {
+    opacity: 1;
+  }
+}
+
+/* The approved rail tab bar: Review, Context, Tasks, Apps, file tabs, then the open-file "+". */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-open-in-app-slot:empty {
+    display: none;
+  }
+
+  /* The file-list toggle stays a real control; it reads as one more 24px rail glyph before Review. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot {
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot::before,
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot::after {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot
+    button {
+    inline-size: 24px;
+    min-inline-size: 24px;
+    block-size: 24px;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: none;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-open-file"] {
+    margin-inline-start: 2px;
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"] {
+    background: transparent;
+    box-shadow: none;
+    inline-size: 24px;
+    block-size: 24px;
+    min-inline-size: 24px;
+    border-radius: 6px;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::after {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]:hover {
+    background: var(--orchestra-rail-tab-hover-background);
+    color: var(--orchestra-rail-tab-hover);
+  }
+}
+
+/* Context tab as the mock's .ctx: 10.5px labels over 12.5px monospace values, uppercase section titles. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-12-regular.text-text-weak {
+    margin-block-start: 4px;
+    color: #7c8b9b;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid > div {
+    gap: 3px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .grid
+    .text-12-regular.text-text-weak {
+    margin: 0;
+    color: #7f8fa0;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid .text-12-medium {
+    color: #cdd6df;
+    font: 500 12.5px var(--font-family-mono);
+    overflow-wrap: anywhere;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-11-regular {
+    color: #8c9daf;
+    font-size: 11.5px;
+  }
+
+  /* The breakdown note says these are approximate window tokens, apart from cumulative cost. */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .hidden.text-11-regular {
+    display: block;
+    color: #65768a;
+    font-size: 10.5px;
+    line-height: 15px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .text-12-regular.text-text-weak {
+    color: #6b7480;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .grid
+    .text-12-medium {
+    color: #2b3440;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .text-11-regular {
+    color: #5f6874;
+  }
+}
+
+/* Session "•••" menu as the mock's .mx-menu (portaled, so not under the surface). */
+body[data-new-layout] [data-orchestra-menu="session"] {
+  min-inline-size: 180px;
+  padding: 5px;
+  border: 1px solid var(--mx-line, rgba(166, 189, 211, 0.14));
+  border-radius: 9px;
+  background: var(--mx-modal, #111922);
+  box-shadow: var(--mx-pop-shadow, 0 14px 35px rgba(0, 0, 0, 0.24));
+}
+
+/* menu-v2.css sizes the item at 28px and types its inner content slot, so both are overridden here. */
+body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"] {
+  block-size: auto;
+  min-block-size: 0;
+  padding: 8px 10px;
+  border-radius: 5px;
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-slot="menu-v2-item-content"] {
+  color: var(--mx-strong, #e1e9f0);
+  font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+  font-optical-sizing: none;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: normal;
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"]:is(:hover, [data-highlighted]) {
+  background: var(--mx-soft, rgba(170, 196, 220, 0.055));
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="menu-v2-item-content"] {
+  color: var(--mx-bad, #d99a94);
+}
+
+/* Header "•••": the mock writes three bullets in the 12px button text rather than a light glyph. */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    [data-component="icon-button-v2"]
+    > :is(svg, [data-component="icon"], span) {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    [data-component="icon-button-v2"]::before {
+    content: "•••";
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 12px;
+    line-height: 1;
+  }
+}
+
+/* Rail controls without a mock counterpart sit at the far end, quiet: the file-list toggle, then the
+ * mock's 22×24 "+" in its 15px glyph. */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-list"]
+    > .session-review-v2-sidebar-toggle-slot {
+    position: static;
+    order: 1;
+    margin-inline-start: auto;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-list"]
+    > [data-slot="session-side-panel-open-file"] {
+    position: static;
+    order: 2;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    :is(.session-review-v2-sidebar-toggle-slot, [data-slot="session-side-panel-open-file"])
+    [data-component="icon-button-v2"] {
+    inline-size: 22px;
+    min-inline-size: 22px;
+    block-size: 24px;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot
+    [data-component="icon-button-v2"]
+    svg {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]
+    > * {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::before {
+    content: "+";
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  /* The change-mode selector reads like the rail's other quiet controls. */
+  body[data-new-layout] [data-slot="orchestra-review-mode"] [data-slot="select-v2-value-text"] {
+    color: #8b9bab;
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-slot="orchestra-review-mode"]
+    [data-slot="select-v2-value-text"] {
+    color: #5f6874;
   }
 }

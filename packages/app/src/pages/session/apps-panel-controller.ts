@@ -89,7 +89,7 @@ type AppDockManifest = {
   history: string[]
 }
 type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: AppDockManifest }
-type Download = TabIdentity & {
+export type Download = TabIdentity & {
   id: string
   filename: string
   receivedBytes: number
@@ -426,6 +426,8 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       }
     },
     owns: (element: HTMLElement | undefined) => !!element && element === host,
+    // A popover drawn inside the Dock's own tree over the page area hides the native browser while open.
+    registerOverlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     // Bounds measured for one tab; the desktop drops them once another tab or generation is attached.
     resize: (tab: TabIdentity, next: Bounds) => dock?.appDockResize(identity(tab), next) ?? Promise.resolve(),
     retry() {

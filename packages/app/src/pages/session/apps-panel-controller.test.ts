@@ -140,6 +140,35 @@ describe("App Dock controller", () => {
     ])
   })
 
+  test("a popover registered inside the Dock occludes the browser only while it covers the page", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const host = placed()
+    controller.attach(host, profileA)
+    await until(() => controller.state.status === "ready")
+    const before = dock.calls.length
+
+    // Drawn in the Dock's own tree, so the body watch alone would never see it.
+    const popover = sized(element(), { x: 960, y: 140, width: 230, height: 200 })
+    host.parentElement!.append(popover)
+    const release = controller.registerOverlay(popover)
+    await until(() => dock.calls.at(-1)?.[0] === "occlude")
+    release()
+    popover.remove()
+    await until(() => dock.calls.length > before + 1)
+    // Outside the page area a registered element does not occlude.
+    const aside = sized(element(), { x: 0, y: 0, width: 200, height: 80 })
+    host.parentElement!.append(aside)
+    const releaseAside = controller.registerOverlay(aside)
+    await settle()
+    releaseAside()
+    await settle()
+    expect(dock.calls.slice(before)).toEqual([
+      ["occlude", true],
+      ["occlude", false],
+    ])
+  })
+
   test("a view attached while an overlay is open is occluded before its tab is shown", async () => {
     const dock = fakeDock()
     const controller = createAppDockController(dock.api)

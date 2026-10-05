@@ -3,7 +3,12 @@ import { mockOpenCodeServer } from "../utils/mock-server"
 
 export async function setupCompactNavigation(
   page: Page,
-  input: { locale?: "en" | "ar"; scheme?: "dark" | "light"; projectName?: string } = {},
+  input: {
+    locale?: "en" | "ar"
+    scheme?: "dark" | "light"
+    projectName?: string
+    protocol?: "v1" | "v2"
+  } = {},
 ) {
   const directory = "/work/compact-navigation"
   const server = "http://127.0.0.1:4096"
@@ -16,6 +21,7 @@ export async function setupCompactNavigation(
     sandboxes: [],
   }
   await mockOpenCodeServer(page, {
+    protocol: input.protocol,
     directory,
     project,
     provider: { all: [], connected: [], default: {} },

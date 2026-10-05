@@ -21,6 +21,11 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   agents: lazy(() => import("./chapters/agents")),
   workspaces: lazy(() => import("./chapters/workspaces")),
   dock: lazy(() => import("./chapters/dock")),
+  plugins: lazy(() => import("./chapters/plugins")),
+  providers: lazy(() => import("./chapters/providers")),
+  shortcuts: lazy(() => import("./chapters/shortcuts")),
+  schedule: lazy(() => import("./chapters/schedule")),
+  settings: lazy(() => import("./chapters/settings")),
 }
 
 export function OrchestraChapterRoute() {
@@ -46,7 +51,7 @@ export function OrchestraChapterRoute() {
         <div
           data-component="orchestra-chapter"
           data-chapter={params.chapter}
-          class="orchestra-chapter m-2 flex min-h-0 flex-1 flex-col self-stretch overflow-hidden rounded-[10px] bg-v2-background-bg-base shadow-[var(--v2-elevation-raised)]"
+          class="orchestra-chapter orchestra-glass flex min-h-0 flex-1 flex-col self-stretch overflow-hidden max-md:m-2 max-md:rounded-[10px] max-md:bg-v2-background-bg-base max-md:shadow-[var(--v2-elevation-raised)]"
         >
           <Show
             when={owner()}

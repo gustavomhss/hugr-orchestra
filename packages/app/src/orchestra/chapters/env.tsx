@@ -1,29 +1,57 @@
+import { Dialog } from "@kobalte/core/dialog"
+import { getFilename } from "@opencode-ai/core/util/path"
 import { createMemo, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
-import type { ChapterPageProps } from "../chapter-route"
+import type { ChapterPageProps } from "@/orchestra/chapter-route"
+import { displayName } from "@/pages/layout/helpers"
+import { pathKey } from "@/utils/path-key"
 import { envEntries, parseEnv, removeEnv, serializeEnv, writeEnv, type EnvLine } from "./env-document"
+import { MxBadge, MxPage } from "./kit"
 import "./env.css"
 
-export default function EnvPage(_props: ChapterPageProps) {
+// Values live only in this component: never in profile config, storage or requests.
+export default function EnvPage(props: ChapterPageProps) {
   const language = useLanguage()
+  const global = useGlobal()
   const [state, setState] = createStore({
     lines: [] as EnvLine[],
     filename: ".env",
-    imported: false,
     loading: false,
-    error: "" as "" | "read" | "invalid" | "duplicate" | "readonly" | "download",
+    error: "" as "" | "read" | "download",
+    search: "",
     revealed: {} as Record<number, boolean>,
-    editor: undefined as { index?: number; key: string; value: string; reveal: boolean } | undefined,
+    dialog: "" as "" | "edit" | "view" | "remove",
+    draft: blank(),
   })
   const entries = createMemo(() => envEntries(state.lines))
+  const rows = createMemo(() => {
+    const query = state.search.trim().toLowerCase()
+    return entries().rows.filter((row) => row.assignment.key.toLowerCase().includes(query))
+  })
+  const profile = createMemo(() => {
+    const directory = pathKey(props.directory)
+    const project = global
+      .ensureServerCtx(props.server)
+      .projects.list()
+      .find(
+        (item) =>
+          pathKey(item.worktree) === directory || item.sandboxes?.some((sandbox) => pathKey(sandbox) === directory),
+      )
+    return project ? displayName(project) : getFilename(props.directory) || props.directory
+  })
+  // First-strong isolate (FSI…PDI): a profile name cannot reorder the English copy around it.
+  const named = () => `\u2068${profile()}\u2069`
   const lifetime = { disposed: false, import: 0 }
   onCleanup(() => {
     lifetime.disposed = true
     lifetime.import++
   })
   let input: HTMLInputElement | undefined
+  let add: HTMLButtonElement | undefined
+  // The dialog has no Kobalte trigger, so focus returns to the control that opened it.
+  let opener: HTMLElement | undefined
   const available =
     typeof File !== "undefined" &&
     typeof File.prototype.arrayBuffer === "function" &&
@@ -33,7 +61,7 @@ export default function EnvPage(_props: ChapterPageProps) {
 
   async function open(file: File) {
     const request = ++lifetime.import
-    setState({ loading: true, error: "", editor: undefined })
+    setState({ loading: true, error: "", dialog: "", draft: blank() })
     const result = await file
       .arrayBuffer()
       .then((bytes) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes))
@@ -47,17 +75,59 @@ export default function EnvPage(_props: ChapterPageProps) {
       setState("error", "read")
       return
     }
-    setState({ lines: result.lines, filename: file.name, imported: true, revealed: {} })
+    setState({ lines: result.lines, filename: file.name, revealed: {} })
+  }
+
+  function edit(target: HTMLElement, index?: number) {
+    opener = target
+    const assignment = index === undefined ? undefined : state.lines[index]?.assignment
+    setState({
+      error: "",
+      dialog: "edit",
+      draft: {
+        index,
+        name: assignment?.key ?? "",
+        key: assignment?.key ?? "",
+        value: assignment?.value ?? "",
+        multiline: /[\r\n]/.test(assignment?.value ?? ""),
+        error: "",
+      },
+    })
   }
 
   function save() {
-    if (!state.editor) return
-    const result = writeEnv(state.lines, state.editor.index, state.editor.key, state.editor.value)
+    const index = state.draft.index
+    const result = writeEnv(state.lines, index, state.draft.key.trim(), state.draft.value)
     if ("error" in result) {
-      setState("error", result.error)
+      setState("draft", "error", result.error)
       return
     }
-    setState({ lines: result.lines, editor: undefined, error: "", revealed: {} })
+    // An edited key is masked again, as in the approved flow; other rows keep their state.
+    setState({
+      lines: result.lines,
+      dialog: "",
+      draft: blank(),
+      revealed: index === undefined ? state.revealed : { ...state.revealed, [index]: false },
+    })
+  }
+
+  function remove() {
+    const index = state.draft.index
+    if (index === undefined) return
+    // Line indices after the removed assignment shift up by one; keep each row's reveal state.
+    const revealed = Object.fromEntries(
+      Object.entries(state.revealed).flatMap(([key, value]) => {
+        const line = Number(key)
+        if (line === index) return []
+        return [[line > index ? line - 1 : line, value]]
+      }),
+    )
+    setState({ lines: removeEnv(state.lines, index), dialog: "", draft: blank(), revealed, error: "" })
+  }
+
+  // Closing drops the draft so a value typed or shown in the dialog does not linger in the store.
+  function close() {
+    setState({ dialog: "", draft: blank() })
   }
 
   function download() {
@@ -69,21 +139,38 @@ export default function EnvPage(_props: ChapterPageProps) {
       link.click()
       // Keep the URL alive until the browser has consumed the download click.
       setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setState("error", "")
     } catch {
       setState("error", "download")
     }
   }
 
+  const title = () => {
+    if (state.dialog === "view") return state.filename
+    if (state.dialog === "remove") return language.t("orchestra.env.dialog.remove", { key: state.draft.name })
+    if (state.draft.index === undefined) return language.t("orchestra.env.dialog.add")
+    return language.t("orchestra.env.dialog.edit", { key: state.draft.name })
+  }
+  const subtitle = () => {
+    if (state.dialog === "view") return language.t("orchestra.env.dialog.preview", { profile: named() })
+    if (state.dialog === "remove") return language.t("orchestra.env.dialog.removeHint")
+    return language.t("orchestra.env.dialog.editHint")
+  }
+  const busy = () => !available || state.loading
+
   return (
-    <section class="env-page" data-component="env-page" aria-busy={state.loading}>
-      <header>
-        <h1>{language.t("orchestra.env.title")}</h1>
-        <p>{language.t("orchestra.env.description")}</p>
-      </header>
-      <div class="env-toolbar">
-        <ButtonV2 disabled={!available || state.loading} onClick={() => input?.click()}>
+    <MxPage
+      id="orchestra-env"
+      eyebrow={language.t("orchestra.env.eyebrow", { profile: named() })}
+      title={language.t("orchestra.env.title")}
+      description={language.t("orchestra.env.description")}
+      action={
+        <button type="button" class="mx-btn primary" disabled={busy()} onClick={() => input?.click()}>
           {language.t("orchestra.env.import")}
-        </ButtonV2>
+        </button>
+      }
+    >
+      <div class="env-body" data-component="env-page" aria-busy={state.loading}>
         <input
           ref={input}
           hidden
@@ -95,143 +182,255 @@ export default function EnvPage(_props: ChapterPageProps) {
             if (file) void open(file)
           }}
         />
-        <ButtonV2
-          disabled={!available || state.loading}
-          onClick={() => setState({ editor: { key: "", value: "", reveal: false }, error: "" })}
-        >
-          {language.t("orchestra.env.add")}
-        </ButtonV2>
-        <ButtonV2 disabled={!available || state.loading || (!state.imported && !state.lines.length)} onClick={download}>
-          {language.t("orchestra.env.download")}
-        </ButtonV2>
-        <Show when={state.imported}>
-          <span class="env-filename" dir="ltr">
-            {state.filename}
-          </span>
-        </Show>
-      </div>
-      <p class="env-note">{language.t("orchestra.env.memory")}</p>
-      <Show when={!available}>
-        <p role="status">{language.t("orchestra.env.unavailable")}</p>
-      </Show>
-      <Show when={state.loading}>
-        <p role="status">{language.t("orchestra.env.loading")}</p>
-      </Show>
-      <Show when={state.error}>
-        <p role="alert" class="env-error">
-          {language.t(`orchestra.env.error.${state.error || "read"}`)}
-        </p>
-      </Show>
-      <Show when={state.editor}>
-        {(editor) => (
-          <form
-            class="env-editor"
-            onSubmit={(event) => {
-              event.preventDefault()
-              save()
-            }}
+        <div class="mx-toolbar">
+          <input
+            class="mx-search"
+            placeholder={language.t("orchestra.env.search")}
+            aria-label={language.t("orchestra.env.search")}
+            value={state.search}
+            spellcheck={false}
             autocomplete="off"
+            onInput={(event) => setState("search", event.currentTarget.value)}
+          />
+          <MxBadge>
+            <bdi>{profile()}</bdi>
+          </MxBadge>
+        </div>
+        <div class="mx-toolbar">
+          <button
+            type="button"
+            class="mx-btn"
+            ref={add}
+            disabled={busy()}
+            onClick={(event) => edit(event.currentTarget)}
           >
-            <label>
-              {language.t("orchestra.env.key")}
-              <input
-                name="env-key"
-                value={editor().key}
-                onInput={(event) => setState("editor", "key", event.currentTarget.value)}
-                spellcheck={false}
-              />
-            </label>
-            <label>
-              {language.t("orchestra.env.value")}
-              <Show
-                when={editor().reveal}
-                fallback={
-                  <input
-                    name="env-value"
-                    type="password"
-                    value={editor().value}
-                    onInput={(event) => setState("editor", "value", event.currentTarget.value)}
-                    autocomplete="new-password"
-                  />
-                }
-              >
-                <textarea
-                  name="env-value"
-                  value={editor().value}
-                  onInput={(event) => setState("editor", "value", event.currentTarget.value)}
-                  spellcheck={false}
-                />
-              </Show>
-            </label>
-            <div class="env-actions">
-              <ButtonV2 type="button" variant="ghost" onClick={() => setState("editor", "reveal", !editor().reveal)}>
-                {language.t(editor().reveal ? "orchestra.env.hide" : "orchestra.env.reveal")}
-              </ButtonV2>
-              <ButtonV2 type="submit">{language.t("orchestra.env.apply")}</ButtonV2>
-              <ButtonV2 type="button" variant="ghost" onClick={() => setState({ editor: undefined, error: "" })}>
-                {language.t("orchestra.env.cancel")}
-              </ButtonV2>
-            </div>
-          </form>
-        )}
-      </Show>
-      <Show when={!state.loading && !entries().rows.length}>
-        <p class="env-empty">{language.t("orchestra.env.empty")}</p>
-      </Show>
-      <Show when={entries().preserved}>
-        <p class="env-note" role="note" data-slot="env-preserved">
-          {language.plural("orchestra.env.preserved", entries().preserved)}
-        </p>
-      </Show>
-      <div class="env-list">
-        <For each={entries().rows}>
-          {(row) => (
-            <article class="env-row" data-env-key={row.assignment.key}>
-              <div class="env-content">
-                <strong>{row.assignment.key}</strong>
-                <pre dir="ltr">
-                  {state.revealed[row.index] ? row.assignment.value : language.t("orchestra.env.mask")}
-                </pre>
+            {language.t("orchestra.env.add")}
+          </button>
+          <button type="button" class="mx-btn" disabled={busy() || !state.lines.length} onClick={download}>
+            {language.t("orchestra.env.download")}
+          </button>
+          <button
+            type="button"
+            class="mx-btn"
+            disabled={state.loading}
+            onClick={(event) => {
+              opener = event.currentTarget
+              setState({ dialog: "view", error: "" })
+            }}
+          >
+            {language.t("orchestra.env.view")}
+          </button>
+          <MxBadge>
+            {language.t(entries().rows.length === 1 ? "orchestra.env.count.one" : "orchestra.env.count.other", {
+              count: entries().rows.length,
+            })}
+          </MxBadge>
+        </div>
+        <Show when={!available}>
+          <p class="mx-error" role="status">
+            {language.t("orchestra.env.unavailable")}
+          </p>
+        </Show>
+        <Show when={state.loading}>
+          <p class="mx-note env-status" role="status">
+            {language.t("orchestra.env.loading")}
+          </p>
+        </Show>
+        <Show when={state.error}>
+          <p class="mx-error" role="alert">
+            {language.t(state.error === "download" ? "orchestra.env.error.download" : "orchestra.env.error.read")}
+          </p>
+        </Show>
+        <Show
+          when={rows().length}
+          fallback={
+            <Show when={!state.loading}>
+              <div class="mx-empty">
+                <Show when={entries().rows.length} fallback={language.t("orchestra.env.empty")}>
+                  {language.t("orchestra.env.noMatch")}
+                </Show>
+                <Show when={!entries().rows.length}>
+                  <br />
+                  {language.t("orchestra.env.emptyHint")}
+                </Show>
               </div>
-              <div class="env-actions">
-                <ButtonV2
-                  variant="ghost"
-                  aria-pressed={!!state.revealed[row.index]}
-                  onClick={() => setState("revealed", row.index, !state.revealed[row.index])}
-                >
-                  {language.t(state.revealed[row.index] ? "orchestra.env.hide" : "orchestra.env.reveal")}
-                </ButtonV2>
-                <ButtonV2
-                  variant="ghost"
-                  disabled={state.loading}
-                  onClick={() =>
-                    setState({
-                      editor: { index: row.index, key: row.assignment.key, value: row.assignment.value, reveal: false },
-                      error: "",
-                    })
-                  }
-                >
-                  {language.t("orchestra.env.edit")}
-                </ButtonV2>
-                <ButtonV2
-                  variant="ghost"
-                  disabled={state.loading}
-                  onClick={() =>
-                    setState({
-                      lines: removeEnv(state.lines, row.index),
-                      editor: undefined,
-                      revealed: {},
-                      error: "",
-                    })
-                  }
-                >
-                  {language.t("orchestra.env.remove")}
-                </ButtonV2>
-              </div>
-            </article>
-          )}
-        </For>
+            </Show>
+          }
+        >
+          <div class="mx-table">
+            <For each={rows()}>
+              {(row) => (
+                <div class="mx-row env-row" data-env-key={row.assignment.key}>
+                  <div class="mx-grow">
+                    <strong>
+                      <code dir="ltr">{row.assignment.key}</code>
+                    </strong>
+                    <small>
+                      <code dir="ltr">
+                        {state.revealed[row.index] ? row.assignment.value : language.t("orchestra.env.mask")}
+                      </code>
+                    </small>
+                  </div>
+                  <button
+                    type="button"
+                    class="mx-btn"
+                    onClick={() => setState("revealed", row.index, !state.revealed[row.index])}
+                  >
+                    {language.t(state.revealed[row.index] ? "orchestra.env.hide" : "orchestra.env.reveal")}
+                  </button>
+                  <button
+                    type="button"
+                    class="mx-btn"
+                    disabled={state.loading}
+                    onClick={(event) => edit(event.currentTarget, row.index)}
+                  >
+                    {language.t("orchestra.env.edit")}
+                  </button>
+                  <button
+                    type="button"
+                    class="mx-btn"
+                    disabled={state.loading}
+                    onClick={(event) => {
+                      opener = event.currentTarget
+                      setState({
+                        dialog: "remove",
+                        error: "",
+                        draft: { ...blank(), index: row.index, name: row.assignment.key },
+                      })
+                    }}
+                  >
+                    {language.t("orchestra.env.remove")}
+                  </button>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+        <Show when={entries().preserved}>
+          <p class="mx-note" role="note" data-slot="env-preserved">
+            {language.plural("orchestra.env.preserved", entries().preserved)}
+          </p>
+        </Show>
+        <p class="mx-note">{language.t("orchestra.env.memory")}</p>
       </div>
-    </section>
+      <Dialog open={!!state.dialog} onOpenChange={(open) => !open && close()}>
+        <Dialog.Portal>
+          <Dialog.Overlay class="env-dialog-backdrop" />
+          <div class="env-dialog-layer">
+            <Dialog.Content
+              class="mx-dialog env-dialog"
+              data-env-dialog={state.dialog}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault()
+                // Rows are recreated after Save or Remove; their opener is gone, so use Add key.
+                const target = opener?.isConnected ? opener : add
+                target?.focus()
+              }}
+            >
+              <form
+                autocomplete="off"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  if (state.dialog === "edit") save()
+                  if (state.dialog === "remove") remove()
+                }}
+              >
+                <header class="mx-dialog-head">
+                  <div>
+                    <Dialog.Title>
+                      {/* File names and key names read left to right whatever their first letter. */}
+                      <bdi dir="ltr">{title()}</bdi>
+                    </Dialog.Title>
+                    <Dialog.Description>{subtitle()}</Dialog.Description>
+                  </div>
+                  <Dialog.CloseButton
+                    class="mx-link"
+                    data-slot="dialog-close-button"
+                    aria-label={language.t("orchestra.env.dialog.close")}
+                  >
+                    <svg class="env-icon" viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="m4 4 8 8m0-8-8 8" />
+                    </svg>
+                  </Dialog.CloseButton>
+                </header>
+                <div class="mx-dialog-body">
+                  <Show when={state.dialog === "edit" && state.draft.error}>
+                    <p class="mx-error" role="alert">
+                      {language.t(`orchestra.env.error.${state.draft.error || "invalid"}`)}
+                    </p>
+                  </Show>
+                  <Show when={state.dialog === "edit"}>
+                    <label class="mx-field">
+                      <span>{language.t("orchestra.env.key")}</span>
+                      <input
+                        name="key"
+                        required
+                        dir="ltr"
+                        spellcheck={false}
+                        value={state.draft.key}
+                        onInput={(event) => setState("draft", "key", event.currentTarget.value)}
+                      />
+                    </label>
+                    <label class="mx-field">
+                      <span>{language.t("orchestra.env.value")}</span>
+                      <Show
+                        when={state.draft.multiline}
+                        fallback={
+                          <input
+                            name="value"
+                            dir="ltr"
+                            spellcheck={false}
+                            value={state.draft.value}
+                            onInput={(event) => setState("draft", "value", event.currentTarget.value)}
+                          />
+                        }
+                      >
+                        <textarea
+                          name="value"
+                          dir="ltr"
+                          spellcheck={false}
+                          value={state.draft.value}
+                          onInput={(event) => setState("draft", "value", event.currentTarget.value)}
+                        />
+                      </Show>
+                    </label>
+                  </Show>
+                  <Show when={state.dialog === "view"}>
+                    <pre class="mx-log env-file" dir="ltr">
+                      {serializeEnv(state.lines).replace(/\r\n?/g, "\n")}
+                    </pre>
+                  </Show>
+                  <Show when={state.dialog === "remove"}>
+                    <p class="mx-note">{language.t("orchestra.env.dialog.removeNote", { profile: named() })}</p>
+                  </Show>
+                </div>
+                <footer class="mx-dialog-foot">
+                  {/* Kobalte's CloseButton labels itself "Dismiss", which would hide the visible "Cancel". */}
+                  <button type="button" class="mx-btn" onClick={close}>
+                    {language.t("orchestra.env.cancel")}
+                  </button>
+                  <Show when={state.dialog === "edit" || state.dialog === "remove"}>
+                    <button type="submit" class="mx-btn primary">
+                      {language.t(state.dialog === "remove" ? "orchestra.env.dialog.confirm" : "orchestra.env.apply")}
+                    </button>
+                  </Show>
+                </footer>
+              </form>
+            </Dialog.Content>
+          </div>
+        </Dialog.Portal>
+      </Dialog>
+    </MxPage>
   )
+}
+
+function blank() {
+  return {
+    index: undefined as number | undefined,
+    name: "",
+    key: "",
+    value: "",
+    multiline: false,
+    error: "" as "" | "invalid" | "duplicate" | "readonly",
+  }
 }

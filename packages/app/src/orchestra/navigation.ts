@@ -24,8 +24,18 @@ export const navigation = [
   { id: "help", label: "sidebar.help", chapter: undefined },
 ] as const
 
+// Capability pages without an entry here use their navigation label, as the reference does.
+const crumbs = {
+  agents: "orchestra.shell.crumb.agents",
+  dock: "orchestra.shell.crumb.dock",
+  workspaces: "orchestra.shell.crumb.workspaces",
+  plugins: "orchestra.shell.crumb.plugins",
+  settings: "orchestra.shell.crumb.settings",
+} as const
+
 export function breadcrumbLabel(route: LayoutRoute) {
-  if (route.type === "home") return "home.title"
-  if (route.type !== "chapter") return "orchestra.nav.chat"
-  return navigation.find((item) => item.id === route.chapter)?.label ?? "home.title"
+  if (route.type === "home") return "orchestra.shell.crumb.home"
+  if (route.type !== "chapter") return "orchestra.shell.crumb.session"
+  if (Object.hasOwn(crumbs, route.chapter)) return crumbs[route.chapter as keyof typeof crumbs]
+  return navigation.find((item) => item.id === route.chapter)?.label ?? "orchestra.shell.crumb.home"
 }

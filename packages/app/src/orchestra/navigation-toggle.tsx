@@ -25,7 +25,7 @@ export function OrchestraNavigationToggle(props: {
           aria-disabled={props.constrained || undefined}
           onClick={props.onToggle}
         >
-          <Icon name="sidebar-right" />
+          <Icon name="sidebar-right" class="orchestra-navigation-toggle-icon" />
           <span class="orchestra-nav-label">{label()}</span>
         </Trigger>
       )}

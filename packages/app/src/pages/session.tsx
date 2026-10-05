@@ -63,7 +63,7 @@ import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/
 import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
-import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { type FollowupDraft, followupSystem, sendFollowupDraft } from "@/components/prompt-input/submit"
 import {
   createEvidenceComposerActions,
   createPromptInputController,
@@ -1340,7 +1340,7 @@ export default function Page() {
   const reviewPanelV2Rendered = createMemo<boolean>((prev) => prev || !store.deferRender, false)
 
   const reviewPanelV2 = () => (
-    <div class="flex flex-col h-full overflow-hidden bg-v2-background-bg-base contain-strict">
+    <div class="flex flex-col h-full overflow-hidden contain-strict">
       <Show when={reviewPanelV2Rendered()}>
         <OrchestraReviewPanel {...reviewPanelV2Props()} />
       </Show>
@@ -1718,7 +1718,7 @@ export default function Page() {
         api: sdk().api.session,
         sync: sync(),
         serverSync: serverSync(),
-        draft: item,
+        draft: { ...item, system: await followupSystem(platform, sdk().scope, serverSync(), sdk().directory) },
         optimisticBusy: item.sessionDirectory === sdk().directory,
       }).catch((err) => {
         setFollowup("failed", input.sessionID, input.id)

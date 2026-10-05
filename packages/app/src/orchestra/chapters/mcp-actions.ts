@@ -1,24 +1,8 @@
-import type { McpServer } from "@opencode-ai/client/promise"
 import { onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 
-export const mcpStatusLabels = {
-  connected: "mcp.status.connected",
-  failed: "mcp.status.failed",
-  needs_auth: "mcp.status.needs_auth",
-  needs_client_registration: "orchestra.mcp.needsClientRegistration",
-  disabled: "mcp.status.disabled",
-  pending: "orchestra.mcp.pending",
-} as const
-
-export function mcpAction(status: McpServer["status"]["status"]) {
-  if (status === "pending") return
-  if (status === "connected") return "disconnect"
-  if (status === "needs_auth") return "authenticate"
-  return "connect"
-}
-
-export function createMcpActions(toggle: (name: string) => Promise<void>) {
+// One request per server at a time; failures stay on their row until that row acts again.
+export function createMcpActions() {
   // MCP names are configuration keys and may also be names on Object.prototype.
   const [state, setState] = createStore({
     pending: Object.create(null) as Record<string, boolean>,
@@ -31,11 +15,11 @@ export function createMcpActions(toggle: (name: string) => Promise<void>) {
 
   return {
     state,
-    async run(name: string, status: McpServer["status"]["status"]) {
-      if (lifetime.disposed || state.pending[name] || !mcpAction(status)) return
+    async run(name: string, action: () => Promise<unknown>) {
+      if (lifetime.disposed || state.pending[name]) return
       setState("pending", name, true)
       setState("failures", name, undefined)
-      await toggle(name)
+      await action()
         .catch((error: unknown) => {
           if (lifetime.disposed) return
           setState("failures", name, { detail: mcpErrorDetail(error) })
