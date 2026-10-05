@@ -2737,13 +2737,21 @@ export type SkillSaveInput = {
   description: string
   content: string
   path?: string
+  mtime?: number
 }
 
 export type SkillWriteError = {
   name: "SkillWriteError"
   data: {
     message: string
-    reason: "invalid" | "missing" | "conflict"
+    reason: "invalid" | "missing" | "readonly"
+  }
+}
+
+export type SkillConflictError = {
+  name: "SkillConflictError"
+  data: {
+    message: string
   }
 }
 
@@ -5902,6 +5910,7 @@ export type SkillV2Info = {
   slash?: boolean
   location: string
   content: string
+  mtime?: number
 }
 
 export type SkillV2SaveInput = {
@@ -5909,6 +5918,7 @@ export type SkillV2SaveInput = {
   description: string
   content: string
   path?: string
+  mtime?: number
 }
 
 export type ModelsDevRefreshed = {
@@ -10059,6 +10069,10 @@ export type AppSkillRemoveErrors = {
    * SkillWriteError | InvalidRequestError
    */
   400: SkillWriteError | InvalidRequestError
+  /**
+   * SkillConflictError
+   */
+  409: SkillConflictError
 }
 
 export type AppSkillRemoveError = AppSkillRemoveErrors[keyof AppSkillRemoveErrors]
@@ -10100,6 +10114,7 @@ export type AppSkillsResponses = {
     description?: string
     location: string
     content: string
+    mtime?: number
   }>
 }
 
@@ -10120,6 +10135,10 @@ export type AppSkillSaveErrors = {
    * SkillWriteError | InvalidRequestError
    */
   400: SkillWriteError | InvalidRequestError
+  /**
+   * SkillConflictError
+   */
+  409: SkillConflictError
 }
 
 export type AppSkillSaveError = AppSkillSaveErrors[keyof AppSkillSaveErrors]
@@ -10133,6 +10152,7 @@ export type AppSkillSaveResponses = {
     description?: string
     location: string
     content: string
+    mtime?: number
   }
 }
 

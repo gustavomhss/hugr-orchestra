@@ -41,6 +41,8 @@ export const Info = Schema.Struct({
   description: Schema.optional(Schema.String),
   location: Schema.String,
   content: Schema.String,
+  /** Last modification time (ms) of the skill file, for optimistic concurrency on save. */
+  mtime: Schema.optional(Schema.Finite),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 
@@ -107,7 +109,12 @@ export interface Interface {
   readonly remove: (location: string) => Effect.Effect<void, SkillFile.WriteError>
 }
 
-const add = Effect.fnUntraced(function* (state: State, match: string, events: EventV2Bridge.Service["Service"]) {
+const add = Effect.fnUntraced(function* (
+  state: State,
+  match: string,
+  events: EventV2Bridge.Service["Service"],
+  fsys: FSUtil.Interface,
+) {
   const md = yield* Effect.tryPromise({
     try: () => ConfigMarkdown.parse(match),
     catch: (err) => err,
@@ -146,6 +153,7 @@ const add = Effect.fnUntraced(function* (state: State, match: string, events: Ev
     description: md.data.description,
     location: match,
     content: md.content,
+    mtime: yield* SkillFile.modified(match).pipe(Effect.provideService(FSUtil.Service, fsys)),
   }
 })
 
@@ -284,8 +292,9 @@ const loadSkills = Effect.fnUntraced(function* (
   state: State,
   discovered: DiscoveryState,
   events: EventV2Bridge.Service["Service"],
+  fsys: FSUtil.Interface,
 ) {
-  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events), {
+  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events, fsys), {
     concurrency: "unbounded",
     discard: true,
   })
@@ -331,7 +340,7 @@ const layer = Layer.effect(
           location: "<built-in>",
           content: CUSTOMIZE_OPENCODE_SKILL_BODY,
         }
-        yield* loadSkills(s, yield* InstanceState.get(discovered), events)
+        yield* loadSkills(s, yield* InstanceState.get(discovered), events, fsys)
         return s
       }),
     )
@@ -370,17 +379,20 @@ const layer = Layer.effect(
     })
 
     const save = Effect.fn("Skill.save")(function* (input: SkillFile.SaveInput) {
-      return yield* SkillFile.save({ directory: yield* InstanceState.directory, registered: yield* all(), skill: input }).pipe(
+      const directory = yield* InstanceState.directory
+      const saved = yield* SkillFile.save({ directory, registered: yield* all(), skill: input }).pipe(
         Effect.provideService(FSUtil.Service, fsys),
-        Effect.ensuring(rescan()),
       )
+      yield* rescan()
+      return saved
     })
 
     const remove = Effect.fn("Skill.remove")(function* (location: string) {
-      yield* SkillFile.remove({ registered: yield* all(), location }).pipe(
+      const directory = yield* InstanceState.directory
+      yield* SkillFile.remove({ directory, registered: yield* all(), location }).pipe(
         Effect.provideService(FSUtil.Service, fsys),
-        Effect.ensuring(rescan()),
       )
+      yield* rescan()
     })
 
     return Service.of({ get, require, all, dirs, available, save, remove })

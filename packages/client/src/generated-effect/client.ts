@@ -513,11 +513,18 @@ type Endpoint12_1Input = {
   readonly description: Endpoint12_1Request["payload"]["description"]
   readonly content: Endpoint12_1Request["payload"]["content"]
   readonly path?: Endpoint12_1Request["payload"]["path"]
+  readonly mtime?: Endpoint12_1Request["payload"]["mtime"]
 }
 const Endpoint12_1 = (raw: RawClient["server.skill"]) => (input: Endpoint12_1Input) =>
   raw["skill.save"]({
     query: { location: input["location"] },
-    payload: { name: input["name"], description: input["description"], content: input["content"], path: input["path"] },
+    payload: {
+      name: input["name"],
+      description: input["description"],
+      content: input["content"],
+      path: input["path"],
+      mtime: input["mtime"],
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint12_2Request = Parameters<RawClient["server.skill"]["skill.remove"]>[0]

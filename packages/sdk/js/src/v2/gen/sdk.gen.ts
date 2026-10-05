@@ -596,7 +596,7 @@ export class App extends HeyApiClient {
   /**
    * Remove skill
    *
-   * Delete the file of a registered skill given its path.
+   * Delete a registered project skill file given its path, and its folder when that is left empty.
    */
   public skillRemove<ThrowOnError extends boolean = false>(
     parameters: {
@@ -658,7 +658,7 @@ export class App extends HeyApiClient {
   /**
    * Save skill
    *
-   * Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.
+   * Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
    */
   public skillSave<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -6605,7 +6605,7 @@ export class Skill extends HeyApiClient {
   /**
    * Remove skill
    *
-   * Delete the file of a registered skill given its path.
+   * Delete a registered project skill file given its path, and its folder when that is left empty.
    */
   public remove<ThrowOnError extends boolean = false>(
     parameters: {
@@ -6660,7 +6660,7 @@ export class Skill extends HeyApiClient {
   /**
    * Save skill
    *
-   * Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.
+   * Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
    */
   public save<ThrowOnError extends boolean = false>(
     parameters: {

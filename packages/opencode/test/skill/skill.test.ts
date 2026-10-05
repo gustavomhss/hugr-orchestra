@@ -122,6 +122,46 @@ Instructions here.
     ),
   )
 
+  it.live("rescans after saving and removing a project skill, and only after a successful write", () =>
+    provideTmpdirInstance(
+      (dir) =>
+        Effect.gen(function* () {
+          const review = path.join(dir, ".opencode", "skill", "review", "SKILL.md")
+          yield* Effect.promise(() =>
+            Bun.write(review, "---\nname: review\ndescription: Review changes.\n---\n\n# Review\n"),
+          )
+          const skill = yield* Skill.Service
+          const project = () =>
+            skill.all().pipe(Effect.map((list) => list.filter((item) => item.location !== "<built-in>")))
+          const before = (yield* project()).find((item) => item.name === "review")
+          expect(typeof before?.mtime).toBe("number")
+
+          const saved = yield* skill.save({ name: "release", description: "Ship it.", content: "# Release" })
+          expect(saved.location).toBe(path.join(dir, ".opencode", "skills", "release", "SKILL.md"))
+          expect((yield* project()).map((item) => item.name).toSorted()).toEqual(["release", "review"])
+
+          yield* skill.save({
+            name: "review",
+            description: "Review the diff.",
+            content: "# Review\n",
+            location: review,
+            mtime: before?.mtime,
+          })
+          expect((yield* project()).find((item) => item.name === "review")?.description).toBe("Review the diff.")
+
+          yield* skill.remove(saved.location)
+          expect((yield* project()).map((item) => item.name)).toEqual(["review"])
+
+          const failed = yield* skill
+            .save({ name: "review", description: "Stale", content: "", location: review, mtime: 1 })
+            .pipe(Effect.flip)
+          expect(failed.reason).toBe("conflict")
+          expect((yield* project()).find((item) => item.name === "review")?.description).toBe("Review the diff.")
+        }),
+      { git: true },
+    ),
+  )
+
   it.live("returns skill directories from Skill.dirs", () =>
     provideTmpdirInstance(
       (dir) =>

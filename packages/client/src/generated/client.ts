@@ -822,6 +822,7 @@ export function make(options: ClientOptions) {
               description: input["description"],
               content: input["content"],
               path: input["path"],
+              mtime: input["mtime"],
             },
             successStatus: 200,
             declaredStatuses: [400, 409, 401],
