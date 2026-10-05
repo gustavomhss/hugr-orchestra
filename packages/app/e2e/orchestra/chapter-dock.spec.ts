@@ -103,9 +103,10 @@ test("an overlay over the Dock occludes the native browser until it closes", asy
   }
   await expect.poll(occluded).toBe(false)
 
-  // The settings dialog renders through a portal and its overlay covers the whole window.
+  // The settings dialog renders through a portal and its overlay covers the whole window. The sidebar's
+  // Settings entry opens the Settings page, so the dialog comes from its keyboard shortcut.
   const beforeDialog = (await fake(page)).calls.length
-  await nav(page, "Settings")
+  await page.keyboard.press("ControlOrMeta+Comma")
   await expect(page.getByRole("dialog")).toBeVisible()
   await expect.poll(occluded).toBe(true)
   await page.keyboard.press("Escape")

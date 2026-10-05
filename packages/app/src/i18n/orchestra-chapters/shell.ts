@@ -6,6 +6,7 @@ export const SHELL_COPY = {
   "orchestra.shell.crumb.agents": "agents",
   "orchestra.shell.crumb.dock": "dock",
   "orchestra.shell.crumb.workspaces": "workspaces",
+  "orchestra.shell.crumb.settings": "settings",
   "orchestra.shell.crumb.plugins": "LLM Plugins",
   "orchestra.shell.profile.agents.one": "{{count}} agent",
   "orchestra.shell.profile.agents.other": "{{count}} agents",

@@ -15,6 +15,7 @@ describe("breadcrumbLabel", () => {
     expect(crumb({ type: "chapter", chapter: "agents" })).toBe("agents")
     expect(crumb({ type: "chapter", chapter: "dock" })).toBe("dock")
     expect(crumb({ type: "chapter", chapter: "workspaces" })).toBe("workspaces")
+    expect(crumb({ type: "chapter", chapter: "settings" })).toBe("settings")
   })
 
   test("names capability pages by their reference page title", () => {

@@ -26,6 +26,7 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   providers: lazy(() => import("./chapters/providers")),
   shortcuts: lazy(() => import("./chapters/shortcuts")),
   schedule: lazy(() => import("./chapters/schedule")),
+  settings: lazy(() => import("./chapters/settings")),
 }
 
 export function OrchestraChapterRoute() {

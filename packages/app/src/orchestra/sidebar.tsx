@@ -279,7 +279,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
     chooseProject(conn, true)
   }
 
-  async function openSettingsPanel(panel?: "providers" | "shortcuts") {
+  async function openSettingsPanel(panel: "providers" | "shortcuts") {
     const current = ++requests.settings
     const target = profile()
     const route = layout.route()
@@ -414,10 +414,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                         if (item.id === "chat") return openChat()
                         if (item.id === "maestro") return openMaestro()
                         if (item.id === "search") return command.show()
-                        // Pages that register Settings keep their own opener; chapter pages use the shell's.
-                        if (item.id === "settings" && command.options.some((option) => option.id === "settings.open"))
-                          return command.trigger("settings.open")
-                        if (item.id === "settings") return void openSettingsPanel()
                         if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
                         if (chapterPages[item.id]) return openChapter(item.id)
                         if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)

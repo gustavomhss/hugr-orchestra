@@ -30,6 +30,7 @@ const crumbs = {
   dock: "orchestra.shell.crumb.dock",
   workspaces: "orchestra.shell.crumb.workspaces",
   plugins: "orchestra.shell.crumb.plugins",
+  settings: "orchestra.shell.crumb.settings",
 } as const
 
 export function breadcrumbLabel(route: LayoutRoute) {
