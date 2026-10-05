@@ -5,7 +5,7 @@ Status: frozen execution plan, 2026-10-05. Implements the accepted architecture 
 ## 1. Baselines and scope decision
 
 - Orchestra worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/charlie-plugin`, HEAD `d11d8652aa` (`fork/dev`, fast-forwarded 2026-10-05 from audit baseline `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`, +158 commits, no local commits). `specs/charlie/` is intentional untracked work; HEAD does not pin it. Backup: `_worktrees/charlie-specs-backup-2026-10-05.tgz`.
-- Canonical Atlas: `/Users/gustavoschneiter/Documents/HuGR/atlas`, HEAD `b319723d5c5c86a45ad362386d8c0583ed3a10f4`.
+- Canonical Atlas: Orchestra `foundation/atlas` (owner ruling 2026-10-05). The standalone `/Users/gustavoschneiter/Documents/HuGR/atlas` (HEAD `b319723d5c`, remote HuGR-Labs/atlas, no push access) is legacy and a read-only reference; audits that cite it still describe the same code apart from formatting.
 - Canonical Composer: `/Users/gustavoschneiter/Documents/HuGR/skill-001-fastapi-production`, HEAD `df04cf8f9c9c4307d22b6447d513b05b94c08572`.
 - Owner scope decision: **Orchestra completo**. Complete delivery on Orchestra, direct without Maestro and delegated through Maestro. Unmodified upstream OpenCode (`opencode-ai@1.18.27`, tag `4b7e19e315cca414121ba1d61523fef74bb3ae8b`) is out of this delivery's support promise — it lacks fork lifecycle hooks and a separate agent ID.
 - Supported install targets (first qualification): macOS arm64/x64, Linux glibc arm64/x64, Windows x64. Windows arm64, Linux musl and x64-baseline CPU claims are separate work, not inherited from the host build matrix.
