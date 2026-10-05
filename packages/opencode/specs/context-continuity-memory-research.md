@@ -103,4 +103,41 @@ provenance, validity and history better than any compactor.
 
 ## 5. Long-term memory construction
 
-Pending: survey still running.
+Most evidence here is about human memory; applying it to an LLM reading a context block is an
+analogy. The exceptions are the computing patterns (correctness guarantees) and the position effect
+(measured on LLMs).
+
+- **Method of loci** (meta-analysis of 13 RCTs, g = 0.65; Dresler 2017): the transferable part is
+  a stable, pre-learned ordered scaffold. Fixed section order, stable IDs and positions; never
+  reshuffle.
+- **Chunks and schemas**: about 4 chunks in focus (Cowan 2001; "7±2" is not a hard limit). The topic
+  given before a passage raises comprehension (Bransford and Johnson 1972). Repeated retelling
+  drifts toward the reader's schema (Bergman and Roediger 1999 replicating Bartlett): the strongest
+  argument against rewriting a summary from a summary.
+- **Append-only log plus compaction** (event sourcing, LSM tombstones, Kafka
+  `delete.retention.ms`, WAL, op-based CRDTs): ops are events with id, source, turn and reason; the
+  memory is a snapshot rebuilt by replay; tombstones stay visible for a retention window; ops are
+  idempotent. Replay(log) = snapshot is a testable invariant.
+- **Consolidation**: complementary learning systems interleave new material with old so new
+  learning does not overwrite old; the consolidation pass must see the current memory with the new
+  turns. "Sleep keeps what you expect to need" failed to replicate.
+- **Gist vs verbatim** (fuzzy-trace theory): stored independently; gist creates plausible false
+  memories. Copy exact tokens (paths, flags, numbers, errors, quotes) verbatim and link gist items to
+  them.
+- **Forgetting**: context does not decay, but use can drive retention (working set, Denning 1968):
+  demote items unused for several passes, never pinned classes; promote archived items fetched
+  repeatedly (thrashing, as in MemGPT paging).
+- **Reconsolidation** (narrow boundary conditions, weak replication): as a rule only — update an
+  item when new evidence contradicts or refines it, show "was" once; new content becomes a new item.
+- **Lost in the middle** (Liu 2024, measured on LLMs): critical items at the edges of the block.
+- **Organizational memory**: debriefs d = 0.67 (Tannenbaum and Cerasoli 2013); NASA lessons went
+  unused when readers could not tell whether a lesson applied (GAO-02-195): every lesson needs an
+  "applies when" condition. Lab notebooks: dated, append-only, corrections struck with a reason.
+- **Source monitoring** (Johnson 1993): source is inferred unreliably later; record it at write
+  time.
+- **Prospective memory**: intentions tied to a concrete cue fire reliably; implementation
+  intentions ("when X, then Y") d = 0.65 over 94 tests (Gollwitzer and Sheeran 2006). Unfinished
+  work is not remembered better (the Zeigarnik claim failed, ratio 0.99), so it must be written down.
+- **Cue-dependent recall**: the principle holds with modest effects (Godden and Baddeley's divers
+  did not replicate). Index items by the strings the agent will meet: paths, symbols, commands,
+  error text.
