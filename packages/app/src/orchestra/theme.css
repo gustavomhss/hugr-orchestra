@@ -65,6 +65,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-profile-muted: #8798aa;
   --orchestra-sidebar-profile-chevron: #8fa0b2;
   --orchestra-sidebar-profile-logo: #2c70bd;
+  --orchestra-sidebar-profile-logo-text: #fff;
   --orchestra-brand-descriptor: #8c9db2;
   --orchestra-sidebar-footer: #7b8c9e;
 
@@ -238,7 +239,8 @@ html[data-color-scheme] body[data-new-layout] {
 html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-text: #1a1f26;
   --orchestra-body: #454d58;
-  --orchestra-muted: #6c7581;
+  /* AA over the light glass, including where it sits on the photo's darker slopes. */
+  --orchestra-muted: #48515c;
   --orchestra-faint: #68707a;
   --orchestra-accent: #3f6f9f;
   --orchestra-warm: #846f45;

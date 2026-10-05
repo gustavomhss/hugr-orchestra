@@ -90,6 +90,27 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await page.screenshot({ path: test.info().outputPath("compact-light.png"), animations: "disabled" })
 })
 
+test("V2 profile card counts agents and shows the branch only when the server reports one", async ({ page }) => {
+  await setupCompactNavigation(page, { protocol: "v2" })
+  const vcs: string[] = []
+  // A V2 server without the legacy endpoint: the card drops the branch instead of showing a stale one.
+  await page.route(
+    (url) => url.pathname === "/vcs",
+    (route) => {
+      vcs.push(route.request().url())
+      return route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
+    },
+  )
+  await page.goto("/")
+  const meta = page.locator('[data-slot="orchestra-profile"] small')
+  await expect(meta).toHaveText("1 agent")
+  expect(vcs.length, "the branch is asked once, without retries").toBe(1)
+  // The same V2 server answering the legacy endpoint shows the branch it reports.
+  await page.unroute((url) => url.pathname === "/vcs")
+  await page.reload()
+  await expect(meta).toHaveText("1 agent · main")
+})
+
 // Every main view is one panel of the shared sidebar glass, one 6px gutter from the sidebar.
 async function expectMainGlass(main: Locator) {
   const sidebar = main.page().locator('[data-component="orchestra-sidebar"]')

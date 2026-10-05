@@ -378,6 +378,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   display: flex;
   inline-size: 100%;
   min-inline-size: 0;
+  /* The reference card height, so a name without its meta line stays centered. */
+  min-block-size: 46px;
   align-items: center;
   gap: 9px;
   padding-block: 8px;
@@ -410,10 +412,10 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 }
 
 /* A repository without its own icon or color gets the reference's square profile mark. */
-.orchestra-profile-avatar [data-slot="project-avatar-surface"][data-variant="gray"]:not([data-has-image]) {
+.orchestra-profile-avatar[data-unset] [data-slot="project-avatar-surface"] {
   background: var(--orchestra-sidebar-profile-logo);
   box-shadow: none;
-  color: #fff;
+  color: var(--orchestra-sidebar-profile-logo-text);
   text-shadow: none;
 }
 
@@ -436,7 +438,6 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 }
 
 .orchestra-profile-text small {
-  min-block-size: 12px;
   color: var(--orchestra-sidebar-profile-muted);
   font-size: 10px;
   line-height: normal;
@@ -611,6 +612,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 
 .orchestra-shell > [data-slot="titlebar-v2"] .orchestra-navigation-toggle {
   inline-size: 34px;
+  block-size: 34px;
   margin-block-end: 0;
   padding-inline: 7px;
   -webkit-app-region: no-drag;
