@@ -2850,6 +2850,10 @@ export type McpStatus =
   | McpStatusNeedsAuth
   | McpStatusNeedsClientRegistration
 
+export type McpConfigError = {
+  message: string
+}
+
 export type McpServerNotFoundError = {
   _tag: "McpServerNotFoundError"
   name: string
@@ -10475,6 +10479,40 @@ export type McpToolsResponses = {
 
 export type McpToolsResponse = McpToolsResponses[keyof McpToolsResponses]
 
+export type McpConfigListData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/config"
+}
+
+export type McpConfigListErrors = {
+  /**
+   * McpConfigError | InvalidRequestError
+   */
+  400: McpConfigError | InvalidRequestError
+}
+
+export type McpConfigListError = McpConfigListErrors[keyof McpConfigListErrors]
+
+export type McpConfigListResponses = {
+  /**
+   * MCP servers defined in the project's own config files, unresolved
+   */
+  200: {
+    [key: string]: {
+      type?: "local" | "remote"
+      command?: Array<string>
+      url?: string
+    }
+  }
+}
+
+export type McpConfigListResponse = McpConfigListResponses[keyof McpConfigListResponses]
+
 export type McpConfigRemoveData = {
   body?: never
   path: {
@@ -10489,9 +10527,9 @@ export type McpConfigRemoveData = {
 
 export type McpConfigRemoveErrors = {
   /**
-   * Bad request
+   * McpConfigError | InvalidRequestError
    */
-  400: BadRequestError
+  400: McpConfigError | InvalidRequestError
   /**
    * McpServerNotFoundError
    */
@@ -10525,9 +10563,9 @@ export type McpConfigUpdateData = {
 
 export type McpConfigUpdateErrors = {
   /**
-   * BadRequest | InvalidRequestError
+   * McpConfigError | InvalidRequestError
    */
-  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+  400: McpConfigError | InvalidRequestError
 }
 
 export type McpConfigUpdateError = McpConfigUpdateErrors[keyof McpConfigUpdateErrors]

@@ -108,6 +108,8 @@ import type {
   McpAuthRemoveResponses,
   McpAuthStartErrors,
   McpAuthStartResponses,
+  McpConfigListErrors,
+  McpConfigListResponses,
   McpConfigRemoveErrors,
   McpConfigRemoveResponses,
   McpConfigUpdateErrors,
@@ -2381,6 +2383,36 @@ export class Formatter extends HeyApiClient {
 }
 
 export class Config3 extends HeyApiClient {
+  /**
+   * List project MCP server config
+   *
+   * List the type, command and URL of each MCP server the project's own config files define, as written (variables are not resolved).
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<McpConfigListResponses, McpConfigListErrors, ThrowOnError>({
+      url: "/mcp/config",
+      ...options,
+      ...params,
+    })
+  }
+
   /**
    * Remove MCP server config
    *

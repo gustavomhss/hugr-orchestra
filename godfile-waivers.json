@@ -391,13 +391,13 @@
       "authorizedAt": "2026-09-08"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1109,
+      "maximumLines": 1111,
       "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-10-05"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 2928,
+      "maximumLines": 2965,
       "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-10-05"
@@ -427,13 +427,13 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 7509,
+      "maximumLines": 7540,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-09-29"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 14584,
+      "maximumLines": 14663,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-09-29"

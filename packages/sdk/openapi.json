@@ -2898,6 +2898,9 @@
                       },
                       "content": {
                         "type": "string"
+                      },
+                      "mtime": {
+                        "type": "number"
                       }
                     },
                     "required": ["name", "location", "content"],
@@ -2968,6 +2971,9 @@
                     },
                     "content": {
                       "type": "string"
+                    },
+                    "mtime": {
+                      "type": "number"
                     }
                   },
                   "required": ["name", "location", "content"],
@@ -2993,9 +2999,19 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "SkillConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillConflictError"
+                }
+              }
+            }
           }
         },
-        "description": "Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.",
+        "description": "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
         "summary": "Save skill",
         "requestBody": {
           "content": {
@@ -3070,9 +3086,19 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "SkillConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillConflictError"
+                }
+              }
+            }
           }
         },
-        "description": "Delete the file of a registered skill given its path.",
+        "description": "Delete a registered project skill file given its path, and its folder when that is left empty.",
         "summary": "Remove skill",
         "x-codeSamples": [
           {
@@ -3406,6 +3432,87 @@
         ]
       }
     },
+    "/mcp/config": {
+      "get": {
+        "tags": ["mcp"],
+        "operationId": "mcp.config.list",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP servers defined in the project's own config files, unresolved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["local", "remote"]
+                      },
+                      "command": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "url": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "description": "MCP servers defined in the project's own config files, unresolved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "McpConfigError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/McpConfigError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "List the type, command and URL of each MCP server the project's own config files define, as written (variables are not resolved).",
+        "summary": "List project MCP server config",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.mcp.config.list({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/mcp/{name}/config": {
       "put": {
         "tags": ["mcp"],
@@ -3449,13 +3556,13 @@
             }
           },
           "400": {
-            "description": "BadRequest | InvalidRequestError",
+            "description": "McpConfigError | InvalidRequestError",
             "content": {
               "application/json": {
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/effect_HttpApiError_BadRequest"
+                      "$ref": "#/components/schemas/McpConfigError"
                     },
                     {
                       "$ref": "#/components/schemas/InvalidRequestError"
@@ -3540,11 +3647,18 @@
             }
           },
           "400": {
-            "description": "Bad request",
+            "description": "McpConfigError | InvalidRequestError",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/McpConfigError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
                 }
               }
             }
@@ -6054,11 +6168,11 @@
             "required": false
           },
           {
-            "name": "edges",
+            "name": "period",
             "in": "query",
             "schema": {
               "type": "string",
-              "description": "Comma-separated ascending epoch-millisecond bucket boundaries (2 to 64)"
+              "enum": ["7d", "30d", "90d", "all"]
             },
             "required": true
           }
@@ -6092,7 +6206,7 @@
             }
           }
         },
-        "description": "Aggregate user and assistant messages of the sessions in this directory into one fact per bucket, session and model. Buckets are [edges[i], edges[i + 1]).",
+        "description": "Aggregate the user and assistant messages of this project's sessions for a period into one fact per bucket, session and model, plus the wall clock of root-session assistant turns per bucket. Buckets are server-local days; a fixed period has the equal window before it as bucket 0.",
         "summary": "Get session activity",
         "x-codeSamples": [
           {
@@ -10591,6 +10705,16 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "UnknownError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnknownError1"
+                }
+              }
+            }
           }
         },
         "description": "Read the agent definition stored in this location's .opencode/agent directory.",
@@ -10683,6 +10807,16 @@
               }
             }
           },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
           "500": {
             "description": "UnknownError",
             "content": {
@@ -10694,7 +10828,7 @@
             }
           }
         },
-        "description": "Write the agent definition to this location's .opencode/agent directory and reload the registered agents.",
+        "description": "Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.",
         "summary": "Update agent file",
         "requestBody": {
           "content": {
@@ -14577,7 +14711,7 @@
             }
           }
         },
-        "description": "Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.",
+        "description": "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
         "summary": "Save skill",
         "requestBody": {
           "content": {
@@ -14678,7 +14812,7 @@
             }
           }
         },
-        "description": "Delete the file of a registered skill given its path.",
+        "description": "Delete a registered project skill file given its path, and its folder when that is left empty.",
         "summary": "Remove skill",
         "x-codeSamples": [
           {
@@ -25168,6 +25302,9 @@
           },
           "path": {
             "type": "string"
+          },
+          "mtime": {
+            "type": "number"
           }
         },
         "required": ["name", "description", "content"],
@@ -25188,10 +25325,31 @@
               },
               "reason": {
                 "type": "string",
-                "enum": ["invalid", "missing", "conflict"]
+                "enum": ["invalid", "missing", "readonly"]
               }
             },
             "required": ["message", "reason"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "SkillConflictError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["SkillConflictError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["message"],
             "additionalProperties": false
           }
         },
@@ -25316,6 +25474,16 @@
             "$ref": "#/components/schemas/MCPStatusNeedsClientRegistration"
           }
         ]
+      },
+      "McpConfigError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["message"],
+        "additionalProperties": false
       },
       "McpServerNotFoundError": {
         "type": "object",
@@ -25749,38 +25917,44 @@
           "failed": {
             "type": "number"
           },
-          "activeMs": {
-            "type": "number"
-          },
           "tokens": {
-            "type": "number"
-          },
-          "cost": {
             "type": "number"
           }
         },
-        "required": [
-          "bucket",
-          "sessionID",
-          "providerID",
-          "modelID",
-          "user",
-          "assistant",
-          "failed",
-          "activeMs",
-          "tokens",
-          "cost"
-        ],
+        "required": ["bucket", "sessionID", "providerID", "modelID", "user", "assistant", "failed", "tokens"],
         "additionalProperties": false
       },
       "SessionActivity": {
         "type": "object",
         "properties": {
+          "period": {
+            "type": "string",
+            "enum": ["7d", "30d", "90d", "all"]
+          },
           "edges": {
             "type": "array",
             "items": {
               "type": "number"
-            }
+            },
+            "description": "Ascending bucket boundaries at server-local midnights; bucket i is [edges[i], edges[i + 1])"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Server-local YYYY-MM-DD of each edge"
+          },
+          "previous": {
+            "type": "boolean",
+            "description": "True when bucket 0 is the equal window before the period"
+          },
+          "activeMs": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Per bucket, wall clock during which any root-session assistant turn was running"
           },
           "sessions": {
             "type": "array",
@@ -25793,9 +25967,13 @@
             "items": {
               "$ref": "#/components/schemas/SessionActivityFact"
             }
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when more than 200000 messages were in range"
           }
         },
-        "required": ["edges", "sessions", "facts"],
+        "required": ["period", "edges", "days", "previous", "activeMs", "sessions", "facts", "truncated"],
         "additionalProperties": false
       },
       "NotFoundError": {
@@ -26245,6 +26423,23 @@
         "required": ["_tag", "message"],
         "additionalProperties": false
       },
+      "ConflictError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["ConflictError"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "message"],
+        "additionalProperties": false
+      },
       "SessionsResponse": {
         "type": "object",
         "properties": {
@@ -26332,23 +26527,6 @@
           }
         },
         "required": ["text"],
-        "additionalProperties": false
-      },
-      "ConflictError": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": ["ConflictError"]
-          },
-          "message": {
-            "type": "string"
-          },
-          "resource": {
-            "type": "string"
-          }
-        },
-        "required": ["_tag", "message"],
         "additionalProperties": false
       },
       "ServiceUnavailableError": {
@@ -31967,6 +32145,12 @@
           "exists": {
             "type": "boolean"
           },
+          "revision": {
+            "type": "string"
+          },
+          "invalid": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
           },
@@ -31994,7 +32178,7 @@
             "type": "boolean"
           }
         },
-        "required": ["path", "exists"],
+        "required": ["path", "exists", "revision"],
         "additionalProperties": false
       },
       "AgentFileInput": {
@@ -32025,6 +32209,9 @@
           },
           "disable": {
             "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -35486,6 +35673,9 @@
           },
           "content": {
             "type": "string"
+          },
+          "mtime": {
+            "type": "number"
           }
         },
         "required": ["name", "location", "content"],
@@ -35505,6 +35695,9 @@
           },
           "path": {
             "type": "string"
+          },
+          "mtime": {
+            "type": "number"
           }
         },
         "required": ["name", "description", "content"],
