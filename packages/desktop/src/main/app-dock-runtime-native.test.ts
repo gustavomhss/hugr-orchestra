@@ -19,7 +19,7 @@ const nativePayload = resolve("resources/linux/app-dock-accessibility")
 const label = "io.orchestra.app-dock"
 
 test.skipIf(!enabled || !image)(
-  "helper admission runs beside the workspace queue and stop reaps an admission in flight",
+  "helper admission runs beside the workspace queue and concurrent callers share one helper",
   async () => {
     const fixture = await workspace(image!)
     try {
@@ -36,10 +36,22 @@ test.skipIf(!enabled || !image)(
       expect(native.active()).toBe(true)
       expect(await fixture.runtime.native()).toBe(native)
       expect(await helpers(owner)).toHaveLength(1)
+      await fixture.runtime.stop()
+      expect(await helpers(owner)).toEqual([])
+    } finally {
+      await fixture.remove()
+    }
+  },
+  240_000,
+)
 
-      // A fresh cold admission, interrupted once its helper container exists.
-      await native.channel.terminate()
-      await until(async () => (await helpers(owner)).length === 0)
+test.skipIf(!enabled || !image)(
+  "stop during a cold admission refuses it and leaves no helper behind",
+  async () => {
+    const fixture = await workspace(image!)
+    try {
+      await fixture.runtime.start()
+      const owner = await fixture.owner()
       const interrupted = fixture.runtime.native().then(() => "admitted", (error: unknown) => error)
       await until(async () => (await helpers(owner)).length === 1)
       await fixture.runtime.stop()
@@ -47,6 +59,28 @@ test.skipIf(!enabled || !image)(
       const outcome = await interrupted
       expect(outcome).toBeInstanceOf(NativeDockProtocol.NativeError)
       expect((await fixture.runtime.state()).phase).toBe("stopped")
+    } finally {
+      await fixture.remove()
+    }
+  },
+  240_000,
+)
+
+test.skipIf(!enabled || !image)(
+  "dispose during a cold admission waits for it and leaves no helper behind a running workspace",
+  async () => {
+    const fixture = await workspace(image!)
+    try {
+      await fixture.runtime.start()
+      const owner = await fixture.owner()
+      // Unlike stop(), dispose() keeps the workspace running, so the admission would otherwise succeed and publish.
+      const admission = fixture.runtime.native().then(() => "admitted", (error: unknown) => error)
+      await until(async () => (await helpers(owner)).length === 1)
+      await fixture.runtime.dispose()
+      expect(await helpers(owner)).toEqual([])
+      const outcome = await admission
+      // Refused either by the admission's own ownership recheck or after it, never published.
+      expect(outcome).toBeInstanceOf(NativeDockProtocol.NativeError)
     } finally {
       await fixture.remove()
     }
