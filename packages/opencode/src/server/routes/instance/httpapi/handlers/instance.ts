@@ -10,7 +10,14 @@ import { SkillFile } from "@opencode-ai/core/skill/file"
 import { Clock, Effect } from "effect"
 import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ApiSkillWriteError, ApiVcsApplyError, SkillRemoveQuery, SkillSaveInput, VcsActivityQuery } from "../groups/instance"
+import {
+  ApiSkillConflictError,
+  ApiSkillWriteError,
+  ApiVcsApplyError,
+  SkillRemoveQuery,
+  SkillSaveInput,
+  VcsActivityQuery,
+} from "../groups/instance"
 import { markInstanceForDisposal } from "../lifecycle"
 
 export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance", (handlers) =>
@@ -94,12 +101,16 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       return yield* skill.all()
     })
 
-    const saveSkill = Effect.fn("InstanceHttpApi.skillSave")(function* (ctx: {
-      payload: typeof SkillSaveInput.Type
-    }) {
+    const saveSkill = Effect.fn("InstanceHttpApi.skillSave")(function* (ctx: { payload: typeof SkillSaveInput.Type }) {
       const input = ctx.payload
       return yield* skill
-        .save({ name: input.name, description: input.description, content: input.content, location: input.path })
+        .save({
+          name: input.name,
+          description: input.description,
+          content: input.content,
+          location: input.path,
+          mtime: input.mtime,
+        })
         .pipe(Effect.mapError(skillWriteError))
     })
 
@@ -138,6 +149,8 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
 )
 
 function skillWriteError(error: SkillFile.WriteError) {
+  if (error.reason === "conflict")
+    return new ApiSkillConflictError({ name: "SkillConflictError", data: { message: error.message } })
   return new ApiSkillWriteError({
     name: "SkillWriteError",
     data: { message: error.message, reason: error.reason },

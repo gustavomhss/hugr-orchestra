@@ -38,7 +38,7 @@ export const SkillGroup = HttpApiGroup.make("server.skill")
           identifier: "v2.skill.save",
           summary: "Save skill",
           description:
-            "Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.",
+            "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
         }),
       ),
   )
@@ -53,7 +53,7 @@ export const SkillGroup = HttpApiGroup.make("server.skill")
         OpenApi.annotations({
           identifier: "v2.skill.remove",
           summary: "Remove skill",
-          description: "Delete the file of a registered skill given its path.",
+          description: "Delete a registered project skill file given its path, and its folder when that is left empty.",
         }),
       ),
   )

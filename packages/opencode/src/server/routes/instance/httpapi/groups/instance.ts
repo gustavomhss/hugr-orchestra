@@ -54,6 +54,8 @@ export const SkillSaveInput = Schema.Struct({
   content: Schema.String,
   /** Location of the registered skill to rewrite. Omit to create a project skill. */
   path: Schema.optional(Schema.String),
+  /** The `mtime` read from the catalog; a save fails with a conflict when the file changed since. */
+  mtime: Schema.optional(Schema.Finite),
 }).annotate({ identifier: "SkillSaveInput" })
 
 export const SkillRemoveQuery = Schema.Struct({
@@ -66,10 +68,18 @@ export class ApiSkillWriteError extends Schema.ErrorClass<ApiSkillWriteError>("S
     name: Schema.Literal("SkillWriteError"),
     data: Schema.Struct({
       message: Schema.String,
-      reason: Schema.Literals(["invalid", "missing", "conflict"]),
+      reason: Schema.Literals(["invalid", "missing", "readonly"]),
     }),
   },
   { httpApiStatus: 400 },
+) {}
+
+export class ApiSkillConflictError extends Schema.ErrorClass<ApiSkillConflictError>("SkillConflictError")(
+  {
+    name: Schema.Literal("SkillConflictError"),
+    data: Schema.Struct({ message: Schema.String }),
+  },
+  { httpApiStatus: 409 },
 ) {}
 
 export const InstancePaths = {
@@ -215,24 +225,25 @@ export const InstanceApi = HttpApi.make("instance")
           query: WorkspaceRoutingQuery,
           payload: SkillSaveInput,
           success: described(Skill.Info, "Saved skill"),
-          error: ApiSkillWriteError,
+          error: [ApiSkillWriteError, ApiSkillConflictError],
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "app.skillSave",
             summary: "Save skill",
             description:
-              "Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.",
+              "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
           }),
         ),
         HttpApiEndpoint.delete("skillRemove", InstancePaths.skill, {
           query: SkillRemoveQuery,
           success: described(Schema.Boolean, "Skill removed"),
-          error: ApiSkillWriteError,
+          error: [ApiSkillWriteError, ApiSkillConflictError],
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "app.skillRemove",
             summary: "Remove skill",
-            description: "Delete the file of a registered skill given its path.",
+            description:
+              "Delete a registered project skill file given its path, and its folder when that is left empty.",
           }),
         ),
         HttpApiEndpoint.get("lsp", InstancePaths.lsp, {

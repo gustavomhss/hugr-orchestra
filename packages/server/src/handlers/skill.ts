@@ -22,17 +22,17 @@ export const SkillHandler = HttpApiBuilder.group(Api, "server.skill", (handlers)
             description: input.description,
             content: input.content,
             location: input.path,
+            mtime: input.mtime,
           }),
-        ).pipe(
-          Effect.catchTag("SkillWriteError", (error) => Effect.fail(writeError(error))),
-        )
+        ).pipe(Effect.catchTag("SkillWriteError", (error) => Effect.fail(writeError(error))))
       }),
     )
     .handle(
       "skill.remove",
       Effect.fn(function* (ctx) {
         const skill = yield* SkillV2.Service
-        return yield* response(skill.remove(ctx.query.path).pipe(Effect.as(true))).pipe(
+        const location = yield* Location.Service
+        return yield* response(skill.remove(location.directory, ctx.query.path).pipe(Effect.as(true))).pipe(
           Effect.catchTag("SkillWriteError", (error) =>
             Effect.fail(new InvalidRequestError({ message: error.message, kind: error.reason, field: "path" })),
           ),

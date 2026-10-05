@@ -34,6 +34,7 @@ import { color, printHeader, printResults } from "./report"
 import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } from "./routing"
 import { mcpScenarios } from "./mcp"
 import { runScenario } from "./runner"
+import { skillScenarios } from "./skill"
 import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
 import { type Scenario } from "./types"
@@ -110,31 +111,7 @@ const scenarios: Scenario[] = [
   ...vcsScenarios,
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
-  http.protected.get("/skill", "app.skills").json(200, array, "status"),
-  http.protected
-    .put("/skill", "app.skillSave")
-    .mutating()
-    .at((ctx) => ({
-      path: "/skill",
-      headers: ctx.headers(),
-      body: { name: "httpapi-skill", description: "Exercise skill", content: "# Exercise" },
-    }))
-    .json(
-      200,
-      (body) => {
-        object(body)
-        check(body.name === "httpapi-skill", "skill save should return the saved skill")
-        check(
-          String(body.location).endsWith("/.opencode/skills/httpapi-skill/SKILL.md"),
-          "skill save should create a project skill file",
-        )
-      },
-      "status",
-    ),
-  http.protected
-    .delete("/skill", "app.skillRemove")
-    .at((ctx) => ({ path: `/skill?${new URLSearchParams({ path: "/missing/SKILL.md" })}`, headers: ctx.headers() }))
-    .status(400, undefined, "status"),
+  ...skillScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),
@@ -674,34 +651,6 @@ const scenarios: Scenario[] = [
     }))
     .status(204, undefined, "status"),
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
-  http.protected.get("/api/skill", "v2.skill.list").json(200, locationData(array)),
-  http.protected
-    .put("/api/skill", "v2.skill.save")
-    .mutating()
-    .at((ctx) => ({
-      path: "/api/skill",
-      headers: ctx.headers(),
-      body: { name: "httpapi-skill-v2", description: "Exercise skill", content: "# Exercise" },
-    }))
-    .json(
-      200,
-      locationData((value) => {
-        object(value)
-        check(value.name === "httpapi-skill-v2", "v2 skill save should return the saved skill")
-        check(
-          String(value.location).endsWith("/.opencode/skills/httpapi-skill-v2/SKILL.md"),
-          "v2 skill save should create a project skill file",
-        )
-      }),
-      "status",
-    ),
-  http.protected
-    .delete("/api/skill", "v2.skill.remove")
-    .at((ctx) => ({
-      path: `/api/skill?${new URLSearchParams({ path: "/missing/SKILL.md" })}`,
-      headers: ctx.headers(),
-    }))
-    .status(400, undefined, "status"),
   http.protected
     .get("/api/event", "v2.event.subscribe")
     .stream()

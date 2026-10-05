@@ -2691,6 +2691,7 @@ export type SkillsListOutput = {
     readonly slash?: boolean
     readonly location: string
     readonly content: string
+    readonly mtime?: number
   }>
 }
 
@@ -2703,25 +2704,36 @@ export type SkillsSaveInput = {
     readonly description: string
     readonly content: string
     readonly path?: string
+    readonly mtime?: number
   }["name"]
   readonly description: {
     readonly name: string
     readonly description: string
     readonly content: string
     readonly path?: string
+    readonly mtime?: number
   }["description"]
   readonly content: {
     readonly name: string
     readonly description: string
     readonly content: string
     readonly path?: string
+    readonly mtime?: number
   }["content"]
   readonly path?: {
     readonly name: string
     readonly description: string
     readonly content: string
     readonly path?: string
+    readonly mtime?: number
   }["path"]
+  readonly mtime?: {
+    readonly name: string
+    readonly description: string
+    readonly content: string
+    readonly path?: string
+    readonly mtime?: number
+  }["mtime"]
 }
 
 export type SkillsSaveOutput = {
@@ -2736,6 +2748,7 @@ export type SkillsSaveOutput = {
     readonly slash?: boolean
     readonly location: string
     readonly content: string
+    readonly mtime?: number
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { filterSkills, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
+import { filterSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
 
 const skills = [
   { name: "Review", description: "Check boundaries", location: "/repo/review/SKILL.md", content: "  <b>review</b>\n" },
@@ -52,6 +52,27 @@ describe("skill source", () => {
         "/repo",
       ).map((skill) => skill.name),
     ).toEqual(["delta", "gamma", "alpha", "beta", "zeta"])
+  })
+})
+
+describe("skill access", () => {
+  test("allows edits only in the project's own skill folders", () => {
+    for (const folder of [".opencode/skills", ".opencode/skill", ".claude/skills", ".agents/skills"])
+      expect(skillAccess(`/repo/${folder}/review/SKILL.md`, "/repo")).toBe("edit")
+    expect(skillAccess("/repo/.opencode/skills/flat.md", "/repo")).toBe("edit")
+  })
+  test("keeps Atlas-governed skills read-only", () => {
+    expect(skillAccess("/repo/.opencode/skills/own/own_policy/SKILL.md", "/repo")).toBe("governed")
+  })
+  test("keeps project skills outside the skill folders read-only", () => {
+    expect(skillAccess("/repo/docs/skills/review/SKILL.md", "/repo")).toBe("fixed")
+    expect(skillAccess("/repo/.opencode/skills/review/SKILL.txt", "/repo")).toBe("fixed")
+  })
+  test("keeps global and built-in skills read-only", () => {
+    expect(skillAccess("/home/me/.config/opencode/skills/a/SKILL.md", "/repo")).toBe("global")
+    expect(skillAccess("/repo-other/.opencode/skills/a/SKILL.md", "/repo")).toBe("global")
+    expect(skillAccess("<built-in>", "/repo")).toBe("builtin")
+    expect(skillAccess("/builtin/customize-opencode.md", "/repo")).toBe("builtin")
   })
 })
 

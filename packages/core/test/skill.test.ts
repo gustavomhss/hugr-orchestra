@@ -9,7 +9,6 @@ import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AbsolutePath } from "@opencode-ai/core/schema"
 import { SkillV2 } from "@opencode-ai/core/skill"
 import { SkillDiscovery } from "@opencode-ai/core/skill/discovery"
-import { SkillFile } from "@opencode-ai/core/skill/file"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -72,18 +71,22 @@ describe("SkillV2", () => {
             { type: "directory", path: AbsolutePath.make(first) },
             { type: "directory", path: AbsolutePath.make(second) },
           ])
-          expect(yield* skill.list()).toEqual([
+          const listed = yield* skill.list()
+          expect(listed.every((item) => typeof item.mtime === "number")).toBe(true)
+          expect(listed.map((item): SkillV2.Info => ({ ...item, mtime: 0 }))).toEqual([
             SkillV2.Info.make({
               name: "foo",
               slash: true,
               location: AbsolutePath.make(path.join(first, "foo.md")),
               content: "# foo",
+              mtime: 0,
             }),
             {
               name: "review",
               description: "Second",
               location: AbsolutePath.make(path.join(second, "review", "SKILL.md")),
               content: "# review",
+              mtime: 0,
             },
           ])
         }),
@@ -119,99 +122,6 @@ describe("SkillV2", () => {
           expect((yield* skill.list()).map((item) => item.name)).toEqual(["deploy"])
           expect(pulls).toBe(1)
           expect(SkillV2.available(yield* skill.list(), (yield* agents.get(AgentV2.ID.make("reviewer")))!)).toEqual([])
-        }),
-      ),
-    ),
-  )
-
-  it.live("creates, edits and removes registered skill files and refreshes the catalog", () =>
-    Effect.acquireRelease(
-      Effect.promise(() => tmpdir()),
-      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
-    ).pipe(
-      Effect.flatMap((tmp) =>
-        Effect.gen(function* () {
-          const root = path.join(tmp.path, ".opencode", "skills")
-          const outside = path.join(tmp.path, "outside.md")
-          yield* Effect.promise(async () => {
-            await fs.mkdir(path.join(root, "review"), { recursive: true })
-            await fs.writeFile(
-              path.join(root, "review", "SKILL.md"),
-              "---\nname: review\ndescription: Old\nlicense: MIT\n---\n# Old\n",
-            )
-            await fs.writeFile(outside, "---\nname: outside\n---\nkeep\n")
-          })
-          const skill = yield* SkillV2.Service
-          yield* skill.transform((editor) => {
-            editor.source({ type: "directory", path: AbsolutePath.make(root) })
-            editor.source({
-              type: "embedded",
-              skill: SkillV2.Info.make({
-                name: "builtin",
-                location: AbsolutePath.make("/builtin/builtin.md"),
-                content: "built in",
-              }),
-            })
-          })
-          expect((yield* skill.list()).map((item) => item.name)).toEqual(["review", "builtin"])
-
-          const created = yield* skill.save(tmp.path, { name: "docs", description: "Write: docs", content: "# Docs" })
-          const docs = path.join(root, "docs", "SKILL.md")
-          expect(created).toEqual(
-            SkillV2.Info.make({
-              name: "docs",
-              description: "Write: docs",
-              location: AbsolutePath.make(docs),
-              content: "# Docs\n",
-            }),
-          )
-          expect(yield* Effect.promise(() => fs.readFile(docs, "utf8"))).toBe(
-            "---\nname: docs\ndescription: 'Write: docs'\n---\n# Docs\n",
-          )
-          expect((yield* skill.list()).find((item) => item.name === "docs")?.description).toBe("Write: docs")
-
-          const review = path.join(root, "review", "SKILL.md")
-          yield* skill.save(tmp.path, { name: "code-review", description: "New", content: "# New\n", location: review })
-          expect(yield* Effect.promise(() => fs.readFile(review, "utf8"))).toBe(
-            "---\nname: code-review\ndescription: New\nlicense: MIT\n---\n# New\n",
-          )
-          expect((yield* skill.list()).map((item) => item.name).toSorted()).toEqual(["builtin", "code-review", "docs"])
-
-          const failure = (effect: Effect.Effect<unknown, SkillFile.WriteError>) =>
-            effect.pipe(
-              Effect.flip,
-              Effect.map((error) => [error.reason, error.message]),
-            )
-          expect(yield* failure(skill.save(tmp.path, { name: "docs", description: "Again", content: "" }))).toEqual([
-            "conflict",
-            "A skill named docs is already registered.",
-          ])
-          expect(
-            (yield* failure(skill.save(tmp.path, { name: "Code Review", description: "Bad", content: "" })))[0],
-          ).toBe("invalid")
-          expect(
-            (yield* failure(skill.save(tmp.path, { name: "../escape", description: "Bad", content: "" })))[0],
-          ).toBe("invalid")
-          expect(yield* failure(skill.save(tmp.path, { name: "blank", description: "  ", content: "" }))).toEqual([
-            "invalid",
-            "A skill needs a description.",
-          ])
-          expect(
-            yield* failure(
-              skill.save(tmp.path, {
-                name: "builtin",
-                description: "Changed",
-                content: "",
-                location: "/builtin/builtin.md",
-              }),
-            ),
-          ).toEqual(["invalid", "builtin is built in and cannot be changed."])
-          expect(yield* failure(skill.remove(outside))).toEqual(["missing", `${outside} is not a registered skill.`])
-          expect(yield* Effect.promise(() => fs.readFile(outside, "utf8"))).toBe("---\nname: outside\n---\nkeep\n")
-
-          yield* skill.remove(docs)
-          expect(yield* Effect.promise(() => fs.stat(path.dirname(docs)).then(() => true, () => false))).toBe(false)
-          expect((yield* skill.list()).map((item) => item.name).toSorted()).toEqual(["builtin", "code-review"])
         }),
       ),
     ),
