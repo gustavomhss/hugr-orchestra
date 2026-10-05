@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { afterEach, describe, expect } from "bun:test"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Database } from "@opencode-ai/core/database/database"
@@ -206,8 +207,7 @@ const evidence = Effect.fn("MaestroNativeApprovalTest.evidence")(function* (
         headSHA: context.headSHA,
         worktree: fixture.session.directory,
         changedPaths: ["proof.txt"],
-        encoding: "base64",
-        bytes: diff.stdout.toString("base64"),
+        sha256: createHash("sha256").update(diff.stdout).digest("hex"),
       },
     })
   }
