@@ -140,9 +140,16 @@ test("V1: the delivery toggle explains why every prompt steers", async ({ page }
   await expect(delivery).toHaveAccessibleDescription(
     "This server delivers every prompt as a steer; queueing needs a server that speaks the V2 protocol.",
   )
-  // aria-disabled keeps the toggle focusable so its reason stays reachable; Playwright treats it as
-  // disabled, so the click is forced to prove a real click on it changes nothing.
-  await delivery.click({ force: true })
+  // aria-disabled keeps the toggle focusable so its reason stays reachable, and Playwright will not click
+  // an aria-disabled control. The toggle itself takes the pointer at its center, and a real click there
+  // changes nothing.
+  const box = await delivery.boundingBox()
+  if (!box) throw new Error("The delivery toggle has no layout box")
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+  expect(
+    await delivery.evaluate((element, point) => element.contains(document.elementFromPoint(point.x, point.y)), center),
+  ).toBe(true)
+  await page.mouse.click(center.x, center.y)
   await expect(delivery).toHaveText("Steer")
   await expect(delivery).toHaveAttribute("data-delivery", "steer")
   await expect(delivery).toHaveAttribute("aria-pressed", "false")

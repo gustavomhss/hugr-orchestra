@@ -1332,6 +1332,17 @@
     color: #7f8d9d;
   }
 
+  /* The shared tabs skin draws an opaque, pointer-transparent mask after a sticky "+" to cover tabs
+   * scrolling beneath it. Here the "+" sits static at the rail's end, so its ::after is only the shared
+   * transparent 24×24 hit box: unpainted, so the glyph shows, and taking the pointer. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::after {
+    background: none;
+    pointer-events: auto;
+  }
+
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-slot="session-side-panel-open-file"]
