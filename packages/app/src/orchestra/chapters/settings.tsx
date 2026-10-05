@@ -1,4 +1,7 @@
-// Placeholder so this branch typechecks; the integration keeps mock-settings' real page.
-import { MxPage } from "./kit"
+import { SettingsView } from "@/components/settings-v2/view/settings-view"
+import type { ChapterPageProps } from "@/orchestra/chapter-route"
 
-export default () => <MxPage id="settings" title="Settings" description="" children={null} />
+// Routed Settings view (`/orchestra/settings?section=<id>`), registered in chapterPages by the shell.
+export default function SettingsPage(props: ChapterPageProps) {
+  return <SettingsView server={props.server} directory={props.directory} />
+}
