@@ -149,7 +149,7 @@ export interface Interface extends State.Transformable<Draft> {
     /** Resolves a connection into usable credential material. */
     readonly resolve: (
       connection: IntegrationConnection.Info,
-    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError>
+    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError | Credential.InheritedError>
     /** Runs a key method and stores the resulting credential. */
     readonly key: (input: {
       /** Integration receiving the credential. */
@@ -397,10 +397,12 @@ export const locationLayer = Layer.effect(
           if (!implementation?.refresh) return credential.value
           const now = yield* Clock.currentTimeMillis
           if (credential.value.expires > now + Duration.toMillis(Duration.minutes(5))) return credential.value
+          const source = yield* credentials.inheritedFrom(credential.id)
+          if (source) {
+            return yield* new Credential.InheritedError({ credentialID: credential.id, source, reason: "refresh" })
+          }
           const value = yield* authorize(implementation.refresh(credential.value))
-          // A new value is always storable: rotating an inherited credential
-          // writes it to the active database instead of failing.
-          yield* credentials.update(credential.id, { value }).pipe(Effect.orDie)
+          yield* credentials.update(credential.id, { value })
           return value
         }),
         key: Effect.fn("Integration.connection.key")(function* (input) {

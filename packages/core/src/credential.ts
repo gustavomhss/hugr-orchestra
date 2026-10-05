@@ -33,13 +33,20 @@ export class Info extends Schema.Class<Info>("Credential.Info")({
   value: Value,
 }) {}
 
-/** The credential is read from the release database, which this build never writes. */
+/**
+ * The credential is read from the release database, which this build never
+ * writes and never refreshes: refreshing could rotate the installed app's
+ * refresh token out from under it.
+ */
 export class InheritedError extends Schema.TaggedErrorClass<InheritedError>()("Credential.InheritedError", {
   credentialID: ID,
   source: Schema.String,
+  reason: Schema.Literals(["readonly", "refresh"]),
 }) {
   override get message() {
-    return `Credential ${this.credentialID} is inherited read-only from ${this.source}. Remove it from the installed app, or set OPENCODE_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
+    if (this.reason === "refresh")
+      return `Credential ${this.credentialID} is inherited from the installed app (${this.source}) and needs a refresh, which this build never performs. Use the installed app to refresh it, or log in separately in this build. Set OPENCODE_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
+    return `Credential ${this.credentialID} is inherited read-only from the installed app (${this.source}). Remove it from the installed app, or set OPENCODE_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
   }
 }
 
@@ -55,17 +62,15 @@ export interface Interface {
   readonly list: (integrationID: Integration.ID) => Effect.Effect<Info[]>
   /** Returns one stored credential by ID. */
   readonly get: (id: ID) => Effect.Effect<Info | undefined>
+  /** Returns the release database a visible credential is inherited from, if any. */
+  readonly inheritedFrom: (id: ID) => Effect.Effect<string | undefined>
   /** Stores a credential for an integration and returns the new record. */
   readonly create: (input: {
     readonly integrationID: Integration.ID
     readonly value: Value
     readonly label?: string
   }) => Effect.Effect<Info>
-  /**
-   * Updates the label or secret value of a stored credential. A new value for
-   * an inherited credential (token rotation) is stored in the active database;
-   * relabeling an inherited credential fails.
-   */
+  /** Updates the label or secret value of a stored credential. Inherited credentials are read-only. */
   readonly update: (id: ID, updates: Partial<Pick<Info, "label" | "value">>) => Effect.Effect<void, InheritedError>
   /** Removes a stored credential. Inherited credentials cannot be removed from this build. */
   readonly remove: (id: ID) => Effect.Effect<void, InheritedError>
@@ -141,6 +146,10 @@ export const layerFrom = (release: string | undefined) =>
         get: Effect.fn("Credential.get")(function* (id) {
           return (yield* find(id)).credential
         }),
+        inheritedFrom: Effect.fn("Credential.inheritedFrom")(function* (id) {
+          const match = yield* find(id)
+          return match.inherited && match.credential ? release : undefined
+        }),
         create: Effect.fn("Credential.create")(function* (input) {
           const credential = new Info({
             id: ID.create(),
@@ -164,20 +173,7 @@ export const layerFrom = (release: string | undefined) =>
           if (!updates.label && !updates.value) return
           const match = yield* find(id)
           if (match.inherited && match.credential && release) {
-            if (!updates.value) return yield* new InheritedError({ credentialID: id, source: release })
-            // A rotated token belongs to this build: store it in the active
-            // database under the same ID so it wins over the release copy.
-            yield* db
-              .insert(CredentialTable)
-              .values({
-                id,
-                integration_id: match.credential.integrationID,
-                label: updates.label ?? match.credential.label,
-                value: updates.value,
-              })
-              .run()
-              .pipe(Effect.orDie)
-            return
+            return yield* new InheritedError({ credentialID: id, source: release, reason: "readonly" })
           }
           yield* db
             .update(CredentialTable)
@@ -189,7 +185,7 @@ export const layerFrom = (release: string | undefined) =>
         remove: Effect.fn("Credential.remove")(function* (id) {
           const match = yield* find(id)
           if (match.inherited && match.credential && release) {
-            return yield* new InheritedError({ credentialID: id, source: release })
+            return yield* new InheritedError({ credentialID: id, source: release, reason: "readonly" })
           }
           yield* db.delete(CredentialTable).where(eq(CredentialTable.id, id)).run().pipe(Effect.orDie)
         }),

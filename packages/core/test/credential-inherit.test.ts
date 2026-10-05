@@ -7,6 +7,10 @@ import path from "path"
 import { Effect, Exit, Layer } from "effect"
 import { Credential } from "@opencode-ai/core/credential"
 import { Database } from "@opencode-ai/core/database/database"
+import { makeGlobalNode } from "@opencode-ai/core/effect/app-node"
+import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { EventV2 } from "@opencode-ai/core/event"
 import { Integration } from "@opencode-ai/core/integration"
 
 const root = mkdtempSync(path.join(os.tmpdir(), "opencode-inherit-"))
@@ -234,31 +238,95 @@ describe("Credential inheritance from the release database", () => {
         const ant = (yield* credentials.list(anthropic))[0]!
         const remove = yield* credentials.remove(inherited.id).pipe(Effect.exit)
         const relabel = yield* credentials.update(inherited.id, { label: "renamed" }).pipe(Effect.exit)
-        yield* credentials.update(ant.id, { value: key("sk-rotated") })
+        const rotate = yield* credentials.update(ant.id, { value: key("sk-rotated") }).pipe(Effect.exit)
         const created = yield* credentials.create({ integrationID: openai, label: "dev", value: key("sk-dev") })
         yield* credentials.update(created.id, { label: "dev-renamed" })
         yield* credentials.remove(created.id)
-        return { inherited, remove, relabel, openai: yield* credentials.list(openai), ant: yield* credentials.list(anthropic) }
+        return {
+          inherited,
+          remove,
+          relabel,
+          rotate,
+          openai: yield* credentials.list(openai),
+          ant: yield* credentials.list(anthropic),
+        }
       }),
     )
 
     expect(Exit.isFailure(result.remove)).toBe(true)
     expect(String(result.remove)).toContain("Credential.InheritedError")
-    expect(new Credential.InheritedError({ credentialID: result.inherited.id, source: paths.release }).message).toContain(
-      `inherited read-only from ${paths.release}`,
-    )
+    expect(
+      new Credential.InheritedError({ credentialID: result.inherited.id, source: paths.release, reason: "readonly" })
+        .message,
+    ).toContain(`inherited read-only from the installed app (${paths.release})`)
     expect(Exit.isFailure(result.relabel)).toBe(true)
-    // The inherited credential is still visible after the refused logout.
+    expect(Exit.isFailure(result.rotate)).toBe(true)
+    // The inherited credentials are still visible and unchanged after the refused writes.
     expect(result.openai.map((item) => item.label)).toEqual(["installed"])
-    // A rotated token is stored in the dev database and wins from then on.
-    expect(result.ant.map((item) => item.value)).toEqual([key("sk-rotated")])
+    expect(result.ant.map((item) => item.value)).toEqual([key("sk-ant")])
     const dev = new Sqlite(paths.dev, { readonly: true })
-    expect(dev.query("SELECT label FROM credential").all()).toEqual([{ label: "installed-ant" }])
+    expect(dev.query("SELECT label FROM credential").all()).toEqual([])
     dev.close()
 
     expect(snapshot(paths.release)).toEqual(before)
     expect(migrations(paths.release)).toEqual(migrated)
     expect(migrated).not.toContain(latest)
+  })
+
+  test("an expired inherited OAuth credential is never refreshed; a dev-owned one is", async () => {
+    const paths = fixture()
+    const methodID = Integration.MethodID.make("chatgpt")
+    const expired = (access: string) =>
+      Credential.OAuth.make({ type: "oauth", methodID, access, refresh: `${access}-refresh`, expires: 1 })
+    await seedRelease(paths.release, (credentials) =>
+      credentials.create({ integrationID: openai, label: "installed", value: expired("installed") }),
+    )
+    createIn(paths.dev)
+    const refreshed: string[] = []
+    const layer = AppNodeBuilder.build(LayerNode.group([Integration.node, Credential.node, EventV2.node]), [
+      [Database.node, Database.layerFromPath(paths.dev)],
+      [
+        Credential.node,
+        makeGlobalNode({ service: Credential.Service, layer: Credential.layerFrom(paths.release), deps: [Database.node] }),
+      ],
+    ])
+
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const integrations = yield* Integration.Service
+        const credentials = yield* Credential.Service
+        yield* integrations.transform((editor) =>
+          editor.method.update({
+            integrationID: openai,
+            method: { id: methodID, type: "oauth", label: "ChatGPT" },
+            authorize: () => Effect.die("unused"),
+            refresh: (credential) =>
+              Effect.sync(() => {
+                refreshed.push(credential.access)
+                return Credential.OAuth.make({ ...credential, access: `${credential.access}-new`, expires: Date.now() + 3_600_000 })
+              }),
+          }),
+        )
+        const inheritedConnection = (yield* integrations.connection.active(openai))!
+        const inherited = yield* integrations.connection.resolve(inheritedConnection).pipe(Effect.flip)
+        const refreshedBeforeDev = [...refreshed]
+        const own = yield* credentials.create({ integrationID: openai, label: "dev", value: expired("dev") })
+        const ownConnection = (yield* integrations.connection.active(openai))!
+        const resolved = yield* integrations.connection.resolve(ownConnection)
+        return { inherited, refreshedBeforeDev, own, ownConnection, resolved, stored: yield* credentials.get(own.id) }
+      }).pipe(Effect.scoped, Effect.provide(layer)),
+    )
+
+    // Inherited: the provider refresh is never called and nothing is stored.
+    expect(result.refreshedBeforeDev).toEqual([])
+    expect(result.inherited).toBeInstanceOf(Credential.InheritedError)
+    expect(result.inherited.message).toContain("inherited from the installed app")
+    expect(result.inherited.message).toContain("OPENCODE_INHERIT_CREDENTIALS")
+    // Dev-owned: refreshes normally and stores the new value in the dev database.
+    expect(result.ownConnection).toEqual({ type: "credential", id: result.own.id, label: "dev" })
+    expect(refreshed).toEqual(["dev"])
+    expect(result.resolved).toEqual(expect.objectContaining({ access: "dev-new" }))
+    expect(result.stored?.value).toEqual(expect.objectContaining({ access: "dev-new" }))
   })
 
   test("the real wiring inherits through XDG data and OPENCODE_DB", async () => {
