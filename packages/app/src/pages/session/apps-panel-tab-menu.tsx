@@ -45,8 +45,10 @@ export function TabMenu(props: {
           menu = element
           props.setElement(element)
           // The first action can be disabled (a crashed tab cannot be duplicated); focus the first one that
-          // works. A microtask, not a frame: a visible native view can suspend the owner's animation frames.
-          queueMicrotask(() => element.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus())
+          // works, after the frame that places the menu so focusing it cannot scroll an unplaced menu.
+          requestAnimationFrame(() =>
+            element.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus(),
+          )
         }}
         class="zen-tab-menu"
         role="menu"
