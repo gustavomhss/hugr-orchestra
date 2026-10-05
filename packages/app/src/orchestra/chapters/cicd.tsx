@@ -136,7 +136,11 @@ export default function Cicd(props: ChapterPageProps) {
       ),
     ),
   )
-  const workflows = createMemo(() => (inventory()?.paths ?? []).filter((path) => matches(`${path} ${kind(path)}`)))
+  // Reading a pending resource suspends the shell's <Suspense> (blanking the page, or holding the
+  // route transition so the URL never changes) instead of showing the explicit loading row.
+  const workflows = createMemo(() =>
+    inventory.loading ? [] : (inventory()?.paths ?? []).filter((path) => matches(`${path} ${kind(path)}`)),
+  )
 
   return (
     <MxPage
