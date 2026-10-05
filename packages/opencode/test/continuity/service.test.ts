@@ -260,3 +260,31 @@ it.instance("masking old tool output alone skips the fork when it frees enough",
     expect((yield* prepare(sessionID, false)).messages).toEqual(yield* sessions.messages({ sessionID }))
   }).pipe(Effect.provide(environment([])))
 }), 60_000)
+
+it.instance("three consecutive invalid producer results stop maintenance until history changes", () => Effect.gen(function* () {
+  const plans = yield* Effect.forEach([0, 1, 2], () => held("not a JSON operation set", { raw: true }))
+  const recovered = yield* held(FIRST)
+  yield* Effect.gen(function* () {
+    const jobs = yield* BackgroundJob.Service
+    const continuity = yield* SessionContinuity.Service
+    const sessionID = yield* seed()
+    for (const [index, plan] of plans.entries()) {
+      if (index > 0) yield* complete(yield* begin(sessionID, `RETRY_${index}`), `RETRY_REPLY_${index}`, 50_000)
+      const hit = yield* entered(plan)
+      yield* Deferred.succeed(plan.release, undefined)
+      yield* terminal(hit.jobID, "completed", "discarded")
+    }
+    const count = () => jobs.list().pipe(Effect.map((list) => list.filter((job) => job.metadata?.sessionId === sessionID).length))
+    expect(yield* count()).toBe(3)
+    // The breaker is open: another over-trigger turn starts nothing.
+    yield* complete(yield* begin(sessionID, "AFTER_BREAKER"), "AFTER_BREAKER_REPLY", 50_000)
+    expect(yield* count()).toBe(3)
+    // An edit or revert invalidates history and closes the breaker again.
+    yield* continuity.invalidate(sessionID)
+    yield* complete(yield* begin(sessionID, "AFTER_EDIT"), "AFTER_EDIT_REPLY", 50_000)
+    const hit = yield* entered(recovered)
+    yield* Deferred.succeed(recovered.release, undefined)
+    yield* terminal(hit.jobID, "completed", "applied")
+    expect(yield* count()).toBe(4)
+  }).pipe(Effect.provide(environment([...plans, recovered])))
+}), 90_000)

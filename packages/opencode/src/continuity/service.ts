@@ -30,6 +30,8 @@ type Entry = {
   attempted?: MessageID
   refresh: boolean
   archived?: MessageID
+  /** Consecutive producer failures; maintenance stops for the session at MAX_FAILURES. */
+  failures?: number
 }
 type State = {
   sessions: Map<SessionID, Entry>
@@ -40,6 +42,9 @@ type State = {
   /** Masked tool part IDs per session, mapped to the archive reference with the full output. */
   masks: Map<SessionID, Map<string, string>>
 }
+
+// After this many consecutive failed or invalid maintenance runs, stop until the user edits history.
+export const MAX_FAILURES = 3
 
 // Background memory starts this far below the trigger; masking alone that reaches it skips the fork.
 const PREPARE_MARGIN = 0.15
@@ -164,6 +169,7 @@ const layer = Layer.effect(
       current.masks.delete(sessionID)
       const item = entry(current, sessionID)
       item.attempted = undefined
+      item.failures = undefined
       item.refresh = true
       item.archived = undefined
     })
@@ -190,6 +196,7 @@ const layer = Layer.effect(
           const item = current.sessions.get(sessionID)
           if (!item || expected && (item !== expected.entry || item.generation !== expected.generation)) return
           if (item.active || item.safe !== message.id || item.attempted === message.id) return
+          if ((item.failures ?? 0) >= MAX_FAILURES) return
           const previous = current.contexts.get(sessionID)
           if (previous && !hasArtifact(previous)) {
             current.contexts.discard(sessionID)
@@ -205,6 +212,15 @@ const layer = Layer.effect(
           return active
         })
         if (!active) return
+
+        // Count consecutive producer failures for this generation; success resets the count.
+        const outcome = (ok: boolean) => Effect.sync(() => {
+          const item = current.sessions.get(sessionID)
+          if (!item || item.generation !== active.generation) return
+          item.failures = ok ? 0 : (item.failures ?? 0) + 1
+          if (item.failures === MAX_FAILURES) return "open" as const
+        }).pipe(Effect.flatMap((state) => state === "open"
+          ? diagnostic(sessionID, active.boundary, "circuit-open") : Effect.void))
 
         const finish = Effect.gen(function* () {
           const next = yield* Effect.sync(() => {
@@ -268,6 +284,7 @@ const layer = Layer.effect(
               })
               if (masked > 0 && tokenCount(message.tokens) - masked <= context * (options.trigger - PREPARE_MARGIN)) {
                 yield* Effect.logInfo("continuity masked tool output", { sessionID, freed: masked })
+                yield* outcome(true)
                 return "masked"
               }
               const selected = yield* Effect.sync(() => {
@@ -307,6 +324,7 @@ const layer = Layer.effect(
               const artifact = yield* run(selected, { provider, llm }, selectedChunks, available, current.requests.get(sessionID))
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
+                yield* outcome(false)
                 return "discarded"
               }
               const latest = (yield* sessions.messages({ sessionID })).at(-1)?.info.id
@@ -345,10 +363,12 @@ const layer = Layer.effect(
                 yield* diagnostic(sessionID, active.boundary, "stale-or-mismatched-artifact")
                 return "discarded"
               }
+              yield* outcome(true)
               return "applied"
             }).pipe(
               Effect.catchCause((cause) =>
                 diagnostic(sessionID, active.boundary, Cause.hasInterruptsOnly(cause) ? "cancelled" : "failed").pipe(
+                  Effect.andThen(Cause.hasInterruptsOnly(cause) ? Effect.void : outcome(false)),
                   Effect.andThen(
                     Cause.hasInterruptsOnly(cause)
                       ? Effect.failCause(cause)
