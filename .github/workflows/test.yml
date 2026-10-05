@@ -230,12 +230,13 @@ jobs:
 
   e2e:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/6)
+    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/4)
     strategy:
       fail-fast: false
       matrix:
-        # 2 OS x 6 shards = 12 parallel jobs, inside GitHub's 20 concurrent jobs alongside the other gates.
-        shard: [1, 2, 3, 4, 5, 6]
+        # The 20 concurrent hosted jobs are shared by every workflow on the account, and one epic run already
+        # needs about 9 other jobs. With 6 shards per OS, jobs were dropped as "not acquired by Runner".
+        shard: [1, 2, 3, 4]
         settings:
           - name: linux
             host: ubuntu-latest
@@ -286,11 +287,12 @@ jobs:
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
-        run: bun --cwd packages/app test:e2e:local --shard=${{ matrix.shard }}/6
+        run: bun --cwd packages/app test:e2e:local --shard=${{ matrix.shard }}/4
         env:
           CI: true
-        # One worker per shard; a sixth of the suite takes a few minutes, retries included.
-        timeout-minutes: 30
+        # One worker per shard; a green quarter takes about 10 minutes, but on Windows failing tests and their
+        # retries pushed a sixth of the suite past 20 minutes.
+        timeout-minutes: 40
 
       - name: Upload Playwright artifacts
         if: always()
