@@ -25,29 +25,12 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
+  # cancels jobs it cannot place. One epic run (this file plus typecheck, nix-eval, storybook and
+  # native) stays at 16 jobs, so short gates share jobs instead of getting their own.
+  #
   # Every job has a timeout: a hung Windows build once held a runner past 40 minutes, and the
   # GitHub default is 6 hours.
-  godfile:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: godfile
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-
-      - name: Fetch target branch
-        run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
-
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun
-
-      - name: Test godfile gate
-        run: bun --cwd packages/core test test/godfile.test.ts
-
-      - name: Run godfile gate
-        run: bun run check:godfile
-
   atlas-scope:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: atlas scope
@@ -175,17 +158,18 @@ jobs:
   # package runs through Turbo in unit-rest, where unchanged packages replay from the Turbo cache.
   unit:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: unit (${{ matrix.settings.name }} opencode ${{ matrix.shard }}/3)
+    name: unit (${{ matrix.name }} opencode ${{ matrix.shard }}/${{ matrix.shards }})
     strategy:
       fail-fast: false
       matrix:
-        settings:
-          - name: linux
-            host: ubuntu-latest
-          - name: windows
-            host: windows-latest
-        shard: [1, 2, 3]
-    runs-on: ${{ matrix.settings.host }}
+        # Windows runs these files about 2.7x slower, so it gets one more shard than Linux.
+        include:
+          - { name: linux, host: ubuntu-latest, shard: 1, shards: 2 }
+          - { name: linux, host: ubuntu-latest, shard: 2, shards: 2 }
+          - { name: windows, host: windows-latest, shard: 1, shards: 3 }
+          - { name: windows, host: windows-latest, shard: 2, shards: 3 }
+          - { name: windows, host: windows-latest, shard: 3, shards: 3 }
+    runs-on: ${{ matrix.host }}
     timeout-minutes: 35
     defaults:
       run:
@@ -210,7 +194,7 @@ jobs:
         timeout-minutes: 30
         working-directory: packages/opencode
         # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
-        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/3
+        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/${{ matrix.shards }}
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
@@ -218,14 +202,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: junit-${{ matrix.settings.name }}-opencode-${{ matrix.shard }}-${{ github.run_attempt }}
+          name: junit-${{ matrix.name }}-opencode-${{ matrix.shard }}-${{ github.run_attempt }}
           if-no-files-found: ignore
           retention-days: 14
           path: ${{ runner.temp }}/junit-*.xml
 
   unit-rest:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: unit (${{ matrix.settings.name }} other packages)
+    name: unit (${{ matrix.settings.name }} other packages${{ matrix.settings.name == 'linux' && ', godfile, httpapi' || '' }})
     strategy:
       fail-fast: false
       matrix:
@@ -268,6 +252,18 @@ jobs:
         working-directory: packages/atlas-boundary
         run: bun run check:generated
 
+      - name: Fetch target branch for godfile
+        if: runner.os == 'Linux'
+        run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
+
+      - name: Test godfile gate
+        if: runner.os == 'Linux'
+        run: bun --cwd packages/core test test/godfile.test.ts
+
+      - name: Run godfile gate
+        if: runner.os == 'Linux'
+        run: bun run check:godfile
+
       - name: Run unit tests
         timeout-minutes: 30
         run: GITHUB_ACTIONS=false bun turbo test --filter='!opencode'
@@ -279,23 +275,12 @@ jobs:
         working-directory: packages/client
         run: bun run check:generated
 
-  httpapi:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: httpapi exerciser
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun
-
-      # Keep the prerequisite it had when it ran after turbo test, which built these first.
-      - name: Build test dependencies
+      - name: Build HttpApi exerciser dependencies
+        if: runner.os == 'Linux'
         run: bun turbo build --filter=opencode^...
 
       - name: Run HttpApi exerciser gates
+        if: runner.os == 'Linux'
         # The gates finish in a few minutes; fail fast instead of holding the runner if a scenario wedges.
         timeout-minutes: 15
         working-directory: packages/opencode
