@@ -314,6 +314,11 @@ test("Terminal hands one existing PTY renderer between Dock and bottom panel", a
   await pane(dock, "Docs").click()
   await expect(page.locator('#terminal-panel [data-component="terminal"] canvas')).toBeVisible()
   await expect(page.locator('[data-component="terminal"]')).toHaveCount(1)
+  // Each handoff reconnects with a fresh ticket; the socket for the latest ticket can open just after the
+  // canvas paints, so wait for every ticket to be spent before comparing.
+  await expect
+    .poll(() => requests.filter((request) => request.endsWith("/connect-token")).length - connections.length)
+    .toBe(0)
   expect(requests.filter((request) => request.startsWith("POST /pty"))).toEqual([
     "POST /pty",
     ...Array.from({ length: connections.length }, () => "POST /pty/pty_cockpit/connect-token"),
