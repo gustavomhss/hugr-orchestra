@@ -21,6 +21,14 @@ export type InvalidRequestError = {
 export const isInvalidRequestError = (value: unknown): value is InvalidRequestError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "InvalidRequestError"
 
+export type UnknownError = {
+  readonly _tag: "UnknownError"
+  readonly message: string
+  readonly ref?: string | undefined
+}
+export const isUnknownError = (value: unknown): value is UnknownError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "UnknownError"
+
 export type InvalidCursorError = { readonly _tag: "InvalidCursorError"; readonly message: string }
 export const isInvalidCursorError = (value: unknown): value is InvalidCursorError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "InvalidCursorError"
@@ -57,14 +65,6 @@ export type MessageNotFoundError = {
 }
 export const isMessageNotFoundError = (value: unknown): value is MessageNotFoundError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "MessageNotFoundError"
-
-export type UnknownError = {
-  readonly _tag: "UnknownError"
-  readonly message: string
-  readonly ref?: string | undefined
-}
-export const isUnknownError = (value: unknown): value is UnknownError =>
-  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "UnknownError"
 
 export type ProviderNotFoundError = {
   readonly _tag: "ProviderNotFoundError"
@@ -146,6 +146,139 @@ export type AgentsListOutput = {
       readonly effect: "allow" | "deny" | "ask"
     }>
   }>
+}
+
+export type AgentsGetFileInput = {
+  readonly agentID: { readonly agentID: string }["agentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AgentsGetFileOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly path: string
+    readonly exists: boolean
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }
+}
+
+export type AgentsUpdateFileInput = {
+  readonly agentID: { readonly agentID: string }["agentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly description?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["description"]
+  readonly mode?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["mode"]
+  readonly model?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["model"]
+  readonly steps?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["steps"]
+  readonly system?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["system"]
+  readonly permission?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["permission"]
+  readonly disable?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }["disable"]
+}
+
+export type AgentsUpdateFileOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly path: string
+    readonly exists: boolean
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+  }
 }
 
 export type SessionsListInput = {

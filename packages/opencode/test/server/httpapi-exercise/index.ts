@@ -21,7 +21,7 @@ import { Effect } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { TestLLMServer } from "../../lib/llm-server"
 import path from "path"
-import { array, boolean, check, isRecord, message, object, stable } from "./assertions"
+import { array, boolean, check, data, isRecord, locationData, message, object, stable } from "./assertions"
 import { controlledPtyInput, http, route } from "./dsl"
 import {
   cleanupExercisePaths,
@@ -40,22 +40,6 @@ import { vcsScenarios } from "./vcs"
 
 function cursor(input: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(input)).toString("base64url")
-}
-
-function data(validate: (value: any) => void) {
-  return (body: any) => {
-    object(body)
-    validate(body.data)
-  }
-}
-
-function locationData(validate: (value: any) => void) {
-  return (body: any) => {
-    object(body)
-    object(body.location)
-    object(body.location.project)
-    validate(body.data)
-  }
 }
 
 const scenarios: Scenario[] = [
@@ -647,6 +631,18 @@ const scenarios: Scenario[] = [
   }),
   http.protected.get("/api/location", "v2.location.get").json(200, object),
   http.protected.get("/api/agent", "v2.agent.list").json(200, locationData(array)),
+  http.protected
+    .get("/api/agent/{agentID}/file", "v2.agent.file.get")
+    .at((ctx) => ({ path: route("/api/agent/{agentID}/file", { agentID: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(200, object),
+  http.protected
+    .put("/api/agent/{agentID}/file", "v2.agent.file.update")
+    .at((ctx) => ({
+      path: route("/api/agent/{agentID}/file", { agentID: "not a name" }),
+      headers: ctx.headers(),
+      body: { description: "rejected before any write" },
+    }))
+    .status(400, undefined, "status"),
   http.protected.get("/api/model", "v2.model.list").json(200, locationData(array)),
   http.protected.get("/api/provider", "v2.provider.list").json(200, locationData(array)),
   http.protected.get("/api/integration", "v2.integration.list").json(200, locationData(array)),
