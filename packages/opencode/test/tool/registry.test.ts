@@ -632,33 +632,42 @@ describe("tool.registry", () => {
 })
 
 describe("tool.registry agent identity", () => {
-  renamed.instance("plugin tools receive the stable agent id beside the label", () =>
-    Effect.gen(function* () {
-      const run = yield* identityTool()
-      expect((yield* run(0, { agent: "Raichu", agentID: "charlie" })).output).toBe(
-        JSON.stringify({ agentID: "charlie", agent: "Raichu" }),
-      )
-      // A caller that predates ids passes only `agent`, which is then also the key.
-      expect((yield* run(0, { agent: "build" })).output).toBe(JSON.stringify({ agentID: "build", agent: "build" }))
-    }),
+  renamed.instance(
+    "plugin tools receive the stable agent id beside the label",
+    () =>
+      Effect.gen(function* () {
+        const run = yield* identityTool()
+        expect((yield* run(0, { agent: "Raichu", agentID: "charlie" })).output).toBe(
+          JSON.stringify({ agentID: "charlie", agent: "Raichu" }),
+        )
+        // A caller that predates ids passes only `agent`, which is then also the key.
+        expect((yield* run(0, { agent: "build" })).output).toBe(JSON.stringify({ agentID: "build", agent: "build" }))
+      }),
     20_000,
   )
 
-  renamed.instance("resolves the executing agent by id, never by its old or new label", () =>
-    Effect.gen(function* () {
-      const agents = yield* Agent.Service
-      expect((yield* agents.get("maestro")).name).toBe("Pikachu")
-      expect(yield* agents.get("Pikachu")).toBeUndefined()
-      const run = yield* identityTool()
-      // Past Truncate.MAX_LINES, so the registry truncates and hints with the resolved agent's tools.
-      const result = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "maestro" })
-      expect(result.metadata.truncated).toBe(true)
-      // Only Maestro's own permissions (Task allowed) produce the delegate hint; an unresolved agent gets the Grep hint.
-      const hint = (output: string) => output.split("\n").find((line) => line.startsWith("Use "))?.split(" ").slice(0, 3)
-      expect(hint(result.output)).toEqual(["Use", "the", "Task"])
-      const unresolved = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "Pikachu" })
-      expect(hint(unresolved.output)).toEqual(["Use", "Grep", "to"])
-    }),
+  renamed.instance(
+    "resolves the executing agent by id, never by its old or new label",
+    () =>
+      Effect.gen(function* () {
+        const agents = yield* Agent.Service
+        expect((yield* agents.get("maestro")).name).toBe("Pikachu")
+        expect(yield* agents.get("Pikachu")).toBeUndefined()
+        const run = yield* identityTool()
+        // Past Truncate.MAX_LINES, so the registry truncates and hints with the resolved agent's tools.
+        const result = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "maestro" })
+        expect(result.metadata.truncated).toBe(true)
+        // Only Maestro's own permissions (Task allowed) produce the delegate hint; an unresolved agent gets the Grep hint.
+        const hint = (output: string) =>
+          output
+            .split("\n")
+            .find((line) => line.startsWith("Use "))
+            ?.split(" ")
+            .slice(0, 3)
+        expect(hint(result.output)).toEqual(["Use", "the", "Task"])
+        const unresolved = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "Pikachu" })
+        expect(hint(unresolved.output)).toEqual(["Use", "Grep", "to"])
+      }),
     20_000,
   )
 })

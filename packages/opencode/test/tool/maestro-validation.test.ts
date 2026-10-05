@@ -187,7 +187,9 @@ describe("Maestro validation tools", () => {
         }
         for (const caller of [context("Pikachu", "build"), context("Pikachu", "Pikachu"), context("Lucy", "Lucy")]) {
           const rejected = yield* Effect.exit(def.execute(review, caller))
-          expect(Exit.isFailure(rejected) && Cause.pretty(rejected.cause)).toContain("Review recording requires Pikachu")
+          expect(Exit.isFailure(rejected) && Cause.pretty(rejected.cause)).toContain(
+            "Review recording requires Pikachu",
+          )
         }
       }),
     { config: { agent: { lucy: { name: "Pikachu" } } } },
