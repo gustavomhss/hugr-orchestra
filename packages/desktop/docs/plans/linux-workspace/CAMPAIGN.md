@@ -101,7 +101,27 @@ morto (o container ficou `Exited (137)` sem remoção). Correção `d522ca3495`:
 container do helper pelo ID e rótulos comprovados e só solta o handle depois de provar a remoção;
 teste Docker dedicado, mutação morta. Falta repetir a rodada aberta com o host aliviado.
 
+Segunda rodada aberta (2026-10-05 ~01:40, app com `d522ca3495`): o Big Pickle não chamou ferramenta
+nenhuma e inventou ter concluído (`settings.json` intacto). O MiMo concluiu de verdade (ligou e
+desligou, conferido por fora), mas com muito atrito: adivinhou `checkbox`/`check box`/`toggle` em vez
+de `check-box`, recebeu `target-not-found` para uma caixa que existia mas só aceitava ação `observed`,
+caiu em `stale-ref` ao usar refs de chamadas anteriores, recebeu `unsupported-operation` ao passar
+`mode: "full"` no `dock_read`, tentou `ref` + nome de ação sem `actionID`, três chamadas paralelas se
+cancelaram (`Native workspace preparation cancelled`) e chegou a pedir para ler `/tmp` do host,
+confundindo com o `/tmp` do container. `603867793e` ataca o que custou mais tempo: o alvo varre por
+nome e filtra depois, o erro lista os controles excluídos com dica (papel errado, só `observed`, só
+teclado), papel compara só letras e dígitos, `action-ambiguous` lista as ações, e as mensagens de
+`ref` sem `actionID` e de formato de leitura do navegador dizem o que fazer.
+
 ## Pendências (próximas fatias)
+
+0. Ergonomia (pela regra do dono), em ordem de custo para o modelo:
+   - chamadas paralelas se cancelando na admissão nativa (`rebindWorkspace` substitui e aborta as anteriores);
+   - preparação por chamada (censo `native-scope` por `docker exec`, 2–5 s com load) torna cada chamada lenta;
+   - o agente não consegue abrir o workspace Linux sozinho se o usuário não abriu a view;
+   - papéis sem nome (`atspi-role-116`) no snapshot do helper;
+   - recusa de permissão encerra o turno do agente.
+
 
 1. Rodar `app-dock-runtime-native.test.ts` com Docker (ver acima) e provar no app real: abrir a view
    Linux pré-aquece o helper; lista de apps e launch respondem durante a partida a frio.
