@@ -143,12 +143,15 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
 
 type NativeQuery = { name: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
-// occurrence counts earlier matches with the same name and roleName on the same page, so a rescan can re-identify the control.
-type NativeMatch = { item: NativeItem; page: number; occurrence: number }
+// occurrence counts earlier matches with the same name and roleName on the same page, and index is the item's position
+// on that page, so a rescan can re-identify the control.
+type NativeMatch = { item: NativeItem; page: number; index: number; occurrence: number }
 type NativeScan = { found: NativeMatch[]; pages: number; more: boolean; complete: boolean; reasons: unknown; restarts?: number }
 
 // Bounds one scan at 48 helper pages (~6000 controls); each page is still one bounded native request.
 const MAX_FIND_PAGES = 48
+// Bounds all scans, restarts and retries of one dock_find/dock_action/dock_type call; nothing is dispatched after it.
+const FIND_DEADLINE_MS = 90000
 // AT-SPI state numbers that change what a model can do with a control.
 const STATES: Record<number, string> = { 4: "checked", 7: "editable", 10: "expanded", 12: "focused", 16: "modal", 20: "pressed", 23: "selected" }
 
@@ -184,13 +187,22 @@ function compactItem(item: NativeItem) {
 const compactScan = (scan: NativeScan, code?: string) => toJSON({
   ...(code ? { code, outcome: "not-dispatched" } : {}),
   found: scan.found.length, pagesScanned: scan.pages, restarts: scan.restarts ?? 0,
-  ...(scan.found.length === 0 ? { searchComplete: scan.complete, reasons: scan.reasons } : scan.more ? { searchComplete: false } : {}),
+  ...(scan.found.length === 0 || code === "target-search-incomplete" ? { searchComplete: scan.complete, reasons: scan.reasons }
+    : scan.more ? { searchComplete: false } : {}),
   items: scan.found.slice(0, 20).map((match) => compactItem(match.item)),
 })
 
-export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: number } = {}): Hooks {
+// The tool-call deadline marks the scan incomplete so callers refuse instead of acting on a partial view.
+const expired = (scan: NativeScan) =>
+  ({ ...scan, complete: false, reasons: [...(Array.isArray(scan.reasons) ? scan.reasons : []), "tool-deadline"] })
+
+// findDeadlineMs is a test seam; production keeps the 90 s default.
+export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: number; findDeadlineMs?: number } = {}): Hooks {
   const timeoutMs = config.timeoutMs ?? 15000
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 15000) throw new Error("Invalid App Dock timeout")
+  const findDeadlineMs = config.findDeadlineMs ?? FIND_DEADLINE_MS
+  if (!Number.isSafeInteger(findDeadlineMs) || findDeadlineMs < 0 || findDeadlineMs > FIND_DEADLINE_MS)
+    throw new Error("Invalid App Dock find deadline")
   const call = (context: ToolContext, op: string, args: Record<string, unknown>) => invoke(context, port, op, args, timeoutMs)
   const ref = tool.schema.union([tool.schema.number().min(1), tool.schema.string().min(3).max(256).startsWith("n:")])
   const target = tool.schema.object({
@@ -200,46 +212,56 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
 
   // A model turn takes far longer than a native continuation lives, so the tool,
   // not the model, pages: each page is requested immediately after the previous one.
-  // Every native request keeps its own limits; only read-only scans are restarted. `until` stops the scan early.
-  const find = (context: ToolContext, query: NativeQuery, until: (scan: NativeScan) => boolean, restarts = 0): Promise<NativeScan> =>
-    scan(context, query, until, call(context, "read", { budget: 500, maxText: query.maxText ?? 0 }),
+  // Every native request keeps its own limits; only read-only scans are restarted. `until` stops the scan early,
+  // and `deadline` (epoch ms, one per tool call) stops paging and restarts.
+  const find = (context: ToolContext, query: NativeQuery, until: (scan: NativeScan) => boolean, deadline: number,
+    restarts = 0): Promise<NativeScan> =>
+    scan(context, query, until, deadline, call(context, "read", { budget: 500, maxText: query.maxText ?? 0 }),
       { found: [], pages: 0, more: true, complete: false, reasons: [] }).catch((error: unknown) => {
-      if (!(error instanceof NativeRPCError) || !["cursor-stale", "stale-ref"].includes(error.code) || restarts >= 2) throw error
-      return find(context, query, until, restarts + 1)
+      if (!(error instanceof NativeRPCError) || !["cursor-stale", "stale-ref"].includes(error.code) || restarts >= 2
+        || Date.now() >= deadline) throw error
+      return find(context, query, until, deadline, restarts + 1)
     }).then((result) => ({ ...result, restarts: result.restarts ?? restarts }))
-  const scan = async (context: ToolContext, query: NativeQuery, until: (scan: NativeScan) => boolean, next: Promise<unknown>,
-    previous: NativeScan): Promise<NativeScan> => {
+  const scan = async (context: ToolContext, query: NativeQuery, until: (scan: NativeScan) => boolean, deadline: number,
+    next: Promise<unknown>, previous: NativeScan): Promise<NativeScan> => {
     const page = nativePage(await next)
     const pages = previous.pages + 1
-    const matched = page.items.filter((item) => matches(item, query))
+    const matched = page.items.flatMap((item, index) => (matches(item, query) ? [{ item, index }] : []))
     const more = page.hasMore === true
+    // Cursors carry earlier pages' partial reasons, so the final page's coverage describes the whole traversal.
     const result = { pages, more, complete: !more && page.coverage.complete === true, reasons: page.coverage.reasons,
-      found: [...previous.found, ...matched.map((item, index) => ({ item, page: pages,
-        occurrence: matched.slice(0, index).filter((other) => other.name === item.name && other.roleName === item.roleName).length }))] }
+      found: [...previous.found, ...matched.map((match, position) => ({ item: match.item, page: pages, index: match.index,
+        occurrence: matched.slice(0, position).filter((other) => other.item.name === match.item.name
+          && other.item.roleName === match.item.roleName).length }))] }
     if (until(result) || !more || typeof page.cursor !== "string" || pages >= MAX_FIND_PAGES) return result
-    return scan(context, query, until, call(context, "read", { cursor: page.cursor }), result)
+    if (Date.now() >= deadline) return expired(result)
+    return scan(context, query, until, deadline, call(context, "read", { cursor: page.cursor }), result)
   }
   // Locate and mutate within one tool call so UI churn between model turns cannot stale the ref.
   // Uniqueness is decided over the whole tree, then a fresh scan re-identifies the winner and supplies a current ref.
   // Only a certainly-undispatched stale target is located again; unknown outcomes are never replayed.
   const act = async (context: ToolContext, query: NativeQuery, run: (item: NativeItem) => Promise<unknown> | string,
-    attempt = 0): Promise<unknown> => {
-    const all = await find(context, query, () => false)
-    if (all.more) return compactScan(all, "target-search-incomplete")
+    deadline: number, attempt = 0): Promise<unknown> => {
+    const all = await find(context, query, () => false, deadline)
+    // A provider error or skipped subtree can end a traversal without more pages, so uniqueness needs full coverage.
+    if (!all.complete) return compactScan(all, "target-search-incomplete")
     // Names are substring-matched, so "Open" also hits "Open Quick Access"; a unique exact name settles that.
     const exact = all.found.filter((match) => match.item.name.trim().toLowerCase() === query.name.trim().toLowerCase())
     const winner = all.found.length === 1 ? all.found[0] : exact.length === 1 ? exact[0] : undefined
     if (winner === undefined) return compactScan(all, all.found.length === 0 ? "target-not-found" : "target-ambiguous")
-    const fresh = await find(context, query, (scan) => scan.pages >= winner.page)
+    const fresh = await find(context, query, (scan) => scan.pages >= winner.page, deadline)
+    if (Date.now() >= deadline) return compactScan(expired(all), "target-search-incomplete")
     const twins = (scan: NativeScan) => scan.found.filter((match) => match.page === winner.page
       && match.item.name === winner.item.name && match.item.roleName === winner.item.roleName)
     const current = twins(fresh).find((match) => match.occurrence === winner.occurrence)
-    // A same-named control appearing on that page would shift occurrence indexes onto a different control.
-    if (current === undefined || twins(fresh).length !== twins(all).length)
+    // A same-named control appearing on that page would shift occurrence indexes onto a different control;
+    // a moved position or tree depth means the page no longer has the shape the winner was chosen from.
+    if (current === undefined || twins(fresh).length !== twins(all).length || current.index !== winner.index
+      || current.item.depth !== winner.item.depth || current.item.scopeDepth !== winner.item.scopeDepth)
       return toJSON({ code: "target-changed", outcome: "not-dispatched", item: compactItem(winner.item) })
     return Promise.resolve(run(current.item)).catch((error: unknown) => {
       if (!(error instanceof NativeRPCError) || error.code !== "stale-ref" || error.outcome !== "not-dispatched" || attempt >= 1) throw error
-      return act(context, query, run, attempt + 1)
+      return act(context, query, run, deadline, attempt + 1)
     })
   }
   return {
@@ -300,8 +322,8 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
         },
         execute: (args, context) =>
-          find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) }, (scan) => scan.found.length > 0)
-            .then((result) => compactScan(result), toolError),
+          find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) }, (scan) => scan.found.length > 0,
+            Date.now() + findDeadlineMs).then((result) => compactScan(result), toolError),
       }),
       dock_wait: tool({
         description: "Wait for a bounded duration in the active App Dock tab. Native wait is a cancellable delay, not proof of application readiness.",
@@ -393,7 +415,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
               object(entry) && typeof entry.id === "string" && typeof entry.name === "string" && (args.action === undefined || entry.name === args.action))
             if (actions.length !== 1) return toJSON({ code: "action-ambiguous", outcome: "not-dispatched", item: compactItem(item) })
             return call(context, "action", { ref: item.ref, actionID: actions[0]!.id, ...mode }).then(toJSON)
-          }).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+          }, Date.now() + findDeadlineMs).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
       dock_type: tool({
@@ -411,7 +433,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             return call(context, "type", { ref: args.ref, text: args.text, ...mode }).then(toJSON, toolError)
           }
           return act(context, { ...args.target, capability: args.mode === "keyboard" ? "keyboardType" : "type" },
-            (item) => call(context, "type", { ref: item.ref, text: args.text, ...mode }).then(toJSON))
+            (item) => call(context, "type", { ref: item.ref, text: args.text, ...mode }).then(toJSON), Date.now() + findDeadlineMs)
             .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),

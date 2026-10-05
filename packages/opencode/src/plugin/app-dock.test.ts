@@ -517,7 +517,7 @@ test("cancel post failure settles native request and removes abort listener/time
 
 type Reply = { ok: true; value: unknown } | { ok: false; error: Record<string, unknown> }
 
-function host(respond: (op: string, args: Record<string, unknown>, index: number) => Reply) {
+function host(respond: (op: string, args: Record<string, unknown>, index: number) => Reply, config: { findDeadlineMs?: number } = {}) {
   const f = fakePort()
   const calls: { op: string; args: Record<string, unknown> }[] = []
   f.port.postMessage = (message: unknown) => {
@@ -527,12 +527,14 @@ function host(respond: (op: string, args: Record<string, unknown>, index: number
     const reply = respond(envelope.op, envelope.args, calls.length - 1)
     queueMicrotask(() => f.deliver({ type: "dock.rpc.result", id: envelope.id, ...reply }))
   }
-  return { hooks: createAppDockHooks(f.port) as Required<Hooks>, calls }
+  return { hooks: createAppDockHooks(f.port, config) as Required<Hooks>, calls }
 }
 
-const page = (items: unknown[], cursor?: string): Reply => ({ ok: true, value: {
+// coverage defaults to what the cursor implies; a final page may still report a partial traversal.
+const page = (items: unknown[], cursor?: string, coverage?: { complete: boolean; reasons: string[] }): Reply => ({ ok: true, value: {
   backend: "linux-atspi", scopeKind: "workspace", observation: "obs", items, hasMore: cursor !== undefined,
-  ...(cursor === undefined ? {} : { cursor }), coverage: { complete: cursor === undefined, reasons: cursor === undefined ? [] : ["page-limit"] } } })
+  ...(cursor === undefined ? {} : { cursor }),
+  coverage: coverage ?? { complete: cursor === undefined, reasons: cursor === undefined ? [] : ["page-limit"] } } })
 const control = (ref: string, name: string, extra: Record<string, unknown> = {}) => ({
   ref, name, role: 43, roleName: "push-button", states: [8, 11, 24], interfaces: [], actions: [{ id: `a:${ref}`, name: "press" }],
   capabilities: { action: { supported: true, reason: "advertised-native-action" }, observedAction: { supported: true, reason: "x" },
@@ -667,7 +669,57 @@ test("dock_action target refuses without dispatch when the rescan no longer find
   }
   for (const second of [[control("n:quick", "Open Quick Access")], [control("n:open", "Open"), control("n:open2", "Open")]])
     expect(await run(second)).toMatchObject({ result: { code: "target-changed", outcome: "not-dispatched", item: { name: "Open" } }, actions: 0 })
-  expect(await run([control("n:fresh", "Open")])).toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
+  expect(await run([control("n:quick", "Open Quick Access"), control("n:fresh", "Open")])).toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
+})
+
+test("dock_action target refuses a unique match when the final page reports a partial traversal", async () => {
+  const { hooks, calls } = host((op, args) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([control("n:quick", "Open Quick Access")], "c")
+    : page([control("n:other", "Terminal")], undefined, { complete: false, reasons: ["null-child"] }))
+  expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "open" } }, context))))
+    .toMatchObject({ code: "target-search-incomplete", outcome: "not-dispatched", found: 1, searchComplete: false, reasons: ["null-child"] })
+  expect(calls.every((call) => call.op === "read")).toBe(true)
+})
+
+test("dock_action target refuses without dispatch when the rescanned winner moved in the tree", async () => {
+  const run = (first: unknown[], second: unknown[]) => {
+    const dock = host((op, _args, index) => index === 0 ? page(first)
+      : op === "action" ? { ok: true, value: { dispatch: "acknowledged" } } : page(second))
+    return dock.hooks.tool.dock_action.execute({ target: { name: "open" } }, context)
+      .then((result) => ({ result: JSON.parse(String(result)), actions: dock.calls.filter((call) => call.op === "action").length }))
+  }
+  const changed = { result: { code: "target-changed", outcome: "not-dispatched", item: { name: "Open" } }, actions: 0 }
+  expect(await run([control("n:open", "Open", { depth: 3, scopeDepth: 2 })], [control("n:open", "Open", { depth: 4, scopeDepth: 2 })]))
+    .toMatchObject(changed)
+  expect(await run([control("n:open", "Open", { depth: 3, scopeDepth: 2 })], [control("n:open", "Open", { depth: 3, scopeDepth: 1 })]))
+    .toMatchObject(changed)
+  expect(await run([control("n:x", "Explorer"), control("n:open", "Open")], [control("n:open", "Open"), control("n:x", "Explorer")]))
+    .toMatchObject(changed)
+  expect(await run([control("n:open", "Open", { depth: 3, scopeDepth: 2 })], [control("n:fresh", "Open", { depth: 3, scopeDepth: 2 })]))
+    .toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
+})
+
+test("one tool-call deadline stops native paging and never dispatches after it", async () => {
+  const paged = () => host((op, args) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([control("n:x", "Explorer")], "c1")
+    : args.cursor === "c1" ? page([control("n:y", "Terminal")], "c2") : page([control("n:open", "Open")]), { findDeadlineMs: 0 })
+  const found = paged()
+  expect(JSON.parse(String(await found.hooks.tool.dock_find.execute({ name: "open" }, context))))
+    .toEqual({ found: 0, pagesScanned: 1, restarts: 0, searchComplete: false, reasons: ["page-limit", "tool-deadline"], items: [] })
+  expect(found.calls.length).toBe(1)
+  const acted = paged()
+  expect(JSON.parse(String(await acted.hooks.tool.dock_action.execute({ target: { name: "open" } }, context))))
+    .toMatchObject({ code: "target-search-incomplete", outcome: "not-dispatched", searchComplete: false })
+  expect(acted.calls).toHaveLength(1)
+  const single = host((op) => op === "type" ? { ok: true, value: { postcondition: "verified" } } : page([field("n:search", "Search")]),
+    { findDeadlineMs: 0 })
+  expect(JSON.parse(String(await single.hooks.tool.dock_type.execute({ target: { name: "search" }, text: "x" }, context))))
+    .toMatchObject({ code: "target-search-incomplete", outcome: "not-dispatched", found: 1, searchComplete: false, reasons: ["tool-deadline"] })
+  expect(single.calls.map((call) => call.op)).toEqual(["read", "read"])
+  const stale = host(() => nativeError("cursor-stale"), { findDeadlineMs: 0 })
+  expect(JSON.parse(String(await stale.hooks.tool.dock_find.execute({ name: "open" }, context)))).toMatchObject({ code: "cursor-stale" })
+  expect(stale.calls).toHaveLength(1)
+  expect(() => createAppDockHooks(fakePort().port, { findDeadlineMs: 90001 })).toThrow("Invalid App Dock find deadline")
 })
 
 test("dock_find marks an early stop with more pages as an incomplete search", async () => {
