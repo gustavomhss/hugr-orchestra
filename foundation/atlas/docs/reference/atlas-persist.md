@@ -1,6 +1,6 @@
 # atlas-persist — Reference
 
-> owner: charlie (FORGE) · grounding: claims checked against `spec/atlas.md` §7, §7.1, A-8, A-11, A-16, A-17, A-18 and the Maestro provenance model (`maestro/packages/core/src/provenance.ts`) · status: draft
+> owner: backend (FORGE) · grounding: claims checked against `spec/atlas.md` §7, §7.1, A-8, A-11, A-16, A-17, A-18 and the Maestro provenance model (`maestro/packages/core/src/provenance.ts`) · status: draft
 
 ## Purpose
 

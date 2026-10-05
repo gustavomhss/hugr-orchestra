@@ -15,6 +15,6 @@
 # A `.gitattributes` pattern is relative to the directory that holds it, so this file binds only the `.atlas/`
 # beside it (`foundation/atlas/.atlas/` while Atlas is vendored into Orchestra). It stays because Atlas's own
 # merge suite copies it into its throwaway repository. A harness that stores Memory elsewhere must carry the
-# same two lines there: Orchestra's root `.gitattributes` does, for the `.atlas/` Charlie's binding writes.
+# same two lines there: Orchestra's root `.gitattributes` does, for the `.atlas/` the backend specialist's binding writes.
 .atlas/memory.jsonl merge=union
 .atlas/orientation.jsonl merge=union

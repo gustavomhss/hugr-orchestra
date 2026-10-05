@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-tls.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE); write-door security-exploitability arm reviewed by billy (FORTRESS, FR-12).
+> **owner:** backend (FORGE); write-door security-exploitability arm reviewed by billy (FORTRESS, FR-12).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. TLS is the **delivery layer** — read/subscribe
 > projections over the kernel store + one governed write-door. **NONE is `formal`**: the whole block fails

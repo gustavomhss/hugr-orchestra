@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Memory is the Atlas's **per-member kind**: every seat (`charlie`, `lucy`, `jimmy`, …) **and the
+Memory is the Atlas's **per-member kind**: every seat (`backend`, `lucy`, `jimmy`, …) **and the
 orchestrator** owns its own, private, decaying Memory. It shares the _one_ Atlas with Knowledge — same
 hashed structural index, same grounding primitive, same templated-write rule, same portable JSON export —
 but is a **distinct kind**, never conflated with Knowledge and never a separate system. Knowledge is shared

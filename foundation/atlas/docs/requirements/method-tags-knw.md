@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-knw.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE).
+> **owner:** backend (FORGE).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. KNW is **elevated / write-decision core** but carries
 > **no** `formal` cluster — the whole Atlas's one machine-checked model is `FSPEC-merge` in the KRN block. The

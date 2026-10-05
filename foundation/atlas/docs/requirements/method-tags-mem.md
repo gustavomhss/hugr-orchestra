@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-mem.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE).
+> **owner:** backend (FORGE).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. The MEM block carries **no** `formal` cluster — the
 > single Atlas `formal` model is `FSPEC-merge`, and MEM only **consumes** kernel seams (the append-only log,

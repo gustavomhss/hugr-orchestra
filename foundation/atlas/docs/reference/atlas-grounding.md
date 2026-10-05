@@ -1,6 +1,6 @@
 # atlas-grounding — Reference
 
-> owner: charlie (FORGE) · grounding: claims checked against `spec/atlas.md` §3.1, A-1, A-2, A-9, A-13 and the `@orchestra/kernel` encoder seam · status: draft
+> owner: backend (FORGE) · grounding: claims checked against `spec/atlas.md` §3.1, A-1, A-2, A-9, A-13 and the `@orchestra/kernel` encoder seam · status: draft
 
 ## Purpose
 

@@ -1,6 +1,6 @@
 # atlas-index — Reference
 
-> owner: charlie (FORGE) · grounding: `spec/atlas.md` §3.5, §3.6, §6.1, A-14 + v1's multi-axis dual-Merkle rollup
+> owner: backend (FORGE) · grounding: `spec/atlas.md` §3.5, §3.6, §6.1, A-14 + v1's multi-axis dual-Merkle rollup
 > (graph-v1 §3) · status: draft
 
 ## Purpose

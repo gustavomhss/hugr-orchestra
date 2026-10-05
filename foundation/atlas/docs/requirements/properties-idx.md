@@ -1,6 +1,6 @@
 # Properties — Block IDX (index) · S3-sibling ∀-law render
 
-> **state:** S3-sibling (rendered from the frozen S2 method-tags) · **owner:** charlie (FORGE) ·
+> **state:** S3-sibling (rendered from the frozen S2 method-tags) · **owner:** backend (FORGE) ·
 > **source (frozen, do not edit):** `method-tags-idx.md` — each `### INV-INDEX-<n>` `up-property`, carried as a
 > `ptr+digest` so an upstream edit renders the property STALE.
 > **purpose:** transcribe every behavioural IDX invariant's `up-property` into a runnable ∀-quantified property —
