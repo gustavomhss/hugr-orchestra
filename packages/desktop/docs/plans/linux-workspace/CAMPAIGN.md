@@ -50,15 +50,38 @@ Todas integradas e verificadas pelo lead (diff, testes por nome, mutação próp
 - `stop()`/`dispose()` pulavam o encerramento do helper/container se `access.close()` falhasse: agora encerram sempre e repassam a falha.
 - `bus.py`: `OverflowError` de parâmetro fora da faixa vira `protocol-error`, com fixture que falha sem a correção.
 
+## Fatia 2026-10-04 noite: acessibilidade opcional e bordas do target
+
+Decisão de produto (delegada pelo usuário à sessão): a acessibilidade é capacidade opcional da
+sessão Linux. Se ela falhar, terminal, arquivos, apps e Slack continuam; só `dock_*` nativo recusa.
+
+- `ca29c6d626` desktop:
+  - `workspace.py session` grava `accessibilityError` (código fixo) em vez de abortar; `parse_session`
+    aceita só o par ausente com código, nunca um campo sozinho; `native_session` recusa
+    `native-session-a11y-unavailable`.
+  - Runtime: a admissão do helper saiu da fila de mutação (só o retrato de posse é serializado,
+    chamadas concorrentes se juntam); falha nativa não marca mais o workspace como `error`;
+    `stop()`/`dispose()` invalidam admissões em voo e esperam por elas. Com isso entrou o
+    pré-aquecimento ao abrir a view Linux (commit do branch `helper-prewarm`).
+  - Provas: `test_runtime_session.py` 25/0 com 16 mutações mortas (2 novas); desktop typecheck 0;
+    testes sem Docker verdes. **Pendente:** `src/main/app-dock-runtime-native.test.ts` (Docker real:
+    fila livre durante a admissão, `stop()` no meio da admissão sem helper sobrando, sessão sem
+    acessibilidade com imagem `orchestra-native-noa11y:20261004`) não rodou até o fim: o Docker
+    Desktop foi encerrado por fora durante a rodada.
+- `73621152dc` plugin: segunda passada do `target` cobre a árvore inteira e precisa escolher o mesmo
+  controle pela mesma regra (homônimo surgindo em outra página recusa `target-changed`); tempo de
+  espera pela permissão empurra o prazo; `dock_find` sinaliza travessia parcial mesmo com resultados.
+  52/0, três mutações mortas.
+- Suíte desktop inteira: 441 passam; as 2 falhas são de carga de módulo em arquivos intocados desde a
+  base (`draft-store` precisa de `node:sqlite`, `wsl/servers` importa o electron do link).
+
 ## Pendências (próximas fatias)
 
-1. **Pré-aquecer o helper** sem passar pela fila do runtime. A tentativa `helper-prewarm` (branch guardado, não integrado) mostrou que a fila marca o workspace como "erro" em qualquer falha e segura lista de apps/launch/Slack durante a partida a frio. Precisa de um caminho de aquecimento fora da fila.
-2. `target`: controle homônimo surgindo em outra página entre as passadas ainda não é detectado; o prazo de 90s inclui o tempo do pedido de permissão; `dock_find` não sinaliza cobertura parcial quando acha resultados.
-3. Teste Docker dedicado para `stop()`/`dispose()` com terminal abrindo (a correção não tem teste).
-4. Falha do helper nativo (via fila do runtime) marca o workspace inteiro como "erro" na UI.
-5. Decisão de produto: o `workspace.py` estrito faz toda a sessão Linux depender do barramento de acessibilidade.
-6. W06 no harness com as ferramentas novas; pacote empacotado (`extraResources`); Windows/arm64; performance.
-7. Nome com atalho ("Settings Ctrl+,") impede casamento exato.
+1. Rodar `app-dock-runtime-native.test.ts` com Docker (ver acima) e provar no app real: abrir a view
+   Linux pré-aquece o helper; lista de apps e launch respondem durante a partida a frio.
+2. Teste Docker de `stop()`/`dispose()` com terminal (`access`) abrindo.
+3. W06 no harness com as ferramentas novas; pacote empacotado (`extraResources`); Windows/arm64; performance.
+4. Nome com atalho ("Settings Ctrl+,") impede casamento exato.
 
 ## Regras herdadas das duas frentes
 
