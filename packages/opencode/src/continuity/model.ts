@@ -20,7 +20,7 @@ export function hasArtifact(
 ): context is ContinuityContext & { artifact: MemoryArtifact } {
   const artifact = context.artifact
   return (
-    artifact?.version === 2 &&
+    artifact?.version === 3 && Array.isArray(artifact.items) && artifact.items.length > 0 &&
     nonempty(context.sessionID) &&
     artifact.parentID === context.sessionID &&
     nonempty(artifact.producerID) && artifact.producerID !== context.sessionID &&

@@ -110,7 +110,7 @@ it.effect("G1 missing middle continuation with valid hashes and every message re
   const calls: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (request: LLM.StreamInput) => {
     calls.push(request)
-    return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ memory: FIRST, references: [] }) }), LLMEvent.finish({ reason: "stop" }))
+    return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: FIRST, status: "claimed" } }] }) }), LLMEvent.finish({ reason: "stop" }))
   } } }
   expect(yield* run(source, services, archived, archived)).toBeDefined()
   expect(calls).toHaveLength(1)
@@ -161,7 +161,7 @@ it.instance("G2 smaller parent model, growing native tail and failed model looku
 }), 30_000)
 
 it.instance("G3 budget batches preserve every unfinished turn and low-token completions advance coverage until backlog is consumed", () => Effect.gen(function* () {
-  const plans = yield* Effect.forEach([0, 1, 2, 3], (i) => held(`# Work\nBatch ${i}; keep checks read-only and deployment awaiting approval.`))
+  const plans = yield* Effect.forEach([0, 1, 2, 3], (i) => held(`Work: Batch ${i}; keep checks read-only and deployment awaiting approval.`))
   yield* Effect.gen(function* () {
     const sessions = yield* Session.Service
     const archive = yield* Archive.Service
@@ -221,7 +221,7 @@ it.instance("G3 indivisible first over-budget tool turn stays native without a p
 
 for (const action of ["advance", "cancel", "forget-rearm"] as const) it.instance(`G4 terminal-stop result held in cleanup cannot overwrite newer context or slot: ${action}`, () => Effect.gen(function* () {
   const first = yield* held(FIRST)
-  const stale = yield* held("# Work\nSTALE_TERMINAL_RESULT", { holdCleanup: true })
+  const stale = yield* held("Work: STALE_TERMINAL_RESULT", { holdCleanup: true })
   const fresh = yield* held(SECOND)
   yield* Effect.gen(function* () {
     const sessionID = yield* seed()
@@ -289,7 +289,7 @@ function dispatchGate() {
 
 for (const action of ["deliver", "duplicate", "advance", "invalidate", "forget", "dispose"] as const) it.instance(`G4 queued dispatch rechecks admission and instance lifetime before start: ${action}`, () => Effect.gen(function* () {
   const first = yield* held(FIRST)
-  const old = yield* held("# Work\nOld terminal snapshot", { holdCleanup: true })
+  const old = yield* held("Work: Old terminal snapshot", { holdCleanup: true })
   const fresh = yield* held(SECOND)
   const gate = dispatchGate()
   yield* Effect.addFinalizer(() => Effect.sync(gate.flush))

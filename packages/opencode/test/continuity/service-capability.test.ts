@@ -45,7 +45,7 @@ it.instance("denied recall prevents maintenance; revocation restores native hist
 it.instance("reference retirement preserves real recall; append-only publication avoids rereading retired history until invalidation", () => Effect.gen(function* () {
   const first = yield* held(FIRST, { reference: NONCE })
   const second = yield* held(SECOND)
-  const third = yield* held("# Work\nVerification still pending; approval constraint retained.")
+  const third = yield* held("Work: Verification still pending; approval constraint retained.")
   const repaired = yield* held(FIRST)
   yield* Effect.gen(function* () {
     const sessionID = yield* seed(B, A, RECEIPT)

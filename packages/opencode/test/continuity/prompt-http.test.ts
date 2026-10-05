@@ -41,7 +41,7 @@ type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const maintenance: Match = (hit) => {
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY PRODUCER PROTOCOL v2")) ||
+  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY PRODUCER PROTOCOL v3")) ||
     (wire.at(-1)?.role === "user" && wire.at(-1)!.content.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
 }
 const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
@@ -111,14 +111,14 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(maintenance(control("CONTEXT CONTINUITY PRODUCER PROTOCOL v2", "system"))).toBe(true)
+  expect(maintenance(control("CONTEXT CONTINUITY PRODUCER PROTOCOL v3", "system"))).toBe(true)
   expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
   for (const turn of seed) yield* llm.pushMatch(capture.record(turn.user, parent(turn.user)), answer(turn.assistant))
   yield* llm.pushMatch(capture.record("trigger", parent("TRIGGER")), answer("TRIGGER_DONE", 50_000, cached))
   // The replayed instruction identifies references by the opening words of their first message.
-  const stale = forkAnswer("# Work\nSTALE_HTTP_MEMORY", capture.record("A", maintenance), "7E5D", a.wait)
+  const stale = forkAnswer("Work: STALE_HTTP_MEMORY", capture.record("A", maintenance), "7E5D", a.wait)
   yield* llm.pushMatch(stale.match, stale.response)
   yield* llm.pushMatch(capture.record("advance", parent("ADVANCE_WHILE_HELD")), answer("PARENT_ADVANCED", 100))
   const fresh = forkAnswer(FIRST, capture.record("B", maintenance), "7E5D", b.wait)
@@ -156,7 +156,8 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
     Effect.map((value) => value.system[0]?.includes(FIRST) ? value : undefined)), "B never applied", "10 seconds")
   expect(prepared.messages).toEqual(history.slice(-8))
   expect(prepared.system[0]).not.toContain("STALE_HTTP_MEMORY")
-  expect(prepared.system[0]).not.toContain(NONCE)
+  // The nonce was written by the user, so the verbatim user ledger keeps it; recall still serves the archive.
+  expect(prepared.system[0]).toContain("Earlier user messages (verbatim, host-collected)")
   expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
   const providerB = capture.hits.find((entry) => entry.name === "B")!
   const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes("7E5D"))!.id

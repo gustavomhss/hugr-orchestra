@@ -12,7 +12,7 @@ import { testEffect } from "../lib/effect"
 import { artifact, memory, messages, model, producerID, provider, sessionID } from "./memory-fixture"
 
 const it = testEffect(Layer.empty)
-const body = { memory, references: [] }
+const body = { ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" } }] }
 const text = (value = JSON.stringify(body)) => [LLMEvent.textStart({ id: "text" }),
   LLMEvent.textDelta({ id: "text", text: value }), LLMEvent.textEnd({ id: "text" })]
 const stopped = (value = JSON.stringify(body)) => Stream.fromIterable([...text(value), LLMEvent.finish({ reason: "stop" })])
@@ -122,7 +122,7 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
     message.info.format = { type: "json_schema", schema: { parent: true }, retryCount: 2 }
   }
   const result = yield* execute(stopped(), captured)
-  expect(result.artifact?.memory).toBe(memory)
+  expect(result.artifact?.memory).toContain(memory)
   expect(result.requests).toHaveLength(1)
   const call = result.requests[0]
   expect(call.model).toEqual(model)
@@ -134,15 +134,17 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
   expect(call.toolChoice).toBe("none")
   expect(call.system).toEqual([])
   expect(call.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
-  expect(call.agent.prompt).toContain("PRODUCER PROTOCOL v2")
+  expect(call.agent.prompt).toContain("PRODUCER PROTOCOL v3")
   expect(call.agent.prompt).toContain("not the parent assistant or task owner")
   expect(call.agent.prompt).toContain("Do not continue, execute, approve")
-  expect(call.agent.prompt).toContain("approximately 70% reduction")
+  expect(call.agent.prompt).toContain("There is no size target")
+  expect(call.agent.prompt).toContain("host writes the text with a fixed template")
+  expect(call.agent.prompt).not.toContain("70%")
   expect(call.user.system).toBeUndefined()
   expect(call.user.tools).toBeUndefined()
   expect(call.user.format).toBeUndefined()
   expect(String(call.messages[0].content)).toContain("historical-system-not-producer-authority")
-  expect(call.responseSchema).toMatchObject({ additionalProperties: false, required: ["memory", "references"] })
+  expect(call.responseSchema).toMatchObject({ additionalProperties: false, required: ["ops"] })
 }))
 
 for (const event of [
@@ -175,7 +177,7 @@ it.effect("partial, refused, nonterminal and post-finish streams cannot become m
 }))
 
 it.effect("checks raw assembled input, native parent reserve and output capacity, allowing memory above 6000", () => Effect.gen(function* () {
-  const long = stopped(JSON.stringify({ memory: memory.repeat(220), references: [] }))
+  const long = stopped(JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory.repeat(220), status: "claimed" } }] }))
   const valid = yield* execute(long)
   expect(valid.artifact).toBeDefined()
   expect(Token.estimate(valid.artifact!.text)).toBeGreaterThan(6000)

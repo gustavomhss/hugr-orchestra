@@ -9,7 +9,7 @@ import type { ArchiveReference, MemoryArtifact, MemorySnapshot } from "@/continu
 
 export const sessionID = SessionID.make("ses_memory_parent")
 export const producerID = SessionID.make("ses_memory_producer")
-export const memory = "# Work\nKeep deployment read-only until approval. Discovery: stale cache caused the fault; invalidate it to unblock verification. Deployment remains pending."
+export const memory = "Work: Keep deployment read-only until approval. Discovery: stale cache caused the fault; invalidate it to unblock verification. Deployment remains pending."
 export const model: Provider.Model = {
   id: ModelV2.ID.make("gpt-5.6-test"), providerID: ProviderV2.ID.make("test"), name: "Memory test model",
   api: { id: "gpt-5.6-test", url: "https://example.invalid", npm: "@ai-sdk/openai" },
@@ -63,8 +63,8 @@ export function reference(): ArchiveReference {
     last: MessageID.make("msg_1"), bytes: 100 }
 }
 
-export function artifact(references = [{ id: reference().id, why: "Recover the failure receipt before verification." }]): MemoryArtifact {
-  const result = decode({ text: JSON.stringify({ memory, references }), snapshot: captured(),
+export function artifact(refs = [reference().id]): MemoryArtifact {
+  const result = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" }, refs }] }), snapshot: captured(),
     producerID, available: [reference()], maxTokens: 20_000 })
   if (!result) throw new Error("Expected a validated memory fixture")
   return result

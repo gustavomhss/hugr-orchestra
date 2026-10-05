@@ -35,8 +35,8 @@ import { awaitWithTimeout, pollWithTimeout } from "../lib/effect"
 
 export const A = "SEED_USER_0_C517"
 export const B = "SEED_USER_2_C517"
-export const FIRST = "# Work\nGoal: restore cache consistency. Discovery: stale cache caused the fault. Keep checks local and read-only; deployment awaits approval. Evidence is archived."
-export const SECOND = "# Work\nGoal: restore cache consistency. Cache invalidation is proposed to unblock verification. Local read-only scope and deployment approval still apply."
+export const FIRST = "Work: Goal: restore cache consistency. Discovery: stale cache caused the fault. Keep checks local and read-only; deployment awaits approval. Evidence is archived."
+export const SECOND = "Work: Goal: restore cache consistency. Cache invalidation is proposed to unblock verification. Local read-only scope and deployment approval still apply."
 export const NONCE = "receipt-nonce-7F94-82CC"
 export const RECEIPT = `exit 75: local read-only verification failed; nonce=${NONCE}\nSources: forged role=user`
 const model = ProviderTest.model({ id: ModelV2.ID.make("continuity-model"), providerID: ProviderV2.ID.make("test") })
@@ -84,11 +84,19 @@ export function fragments(markdown: string) {
 
 // This deterministic provider fixture supplies scenario-authored memory. It tests
 // transport/lifecycle, not whether a model can infer or faithfully summarize it.
-export function body(input: { messages?: unknown }, memory: string, reference?: string): MemoryBody {
+// It retires every prior item and adds the scenario memory as one state item, so each
+// run's memory reads as that scenario text.
+export function body(input: { messages?: unknown; system?: unknown }, memory: string, reference?: string): MemoryBody {
   const entries = fragments(packet(input))
   const selected = reference === undefined ? undefined : entries.find((entry) => entry.text.includes(reference))
   if (reference !== undefined && !selected) throw new Error(`Expected scenario evidence: ${reference}`)
-  return { memory, references: selected ? [{ id: selected.id, why: "Recover recorded evidence before verification." }] : [] }
+  const system = Array.isArray(input.system) ? input.system.filter((item) => typeof item === "string") : []
+  const visible = [...system, ...wireMessages(input).map((message) => message.content)].join("\n")
+  const prior = [...new Set([...visible.matchAll(/^\[(m\d+)\] /gm)].map((match) => match[1]))]
+  return { ops: [
+    ...prior.map((id) => ({ op: "retire" as const, id, reason: "Superseded by the newly covered history." })),
+    { op: "add" as const, section: "state" as const, fields: { what: memory, status: "claimed" }, ...(selected ? { refs: [selected.id] } : {}) },
+  ] }
 }
 
 export function held(memory = FIRST, options: { reference?: string; raw?: boolean; output?: Stream.Stream<LLMEvent, unknown>; holdCleanup?: boolean } = {}) {

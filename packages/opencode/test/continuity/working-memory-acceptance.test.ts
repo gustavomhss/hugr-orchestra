@@ -32,11 +32,14 @@ test("durable Markdown fragments preserve captured text, have content IDs, and s
     const tail = [{ info: { ...messages[0].info, id: MessageID.make("msg_tail") }, parts: [] }]
     const snapshot = { sessionID, boundary: tail[0].info.id, tailStart: tail[0].info.id,
       head: messages, tail, canRecall: true }
-    const first = decode({ text: JSON.stringify({ memory: "# Work\nRead-only verification succeeded; deployment awaits approval.",
-      references: [{ id: written[0].id, why: "Verification details if deployment is requested." }] }),
+    const first = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "state",
+      fields: { what: "Read-only verification succeeded; deployment awaits approval.", status: "verified" }, refs: [written[0].id] }] }),
       snapshot, producerID: SessionID.descending(), available: written, maxTokens: 100000 })
     expect(first).toBeDefined()
-    const next = decode({ text: JSON.stringify({ memory: "# Work\nDeployment remains awaiting approval. Verification details are no longer active.", references: [] }),
+    // Replacing the only item drops its reference from active memory; the archive keeps the fragment.
+    const next = decode({ text: JSON.stringify({ ops: [
+      { op: "add", section: "open", fields: { task: "Deploy", status: "awaiting_approval" } },
+      { op: "retire", id: "m1", reason: "Verification details are no longer active." }] }),
       snapshot: { ...snapshot, previous: first, head: tail,
         boundary: MessageID.make("msg_next_tail"), tailStart: MessageID.make("msg_next_tail"),
         tail: [{ info: { ...messages[0].info, id: MessageID.make("msg_next_tail") }, parts: [] }] },

@@ -10,7 +10,7 @@ import { testEffect } from "../lib/effect"
 import { memory, messages, model, provider, sessionID } from "./memory-fixture"
 
 const it = testEffect(Layer.empty)
-const body = JSON.stringify({ memory, references: [] })
+const body = JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" } }] })
 const stopped = () => Stream.fromIterable([LLMEvent.textStart({ id: "text" }),
   LLMEvent.textDelta({ id: "text", text: body }), LLMEvent.textEnd({ id: "text" }), LLMEvent.finish({ reason: "stop" })])
 
@@ -55,7 +55,7 @@ function execute(request?: ParentRequest) {
 it.live("maintenance replays the parent request prefix and appends one instruction", () => Effect.gen(function* () {
   const source = parent()
   const { artifact, requests } = yield* execute(source)
-  expect(artifact?.memory).toBe(memory)
+  expect(artifact?.memory).toContain(memory)
   expect(requests).toHaveLength(1)
   const sent = requests[0]
   expect(sent.purpose).toBeUndefined()
@@ -70,7 +70,7 @@ it.live("maintenance replays the parent request prefix and appends one instructi
   const appended = sent.messages.at(-1)!
   expect(appended.role).toBe("user")
   expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT")
-  expect(String(appended.content)).toContain("CONTEXT CONTINUITY PRODUCER PROTOCOL v2")
+  expect(String(appended.content)).toContain("CONTEXT CONTINUITY PRODUCER PROTOCOL v3")
   expect(Object.keys(sent.tools)).toEqual(Object.keys(source.input.tools))
   expect(sent.tools.read.description).toBe(source.input.tools.read.description)
   expect(sent.tools.read.inputSchema).toBe(source.input.tools.read.inputSchema)

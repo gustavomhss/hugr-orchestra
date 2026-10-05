@@ -239,7 +239,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     )
   }), Effect.scoped)
   if (!result.finished || result.invalid) return
-  return decode({ text: result.text, snapshot: captured, producerID: sessionID, available: known, maxTokens })
+  return decode({ text: result.text, snapshot: captured, producerID: sessionID, available: known, sources: selected, maxTokens })
 }, Effect.timeout("180 seconds"))
 
 function validArchive(captured: MemorySnapshot, chunks: ArchiveChunk[], available: ArchiveReference[]) {

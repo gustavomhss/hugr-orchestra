@@ -44,7 +44,7 @@ it.instance("repeat maintenance receives prior Markdown and only newly displaced
 }), 30_000)
 
 for (const ongoing of [false, true]) it.instance(`held stale A cannot prune; below-threshold refresh waits for whole parent turn; ongoing=${ongoing}`, () => Effect.gen(function* () {
-  const stale = yield* held("# Work\nSTALE_A_MUST_NOT_APPLY")
+  const stale = yield* held("Work: STALE_A_MUST_NOT_APPLY")
   const fresh = yield* held(SECOND)
   yield* Effect.gen(function* () {
     const sessionID = yield* seed()
@@ -87,7 +87,7 @@ for (const failure of ["provider-error", "stream-failure", "tool-attempt", "part
         LLMEvent.finish({ reason: failure === "refusal" ? "content-filter" : failure === "length" ? "length" : "stop" }),
       ])
     const invalid = failure === "malformed" ? '{"memory":"missing references"}'
-      : failure === "resumed-work" ? "I continued working and changed the code." : "# Work\nREJECTED_MEMORY"
+      : failure === "resumed-work" ? "I continued working and changed the code." : "Work: REJECTED_MEMORY"
     const second = yield* held(invalid, { output, raw: failure === "malformed" || failure === "resumed-work" })
     yield* Effect.gen(function* () {
       const sessionID = yield* seed()
@@ -144,7 +144,7 @@ it.instance("cancellation interrupts the real held stream and frees the next mai
 for (const action of ["edit", "revert", "forget"] as const) it.instance(`${action} invalidates memory and an in-flight result, then restarts from native history`, () => Effect.gen(function* () {
   const first = yield* held(FIRST)
   const stale = yield* held(SECOND)
-  const fresh = yield* held("# Work\nRecheck edited or rewound history; approval still required.")
+  const fresh = yield* held("Work: Recheck edited or rewound history; approval still required.")
   yield* Effect.gen(function* () {
     const sessionID = yield* seed()
     yield* applyFirst(sessionID, first)

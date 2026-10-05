@@ -35,11 +35,11 @@ test("unvalidated plaintext and foreign sessions preserve native history", () =>
   expect(store.prepare(sessionID, history, true)).toEqual({ messages: history, system: [] })
 })
 
-test("reader accepts version 2 only and leaves earlier valid entry when replacement fails", () => {
+test("reader accepts version 3 only and leaves earlier valid entry when replacement fails", () => {
   const store = create()
   const valid = context()
   expect(store.set(valid)).toBe(true)
-  for (const version of [1, 3, "2", null]) {
+  for (const version of [1, 2, "3", null]) {
     const entry = context()
     Reflect.set(entry.artifact, "version", version)
     expect(hasArtifact(entry)).toBe(false)

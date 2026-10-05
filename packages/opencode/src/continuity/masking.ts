@@ -16,18 +16,18 @@ const KEY_ARGS = ["filePath", "path", "command", "pattern", "url", "query", "inc
 /** Masked tool part IDs mapped to the archive reference holding the full output. */
 export type Masks = ReadonlyMap<string, string>
 
-type CompletedTool = SessionV1.ToolPart & { state: SessionV1.ToolStateCompleted }
+export type CompletedTool = SessionV1.ToolPart & { state: SessionV1.ToolStateCompleted }
 
-function completed(part: SessionV1.Part): part is CompletedTool {
+export function completed(part: SessionV1.Part): part is CompletedTool {
   return part.type === "tool" && part.state.status === "completed"
 }
 
-function failed(part: CompletedTool) {
+export function failed(part: CompletedTool) {
   const exit = part.state.metadata?.exit
   return typeof exit === "number" && exit !== 0
 }
 
-function signature(part: CompletedTool) {
+export function signature(part: CompletedTool) {
   const input = part.state.input ?? {}
   const args = KEY_ARGS.flatMap((key) => {
     const value = (input as Record<string, unknown>)[key]

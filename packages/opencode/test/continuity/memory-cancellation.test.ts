@@ -34,7 +34,7 @@ function transport() {
         events.push("closed")
       }))
       // A complete JSON body without terminal stop must not become applied memory.
-      return Stream.concat(Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ memory, references: [] }) })),
+      return Stream.concat(Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" } }] }) })),
         Stream.unwrap(Effect.gen(function* () {
           yield* jobs.list()
           yield* Deferred.succeed(entered, undefined)
@@ -71,7 +71,8 @@ it.instance("maintenance completion then cancellation await captured AbortContro
       yield* Deferred.succeed(capture.release, undefined)
       const result = yield* jobs.wait({ id: job.id })
       expect(result.info?.output).toBe("applied")
-      expect(accepted.map((artifact) => artifact.memory)).toEqual([memory])
+      expect(accepted).toHaveLength(1)
+      expect(accepted[0].memory).toContain(memory)
     }
     if (action === "cancel") {
       const cancel = yield* awaitWithTimeout(jobs.cancel(job.id), "Cancellation did not return", "5 seconds").pipe(

@@ -389,7 +389,16 @@ bootstrap confidence intervals.
    an edit, revert or session deletion, so the prefix stays stable between swaps. When
    masking alone brings usage to `trigger - 0.15` or below, the fork is skipped.
 4. Continuity block as a message after system, host artifact trail and user ledger.
-5. Item store, delta operations, validation and the v3 producer instruction.
+5. Item store, delta operations, validation and the v3 producer instruction. **Implemented**
+   (`continuity/memory.ts`, `prompt.txt` protocol v3), leaner than the design above:
+   three operations (`add`, `update`, `retire`); every item fills the fixed fields of its
+   section (`FIELDS`) and the host renders them with a fixed template, so the producer
+   never chooses the layout; field values are single lines; constraints require a quote the
+   host finds verbatim in the newly covered archive; objective and constraints retire only
+   with a covered user turn; unchanged items carry forward byte for byte. The host collects
+   the verbatim user ledger and the tool-call trail from covered history. Any violation
+   discards the whole result. The continuity block is still appended to `system`; moving it
+   to a message after the system prompt is a follow-up.
 6. Prepare/swap scheduling, opportunistic swap, price tiers, circuit breaker.
 7. Benchmark harness and the evaluation gate.
 
