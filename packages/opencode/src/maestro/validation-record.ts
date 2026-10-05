@@ -15,7 +15,8 @@ import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { lookupRouteGrant } from "./route-grant"
-import { lookupRosterMember, nativeProfiles, roster, type RosterMember } from "./roster"
+import { omit } from "remeda"
+import { lookupRosterMember, nativeProfiles, renderPrompt, roster, type Roster, type RosterMember } from "./roster"
 import { contextIsCurrent, readContext } from "./context-record"
 
 type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
@@ -109,8 +110,40 @@ function stable(value: unknown): string {
   return JSON.stringify(value)
 }
 
+// F1.4: new records bind behavior, not presentation. v2 hashes project each member without its display label (prompts
+// stay label templates) and tag the preimage with their version, so no v2 hash can equal a v1 hash. v1 hashed the full
+// members with their default labels rendered into the prompts; records holding it stay verifiable and are never
+// rewritten. Hashes stay bare hex because authorization receipts require that shape.
+const ROSTER_V2 = "maestro-roster-v2"
+const REVIEW_POLICY_V2 = "maestro-review-policy-v2"
+
+export function rosterHash(members: Roster) {
+  return hash({ version: ROSTER_V2, members: members.map(behavior) })
+}
+
+/** The hash version a recorded roster hash verifies under against `members`, if any. */
+export function verifyRosterHash(recorded: string, members: Roster) {
+  if (recorded === rosterHash(members)) return ROSTER_V2
+  if (recorded === hash(members.map(legacy))) return "maestro-roster-v1"
+}
+
 export function reviewPolicyHash(reviewer: RosterMember, profile: unknown) {
-  return hash({ version: "maestro-review-policy-v1", reviewer, profile })
+  return hash({ version: REVIEW_POLICY_V2, reviewer: behavior(reviewer), profile })
+}
+
+/** The hash version a recorded review-policy hash verifies under, if any. */
+export function verifyReviewPolicyHash(recorded: string, reviewer: RosterMember, profile: unknown) {
+  if (recorded === reviewPolicyHash(reviewer, profile)) return REVIEW_POLICY_V2
+  if (recorded === hash({ version: "maestro-review-policy-v1", reviewer: legacy(reviewer), profile }))
+    return "maestro-review-policy-v1"
+}
+
+function behavior(member: RosterMember) {
+  return omit(member, ["displayName"])
+}
+
+function legacy(member: RosterMember) {
+  return member.prompt === undefined ? member : { ...member, prompt: renderPrompt(member, member.displayName) }
 }
 
 function validationEventID(input: Pick<RecordValidationInput, "sessionID" | "workCardID">) {
@@ -156,7 +189,7 @@ function validation(input: RecordValidationInput): Omit<ValidationData, "actor" 
     workCard,
     workCardHash: workCardHash(workCard),
     routedMemberID: member.member.memberId,
-    rosterHash: hash(roster),
+    rosterHash: rosterHash(roster),
     grantHash: hash(grant.grant),
     reviewPolicyHash: reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]),
     validatorID: "maestro",
@@ -298,8 +331,7 @@ export const recordValidation = Effect.fn("MaestroValidation.record")(function* 
   const id = validationEventID(input)
   const existing = yield* readValidation(id)
   if (existing) {
-    const { id: existingID, ...recorded } = existing
-    if (isDeepStrictEqual(recorded, wanted)) return existing
+    if (sameValidation(existing, wanted)) return existing
     return yield* new ValidationConflictError({ sessionID: input.sessionID, workCardID: input.workCardID })
   }
   const events = yield* EventV2Bridge.Service
@@ -310,13 +342,25 @@ export const recordValidation = Effect.fn("MaestroValidation.record")(function* 
         if (!isDuplicate(cause)) return yield* Effect.failCause(cause)
         const existing = yield* readValidation(id)
         if (!existing) return yield* Effect.failCause(cause)
-        const { id: existingID, ...recorded } = existing
-        if (isDeepStrictEqual(recorded, wanted)) return existing
+        if (sameValidation(existing, wanted)) return existing
         return yield* new ValidationConflictError({ sessionID: input.sessionID, workCardID: input.workCardID })
       }),
     ),
   )
 })
+
+// An exact retry of a record written under an earlier hash version still matches when its hashes verify under that
+// version against the current roster and review policy.
+function sameValidation(existing: ValidationRecord, wanted: ValidationData) {
+  const { id: _, ...recorded } = existing
+  const reviewer = roster.find((candidate) => candidate.memberId === "lucy")
+  if (!reviewer?.nativeProfile) return false
+  return (
+    isDeepStrictEqual({ ...recorded, rosterHash: wanted.rosterHash, reviewPolicyHash: wanted.reviewPolicyHash }, wanted) &&
+    verifyRosterHash(recorded.rosterHash, roster) !== undefined &&
+    verifyReviewPolicyHash(recorded.reviewPolicyHash, reviewer, nativeProfiles[reviewer.nativeProfile]) !== undefined
+  )
+}
 
 export const readReview = Effect.fn("MaestroReview.read")(function* (id: string) {
   if (!id.startsWith("evt_")) return undefined
