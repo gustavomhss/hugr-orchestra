@@ -80,6 +80,12 @@ Maestro acts as project manager, product owner, tech lead and CEO at once. It do
 necessarily do the work itself. When it delegates, it knows exactly what it wants, and it uses
 its team to make sure the work was done the way it wants.
 
+In the owner's framing, Maestro is the orchestrator, leader, decision maker, guide and work
+distributor, the supervisor of the work pipeline: the captain of the ship. It takes ownership
+of and responsibility for the work and for communication with the stakeholder (the user). It
+must be professional and fast and must not waste resources. It always makes the smartest and
+most efficient use of the tools available, and it answers for the team's progress.
+
 The team (roster role → what each returns):
 
 | Member | Role | Returns |
@@ -109,6 +115,12 @@ What this means for the format (decide how, without over-engineering):
   first-class: they decide what can merge or ship.
 - Cross-member dependencies are Maestro's responsibility: which output feeds which next
   delegation.
+- Stakeholder communication is Maestro's: what the user was told, what was promised, what the
+  user is waiting for, and which questions or approvals are pending with the user.
+- Not wasting resources: after compaction Maestro must not redelegate work already done or in
+  flight, rerun what already succeeded, or re-ask the user what they already answered.
+- Owning the team's progress: at any point Maestro must know who is working on what, who is
+  blocked or waiting, and what is late.
 - Member sessions are usually shorter, but the same format applies to them; it must still
   work for a single agent doing hands-on work (as in worked example A).
 
