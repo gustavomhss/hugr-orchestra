@@ -8,6 +8,8 @@ export async function setupCompactNavigation(
     scheme?: "dark" | "light"
     projectName?: string
     protocol?: "v1" | "v2"
+    // Home shows no profile until one is chosen; a returning user has the repository chosen and persisted.
+    selected?: boolean
   } = {},
 ) {
   const directory = "/work/compact-navigation"
@@ -29,7 +31,7 @@ export async function setupCompactNavigation(
     pageMessages: () => ({ items: [] }),
   })
   await page.addInitScript(
-    ({ directory, server, locale, scheme }) => {
+    ({ directory, server, locale, scheme, selected }) => {
       localStorage.setItem(
         "settings.v3",
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
@@ -48,8 +50,12 @@ export async function setupCompactNavigation(
       localStorage.setItem("opencode-theme-id", "oc-2")
       localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
+      // Seed once per tab: a reload must keep what the app itself persisted since.
+      if (!selected || sessionStorage.getItem("compact-navigation-selected")) return
+      sessionStorage.setItem("compact-navigation-selected", "1")
+      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
-    { directory, server, locale: input.locale ?? "en", scheme: input.scheme ?? "dark" },
+    { directory, server, locale: input.locale ?? "en", scheme: input.scheme ?? "dark", selected: !!input.selected },
   )
   return {
     renameProject(name: string) {

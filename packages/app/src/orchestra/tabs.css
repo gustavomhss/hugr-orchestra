@@ -349,7 +349,8 @@
     opacity: 1 !important;
   }
 
-  [data-orchestra-tabs] [data-titlebar-tab] {
+  [data-orchestra-tabs] [data-titlebar-tab],
+  [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"] {
     transition: none;
   }
 }

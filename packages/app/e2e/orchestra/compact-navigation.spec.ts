@@ -8,7 +8,7 @@ const wipText = "Work in progress, revisit before production"
 
 test("collapse preserves names, focus, routes, profile and titlebar geometry across reload", async ({ page }) => {
   test.setTimeout(120_000)
-  await setupCompactNavigation(page)
+  await setupCompactNavigation(page, { selected: true })
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   const header = page.locator('[data-slot="titlebar-v2"]')
@@ -87,6 +87,10 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await sidebar.getByRole("button", { name: "Choose repository profile" }).click()
   await page.getByRole("menuitemradio", { name: "Compact project", exact: true }).click()
   await expect(sidebar.locator('[data-slot="orchestra-profile"]')).toContainText("Compact project")
+  // Choosing an item closes the menu and then returns focus to the profile button (menu button pattern).
+  // Moving focus before that lands would race the return and close the next tooltip.
+  await expect(page.locator('[data-component="orchestra-profile-picker"]')).toHaveCount(0)
+  await expect(sidebar.getByRole("button", { name: "Choose repository profile" })).toBeFocused()
   await sidebar.getByRole("button", { name: "MCP", exact: true }).focus()
   await expect(page.getByRole("tooltip", { name: "MCP", exact: true })).toBeVisible()
   await page.keyboard.press("Escape")
@@ -125,22 +129,25 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
 })
 
 test("V2 profile card counts agents and shows the branch only when the server reports one", async ({ page }) => {
-  await setupCompactNavigation(page, { protocol: "v2" })
+  await setupCompactNavigation(page, { protocol: "v2", selected: true })
   const vcs: string[] = []
+  // `unroute` matches a predicate by reference, so the same function must remove the route below.
+  const legacyVcs = (url: URL) => url.pathname === "/vcs"
   // A V2 server without the legacy endpoint: the card drops the branch instead of showing a stale one.
-  await page.route(
-    (url) => url.pathname === "/vcs",
-    (route) => {
-      vcs.push(route.request().url())
-      return route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
-    },
-  )
-  await page.goto("/")
+  await page.route(legacyVcs, (route) => {
+    vcs.push(route.request().url())
+    return route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
+  })
+  // Home's dashboard reads the branch for itself; on a chapter page the card is the only reader.
+  await page.goto("/orchestra/skills")
   const meta = page.locator('[data-slot="orchestra-profile"] small')
   await expect(meta).toHaveText("1 agent")
+  await expect.poll(() => vcs.length).toBe(1)
+  // A retry would follow the 404 after about a second.
+  await page.waitForTimeout(1_500)
   expect(vcs.length, "the branch is asked once, without retries").toBe(1)
   // The same V2 server answering the legacy endpoint shows the branch it reports.
-  await page.unroute((url) => url.pathname === "/vcs")
+  await page.unroute(legacyVcs)
   await page.reload()
   await expect(meta).toHaveText("1 agent · main")
 })
