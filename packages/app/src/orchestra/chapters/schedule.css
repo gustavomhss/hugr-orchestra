@@ -1,0 +1,25 @@
+/* Schedule screen additions to the shared kit (mock `.ic`, native <dialog> rules). */
+.schedule-ic {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The app's reset zeroes margins; a native modal needs auto margins to center. */
+.schedule-dialog {
+  margin: auto;
+}
+.schedule-dialog::backdrop {
+  background: var(--mx-backdrop);
+  backdrop-filter: blur(5px);
+}
+.schedule-dialog form {
+  display: flex;
+  max-block-size: calc(100vh - 66px);
+  flex-direction: column;
+  margin: 0;
+}
