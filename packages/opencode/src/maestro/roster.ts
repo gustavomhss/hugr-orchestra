@@ -74,7 +74,7 @@ export const roster = createRoster([
   {
     displayName: "Lucy",
     memberId: "lucy",
-    role: "cold review",
+    role: "cold code review; records governed reviews",
     abilityClass: "read-only artifact review",
     returnCard: "cited APPROVE/FIX_FIRST/REJECT card",
     forbiddenActions: ["edit implementation", "receive author transcript", "merge"],
@@ -84,7 +84,7 @@ export const roster = createRoster([
   {
     displayName: "Bobby",
     memberId: "bobby",
-    role: "architecture",
+    role: "architecture review",
     abilityClass: "read-only contract review",
     returnCard: "seam/contract verdict",
     forbiddenActions: ["implement product", "merge"],
@@ -94,7 +94,7 @@ export const roster = createRoster([
   {
     displayName: "Billy",
     memberId: "billy",
-    role: "security",
+    role: "security review",
     abilityClass: "read-only threat review",
     returnCard: "threat verdict and cited controls",
     forbiddenActions: ["implement product", "merge"],
@@ -104,7 +104,7 @@ export const roster = createRoster([
   {
     displayName: "Jimmy",
     memberId: "jimmy",
-    role: "exploration",
+    role: "codebase exploration",
     abilityClass: "read-only discovery",
     returnCard: "grounded findings card",
     forbiddenActions: ["ratify alone", "edit product"],
@@ -114,7 +114,7 @@ export const roster = createRoster([
   {
     displayName: "Rosie",
     memberId: "rosie",
-    role: "documentation",
+    role: "documentation changes",
     abilityClass: "scoped docs write",
     returnCard: "docs evidence card",
     forbiddenActions: ["decide product behavior"],

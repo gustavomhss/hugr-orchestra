@@ -472,12 +472,14 @@ it.instance("denies task_id with different parent or agent", () =>
           ask: () => Effect.void,
         },
       )
-    for (const taskID of [wrongParent.id, wrongAgent.id]) {
+    const denied = [
+      [wrongParent.id, `No task ${wrongParent.id} in this session.`],
+      [wrongAgent.id, "Task resume denied: task is not direct child for selected agent"],
+    ]
+    for (const [taskID, message] of denied) {
       const exit = yield* execute(taskID).pipe(Effect.exit)
       expect(Exit.isFailure(exit)).toBe(true)
-      if (Exit.isFailure(exit)) {
-        expect(Cause.pretty(exit.cause)).toContain("Task resume denied: task is not direct child for selected agent")
-      }
+      if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain(message)
     }
     expect(yield* sessions.children(chat.id)).toEqual([wrongAgent])
     expect(yield* sessions.children(otherParent.id)).toEqual([wrongParent])

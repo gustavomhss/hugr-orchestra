@@ -118,6 +118,19 @@ function stubOps(opts?: {
   }
 }
 
+function callContext(sessionID: SessionID, messageID: MessageID, promptOps: TaskPromptOps) {
+  return {
+    sessionID,
+    messageID,
+    agent: "build",
+    abort: new AbortController().signal,
+    extra: { promptOps },
+    messages: [],
+    metadata: () => Effect.void,
+    ask: () => Effect.void,
+  }
+}
+
 function reply(
   input: SessionPrompt.PromptInput,
   text: string,
@@ -248,6 +261,24 @@ describe("tool.task", () => {
         },
       },
     },
+  )
+
+  it.instance("description lists each native teammate's role, tools and return", () =>
+    Effect.gen(function* () {
+      const agent = yield* Agent.Service
+      const maestro = yield* agent.get("maestro")
+      const registry = yield* ToolRegistry.Service
+      const description =
+        (yield* registry.tools({ ...ref, agent: maestro })).find((tool) => tool.id === TaskTool.id)?.description ?? ""
+
+      expect(description).toContain(
+        "- charlie: Backend execution. Edits files and runs shell commands. Returns implementation card, gates, diff receipt.",
+      )
+      expect(description).toContain(
+        "- lucy: Cold code review; records governed reviews. Read-only: reads and searches files; cannot edit or run commands. Returns cited APPROVE/FIX_FIRST/REJECT card.",
+      )
+      expect(description).not.toContain("native team specialist")
+    }),
   )
 
   it.instance(
@@ -435,6 +466,7 @@ describe("tool.task", () => {
       const { chat, assistant } = yield* seed()
       const tool = yield* TaskTool
       const def = yield* tool.init()
+      const context = (promptOps: TaskPromptOps) => callContext(chat.id, assistant.id, promptOps)
 
       const exit = yield* def
         .execute(
@@ -443,21 +475,12 @@ describe("tool.task", () => {
             prompt: "look into the cache key path",
             subagent_type: "general",
           },
-          {
-            sessionID: chat.id,
-            messageID: assistant.id,
-            agent: "build",
-            abort: new AbortController().signal,
-            extra: {
-              promptOps: stubOps({
-                text: "",
-                error: new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(),
-              }),
-            },
-            messages: [],
-            metadata: () => Effect.void,
-            ask: () => Effect.void,
-          },
+          context(
+            stubOps({
+              text: "",
+              error: new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(),
+            }),
+          ),
         )
         .pipe(Effect.exit)
 
@@ -469,6 +492,20 @@ describe("tool.task", () => {
       expect(failure).toBeInstanceOf(Error)
       if (!(failure instanceof Error)) throw new Error("expected Error defect")
       expect(failure.message).toBe(`Subagent failed (task_id: ${child?.id}): Network connection lost`)
+
+      let seen: SessionPrompt.PromptInput | undefined
+      const resumed = yield* def.execute(
+        {
+          description: "inspect bug",
+          prompt: "retry the cache key path",
+          subagent_type: "general",
+          task_id: failure.message.match(/task_id: (\S+)\)/)?.[1],
+        },
+        context(stubOps({ onPrompt: (input) => (seen = input) })),
+      )
+      expect(resumed.metadata.sessionId).toBe(child!.id)
+      expect(seen?.sessionID).toBe(child!.id)
+      expect(yield* sessions.children(chat.id)).toHaveLength(1)
     }),
   )
 
@@ -612,40 +649,38 @@ describe("tool.task", () => {
     }),
   )
 
-  it.instance("execute creates a child when task_id does not exist", () =>
+  it.instance("execute fails when task_id is not a task of this session", () =>
     Effect.gen(function* () {
       const sessions = yield* Session.Service
       const { chat, assistant } = yield* seed()
+      const other = yield* sessions.create({ title: "Other parent" })
+      const foreign = yield* sessions.create({ parentID: other.id, title: "Foreign child", agent: "general" })
       const tool = yield* TaskTool
       const def = yield* tool.init()
-      let seen: SessionPrompt.PromptInput | undefined
-      const promptOps = stubOps({ text: "created", onPrompt: (input) => (seen = input) })
+      let prompted = false
 
-      const result = yield* def.execute(
-        {
-          description: "inspect bug",
-          prompt: "look into the cache key path",
-          subagent_type: "general",
-          task_id: "ses_missing",
-        },
-        {
-          sessionID: chat.id,
-          messageID: assistant.id,
-          agent: "build",
-          abort: new AbortController().signal,
-          extra: { promptOps },
-          messages: [],
-          metadata: () => Effect.void,
-          ask: () => Effect.void,
-        },
-      )
+      for (const taskID of ["ses_missing", "charlie-1", foreign.id]) {
+        const exit = yield* def
+          .execute(
+            {
+              description: "inspect bug",
+              prompt: "look into the cache key path",
+              subagent_type: "general",
+              task_id: taskID,
+            },
+            callContext(chat.id, assistant.id, stubOps({ onPrompt: () => (prompted = true) })),
+          )
+          .pipe(Effect.exit)
+        expect(Exit.isFailure(exit)).toBe(true)
+        if (Exit.isFailure(exit))
+          expect(Cause.pretty(exit.cause)).toContain(
+            `No task ${taskID} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
+          )
+      }
 
-      const kids = yield* sessions.children(chat.id)
-      expect(kids).toHaveLength(1)
-      expect(kids[0]?.id).toBe(result.metadata.sessionId)
-      expect(result.metadata.sessionId).not.toBe("ses_missing")
-      expect(result.output).toContain(`<task id="${result.metadata.sessionId}" state="completed">`)
-      expect(seen?.sessionID).toBe(result.metadata.sessionId)
+      expect(yield* sessions.children(chat.id)).toEqual([])
+      expect(yield* sessions.children(other.id)).toEqual([foreign])
+      expect(prompted).toBe(false)
     }),
   )
 

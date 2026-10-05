@@ -357,7 +357,14 @@ const layer = Layer.effect(
       const s = yield* InstanceState.get(state)
       const list = Object.values(s.skills).toSorted((a, b) => a.name.localeCompare(b.name))
       if (!agent) return list
-      return list.filter((skill) => Permission.evaluate("skill", skill.name, agent.permission).action !== "deny")
+      // A skill rule whose pattern is an absolute path matches where the skill was found, not its name,
+      // and only hides the skill from this list. Name rules such as "*" never match a location.
+      const located = agent.permission.filter((rule) => path.isAbsolute(rule.pattern))
+      return list.filter(
+        (skill) =>
+          Permission.evaluate("skill", skill.name, agent.permission).action !== "deny" &&
+          Permission.evaluate("skill", skill.location, located).action !== "deny",
+      )
     })
 
     return Service.of({ get, require, all, dirs, available })

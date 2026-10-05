@@ -21,15 +21,58 @@ const it = testEffect(
   ),
 )
 
+const execution = "Edits files and runs shell commands."
+const review = "Read-only: reads and searches files; cannot edit or run commands."
+
 const nativeTeam = [
-  { id: "charlie", profile: "execution", prompt: "You are Charlie, backend execution specialist." },
-  { id: "patty", profile: "execution", prompt: "You are Patty, frontend execution specialist." },
-  { id: "lucy", profile: "review", prompt: "You are Lucy, cold code reviewer." },
-  { id: "bobby", profile: "review", prompt: "You are Bobby, architecture reviewer." },
-  { id: "billy", profile: "review", prompt: "You are Billy, security reviewer." },
-  { id: "jimmy", profile: "review", prompt: "You are Jimmy, exploration reviewer." },
-  { id: "rosie", profile: "execution", prompt: "You are Rosie, documentation execution specialist." },
-  { id: "frankie", profile: "review", prompt: "You are Frankie, process auditor." },
+  {
+    id: "charlie",
+    profile: "execution",
+    prompt: "You are Charlie, backend execution specialist.",
+    description: `Backend execution. ${execution} Returns implementation card, gates, diff receipt.`,
+  },
+  {
+    id: "patty",
+    profile: "execution",
+    prompt: "You are Patty, frontend execution specialist.",
+    description: `Frontend execution. ${execution} Returns implementation card, sensory evidence, diff receipt.`,
+  },
+  {
+    id: "lucy",
+    profile: "review",
+    prompt: "You are Lucy, cold code reviewer.",
+    description: `Cold code review; records governed reviews. ${review} Returns cited APPROVE/FIX_FIRST/REJECT card.`,
+  },
+  {
+    id: "bobby",
+    profile: "review",
+    prompt: "You are Bobby, architecture reviewer.",
+    description: `Architecture review. ${review} Returns seam/contract verdict.`,
+  },
+  {
+    id: "billy",
+    profile: "review",
+    prompt: "You are Billy, security reviewer.",
+    description: `Security review. ${review} Returns threat verdict and cited controls.`,
+  },
+  {
+    id: "jimmy",
+    profile: "review",
+    prompt: "You are Jimmy, exploration reviewer.",
+    description: `Codebase exploration. ${review} Returns grounded findings card.`,
+  },
+  {
+    id: "rosie",
+    profile: "execution",
+    prompt: "You are Rosie, documentation execution specialist.",
+    description: `Documentation changes. ${execution} Returns docs evidence card.`,
+  },
+  {
+    id: "frankie",
+    profile: "review",
+    prompt: "You are Frankie, process auditor.",
+    description: `Process audit. ${review} Returns audit verdict.`,
+  },
 ] as const
 
 function load<A>(fn: (service: Agent.Interface) => Effect.Effect<A>) {
@@ -50,6 +93,7 @@ it.instance("registers native team specialists with fixed profiles", () =>
     for (const seat of nativeTeam) {
       const agent = yield* load((service) => service.get(seat.id))
       expect(agent).toMatchObject({ id: seat.id, mode: "subagent", native: true })
+      expect(agent.description).toBe(seat.description)
       expect(agent.prompt).toStartWith(seat.prompt)
       expect(agent.prompt).toContain("Return card:")
       expect(agent.prompt).toContain("Forbidden:")

@@ -58,6 +58,12 @@ export const Info = Schema.Struct({
 }).annotate({ identifier: "Agent" })
 export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>
 
+// What each roster native profile lets a teammate do, as the task tool lists it.
+const nativeAccess = {
+  execution: "Edits files and runs shell commands.",
+  review: "Read-only: reads and searches files; cannot edit or run commands.",
+} satisfies Record<keyof typeof nativeProfiles, string>
+
 const GeneratedAgent = Schema.Struct({
   identifier: Schema.String,
   whenToUse: Schema.String,
@@ -97,6 +103,7 @@ const layer = Layer.effect(
     const skill = yield* Skill.Service
     const provider = yield* Provider.Service
     const locations = yield* LocationServiceMap.Service
+    const global = yield* Global.Service
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("Agent.state")(function* (ctx) {
@@ -194,6 +201,20 @@ const layer = Layer.effect(
               defaults,
               Permission.fromConfig({
                 question: "allow",
+                // Publishing asks by default; user config can allow it.
+                bash: {
+                  "git push *": "ask",
+                  "git -C * push *": "ask",
+                  "gh pr create *": "ask",
+                  "gh pr merge *": "ask",
+                  "gh release *": "ask",
+                },
+                // Skills in the global Claude and agents directories are written for other tools; keep them
+                // off Maestro's skill list. Location rules affect only that list (see Skill.available).
+                skill: {
+                  [path.join(global.home, ".claude", "skills", "*")]: "deny",
+                  [path.join(global.home, ".agents", "skills", "*")]: "deny",
+                },
               }),
               user,
             ),
@@ -296,7 +317,7 @@ const layer = Layer.effect(
                 {
                   id: member.memberId,
                   name: member.displayName,
-                  description: `${member.displayName} native team specialist.`,
+                  description: `${member.role.charAt(0).toUpperCase()}${member.role.slice(1)}. ${nativeAccess[member.nativeProfile!]} Returns ${member.returnCard}.`,
                   prompt: member.prompt,
                   options: {},
                   permission: Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
@@ -498,7 +519,7 @@ const locationServiceMapNode = LayerNode.make({
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [Config.node, Auth.node, Plugin.node, Skill.node, Provider.node, locationServiceMapNode],
+  deps: [Config.node, Auth.node, Plugin.node, Skill.node, Provider.node, locationServiceMapNode, Global.node],
 })
 
 export * as Agent from "./agent"

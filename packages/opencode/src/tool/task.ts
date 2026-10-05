@@ -62,12 +62,12 @@ const BACKGROUND_UPDATED = [
 ].join("\n")
 
 const BaseParameterFields = {
-  description: Schema.String.annotate({ description: "A short (3-5 words) description of the task" }),
+  description: Schema.String.annotate({ description: "The short label the user sees for this task (3-5 words)" }),
   prompt: Schema.String.annotate({ description: "The task for the agent to perform" }),
   subagent_type: Schema.String.annotate({ description: "The type of specialized agent to use for this task" }),
   task_id: Schema.optional(Schema.String).annotate({
     description:
-      "This should only be set if you mean to resume a previous task (you can pass a prior task_id and the task will continue the same subagent session as before instead of creating a fresh one)",
+      "Set only to continue an earlier task: the exact task_id that call returned. The agent resumes with its earlier context. An unknown id fails.",
   }),
   command: Schema.optional(Schema.String).annotate({ description: "The command that triggered this task" }),
   model: Schema.optional(Schema.String).annotate({
@@ -197,7 +197,11 @@ export const TaskTool = Tool.define(
           permission: childPermissions,
         })
         if (reservation.routedMemberID !== nextID) {
-          return yield* Effect.fail(new Error("Authorized Task denied: routed-seat-mismatch"))
+          return yield* Effect.fail(
+            new Error(
+              `Authorized Task denied: routed-seat-mismatch. This authorization dispatches only ${reservation.routedMemberID}; retry with exactly the approved seat, prompt and model.`,
+            ),
+          )
         }
         if (
           reservation.taskIntentHash !==
@@ -207,16 +211,29 @@ export const TaskTool = Tool.define(
             model: params.model,
           })
         ) {
-          return yield* Effect.fail(new Error("Authorized Task denied: task-intent-mismatch"))
+          return yield* Effect.fail(
+            new Error(
+              "Authorized Task denied: task-intent-mismatch. subagent_type, prompt and model must match the approved intent byte for byte; retry with exactly what was presented and approved.",
+            ),
+          )
         }
         governedChildID = SessionID.make(reservation.childSessionID)
         reservedChildPermissions = reservation.permission
         replayReserved = true
         requireCompletedReplay = true
       }
-      const resumed = params.task_id
+      // SessionID.make throws on ids without the session prefix.
+      const resumed = params.task_id?.startsWith("ses")
         ? yield* sessions.get(SessionID.make(params.task_id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
         : undefined
+      // Governed and authorized dispatch reserve their own child, so their task_id may name one not created yet.
+      if (params.task_id && !params.governed && !params.authorizationID && resumed?.parentID !== ctx.sessionID) {
+        return yield* Effect.fail(
+          new Error(
+            `No task ${params.task_id} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
+          ),
+        )
+      }
       if (resumed && (resumed.parentID !== ctx.sessionID || resumed.agent !== nextID)) {
         return yield* Effect.fail(new Error("Task resume denied: task is not direct child for selected agent"))
       }
@@ -512,7 +529,9 @@ export const TaskTool = Tool.define(
             Effect.provideService(Session.Service, sessions),
           )
         }
-        const parts = yield* ops.resolvePromptParts(params.prompt)
+        // A brief names other agents as plain text. As an @mention, an agent part would tell the child to
+        // delegate to that agent and skip its own task permission prompt.
+        const parts = (yield* ops.resolvePromptParts(params.prompt)).filter((part) => part.type !== "agent")
         const authorizationID = params.authorizationID
         const own = authorizationID
           ? yield* Effect.gen(function* () {

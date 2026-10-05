@@ -340,7 +340,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "description": {
-      "description": "A short (3-5 words) description of the task",
+      "description": "The short label the user sees for this task (3-5 words)",
       "type": "string",
     },
     "governed": {
@@ -408,7 +408,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "task_id": {
-      "description": "This should only be set if you mean to resume a previous task (you can pass a prior task_id and the task will continue the same subagent session as before instead of creating a fresh one)",
+      "description": "Set only to continue an earlier task: the exact task_id that call returned. The agent resumes with its earlier context. An unknown id fails.",
       "type": "string",
     },
   },

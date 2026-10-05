@@ -9,7 +9,11 @@ import { Config } from "../../src/config/config"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Global } from "@opencode-ai/core/global"
-import { provideInstance, provideTmpdirInstance, testInstanceStoreLayer, tmpdir } from "../fixture/fixture"
+import { Agent } from "../../src/agent/agent"
+import { Auth } from "../../src/auth"
+import { Plugin } from "../../src/plugin"
+import { Provider } from "../../src/provider/provider"
+import { provideInstance, provideTmpdirInstance, testInstanceStoreLayer, tmpdir, tmpdirScoped } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import path from "path"
 import fs from "fs/promises"
@@ -31,6 +35,8 @@ const itWithoutExternalSkills = testEffect(
     testInstanceStoreLayer,
   ),
 )
+// Tests provide Agent and Skill with their own home; a Skill built here would be reused through the shared memo map.
+const withAgents = testEffect(Layer.mergeAll(node, testInstanceStoreLayer))
 
 async function createGlobalSkill(homeDir: string) {
   const skillDir = path.join(homeDir, ".claude", "skills", "global-test-skill")
@@ -582,4 +588,87 @@ description: A skill in the .opencode/skills directory.
       { git: true },
     ),
   )
+
+  withAgents.live("lists skills from the global Claude and agents directories for every agent but maestro", () =>
+    Effect.gen(function* () {
+      const home = yield* globalSkills()
+      yield* provideTmpdirInstance(
+        (dir) =>
+          Effect.gen(function* () {
+            yield* Effect.promise(() =>
+              Promise.all([
+                writeSkill(path.join(dir, ".claude", "skills"), "claude-project"),
+                writeSkill(path.join(dir, ".agents", "skills"), "agents-project"),
+                writeSkill(path.join(dir, ".opencode", "skills"), "opencode-project"),
+                writeSkill(path.join(dir, "team-skills"), "configured-path"),
+              ]),
+            )
+            expect(yield* listed("maestro")).toEqual([
+              "agents-project",
+              "claude-project",
+              "configured-path",
+              "customize-opencode",
+              "opencode-project",
+            ])
+            expect(yield* listed("build")).toEqual([
+              "agents-global",
+              "agents-project",
+              "claude-global",
+              "claude-project",
+              "configured-path",
+              "customize-opencode",
+              "opencode-project",
+            ])
+            expect(yield* listed("plan")).toEqual(yield* listed("build"))
+          }).pipe(Effect.provide(agentLayer(home))),
+        { git: true, config: { skills: { paths: ["team-skills"] } } },
+      )
+    }),
+  )
+
+  withAgents.live("lists global skills for maestro again when config allows their location", () =>
+    Effect.gen(function* () {
+      const home = yield* globalSkills()
+      yield* provideTmpdirInstance(
+        () =>
+          Effect.gen(function* () {
+            expect(yield* listed("maestro")).toEqual(["claude-global", "customize-opencode"])
+          }).pipe(Effect.provide(agentLayer(home))),
+        {
+          git: true,
+          config: {
+            agent: { maestro: { permission: { skill: { [path.join(home, ".claude", "skills", "*")]: "allow" } } } },
+          },
+        },
+      )
+    }),
+  )
+})
+
+// Agent and Skill read the global home from the same Global service.
+const agentLayer = (home: string) =>
+  LayerNode.compile(
+    LayerNode.group([Agent.node, Plugin.node, Provider.node, Auth.node, Config.node, Skill.node, RuntimeFlags.node]),
+    [[Global.node, Global.layerWith({ home })]],
+  )
+
+const writeSkill = (root: string, name: string) =>
+  Bun.write(path.join(root, name, "SKILL.md"), `---\nname: ${name}\ndescription: The ${name} skill.\n---\n\n# ${name}\n`)
+
+const globalSkills = Effect.fn("SkillTest.globalSkills")(function* () {
+  const home = yield* tmpdirScoped()
+  yield* Effect.promise(() =>
+    Promise.all([
+      writeSkill(path.join(home, ".claude", "skills"), "claude-global"),
+      writeSkill(path.join(home, ".agents", "skills"), "agents-global"),
+    ]),
+  )
+  return home
+})
+
+const listed = Effect.fn("SkillTest.listed")(function* (agentID: string) {
+  const skill = yield* Skill.Service
+  const agents = yield* Agent.Service
+  const agent = yield* agents.get(agentID)
+  return (yield* skill.available(agent)).map((item) => item.name)
 })
