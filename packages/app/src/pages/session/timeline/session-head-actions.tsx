@@ -14,7 +14,8 @@ export function SessionHeadActions(props: {
 }) {
   const language = useLanguage()
   const layout = useSessionLayout()
-  // The approved first paint shows the rail. Open it once per profile; later choices persist in the layout.
+  // The approved first paint shows the rail. A global flag (Persist.global "orchestra.chat.rail") opens it
+  // once per app storage; the review panel state is global too, so later choices persist in the layout.
   const [rail, setRail, , railReady] = persisted(
     Persist.global("orchestra.chat.rail"),
     createStore({ defaulted: false }),

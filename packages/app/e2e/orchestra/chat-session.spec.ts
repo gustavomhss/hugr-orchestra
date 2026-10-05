@@ -33,7 +33,7 @@ test("a fresh profile opens the rail on Review once; the header's Review button 
   await expect(panel).toHaveCount(0)
   await expect(reviewButton(page)).toHaveAttribute("aria-pressed", "false")
 
-  // The default applies once per profile: a reload keeps the user's choice.
+  // The default applies once per app storage: a reload keeps the user's choice.
   await page.reload({ waitUntil: "domcontentloaded" })
   await expectSessionTitle(page, parentTitle)
   await expect(reviewButton(page)).toHaveAttribute("aria-pressed", "false")

@@ -6,7 +6,7 @@ const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mc
 
 export interface MockServerConfig {
   protocol?: "v1" | "v2"
-  // Orchestra opens the review rail once per profile. Mocked pages start after that default unless a
+  // Orchestra opens the review rail once per app storage. Mocked pages start after that default unless a
   // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
   freshRail?: boolean
   provider: unknown | (() => unknown)
