@@ -3,7 +3,7 @@ import { expect, test, type Page, type Route } from "@playwright/test"
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
 const directory = "/repo/shared"
-type SkillFixture = { name: string; description: string; location: string; content: string }
+type SkillFixture = { name: string; description: string; location: string; content: string; mtime?: number }
 
 const catalog: SkillFixture[] = [
   {
@@ -12,6 +12,7 @@ const catalog: SkillFixture[] = [
     location: "/repo/shared/.opencode/skills/review/SKILL.md",
     content:
       "  # Review\n<script>window.__skillInjected = true</script>\n<img src=x onerror=alert(1)>\n<b>Keep literal markup</b>\n",
+    mtime: 1_791_000_000_123,
   },
   {
     name: "Release notes",
@@ -55,12 +56,18 @@ for (const protocol of ["v1", "v2"] as const) {
     await page.keyboard.press("Escape")
     await expect(dialog).toHaveCount(0)
 
-    const read = cards.last().getByRole("button", { name: "Read & edit" })
+    await expect(cards.last().getByRole("button", { name: "Read & edit" })).toHaveCount(0)
+    const read = cards.last().getByRole("button", { name: "Read", exact: true })
     await read.focus()
     await page.keyboard.press("Enter")
-    await expect(dialog.locator("h2")).toHaveText(`Edit ${catalog[1].name}`)
+    await expect(dialog.locator("h2")).toHaveText(`Read ${catalog[1].name}`)
     await expect(instructions).toHaveValue(catalog[1].content)
-    await expect(dialog.locator(".mx-dialog-head p")).toHaveText(`Stored at ${catalog[1].location}`)
+    await expect(instructions).not.toBeEditable()
+    await expect(dialog.locator(".mx-dialog-head p")).toHaveText(
+      `Stored at ${catalog[1].location}. Global skills are read-only here.`,
+    )
+    await expect(dialog.getByRole("button", { name: "Save" })).toHaveCount(0)
+    await expect(dialog.getByRole("button", { name: "Remove skill" })).toHaveCount(0)
     await dialog.getByRole("button", { name: "Cancel" }).click()
     await expect(dialog).toHaveCount(0)
 
@@ -84,7 +91,9 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(instructions).toHaveValue(catalog[0].content)
   })
 
-  test(`${protocol}: create, edit, remove, built-in read and local availability`, async ({ page }) => {
+  test(`${protocol}: create, edit, remove, read-only skills, reload notice and local availability`, async ({
+    page,
+  }) => {
     const writes: { method: string; url: string; body: unknown }[] = []
     const builtin = {
       name: "customize-opencode",
@@ -92,13 +101,20 @@ for (const protocol of ["v1", "v2"] as const) {
       location: protocol === "v1" ? "<built-in>" : "/builtin/customize-opencode.md",
       content: "# Built in\n",
     }
-    const response = { status: 200, skills: [...catalog, builtin] }
+    const governed = {
+      name: "own_policy",
+      description: "Atlas policy",
+      location: `${directory}/.opencode/skills/own/own_policy/SKILL.md`,
+      content: "# Policy\n",
+    }
+    const created = `${directory}/.opencode/skills/release-checklist/SKILL.md`
+    const response = { status: 200, skills: [...catalog, governed, builtin], hidden: [created] }
     await setup(page, { protocol, response, writes })
     await openSkills(page)
     const chapter = page.locator('[data-chapter="skills"]')
     const cards = chapter.locator(".skills-card")
     const dialog = page.getByRole("dialog")
-    await expect(cards.locator("h3")).toHaveText([catalog[0].name, catalog[1].name, builtin.name])
+    await expect(cards.locator("h3")).toHaveText([catalog[0].name, governed.name, catalog[1].name, builtin.name])
     await expect(cards.last().locator(".mx-meta .mx-badge")).toHaveText(["Built-in", "Available"])
 
     await cards.last().getByRole("button", { name: "Read", exact: true }).click()
@@ -110,6 +126,17 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(dialog.getByRole("button", { name: "Save" })).toHaveCount(0)
     await expect(dialog.getByRole("button", { name: "Remove skill" })).toHaveCount(0)
     await dialog.getByRole("button", { name: "Close dialog" }).click()
+    await expect(dialog).toHaveCount(0)
+
+    await cards.nth(1).getByRole("button", { name: "Read", exact: true }).click()
+    await expect(dialog.locator("h2")).toHaveText(`Read ${governed.name}`)
+    await expect(dialog.locator(".mx-dialog-head p")).toHaveText(
+      `Stored at ${governed.location}. Governed by Atlas, so it is read-only.`,
+    )
+    await expect(dialog.getByRole("textbox", { name: "Description" })).not.toBeEditable()
+    await expect(dialog.getByRole("button", { name: "Save" })).toHaveCount(0)
+    await expect(dialog.getByRole("button", { name: "Remove skill" })).toHaveCount(0)
+    await page.keyboard.press("Escape")
     await expect(dialog).toHaveCount(0)
 
     await chapter.getByRole("button", { name: "Add skill" }).click()
@@ -124,14 +151,6 @@ for (const protocol of ["v1", "v2"] as const) {
     await dialog.getByRole("textbox", { name: "Instructions" }).fill("# Release\n\nRun the gate.")
     await dialog.getByRole("button", { name: "Save" }).click()
     await expect(dialog).toHaveCount(0)
-    const created = `${directory}/.opencode/skills/release-checklist/SKILL.md`
-    await expect(cards.locator("h3")).toHaveText([
-      catalog[0].name,
-      "release-checklist",
-      catalog[1].name,
-      builtin.name,
-    ])
-    await expect(cards.nth(1).locator(".mx-meta .mx-badge")).toHaveText(["Project", "Available"])
     expect(writes.map((write) => write.method)).toEqual(["PUT", "PUT"])
     expect(writes[1].body).toEqual({
       name: "release-checklist",
@@ -140,28 +159,58 @@ for (const protocol of ["v1", "v2"] as const) {
     })
     expectDirectory(writes[1].url)
 
+    // The server saved the file but its cached configuration does not list the new folder yet.
+    const notice = chapter.locator(".orchestra-skills-notice")
+    await expect(notice).toHaveText(
+      `Saved to ${created}. The server lists it after it reloads this project's configuration. Reload list`,
+    )
+    await expect(cards.locator("h3")).toHaveText([catalog[0].name, governed.name, catalog[1].name, builtin.name])
+    response.hidden = []
+    await notice.getByRole("button", { name: "Reload list" }).click()
+    await expect(cards.locator("h3")).toHaveText([
+      catalog[0].name,
+      governed.name,
+      "release-checklist",
+      catalog[1].name,
+      builtin.name,
+    ])
+    await expect(notice).toHaveCount(0)
+    await expect(cards.nth(2).locator(".mx-meta .mx-badge")).toHaveText(["Project", "Available"])
+
+    // Availability follows the file, so renaming a disabled skill keeps it disabled.
+    await chapter.getByRole("switch", { name: `Enable ${catalog[0].name}` }).click()
     await cards.first().getByRole("button", { name: "Read & edit" }).click()
+    await dialog.getByRole("textbox", { name: "Name" }).fill("boundary-check")
     await dialog.getByRole("textbox", { name: "Description" }).fill("Inspect every public interface")
     await dialog.getByRole("button", { name: "Save" }).click()
     await expect(dialog).toHaveCount(0)
+    await expect(cards.first().locator("h3")).toHaveText("boundary-check")
     await expect(cards.first().getByText("Inspect every public interface", { exact: true })).toBeVisible()
-    expect(writes[2]).toMatchObject({
+    await expect(chapter.getByRole("switch", { name: "Enable boundary-check" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    )
+    await expect(cards.first().locator(".mx-meta .mx-badge")).toHaveText(["Project", "Disabled"])
+    expect(writes[2]).toEqual({
       method: "PUT",
+      url: writes[2].url,
       body: {
-        name: catalog[0].name,
+        name: "boundary-check",
         description: "Inspect every public interface",
         content: catalog[0].content,
         path: catalog[0].location,
+        mtime: catalog[0].mtime,
       },
     })
+    expectDirectory(writes[2].url)
 
-    await cards.nth(1).getByRole("button", { name: "Read & edit" }).click()
+    await cards.nth(2).getByRole("button", { name: "Read & edit" }).click()
     await dialog.getByRole("button", { name: "Remove skill" }).click()
     await expect(dialog.locator("h2")).toHaveText("Remove this skill?")
     await expect(dialog.locator(".mx-dialog-head p")).toHaveText(`Deletes ${created}.`)
     await dialog.getByRole("button", { name: "Confirm" }).click()
     await expect(dialog).toHaveCount(0)
-    await expect(cards.locator("h3")).toHaveText([catalog[0].name, catalog[1].name, builtin.name])
+    await expect(cards.locator("h3")).toHaveText(["boundary-check", governed.name, catalog[1].name, builtin.name])
     expect(writes).toHaveLength(4)
     expect(writes[3].method).toBe("DELETE")
     expect(new URL(writes[3].url).searchParams.get("path")).toBe(created)
@@ -171,7 +220,7 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(toggle).toHaveAttribute("aria-checked", "true")
     await toggle.click()
     await expect(toggle).toHaveAttribute("aria-checked", "false")
-    await expect(cards.nth(1).locator(".mx-meta .mx-badge")).toHaveText(["Global", "Disabled"])
+    await expect(cards.nth(2).locator(".mx-meta .mx-badge")).toHaveText(["Global", "Disabled"])
     await expect(chapter.locator(".mx-note")).toHaveText(
       "Availability is saved for this profile in this app; agents still receive every registered skill.",
     )
@@ -180,7 +229,11 @@ for (const protocol of ["v1", "v2"] as const) {
       "aria-checked",
       "false",
     )
-    await expect(chapter.getByRole("switch", { name: `Enable ${catalog[0].name}` })).toHaveAttribute(
+    await expect(chapter.getByRole("switch", { name: "Enable boundary-check" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    )
+    await expect(chapter.getByRole("switch", { name: `Enable ${governed.name}` })).toHaveAttribute(
       "aria-checked",
       "true",
     )
@@ -301,7 +354,7 @@ async function setup(
     protocol: "v1" | "v2"
     requests?: string[]
     scheme?: "dark" | "light"
-    response?: { status: number; skills: SkillFixture[] }
+    response?: { status: number; skills: SkillFixture[]; hidden?: string[] }
     writes?: { method: string; url: string; body: unknown }[]
     beforeA?: () => Promise<void>
     afterA?: () => void
@@ -361,7 +414,7 @@ async function setup(
       if (url.origin === serverA) await input.beforeA?.()
       const skills =
         url.origin === serverA
-          ? (input.response?.skills ?? catalog)
+          ? (input.response?.skills ?? catalog).filter((skill) => !input.response?.hidden?.includes(skill.location))
           : [{ ...catalog[1], name: "Server B instructions", content: "Only server B.\n" }]
       await json(
         route,
@@ -398,7 +451,7 @@ function json(route: Route, body: unknown, status = 200) {
 }
 
 // Mirrors the server contract: PUT creates `<directory>/.opencode/skills/<name>/SKILL.md` or rewrites the
-// registered file at `path`; DELETE removes the registered file at `path`.
+// registered file at `path` (bumping its mtime); DELETE removes the registered file at `path`.
 function writeSkill(
   route: Route,
   input: {
@@ -407,7 +460,7 @@ function writeSkill(
     body: unknown
     url: URL
     location: unknown
-    skills?: { status: number; skills: SkillFixture[] }
+    skills?: { status: number; skills: SkillFixture[]; hidden?: string[] }
   },
 ) {
   const store = input.skills
@@ -422,7 +475,7 @@ function writeSkill(
   if (body.name === "taken") {
     const message = "A skill named taken is already registered."
     return input.path === "/skill"
-      ? json(route, { name: "SkillWriteError", data: { message, reason: "conflict" } }, 400)
+      ? json(route, { name: "SkillConflictError", data: { message } }, 409)
       : json(route, { _tag: "ConflictError", message, resource: "skill" }, 409)
   }
   const saved = {
@@ -430,6 +483,7 @@ function writeSkill(
     description: body.description,
     location: body.path ?? `${directory}/.opencode/skills/${body.name}/SKILL.md`,
     content: body.content,
+    mtime: Date.now(),
   }
   store.skills = body.path
     ? store.skills.map((skill) => (skill.location === body.path ? saved : skill))

@@ -11,7 +11,7 @@ import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { SkillDialog, type SkillDialogState, type SkillSaveInput } from "./skills-dialog"
-import { filterSkills, skillErrorMessage, skillSource, sortSkills, type SkillEntry } from "./skills-data"
+import { filterSkills, skillAccess, skillErrorMessage, skillSource, sortSkills, type SkillEntry } from "./skills-data"
 import "./skills.css"
 
 export default function Skills(props: ChapterPageProps) {
@@ -25,12 +25,17 @@ export default function Skills(props: ChapterPageProps) {
     skills: [] as SkillEntry[],
     query: "",
     dialog: undefined as SkillDialogState | undefined,
-    notice: undefined as string | undefined,
+    // A saved file the server has not listed yet (its configuration predates the skill folder).
+    pending: undefined as string | undefined,
   })
-  // No server setting decides which skills a profile offers, so availability is this app's per-profile choice.
+  // No server setting decides which skills a profile offers, so availability is this app's per-profile choice,
+  // keyed by skill file location because names can repeat across folders.
   const [local, setLocal] = persisted(
     Persist.serverWorkspace(serverSDK().scope, props.directory, "orchestra-skills"),
     createStore({ disabled: [] as string[] }),
+  )
+  const unlisted = createMemo(() =>
+    state.pending && !state.skills.some((skill) => skill.location === state.pending) ? state.pending : undefined,
   )
   const filtered = createMemo(() => filterSkills(state.skills, state.query))
   const profile = createMemo(() => {
@@ -84,6 +89,8 @@ export default function Skills(props: ChapterPageProps) {
 
   async function save(input: SkillSaveInput) {
     const protocol = await serverSDK().protocol
+    // V2 goes through the legacy SDK's generated v2 group: `currentApi` is the vendored @opencode-ai/client
+    // release, which predates the skill write routes.
     const result = await (
       protocol === "v1"
         ? sdk().client.app.skillSave({ directory: props.directory, skillSaveInput: input }, { throwOnError: false })
@@ -95,13 +102,8 @@ export default function Skills(props: ChapterPageProps) {
     if (!result?.data) return writeFailure(result?.response?.status, result?.error)
     const saved = "data" in result.data ? result.data.data : result.data
     if (abort.signal.aborted) return
-    setState("dialog", undefined)
+    setState({ dialog: undefined, pending: saved.location })
     await load().catch(() => refresh())
-    const listed = state.skills.some((skill) => skill.location === saved.location)
-    setState(
-      "notice",
-      listed ? undefined : language.t("orchestra.skills.notListed", { location: saved.location }),
-    )
   }
 
   async function remove(skill: SkillEntry) {
@@ -116,7 +118,8 @@ export default function Skills(props: ChapterPageProps) {
     ).catch(() => undefined)
     if (!result?.response?.ok) return writeFailure(result?.response?.status, result?.error)
     if (abort.signal.aborted) return
-    setState({ dialog: undefined, notice: undefined })
+    setState({ dialog: undefined, pending: undefined })
+    setLocal("disabled", (locations) => locations.filter((location) => location !== skill.location))
     await load().catch(() => refresh())
   }
 
@@ -174,7 +177,8 @@ export default function Skills(props: ChapterPageProps) {
           <For each={filtered()}>
             {(skill) => {
               const source = () => skillSource(skill.location, props.directory)
-              const enabled = () => !local.disabled.includes(skill.name)
+              const access = () => skillAccess(skill.location, props.directory)
+              const enabled = () => !local.disabled.includes(skill.location)
               return (
                 <li class="mx-card skills-card" data-skill-location={skill.location}>
                   <div class="mx-card-top">
@@ -200,16 +204,18 @@ export default function Skills(props: ChapterPageProps) {
                     <button
                       type="button"
                       class="mx-btn"
-                      onClick={() => setState("dialog", { type: "edit", skill, readOnly: source() === "builtin" })}
+                      onClick={() => setState("dialog", { type: "edit", skill, access: access() })}
                     >
-                      {language.t(source() === "builtin" ? "orchestra.skills.readOnly" : "orchestra.skills.read")}
+                      {language.t(access() === "edit" ? "orchestra.skills.read" : "orchestra.skills.readOnly")}
                     </button>
                     <MxToggle
                       checked={enabled()}
                       label={language.t("orchestra.skills.toggle", { name: skill.name })}
                       onChange={(next) =>
-                        setLocal("disabled", (names) =>
-                          next ? names.filter((name) => name !== skill.name) : [...names, skill.name],
+                        setLocal("disabled", (locations) =>
+                          next
+                            ? locations.filter((location) => location !== skill.location)
+                            : [...locations, skill.location],
                         )
                       }
                     />
@@ -220,8 +226,15 @@ export default function Skills(props: ChapterPageProps) {
           </For>
         </ul>
       </Show>
-      <Show when={state.notice}>
-        <p class="mx-note">{state.notice}</p>
+      <Show when={unlisted()}>
+        {(location) => (
+          <p class="mx-note orchestra-skills-notice">
+            {language.t("orchestra.skills.notListed", { location: location() })}{" "}
+            <button type="button" class="mx-link" onClick={refresh}>
+              {language.t("orchestra.skills.reload")}
+            </button>
+          </p>
+        )}
       </Show>
       <Show when={state.status === "ready" && state.skills.length}>
         <p class="mx-note">{language.t("orchestra.skills.localNote")}</p>

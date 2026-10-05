@@ -1,13 +1,13 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
-import type { SkillEntry } from "./skills-data"
+import type { SkillAccess, SkillEntry } from "./skills-data"
 
 export type SkillDialogState =
   | { type: "add" }
-  | { type: "edit"; skill: SkillEntry; readOnly: boolean }
+  | { type: "edit"; skill: SkillEntry; access: SkillAccess }
   | { type: "remove"; skill: SkillEntry }
 
-export type SkillSaveInput = { name: string; description: string; content: string; path?: string }
+export type SkillSaveInput = { name: string; description: string; content: string; path?: string; mtime?: number }
 
 // Mock `modal()`: one native modal dialog whose content is replaced per step. Each action resolves to
 // an error message, or undefined once the page has applied it and closed the dialog.
@@ -23,7 +23,7 @@ export function SkillDialog(props: {
   const [busy, setBusy] = createSignal(false)
   const lifetime = { disposed: false }
   const skill = props.state.type === "add" ? undefined : props.state.skill
-  const editable = props.state.type === "add" || (props.state.type === "edit" && !props.state.readOnly)
+  const editable = props.state.type === "add" || (props.state.type === "edit" && props.state.access === "edit")
   let dialog!: HTMLDialogElement
 
   onMount(() => dialog.showModal())
@@ -52,6 +52,7 @@ export function SkillDialog(props: {
         description: String(data.get("description") ?? ""),
         content: String(data.get("instructions") ?? ""),
         path: skill?.location,
+        mtime: skill?.mtime ?? undefined,
       }),
     )
   }
@@ -59,7 +60,7 @@ export function SkillDialog(props: {
   const title = () => {
     if (props.state.type === "add") return language.t("orchestra.skills.dialog.add")
     if (props.state.type === "remove") return language.t("orchestra.skills.remove.title")
-    return language.t(props.state.readOnly ? "orchestra.skills.dialog.read" : "orchestra.skills.dialog.edit", {
+    return language.t(props.state.access === "edit" ? "orchestra.skills.dialog.edit" : "orchestra.skills.dialog.read", {
       name: props.state.skill.name,
     })
   }
@@ -67,8 +68,12 @@ export function SkillDialog(props: {
     if (props.state.type === "add") return language.t("orchestra.skills.dialog.addDetail")
     if (props.state.type === "remove")
       return language.t("orchestra.skills.remove.detail", { location: props.state.skill.location })
-    if (props.state.readOnly) return language.t("orchestra.skills.dialog.builtin")
-    return language.t("orchestra.skills.location", { location: props.state.skill.location })
+    const location = props.state.skill.location
+    if (props.state.access === "builtin") return language.t("orchestra.skills.dialog.builtin")
+    if (props.state.access === "global") return language.t("orchestra.skills.dialog.global", { location })
+    if (props.state.access === "governed") return language.t("orchestra.skills.dialog.governed", { location })
+    if (props.state.access === "fixed") return language.t("orchestra.skills.dialog.fixed", { location })
+    return language.t("orchestra.skills.location", { location })
   }
 
   return (

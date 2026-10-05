@@ -11,12 +11,18 @@ export const SKILLS_COPY = {
   "orchestra.skills.toggle": "Enable {{name}}",
   "orchestra.skills.localNote":
     "Availability is saved for this profile in this app; agents still receive every registered skill.",
-  "orchestra.skills.notListed": "Saved to {{location}}. The server lists it after it reloads this project's configuration.",
+  "orchestra.skills.notListed":
+    "Saved to {{location}}. The server lists it after it reloads this project's configuration.",
+  "orchestra.skills.reload": "Reload list",
   "orchestra.skills.dialog.add": "Add skill",
   "orchestra.skills.dialog.addDetail": "Saved as .opencode/skills/<name>/SKILL.md in this profile's repository.",
   "orchestra.skills.dialog.edit": "Edit {{name}}",
   "orchestra.skills.dialog.read": "Read {{name}}",
   "orchestra.skills.dialog.builtin": "Built into opencode. Read-only.",
+  "orchestra.skills.dialog.global": "Stored at {{location}}. Global skills are read-only here.",
+  "orchestra.skills.dialog.governed": "Stored at {{location}}. Governed by Atlas, so it is read-only.",
+  "orchestra.skills.dialog.fixed":
+    "Stored at {{location}}. Outside this project's skill folders, so it is read-only here.",
   "orchestra.skills.dialog.close": "Close dialog",
   "orchestra.skills.dialog.cancel": "Cancel",
   "orchestra.skills.dialog.save": "Save",
