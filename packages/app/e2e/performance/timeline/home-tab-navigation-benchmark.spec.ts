@@ -110,49 +110,15 @@ async function setup(page: Parameters<typeof mockStressTimeline>[0], sessionIDs:
   await installHomeActivity(page)
 }
 
-// Home lists the selected profile's sessions by recorded activity; select the fixture project and give
-// every root session one turn in the last bar.
+// Home ranks the selected profile's sessions; the mock server gives each root session one message today.
 async function installHomeActivity(page: Parameters<typeof mockStressTimeline>[0]) {
   const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
   await page.addInitScript(
     ({ server, directory }) =>
-      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } })),
+      localStorage.setItem(
+        "opencode.global.dat:layout",
+        JSON.stringify({ home: { selection: { server, directory } } }),
+      ),
     { server, directory: fixture.directory },
   )
-  const roots = fixture.sessions.filter((session) => !("parentID" in session))
-  await page.route(/\/session\/activity\?/, (route) => {
-    const edges = new URL(route.request().url()).searchParams.get("edges")!.split(",").map(Number)
-    return route.fulfill({
-      headers: { "access-control-allow-origin": "*" },
-      json: {
-        edges,
-        sessions: roots.map((session) => ({
-          id: session.id,
-          title: session.title,
-          parentID: null,
-          created: session.time.created,
-          updated: session.time.updated,
-          additions: null,
-          deletions: null,
-          files: null,
-        })),
-        facts: roots.map((session) => ({
-          bucket: edges.length - 2,
-          sessionID: session.id,
-          providerID: null,
-          modelID: null,
-          user: 1,
-          assistant: 0,
-          failed: 0,
-          activeMs: 0,
-          tokens: 0,
-          cost: 0,
-        })),
-      },
-    })
-  })
-}
-
-function messageSelector(id: string) {
-  return `[data-message-id="${id}"]`
 }
