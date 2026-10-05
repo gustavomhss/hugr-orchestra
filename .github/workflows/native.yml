@@ -27,13 +27,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # Refs without the native suites (they live with the Linux workspace) skip every step.
       - name: Build a11y test image
+        id: image
+        if: hashFiles('packages/desktop/test/native/Dockerfile') != ''
         run: docker build --provenance=false --tag orchestra-a11y-test:ci test/native
 
       # Every suite runs in a fresh container without network, as the image's own UID, with the package
       # mounted read-only. Xvfb must exist before D-Bus activates the registry, so DISPLAY is exported
       # into the activation environment; without it at-spi2-registryd cannot synthesize keys.
       - name: Write suite runner
+        if: steps.image.outcome == 'success'
         run: |
           cat > "$RUNNER_TEMP/suite" <<'SH'
           #!/usr/bin/env bash
@@ -48,29 +52,29 @@ jobs:
           chmod +x "$RUNNER_TEMP/suite"
 
       - name: Snapshot
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_snapshot.py --self-check
 
       - name: Helper
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_helper.py --payload resources/linux/app-dock-accessibility --self-check
 
       - name: Workspace scope
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_workspace.py --payload resources/linux/app-dock-accessibility --self-check
 
       - name: Bus transport
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_bus.py --self-check
 
       - name: Runtime session
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_runtime_session.py --workspace resources/linux-runtime/workspace.py --self-check
 
       - name: Actions with the real registry
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_actions.py
 
       - name: Keyboard
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite keyboard_regression.py
