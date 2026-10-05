@@ -2,6 +2,7 @@ export * as SessionContinuity from "./service"
 
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { BackgroundJob } from "@/background/job"
+import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { Provider } from "@/provider/provider"
 import { LLM } from "@/session/llm"
@@ -15,7 +16,7 @@ import { Cause, Context, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
 import { run, snapshot, type ParentRequest } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
-import { isSafe, shouldStart, tokenCount } from "./trigger"
+import { isSafe, settings, shouldStart, tokenCount } from "./trigger"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
 type Active = { generation: number; boundary: MessageID }
@@ -84,12 +85,16 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const llm = yield* LLM.Service
     const archive = yield* Archive.Service
+    const config = yield* Config.Service
+    const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
       return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map() }
     }))
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
+      // Disabling continuity also stops using memory that was applied earlier.
+      if (!(yield* enabled).enabled) return { messages: input.messages, system: [] }
       const current = yield* InstanceState.get(state)
       const prepared = current.contexts.prepare(input.sessionID, input.messages, input.canRecall)
       if (!prepared.system.length) return prepared
@@ -159,6 +164,12 @@ const layer = Layer.effect(
       expected?: { entry: Entry; generation: number }): Effect.Effect<void> =>
       Effect.gen(function* () {
         const message = pending.message
+        const options = yield* enabled
+        if (!options.enabled) return
+        const context = yield* provider.getModel(message.providerID, message.modelID).pipe(
+          Effect.map((model) => model.limit.context),
+          Effect.orElseSucceed(() => 0),
+        )
         const active = yield* Effect.sync(() => {
           const item = current.sessions.get(sessionID)
           if (!item || expected && (item !== expected.entry || item.generation !== expected.generation)) return
@@ -169,7 +180,8 @@ const layer = Layer.effect(
             item.refresh = true
           }
           if (current.contexts.get(sessionID)?.boundary === message.id) return
-          if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false })) return
+          if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false, context,
+            trigger: options.trigger })) return
           const active: Active = { generation: item.generation, boundary: message.id }
           item.active = active
           item.attempted = message.id
@@ -360,5 +372,5 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node],
+  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node],
 })

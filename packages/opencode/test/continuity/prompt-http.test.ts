@@ -53,6 +53,8 @@ function configure(url: string, directory: string, options: { toolcall?: boolean
   return Effect.promise(() => Bun.write(path.join(directory, "opencode.json"), JSON.stringify({
     ...config, model: "test/test-model", small_model: "test/test-model", enabled_providers: ["test"],
     plugin: [], mcp: {}, compaction: { auto: false },
+    // Scenario turns report 50,000 tokens against the test model's 100,000-token window.
+    continuity: { trigger: 0.5 },
     agent: { build: { permission: { context_recall: options.permission ?? "allow" } } },
   })))
 }

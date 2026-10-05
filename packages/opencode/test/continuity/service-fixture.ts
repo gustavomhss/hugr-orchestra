@@ -14,6 +14,8 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { Agent } from "@/agent/agent"
+import { Config } from "@/config/config"
+import type { ConfigV1 } from "@opencode-ai/core/v1/config/config"
 import { Archive } from "@/continuity/archive"
 import type { MemoryBody } from "@/continuity/memory-types"
 import { BackgroundJob } from "@/background/job"
@@ -106,6 +108,8 @@ export function environment<A = never, E = never>(plans: Held[], options: {
   getModel?: Provider.Interface["getModel"]
   archive?: (actual: Archive.Interface) => Archive.Interface
   node?: LayerNode.Node<A, E, LayerNode.Tag | undefined>
+  /** Fixture turns report 50,000 tokens against a 200,000-token window. */
+  config?: ConfigV1.Info
 } = {}) {
   const llm = LayerNode.make({ service: LLM.Service, deps: [Session.node, BackgroundJob.node],
     layer: Layer.effect(LLM.Service, Effect.gen(function* () {
@@ -160,6 +164,7 @@ export function environment<A = never, E = never>(plans: Held[], options: {
     }) })],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
     [Plugin.node, Layer.mock(Plugin.Service, { init: () => Effect.void, list: () => Effect.succeed([]), trigger: (_name, _input, output) => Effect.succeed(output) })],
+    [Config.node, Layer.mock(Config.Service, { get: () => Effect.succeed(options.config ?? { continuity: { trigger: 0.25 } }) })],
   ])
 }
 

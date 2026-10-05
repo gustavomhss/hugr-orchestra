@@ -2,8 +2,6 @@ import type { MessageID, SessionID } from "@/session/schema"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import type { ArchiveReference, MemoryArtifact, MemorySnapshot } from "./memory-types"
 
-export const threshold = 50_000
-
 export type Snapshot = {
   sessionID: SessionID
   boundary: MessageID

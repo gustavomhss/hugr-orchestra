@@ -211,3 +211,24 @@ it.instance("native compaction archives durable old history but supplies only su
     expect(yield* sessions.messages({ sessionID: chat.id })).toEqual(durable)
   }).pipe(Effect.provide(environment([plan])))
 }), 30_000)
+
+for (const config of [{ continuity: { enabled: false } }, { continuity: { trigger: 0.9 } }]) {
+  it.instance(`no maintenance starts below the configured trigger or when disabled: ${JSON.stringify(config)}`, () => Effect.gen(function* () {
+    yield* Effect.gen(function* () {
+      // Seed reports 50,000 tokens on a 200,000-token window: 25%, below 0.9 and irrelevant when disabled.
+      const sessionID = yield* seed()
+      const jobs = yield* BackgroundJob.Service
+      expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toEqual([])
+      expect((yield* prepare(sessionID)).system).toEqual([])
+    }).pipe(Effect.provide(environment([], { config })))
+  }), 30_000)
+}
+
+it.instance("the default fixture trigger starts maintenance at the same usage", () => Effect.gen(function* () {
+  const first = yield* held(FIRST)
+  yield* Effect.gen(function* () {
+    const sessionID = yield* seed()
+    const jobs = yield* BackgroundJob.Service
+    expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toHaveLength(1)
+  }).pipe(Effect.provide(environment([first])))
+}), 30_000)
