@@ -54,10 +54,13 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(panelClose).toHaveCSS("height", "20px")
     await expectTarget(panelClose)
 
+    // Plugins is a page now; its Add behavior dialog carries the shared dialog close control.
     await sidebar.getByRole("button", { name: /^Plugins/ }).click()
+    await page.locator('[data-mx-page="orchestra-plugins"]').getByRole("button", { name: "Add behavior" }).click()
     const dialog = page.getByRole("dialog")
-    await expect(dialog).toContainText("Plugins")
-    const dialogClose = dialog.getByRole("button", { name: "Close", exact: true })
+    await expect(dialog).toContainText("Add LLM behavior")
+    const dialogClose = dialog.getByRole("button", { name: "Close dialog", exact: true })
+    await expect(dialogClose).toHaveAttribute("data-slot", "dialog-close-button")
     await expect(dialogClose).toHaveCSS("width", "20px")
     await expect(dialogClose).toHaveCSS("height", "20px")
     await expectTarget(dialogClose)

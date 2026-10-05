@@ -33,6 +33,8 @@ const promptInputs: unknown[] = []
 const sentCommands: unknown[] = []
 const commands: Array<{ name: string }> = []
 let serverSessionSyncs = 0
+const behaviorProfiles: string[] = []
+const behaviors = { ready: true, system: undefined as string | undefined }
 
 let params: { id?: string } = {}
 let search: { draftId?: string } = {}
@@ -140,6 +142,20 @@ beforeAll(async () => {
 
   mock.module("@opencode-ai/core/util/encode", () => ({
     base64Encode: (value: string) => value,
+  }))
+
+  mock.module("@/orchestra/chapters/plugins-store", () => ({
+    llmBehaviors: (_platform: unknown, scope: string, directory: string) => {
+      behaviorProfiles.push(`${scope}:${directory}`)
+      return {
+        ready: () => behaviors.ready,
+        loaded: async () => {
+          behaviors.ready = true
+        },
+        // Read after loaded() so a send never uses the defaults of a profile still loading.
+        system: () => (behaviors.ready ? behaviors.system : "read before load"),
+      }
+    },
   }))
 
   mock.module("@/context/local", () => ({
@@ -294,6 +310,9 @@ beforeEach(() => {
   promotedDrafts.length = 0
   sentPrompts.length = 0
   promptInputs.length = 0
+  behaviorProfiles.length = 0
+  behaviors.ready = true
+  behaviors.system = undefined
   sentCommands.length = 0
   commands.length = 0
   promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
@@ -497,6 +516,40 @@ describe("prompt submit worktree selection", () => {
     expect((promptInputs[0] as { legacyParts?: { id: string; type: string; text?: string }[] }).legacyParts).toEqual([
       { id: expect.stringMatching(/^prt_/), type: "text", text: "ls" },
     ])
+  })
+
+  test("sends the profile's enabled LLM behaviors with each new message", async () => {
+    params = { id: "session-1" }
+    const submit = createPromptSubmit({
+      prompt,
+      info: () => ({ id: "session-1" }),
+      imageAttachments: () => [],
+      commentCount: () => 0,
+      autoAccept: () => false,
+      mode: () => "normal",
+      working: () => false,
+      editor: () => undefined,
+      queueScroll: () => undefined,
+      promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+      addToHistory: () => undefined,
+      resetHistoryNavigation: () => undefined,
+      setMode: () => undefined,
+      setPopover: () => undefined,
+    })
+    const event = { preventDefault: () => undefined } as unknown as Event
+
+    behaviors.ready = false
+    behaviors.system = "## Caveman (intensity: ultra)"
+    await submit.handleSubmit(event)
+    await Bun.sleep(0)
+    behaviors.system = undefined
+    await submit.handleSubmit(event)
+    await Bun.sleep(0)
+
+    expect(behaviorProfiles).toEqual(["local:/repo/main", "local:/repo/main"])
+    expect(promptInputs).toHaveLength(2)
+    expect((promptInputs[0] as { system?: string }).system).toBe("## Caveman (intensity: ultra)")
+    expect((promptInputs[1] as { system?: string }).system).toBeUndefined()
   })
 
   test("submits slash commands through the current session API", async () => {

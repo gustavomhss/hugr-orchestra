@@ -1,0 +1,123 @@
+export const CAVEMAN_ID = "caveman"
+export const INTENSITIES = ["lite", "full", "ultra"] as const
+
+export type Intensity = (typeof INTENSITIES)[number]
+
+export type LlmBehavior = {
+  id: string
+  name: string
+  description: string
+  instructions: string
+  enabled: boolean
+  intensity?: Intensity
+}
+
+export type LlmBehaviorState = { behaviors: LlmBehavior[] }
+
+// Each level states what changes, so the selected intensity reaches the model as a concrete rule.
+const INTENSITY_RULES: Record<Intensity, string> = {
+  lite: "Cut filler, pleasantries and hedging. Keep articles and full sentences; stay professional and tight.",
+  full: "Drop articles and filler; fragments are fine. Prefer short words. Do not narrate tool calls or add decorative formatting.",
+  ultra:
+    "Compress to the minimum: one word when one word is enough, state each fact once, drop conjunctions when the meaning stays clear.",
+}
+
+const CAVEMAN_GUARDS =
+  "Keep code, commands, API names, numbers and exact error text unchanged. Never drop negations. Write security warnings and irreversible-action confirmations in full."
+
+// A new profile starts with Caveman available but off: enabling it changes real model output.
+export function defaultBehaviorState(): LlmBehaviorState {
+  return {
+    behaviors: [
+      {
+        id: CAVEMAN_ID,
+        name: "Caveman",
+        description: "Technical substance stays. Fluff goes.",
+        instructions: "Respond terse like smart caveman. Preserve technical accuracy.",
+        enabled: false,
+        intensity: "full",
+      },
+    ],
+  }
+}
+
+// Persisted values come from browser storage; keep only well-formed behaviors.
+export function sanitizeBehaviorState(value: unknown): LlmBehaviorState {
+  if (!isRecord(value) || !Array.isArray(value.behaviors)) return defaultBehaviorState()
+  return { behaviors: value.behaviors.flatMap((item) => (isBehavior(item) ? [normalize(item)] : [])) }
+}
+
+export function behaviorSystem(behaviors: LlmBehavior[]) {
+  const active = behaviors.filter(
+    (behavior) => behavior.enabled && (behavior.id === CAVEMAN_ID || behavior.instructions.trim()),
+  )
+  if (!active.length) return
+  return [
+    "LLM behaviors active for this profile. Apply them to every answer.",
+    ...active.map((behavior) =>
+      [
+        behavior.id === CAVEMAN_ID ? `## ${behavior.name} (intensity: ${intensity(behavior)})` : `## ${behavior.name}`,
+        behavior.instructions.trim(),
+        behavior.id === CAVEMAN_ID ? `${INTENSITY_RULES[intensity(behavior)]} ${CAVEMAN_GUARDS}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+  ].join("\n\n")
+}
+
+export function filterBehaviors(behaviors: LlmBehavior[], query: string) {
+  const search = query.trim().toLowerCase()
+  if (!search) return behaviors
+  return behaviors.filter((behavior) =>
+    [behavior.name, behavior.description, behavior.intensity ?? "custom", behavior.enabled ? "active" : "disabled"]
+      .join(" ")
+      .toLowerCase()
+      .includes(search),
+  )
+}
+
+export function saveBehavior(behaviors: LlmBehavior[], next: LlmBehavior) {
+  if (!behaviors.some((behavior) => behavior.id === next.id)) return [...behaviors, next]
+  return behaviors.map((behavior) => (behavior.id === next.id ? next : behavior))
+}
+
+export function removeBehavior(behaviors: LlmBehavior[], id: string) {
+  return behaviors.filter((behavior) => behavior.id !== id)
+}
+
+export function toggleBehavior(behaviors: LlmBehavior[], id: string, enabled: boolean) {
+  return behaviors.map((behavior) => (behavior.id === id ? { ...behavior, enabled } : behavior))
+}
+
+export function intensity(behavior: LlmBehavior): Intensity {
+  return behavior.intensity ?? "full"
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isBehavior(value: unknown): value is LlmBehavior {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
+    typeof value.name === "string" &&
+    typeof value.description === "string" &&
+    typeof value.instructions === "string" &&
+    typeof value.enabled === "boolean"
+  )
+}
+
+function normalize(behavior: LlmBehavior): LlmBehavior {
+  const level = INTENSITIES.find((item) => item === behavior.intensity)
+  return {
+    id: behavior.id,
+    name: behavior.name,
+    description: behavior.description,
+    instructions: behavior.instructions,
+    enabled: behavior.enabled,
+    ...(behavior.id === CAVEMAN_ID ? { intensity: level ?? "full" } : {}),
+  }
+}

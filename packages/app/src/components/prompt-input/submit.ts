@@ -13,6 +13,8 @@ import { usePermission } from "@/context/permission"
 import { type ContextItem, type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/context/platform"
+import { llmBehaviors } from "@/orchestra/chapters/plugins-store"
 import { clearPending, pendingRules } from "@/components/draft-subagent-models"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
@@ -41,6 +43,8 @@ export type FollowupDraft = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
+  // Profile LLM behaviors (Orchestra Plugins), captured when the message is submitted.
+  system?: string
 }
 
 type FollowupSendInput = {
@@ -173,6 +177,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       agent: input.draft.agent,
       model: input.draft.model,
       variant: input.draft.variant,
+      system: input.draft.system,
       legacyParts: requestParts,
       text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
       files: requestParts.flatMap((part) => {
@@ -258,6 +263,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
   const local = useLocal()
+  const platform = usePlatform()
   const permission = usePermission()
   const prompt = input.prompt
   const layout = useLayout()
@@ -483,6 +489,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       providerID: currentModel.provider.id,
     }
     const agent = currentAgent.name
+    const behaviors = llmBehaviors(platform, sdk().scope, sync().project?.worktree ?? projectDirectory)
+    if (!behaviors.ready()) await behaviors.loaded()
     const draft: FollowupDraft = {
       sessionID: session.id,
       sessionDirectory,
@@ -491,6 +499,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       agent,
       model,
       variant,
+      system: behaviors.system(),
     }
 
     const clearInput = () => {
