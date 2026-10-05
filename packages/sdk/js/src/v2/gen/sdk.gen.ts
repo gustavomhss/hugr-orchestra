@@ -9,6 +9,10 @@ import type {
   AppAgentsResponses,
   AppLogErrors,
   AppLogResponses,
+  AppSkillRemoveErrors,
+  AppSkillRemoveResponses,
+  AppSkillSaveErrors,
+  AppSkillSaveResponses,
   AppSkillsErrors,
   AppSkillsResponses,
   Auth as Auth3,
@@ -18,7 +22,7 @@ import type {
   AuthSetResponses,
   CommandListErrors,
   CommandListResponses,
-  Config as Config3,
+  Config as Config4,
   ConfigGetErrors,
   ConfigGetResponses,
   ConfigProvidersErrors,
@@ -104,6 +108,10 @@ import type {
   McpAuthRemoveResponses,
   McpAuthStartErrors,
   McpAuthStartResponses,
+  McpConfigRemoveErrors,
+  McpConfigRemoveResponses,
+  McpConfigUpdateErrors,
+  McpConfigUpdateResponses,
   McpConnectErrors,
   McpConnectResponses,
   McpDisconnectErrors,
@@ -112,6 +120,8 @@ import type {
   McpRemoteConfig,
   McpStatusErrors,
   McpStatusResponses,
+  McpToolsErrors,
+  McpToolsResponses,
   ModelRef,
   MoveSessionDestination,
   OutputFormat,
@@ -226,6 +236,8 @@ import type {
   SessionUnshareResponses,
   SessionUpdateErrors,
   SessionUpdateResponses,
+  SkillSaveInput,
+  SkillV2SaveInput,
   SubtaskPartInput,
   SyncHistoryListErrors,
   SyncHistoryListResponses,
@@ -392,6 +404,10 @@ import type {
   V2SessionWaitResponses,
   V2SkillListErrors,
   V2SkillListResponses,
+  V2SkillRemoveErrors,
+  V2SkillRemoveResponses,
+  V2SkillSaveErrors,
+  V2SkillSaveResponses,
   VcsActivityErrors,
   VcsActivityResponses,
   VcsApplyErrors,
@@ -593,6 +609,38 @@ export class App extends HeyApiClient {
   }
 
   /**
+   * Remove skill
+   *
+   * Delete the file of a registered skill given its path.
+   */
+  public skillRemove<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      path: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<AppSkillRemoveResponses, AppSkillRemoveErrors, ThrowOnError>({
+      url: "/skill",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List skills
    *
    * Get a list of all available skills in the OpenCode system.
@@ -619,6 +667,43 @@ export class App extends HeyApiClient {
       url: "/skill",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Save skill
+   *
+   * Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.
+   */
+  public skillSave<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      skillSaveInput?: SkillSaveInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "skillSaveInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<AppSkillSaveResponses, AppSkillSaveErrors, ThrowOnError>({
+      url: "/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -1306,7 +1391,7 @@ export class Config extends HeyApiClient {
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
-      config?: Config3
+      config?: Config4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1463,7 +1548,7 @@ export class Config2 extends HeyApiClient {
     parameters?: {
       directory?: string
       workspace?: string
-      config?: Config3
+      config?: Config4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2162,7 +2247,7 @@ export class Vcs extends HeyApiClient {
   /**
    * Get VCS activity
    *
-   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals.
+   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.
    */
   public activity<ThrowOnError extends boolean = false>(
     parameters: {
@@ -2291,6 +2376,79 @@ export class Formatter extends HeyApiClient {
       url: "/formatter",
       ...options,
       ...params,
+    })
+  }
+}
+
+export class Config3 extends HeyApiClient {
+  /**
+   * Remove MCP server config
+   *
+   * Remove an MCP server from the project's own config files.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<McpConfigRemoveResponses, McpConfigRemoveErrors, ThrowOnError>({
+      url: "/mcp/{name}/config",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Save MCP server config
+   *
+   * Create or update an MCP server in the project's own config file. Fields that are not sent keep their existing values.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+      config?: McpLocalConfig | McpRemoteConfig
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "config" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<McpConfigUpdateResponses, McpConfigUpdateErrors, ThrowOnError>({
+      url: "/mcp/{name}/config",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -2505,6 +2663,36 @@ export class Mcp extends HeyApiClient {
   }
 
   /**
+   * List MCP tools
+   *
+   * List the tool names each connected Model Context Protocol (MCP) server reports.
+   */
+  public tools<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<McpToolsResponses, McpToolsErrors, ThrowOnError>({
+      url: "/mcp/tools",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * Connect an MCP server.
    */
   public connect<ThrowOnError extends boolean = false>(
@@ -2562,6 +2750,11 @@ export class Mcp extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _config?: Config3
+  get config(): Config3 {
+    return (this._config ??= new Config3({ client: this.client }))
   }
 
   private _auth?: Auth2
@@ -6679,6 +6872,39 @@ export class Command2 extends HeyApiClient {
 
 export class Skill extends HeyApiClient {
   /**
+   * Remove skill
+   *
+   * Delete the file of a registered skill given its path.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      path: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2SkillRemoveResponses, V2SkillRemoveErrors, ThrowOnError>({
+      url: "/api/skill",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List skills
    *
    * Retrieve currently registered skills.
@@ -6697,6 +6923,44 @@ export class Skill extends HeyApiClient {
       url: "/api/skill",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Save skill
+   *
+   * Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.
+   */
+  public save<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      skillV2SaveInput: SkillV2SaveInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "skillV2SaveInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2SkillSaveResponses, V2SkillSaveErrors, ThrowOnError>({
+      url: "/api/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }

@@ -2729,6 +2729,11 @@ export type VcsActivityCommit = {
   time: number
 }
 
+export type VcsActivityPartial = {
+  commits: boolean
+  lines: boolean
+}
+
 export type VcsActivity = {
   repository: boolean
   since: number
@@ -2740,9 +2745,10 @@ export type VcsActivity = {
   ahead: number | null
   behind: number | null
   /**
-   * True when a commit, output or time bound cut the scan short
+   * True when a commit, output or time bound cut any scan short
    */
   truncated: boolean
+  partial: VcsActivityPartial
 }
 
 export type Command = {
@@ -2836,14 +2842,14 @@ export type McpStatus =
   | McpStatusNeedsAuth
   | McpStatusNeedsClientRegistration
 
-export type McpUnsupportedOAuthError = {
-  error: string
-}
-
 export type McpServerNotFoundError = {
   _tag: "McpServerNotFoundError"
   name: string
   message: string
+}
+
+export type McpUnsupportedOAuthError = {
+  error: string
 }
 
 export type Project = {
@@ -10397,6 +10403,102 @@ export type McpAddResponses = {
 }
 
 export type McpAddResponse = McpAddResponses[keyof McpAddResponses]
+
+export type McpToolsData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/tools"
+}
+
+export type McpToolsErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type McpToolsError = McpToolsErrors[keyof McpToolsErrors]
+
+export type McpToolsResponses = {
+  /**
+   * Tool names reported by each connected MCP server
+   */
+  200: {
+    [key: string]: Array<string>
+  }
+}
+
+export type McpToolsResponse = McpToolsResponses[keyof McpToolsResponses]
+
+export type McpConfigRemoveData = {
+  body?: never
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/{name}/config"
+}
+
+export type McpConfigRemoveErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError
+}
+
+export type McpConfigRemoveError = McpConfigRemoveErrors[keyof McpConfigRemoveErrors]
+
+export type McpConfigRemoveResponses = {
+  /**
+   * MCP server removed from the project config
+   */
+  200: boolean
+}
+
+export type McpConfigRemoveResponse = McpConfigRemoveResponses[keyof McpConfigRemoveResponses]
+
+export type McpConfigUpdateData = {
+  body?: {
+    config: McpLocalConfig | McpRemoteConfig
+  }
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/{name}/config"
+}
+
+export type McpConfigUpdateErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type McpConfigUpdateError = McpConfigUpdateErrors[keyof McpConfigUpdateErrors]
+
+export type McpConfigUpdateResponses = {
+  /**
+   * MCP server saved to the project config
+   */
+  200: boolean
+}
+
+export type McpConfigUpdateResponse = McpConfigUpdateResponses[keyof McpConfigUpdateResponses]
 
 export type McpAuthRemoveData = {
   body?: never
