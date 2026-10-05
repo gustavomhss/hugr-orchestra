@@ -643,7 +643,16 @@ export function MessageTimeline(props: {
     props.onMarkScrollGesture(event.currentTarget)
   }
 
+  // The approved header is transparent, so rows that scroll under it are masked out, with the mock's
+  // 18px scroll-area fade below it. Mask position is not inherited: moving it restyles no row.
+  const syncContentMask = () => {
+    const root = listRoot()
+    if (!virtualContent || !root || !settings.general.newLayoutDesigns()) return
+    virtualContent.style.maskPosition = `0 ${root.scrollTop}px`
+  }
+
   const handleListScroll = (event: Event & { currentTarget: HTMLDivElement }) => {
+    syncContentMask()
     if (prependLoading) updatePrependAnchor()
     props.onScheduleScrollState(event.currentTarget)
     props.onHistoryScroll()
@@ -1335,7 +1344,10 @@ export function MessageTimeline(props: {
         onClick={props.onAutoScrollInteraction}
         class="relative min-w-0 w-full h-full"
         style={{
-          "--sticky-accordion-top": showHeader() ? `${headerHeight() - 16}px` : "0px",
+          // The new layout's header has no gradient tail, so stuck headers sit below the 18px fade.
+          "--sticky-accordion-top": !showHeader()
+            ? "0px"
+            : `${settings.general.newLayoutDesigns() ? headerHeight() + 18 : headerHeight() - 16}px`,
         }}
       >
         <Show when={showHeader()}>
@@ -1644,6 +1656,7 @@ export function MessageTimeline(props: {
           ref={(element) => {
             virtualContent = element
             props.setContentRef(element)
+            syncContentMask()
           }}
           style={{
             height: `${virtualizer.getTotalSize()}px`,
