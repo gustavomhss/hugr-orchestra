@@ -251,7 +251,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const [configQuery, providerQuery, pathQuery] = useQueries(() => ({
     queries: [queryOptionsApi.globalConfig(), queryOptionsApi.providers(null), queryOptionsApi.path(null)],
   }))
-  const activeSessionsQuery = useQuery(() =>
+  const activeSessions = () =>
     loadActiveSessionsQuery(serverSDK.scope, {
       active: async () => {
         if ((await serverSDK.protocol) === "v1") {
@@ -273,8 +273,8 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         }
         return active
       },
-    }),
-  )
+    })
+  const activeSessionsQuery = useQuery(activeSessions)
 
   const [globalStore, setGlobalStore] = createStore<GlobalStore>({
     get ready() {
@@ -509,6 +509,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         setStore: child[1],
         vcsCache: cache,
         loadSessions,
+        loadActiveSessions: () => queryClient.ensureQueryData(activeSessions()),
         translate: language.t,
         queryClient,
         session,

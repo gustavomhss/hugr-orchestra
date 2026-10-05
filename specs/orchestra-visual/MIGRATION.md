@@ -1,9 +1,14 @@
 # Orchestra visual identity migration
 
-## Baseline and reference
+Campaign/resumption entry: [HANDOFF.md](HANDOFF.md). The current state is in the
+Status section at the end. Sections marked "History" record the identity
+migration of 2026-10-01 and 2026-10-02 and are kept as history.
+
+## History: baseline and reference
 
 - PR integration branch: `identity-integration`.
-- Integration worktree: `../_worktrees/identity-integration`.
+- Integration worktree: `../_worktrees/identity-integration` (removed after the merge;
+  the branch remains on the fork).
 - PR base: `fork/dev`, `da2b75aff12e21c9974ebc5be41ae138302de40b`, including native App Dock.
 - Published source: `orchestra-identity`, commit `9c535be9e98021b34500794bdc207199b120217a`.
   Its original benchmark base was `5e4bea3b519c04cebfb787e98dfa171f5771d25c`.
@@ -11,8 +16,10 @@
   ancestors are not included in this PR.
 - Approved reference: `/Users/gustavoschneiter/Downloads/orchestra-replica-static/app.html`,
   `mock-features.js`, `MOCK-GUIDE.md`, and `CHAPTERS.md`.
-- Desktop identity is approved. The individual capability-screen rework chapters
-  remain pending; a visual migration does not approve their domain workflows.
+- The desktop identity design (the approved mock) is approved; owner acceptance of
+  the integrated implementation is still pending. At migration time the individual
+  capability-screen rework chapters were pending; a visual migration does not
+  approve their domain workflows. Wave 1 chapters later landed in #240 (see Status).
 
 ## Frozen visual contract
 
@@ -20,8 +27,12 @@ Use the measured reference, not an approximate redesign:
 
 - Official compact HuGR SVGs, byte-preserved; `Human Guardrail` descriptor.
 - One continuous `mtn-src.jpg` workspace background, never one image per panel.
-- Sidebar **230px**, toolbar **45px**, workspace gutter/padding **6px**;
+- Sidebar **230px** in the expanded shell (from 1440px wide), toolbar **45px**,
+  workspace gutter/padding **6px**;
   panel radius **9px**. Reference outer frame: margin **12px**, radius **13px**.
+- Compact navigation (wave B, not yet in `dev`): 208px is visible only at
+  1280–1439px, the layout forces a 56px rail below 1280px or when collapsed, and
+  at 768–1023px the rail is hidden behind a titlebar button. See Status.
 - Dark/light palette, glass gradient/filter/border/shadow values match reference.
 - Sidebar, session strip and active session tab use the same glass tokens.
 - Repository profile picker stays at the bottom; its menu opens upward through
@@ -38,7 +49,7 @@ Use the measured reference, not an approximate redesign:
   production and no heavy runtime dependencies for the skin.
 - RTL uses logical geometry; native window controls remain physical/native.
 
-## Execution waves and isolation
+## History: execution waves and isolation
 
 Each agent owns an isolated worktree at the same base. No shared file is edited
 by two authors. Lead owns stylesheet imports, localization keys, app startup
@@ -59,11 +70,12 @@ existing branch. Profile tab filtering is presentation-only; durable tab
 identity remains server/session based.
 
 The owner explicitly authorized **Commit + push** on 2026-10-01 and subsequently
-approved base auditing and PR preparation/publication. The PR uses
+approved base auditing and PR preparation/publication. The PR used
 `identity-integration` against `dev` in `gmhelmold/HuGR-Orchestra`; the published
-source branch remains intact. Merge requires CI and review acceptance.
+source branch remains intact. Merge required CI and review acceptance; #239 merged
+on 2026-10-02 (squash `9fc1af89b9`).
 
-## Current-dev integration
+## History: integration on `dev` (2026-10-01)
 
 The native browser contract required by the skin already exists on `fork/dev`.
 Conflict resolution preserves current AppsPanel handlers, task-section hooks,
@@ -95,10 +107,27 @@ Godfile guard or its waiver ledger:
 
 ## Status
 
-Implementation integrated on current `fork/dev`; app checks and the 21-case
-delivery UI suite pass locally. CI status is recorded on the PR, not inferred
-from these local results.
-`VERIFICATION.md` records evidence, measured performance, and verification reach.
-No pending chapter has been promoted to approved. Native caption geometry is
+Current state on 2026-10-04:
+
+- The identity is in `dev` through PR #239 (squash `9fc1af89b9`); wave 1 chapters
+  through #240; the wave 2 fixes are at `fork/dev@76015a9dcd`. At integration
+  time, app checks and the 21-case delivery UI suite passed locally, and the
+  broader E2E failures were fixed before #239 merged.
+- The cockpit waves A and B are not yet in `dev`. They await GitLab merge requests
+  !38, !27, !31, !33, !34 and !37; the final wave B candidate is
+  `cockpit-review-fixes@607c2bf4c6`.
+- The remote `fork` is now GitLab `gmhelmold/hugr-orchestra`; GitHub
+  `gusmhs/HuGR-Orchestra` is an archive only. GitLab CI has never executed a test,
+  so the owner runs a local gate on macOS; the Windows lanes and `nix-eval` remain
+  unproven.
+- Wave B's compact navigation changes the sidebar width outside the expanded
+  shell: 208px is visible only at 1280–1439px. The 208px CSS rule spans
+  768–1439px, but the layout forces the 56px rail below 1280px, and at 768–1023px
+  the rail is hidden behind a titlebar button.
+- Owner acceptance is pending for the integrated identity, each wave 1 chapter and
+  the integrated bundle of waves A and B.
+
+`VERIFICATION.md` records the identity-era evidence, measured performance, and
+verification reach. No pending chapter has been promoted to approved. Native caption geometry is
 reported by the renderer and converted using the owning window's native zoom;
 macOS controls retain physical placement in RTL, zoom and fullscreen transitions.

@@ -209,6 +209,24 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   }
 }
 
+// Shared by the composer and evidence replay: every shell run gets a new event ID, and
+// the request carries no workdir, so callers must only replay in the session directory.
+export function submitShellCommand(input: {
+  api: DirectorySDK["api"]["session"]
+  sessionID: string
+  command: string
+  agent: string
+  model: { providerID: string; modelID: string }
+}) {
+  return input.api.shell({
+    sessionID: input.sessionID,
+    id: Event.ID.create(),
+    command: input.command,
+    agent: input.agent,
+    model: input.model,
+  })
+}
+
 type PromptSubmitInput = {
   prompt: ReturnType<typeof usePrompt>
   info: Accessor<{ id: string } | undefined>
@@ -509,22 +527,15 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     if (mode === "shell") {
       clearInput()
-      const eventID = Event.ID.create()
-      sdk()
-        .api.session.shell({
-          sessionID: session.id,
-          id: eventID,
-          command: text,
-          agent,
-          model,
-        })
-        .catch((err) => {
+      submitShellCommand({ api: sdk().api.session, sessionID: session.id, command: text, agent, model }).catch(
+        (err) => {
           showToast({
             title: language.t("prompt.toast.shellSendFailed.title"),
             description: errorMessage(err),
           })
           restoreInput()
-        })
+        },
+      )
       return
     }
 

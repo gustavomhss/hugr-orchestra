@@ -1,0 +1,42 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "5004"[0m
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:142:1 › navigation child remains no-drag and outside physical macOS controls in both directions
+[1A[2K  1) [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:142:1 › navigation child remains no-drag and outside physical macOS controls in both directions
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCSS[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  getByRole('banner', { name: 'Native titlebar fixture', exact: true }).getByRole('button', { name: 'Expand sidebar', exact: true })
+    Expected: [32m"no[7m-drag[27m"[39m
+    Received: [31m"no[7mne[27m"[39m
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toHaveCSS" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('banner', { name: 'Native titlebar fixture', exact: true }).getByRole('button', { name: 'Expand sidebar', exact: true })[22m
+    [2m    14 × locator resolved to <button type="button" data-closed="" aria-expanded="false" aria-label="Expand sidebar" aria-controls="orchestra-navigation" class="orchestra-nav-button orchestra-navigation-toggle">…</button>[22m
+    [2m       - unexpected value "none"[22m
+
+
+      149 |       const toggle = header.getByRole("button", { name: "Expand sidebar", exact: true })
+      150 |       await expect(toggle).toBeVisible()
+    > 151 |       await expect(toggle).toHaveCSS("-webkit-app-region", "no-drag")
+          |                            ^
+      152 |       await expect(header).toHaveCSS("-webkit-app-region", "drag")
+      153 |       const frame = await header.boundingBox()
+      154 |       expect(frame).not.toBeNull()
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/e2e/orchestra/titlebar-native-frame.spec.ts:151:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-native-mutation-red/orchestra-titlebar-native--1c089-controls-in-both-directions-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-native-mutation-red/orchestra-titlebar-native--1c089-controls-in-both-directions-chromium/error-context.md
+
+    Error Context: ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-native-mutation-red/orchestra-titlebar-native--1c089-controls-in-both-directions-chromium/error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:142:1 › navigation child remains no-drag and outside physical macOS controls in both directions

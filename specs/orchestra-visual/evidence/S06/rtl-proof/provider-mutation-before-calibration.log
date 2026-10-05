@@ -1,0 +1,7 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "5004"[0m
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL dark: navigation, tooltips and profile portal agree
+[1A[2K  1 passed (19.6s)

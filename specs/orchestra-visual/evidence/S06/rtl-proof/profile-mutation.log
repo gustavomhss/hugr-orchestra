@@ -1,0 +1,52 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "5004"[0m
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR dark: navigation, tooltips and profile portal agree
+[1A[2K  1) [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR dark: navigation, tooltips and profile portal agree
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeFocused[2m([22m[2m)[22m failed
+
+    Locator:  getByRole('menuitemradio', { name: 'مشروع Compact navigation 42 — واجهة v2', exact: true })
+    Expected: focused
+    Received: inactive
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toBeFocused" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('menuitemradio', { name: 'مشروع Compact navigation 42 — واجهة v2', exact: true })[22m
+    [2m    2 × locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-48" data-key="dropdownmenu-cl-19-item-cl-48" aria-labelledby="dropdownmenu-cl-19-item-cl-48-label">…</div>[22m
+    [2m      - unexpected value "inactive"[22m
+    [2m    2 × locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-49" data-key="dropdownmenu-cl-19-item-cl-49" aria-labelledby="dropdownmenu-cl-19-item-cl-49-label">…</div>[22m
+    [2m      - unexpected value "inactive"[22m
+    [2m    - locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-50" data-key="dropdownmenu-cl-19-item-cl-50" aria-labelledby="dropdownmenu-cl-19-item-cl-50-label">…</div>[22m
+    [2m    2 × unexpected value "inactive"[22m
+    [2m      - locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-51" data-key="dropdownmenu-cl-19-item-cl-51" aria-labelledby="dropdownmenu-cl-19-item-cl-51-label">…</div>[22m
+    [2m    2 × unexpected value "inactive"[22m
+    [2m      - locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-52" data-key="dropdownmenu-cl-19-item-cl-52" aria-labelledby="dropdownmenu-cl-19-item-cl-52-label">…</div>[22m
+    [2m    - unexpected value "inactive"[22m
+    [2m    - locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-53" data-key="dropdownmenu-cl-19-item-cl-53" aria-labelledby="dropdownmenu-cl-19-item-cl-53-label">…</div>[22m
+    [2m    - unexpected value "inactive"[22m
+    [2m    - locator resolved to <div tabindex="-1" data-checked="" aria-checked="true" role="menuitemradio" aria-disabled="false" class="orchestra-profile-item" id="dropdownmenu-cl-19-item-cl-54" data-key="dropdownmenu-cl-19-item-cl-54" aria-labelledby="dropdownmenu-cl-19-item-cl-54-label">…</div>[22m
+    [2m    - unexpected value "inactive"[22m
+
+
+      119 |       fixture.renameProject(`${projectName} v2`)
+      120 |       const refreshed = page.getByRole("menuitemradio", { name: `${projectName} v2`, exact: true })
+    > 121 |       await expect(refreshed).toBeFocused()
+          |                               ^
+      122 |       await expect(refreshed).toHaveAttribute("aria-checked", "true")
+      123 |       expect(await refreshed.evaluate((element, previous) => element === previous, item)).toBe(true)
+      124 |       await page.keyboard.press("Escape")
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/e2e/orchestra/compact-navigation-direction.spec.ts:121:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-profile-mutation/orchestra-compact-navigati-4b92f-ps-and-profile-portal-agree-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-profile-mutation/orchestra-compact-navigati-4b92f-ps-and-profile-portal-agree-chromium/error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR dark: navigation, tooltips and profile portal agree

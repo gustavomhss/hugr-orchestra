@@ -1,0 +1,24 @@
+bun test v1.3.14 (0d9b296a)
+
+src/pages/session/orchestra-governance-data.test.ts:
+(pass) readGovernance > records come only from server-written Maestro tool results, never from model input or prose [7.93ms]
+(pass) readGovernance > reads each Maestro record with its identity, outcome and turn [15.19ms]
+(pass) readGovernance > refusals, HOLD outcomes and malformed results hold with the server reason [5.67ms]
+(pass) readGovernance > only the newest presentation can await a reply; older ones are superseded [1.36ms]
+(pass) readGovernance > decisions follow the server status; a missing reply binding authorizes nothing [19.92ms]
+(pass) readGovernance > results recorded outside this session's Maestro agent hold as foreign [0.95ms]
+(pass) readGovernance > direct review receipts come from Lucy; Maestro exposes the delegated receipt instead [0.43ms]
+(pass) readGovernance > Lucy verdict must match the entire server result and receipt, never a prefix or truncated output [1.51ms]
+(pass) readGovernance > synthetic assistants and foreign message parts cannot confirm governance [0.76ms]
+(pass) readGovernance > source navigation requires a loaded user turn from this session [4.19ms]
+(pass) readGovernance > retains bounded catalog and presentation output without treating their prose as decisions [22.28ms]
+(pass) readGovernance > reads current server structured results before the legacy normalized metadata; missing end stays unknown [120.89ms]
+(pass) readGovernance > invalid timestamps remain unknown instead of crashing the view or inventing zero [0.93ms]
+(pass) readGovernance > current server content order wins over lexically sorted opaque call IDs [3.01ms]
+(pass) maestroCapability > requires the native Maestro agent and waits for the agent list [0.91ms]
+(pass) ownSource > separates unknown, missing and configured Own sources [1.33ms]
+
+ 16 pass
+ 0 fail
+ 53 expect() calls
+Ran 16 tests across 1 file. [7.31s]

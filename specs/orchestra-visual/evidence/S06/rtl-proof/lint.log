@@ -1,0 +1,119 @@
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/orchestra/sidebar.tsx:215:22]
+ 214 |         if (requests.disposed || requests.profile !== current || layout.route() !== route) return
+ 215 |         if (project) selectProject(conn, project, draft)
+     :                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 216 |       },
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(no-floating-promises): Promises must be awaited, add void operator to ignore.
+     ,-[src/orchestra/sidebar.tsx:250:7]
+ 249 |     if (project) {
+ 250 |       selectProject(conn, project, true)
+     :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 251 |       return
+     `----
+  help: The promise must end with a call to .catch, or end with a call to .then with a rejection handler, or be explicitly marked as ignored with the `void` operator.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/orchestra/sidebar.tsx:446:33]
+ 445 |               data-component="orchestra-profile-picker"
+ 446 |               onCloseAutoFocus={dismiss.onCloseAutoFocus}
+     :                                 ^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                             |           `-- This reference may be unbound and lose `this` context
+ 447 |               onPointerDownOutside={dismiss.preventTriggerRestore}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/orchestra/sidebar.tsx:447:37]
+ 446 |               onCloseAutoFocus={dismiss.onCloseAutoFocus}
+ 447 |               onPointerDownOutside={dismiss.preventTriggerRestore}
+     :                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                                   |              `-- This reference may be unbound and lose `this` context
+ 448 |               onFocusOutside={dismiss.preventTriggerRestore}
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(unbound-method): Avoid referencing unbound methods which may cause unintentional scoping of `this`.
+     ,-[src/orchestra/sidebar.tsx:448:31]
+ 447 |               onPointerDownOutside={dismiss.preventTriggerRestore}
+ 448 |               onFocusOutside={dismiss.preventTriggerRestore}
+     :                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^|
+     :                                             |              `-- This reference may be unbound and lose `this` context
+ 449 |             >
+     `----
+  help: If your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.
+
+  ! typescript-eslint(consistent-return): Function 'resolveId' expected a return value.
+     ,-[e2e/orchestra/titlebar-native-frame.fixture.ts:297:38]
+ 296 |             return "\0frame:providers"
+ 297 |           if (importer !== titlebar) return
+     :                                      ^^^^^^
+ 298 |           if (source === "./orchestra/native-frame") return nativeFrame
+     `----
+
+  ! typescript-eslint(consistent-return): Function 'load' expected a return value.
+     ,-[e2e/orchestra/titlebar-native-frame.fixture.ts:318:9]
+ 317 |             },
+ 318 | ,->         load(id) {
+ 319 | |             if (id === "\0frame:state") return stateModule
+ 320 | |             if (id === "\0frame:providers") return providersModule
+ 321 | |             if (id === "\0frame:entry") return entryModule
+ 322 | |             if (id === "\0frame:empty") return ""
+ 323 | `->         },
+ 324 |             transform(source, id) {
+     `----
+
+  ! typescript-eslint(no-unsafe-type-assertion): Unsafe type assertion: type '"cleanup" | "global-mutation-observer" | "wrong-coordinate" | "zero-size-guard"' is more narrow than the original type.
+     ,-[e2e/orchestra/titlebar-native-frame.fixture.ts:338:35]
+ 337 |           if (!mutation) return
+ 338 |           const patch = mutations[mutation as keyof typeof mutations]
+     :                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 339 |           const anchors: Node[] = []
+     `----
+
+  ! typescript-eslint(consistent-return): Function 'transform' expected no return value.
+     ,-[e2e/orchestra/titlebar-native-frame.fixture.ts:347:11]
+ 346 |             throw new Error(`Native frame mutation ${mutation} requires exactly one source anchor`)
+ 347 |           return source.slice(0, anchors[0].getStart(file)) + patch.to + source.slice(anchors[0].end)
+     :           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 348 |         },
+     `----
+
+  ! typescript-eslint(no-unsafe-type-assertion): Unsafe type assertion: type 'HTMLElement' is more narrow than the original type.
+     ,-[e2e/orchestra/compact-navigation-direction.spec.ts:101:24]
+ 100 |       await shell.evaluate((element) => {
+ 101 |         const style = (element as HTMLElement).style
+     :                        ^^^^^^^^^^^^^^^^^^^^^^
+ 102 |         style.marginInline = "320px"
+     `----
+
+  ! typescript-eslint(no-unsafe-type-assertion): Unsafe type assertion: type 'HTMLElement' is more narrow than the original type.
+     ,-[e2e/orchestra/compact-navigation-direction.spec.ts:129:24]
+ 128 |       await shell.evaluate((element) => {
+ 129 |         const style = (element as HTMLElement).style
+     :                        ^^^^^^^^^^^^^^^^^^^^^^
+ 130 |         style.removeProperty("margin-inline")
+     `----
+
+  ! typescript-eslint(no-unsafe-type-assertion): Unsafe type assertion: type 'HTMLElement' is more narrow than the original type.
+     ,-[e2e/orchestra/titlebar-native-frame.spec.ts:216:7]
+ 215 |   await header.evaluate((element) => {
+ 216 |     ;(element as HTMLElement).style.display = "none"
+     :       ^^^^^^^^^^^^^^^^^^^^^^
+ 217 |   })
+     `----
+
+  ! typescript-eslint(no-unsafe-type-assertion): Unsafe type assertion: type 'HTMLElement' is more narrow than the original type.
+     ,-[e2e/orchestra/titlebar-native-frame.spec.ts:228:7]
+ 227 |   await header.evaluate((element) => {
+ 228 |     ;(element as HTMLElement).style.removeProperty("display")
+     :       ^^^^^^^^^^^^^^^^^^^^^^
+ 229 |   })
+     `----
+
+Found 13 warnings and 0 errors.
+Finished in 3.3s on 6 files with 130 rules using 12 threads.
