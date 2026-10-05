@@ -1,6 +1,6 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { AppProcess } from "@opencode-ai/core/process"
-import { Effect, Layer, Context, Stream } from "effect"
+import { Duration, Effect, Layer, Context, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 
 const cfg = [
@@ -19,6 +19,8 @@ const cfg = [
 
 const out = (result: { text(): string }) => result.text().trim()
 const nuls = (text: string) => text.split("\0").filter(Boolean)
+// `@<seconds> +0000` is git's raw date form; a bare number below nine digits is not parsed as epoch seconds.
+const epoch = (ms: number) => `@${Math.floor(ms / 1000)} +0000`
 const fail = (err: unknown) =>
   ({
     exitCode: 1,
@@ -47,6 +49,28 @@ export type Stat = {
   readonly deletions: number
 }
 
+export type Commit = {
+  readonly hash: string
+  readonly time: number
+  readonly email: string
+  readonly subject: string
+  readonly files: Stat[]
+}
+
+export type Log = {
+  readonly commits: Commit[]
+  readonly truncated: boolean
+}
+
+export interface LogOptions {
+  readonly since: number
+  readonly until: number
+  readonly merges: boolean
+  readonly limit: number
+  readonly maxOutputBytes: number
+  readonly timeout: Duration.Input
+}
+
 export type Patch = {
   readonly text: string
   readonly truncated: boolean
@@ -69,6 +93,7 @@ export interface Options {
   readonly cwd: string
   readonly env?: Record<string, string>
   readonly maxOutputBytes?: number
+  readonly timeout?: Duration.Input
   readonly stdin?: ChildProcess.CommandInput
 }
 
@@ -88,7 +113,52 @@ export interface Interface {
   readonly patchUntracked: (cwd: string, file: string, options?: PatchOptions) => Effect.Effect<Patch>
   readonly statUntracked: (cwd: string, file: string) => Effect.Effect<Stat | undefined>
   readonly applyPatch: (cwd: string, patch: string) => Effect.Effect<Result>
+  readonly log: (cwd: string, options: LogOptions) => Effect.Effect<Log>
+  readonly upstream: (cwd: string, branch: string) => Effect.Effect<string | undefined>
+  readonly aheadBehind: (
+    cwd: string,
+    base: string,
+    timeout: Duration.Input,
+  ) => Effect.Effect<{ ahead: number; behind: number } | undefined>
 }
+
+const numstat = (item: string) => {
+  const a = item.indexOf("\t")
+  const b = item.indexOf("\t", a + 1)
+  if (a === -1 || b === -1) return
+  const file = item.slice(b + 1)
+  if (!file) return
+  const adds = item.slice(0, a)
+  const dels = item.slice(a + 1, b)
+  const additions = adds === "-" ? 0 : Number.parseInt(adds || "0", 10)
+  const deletions = dels === "-" ? 0 : Number.parseInt(dels || "0", 10)
+  return {
+    file,
+    additions: Number.isFinite(additions) ? additions : 0,
+    deletions: Number.isFinite(deletions) ? deletions : 0,
+  } satisfies Stat
+}
+
+// `git log -z` emits each commit header as one NUL-terminated token and each numstat
+// row as another, so tokens that open with the record separator start a new commit.
+const commits = (text: string) =>
+  nuls(text).reduce<Commit[]>((list, token) => {
+    const item = token.startsWith("\n") ? token.slice(1) : token
+    if (item.startsWith("\x1e")) {
+      const fields = item.slice(1).split("\x1f")
+      list.push({
+        hash: fields[0] ?? "",
+        time: Number(fields[1]) * 1000,
+        email: fields[2] ?? "",
+        subject: fields.slice(3).join("\x1f"),
+        files: [],
+      })
+      return list
+    }
+    const stat = numstat(item)
+    if (stat) list.at(-1)?.files.push(stat)
+    return list
+  }, [])
 
 const kind = (code: string): Kind => {
   if (code === "??") return "added"
@@ -118,7 +188,7 @@ const layer = Layer.effect(
             stdout: "pipe",
             stderr: "pipe",
           }),
-          { maxOutputBytes: opts.maxOutputBytes },
+          { maxOutputBytes: opts.maxOutputBytes, timeout: opts.timeout },
         )
         return {
           exitCode: result.exitCode,
@@ -241,22 +311,8 @@ const layer = Layer.effect(
       return nuls(
         yield* text(["diff", "--no-ext-diff", "--no-renames", "--numstat", "-z", ref, "--", "."], { cwd }),
       ).flatMap((item) => {
-        const a = item.indexOf("\t")
-        const b = item.indexOf("\t", a + 1)
-        if (a === -1 || b === -1) return []
-        const file = item.slice(b + 1)
-        if (!file) return []
-        const adds = item.slice(0, a)
-        const dels = item.slice(a + 1, b)
-        const additions = adds === "-" ? 0 : Number.parseInt(adds || "0", 10)
-        const deletions = dels === "-" ? 0 : Number.parseInt(dels || "0", 10)
-        return [
-          {
-            file,
-            additions: Number.isFinite(additions) ? additions : 0,
-            deletions: Number.isFinite(deletions) ? deletions : 0,
-          } satisfies Stat,
-        ]
+        const stat = numstat(item)
+        return stat ? [stat] : []
       })
     })
 
@@ -323,6 +379,53 @@ const layer = Layer.effect(
       return yield* run(["apply", "-"], { cwd, stdin: stdin(patch) })
     })
 
+    const log = Effect.fn("Git.log")(function* (cwd: string, options: LogOptions) {
+      const result = yield* run(
+        [
+          "log",
+          options.merges ? "--merges" : "--no-merges",
+          ...(options.merges ? [] : ["--numstat", "--no-renames", "--no-ext-diff"]),
+          "--no-color",
+          "--no-show-signature",
+          "-z",
+          `--max-count=${options.limit + 1}`,
+          `--since=${epoch(options.since)}`,
+          `--until=${epoch(options.until)}`,
+          "--format=%x1e%h%x1f%at%x1f%ae%x1f%s",
+          "HEAD",
+          "--",
+        ],
+        { cwd, maxOutputBytes: options.maxOutputBytes, timeout: options.timeout },
+      )
+      // A failed or timed-out scan is reported as incomplete rather than as an empty window.
+      if (result.exitCode !== 0) return { commits: [], truncated: true } satisfies Log
+      const list = commits(result.text())
+      // Output past the byte cap ends mid-record, so the last parsed commit may be missing rows.
+      const complete = result.truncated ? list.slice(0, -1) : list
+      return {
+        commits: complete.slice(0, options.limit),
+        truncated: result.truncated || complete.length > options.limit,
+      } satisfies Log
+    })
+
+    const upstream = Effect.fn("Git.upstream")(function* (cwd: string, branch: string) {
+      const result = yield* run(["rev-parse", "--verify", "--quiet", "--symbolic-full-name", `${branch}@{upstream}`], {
+        cwd,
+      })
+      if (result.exitCode !== 0) return
+      return out(result) || undefined
+    })
+
+    const aheadBehind = Effect.fn("Git.aheadBehind")(function* (cwd: string, base: string, timeout: Duration.Input) {
+      const result = yield* run(["rev-list", "--left-right", "--count", `${base}...HEAD`, "--"], { cwd, timeout })
+      if (result.exitCode !== 0) return
+      const counts = out(result)
+        .split(/\s+/)
+        .map((item) => Number.parseInt(item, 10))
+      if (counts.length !== 2 || !counts.every(Number.isFinite)) return
+      return { behind: counts[0], ahead: counts[1] }
+    })
+
     return Service.of({
       run,
       branch,
@@ -339,6 +442,9 @@ const layer = Layer.effect(
       patchUntracked,
       statUntracked,
       applyPatch,
+      log,
+      upstream,
+      aheadBehind,
     })
   }),
 )

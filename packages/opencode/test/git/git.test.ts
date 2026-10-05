@@ -3,7 +3,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { describe, expect } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
-import { Effect } from "effect"
+import { Duration, Effect } from "effect"
 import { Git } from "../../src/git"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -174,6 +174,36 @@ describe("Git", () => {
       const git = yield* Git.Service
       const text = yield* git.show(tmp.path, "HEAD", "bin.dat")
       expect(text).toBe("")
+    }),
+  )
+
+  it.live("log() parses special filenames and flags commit and byte caps", () =>
+    Effect.gen(function* () {
+      const tmp = yield* scopedTmpdir({ git: true })
+      yield* Effect.promise(() => fs.writeFile(path.join(tmp.path, weird), "one\ntwo\n", "utf-8"))
+      yield* Effect.promise(() => $`git add .`.cwd(tmp.path).quiet())
+      yield* Effect.promise(() => $`git commit --no-gpg-sign -m "add weird"`.cwd(tmp.path).quiet())
+
+      const git = yield* Git.Service
+      const scan = {
+        since: 0,
+        until: Date.now() + 60_000,
+        merges: false,
+        maxOutputBytes: 1_000_000,
+        timeout: Duration.seconds(10),
+      }
+      const full = yield* git.log(tmp.path, { ...scan, limit: 10 })
+      const capped = yield* git.log(tmp.path, { ...scan, limit: 1 })
+      const clipped = yield* git.log(tmp.path, { ...scan, limit: 10, maxOutputBytes: 1 })
+
+      expect(full.truncated).toBe(false)
+      expect(full.commits.map((commit) => commit.subject)).toEqual([
+        "add weird",
+        expect.stringContaining("root commit"),
+      ])
+      expect(full.commits[0]?.files).toEqual([{ file: weird, additions: 2, deletions: 0 }])
+      expect(capped).toEqual({ commits: [full.commits[0]], truncated: true })
+      expect(clipped).toEqual({ commits: [], truncated: true })
     }),
   )
 })

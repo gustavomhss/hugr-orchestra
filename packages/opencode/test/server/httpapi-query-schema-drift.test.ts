@@ -16,7 +16,7 @@ import {
   SessionListQuery as ExperimentalSessionListQuery,
   ToolListQuery,
 } from "../../src/server/routes/instance/httpapi/groups/experimental"
-import { InstancePaths, VcsDiffQuery } from "../../src/server/routes/instance/httpapi/groups/instance"
+import { InstancePaths, VcsActivityQuery, VcsDiffQuery } from "../../src/server/routes/instance/httpapi/groups/instance"
 import { WorkspacePaths } from "../../src/server/routes/instance/httpapi/groups/workspace"
 import {
   ListQuery as SessionListQuery,
@@ -54,6 +54,7 @@ const openApiDriftRoutes = [
   { method: "get", path: ExperimentalPaths.session, query: ExperimentalSessionListQuery },
   { method: "get", path: ExperimentalPaths.tool, query: ToolListQuery },
   { method: "get", path: InstancePaths.vcsDiff, query: VcsDiffQuery },
+  { method: "get", path: InstancePaths.vcsActivity, query: VcsActivityQuery },
   { method: "get", path: "/api/session/:sessionID/message", query: SessionMessagesQuery },
 ] satisfies Array<{ method: Method; path: string; query: QuerySchema }>
 
@@ -71,6 +72,8 @@ const numericSdkQueryParams = [
     schema: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
   },
   { method: "get", path: "/api/session/:sessionID/message", name: "limit", schema: { type: "number" } },
+  { method: "get", path: InstancePaths.vcsActivity, name: "since", schema: { type: "integer", minimum: 0 } },
+  { method: "get", path: InstancePaths.vcsActivity, name: "until", schema: { type: "integer", minimum: 0 } },
 ] satisfies Array<{ method: Method; path: string; name: string; schema: OpenApiSchema }>
 
 const booleanSdkQueryParams = [
