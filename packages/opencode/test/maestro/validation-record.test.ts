@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { afterEach, describe, expect } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -19,10 +20,12 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { SessionID } from "@/session/schema"
 import {
+  findReview,
   readReview,
   readValidation,
   recordReview,
   recordValidation,
+  REVIEW_ARTIFACT_MAX_BYTES,
   reviewPolicyHash,
 } from "../../src/maestro/validation-record"
 import { nativeProfiles, roster } from "../../src/maestro/roster"
@@ -80,7 +83,7 @@ const prepare = Effect.fn("MaestroValidationTest.prepare")(function* (sessionID 
   return { ...base, sessionID, projectID: project.id }
 })
 
-const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDirectory?: string) {
+const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDirectory?: string, proof2 = "proof 2\n") {
   const test = yield* TestInstance
   const directory = inputDirectory ?? test.directory
   const { db } = yield* Database.Service
@@ -94,7 +97,7 @@ const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDir
   yield* fs.writeFileString(path.join(directory, "proof.txt"), "proof\n")
   yield* git.run(["add", "proof.txt"], { cwd: directory })
   yield* git.run(["commit", "-m", "proof"], { cwd: directory })
-  yield* fs.writeFileString(path.join(directory, "proof-2.txt"), "proof 2\n")
+  yield* fs.writeFileString(path.join(directory, "proof-2.txt"), proof2)
   yield* git.run(["add", "proof-2.txt"], { cwd: directory })
   yield* git.run(["commit", "-m", "proof 2"], { cwd: directory })
   const head = yield* git.run(["rev-parse", "HEAD"], { cwd: directory })
@@ -169,8 +172,7 @@ const artifact = Effect.fn("MaestroValidationTest.artifact")(function* (inputDir
     headSHA: head.text().trim(),
     worktree: root.text().trim(),
     changedPaths: names.text().split("\0").filter(Boolean),
-    encoding: "base64" as const,
-    bytes: diff.stdout.toString("base64"),
+    sha256: createHash("sha256").update(diff.stdout).digest("hex"),
   }
 })
 
@@ -347,16 +349,115 @@ describe("Maestro validation receipt", () => {
           headSHA: evidence.headSHA,
           worktree: evidence.worktree,
           changedPaths: evidence.changedPaths,
-          bytes: evidence.bytes,
           workCardHash: validation.workCardHash,
-          sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+          sha256: evidence.sha256,
         })
         expect("reviewBaseSHA" in validation && validation.reviewBaseSHA).toBe(evidence.baseSHA)
         expect(receipt.artifact.changedPaths).toEqual(["proof-2.txt", "proof.txt"])
+        expect("bytes" in receipt.artifact).toBe(false)
         expect(receipt.actor.bytes).toBe(
           `{"memberId":"lucy","projectId":"${input.projectID}","sessionId":"${input.sessionID}"}`,
         )
         expect(yield* readReview(receipt.id)).toEqual(receipt)
+      }),
+    { git: true },
+  )
+
+  it.instance(
+    "rejects a review artifact larger than the inline review budget",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* prepare()
+        const validation = yield* recordValidation(input)
+        const evidence = yield* artifact(undefined, "x".repeat(REVIEW_ARTIFACT_MAX_BYTES) + "\n")
+        const rejected = yield* recordReview({
+          sessionID: input.sessionID,
+          validationRecordID: validation.id,
+          workCard: input.workCard,
+          reviewerID: "lucy",
+          reviewMethodVersion: "review-v1",
+          verdict: "APPROVE",
+          findings: [],
+          artifact: evidence,
+          checks: input.checks,
+        }).pipe(Effect.flip)
+
+        expectReviewRejection(rejected, "artifact-too-large")
+      }),
+    { git: true },
+  )
+
+  it.instance(
+    "rejects review artifacts that carry bytes or a malformed digest",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* prepare()
+        const validation = yield* recordValidation(input)
+        const evidence = yield* artifact()
+        const review = (value: unknown) =>
+          recordReview({
+            sessionID: input.sessionID,
+            validationRecordID: validation.id,
+            workCard: input.workCard,
+            reviewerID: "lucy",
+            reviewMethodVersion: "review-v1",
+            verdict: "APPROVE",
+            findings: [],
+            artifact: value,
+            checks: input.checks,
+          }).pipe(Effect.flip)
+
+        expectReviewRejection(
+          yield* review({ ...evidence, encoding: "base64", bytes: "cHJvb2Y=" }),
+          "malformed-artifact-evidence",
+        )
+        expectReviewRejection(yield* review({ ...evidence, sha256: "A".repeat(64) }), "malformed-artifact-digest")
+      }),
+    { git: true },
+  )
+
+  it.instance(
+    "reads version 1 review receipts without their stored diff bytes",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* prepare()
+        const validation = yield* recordValidation(input)
+        const events = yield* EventV2Bridge.Service
+        const legacy = yield* events.publish(MaestroEvent.Review.Received, {
+          sessionID: input.sessionID,
+          projectID: validation.projectID,
+          validationRecordID: validation.id,
+          workCardHash: validation.workCardHash,
+          routedMemberID: validation.routedMemberID,
+          rosterHash: validation.rosterHash,
+          grantHash: validation.grantHash,
+          reviewPolicyHash: validation.reviewPolicyHash,
+          actor: validation.actor,
+          reviewerID: "lucy",
+          reviewMethodVersion: "review-v1",
+          artifact: {
+            workCardHash: validation.workCardHash,
+            sha256: "a".repeat(64),
+            baseSHA: "a".repeat(40),
+            headSHA: "b".repeat(40),
+            worktree: "/tmp",
+            changedPaths: ["proof.txt"],
+            bytes: "ZGlmZg==",
+          },
+          verdict: "APPROVE",
+          findings: [],
+        })
+        const read = yield* readReview(legacy.id)
+
+        expect(read?.artifact).toEqual({
+          workCardHash: validation.workCardHash,
+          sha256: "a".repeat(64),
+          baseSHA: "a".repeat(40),
+          headSHA: "b".repeat(40),
+          worktree: "/tmp",
+          changedPaths: ["proof.txt"],
+        })
+        expect((yield* findReview(input.sessionID, validation.id))?.id).toBe(legacy.id)
       }),
     { git: true },
   )
@@ -472,7 +573,7 @@ describe("Maestro validation receipt", () => {
           reviewMethodVersion: "review-v1",
           verdict: "APPROVE",
           findings: [],
-          artifact: { ...evidence, bytes: Buffer.from("forged").toString("base64") },
+          artifact: { ...evidence, sha256: "f".repeat(64) },
           checks: input.checks,
         }).pipe(Effect.flip)
         const sha = yield* recordReview({
@@ -564,7 +665,7 @@ describe("Maestro validation receipt", () => {
             ...evidence,
             headSHA: head.text().trim(),
             changedPaths: names.text().split("\0").filter(Boolean),
-            bytes: diff.stdout.toString("base64"),
+            sha256: createHash("sha256").update(diff.stdout).digest("hex"),
           },
           checks: input.checks,
         }).pipe(Effect.flip)

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { afterEach, describe, expect } from "bun:test"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Database } from "@opencode-ai/core/database/database"
@@ -218,7 +219,7 @@ describe("Maestro evidence tools", () => {
               baseSHA: Schema.String,
               headSHA: Schema.String,
               changedPaths: Schema.Array(Schema.String),
-              bytes: Schema.String,
+              sha256: Schema.String,
             }),
           ),
         )(/^artifact JSON: (.+)$/m.exec(prompt)?.[1])
@@ -241,7 +242,10 @@ describe("Maestro evidence tools", () => {
         expect(artifact.baseSHA).toBe(base)
         expect(artifact.headSHA).toBe(context.headSHA)
         expect(artifact.changedPaths).toEqual(["first.txt", "second.txt"])
-        expect(Buffer.from(artifact.bytes, "base64").equals(full.stdout)).toBe(true)
+        expect(artifact.sha256).toBe(createHash("sha256").update(full.stdout).digest("hex"))
+        // Lucy reads the diff as text and never receives it as base64 to copy back.
+        expect(prompt).toContain(full.text())
+        expect(prompt).not.toContain(full.stdout.toString("base64"))
 
         const sessions = yield* Session.Service
         const other = yield* sessions.create({ title: "foreign context" })

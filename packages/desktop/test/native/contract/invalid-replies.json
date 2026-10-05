@@ -1,0 +1,7 @@
+[
+  {"v":2,"id":"golden:1","ok":true,"value":{}},
+  {"v":1,"id":"","ok":true,"value":{}},
+  {"v":1,"id":"golden:1","ok":true},
+  {"v":1,"id":"golden:1","ok":false,"error":{"code":"timeout","message":"Deadline","outcome":"success"}},
+  {"v":1,"id":"golden:1","ok":false,"error":{"message":"No code","outcome":"unknown"}}
+]

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { expect } from "bun:test"
 import path from "node:path"
 import { Effect, FileSystem } from "effect"
@@ -268,8 +269,7 @@ it.instance(
           headSHA: context.headSHA,
           worktree: data.test.directory,
           changedPaths: names.text().split("\0").filter(Boolean),
-          encoding: "base64",
-          bytes: diff.stdout.toString("base64"),
+          sha256: createHash("sha256").update(diff.stdout).digest("hex"),
         },
       })
       const sessions = yield* Session.Service

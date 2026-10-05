@@ -28,7 +28,6 @@ export function TabMenu(props: {
   onCloseRight: () => void
 }) {
   let menu: HTMLDivElement | undefined
-  let firstItem: HTMLButtonElement | undefined
   const [place, setPlace] = createSignal<{ left: string; top: string }>()
   // Measured at the window's origin, where nothing narrows it, and placed before it paints.
   createEffect(() => {
@@ -45,6 +44,11 @@ export function TabMenu(props: {
         ref={(element) => {
           menu = element
           props.setElement(element)
+          // The first action can be disabled (a crashed tab cannot be duplicated); focus the first one that
+          // works, after the frame that places the menu so focusing it cannot scroll an unplaced menu.
+          requestAnimationFrame(() =>
+            element.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus(),
+          )
         }}
         class="zen-tab-menu"
         role="menu"
@@ -71,16 +75,7 @@ export function TabMenu(props: {
           items[(next + items.length) % items.length]?.focus()
         }}
       >
-        <button
-          ref={(element) => {
-            firstItem = element
-            requestAnimationFrame(() => firstItem?.focus())
-          }}
-          type="button"
-          role="menuitem"
-          disabled={!props.canDuplicate}
-          onClick={props.onDuplicate}
-        >
+        <button type="button" role="menuitem" disabled={!props.canDuplicate} onClick={props.onDuplicate}>
           Duplicate
         </button>
         <button type="button" role="menuitem" onClick={props.onTogglePin}>

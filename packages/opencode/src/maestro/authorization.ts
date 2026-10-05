@@ -6,7 +6,7 @@ import { asc, eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { createHash } from "node:crypto"
 import { EventV2Bridge } from "@/event-v2-bridge"
-import { readValidation, validationRecordHash, type ReviewReceipt } from "./validation-record"
+import { decodeReview, readValidation, validationRecordHash } from "./validation-record"
 import { recordApproval } from "./approval-record"
 import { readPlanRevision } from "./plan-revision"
 import { contextIsCurrent, readContext } from "./context-record"
@@ -167,10 +167,8 @@ function findReview(sessionID: string, validationRecordID: string, workCardHash:
       .all()
       .pipe(Effect.orDie)
     for (const row of rows.reverse()) {
-      if (row.type === EventV2.versionedType(MaestroEvent.Review.Received.type, 1) && row.data) {
-        const review = Schema.decodeUnknownSync(MaestroEvent.Review.Received.data)(row.data) as ReviewReceipt
-        if (review.validationRecordID === validationRecordID && review.workCardHash === workCardHash) return review
-      }
+      const review = row.data ? decodeReview(row) : undefined
+      if (review?.validationRecordID === validationRecordID && review.workCardHash === workCardHash) return review
     }
     return undefined
   })

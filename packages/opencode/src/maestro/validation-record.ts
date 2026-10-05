@@ -32,7 +32,10 @@ type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
 type LegacyValidationData = Schema.Schema.Type<typeof MaestroEvent.Validation.Recorded.data>
 type ValidationV2Data = Schema.Schema.Type<typeof MaestroEvent.Validation.RecordedV2.data>
 type ValidationData = Schema.Schema.Type<typeof MaestroEvent.Validation.RecordedV3.data>
-type ReviewData = Schema.Schema.Type<typeof MaestroEvent.Review.Received.data>
+type ReviewData = Schema.Schema.Type<typeof MaestroEvent.Review.ReceivedV2.data>
+
+// Lucy reads the diff inline (read-only tools cannot run git), so the artifact must fit a model prompt.
+export const REVIEW_ARTIFACT_MAX_BYTES = 256 * 1024
 
 export type RecordValidationInput = {
   sessionID: string
@@ -416,9 +419,28 @@ export const readReview = Effect.fn("MaestroReview.read")(function* (id: string)
     .where(eq(EventTable.id, EventV2.ID.make(id)))
     .get()
     .pipe(Effect.orDie)
-  if (!row || row.type !== EventV2.versionedType(MaestroEvent.Review.Received.type, 1)) return undefined
-  return { id: row.id, ...Schema.decodeUnknownSync(MaestroEvent.Review.Received.data)(row.data) }
+  return row ? decodeReview(row) : undefined
 })
+
+// Version 1 receipts carried the reviewed diff bytes; both versions bind the same digest.
+export function decodeReview(row: { id: string; type: string; data: unknown }): ReviewReceipt | undefined {
+  if (row.type === EventV2.versionedType(MaestroEvent.Review.ReceivedV2.type, 2))
+    return { id: row.id, ...Schema.decodeUnknownSync(MaestroEvent.Review.ReceivedV2.data)(row.data) }
+  if (row.type !== EventV2.versionedType(MaestroEvent.Review.Received.type, 1)) return undefined
+  const legacy = Schema.decodeUnknownSync(MaestroEvent.Review.Received.data)(row.data)
+  return {
+    id: row.id,
+    ...legacy,
+    artifact: {
+      workCardHash: legacy.artifact.workCardHash,
+      sha256: legacy.artifact.sha256,
+      baseSHA: legacy.artifact.baseSHA,
+      headSHA: legacy.artifact.headSHA,
+      worktree: legacy.artifact.worktree,
+      changedPaths: legacy.artifact.changedPaths,
+    },
+  }
+}
 
 export const findReview = Effect.fn("MaestroReview.find")(function* (sessionID: string, validationRecordID: string) {
   const { db } = yield* Database.Service
@@ -429,8 +451,12 @@ export const findReview = Effect.fn("MaestroReview.find")(function* (sessionID: 
     .all()
     .pipe(Effect.orDie)
   return rows
-    .filter((row) => row.type === EventV2.versionedType(MaestroEvent.Review.Received.type, 1))
-    .map((row) => ({ id: row.id, data: Schema.decodeUnknownSync(MaestroEvent.Review.Received.data)(row.data) }))
+    .flatMap((row) => {
+      const review = decodeReview(row)
+      if (!review) return []
+      const { id, ...data } = review
+      return [{ id, data }]
+    })
     .find((row) => row.data.validationRecordID === validationRecordID)
 })
 
@@ -447,7 +473,8 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
   if (typeof input.workCard !== "string" || workCardHash(input.workCard) !== record.workCardHash) {
     return yield* new ReviewRejectedError({ reason: "work-card-mismatch" })
   }
-  const artifact = yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root)
+  const reviewed = yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root)
+  const artifact = reviewed.artifact
   if (record.contextRecordID) {
     const context = yield* readContext(record.contextRecordID)
     if (context?.mode === "GROUNDED" && !(yield* contextIsCurrent(context)))
@@ -475,7 +502,7 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
     return yield* new ReviewRejectedError({ reason: "malformed-verdict" })
   }
   const findings = yield* Effect.try({
-    try: () => requireFindings(input.findings, artifact),
+    try: () => requireFindings(input.findings, artifact, reviewed.diff),
     catch: (error) =>
       error instanceof ReviewRejectedError ? error : new ReviewRejectedError({ reason: "malformed-findings" }),
   })
@@ -510,7 +537,7 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
     return yield* new ReviewConflictError({ sessionID: input.sessionID, validationRecordID: input.validationRecordID })
   }
   const events = yield* EventV2Bridge.Service
-  return yield* events.publish(MaestroEvent.Review.Received, wanted, { id }).pipe(
+  return yield* events.publish(MaestroEvent.Review.ReceivedV2, wanted, { id }).pipe(
     Effect.map((recorded) => ({ id: recorded.id, ...recorded.data })),
     Effect.catchCause((cause) =>
       Effect.gen(function* () {
@@ -544,15 +571,13 @@ const requireArtifact = Effect.fn("MaestroReview.requireArtifact")(function* (
   }
   const artifact = value as Record<string, unknown>
   if (
-    artifact.encoding !== "base64" ||
-    typeof artifact.bytes !== "string" ||
-    artifact.bytes.length === 0 ||
+    typeof artifact.sha256 !== "string" ||
     typeof artifact.baseSHA !== "string" ||
     typeof artifact.headSHA !== "string" ||
     typeof artifact.worktree !== "string" ||
     !Array.isArray(artifact.changedPaths) ||
     Object.keys(artifact).some(
-      (key) => !["baseSHA", "headSHA", "worktree", "changedPaths", "encoding", "bytes"].includes(key),
+      (key) => !["baseSHA", "headSHA", "worktree", "changedPaths", "sha256"].includes(key),
     )
   ) {
     return yield* new ReviewRejectedError({ reason: "malformed-artifact-evidence" })
@@ -562,10 +587,8 @@ const requireArtifact = Effect.fn("MaestroReview.requireArtifact")(function* (
   if (artifact.changedPaths.some((item) => typeof item !== "string" || !validPath(item))) {
     return yield* new ReviewRejectedError({ reason: "malformed-artifact-path" })
   }
-  const bytes = Buffer.from(artifact.bytes, "base64")
-  if (bytes.length === 0 || bytes.toString("base64") !== artifact.bytes) {
-    return yield* new ReviewRejectedError({ reason: "malformed-artifact-bytes" })
-  }
+  if (!/^[0-9a-f]{64}$/.test(artifact.sha256))
+    return yield* new ReviewRejectedError({ reason: "malformed-artifact-digest" })
   const git = yield* Git.Service
   const status = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: directory })
   if (status.exitCode !== 0 || status.truncated || status.text().trim())
@@ -621,19 +644,23 @@ const requireArtifact = Effect.fn("MaestroReview.requireArtifact")(function* (
       "--",
       ".",
     ],
-    { cwd: worktree },
+    { cwd: worktree, maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES },
   )
-  if (diff.exitCode !== 0 || diff.truncated || !diff.stdout.equals(bytes)) {
+  if (diff.truncated) return yield* new ReviewRejectedError({ reason: "artifact-too-large" })
+  const sha256 = createHash("sha256").update(diff.stdout).digest("hex")
+  if (diff.exitCode !== 0 || diff.stdout.length === 0 || sha256 !== artifact.sha256) {
     return yield* new ReviewRejectedError({ reason: "artifact-bytes-mismatch" })
   }
   return {
-    workCardHash,
-    sha256: createHash("sha256").update(diff.stdout).digest("hex"),
-    baseSHA: artifact.baseSHA,
-    headSHA: artifact.headSHA,
-    worktree,
-    changedPaths,
-    bytes: artifact.bytes,
+    artifact: {
+      workCardHash,
+      sha256,
+      baseSHA: artifact.baseSHA,
+      headSHA: artifact.headSHA,
+      worktree,
+      changedPaths,
+    },
+    diff: diff.text(),
   }
 })
 
@@ -645,7 +672,7 @@ function validPath(value: string) {
   return value.length > 0 && !path.isAbsolute(value) && !value.split(/[\\/]/).includes("..")
 }
 
-function requireFindings(value: unknown, artifact: ReviewData["artifact"]) {
+function requireFindings(value: unknown, artifact: ReviewData["artifact"], diff: string) {
   if (!Array.isArray(value)) throw new ReviewRejectedError({ reason: "malformed-findings" })
   return value.map((item) => {
     if (!item || typeof item !== "object") throw new ReviewRejectedError({ reason: "malformed-finding" })
@@ -662,17 +689,17 @@ function requireFindings(value: unknown, artifact: ReviewData["artifact"]) {
     ) {
       throw new ReviewRejectedError({ reason: "malformed-finding" })
     }
-    if (!artifact.changedPaths.includes(finding.path) || !hasAddedLine(artifact, finding.path, line)) {
+    if (!artifact.changedPaths.includes(finding.path) || !hasAddedLine(diff, finding.path, line)) {
       throw new ReviewRejectedError({ reason: "finding-not-in-artifact" })
     }
     return { path: finding.path, line, message: finding.message }
   })
 }
 
-function hasAddedLine(artifact: ReviewData["artifact"], findingPath: string, findingLine: number) {
+function hasAddedLine(diff: string, findingPath: string, findingLine: number) {
   let file: string | undefined
   let line: number | undefined
-  for (const value of Buffer.from(artifact.bytes, "base64").toString("utf8").split("\n")) {
+  for (const value of diff.split("\n")) {
     if (value.startsWith("+++ b/")) {
       file = value.slice(6)
       line = undefined

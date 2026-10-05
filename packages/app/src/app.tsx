@@ -274,7 +274,7 @@ declare global {
     __OPENCODE__?: {
       deepLinks?: string[]
     }
-    api?: {
+    api?: Partial<import("./app-dock-linux").AppDockLinuxAPI> & {
       appDockOpen?: (
         url: string,
         bounds: { x: number; y: number; width: number; height: number },

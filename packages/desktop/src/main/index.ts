@@ -15,6 +15,8 @@ import type { ServerReadyData } from "../preload/types"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
+import { handleDockRPC } from "./app-dock-rpc"
+import { LinuxWorkspaceRPC } from "./linux-workspace-rpc"
 import { forwardInitializationFailure } from "./initialization"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
 import { createMenu } from "./menu"
@@ -168,6 +170,11 @@ const main = Effect.gen(function* () {
     await killSidecar()
     wslServers.stopAll()
   }
+  const shutdown = {
+    runtimeStop: undefined as (() => Promise<void>) | undefined,
+    promise: undefined as Promise<void> | undefined,
+    done: false,
+  }
   const relaunch = () => {
     setAppQuitting()
     void stopSidecars().finally(() => {
@@ -193,7 +200,8 @@ const main = Effect.gen(function* () {
   app.commandLine.appendSwitch("proxy-bypass-list", "<-loopback>")
   const features = app.commandLine.getSwitchValue("enable-features")
   app.commandLine.appendSwitch("enable-features", features ? `${jsCallStackFeature},${features}` : jsCallStackFeature)
-  if (!app.isPackaged) app.commandLine.appendSwitch("remote-debugging-port", "9222")
+  if (!app.isPackaged && !app.commandLine.hasSwitch("remote-debugging-port"))
+    app.commandLine.appendSwitch("remote-debugging-port", "9222")
 
   if (!app.requestSingleInstanceLock()) {
     app.quit()
@@ -221,9 +229,19 @@ const main = Effect.gen(function* () {
     emitDeepLinks([url])
   })
 
-  app.on("before-quit", () => {
+  app.on("before-quit", (event) => {
     setAppQuitting()
-    void stopSidecars()
+    if (shutdown.done) return
+    event.preventDefault()
+    shutdown.promise ??= Promise.all([
+      stopSidecars().catch((error: unknown) => logger.error("failed to stop sidecars", error)),
+      Promise.resolve()
+        .then(() => shutdown.runtimeStop?.())
+        .catch((error: unknown) => logger.error("failed to stop Linux runtime", error)),
+    ]).then(() => {
+      shutdown.done = true
+      app.quit()
+    })
   })
 
   app.on("will-quit", () => {
@@ -280,7 +298,7 @@ const main = Effect.gen(function* () {
     checkForUpdates: () => void showUpdaterDialog(updater, true),
     relaunch,
   }
-  registerIpcHandlers({
+  shutdown.runtimeStop = registerIpcHandlers({
     killSidecar: () => killSidecar(),
     relaunch,
     awaitInitialization: Effect.fnUntraced(
@@ -310,7 +328,7 @@ const main = Effect.gen(function* () {
     setNativeTranslations: (bundle) => {
       if (setNativeTranslations(bundle)) createMenu(menuDeps)
     },
-  })
+  }).stopLinuxRuntime
   registerWslIpcHandlers(wslServers)
   void updater.start()
   const updateTimer = setInterval(() => void updater.check(), 10 * 60 * 1000)
@@ -380,7 +398,11 @@ const main = Effect.gen(function* () {
         userDataPath: app.getPath("userData"),
         onStdout: (message) => writeLog("server", "stdout", { message }),
         onStderr: (message) => writeLog("server", "stderr", { message }, "warn"),
-        onExit: (code) => writeLog("utility", "sidecar exited", { code }, "warn"),
+        onExit: (code) => {
+          writeLog("utility", "sidecar exited", { code }, "warn")
+          void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn"))
+        },
+        onMessage: (message, reply) => { if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply) },
       }),
     )
     server = listener

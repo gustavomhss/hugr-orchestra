@@ -7,6 +7,7 @@ import { Effect, Latch, Layer, Scope, Context } from "effect"
 import { Session } from "./session"
 import { SessionID } from "./schema"
 import { SessionStatus } from "./status"
+import { MessageV2 } from "./message-v2"
 
 export interface Interface {
   readonly assertNotBusy: (sessionID: SessionID) => Effect.Effect<void, Session.BusyError>
@@ -31,6 +32,7 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const background = yield* BackgroundJob.Service
     const status = yield* SessionStatus.Service
+    const sessions = yield* Session.Service
 
     const state = yield* InstanceState.make(
       Effect.fn("SessionRunState.state")(function* () {
@@ -55,7 +57,7 @@ const layer = Layer.effect(
     ) {
       const data = yield* InstanceState.get(state)
       const existing = data.runners.get(sessionID)
-      if (existing) return existing
+      if (existing) return { runner: existing, fresh: false }
       const next = Runner.make<SessionV1.WithParts>(data.scope, {
         onIdle: Effect.gen(function* () {
           data.runners.delete(sessionID)
@@ -65,7 +67,51 @@ const layer = Layer.effect(
         onInterrupt,
       })
       data.runners.set(sessionID, next)
-      return next
+      return { runner: next, fresh: true }
+    })
+
+    // A process killed mid-run (SIGKILL, crash) leaves tool calls projected as running and its assistant message
+    // open. When this process starts the first runner for a Session nothing here can still own them, so close them
+    // the way processor cleanup() closes aborted calls. Never retry the tool or the provider turn.
+    const closeStaleRun = Effect.fn("SessionRunState.closeStaleRun")(function* (sessionID: SessionID) {
+      const msgs = yield* sessions.messages({ sessionID }).pipe(Effect.orElseSucceed(() => []))
+      yield* Effect.forEach(
+        msgs,
+        Effect.fnUntraced(function* (msg) {
+          if (msg.info.role !== "assistant") return
+          const end = Date.now()
+          yield* Effect.forEach(
+            msg.parts.filter(
+              (part): part is SessionV1.ToolPart =>
+                part.type === "tool" && (part.state.status === "pending" || part.state.status === "running"),
+            ),
+            (part) =>
+              sessions.updatePart({
+                ...part,
+                state: {
+                  ...part.state,
+                  status: "error",
+                  error: "Tool execution aborted",
+                  metadata: { ...("metadata" in part.state ? part.state.metadata : {}), interrupted: true },
+                  time: { start: "time" in part.state ? part.state.time.start : end, end },
+                },
+              }),
+            { discard: true },
+          )
+          if (msg.info.time.completed) return
+          yield* sessions.updateMessage({
+            ...msg.info,
+            error:
+              msg.info.error ??
+              MessageV2.fromError(new DOMException("Aborted", "AbortError"), {
+                providerID: msg.info.providerID,
+                aborted: true,
+              }),
+            time: { ...msg.info.time, completed: end },
+          })
+        }),
+        { discard: true },
+      )
     })
 
     const assertNotBusy = Effect.fn("SessionRunState.assertNotBusy")(function* (sessionID: SessionID) {
@@ -90,7 +136,8 @@ const layer = Layer.effect(
       onInterrupt: Effect.Effect<SessionV1.WithParts>,
       work: Effect.Effect<SessionV1.WithParts>,
     ) {
-      return yield* (yield* runner(sessionID, onInterrupt)).ensureRunning(work)
+      const current = yield* runner(sessionID, onInterrupt)
+      return yield* current.runner.ensureRunning(current.fresh ? closeStaleRun(sessionID).pipe(Effect.andThen(work)) : work)
     })
 
     const startShell = Effect.fn("SessionRunState.startShell")(function* (
@@ -99,8 +146,9 @@ const layer = Layer.effect(
       work: Effect.Effect<SessionV1.WithParts>,
       ready?: Latch.Latch,
     ) {
-      return yield* (yield* runner(sessionID, onInterrupt))
-        .startShell(work, ready)
+      const current = yield* runner(sessionID, onInterrupt)
+      return yield* current.runner
+        .startShell(current.fresh ? closeStaleRun(sessionID).pipe(Effect.andThen(work)) : work, ready)
         .pipe(Effect.catchTag("RunnerBusy", () => Effect.fail(busyError(sessionID))))
     })
 
@@ -146,6 +194,10 @@ function busyError(sessionID: SessionID) {
   return new Session.BusyError({ sessionID })
 }
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [BackgroundJob.node, SessionStatus.node] })
+export const node = LayerNode.make({
+  service: Service,
+  layer: layer,
+  deps: [BackgroundJob.node, SessionStatus.node, Session.node],
+})
 
 export * as SessionRunState from "./run-state"

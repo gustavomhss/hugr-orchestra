@@ -1,0 +1,7 @@
+Package: xpra-server xpra-x11 xpra-common xpra-client xpra-codecs
+Pin: version 6.5.4-r0-1
+Pin-Priority: 1001
+
+Package: xpra-html5
+Pin: version 21-r1-1
+Pin-Priority: 1001

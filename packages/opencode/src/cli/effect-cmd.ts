@@ -1,3 +1,4 @@
+import { constants } from "node:os"
 import type { Argv } from "yargs"
 import { Effect, Schema } from "effect"
 import type { AppServices } from "@/effect/app-runtime"
@@ -74,23 +75,39 @@ export const effectCmd = <Args, A>(opts: EffectCmdOpts<Args, A>) =>
     builder: opts.builder as never,
     async handler(rawArgs) {
       const { AppRuntime } = await import("@/effect/app-runtime")
+      // A signal would end the process before layer finalizers run, leaving in-flight tool calls projected as
+      // running. Dispose the runtime first: instance disposal cancels Session runs and their cleanup marks the calls
+      // interrupted. The timeout keeps a stuck finalizer from blocking the exit.
+      let signalled = false
+      for (const signal of ["SIGTERM", "SIGHUP"] as const)
+        process.once(signal, () => {
+          signalled = true
+          process.exitCode = 128 + constants.signals[signal]
+          void Promise.race([AppRuntime.dispose(), Bun.sleep(5_000)]).finally(() => process.exit())
+        })
       // yargs typing wraps Args in ArgumentsCamelCase<WithDoubleDash<...>>; cast at the boundary.
       const args = rawArgs as unknown as WithDoubleDash<Args>
-      const useInstance = typeof opts.instance === "function" ? opts.instance(args) : opts.instance !== false
-      if (!useInstance) {
-        await AppRuntime.runPromise(opts.handler(args))
-        return
+      const run = async () => {
+        const useInstance = typeof opts.instance === "function" ? opts.instance(args) : opts.instance !== false
+        if (!useInstance) {
+          await AppRuntime.runPromise(opts.handler(args))
+          return
+        }
+        const { InstanceStore } = await import("@/project/instance-store")
+        const { InstanceRef } = await import("@/effect/instance-ref")
+        const directory = opts.directory?.(args) ?? process.cwd()
+        const { store, ctx } = await AppRuntime.runPromise(
+          InstanceStore.Service.use((store) => store.load({ directory }).pipe(Effect.map((ctx) => ({ store, ctx })))),
+        )
+        try {
+          await AppRuntime.runPromise(opts.handler(args).pipe(Effect.provideService(InstanceRef, ctx)))
+        } finally {
+          await AppRuntime.runPromise(store.dispose(ctx))
+        }
       }
-      const { InstanceStore } = await import("@/project/instance-store")
-      const { InstanceRef } = await import("@/effect/instance-ref")
-      const directory = opts.directory?.(args) ?? process.cwd()
-      const { store, ctx } = await AppRuntime.runPromise(
-        InstanceStore.Service.use((store) => store.load({ directory }).pipe(Effect.map((ctx) => ({ store, ctx })))),
-      )
-      try {
-        await AppRuntime.runPromise(opts.handler(args).pipe(Effect.provideService(InstanceRef, ctx)))
-      } finally {
-        await AppRuntime.runPromise(store.dispose(ctx))
-      }
+      // After a signal disposed the runtime, the interrupted command is the expected outcome, not a failure.
+      await run().catch((error) => {
+        if (!signalled) throw error
+      })
     },
   })
