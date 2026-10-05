@@ -170,15 +170,19 @@ function decode(file: { directory: string; filepath: string; primary: boolean },
     .replaceAll("\\", "/")
     .replace(/^(agent|agents|mode|modes)\//, "")
     .replace(/\.md$/, "")
+  // A file without a body overrides other fields only; it keeps the agent's built-in instructions.
   const body = markdown.content.trim()
   const legacy = Object.keys(markdown.data).some((key) => !agentKeys.has(key))
   const agent = Option.getOrUndefined(
     legacy
       ? Option.map(
-          decodeLegacyAgent({ name, ...markdown.data, prompt: body }, { errors: "all", propertyOrder: "original" }),
+          decodeLegacyAgent(
+            { name, ...markdown.data, ...(body ? { prompt: body } : {}) },
+            { errors: "all", propertyOrder: "original" },
+          ),
           ConfigMigrateV1.migrateAgent,
         )
-      : decodeAgent({ ...markdown.data, system: body }, { errors: "all", propertyOrder: "original" }),
+      : decodeAgent({ ...markdown.data, ...(body ? { system: body } : {}) }, { errors: "all", propertyOrder: "original" }),
   )
   if (!agent) return
   const info = Option.getOrUndefined(
