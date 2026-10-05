@@ -138,6 +138,37 @@
 .orchestra-settings .perm-tool .seg button:disabled {
   cursor: default;
 }
+.orchestra-settings .perm-tool .seg[aria-disabled] {
+  opacity: 0.45;
+}
+.orchestra-settings .perm-tool .tnote {
+  margin-block-start: 2px;
+  color: #c9b78f;
+  font-size: 11px;
+}
+.orchestra-settings .settings-note {
+  margin: 0 0 11px;
+  color: var(--mx-dim);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.orchestra-settings .settings-field-note {
+  color: var(--mx-dim);
+  font-size: 11px;
+}
+.orchestra-settings .agent-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+/* Auto-accept belongs to an open session; inside one, Cmd/Ctrl+, opens the Settings dialog that has it. */
+.orchestra-settings
+  .settings-inherited
+  [data-component="settings-v2-row"]:has([data-action="settings-auto-accept-permissions"]) {
+  display: none;
+}
 .orchestra-settings .perm-tool .seg button + button {
   border-inline-start: 1px solid rgba(160, 181, 200, 0.12);
 }
@@ -168,6 +199,9 @@
 }
 .orchestra-settings .mx-brand {
   flex: none;
+}
+/* Row logos are drawn in the text colour; card marks keep the kit's blue, as in the mock. */
+.orchestra-settings .mx-row .mx-brand {
   color: var(--mx-strong);
 }
 .orchestra-settings .mx-card h3 {
@@ -330,6 +364,10 @@ html[data-color-scheme="light"] .orchestra-settings .agent-top b {
 }
 html[data-color-scheme="light"] .orchestra-settings .agent-role {
   color: #6b7480;
+}
+
+html[data-color-scheme="light"] .orchestra-settings .perm-tool .tnote {
+  color: #7d6331;
 }
 
 @media (max-width: 760px) {

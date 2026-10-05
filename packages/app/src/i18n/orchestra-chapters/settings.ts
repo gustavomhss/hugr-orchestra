@@ -4,18 +4,41 @@ export const SETTINGS_COPY = {
   "orchestra.settings.subtitle": "the agents may do.",
   "orchestra.settings.sections": "Settings sections",
   "orchestra.settings.configure": "Configure",
+  "orchestra.settings.permissions.scope":
+    "Server-wide defaults for every agent and repository. A project's config or an agent's own rules can override them.",
   "orchestra.settings.permissions.readOnly":
     "This server does not share its tool defaults, so the built-in defaults are shown and cannot be changed here.",
-  "orchestra.settings.providers.description": "Choose how this profile reaches its models.",
+  "orchestra.settings.permissions.locked.patterns":
+    "Pattern rules in the server config set this tool. Edit them in the config file.",
+  "orchestra.settings.permissions.locked.shadowed":
+    "A later rule in the server config overrides this tool. Edit the config file to change it.",
+  "orchestra.settings.providers.description": "Choose how this server reaches its models.",
   "orchestra.settings.providers.connect": "Connect provider",
-  "orchestra.settings.providers.route": "Route for new turns",
+  "orchestra.settings.providers.route": "Route for new turns (all repositories)",
+  "orchestra.settings.providers.routeReadOnly": "This server does not let the app change its default model.",
+  "orchestra.settings.providers.routeNone": "Connect a provider to choose a route.",
   "orchestra.settings.providers.routeEmpty": "Choose a connected provider",
   "orchestra.settings.providers.connected": "Connected",
   "orchestra.settings.providers.model": "1 model",
   "orchestra.settings.providers.models": "{{count}} models",
   "orchestra.settings.providers.allListed": "All popular providers are listed above.",
   "orchestra.settings.providers.loading": "Loading providers…",
-  "orchestra.settings.models.description": "Choose which models appear in this profile's composer.",
+  "orchestra.settings.providers.remove": "Remove",
+  "orchestra.settings.providers.removeAll.title": "Remove {{count}} credentials for {{provider}}?",
+  "orchestra.settings.providers.removeAll.description":
+    "This removes {{labels}} from this server, for every repository.",
+  "orchestra.settings.providers.env.title": "{{provider}} stays connected",
+  "orchestra.settings.providers.env.description":
+    "It connects through {{names}} in the server's environment. Remove the variable to disconnect it.",
+  "orchestra.settings.providers.labelled.title": "{{provider}} has no default key",
+  "orchestra.settings.providers.labelled.description":
+    "Its keys are labelled ({{labels}}). Disconnect each one from its own entry.",
+  "orchestra.settings.providers.none.title": "Nothing stored for {{provider}}",
+  "orchestra.settings.providers.none.description":
+    "Its connection comes from the server config, not from a stored credential.",
+  "orchestra.settings.models.description": "Choose which models appear in the composer.",
+  "orchestra.settings.models.search": "Search models",
+  "orchestra.settings.models.noMatches": "No models match your search.",
   "orchestra.settings.models.meta": "{{provider}} · Context {{context}}",
   "orchestra.settings.models.enable": "Enable {{model}}",
   "orchestra.settings.models.empty": "No models yet. Connect a provider to choose its models.",

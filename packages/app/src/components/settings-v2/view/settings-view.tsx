@@ -1,8 +1,9 @@
 import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
 import { useSearchParams } from "@solidjs/router"
-import { createMemo, For, Match, Show, Switch } from "solid-js"
+import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { reconcile, unwrap } from "solid-js/store"
 import { useLanguage } from "@/context/language"
-import { ModelsProvider, useModels } from "@/context/models"
+import { useModels } from "@/context/models"
 import type { ServerConnection } from "@/context/server"
 import { useServerProtocol } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -19,12 +20,15 @@ import {
   PERMISSION_ACTIONS,
   PERMISSION_TOOLS,
   permissionAction,
-  permissionUpdate,
+  permissionLock,
+  permissionWrite,
   SETTINGS_SECTIONS,
   settingsSection,
   type PermissionTool,
   type SettingsSection,
 } from "./settings-data"
+
+type PermissionAction = (typeof PERMISSION_ACTIONS)[number]
 import { SettingsSec } from "./settings-sec"
 import { ShortcutsSection } from "./shortcuts-section"
 import "./settings-view.css"
@@ -78,42 +82,40 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
             </For>
           </nav>
           <div class="settings-body" data-section={section()}>
-            <ModelsProvider directory={() => props.directory}>
-              <Switch>
-                <Match when={section() === "permissions"}>
-                  <PermissionsSection />
-                </Match>
-                <Match when={section() === "providers"}>
-                  <ProvidersSection directory={props.directory} onModels={() => open("models")} />
-                </Match>
-                <Match when={section() === "models"}>
-                  <ModelsSection directory={props.directory} />
-                </Match>
-                <Match when={section() === "agents"}>
-                  <AgentsSection server={props.server} directory={props.directory} />
-                </Match>
-                <Match when={section() === "mcp"}>
-                  <McpSection directory={props.directory} />
-                </Match>
-                <Match when={section() === "shortcuts"}>
-                  <ShortcutsSection />
-                </Match>
-                <Match when={section() === "general"}>
-                  <SettingsSec title={language.t("settings.tab.general")}>
-                    <div class="settings-inherited">
-                      <SettingsGeneralV2 />
-                    </div>
-                  </SettingsSec>
-                </Match>
-                <Match when={section() === "servers"}>
-                  <SettingsSec title={language.t("status.popover.tab.servers")}>
-                    <div class="settings-inherited">
-                      <SettingsServersV2 />
-                    </div>
-                  </SettingsSec>
-                </Match>
-              </Switch>
-            </ModelsProvider>
+            <Switch>
+              <Match when={section() === "permissions"}>
+                <PermissionsSection />
+              </Match>
+              <Match when={section() === "providers"}>
+                <ProvidersSection directory={props.directory} onModels={() => open("models")} />
+              </Match>
+              <Match when={section() === "models"}>
+                <ModelsSection directory={props.directory} />
+              </Match>
+              <Match when={section() === "agents"}>
+                <AgentsSection server={props.server} directory={props.directory} />
+              </Match>
+              <Match when={section() === "mcp"}>
+                <McpSection directory={props.directory} />
+              </Match>
+              <Match when={section() === "shortcuts"}>
+                <ShortcutsSection />
+              </Match>
+              <Match when={section() === "general"}>
+                <SettingsSec title={language.t("settings.tab.general")}>
+                  <div class="settings-inherited">
+                    <SettingsGeneralV2 />
+                  </div>
+                </SettingsSec>
+              </Match>
+              <Match when={section() === "servers"}>
+                <SettingsSec title={language.t("status.popover.tab.servers")}>
+                  <div class="settings-inherited">
+                    <SettingsServersV2 />
+                  </div>
+                </SettingsSec>
+              </Match>
+            </Switch>
           </div>
         </div>
       </div>
@@ -127,15 +129,18 @@ function PermissionsSection() {
   const protocol = useServerProtocol()
   // Tool defaults live in the server's global config, which only the v1 API reads and writes.
   const editable = () => protocol() === "v1"
-  const set = (tool: PermissionTool, action: (typeof PERMISSION_ACTIONS)[number]) => {
-    const before = serverSync().data.config.permission
-    if (permissionAction(before, tool) === action) return
-    const next = permissionUpdate(before, tool, action)
-    serverSync().set("config", "permission", next)
+  const set = (tool: PermissionTool, action: PermissionAction) => {
+    const current = serverSync().data.config.permission
+    if (permissionAction(current, tool) === action) return
+    const result = permissionWrite(current, tool, action)
+    if ("locked" in result) return
+    // The store merges objects in place, so keep a detached copy to restore.
+    const before = current === undefined ? undefined : structuredClone(unwrap(current))
+    serverSync().set("config", "permission", reconcile(result.next))
     serverSync()
-      .updateConfig({ permission: next })
+      .updateConfig({ permission: result.next })
       .catch((err: unknown) => {
-        serverSync().set("config", "permission", before)
+        serverSync().set("config", "permission", before === undefined ? undefined : reconcile(before))
         showToast({
           title: language.t("settings.permissions.toast.updateFailed.title"),
           description: err instanceof Error ? err.message : String(err),
@@ -148,51 +153,115 @@ function PermissionsSection() {
       title={language.t("settings.permissions.title")}
       description={language.t("settings.permissions.description")}
     >
+      <p class="settings-note">{language.t("orchestra.settings.permissions.scope")}</p>
+      <Show when={protocol() === "v2"}>
+        <p class="settings-note" role="status">
+          {language.t("orchestra.settings.permissions.readOnly")}
+        </p>
+      </Show>
       <div class="perm-table">
         <For each={PERMISSION_TOOLS}>
           {(tool) => {
             const current = () => permissionAction(serverSync().data.config.permission, tool)
+            const lock = () => permissionLock(serverSync().data.config.permission, tool)
             const title = () => language.t(`settings.permissions.tool.${tool}.title`)
             return (
-              <div class="perm-tool" data-tool={tool}>
+              <div class="perm-tool" data-tool={tool} data-locked={lock()}>
                 <div>
                   <div class="tname">{title()}</div>
                   <div class="tdesc">{language.t(`settings.permissions.tool.${tool}.description`)}</div>
-                </div>
-                <div class="seg" role="radiogroup" aria-label={title()}>
-                  <For each={PERMISSION_ACTIONS}>
-                    {(action) => (
-                      <button
-                        type="button"
-                        role="radio"
-                        data-v={action}
-                        classList={{ on: current() === action }}
-                        aria-checked={current() === action}
-                        disabled={!editable()}
-                        onClick={() => set(tool, action)}
-                      >
-                        {language.t(`settings.permissions.action.${action}`)}
-                      </button>
+                  <Show when={editable() && lock()}>
+                    {(reason) => (
+                      <div class="tnote" id={`perm-lock-${tool}`}>
+                        {language.t(`orchestra.settings.permissions.locked.${reason()}`)}
+                      </div>
                     )}
-                  </For>
+                  </Show>
                 </div>
+                <PermissionSegment
+                  label={title()}
+                  value={current()}
+                  disabled={!editable() || !!lock()}
+                  describedBy={editable() && lock() ? `perm-lock-${tool}` : undefined}
+                  onChange={(action) => set(tool, action)}
+                />
               </div>
             )
           }}
         </For>
       </div>
-      <Show when={protocol() === "v2"}>
-        <p class="mx-note">{language.t("orchestra.settings.permissions.readOnly")}</p>
-      </Show>
     </SettingsSec>
   )
 }
 
+// A radio group: one tab stop on the checked option; arrow keys, Home and End move and select.
+function PermissionSegment(props: {
+  label: string
+  value: PermissionAction
+  disabled: boolean
+  describedBy?: string
+  onChange: (action: PermissionAction) => void
+}) {
+  const language = useLanguage()
+  const move = (event: KeyboardEvent & { currentTarget: HTMLDivElement }) => {
+    const rtl = getComputedStyle(event.currentTarget).direction === "rtl"
+    const step = {
+      ArrowDown: 1,
+      ArrowUp: -1,
+      ArrowRight: rtl ? -1 : 1,
+      ArrowLeft: rtl ? 1 : -1,
+    }[event.key]
+    const index = PERMISSION_ACTIONS.indexOf(props.value)
+    const target =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? PERMISSION_ACTIONS.length - 1
+          : step === undefined
+            ? undefined
+            : (index + step + PERMISSION_ACTIONS.length) % PERMISSION_ACTIONS.length
+    if (target === undefined) return
+    event.preventDefault()
+    props.onChange(PERMISSION_ACTIONS[target])
+    event.currentTarget.querySelectorAll<HTMLButtonElement>("button")[target]?.focus()
+  }
+
+  return (
+    <div
+      class="seg"
+      role="radiogroup"
+      aria-label={props.label}
+      aria-describedby={props.describedBy}
+      aria-disabled={props.disabled || undefined}
+      onKeyDown={move}
+    >
+      <For each={PERMISSION_ACTIONS}>
+        {(action) => (
+          <button
+            type="button"
+            role="radio"
+            data-v={action}
+            classList={{ on: props.value === action }}
+            aria-checked={props.value === action}
+            tabindex={props.value === action ? 0 : -1}
+            disabled={props.disabled}
+            onClick={() => props.onChange(action)}
+          >
+            {language.t(`settings.permissions.action.${action}`)}
+          </button>
+        )}
+      </For>
+    </div>
+  )
+}
+
+// Visibility lives in the app-wide model store (the ancestor ModelsProvider), the same one every composer reads.
 function ModelsSection(props: { directory: string }) {
   const language = useLanguage()
   const serverSync = useServerSync()
   const models = useModels()
-  const rows = createMemo(() =>
+  const [query, setQuery] = createSignal("")
+  const all = createMemo(() =>
     models
       .list()
       .slice()
@@ -206,6 +275,13 @@ function ModelsSection(props: { directory: string }) {
         )
       }),
   )
+  const rows = createMemo(() => {
+    const term = query().trim().toLowerCase()
+    if (!term) return all()
+    return all().filter((item) =>
+      [item.name, item.id, item.provider.name].some((value) => value.toLowerCase().includes(term)),
+    )
+  })
 
   return (
     <SettingsSec
@@ -213,7 +289,7 @@ function ModelsSection(props: { directory: string }) {
       description={language.t("orchestra.settings.models.description")}
     >
       <Show
-        when={rows().length > 0}
+        when={all().length > 0}
         fallback={
           <div class="mx-empty">
             {language.t(
@@ -224,35 +300,52 @@ function ModelsSection(props: { directory: string }) {
           </div>
         }
       >
-        <div class="mx-table">
-          <For each={rows()}>
-            {(item) => {
-              const key = { providerID: item.provider.id, modelID: item.id }
-              const logo = resolveModelLogo({ id: item.id, providerID: item.provider.id }).logo
-              const context = contextLabel(item.limit?.context)
-              return (
-                <div class="mx-row" data-mx-card data-model={`${item.provider.id}/${item.id}`}>
-                  <Show when={logo !== "neutral"} fallback={<NeutralMark />}>
-                    <ProviderIcon id={logo} width={22} height={22} class="mx-brand" aria-hidden="true" />
-                  </Show>
-                  <div class="mx-grow">
-                    <strong>{item.name}</strong>
-                    <small>
-                      {context
-                        ? language.t("orchestra.settings.models.meta", { provider: item.provider.name, context })
-                        : item.provider.name}
-                    </small>
-                  </div>
-                  <MxToggle
-                    checked={models.visible(key)}
-                    label={language.t("orchestra.settings.models.enable", { model: item.name })}
-                    onChange={(next) => models.setVisibility(key, next)}
-                  />
-                </div>
-              )
-            }}
-          </For>
+        <div class="mx-toolbar">
+          <input
+            class="mx-search"
+            type="search"
+            value={query()}
+            placeholder={language.t("orchestra.settings.models.search")}
+            aria-label={language.t("orchestra.settings.models.search")}
+            spellcheck={false}
+            autocomplete="off"
+            onInput={(event) => setQuery(event.currentTarget.value)}
+          />
         </div>
+        <Show
+          when={rows().length > 0}
+          fallback={<div class="mx-empty">{language.t("orchestra.settings.models.noMatches")}</div>}
+        >
+          <div class="mx-table">
+            <For each={rows()}>
+              {(item) => {
+                const key = { providerID: item.provider.id, modelID: item.id }
+                const logo = resolveModelLogo({ id: item.id, providerID: item.provider.id }).logo
+                const context = contextLabel(item.limit?.context)
+                return (
+                  <div class="mx-row" data-mx-card data-model={`${item.provider.id}/${item.id}`}>
+                    <Show when={logo !== "neutral"} fallback={<NeutralMark />}>
+                      <ProviderIcon id={logo} width={22} height={22} class="mx-brand" aria-hidden="true" />
+                    </Show>
+                    <div class="mx-grow">
+                      <strong>{item.name}</strong>
+                      <small>
+                        {context
+                          ? language.t("orchestra.settings.models.meta", { provider: item.provider.name, context })
+                          : item.provider.name}
+                      </small>
+                    </div>
+                    <MxToggle
+                      checked={models.visible(key)}
+                      label={language.t("orchestra.settings.models.enable", { model: item.name })}
+                      onChange={(next) => models.setVisibility(key, next)}
+                    />
+                  </div>
+                )
+              }}
+            </For>
+          </div>
+        </Show>
       </Show>
     </SettingsSec>
   )

@@ -14,8 +14,9 @@ const groupLabels = {
   Prompt: "settings.shortcuts.group.prompt",
 } as const
 
-// Every real shortcut in one table, in group order. Edit captures the next key combination;
-// Escape cancels and Backspace clears, as in the Shortcuts settings panel.
+// The shortcuts of every command the app has registered so far (the persisted command catalog plus the live
+// options), in group order. Commands of screens not yet opened appear once they register. Edit captures the
+// next key combination; Escape cancels and Backspace clears, as in the Shortcuts settings panel.
 export function ShortcutsSection() {
   const language = useLanguage()
   const controller = createKeybindSettingsController({ command: useCommand(), settings: useSettings() })

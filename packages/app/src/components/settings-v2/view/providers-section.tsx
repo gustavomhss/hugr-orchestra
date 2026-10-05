@@ -23,7 +23,14 @@ export function ProvidersSection(props: { directory: string; onModels: () => voi
   const routes = createMemo(() =>
     controller.providers.connected().filter((item) => !providerIdentity(item.id).credentialID),
   )
-  // The route is the provider of that model. Only the v1 API writes the global config.
+  // Only the v1 API writes the global config.
+  const routeBlocked = () => {
+    if (controller.protocol() === "v2") return "orchestra.settings.providers.routeReadOnly" as const
+    if (routes().length === 0 && serverSync().child(props.directory)[0].provider_ready)
+      return "orchestra.settings.providers.routeNone" as const
+    return undefined
+  }
+  // The route is the provider of that model.
   const setRoute = (providerID: string) => {
     const provider = routes().find((item) => item.id === providerID)
     if (!provider) return
@@ -79,6 +86,9 @@ export function ProvidersSection(props: { directory: string; onModels: () => voi
             )}
           </For>
         </select>
+        <Show when={routeBlocked()}>
+          {(reason) => <small class="settings-field-note">{language.t(reason())}</small>}
+        </Show>
       </label>
       <Show when={controller.connected().length > 0}>
         <div class="mx-grid">

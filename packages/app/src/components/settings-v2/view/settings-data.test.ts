@@ -2,8 +2,9 @@ import { describe, expect, test } from "bun:test"
 import {
   contextLabel,
   permissionAction,
+  permissionLock,
   permissionMap,
-  permissionUpdate,
+  permissionWrite,
   routeModel,
   settingsSection,
 } from "./settings-data"
@@ -25,42 +26,57 @@ describe("permission defaults", () => {
     expect(permissionAction({}, "external_directory")).toBe("ask")
   })
 
-  test("a direct rule wins over the wildcard, which wins over built-ins", () => {
-    const config = { "*": "deny", bash: "ask" }
-    expect(permissionAction(config, "bash")).toBe("ask")
-    expect(permissionAction(config, "read")).toBe("deny")
-    expect(permissionAction(config, "doom_loop")).toBe("deny")
+  test("the last matching rule wins, in key order, as on the server", () => {
+    expect(permissionAction({ "*": "deny", bash: "ask" }, "bash")).toBe("ask")
+    expect(permissionAction({ bash: "ask", "*": "deny" }, "bash")).toBe("deny")
+    expect(permissionAction({ "*": "deny", bash: "ask" }, "read")).toBe("deny")
+    expect(permissionAction({ "*": "deny" }, "doom_loop")).toBe("deny")
+    expect(permissionAction({ "web*": "deny" }, "webfetch")).toBe("deny")
+    expect(permissionAction({ "web*": "deny" }, "bash")).toBe("allow")
   })
 
-  test("a string config is a wildcard and patterned rules use their default", () => {
+  test('a string config is a wildcard, and only a rule\'s "*" pattern sets the default', () => {
     expect(permissionAction("ask", "edit")).toBe("ask")
     expect(permissionAction({ read: { "*": "deny", "*.md": "allow" } }, "read")).toBe("deny")
     expect(permissionAction({ read: { "*.env": "ask" } }, "read")).toBe("allow")
+    expect(permissionAction({ read: { "*.env": "deny", "*": "ask" } }, "read")).toBe("ask")
   })
 
   test("invalid values are ignored", () => {
     expect(permissionMap({ bash: 3, read: "allow", list: ["x"] })).toEqual({ read: "allow" })
     expect(permissionAction({ bash: "maybe" }, "bash")).toBe("allow")
+    expect(permissionAction({ bash: { "*": "maybe" } }, "bash")).toBe("allow")
   })
 })
 
-describe("permission updates", () => {
-  test("sets a plain action and keeps other rules", () => {
-    expect(permissionUpdate({ "*": "ask", read: "allow" }, "bash", "deny")).toEqual({
-      "*": "ask",
-      read: "allow",
-      bash: "deny",
-    })
+describe("permission writes", () => {
+  test("sets a plain action in place and appends new tools", () => {
+    const result = permissionWrite({ "*": "ask", read: "allow" }, "bash", "deny")
+    expect(result).toEqual({ next: { "*": "ask", read: "allow", bash: "deny" } })
+    expect(Object.keys("next" in result ? result.next : {})).toEqual(["*", "read", "bash"])
   })
 
-  test("keeps patterns and changes only the default of a patterned rule", () => {
-    expect(permissionUpdate({ read: { "*.env": "ask", "*": "allow" } }, "read", "deny")).toEqual({
-      read: { "*.env": "ask", "*": "deny" },
-    })
+  test('changes the existing "*" of a patterned rule in place, keeping its patterns after it', () => {
+    const result = permissionWrite({ read: { "*": "allow", "*.env": "deny" } }, "read", "ask")
+    expect(result).toEqual({ next: { read: { "*": "ask", "*.env": "deny" } } })
+    expect(Object.keys("next" in result ? result.next.read : {})).toEqual(["*", "*.env"])
+  })
+
+  test('refuses to add "*" to a patterned rule, because the server would place it after the patterns', () => {
+    expect(permissionWrite({ read: { "*.env": "deny" } }, "read", "allow")).toEqual({ locked: "patterns" })
+    expect(permissionLock({ read: { "*.env": "deny" } }, "read")).toBe("patterns")
+    expect(permissionWrite({ read: {} }, "read", "deny")).toEqual({ next: { read: { "*": "deny" } } })
+  })
+
+  test("refuses a write that a later wildcard rule would override", () => {
+    expect(permissionWrite({ bash: "ask", "*": "deny" }, "bash", "allow")).toEqual({ locked: "shadowed" })
+    expect(permissionLock({ bash: "ask", "*": "deny" }, "bash")).toBe("shadowed")
+    expect(permissionLock({ "*": "deny", bash: "ask" }, "bash")).toBeUndefined()
+    expect(permissionLock({ bash: "ask", "*": "deny" }, "read")).toBeUndefined()
   })
 
   test("a string config becomes a wildcard rule", () => {
-    expect(permissionUpdate("ask", "edit", "allow")).toEqual({ "*": "ask", edit: "allow" })
+    expect(permissionWrite("ask", "edit", "allow")).toEqual({ next: { "*": "ask", edit: "allow" } })
   })
 })
 
