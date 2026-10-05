@@ -63,7 +63,7 @@ import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/
 import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
-import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { type FollowupDraft, followupSystem, sendFollowupDraft } from "@/components/prompt-input/submit"
 import {
   createEvidenceComposerActions,
   createPromptInputController,
@@ -1718,7 +1718,7 @@ export default function Page() {
         api: sdk().api.session,
         sync: sync(),
         serverSync: serverSync(),
-        draft: item,
+        draft: { ...item, system: await followupSystem(platform, sdk().scope, serverSync(), sdk().directory) },
         optimisticBusy: item.sessionDirectory === sdk().directory,
       }).catch((err) => {
         setFollowup("failed", input.sessionID, input.id)
