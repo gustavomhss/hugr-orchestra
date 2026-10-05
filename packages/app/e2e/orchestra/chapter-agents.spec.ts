@@ -1,84 +1,37 @@
-import { expect, test, type Page, type Request } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
-
-const serverA = "http://127.0.0.1:4096"
-const serverB = "http://127.0.0.1:4097"
-const directory = "/repo/shared"
-const otherDirectory = "/repo/other"
-type MockAgent = {
-  name: string
-  description?: string
-  mode: string
-  native?: boolean
-  hidden?: boolean
-  model?: { providerID: string; modelID: string }
-  steps?: number
-  prompt?: string
-  permission: { permission: string; pattern: string; action: string }[]
-  options: Record<string, unknown>
-}
-const agents: MockAgent[] = [
-  {
-    name: "build",
-    description: "Implements repository changes",
-    mode: "primary",
-    native: true,
-    permission: [{ permission: "*", pattern: "*", action: "allow" }],
-    options: {},
-  },
-  {
-    name: "plan",
-    description: "Plans repository work",
-    mode: "primary",
-    native: true,
-    model: { providerID: "example", modelID: "reasoner" },
-    steps: 7,
-    prompt: "Plan before acting.",
-    permission: [
-      { permission: "*", pattern: "*", action: "allow" },
-      { permission: "bash", pattern: "git *", action: "ask" },
-      { permission: "edit", pattern: "*", action: "deny" },
-    ],
-    options: {},
-  },
-  {
-    name: "research",
-    description: "Investigates dependencies",
-    mode: "subagent",
-    native: true,
-    permission: [],
-    options: {},
-  },
-  { name: "review", description: "Reviews repository changes", mode: "all", native: true, permission: [], options: {} },
-  { name: "secret", mode: "primary", hidden: true, permission: [], options: {} },
-]
-type AgentFile = { path: string; exists: boolean } & Record<string, unknown>
-type Write = { url: string; directory: string | null; body: Record<string, unknown> }
+import { expect, test } from "@playwright/test"
+import { card, dialog, directory, openAgents, otherDirectory, serverA, serverB, setup } from "./chapter-agents.fixture"
 
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
 
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: roster cards show the returned fields`, async ({ page }) => {
-    await setup(page, { scheme })
+    await setup(page, { scheme, models: true })
     await openAgents(page)
     const roster = page.getByRole("list", { name: "Configured agents" })
     await expect(roster.getByRole("listitem")).toHaveCount(4)
     await expect(roster).not.toContainText("secret")
-    await expect(page.locator(".orchestra-agents").getByRole("heading", { level: 1 })).toHaveText("Who is doingthe work.")
+    await expect(page.locator(".orchestra-agents").getByRole("heading", { level: 1 })).toHaveText(
+      "Who is doingthe work.",
+    )
     await expect(page.getByRole("button", { name: "Create agent", exact: true })).toBeEnabled()
     const plan = card(page, "plan")
     expect.soft(await plan.locator(".agent-role").textContent()).toBe("primary")
     expect.soft(await plan.locator("p").textContent()).toBe("Plans repository work")
-    expect.soft(await plan.locator(".mx-badge").allTextContents()).toEqual(["reasoner", "7 steps", "Available"])
+    await expect(plan.locator(".mx-badge")).toHaveText(["reasoner", "7 steps", "Available"])
     await expect(plan.locator(".mx-badge bdi")).toHaveAttribute("title", "example/reasoner")
-    expect
-      .soft(await card(page, "build").locator(".mx-badge").allTextContents())
-      .toEqual(["Default model", "Unlimited steps", "Available"])
+    await expect(card(page, "build").locator(".mx-badge")).toHaveText(["Default model", "Unlimited steps", "Available"])
+    const offline = card(page, "review").locator(".mx-badge")
+    await expect(offline).toHaveText(["solo", "Unlimited steps", "Provider not connected"])
+    await expect(offline.last()).toHaveClass(/\bbad\b/)
+    await expect(offline.last()).toHaveAttribute("title", "offline is not connected in this profile.")
     await page.screenshot({ path: test.info().outputPath(`${scheme}.png`), fullPage: true })
     const research = card(page, "research").getByRole("button", { name: "Open Chat", exact: true })
     await expect(research).toBeDisabled()
-    await expect(research).toHaveAttribute("title", "Subagents are invoked by another agent and cannot start a chat directly.")
+    await expect(research).toHaveAttribute(
+      "title",
+      "Subagents are invoked by another agent and cannot start a chat directly.",
+    )
     await expect(card(page, "review").getByRole("button", { name: "Open Chat", exact: true })).toBeEnabled()
     await expect(card(page, "build").getByRole("button", { name: "Configure", exact: true })).toBeEnabled()
   })
@@ -124,6 +77,7 @@ test("agent and agent file requests target the selected profile", async ({ page 
   await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
   await expect(dialog(page).getByRole("heading", { name: "Configure plan" })).toBeVisible()
   await expect(dialog(page).getByLabel("Description")).toHaveValue("Plans repository work")
+  await expect(card(page, "build").locator(".mx-badge")).toHaveText(["Default model", "Unlimited steps"])
   const targets = mock.requests.filter((request) => new URL(request.url).pathname === "/agent")
   expect(targets.length).toBeGreaterThan(0)
   expect(
@@ -266,13 +220,18 @@ test("current protocol agents retain configured model, steps and permission rule
 })
 
 test("create agent writes the project agent file and reloads the legacy roster", async ({ page }) => {
-  const mock = await setup(page)
+  const mock = await setup(page, { models: true })
   await openAgents(page)
-  await page.getByRole("button", { name: "Create agent", exact: true }).click()
+  const opener = page.getByRole("button", { name: "Create agent", exact: true })
+  await opener.click()
   const form = dialog(page)
   await expect(form.getByRole("heading", { name: "Create agent" })).toBeVisible()
   await expect(form.getByLabel("Mode", { exact: true })).toHaveValue("subagent")
-  await expect(form.getByLabel("Bash", { exact: true }).locator("option:checked")).toHaveText("Inherit (allow)")
+  // A new agent only gets profile rules this page cannot see, so no inherited value is claimed.
+  await expect(form.getByLabel("Bash", { exact: true }).locator("option:checked")).toHaveText("Inherit")
+  const model = form.getByLabel("Model", { exact: true })
+  await expect(model.locator("option")).toHaveText(["Default model", "Builder", "Reasoner"])
+  await expect(model.locator("optgroup")).toHaveAttribute("label", "Example")
 
   await form.getByLabel("Name").fill("plan")
   await form.getByLabel("Description").fill("Reviews the diff")
@@ -288,10 +247,12 @@ test("create agent writes the project agent file and reloads the legacy roster",
   expect(mock.writes).toEqual([])
 
   await form.getByLabel("Provider-turn allowance").fill("5")
+  await model.selectOption("example/reasoner")
   await form.getByLabel("System instructions").fill("Read the diff first.")
   await form.getByLabel("Bash", { exact: true }).selectOption("deny")
   await form.getByRole("button", { name: "Save", exact: true }).click()
   await expect(form).toHaveCount(0)
+  await expect(opener).toBeFocused()
   expect(mock.writes).toEqual([
     {
       url: expect.stringContaining(`${serverA}/api/agent/reviewer/file`),
@@ -299,6 +260,7 @@ test("create agent writes the project agent file and reloads the legacy roster",
       body: {
         mode: "subagent",
         description: "Reviews the diff",
+        model: "example/reasoner",
         steps: 5,
         system: "Read the diff first.",
         permission: { bash: "deny" },
@@ -310,6 +272,25 @@ test("create agent writes the project agent file and reloads the legacy roster",
   await expect(card(page, "reviewer").locator(".agent-role")).toHaveText("subagent")
 })
 
+test("configure without a file writes only what changed and shows resolved pattern rules as inherited", async ({
+  page,
+}) => {
+  const mock = await setup(page)
+  await openAgents(page)
+  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+  const form = dialog(page)
+  await expect(form.getByLabel("Description")).toHaveValue("Plans repository work")
+  // `plan` resolves `bash git *: ask` from elsewhere; with no file there is no pattern map to keep.
+  const bash = form.getByLabel("Bash", { exact: true })
+  await expect(bash).toHaveValue("inherit")
+  await expect(bash.locator("option")).toHaveText(["Inherit (allow)", "Allow", "Ask", "Deny"])
+  await expect(form.getByLabel("Edit", { exact: true }).locator("option:checked")).toHaveText("Inherit (deny)")
+  await form.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(form).toHaveCount(0)
+  // Nothing resolved from built-ins is frozen into the new file.
+  expect(mock.writes.map((write) => write.body)).toEqual([{ permission: {}, revision: "" }])
+})
+
 test("configure seeds from the project file and keeps pattern rules it does not edit", async ({ page }) => {
   const mock = await setup(page, {
     protocol: "v2",
@@ -317,6 +298,7 @@ test("configure seeds from the project file and keeps pattern rules it does not 
       plan: {
         path: `${directory}/.opencode/agent/plan.md`,
         exists: true,
+        revision: "r1",
         description: "From the file",
         mode: "primary",
         system: "File prompt",
@@ -342,278 +324,139 @@ test("configure seeds from the project file and keeps pattern rules it does not 
     {
       mode: "primary",
       description: "From the file",
-      steps: 7,
       system: "File prompt",
       permission: { bash: { "git *": "ask" }, question: "allow" },
+      revision: "r1",
     },
   ])
   expect(mock.writes[0]?.url).toContain(`${serverA}/api/agent/plan/file`)
   expect(mock.disposed).toEqual([])
 })
 
-test("cancel and Escape discard the draft; remove disables the agent after confirmation", async ({ page }) => {
-  const mock = await setup(page)
+test("cancel and Escape discard the draft and return focus; remove keeps the definition and disables it", async ({
+  page,
+}) => {
+  const mock = await setup(page, {
+    files: {
+      plan: {
+        path: `${directory}/.opencode/agent/plan.md`,
+        exists: true,
+        revision: "r1",
+        description: "Plan file",
+        system: "File prompt",
+        permission: { "*": "ask", edit: "deny" },
+      },
+    },
+  })
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+  const configure = card(page, "plan").getByRole("button", { name: "Configure", exact: true })
+  await configure.click()
   await dialog(page).getByLabel("Description").fill("Changed")
   await page.keyboard.press("Escape")
   await expect(dialog(page)).toHaveCount(0)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  await expect(dialog(page).getByLabel("Description")).toHaveValue("Plans repository work")
+  await expect(configure).toBeFocused()
+  await configure.click()
+  await expect(dialog(page).getByLabel("Description")).toHaveValue("Plan file")
   await dialog(page).getByLabel("Description").fill("Changed again")
   await dialog(page).getByRole("button", { name: "Cancel", exact: true }).click()
   await expect(dialog(page)).toHaveCount(0)
+  await expect(configure).toBeFocused()
   expect(mock.writes).toEqual([])
 
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+  await configure.click()
   await dialog(page).getByRole("button", { name: "Remove agent", exact: true }).click()
   await expect(dialog(page).getByRole("heading", { name: "Remove plan?" })).toBeVisible()
   await expect(dialog(page)).toContainText("Existing sessions keep their recorded model and conversation.")
+  await expect(dialog(page)).toContainText(
+    "Adds disable: true to .opencode/agent/plan.md and keeps the rest of the definition. Delete that line to restore plan.",
+  )
   expect(mock.writes).toEqual([])
   await dialog(page).getByRole("button", { name: "Confirm", exact: true }).click()
   await expect(dialog(page)).toHaveCount(0)
-  expect(mock.writes.map((write) => [write.body, write.directory])).toEqual([[{ disable: true }, directory]])
+  expect(mock.writes.map((write) => [write.body, write.directory])).toEqual([
+    [
+      {
+        description: "Plan file",
+        system: "File prompt",
+        permission: { "*": "ask", edit: "deny" },
+        disable: true,
+        revision: "r1",
+      },
+      directory,
+    ],
+  ])
   await expect(page.getByRole("list", { name: "Configured agents" }).getByRole("listitem")).toHaveCount(3)
   await expect(card(page, "plan")).toHaveCount(0)
 })
 
-test("a server without the agent file API keeps the editor read-only", async ({ page }) => {
-  const mock = await setup(page, { fileApi: false })
+test("Escape while the file loads closes the dialog and a late answer does not reopen it", async ({ page }) => {
+  const gate = { release: () => {} }
+  const mock = await setup(page, {
+    fileGate: new Promise<void>((resolve) => {
+      gate.release = resolve
+    }),
+  })
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  const form = dialog(page)
-  await expect(form.getByRole("alert")).toHaveText("This server cannot save agent configuration.")
-  await expect(form.getByRole("button", { name: "Save", exact: true })).toBeDisabled()
-  await expect(form.getByLabel("Description")).toBeDisabled()
-  await expect(form.getByRole("button", { name: "Remove agent", exact: true })).toHaveCount(0)
+  const configure = card(page, "plan").getByRole("button", { name: "Configure", exact: true })
+  await configure.click()
+  await expect(dialog(page)).toContainText("Loading configuration…")
+  await expect(dialog(page).getByRole("button", { name: "Save", exact: true })).toBeDisabled()
+  await page.keyboard.press("Escape")
+  await expect(dialog(page)).toHaveCount(0)
+  await expect(configure).toBeFocused()
+  gate.release()
+  await expect.poll(() => mock.answered.length).toBe(1)
+  await expect(dialog(page)).toHaveCount(0)
+  await expect(configure).toBeFocused()
   expect(mock.writes).toEqual([])
 })
 
-function card(page: Page, name: string) {
-  return page.getByRole("list", { name: "Configured agents" }).getByRole("listitem", { name, exact: true })
-}
-
-function dialog(page: Page) {
-  return page.locator("dialog.agents-dialog")
-}
-
-async function openAgents(page: Page, ready = true) {
-  await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page
-    .locator('[data-component="orchestra-sidebar"]')
-    .getByRole("button", { name: "Agents", exact: true })
-    .click()
-  await expect(page).toHaveURL(/\/orchestra\/agents$/)
-  const debug = page.getByRole("button", { name: "Toggle debug tools", exact: true })
-  if ((await debug.isVisible()) && (await debug.getAttribute("aria-pressed")) === "true") await debug.click()
-  const notice = page.getByRole("button", { name: "Dismiss Tabs information", exact: true })
-  if (await notice.isVisible()) await notice.click()
-  if (ready) await expect(page.getByRole("list", { name: "Configured agents" })).toBeVisible()
-}
-
-function requestDirectory(request: Request) {
-  const url = new URL(request.url())
-  const header = request.headers()["x-opencode-directory"]
-  return (
-    url.searchParams.get("location[directory]") ??
-    url.searchParams.get("directory") ??
-    (header ? decodeURIComponent(header) : null)
+test("load failures offer a retry; save conflicts and unsupported servers stay explicit", async ({ page }) => {
+  const mock = await setup(page, { fileFailures: 1, writeStatus: 409 })
+  await openAgents(page)
+  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+  const form = dialog(page)
+  await expect(form.getByRole("alert")).toHaveText("The agent configuration could not be loaded.")
+  await expect(form.getByRole("button", { name: "Save", exact: true })).toBeDisabled()
+  await form.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect(form.getByRole("alert")).toBeHidden()
+  await expect(form.getByRole("button", { name: "Retry", exact: true })).toHaveCount(0)
+  await form.getByLabel("Description").fill("Mine")
+  await form.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(form.getByRole("alert")).toHaveText(
+    "The agent file changed on disk after it was opened. Close this dialog and open it again to edit the current version.",
   )
+  await expect(form.getByLabel("Description")).toHaveValue("Mine")
+  expect(mock.writes).toHaveLength(1)
+  expect(mock.disposed).toEqual([])
+})
+
+for (const fileApi of [false, "html"] as const) {
+  test(`a server without the agent file API keeps the editor read-only (${fileApi || "404"})`, async ({ page }) => {
+    const mock = await setup(page, { fileApi })
+    await openAgents(page)
+    await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+    const form = dialog(page)
+    await expect(form.getByRole("alert")).toHaveText("This server cannot save agent configuration.")
+    await expect(form.getByRole("button", { name: "Save", exact: true })).toBeDisabled()
+    await expect(form.getByRole("button", { name: "Retry", exact: true })).toHaveCount(0)
+    await expect(form.getByLabel("Description")).toBeDisabled()
+    await expect(form.getByRole("button", { name: "Remove agent", exact: true })).toHaveCount(0)
+    expect(mock.writes).toEqual([])
+  })
 }
 
-async function setup(
-  page: Page,
-  input: {
-    scheme?: "dark" | "light"
-    wait?: Promise<void>
-    waitOther?: Promise<void>
-    response?: { state: string }
-    protocol?: "v1" | "v2"
-    models?: boolean
-    files?: Record<string, AgentFile>
-    fileApi?: boolean
-  } = {},
-) {
-  const requests: Array<{ url: string; method: string; directory: string | null }> = []
-  const writes: Write[] = []
-  const disposed: (string | null)[] = []
-  const roster = agents.map((agent) => ({ ...agent }))
-  const files = { ...input.files }
-  const project = (name: string, worktree = directory) => ({
-    id: name,
-    name,
-    worktree,
-    vcs: "git",
-    sandboxes: [],
-    time: { created: 1, updated: 1 },
-  })
-  await page.addInitScript(
-    ({ serverA, serverB, directory, otherDirectory, scheme }) => {
-      localStorage.setItem("opencode.settings.dat:defaultServerUrl", serverA)
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({
-          general: {
-            newLayoutDesigns: true,
-            agentVisibilityInitialized: true,
-            showCustomAgents: false,
-            shouldDisplayTabsToast: false,
-            newInterfaceNoticeDismissed: true,
-          },
-        }),
-      )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
-      localStorage.setItem(
-        "opencode.global.dat:server",
-        JSON.stringify({
-          list: [serverA, serverB],
-          projects: {
-            local: [
-              { worktree: directory, expanded: true },
-              { worktree: otherDirectory, expanded: true },
-            ],
-            [serverA]: [
-              { worktree: directory, expanded: true },
-              { worktree: otherDirectory, expanded: true },
-            ],
-            [serverB]: [{ worktree: directory, expanded: true }],
-          },
-        }),
-      )
-      localStorage.setItem(
-        "opencode.global.dat:layout",
-        JSON.stringify({ home: { selection: { server: serverA, directory } } }),
-      )
-      localStorage.setItem(
-        `opencode.global.dat:${serverA}\0layout`,
-        JSON.stringify({ home: { selection: { server: serverA, directory } } }),
-      )
-    },
-    { serverA, serverB, directory, otherDirectory, scheme: input.scheme ?? "dark" },
+test("saving while sessions run defers the legacy reload instead of disposing the instance", async ({ page }) => {
+  const mock = await setup(page, { sessionStatus: { ses_busy: { type: "busy" } } })
+  await openAgents(page)
+  await page.getByRole("button", { name: "Create agent", exact: true }).click()
+  await dialog(page).getByLabel("Name").fill("reviewer")
+  await dialog(page).getByLabel("Description").fill("Reviews the diff")
+  await dialog(page).getByRole("button", { name: "Save", exact: true }).click()
+  await expect(dialog(page)).toHaveCount(0)
+  expect(mock.writes).toHaveLength(1)
+  await expect(page.getByRole("status").filter({ hasText: "Saved to" })).toHaveText(
+    "Saved to .opencode/agent/reviewer.md. Sessions are running in this profile, so the agent list reloads once they finish.",
   )
-  await mockOpenCodeServer(page, {
-    protocol: input.protocol,
-    eventRetry: 60_000,
-    provider: input.models
-      ? {
-          all: [
-            {
-              id: "example",
-              name: "Example",
-              models: {
-                builder: { id: "builder", name: "Builder", limit: { context: 200_000 } },
-                reasoner: { id: "reasoner", name: "Reasoner", limit: { context: 200_000 } },
-              },
-            },
-          ],
-          connected: ["example"],
-          default: { example: "builder" },
-        }
-      : { all: [], connected: [], default: {} },
-    directory,
-    project: project("Atlas"),
-    sessions: [],
-    pageMessages: () => ({ items: [] }),
-  })
-  await page.route("**/*", async (route) => {
-    const request = route.request()
-    const url = new URL(request.url())
-    if (url.origin !== serverA && url.origin !== serverB) return route.fallback()
-    requests.push({ url: url.toString(), method: request.method(), directory: requestDirectory(request) })
-    const json = (body: unknown, status = 200) =>
-      route.fulfill({
-        status,
-        contentType: "application/json",
-        headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify(body),
-      })
-    const selectedDirectory = url.searchParams.get("directory") ?? directory
-    if (url.pathname === "/project")
-      return json(
-        url.origin === serverB ? [project("Boreal")] : [project("Atlas"), project("Other worktree", otherDirectory)],
-      )
-    if (url.pathname === "/project/current")
-      return json(
-        project(
-          url.origin === serverB ? "Boreal" : selectedDirectory === otherDirectory ? "Other worktree" : "Atlas",
-          selectedDirectory,
-        ),
-      )
-    const file = /^\/api\/agent\/([^/]+)\/file$/.exec(url.pathname)
-    if (file) {
-      if (input.fileApi === false) return json({ message: "Not found" }, 404)
-      const name = decodeURIComponent(file[1])
-      const location = { directory, project: { id: "Atlas", directory } }
-      if (request.method() === "GET")
-        return json({ location, data: files[name] ?? { path: `${directory}/.opencode/agent/${name}.md`, exists: false } })
-      const body = request.postDataJSON() as Record<string, unknown>
-      writes.push({ url: url.toString(), directory: requestDirectory(request), body })
-      // Mirror the server: the next roster read reflects the written definition.
-      const index = roster.findIndex((agent) => agent.name === name)
-      if (body.disable === true) roster.splice(index, 1)
-      if (body.disable !== true && index === -1)
-        roster.push({ name, description: String(body.description), mode: String(body.mode), permission: [], options: {} })
-      files[name] = { path: `${directory}/.opencode/agent/${name}.md`, exists: true, ...body }
-      return json({ location, data: files[name] })
-    }
-    if (url.pathname === "/instance/dispose" && request.method() === "POST") {
-      disposed.push(requestDirectory(request))
-      return json(true)
-    }
-    if (url.pathname === "/agent" || url.pathname === "/api/agent") {
-      if (url.origin === serverA && selectedDirectory === directory) await input.wait
-      if (url.origin === serverA && selectedDirectory === otherDirectory) await input.waitOther
-      const state = input.response?.state
-      if (state === "error" || state === "unavailable")
-        return json({ message: "Agent endpoint failed" }, state === "error" ? 500 : 404)
-      const data =
-        state === "empty"
-          ? []
-          : url.origin === serverB
-            ? [{ ...agents[0], name: "boreal-agent" }]
-            : selectedDirectory === otherDirectory
-              ? [{ ...agents[0], name: "other-agent" }]
-              : roster
-      if (input.protocol !== "v2") return json(data)
-      return json({
-        location: { directory: selectedDirectory },
-        data: data.map((agent) => ({
-          id: agent.name,
-          name: agent.name,
-          description: agent.description,
-          mode: agent.mode,
-          hidden: agent.hidden ?? false,
-          request: { settings: {} },
-          steps: agent.steps,
-          system: agent.prompt,
-          model: agent.model ? { providerID: agent.model.providerID, id: agent.model.modelID } : undefined,
-          permissions: agent.permission.map((rule) => ({
-            action: rule.permission,
-            resource: rule.pattern,
-            effect: rule.action,
-          })),
-        })),
-      })
-    }
-    if (url.pathname === "/path" || url.pathname === "/api/path")
-      return json({
-        state: selectedDirectory,
-        config: selectedDirectory,
-        worktree: selectedDirectory,
-        directory: selectedDirectory,
-        home: "/repo",
-      })
-    if (url.origin === serverA) return route.fallback()
-    if (["/global/event", "/event", "/api/event"].includes(url.pathname))
-      return route.fulfill({ contentType: "text/event-stream", body: "retry: 60000\n\n: ok\n\n" })
-    if (url.pathname === "/global/health") return json({ healthy: true })
-    if (["/skill", "/command", "/lsp", "/formatter", "/permission", "/question", "/vcs/diff"].includes(url.pathname))
-      return json([])
-    if (url.pathname === "/api/session") return json({ data: [], cursor: {} })
-    if (url.pathname === "/api/session/active") return json({ data: {} })
-    if (url.pathname === "/provider") return json({ all: [], connected: [], default: {} })
-    return json({})
-  })
-  return { requests, writes, disposed }
-}
+  expect(mock.disposed).toEqual([])
+})

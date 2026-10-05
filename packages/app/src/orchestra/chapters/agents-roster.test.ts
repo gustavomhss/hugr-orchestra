@@ -10,6 +10,7 @@ import {
   draftError,
   inheritedAction,
   PERMISSION_TOOLS,
+  removeInput,
 } from "./agents-roster"
 
 const agent = (name: string, mode: Agent["mode"], hidden = false): Agent => ({
@@ -79,6 +80,7 @@ describe("Agent editor", () => {
   const file = {
     path: "/repo/.opencode/agent/plan.md",
     exists: true,
+    revision: "r1",
     system: "File prompt",
     permission: { edit: "deny" as const, bash: { "git *": "allow" as const }, question: "allow" as const },
   }
@@ -100,28 +102,82 @@ describe("Agent editor", () => {
     expect(agentDraft(undefined, undefined)).toMatchObject({ name: "", mode: "subagent", model: "", steps: "" })
   })
 
-  test("writes explicit choices, drops inherited ones and keeps patterns and unlisted tools", () => {
-    const draft = agentDraft(plan, file)
-    draft.permission.edit = "inherit"
+  test("writes explicit choices in the file's rule order and keeps patterns and unlisted tools", () => {
+    const ordered = {
+      ...file,
+      permission: {
+        "*": "ask" as const,
+        edit: "deny" as const,
+        bash: { "git *": "allow" as const },
+        question: "allow" as const,
+      },
+    }
+    const draft = agentDraft(plan, ordered)
+    draft.permission.edit = "allow"
     draft.permission.read = "ask"
-    draft.model = ""
-    draft.steps = " "
-    expect(agentFileInput(draft, file)).toEqual({
-      mode: "primary",
-      description: "Plans work",
-      system: "File prompt",
-      permission: { bash: { "git *": "allow" }, question: "allow", read: "ask" },
-    })
+    expect(Object.entries(agentFileInput(draft, ordered, plan).permission ?? {})).toEqual([
+      ["*", "ask"],
+      ["edit", "allow"],
+      ["bash", { "git *": "allow" }],
+      ["question", "allow"],
+      ["read", "ask"],
+    ])
+    draft.permission.edit = "inherit"
     draft.permission.bash = "deny"
-    expect(agentFileInput(draft, file).permission).toEqual({ question: "allow", read: "ask", bash: "deny" })
+    expect(Object.entries(agentFileInput(draft, ordered, plan).permission ?? {})).toEqual([
+      ["*", "ask"],
+      ["bash", "deny"],
+      ["question", "allow"],
+      ["read", "ask"],
+    ])
+  })
+
+  test("never freezes a resolved value the file does not set; the file's own values stay editable", () => {
+    const untouched = agentDraft(plan, undefined)
+    expect(agentFileInput(untouched, { path: file.path, exists: false, revision: "" }, plan)).toEqual({
+      permission: {},
+      revision: "",
+    })
+    const draft = agentDraft(plan, file)
+    draft.description = "Plans carefully"
+    draft.steps = " "
+    draft.system = ""
+    expect(agentFileInput(draft, file, plan)).toEqual({
+      description: "Plans carefully",
+      permission: { edit: "deny", bash: { "git *": "allow" }, question: "allow" },
+      revision: "r1",
+    })
+    const created = { ...agentDraft(undefined, undefined), name: "new", description: "New", steps: "4" }
+    expect(agentFileInput(created, undefined, undefined)).toEqual({
+      mode: "subagent",
+      description: "New",
+      steps: 4,
+      permission: {},
+    })
+  })
+
+  test("disabling keeps the file's own fields and its revision", () => {
+    expect(removeInput(file)).toEqual({
+      description: undefined,
+      mode: undefined,
+      model: undefined,
+      steps: undefined,
+      system: "File prompt",
+      permission: file.permission,
+      disable: true,
+      revision: "r1",
+    })
+    expect(removeInput(undefined)).toMatchObject({ disable: true })
   })
 
   test("validates the name, duplicates on create and a positive whole turn allowance", () => {
     const draft = agentDraft(undefined, undefined)
-    expect(draftError({ ...draft, name: "../x" }, [], true)).toBe("name")
+    for (const name of ["../x", "con", "a".repeat(65), ""])
+      expect(draftError({ ...draft, name }, [], true)).toBe("name")
     expect(draftError({ ...draft, name: "Plan" }, ["plan"], true)).toBe("duplicate")
     expect(draftError({ ...draft, name: "plan" }, ["plan"], false)).toBeUndefined()
-    for (const steps of ["0", "-1", "1.5", "2e3", "x"]) expect(draftError({ ...draft, name: "a", steps }, [], true)).toBe("steps")
+    for (const steps of ["0", "-1", "1.5", "2e3", "x"])
+      expect(draftError({ ...draft, name: "a", steps }, [], true)).toBe("steps")
     expect(draftError({ ...draft, name: "a", steps: "20" }, [], true)).toBeUndefined()
   })
 
