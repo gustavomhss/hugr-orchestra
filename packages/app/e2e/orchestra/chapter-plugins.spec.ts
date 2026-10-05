@@ -22,6 +22,36 @@ async function sendPrompt(page: Page, text: string) {
   await prompt.press("Enter")
 }
 
+// The shared mock answers V2 catalog reads with `{}`, so a V2 composer has no model and refuses to send.
+// Serve the fixture's model in the V2 shape (as the evidence and CI/CD fixtures do), then reload so the
+// catalog is read through this route, which takes precedence over the shared mock's.
+async function serveV2Catalog(page: Page) {
+  const location = { directory }
+  const model = {
+    id: "claude-opus-4-6",
+    modelID: "claude-opus-4-6",
+    providerID: "opencode",
+    name: "Claude Opus 4.6",
+    capabilities: { input: ["text"], output: ["text"], tools: true },
+    variants: [],
+    time: { released: 1 },
+    cost: [],
+    status: "active",
+    enabled: true,
+    limit: { context: 200_000, output: 8192 },
+  }
+  await page.route("**/api/**", (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === "/api/provider")
+      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "OpenCode", settings: {} }] } })
+    if (path === "/api/model") return route.fulfill({ json: { location, data: [model] } })
+    if (path === "/api/model/default") return route.fulfill({ json: { location, data: model } })
+    return route.fallback()
+  })
+  await page.reload()
+  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
+}
+
 // Theme, version and the profile list are seeded the same way for every protocol.
 async function openSession(page: Page, scheme: "dark" | "light", protocol: "v1" | "v2") {
   await page.addInitScript(
@@ -147,6 +177,7 @@ for (const scheme of ["dark", "light"] as const) {
 
 test("V2 servers keep behaviors on the profile without claiming they reach turns", async ({ page }) => {
   const prompts = await openSession(page, "dark", "v2")
+  await serveV2Catalog(page)
   await openPlugins(page)
   await expect(chapter(page).locator('[data-slot="plugins-application"]')).toHaveText(
     "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
@@ -164,6 +195,7 @@ test("V2 servers keep behaviors on the profile without claiming they reach turns
   await expect(dialog).toHaveCount(0)
   await sendPrompt(page, "Explain the failing test")
   await expect.poll(() => prompts.length).toBe(1)
+  expect(JSON.stringify(prompts[0]?.body)).toContain("Explain the failing test")
   expect(JSON.stringify(prompts[0]?.body)).not.toContain("Caveman")
 })
 
