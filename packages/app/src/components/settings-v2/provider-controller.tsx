@@ -1,4 +1,6 @@
 import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@opencode-ai/ui/v2/dialog-v2"
 import { createMemo, type Accessor } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
@@ -6,7 +8,7 @@ import { useServerSync } from "@/context/server-sync"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { showToast } from "@/utils/toast"
 import { DialogConnectProvider, useProviderConnectController } from "../dialog-connect-provider"
-import { storedCredentials } from "./provider-credentials"
+import { disconnectPlan, type DisconnectPlan } from "./provider-credentials"
 
 export { providerIdentity } from "./provider-credentials"
 
@@ -102,6 +104,25 @@ export function createProviderSettingsController(input: {
       description: language.t("provider.disconnect.toast.disconnected.description", { provider: name }),
     })
 
+  const stays = (plan: Exclude<DisconnectPlan, { type: "remove" }>, provider: string) => {
+    if (plan.type === "env")
+      return {
+        title: language.t("orchestra.settings.providers.env.title", { provider }),
+        description: language.t("orchestra.settings.providers.env.description", { names: plan.names.join(", ") }),
+      }
+    if (plan.type === "labelled")
+      return {
+        title: language.t("orchestra.settings.providers.labelled.title", { provider }),
+        description: language.t("orchestra.settings.providers.labelled.description", {
+          labels: plan.labels.join(", "),
+        }),
+      }
+    return {
+      title: language.t("orchestra.settings.providers.none.title", { provider }),
+      description: language.t("orchestra.settings.providers.none.description"),
+    }
+  }
+
   const failed = (err: unknown) =>
     showToast({
       title: language.t("common.requestFailed"),
@@ -126,20 +147,40 @@ export function createProviderSettingsController(input: {
         const directory = input.directory()
         const location = directory ? { directory } : undefined
         const api = serverSdk().api
-        await Promise.all([api.provider.list({ location }), api.integration.list({ location })])
-          .then(([providers, integrations]) =>
-            storedCredentials({ providerID, providers: providers.data, integrations: integrations.data }),
+        const plan = await Promise.all([api.provider.list({ location }), api.integration.list({ location })])
+          .then(([catalog, integrations]) =>
+            disconnectPlan({ providerID, catalog: catalog.data, integrations: integrations.data }),
           )
-          .then((ids) => {
-            // Environment connections are not stored, so there is nothing to remove for them.
-            if (!ids.length) throw new Error(language.t("settings.providers.connected.environmentDescription"))
-            return Promise.all(ids.map((credentialID) => api.credential.remove({ credentialID, location })))
+          .catch((err: unknown) => {
+            failed(err)
+            return undefined
           })
-          .then(async () => {
-            await serverSync().refreshProviders()
-            disconnected(name)
-          })
-          .catch(failed)
+        if (!plan) return
+        if (plan.type !== "remove") return void showToast(stays(plan, name))
+        const remove = () =>
+          Promise.all(plan.ids.map((credentialID) => api.credential.remove({ credentialID, location })))
+            .then(async () => {
+              await serverSync().refreshProviders()
+              disconnected(name)
+            })
+            .catch(failed)
+        if (plan.ids.length === 1) return remove()
+        // Removing every credential a provider row stands for is confirmed first.
+        void dialog.push(() => (
+          <ConfirmRemove
+            title={language.t("orchestra.settings.providers.removeAll.title", {
+              count: plan.ids.length,
+              provider: name,
+            })}
+            description={language.t("orchestra.settings.providers.removeAll.description", {
+              labels: plan.labels.join(", "),
+            })}
+            onConfirm={() => {
+              dialog.close()
+              void remove()
+            }}
+          />
+        ))
         return
       }
       if (isConfigCustom(providerID)) {
@@ -172,4 +213,27 @@ export function createProviderSettingsController(input: {
         .catch(failed)
     },
   }
+}
+
+function ConfirmRemove(props: { title: string; description: string; onConfirm: () => void }) {
+  const dialog = useDialog()
+  const language = useLanguage()
+  return (
+    <Dialog>
+      <DialogHeader>
+        <DialogTitle>{props.title}</DialogTitle>
+      </DialogHeader>
+      <DialogBody>
+        <p>{props.description}</p>
+      </DialogBody>
+      <DialogFooter>
+        <ButtonV2 variant="neutral" onClick={() => dialog.close()}>
+          {language.t("common.cancel")}
+        </ButtonV2>
+        <ButtonV2 variant="contrast" onClick={props.onConfirm}>
+          {language.t("orchestra.settings.providers.remove")}
+        </ButtonV2>
+      </DialogFooter>
+    </Dialog>
+  )
 }

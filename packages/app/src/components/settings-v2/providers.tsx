@@ -80,7 +80,7 @@ export const SettingsProvidersV2: Component<{
                               variant="ghost-muted"
                               onClick={() => void controller.removeKey(id(), item.name)}
                             >
-                              {language.t("common.remove")}
+                              {language.t("orchestra.settings.providers.remove")}
                             </ButtonV2>
                           )}
                         </Show>
