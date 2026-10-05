@@ -70,7 +70,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(page.locator('[data-component="orchestra-home"]')).toBeVisible()
     await expect(home(page).locator(".home-kicker")).toHaveText("Project · Recorded repo A")
     await expect(home(page).locator("h1")).toHaveText("What the agentsactually shipped.")
-    await expect(home(page).getByRole("button", { name: "30d" })).toHaveAttribute("aria-pressed", "true")
+    await expect(home(page).getByRole("button", { name: "30d", exact: true })).toHaveAttribute("aria-pressed", "true")
     // The mock's 520-580 weights render as static Inter Medium with synthetic bold.
     await expect(home(page).locator(".home-kpi-label").first()).toHaveCSS("font-weight", "600")
     expect(
@@ -200,13 +200,13 @@ test("period switch reads each period once while fresh, keeps the choice per pro
   await setup(page, { requests, gitRequests })
   await page.goto("/")
   await expect(value(page, "tokens")).toHaveText("1.8M")
-  await home(page).getByRole("button", { name: "7d" }).click()
-  await expect(home(page).getByRole("button", { name: "7d" })).toHaveAttribute("aria-pressed", "true")
+  await home(page).getByRole("button", { name: "7d", exact: true }).click()
+  await expect(home(page).getByRole("button", { name: "7d", exact: true })).toHaveAttribute("aria-pressed", "true")
   await expect(value(page, "tokens")).toHaveText("50k")
   await expect(tile(page, "tokens").locator(".home-kpi-foot")).toHaveText("↗ newvs previous")
   await expect(value(page, "commits")).toHaveText("8")
   // Back to 30d inside the stale time: the cached read answers.
-  await home(page).getByRole("button", { name: "30d" }).click()
+  await home(page).getByRole("button", { name: "30d", exact: true }).click()
   await expect(value(page, "tokens")).toHaveText("1.8M")
   expect(requests.map((url) => url.searchParams.get("period"))).toEqual(["30d", "7d"])
   // Git windows cover the previous period in any time zone; days outside it are not counted.
@@ -214,13 +214,13 @@ test("period switch reads each period once while fresh, keeps the choice per pro
     [String(now - 62 * DAY), String(now)],
     [String(now - 16 * DAY), String(now)],
   ])
-  await home(page).getByRole("button", { name: "7d" }).click()
+  await home(page).getByRole("button", { name: "7d", exact: true }).click()
   await expect(value(page, "tokens")).toHaveText("50k")
   await page.reload()
-  await expect(home(page).getByRole("button", { name: "7d" })).toHaveAttribute("aria-pressed", "true")
+  await expect(home(page).getByRole("button", { name: "7d", exact: true })).toHaveAttribute("aria-pressed", "true")
   await expect(value(page, "tokens")).toHaveText("50k")
   // "All" is one read; the server starts it on the first recorded day.
-  await home(page).getByRole("button", { name: "All" }).click()
+  await home(page).getByRole("button", { name: "All", exact: true }).click()
   await expect(value(page, "tokens")).toHaveText("1.8M")
   await expect(tile(page, "tokens").locator(".home-kpi-foot")).toHaveText("since Sep 1, 2026")
   await expect(tile(page, "tokens").locator(".home-delta")).toHaveCount(0)

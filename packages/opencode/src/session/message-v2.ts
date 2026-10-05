@@ -608,6 +608,8 @@ export function fromError(
   ctx: { providerID: ProviderV2.ID; aborted?: boolean },
 ): NonNullable<Assistant["error"]> {
   switch (true) {
+    case e instanceof ContextOverflowError:
+      return e.toObject()
     case e instanceof DOMException && e.name === "AbortError":
       return new AbortedError(
         { message: e.message },

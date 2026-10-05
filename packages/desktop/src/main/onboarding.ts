@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs"
-import { mkdir } from "node:fs/promises"
+import { mkdir, realpath } from "node:fs/promises"
 import { join } from "node:path"
 import { app } from "electron"
 import { getStore } from "./store"
@@ -38,8 +38,9 @@ export async function finishFirstLaunchOnboarding(createDefaultProject: boolean)
 
   const defaultProject = createDefaultProject ? join(app.getPath("documents"), DEFAULT_PROJECT_DIR) : null
   if (defaultProject) await mkdir(defaultProject, { recursive: true })
+  const directory = defaultProject ? await realpath(defaultProject) : null
 
   getStore().set(FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, true)
-  writeLog("onboarding", "first launch onboarding completed", { createDefaultProject, defaultProject })
-  return defaultProject
+  writeLog("onboarding", "first launch onboarding completed", { createDefaultProject, defaultProject: directory })
+  return directory
 }

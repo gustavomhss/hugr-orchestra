@@ -18308,6 +18308,35 @@
         "required": ["text"],
         "additionalProperties": false
       },
+      "SessionStepTokens": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "number"
+          },
+          "output": {
+            "type": "number"
+          },
+          "reasoning": {
+            "type": "number"
+          },
+          "cache": {
+            "type": "object",
+            "properties": {
+              "read": {
+                "type": "number"
+              },
+              "write": {
+                "type": "number"
+              }
+            },
+            "required": ["read", "write"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["input", "output", "reasoning", "cache"],
+        "additionalProperties": false
+      },
       "Pty": {
         "type": "object",
         "properties": {
@@ -19215,34 +19244,11 @@
                       "cost": {
                         "type": "number"
                       },
+                      "usageKnown": {
+                        "type": "boolean"
+                      },
                       "tokens": {
-                        "type": "object",
-                        "properties": {
-                          "input": {
-                            "type": "number"
-                          },
-                          "output": {
-                            "type": "number"
-                          },
-                          "reasoning": {
-                            "type": "number"
-                          },
-                          "cache": {
-                            "type": "object",
-                            "properties": {
-                              "read": {
-                                "type": "number"
-                              },
-                              "write": {
-                                "type": "number"
-                              }
-                            },
-                            "required": ["read", "write"],
-                            "additionalProperties": false
-                          }
-                        },
-                        "required": ["input", "output", "reasoning", "cache"],
-                        "additionalProperties": false
+                        "$ref": "#/components/schemas/SessionStepTokens"
                       },
                       "snapshot": {
                         "type": "string"
@@ -21272,21 +21278,9 @@
                               "type": "string",
                               "minLength": 1
                             }
-                          },
-                          "bytes": {
-                            "type": "string",
-                            "minLength": 1
                           }
                         },
-                        "required": [
-                          "workCardHash",
-                          "sha256",
-                          "baseSHA",
-                          "headSHA",
-                          "worktree",
-                          "changedPaths",
-                          "bytes"
-                        ],
+                        "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths"],
                         "additionalProperties": false
                       },
                       "verdict": {
@@ -29092,34 +29086,11 @@
                   "cost": {
                     "type": "number"
                   },
+                  "usageKnown": {
+                    "type": "boolean"
+                  },
                   "tokens": {
-                    "type": "object",
-                    "properties": {
-                      "input": {
-                        "type": "number"
-                      },
-                      "output": {
-                        "type": "number"
-                      },
-                      "reasoning": {
-                        "type": "number"
-                      },
-                      "cache": {
-                        "type": "object",
-                        "properties": {
-                          "read": {
-                            "type": "number"
-                          },
-                          "write": {
-                            "type": "number"
-                          }
-                        },
-                        "required": ["read", "write"],
-                        "additionalProperties": false
-                      }
-                    },
-                    "required": ["input", "output", "reasoning", "cache"],
-                    "additionalProperties": false
+                    "$ref": "#/components/schemas/SessionStepTokens"
                   },
                   "snapshot": {
                     "type": "string"
@@ -31489,7 +31460,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["maestro.review.received.1"]
+                "enum": ["maestro.review.received.2"]
               },
               "id": {
                 "type": "string",
@@ -31592,13 +31563,9 @@
                           "type": "string",
                           "minLength": 1
                         }
-                      },
-                      "bytes": {
-                        "type": "string",
-                        "minLength": 1
                       }
                     },
-                    "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths", "bytes"],
+                    "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths"],
                     "additionalProperties": false
                   },
                   "verdict": {
@@ -33604,34 +33571,11 @@
               "cost": {
                 "type": "number"
               },
+              "usageKnown": {
+                "type": "boolean"
+              },
               "tokens": {
-                "type": "object",
-                "properties": {
-                  "input": {
-                    "type": "number"
-                  },
-                  "output": {
-                    "type": "number"
-                  },
-                  "reasoning": {
-                    "type": "number"
-                  },
-                  "cache": {
-                    "type": "object",
-                    "properties": {
-                      "read": {
-                        "type": "number"
-                      },
-                      "write": {
-                        "type": "number"
-                      }
-                    },
-                    "required": ["read", "write"],
-                    "additionalProperties": false
-                  }
-                },
-                "required": ["input", "output", "reasoning", "cache"],
-                "additionalProperties": false
+                "$ref": "#/components/schemas/SessionStepTokens"
               },
               "snapshot": {
                 "type": "string"
@@ -37869,13 +37813,9 @@
                       "type": "string",
                       "minLength": 1
                     }
-                  },
-                  "bytes": {
-                    "type": "string",
-                    "minLength": 1
                   }
                 },
-                "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths", "bytes"],
+                "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths"],
                 "additionalProperties": false
               },
               "verdict": {
@@ -41199,34 +41139,11 @@
               "cost": {
                 "type": "number"
               },
+              "usageKnown": {
+                "type": "boolean"
+              },
               "tokens": {
-                "type": "object",
-                "properties": {
-                  "input": {
-                    "type": "number"
-                  },
-                  "output": {
-                    "type": "number"
-                  },
-                  "reasoning": {
-                    "type": "number"
-                  },
-                  "cache": {
-                    "type": "object",
-                    "properties": {
-                      "read": {
-                        "type": "number"
-                      },
-                      "write": {
-                        "type": "number"
-                      }
-                    },
-                    "required": ["read", "write"],
-                    "additionalProperties": false
-                  }
-                },
-                "required": ["input", "output", "reasoning", "cache"],
-                "additionalProperties": false
+                "$ref": "#/components/schemas/SessionStepTokens"
               },
               "snapshot": {
                 "type": "string"
@@ -43220,13 +43137,9 @@
                       "type": "string",
                       "minLength": 1
                     }
-                  },
-                  "bytes": {
-                    "type": "string",
-                    "minLength": 1
                   }
                 },
-                "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths", "bytes"],
+                "required": ["workCardHash", "sha256", "baseSHA", "headSHA", "worktree", "changedPaths"],
                 "additionalProperties": false
               },
               "verdict": {

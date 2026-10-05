@@ -171,6 +171,7 @@ function ShortcutDialog(props: {
   const dialog = useDialog()
   const [draft, setDraft] = createSignal(props.row.config)
   const [error, setError] = createSignal("")
+  let field!: HTMLInputElement
   // The app's dialog layer has no Kobalte trigger to restore focus to, so hand it back to the Edit
   // button once the dialog has unmounted (the row stays mounted because rows reconcile by id).
   onCleanup(() =>
@@ -183,7 +184,12 @@ function ShortcutDialog(props: {
     const config = draft()
     if (!config || config === props.row.config) return dialog.close()
     const conflict = findConflict(props.rows(), props.row.id, config)
-    if (conflict) return setError(language.t("orchestra.shortcuts.dialog.conflict", { title: conflict.title }))
+    if (conflict) {
+      setError(language.t("orchestra.shortcuts.dialog.conflict", { title: conflict.title }))
+      // Save took focus; hand it back to the capture field so the next combination can be pressed.
+      field.focus()
+      return
+    }
     props.onSave(config)
     dialog.close()
   }
@@ -220,6 +226,7 @@ function ShortcutDialog(props: {
           <label class="mx-field">
             <span>{language.t("orchestra.shortcuts.dialog.field")}</span>
             <input
+              ref={field}
               name="binding"
               type="text"
               readOnly

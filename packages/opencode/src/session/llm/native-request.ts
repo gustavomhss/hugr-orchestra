@@ -9,7 +9,7 @@ import {
   OpenAICompatible,
   OpenRouter,
 } from "@opencode-ai/llm/providers"
-import type { ModelMessage } from "ai"
+import type { JSONSchema7, ModelMessage } from "ai"
 import type { Provider } from "@/provider/provider"
 import { isRecord } from "@/util/record"
 
@@ -26,6 +26,7 @@ export type RequestInput = {
   readonly messages: readonly ModelMessage[]
   readonly tools?: Record<string, ToolInput>
   readonly toolChoice?: "auto" | "required" | "none"
+  readonly responseSchema?: JSONSchema7
   readonly temperature?: number
   readonly topP?: number
   readonly topK?: number
@@ -188,6 +189,7 @@ export const request = (input: RequestInput) => {
     messages: converted.messages,
     tools: tools(input.tools),
     toolChoice: input.toolChoice,
+    ...(input.responseSchema ? { responseFormat: { type: "json" as const, schema: { ...input.responseSchema } } } : {}),
     generation: generation(input),
     providerOptions: input.providerOptions,
   })

@@ -264,11 +264,13 @@ describe("ToolRegistry", () => {
         outputPaths: ["/managed/generic"],
       })
       if (settlement.result.type !== "text") throw new Error("Expected bounded text settlement")
-      expect(settlement.result.value).toContain("bounded reference")
-      expect(settlement.result.value).toContain("/managed/generic")
-      expect(settlement.result.value).toContain("Context pressure:")
-      expect(Buffer.byteLength(settlement.result.value)).toBeLessThanOrEqual(50_000)
-      expect(settlement.output?.content[0]).toEqual({ type: "text", text: settlement.result.value })
+      const value = settlement.result.value
+      if (typeof value !== "string") throw new Error("Expected bounded text value")
+      expect(value).toContain("bounded reference")
+      expect(value).toContain("/managed/generic")
+      expect(value).toContain("Context pressure:")
+      expect(Buffer.byteLength(value)).toBeLessThanOrEqual(50_000)
+      expect(settlement.output?.content[0]).toEqual({ type: "text", text: value })
       expect(bounds).toHaveLength(1)
     }),
   )
