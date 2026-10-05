@@ -387,6 +387,8 @@ import type {
   V2SessionWaitResponses,
   V2SkillListErrors,
   V2SkillListResponses,
+  VcsActivityErrors,
+  VcsActivityResponses,
   VcsApplyErrors,
   VcsApplyResponses,
   VcsDiffErrors,
@@ -2149,6 +2151,40 @@ export class Vcs extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
+    })
+  }
+
+  /**
+   * Get VCS activity
+   *
+   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      since: number
+      until?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "since" },
+            { in: "query", key: "until" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<VcsActivityResponses, VcsActivityErrors, ThrowOnError>({
+      url: "/vcs/activity",
+      ...options,
+      ...params,
     })
   }
 

@@ -2698,6 +2698,53 @@ export type VcsApplyError = {
   }
 }
 
+export type VcsActivityTotals = {
+  commits: number
+  merges: number
+  authors: number
+  additions: number
+  deletions: number
+  filesChanged: number
+}
+
+export type VcsActivityDay = {
+  /**
+   * Server-local YYYY-MM-DD of the commit author time
+   */
+  day: string
+  commits: number
+  merges: number
+  additions: number
+  deletions: number
+}
+
+export type VcsActivityPath = {
+  path: string
+  changes: number
+}
+
+export type VcsActivityCommit = {
+  hash: string
+  subject: string
+  time: number
+}
+
+export type VcsActivity = {
+  repository: boolean
+  since: number
+  until: number
+  totals: VcsActivityTotals
+  days: Array<VcsActivityDay>
+  topPaths: Array<VcsActivityPath>
+  recent: Array<VcsActivityCommit>
+  ahead: number | null
+  behind: number | null
+  /**
+   * True when a commit, output or time bound cut the scan short
+   */
+  truncated: boolean
+}
+
 export type Command = {
   name: string
   description?: string
@@ -9994,6 +10041,36 @@ export type VcsApplyResponses = {
 }
 
 export type VcsApplyResponse = VcsApplyResponses[keyof VcsApplyResponses]
+
+export type VcsActivityData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    since: number
+    until?: number
+  }
+  url: "/vcs/activity"
+}
+
+export type VcsActivityErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type VcsActivityError = VcsActivityErrors[keyof VcsActivityErrors]
+
+export type VcsActivityResponses = {
+  /**
+   * VCS activity
+   */
+  200: VcsActivity
+}
+
+export type VcsActivityResponse = VcsActivityResponses[keyof VcsActivityResponses]
 
 export type CommandListData = {
   body?: never
