@@ -2,6 +2,7 @@ import { createMediaQuery } from "@solid-primitives/media"
 import { createEffect, createMemo, on, onCleanup, onMount, Show, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
+import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
@@ -10,8 +11,8 @@ import { pathKey } from "@/utils/path-key"
 import {
   appDockController,
   appDockProfile,
+  isLinux,
   sameTab,
-  tabLabel,
   type AppDockAPI,
   type Bookmark,
   type Tab,
@@ -19,7 +20,10 @@ import {
 } from "./apps-panel-controller"
 import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
 import { FindBar, LibraryPopover } from "./apps-panel-library"
+import { DockModes, LinuxToolbar } from "./apps-panel-linux"
+import { TabButton } from "./apps-panel-tab-button"
 import { TabMenu } from "./apps-panel-tab-menu"
+import { createLinuxMenuController, LinuxMenu } from "./linux-menu"
 import "./apps-panel.css"
 
 const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
@@ -44,6 +48,7 @@ export function AppsPanel(
   const sdk = useSDK()
   const global = useGlobal()
   const settings = useSettings()
+  const language = useLanguage()
   const desktop = createMediaQuery("(min-width: 768px)")
   // Orchestra's desktop workspace (the titlebar's profile-scoped tab mode) binds the Dock to the
   // repository profile. Everywhere else the Apps panel keeps its manual browser profiles.
@@ -79,6 +84,19 @@ export function AppsPanel(
   let addressInput: HTMLInputElement | undefined
   const capability = (name: keyof AppDockAPI) => typeof api?.[name] === "function"
   const ready = () => state.status === "ready"
+  const activeLinux = () => state.mode === "linux"
+  const linuxMenu = createLinuxMenuController({
+    api,
+    get profile() {
+      return state.profile ?? ""
+    },
+    generation: () => state.linuxIntent,
+    get disabled() {
+      return !ready()
+    },
+    open: dock.openLinux,
+    onLaunched: dock.refreshWindows,
+  })
   const closeMenu = (restoreFocus = true) => {
     const invoker = view.menu?.invoker
     setView("menu", undefined)
@@ -91,8 +109,13 @@ export function AppsPanel(
         ? { tab, bounds: bounds(host), resize: (next) => dock.resize(tab, next) }
         : undefined
     },
-    requestAnimationFrame: (callback) => requestAnimationFrame(callback),
-    cancelAnimationFrame: (frame) => cancelAnimationFrame(frame),
+    // A visible native view can leave its owner document hidden, which suspends animation frames; a
+    // microtask still coalesces a burst of layout changes into one measurement.
+    requestAnimationFrame: (callback) => {
+      queueMicrotask(callback)
+      return 0
+    },
+    cancelAnimationFrame: () => undefined,
   })
   createEffect(
     on(profile, (id) => {
@@ -109,8 +132,13 @@ export function AppsPanel(
     ),
   )
   onMount(() => {
+    // Linux windows open and close inside the workspace without a Dock event; keep the picker current.
+    const windows = setInterval(() => {
+      if (activeLinux() && !linuxMenu.store.busy) void dock.refreshWindows()
+    }, 2000)
     const unsubscribeFind = api?.appDockFindResult?.((result) => {
-      if (sameTab(result, state.active) && result.requestID === findRequestID) setView("findResult", result)
+      if (!activeLinux() && sameTab(result, state.active) && result.requestID === findRequestID)
+        setView("findResult", result)
     })
     const observer = new ResizeObserver(resize.request)
     if (host) observer.observe(host)
@@ -132,6 +160,7 @@ export function AppsPanel(
       if (!(event.metaKey || event.ctrlKey)) return
       if (event.key.toLowerCase() === "l") {
         event.preventDefault()
+        if (activeLinux()) return
         addressInput?.focus()
         addressInput?.select()
       } else if (event.key.toLowerCase() === "t") {
@@ -153,6 +182,7 @@ export function AppsPanel(
     window.addEventListener("pointerdown", onPointerDown)
     window.addEventListener("focusin", onFocusIn)
     onCleanup(() => {
+      clearInterval(windows)
       if (view.findOpen) closeFind()
       observer.disconnect()
       window.removeEventListener("resize", resize.request)
@@ -171,7 +201,8 @@ export function AppsPanel(
       : state.url
   }
   const activeCrashed = () => activeTab()?.crashed
-  const bookmarked = () => !!activeTab() && state.bookmarks.some((item) => item.url === activeTab()!.url)
+  const bookmarked = () =>
+    !activeLinux() && !!activeTab() && state.bookmarks.some((item) => item.url === activeTab()!.url)
   const toggleSidebar = () => {
     const next = !view.sidebarCollapsed
     setView("sidebarCollapsed", next)
@@ -179,19 +210,19 @@ export function AppsPanel(
   }
   const find = async (forward: boolean) => {
     const tab = state.active
-    if (!tab || !view.findText.trim()) return
+    if (!tab || activeLinux() || !view.findText.trim()) return
     setView("findResult", undefined)
     findRequestID = await api?.appDockFind(tab.tabID, view.findText, forward)
   }
   const closeFind = () => {
     const tab = state.active
-    if (tab) void api?.appDockStopFind(tab.tabID)
+    if (tab && !activeLinux()) void api?.appDockStopFind(tab.tabID)
     findRequestID = undefined
     setView({ findOpen: false, findResult: undefined })
   }
   const zoom = (delta: number) => {
     const tab = state.active
-    if (!tab) return
+    if (!tab || activeLinux()) return
     void api?.appDockZoom(tab.tabID).then((factor) => api.appDockZoom(tab.tabID, factor + delta))
   }
   const toggleFullscreen = () => {
@@ -210,410 +241,374 @@ export function AppsPanel(
     setView({ profileDraft: "", profileCreating: false })
   }
   const command = (action: "back" | "forward" | "reload", tab: TabIdentity | undefined = state.active) => {
-    if (tab) void api?.appDockCommand(tab.tabID, action)
+    if (tab && !activeLinux()) void api?.appDockCommand(tab.tabID, action)
   }
+  // A crashed Linux workspace recovers by reconnecting, not through the browser's tab recovery.
+  const recover = () => (activeLinux() ? void linuxMenu.run({ type: "open" }) : void dock.recover())
   return (
-    <div
-      ref={root}
-      class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""} ${view.findOpen ? "is-finding" : ""}`}
-      data-status={state.status}
-    >
-      <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
-        <div class="zen-workspace-indicator" aria-label="Current workspace">
-          <button
-            class="zen-sidebar-toggle"
-            type="button"
-            aria-label={view.sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-pressed={view.sidebarCollapsed}
-            onClick={toggleSidebar}
-          >
-            ||
-          </button>
-          <span class="zen-workspace-indicator-dot" aria-hidden="true" />
-          {!repository() && (
-            <>
-              <select
-                class="zen-workspace-indicator-name"
-                value={state.profile}
-                aria-label="Browser profile"
-                disabled={state.status === "loading"}
-                onChange={(event) => {
-                  setView("libraryOpen", undefined)
-                  void dock.switchProfile(event.currentTarget.value)
-                }}
-              >
-                {/* Manifest writes replace these options; mark the selection on each one so the
+    <div ref={root} class="zen-browser-frame">
+      <DockModes compact={props.compact} dock={dock} menu={linuxMenu} />
+      <div
+        class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""} ${view.findOpen && !activeLinux() ? "is-finding" : ""}`}
+        data-status={state.status}
+      >
+        <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
+          <div class="zen-workspace-indicator" aria-label="Current workspace">
+            <button
+              class="zen-sidebar-toggle"
+              type="button"
+              aria-label={view.sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-pressed={view.sidebarCollapsed}
+              onClick={toggleSidebar}
+            >
+              ||
+            </button>
+            {!activeLinux() && <span class="zen-workspace-indicator-dot" aria-hidden="true" />}
+            {activeLinux() && !view.sidebarCollapsed && (
+              <strong class="zen-workspace-kind">
+                <bdi dir="ltr">{language.t("appDock.linux.title")}</bdi>
+              </strong>
+            )}
+            {!repository() && !activeLinux() && (
+              <>
+                <select
+                  class="zen-workspace-indicator-name"
+                  value={state.profile}
+                  aria-label="Browser profile"
+                  disabled={state.status === "loading"}
+                  onChange={(event) => {
+                    setView("libraryOpen", undefined)
+                    void dock.switchProfile(event.currentTarget.value)
+                  }}
+                >
+                  {/* Manifest writes replace these options; mark the selection on each one so the
                     select does not fall back to the first profile. */}
-                {state.profiles.map((item) => (
-                  <option value={item.id} selected={item.id === state.profile}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                class="zen-profile-add"
-                type="button"
-                aria-label="Create browser profile"
-                onClick={() => setView("profileCreating", true)}
-              >
+                  {state.profiles.map((item) => (
+                    <option value={item.id} selected={item.id === state.profile}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  class="zen-profile-add"
+                  type="button"
+                  aria-label="Create browser profile"
+                  onClick={() => setView("profileCreating", true)}
+                >
+                  +
+                </button>
+              </>
+            )}
+          </div>
+          {!repository() && !activeLinux() && view.profileCreating && (
+            <form class="zen-profile-form" onSubmit={createProfile}>
+              <input
+                autofocus
+                value={view.profileDraft}
+                onInput={(event) => setView("profileDraft", event.currentTarget.value)}
+                placeholder="Profile name"
+                aria-label="New profile name"
+              />
+              <button type="submit" aria-label="Save profile">
                 +
               </button>
-            </>
+              <button
+                type="button"
+                aria-label="Cancel profile creation"
+                onClick={() => setView("profileCreating", false)}
+              >
+                x
+              </button>
+            </form>
           )}
-        </div>
-        {!repository() && view.profileCreating && (
-          <form class="zen-profile-form" onSubmit={createProfile}>
-            <input
-              autofocus
-              value={view.profileDraft}
-              onInput={(event) => setView("profileDraft", event.currentTarget.value)}
-              placeholder="Profile name"
-              aria-label="New profile name"
-            />
-            <button type="submit" aria-label="Save profile">
-              +
+          {activeLinux() && <LinuxMenu controller={linuxMenu} collapsed={view.sidebarCollapsed} />}
+          <div class="zen-tabs" role="tablist" aria-label="Tabs" hidden={activeLinux()}>
+            {state.tabs.filter((tab) => tab.pinned && !isLinux(tab.url)).length > 0 && (
+              <div class="zen-tab-section-label">Pinned</div>
+            )}
+            {state.tabs
+              .filter((tab) => tab.pinned && !isLinux(tab.url))
+              .map((tab) => (
+                <TabButton
+                  tab={tab}
+                  active={() => state.active}
+                  select={dock.select}
+                  setMenu={(menu) => setView("menu", menu)}
+                />
+              ))}
+            {state.tabs
+              .filter((tab) => !tab.pinned && !isLinux(tab.url))
+              .map((tab) => (
+                <TabButton
+                  tab={tab}
+                  active={() => state.active}
+                  select={dock.select}
+                  setMenu={(menu) => setView("menu", menu)}
+                />
+              ))}
+            <button class="zen-new-tab" type="button" disabled={!ready()} onClick={() => void dock.openNewTab()}>
+              + New tab
+            </button>
+          </div>
+        </aside>
+        <main class="zen-browser-content">
+          {activeLinux() && <LinuxToolbar dock={dock} menu={linuxMenu} />}
+          <form
+            hidden={activeLinux()}
+            class="zen-urlbar"
+            onSubmit={(event) => {
+              event.preventDefault()
+              dock.setURL(address())
+              props.onDraftChange?.(undefined)
+              void dock.launch()
+            }}
+          >
+            <button
+              class="zen-nav-button"
+              type="button"
+              aria-label="Back"
+              disabled={!activeTab()?.canGoBack || !!activeCrashed() || !capability("appDockCommand")}
+              onClick={() => command("back")}
+            >
+              &#8592;
             </button>
             <button
+              class="zen-nav-button"
               type="button"
-              aria-label="Cancel profile creation"
-              onClick={() => setView("profileCreating", false)}
+              aria-label="Forward"
+              disabled={!activeTab()?.canGoForward || !!activeCrashed() || !capability("appDockCommand")}
+              onClick={() => command("forward")}
             >
-              x
+              &#8594;
             </button>
-          </form>
-        )}
-        <div class="zen-tabs" role="tablist" aria-label="Tabs">
-          {state.tabs.filter((tab) => tab.pinned).length > 0 && <div class="zen-tab-section-label">Pinned</div>}
-          {state.tabs
-            .filter((tab) => tab.pinned)
-            .map((tab) => (
-              <TabButton
-                tab={tab}
-                active={() => state.active}
-                select={dock.select}
-                setMenu={(menu) => setView("menu", menu)}
-              />
-            ))}
-          {state.tabs
-            .filter((tab) => !tab.pinned)
-            .map((tab) => (
-              <TabButton
-                tab={tab}
-                active={() => state.active}
-                select={dock.select}
-                setMenu={(menu) => setView("menu", menu)}
-              />
-            ))}
-          <button class="zen-new-tab" type="button" disabled={!ready()} onClick={() => void dock.openNewTab()}>
-            + New tab
-          </button>
-        </div>
-      </aside>
-      <main class="zen-browser-content">
-        <form
-          class="zen-urlbar"
-          onSubmit={(event) => {
-            event.preventDefault()
-            dock.setURL(address())
-            props.onDraftChange?.(undefined)
-            void dock.launch()
-          }}
-        >
-          <button
-            class="zen-nav-button"
-            type="button"
-            aria-label="Back"
-            disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
-            onClick={() => command("back")}
-          >
-            &#8592;
-          </button>
-          <button
-            class="zen-nav-button"
-            type="button"
-            aria-label="Forward"
-            disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
-            onClick={() => command("forward")}
-          >
-            &#8594;
-          </button>
-          <button
-            class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
-            type="button"
-            aria-label={bookmarked() ? "Remove bookmark" : "Add bookmark"}
-            disabled={!!activeCrashed()}
-            onClick={dock.toggleBookmark}
-          >
-            &#9733;
-          </button>
-          <input
-            ref={addressInput}
-            value={address()}
-            dir="ltr"
-            onInput={(event) => {
-              const value = event.currentTarget.value
-              if (props.onDraftChange) props.onDraftChange({ owner: state.owner, tab: state.active, value })
-              dock.setURL(value)
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== "Escape") return
-              event.preventDefault()
-              props.onDraftChange?.(undefined)
-              dock.setURL(activeTab()?.url ?? "")
-            }}
-            aria-label="Address"
-            disabled={!!activeCrashed()}
-          />
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label="Bookmarks"
-            onClick={() => toggleLibrary("bookmarks")}
-          >
-            &#9734;
-          </button>
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label="History"
-            onClick={() => toggleLibrary("history")}
-          >
-            &#8986;
-          </button>
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label="Find in page"
-            disabled={!!activeCrashed()}
-            onClick={() => setView("findOpen", true)}
-          >
-            &#8981;
-          </button>
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label="Zoom out"
-            disabled={!!activeCrashed()}
-            onClick={() => zoom(-0.1)}
-          >
-            A-
-          </button>
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label="Zoom in"
-            disabled={!!activeCrashed()}
-            onClick={() => zoom(0.1)}
-          >
-            A+
-          </button>
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label="Downloads"
-            onClick={() => toggleLibrary("downloads")}
-          >
-            &#8595;
-          </button>
-          <button
-            class="zen-nav-button zen-nav-extra"
-            type="button"
-            aria-label={state.fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            disabled={!!activeCrashed()}
-            onClick={toggleFullscreen}
-          >
-            {state.fullscreen ? "Exit" : "Full"}
-          </button>
-          <button
-            class="zen-open-button"
-            type="button"
-            disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
-            onClick={() => command("reload")}
-          >
-            {activeTab()?.loading ? "Loading" : "Reload"}
-          </button>
-          <button class="zen-open-button" type="submit" disabled={!api || !ready() || !!activeCrashed()}>
-            {activeTab()?.loading ? "Loading" : "Open"}
-          </button>
-          {state.active && (
-            <button class="zen-nav-button" type="button" onClick={() => void dock.close()} aria-label="Close tab">
-              x
+            <button
+              class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
+              type="button"
+              aria-label={bookmarked() ? "Remove bookmark" : "Add bookmark"}
+              disabled={!!activeCrashed()}
+              onClick={dock.toggleBookmark}
+            >
+              &#9733;
             </button>
-          )}
-        </form>
-        {state.error && (
-          <div class="zen-error" role="alert" aria-live="assertive">
-            {state.error}
-          </div>
-        )}
-        {state.permission && (
-          <div class="zen-error warn" role="status" aria-live="polite">
-            {`${state.permission.permission} permission ${state.permission.state}`}
-          </div>
-        )}
-        {activeCrashed() && (
-          <div class="zen-tab-crash" role="alert" aria-live="assertive">
-            <span>Tab crashed ({activeCrashed()!.reason}).</span>
+            <input
+              ref={addressInput}
+              value={address()}
+              dir="ltr"
+              onInput={(event) => {
+                const value = event.currentTarget.value
+                if (props.onDraftChange) props.onDraftChange({ owner: state.owner, tab: state.active, value })
+                dock.setURL(value)
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Escape") return
+                event.preventDefault()
+                props.onDraftChange?.(undefined)
+                dock.setURL(activeTab()?.url ?? "")
+              }}
+              aria-label="Address"
+              disabled={!!activeCrashed()}
+            />
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label="Bookmarks"
+              onClick={() => toggleLibrary("bookmarks")}
+            >
+              &#9734;
+            </button>
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label="History"
+              onClick={() => toggleLibrary("history")}
+            >
+              &#8986;
+            </button>
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label="Find in page"
+              disabled={!!activeCrashed()}
+              onClick={() => setView("findOpen", true)}
+            >
+              &#8981;
+            </button>
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label="Zoom out"
+              disabled={!!activeCrashed()}
+              onClick={() => zoom(-0.1)}
+            >
+              A-
+            </button>
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label="Zoom in"
+              disabled={!!activeCrashed()}
+              onClick={() => zoom(0.1)}
+            >
+              A+
+            </button>
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label="Downloads"
+              onClick={() => toggleLibrary("downloads")}
+            >
+              &#8595;
+            </button>
+            <button
+              class="zen-nav-button zen-nav-extra"
+              type="button"
+              aria-label={state.fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              disabled={!!activeCrashed()}
+              onClick={toggleFullscreen}
+            >
+              {state.fullscreen ? "Exit" : "Full"}
+            </button>
             <button
               class="zen-open-button"
               type="button"
-              disabled={!capability("appDockRecoverTab") || !!state.recovering}
-              onClick={() => void dock.recover()}
+              disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
+              onClick={() => command("reload")}
             >
-              {state.recovering ? "Recovering" : "Recover"}
+              {activeTab()?.loading ? "Loading" : "Reload"}
             </button>
-          </div>
-        )}
-        <Show when={view.libraryOpen}>
-          {(kind) => (
-            <LibraryPopover
-              kind={kind()}
-              entries={kind() === "bookmarks" ? state.bookmarks : state.history}
-              downloads={state.downloads}
-              register={dock.registerOverlay}
-              onOpen={openLibraryItem}
-              onOpenDownload={(id) => void api?.appDockOpenDownload(id)}
-              onCancelDownload={(id) => void api?.appDockCancelDownload(id)}
-            />
-          )}
-        </Show>
-        <Show when={view.findOpen}>
-          <FindBar
-            text={view.findText}
-            result={view.findResult}
-            onInput={(text) => setView("findText", text)}
-            onFind={(forward) => void find(forward)}
-            onClose={closeFind}
-          />
-        </Show>
-        {/* The page area. The native browser covers the view inside it, which starts below the find
-            bar while that is open so the bar stays above the page it searches. */}
-        <div class="zen-browser-host">
-          <div ref={host} class="zen-browser-view" />
-          {api ? (
-            props.placeholder
-          ) : (
-            <div class="zen-empty-state">
-              <strong>Browser needs OpenCode Desktop.</strong>
-              <span>Native browser tabs are unavailable in web app.</span>
+            <button class="zen-open-button" type="submit" disabled={!api || !ready() || !!activeCrashed()}>
+              {activeTab()?.loading ? "Loading" : "Open"}
+            </button>
+            {state.active && (
+              <button class="zen-nav-button" type="button" onClick={() => void dock.close()} aria-label="Close tab">
+                x
+              </button>
+            )}
+          </form>
+          {state.error && (
+            <div class="zen-error" role="alert" aria-live="assertive">
+              {state.error}
             </div>
           )}
-        </div>
-        {view.menu && (
-          <TabMenu
-            tab={view.menu.tab}
-            x={view.menu.x}
-            y={view.menu.y}
-            rtl={view.menu.rtl}
-            setElement={(element) => (menuElement = element)}
-            onDismiss={() => closeMenu()}
-            canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
-            canReload={capability("appDockCommand") && !view.menu.tab.crashed}
-            canClose={capability("appDockCloseTab")}
-            hasOthers={state.tabs.length > 1}
-            hasRight={
-              [...state.tabs.filter((item) => item.pinned), ...state.tabs.filter((item) => !item.pinned)].findIndex(
-                (item) => sameTab(item, view.menu!.tab),
-              ) <
-              state.tabs.length - 1
-            }
-            onDuplicate={() => {
-              void dock.duplicate(view.menu!.tab)
-              closeMenu()
-            }}
-            onTogglePin={() => {
-              dock.togglePin(view.menu!.tab)
-              closeMenu()
-            }}
-            onReload={() => {
-              command("reload", view.menu!.tab)
-              closeMenu()
-            }}
-            onClose={() => {
-              void dock.close(view.menu!.tab)
-              closeMenu()
-            }}
-            onCloseOthers={() => {
-              void dock.closeTabs(view.menu!.tab, "others")
-              closeMenu()
-            }}
-            onCloseRight={() => {
-              void dock.closeTabs(view.menu!.tab, "right")
-              closeMenu()
-            }}
-          />
-        )}
-      </main>
+          {state.permission && (
+            <div class="zen-error warn" role="status" aria-live="polite">
+              {`${state.permission.permission} permission ${state.permission.state}`}
+            </div>
+          )}
+          {activeCrashed() && (
+            <div class="zen-tab-crash" role="alert" aria-live="assertive">
+              <span>Tab crashed ({activeCrashed()!.reason}).</span>
+              <button
+                class="zen-open-button"
+                type="button"
+                disabled={
+                  !(activeLinux() ? capability("appDockLinuxOpen") : capability("appDockRecoverTab")) ||
+                  !!state.recovering
+                }
+                onClick={recover}
+              >
+                {state.recovering ? "Recovering" : "Recover"}
+              </button>
+            </div>
+          )}
+          {activeLinux() && state.windowError && !linuxMenu.store.busy && (
+            <div class="zen-error" role="status">
+              {language.t("common.requestFailed")}
+            </div>
+          )}
+          <Show when={view.libraryOpen}>
+            {(kind) => (
+              <LibraryPopover
+                kind={kind()}
+                entries={kind() === "bookmarks" ? state.bookmarks : state.history}
+                downloads={state.downloads}
+                register={dock.registerOverlay}
+                onOpen={openLibraryItem}
+                onOpenDownload={(id) => void api?.appDockOpenDownload(id)}
+                onCancelDownload={(id) => void api?.appDockCancelDownload(id)}
+              />
+            )}
+          </Show>
+          <Show when={view.findOpen && !activeLinux()}>
+            <FindBar
+              text={view.findText}
+              result={view.findResult}
+              onInput={(text) => setView("findText", text)}
+              onFind={(forward) => void find(forward)}
+              onClose={closeFind}
+            />
+          </Show>
+          {/* The page area. The native browser covers the view inside it, which starts below the find
+              bar while that is open so the bar stays above the page it searches. */}
+          <div class="zen-browser-host">
+            <div ref={host} class="zen-browser-view" />
+            {api ? (
+              props.placeholder
+            ) : (
+              <div class="zen-empty-state">
+                <strong>Browser needs OpenCode Desktop.</strong>
+                <span>Native browser tabs are unavailable in web app.</span>
+              </div>
+            )}
+            {/* The browser side with no page. Views that already report an empty Dock (the cockpit card,
+                a placeholder) only need it while the Linux workspace is the sole tab. */}
+            {api &&
+              ready() &&
+              !state.active &&
+              !activeLinux() &&
+              (state.tabs.length > 0 || !(props.compact || "placeholder" in props)) && (
+                <div class="zen-empty-state">
+                  <strong>{language.t("appDock.browser.title")}</strong>
+                  <span>{language.t("appDock.browser.empty")}</span>
+                </div>
+              )}
+          </div>
+          {view.menu && (
+            <TabMenu
+              tab={view.menu.tab}
+              x={view.menu.x}
+              y={view.menu.y}
+              rtl={view.menu.rtl}
+              setElement={(element) => (menuElement = element)}
+              onDismiss={() => closeMenu()}
+              canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
+              canReload={capability("appDockCommand") && !view.menu.tab.crashed}
+              canClose={capability("appDockCloseTab")}
+              hasOthers={state.tabs.length > 1}
+              hasRight={
+                [...state.tabs.filter((item) => item.pinned), ...state.tabs.filter((item) => !item.pinned)].findIndex(
+                  (item) => sameTab(item, view.menu!.tab),
+                ) <
+                state.tabs.length - 1
+              }
+              onDuplicate={() => {
+                void dock.duplicate(view.menu!.tab)
+                closeMenu()
+              }}
+              onTogglePin={() => {
+                dock.togglePin(view.menu!.tab)
+                closeMenu()
+              }}
+              onReload={() => {
+                command("reload", view.menu!.tab)
+                closeMenu()
+              }}
+              onClose={() => {
+                void dock.close(view.menu!.tab)
+                closeMenu()
+              }}
+              onCloseOthers={() => {
+                void dock.closeTabs(view.menu!.tab, "others")
+                closeMenu()
+              }}
+              onCloseRight={() => {
+                void dock.closeTabs(view.menu!.tab, "right")
+                closeMenu()
+              }}
+            />
+          )}
+        </main>
+      </div>
     </div>
-  )
-}
-
-function TabButton(props: {
-  tab: Tab
-  active: () => TabIdentity | undefined
-  select: (tab: Tab) => void
-  setMenu: (menu: { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement }) => void
-}) {
-  const openMenu = (x: number, y: number, invoker: HTMLButtonElement) =>
-    props.setMenu({ tab: props.tab, x, y, rtl: getComputedStyle(invoker).direction === "rtl", invoker })
-  const keydown = (event: KeyboardEvent) => {
-    const current = event.currentTarget
-    if (!(current instanceof HTMLButtonElement)) return
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault()
-      props.select(props.tab)
-    } else if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
-      event.preventDefault()
-      const rect = current.getBoundingClientRect()
-      openMenu(getComputedStyle(current).direction === "rtl" ? rect.right - 8 : rect.left + 8, rect.bottom + 4, current)
-    } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-      const tabs = [...(current.parentElement?.querySelectorAll<HTMLButtonElement>("[role='tab']") ?? [])]
-      const index = tabs.indexOf(current)
-      if (index < 0) return
-      const next =
-        event.key === "Home"
-          ? tabs[0]
-          : event.key === "End"
-            ? tabs.at(-1)
-            : tabs[
-                (index +
-                  (event.key === (getComputedStyle(current).direction === "rtl" ? "ArrowLeft" : "ArrowRight")
-                    ? 1
-                    : -1) +
-                  tabs.length) %
-                  tabs.length
-              ]
-      event.preventDefault()
-      next?.focus()
-      next?.click()
-    }
-  }
-  return (
-    <button
-      class={`zen-tab ${sameTab(props.active(), props.tab) ? "is-active" : ""} ${props.tab.crashed ? "is-crashed" : ""}`}
-      type="button"
-      role="tab"
-      tabindex={sameTab(props.active(), props.tab) ? 0 : -1}
-      aria-selected={sameTab(props.active(), props.tab)}
-      onClick={() => props.select(props.tab)}
-      onContextMenu={(event) => {
-        event.preventDefault()
-        openMenu(event.clientX, event.clientY, event.currentTarget)
-      }}
-      onKeyDown={keydown}
-    >
-      <span class={`zen-tab-icon ${props.tab.loading ? "is-loading" : ""}`}>
-        {props.tab.favicon ? (
-          <img src={props.tab.favicon} alt="" />
-        ) : (
-          new URL(props.tab.url).hostname.slice(0, 1).toUpperCase()
-        )}
-      </span>
-      <bdi dir="auto" class="zen-tab-title">
-        {tabLabel(props.tab)}
-      </bdi>
-      {props.tab.pinned && <span class="zen-tab-pinmark">Pinned</span>}
-      {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
-    </button>
   )
 }

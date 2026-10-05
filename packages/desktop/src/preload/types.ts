@@ -62,9 +62,12 @@ export type AppDockEvent =
         favicon?: string
         loading: boolean
         audible: boolean
+        canGoBack: boolean
+        canGoForward: boolean
       }
     }
   | { type: "tab-opened" | "tab-opened-background"; payload: { tabID: string; generation: number; url: string } }
+  | { type: "tab-selected"; payload: { tabID: string; generation: number } }
   | {
       type: "tab-crashed"
       payload: { identity: { tabID: string; generation: number }; reason: "crashed" | "killed" | "oom" }
@@ -104,12 +107,13 @@ export type AppDockManifest = {
 
 export type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: AppDockManifest }
 
-export type ElectronAPI = {
+export type ElectronAPI = import("@opencode-ai/app/app-dock-linux").AppDockLinuxAPI & {
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },
     profile?: string,
   ) => Promise<{ tabID: string; generation: number; url: string }>
+  appDockList: () => Promise<Array<{ tabID: string; generation: number; url: string; active: boolean }>>
   appDockDeleteProfile: (profileID: string) => Promise<void>
   // Resize, Hide and Select name the tab and generation they target; the desktop ignores stale ones.
   appDockResize: (

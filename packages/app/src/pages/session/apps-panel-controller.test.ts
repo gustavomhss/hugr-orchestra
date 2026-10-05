@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
+import type { LinuxOpenResult } from "../../app-dock-linux"
 import { appDockProfile, createAppDockController, type AppDockAPI, type TabIdentity } from "./apps-panel-controller"
 
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
@@ -423,6 +424,111 @@ describe("App Dock controller", () => {
   })
 })
 
+describe("App Dock controller with the Linux workspace", () => {
+  const workspace = (tabID: string, generation: number) => ({ tabID, generation, url: "appdock://linux" as const })
+  const ready = async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    return { dock, controller }
+  }
+  const openLinux = async (
+    setup: Awaited<ReturnType<typeof ready>>,
+    tab: ReturnType<typeof workspace>,
+    during?: () => void,
+  ) => {
+    const pending = setup.controller.openLinux()
+    await until(() => setup.dock.linuxPending() === 1)
+    during?.()
+    setup.dock.resolveLinux({ status: "opened", tab })
+    return pending
+  }
+
+  test("a replaced workspace view leaves one Linux tab beside the browser tabs, and is never saved", async () => {
+    const setup = await ready()
+    await openLinux(setup, workspace("linux-1", 10))
+    await openLinux(setup, workspace("linux-2", 11))
+    expect(setup.controller.state.tabs.map((item) => item.tabID)).toEqual(["tab-1", "linux-2"])
+    expect(setup.controller.state.active).toEqual(tab("linux-2", 11))
+    expect(setup.controller.state.mode).toBe("linux")
+    await settle()
+    expect(setup.dock.manifest().tabs[profileA]).toEqual([{ url: "https://example.com/a", pinned: false }])
+  })
+
+  test("a browser selection while the workspace opens keeps the browser on screen", async () => {
+    const setup = await ready()
+    const result = await openLinux(setup, workspace("linux-1", 10), () =>
+      setup.dock.emit({ type: "tab-selected", payload: tab("tab-1", 1) }),
+    )
+    expect(result).toBeUndefined()
+    expect(setup.controller.state.active).toEqual(tab("tab-1", 1))
+    expect(setup.controller.state.mode).toBe("browser")
+  })
+
+  test("the workspace's own selection event does not cancel its reconnect", async () => {
+    const setup = await ready()
+    await openLinux(setup, workspace("linux-1", 10))
+    const result = await openLinux(setup, workspace("linux-1", 10), () =>
+      setup.dock.emit({ type: "tab-selected", payload: tab("linux-1", 10) }),
+    )
+    expect(result).toEqual({ status: "opened", tab: workspace("linux-1", 10) })
+    expect(setup.controller.state.active).toEqual(tab("linux-1", 10))
+    expect(setup.controller.state.mode).toBe("linux")
+  })
+
+  test("selection events for unknown or retired generations cannot steal the selection", async () => {
+    const setup = await ready()
+    setup.dock.emit({ type: "tab-selected", payload: tab("tab-1", 99) })
+    setup.dock.emit({ type: "tab-selected", payload: tab("unknown", 1) })
+    expect(setup.controller.state.active).toEqual(tab("tab-1", 1))
+  })
+
+  test("a browser open announced before its reply keeps one tab with the newer navigation state", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    const release = Promise.withResolvers<void>()
+    dock.gate(release.promise)
+    controller.setURL("https://example.com/a")
+    const launching = controller.launch()
+    await until(() => dock.calls.some((call) => call[0] === "open"))
+    dock.emit({ type: "tab-opened", payload: { ...tab("tab-1", 1), url: "https://example.com/a" } })
+    dock.emit({
+      type: "state",
+      payload: {
+        ...tab("tab-1", 1),
+        url: "https://example.com/loaded",
+        title: "Loaded",
+        loading: false,
+        audible: false,
+      },
+    })
+    release.resolve()
+    await launching
+    expect(controller.state.tabs.map((item) => [item.tabID, item.url])).toEqual([
+      ["tab-1", "https://example.com/loaded"],
+    ])
+    expect(controller.state.url).toBe("https://example.com/loaded")
+  })
+
+  test("closing the last browser tab stays on the browser side when the desktop attaches the workspace", async () => {
+    const setup = await ready()
+    await openLinux(setup, workspace("linux-1", 10))
+    setup.controller.showBrowser()
+    expect(setup.controller.state.mode).toBe("browser")
+    setup.dock.onCloseTab(() => setup.dock.emit({ type: "tab-selected", payload: tab("linux-1", 10) }))
+    await setup.controller.close()
+    expect(setup.controller.state.mode).toBe("browser")
+    expect(setup.controller.state.active).toBeUndefined()
+    expect(setup.controller.state.tabs.map((item) => item.tabID)).toEqual(["linux-1"])
+    expect(setup.dock.calls.at(-1)).toEqual(["hide", tab("linux-1", 10)])
+  })
+})
+
 function element() {
   return document.createElement("div")
 }
@@ -488,6 +594,8 @@ function fakeDock() {
     tabs: 0,
     gate: undefined as Promise<void> | undefined,
     failManifest: false,
+    linux: [] as Array<(result: LinuxOpenResult) => void>,
+    closing: undefined as ((tabID: string) => void) | undefined,
   }
   const api = {
     appDockOpen: async (url: string, _bounds: unknown, profile = "default") => {
@@ -521,7 +629,13 @@ function fakeDock() {
     },
     appDockCloseTab: async (tabID: string) => {
       calls.push(["close-tab", tabID])
+      state.closing?.(tabID)
     },
+    appDockLinuxOpen: (_bounds: unknown, profile: string) => {
+      calls.push(["linux-open", profile])
+      return new Promise<LinuxOpenResult>((resolve) => state.linux.push(resolve))
+    },
+    appDockLinuxWindows: async () => ({ status: "ready", windows: [] }),
     appDockNavigate: async (tabID: string, url: string) => {
       calls.push(["navigate", tabID, url])
     },
@@ -555,5 +669,8 @@ function fakeDock() {
     gate: (promise: Promise<void>) => (state.gate = promise),
     seed: (manifest: Pick<Manifest, "profiles" | "tabs">) => (state.manifest = { ...state.manifest, ...manifest }),
     failManifest: (value: boolean) => (state.failManifest = value),
+    linuxPending: () => state.linux.length,
+    resolveLinux: (result: LinuxOpenResult) => state.linux.shift()?.(result),
+    onCloseTab: (callback: (tabID: string) => void) => (state.closing = callback),
   }
 }

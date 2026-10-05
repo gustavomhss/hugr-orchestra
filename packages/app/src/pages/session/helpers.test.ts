@@ -9,6 +9,7 @@ import {
   createSidePanelTabs,
   focusTerminalById,
   getTabReorderIndex,
+  planTasksTab,
   shouldShowFileTree,
 } from "./helpers"
 
@@ -16,6 +17,29 @@ describe("shouldShowFileTree", () => {
   test("does not reserve space for a disabled file tree", () => {
     expect(shouldShowFileTree({ visible: false, opened: true })).toBe(false)
     expect(shouldShowFileTree({ visible: true, opened: true })).toBe(true)
+  })
+})
+
+describe("planTasksTab", () => {
+  test("adds Tasks behind an active Apps tab without taking focus", () => {
+    const all = ["apps", "file://src/a.ts"]
+    expect(planTasksTab({ active: "apps", all })).toEqual({
+      all: ["apps", "file://src/a.ts", "tasks"],
+      activate: false,
+    })
+    expect(all).toEqual(["apps", "file://src/a.ts"])
+  })
+
+  test("activates Tasks when Apps is not the active tab", () => {
+    expect(planTasksTab({ active: "review", all: ["apps"] })).toEqual({ all: ["apps", "tasks"], activate: true })
+    expect(planTasksTab({ active: undefined, all: [] })).toEqual({ all: ["tasks"], activate: true })
+  })
+
+  test("does not duplicate an existing Tasks tab", () => {
+    expect(planTasksTab({ active: "apps", all: ["tasks", "apps"] })).toEqual({
+      all: ["tasks", "apps"],
+      activate: false,
+    })
   })
 })
 

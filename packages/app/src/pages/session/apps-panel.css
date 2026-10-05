@@ -132,6 +132,55 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-focus: #2f6bbf;
 }
 
+.zen-browser-frame {
+  display: flex;
+  flex-direction: column;
+  container: app-dock / inline-size;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.zen-dock-modes {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 6px;
+  border-block-end: 1px solid var(--border-weak);
+}
+
+.zen-dock-modes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 34px;
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-weak);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.zen-dock-modes button.is-active {
+  color: var(--text-strong);
+  background: var(--surface-raised-stronger);
+  border-color: var(--border-strong);
+  font-weight: 600;
+}
+
+.zen-dock-modes button:focus-visible,
+.zen-window-picker:focus-visible {
+  outline: 2px solid var(--text-strong);
+  outline-offset: -2px;
+}
+
 .zen-browser-shell {
   --zen-toolbox-padding: 6px;
   --zen-sidebar-width: 250px;
@@ -142,7 +191,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   font-family: var(--zen-font);
   display: flex;
   width: 100%;
-  height: 100%;
+  flex: 1;
   min-width: 0;
   min-height: 0;
   gap: var(--zen-toolbox-padding);
@@ -155,6 +204,35 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 /* Zero specificity, so each control's own size below still applies. */
 :where(.zen-browser-shell) button {
   font: inherit;
+}
+
+.zen-workspace-kind {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.zen-window-picker {
+  flex: 1;
+  min-inline-size: 60px;
+  block-size: 28px;
+  border: 1px solid var(--border-weak);
+  border-radius: 7px;
+  padding-inline: 8px;
+  background: var(--zen-input);
+  color: var(--zen-text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.zen-browser-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.zen-urlbar:has(.zen-browser-tools) {
+  flex-wrap: wrap;
 }
 
 .zen-browser-sidebar {
@@ -321,7 +399,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   color: var(--zen-muted);
   background: transparent;
   font-size: 12.5px;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -424,6 +502,27 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   padding: 3px 6px;
   border-radius: var(--zen-panel-radius);
   background: var(--zen-panel);
+}
+
+.zen-native-toolbar {
+  display: flex;
+  min-block-size: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block: 3px;
+  padding-inline: 10px 6px;
+  border-radius: var(--zen-panel-radius);
+  background: var(--zen-panel);
+  font-size: 12px;
+}
+
+.zen-native-toolbar strong {
+  max-inline-size: 160px;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .zen-urlbar input {
@@ -539,7 +638,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   color: var(--zen-popover-text);
   background: transparent;
   font-size: 12px;
-  text-align: left;
+  text-align: start;
 }
 
 .zen-library button {
@@ -774,7 +873,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   padding: 0 6px;
 }
 
-@media (max-width: 640px) {
+@container app-dock (max-width: 640px) {
   .zen-browser-shell {
     gap: 3px;
     padding: 3px;
@@ -813,7 +912,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   }
 }
 
-@media (max-width: 460px) {
+@container app-dock (max-width: 460px) {
   .zen-browser-shell {
     flex-direction: column;
   }

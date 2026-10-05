@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
+import { For, Show, createEffect, createMemo, onCleanup, untrack, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { DragDropProvider as DndKitProvider, PointerSensor } from "@dnd-kit/solid"
@@ -48,6 +48,7 @@ import {
   createOpenSessionFileTab,
   createSidePanelTabs,
   getTabReorderIndex,
+  planTasksTab,
   shouldShowFileTree,
   type Sizing,
 } from "@/pages/session/helpers"
@@ -194,10 +195,18 @@ export function SessionSidePanel(props: {
     }
     if (wasOpen && !open) snoozed = true
     wasOpen = open
-    // Live work may take Review's place, never Apps, Context or a file the user is reading.
-    const reading =
-      active === "apps" || active === "context" || active === SESSION_OPEN_FILE_TAB || !!file.pathFromTab(active)
-    if (!open && !snoozed && !reading) {
+    if (!open && !snoozed) {
+      // Read the tab state before changing it: open() always activates its tab,
+      // which would detach an active App Dock and break the agent's dock tools.
+      const plan = untrack(() => planTasksTab({ active: tabs().active(), all: tabs().all() }))
+      // Live work may take Review's place, never Apps, Context or a file the user is reading;
+      // there Tasks only joins the strip.
+      const reading =
+        active === "apps" || active === "context" || active === SESSION_OPEN_FILE_TAB || !!file.pathFromTab(active)
+      if (reading || !plan.activate) {
+        tabs().setAll(plan.all)
+        return
+      }
       // Panel first, then tab, then focus in a microtask so the freshly
       // mounted tab strip selects that tab instead of falling back to Review.
       view().reviewPanel.open()

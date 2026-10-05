@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "required": [
+    { "id": "W01", "description": "Production workspace preparation yields workspace-kind tree/capabilities and actual runtime session, namespaces and source provenance." },
+    { "id": "W02", "description": "Installed GTK Mousepad replaces exact Unicode/newlines, clears, replaces, invokes advertised Save and independently proves UTF-8 file bytes; restores through the app." },
+    { "id": "W03", "description": "Installed Qt FeatherPad replaces exact Unicode/newlines, clears, replaces, invokes advertised Save and independently proves UTF-8 file bytes; restores through the app." },
+    { "id": "W04", "description": "Denied ToolContext.ask fixture sends no RPC or workspace preparation." },
+    { "id": "W05", "description": "Browser-only evaluate is rejected on the workspace; browser fallback count remains zero." },
+    { "id": "W06", "description": "Installed Electron VS Code verifies Quick Open Unicode/decomposed/clear/no-op through explicit keyboard mode, rejects stable virtual checkbox action, then proves observed Settings action through independently read config and restores through the app." }
+  ]
+}

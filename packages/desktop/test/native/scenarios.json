@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "required": [
+    { "id": "E01", "description": "Registered tools reach real RPC, shared helper and three owned native launches; admission is nonterminal" },
+    { "id": "E02", "description": "GTK Mousepad Unicode/newline and empty replacement, fresh advertised Save, independent exact file bytes" },
+    { "id": "E03", "description": "Qt FeatherPad matching editor, Unicode/newline and empty replacement, fresh advertised Save, independent exact file bytes" },
+    { "id": "E04", "description": "VS Code 1.140.0 Quick Open exact Unicode/decomposed/clear/no-op keyboard proof; Settings ASCII filter, default stable rejection, explicit observed checkbox action, independent config agreement and app-driven restore" },
+    { "id": "E05", "description": "Refs consumed by newer reads and mutation; stale operations fail without changing text" },
+    { "id": "E06", "description": "Foreign tab refs, changed Dock generation, foreign binding epoch and application-root admission fail" },
+    { "id": "E07", "description": "Browser-only dock_evaluate rejects native scope without viewer fallback" },
+    { "id": "E08", "description": "Abort an actual wire read, correlate cancellation, no read replay or mutation; independent files unchanged" },
+    { "id": "E09", "description": "Reap helper, restart and bind all launches; old helper refs fail while new reads work" },
+    { "id": "E10", "description": "Unicode character offsets, bounded native reply bytes and continuation readback of a large live value" }
+  ]
+}
