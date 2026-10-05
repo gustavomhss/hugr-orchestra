@@ -228,11 +228,6 @@
     z-index: 1;
   }
 
-  /* The title remains 48px + 16px; these are the virtualizer's header offsets. */
-  body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
-    padding-inline: 30px;
-    background: linear-gradient(to bottom, var(--orchestra-evidence-solid) 48px, transparent);
-  }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
     margin: 0;
@@ -289,13 +284,6 @@
     padding-inline: 30px;
   }
 
-  body[data-new-layout]
-    [data-session-layout="surface"]
-    :is([data-timeline-row="UserMessage"], [data-timeline-row="AssistantPart"])
-    [data-slot="session-turn-message-container"] {
-    padding-block: 14px;
-    border-block-start: 1px solid var(--orchestra-session-message-rule);
-  }
 
   body[data-new-layout] [data-session-layout="surface"] [data-component="user-message"] {
     align-items: flex-start;
@@ -1010,4 +998,382 @@
       font-weight: 500 !important;
     }
   }
+}
+
+/* Conversation header and transcript entries of the approved session view (.conv-head, .msg). */
+@media (min-width: 768px) {
+  /* The mock's views inherit the system 16px/normal/400 type; every control sets its own size. */
+  body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-chat-font: var(--orchestra-font-family-sans);
+    font-family: var(--orchestra-chat-font);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    --orchestra-chat-who: #7ea5cc;
+    --orchestra-chat-button-border: rgba(163, 184, 203, 0.2);
+    --orchestra-chat-button-background: rgba(32, 43, 55, 0.7);
+    --orchestra-chat-button-text: #c7d2dc;
+    --orchestra-chat-button-hover-border: rgba(170, 192, 212, 0.34);
+    --orchestra-chat-button-hover-background: rgba(44, 58, 73, 0.8);
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-chat-who: #3f6f9f;
+    --orchestra-chat-button-border: rgba(70, 84, 98, 0.2);
+    --orchestra-chat-button-background: rgba(255, 255, 255, 0.6);
+    --orchestra-chat-button-text: #3a434e;
+    --orchestra-chat-button-hover-border: rgba(70, 84, 98, 0.32);
+    --orchestra-chat-button-hover-background: rgba(255, 255, 255, 0.85);
+  }
+
+  /* The header height is measured for the virtualizer's scroll margin. */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
+    padding: 24px 30px 18px;
+    background: linear-gradient(to bottom, var(--orchestra-evidence-solid) calc(100% - 18px), transparent);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-row"] {
+    block-size: auto;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-main"] {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
+    padding: 0;
+    border-radius: 6px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] h1[data-slot="session-title-child"]:hover {
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-brief"] {
+    display: -webkit-box;
+    margin: 5px 0 0;
+    overflow: hidden;
+    color: var(--orchestra-session-secondary);
+    font-size: 14px;
+    line-height: 17px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-actions"] {
+    gap: 8px;
+    padding-block-start: 2px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]) {
+    display: inline-flex;
+    min-inline-size: 48px;
+    block-size: 32px;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 13px;
+    border: 1px solid var(--orchestra-chat-button-border);
+    border-radius: 7px;
+    background: var(--orchestra-chat-button-background);
+    color: var(--orchestra-chat-button-text);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]):is(:hover, [aria-expanded="true"]) {
+    border-color: var(--orchestra-chat-button-hover-border);
+    background: var(--orchestra-chat-button-hover-background);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]):focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-timeline-row="TurnGap"] {
+    block-size: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"] {
+    display: grid;
+    inline-size: 100%;
+    align-self: stretch;
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"][data-head] {
+    padding-block-start: 14px;
+    border-block-start: 1px solid var(--orchestra-session-message-rule);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"][data-role="user"] {
+    padding-block-end: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"]:not([data-head]) > * {
+    grid-column: 2;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-mark"] {
+    display: grid;
+    inline-size: 30px;
+    block-size: 30px;
+    place-items: center;
+    border: 1px solid var(--orchestra-task-mark-border);
+    border-radius: 8px;
+    background: var(--orchestra-task-mark-background);
+    color: var(--orchestra-task-mark-text);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-mark"] svg {
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-body"] {
+    min-inline-size: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-meta"] {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-block-end: 4px;
+    line-height: 16px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-who"] {
+    color: var(--orchestra-chat-who);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-when"] {
+    color: var(--orchestra-session-meta);
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  /* Tool and tool-group rows read as the mock's .tool-trigger: 13px title, 12px monospace argument. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-component="tool-trigger"], [data-component="context-tool-group-trigger"]) {
+    min-block-size: 32px;
+    gap: 8px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
+    color: #c8d2dc;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-subtitle"], [data-slot="shell-submessage-value"]) {
+    color: #8b9bab;
+    font: 12px / 16px var(--font-family-mono);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-body"] [data-slot="context-tool-group-summary"] {
+    color: #8b9bab;
+    font-size: 12px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
+    color: #3f4854;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is(
+      [data-slot="basic-tool-tool-subtitle"],
+      [data-slot="shell-submessage-value"],
+      [data-slot="context-tool-group-summary"]
+    ) {
+    color: #6b7480;
+  }
+
+  /* The send control keeps the mock's blue even before a prompt is written. */
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-prompt-dock"] [data-action="prompt-submit"]:disabled {
+    opacity: 1;
+  }
+}
+
+
+/* The approved rail tab bar: Review, Context, Tasks, Apps, file tabs, then the open-file "+". */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    :is(.session-review-v2-sidebar-toggle-slot, .session-review-v2-open-in-app-slot:empty) {
+    display: none;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-open-file"] {
+    margin-inline-start: 2px;
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"] {
+    background: transparent;
+    box-shadow: none;
+    inline-size: 24px;
+    block-size: 24px;
+    min-inline-size: 24px;
+    border-radius: 6px;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::after {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]
+    svg {
+    transform: scale(1.25);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]:hover {
+    background: var(--orchestra-rail-tab-hover-background);
+    color: var(--orchestra-rail-tab-hover);
+  }
+}
+
+/* Context tab as the mock's .ctx: 10.5px labels over 12.5px monospace values, uppercase section titles. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-12-regular.text-text-weak {
+    margin-block-start: 4px;
+    color: #7c8b9b;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid > div {
+    gap: 3px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid .text-12-regular.text-text-weak {
+    margin: 0;
+    color: #7f8fa0;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid .text-12-medium {
+    color: #cdd6df;
+    font: 500 12.5px var(--font-family-mono);
+    overflow-wrap: anywhere;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-11-regular {
+    color: #8c9daf;
+    font-size: 11.5px;
+  }
+
+  /* The breakdown note says these are approximate window tokens, apart from cumulative cost. */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .hidden.text-11-regular {
+    display: block;
+    color: #65768a;
+    font-size: 10.5px;
+    line-height: 15px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .text-12-regular.text-text-weak {
+    color: #6b7480;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .grid
+    .text-12-medium {
+    color: #2b3440;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .text-11-regular {
+    color: #5f6874;
+  }
+}
+
+/* Session "•••" menu as the mock's .mx-menu (portaled, so not under the surface). */
+body[data-new-layout] [data-orchestra-menu="session"] {
+  min-inline-size: 180px;
+  padding: 5px;
+  border: 1px solid var(--mx-line, rgba(166, 189, 211, 0.14));
+  border-radius: 9px;
+  background: var(--mx-modal, #111922);
+  box-shadow: var(--mx-pop-shadow, 0 14px 35px rgba(0, 0, 0, 0.24));
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [role="menuitem"] {
+  min-block-size: 0;
+  padding: 8px 10px;
+  border-radius: 5px;
+  color: var(--mx-strong, #e1e9f0);
+  font-family: var(--orchestra-font-family-sans);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [role="menuitem"]:is(:hover, [data-highlighted]) {
+  background: var(--mx-soft, rgba(170, 196, 220, 0.055));
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-danger] {
+  color: var(--mx-bad, #d99a94);
 }

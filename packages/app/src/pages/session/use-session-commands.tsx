@@ -20,7 +20,6 @@ import { Message, Part, UserMessage } from "@opencode-ai/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { createSessionOwnership } from "./session-ownership"
-import { cockpitView, updateCockpitView } from "./orchestra-cockpit-state"
 import { useLocal } from "@/context/local"
 
 export type SessionCommandContext = {
@@ -90,7 +89,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     review: actions.review,
     hasReview,
     fileBrowser: actions.fileBrowser,
-    cockpit: settings.general.newLayoutDesigns,
+    cockpit: () => false,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab
@@ -602,13 +601,15 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       id: "tasks.toggle",
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
-        // Orchestra shows Tasks in the cockpit beside the Dock: reveal it and toggle the Tasks detail.
+        // Orchestra's rail keeps a permanent Tasks tab: reveal it, or leave it for Review when shown.
         if (settings.general.newLayoutDesigns()) {
-          const shown = view().reviewPanel.opened() && tabs().active() === "apps"
-          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
+          if (view().reviewPanel.opened() && tabs().active() === "tasks") {
+            tabs().setActive("review")
+            return
+          }
           view().reviewPanel.open()
-          tabs().open("apps")
-          tabs().setActive("apps")
+          tabs().open("tasks")
+          tabs().setActive("tasks")
           return
         }
         if (tabs().active() === "tasks") {

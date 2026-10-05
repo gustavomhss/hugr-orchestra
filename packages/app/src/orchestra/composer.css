@@ -1,4 +1,6 @@
-/* Import after session.css: the approved final reference has a stacked 98px composer. */
+/* Import after session.css: the approved composer stacks the editor over one control row
+ * (.composer with mock-features' compose tools): add/context/stop on the left, then
+ * model, effort, subagent models and send on the right. */
 @media (min-width: 768px) {
   body[data-new-layout] [data-session-layout="surface"] [data-session-layout="body"] {
     padding: 1px;
@@ -13,7 +15,7 @@
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 10px;
-    min-block-size: 98px;
+    min-block-size: 90px;
     padding: 12px 14px;
   }
 
@@ -36,7 +38,7 @@
     min-block-size: 28px;
     padding-block: 4px;
     padding-inline: 2px;
-    font-family: Arial, sans-serif;
+    font-family: var(--orchestra-chat-font);
   }
 
   body[data-new-layout]
@@ -49,7 +51,7 @@
     inset: auto;
     padding-block-start: 4px;
     padding-inline: 2px;
-    font-family: Arial, sans-serif;
+    font-family: var(--orchestra-chat-font);
   }
 
   body[data-new-layout]
@@ -69,9 +71,39 @@
     [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     [data-component="prompt-input-v2"]
-    > div[data-slot="prompt-input-v2-toolbar"]
-    > div[data-slot="prompt-input-v2-controls"] {
+    [data-slot="prompt-input-v2-controls"] {
     gap: 8px;
+  }
+
+  /* Left group: the add menu, then the compose tools; everything else sits on the right. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    > * {
+    order: 2;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    > :first-child {
+    order: 0;
+    flex-shrink: 0;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    > [data-slot="orchestra-compose-tools"] {
+    display: flex;
+    order: 1;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    margin-inline-end: auto;
   }
 
   body[data-new-layout]
@@ -90,21 +122,52 @@
     flex-shrink: 0;
   }
 
+  /* The add menu and compose tools are the mock's small bordered buttons (.mx-btn). */
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
-    [data-component="prompt-input-v2"]
-    [data-component="tooltip-v2-trigger"]:has(> [data-action="prompt-model"]) {
-    margin-inline-start: auto;
+    :is([data-action="prompt-attach"], [data-slot="orchestra-compose-tools"] > button) {
+    display: inline-flex;
+    min-inline-size: 32px;
+    inline-size: auto;
+    block-size: 26px;
+    min-block-size: 26px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 7px;
+    border: 1px solid var(--mx-line, rgba(166, 189, 211, 0.14));
+    border-radius: 7px;
+    background: var(--mx-soft, rgba(170, 196, 220, 0.055));
+    color: var(--mx-strong, #e1e9f0);
+    font-size: 10.5px;
+    white-space: nowrap;
   }
 
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
-    [data-component="prompt-input-v2"]
-    [data-action="prompt-attach"] {
-    inline-size: 32px;
-    block-size: 26px;
+    :is([data-action="prompt-attach"], [data-slot="orchestra-compose-tools"] > button):hover {
+    border-color: var(--mx-blue, #9abfe5);
+    background: var(--mx-raised, rgba(19, 28, 38, 0.55));
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    :is([data-action="prompt-attach"], [data-slot="orchestra-compose-tools"] > button):focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: 2px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-compose-tools"] svg {
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   body[data-new-layout]
@@ -114,5 +177,15 @@
     [data-component="button-v2"] {
     min-inline-size: 0;
     letter-spacing: normal;
+  }
+
+  /* Model, effort and subagent models read as the mock's text controls (.ctl): no chevrons or icons. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-slot="prompt-input-v2-controls"]
+    [data-component="button-v2"]
+    :is([data-component="provider-icon"], [data-component="icon"]) {
+    display: none;
   }
 }

@@ -73,3 +73,89 @@
     }
   }
 }
+
+/* The approved rail's Review head: Files Changed / All files views, then the review actions. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-component="orchestra-review"] {
+    gap: 10px;
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-head"] {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-views"] {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-views"] button {
+    flex: 1;
+    block-size: 26px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #8695a5;
+    font-size: 11.5px;
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-views"] button[data-active] {
+    background: rgba(46, 58, 72, 0.9);
+    color: #dbe3ea;
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-review-views"] {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-review-views"] button {
+    color: #5f6874;
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-review-views"] button[data-active] {
+    background: rgba(96, 138, 180, 0.22);
+    color: #141a21;
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-views"] button:focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-actions"] {
+    display: flex;
+    min-inline-size: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body[data-new-layout] [data-slot="orchestra-review-mode"] {
+    min-inline-size: 0;
+    margin-inline-start: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  /* The rail panel starts 10px below the tab bar (.rail gap). */
+  body[data-new-layout] [data-slot="orchestra-review-head"] {
+    margin-block-start: 10px;
+  }
+
+  /* The approved list has no header row: the change mode sits in the review head above it. */
+  body[data-new-layout] [data-component="orchestra-review"] [data-slot="session-review-v2-sidebar-header"] {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  /* With no changes the file list has nothing to show; the empty state takes the panel. */
+  body[data-new-layout] [data-component="orchestra-review"][data-empty] [data-component="session-review-v2-sidebar-root"] {
+    display: none;
+  }
+}
