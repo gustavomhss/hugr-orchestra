@@ -152,9 +152,9 @@ test("due tasks dispatch while the page is open, recurring dates roll forward an
 
   await page.clock.fastForward("31:00")
   await expect.poll(() => api.created).toEqual([{ agent: "build", location: { directory } }])
-  await expect.poll(() => api.prompts.map((prompt) => prompt.body)).toEqual([
-    { id: expect.stringMatching(/^msg_/), text: "Check the build." },
-  ])
+  await expect
+    .poll(() => api.prompts.map((prompt) => prompt.body))
+    .toEqual([{ id: expect.stringMatching(/^msg_/), text: "Check the build." }])
   await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
   await expect(hourly.locator(".mx-badge")).toHaveText(["Every hour", "build", "Scheduled"])
   // Background dispatch stays on this page.
@@ -185,9 +185,26 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await openSchedule(page)
   await createTask(page, { name: "Weekly sweep", prompt: "Sweep stale branches.", agent: "plan", cadence: "weekly" })
   const card = page.getByRole("article", { name: "Weekly sweep" })
+  const edit = page.getByRole("dialog", { name: "Edit Weekly sweep" })
+
+  // A dialog opened before the previous one's close event lands must still open and stay open.
+  await page.getByRole("button", { name: "Schedule task", exact: true }).click()
+  const add = page.getByRole("dialog", { name: "Schedule task" })
+  await add.getByLabel("Name").fill("Second sweep")
+  await add.getByLabel("What to run").fill("Sweep again.")
+  await add.getByLabel("Next run").fill("2031-01-16T09:30")
+  await page.evaluate(() => {
+    document.querySelector<HTMLButtonElement>('dialog[open] button[type="submit"]')?.click()
+    const article = [...document.querySelectorAll("article")].find((item) => item.textContent?.includes("Weekly sweep"))
+    ;[...(article?.querySelectorAll("button") ?? [])].find((button) => button.textContent === "Edit")?.click()
+  })
+  await expect(edit).toBeVisible()
+  await expect(page.getByRole("article", { name: "Second sweep" })).toBeVisible()
+  await expect(page.locator("dialog")).toHaveCount(1)
+  await page.keyboard.press("Escape")
+  await expect(edit).toHaveCount(0)
 
   await card.getByRole("button", { name: "Edit", exact: true }).click()
-  const edit = page.getByRole("dialog", { name: "Edit Weekly sweep" })
   await expect(edit.getByLabel("Name")).toHaveValue("Weekly sweep")
   await expect(edit.getByLabel("What to run")).toHaveValue("Sweep stale branches.")
   await expect(edit.getByLabel("Cadence")).toHaveValue("weekly")
@@ -223,6 +240,14 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await edit.getByRole("button", { name: "Remove task", exact: true }).click()
   await confirm.getByRole("button", { name: "Confirm", exact: true }).click()
   await expect(confirm).toHaveCount(0)
+  await expect(card).toHaveCount(0)
+  await expect(page.locator("article")).toHaveText([/^Second sweep/])
+  await page.reload()
+  await expect(page.locator("article")).toHaveText([/^Second sweep/])
+  const second = page.getByRole("article", { name: "Second sweep" })
+  await second.getByRole("button", { name: "Edit", exact: true }).click()
+  await page.getByRole("dialog", { name: "Edit Second sweep" }).getByRole("button", { name: "Remove task" }).click()
+  await page.getByRole("dialog", { name: "Remove this item?" }).getByRole("button", { name: "Confirm" }).click()
   await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
   await page.reload()
   await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
@@ -233,10 +258,7 @@ test("V1 servers dispatch through the legacy session API with the task's agent",
   const api = await setup(page, { protocol: "v1" })
   await openSchedule(page)
   await createTask(page, { name: "Legacy run", prompt: "Summarize open issues.", agent: "review" })
-  await page
-    .getByRole("article", { name: "Legacy run" })
-    .getByRole("button", { name: "Run now", exact: true })
-    .click()
+  await page.getByRole("article", { name: "Legacy run" }).getByRole("button", { name: "Run now", exact: true }).click()
   await expect(page).toHaveURL(/\/session\/ses_schedule_1$/)
   expect(api.attempts).toBe(1)
   expect(api.prompts).toEqual([
@@ -325,7 +347,8 @@ async function setup(
     },
     sessions,
     pageMessages: () => ({ items: [] }),
-    onPrompt: (prompt) => api.prompts.push({ sessionID: prompt.sessionID, body: prompt.body as Record<string, unknown> }),
+    onPrompt: (prompt) =>
+      api.prompts.push({ sessionID: prompt.sessionID, body: prompt.body as Record<string, unknown> }),
   })
   // The shared mock server lists sessions but cannot create them: answer creation here and keep each request.
   await page.route("**/*", async (route) => {
@@ -358,10 +381,24 @@ async function setup(
     const body = route.request().postDataJSON()
     if (protocol === "v2") api.created.push(body)
     const id = `ses_schedule_${api.attempts}`
-    const session = { id, directory, agent: body?.agent ?? "build", title: "New session", time: { created: 1, updated: 1 } }
+    const session = {
+      id,
+      directory,
+      agent: body?.agent ?? "build",
+      title: "New session",
+      time: { created: 1, updated: 1 },
+    }
     sessions.push(session)
     if (protocol === "v2") return json({ data: currentSession(session, directory) })
-    return json({ id, slug: id, projectID: "schedule", directory, title: "New session", version: "1", time: session.time })
+    return json({
+      id,
+      slug: id,
+      projectID: "schedule",
+      directory,
+      title: "New session",
+      version: "1",
+      time: session.time,
+    })
   })
   return api
 }

@@ -25,7 +25,8 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.runError": "Could not run {{name}}: {{detail}}",
   "orchestra.schedule.dialog.new": "Schedule task",
   "orchestra.schedule.dialog.edit": "Edit {{name}}",
-  "orchestra.schedule.dialog.subtitle": "Time is shown in your local timezone. Cadence and agent belong to this profile.",
+  "orchestra.schedule.dialog.subtitle":
+    "Time is shown in your local timezone. Cadence and agent belong to this profile.",
   "orchestra.schedule.dialog.close": "Close dialog",
   "orchestra.schedule.field.name": "Name",
   "orchestra.schedule.field.prompt": "What to run",

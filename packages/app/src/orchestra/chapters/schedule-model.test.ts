@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { canResume, dueTasks, following, localInput, readTasks, recordRun, resume, type ScheduleTask } from "./schedule-model"
+import {
+  canResume,
+  dueTasks,
+  following,
+  localInput,
+  readTasks,
+  recordRun,
+  resume,
+  type ScheduleTask,
+} from "./schedule-model"
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR

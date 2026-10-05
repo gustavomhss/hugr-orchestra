@@ -1,6 +1,17 @@
 import { useQuery } from "@tanstack/solid-query"
 import { getFilename } from "@opencode-ai/core/util/path"
-import { createMemo, createSignal, createUniqueId, For, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js"
+import {
+  createMemo,
+  createSignal,
+  createUniqueId,
+  For,
+  Match,
+  onCleanup,
+  onMount,
+  Show,
+  Switch,
+  type JSX,
+} from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -48,11 +59,12 @@ export default function SchedulePage(props: ChapterPageProps) {
   )
   const [state, setState] = createStore({
     search: "",
-    dialog: undefined as Dialog | undefined,
     running: {} as Record<string, boolean>,
     error: "",
     now: Date.now(),
   })
+  // A signal, not the store: a store merges a new dialog into the open one instead of replacing it.
+  const [dialog, setDialog] = createSignal<Dialog>()
   const lifetime = { disposed: false, dialogs: 0, ticking: false, failed: new Set<string>() }
   const profile = createMemo(() => {
     const project = global
@@ -74,7 +86,9 @@ export default function SchedulePage(props: ChapterPageProps) {
       ),
     )
   })
-  const nextFormat = createMemo(() => new Intl.DateTimeFormat(language.intl(), { dateStyle: "medium", timeStyle: "short" }))
+  const nextFormat = createMemo(
+    () => new Intl.DateTimeFormat(language.intl(), { dateStyle: "medium", timeStyle: "short" }),
+  )
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const runs = (count: number) =>
     language.t(
@@ -85,9 +99,10 @@ export default function SchedulePage(props: ChapterPageProps) {
     )
   const update = (id: string, next: (task: ScheduleTask) => ScheduleTask) =>
     setSaved("tasks", (task) => task.id === id, next)
-  const show = (dialog: DialogInput) => setState("dialog", { ...dialog, key: ++lifetime.dialogs })
+  const show = (input: DialogInput) => setDialog({ ...input, key: ++lifetime.dialogs })
+  // A replaced dialog still fires its close event later; only the current one may clear the state.
   const hide = (key: number) => {
-    if (state.dialog?.key === key) setState("dialog", undefined)
+    if (dialog()?.key === key) setDialog(undefined)
   }
 
   const start = async (task: ScheduleTask) => {
@@ -149,7 +164,7 @@ export default function SchedulePage(props: ChapterPageProps) {
     lifetime.disposed = true
   })
 
-  const save = (dialog: Extract<Dialog, { type: "edit" }>, form: FormData) => {
+  const save = (edit: Extract<Dialog, { type: "edit" }>, form: FormData) => {
     const name = String(form.get("name") ?? "").trim()
     const prompt = String(form.get("prompt") ?? "").trim()
     const agent = String(form.get("agent") ?? "")
@@ -159,9 +174,15 @@ export default function SchedulePage(props: ChapterPageProps) {
     if (!agent) return language.t("orchestra.schedule.error.agent")
     if (!Number.isFinite(next)) return language.t("orchestra.schedule.error.date")
     if (next <= Date.now()) return language.t("orchestra.schedule.error.past")
-    const fields = { name, prompt, agent, next, cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once" }
-    if (dialog.id) {
-      update(dialog.id, (task) => ({ ...task, ...fields, enabled: dialog.resume ? true : task.enabled }))
+    const fields = {
+      name,
+      prompt,
+      agent,
+      next,
+      cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
+    }
+    if (edit.id) {
+      update(edit.id, (task) => ({ ...task, ...fields, enabled: edit.resume ? true : task.enabled }))
       return
     }
     setSaved("tasks", saved.tasks.length, { id: crypto.randomUUID(), ...fields, enabled: true, runs: 0 })
@@ -286,10 +307,10 @@ export default function SchedulePage(props: ChapterPageProps) {
         </Show>
       </Show>
       <p class="mx-note">{language.t("orchestra.schedule.note")}</p>
-      <Show when={state.dialog} keyed>
-        {(dialog) => (
+      <Show when={dialog()} keyed>
+        {(current) => (
           <Switch>
-            <Match when={dialog.type === "edit" && dialog}>
+            <Match when={current.type === "edit" && current}>
               {(edit) => {
                 const task = saved.tasks.find((item) => item.id === edit().id)
                 // Keep a saved agent selectable even when the profile no longer lists it.
@@ -318,7 +339,7 @@ export default function SchedulePage(props: ChapterPageProps) {
                     cancel={language.t("orchestra.schedule.cancel")}
                     submit={language.t("orchestra.schedule.save")}
                     onSubmit={(form) => save(edit(), form)}
-                    onClose={() => hide(dialog.key)}
+                    onClose={() => hide(current.key)}
                   >
                     <label class="mx-field">
                       <span>{language.t("orchestra.schedule.field.name")}</span>
@@ -370,8 +391,12 @@ export default function SchedulePage(props: ChapterPageProps) {
                       />
                     </label>
                     <Show when={task}>
-                      {(current) => (
-                        <button type="button" class="mx-btn" onClick={() => show({ type: "remove", id: current().id })}>
+                      {(existing) => (
+                        <button
+                          type="button"
+                          class="mx-btn"
+                          onClick={() => show({ type: "remove", id: existing().id })}
+                        >
                           {language.t("orchestra.schedule.remove")}
                         </button>
                       )}
@@ -380,7 +405,7 @@ export default function SchedulePage(props: ChapterPageProps) {
                 )
               }}
             </Match>
-            <Match when={dialog.type === "remove" && dialog}>
+            <Match when={current.type === "remove" && current}>
               {(remove) => (
                 <ScheduleDialog
                   title={language.t("orchestra.schedule.confirm.title")}
@@ -392,7 +417,7 @@ export default function SchedulePage(props: ChapterPageProps) {
                     setSaved("tasks", (tasks) => tasks.filter((task) => task.id !== remove().id))
                     return undefined
                   }}
-                  onClose={() => hide(dialog.key)}
+                  onClose={() => hide(current.key)}
                 >
                   <p class="mx-note">{language.t("orchestra.schedule.confirm.detail", { profile: profile() })}</p>
                 </ScheduleDialog>
