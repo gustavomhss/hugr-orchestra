@@ -1,0 +1,20 @@
+# The two append-only Atlas logs merge by UNION (F3 clause 30, owner ruling F3-D5: Memory is versioned in
+# Git with the code and a branch's Memory becomes canonical when it merges).
+#
+# Why a driver at all: two branches that each append from a common base both add lines at end-of-file, and
+# git's default text driver reports that as a CONFLICT. The conflict markers would then sit in the log as
+# lines its reader rejects. `union` keeps both sides' lines; every line is a whole, self-verifying,
+# content-keyed record, so a union can never splice two records, and a line both sides added folds to one
+# record by content id.
+#
+# The effect on ranking, stated rather than hidden: `union` writes OUR side's new lines first and THEIR side's
+# after. Rule frecency decays by position in the log (`memory-read.ts`), so after a merge the side that was
+# merged IN reads as younger than the side it was merged into, and merging A into B ranks differently from
+# merging B into A. `packages/adapter-io/test/native-memory-merge.test.ts` asserts both directions.
+#
+# A `.gitattributes` pattern is relative to the directory that holds it, so this file binds only the `.atlas/`
+# beside it (`foundation/atlas/.atlas/` while Atlas is vendored into Orchestra). It stays because Atlas's own
+# merge suite copies it into its throwaway repository. A harness that stores Memory elsewhere must carry the
+# same two lines there: Orchestra's root `.gitattributes` does, for the `.atlas/` Charlie's binding writes.
+.atlas/memory.jsonl merge=union
+.atlas/orientation.jsonl merge=union

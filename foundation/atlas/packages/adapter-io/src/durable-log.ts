@@ -33,11 +33,18 @@
 //
 // ── TRAVEL ───────────────────────────────────────────────────────────────────────────────────────────────
 // Both logs are git-tracked (`.gitignore` re-includes them under the `.atlas/*` deny-by-default rule) and
-// the JSONL form is what makes a plain git text merge SAFE: whole lines union or duplicate and can never
-// splice two records together, and a duplicate is deduped by content id on the fold. That is KERNEL-12b's
-// safe-degrade line merge, and it is why a fork inherits the whole log with 0 records lost.
+// the JSONL form is what makes a LINE merge safe: whole lines union or duplicate and can never splice two
+// records together, and a duplicate is deduped by content id on the fold. That is KERNEL-12b's safe-degrade
+// line merge, and it is why a fork inherits the whole log with 0 records lost.
+//
+// A PLAIN git text merge is not that merge, and this header used to say it was. Two branches that each
+// append from a common base both add lines at end-of-file, which git's default driver reports as a CONFLICT
+// — markers in the file, every marker line a rejected line on the next read. `.gitattributes` binds both
+// logs to `merge=union`, which takes both sides' lines; `native-memory-merge.test.ts` drives that through a
+// real `git merge`. A `.gitattributes` pattern binds only below the directory that holds it: a consumer
+// storing its Memory anywhere else must carry the same two lines there (Orchestra's root file does).
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs"
+import { appendFileSync, mkdirSync, readFileSync } from "node:fs"
 import { dirname } from "node:path"
 import { combine, createLog, isContentKeyed } from "@atlas/kernel"
 import type { Event, EventLog } from "@atlas/kernel"
@@ -51,6 +58,13 @@ export interface LogRead {
   readonly log: EventLog
   /** Lines that did not parse, or whose stored `id` is not their content hash. Never silently discarded. */
   readonly rejected: number
+  /**
+   * `true` when the FILE could not be read at all (it exists but is a directory, unreadable, …). Present
+   * because `rejected` alone cannot tell "one torn line and nothing else" from "the file could not be
+   * opened" — both are an empty log with `rejected: 1` — and a caller deriving a store state must map the
+   * first to PARTIAL and the second to UNAVAILABLE (F3 clause 7). Absent on every readable outcome.
+   */
+  readonly unreadable?: true
 }
 
 /**
@@ -107,15 +121,18 @@ function parseLine(line: string, keyed: LineKeyed): Event | undefined {
 
 export function createDurableLog(path: string, keyed: LineKeyed = isContentKeyed): DurableLog {
   function read(): LogRead {
-    if (!existsSync(path)) return { log: new Map(), rejected: 0 }
     let text: string
     try {
       text = readFileSync(path, "utf8")
-    } catch {
+    } catch (e) {
+      // Only a genuinely ABSENT file is an empty log. This used to be an `existsSync` pre-check, which also
+      // answers `false` when a parent directory cannot be searched — so "could not look" read as "nothing
+      // there". The read's own error code is the one witness that cannot conflate the two.
+      if ((e as { code?: unknown } | null)?.code === "ENOENT") return { log: new Map(), rejected: 0 }
       // An unreadable file is NOT an empty log. Reporting it as one is precisely how the knowledge sidecar
       // turned a torn read into a total loss, so the whole file counts as one rejection and the caller sees
-      // a non-zero count against an empty log.
-      return { log: new Map(), rejected: 1 }
+      // a non-zero count against an empty log — and `unreadable` says which of the two empty logs this is.
+      return { log: new Map(), rejected: 1, unreadable: true }
     }
     const appender = createLog()
     let snapshot: EventLog = new Map()
