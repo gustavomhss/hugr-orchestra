@@ -1,18 +1,22 @@
 import { useQuery } from "@tanstack/solid-query"
+import { makeEventListener } from "@solid-primitives/event-listener"
 import { getFilename } from "@opencode-ai/core/util/path"
+import { Option, Schema } from "effect"
 import {
+  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
   For,
   Match,
+  on,
   onCleanup,
   onMount,
   Show,
   Switch,
   type JSX,
 } from "solid-js"
-import { createStore } from "solid-js/store"
+import { createStore, reconcile } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
@@ -20,27 +24,34 @@ import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
-import { displayName } from "@/pages/layout/helpers"
+import { displayName, errorMessage } from "@/pages/layout/helpers"
 import { Identifier } from "@/utils/id"
 import { pathKey } from "@/utils/path-key"
 import { Persist, persisted } from "@/utils/persist"
 import { normalizeSessionInfo } from "@/utils/session"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge, MxPage, MxToggle } from "./kit"
+import { claimStorage, createClaims } from "./schedule-claims"
 import {
   CADENCES,
   canResume,
-  dueTasks,
   localInput,
+  localMinute,
+  plan,
   readTasks,
   recordRun,
   resume,
+  skipRun,
+  slotIDs,
   type ScheduleTask,
 } from "./schedule-model"
 import "./schedule.css"
 
-// Due tasks are checked on open and on this cadence while the page stays mounted.
+// Due tasks are checked once the saved list is ready and then on this cadence while the page is mounted.
 const TICK = 15_000
+// One hung request must not stall the scheduler; the slot claim outlives this (CLAIM_TTL).
+const TIMEOUT = 60_000
+const decode = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 
 type DialogInput = { type: "edit"; id?: string; resume?: boolean } | { type: "remove"; id: string }
 type Dialog = DialogInput & { key: number }
@@ -53,19 +64,20 @@ export default function SchedulePage(props: ChapterPageProps) {
   const global = useGlobal()
   const tabs = useTabs()
   const agents = useQuery(() => serverSync().queryOptions.agents(pathKey(props.directory)))
+  const target = Persist.serverWorkspace(sdk().scope, props.directory, "orchestra.schedule")
   const [saved, setSaved, , ready] = persisted(
-    { ...Persist.serverWorkspace(sdk().scope, props.directory, "orchestra.schedule"), migrate: readTasks },
+    { ...target, migrate: readTasks },
     createStore({ tasks: [] as ScheduleTask[] }),
   )
   const [state, setState] = createStore({
     search: "",
     running: {} as Record<string, boolean>,
     error: "",
-    now: Date.now(),
   })
   // A signal, not the store: a store merges a new dialog into the open one instead of replacing it.
   const [dialog, setDialog] = createSignal<Dialog>()
-  const lifetime = { disposed: false, dialogs: 0, ticking: false, failed: new Set<string>() }
+  const lifetime = { disposed: false, dialogs: 0, ticking: false }
+  const claims = createClaims(claimStorage(), typeof navigator === "undefined" ? undefined : navigator.locks)
   const profile = createMemo(() => {
     const project = global
       .ensureServerCtx(props.server)
@@ -97,6 +109,7 @@ export default function SchedulePage(props: ChapterPageProps) {
         : "orchestra.schedule.runs.other",
       { count },
     )
+  const find = (id: string) => saved.tasks.find((task) => task.id === id)
   const update = (id: string, next: (task: ScheduleTask) => ScheduleTask) =>
     setSaved("tasks", (task) => task.id === id, next)
   const show = (input: DialogInput) => setDialog({ ...input, key: ++lifetime.dialogs })
@@ -105,58 +118,128 @@ export default function SchedulePage(props: ChapterPageProps) {
     if (dialog()?.key === key) setDialog(undefined)
   }
 
-  const start = async (task: ScheduleTask) => {
-    const session = normalizeSessionInfo(
-      await sdk().api.session.create({ agent: task.agent, location: { directory: props.directory } }),
-    )
-    sync().session.remember(session)
-    await sdk().api.session.prompt({
-      sessionID: session.id,
-      id: Identifier.ascending("message"),
-      text: task.prompt,
-      agent: task.agent,
-    })
-    return session.id
-  }
+  // Other tabs and windows save the same list; adopt their writes so this page plans from fresh data.
+  // The key mirrors the persisted web storage layout (`<storage>:<key>`); desktop storage has no events.
+  makeEventListener(window, "storage", (event) => {
+    if (event.key !== `${target.storage}:${target.key}`) return
+    setSaved(reconcile(readTasks(Option.getOrUndefined(decode(event.newValue ?? "")))))
+  })
 
-  // Creates a real session on this profile, then records the run against the slot it served.
-  const dispatch = async (task: ScheduleTask) => {
-    const now = Date.now()
-    setState({ running: { ...state.running, [task.id]: true }, error: "" })
-    const result = await start(task).then(
-      (sessionID) => ({ sessionID, detail: "" }),
-      (error: unknown) => ({ sessionID: "", detail: error instanceof Error ? error.message : String(error) }),
-    )
-    setState("running", task.id, false)
-    if (!result.sessionID) {
-      lifetime.failed.add(`${task.id}:${task.next}`)
-      if (!lifetime.disposed)
-        setState("error", language.t("orchestra.schedule.runError", { name: task.name, detail: result.detail }))
-      return
+  // Starts a real session on this profile. The scheduler only serves a due slot it could claim; Run now
+  // (`forced`) serves the due slot when it can claim it and otherwise starts an extra run.
+  const dispatch = async (id: string, forced: boolean) => {
+    const task = find(id)
+    if (!task || state.running[id]) return
+    // Mark the task busy before any await so a Run now and a tick in this page cannot both start it.
+    setState("running", id, true)
+    try {
+      const now = Date.now()
+      const due = plan(task, now)
+      if (!forced && due.type !== "run") return
+      const claimed = due.type === "run" ? await claims.take(id, due.slot, now, forced).catch(() => false) : false
+      const slot = due.type === "run" && claimed ? due.slot : undefined
+      // Re-check live after the claim: the task may have been removed, paused or rescheduled meanwhile.
+      const live = find(id)
+      const recheck = live ? plan(live, Date.now()) : undefined
+      if (!live || (!forced && (slot === undefined || recheck?.type !== "run" || recheck.slot !== slot))) {
+        if (slot !== undefined) claims.settle(id, slot, undefined)
+        return
+      }
+      setState("error", "")
+      const ids = slot === undefined ? undefined : slotIDs(id, slot)
+      const signal = AbortSignal.timeout(TIMEOUT)
+      const v2 = (await sdk().protocol) !== "v1"
+      const result = await abortable(
+        sdk().api.session.create(
+          { id: ids?.session, agent: live.agent, location: { directory: props.directory } },
+          { signal },
+        ),
+        signal,
+      )
+        .then(normalizeSessionInfo)
+        .then((session) => {
+          sync().session.remember(session)
+          return abortable(
+            sdk().api.session.prompt({
+              sessionID: session.id,
+              id: ids?.message ?? Identifier.ascending("message"),
+              text: live.prompt,
+              agent: live.agent,
+            }),
+            signal,
+          ).then(
+            () => ({ sessionID: session.id, error: undefined }),
+            async (error: unknown) => {
+              // An unprompted session is noise. Keep it only when Run now released the slot on V2,
+              // where a retry of the slot adopts it through the same deterministic IDs.
+              if (!(v2 && ids && forced))
+                await sdk()
+                  .api.session.remove({ sessionID: session.id, directory: props.directory })
+                  .catch(() => undefined)
+              throw error
+            },
+          )
+        })
+        .catch((error: unknown) => ({ sessionID: "", error: error ?? new Error() }))
+      if (!result.sessionID) {
+        // Only the scheduler marks a slot failed; a failed Run now leaves it for the scheduler or a retry.
+        if (slot !== undefined) claims.settle(id, slot, forced ? undefined : "failed")
+        if (lifetime.disposed) return
+        // V2 rejects with the parsed error body, V1 with its legacy body; both may carry only `message`.
+        const error = result.error
+        const message =
+          error && typeof error === "object" && "message" in error && typeof error.message === "string"
+            ? error.message
+            : language.t("common.requestFailed")
+        setState(
+          "error",
+          language.t("orchestra.schedule.runError", { name: live.name, detail: errorMessage(error, message) }),
+        )
+        return
+      }
+      if (slot !== undefined) claims.settle(id, slot, "done")
+      const time = Date.now()
+      update(id, (current) =>
+        recordRun(
+          current,
+          // A task rescheduled during the run keeps its new time; the run counts as an extra run.
+          slot !== undefined && current.next === live.next
+            ? { time, sessionID: result.sessionID, slot, missed: due.type === "run" ? due.missed : undefined }
+            : { time, sessionID: result.sessionID },
+        ),
+      )
+      return result.sessionID
+    } finally {
+      setState("running", id, false)
     }
-    update(task.id, (current) => recordRun(current, now, result.sessionID))
-    return result.sessionID
   }
-
   const openSession = (sessionID: string) =>
     tabs.select(tabs.addSessionTab({ server: ServerConnection.key(props.server), sessionId: sessionID }))
 
   const tick = async () => {
-    setState("now", Date.now())
     if (!ready() || lifetime.ticking || lifetime.disposed) return
     lifetime.ticking = true
-    const due = dueTasks(saved.tasks, Date.now()).filter(
-      (task) => !state.running[task.id] && !lifetime.failed.has(`${task.id}:${task.next}`),
-    )
-    for (const task of due) {
-      if (lifetime.disposed) break
-      await dispatch(task)
+    try {
+      const now = Date.now()
+      const work = saved.tasks.map((task) => ({ id: task.id, next: plan(task, now) }))
+      // Too late to run: mark the slot missed and move on. Writing the same result twice is harmless.
+      work.forEach((item) => {
+        if (item.next.type !== "skip") return
+        update(item.id, (task) => {
+          const live = plan(task, now)
+          return live.type === "skip" ? skipRun(task, live.slot, now) : task
+        })
+      })
+      for (const item of work) {
+        if (lifetime.disposed) return
+        if (item.next.type === "run") await dispatch(item.id, false)
+      }
+    } finally {
+      lifetime.ticking = false
     }
-    lifetime.ticking = false
   }
+  createEffect(on(ready, (value) => value && void tick()))
   onMount(() => {
-    void ready.promise?.then(tick)
-    if (ready()) void tick()
     const timer = setInterval(() => void tick(), TICK)
     onCleanup(() => clearInterval(timer))
   })
@@ -179,7 +262,9 @@ export default function SchedulePage(props: ChapterPageProps) {
       prompt,
       agent,
       next,
+      minute: localMinute(next),
       cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
+      missed: undefined,
     }
     if (edit.id) {
       update(edit.id, (task) => ({ ...task, ...fields, enabled: edit.resume ? true : task.enabled }))
@@ -265,7 +350,7 @@ export default function SchedulePage(props: ChapterPageProps) {
                         class="mx-btn"
                         disabled={!!state.running[task.id]}
                         onClick={() =>
-                          void dispatch(task).then((sessionID) => {
+                          void dispatch(task.id, true).then((sessionID) => {
                             if (sessionID && !lifetime.disposed) openSession(sessionID)
                           })
                         }
@@ -287,6 +372,13 @@ export default function SchedulePage(props: ChapterPageProps) {
                       }}
                     />
                   </footer>
+                  <Show when={task.missed}>
+                    {(missed) => (
+                      <p class="mx-note schedule-missed">
+                        {language.t("orchestra.schedule.missed", { date: nextFormat().format(missed()) })}
+                      </p>
+                    )}
+                  </Show>
                   <Show when={task.last}>
                     {(last) => (
                       <p class="mx-note">
@@ -415,6 +507,7 @@ export default function SchedulePage(props: ChapterPageProps) {
                   submit={language.t("orchestra.schedule.confirm.submit")}
                   onSubmit={() => {
                     setSaved("tasks", (tasks) => tasks.filter((task) => task.id !== remove().id))
+                    claims.forget(remove().id)
                     return undefined
                   }}
                   onClose={() => hide(current.key)}
@@ -508,4 +601,12 @@ function ClockIcon() {
       <path d="M8 4v4l3 2" />
     </svg>
   )
+}
+
+function abortable<T>(promise: Promise<T>, signal: AbortSignal) {
+  return new Promise<T>((resolve, reject) => {
+    if (signal.aborted) return reject(signal.reason)
+    signal.addEventListener("abort", () => reject(signal.reason), { once: true })
+    promise.then(resolve, reject)
+  })
 }
