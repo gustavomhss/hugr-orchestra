@@ -1,46 +1,70 @@
-import { createMemo, onCleanup, onMount, Show } from "solid-js"
-import { createStore } from "solid-js/store"
-import { Dynamic } from "solid-js/web"
+import { getFilename } from "@opencode-ai/core/util/path"
+import { createMemo, Show, startTransition } from "solid-js"
+import { useLanguage } from "@/context/language"
+import { ServerConnection } from "@/context/server"
+import { useTabs } from "@/context/tabs"
 import type { HomeController } from "@/pages/home/home-controller"
+import { displayName } from "@/pages/layout/helpers"
+import { KpiDashboard } from "./kpis"
 
-export function RecordedUsageHome(props: { home: HomeController }) {
-  const [state, setState] = createStore({ view: undefined as typeof import("./kpis").RecordedUsage | undefined })
+// Home is the selected repository profile's KPI dashboard. It remounts only when that profile changes,
+// so a profile switch abandons the previous profile's reads.
+export function OrchestraHome(props: { home: HomeController }) {
+  const language = useLanguage()
+  const tabs = useTabs()
   const owner = createMemo(
     () => {
       const selection = props.home.selection.value()
+      const conn = props.home.server.focused()
       const ctx = props.home.server.focusedContext()
-      if (!selection.directory || !ctx) return
-      return { key: `${selection.server}\0${selection.directory}`, directory: selection.directory, sdk: ctx.sdk }
+      if (!selection.directory || !conn || !ctx) return
+      return { key: `${selection.server}\0${selection.directory}`, directory: selection.directory, conn, ctx }
     },
     undefined,
     { equals: (a, b) => a?.key === b?.key },
   )
 
-  onMount(() => {
-    const pending = { task: undefined as ReturnType<typeof setTimeout> | undefined }
-    // A task after the animation frame lets Home paint before importing or requesting usage.
-    // Import without lazy(): a pending lazy() suspends the route Suspense outside the router's
-    // transition, and a navigation committed meanwhile leaves this Home's DOM in place of the
-    // next route.
-    const frame = requestAnimationFrame(() => {
-      pending.task = setTimeout(async () => {
-        const { RecordedUsage } = await import("./kpis")
-        setState("view", () => RecordedUsage)
-      }, 0)
-    })
-    onCleanup(() => {
-      cancelAnimationFrame(frame)
-      clearTimeout(pending.task)
-    })
-  })
-
   return (
-    <Show when={state.view}>
-      {(view) => (
-        <Show when={owner()} keyed>
-          {(owner) => <Dynamic component={view()} directory={owner.directory} sdk={owner.sdk} />}
-        </Show>
-      )}
+    <Show
+      when={owner()}
+      keyed
+      fallback={
+        <section class="orchestra-home-dashboard" data-component="orchestra-kpis-empty">
+          <div class="home-inner">
+            <header class="home-mast">
+              <div>
+                <div class="home-kicker">{language.t("orchestra.home.eyebrowEmpty")}</div>
+                <h1>
+                  {language.t("orchestra.home.titleLead")}
+                  <br />
+                  <span>{language.t("orchestra.home.titleTail")}</span>
+                </h1>
+              </div>
+            </header>
+            <p class="home-status">{language.t("orchestra.home.empty")}</p>
+          </div>
+        </section>
+      }
+    >
+      {(owner) => {
+        const project = () => props.home.project.selected()
+        return (
+          <KpiDashboard
+            directory={owner.directory}
+            sdk={owner.ctx.sdk}
+            name={project() ? displayName(project()!) : getFilename(owner.directory)}
+            running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
+            openSession={(sessionID) => {
+              owner.ctx.projects.open(owner.directory)
+              owner.ctx.projects.touch(owner.directory)
+              void startTransition(() => {
+                const tab = tabs.addSessionTab({ server: ServerConnection.key(owner.conn), sessionId: sessionID })
+                tabs.select(tab)
+              })
+            }}
+          />
+        )
+      }}
     </Show>
   )
 }
