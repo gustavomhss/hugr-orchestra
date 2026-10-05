@@ -32,6 +32,7 @@ import {
 } from "./environment"
 import { color, printHeader, printResults } from "./report"
 import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } from "./routing"
+import { mcpScenarios } from "./mcp"
 import { runScenario } from "./runner"
 import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
@@ -371,66 +372,7 @@ const scenarios: Scenario[] = [
         }),
       "status",
     ),
-  http.protected.get("/mcp", "mcp.status").json(),
-  http.protected
-    .post("/mcp", "mcp.add")
-    .mutating()
-    .at((ctx) => ({
-      path: "/mcp",
-      headers: ctx.headers(),
-      body: { name: "httpapi-disabled", config: { type: "local", command: ["bun", "--version"], enabled: false } },
-    }))
-    .json(
-      200,
-      (body) => {
-        object(body)
-        object(body["httpapi-disabled"])
-        check(body["httpapi-disabled"].status === "disabled", "disabled MCP server should be added without spawning")
-      },
-      "status",
-    ),
-  http.protected
-    .post("/mcp", "mcp.add.invalid")
-    .at((ctx) => ({
-      path: "/mcp",
-      headers: ctx.headers(),
-      body: { name: "httpapi-invalid", config: { type: "invalid" } },
-    }))
-    .status(400),
-  http.protected
-    .post("/mcp/{name}/auth", "mcp.auth.start")
-    .at((ctx) => ({ path: route("/mcp/{name}/auth", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
-  http.protected
-    .delete("/mcp/{name}/auth", "mcp.auth.remove")
-    .mutating()
-    .at((ctx) => ({ path: route("/mcp/{name}/auth", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/auth/authenticate", "mcp.auth.authenticate")
-    .at((ctx) => ({
-      path: route("/mcp/{name}/auth/authenticate", { name: "httpapi-missing" }),
-      headers: ctx.headers(),
-    }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/auth/callback", "mcp.auth.callback")
-    .at((ctx) => ({
-      path: route("/mcp/{name}/auth/callback", { name: "httpapi-missing" }),
-      headers: ctx.headers(),
-      body: { code: "code" },
-    }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/connect", "mcp.connect")
-    .mutating()
-    .at((ctx) => ({ path: route("/mcp/{name}/connect", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/disconnect", "mcp.disconnect")
-    .mutating()
-    .at((ctx) => ({ path: route("/mcp/{name}/disconnect", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
+  ...mcpScenarios,
   http.protected.get("/pty/shells", "pty.shells").json(200, array),
   http.protected.get("/pty", "pty.list").json(200, array),
   http.protected
