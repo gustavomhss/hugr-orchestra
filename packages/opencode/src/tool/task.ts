@@ -635,7 +635,9 @@ export const TaskTool = Tool.define(
         // work result, read from the child's durable last assistant message (a resumed job may have run several turns).
         const last =
           nextID === "charlie"
-            ? (yield* MessageV2.stream(nextSession.id)).findLast((message) => message.info.role === "assistant")
+            ? (yield* MessageV2.stream(nextSession.id).pipe(Effect.provideService(Database.Service, database))).findLast(
+                (message) => message.info.role === "assistant",
+              )
             : undefined
         const workResult =
           nextID !== "charlie"
