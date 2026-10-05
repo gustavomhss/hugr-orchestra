@@ -25,6 +25,61 @@
   font-style: normal;
 }
 
+/* The mock's "SF Pro Text" is not addressable by name on macOS, so the mock renders with the installed static
+   Inter faces, and Chrome draws every weight from 501 to 599 as Inter Medium plus synthetic bold. The app's own
+   `Inter` @font-face (bundled variable font) shadows those faces and renders a true 590, which reads much lighter.
+   "Mx Inter" picks the same static faces (bundled font where Inter is not installed). Blink only synthesizes bold
+   for web fonts at a requested weight of 600 or more against a lighter face, so the mock's 501-599 weights are
+   written as `font-family: var(--mx-emphasis); font-weight: 600` against the Medium-only "Mx Inter Medium". */
+@font-face {
+  font-family: "Mx Inter";
+  src:
+    local("Inter Regular"),
+    local("Inter-Regular"),
+    url("/assets/Inter.ttf") format("truetype");
+  font-weight: 1 450;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src:
+    local("Inter Medium"),
+    local("Inter-Medium"),
+    url("/assets/Inter.ttf") format("truetype");
+  font-weight: 451 599;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src:
+    local("Inter SemiBold"),
+    local("Inter-SemiBold"),
+    url("/assets/Inter.ttf") format("truetype");
+  font-weight: 600 649;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src:
+    local("Inter Bold"),
+    local("Inter-Bold"),
+    url("/assets/Inter.ttf") format("truetype");
+  font-weight: 650 799;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src:
+    local("Inter ExtraBold"),
+    local("Inter-ExtraBold"),
+    url("/assets/Inter.ttf") format("truetype");
+  font-weight: 800 1000;
+}
+@font-face {
+  font-family: "Mx Inter Medium";
+  src:
+    local("Inter Medium"),
+    local("Inter-Medium"),
+    url("/assets/Inter.ttf") format("truetype");
+  font-weight: 500;
+}
+
 @media (display-mode: standalone) {
   /* WebKit excludes safe-area insets from dvh in installed apps. */
   #root {

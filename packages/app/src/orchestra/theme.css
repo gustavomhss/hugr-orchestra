@@ -89,9 +89,10 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-overlay-hover: rgba(255, 255, 255, 0.045);
   --orchestra-overlay-pressed: rgba(255, 255, 255, 0.08);
 
-  /* Leave --font-family-mono and the terminal's independent font setting intact. */
+  /* Leave --font-family-mono and the terminal's independent font setting intact. The reference's SF Pro
+     names do not resolve on macOS, so it renders with the static Inter faces "Mx Inter" selects (index.css). */
   --orchestra-font-family-sans:
-    "SF Pro Text", "SF Pro Display", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    "Mx Inter", "SF Pro Text", "SF Pro Display", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-family-sans: var(--orchestra-font-family-sans);
   --font-family-text: var(--orchestra-font-family-sans);
   --v2-font-family-sans: var(--orchestra-font-family-sans);
@@ -230,6 +231,8 @@ html[data-color-scheme] body[data-new-layout] {
   background: var(--orchestra-page-background);
   font-family: var(--font-family-text);
   -webkit-font-smoothing: antialiased;
+  /* The static faces have no optical axis; keep the bundled variable fallback at its text cut too. */
+  font-optical-sizing: none;
 }
 
 html[data-color-scheme="light"] body[data-new-layout] {

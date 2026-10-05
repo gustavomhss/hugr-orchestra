@@ -597,6 +597,13 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   line-height: normal;
 }
 
+/* The reference's 520 resolves to Inter Medium plus synthetic bold; Blink synthesizes bold for web
+   fonts only at 600 or more against a lighter face, so ask the Medium-only face for 600. */
+.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
+  font-family: "Mx Inter Medium", var(--orchestra-font-family-sans);
+  font-weight: 600;
+}
+
 /* The reference spaces the caption 16px from the scheme toggle. */
 .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-caption"] {
   margin-inline-end: 10px;
