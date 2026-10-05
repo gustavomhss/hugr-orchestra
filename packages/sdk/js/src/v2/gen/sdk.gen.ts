@@ -2157,7 +2157,7 @@ export class Vcs extends HeyApiClient {
   /**
    * Get VCS activity
    *
-   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals.
+   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.
    */
   public activity<ThrowOnError extends boolean = false>(
     parameters: {

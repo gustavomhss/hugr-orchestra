@@ -2729,6 +2729,11 @@ export type VcsActivityCommit = {
   time: number
 }
 
+export type VcsActivityPartial = {
+  commits: boolean
+  lines: boolean
+}
+
 export type VcsActivity = {
   repository: boolean
   since: number
@@ -2740,9 +2745,10 @@ export type VcsActivity = {
   ahead: number | null
   behind: number | null
   /**
-   * True when a commit, output or time bound cut the scan short
+   * True when a commit, output or time bound cut any scan short
    */
   truncated: boolean
+  partial: VcsActivityPartial
 }
 
 export type Command = {
