@@ -124,6 +124,9 @@ export async function setup(
     id: name,
     name,
     worktree,
+    // A project without an avatar color makes the V1 layout PATCH one in the background; already colored
+    // projects keep the specs' "sends nothing" oracles about the agent flows themselves.
+    icon: { color: "mint" },
     vcs: "git",
     sandboxes: [],
     time: { created: 1, updated: 1 },
