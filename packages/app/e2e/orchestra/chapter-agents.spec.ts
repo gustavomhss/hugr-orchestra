@@ -411,6 +411,26 @@ test("Escape while the file loads closes the dialog and a late answer does not r
   expect(mock.writes).toEqual([])
 })
 
+test("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
+  const mock = await setup(page)
+  await openAgents(page)
+  // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
+  await page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Agents", exact: true })
+    .hover()
+  await expect(page.getByRole("tooltip")).toHaveText("Work in progress, revisit before production")
+  const configure = card(page, "plan").getByRole("button", { name: "Configure", exact: true })
+  await configure.focus()
+  await page.keyboard.press("Enter")
+  await expect(dialog(page)).toBeVisible()
+  await expect(page.getByRole("tooltip")).toHaveCount(1)
+  await page.keyboard.press("Escape")
+  await expect(dialog(page)).toHaveCount(0)
+  await expect(configure).toBeFocused()
+  expect(mock.writes).toEqual([])
+})
+
 test("load failures offer a retry; save conflicts and unsupported servers stay explicit", async ({ page }) => {
   const mock = await setup(page, { fileFailures: 1, writeStatus: 409 })
   await openAgents(page)

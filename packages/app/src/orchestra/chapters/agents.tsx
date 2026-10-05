@@ -76,11 +76,17 @@ export default function Agents(props: ChapterPageProps) {
       result.error && typeof result.error === "object" && "kind" in result.error ? result.error.kind : undefined
     return new Error(language.t("orchestra.agents.error.save"), { cause: { status: result.response?.status, kind } })
   }
+  const unsupportedError = () => new Error(language.t("orchestra.agents.error.unsupported"), { cause: { status: 404 } })
   // A server without the route can answer with its web app's HTML and status 200.
   const unsupported = (response: Response | undefined) =>
-    !response?.headers.get("content-type")?.includes("application/json")
-      ? new Error(language.t("orchestra.agents.error.unsupported"), { cause: { status: 404 } })
-      : undefined
+    !response?.headers.get("content-type")?.includes("application/json") ? unsupportedError() : undefined
+  // The SDK rejects a bare `text/html` answer (what a server's embedded web app sends) before this page can read
+  // the response, so that rejection means the same missing route.
+  const htmlRejected = (error: unknown): never => {
+    throw error instanceof Error && error.message.includes("Server responded with text/html")
+      ? unsupportedError()
+      : error
+  }
   const working = async (directory: string) =>
     Object.values((await legacy(directory).session.status()).data ?? {}).some((status) => status.type !== "idle")
   // V1 keeps config per instance, and disposing it cancels that directory's running sessions.
@@ -92,7 +98,9 @@ export default function Agents(props: ChapterPageProps) {
 
   // Agent files live in `<profile>/.opencode/agent`; the server reloads its V2 agents after a write.
   const load = async (name: string) => {
-    const result = await legacy().v2.agent.file.get({ agentID: name, location: { directory: props.directory } })
+    const result = await legacy()
+      .v2.agent.file.get({ agentID: name, location: { directory: props.directory } })
+      .catch(htmlRejected)
     if (!result.data) throw requestError(result)
     const missing = unsupported(result.response)
     if (missing) throw missing
@@ -100,11 +108,13 @@ export default function Agents(props: ChapterPageProps) {
   }
   const save = async (name: string, input: AgentFileInput) => {
     const directory = props.directory
-    const result = await legacy().v2.agent.file.update({
-      agentID: name,
-      location: { directory },
-      agentFileInput: input,
-    })
+    const result = await legacy()
+      .v2.agent.file.update({
+        agentID: name,
+        location: { directory },
+        agentFileInput: input,
+      })
+      .catch(htmlRejected)
     if (!result.data) throw requestError(result)
     const missing = unsupported(result.response)
     if (missing) throw missing
