@@ -70,7 +70,36 @@ provenance, validity and history better than any compactor.
 
 ## 4. Text structuring and handoff protocols
 
-Pending: survey still running.
+- **I-PASS** (NEJM 2014, 10,740 admissions): severity → summary → action list → situation awareness
+  and if/then contingencies → receiver synthesis. Medical errors -23%, preventable adverse events -30%.
+- **SBAR**: Situation, Background, Assessment, Recommendation; the sender must commit to a
+  recommendation (mixed evidence, strongest for calls).
+- **Shift handover** (Patterson 2004): hand over what changed since last time, what is unusual, and
+  expectations with certainty (observational).
+- **Commander's intent / BLUF / OPORD**: purpose, key tasks, checkable end state; conclusion first
+  (doctrine, no trials).
+- **Surgical Safety Checklist** (NEJM 2009): deaths 1.5% → 0.8%; short, read-do, only dangerous
+  omissions.
+- **ICS-201 / SRE handoffs**: done vs in progress (partly applied) vs not started.
+- **ADRs**: status proposed/accepted/deprecated/superseded-by, context, decision, consequences.
+- **ICD 203**: key judgments first; fixed likelihood scale; confidence separate; facts vs
+  assumptions vs judgments; sources described.
+- **LLM evidence**: format changes move accuracy by up to 40 points (He 2024) or 76 (Sclar 2023), no
+  universal winner, consistency matters; lost in the middle (U-shaped); task or query at the end
+  helps up to 30% (Anthropic); earlier instructions are followed better (IFScale); length and
+  near-duplicate distractors degrade reasoning (Levy 2024, Chroma); **repeatedly updated keys make
+  the latest value hard to retrieve — keep only current values live** (PI-LLM, arXiv 2506.08184);
+  state rules positively; use closed status labels instead of hedging words; a one-paragraph
+  overview above itemized detail (RAPTOR); open work as an ordered plan (Plan-and-Solve,
+  Least-to-Most); strict JSON output hurts reasoning, so JSON is for the producer transport, not
+  the reader view.
+- **Rules derived**: status line and overview first; objective as purpose plus checkable end state;
+  hard constraints near the top, short and capped, with quote plus positive restatement plus scope;
+  bulky reference in the middle; next action as the very last line; one current value per fact,
+  superseded items reduced to a pointer; closed provenance labels; at most one in-progress task and
+  explicit partial state; if/then contingencies; failures in their own section; a Δ marker on items
+  changed since the last compaction; stable short IDs and references by ID; MECE sections; one
+  fixed format (tagged sections, single-line items); terse.
 
 ## 5. Long-term memory construction
 
