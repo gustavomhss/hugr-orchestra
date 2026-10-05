@@ -216,6 +216,8 @@ const layer = Layer.effect(
                 })
                 const pluginCtx: PluginToolContext = {
                   ...toolCtx,
+                  // Callers that predate ids pass only `agent`, which is then also the key (as in the lookup below).
+                  agentID: toolCtx.agentID ?? toolCtx.agent,
                   ask: (req) => bridge.promise(toolCtx.ask(req)),
                   directory: ctx.directory,
                   worktree: ctx.worktree,

@@ -141,6 +141,7 @@ function composerFixture(mode: string) {
       sessionID: session.id,
       messageID: "message",
       agent: "build",
+      agentID: "build",
       directory: instance.directory,
       worktree: instance.directory,
       abort: new AbortController().signal,
