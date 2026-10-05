@@ -13,8 +13,7 @@ import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 
-const USAGE =
-  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
+const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 const root = (await $`git rev-parse --show-toplevel`.text()).trim()
 const request = parse(process.argv.slice(2))
@@ -112,7 +111,10 @@ async function snapshot() {
   const dir = await mkdtemp(path.join(os.tmpdir(), "test-ci-"))
   const index = path.join(dir, "index")
   // A copy of the real index keeps its file stat cache, so `git add -A` only rehashes what changed.
-  await Bun.write(index, Bun.file(path.resolve(root, (await $`git rev-parse --git-path index`.cwd(root).text()).trim())))
+  await Bun.write(
+    index,
+    Bun.file(path.resolve(root, (await $`git rev-parse --git-path index`.cwd(root).text()).trim())),
+  )
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
   const body = JSON.stringify({ package: request.package, args: request.args })
@@ -167,15 +169,20 @@ async function uploadBlobs() {
 
 async function follow(id: number) {
   const seen = new Map<string, string>()
-  return waitFor("the workflow run to finish", 60 * 60_000, async () => {
-    const view = await $`gh run view ${id} --repo ${repo} --json status,conclusion,jobs`.quiet().json()
-    for (const job of view.jobs as { name: string; status: string; conclusion: string }[]) {
-      const state = job.conclusion || job.status
-      if (seen.get(job.name) !== state) console.log(`test-ci: ${job.name} ${state}`)
-      seen.set(job.name, state)
-    }
-    return view.status === "completed" ? (view as RunView) : undefined
-  }, 10_000)
+  return waitFor(
+    "the workflow run to finish",
+    60 * 60_000,
+    async () => {
+      const view = await $`gh run view ${id} --repo ${repo} --json status,conclusion,jobs`.quiet().json()
+      for (const job of view.jobs as { name: string; status: string; conclusion: string }[]) {
+        const state = job.conclusion || job.status
+        if (seen.get(job.name) !== state) console.log(`test-ci: ${job.name} ${state}`)
+        seen.set(job.name, state)
+      }
+      return view.status === "completed" ? (view as RunView) : undefined
+    },
+    10_000,
+  )
 }
 
 type RunView = {
@@ -190,10 +197,19 @@ async function report(view: RunView) {
       const result = await $`gh run view --repo ${repo} --job ${job.databaseId} --log`.quiet().nothrow()
       return result.exitCode === 0 && result.stdout.length > 0 ? result.text() : undefined
     })
-    const lines = log
+    const step = log
       .split("\n")
       .filter((line) => line.split("\t")[1] === "Run tests")
-      .map((line) => line.split("\t").slice(2).join("\t").replace(/^\S+Z /, ""))
+      .map((line) =>
+        line
+          .split("\t")
+          .slice(2)
+          .join("\t")
+          .replace(/^\uFEFF?\S+Z /, "")
+          .replace(/\x1b\[[0-9;]*m/g, ""),
+      )
+    // Drop the echoed step script that GitHub prints before the command output.
+    const lines = step.slice(step.findIndex((line) => line.startsWith("##[endgroup]")) + 1)
     // A passing run needs only its summary; a failing one needs the errors printed above each (fail) line.
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
