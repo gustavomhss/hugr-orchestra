@@ -11,3 +11,8 @@ export function agentMention(agent: { id?: string; name: string }) {
     part: { type: "agent" as const, name: agentKey(agent), source: { start: 0, end: 0, value: "" } },
   }
 }
+
+// An agent as the agent picker lists it: the label is the title, the stable id is the value the selection stores.
+export function agentOption(agent: { id?: string; name: string; native?: boolean; description?: string }) {
+  return { value: agentKey(agent), title: agent.name, description: agent.native ? "native" : agent.description }
+}
