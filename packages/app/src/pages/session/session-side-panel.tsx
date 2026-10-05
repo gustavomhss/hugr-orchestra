@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
+import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, untrack, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { DragDropProvider as DndKitProvider, PointerSensor } from "@dnd-kit/solid"
@@ -50,6 +50,7 @@ import {
   createOpenSessionFileTab,
   createSessionTabs,
   getTabReorderIndex,
+  planTasksTab,
   shouldShowFileTree,
   type Sizing,
 } from "@/pages/session/helpers"
@@ -207,13 +208,18 @@ export function SessionSidePanel(props: {
     if (wasOpen && !open) snoozed = true
     wasOpen = open
     if (!open && !snoozed) {
+      // Read the tab state before changing it: open() always activates its tab,
+      // which would detach an active App Dock and break the agent's dock tools.
+      const plan = untrack(() => planTasksTab({ active: tabs().active(), all: tabs().all() }))
       // Panel first, then tab, then focus in a microtask so the freshly
       // mounted tab strip selects Tasks instead of falling back to Review.
       view().reviewPanel.open()
+      if (!plan.activate) {
+        tabs().setAll(plan.all)
+        return
+      }
       tabs().open("tasks")
-      // App Dock views only stay attached while Apps is the active tab; stealing
-      // focus here would hide the dock mid-turn and break the agent's dock tools.
-      if (tabs().active() !== "apps") queueMicrotask(() => tabs().setActive("tasks"))
+      queueMicrotask(() => tabs().setActive("tasks"))
     }
   })
   const panelTabs = tabState.panelTabs
