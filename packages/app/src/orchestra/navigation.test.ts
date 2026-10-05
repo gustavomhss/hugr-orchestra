@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { dict } from "../i18n/en"
 import { ORCHESTRA_COPY } from "../i18n/orchestra"
-import { breadcrumbLabel, navigation } from "./navigation"
+import { breadcrumbLabel, isWip, navigation } from "./navigation"
 
 const copy: Record<string, string> = { ...dict, ...ORCHESTRA_COPY }
 const crumb = (route: Parameters<typeof breadcrumbLabel>[0]) => copy[breadcrumbLabel(route)]
@@ -31,4 +31,15 @@ describe("breadcrumbLabel", () => {
     for (const item of navigation.filter((entry) => entry.chapter))
       expect(crumb({ type: "chapter", chapter: item.id })).toBeString()
   })
+})
+
+test("marks exactly the owner's revisit-before-production screens as WIP", () => {
+  expect(navigation.filter((item) => isWip(item.id)).map((item) => item.id)).toEqual([
+    "agents",
+    "mcp",
+    "hooks",
+    "cicd",
+    "workspaces",
+  ])
+  expect(isWip("missing")).toBe(false)
 })

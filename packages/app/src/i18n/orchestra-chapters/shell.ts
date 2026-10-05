@@ -8,6 +8,9 @@ export const SHELL_COPY = {
   "orchestra.shell.crumb.workspaces": "workspaces",
   "orchestra.shell.crumb.settings": "settings",
   "orchestra.shell.crumb.plugins": "LLM Plugins",
+  "orchestra.shell.wip.chip": "WIP",
+  "orchestra.shell.wip.description": "Work in progress, revisit before production",
+  "orchestra.shell.wip.page": "WIP · revisit before production",
   "orchestra.shell.profile.agents.one": "{{count}} agent",
   "orchestra.shell.profile.agents.other": "{{count}} agents",
 }

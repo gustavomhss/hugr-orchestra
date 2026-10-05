@@ -366,6 +366,38 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   background: var(--v2-state-fg-warning);
 }
 
+/* The reference's chapter marker (.mx-origin), marking screens to revisit before production. */
+:is(.orchestra-wip-chip, .orchestra-wip-mark) {
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: 6px;
+  background: var(--orchestra-wip-background);
+  color: var(--orchestra-wip-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.orchestra-wip-chip {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding-block: 1px;
+  padding-inline: 6px;
+}
+
+/* In flow above the page, so it never covers a page's own eyebrow, title or header action. Pages use
+   different content columns, so it sits in the panel's corner rather than on any one of them. */
+.orchestra-wip-mark {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-block: 14px 0;
+  margin-inline: 16px;
+  padding-block: 4px;
+  padding-inline: 8px;
+}
+
 .orchestra-sidebar-foot {
   display: grid;
   flex-shrink: 0;
@@ -677,6 +709,23 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   inline-size: 2px;
   border-radius: 1px;
   background: var(--orchestra-sidebar-active-icon);
+}
+
+/* The compact rail keeps the mark as a dot on the icon. */
+[data-navigation="compact"] .orchestra-wip-chip {
+  position: absolute;
+  inset-inline-end: 4px;
+  inset-block-start: 4px;
+  inline-size: 5px;
+  block-size: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--orchestra-wip-text);
+}
+
+[data-navigation="compact"] .orchestra-wip-chip > span {
+  display: none;
 }
 
 [data-navigation="compact"] .orchestra-pending-dot {

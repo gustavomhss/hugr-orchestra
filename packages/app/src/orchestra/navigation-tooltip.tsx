@@ -5,9 +5,9 @@ import "@opencode-ai/ui/v2/tooltip-v2.css"
 
 // Compose the primitive with the actual button so it owns focus, hover and Escape
 // together, and its accessible description reaches the keyboard target. Expanded
-// navigation shows every label, so only icon-only (compact) triggers get a tooltip.
+// navigation shows every label, so only icon-only (compact) triggers and the WIP marks get one.
 export function OrchestraNavigationTooltip(props: {
-  compact: boolean
+  enabled: boolean
   value: string
   children: (trigger: typeof Tooltip.Trigger) => JSX.Element
 }) {
@@ -15,13 +15,13 @@ export function OrchestraNavigationTooltip(props: {
   const [open, setOpen] = createSignal(false)
   // `disabled` only stops opening; also close a tooltip that was open when the rail expanded.
   createEffect(() => {
-    if (!props.compact) setOpen(false)
+    if (!props.enabled) setOpen(false)
   })
   return (
     <Tooltip
       open={open()}
       onOpenChange={setOpen}
-      disabled={!props.compact}
+      disabled={!props.enabled}
       placement={language.direction() === "rtl" ? "left" : "right"}
       gutter={4}
       openDelay={400}

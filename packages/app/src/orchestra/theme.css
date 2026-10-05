@@ -68,6 +68,8 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-profile-logo-text: #fff;
   --orchestra-brand-descriptor: #8c9db2;
   --orchestra-sidebar-footer: #7b8c9e;
+  --orchestra-wip-text: var(--orchestra-warm);
+  --orchestra-wip-background: var(--orchestra-overlay-hover);
 
   --orchestra-tab-text: #81909f;
   --orchestra-tab-hover-background: rgba(173, 196, 217, 0.045);
@@ -298,6 +300,9 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-sidebar-profile-logo: #2f6bbf;
   --orchestra-brand-descriptor: var(--orchestra-sidebar-secondary);
   --orchestra-sidebar-footer: #59616a;
+  /* The reference's near-transparent amber mark misses AA on the light glass over the photograph. */
+  --orchestra-wip-text: #6b5630;
+  --orchestra-wip-background: rgba(255, 255, 255, 0.5);
 
   --orchestra-tab-text: #5f6874;
   --orchestra-tab-hover-background: rgba(40, 56, 74, 0.035);
