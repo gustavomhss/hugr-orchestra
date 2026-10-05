@@ -6,6 +6,8 @@ export const navigation = [
   { id: "home", label: "home.title", chapter: undefined },
   { id: "chat", label: "orchestra.nav.chat", chapter: undefined },
   { id: "agents", label: "orchestra.nav.agents", chapter: "C11" },
+  // Session-relative governance (S20), opened as a dialog over the current session; not a route.
+  { id: "maestro", label: "orchestra.nav.maestro", chapter: undefined },
   { id: "mcp", label: "orchestra.nav.mcp", chapter: "C01" },
   { id: "skills", label: "orchestra.nav.skills", chapter: "C02" },
   { id: "plugins", label: "orchestra.nav.plugins", chapter: "C03" },

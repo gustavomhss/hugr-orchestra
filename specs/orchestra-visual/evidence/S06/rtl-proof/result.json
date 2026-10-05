@@ -1,0 +1,198 @@
+{
+  "scope": "S06 compact navigation P2 RTL proof closure and profile refresh focus fix",
+  "status": "PASS",
+  "base_commit_sha": "e4e5693ee8fef063cf6f13ef2f5ebe859f0c1828",
+  "branch": "orchestra-compact-nav",
+  "contract_ref": "e5b5bf9c446ed0ae3eddb841e38c7ebdb06f957a",
+  "supersedes": {
+    "receipt": "../result.json",
+    "scope": "DOM-only English RTL geometry and the absence of actual RTL-locale navigation proof. This does not claim Arabic linguistic quality or Hebrew coverage."
+  },
+  "source_identity": "SHA-256 of the final source and tests below; the containing commit is discoverable with git log -- specs/orchestra-visual/evidence/S06/rtl-proof/result.json",
+  "source_sha256": {
+    "packages/app/e2e/orchestra/compact-navigation.fixture.ts": "aa489ff620d47c2d9271c314737c5a71b456f9f943addb765a4d5ac95ac5c16a",
+    "packages/app/e2e/orchestra/compact-navigation.spec.ts": "ccf89cafb37324471970ec366b1a3ddc02de56f748445ffb7f6b45e91276f138",
+    "packages/app/e2e/orchestra/compact-navigation-direction.spec.ts": "e7848e9dfd6a48b3fe8690e638de163c26b3a0fb67ae6c96a5412f6179436d52",
+    "packages/app/e2e/orchestra/titlebar-native-frame.fixture.ts": "8d02fc80c58813e8b1e6301b1b8704a2e1b65cd0a42c52a5d408ea7c4a3c81bf",
+    "packages/app/e2e/orchestra/titlebar-native-frame.spec.ts": "36a4372e101ccf409413188fac8f7ab7b159f0beb5584be93ed2386d2521060c",
+    "packages/app/src/orchestra/sidebar.tsx": "471f401824411c0581a93678fcd0acac9ef1fe7f4f2fc80a61a75d850bbc4f44",
+    "packages/app/src/app.tsx": "01f81a96c4b72111df20887c607a20b90331bdb18c2cd387c3d8e65bde111385",
+    "packages/app/src/context/language.tsx": "5ef0d724a88ac90ce097fcf28c7c11fc758df8e4f9b1ccc41ae6f15381bbe8a5",
+    "packages/ui/src/context/i18n.tsx": "8f45ec69a3fc6b0b8781b6a6522e510085aca531ed55e8f97789f32b26abcba2",
+    "packages/app/src/orchestra/navigation-tooltip.tsx": "e738afdf28995e9cc21cfad3f86fe0d36bf4181547fd3a664e2a1de9eec1c15e",
+    "packages/app/src/orchestra/navigation-toggle.tsx": "a0e5408a42f324129614db51e0aab7b5ac4f753f02f3ffab92327534f6f3b485",
+    "packages/app/src/orchestra/shell.css": "645482a4648d0ce316173ae049ca875b9090f323c2e90d46be0e1ead28d2ada8"
+  },
+  "environment": {
+    "os": "macOS 15.3.2 (24D81)",
+    "bun": "1.3.14",
+    "node": "v22.17.1",
+    "browser": "Playwright Chromium headless, installed chromium_headless_shell-1217",
+    "app": "Vite development server from this worktree, port 5004",
+    "backend": "Deterministic mockOpenCodeServer responses; actual app controllers and providers",
+    "workers": 1,
+    "retries": 0,
+    "lock": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh",
+    "matrix_viewport": "1672x941, then 1152x600 for clipped navigation keyboard reach",
+    "native_fixture_viewport": "1000x800, DPR1, zoom 1/1.25/2"
+  },
+  "implementation": {
+    "direction": "English forced RTL uses the existing DIR debug button -> LanguageProvider.setDirection -> document.dir and layoutLocale -> UiI18nBridge -> Kobalte. Arabic starts from the real persisted ar locale and existing dictionaries. No new production direction override or test-only application hook.",
+    "production_fix": "Profile RadioItem identity is now keyed by worktree rather than enriched project object reference. Metadata refresh preserves the DOM node, checked project and keyboard focus.",
+    "governance": "No governance command, route or navigation-entry logic changed."
+  },
+  "matrix": [
+    {
+      "locale": "en",
+      "override": null,
+      "direction": "ltr",
+      "scheme": "dark",
+      "artifacts": "artifacts/orchestra-compact-navigati-4b92f-ps-and-profile-portal-agree-chromium"
+    },
+    {
+      "locale": "en",
+      "override": null,
+      "direction": "ltr",
+      "scheme": "light",
+      "artifacts": "artifacts/orchestra-compact-navigati-1494d-ps-and-profile-portal-agree-chromium"
+    },
+    {
+      "locale": "en",
+      "override": "rtl",
+      "direction": "rtl",
+      "scheme": "dark",
+      "artifacts": "artifacts/orchestra-compact-navigati-f4dc2-ps-and-profile-portal-agree-chromium"
+    },
+    {
+      "locale": "en",
+      "override": "rtl",
+      "direction": "rtl",
+      "scheme": "light",
+      "artifacts": "artifacts/orchestra-compact-navigati-858a1-ps-and-profile-portal-agree-chromium"
+    },
+    {
+      "locale": "ar",
+      "override": null,
+      "direction": "rtl",
+      "scheme": "dark",
+      "artifacts": "artifacts/orchestra-compact-navigati-e5ccb-ps-and-profile-portal-agree-chromium"
+    },
+    {
+      "locale": "ar",
+      "override": null,
+      "direction": "rtl",
+      "scheme": "light",
+      "artifacts": "artifacts/orchestra-compact-navigati-b9e89-ps-and-profile-portal-agree-chromium"
+    }
+  ],
+  "coverage": [
+    "Document lang/dir and provider-backed debug direction agree while English remains English.",
+    "230-to-56 collapse retains toggle focus; Tab order Home, Chat, Agents, MCP remains semantic.",
+    "The 2px selected marker is at the logical start, including its computed physical position.",
+    "Side tooltip direction, placement and aria-describedby target are correct; Escape closes it without moving focus.",
+    "Profile popup is outside the sidebar subtree, inherits text direction and uses the correct logical top-start alignment.",
+    "Both tooltip and profile preferred placement are checked again with room on both sides, preventing collision flipping from hiding broken direction propagation.",
+    "Profile activation chooses the exact mixed-script project; its filesystem path remains LTR.",
+    "Renaming project metadata through refreshed mock API responses preserves menu DOM identity, checked state and focus; Escape restores the profile trigger.",
+    "Short-window navigation scrolls Help into view; Tab and Shift+Tab retain the Help/profile order.",
+    "Existing route/draft/reload/window independence, 230/208/56 widths, constrained explanation, 900px on-demand rail and 767px mobile checks were rerun.",
+    "The real native Titlebar receives the real navigation child and production shell CSS; no-drag, center hit testing, physical macOS padding of 84/zoom, keyboard/pointer toggles and unchanged physical frame reports are checked in LTR and RTL."
+  ],
+  "verification": [
+    {
+      "cwd": "packages/app",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=5004 PLAYWRIGHT_WORKERS=1 PLAYWRIGHT_NO_VIDEO=1 bunx playwright test e2e/orchestra/compact-navigation.spec.ts e2e/orchestra/compact-navigation-direction.spec.ts e2e/orchestra/titlebar-native-frame.spec.ts --reporter=line --retries=0 --output=../../specs/orchestra-visual/evidence/S06/rtl-proof/artifacts",
+      "exit_code": 0,
+      "result": "16 passed, no retries",
+      "log": "final-e2e.log",
+      "runner_receipt": "artifacts/.last-run.json"
+    },
+    {
+      "cwd": "packages/app",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=5004 PLAYWRIGHT_WORKERS=1 PLAYWRIGHT_NO_VIDEO=1 bunx playwright test e2e/orchestra/compact-navigation-direction.spec.ts e2e/orchestra/titlebar-native-frame.spec.ts --grep 'English LTR dark|English forced RTL dark|navigation child' --reporter=line --retries=0 --output=/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-restored-final",
+      "exit_code": 0,
+      "result": "3 passed after exact source restoration",
+      "log": "restored-e2e.log"
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bun test --conditions=browser --preload ./happydom.ts ./test-browser/orchestra-compact-navigation.test.ts",
+      "exit_code": 0,
+      "result": "2 passed, 9 assertions; unchanged navigation model",
+      "log": "model-tests.log"
+    },
+    { "cwd": "packages/app", "command": "bun typecheck", "exit_code": 0, "log": "typecheck.log" },
+    { "cwd": "packages/app", "command": "bun run typecheck:e2e", "exit_code": 0, "log": "typecheck-e2e.log" },
+    {
+      "cwd": "packages/app",
+      "command": "bunx prettier --check src/orchestra/sidebar.tsx e2e/orchestra/compact-navigation.fixture.ts e2e/orchestra/compact-navigation.spec.ts e2e/orchestra/compact-navigation-direction.spec.ts e2e/orchestra/titlebar-native-frame.fixture.ts e2e/orchestra/titlebar-native-frame.spec.ts",
+      "exit_code": 0,
+      "log": "format.log"
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bunx oxlint -c ../../.oxlintrc.json src/orchestra/sidebar.tsx e2e/orchestra/compact-navigation.fixture.ts e2e/orchestra/compact-navigation.spec.ts e2e/orchestra/compact-navigation-direction.spec.ts e2e/orchestra/titlebar-native-frame.fixture.ts e2e/orchestra/titlebar-native-frame.spec.ts",
+      "exit_code": 0,
+      "result": "13 warnings, 0 errors; includes two HTMLElement assertion warnings in the new calibration probe",
+      "log": "lint.log"
+    }
+  ],
+  "mutations": [
+    {
+      "source": "packages/app/src/app.tsx",
+      "change": "Replace UiI18nBridge layoutLocale: language.layoutLocale with layoutLocale: language.intl.",
+      "test": "compact-navigation-direction.spec.ts --grep 'English forced RTL dark'",
+      "exit_code": 1,
+      "failure": "Non-colliding profile logical alignment: expected true, received false.",
+      "log": "provider-mutation.log",
+      "restored_sha256": "01f81a96c4b72111df20887c607a20b90331bdb18c2cd387c3d8e65bde111385",
+      "stage": "Before the later profile identity fix; the failing placement assertion remains in the final test."
+    },
+    {
+      "source": "packages/app/src/orchestra/shell.css",
+      "change": "Remove -webkit-app-region: no-drag from the titlebar navigation toggle rule.",
+      "test": "titlebar-native-frame.spec.ts --grep 'navigation child'",
+      "exit_code": 1,
+      "failure": "Expected no-drag, received none.",
+      "log": "native-mutation.log",
+      "restored_sha256": "645482a4648d0ce316173ae049ca875b9090f323c2e90d46be0e1ead28d2ada8"
+    },
+    {
+      "source": "packages/app/src/orchestra/sidebar.tsx",
+      "change": "Replace stable worktree string keys with freshly allocated { worktree } objects, preserving every handler and rendered value.",
+      "test": "compact-navigation-direction.spec.ts --grep 'English LTR dark'",
+      "exit_code": 1,
+      "failure": "After explicit metadata rename to the v2 project, the menu item becomes inactive and its generated DOM ID changes on refresh.",
+      "log": "profile-mutation.log",
+      "restored_sha256": "471f401824411c0581a93678fcd0acac9ef1fe7f4f2fc80a61a75d850bbc4f44"
+    }
+  ],
+  "calibration_and_failure_history": [
+    "Initial portal assertion incorrectly required an explicit dir attribute. Kobalte portals inherit direction; this was replaced by computed direction plus real logical popup geometry, without changing production markup.",
+    "provider-mutation-before-calibration.log records a surviving mutation at the viewport edge. The test was strengthened with the non-colliding inset probe; provider-mutation.log is the subsequent behavior failure.",
+    "The first inset probe let the stationary pointer hover another tooltip after layout movement. The final probe moves the pointer to content before keyboard focus. Its restored baseline and subsequent provider mutation separated that harness issue from the provider defect.",
+    "pre-final-e2e.log records global Enter missing a replaced menu target after capture. Scoping activation to the exact item did not hide the remaining focus problem: profile-focus-before-fix.log records repeated generated item-ID changes and inactive focus. Stable worktree identity fixes that production seam; profile-mutation.log proves the regression assertion detects it.",
+    "interrupted-e2e.log is an incomplete run stopped by the shell tool timeout while using the shared lock. It is not counted as a passing result; the complete final run supersedes it."
+  ],
+  "artifacts": {
+    "hash_manifest": "SHA256SUMS",
+    "log_normalization": "Trailing spaces were removed from Playwright diagnostic lines for git diff --check; outcomes and diagnostics are otherwise preserved.",
+    "matrix_files": ["compact-tooltip.png", "compact-profile.png"],
+    "matrix_source": "Real app consumers with deterministic project/API fixtures; normal layout before the inset calibration step.",
+    "other_captures": {
+      "artifacts/orchestra-compact-navigati-fe66f-ebar-geometry-across-reload-chromium": "Dark/light draft preservation and provider-driven forced RTL compact/expanded captures.",
+      "artifacts/orchestra-compact-navigati-f5d2c-mobile-navigation-available-chromium": "1152px constrained rail and 900px on-demand rail."
+    }
+  },
+  "review": {
+    "independence": "The original cold reviewer authored this follow-up after explicit write authorization. This is implementation self-review, not a new independent cold review.",
+    "visual": "Inspected final Arabic and provider-driven English RTL profile/tooltip captures: script, logical placement, focus outline, selection marker and theme identity are coherent. Assertions cover the complete direction/theme matrix."
+  },
+  "limits": [
+    "Native proof is Chromium CSS/geometry and mocked macOS IPC, not live Electron or native OS click validation. Windows/Linux caption-control integration is not claimed.",
+    "Arabic layout and existing dictionary use are covered; Arabic linguistic quality and Hebrew locale coverage are not claimed.",
+    "No full suite, production build or benchmark was run. Debug performance counters in screenshots are not benchmark evidence.",
+    "Provider/PTY-wide session identity remains outside this compact-navigation proof; route/draft preservation is covered by the existing focused app spec.",
+    "Governance branch integration must preserve Maestro's additive row/icon/handler and extend the explicit keyboard-order expectation when that row is combined."
+  ]
+}

@@ -413,7 +413,7 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-des
     min-inline-size: 0;
     min-block-size: 0;
     flex: 1;
-    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-columns: var(--orchestra-workspace-columns, var(--orchestra-navigation-width, 230px) minmax(0, 1fr));
     grid-template-rows: minmax(0, 1fr);
     gap: 6px;
     padding: 6px;
@@ -440,16 +440,16 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-des
   }
 
   html[data-color-scheme] body[data-new-layout] .orchestra-sidebar {
-    display: flex;
+    display: var(--orchestra-navigation-display, flex);
     min-block-size: 0;
     flex-direction: column;
     padding-block: 14px 13px;
-    padding-inline: 10px;
+    padding-inline: var(--orchestra-navigation-padding, 10px);
   }
 
   html[data-color-scheme] body[data-new-layout] .orchestra-sidebar .orchestra-brand {
     padding-block: 2px 16px;
-    padding-inline: 10px;
+    padding-inline: var(--orchestra-brand-padding, 10px);
   }
 
   html[data-color-scheme] body[data-new-layout] .orchestra-session-tabs {

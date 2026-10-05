@@ -18,13 +18,22 @@ import {
   type TabIdentity,
 } from "./apps-panel-controller"
 import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
+import { TabMenu } from "./apps-panel-tab-menu"
 import "./apps-panel.css"
 
 const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
+export type DockAddressDraft = { owner?: string; tab?: TabIdentity; value: string }
 
 // A view of the window's App Dock. The live tabs belong to the controller and the repository
 // profile in context, so unmounting this view hides the native browser instead of closing it.
-export function AppsPanel() {
+// The compact view is the cockpit's Dock card: tabs above the address bar and only the core controls.
+export function AppsPanel(
+  props: {
+    compact?: boolean
+    draft?: DockAddressDraft
+    onDraftChange?: (draft: DockAddressDraft | undefined) => void
+  } = {},
+) {
   const dock = appDockController()
   const api = dock.api
   const state = dock.state
@@ -57,7 +66,7 @@ export function AppsPanel() {
     findResult: undefined as { requestID: number; activeMatchOrdinal: number; matches: number } | undefined,
     downloadsOpen: false,
     sidebarCollapsed: localStorage.getItem(sidebarCollapsedKey) === "true",
-    menu: undefined as { tab: Tab; x: number; y: number; invoker: HTMLButtonElement } | undefined,
+    menu: undefined as { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement } | undefined,
     profileCreating: false,
     profileDraft: "",
   })
@@ -76,8 +85,8 @@ export function AppsPanel() {
   const resize = createAppDockBoundsSync({
     snapshot: () => {
       const tab = state.active
-      return tab && host && api && dock.owns(host)
-        ? { tab, bounds: bounds(host), resize: (next) => api.appDockResize(next) }
+      return tab && host && dock.owns(host)
+        ? { tab, bounds: bounds(host), resize: (next) => dock.resize(tab, next) }
         : undefined
     },
     requestAnimationFrame: (callback) => requestAnimationFrame(callback),
@@ -88,10 +97,15 @@ export function AppsPanel() {
       if (host) onCleanup(dock.attach(host, id))
     }),
   )
-  // The tab menu is drawn in place, not in a portal, and can reach over the browser.
-  createEffect(() => {
-    if (view.menu && menuElement) onCleanup(dock.overlay(menuElement))
-  })
+  // Resizes reach only the tab they name. A tab the desktop attached while one was in flight (a new
+  // tab, a popup or a recovery) is measured again once it becomes active here.
+  createEffect(
+    on(
+      () => state.active,
+      () => resize.request(),
+      { defer: true },
+    ),
+  )
   onMount(() => {
     const unsubscribeFind = api?.appDockFindResult?.((result) => {
       if (sameTab(result, state.active) && result.requestID === findRequestID) setView("findResult", result)
@@ -102,7 +116,7 @@ export function AppsPanel() {
     window.addEventListener("resize", resize.request)
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
-      if (!target || !root?.contains(target)) return
+      if (!target || !(root?.contains(target) || menuElement?.contains(target))) return
       const editable = !!target.closest("input, textarea, select, [contenteditable]")
       if (event.key === "Escape") {
         if (view.menu) closeMenu()
@@ -149,6 +163,12 @@ export function AppsPanel() {
     })
   })
   const activeTab = () => state.tabs.find((tab) => sameTab(tab, state.active))
+  const address = () => {
+    const draft = props.draft
+    return draft && draft.owner === state.owner && (draft.tab ? sameTab(draft.tab, state.active) : !state.active)
+      ? draft.value
+      : state.url
+  }
   const activeCrashed = () => activeTab()?.crashed
   const bookmarked = () => !!activeTab() && state.bookmarks.some((item) => item.url === activeTab()!.url)
   const toggleSidebar = () => {
@@ -192,7 +212,7 @@ export function AppsPanel() {
   return (
     <div
       ref={root}
-      class={`zen-browser-shell ${view.sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}
+      class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
       data-status={state.status}
     >
       <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
@@ -291,6 +311,8 @@ export function AppsPanel() {
           class="zen-urlbar"
           onSubmit={(event) => {
             event.preventDefault()
+            dock.setURL(address())
+            props.onDraftChange?.(undefined)
             void dock.launch()
           }}
         >
@@ -313,7 +335,7 @@ export function AppsPanel() {
             &#8594;
           </button>
           <button
-            class={`zen-nav-button ${bookmarked() ? "is-active" : ""}`}
+            class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
             type="button"
             aria-label={bookmarked() ? "Remove bookmark" : "Add bookmark"}
             disabled={!!activeCrashed()}
@@ -323,13 +345,24 @@ export function AppsPanel() {
           </button>
           <input
             ref={addressInput}
-            value={state.url}
-            onInput={(event) => dock.setURL(event.currentTarget.value)}
+            value={address()}
+            dir="ltr"
+            onInput={(event) => {
+              const value = event.currentTarget.value
+              if (props.onDraftChange) props.onDraftChange({ owner: state.owner, tab: state.active, value })
+              dock.setURL(value)
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape") return
+              event.preventDefault()
+              props.onDraftChange?.(undefined)
+              dock.setURL(activeTab()?.url ?? "")
+            }}
             aria-label="Address"
             disabled={!!activeCrashed()}
           />
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Bookmarks"
             onClick={() => setView("libraryOpen", view.libraryOpen === "bookmarks" ? undefined : "bookmarks")}
@@ -337,7 +370,7 @@ export function AppsPanel() {
             &#9734;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="History"
             onClick={() => setView("libraryOpen", view.libraryOpen === "history" ? undefined : "history")}
@@ -345,7 +378,7 @@ export function AppsPanel() {
             &#8986;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Find in page"
             disabled={!!activeCrashed()}
@@ -354,7 +387,7 @@ export function AppsPanel() {
             &#8981;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Zoom out"
             disabled={!!activeCrashed()}
@@ -363,7 +396,7 @@ export function AppsPanel() {
             A-
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Zoom in"
             disabled={!!activeCrashed()}
@@ -372,7 +405,7 @@ export function AppsPanel() {
             A+
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label="Downloads"
             onClick={() => setView("downloadsOpen", !view.downloadsOpen)}
@@ -380,7 +413,7 @@ export function AppsPanel() {
             &#8595;
           </button>
           <button
-            class="zen-nav-button"
+            class="zen-nav-button zen-nav-extra"
             type="button"
             aria-label={state.fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             disabled={!!activeCrashed()}
@@ -509,7 +542,9 @@ export function AppsPanel() {
             tab={view.menu.tab}
             x={view.menu.x}
             y={view.menu.y}
+            rtl={view.menu.rtl}
             setElement={(element) => (menuElement = element)}
+            onDismiss={() => closeMenu()}
             canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
             canReload={capability("appDockCommand") && !view.menu.tab.crashed}
             canClose={capability("appDockCloseTab")}
@@ -555,10 +590,10 @@ function TabButton(props: {
   tab: Tab
   active: () => TabIdentity | undefined
   select: (tab: Tab) => void
-  setMenu: (menu: { tab: Tab; x: number; y: number; invoker: HTMLButtonElement }) => void
+  setMenu: (menu: { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement }) => void
 }) {
   const openMenu = (x: number, y: number, invoker: HTMLButtonElement) =>
-    props.setMenu({ tab: props.tab, x, y, invoker })
+    props.setMenu({ tab: props.tab, x, y, rtl: getComputedStyle(invoker).direction === "rtl", invoker })
   const keydown = (event: KeyboardEvent) => {
     const current = event.currentTarget
     if (!(current instanceof HTMLButtonElement)) return
@@ -568,7 +603,7 @@ function TabButton(props: {
     } else if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
       event.preventDefault()
       const rect = current.getBoundingClientRect()
-      openMenu(rect.left + 8, rect.bottom + 4, current)
+      openMenu(getComputedStyle(current).direction === "rtl" ? rect.right - 8 : rect.left + 8, rect.bottom + 4, current)
     } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       const tabs = [...(current.parentElement?.querySelectorAll<HTMLButtonElement>("[role='tab']") ?? [])]
       const index = tabs.indexOf(current)
@@ -578,7 +613,14 @@ function TabButton(props: {
           ? tabs[0]
           : event.key === "End"
             ? tabs.at(-1)
-            : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]
+            : tabs[
+                (index +
+                  (event.key === (getComputedStyle(current).direction === "rtl" ? "ArrowLeft" : "ArrowRight")
+                    ? 1
+                    : -1) +
+                  tabs.length) %
+                  tabs.length
+              ]
       event.preventDefault()
       next?.focus()
       next?.click()
@@ -605,66 +647,11 @@ function TabButton(props: {
           new URL(props.tab.url).hostname.slice(0, 1).toUpperCase()
         )}
       </span>
-      <span class="zen-tab-title">{tabLabel(props.tab)}</span>
+      <bdi dir="auto" class="zen-tab-title">
+        {tabLabel(props.tab)}
+      </bdi>
       {props.tab.pinned ? "Pinned" : ""}
       {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
     </button>
-  )
-}
-
-function TabMenu(props: {
-  tab: Tab
-  x: number
-  y: number
-  setElement: (element: HTMLDivElement) => void
-  canDuplicate: boolean
-  canReload: boolean
-  canClose: boolean
-  hasOthers: boolean
-  hasRight: boolean
-  onDuplicate: () => void
-  onTogglePin: () => void
-  onReload: () => void
-  onClose: () => void
-  onCloseOthers: () => void
-  onCloseRight: () => void
-}) {
-  let firstItem: HTMLButtonElement | undefined
-  return (
-    <div
-      ref={props.setElement}
-      class="zen-tab-menu"
-      role="menu"
-      aria-label={`Actions for ${tabLabel(props.tab)}`}
-      style={{ left: `${props.x}px`, top: `${props.y}px` }}
-    >
-      <button
-        ref={(element) => {
-          firstItem = element
-          requestAnimationFrame(() => firstItem?.focus())
-        }}
-        type="button"
-        role="menuitem"
-        disabled={!props.canDuplicate}
-        onClick={props.onDuplicate}
-      >
-        Duplicate
-      </button>
-      <button type="button" role="menuitem" onClick={props.onTogglePin}>
-        {props.tab.pinned ? "Unpin" : "Pin"}
-      </button>
-      <button type="button" role="menuitem" disabled={!props.canReload} onClick={props.onReload}>
-        Reload
-      </button>
-      <button type="button" role="menuitem" disabled={!props.canClose} onClick={props.onClose}>
-        Close
-      </button>
-      <button type="button" role="menuitem" disabled={!props.hasOthers} onClick={props.onCloseOthers}>
-        Close others
-      </button>
-      <button type="button" role="menuitem" disabled={!props.hasRight} onClick={props.onCloseRight}>
-        Close right
-      </button>
-    </div>
   )
 }

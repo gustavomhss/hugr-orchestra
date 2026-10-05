@@ -9,6 +9,7 @@ import {
   Show,
   Switch,
   untrack,
+  type JSX,
 } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Portal } from "solid-js/web"
@@ -73,6 +74,7 @@ export function Titlebar(props: {
   update?: TitlebarUpdate
   debugTools?: { visible: boolean; toggle: () => void }
   tabsMount?: HTMLElement
+  navigation?: JSX.Element
 }) {
   const layout = useLayout()
   const platform = usePlatform()
@@ -492,6 +494,7 @@ export function Titlebar(props: {
                 }}
               >
                 <ChannelIndicator debugTools={props.debugTools} />
+                {props.navigation}
                 <Show when={windows() || linux()}>
                   <WindowsAppMenu command={command} platform={platform} variant="v2" />
                 </Show>

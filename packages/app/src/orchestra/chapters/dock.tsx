@@ -22,7 +22,7 @@ export default function DockPage(props: ChapterPageProps) {
         when={dock.available}
         fallback={
           <p role="status" class="orchestra-dock-message">
-            {language.t("orchestra.dock.unavailable")}
+            <span>{language.t("orchestra.dock.unavailable")}</span>
           </p>
         }
       >

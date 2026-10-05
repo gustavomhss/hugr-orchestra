@@ -347,6 +347,7 @@ export async function bootstrapDirectory(input: {
   setStore: SetStoreFunction<State>
   vcsCache: VcsCache
   loadSessions: (directory: string) => Promise<void> | void
+  loadActiveSessions: () => Promise<unknown>
   translate: (key: string, vars?: Record<string, string | number>) => string
   global: {
     config: Config
@@ -371,22 +372,37 @@ export async function bootstrapDirectory(input: {
   const revKey = ScopedKey.from(input.scope, input.directory)
   const rev = (providerRev.get(revKey) ?? 0) + 1
   providerRev.set(revKey, rev)
+  const latest = () => providerRev.get(revKey) === rev
   ;(async () => {
     const slow = [
       () => Promise.resolve(input.loadSessions(input.directory)),
       () =>
-        input.queryClient
-          .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
-          .then((data) => input.setStore("agent", data)),
+        settle(
+          input.setStore,
+          "agent",
+          input.queryClient
+            .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
+            .then((data) => input.setStore("agent", data)),
+          latest,
+        ),
       () =>
-        retry(async () => {
-          if ((await input.protocol) !== "v1") return
-          return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
-        }),
-      () =>
-        retry(() =>
-          (async () => {
+        settle(
+          input.setStore,
+          "config",
+          retry(async () => {
             if ((await input.protocol) !== "v1") return
+            return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
+          }),
+          latest,
+        ),
+      async () => {
+        // v2 statuses come from the server-wide active session seed, whose failure is not this directory's.
+        if ((await input.protocol) !== "v1")
+          return settle(input.setStore, "session_status", input.loadActiveSessions(), latest).catch(() => undefined)
+        return settle(
+          input.setStore,
+          "session_status",
+          retry(async () => {
             const x = await input.sdk.session.status()
             if (!input.session) {
               input.setStore("session_status", x.data!)
@@ -408,8 +424,10 @@ export async function bootstrapDirectory(input: {
             await Promise.all(
               Object.keys(statuses).map((sessionID) => input.session!.resolve(sessionID).catch(() => undefined)),
             )
-          })(),
-        ),
+          }),
+          latest,
+        )
+      },
       !seededProject &&
         (() =>
           retry(() => input.api.project.current({ location: { directory: input.directory } })).then((project) =>
@@ -551,4 +569,23 @@ export async function bootstrapDirectory(input: {
 
     if (loading && slowErrs.length === 0) input.setStore("status", "complete")
   })()
+}
+
+// Readers that need one resource must not wait for every other bootstrap read to succeed.
+// Runs of one directory overlap, and every successful read writes its data, which no failed read
+// removes. So any run's success records "ready", and only the latest run's failure records "failed",
+// never over a success: the flag must not deny data a successful read put in the store.
+function settle(
+  setStore: SetStoreFunction<State>,
+  resource: keyof State["load"],
+  read: Promise<unknown>,
+  latest: () => boolean,
+) {
+  return read.then(
+    () => setStore("load", resource, "ready"),
+    (error: unknown) => {
+      if (latest()) setStore("load", resource, (current) => (current === "ready" ? current : "failed"))
+      throw error
+    },
+  )
 }

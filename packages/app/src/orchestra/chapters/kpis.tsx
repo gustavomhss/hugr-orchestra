@@ -162,7 +162,13 @@ export function RecordedUsage(props: { directory: string; sdk: ServerSDK }) {
               <For each={ranking()}>
                 {(row) => (
                   <tr>
-                    <For each={row}>{(value) => <td>{value}</td>}</For>
+                    <For each={row}>
+                      {(value) => (
+                        <td>
+                          <bdi>{value}</bdi>
+                        </td>
+                      )}
+                    </For>
                   </tr>
                 )}
               </For>
