@@ -1,13 +1,5 @@
 /* Plugins screen additions to the shared kit: the mock's `.ic` glyph and its dialog inside the
-   app's dialog layer (the dialog-v2 container defaults would otherwise win on size and paint). */
-/* The app body sets 13px/24px at weight 440; the mock's page and dialog inherit 16px/normal/400. */
-.mx-page[data-mx-page="orchestra-plugins"],
-[data-component="dialog-v2"] [data-slot="dialog-container"].plugins-dialog {
-  font-size: 16px;
-  line-height: normal;
-  font-weight: 400;
-}
-
+   app's dialog layer (the dialog-v2 defaults would otherwise win on size, header and paint). */
 .plugins-ic {
   inline-size: 16px;
   block-size: 16px;
@@ -42,15 +34,43 @@
   margin: 0;
 }
 
-/* The close glyph keeps the mock's 16px mark; the 20px box carries the shared 24px hit target. */
-.plugins-dialog .plugins-close {
-  display: grid;
-  place-items: center;
-  inline-size: 20px;
-  block-size: 20px;
-  margin-block-start: -2px;
-  margin-inline-end: -2px;
-  border-radius: 4px;
+/* The shared header, painted as the mock's `.mx-dialog-head`. */
+[data-component="dialog-v2"]
+  [data-slot="dialog-container"].plugins-dialog
+  [data-slot="dialog-content"]
+  [data-slot="dialog-header"] {
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 18px;
+  border-block-end: 1px solid var(--mx-line);
+}
+
+.plugins-dialog [data-slot="dialog-header"] h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 570;
+  letter-spacing: -0.025em;
+}
+
+.plugins-dialog [data-slot="dialog-header"] p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  color: var(--mx-dim);
+  line-height: 1.6;
+}
+
+/* Shared 20px close control (24px target) in the mock's link colour and glyph weight. */
+[data-component="dialog-v2"]
+  [data-slot="dialog-container"].plugins-dialog
+  [data-slot="dialog-content"]
+  [data-slot="dialog-header"]
+  [data-slot="dialog-close-button"] {
+  color: var(--mx-blue);
+}
+
+.plugins-dialog [data-slot="dialog-close-button"] path {
+  stroke-width: 1.4;
+  stroke-linecap: round;
 }
 
 body:has(.plugins-dialog) [data-component="dialog-overlay"] {

@@ -1,3 +1,5 @@
+import { pathKey } from "./path-key"
+
 export const CAVEMAN_ID = "caveman"
 export const INTENSITIES = ["lite", "full", "ultra"] as const
 
@@ -66,15 +68,42 @@ export function behaviorSystem(behaviors: LlmBehavior[]) {
   ].join("\n\n")
 }
 
-export function filterBehaviors(behaviors: LlmBehavior[], query: string) {
+export type BehaviorCardLabels = {
+  kind: string
+  custom: string
+  status: (behavior: LlmBehavior) => string
+  configure: string
+}
+
+// The text a behavior card shows, in reading order; search matches exactly what the user sees.
+export function behaviorCardText(behavior: LlmBehavior, labels: BehaviorCardLabels) {
+  return [
+    behavior.name,
+    behavior.description,
+    labels.kind,
+    behavior.intensity ?? labels.custom,
+    labels.status(behavior),
+    labels.configure,
+  ].join(" ")
+}
+
+export function filterBehaviors(behaviors: LlmBehavior[], query: string, labels: BehaviorCardLabels) {
   const search = query.trim().toLowerCase()
   if (!search) return behaviors
-  return behaviors.filter((behavior) =>
-    [behavior.name, behavior.description, behavior.intensity ?? "custom", behavior.enabled ? "active" : "disabled"]
-      .join(" ")
-      .toLowerCase()
-      .includes(search),
+  return behaviors.filter((behavior) => behaviorCardText(behavior, labels).toLowerCase().includes(search))
+}
+
+// A profile is a repository: a sandbox or worktree directory belongs to the project that lists it,
+// so the Plugins page and every composer in that repository share one behavior store.
+export function behaviorProfileDirectory(
+  projects: readonly { worktree: string; sandboxes?: readonly string[] }[],
+  directory: string,
+) {
+  const key = pathKey(directory)
+  const owner = projects.find(
+    (project) => pathKey(project.worktree) === key || project.sandboxes?.some((sandbox) => pathKey(sandbox) === key),
   )
+  return owner?.worktree ?? directory
 }
 
 export function saveBehavior(behaviors: LlmBehavior[], next: LlmBehavior) {

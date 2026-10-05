@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
+  behaviorCardText,
+  behaviorProfileDirectory,
   behaviorSystem,
   CAVEMAN_ID,
   defaultBehaviorState,
@@ -8,8 +10,9 @@ import {
   sanitizeBehaviorState,
   saveBehavior,
   toggleBehavior,
+  type BehaviorCardLabels,
   type LlmBehavior,
-} from "./plugins-data"
+} from "./llm-behaviors"
 
 const custom: LlmBehavior = {
   id: "reviewer",
@@ -19,10 +22,19 @@ const custom: LlmBehavior = {
   enabled: true,
 }
 
-describe("plugins data", () => {
+const labels: BehaviorCardLabels = {
+  kind: "LLM behavior",
+  custom: "custom",
+  configure: "Configure",
+  status: (behavior) => (behavior.enabled ? "Active" : "Disabled"),
+}
+
+describe("LLM behaviors", () => {
   test("a new profile offers Caveman at full intensity, switched off", () => {
     const state = defaultBehaviorState()
-    expect(state.behaviors.map((item) => [item.id, item.enabled, item.intensity])).toEqual([[CAVEMAN_ID, false, "full"]])
+    expect(state.behaviors.map((item) => [item.id, item.enabled, item.intensity])).toEqual([
+      [CAVEMAN_ID, false, "full"],
+    ])
     expect(behaviorSystem(state.behaviors)).toBeUndefined()
   })
 
@@ -77,12 +89,35 @@ describe("plugins data", () => {
     expect(removeBehavior(renamed, CAVEMAN_ID).map((item) => item.id)).toEqual(["reviewer"])
   })
 
-  test("search matches the card's visible text", () => {
+  test("a card's text is what it shows, in reading order", () => {
+    expect(behaviorCardText(defaultBehaviorState().behaviors[0]!, labels)).toBe(
+      "Caveman Technical substance stays. Fluff goes. LLM behavior full Disabled Configure",
+    )
+    expect(behaviorCardText(custom, labels)).toBe("Reviewer Ask for evidence. LLM behavior custom Active Configure")
+  })
+
+  test("search filters on each card's shown text", () => {
     const list = saveBehavior(defaultBehaviorState().behaviors, custom)
-    expect(filterBehaviors(list, "  ").map((item) => item.id)).toEqual([CAVEMAN_ID, "reviewer"])
-    expect(filterBehaviors(list, "FLUFF").map((item) => item.id)).toEqual([CAVEMAN_ID])
-    expect(filterBehaviors(list, "custom").map((item) => item.id)).toEqual(["reviewer"])
-    expect(filterBehaviors(list, "disabled").map((item) => item.id)).toEqual([CAVEMAN_ID])
-    expect(filterBehaviors(list, "zzz")).toEqual([])
+    const ids = (query: string) => filterBehaviors(list, query, labels).map((item) => item.id)
+    expect(ids("  ")).toEqual([CAVEMAN_ID, "reviewer"])
+    expect(ids("FLUFF")).toEqual([CAVEMAN_ID])
+    expect(ids("custom")).toEqual(["reviewer"])
+    expect(ids("disabled")).toEqual([CAVEMAN_ID])
+    expect(ids("llm behavior")).toEqual([CAVEMAN_ID, "reviewer"])
+    expect(ids("configure")).toEqual([CAVEMAN_ID, "reviewer"])
+    expect(ids("zzz")).toEqual([])
+  })
+
+  test("a sandbox or worktree directory resolves to the repository that owns it", () => {
+    const projects = [
+      { worktree: "/repo/main", sandboxes: ["/repo/.worktrees/feature"] },
+      { worktree: "C:\\Work\\Other" },
+    ]
+    expect(behaviorProfileDirectory(projects, "/repo/main")).toBe("/repo/main")
+    expect(behaviorProfileDirectory(projects, "/repo/main/")).toBe("/repo/main")
+    expect(behaviorProfileDirectory(projects, "/repo/.worktrees/feature")).toBe("/repo/main")
+    expect(behaviorProfileDirectory(projects, "C:/Work/Other")).toBe("C:\\Work\\Other")
+    expect(behaviorProfileDirectory(projects, "/elsewhere")).toBe("/elsewhere")
+    expect(behaviorProfileDirectory([], "/repo/.worktrees/feature")).toBe("/repo/.worktrees/feature")
   })
 })

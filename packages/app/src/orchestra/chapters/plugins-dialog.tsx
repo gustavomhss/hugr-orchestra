@@ -1,8 +1,9 @@
 import { Dialog } from "@kobalte/core/dialog"
-import { DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
+import { DialogHeader, DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
 import { For, Show, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { CAVEMAN_ID, INTENSITIES, intensity, type Intensity, type LlmBehavior } from "./plugins-data"
+import { CAVEMAN_ID, INTENSITIES, intensity, type LlmBehavior } from "@/utils/llm-behaviors"
+import { uuid } from "@/utils/uuid"
 
 // Mark copied from the approved mock's plugins icon.
 export function PluginIcon() {
@@ -15,12 +16,13 @@ export function PluginIcon() {
 
 export function BehaviorDialog(props: {
   behavior?: LlmBehavior
+  applied: boolean
   onSave: (next: LlmBehavior) => void
   onRemove: (id: string) => void
   onCancel: () => void
 }) {
   const language = useLanguage()
-  const id = props.behavior?.id ?? crypto.randomUUID()
+  const id = props.behavior?.id ?? uuid()
   const caveman = id === CAVEMAN_ID
   return (
     <PluginsDialog
@@ -29,7 +31,9 @@ export function BehaviorDialog(props: {
           ? language.t("orchestra.plugins.dialog.configure", { name: props.behavior.name })
           : language.t("orchestra.plugins.dialog.add")
       }
-      subtitle={language.t("orchestra.plugins.dialog.subtitle")}
+      subtitle={language.t(
+        props.applied ? "orchestra.plugins.dialog.subtitle" : "orchestra.plugins.dialog.subtitleSaved",
+      )}
       submit={language.t("orchestra.plugins.save")}
       onCancel={props.onCancel}
       onSubmit={(data) =>
@@ -54,7 +58,7 @@ export function BehaviorDialog(props: {
           <Field label={language.t("orchestra.plugins.field.intensity")}>
             <select name="intensity">
               <For each={INTENSITIES}>
-                {(item: Intensity) => (
+                {(item) => (
                   <option value={item} selected={item === intensity(behavior())}>
                     {item}
                   </option>
@@ -94,6 +98,7 @@ export function RemoveDialog(props: { profile: string; onConfirm: () => void; on
 }
 
 // Mock `.mx-dialog` markup inside the app's dialog layer, which owns focus, Escape and the backdrop.
+// The header keeps the shared dialog close control (and its 24px target); plugins.css paints it as the mock.
 function PluginsDialog(props: {
   title: string
   subtitle: string
@@ -112,21 +117,12 @@ function PluginsDialog(props: {
           props.onSubmit(new FormData(event.currentTarget))
         }}
       >
-        <header class="mx-dialog-head">
+        <DialogHeader>
           <div>
             <Dialog.Title>{props.title}</Dialog.Title>
             <Dialog.Description>{props.subtitle}</Dialog.Description>
           </div>
-          <Dialog.CloseButton
-            data-slot="dialog-close-button"
-            class="mx-link plugins-close"
-            aria-label={language.t("orchestra.plugins.dialog.close")}
-          >
-            <svg class="plugins-ic" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="m4 4 8 8m0-8-8 8" />
-            </svg>
-          </Dialog.CloseButton>
-        </header>
+        </DialogHeader>
         <div class="mx-dialog-body">{props.children}</div>
         <footer class="mx-dialog-foot">
           <button type="button" class="mx-btn" onClick={props.onCancel}>

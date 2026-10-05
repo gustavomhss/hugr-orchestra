@@ -22,6 +22,34 @@ async function sendPrompt(page: Page, text: string) {
   await prompt.press("Enter")
 }
 
+// Theme, version and the profile list are seeded the same way for every protocol.
+async function openSession(page: Page, scheme: "dark" | "light", protocol: "v1" | "v2") {
+  await page.addInitScript(
+    (input) => {
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", input.scheme)
+      localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
+      localStorage.setItem(
+        "opencode.global.dat:server",
+        JSON.stringify({
+          projects: { local: [{ worktree: input.directory, expanded: true }] },
+          lastProject: { local: input.directory },
+        }),
+      )
+    },
+    { scheme, directory },
+  )
+  const prompts: Array<{ sessionID: string; body: unknown }> = []
+  await setupTimeline(page, {
+    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
+    locale: "en",
+    protocol,
+    onPrompt: (input) => prompts.push(input),
+  })
+  await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
+  return prompts
+}
+
 function systemOf(prompts: Array<{ body: unknown }>, index: number) {
   const body = prompts[index]?.body
   if (!body || typeof body !== "object" || !("system" in body)) return undefined
@@ -30,29 +58,7 @@ function systemOf(prompts: Array<{ body: unknown }>, index: number) {
 
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: configured behaviors persist per profile and reach new chat messages`, async ({ page }) => {
-    await page.addInitScript(
-      (input) => {
-        localStorage.setItem("opencode-theme-id", "oc-2")
-        localStorage.setItem("opencode-color-scheme", input.scheme)
-        localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
-        localStorage.setItem(
-          "opencode.global.dat:server",
-          JSON.stringify({
-            projects: { local: [{ worktree: input.directory, expanded: true }] },
-            lastProject: { local: input.directory },
-          }),
-        )
-      },
-      { scheme, directory },
-    )
-    const prompts: Array<{ sessionID: string; body: unknown }> = []
-    await setupTimeline(page, {
-      settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
-      locale: "en",
-      protocol: "v1",
-      onPrompt: (input) => prompts.push(input),
-    })
-    await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
+    const prompts = await openSession(page, scheme, "v1")
     await openPlugins(page)
 
     const view = chapter(page)
@@ -86,7 +92,8 @@ for (const scheme of ["dark", "light"] as const) {
     await caveman.getByRole("button", { name: "Configure", exact: true }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByRole("heading", { name: "Configure Caveman" })).toBeVisible()
-    await expect(dialog).toHaveCSS("width", "680px")
+    await expect(dialog).toContainText("Active behaviors are added to new chat messages in this profile.")
+    await expect(page.locator('[data-slot="dialog-container"].plugins-dialog')).toHaveCSS("width", "680px")
     await expect(dialog.getByLabel("Intensity")).toHaveValue("full")
     await dialog.getByLabel("Intensity").selectOption("ultra")
     await dialog.getByRole("button", { name: "Save", exact: true }).click()
@@ -139,19 +146,22 @@ for (const scheme of ["dark", "light"] as const) {
 }
 
 test("V2 servers keep behaviors on the profile without claiming they reach turns", async ({ page }) => {
-  const prompts: Array<{ sessionID: string; body: unknown }> = []
-  await setupTimeline(page, {
-    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
-    locale: "en",
-    protocol: "v2",
-    onPrompt: (input) => prompts.push(input),
-  })
+  const prompts = await openSession(page, "dark", "v2")
   await openPlugins(page)
   await expect(chapter(page).locator('[data-slot="plugins-application"]')).toHaveText(
     "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
   )
-  await card(page, "Caveman").getByRole("switch", { name: "Enable Caveman" }).click()
-  await expect(card(page, "Caveman").locator(".mx-badge.good")).toHaveText("Active")
+  const caveman = card(page, "Caveman")
+  await caveman.getByRole("switch", { name: "Enable Caveman" }).click()
+  await expect(caveman.getByRole("switch", { name: "Enable Caveman" })).toHaveAttribute("aria-checked", "true")
+  await expect(caveman.locator(".mx-badge")).toHaveText(["LLM behavior", "full", "Enabled"])
+  await expect(chapter(page)).not.toContainText("Active")
+  await caveman.getByRole("button", { name: "Configure", exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toContainText("Behaviors are saved for this profile.")
+  await expect(dialog).not.toContainText("added to new chat messages")
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(dialog).toHaveCount(0)
   await sendPrompt(page, "Explain the failing test")
   await expect.poll(() => prompts.length).toBe(1)
   expect(JSON.stringify(prompts[0]?.body)).not.toContain("Caveman")

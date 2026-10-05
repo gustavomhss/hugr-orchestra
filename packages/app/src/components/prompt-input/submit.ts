@@ -13,8 +13,8 @@ import { usePermission } from "@/context/permission"
 import { type ContextItem, type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
-import { usePlatform } from "@/context/platform"
-import { llmBehaviors } from "@/orchestra/chapters/plugins-store"
+import { usePlatform, type Platform } from "@/context/platform"
+import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
 import { clearPending, pendingRules } from "@/components/draft-subagent-models"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
@@ -22,7 +22,7 @@ import { Worktree as WorktreeState } from "@/utils/worktree"
 import { buildRequestParts } from "./build-request-parts"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError } from "@/utils/server-errors"
-import { ScopedKey } from "@/utils/server-scope"
+import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
 import { Event } from "@opencode-ai/schema/event"
@@ -43,7 +43,7 @@ export type FollowupDraft = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
-  // Profile LLM behaviors (Orchestra Plugins), captured when the message is submitted.
+  // Profile LLM behaviors (Orchestra Plugins), resolved when the message is sent; never stored when queued.
   system?: string
 }
 
@@ -55,6 +55,11 @@ type FollowupSendInput = {
   messageID?: string
   optimisticBusy?: boolean
   before?: () => Promise<boolean> | boolean
+}
+
+// Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
+export function followupSystem(platform: Platform, scope: ServerScope, serverSync: ServerSync, directory: string) {
+  return resolveBehaviorSystem({ platform, scope, projects: serverSync.data.project, directory }).catch(() => undefined)
 }
 
 const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? part.content : "")).join("")
@@ -489,8 +494,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       providerID: currentModel.provider.id,
     }
     const agent = currentAgent.name
-    const behaviors = llmBehaviors(platform, sdk().scope, sync().project?.worktree ?? projectDirectory)
-    if (!behaviors.ready()) await behaviors.loaded()
     const draft: FollowupDraft = {
       sessionID: session.id,
       sessionDirectory,
@@ -499,7 +502,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       agent,
       model,
       variant,
-      system: behaviors.system(),
     }
 
     const clearInput = () => {
@@ -655,11 +657,12 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return true
     }
 
+    // The input is already cleared, so waiting on the profile's behaviors cannot resend this message.
     void sendFollowupDraft({
       api: sdk().api.session,
       sync: sync(),
       serverSync: serverSync(),
-      draft,
+      draft: { ...draft, system: await followupSystem(platform, sdk().scope, serverSync(), projectDirectory) },
       messageID,
       optimisticBusy: sessionDirectory === projectDirectory,
       before: waitForWorktree,
