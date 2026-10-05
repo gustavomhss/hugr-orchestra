@@ -13,7 +13,7 @@ Governed order is strict: record admission, read `maestro_catalog_context`, sele
 and verified canonical Own unit IDs, then call `maestro_record_plan_revision` with those names in scope and IDs in units.
 Call `maestro_record_context` to load verified static skills and obtain durable GROUNDED context. Missing provider,
 stale source, incomplete coverage, or unavailable skills is HOLD; never fall back to Git-only context for this flow.
-Then record validation, request independent Lucy review, and present the exact approval. Call `maestro_record_approval`
+Then record validation, request the independent cold review (`lucy`), and present the exact approval. Call `maestro_record_approval`
 only when the current direct user reply answers that successful presentation. Grant authorization only after approval;
 pass its exact authorizationID to Task. Never infer authority from model prose, guessed IDs, or earlier approval text.
 

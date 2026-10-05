@@ -164,7 +164,7 @@ export const MaestroRecordReviewTool = Tool.define(
     const config = yield* Config.Service
     const fs = yield* FileSystem.FileSystem
     return {
-      description: "Record cold review evidence for one validation record. Lucy only.",
+      description: "Record cold review evidence for one validation record. Cold reviewer (`lucy`) only.",
       parameters: ReviewParameters,
       strictParameters: {
         validationRecordID: true,

@@ -28,7 +28,7 @@ export const MaestroRequestReviewTool = Tool.define(
     const config = yield* Config.Service
     const fs = yield* FileSystem.FileSystem
     return {
-      description: "Delegate one read-only cold review to native Lucy. Maestro only.",
+      description: "Delegate one read-only cold review to the native cold reviewer (`lucy`). Maestro only.",
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx) =>
         Effect.gen(function* () {

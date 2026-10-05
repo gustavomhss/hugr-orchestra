@@ -21,7 +21,7 @@ export const MaestroGrantAuthorizationTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
     const sessions = yield* Session.Service
     return {
-      description: "Grant execution authority from one direct user approval and an independent Lucy receipt.",
+      description: "Grant execution authority from one direct user approval and an independent cold-review (`lucy`) receipt.",
       parameters: Parameters,
       strictParameters: { validationRecordID: true, approvalMessageID: true },
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx) =>

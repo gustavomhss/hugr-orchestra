@@ -7,7 +7,9 @@ export type ProjectConfigField = {
 
 export type ProjectConfigOption = {
   id: string
-  name: string
+  name?: string
+  // Seat options bind a board option to a stable member id (F1.1); the board's option label is presentation.
+  memberId?: string
 }
 
 export type ProjectConfig = {
@@ -63,15 +65,15 @@ const projectConfig: ProjectConfig = {
       name: "Seat",
       type: "SingleSelect",
       options: [
-        { id: "01b0cacc", name: "Maestro" },
-        { id: "848d4e73", name: "Charlie" },
-        { id: "60a9b6ec", name: "Patty" },
-        { id: "11dd93df", name: "Lucy" },
-        { id: "37d9d703", name: "Bobby" },
-        { id: "905fe6a8", name: "Billy" },
-        { id: "ac92afd9", name: "Jimmy" },
-        { id: "08feaad7", name: "Rosie" },
-        { id: "bab8dcee", name: "Frankie" },
+        { id: "01b0cacc", memberId: "maestro" },
+        { id: "848d4e73", memberId: "charlie" },
+        { id: "60a9b6ec", memberId: "patty" },
+        { id: "11dd93df", memberId: "lucy" },
+        { id: "37d9d703", memberId: "bobby" },
+        { id: "905fe6a8", memberId: "billy" },
+        { id: "ac92afd9", memberId: "jimmy" },
+        { id: "08feaad7", memberId: "rosie" },
+        { id: "bab8dcee", memberId: "frankie" },
       ],
     },
     {
@@ -147,7 +149,10 @@ export function validateProjectConfig(input: unknown): ProjectConfigValidation {
     if (options.length !== expected.options.length) return { status: "HOLD", reason: "field-mismatch" }
     if (
       expected.options.some(
-        (expected) => !options.some((option) => option.id === expected.id && option.name === expected.name),
+        (expected) =>
+          !options.some(
+            (option) => option.id === expected.id && (expected.name === undefined || option.name === expected.name),
+          ),
       )
     ) {
       return { status: "HOLD", reason: "field-mismatch" }
@@ -171,7 +176,7 @@ function isField(value: unknown): value is ProjectConfigField {
   )
 }
 
-function isOption(value: unknown): value is ProjectConfigOption {
+function isOption(value: unknown): value is ProjectConfigOption & { name: string } {
   return isRecord(value) && nonemptyString(value.id) && nonemptyString(value.name)
 }
 

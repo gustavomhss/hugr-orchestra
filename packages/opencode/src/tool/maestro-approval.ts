@@ -53,7 +53,7 @@ export const MaestroPresentApprovalTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
     return {
       description:
-        "Present exact task intent for direct user approval. Requires native Maestro, same-Session/project durable plan and VALID validation, current clean context, and Lucy APPROVE. Runtime computes the task hash; an optional supplied hash must match.",
+        "Present exact task intent for direct user approval. Requires native Maestro, same-Session/project durable plan and VALID validation, current clean context, and cold-review (`lucy`) APPROVE. Runtime computes the task hash; an optional supplied hash must match.",
       parameters: PresentationParameters,
       execute: (_params: Schema.Schema.Type<typeof PresentationParameters>, ctx) =>
         Effect.gen(function* () {
