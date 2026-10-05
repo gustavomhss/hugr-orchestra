@@ -454,6 +454,25 @@ export namespace Review {
     },
   })
   export type Received = typeof Received.Type
+
+  // Binds the receipt to the reviewed diff by digest; the server recomputes the diff, so the bytes
+  // never have to travel through the model or into the event log.
+  export const ReceivedV2 = Event.define({
+    type: Received.type,
+    durable: { version: 2, aggregate: "sessionID" },
+    schema: {
+      ...Received.data.fields,
+      artifact: Schema.Struct({
+        workCardHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+        sha256: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+        baseSHA: Schema.NonEmptyString,
+        headSHA: Schema.NonEmptyString,
+        worktree: Schema.NonEmptyString,
+        changedPaths: Schema.Array(Schema.NonEmptyString),
+      }),
+    },
+  })
+  export type ReceivedV2 = typeof ReceivedV2.Type
 }
 
 export namespace Authorization {
@@ -539,6 +558,7 @@ export const Definitions = Event.inventory(
   Validation.RecordedV2,
   Validation.RecordedV3,
   Review.Received,
+  Review.ReceivedV2,
   Authorization.Granted,
   Dispatch.Reserved,
   Dispatch.ReservedV2,
