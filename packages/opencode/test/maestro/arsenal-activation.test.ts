@@ -308,7 +308,7 @@ it.live(
             ).toBe("text")
             expect((yield* invoke("denied", "read", { path: "locked.txt" })).result).toEqual({
               type: "error",
-              value: "Tool safety HOLD: project-never-touch",
+              value: expect.stringMatching(/^Tool safety HOLD: project-never-touch\n\S/),
             })
             expect((yield* invoke("allowed", "read", { path: "free.txt" })).result).toMatchObject({
               type: "json",

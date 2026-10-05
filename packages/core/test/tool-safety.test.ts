@@ -43,7 +43,7 @@ describe("native tool safety", () => {
         type: "tool-call", name: "bash", id: "denied", input: { command: process.platform === "win32"
           ? "git commit --no-verify & type nul > denied" : "git commit --no-verify; touch denied" },
       } })
-      expect(denied.result).toEqual({ type: "error", value: "Tool safety HOLD: known-gate-bypass" })
+      expect(denied.result).toEqual({ type: "error", value: "Tool safety HOLD: known-gate-bypass\nHooks and verification gates cannot be skipped (`--no-verify`, `-n`, `HUSKY=0`, `--no-hooks`), so the command did not run. Fix what the hook reports and rerun without the bypass; words such as `-n` or `-json` in a `git commit` message also match, so reword them." })
       expect(yield* fs.exists(path.join(tmp.path, "denied"))).toBe(false)
       expect((yield* settleTool(registry, { ...identity, call: {
         type: "tool-call", name: "bash", id: "allowed", input: { command: process.platform === "win32"
@@ -74,7 +74,7 @@ describe("native tool safety", () => {
         Effect.provideService(Location.Service, location(Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }))),
         Effect.provideService(ToolSafety.RuntimeProfile, { writeRoots: ["owned"] }),
       )
-      expect((yield* execute("owned/escape/blocked")).result).toEqual({ type: "error", value: "Tool safety HOLD: write-outside-physical-roots" })
+      expect((yield* execute("owned/escape/blocked")).result).toEqual({ type: "error", value: "Tool safety HOLD: write-outside-physical-roots\nThe project's safety profile allows writes only inside its write roots and this path is outside them, so nothing was written. Write inside those roots, or ask the owner." })
       expect(yield* fs.exists(path.join(tmp.path, "outside", "blocked"))).toBe(false)
       expect((yield* execute("owned/allowed")).result.type).toBe("text")
       expect(yield* fs.readFileString(path.join(tmp.path, "owned", "allowed"))).toBe("written")
@@ -106,7 +106,7 @@ describe("native tool safety", () => {
         Effect.provideService(Location.Service, location(Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }))),
         Effect.provideService(ToolSafety.RuntimeProfile, { corpusFiles: ["corpus"] }),
       )
-      expect((yield* read()).result).toEqual({ type: "error", value: "Tool safety HOLD: defense-corpus-bulk-read" })
+      expect((yield* read()).result).toEqual({ type: "error", value: "Tool safety HOLD: defense-corpus-bulk-read\nThe project's safety profile allows this file to be read only in slices, so nothing was read. Pass `limit` as a whole number from 1 to 400 and page with `offset`." })
       expect((yield* read(40)).result).toEqual({ type: "text", value: "defensive source" })
       const check = (tool: string, args: unknown, profile: ToolSafety.Profile) => safety.before({
         ...invocation, tool, args, directory: tmp.path, projectID: "project",
@@ -150,7 +150,7 @@ describe("native tool safety", () => {
       }) })
       const secret = "gh" + "p_" + "x".repeat(40)
       const result = yield* settleTool(registry, { ...identity, call: { type: "tool-call", name: "output", id: "secret", input: secret } })
-      expect(result).toEqual({ result: { type: "error", value: "Tool safety HOLD: recognized-secret-output" } })
+      expect(result).toEqual({ result: { type: "error", value: "Tool safety HOLD: recognized-secret-output\nThe tool ran, but its output contained a credential-shaped value (a private key, or an AWS, GitHub, Stripe or OpenAI key), so the output was discarded. Do not print secrets or try to reveal them another way; to check that one is set, test it without printing its value." } })
       expect((yield* settleTool(registry, { ...identity, call: { type: "tool-call", name: "output", id: "plain", input: "ordinary output" } })).result.type).toBe("text")
     }),
   )
