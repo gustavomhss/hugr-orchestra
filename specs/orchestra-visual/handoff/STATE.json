@@ -1,9 +1,32 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-10-02T18:44:21.000Z",
-  "repository": "https://github.com/gusmhs/HuGR-Orchestra",
+  "observedAt": "2026-10-04T17:44:27.000Z",
+  "repository": "https://gitlab.com/gmhelmold/hugr-orchestra",
+  "hosting": {
+    "fork": "GitLab gmhelmold/hugr-orchestra (git@gitlab.com:gmhelmold/hugr-orchestra.git); merge requests target dev",
+    "githubArchive": "https://github.com/gusmhs/HuGR-Orchestra is an archive only; the account appears flagged. PR numbers #4-#25 refer to it.",
+    "githubOriginal": "gmhelmold/HuGR-Orchestra on GitHub was suspended on 2026-10-02; its PR, issue and CI links are unreachable. Numbers #215, #232 and #239-#244 refer to it."
+  },
+  "ci": {
+    "gitlab": "Never executed a test. The free compute quota was exhausted (568 of 400 minutes in October), so shared runners were disabled; the pipelines that were created stayed stuck_pending_no_matching_runners.",
+    "gate": "Local: the owner chose to replicate the .gitlab-ci.yml Linux jobs on macOS instead of buying compute minutes.",
+    "unproven": ["unit-windows", "e2e-windows", "nix-eval"],
+    "receipts": {
+      "candidate": "4d9899c487",
+      "e2eDefault": "319/319, 0 flaky at 833cf2507d (CI=true); 19/19 affected specs at 4d9899c487",
+      "production": "300/300 at 833cf2507d; 19/19 affected specs at 4d9899c487",
+      "appUnit": "1017 src + 68 test-browser pass at 4d9899c487",
+      "typecheck": "turbo 31/31 at 37514ef4a6; app typecheck and typecheck:e2e clean at 4d9899c487",
+      "unitAllPackages": "bun turbo test pass at 37514ef4a6; httpapi 208/0; generated checks pass",
+      "godfile": "pass at 37514ef4a6 (legacy warnings only)",
+      "atlas": "guards pass; 4131/4147 with one load timeout in adapter-io scanner test, isolated rerun 17/17 x3; Atlas untouched",
+      "storybook": "build pass at 607c2bf4c6",
+      "nativeDock": "U01-U31 31/31 at a1698508f9, Electron 42.3.3; desktop untouched since"
+    }
+  },
   "branch": "dev",
   "base": "fork/dev",
+  "devHead": "76015a9dcd",
   "integrated": [
     {
       "pr": 239,
@@ -19,20 +42,79 @@
       "pr": 241,
       "title": "fix(opencode): settle interrupted instance boots",
       "squash": "1b2c9a0a25"
-    }
-  ],
-  "openFollowUps": [
-    {
-      "repository": "gusmhs/HuGR-Orchestra",
-      "pr": 15,
-      "title": "fix(ci): fit CI to standard runners and make Atlas bundles deterministic",
-      "note": "prerequisite for the others"
     },
     {
       "repository": "gusmhs/HuGR-Orchestra",
-      "prs": [4, 6, 8, 10, 12, 17, 19, 21, 23, 25],
-      "note": "wave 2: docs, Windows Maestro fixtures, terminal palette, branding, first paint, hit areas, production-build suite, provider secrets/model list, Dock overlays, style-recalc regression; validated together on branch wave2-integration"
+      "prs": [4, 6, 8, 10, 12, 15, 17, 19, 21, 23, 25],
+      "note": "wave 2 and CI fit: docs, Windows Maestro fixtures, terminal palette, branding, first paint, hit areas, production-build suite, provider secrets/model list, Dock overlays, style-recalc regression; in dev at 76015a9dcd"
     }
+  ],
+  "waves": {
+    "A": {
+      "branch": "wave-a-integration",
+      "head": "ab4975dd55",
+      "inDev": false,
+      "mergeRequests": {
+        "!27": "tasks-truth: Tasks report only proven outcomes (S17); child-only Stop with pending, error and retry (S18)",
+        "!31": "context-unknown-usage: unknown Context cost and usage",
+        "!33": "timeline-checklists: confirmed historical checklists (S09)",
+        "!34": "dock-tab-binding: Dock resize and hide bound to the tab generation (S16)"
+      }
+    },
+    "B": {
+      "branch": "wave-b-integration",
+      "head": "37514ef4a6",
+      "finalCandidate": {
+        "branch": "cockpit-review-fixes",
+        "head": "607c2bf4c6",
+        "note": "wave-b-integration plus review fixes"
+      },
+      "inDev": false,
+      "mergeRequest": "!37",
+      "delivered": {
+        "S15/S18": "simultaneous cockpit: compact Dock above Tasks and Activity, local Files, Docs and Terminal panes",
+        "S11": "execution evidence: test-summary parsing and result cards",
+        "S10": "safe replay and unsent PR preparation",
+        "S20/S19": "Maestro governance destination (read-only dialog) and honest Own states; W1 only",
+        "S06": "compact navigation: 230px from 1440px, 208px at 1280-1439px, 56px rail when collapsed or below 1280px, on-demand rail at 768-1023px, RTL"
+      },
+      "evidence": [
+        "evidence/S06/result.json",
+        "evidence/S06/rtl-proof/result.json",
+        "evidence/S11/result.json",
+        "evidence/S15/result.json",
+        "evidence/S20/result.json"
+      ]
+    },
+    "mergeOrder": ["!38", "!27", "!31", "!33", "!34", "!37 retargeted to dev"]
+  },
+  "openFollowUps": [
+    {
+      "repository": "gmhelmold/hugr-orchestra",
+      "mr": "!38",
+      "title": "chore(ci): extend product validation to GitLab",
+      "note": "merge first"
+    },
+    {
+      "repository": "gmhelmold/hugr-orchestra",
+      "mrs": ["!27", "!31", "!33", "!34"],
+      "note": "wave A"
+    },
+    {
+      "repository": "gmhelmold/hugr-orchestra",
+      "mr": "!37",
+      "note": "wave B; retarget to dev after wave A"
+    }
+  ],
+  "openItems": [
+    "Owner visual acceptance of the integrated bundle, including the 208px sidebar (the CSS rule spans 768-1439px; the 208px width is visible only at 1280-1439px, and no 208px screenshot exists)",
+    "Janitor (S21) deferred by the owner",
+    "\"Finished\" vs \"Completed\" Tasks header copy awaiting owner confirmation",
+    "Dock tab menu offset attributed to contain: strict",
+    "Background-tab popups attaching a visible browser",
+    "Graphite theme owner decision",
+    "Windows CI proof (and nix-eval)",
+    "Paired performance benchmarks on the final candidate"
   ],
   "chapters": {
     "active": null,
@@ -122,9 +204,9 @@
     ],
     "externalDisposition": "Preserved and inventoried, not claimed clean or merged; separate campaigns are not authorized for blanket integration"
   },
-  "nextAction": "Merge #15 then the wave 2 PRs once CI is green; record the cockpit re-verification in HANDOFF.md section 7 and COVERAGE.md; then owner acceptance of the identity and wave 1 chapters.",
+  "nextAction": "Fill the local-gate receipts for 607c2bf4c6, merge !38, then !27/!31/!33/!34, then retarget !37 to dev; then owner acceptance and the open items.",
   "recoveryIndex": "README.md",
   "archiveVerification": "archive-verification.json",
   "cleanupReceipt": "cleanup.json",
-  "repositoryMigration": "Moved from gmhelmold/HuGR-Orchestra on 2026-10-02 after that account was suspended; old PR, issue and CI links are unreachable. Branches were restored from a local backup; PR numbers below refer to the old repository."
+  "repositoryMigration": "Moved from GitHub gmhelmold/HuGR-Orchestra on 2026-10-02 after that account was suspended, first to GitHub gusmhs/HuGR-Orchestra and then to GitLab gmhelmold/hugr-orchestra; gusmhs/HuGR-Orchestra remains as an archive. Old PR, issue and CI links are unreachable."
 }

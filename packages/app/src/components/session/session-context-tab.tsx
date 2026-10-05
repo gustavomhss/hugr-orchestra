@@ -18,7 +18,7 @@ import { useLanguage } from "@/context/language"
 import { useProviders } from "@/hooks/use-providers"
 import { useSDK } from "@/context/sdk"
 import { useSessionLayout } from "@/pages/session/session-layout"
-import { getSessionContext } from "./session-context-metrics"
+import { getSessionContext, getSessionCost } from "./session-context-metrics"
 import { estimateSessionContextBreakdown, type SessionContextBreakdownKey } from "./session-context-breakdown"
 import { createSessionContextFormatter } from "./session-context-format"
 
@@ -130,19 +130,18 @@ export function SessionContextTab() {
     { equals: same },
   )
 
-  const usd = createMemo(
-    () =>
-      new Intl.NumberFormat(language.intl(), {
-        style: "currency",
-        currency: "USD",
-      }),
-  )
-
-  const ctx = createMemo(() => getSessionContext(messages(), [...providers.all().values()]))
+  const ctx = createMemo(() => getSessionContext(messages(), [...providers.all().values()], sync().data.part))
   const formatter = createMemo(() => createSessionContextFormatter(language.intl()))
 
   const cost = createMemo(() => {
-    return usd().format(info()?.cost ?? 0)
+    return formatter().currency(
+      getSessionCost(
+        info()?.cost,
+        params.id ? sync().data.message[params.id] : undefined,
+        [...providers.all().values()],
+        sync().data.part,
+      ),
+    )
   })
 
   const counts = createMemo(() => {

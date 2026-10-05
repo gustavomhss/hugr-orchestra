@@ -1,2 +1,4 @@
 packages/core/migration/**/snapshot.json linguist-generated
 packages/core/src/database/migration.gen.ts linguist-generated
+# Recorded runner output: keep bytes exact, Windows checkouts must not convert to CRLF.
+packages/app/src/pages/session/orchestra-evidence-fixtures/** -text

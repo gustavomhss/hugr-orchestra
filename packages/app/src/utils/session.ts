@@ -12,7 +12,7 @@ export function normalizeSessionInfo(input: SessionInfo | Session): Session {
     directory: input.location.directory,
     path: input.subpath,
     parentID: input.parentID,
-    cost: input.cost,
+    cost: "costAvailable" in input && input.costAvailable === false ? undefined : input.cost,
     tokens: input.tokens,
     title: withTimestampedFallback(input),
     agent: input.agent,

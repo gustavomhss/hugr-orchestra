@@ -1,0 +1,57 @@
+[WebServer] $ vite --host "0.0.0.0" --port "4994"
+
+[WebServer] /usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor
+
+[WebServer] (node:42489) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 1 test using 1 worker
+
+(node:42519) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:42519) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] [chromium] › e2e/orchestra/compact-navigation.spec.ts:85:1 › responsive compact mode restores the choice and leaves mobile navigation available
+  1) [chromium] › e2e/orchestra/compact-navigation.spec.ts:85:1 › responsive compact mode restores the choice and leaves mobile navigation available
+
+    Error: expect(locator).toHaveCSS(expected) failed
+
+    Locator:  locator('[data-component="orchestra-sidebar"]')
+    Expected: "208px"
+    Received: "230px"
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCSS" with timeout 10000ms
+      - waiting for locator('[data-component="orchestra-sidebar"]')
+        14 × locator resolved to <aside aria-label="Projects" class="orchestra-sidebar" data-component="orchestra-sidebar">…</aside>
+           - unexpected value "230px"
+
+
+      92 |   await expect(sidebar).toHaveCSS("width", "230px")
+      93 |   await page.setViewportSize({ width: 1366, height: 768 })
+    > 94 |   await expect(sidebar).toHaveCSS("width", "208px")
+         |                         ^
+      95 |   await page.setViewportSize({ width: 1152, height: 768 })
+      96 |   await expect(sidebar).toHaveCSS("width", "56px")
+      97 |   await expect(page.getByRole("button", { name: "Expand sidebar", exact: true })).toHaveAttribute(
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/e2e/orchestra/compact-navigation.spec.ts:94:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-compact-navigati-f5d2c-mobile-navigation-available-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-compact-navigati-f5d2c-mobile-navigation-available-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/test-results/orchestra-compact-navigati-f5d2c-mobile-navigation-available-chromium/error-context.md
+
+
+  1 failed
+    [chromium] › e2e/orchestra/compact-navigation.spec.ts:85:1 › responsive compact mode restores the choice and leaves mobile navigation available

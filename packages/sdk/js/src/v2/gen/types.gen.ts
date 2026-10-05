@@ -658,6 +658,16 @@ export type Prompt = {
   agents?: Array<PromptAgentAttachment>
 }
 
+export type SessionStepTokens = {
+  input: number
+  output: number
+  reasoning: number
+  cache: {
+    read: number
+    write: number
+  }
+}
+
 export type Pty = {
   id: string
   title: string
@@ -946,15 +956,8 @@ export type GlobalEvent = {
           assistantMessageID: string
           finish: string
           cost: number
-          tokens: {
-            input: number
-            output: number
-            reasoning: number
-            cache: {
-              read: number
-              write: number
-            }
-          }
+          usageKnown?: boolean
+          tokens: SessionStepTokens
           snapshot?: string
           files?: Array<string>
         }
@@ -3919,15 +3922,8 @@ export type SyncEventSessionNextStepEnded = {
       assistantMessageID: string
       finish: string
       cost: number
-      tokens: {
-        input: number
-        output: number
-        reasoning: number
-        cache: {
-          read: number
-          write: number
-        }
-      }
+      usageKnown?: boolean
+      tokens: SessionStepTokens
       snapshot?: string
       files?: Array<string>
     }
@@ -5253,15 +5249,8 @@ export type SessionNextStepEnded = {
     assistantMessageID: string
     finish: string
     cost: number
-    tokens: {
-      input: number
-      output: number
-      reasoning: number
-      cache: {
-        read: number
-        write: number
-      }
-    }
+    usageKnown?: boolean
+    tokens: SessionStepTokens
     snapshot?: string
     files?: Array<string>
   }
@@ -7710,15 +7699,8 @@ export type EventSessionNextStepEnded = {
     assistantMessageID: string
     finish: string
     cost: number
-    tokens: {
-      input: number
-      output: number
-      reasoning: number
-      cache: {
-        read: number
-        write: number
-      }
-    }
+    usageKnown?: boolean
+    tokens: SessionStepTokens
     snapshot?: string
     files?: Array<string>
   }

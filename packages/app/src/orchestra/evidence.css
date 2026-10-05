@@ -1,0 +1,281 @@
+/* Execution evidence card (W03) and its action strip (W07), from the approved
+ * app.html .ev-card/.ev-head/.msg-actions and design state DS19-output-partial.
+ * Hooks live on the card's own subtree (data-orchestra-evidence), never on timeline
+ * row ancestors, and no :has() rule is used here. Session tokens only exist on the
+ * desktop surface, so each one falls back to a theme token. */
+body[data-new-layout] [data-orchestra-evidence] {
+  --evidence-text: var(--orchestra-session-body, var(--orchestra-body));
+  --evidence-heading: var(--orchestra-evidence-heading, var(--orchestra-muted));
+  --evidence-meta: var(--orchestra-session-meta, var(--orchestra-faint));
+  --evidence-rule: var(--orchestra-session-rule, var(--orchestra-border-muted));
+  --evidence-pass: var(--orchestra-evidence-add, var(--orchestra-success));
+  --evidence-fail: var(--orchestra-evidence-delete, var(--orchestra-danger));
+  --evidence-mono: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-inline-size: 0;
+  color: var(--evidence-text);
+  font-size: 12px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-card"] {
+  min-inline-size: 0;
+  overflow: hidden;
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: 9px;
+  background: var(--orchestra-evidence-background, var(--orchestra-surface));
+  /* Virtual rows clip at their measured height: keep only the inset highlight. */
+  box-shadow: var(--orchestra-evidence-highlight, none);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tabs"] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-block-size: 38px;
+  padding-inline: 8px 13px;
+  border-block-end: 1px solid var(--evidence-rule);
+  color: var(--evidence-heading);
+}
+
+/* The command sits beside the tablist, not in it; the tabs keep the header's spacing. */
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] {
+  display: flex;
+  gap: 4px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] > button {
+  block-size: 28px;
+  padding-inline: 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--orchestra-rail-tab-text, var(--orchestra-muted));
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] > button:hover {
+  background: var(--orchestra-rail-tab-hover-background, var(--orchestra-overlay-hover));
+  color: var(--orchestra-rail-tab-hover, var(--orchestra-body));
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-tablist"] > button[aria-selected="true"] {
+  border-color: var(--orchestra-border-muted);
+  background: var(--orchestra-rail-tab-active, var(--orchestra-surface-active));
+  color: var(--orchestra-rail-tab-active-text, var(--orchestra-text));
+}
+
+body[data-new-layout] [data-orchestra-evidence] :is(button, [tabindex]):focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: 1px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-command"] {
+  min-inline-size: 0;
+  margin-inline-start: auto;
+  overflow: hidden;
+  color: var(--evidence-meta);
+  font-family: var(--evidence-mono);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-result"] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  font-family: var(--evidence-mono);
+  line-height: 18px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-output"] {
+  padding: 8px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-head"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 2px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-status"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--evidence-heading);
+}
+
+body[data-new-layout] [data-orchestra-evidence][data-state="passed"] [data-slot="evidence-status"] {
+  color: var(--evidence-pass);
+}
+
+body[data-new-layout] [data-orchestra-evidence][data-state="failed"] [data-slot="evidence-status"] {
+  color: var(--evidence-fail);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-badge"] {
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--orchestra-warm) 40%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--orchestra-warm) 16%, transparent);
+  color: var(--orchestra-warm);
+  font-family: var(--orchestra-font-family-sans);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-link"] {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-block-size: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--orchestra-accent);
+  font-family: var(--orchestra-font-family-sans);
+  font-size: 12px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-link"]:hover {
+  text-decoration: underline;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-partial"] p:first-child {
+  font-family: var(--orchestra-font-family-sans);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-rows"] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-row"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-row"] dd {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  margin: 0;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-count="passed"] {
+  color: var(--evidence-pass);
+}
+
+body[data-new-layout]
+  [data-orchestra-evidence]
+  :is([data-count="failed"], [data-count="errors"], [data-count="interrupted"]) {
+  color: var(--evidence-fail);
+}
+
+body[data-new-layout] [data-orchestra-evidence] :is([data-slot="evidence-total"], [data-slot="evidence-meta"]) {
+  color: var(--evidence-meta);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-failures"] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-block-start: 4px;
+  color: var(--evidence-heading);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-failures"] ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-failures"] li {
+  overflow: hidden;
+  color: var(--evidence-fail);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-failures"] li::before {
+  content: "✕ ";
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-actions"] > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  block-size: 30px;
+  padding-inline: 11px;
+  border: 1px solid var(--orchestra-composer-border, var(--orchestra-border));
+  border-radius: 7px;
+  background: var(--orchestra-surface);
+  color: var(--orchestra-body);
+  font-size: 12px;
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-actions"] > button:hover {
+  background: var(--orchestra-surface-hover);
+  color: var(--orchestra-text);
+}
+
+body[data-new-layout] [data-orchestra-evidence] [data-slot="evidence-actions"] > button:active {
+  background: var(--orchestra-overlay-pressed);
+}
+
+body[data-new-layout] .orchestra-evidence-dialog {
+  max-inline-size: min(560px, calc(100vw - 32px));
+}
+
+body[data-new-layout] .orchestra-evidence-dialog [data-slot="evidence-replay"] {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 12px;
+}
+
+body[data-new-layout] .orchestra-evidence-dialog [data-slot="evidence-replay"] dt {
+  color: var(--orchestra-muted);
+}
+
+body[data-new-layout] .orchestra-evidence-dialog [data-slot="evidence-replay"] dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+body[data-new-layout] .orchestra-evidence-dialog [data-slot="evidence-replay"] code {
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  user-select: text;
+}
+
+body[data-new-layout]
+  .orchestra-evidence-dialog
+  :is([data-slot="evidence-replay-note"], [data-slot="evidence-replay-block"]) {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+body[data-new-layout] .orchestra-evidence-dialog [data-slot="evidence-replay-note"] {
+  color: var(--orchestra-muted);
+}
+
+body[data-new-layout] .orchestra-evidence-dialog [data-slot="evidence-replay-block"] {
+  color: var(--orchestra-warm);
+}

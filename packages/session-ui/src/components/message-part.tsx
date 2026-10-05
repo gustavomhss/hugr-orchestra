@@ -27,7 +27,6 @@ import {
   TextPart,
   ToolPart,
   UserMessage,
-  Todo,
   QuestionAnswer,
   QuestionInfo,
 } from "@opencode-ai/sdk/v2"
@@ -42,7 +41,6 @@ import { Collapsible } from "@opencode-ai/ui/collapsible"
 import { FileIcon } from "@opencode-ai/ui/file-icon"
 import { Icon } from "@opencode-ai/ui/icon"
 import { ToolErrorCard } from "./tool-error-card"
-import { Checkbox } from "@opencode-ai/ui/checkbox"
 import { DiffChanges } from "@opencode-ai/ui/diff-changes"
 import { Markdown } from "./markdown"
 import { ImagePreview } from "@opencode-ai/ui/image-preview"
@@ -62,6 +60,8 @@ import { AnimatedCountList } from "./tool-count-summary"
 import { ToolStatusTitle } from "./tool-status-title"
 import { patchFiles } from "./apply-patch-file"
 import { partDefaultOpen } from "./part-default-open"
+import { confirmedTodos } from "./confirmed-todos"
+import { TodoWrite } from "./todo-write"
 import { animate } from "motion"
 import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
@@ -605,7 +605,6 @@ function taskSession(
 }
 
 const CONTEXT_GROUP_TOOLS = new Set(["read", "glob", "grep", "list"])
-const HIDDEN_TOOLS = new Set(["todowrite"])
 
 function list<T>(value: T[] | undefined | null, fallback: T[]) {
   if (Array.isArray(value)) return value
@@ -710,7 +709,7 @@ function index<T extends { id: string }>(items: readonly T[]) {
 
 export function renderable(part: PartType, showReasoningSummaries = true) {
   if (part.type === "tool") {
-    if (HIDDEN_TOOLS.has(part.tool)) return false
+    if (part.tool === "todowrite") return confirmedTodos(part.state) !== undefined
     if (part.tool === "question") return part.state.status !== "pending" && part.state.status !== "running"
     return true
   }
@@ -1535,7 +1534,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const data = useData()
   const i18n = useI18n()
   const part = () => props.part as ToolPart
-  if (part().tool === "todowrite") return null
+  const hideTodo = createMemo(() => part().tool === "todowrite" && confirmedTodos(part().state) === undefined)
 
   const hideQuestion = createMemo(
     () => part().tool === "question" && (part().state.status === "pending" || part().state.status === "running"),
@@ -1568,7 +1567,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const handleToolOpenChange = (open: boolean) => props.onToolOpenChange?.(open)
 
   return (
-    <Show when={!hideQuestion()}>
+    <Show when={!hideQuestion() && !hideTodo()}>
       <div data-component="tool-part-wrapper" data-timeline-part-id={part().id}>
         <Switch>
           <Match when={part().state.status === "error" && (part().state as any).error}>
@@ -2524,53 +2523,7 @@ ToolRegistry.register({
 
 ToolRegistry.register({
   name: "todowrite",
-  render(props) {
-    const i18n = useI18n()
-    const todos = createMemo(() => {
-      const meta = props.metadata?.todos
-      if (Array.isArray(meta)) return meta
-
-      const input = props.input.todos
-      if (Array.isArray(input)) return input
-
-      return []
-    })
-
-    const subtitle = createMemo(() => {
-      const list = todos()
-      if (list.length === 0) return ""
-      return `${list.filter((t: Todo) => t.status === "completed").length}/${list.length}`
-    })
-
-    return (
-      <BasicTool
-        {...props}
-        defaultOpen
-        icon="checklist"
-        trigger={{
-          title: i18n.t("ui.tool.todos"),
-          subtitle: subtitle(),
-        }}
-      >
-        <Show when={todos().length}>
-          <div data-component="todos">
-            <For each={todos()}>
-              {(todo: Todo) => (
-                <Checkbox readOnly checked={todo.status === "completed"}>
-                  <span
-                    data-slot="message-part-todo-content"
-                    data-completed={todo.status === "completed" ? "completed" : undefined}
-                  >
-                    {todo.content}
-                  </span>
-                </Checkbox>
-              )}
-            </For>
-          </div>
-        </Show>
-      </BasicTool>
-    )
-  },
+  render: TodoWrite,
 })
 
 ToolRegistry.register({

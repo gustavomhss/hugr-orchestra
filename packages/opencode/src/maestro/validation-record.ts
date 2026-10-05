@@ -59,7 +59,11 @@ export class ValidationRejectedError extends Schema.TaggedErrorClass<ValidationR
   {
     reason: Schema.String,
   },
-) {}
+) {
+  override get message() {
+    return `${this._tag}: ${this.reason}`
+  }
+}
 
 export class ValidationConflictError extends Schema.TaggedErrorClass<ValidationConflictError>()(
   "MaestroValidationConflict",
@@ -71,7 +75,11 @@ export class ValidationConflictError extends Schema.TaggedErrorClass<ValidationC
 
 export class ReviewRejectedError extends Schema.TaggedErrorClass<ReviewRejectedError>()("MaestroReviewRejected", {
   reason: Schema.String,
-}) {}
+}) {
+  override get message() {
+    return `${this._tag}: ${this.reason}`
+  }
+}
 
 export class ReviewConflictError extends Schema.TaggedErrorClass<ReviewConflictError>()("MaestroReviewConflict", {
   sessionID: Schema.String,

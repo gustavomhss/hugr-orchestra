@@ -1,0 +1,5 @@
+Running 1 test using 1 worker
+
+  1 failed
+    a.spec.ts:3:7 › approval › rejects empty
+    b.spec.ts:4:7 › unrelated failure

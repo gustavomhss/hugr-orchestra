@@ -1,0 +1,80 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "4993"[0m
+
+
+Running 2 tests using 1 worker
+
+[1A[2K[1/2] [chromium] › e2e/orchestra/governance-lifetime.spec.ts:17:1 › owned dialog cleanup preserves a replacement owned by another scope
+[1A[2K  1) [chromium] › e2e/orchestra/governance-lifetime.spec.ts:17:1 › owned dialog cleanup preserves a replacement owned by another scope
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('dialog', { name: 'Replacement', exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('dialog', { name: 'Replacement', exact: true })[22m
+
+
+      21 |   await page.getByText("Home", { exact: true }).dispatchEvent("click")
+      22 |   await expect(page.getByLabel("Owning route")).toHaveText("home")
+    > 23 |   await expect(replacement).toBeVisible()
+         |                             ^
+      24 |   await expect(page.locator('[data-component="dialog-overlay"]')).toHaveCount(1)
+      25 |   await page.getByText("Open from disposed owner", { exact: true }).dispatchEvent("click")
+      26 |   await expect(replacement).toBeVisible()
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-governance/packages/app/e2e/orchestra/governance-lifetime.spec.ts:23:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-lifet-be60a-ment-owned-by-another-scope-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-lifet-be60a-ment-owned-by-another-scope-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/test-results/orchestra-governance-lifet-be60a-ment-owned-by-another-scope-chromium/error-context.md
+
+
+[1A[2K[2/2] [chromium] › e2e/orchestra/governance-lifetime.spec.ts:30:1 › owned dialog cleanup removes its hidden root without closing a newer stacked dialog
+[1A[2K  2) [chromium] › e2e/orchestra/governance-lifetime.spec.ts:30:1 › owned dialog cleanup removes its hidden root without closing a newer stacked dialog
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('.governance-owned-dialog')
+    Expected: [32m0[39m
+    Received: [31m1[39m
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 10000ms[22m
+    [2m  - waiting for locator('.governance-owned-dialog')[22m
+    [2m    14 × locator resolved to 1 element[22m
+    [2m       - unexpected value "1"[22m
+
+
+      37 |   await page.getByText("Home", { exact: true }).dispatchEvent("click")
+      38 |   await expect(page.getByLabel("Owning route")).toHaveText("home")
+    > 39 |   await expect(page.locator(".governance-owned-dialog")).toHaveCount(0)
+         |                                                          ^
+      40 |   await expect(newer).toBeVisible()
+      41 |   await expect(page.locator('[data-component="dialog-overlay"]')).toHaveCount(1)
+      42 |   await page.keyboard.press("Escape")
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-governance/packages/app/e2e/orchestra/governance-lifetime.spec.ts:39:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-lifet-23603-sing-a-newer-stacked-dialog-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-lifet-23603-sing-a-newer-stacked-dialog-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/test-results/orchestra-governance-lifet-23603-sing-a-newer-stacked-dialog-chromium/error-context.md
+
+
+[1A[2K  2 failed
+    [chromium] › e2e/orchestra/governance-lifetime.spec.ts:17:1 › owned dialog cleanup preserves a replacement owned by another scope
+    [chromium] › e2e/orchestra/governance-lifetime.spec.ts:30:1 › owned dialog cleanup removes its hidden root without closing a newer stacked dialog

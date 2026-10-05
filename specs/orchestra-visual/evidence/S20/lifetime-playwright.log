@@ -1,0 +1,19 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "4993"[0m
+
+
+Running 13 tests using 2 workers
+
+[1A[2K[1/13] [chromium] › e2e/orchestra/governance-lifetime.spec.ts:17:1 › owned dialog cleanup preserves a replacement owned by another scope
+[1A[2K[2/13] [chromium] › e2e/orchestra/governance.spec.ts:20:3 › dark: shows the session's real Maestro records read-only and returns with Escape
+[1A[2K[3/13] [chromium] › e2e/orchestra/governance-lifetime.spec.ts:30:1 › owned dialog cleanup removes its hidden root without closing a newer stacked dialog
+[1A[2K[4/13] [chromium] › e2e/orchestra/governance-lifetime.spec.ts:46:1 › owned dialog cleanup works while the newer dialog is already closing
+[1A[2K[5/13] [chromium] › e2e/orchestra/governance-lifetime.spec.ts:56:1 › owned dialog disposer cannot close a newer server owner's dialog
+[1A[2K[6/13] [chromium] › e2e/orchestra/governance.spec.ts:20:3 › light: shows the session's real Maestro records read-only and returns with Escape
+[1A[2K[7/13] [chromium] › e2e/orchestra/governance.spec.ts:87:1 › Show in chat moves to the record's turn through the existing message hash
+[1A[2K[8/13] [chromium] › e2e/orchestra/governance.spec.ts:153:1 › a server without Maestro is unavailable, and a pending question is not an approval
+[1A[2K[9/13] [chromium] › e2e/orchestra/governance.spec.ts:189:3 › en: RTL preserves mixed IDs, scroll bounds, keyboard focus and ordinary draft
+[1A[2K[10/13] [chromium] › e2e/orchestra/governance.spec.ts:189:3 › ar: RTL preserves mixed IDs, scroll bounds, keyboard focus and ordinary draft
+[1A[2K[11/13] [chromium] › e2e/orchestra/governance.spec.ts:228:1 › without an open session the entry explains how to reach governance
+[1A[2K[12/13] [chromium] › e2e/orchestra/governance.spec.ts:243:1 › route disposal closes governance when the session leaves for Home
+[1A[2K[13/13] [chromium] › e2e/orchestra/governance.spec.ts:277:1 › cross-server remount closes old governance even when the session ID is reused
+[1A[2K  13 passed (1.0m)

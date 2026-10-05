@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { decideAdmission, type IntentAssessment } from "../../src/maestro/admit-request"
+import { Schema } from "effect"
+import { decideAdmission, IntentAssessment, isIntentAssessment } from "../../src/maestro/admit-request"
 
 const orient: IntentAssessment = {
   kind: "orient",
@@ -25,6 +26,12 @@ const work: IntentAssessment = {
 describe("Maestro admit request", () => {
   test("returns ORIENT for valid orient assessment", () => {
     expect(decideAdmission(orient)).toMatchObject({ outcome: "ORIENT", assessment: orient })
+    expect(
+      decideAdmission({ ...orient, activeWorkEffect: "new-scope-or-revision", unknowns: ["Scope unclear."] }),
+    ).toEqual({
+      outcome: "ORIENT",
+      assessment: { ...orient, activeWorkEffect: "new-scope-or-revision", unknowns: ["Scope unclear."] },
+    })
   })
 
   test("clarifies work without usable goal", () => {
@@ -54,6 +61,47 @@ describe("Maestro admit request", () => {
       outcome: "CLARIFY",
       reason: "invalid-assessment",
     })
+  })
+
+  test.each([
+    ["known strings", { ...work, known: ["Settings page exists."] }],
+    ["uncertainty array", { ...work, uncertainty: ["Theme persistence needs later inspection."] }],
+    ["missing activeWorkEffect", { ...work, activeWorkEffect: undefined }],
+  ])("rejects first pilot malformed %s in shared schema and admission", (_, input) => {
+    expect(() => Schema.decodeUnknownSync(IntentAssessment)(input)).toThrow()
+    expect(decideAdmission(input)).toEqual({ outcome: "CLARIFY", reason: "invalid-assessment" })
+  })
+
+  test.each(
+    [
+      { ...work, known: [{ text: " \n\t", source: "stakeholder" }] },
+      { ...work, proposals: [{ text: "", source: "maestro" }] },
+      { ...work, unknowns: [" "] },
+      { ...work, uncertainty: "\n" },
+      { ...work, reason: "\t" },
+      { ...work, goal: null },
+      null,
+      [],
+      "work",
+    ].map((input) => ({ input })),
+  )("fails closed on malformed assessment %#", (item) => {
+    expect(isIntentAssessment(item.input)).toBe(false)
+    expect(decideAdmission(item.input)).toEqual({ outcome: "CLARIFY", reason: "invalid-assessment" })
+  })
+
+  test("keeps optional goal and existing conflict, goal, blocker precedence", () => {
+    expect(isIntentAssessment({ ...orient, goal: undefined })).toBe(true)
+    expect(decideAdmission({ ...work, goal: undefined })).toEqual({
+      outcome: "CLARIFY",
+      reason: "missing-usable-goal",
+    })
+    expect(decideAdmission({ ...work, goal: " ", unknowns: ["Pick scope."] })).toEqual({
+      outcome: "CLARIFY",
+      reason: "missing-usable-goal",
+    })
+    expect(
+      decideAdmission({ ...work, activeWorkEffect: "new-scope-or-revision", goal: " ", unknowns: ["Pick scope."] }),
+    ).toEqual({ outcome: "CLARIFY", reason: "active-work-conflict" })
   })
 
   test("clarifies work that may redirect active approved work", () => {

@@ -95,6 +95,7 @@
     "solid-js": "catalog:",
     "solid-list": "catalog:",
     "solid-presence": "0.2.0",
+    "strip-ansi": "7.1.2",
     "tailwindcss": "catalog:"
   }
 }

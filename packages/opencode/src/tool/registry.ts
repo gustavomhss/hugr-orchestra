@@ -11,7 +11,7 @@ import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
 import { Archive } from "@/continuity/archive"
-import { TaskTool } from "./task"
+import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
 import { MaestroRecordAdmissionTool } from "./maestro-admission"
 import { MaestroCatalogContextTool, MaestroRecordPlanRevisionTool } from "./maestro-plan"
@@ -19,6 +19,13 @@ import { MaestroRecordContextTool } from "./maestro-context"
 import { MaestroRequestReviewTool } from "./maestro-review"
 import { MaestroRecordReviewTool, MaestroRecordValidationTool } from "./maestro-validation"
 import { MaestroGrantAuthorizationTool } from "./maestro-authorization"
+import { MaestroArsenalTools } from "./maestro-arsenal"
+import { MaestroArsenal } from "@opencode-ai/core/tool/maestro-arsenal"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AppProcess } from "@opencode-ai/core/process"
+import { Global } from "@opencode-ai/core/global"
 import { Database } from "@opencode-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
@@ -46,6 +53,7 @@ import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Format } from "../format"
 import { InstanceState } from "@/effect/instance-state"
+import { InstanceStore } from "@/project/instance-store"
 import { EffectBridge } from "@/effect/bridge"
 import { Question } from "../question"
 import { Todo } from "../session/todo"
@@ -93,6 +101,7 @@ export interface Interface {
     modelID: ModelV2.ID
     agent: Agent.Info
     permission?: PermissionV1.Ruleset
+    durableSafety?: boolean
   }) => Effect.Effect<Tool.Def[]>
 }
 
@@ -107,9 +116,40 @@ const layer = Layer.effect(
     const truncate = yield* Truncate.Service
     const flags = yield* RuntimeFlags.Service
     const mcp = yield* MCP.Service
+    const fs = yield* FSUtil.Service
+    const observations = yield* ArsenalObservations.Service
+    const runtime = yield* ArsenalBindings.make
+    const safety = yield* ToolSafety.make
+    const arsenal = yield* MaestroArsenalTools.make({
+      beforeExecute: (context, name, args) => runtime.beforeExecute(context.sessionID, name, args),
+      afterExecute: (context, name, args, result) => {
+        if (!context.callID) return Effect.fail(new Error("Arsenal native call identity missing")).pipe(Effect.orDie)
+        return runtime.afterExecute(
+          { sessionID: context.sessionID, assistantMessageID: context.messageID, callID: context.callID },
+          name,
+          args,
+          result,
+        )
+      },
+      observeGovernance: (context, operation) =>
+        Effect.gen(function* () {
+          const instance = yield* InstanceState.context
+          yield* context.ask({
+            permission: "read",
+            patterns: [`session:${context.sessionID}`],
+            always: [],
+            metadata: { operation },
+          })
+          return yield* observations.read({
+            sessionID: context.sessionID,
+            operation,
+            placement: { directory: instance.directory, projectID: instance.project.id },
+          })
+        }),
+    })
 
     const invalid = yield* InvalidTool
-    const task = yield* TaskTool
+    const task = yield* TaskTool.pipe(runtime.construct)
     const maestroPresentApproval = yield* MaestroPresentApprovalTool
     const maestroRecordApproval = yield* MaestroRecordApprovalTool
     const maestroRecordAdmission = yield* MaestroRecordAdmissionTool
@@ -166,13 +206,39 @@ const layer = Layer.effect(
                 // Bridge the host's Effect-based `ask` into a Promise-returning
                 // function for the plugin to make sure context persists
                 const bridge = yield* EffectBridge.make()
+                yield* ToolSafety.beforeInvocation({
+                  tool: id,
+                  args,
+                  sessionID: toolCtx.sessionID,
+                  callID: toolCtx.callID ?? "",
+                  directory: ctx.directory,
+                  projectID: ctx.project.id,
+                  projectDirectory: ctx.worktree === "/" ? ctx.directory : ctx.worktree,
+                })
                 const pluginCtx: PluginToolContext = {
                   ...toolCtx,
                   ask: (req) => bridge.promise(toolCtx.ask(req)),
                   directory: ctx.directory,
                   worktree: ctx.worktree,
                 }
-                const result = yield* Effect.promise(() => def.execute(args as any, pluginCtx))
+                const result = yield* safety.run(
+                  {
+                    tool: id,
+                    args,
+                    sessionID: toolCtx.sessionID,
+                    callID: toolCtx.callID ?? "",
+                    directory: ctx.directory,
+                    projectID: ctx.project.id,
+                    projectDirectory: ctx.worktree === "/" ? ctx.directory : ctx.worktree,
+                  },
+                  Effect.gen(function* () {
+                    const raw = yield* Effect.promise(() => def.execute(args as any, pluginCtx))
+                    yield* ToolSafety.inspect(raw)
+                    return raw
+                  }),
+                  () => Effect.void,
+                )
+                yield* ToolSafety.inspect(result)
                 const output = typeof result === "string" ? result : result.output
                 const metadata = typeof result === "string" ? {} : (result.metadata ?? {})
                 const attachments = typeof result === "string" ? undefined : result.attachments
@@ -189,6 +255,7 @@ const layer = Layer.effect(
                   },
                 }
               }).pipe(
+                Effect.orDie,
                 Effect.withSpan("Tool.execute", {
                   attributes: {
                     "tool.name": id,
@@ -226,6 +293,7 @@ const layer = Layer.effect(
 
         yield* config.get()
         const questionEnabled = ["app", "cli", "desktop"].includes(flags.client) || flags.enableQuestionTool
+        yield* MaestroArsenalTools.prepare.pipe(Effect.provideService(FSUtil.Service, fs), Effect.orDie)
 
         const tool = yield* Effect.all({
           invalid: Tool.init(invalid),
@@ -247,6 +315,9 @@ const layer = Layer.effect(
           maestroRecordValidation: Tool.init(maestroRecordValidation),
           maestroRecordReview: Tool.init(maestroRecordReview),
           maestroGrantAuthorization: Tool.init(maestroGrantAuthorization),
+          arsenalCatalog: Tool.init(arsenal[0]),
+          arsenalDescribe: Tool.init(arsenal[1]),
+          arsenalExecute: Tool.init(arsenal[2]),
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
           search: Tool.init(websearch),
@@ -281,6 +352,9 @@ const layer = Layer.effect(
             tool.maestroRecordValidation,
             tool.maestroRecordReview,
             tool.maestroGrantAuthorization,
+            tool.arsenalCatalog,
+            tool.arsenalDescribe,
+            tool.arsenalExecute,
             tool.fetch,
             tool.todo,
             tool.search,
@@ -296,10 +370,29 @@ const layer = Layer.effect(
       }),
     )
 
-    const all: Interface["all"] = Effect.fn("ToolRegistry.all")(function* () {
+    const definitions = Effect.fn("ToolRegistry.definitions")(function* (durableSafety: boolean) {
       const s = yield* InstanceState.get(state)
-      return [...s.builtin, ...s.custom] as Tool.Def[]
+      const instance = yield* InstanceState.context
+      return [...s.builtin, ...s.custom].map((definition: Tool.Def) => ({
+        ...definition,
+        execute: (args: unknown, context: Tool.Context) => runtime.withSession(
+          context.sessionID,
+          runtime.run({
+            tool: definition.id,
+            args,
+            sessionID: context.sessionID,
+            assistantMessageID: context.messageID,
+            agent: context.agentID ?? context.agent,
+            callID: context.callID ?? "",
+            directory: instance.directory,
+            projectID: instance.project.id,
+            projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
+          }, definition.execute(args, context), durableSafety, () => context.abort.aborted),
+        ).pipe(Effect.orDie),
+      }))
     })
+
+    const all: Interface["all"] = () => definitions(true)
 
     const ids: Interface["ids"] = Effect.fn("ToolRegistry.ids")(function* () {
       return (yield* all()).map((tool) => tool.id)
@@ -346,7 +439,12 @@ const layer = Layer.effect(
     })
 
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
-      const filtered = (yield* all()).filter((tool) => {
+      const filtered = (yield* definitions(input.durableSafety !== false)).filter((tool) => {
+        if (
+          Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
+          (input.agent.id !== "maestro" || input.agent.native !== true)
+        )
+          return false
         if (
           ((tool.id === MaestroPresentApprovalTool.id ||
             tool.id === MaestroRecordApprovalTool.id ||
@@ -543,6 +641,11 @@ export const node = LayerNode.make({
     MCP.node,
     Database.node,
     Archive.node,
+    ArsenalObservations.node,
+    AppProcess.node,
+    Global.node,
+    InstanceStore.node,
+    Permission.node,
     Ripgrep.node,
   ],
 })

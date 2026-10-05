@@ -8,12 +8,17 @@ import { Config } from "../config"
 import { makeLocationNode } from "../effect/app-node"
 import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
+import { Location } from "../location"
 import { AppProcess } from "../process"
 import { PermissionV2 } from "../permission"
 import { PositiveInt } from "../schema"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
+import { ToolSafety } from "../tool-safety"
+import { ToolSafetySandbox } from "../tool-safety-sandbox"
+import { ToolSafetyGit } from "../tool-safety-git"
+import { OutputInspector } from "../output-inspector"
 
 export const name = "bash"
 export const DEFAULT_TIMEOUT_MS = 2 * 60 * 1_000
@@ -102,6 +107,7 @@ const layer = Layer.effectDiscard(
     const appProcess = yield* AppProcess.Service
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
+    const location = yield* Location.Service
 
     yield* tools
       .register({
@@ -163,15 +169,31 @@ const layer = Layer.effectDiscard(
                 forceKillAfter: Duration.seconds(3),
               })
               const timeout = input.timeout ?? DEFAULT_TIMEOUT_MS
-              const result = yield* appProcess
-                .run(command, {
+              const profile = yield* ToolSafety.RuntimeProfile
+              yield* ToolSafetyGit.before({ command: input.command, directory: location.directory,
+                projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+                cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,
+                neverTouch: profile?.neverTouch,
+              }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
+              const result = yield* Effect.scoped(Effect.gen(function* () {
+                const inspector = OutputInspector.make()
+                const wrapped = yield* ToolSafetySandbox.wrap(command).pipe(Effect.provideService(FSUtil.Service, fs))
+                const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),
                   maxOutputBytes: MAX_CAPTURE_BYTES,
+                  inspect: (chunk) => {
+                    const reason = inspector.push(chunk)
+                    if (reason) throw new ToolSafety.Denied({ reason })
+                  },
                 })
-                .pipe(
-                  Effect.catchTag("AppProcessError", (error) =>
-                    isTimeout(error) ? Effect.succeed(undefined) : Effect.fail(error),
+                const reason = inspector.finish()
+                if (reason) return yield* new ToolSafety.Denied({ reason })
+                return captured
+              })).pipe(
+                  Effect.catchTag("AppProcessError", (error): Effect.Effect<AppProcess.RunResult | undefined, AppProcess.AppProcessError | ToolSafety.Denied> =>
+                    error.cause instanceof ToolSafety.Denied ? Effect.fail(error.cause)
+                      : isTimeout(error) ? Effect.succeed(undefined) : Effect.fail(error),
                   ),
                 )
               if (!result) {
@@ -193,7 +215,11 @@ const layer = Layer.effectDiscard(
                 truncated: result.outputTruncated === true,
                 ...(warnings.length ? { warnings } : {}),
               }
-            }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to execute command: ${input.command}` }))),
+               }).pipe(Effect.provideService(ToolSafety.NativeContext, { directory: location.directory, projectID: location.project.id }),
+                 Effect.mapError((error) => new ToolFailure({ message: error instanceof ToolSafety.Denied
+                ? error.message : `Unable to execute command: ${input.command}`,
+                ...(error instanceof ToolSafety.Denied ? { error } : {}),
+              }))),
         }),
       })
       .pipe(Effect.orDie)
@@ -203,5 +229,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/bash",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
 })

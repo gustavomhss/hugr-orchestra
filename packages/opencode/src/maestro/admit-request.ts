@@ -1,23 +1,21 @@
-export type KnownFact = {
-  text: string
-  source: "stakeholder" | "orientation"
-}
+import { Schema } from "effect"
 
-export type Proposal = {
-  text: string
-  source: "maestro"
-}
+const NonBlank = Schema.String.check(Schema.isPattern(/\S/))
 
-export type IntentAssessment = {
-  kind: "orient" | "work"
-  goal?: string
-  known: KnownFact[]
-  proposals: Proposal[]
-  unknowns: string[]
-  uncertainty: string
-  activeWorkEffect: "none" | "new-scope-or-revision"
-  reason: string
-}
+export const IntentAssessment = Schema.Struct({
+  kind: Schema.Literals(["orient", "work"]),
+  goal: Schema.optional(Schema.String),
+  known: Schema.Array(Schema.Struct({ text: NonBlank, source: Schema.Literals(["stakeholder", "orientation"]) })),
+  proposals: Schema.Array(Schema.Struct({ text: NonBlank, source: Schema.Literal("maestro") })),
+  unknowns: Schema.Array(NonBlank),
+  uncertainty: NonBlank,
+  activeWorkEffect: Schema.Literals(["none", "new-scope-or-revision"]),
+  reason: NonBlank,
+}).annotate({ description: "admit-request-v1 assessment; admission outcome is computed by runtime policy." })
+
+export type IntentAssessment = Schema.Schema.Type<typeof IntentAssessment>
+export type KnownFact = IntentAssessment["known"][number]
+export type Proposal = IntentAssessment["proposals"][number]
 
 export type AdmissionDecision =
   | { outcome: "ORIENT"; assessment: IntentAssessment }
@@ -31,41 +29,7 @@ function text(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0
 }
 
-function known(value: unknown): value is KnownFact[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        typeof item === "object" &&
-        item !== null &&
-        text(item.text) &&
-        (item.source === "stakeholder" || item.source === "orientation"),
-    )
-  )
-}
-
-function proposals(value: unknown): value is Proposal[] {
-  return (
-    Array.isArray(value) &&
-    value.every((item) => typeof item === "object" && item !== null && text(item.text) && item.source === "maestro")
-  )
-}
-
-export function isIntentAssessment(value: unknown): value is IntentAssessment {
-  if (typeof value !== "object" || value === null) return false
-  const item = value as Partial<IntentAssessment>
-  return (
-    (item.kind === "orient" || item.kind === "work") &&
-    (item.goal === undefined || typeof item.goal === "string") &&
-    known(item.known) &&
-    proposals(item.proposals) &&
-    Array.isArray(item.unknowns) &&
-    item.unknowns.every(text) &&
-    text(item.uncertainty) &&
-    (item.activeWorkEffect === "none" || item.activeWorkEffect === "new-scope-or-revision") &&
-    text(item.reason)
-  )
-}
+export const isIntentAssessment = Schema.is(IntentAssessment)
 
 /** Applies admission policy after frame-request has returned an untrusted assessment. */
 export function decideAdmission(input: unknown): AdmissionDecision {

@@ -7,7 +7,7 @@ import { readAtlasSource } from "@/maestro/atlas-source"
 import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { Session } from "@/session/session"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 
 const Field = Schema.Struct({
   value: Schema.String,
@@ -103,10 +103,11 @@ export const MaestroRecordPlanRevisionTool = Tool.define(
             sessionID: ctx.sessionID,
             contextRequirement: "PENDING",
           })
+          const bindings = { planRevisionID: record.id, revisionHash: record.revisionHash }
           return {
             title: `Plan revision ${record.revision}`,
-            metadata: { planRevisionID: record.id },
-            output: `${record.status}: ${record.id}`,
+            metadata: { ...bindings, truncated: false },
+            output: `${record.status}: ${record.id}\n\nBindings: ${JSON.stringify(bindings)}`,
           }
         }).pipe(
           Effect.provideService(Database.Service, database),

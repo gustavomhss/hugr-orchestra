@@ -7,7 +7,7 @@ import { Database } from "@opencode-ai/core/database/database"
 import { recordContext } from "@/maestro/context-record"
 import { Config } from "@/config/config"
 import { Skill } from "@/skill"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 
 const Parameters = Schema.Struct({ planRevisionID: Schema.String })
 
@@ -32,16 +32,16 @@ export const MaestroRecordContextTool = Tool.define(
           if (agent?.id !== "maestro" || agent.native !== true)
             return yield* Effect.fail(new Error("Context recording requires Maestro"))
           const record = yield* recordContext(params.planRevisionID, ctx.sessionID, true)
+          const bindings = { contextRecordID: record.id, contextHash: record.contextHash, mode: record.mode }
           return {
             title: `Context ${record.mode}`,
             metadata: {
-              contextRecordID: record.id,
-              contextHash: record.contextHash,
-              mode: record.mode,
+              ...bindings,
               truncated: false,
             },
             output: [
               `${record.mode}: ${record.id}`,
+              `Bindings: ${JSON.stringify(bindings)}`,
               ...("skills" in record
                 ? record.skills.map(
                     (skill) => `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,

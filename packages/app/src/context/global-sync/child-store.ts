@@ -221,6 +221,7 @@ export function createChildStoreManager(input: {
               return pathQuery.data ?? EMPTY
             },
             status: "loading" as const,
+            load: { agent: "pending", config: "pending", session_status: "pending" },
             agent: [],
             command: [],
             get reference() {

@@ -1,4 +1,10 @@
-import { Effect, Stream } from "effect"
+import { Effect, Fiber, Stream } from "effect"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
+import { ToolSafetyGit } from "@opencode-ai/core/tool-safety-git"
+import { OutputInspector } from "@opencode-ai/core/output-inspector"
+import { AppProcess } from "@opencode-ai/core/process"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import os from "os"
 import { createWriteStream } from "node:fs"
 import * as Tool from "./tool"
@@ -436,6 +442,13 @@ export const ShellTool = Tool.define(
       ctx: Tool.Context,
     ) {
       const limits = yield* trunc.limits()
+      const profile = yield* ToolSafety.RuntimeProfile
+      const instance = yield* InstanceState.context
+      const env = ToolSafetySandbox.environment(input.env)
+      yield* ToolSafetyGit.before({ command: input.command, directory: instance.directory,
+        projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
+        cwd: input.cwd, env, managedPaths: profile?.managedPaths, neverTouch: profile?.neverTouch,
+      }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provide(LayerNode.compile(AppProcess.node)), Effect.orDie)
       const keep = limits.maxBytes * 2
       let full = ""
       let last = ""
@@ -481,10 +494,16 @@ export const ShellTool = Tool.define(
       const code: number | null = yield* Effect.scoped(
         Effect.gen(function* () {
           yield* Effect.addFinalizer(closeSink)
-          const handle = yield* spawner.spawn(cmd(input.shell, input.command, input.cwd, input.env))
+          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env)).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
+          )
+          const handle = yield* spawner.spawn(wrapped)
+          const inspection = OutputInspector.quarantine()
 
-          yield* Effect.forkScoped(
-            Stream.runForEach(Stream.decodeText(handle.all), (chunk) => {
+          const retain = (chunk: string) =>
+            Effect.suspend(() => {
+              if (!chunk) return ctx.metadata({ metadata: { output: last } })
               const size = Buffer.byteLength(chunk, "utf-8")
               list.push({ text: chunk, size })
               used += size
@@ -527,7 +546,23 @@ export const ShellTool = Tool.define(
                   output: last,
                 },
               })
-            }),
+            })
+          const reader = yield* Effect.forkScoped(
+            Stream.runForEach(Stream.decodeText(handle.all), (chunk) =>
+              Effect.suspend(() => {
+                const inspected = inspection.push(chunk)
+                return inspected.reason
+                  ? Effect.die(new ToolSafety.Denied({ reason: inspected.reason }))
+                  : retain(inspected.text)
+              }),
+            ).pipe(
+              Effect.andThen(Effect.suspend(() => {
+                const inspected = inspection.finish()
+                return inspected.reason
+                  ? Effect.die(new ToolSafety.Denied({ reason: inspected.reason }))
+                  : retain(inspected.text)
+              })),
+            ),
           )
 
           const abort = Effect.callback<void>((resume) => {
@@ -543,6 +578,7 @@ export const ShellTool = Tool.define(
             handle.exitCode.pipe(Effect.map((code) => ({ kind: "exit" as const, code }))),
             abort.pipe(Effect.map(() => ({ kind: "abort" as const, code: null }))),
             timeout.pipe(Effect.map(() => ({ kind: "timeout" as const, code: null }))),
+            Fiber.join(reader).pipe(Effect.andThen(Effect.never)),
           ])
 
           if (exit.kind === "abort") {
@@ -554,6 +590,7 @@ export const ShellTool = Tool.define(
             yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
           }
 
+          if (exit.kind === "exit") yield* Fiber.join(reader)
           return exit.kind === "exit" ? exit.code : null
         }),
       ).pipe(Effect.orDie)
@@ -587,6 +624,8 @@ export const ShellTool = Tool.define(
         metadata: {
           output: last || preview(output),
           exit: code,
+          timeout: expired,
+          aborted,
           truncated: cut,
           ...(cut && file ? { outputPath: file } : {}),
         },

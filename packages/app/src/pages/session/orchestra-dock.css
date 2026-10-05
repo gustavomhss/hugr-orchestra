@@ -1,0 +1,287 @@
+/* The cockpit's compact Dock card (approved reference: one card, header, four pane segments, then
+ * the pane). Colors come from the Orchestra session tokens; the browser chrome inside keeps its own
+ * paint rules in orchestra/session.css. */
+.orchestra-dock-card {
+  display: flex;
+  min-block-size: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--orchestra-border-muted, var(--v2-border-border-muted));
+  border-radius: 10px;
+  background: var(--orchestra-card-background, var(--v2-background-bg-layer-01));
+  box-shadow: var(--orchestra-evidence-shadow, none);
+}
+
+.orchestra-dock-header {
+  display: flex;
+  min-block-size: 28px;
+  align-items: center;
+  gap: 8px;
+  color: var(--orchestra-task-meta, var(--text-weak));
+}
+
+.orchestra-dock-header h2 {
+  margin: 0;
+  flex: 1;
+  color: var(--orchestra-task-title, var(--text-strong));
+  font-size: 13.5px;
+  font-weight: 560;
+}
+
+.orchestra-dock-icon-button {
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--orchestra-rail-tab-text, var(--text-weak));
+  cursor: pointer;
+}
+
+.orchestra-dock-icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.orchestra-dock-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--orchestra-session-rule, var(--border-weaker-base));
+  border-radius: 8px;
+  background: var(--orchestra-context-background, var(--surface-base));
+}
+
+.orchestra-dock-tabs [role="tab"] {
+  min-inline-size: 0;
+  min-block-size: 28px;
+  overflow: hidden;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--orchestra-rail-tab-text, var(--text-weak));
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+:is(.orchestra-dock-tabs [role="tab"], .orchestra-dock-icon-button:not(:disabled), .orchestra-dock-back):hover {
+  background: var(--orchestra-rail-tab-hover-background, var(--surface-raised-base-hover));
+  color: var(--orchestra-rail-tab-hover, var(--text-strong));
+}
+
+.orchestra-dock-tabs [role="tab"][aria-selected="true"] {
+  background: var(--orchestra-file-active, var(--surface-raised-stronger));
+  color: var(--orchestra-rail-tab-active-text, var(--text-strong));
+  box-shadow: inset 0 1px 0 var(--orchestra-rail-tab-highlight, transparent);
+}
+
+.orchestra-dock-card :is(button, [role="tab"]):focus-visible {
+  outline: 2px solid var(--orchestra-accent, var(--text-strong));
+  outline-offset: -2px;
+}
+
+.orchestra-dock-pane {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orchestra-dock-pane > .zen-browser-shell {
+  block-size: auto;
+  min-block-size: 0;
+  flex: 1;
+}
+
+/* Compact browser controls share the session's selected-file and evidence materials. Paint stays
+ * on the controls: a backdrop filter on their ancestor would rebind the fixed native-tab menu. */
+.orchestra-dock-card .zen-browser-shell.is-compact .zen-tab.is-active {
+  background: var(--orchestra-file-active);
+  color: var(--orchestra-rail-tab-active-text);
+  box-shadow:
+    inset 0 0 0 1px var(--orchestra-file-active-border),
+    var(--orchestra-evidence-highlight);
+}
+
+.orchestra-dock-card
+  .zen-browser-shell.is-compact
+  :is(.zen-tab:not(.is-active), .zen-new-tab, .zen-nav-button:not(:disabled), .zen-open-button:not(:disabled)):hover {
+  background: var(--orchestra-rail-tab-hover-background);
+  color: var(--orchestra-rail-tab-hover);
+  box-shadow: var(--orchestra-evidence-highlight);
+}
+
+.orchestra-dock-card .zen-browser-shell.is-compact .zen-urlbar input {
+  background: var(--orchestra-evidence-background);
+  color: var(--orchestra-session-heading);
+  box-shadow:
+    inset 0 0 0 1px var(--orchestra-context-border),
+    var(--orchestra-evidence-highlight);
+}
+
+.orchestra-dock-card .zen-browser-shell.is-compact .zen-urlbar input:focus-visible {
+  outline-color: var(--orchestra-accent);
+  outline-offset: -2px;
+}
+
+.orchestra-dock-note {
+  display: flex;
+  margin: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  color: var(--orchestra-task-meta, var(--text-weak));
+  font-size: 12px;
+}
+
+.orchestra-dock-note[role="alert"] {
+  color: var(--orchestra-evidence-delete, var(--text-critical-base));
+}
+
+.orchestra-dock-state {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--orchestra-task-meta, var(--text-weak));
+  font-size: 12px;
+  text-align: center;
+}
+
+.orchestra-dock-state strong {
+  color: var(--orchestra-task-title, var(--text-strong));
+  font-size: 13px;
+  font-weight: 560;
+}
+
+:is(.orchestra-dock-state, .orchestra-dock-note) button,
+.orchestra-dock-link {
+  min-block-size: 28px;
+  flex: none;
+  padding: 0 10px;
+  border: 1px solid var(--orchestra-border-muted, var(--border-weak-base));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--orchestra-rail-tab-active-text, var(--text-strong));
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.orchestra-dock-local {
+  position: relative;
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orchestra-dock-bar {
+  display: flex;
+  min-block-size: 28px;
+  align-items: center;
+  gap: 6px;
+}
+
+.orchestra-dock-path {
+  min-inline-size: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--orchestra-task-meta, var(--text-weak));
+  font: 11.5px / 16px var(--font-family-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orchestra-dock-back {
+  display: inline-flex;
+  min-block-size: 28px;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px 0 2px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--orchestra-rail-tab-text, var(--text-weak));
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.orchestra-dock-scroll {
+  min-block-size: 0;
+  flex: 1;
+}
+
+.orchestra-dock-viewer {
+  position: relative;
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.orchestra-dock-terminal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.orchestra-docs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.orchestra-docs-list .orchestra-docs-list {
+  padding-inline-start: 14px;
+}
+
+.orchestra-docs-entry {
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 28px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--orchestra-file-text, var(--text-base));
+  font: 12px / 16px var(--font-family-mono);
+  text-align: start;
+  cursor: pointer;
+}
+
+.orchestra-docs-entry:hover {
+  background: var(--orchestra-overlay-hover, var(--surface-raised-base-hover));
+}
+
+.orchestra-docs-document {
+  padding: 4px 6px 16px;
+  color: var(--orchestra-session-body, var(--text-base));
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.orchestra-docs-document pre {
+  margin: 0;
+  font: 12px / 18px var(--font-family-mono);
+  white-space: pre-wrap;
+}

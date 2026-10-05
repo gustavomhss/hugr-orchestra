@@ -16,6 +16,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { httpError, raw, reply, TestLLMServer } from "../lib/llm-server"
@@ -24,7 +25,7 @@ import { FIRST, NONCE, body, fragments, jobFor, packet, wireMessages } from "./s
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 const llmNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
-const it = testEffect(LayerNode.compile(LayerNode.group([
+const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   SessionPrompt.node, SessionContinuity.node, Session.node, SessionProjector.node, BackgroundJob.node,
   Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, Archive.node, llmNode,
 ]), [

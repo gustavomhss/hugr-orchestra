@@ -408,10 +408,10 @@ withMcpInstructions.instance(
       const fiber = yield* prompt.loop({ sessionID: chat.id }).pipe(Effect.forkChild)
       yield* awaitWithTimeout(llm.wait(1), "timed out waiting for MCP instruction request", "10 seconds")
 
-      const hits = yield* llm.hits
-      const body = JSON.stringify(hits[0]?.body)
+      const body = JSON.stringify((yield* llm.hits)[0]?.body)
       expect(body).toContain('<server name=\\"guide-server\\">')
       expect(body).toContain("Use lookup before mutate.")
+      yield* prompt.cancel(chat.id)
       yield* Fiber.interrupt(fiber)
     }),
   15_000,
@@ -1781,8 +1781,10 @@ unix(
       })
 
       yield* llm.tool("bash", {
+        // Leave enough ordinary suffix to release the ready marker from the
+        // secret scanner's cross-chunk quarantine before the process sleeps.
         command:
-          'i=0; while [ "$i" -lt 4000 ]; do printf "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx %05d\\n" "$i"; i=$((i + 1)); done; printf truncation-ready; sleep 30',
+          'i=0; while [ "$i" -lt 4000 ]; do printf "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx %05d\\n" "$i"; i=$((i + 1)); done; printf "truncation-ready%080d" 0; sleep 30',
         timeout: 30_000,
         workdir: path.resolve(dir),
       })
@@ -1791,10 +1793,8 @@ unix(
       yield* llm.wait(1)
       yield* pollWithTimeout(
         Effect.gen(function* () {
-          const msgs = yield* MessageV2.filterCompactedEffect(chat.id)
-          const assistant = msgs.findLast((item) => item.info.role === "assistant")
-          const tool = assistant ? toolPart(assistant.parts) : undefined
-          if (tool?.state.status === "running" && tool.state.metadata?.output.includes("truncation-ready")) return true
+          const tool = toolPart((yield* MessageV2.filterCompactedEffect(chat.id)).findLast((item) => item.info.role === "assistant")?.parts ?? [])
+          if (tool?.state.status === "running" && tool.state.metadata?.output?.includes("truncation-ready")) return true
         }),
         "timed out waiting for truncated shell output",
       )

@@ -14,6 +14,7 @@ import { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
 import { ToolRegistry } from "@/tool/registry"
 import { ToolJsonSchema } from "@/tool/json-schema"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -365,7 +366,7 @@ describe("context_recall", () => {
       expect(out.content).toContain("Stored own receipt ZX-19.")
     }).pipe(
       Effect.provide(
-        LayerNode.compile(
+        TestAppNodeBuilder.build(
           LayerNode.group([
             ToolRegistry.node,
             Session.node,

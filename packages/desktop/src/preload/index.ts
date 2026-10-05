@@ -13,14 +13,14 @@ const updaterHandler = (_: unknown, state: UpdaterState) => {
 const api: ElectronAPI = {
   appDockOpen: (url, bounds, profile) => ipcRenderer.invoke("app-dock-open", url, bounds, profile),
   appDockDeleteProfile: (profileID) => ipcRenderer.invoke("app-dock-delete-profile", { profileID }),
-  appDockResize: (bounds) => ipcRenderer.invoke("app-dock-resize", bounds),
-  appDockHide: () => ipcRenderer.invoke("app-dock-hide"),
+  appDockResize: (tab, bounds) => ipcRenderer.invoke("app-dock-resize", tab, bounds),
+  appDockHide: (tab) => ipcRenderer.invoke("app-dock-hide", tab),
   appDockOcclude: (occluded) => ipcRenderer.invoke("app-dock-occlude", occluded),
   appDockClose: () => ipcRenderer.invoke("app-dock-close"),
   appDockCloseTab: (tabID) => ipcRenderer.invoke("app-dock-close-tab", tabID),
   appDockRecoverTab: (tabID) => ipcRenderer.invoke("app-dock-recover-tab", tabID),
   appDockCloseTabs: (tabID, scope, order) => ipcRenderer.invoke("app-dock-close-tabs", tabID, scope, order),
-  appDockSelect: (tabID, bounds) => ipcRenderer.invoke("app-dock-select", tabID, bounds),
+  appDockSelect: (tab, bounds) => ipcRenderer.invoke("app-dock-select", tab, bounds),
   appDockNavigate: (tabID, url) => ipcRenderer.invoke("app-dock-navigate", tabID, url),
   appDockCommand: (tabID, command) => ipcRenderer.invoke("app-dock-command", tabID, command),
   appDockEvent: (callback) => {

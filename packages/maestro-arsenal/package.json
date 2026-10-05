@@ -1,0 +1,27 @@
+{
+  "name": "@opencode-ai/maestro-arsenal",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "test": "bun test --timeout 30000",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "typescript": "catalog:",
+    "tree-sitter": "0.25.0",
+    "tree-sitter-python": "0.25.0",
+    "tree-sitter-typescript": "0.23.2"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

@@ -55,6 +55,12 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { AppNodeBuilderV1 } from "./app-node-builder-v1"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
+import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { ApplicationTools } from "@opencode-ai/core/tool/application-tools"
+import { LocationServiceMap } from "@opencode-ai/core/location-services"
+import { EventV2 } from "@opencode-ai/core/event"
+import { SessionStore } from "@opencode-ai/core/session/store"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
 
 export const AppLayer = AppNodeBuilderV1.build(
   LayerNode.group([
@@ -107,6 +113,12 @@ export const AppLayer = AppNodeBuilderV1.build(
     Installation.node,
     ShareNext.node,
     SessionShare.node,
+    ArsenalBindings.node,
+    ApplicationTools.node,
+    LocationServiceMap.node,
+    EventV2.node,
+    SessionStore.node,
+    ArsenalObservations.node,
   ]),
 ).pipe(Layer.provideMerge(AppNodeBuilderV1.build(Ripgrep.node)), Layer.provideMerge(Observability.layer))
 

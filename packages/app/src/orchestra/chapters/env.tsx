@@ -105,7 +105,9 @@ export default function EnvPage(_props: ChapterPageProps) {
           {language.t("orchestra.env.download")}
         </ButtonV2>
         <Show when={state.imported}>
-          <span class="env-filename">{state.filename}</span>
+          <span class="env-filename" dir="ltr">
+            {state.filename}
+          </span>
         </Show>
       </div>
       <p class="env-note">{language.t("orchestra.env.memory")}</p>

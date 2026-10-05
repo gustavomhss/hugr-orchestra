@@ -1,0 +1,40 @@
+bun test v1.3.14 (0d9b296a)
+
+test-browser/orchestra-compact-navigation.test.ts:
+24 |     await createRoot(async (dispose) => {
+25 |       const first = createOrchestraNavigation({ platform: platform("one"), constrained: () => false })
+26 |       await first.ready
+27 |       expect(first.compact()).toBe(false)
+28 |       first.toggle()
+29 |       expect(first.compact()).toBe(true)
+                                   ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/test-browser/orchestra-compact-navigation.test.ts:29:31)
+      at async <anonymous> (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/test-browser/orchestra-compact-navigation.test.ts:24:11)
+(fail) window navigation presentation > remembers an explicit choice without sharing it with another window [17.03ms]
+979 |   }
+980 | }
+981 | function handleError(err, owner = Owner) {
+982 |   const fns = ERROR && owner && owner.context && owner.context[ERROR];
+983 |   const error = castError(err);
+984 |   if (!fns) throw error;
+                        ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at handleError (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/node_modules/.bun/solid-js@1.9.10/node_modules/solid-js/dist/solid.js:984:19)
+      at runUpdates (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/node_modules/.bun/solid-js@1.9.10/node_modules/solid-js/dist/solid.js:808:5)
+      at createRoot (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/node_modules/.bun/solid-js@1.9.10/node_modules/solid-js/dist/solid.js:189:12)
+      at <anonymous> (/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/test-browser/orchestra-compact-navigation.test.ts:42:5)
+(fail) window navigation presentation > a narrow window cannot overwrite the expanded preference [2.87ms]
+
+ 0 pass
+ 2 fail
+ 6 expect() calls
+Ran 2 tests across 1 file. [1118.00ms]

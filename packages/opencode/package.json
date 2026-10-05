@@ -88,6 +88,7 @@
     "@openauthjs/openauth": "catalog:",
     "@opencode-ai/codemode": "workspace:*",
     "@opencode-ai/llm": "workspace:*",
+    "@opencode-ai/maestro-arsenal": "workspace:*",
     "@opencode-ai/plugin": "workspace:*",
     "@opencode-ai/protocol": "workspace:*",
     "@opencode-ai/schema": "workspace:*",

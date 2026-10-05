@@ -1,19 +1,15 @@
-import { expect, test, type Locator, type Page } from "@playwright/test"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { expect, test, type Locator } from "@playwright/test"
 import type { GlobalEvent } from "@opencode-ai/sdk/v2/client"
 import {
-  assistantMessage,
   completedAssistantInfo,
   directory,
   messageUpdated,
   project,
   sessionID,
-  setupTimeline,
   status,
-  textPart,
   title,
-  userMessage,
 } from "../performance/timeline-stability/fixture"
+import { setupIdentity } from "./identity.fixture"
 
 // Frozen approved app.html values, normalized by Chromium's computed-style engine.
 const glass = {
@@ -52,14 +48,17 @@ if (
   throw new Error(`Unknown Orchestra identity mutation: ${mutation}`)
 }
 
-test.use({ viewport: { width: 1400, height: 900 }, deviceScaleFactor: 1, serviceWorkers: "block" })
+// The expanded identity oracle stays above the compact-navigation breakpoint.
+// Dedicated navigation cases verify the 208px and 56px responsive modes.
+const viewport = { width: 1672, height: 941 }
+test.use({ viewport, deviceScaleFactor: 1, serviceWorkers: "block" })
 
 for (const scheme of ["dark", "light"] as const) {
   for (const locale of ["en", "ar"] as const) {
     test(`${scheme} ${locale}: frozen glass, 230/45/6 geometry, and upward profile portal`, async ({
       page,
     }, testInfo) => {
-      await setupIdentity(page, { scheme, locale })
+      await setupIdentity(page, { scheme, locale, viewport })
       const sidebar = page.locator('[data-component="orchestra-sidebar"]')
       const profile = page.locator('[data-slot="orchestra-profile"]')
       const toolbar = page.locator('[data-slot="titlebar-v2"]')
@@ -146,7 +145,7 @@ for (const scheme of ["dark", "light"] as const) {
       const menuBox = await readBox(menu)
       expect(menuBox.top, "profile menu stays within viewport").toBeGreaterThanOrEqual(0)
       expect(menuBox.left).toBeGreaterThanOrEqual(0)
-      expect(menuBox.right).toBeLessThanOrEqual(1400)
+      expect(menuBox.right).toBeLessThanOrEqual(viewport.width)
       expect(menuBox.height, "profile menu is nonempty").toBeGreaterThan(0)
       await page.keyboard.press("Escape")
       await expect(profile).toHaveAttribute("aria-expanded", "false")
@@ -162,7 +161,7 @@ for (const scheme of ["dark", "light"] as const) {
 
   for (const reducedMotion of [false, true]) {
     test(`${scheme}: model running/waiting/idle motion, reduced=${reducedMotion}`, async ({ page }) => {
-      const timeline = await setupIdentity(page, { scheme, running: true })
+      const timeline = await setupIdentity(page, { scheme, running: true, viewport })
       const active = page.locator('#orchestra-session-tabs [data-titlebar-tab][data-active="true"]')
       await expect(active).toHaveCount(1)
       const activity = active.locator("[data-activity]")
@@ -254,7 +253,7 @@ for (const scheme of ["dark", "light"] as const) {
 }
 
 test("oracle calibration: real production toolbar rejects geometry and glass mutations", async ({ page }) => {
-  await setupIdentity(page, { scheme: "dark" })
+  await setupIdentity(page, { scheme: "dark", viewport })
   const toolbar = page.locator('[data-slot="titlebar-v2"]')
   await expect(toolbar).toHaveCount(1)
   await expect(toolbar).toBeVisible()
@@ -291,7 +290,7 @@ test("oracle calibration: real production toolbar rejects geometry and glass mut
 })
 
 test("fixture calibration: pending permission traverses the real reducer and dock", async ({ page }) => {
-  const timeline = await setupIdentity(page, { scheme: "dark", running: true })
+  const timeline = await setupIdentity(page, { scheme: "dark", running: true, viewport })
   await timeline.transport.writeRaw(`data: ${JSON.stringify(permissionAsked())}\n\n`)
   const permission = page.locator('[data-component="dock-prompt"][data-kind="permission"]')
   await expect(permission).toHaveCount(1)
@@ -300,54 +299,6 @@ test("fixture calibration: pending permission traverses the real reducer and doc
   await expect(permission).toHaveCount(0)
   await expect(page.getByRole("textbox", { name: "Prompt", exact: true })).toBeEditable()
 })
-
-async function setupIdentity(page: Page, input: { scheme: "dark" | "light"; locale?: "en" | "ar"; running?: boolean }) {
-  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
-  await page.addInitScript(
-    ({ scheme, server, directory, sessionID }) => {
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
-      localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
-      localStorage.setItem(
-        "opencode.global.dat:server",
-        JSON.stringify({
-          projects: { local: [{ worktree: directory, expanded: true }] },
-          lastProject: { local: directory },
-        }),
-      )
-      localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
-        JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
-      )
-    },
-    { scheme: input.scheme, server, directory, sessionID },
-  )
-  const assistant = assistantMessage(
-    input.running ? [] : [textPart("prt_orchestra_identity_response", "Orchestra identity fixture response")],
-    { completed: !input.running },
-  )
-  // Execution differs from the user's configured model, proving mounted logo ownership.
-  assistant.info.modelID = "gpt-5"
-  assistant.info.providerID = "openrouter"
-  const messages = [userMessage(), assistant]
-  expect(
-    messages.map((message) => message.info.role),
-    "nonempty real-session fixture",
-  ).toEqual(["user", "assistant"])
-  const timeline = await setupTimeline(page, {
-    messages,
-    locale: input.locale ?? "en",
-    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
-    viewport: { width: 1400, height: 900 },
-  })
-  await expect(page.locator("html")).toHaveAttribute("data-color-scheme", input.scheme)
-  await expect(page.locator("html")).toHaveAttribute("dir", input.locale === "ar" ? "rtl" : "ltr")
-  await expect(page.getByText("Build the timeline stability matrix.", { exact: true })).toBeVisible()
-  await expect(
-    page.locator(`[data-titlebar-tab] a[href="/server/${base64Encode(server)}/session/${sessionID}"]`),
-  ).toHaveCount(1)
-  return { ...timeline, assistant }
-}
 
 function permissionAsked() {
   return {
