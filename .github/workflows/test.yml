@@ -204,8 +204,8 @@ jobs:
       - name: Run opencode tests
         timeout-minutes: 30
         working-directory: packages/opencode
-        # --parallel runs files in isolated worker processes; test/preload.ts gives each its own data dir.
-        run: bun test --timeout 30000 --only-failures --parallel=4 --shard=${{ matrix.shard }}/3
+        # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
+        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/3
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
