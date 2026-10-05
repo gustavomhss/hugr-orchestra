@@ -1,7 +1,7 @@
 import type { Page, Route } from "@playwright/test"
 import { railDefaulted } from "./review-rail"
 
-const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff"])
+const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff", "/pty/shells"])
 const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mcp", "/experimental/resource"])
 
 export interface MockServerConfig {

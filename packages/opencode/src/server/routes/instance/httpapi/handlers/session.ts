@@ -9,6 +9,7 @@ import { Session } from "@/session/session"
 import { SessionActivity } from "@/session/activity"
 import { Database } from "@opencode-ai/core/database/database"
 import { ProjectV2 } from "@opencode-ai/core/project"
+import { SessionContinuity } from "@/continuity/service"
 import { SessionCompaction } from "@/session/compaction"
 import { MessageV2 } from "@/session/message-v2"
 import { SessionPrompt } from "@/session/prompt"
@@ -52,6 +53,7 @@ const tryParseJson = (text: string) =>
 export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", (handlers) =>
   Effect.gen(function* () {
     const session = yield* Session.Service
+    const continuity = yield* SessionContinuity.Service
     const shareSvc = yield* SessionShare.Service
     const promptSvc = yield* SessionPrompt.Service
     const revertSvc = yield* SessionRevert.Service
@@ -195,7 +197,10 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     })
 
     const remove = Effect.fn("SessionHttpApi.remove")(function* (ctx: { params: { sessionID: SessionID } }) {
+      yield* requireSession(ctx.params.sessionID)
+      yield* continuity.invalidate(ctx.params.sessionID)
       yield* SessionError.mapStorageNotFound(session.remove(ctx.params.sessionID))
+      yield* continuity.forget(ctx.params.sessionID)
       return true
     })
 
@@ -370,6 +375,8 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       payload: typeof RevertPayload.Type
     }) {
       yield* requireSession(ctx.params.sessionID)
+      yield* SessionError.mapBusy(runState.assertNotBusy(ctx.params.sessionID))
+      yield* continuity.invalidate(ctx.params.sessionID)
       return yield* SessionError.mapBusy(revertSvc.revert({ sessionID: ctx.params.sessionID, ...ctx.payload }))
     })
 
@@ -401,6 +408,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     }) {
       yield* requireSession(ctx.params.sessionID)
       yield* SessionError.mapBusy(runState.assertNotBusy(ctx.params.sessionID))
+      yield* continuity.invalidate(ctx.params.sessionID)
       yield* session.removeMessage(ctx.params)
       return true
     })
@@ -409,6 +417,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       params: { sessionID: SessionID; messageID: MessageID; partID: PartID }
     }) {
       yield* requireSession(ctx.params.sessionID)
+      yield* continuity.invalidate(ctx.params.sessionID)
       yield* session.removePart(ctx.params)
       return true
     })
@@ -426,6 +435,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       ) {
         return yield* new HttpApiError.BadRequest({})
       }
+      yield* continuity.invalidate(ctx.params.sessionID)
       return yield* session.updatePart(payload)
     })
 

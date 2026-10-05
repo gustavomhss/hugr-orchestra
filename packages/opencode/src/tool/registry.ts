@@ -9,6 +9,8 @@ import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
+import { ContextRecallTool } from "./context-recall"
+import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
 import { MaestroRecordAdmissionTool } from "./maestro-admission"
@@ -159,6 +161,7 @@ const layer = Layer.effect(
     const maestroRecordReview = yield* MaestroRecordReviewTool
     const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
     const read = yield* ReadTool
+    const recall = yield* ContextRecallTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
@@ -296,6 +299,7 @@ const layer = Layer.effect(
           invalid: Tool.init(invalid),
           shell: Tool.init(shell),
           read: Tool.init(read),
+          recall: Tool.init(recall),
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
@@ -332,6 +336,7 @@ const layer = Layer.effect(
             ...(questionEnabled ? [tool.question] : []),
             tool.shell,
             tool.read,
+            tool.recall,
             tool.glob,
             tool.grep,
             tool.edit,
@@ -635,6 +640,7 @@ export const node = LayerNode.make({
     RuntimeFlags.node,
     MCP.node,
     Database.node,
+    Archive.node,
     ArsenalObservations.node,
     AppProcess.node,
     Global.node,
