@@ -16,9 +16,10 @@ import { Session } from "./session"
 import { Agent } from "../agent/agent"
 import { Provider } from "@/provider/provider"
 
-import { type Tool as AITool, tool, jsonSchema } from "ai"
-import type { JSONSchema7 } from "@ai-sdk/provider"
+import { createStructuredOutputTool } from "./structured-output"
+export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
+import { SessionContinuity } from "@/continuity/service"
 import { SystemPrompt } from "./system"
 import { Instruction } from "./instruction"
 import { Plugin } from "../plugin"
@@ -41,6 +42,7 @@ import { Tool } from "@/tool/tool"
 import { Permission } from "@/permission"
 import { SessionStatus } from "./status"
 import { LLM } from "./llm"
+import { LLMRequestPrep } from "./llm/request"
 import { Shell } from "@opencode-ai/core/shell"
 import { ShellID } from "@/tool/shell/id"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -77,14 +79,6 @@ const SUPPORTED_MCP_RESOURCE_ATTACHMENT_MIMES = new Set([
   "image/png",
   "image/webp",
 ])
-
-const STRUCTURED_OUTPUT_DESCRIPTION = `Use this tool to return your final response in the requested structured format.
-
-IMPORTANT:
-- You MUST call this tool exactly once at the end of your response
-- The input must be valid JSON matching the required schema
-- Complete all necessary research and tool calls BEFORE calling this tool
-- This tool provides your final answer - no further actions are taken after calling it`
 
 const STRUCTURED_OUTPUT_SYSTEM_PROMPT = `IMPORTANT: The user has requested structured output. You MUST use the StructuredOutput tool to provide your final response. Do NOT respond with plain text - you MUST call the StructuredOutput tool with your answer formatted according to the schema.`
 
@@ -126,6 +120,7 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const processor = yield* SessionProcessor.Service
     const compaction = yield* SessionCompaction.Service
+    const continuity = yield* SessionContinuity.Service
     const plugin = yield* Plugin.Service
     const commands = yield* Command.Service
     const config = yield* Config.Service
@@ -1050,6 +1045,7 @@ const layer = Layer.effect(
         })
       }
 
+      yield* continuity.advance(input.sessionID)
       yield* sessions.updateMessage(info)
       for (const part of parts) yield* sessions.updatePart(part)
 
@@ -1060,6 +1056,7 @@ const layer = Layer.effect(
       "SessionPrompt.prompt",
     )(function* (input: PromptInput) {
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
+      if (session.revert) yield* continuity.invalidate(input.sessionID)
       yield* revert.cleanup(session)
       const message = yield* createUserMessage(input)
       yield* sessions.touch(input.sessionID)
@@ -1089,6 +1086,7 @@ const layer = Layer.effect(
       function* (sessionID: SessionID) {
         const ctx = yield* InstanceState.context
         let structured: unknown
+        let canRecall = false
         let step = 0
         const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
 
@@ -1133,6 +1131,7 @@ const layer = Layer.effect(
               })
             }
             yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
+            if (!orphan) yield* continuity.start({ sessionID, message: lastAssistant, canRecall })
             break
           }
 
@@ -1234,6 +1233,11 @@ const layer = Layer.effect(
               messages: msgs,
             }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
 
+            canRecall = Object.hasOwn(
+              LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
+              "context_recall",
+            ) && model.capabilities.toolcall &&
+              Permission.evaluate("context_recall", sessionID, agent.permission, session.permission ?? []).action !== "deny"
             if (lastUser.format?.type === "json_schema") {
               tools["StructuredOutput"] = createStructuredOutputTool({
                 schema: lastUser.format.schema,
@@ -1248,22 +1252,26 @@ const layer = Layer.effect(
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
+            const prepared = yield* continuity.prepare({ sessionID, messages: msgs, canRecall })
+
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
               sys.environment(model),
               instruction.system().pipe(Effect.orDie),
               sys.mcp(agent, session.permission),
-              MessageV2.toModelMessagesEffect(msgs, model),
+              MessageV2.toModelMessagesEffect(prepared.messages, model),
             ])
             const system = [
               ...env,
               ...instructions,
               ...(mcpInstructions ? [mcpInstructions] : []),
               ...(skills ? [skills] : []),
+              ...prepared.system,
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
             const result = yield* handle.process({
+              contextMemory: prepared.system.length > 0,
               user: lastUser,
               agent,
               permission: session.permission,
@@ -1283,6 +1291,7 @@ const layer = Layer.effect(
               handle.message.structured = structured
               handle.message.finish = handle.message.finish ?? "stop"
               yield* sessions.updateMessage(handle.message)
+              yield* continuity.start({ sessionID, message: handle.message, canRecall })
               return "break" as const
             }
 
@@ -1336,6 +1345,7 @@ const layer = Layer.effect(
                 })
                 return "continue" as const
               }
+              yield* continuity.start({ sessionID, message: handle.message, canRecall })
               return "break" as const
             }
             if (result === "compact") {
@@ -1584,34 +1594,6 @@ export const CommandInput = Schema.Struct({
 })
 export type CommandInput = Schema.Schema.Type<typeof CommandInput>
 
-/** @internal Exported for testing */
-export function createStructuredOutputTool(input: {
-  schema: Record<string, any>
-  onSuccess: (output: unknown) => void
-}): AITool {
-  // Remove $schema property if present (not needed for tool input)
-  const { $schema: _, ...toolSchema } = input.schema
-
-  return tool({
-    description: STRUCTURED_OUTPUT_DESCRIPTION,
-    inputSchema: jsonSchema(toolSchema as JSONSchema7),
-    async execute(args) {
-      // AI SDK validates args against inputSchema before calling execute()
-      input.onSuccess(args)
-      return {
-        output: "Structured output captured successfully.",
-        title: "Structured Output",
-        metadata: { valid: true },
-      }
-    },
-    toModelOutput({ output }) {
-      return {
-        type: "text",
-        value: output.output,
-      }
-    },
-  })
-}
 const bashRegex = /!`([^`]+)`/g
 // Match [Image N] as single token, quoted strings, or non-space sequences
 const argsRegex = /(?:\[Image\s+\d+\]|"[^"]*"|'[^']*'|[^\s"']+)/gi
@@ -1628,6 +1610,7 @@ export const node = LayerNode.make({
     Provider.node,
     SessionProcessor.node,
     SessionCompaction.node,
+    SessionContinuity.node,
     Plugin.node,
     Command.node,
     Config.node,
