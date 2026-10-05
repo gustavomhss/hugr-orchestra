@@ -42,6 +42,8 @@ runs:
 
     - name: Restore Bun dependencies
       id: bun-cache
+      # Windows installs with --no-cache below, so only other platforms reuse Bun's package cache.
+      if: runner.os != 'Windows'
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.cache.outputs.dir }}
@@ -50,11 +52,25 @@ runs:
         restore-keys: |
           ${{ runner.os }}-bun-v2-
 
+    # Windows cannot reuse Bun's package cache (see the install step), so it reuses the installed tree.
+    # The key covers everything that shapes node_modules; a partial tree from another lockfile is never restored.
+    - name: Restore Windows node_modules
+      id: modules-cache
+      if: runner.os == 'Windows' && inputs.install-flags == ''
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: |
+          node_modules
+          packages/*/node_modules
+          packages/*/*/node_modules
+        key: Windows-modules-v1-${{ hashFiles('**/bun.lock', 'patches/**', 'package.json') }}
+
     - name: Install setuptools for distutils compatibility
       run: python3 -m pip install setuptools || pip install setuptools || true
       shell: bash
 
     - name: Install dependencies
+      if: steps.modules-cache.outputs.cache-hit != 'true'
       run: |
         # Workaround for patched peer variants
         # e.g. ./patches/ for standard-openapi
@@ -81,8 +97,18 @@ runs:
       shell: bash
 
     - name: Save Bun dependencies
-      if: steps.bun-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      if: runner.os != 'Windows' && steps.bun-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.cache.outputs.dir }}
         key: ${{ runner.os }}-bun-v2-${{ hashFiles('**/bun.lock') }}
+
+    - name: Save Windows node_modules
+      if: runner.os == 'Windows' && inputs.install-flags == '' && steps.modules-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: |
+          node_modules
+          packages/*/node_modules
+          packages/*/*/node_modules
+        key: Windows-modules-v1-${{ hashFiles('**/bun.lock', 'patches/**', 'package.json') }}
