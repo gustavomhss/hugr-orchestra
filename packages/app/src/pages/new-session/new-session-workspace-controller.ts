@@ -42,22 +42,24 @@ export function createNewSessionWorkspaceController() {
   const sdk = useSDK()
   const sync = useSync()
   const serverSync = useServerSync()
-  const [workspaces] = persistedWorkspaces(useServerSDK()().scope)
+  const [workspaces, , , workspacesReady] = persistedWorkspaces(useServerSDK()().scope)
   const [worktree, setWorktree] = createSignal<string>()
   const visible = createMemo(() => workspaceBarEnabled && sync().project?.vcs === "git")
+  const projectRoot = createMemo(() => sync().project?.worktree ?? sdk().directory)
   const value = createMemo(() =>
     resolveNewSessionWorktree({
       enabled: visible(),
       selected: worktree(),
       directory: sdk().directory,
       projectWorktree: sync().project?.worktree,
-      preferred: preferredSandbox(
-        sync().project?.sandboxes ?? [],
-        workspaces.active[pathKey(sync().project?.worktree ?? sdk().directory)],
-      ),
+      preferred: preferredSandbox({
+        ready: workspacesReady(),
+        sandboxes: sync().project?.sandboxes ?? [],
+        known: workspaces.known[pathKey(projectRoot())],
+        stored: workspaces.active[pathKey(projectRoot())],
+      }),
     }),
   )
-  const projectRoot = createMemo(() => sync().project?.worktree ?? sdk().directory)
   const localBranch = createMemo(() => serverSync().child(projectRoot())[0].vcs?.branch)
   const branch = createMemo(() =>
     resolveNewSessionBranch({
@@ -83,6 +85,8 @@ export function createNewSessionWorkspaceController() {
       visible,
       branch,
     },
+    // The profile's saved workspace choice; the page waits for it so a root draft never flips after rendering.
+    ready: workspacesReady,
   }
 }
 
