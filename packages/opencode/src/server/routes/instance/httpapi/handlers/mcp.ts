@@ -5,7 +5,14 @@ import { Effect, Schema } from "effect"
 import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 import { McpServerNotFoundError } from "../errors"
-import { AddPayload, AuthCallbackPayload, ConfigPayload, StatusMap, UnsupportedOAuthError } from "../groups/mcp"
+import {
+  AddPayload,
+  AuthCallbackPayload,
+  ConfigPayload,
+  McpConfigError,
+  StatusMap,
+  UnsupportedOAuthError,
+} from "../groups/mcp"
 import { markInstanceForDisposal } from "../lifecycle"
 
 export const mcpHandlers = HttpApiBuilder.group(InstanceHttpApi, "mcp", (handlers) =>
@@ -23,17 +30,16 @@ export const mcpHandlers = HttpApiBuilder.group(InstanceHttpApi, "mcp", (handler
       ).pipe(Effect.mapError(() => new HttpApiError.BadRequest({})))
     })
 
+    // Keyed by server: prefixed tool names can collide across servers.
     const tools = Effect.fn("McpHttpApi.tools")(function* () {
-      const status = yield* mcp.status()
-      const listed = Object.values(yield* mcp.tools())
       return Object.fromEntries(
-        Object.entries(yield* mcp.clients())
-          .filter(([name]) => status[name]?.status === "connected")
-          .map(([name, client]) => [
-            name,
-            listed.filter((tool) => tool.client === client).map((tool) => tool.def.name),
-          ]),
+        Object.entries(yield* mcp.catalog()).map(([name, defs]) => [name, defs.map((def) => def.name)]),
       )
+    })
+
+    const configList = Effect.fn("McpHttpApi.configList")(function* () {
+      const instance = yield* InstanceState.context
+      return yield* McpProjectConfig.entries(instance.directory).pipe(Effect.mapError(configError))
     })
 
     // Config writes target the instance's own files; disposal reloads config and reconnects MCP.
@@ -42,14 +48,20 @@ export const mcpHandlers = HttpApiBuilder.group(InstanceHttpApi, "mcp", (handler
       payload: typeof ConfigPayload.Type
     }) {
       const instance = yield* InstanceState.context
-      yield* McpProjectConfig.write(instance.directory, ctx.params.name, ctx.payload.config).pipe(Effect.orDie)
+      yield* validName(ctx.params.name)
+      yield* McpProjectConfig.write(instance.directory, ctx.params.name, ctx.payload.config).pipe(
+        Effect.mapError(configError),
+      )
       yield* markInstanceForDisposal(instance)
       return true
     })
 
     const configRemove = Effect.fn("McpHttpApi.configRemove")(function* (ctx: { params: { name: string } }) {
       const instance = yield* InstanceState.context
-      const removed = yield* McpProjectConfig.remove(instance.directory, ctx.params.name).pipe(Effect.orDie)
+      yield* validName(ctx.params.name)
+      const removed = yield* McpProjectConfig.remove(instance.directory, ctx.params.name).pipe(
+        Effect.mapError(configError),
+      )
       if (!removed.length)
         return yield* new McpServerNotFoundError({
           name: ctx.params.name,
@@ -141,6 +153,7 @@ export const mcpHandlers = HttpApiBuilder.group(InstanceHttpApi, "mcp", (handler
       .handle("status", status)
       .handle("add", add)
       .handle("tools", tools)
+      .handle("configList", configList)
       .handle("configUpdate", configUpdate)
       .handle("configRemove", configRemove)
       .handle("authStart", authStart)
@@ -151,3 +164,12 @@ export const mcpHandlers = HttpApiBuilder.group(InstanceHttpApi, "mcp", (handler
       .handle("disconnect", disconnect)
   }),
 )
+
+function validName(name: string) {
+  if (McpProjectConfig.validName(name)) return Effect.void
+  return Effect.fail(new McpConfigError({ message: `Invalid MCP server name: ${JSON.stringify(name)}` }))
+}
+
+function configError(error: McpProjectConfig.FileError) {
+  return new McpConfigError({ message: error.message })
+}

@@ -1,4 +1,5 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
+import fs from "fs/promises"
 import path from "path"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -109,4 +110,99 @@ describe("McpProjectConfig", () => {
       expect(yield* McpProjectConfig.remove(dir.path, "toString")).toEqual([])
     }),
   )
+
+  it.live("lists raw entries from the winning file and skips files it cannot parse", () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      yield* Effect.promise(() =>
+        Bun.write(
+          path.join(dir.path, "opencode.json"),
+          JSON.stringify({
+            mcp: {
+              cli: { type: "local", command: ["run", "--token", "{env:TOKEN}"], environment: { A: "b" } },
+              both: { type: "local", command: ["old"] },
+              flag: { enabled: false },
+            },
+          }),
+        ),
+      )
+      yield* Effect.promise(() =>
+        Bun.write(
+          path.join(dir.path, ".opencode", "opencode.jsonc"),
+          `{ "mcp": { "both": { "type": "remote", "url": "https://x.test/?k={env:K}", "headers": { "A": "b" } } } }`,
+        ),
+      )
+      yield* Effect.promise(() => Bun.write(path.join(dir.path, "opencode.jsonc"), `{ "mcp": { "lost": `))
+      expect(yield* McpProjectConfig.entries(dir.path)).toEqual({
+        cli: { type: "local", command: ["run", "--token", "{env:TOKEN}"] },
+        both: { type: "remote", url: "https://x.test/?k={env:K}" },
+        flag: {},
+      })
+    }),
+  )
+
+  it.live("refuses files it cannot edit and leaves them untouched", () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      const file = path.join(dir.path, "opencode.json")
+      const local = { type: "local" as const, command: ["x"] }
+      for (const [content, message] of [
+        [`{ "mcp": { "a": `, "is not valid JSONC"],
+        [`[]`, "must contain a JSON object"],
+        [`{ "mcp": [] }`, `"mcp" in ${file} must be an object`],
+        [`{ "mcp": "nope" }`, `"mcp" in ${file} must be an object`],
+        [`{ "mcp": { "a": true } }`, `"mcp.a" in ${file} must be an object`],
+      ]) {
+        yield* Effect.promise(() => Bun.write(file, content))
+        const error = yield* Effect.flip(McpProjectConfig.write(dir.path, "a", local))
+        expect(error).toBeInstanceOf(McpProjectConfig.FileError)
+        expect(error.message).toContain(message)
+        expect(yield* text(file)).toBe(content)
+      }
+    }),
+  )
+
+  it.live("serializes concurrent writes to one profile so none is lost", () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      const names = Array.from({ length: 8 }, (_, index) => `server-${index}`)
+      yield* Effect.forEach(
+        names,
+        (name) => McpProjectConfig.write(dir.path, name, { type: "local", command: [name] }),
+        {
+          concurrency: "unbounded",
+        },
+      )
+      expect(Object.keys(JSON.parse(yield* text(path.join(dir.path, "opencode.json"))).mcp).sort()).toEqual(names)
+    }),
+  )
+
+  it.live("writes through a symlinked config without replacing the link", () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      const real = path.join(dir.path, "real.json")
+      const link = path.join(dir.path, "opencode.json")
+      yield* Effect.promise(() => Bun.write(real, "{}"))
+      yield* Effect.promise(() => fs.symlink(real, link))
+      yield* McpProjectConfig.write(dir.path, "a", { type: "local", command: ["x"] })
+      expect((yield* Effect.promise(() => fs.lstat(link))).isSymbolicLink()).toBe(true)
+      expect(JSON.parse(yield* text(real))).toEqual({ mcp: { a: { type: "local", command: ["x"] } } })
+    }),
+  )
+
+  test.each([
+    ["docs", true],
+    ["Docs Server", true],
+    ["toString", true],
+    ["", false],
+    ["   ", false],
+    [".", false],
+    ["..", false],
+    ["__proto__", false],
+    ["a/b", false],
+    ["a\\b", false],
+    ["line\nbreak", false],
+  ])("validName(%j) is %s", (name, valid) => {
+    expect(McpProjectConfig.validName(name)).toBe(valid)
+  })
 })
