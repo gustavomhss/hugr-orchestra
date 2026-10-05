@@ -2671,6 +2671,71 @@ export type SkillsListOutput = {
   }>
 }
 
+export type SkillsSaveInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name: {
+    readonly name: string
+    readonly description: string
+    readonly content: string
+    readonly path?: string
+  }["name"]
+  readonly description: {
+    readonly name: string
+    readonly description: string
+    readonly content: string
+    readonly path?: string
+  }["description"]
+  readonly content: {
+    readonly name: string
+    readonly description: string
+    readonly content: string
+    readonly path?: string
+  }["content"]
+  readonly path?: {
+    readonly name: string
+    readonly description: string
+    readonly content: string
+    readonly path?: string
+  }["path"]
+}
+
+export type SkillsSaveOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly name: string
+    readonly description?: string
+    readonly slash?: boolean
+    readonly location: string
+    readonly content: string
+  }
+}
+
+export type SkillsRemoveInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly path: string
+  }["location"]
+  readonly path: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly path: string
+  }["path"]
+}
+
+export type SkillsRemoveOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: boolean
+}
+
 export type EventsSubscribeOutput = OpenCodeEventEncoded
 
 export type PtysListInput = {

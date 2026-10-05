@@ -2779,6 +2779,21 @@ export type Agent = {
   steps?: number
 }
 
+export type SkillSaveInput = {
+  name: string
+  description: string
+  content: string
+  path?: string
+}
+
+export type SkillWriteError = {
+  name: "SkillWriteError"
+  data: {
+    message: string
+    reason: "invalid" | "missing" | "conflict"
+  }
+}
+
 export type LspStatus = {
   id: string
   name: string
@@ -5998,6 +6013,13 @@ export type SkillV2Info = {
   slash?: boolean
   location: string
   content: string
+}
+
+export type SkillV2SaveInput = {
+  name: string
+  description: string
+  content: string
+  path?: string
 }
 
 export type ModelsDevRefreshed = {
@@ -10162,6 +10184,35 @@ export type AppAgentsResponses = {
 
 export type AppAgentsResponse = AppAgentsResponses[keyof AppAgentsResponses]
 
+export type AppSkillRemoveData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    path: string
+  }
+  url: "/skill"
+}
+
+export type AppSkillRemoveErrors = {
+  /**
+   * SkillWriteError | InvalidRequestError
+   */
+  400: SkillWriteError | InvalidRequestError
+}
+
+export type AppSkillRemoveError = AppSkillRemoveErrors[keyof AppSkillRemoveErrors]
+
+export type AppSkillRemoveResponses = {
+  /**
+   * Skill removed
+   */
+  200: boolean
+}
+
+export type AppSkillRemoveResponse = AppSkillRemoveResponses[keyof AppSkillRemoveResponses]
+
 export type AppSkillsData = {
   body?: never
   path?: never
@@ -10194,6 +10245,39 @@ export type AppSkillsResponses = {
 }
 
 export type AppSkillsResponse = AppSkillsResponses[keyof AppSkillsResponses]
+
+export type AppSkillSaveData = {
+  body?: SkillSaveInput
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/skill"
+}
+
+export type AppSkillSaveErrors = {
+  /**
+   * SkillWriteError | InvalidRequestError
+   */
+  400: SkillWriteError | InvalidRequestError
+}
+
+export type AppSkillSaveError = AppSkillSaveErrors[keyof AppSkillSaveErrors]
+
+export type AppSkillSaveResponses = {
+  /**
+   * Saved skill
+   */
+  200: {
+    name: string
+    description?: string
+    location: string
+    content: string
+  }
+}
+
+export type AppSkillSaveResponse = AppSkillSaveResponses[keyof AppSkillSaveResponses]
 
 export type LspStatusData = {
   body?: never
@@ -14865,6 +14949,44 @@ export type V2CommandListResponses = {
 
 export type V2CommandListResponse = V2CommandListResponses[keyof V2CommandListResponses]
 
+export type V2SkillRemoveData = {
+  body?: never
+  path?: never
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    path: string
+  }
+  url: "/api/skill"
+}
+
+export type V2SkillRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2SkillRemoveError = V2SkillRemoveErrors[keyof V2SkillRemoveErrors]
+
+export type V2SkillRemoveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: boolean
+  }
+}
+
+export type V2SkillRemoveResponse = V2SkillRemoveResponses[keyof V2SkillRemoveResponses]
+
 export type V2SkillListData = {
   body?: never
   path?: never
@@ -14901,6 +15023,47 @@ export type V2SkillListResponses = {
 }
 
 export type V2SkillListResponse = V2SkillListResponses[keyof V2SkillListResponses]
+
+export type V2SkillSaveData = {
+  body: SkillV2SaveInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/skill"
+}
+
+export type V2SkillSaveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2SkillSaveError = V2SkillSaveErrors[keyof V2SkillSaveErrors]
+
+export type V2SkillSaveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: SkillV2Info
+  }
+}
+
+export type V2SkillSaveResponse = V2SkillSaveResponses[keyof V2SkillSaveResponses]
 
 export type V2EventSubscribeData = {
   body?: never
