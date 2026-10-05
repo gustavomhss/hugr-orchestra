@@ -1,4 +1,5 @@
 import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { useSettingsDialog } from "@/components/settings-dialog"
 import { createMemo, createResource, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
@@ -14,6 +15,7 @@ import { MxBadge, MxPage } from "./kit"
 import {
   type CatalogEntry,
   customProvider,
+  errorMessage,
   fromV1,
   fromV2,
   matches,
@@ -26,8 +28,8 @@ import {
 import {
   CustomProviderDialog,
   ProviderBrand,
+  ProviderConfirmDialog,
   ProviderConnectDialog,
-  ProviderModelsDialog,
   ProviderPickerDialog,
 } from "./providers-dialogs"
 import "./providers.css"
@@ -43,6 +45,8 @@ export default function ProvidersPage(props: ChapterPageProps) {
 function ProvidersScreen(props: ChapterPageProps) {
   const language = useLanguage()
   const dialog = useDialog()
+  // The mock's Models action opens Settings › Models; this page's ModelsProvider backs that panel.
+  const openModels = useSettingsDialog("models")
   const sdk = useServerSDK()
   const sync = useServerSync()
   const protocol = useServerProtocol()
@@ -85,7 +89,7 @@ function ProvidersScreen(props: ChapterPageProps) {
       const value = v2Data()
       return value ? fromV2(value) : undefined
     }
-    if (protocol() !== "v1" || !child.provider_ready) return
+    if (protocol() !== "v1" || !sync().ready || !child.provider_ready) return
     return fromV1({ all: [...providers.all().values()], connected: providers.connected(), config: sync().data.config })
   })
   const failed = () => protocol() === "v2" && v2.state === "errored"
@@ -104,12 +108,19 @@ function ProvidersScreen(props: ChapterPageProps) {
     )
   })
   const routes = createMemo(() => (data()?.cards ?? []).filter((card) => card.connected && card.models.length))
+  // A pending choice shows only while its write is in flight; afterwards the select follows the reloaded
+  // directory config, which also reveals a project-level `model` that shadows the server-wide write.
   const route = createMemo(() => {
-    if (state.route) return state.route
-    const preferred =
-      protocol() === "v2" ? v2Data()?.preferred : resolveDefaultModel(providers.defaultModel(), child.config.model)
+    if (state.route !== undefined) return state.route
+    const preferred = resolveDefaultModel(providers.defaultModel(), child.config.model)
     return routes().find((card) => card.id === preferred?.providerID)?.id ?? ""
   })
+  const serverRoute = createMemo(() => {
+    const preferred = v2Data()?.preferred
+    if (!preferred) return
+    return routes().find((card) => card.id === preferred.providerID)?.name ?? preferred.providerID
+  })
+  const baseName = (card: ProviderCard) => data()?.catalog.find((entry) => entry.id === card.base)?.name ?? card.name
 
   const note = (card: ProviderCard) => {
     const key = noteKey(card.base)
@@ -138,7 +149,7 @@ function ProvidersScreen(props: ChapterPageProps) {
   const requestFailed = (error: unknown) =>
     showToast({
       title: language.t("common.requestFailed"),
-      description: error instanceof Error ? error.message : String(error),
+      description: errorMessage(error, language.t("common.requestFailed")),
     })
 
   const openConnect = (id: string, name: string) =>
@@ -148,7 +159,12 @@ function ProvidersScreen(props: ChapterPageProps) {
       <CustomProviderDialog
         unavailable={protocol() === "v1" ? undefined : language.t("provider.custom.unavailable")}
         onSubmit={async (input) => {
-          const result = customProvider({ ...input, existing: new Set(providers.all().keys()) })
+          const existing = new Set([
+            ...providers.all().keys(),
+            ...(data()?.cards ?? []).map((card) => card.id),
+            ...Object.keys(sync().data.config.provider ?? {}),
+          ])
+          const result = customProvider({ ...input, existing })
           if ("error" in result) {
             if (result.error === "name") return language.t("orchestra.providers.custom.nameError")
             if (result.error === "endpoint") return language.t("orchestra.providers.custom.endpointError")
@@ -160,7 +176,7 @@ function ProvidersScreen(props: ChapterPageProps) {
               disabled_providers: (sync().data.config.disabled_providers ?? []).filter((id) => id !== result.id),
             })
             .then(() => undefined)
-            .catch((error: unknown) => (error instanceof Error ? error.message : String(error)))
+            .catch((error: unknown) => errorMessage(error, language.t("common.requestFailed")))
         }}
       />
     ))
@@ -173,14 +189,39 @@ function ProvidersScreen(props: ChapterPageProps) {
       />
     ))
 
-  const toggle = async (card: ProviderCard) => {
+  const toggle = (card: ProviderCard) => {
     const action = card.disconnect
     if (action.type === "none" || state.busy[card.id]) return
-    setState("busy", card.id, true)
-    await disconnect(card)
-      .then(refresh)
-      .catch(requestFailed)
-      .finally(() => setState("busy", card.id, false))
+    if (action.type === "enable") {
+      setState("busy", card.id, true)
+      void disconnect(card)
+        .catch(requestFailed)
+        .finally(() => refresh().finally(() => setState("busy", card.id, false)))
+      return
+    }
+    dialog.show(() => (
+      <ProviderConfirmDialog
+        title={language.t("orchestra.providers.disconnectDialog.title", { provider: card.name })}
+        description={language.t("orchestra.providers.disconnectDialog.description", { provider: card.name })}
+        submit={language.t("common.disconnect")}
+        onConfirm={async () => {
+          setState("busy", card.id, true)
+          const error = await disconnect(card)
+            .then(() => undefined)
+            .catch((error: unknown) => errorMessage(error, language.t("common.requestFailed")))
+          // Some credentials may be gone even when another removal failed, so always reload.
+          await refresh().catch(() => undefined)
+          setState("busy", card.id, false)
+          if (error) return error
+          showToast({
+            variant: "success",
+            icon: "circle-check",
+            title: language.t("provider.disconnect.toast.disconnected.title", { provider: card.name }),
+            description: language.t("provider.disconnect.toast.disconnected.description", { provider: card.name }),
+          })
+        }}
+      />
+    ))
   }
   // Mirrors the Settings providers panel: V2 removes stored credentials; V1 removes auth or disables a config provider.
   const disconnect = async (card: ProviderCard) => {
@@ -215,14 +256,11 @@ function ProvidersScreen(props: ChapterPageProps) {
     const card = routes().find((item) => item.id === id)
     const model = card && routeModel(card, providers.default()[card.id])
     if (!card || !model) return
-    const previous = state.route
     setState("route", card.id)
     await sync()
       .updateConfig({ model: `${card.id}/${model}` })
-      .catch((error: unknown) => {
-        setState("route", previous)
-        requestFailed(error)
-      })
+      .catch(requestFailed)
+      .finally(() => setState("route", undefined))
   }
 
   return (
@@ -263,19 +301,38 @@ function ProvidersScreen(props: ChapterPageProps) {
         </p>
       </Show>
       <Show when={data()}>
-        <label class="mx-field providers-route">
-          <span>{language.t("orchestra.providers.route")}</span>
-          <select
-            data-providers-route
-            value={route()}
-            disabled={protocol() !== "v1"}
-            title={protocol() === "v1" ? undefined : language.t("orchestra.providers.route.readonly")}
-            onChange={(event) => void chooseRoute(event.currentTarget.value)}
-          >
-            <option value="">{language.t("orchestra.providers.route.placeholder")}</option>
-            <For each={routes()}>{(card) => <option value={card.id}>{card.name}</option>}</For>
-          </select>
-        </label>
+        <Show
+          when={protocol() === "v1"}
+          fallback={
+            <div class="providers-route">
+              <span class="providers-route-label">{language.t("orchestra.providers.route")}</span>
+              <p class="mx-note" data-providers-route-server>
+                <Show when={serverRoute()} fallback={language.t("orchestra.providers.route.serverUnknown")}>
+                  {(provider) => language.t("orchestra.providers.route.server", { provider: provider() })}
+                </Show>
+              </p>
+            </div>
+          }
+        >
+          <div class="providers-route">
+            <label class="mx-field">
+              <span>{language.t("orchestra.providers.route")}</span>
+              <select
+                data-providers-route
+                value={route()}
+                disabled={state.route !== undefined}
+                aria-describedby="orchestra-providers-route-scope"
+                onChange={(event) => void chooseRoute(event.currentTarget.value)}
+              >
+                <option value="">{language.t("orchestra.providers.route.placeholder")}</option>
+                <For each={routes()}>{(card) => <option value={card.id}>{card.name}</option>}</For>
+              </select>
+            </label>
+            <p id="orchestra-providers-route-scope" class="mx-note">
+              {language.t("orchestra.providers.route.scope")}
+            </p>
+          </div>
+        </Show>
         <Show when={!cards().length && state.search.trim()}>
           <div class="mx-empty" role="status">
             {language.t("orchestra.providers.noMatches")}
@@ -305,14 +362,10 @@ function ProvidersScreen(props: ChapterPageProps) {
                 </div>
                 <footer class="mx-card-foot">
                   <div>
-                    <button type="button" class="mx-btn" onClick={() => openConnect(card.base, card.name)}>
+                    <button type="button" class="mx-btn" onClick={() => openConnect(card.base, baseName(card))}>
                       {language.t("orchestra.providers.configure")}
                     </button>{" "}
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      onClick={() => dialog.show(() => <ProviderModelsDialog card={card} />)}
-                    >
+                    <button type="button" class="mx-btn" onClick={openModels}>
                       {language.t("orchestra.providers.models")}
                     </button>
                   </div>
@@ -325,7 +378,7 @@ function ProvidersScreen(props: ChapterPageProps) {
                         ? language.t("settings.providers.connected.environmentDescription")
                         : undefined
                     }
-                    onClick={() => void toggle(card)}
+                    onClick={() => toggle(card)}
                   >
                     {language.t(card.connected ? "common.disconnect" : "common.connect")}
                   </button>

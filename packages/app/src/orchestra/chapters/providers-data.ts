@@ -1,6 +1,6 @@
 // Pure projection of server provider data into the mock's provider cards, popular rows and picker rows.
 
-export type ProviderModel = { id: string; name: string; context: number }
+export type ProviderModel = { id: string; name: string }
 export type ProviderMethod = "apiKey" | "environment" | "config" | "custom" | "credential"
 export type ProviderDisconnect =
   | { type: "credentials"; ids: string[] }
@@ -37,11 +37,10 @@ type V2Input = {
     readonly providerID: string
     readonly name: string
     readonly status: string
-    readonly limit: { readonly context: number }
   }>
 }
 
-type V1Model = { id: string; name: string; status?: string; limit: { context: number } }
+type V1Model = { id: string; name: string; status?: string }
 type V1Provider = { id: string; name: string; source?: string; models: Record<string, V1Model> }
 type V1Input = {
   all: V1Provider[]
@@ -86,31 +85,18 @@ export function fromV2(input: V2Input) {
     const stored = (integration?.connections ?? []).flatMap((item) =>
       item.type === "credential" && !virtual.has(item.id) ? [item.id] : [],
     )
-    const env = integration?.connections.some((item) => item.type === "env") ?? false
-    const oauth = integration?.methods.some((item) => item.type === "oauth") ?? false
+    const ids = credential ? [credential] : stored
     return {
       id: provider.id,
       base,
       name: provider.name,
       connected: true,
-      method: credential
-        ? "apiKey"
-        : stored.length
-          ? oauth
-            ? "credential"
-            : "apiKey"
-          : env
-            ? "environment"
-            : "config",
+      method: v2Method(credential, stored, integration),
       custom: false,
-      disconnect: credential
-        ? { type: "credentials", ids: [credential] }
-        : stored.length
-          ? { type: "credentials", ids: stored }
-          : { type: "none" },
+      disconnect: ids.length ? { type: "credentials", ids } : { type: "none" },
       models: input.models
         .filter((model) => model.providerID === provider.id && model.status !== "deprecated")
-        .map((model) => ({ id: model.id, name: model.name, context: model.limit.context })),
+        .map((model) => ({ id: model.id, name: model.name })),
     }
   })
   const catalog = input.integrations.map(
@@ -142,15 +128,10 @@ export function fromV1(input: V1Input) {
       connected: true,
       method: v1Method(provider.source, custom(provider.id)),
       custom: custom(provider.id),
-      disconnect:
-        provider.source === "env"
-          ? { type: "none" }
-          : credential
-            ? { type: "credentials", ids: [credential] }
-            : { type: "auth", custom: custom(provider.id) },
+      disconnect: v1Disconnect(provider.source, credential, custom(provider.id)),
       models: Object.values(provider.models)
         .filter((model) => model.status !== "deprecated")
-        .map((model) => ({ id: model.id, name: model.name, context: model.limit.context })),
+        .map((model) => ({ id: model.id, name: model.name })),
     }
   })
   const disabled = (input.config.disabled_providers ?? [])
@@ -167,7 +148,6 @@ export function fromV1(input: V1Input) {
         models: Object.entries(configured[id]?.models ?? {}).map(([model, info]) => ({
           id: model,
           name: info.name ?? model,
-          context: 0,
         })),
       }),
     )
@@ -195,12 +175,6 @@ export function matches(parts: Array<string | undefined>, query: string) {
 export function routeModel(card: ProviderCard, preferred: string | undefined) {
   if (preferred && card.models.some((model) => model.id === preferred)) return preferred
   return card.models[0]?.id
-}
-
-export function formatContext(tokens: number) {
-  if (tokens >= 1_000_000) return `${Number((tokens / 1_000_000).toFixed(1))}M`
-  if (tokens >= 1_000) return `${Math.round(tokens / 1_000)}K`
-  return String(tokens)
 }
 
 export function customProvider(input: { name: string; endpoint: string; model: string; existing: Set<string> }) {
@@ -251,9 +225,44 @@ function credentialOf(id: string) {
   return index === -1 ? undefined : id.slice(index + 1)
 }
 
+// Only labeled API keys become their own provider, so a remaining credential is a key unless the integration signs in.
+function v2Method(
+  credential: string | undefined,
+  stored: string[],
+  integration:
+    | { readonly methods: ReadonlyArray<V2Method>; readonly connections: ReadonlyArray<V2Connection> }
+    | undefined,
+): ProviderMethod {
+  if (credential) return "apiKey"
+  if (stored.length) return integration?.methods.some((item) => item.type === "oauth") ? "credential" : "apiKey"
+  if (integration?.connections.some((item) => item.type === "env")) return "environment"
+  return "config"
+}
+
+function v1Disconnect(source: string | undefined, credential: string | undefined, custom: boolean): ProviderDisconnect {
+  if (source === "env") return { type: "none" }
+  if (credential) return { type: "credentials", ids: [credential] }
+  return { type: "auth", custom }
+}
+
 function v1Method(source: string | undefined, custom: boolean): ProviderMethod {
   if (source === "env") return "environment"
   if (source === "api") return "apiKey"
   if (source === "custom" || custom) return "custom"
   return "config"
+}
+
+// Only a web link from the server is rendered as the authorization target.
+export function authorizationURL(value: string) {
+  if (!URL.canParse(value)) return
+  const url = new URL(value)
+  return url.protocol === "http:" || url.protocol === "https:" ? url : undefined
+}
+
+export function errorMessage(value: unknown, fallback: string): string {
+  if (typeof value === "string" && value) return value
+  if (value instanceof Error && value.message) return value.message
+  if (value && typeof value === "object" && "message" in value && typeof value.message === "string" && value.message)
+    return value.message
+  return fallback
 }

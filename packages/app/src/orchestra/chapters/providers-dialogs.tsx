@@ -1,16 +1,14 @@
-import { Dialog as Kobalte } from "@kobalte/core/dialog"
+import { Dialog } from "@kobalte/core/dialog"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { iconNames } from "@opencode-ai/ui/icons/provider"
 import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
-import { createMemo, createResource, For, type JSX, onCleanup, Show } from "solid-js"
+import { children, createMemo, createResource, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
-import { useModels } from "@/context/models"
 import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
-import { MxToggle } from "./kit"
-import { type CatalogEntry, formatContext, noteKey, type ProviderCard, visiblePrompts } from "./providers-data"
+import { authorizationURL, type CatalogEntry, errorMessage, noteKey, visiblePrompts } from "./providers-data"
 
 // The mock's provider mark: the real brand when the sprite has it, the neutral model mark otherwise.
 export function ProviderBrand(props: { id: string }) {
@@ -40,14 +38,15 @@ function MxDialog(props: {
   description: string
   error?: string
   submit?: string
-  cancel?: string
   busy?: boolean
+  bodyClass?: string
   onSubmit?: () => void
-  children: JSX.Element
+  children?: JSX.Element
 }) {
   const language = useLanguage()
+  const body = children(() => props.children)
   return (
-    <Kobalte.Content class="mx-dialog providers-dialog" data-component="orchestra-providers-dialog">
+    <Dialog.Content class="mx-dialog providers-dialog" data-component="orchestra-providers-dialog">
       <form
         autocomplete="off"
         onSubmit={(event) => {
@@ -57,27 +56,29 @@ function MxDialog(props: {
       >
         <header class="mx-dialog-head">
           <div>
-            <Kobalte.Title as="h2">{props.title}</Kobalte.Title>
-            <Kobalte.Description as="p">{props.description}</Kobalte.Description>
+            <Dialog.Title as="h2">{props.title}</Dialog.Title>
+            <Dialog.Description as="p">{props.description}</Dialog.Description>
           </div>
-          <Kobalte.CloseButton type="button" class="mx-link" aria-label={language.t("orchestra.providers.closeDialog")}>
+          <Dialog.CloseButton type="button" class="mx-link" aria-label={language.t("orchestra.providers.closeDialog")}>
             <svg class="providers-close" viewBox="0 0 16 16" aria-hidden="true">
               <path d="m4 4 8 8m0-8-8 8" />
             </svg>
-          </Kobalte.CloseButton>
+          </Dialog.CloseButton>
         </header>
-        <div class="mx-dialog-body">
-          <Show when={props.error}>
-            <p class="mx-error" role="alert">
-              {props.error}
-            </p>
-          </Show>
-          {props.children}
-        </div>
+        <Show when={body() || props.error}>
+          <div class={props.bodyClass ? `mx-dialog-body ${props.bodyClass}` : "mx-dialog-body"}>
+            <Show when={props.error}>
+              <p class="mx-error" role="alert">
+                {props.error}
+              </p>
+            </Show>
+            {body()}
+          </div>
+        </Show>
         <footer class="mx-dialog-foot">
-          <Kobalte.CloseButton type="button" class="mx-btn">
-            {props.cancel ?? language.t("common.cancel")}
-          </Kobalte.CloseButton>
+          <Dialog.CloseButton type="button" class="mx-btn">
+            {language.t("common.cancel")}
+          </Dialog.CloseButton>
           <Show when={props.submit}>
             <button class="mx-btn primary" type="submit" disabled={props.busy}>
               {props.submit}
@@ -85,7 +86,7 @@ function MxDialog(props: {
           </Show>
         </footer>
       </form>
-    </Kobalte.Content>
+    </Dialog.Content>
   )
 }
 
@@ -99,6 +100,7 @@ export function ProviderPickerDialog(props: {
     <MxDialog
       title={language.t("orchestra.providers.connect")}
       description={language.t("orchestra.providers.picker.description")}
+      bodyClass="providers-picker"
     >
       <div class="mx-table">
         <For each={props.entries}>
@@ -171,6 +173,11 @@ export function ProviderConnectDialog(props: {
 
   const fail = (error: unknown) =>
     setState({ busy: false, error: errorMessage(error, language.t("common.requestFailed")) })
+  // A failed or expired automatic sign-in cannot be resumed; return to the method form so it can start again.
+  const restart = (error: unknown) => {
+    fail(error)
+    setState("attempt", undefined)
+  }
   const finish = async () => {
     await props.onConnected().catch(() => undefined)
     if (alive.value) dialog.close()
@@ -181,16 +188,17 @@ export function ProviderConnectDialog(props: {
       .then((result) => {
         if (!alive.value) return
         if (result.data.status === "complete") return finish()
-        if (result.data.status === "failed") return fail(result.data.message)
-        if (result.data.status === "expired") return fail(language.t("common.requestFailed"))
+        if (result.data.status === "failed") return restart(result.data.message)
+        if (result.data.status === "expired") return restart(language.t("common.requestFailed"))
         alive.timer = setTimeout(() => poll(attemptID), 1_000)
       })
-      .catch((error) => alive.value && fail(error))
+      .catch((error) => alive.value && restart(error))
   }
 
   const submit = async () => {
     const current = method()
-    if (state.busy) return
+    // Automatic sign-in completes by polling; Enter in its read-only code field must not submit an empty code.
+    if (state.busy || state.attempt?.mode === "auto") return
     if (current.type === "key" && !state.key.trim()) {
       setState("error", language.t("orchestra.providers.connectDialog.keyRequired"))
       return
@@ -201,7 +209,9 @@ export function ProviderConnectDialog(props: {
     }
     setState({ busy: true, error: undefined })
     if (current.type === "key") {
-      await sdk().api.integration.connect.key({ integrationID: props.id, location, key: state.key }).then(finish, fail)
+      await sdk()
+        .api.integration.connect.key({ integrationID: props.id, location, key: state.key.trim() })
+        .then(finish, fail)
       return
     }
     const attempt = state.attempt
@@ -225,7 +235,8 @@ export function ProviderConnectDialog(props: {
       })
       .then((result) => {
         if (!alive.value) return
-        const url = new URL(result.data.url)
+        const url = authorizationURL(result.data.url)
+        if (!url) return fail(language.t("orchestra.providers.connectDialog.badLink"))
         // The OpenCode console recognizes the desktop shell by its own OAuth client.
         if (props.id === "opencode" && platform.platform === "desktop")
           url.searchParams.set("client_id", "opencode-desktop")
@@ -395,50 +406,29 @@ export function CustomProviderDialog(props: {
   )
 }
 
-export function ProviderModelsDialog(props: { card: ProviderCard }) {
-  const language = useLanguage()
-  const models = useModels()
-  const rows = createMemo(() => props.card.models.toSorted((a, b) => a.name.localeCompare(b.name)))
+export function ProviderConfirmDialog(props: {
+  title: string
+  description: string
+  submit: string
+  onConfirm: () => Promise<string | undefined>
+}) {
+  const dialog = useDialog()
+  const [state, setState] = createStore({ busy: false, error: undefined as string | undefined })
   return (
     <MxDialog
-      title={language.t("orchestra.providers.modelsDialog.title", { provider: props.card.name })}
-      description={language.t("orchestra.providers.modelsDialog.description")}
-      cancel={language.t("common.close")}
-    >
-      <Show
-        when={rows().length}
-        fallback={<div class="mx-empty">{language.t("orchestra.providers.modelsDialog.empty")}</div>}
-      >
-        <div class="mx-table">
-          <For each={rows()}>
-            {(model) => {
-              const key = { providerID: props.card.id, modelID: model.id }
-              return (
-                <div class="mx-row" data-model-id={model.id}>
-                  <ProviderBrand id={props.card.base} />
-                  <div class="mx-grow">
-                    <strong>{model.name}</strong>
-                    <small>
-                      {model.context
-                        ? language.t("orchestra.providers.modelsDialog.row", {
-                            provider: props.card.name,
-                            context: formatContext(model.context),
-                          })
-                        : props.card.name}
-                    </small>
-                  </div>
-                  <MxToggle
-                    checked={models.visible(key)}
-                    label={language.t("orchestra.providers.modelsDialog.toggle", { model: model.name })}
-                    onChange={(next) => models.setVisibility(key, next)}
-                  />
-                </div>
-              )
-            }}
-          </For>
-        </div>
-      </Show>
-    </MxDialog>
+      title={props.title}
+      description={props.description}
+      error={state.error}
+      busy={state.busy}
+      submit={props.submit}
+      onSubmit={async () => {
+        if (state.busy) return
+        setState({ busy: true, error: undefined })
+        const error = await props.onConfirm()
+        setState({ busy: false, error })
+        if (!error) dialog.close()
+      }}
+    />
   )
 }
 
@@ -452,12 +442,4 @@ function summary(entry: CatalogEntry, t: ReturnType<typeof useLanguage>["t"]) {
 
 function confirmation(instructions: string) {
   return instructions.includes(":") ? (instructions.split(":").pop()?.trim() ?? instructions) : instructions
-}
-
-function errorMessage(value: unknown, fallback: string): string {
-  if (typeof value === "string" && value) return value
-  if (value instanceof Error && value.message) return value.message
-  if (value && typeof value === "object" && "message" in value && typeof value.message === "string" && value.message)
-    return value.message
-  return fallback
 }

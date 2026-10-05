@@ -1,6 +1,18 @@
 /* Providers screen additions to the shared mock kit (kit.css). */
-.providers-route {
+.providers-route > .mx-field {
   max-inline-size: 300px;
+}
+.providers-route > .mx-note {
+  margin: -9px 0 16px;
+}
+.providers-route-label {
+  display: block;
+  margin-block-end: 7px;
+  font-size: 11.5px;
+  color: var(--mx-dim);
+}
+.providers-route-label + .mx-note {
+  margin: 0 0 16px;
 }
 
 .mx-page .mx-row > .mx-brand {
@@ -25,6 +37,20 @@
   max-block-size: calc(100vh - 66px);
   flex-direction: column;
   margin: 0;
+}
+/* The catalog scrolls inside the picker so the custom endpoint entry below it stays in view. */
+.providers-dialog .providers-picker {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.providers-picker > .mx-table {
+  min-block-size: 0;
+  flex: 0 1 auto;
+  overflow: auto;
+}
+.providers-picker > .mx-note {
+  flex: none;
 }
 .providers-dialog .mx-row > .mx-brand {
   flex: none;

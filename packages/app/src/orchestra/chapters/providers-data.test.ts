@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import {
+  authorizationURL,
   baseID,
   customProvider,
-  formatContext,
+  errorMessage,
   fromV1,
   fromV2,
   matches,
@@ -134,7 +135,7 @@ describe("fromV1", () => {
       name: "Gone endpoint",
       connected: false,
       disconnect: { type: "enable" },
-      models: [{ id: "gone-model", name: "Gone", context: 0 }],
+      models: [{ id: "gone-model", name: "Gone" }],
     })
     expect(card("never-configured")).toBeUndefined()
   })
@@ -165,10 +166,6 @@ test("helpers", () => {
   expect(noteKey("constructor")).toBeUndefined()
   expect(matches(["OpenAI", "Connected"], "  conn ")).toBe(true)
   expect(matches(["OpenAI"], "x")).toBe(false)
-  expect(formatContext(1_048_576)).toBe("1M")
-  expect(formatContext(1_500_000)).toBe("1.5M")
-  expect(formatContext(262_144)).toBe("262K")
-  expect(formatContext(512)).toBe("512")
   const card = fromV2({
     providers: [{ id: "p", name: "P" }],
     integrations: [],
@@ -176,6 +173,14 @@ test("helpers", () => {
   }).cards[0]
   expect(routeModel(card, "b")).toBe("b")
   expect(routeModel(card, "missing")).toBe("a")
+})
+
+test("only web links are accepted as OAuth authorization targets", () => {
+  expect(authorizationURL("https://auth.example.com/start?x=1")?.href).toBe("https://auth.example.com/start?x=1")
+  expect(authorizationURL("http://127.0.0.1:1455/auth")?.href).toBe("http://127.0.0.1:1455/auth")
+  expect(authorizationURL("javascript:alert(1)")).toBeUndefined()
+  expect(authorizationURL("data:text/html,hi")).toBeUndefined()
+  expect(authorizationURL("not a url")).toBeUndefined()
 })
 
 test("custom provider validation and config", () => {
@@ -213,4 +218,11 @@ test("OAuth prompts follow their conditions and default selects to the first opt
     shown: [prompts[0], prompts[1]],
     values: { kind: "self", host: "h" },
   })
+})
+
+test("error messages prefer the server's message", () => {
+  expect(errorMessage({ message: "write refused" }, "Request failed")).toBe("write refused")
+  expect(errorMessage(new Error("boom"), "Request failed")).toBe("boom")
+  expect(errorMessage("plain", "Request failed")).toBe("plain")
+  expect(errorMessage({ data: 1 }, "Request failed")).toBe("Request failed")
 })
