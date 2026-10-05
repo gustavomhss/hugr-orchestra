@@ -255,7 +255,6 @@ export const dict = {
   "appDock.linux.title": "Linux",
   "appDock.contexts": "App Dock contexts",
   "appDock.browser.title": "Browser",
-  "appDock.browser.actions": "Browser actions",
   "appDock.browser.empty": "Enter a web address to open a browser tab.",
   "appDock.linux.workspace": "Linux workspace",
   "appDock.linux.windows": "Open windows",
