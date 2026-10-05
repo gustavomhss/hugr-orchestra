@@ -100,6 +100,9 @@ for (const scheme of ["dark", "light"] as const) {
     await nav.getByRole("button", { name: ".env", exact: true }).click()
     await expect(page.getByRole("heading", { name: ".env", level: 1 })).toBeVisible()
     results.push(...(await measureContrast(page, [{ name: "chapter text", selector: chapter }])))
+    await nav.getByRole("button", { name: "MCP", exact: true }).click()
+    await expect(page.locator('[data-slot="orchestra-wip"]')).toBeVisible()
+    results.push(...(await measureContrast(page, [{ name: "page WIP mark", selector: '[data-slot="orchestra-wip"]' }])))
     await report(results, `sidebar-${scheme}`)
   })
 }
@@ -558,6 +561,7 @@ const sidebarText: ContrastTarget[] = [
     kind: "graphic",
   },
   { name: "search key", selector: `${sidebar} .orchestra-nav-button kbd` },
+  { name: "WIP mark", selector: `${sidebar} [data-slot="orchestra-nav-wip"]` },
   { name: "profile name", selector: `${sidebar} .orchestra-profile-text strong` },
   { name: "profile meta", selector: `${sidebar} .orchestra-profile-text small` },
   { name: "sidebar footer", selector: `${sidebar} .orchestra-sidebar-footer` },

@@ -28,7 +28,7 @@ import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
-import { navigation } from "@/orchestra/navigation"
+import { isWip, navigation } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
 import { createHomeController } from "@/pages/home/home-controller"
@@ -443,12 +443,15 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                 <Show when={item.id === "search"}>
                   <div class="orchestra-nav-rule" />
                 </Show>
+                {/* Expanded, a WIP row's tooltip carries the mark's meaning; the compact rail keeps names. */}
                 <OrchestraNavigationTooltip
-                  compact={props.compact}
+                  enabled={props.compact || isWip(item.id)}
                   value={
-                    item.chapter && !chapterPages[item.id]
-                      ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
-                      : language.t(item.label)
+                    !props.compact && isWip(item.id)
+                      ? language.t("orchestra.shell.wip.description")
+                      : item.chapter && !chapterPages[item.id]
+                        ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
+                        : language.t(item.label)
                   }
                 >
                   {(Trigger) => (
@@ -457,7 +460,11 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       class="orchestra-nav-button"
                       aria-label={language.t(item.label)}
                       aria-description={
-                        item.chapter && !chapterPages[item.id] ? language.t("orchestra.rework.pending") : undefined
+                        isWip(item.id)
+                          ? language.t("orchestra.shell.wip.description")
+                          : item.chapter && !chapterPages[item.id]
+                            ? language.t("orchestra.rework.pending")
+                            : undefined
                       }
                       disabled={
                         (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
@@ -488,7 +495,13 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       <Show when={item.id === "search"}>
                         <kbd>{command.keybind("command.palette")}</kbd>
                       </Show>
-                      <Show when={item.chapter && !chapterPages[item.id]}>
+                      {/* The WIP mark replaces the pending dot; an unbuilt WIP chapter keeps its pending dialog. */}
+                      <Show when={isWip(item.id)}>
+                        <span class="orchestra-wip-chip" data-slot="orchestra-nav-wip">
+                          <span aria-hidden="true">{language.t("orchestra.shell.wip.chip")}</span>
+                        </span>
+                      </Show>
+                      <Show when={!isWip(item.id) && item.chapter && !chapterPages[item.id]}>
                         <span class="orchestra-pending-dot" aria-hidden="true" />
                         <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
                       </Show>
@@ -511,7 +524,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
             setState("profileOpen", open)
           }}
         >
-          <OrchestraNavigationTooltip compact={props.compact} value={language.t("orchestra.profile.choose")}>
+          <OrchestraNavigationTooltip enabled={props.compact} value={language.t("orchestra.profile.choose")}>
             {(Trigger) => (
               <Trigger
                 as={DropdownMenu.Trigger}

@@ -8,6 +8,7 @@ import { SDKProvider } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
 import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider } from "@/context/server-sync"
+import { isWip } from "@/orchestra/navigation"
 
 export type ChapterPageProps = { server: ServerConnection.Any; directory: string }
 
@@ -53,6 +54,11 @@ export function OrchestraChapterRoute() {
           data-chapter={params.chapter}
           class="orchestra-chapter orchestra-glass flex min-h-0 flex-1 flex-col self-stretch overflow-hidden max-md:m-2 max-md:rounded-[10px] max-md:bg-v2-background-bg-base max-md:shadow-[var(--v2-elevation-raised)]"
         >
+          <Show when={isWip(params.chapter)}>
+            <p class="orchestra-wip-mark" data-slot="orchestra-wip">
+              {language.t("orchestra.shell.wip.page")}
+            </p>
+          </Show>
           <Show
             when={owner()}
             keyed
