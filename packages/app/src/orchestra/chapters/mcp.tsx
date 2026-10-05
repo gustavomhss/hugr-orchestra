@@ -36,9 +36,22 @@ export default function McpPage(props: ChapterPageProps) {
     fetch: (url, init) => (platform.fetch ?? globalThis.fetch)(url, init),
   })
   const [v1] = createResource(source.v1)
-  // Observe the server's own query client so the status popover and @-resources share this cache.
+  // ServerSync keeps observing this profile's MCP status and resources after the page closes, so a
+  // status event still refreshes the owning profile while another profile is open.
+  sync().child(props.directory, { bootstrap: false, mcp: true })
+  // The server's own query client, where ServerSync keeps the status popover and @-resources.
   const client = () => global.ensureServerCtx(props.server).queryClient
-  const status = useQuery(() => ({ ...sync().queryOptions.mcp(key), retry: false, refetchOnMount: "always" }), client)
+  // The page's own status query: ServerSync's copy retries in the background, while the page reports a
+  // failed load at once.
+  const status = useQuery(
+    () => ({
+      queryKey: [serverSDK().scope, key, "orchestra-mcp-status"] as const,
+      queryFn: source.status,
+      retry: false,
+      refetchOnMount: "always",
+    }),
+    client,
+  )
   const config = useQuery(
     () => ({
       queryKey: [serverSDK().scope, key, "orchestra-mcp-config"] as const,
@@ -65,6 +78,7 @@ export default function McpPage(props: ChapterPageProps) {
       config.refetch(),
       entries.refetch(),
       tools.refetch(),
+      client().refetchQueries(sync().queryOptions.mcp(key)),
       client().refetchQueries(sync().queryOptions.mcpResources(key)),
     ]).then(() => undefined)
   onCleanup(

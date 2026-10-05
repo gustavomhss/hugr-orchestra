@@ -3,7 +3,7 @@ import type { ServerConnection } from "@/context/server"
 import type { ServerSDK } from "@/context/server-sdk"
 import { authTokenFromCredentials } from "@/utils/server"
 import { mcpErrorDetail } from "./mcp-actions"
-import { type McpEntry, mcpEntry, type McpServerConfig } from "./mcp-model"
+import { type McpEntry, mcpEntry, type McpServerConfig, type McpStatus } from "./mcp-model"
 
 type Fetch = (url: URL, init: RequestInit) => Promise<Response>
 
@@ -23,6 +23,11 @@ export function createMcpSource(input: {
 
   return {
     v1,
+    async status(): Promise<Record<string, McpStatus>> {
+      if (await v1()) return (await input.sdk.client.mcp.status()).data ?? {}
+      const listed = await api().list({ location })
+      return Object.fromEntries(listed.data.map((server) => [server.name, server.status]))
+    },
     // The server's resolved config, reduced to type/command/url before anything caches it.
     async config(): Promise<Record<string, McpEntry>> {
       if (!(await v1())) return {}
