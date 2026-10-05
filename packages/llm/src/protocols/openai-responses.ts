@@ -21,6 +21,7 @@ import {
 import { JsonObject, optionalArray, optionalNull, ProviderShared } from "./shared"
 import { isContextOverflow } from "../provider-error"
 import { OpenAIOptions } from "./utils/openai-options"
+import { ResponseFormat } from "./utils/response-format"
 import { Lifecycle } from "./utils/lifecycle"
 import { ToolSchemaProjection } from "./utils/tool-schema"
 import { ToolStream } from "./utils/tool-stream"
@@ -139,11 +140,7 @@ const OpenAIResponsesCoreFields = {
       summary: Schema.optional(Schema.Literal("auto")),
     }),
   ),
-  text: Schema.optional(
-    Schema.Struct({
-      verbosity: Schema.optional(OpenAIOptions.OpenAITextVerbosity),
-    }),
-  ),
+  text: Schema.optional(ResponseFormat.OpenAIText),
   max_output_tokens: Schema.optional(Schema.Number),
   temperature: Schema.optional(Schema.Number),
   top_p: Schema.optional(Schema.Number),
@@ -236,6 +233,7 @@ type OpenAIResponsesEvent = Schema.Schema.Type<typeof OpenAIResponsesEvent>
 interface ParserState {
   readonly tools: ToolStream.State<string>
   readonly hasFunctionCall: boolean
+  readonly json: boolean
   readonly lifecycle: Lifecycle.State
   readonly reasoningItems: Readonly<Record<string, ReasoningStreamItem>>
   readonly store: boolean | undefined
@@ -461,7 +459,7 @@ const lowerOptions = Effect.fn("OpenAIResponses.lowerOptions")(function* (reques
     return yield* invalid(`OpenAI Responses does not support reasoning effort ${effort}`)
   const summary = OpenAIOptions.reasoningSummary(request)
   const include = OpenAIOptions.include(request)
-  const verbosity = OpenAIOptions.textVerbosity(request)
+  const text = ResponseFormat.openAIText(request)
   const instructions = OpenAIOptions.instructions(request)
   const serviceTier = OpenAIOptions.serviceTier(request)
   return {
@@ -470,7 +468,7 @@ const lowerOptions = Effect.fn("OpenAIResponses.lowerOptions")(function* (reques
     ...(promptCacheKey ? { prompt_cache_key: promptCacheKey } : {}),
     ...(include ? { include } : {}),
     ...(effort || summary ? { reasoning: { effort, summary } } : {}),
-    ...(verbosity ? { text: { verbosity } } : {}),
+    ...(text ? { text } : {}),
     ...(serviceTier ? { service_tier: serviceTier } : {}),
   }
 })
@@ -635,8 +633,6 @@ const onReasoningDelta = (state: ParserState, event: OpenAIResponsesEvent): Step
     events,
   ]
 }
-
-const onReasoningDone = (state: ParserState, _event: OpenAIResponsesEvent): StepResult => [state, NO_EVENTS]
 
 const reasoningMetadata = (item: OpenAIResponsesStreamItem & { id: string }) =>
   openaiMetadata({ itemId: item.id, reasoningEncryptedContent: item.encrypted_content ?? null })
@@ -910,17 +906,17 @@ const providerError = (event: OpenAIResponsesEvent, fallback: string) => {
   })
 }
 
-const onResponseFailed = (state: ParserState, event: OpenAIResponsesEvent): StepResult => [
-  state,
-  [providerError(event, "OpenAI Responses response failed")],
-]
-
-const onError = (state: ParserState, event: OpenAIResponsesEvent): StepResult => [
-  state,
-  [providerError(event, "OpenAI Responses stream error")],
-]
+const onProviderError = (state: ParserState, error: LLMEvent): StepResult => [state, [error]]
 
 const step = (state: ParserState, event: OpenAIResponsesEvent) => {
+  // JSON-only refusals invalidate structured output without exposing provider text.
+  if (state.json && (event.type === "response.refusal.delta" || event.type === "response.refusal.done"))
+    return Effect.succeed(
+      onProviderError(
+        state,
+        LLMEvent.providerError({ message: "Provider refused structured response", retryable: false }),
+      ),
+    )
   if (event.type === "response.output_text.delta") return Effect.succeed(onOutputTextDelta(state, event))
   if (
     event.type === "response.reasoning_text.delta" ||
@@ -928,12 +924,6 @@ const step = (state: ParserState, event: OpenAIResponsesEvent) => {
     event.type === "response.reasoning_summary_text.delta"
   )
     return Effect.succeed(onReasoningDelta(state, event))
-  if (
-    event.type === "response.reasoning_text.done" ||
-    event.type === "response.reasoning_summary.done" ||
-    event.type === "response.reasoning_summary_text.done"
-  )
-    return Effect.succeed(onReasoningDone(state, event))
   if (event.type === "response.reasoning_summary_part.added")
     return Effect.succeed(onReasoningSummaryPartAdded(state, event))
   if (event.type === "response.reasoning_summary_part.done")
@@ -943,8 +933,10 @@ const step = (state: ParserState, event: OpenAIResponsesEvent) => {
   if (event.type === "response.output_item.done") return onOutputItemDone(state, event)
   if (event.type === "response.completed" || event.type === "response.incomplete")
     return Effect.succeed(onResponseFinish(state, event))
-  if (event.type === "response.failed") return Effect.succeed(onResponseFailed(state, event))
-  if (event.type === "error") return Effect.succeed(onError(state, event))
+  if (event.type === "response.failed")
+    return Effect.succeed(onProviderError(state, providerError(event, "OpenAI Responses response failed")))
+  if (event.type === "error")
+    return Effect.succeed(onProviderError(state, providerError(event, "OpenAI Responses stream error")))
   return Effect.succeed<StepResult>([state, NO_EVENTS])
 }
 
@@ -966,6 +958,7 @@ export const protocol = Protocol.make({
     event: Protocol.jsonEvent(OpenAIResponsesEvent),
     initial: (request) => ({
       hasFunctionCall: false,
+      json: request.responseFormat?.type === "json",
       tools: ToolStream.empty<string>(),
       lifecycle: Lifecycle.initial(),
       reasoningItems: {},

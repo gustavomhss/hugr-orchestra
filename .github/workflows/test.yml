@@ -230,10 +230,12 @@ jobs:
 
   e2e:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: e2e (${{ matrix.settings.name }})
+    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/6)
     strategy:
       fail-fast: false
       matrix:
+        # 2 OS x 6 shards = 12 parallel jobs, inside GitHub's 20 concurrent jobs alongside the other gates.
+        shard: [1, 2, 3, 4, 5, 6]
         settings:
           - name: linux
             host: ubuntu-latest
@@ -284,17 +286,17 @@ jobs:
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
-        run: bun --cwd packages/app test:e2e:local
+        run: bun --cwd packages/app test:e2e:local --shard=${{ matrix.shard }}/6
         env:
           CI: true
-        # One CI worker runs the whole suite; on 2-vCPU Windows runners it takes about 30 minutes.
-        timeout-minutes: 45
+        # One worker per shard; a sixth of the suite takes a few minutes, retries included.
+        timeout-minutes: 30
 
       - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: playwright-${{ matrix.settings.name }}-${{ github.run_attempt }}
+          name: playwright-${{ matrix.settings.name }}-${{ matrix.shard }}-${{ github.run_attempt }}
           if-no-files-found: ignore
           retention-days: 7
           path: |

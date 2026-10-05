@@ -3,7 +3,7 @@ import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import { errorMessage } from "@/util/error"
 import { isRecord } from "@/util/record"
-import { asSchema, type ModelMessage, type Tool } from "ai"
+import { asSchema, type JSONSchema7, type ModelMessage, type Tool } from "ai"
 import { Cause, Effect, FiberSet, Queue } from "effect"
 import * as Stream from "effect/Stream"
 import { FetchHttpClient } from "effect/unstable/http"
@@ -34,6 +34,7 @@ type StreamInput = {
   readonly messages: ModelMessage[]
   readonly tools: Record<string, Tool>
   readonly toolChoice?: "auto" | "required" | "none"
+  readonly responseSchema?: JSONSchema7
   readonly temperature?: number
   readonly topP?: number
   readonly topK?: number
@@ -72,6 +73,8 @@ function statusWithFetch(
 }
 
 export function stream(input: StreamInput): StreamResult {
+  if (input.responseSchema && input.model.api.npm !== "@ai-sdk/openai")
+    return { type: "unsupported", reason: "native response schemas require @ai-sdk/openai" }
   const fetch = providerFetch(input)
   const current = statusWithFetch(input, fetch)
   if (current.type === "unsupported") return current
@@ -93,6 +96,7 @@ export function stream(input: StreamInput): StreamResult {
     baseURL: current.baseURL,
     messages: ProviderTransform.message(input.messages, input.model, input.providerOptions ?? {}),
     toolChoice: input.toolChoice,
+    responseSchema: input.responseSchema,
     temperature: input.temperature,
     topP: input.topP,
     topK: input.topK,

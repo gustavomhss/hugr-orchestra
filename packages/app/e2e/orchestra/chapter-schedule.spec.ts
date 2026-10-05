@@ -333,7 +333,7 @@ test("leaving the page mid-run neither navigates nor keeps scheduling", async ({
   const home = page.url()
   release()
   await expect.poll(() => api.prompts).toHaveLength(1)
-  await page.clock.fastForward("70:00")
+  await page.clock.fastForward("01:10:00")
   await page.clock.runFor(30_000)
   expect(api.attempts).toBe(1)
   expect(page.url()).toBe(home)
