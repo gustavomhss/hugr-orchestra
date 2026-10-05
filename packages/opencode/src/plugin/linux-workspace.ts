@@ -6,6 +6,13 @@ type Port = {
   postMessage(message: unknown): void
   on(event: "message", listener: (event: { data: unknown }) => void): void
 }
+// What the agent can do about each workspace state; without it models retry blindly or reach for other tools.
+const hints = {
+  "workspace-not-configured": "The Linux workspace was never set up; ask the user to open Apps > Linux workspace in the App Dock",
+  "workspace-not-running": "The Linux workspace is stopped; ask the user to open Apps > Linux workspace in the App Dock, then retry",
+  "workspace-unavailable": "The Linux workspace is not available in this app window; ask the user to open it in the App Dock",
+}
+
 const routers = new WeakMap<Port, Map<string, { settle: (value: unknown, error?: string) => void }>>()
 
 export function createLinuxWorkspaceHooks(port: Port): Hooks {
@@ -87,9 +94,10 @@ export function createLinuxWorkspaceHooks(port: Port): Hooks {
     env: tool.schema.record(tool.schema.string(), tool.schema.string()).optional(),
   }
   const execute = (context: ToolContext, op: string, args: Record<string, unknown>) =>
-    call(context, op, args).catch((error) =>
-      JSON.stringify({ error: error instanceof Error ? error.message : "workspace-failed" }),
-    )
+    call(context, op, args).catch((error) => {
+      const code = error instanceof Error ? error.message : "workspace-failed"
+      return JSON.stringify({ error: code, ...(code in hints ? { hint: hints[code as keyof typeof hints] } : {}) })
+    })
   return {
     event: async ({ event }) => {
       if (event.type === "session.deleted")

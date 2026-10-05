@@ -117,6 +117,8 @@ export function create(options: { root: string; context: string; image?: string;
         current.state = { phase: "error", apps: current.state.apps, error: failure.code }
       }
       if (error instanceof NativeDockProtocol.NativeError) throw error
+      // Fixed access codes carry no Docker diagnostics and tell the agent what is wrong.
+      if (!marks && error instanceof Error && /^workspace-[a-z-]{1,48}$/.test(error.message)) throw error
       throw failure
     })
     const tail = result.then(
@@ -533,6 +535,7 @@ export function create(options: { root: string; context: string; image?: string;
   }
 
   const access = LinuxWorkspaceAccess.create({
+    // Terminal access observes the workspace; a stopped workspace is not a workspace failure.
     prepare: () => serialize(async () => {
       if (!(await readMetadata(root))) throw new Error("workspace-not-configured")
       const metadata = await load()
@@ -546,7 +549,7 @@ export function create(options: { root: string; context: string; image?: string;
         current.accessKey = key
       }
       return { endpoint: metadata.endpoint, containerID: container.Id, key }
-    }),
+    }, false),
     verify: async connection => {
       const metadata = await load()
       const container = await owned(metadata)

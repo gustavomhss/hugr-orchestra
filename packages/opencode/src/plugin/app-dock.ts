@@ -121,11 +121,22 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
 const parentPort = (): ParentPortLike | undefined =>
   (process as typeof process & { parentPort?: ParentPortLike }).parentPort
 
-const toolErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error))
+const toolErrorMessage = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error)
+  return message === "App Dock has no open tabs"
+    ? `${message}; ask the user to open the App Dock (for Linux apps: Apps > Linux workspace)` : message
+}
+// What the model can do next for codes that otherwise led unscripted runs into blind retries.
+const hints: Record<string, string> = {
+  "unstable-ref": 'This control sits below virtual ancestry (lists, trees); retry dock_action with mode: "observed"',
+  "unsupported-interface": 'This field has no editable-text interface; retry dock_type with mode: "keyboard"',
+  "stale-ref": "Native refs expire when the app changes; pass target {name, role} to locate and act in one call",
+  "unsupported-backend": "The active App Dock tab is a browser page; ask the user to open Apps > Linux workspace, or use dock_read for the page",
+}
 const toolError = (error: unknown) => error instanceof NativeRPCError
   ? toJSON({ backend: error.backend, code: error.code, message: error.message, outcome: error.outcome,
     ...(error.result === undefined ? {} : { result: error.result }), ...(error.target === undefined ? {} : { target: error.target }),
-    ...(error.cleanup === undefined ? {} : { cleanup: error.cleanup }) })
+    ...(error.cleanup === undefined ? {} : { cleanup: error.cleanup }), ...(hints[error.code] ? { hint: hints[error.code] } : {}) })
   : toolErrorMessage(error)
 
 function cleanupEvidence(value: unknown) {

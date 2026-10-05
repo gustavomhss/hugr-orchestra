@@ -802,3 +802,14 @@ test("action-ambiguous names the actions the model can pass", async () => {
   expect(JSON.parse(String(await dock.hooks.tool.dock_action.execute({ target: { name: "search settings" }, action: "press" }, context))))
     .toMatchObject({ code: "action-ambiguous", hint: "Pass action as one of: activate, showContextMenu" })
 })
+
+test("native errors that have a known next step carry it as a hint", async () => {
+  const unstable = host(() => nativeError("unstable-ref"))
+  expect(JSON.parse(String(await unstable.hooks.tool.dock_action.execute({ ref: "n:a", actionID: "a:n:a" }, context))))
+    .toMatchObject({ code: "unstable-ref", hint: 'This control sits below virtual ancestry (lists, trees); retry dock_action with mode: "observed"' })
+  const plain = host(() => nativeError("capacity"))
+  expect(JSON.parse(String(await plain.hooks.tool.dock_action.execute({ ref: "n:a", actionID: "a:n:a" }, context))))
+    .not.toHaveProperty("hint")
+  const empty = host((): Reply => ({ ok: false, error: { message: "App Dock has no open tabs" } }))
+  expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toContain("Apps > Linux workspace")
+})
