@@ -116,8 +116,8 @@ export function PipelineDialog(props: {
   return (
     <CicdDialog
       title={
-        item()
-          ? language.t("orchestra.cicd.dialog.editTitle", { name: item()!.name })
+        props.pipeline
+          ? language.t("orchestra.cicd.dialog.editTitle", { name: props.pipeline.name })
           : language.t("orchestra.cicd.new")
       }
       detail={language.t("orchestra.cicd.dialog.detail")}
@@ -125,15 +125,26 @@ export function PipelineDialog(props: {
       error={error()}
       onClose={props.onClose}
       onSubmit={(data) => {
-        const command = String(data.get("command") ?? "").trim()
-        if (!command) {
-          setError(language.t("orchestra.cicd.field.commandsRequired"))
+        const name = String(data.get("name") ?? "").trim()
+        const branch = String(data.get("branch") ?? "").trim()
+        const command = String(data.get("command") ?? "")
+          .replace(/\r\n?/g, "\n")
+          .trim()
+        const problem = !name
+          ? "orchestra.cicd.field.nameRequired"
+          : !branch
+            ? "orchestra.cicd.field.branchRequired"
+            : !command
+              ? "orchestra.cicd.field.commandsRequired"
+              : undefined
+        if (problem) {
+          setError(language.t(problem))
           return false
         }
         props.onSave({
           id: item()?.id ?? crypto.randomUUID(),
-          name: String(data.get("name") ?? "").trim(),
-          branch: String(data.get("branch") ?? "").trim(),
+          name,
+          branch,
           trigger: TRIGGERS.find((value) => value === data.get("trigger")) ?? "manual",
           command,
           environment: ENVIRONMENTS.find((value) => value === data.get("environment")) ?? "preview",

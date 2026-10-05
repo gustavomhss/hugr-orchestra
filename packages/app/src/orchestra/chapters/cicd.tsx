@@ -1,5 +1,16 @@
 import { getFilename } from "@opencode-ai/core/util/path"
-import { createEffect, createMemo, createResource, createSignal, For, Match, onCleanup, Show, Switch, untrack } from "solid-js"
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+  untrack,
+} from "solid-js"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
@@ -29,7 +40,7 @@ export default function Cicd(props: ChapterPageProps) {
   const tabs = useTabs()
   const global = useGlobal()
   const sync = useServerSync()
-  const pipelines = profilePipelines(`${ServerConnection.key(props.server)}\0${props.directory}`, {
+  const pipelines = profilePipelines(`${ServerConnection.key(props.server)}\0${pathKey(props.directory)}`, {
     sdk: useServerSDK()(),
     platform: usePlatform(),
     directory: props.directory,
@@ -42,6 +53,10 @@ export default function Cicd(props: ChapterPageProps) {
   const [dialog, setDialog] = createSignal<Dialog>()
   const closeDialog = (current: Dialog) => () => {
     if (dialog() === current) setDialog(undefined)
+  }
+  const dialogOf = <T extends Dialog["type"]>(type: T) => {
+    const current = dialog()
+    if (current && isDialog(current, type)) return current
   }
   const profile = createMemo(() => {
     const directory = pathKey(props.directory)
@@ -58,10 +73,8 @@ export default function Cicd(props: ChapterPageProps) {
   const [vcs] = createResource(() =>
     sdk()
       .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
-      .then(
-        (result) => result.data?.branch,
-        () => undefined,
-      ),
+      .then((result) => result.data?.branch)
+      .catch(() => undefined),
   )
   const branch = () => vcs() ?? sync().child(props.directory, { bootstrap: false })[0].vcs?.branch ?? ""
   const matches = (text: string) => text.toLowerCase().includes(query().trim().toLowerCase())
@@ -84,10 +97,7 @@ export default function Cicd(props: ChapterPageProps) {
     }),
   )
   const [source] = createResource(
-    () => {
-      const current = dialog()
-      return current?.type === "source" ? current.path : undefined
-    },
+    () => dialogOf("source")?.path,
     async (path) => {
       const content = async () => {
         if ((await sdk().protocol) === "v1") {
@@ -102,10 +112,9 @@ export default function Cicd(props: ChapterPageProps) {
           .api.file.read({ path, location: { directory: props.directory } }, { signal: abort.signal })
           .then((bytes) => new TextDecoder().decode(bytes))
       }
-      return content().then(
-        (text) => ({ status: "ready" as const, path, text }),
-        (error: unknown) => ({ status: workflowFailure(error), path, text: "" }),
-      )
+      return content()
+        .then((text) => ({ status: "ready" as const, path, text }))
+        .catch((error: unknown) => ({ status: workflowFailure(error), path, text: "" }))
     },
   )
   const kind = (path: string) => language.t(path === GITLAB_CI ? "orchestra.cicd.gitlab" : "orchestra.cicd.github")
@@ -175,7 +184,15 @@ export default function Cicd(props: ChapterPageProps) {
                 </div>
                 <p dir="ltr">{item.command}</p>
                 <div class="mx-meta">
-                  <MxBadge tone={item.status === "passed" ? "good" : item.status === "failed" ? "bad" : undefined}>
+                  <MxBadge
+                    tone={
+                      item.status === "passed"
+                        ? "good"
+                        : item.status === "failed" || item.status === "error"
+                          ? "bad"
+                          : undefined
+                    }
+                  >
                     {language.t(`orchestra.cicd.status.${item.status}`)}
                   </MxBadge>
                   <MxBadge>
@@ -195,7 +212,12 @@ export default function Cicd(props: ChapterPageProps) {
                     <button
                       type="button"
                       class="mx-btn"
-                      onClick={() => (item.status === "running" ? pipelines.stop(item.id) : void pipelines.run(item.id))}
+                      onClick={(event) => {
+                        // The second click of a double click must not stop the run the first one started.
+                        if (event.detail > 1) return
+                        if (item.status === "running") return pipelines.stop(item.id)
+                        void pipelines.run(item.id, vcs())
+                      }}
                     >
                       {language.t(item.status === "running" ? "orchestra.cicd.stop" : "orchestra.cicd.run")}
                     </button>{" "}
@@ -266,13 +288,7 @@ export default function Cicd(props: ChapterPageProps) {
       </Show>
       <p class="mx-note">{language.t("orchestra.cicd.note")}</p>
       <Switch>
-        <Match
-          when={(() => {
-            const current = dialog()
-            return current?.type === "edit" ? current : undefined
-          })()}
-          keyed
-        >
+        <Match when={dialogOf("edit")} keyed>
           {(current) => (
             <PipelineDialog
               pipeline={current.id ? pipelines.list().find((item) => item.id === current.id) : undefined}
@@ -287,10 +303,9 @@ export default function Cicd(props: ChapterPageProps) {
         </Match>
         <Match
           when={(() => {
-            const current = dialog()
-            if (current?.type !== "logs") return
-            const item = pipelines.list().find((entry) => entry.id === current.id)
-            return item ? { current, item } : undefined
+            const current = dialogOf("logs")
+            const item = current && pipelines.list().find((entry) => entry.id === current.id)
+            return current && item ? { current, item } : undefined
           })()}
         >
           {(open) => (
@@ -301,13 +316,7 @@ export default function Cicd(props: ChapterPageProps) {
             />
           )}
         </Match>
-        <Match
-          when={(() => {
-            const current = dialog()
-            return current?.type === "remove" ? current : undefined
-          })()}
-          keyed
-        >
+        <Match when={dialogOf("remove")} keyed>
           {(current) => (
             <CicdDialog
               title={language.t("orchestra.cicd.removeTitle")}
@@ -320,13 +329,7 @@ export default function Cicd(props: ChapterPageProps) {
             </CicdDialog>
           )}
         </Match>
-        <Match
-          when={(() => {
-            const current = dialog()
-            return current?.type === "source" ? current : undefined
-          })()}
-          keyed
-        >
+        <Match when={dialogOf("source")} keyed>
           {(current) => (
             <CicdDialog
               title={current.path}
@@ -367,4 +370,8 @@ export default function Cicd(props: ChapterPageProps) {
       </Switch>
     </MxPage>
   )
+}
+
+function isDialog<T extends Dialog["type"]>(value: Dialog, type: T): value is Extract<Dialog, { type: T }> {
+  return value.type === type
 }
