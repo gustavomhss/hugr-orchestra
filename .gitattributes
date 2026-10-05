@@ -8,3 +8,6 @@ packages/app/src/pages/session/orchestra-evidence-fixtures/** -text
 # Rationale and the rank effect of union ordering: `foundation/atlas/.gitattributes`.
 .atlas/memory.jsonl merge=union
 .atlas/orientation.jsonl merge=union
+# Shipped specialist skills and seat prompts are LF on every platform (F6.6); Windows checkouts must not convert them.
+packages/backend-specialist/skills/** text eol=lf
+packages/opencode/src/agent/prompt/*.txt text eol=lf
