@@ -1,4 +1,4 @@
-import { For, onMount, Show } from "solid-js"
+import { For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Agent, AgentFileInfo, AgentFileInput } from "@opencode-ai/sdk/v2/client"
 import { useLanguage } from "@/context/language"
@@ -8,8 +8,11 @@ import {
   agentFileInput,
   agentUnavailable,
   draftError,
+  errorKind,
+  errorStatus,
   inheritedAction,
   PERMISSION_TOOLS,
+  removeInput,
   type PermissionChoice,
 } from "./agents-roster"
 
@@ -19,6 +22,7 @@ export type ModelGroup = { id: string; name: string; models: { value: string; la
 export function AgentDialog(props: {
   agent?: Agent
   agents: readonly Agent[]
+  directory: string
   models: readonly ModelGroup[]
   load: (name: string) => Promise<AgentFileInfo>
   save: (name: string, input: AgentFileInput) => Promise<void>
@@ -28,35 +32,68 @@ export function AgentDialog(props: {
   const [state, setState] = createStore({
     phase: (props.agent ? "loading" : "edit") as "loading" | "edit" | "confirm",
     file: undefined as AgentFileInfo | undefined,
-    readOnly: false,
+    loadError: "" as "" | "unsupported" | "failed",
     saving: false,
     error: "",
   })
   const [draft, setDraft] = createStore(agentDraft(props.agent, undefined))
-  // A new agent starts from the same profile rules as the default agent.
-  const rules = () => props.agent?.permission ?? props.agents.find((agent) => agent.name === "build")?.permission ?? []
-  const failure = (error: unknown) =>
-    language.t(agentUnavailable(error) ? "orchestra.agents.error.unsupported" : "orchestra.agents.error.save")
+  // Focus goes back to the button that opened the dialog; the roster stays mounted underneath.
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
+  const life = { open: true, element: undefined as HTMLDialogElement | undefined }
+  onCleanup(() => {
+    life.open = false
+  })
+  const finish = () => {
+    if (!life.open) return
+    life.open = false
+    life.element?.close()
+    props.onClose()
+    if (opener?.isConnected) opener.focus()
+  }
+  const readOnly = () => state.loadError !== "" || state.file?.invalid === true
+  const relative = (filepath: string) =>
+    filepath.startsWith(`${props.directory}/`) ? filepath.slice(props.directory.length + 1) : filepath
+  const saveFailure = (error: unknown) => {
+    if (agentUnavailable(error)) return language.t("orchestra.agents.error.unsupported")
+    if (errorStatus(error) === 409) return language.t("orchestra.agents.error.conflict")
+    const kind = errorKind(error)
+    if (kind === "agent_file_case") return language.t("orchestra.agents.error.case")
+    if (kind === "agent_file_outside") return language.t("orchestra.agents.error.outside")
+    if (kind === "agent_file_unparseable")
+      return language.t("orchestra.agents.error.invalid", { path: relative(state.file?.path ?? "") })
+    return language.t("orchestra.agents.error.save")
+  }
+  const notice = () => {
+    if (state.loadError === "unsupported") return language.t("orchestra.agents.error.unsupported")
+    if (state.loadError === "failed") return language.t("orchestra.agents.error.load")
+    if (state.file?.invalid) return language.t("orchestra.agents.error.invalid", { path: relative(state.file.path) })
+    return state.error
+  }
   const commit = (name: string, input: AgentFileInput) => {
     setState({ saving: true, error: "" })
     props
       .save(name, input)
-      .then(() => props.onClose())
-      .catch((error: unknown) => setState({ saving: false, error: failure(error) }))
+      .then(finish)
+      .catch((error: unknown) => setState({ saving: false, error: saveFailure(error) }))
   }
-  const dialog = { element: undefined as HTMLDialogElement | undefined }
-
-  onMount(() => {
-    dialog.element?.showModal()
+  const load = () => {
     const agent = props.agent
     if (!agent) return
+    setState({ phase: "loading", loadError: "" })
     props
       .load(agent.name)
       .then((file) => {
         setDraft(agentDraft(agent, file))
         setState({ phase: "edit", file })
       })
-      .catch((error: unknown) => setState({ phase: "edit", readOnly: true, error: failure(error) }))
+      .catch((error: unknown) =>
+        setState({ phase: "edit", loadError: agentUnavailable(error) ? "unsupported" : "failed" }),
+      )
+  }
+
+  onMount(() => {
+    life.element?.showModal()
+    load()
   })
 
   const title = () => {
@@ -64,8 +101,9 @@ export function AgentDialog(props: {
     if (!props.agent) return language.t("orchestra.agents.dialog.create")
     return language.t("orchestra.agents.dialog.configure", { name: props.agent.name })
   }
+  // A new agent inherits only profile rules this page cannot see, so it names no value.
   const inheritLabel = (tool: (typeof PERMISSION_TOOLS)[number]) => {
-    const action = inheritedAction(rules(), tool, state.file?.permission?.[tool])
+    const action = props.agent && inheritedAction(props.agent.permission, tool, state.file?.permission?.[tool])
     if (!action) return language.t("orchestra.agents.choice.inherit")
     return language.t("orchestra.agents.choice.inheritValue", { action })
   }
@@ -73,12 +111,12 @@ export function AgentDialog(props: {
 
   return (
     <dialog
-      ref={(element) => (dialog.element = element)}
+      ref={(element) => (life.element = element)}
       class="mx-dialog agents-dialog"
       aria-labelledby="agents-dialog-title"
       onCancel={(event) => {
         event.preventDefault()
-        props.onClose()
+        finish()
       }}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return
@@ -88,22 +126,22 @@ export function AgentDialog(props: {
           event.clientX <= rect.right &&
           event.clientY >= rect.top &&
           event.clientY <= rect.bottom
-        if (!inside) props.onClose()
+        if (!inside) finish()
       }}
     >
       <form
         autocomplete="off"
         onSubmit={(event) => {
           event.preventDefault()
-          if (state.saving || state.readOnly || state.phase === "loading") return
-          if (state.phase === "confirm") return commit(draft.name, { disable: true })
+          if (state.saving || readOnly() || state.phase === "loading") return
+          if (state.phase === "confirm") return commit(draft.name, removeInput(state.file))
           const problem = draftError(
             draft,
             props.agents.map((agent) => agent.name),
             !props.agent,
           )
           if (problem) return setState("error", language.t(`orchestra.agents.error.${problem}`))
-          commit(draft.name.trim(), agentFileInput(draft, state.file))
+          commit(draft.name.trim(), agentFileInput(draft, state.file, props.agent))
         }}
       >
         <header class="mx-dialog-head">
@@ -119,7 +157,7 @@ export function AgentDialog(props: {
             type="button"
             class="mx-link agents-close"
             aria-label={language.t("orchestra.agents.dialog.close")}
-            onClick={() => props.onClose()}
+            onClick={finish}
           >
             <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
               <path d="m4 4 8 8m0-8-8 8" />
@@ -127,30 +165,49 @@ export function AgentDialog(props: {
           </button>
         </header>
         <div class="mx-dialog-body">
-          <p class="mx-error" role="alert" hidden={!state.error}>
-            {state.error}
+          <p class="mx-error" role="alert" hidden={!notice()}>
+            {notice()}
           </p>
-          <Show when={state.phase !== "loading"} fallback={<p class="mx-note">{language.t("orchestra.agents.loadingFile")}</p>}>
+          <Show when={state.loadError === "failed"}>
+            <p class="agents-retry">
+              <button type="button" class="mx-btn" onClick={load}>
+                {language.t("orchestra.agents.retry")}
+              </button>
+            </p>
+          </Show>
+          <Show
+            when={state.phase !== "loading"}
+            fallback={<p class="mx-note">{language.t("orchestra.agents.loadingFile")}</p>}
+          >
             <Show
               when={state.phase === "edit"}
-              fallback={<p class="mx-note">{language.t("orchestra.agents.removeNote", { name: draft.name })}</p>}
+              fallback={
+                <p class="mx-note">
+                  {language.t("orchestra.agents.removeNote", {
+                    name: draft.name,
+                    path: relative(state.file?.path ?? ""),
+                  })}
+                </p>
+              }
             >
-              <fieldset class="agents-fieldset" disabled={state.readOnly || state.saving}>
+              <fieldset class="agents-fieldset" disabled={readOnly() || state.saving}>
                 <div class="mx-fields">
                   <label class="mx-field">
-                    <span>{language.t("orchestra.agents.field.name")}</span>
+                    <span id="agents-field-name">{language.t("orchestra.agents.field.name")}</span>
                     <input
                       name="name"
                       required
+                      aria-labelledby="agents-field-name"
                       readOnly={!!props.agent}
                       value={draft.name}
                       onInput={(event) => setDraft("name", event.currentTarget.value)}
                     />
                   </label>
                   <label class="mx-field">
-                    <span>{language.t("orchestra.agents.mode")}</span>
+                    <span id="agents-field-mode">{language.t("orchestra.agents.mode")}</span>
                     <select
                       name="mode"
+                      aria-labelledby="agents-field-mode"
                       onChange={(event) => setDraft("mode", AGENT_MODES[event.currentTarget.selectedIndex])}
                     >
                       <For each={AGENT_MODES}>
@@ -164,18 +221,23 @@ export function AgentDialog(props: {
                   </label>
                 </div>
                 <label class="mx-field">
-                  <span>{language.t("orchestra.agents.field.description")}</span>
+                  <span id="agents-field-description">{language.t("orchestra.agents.field.description")}</span>
                   <input
                     name="description"
                     required
+                    aria-labelledby="agents-field-description"
                     value={draft.description}
                     onInput={(event) => setDraft("description", event.currentTarget.value)}
                   />
                 </label>
                 <div class="mx-fields">
                   <label class="mx-field">
-                    <span>{language.t("orchestra.agents.model")}</span>
-                    <select name="model" onChange={(event) => setDraft("model", event.currentTarget.value)}>
+                    <span id="agents-field-model">{language.t("orchestra.agents.model")}</span>
+                    <select
+                      name="model"
+                      aria-labelledby="agents-field-model"
+                      onChange={(event) => setDraft("model", event.currentTarget.value)}
+                    >
                       <option value="" selected={draft.model === ""}>
                         {language.t("orchestra.agents.defaultModel")}
                       </option>
@@ -200,10 +262,11 @@ export function AgentDialog(props: {
                     </select>
                   </label>
                   <label class="mx-field">
-                    <span>{language.t("orchestra.agents.steps")}</span>
+                    <span id="agents-field-steps">{language.t("orchestra.agents.steps")}</span>
                     <input
                       name="steps"
                       type="number"
+                      aria-labelledby="agents-field-steps"
                       placeholder={language.t("orchestra.agents.field.stepsPlaceholder")}
                       value={draft.steps}
                       onInput={(event) => setDraft("steps", event.currentTarget.value)}
@@ -211,8 +274,13 @@ export function AgentDialog(props: {
                   </label>
                 </div>
                 <label class="mx-field">
-                  <span>{language.t("orchestra.agents.field.system")}</span>
-                  <textarea name="system" value={draft.system} onInput={(event) => setDraft("system", event.currentTarget.value)} />
+                  <span id="agents-field-system">{language.t("orchestra.agents.field.system")}</span>
+                  <textarea
+                    name="system"
+                    aria-labelledby="agents-field-system"
+                    value={draft.system}
+                    onInput={(event) => setDraft("system", event.currentTarget.value)}
+                  />
                 </label>
                 <h3 class="mx-section">{language.t("orchestra.agents.toolPermissions")}</h3>
                 <p class="mx-note">{language.t("orchestra.agents.toolPermissionsNote")}</p>
@@ -234,7 +302,7 @@ export function AgentDialog(props: {
                           <option value="inherit" selected={draft.permission[tool] === "inherit"}>
                             {inheritLabel(tool)}
                           </option>
-                          <Show when={draft.permission[tool] === "custom" || typeof state.file?.permission?.[tool] === "object"}>
+                          <Show when={typeof state.file?.permission?.[tool] === "object"}>
                             <option value="custom" selected={draft.permission[tool] === "custom"}>
                               {language.t("orchestra.agents.choice.custom")}
                             </option>
@@ -252,7 +320,7 @@ export function AgentDialog(props: {
                   </For>
                 </div>
               </fieldset>
-              <Show when={props.agent && !state.readOnly}>
+              <Show when={props.agent && !readOnly()}>
                 <p class="mx-note">
                   <button
                     type="button"
@@ -268,13 +336,13 @@ export function AgentDialog(props: {
           </Show>
         </div>
         <footer class="mx-dialog-foot">
-          <button type="button" class="mx-btn" onClick={() => props.onClose()}>
+          <button type="button" class="mx-btn" onClick={finish}>
             {language.t("orchestra.agents.cancel")}
           </button>
           <button
             class="mx-btn primary"
             type="submit"
-            disabled={state.saving || state.readOnly || state.phase === "loading"}
+            disabled={state.saving || readOnly() || state.phase === "loading"}
           >
             {language.t(state.phase === "confirm" ? "orchestra.agents.confirm" : "orchestra.agents.save")}
           </button>
