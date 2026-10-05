@@ -14,6 +14,10 @@ export const AddPayload = Schema.Struct({
 })
 
 export const StatusMap = Schema.Record(Schema.String, MCP.Status)
+export const ToolNames = Schema.Record(Schema.String, Schema.Array(Schema.String))
+export const ConfigPayload = Schema.Struct({
+  config: ConfigMCPV1.Info,
+})
 export const AuthStartResponse = Schema.Struct({
   authorizationUrl: Schema.String,
   oauthState: Schema.String,
@@ -31,6 +35,8 @@ export class UnsupportedOAuthError extends Schema.ErrorClass<UnsupportedOAuthErr
 
 export const McpPaths = {
   status: "/mcp",
+  tools: "/mcp/tools",
+  config: "/mcp/:name/config",
   auth: "/mcp/:name/auth",
   authCallback: "/mcp/:name/auth/callback",
   authAuthenticate: "/mcp/:name/auth/authenticate",
@@ -62,6 +68,42 @@ export const McpApi = HttpApi.make("mcp")
             identifier: "mcp.add",
             summary: "Add MCP server",
             description: "Dynamically add a new Model Context Protocol (MCP) server to the system.",
+          }),
+        ),
+        HttpApiEndpoint.get("tools", McpPaths.tools, {
+          query: WorkspaceRoutingQuery,
+          success: described(ToolNames, "Tool names reported by each connected MCP server"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "mcp.tools",
+            summary: "List MCP tools",
+            description: "List the tool names each connected Model Context Protocol (MCP) server reports.",
+          }),
+        ),
+        HttpApiEndpoint.put("configUpdate", McpPaths.config, {
+          params: { name: Schema.String },
+          query: WorkspaceRoutingQuery,
+          payload: ConfigPayload,
+          success: described(Schema.Boolean, "MCP server saved to the project config"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "mcp.config.update",
+            summary: "Save MCP server config",
+            description:
+              "Create or update an MCP server in the project's own config file. Fields that are not sent keep their existing values.",
+          }),
+        ),
+        HttpApiEndpoint.delete("configRemove", McpPaths.config, {
+          params: { name: Schema.String },
+          query: WorkspaceRoutingQuery,
+          success: described(Schema.Boolean, "MCP server removed from the project config"),
+          error: McpServerNotFoundError,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "mcp.config.remove",
+            summary: "Remove MCP server config",
+            description: "Remove an MCP server from the project's own config files.",
           }),
         ),
         HttpApiEndpoint.post("authStart", McpPaths.auth, {
