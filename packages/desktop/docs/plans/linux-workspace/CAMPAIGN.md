@@ -127,6 +127,23 @@ abriu `code.visualstudio.com` no navegador); com ela aberta, todo par de chamada
   navegador mantêm a concorrência.
 A quarta rodada não rodou: o app dev parou em `app.whenReady()` às 03:00 com o Mac ocioso.
 
+Rodadas 4 e 5 (2026-10-05 manhã, MiMo, Linux aberto e VS Code rodando antes da tarefa, Mac leve):
+nenhuma concluiu (encerradas após ~30 e ~15 min, `settings.json` intacto no fim). Achados:
+- Regressão minha: a segunda passada em árvore inteira fazia o `target` agir com ref de página já
+  aposentada (cada página é uma observação nova) → `stale-ref` em todo `target`. Corrigida em
+  `544763696c` (ref viva lida parando na página do vencedor; host de teste agora aposenta páginas).
+- `dock_find` só com `role` quebrava (`trim` de indefinido); `action` com o `actionID` era recusado.
+  Corrigidos em `544763696c`.
+- A dica de modo `keyboard` funcionou (o modelo a leu e seguiu).
+- O que mais tira o modelo do caminho: não há atalho de teclado nativo (`dock_keyboard` recusa no
+  Linux) nem screenshot nativo; ele cai no `xdotool`, que não entrega teclas ao VS Code (sem
+  gerenciador de janelas), e numa rodada mudou outra configuração às cegas
+  (`trimTrailingWhitespaceInRegexAndStrings`).
+- Processos criados por `linux_exec` mudam o censo do workspace e o `dock_read` seguinte falha com
+  `wrong-scope: membership changed before confirmation`.
+- O modelo confunde `/tmp` do container com o do host e pede permissão para ler o do Mac; a recusa
+  encerra o turno.
+
 ## Pendências (próximas fatias)
 
 0. Ergonomia (pela regra do dono), em ordem de custo para o modelo:
