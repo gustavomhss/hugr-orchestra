@@ -10,6 +10,7 @@ import { FSUtil } from "./fs-util"
 import { PermissionV2 } from "./permission"
 import { AbsolutePath } from "./schema"
 import { SkillDiscovery } from "./skill/discovery"
+import { SkillFile } from "./skill/file"
 import { State } from "./state"
 
 export const DirectorySource = Skill.DirectorySource
@@ -49,6 +50,9 @@ export type Draft = {
 export interface Interface extends State.Transformable<Draft> {
   readonly sources: () => Effect.Effect<Source[]>
   readonly list: () => Effect.Effect<Info[]>
+  /** Writes a skill file for the catalog (see SkillFile.save) and reloads cached skill files. */
+  readonly save: (directory: string, input: SkillFile.SaveInput) => Effect.Effect<Info, SkillFile.WriteError>
+  readonly remove: (location: string) => Effect.Effect<void, SkillFile.WriteError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Skill") {}
@@ -118,6 +122,21 @@ const layer = Layer.effect(
       return Array.from(skills.values())
     })
 
+    const save = Effect.fn("SkillV2.save")(function* (directory: string, input: SkillFile.SaveInput) {
+      const saved = yield* SkillFile.save({ directory, registered: yield* list(), skill: input }).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.ensuring(Effect.sync(() => cache.clear())),
+      )
+      return Info.make({ ...saved, location: AbsolutePath.make(saved.location) })
+    })
+
+    const remove = Effect.fn("SkillV2.remove")(function* (location: string) {
+      yield* SkillFile.remove({ registered: yield* list(), location }).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.ensuring(Effect.sync(() => cache.clear())),
+      )
+    })
+
     return Service.of({
       transform: state.transform,
       reload: state.reload,
@@ -125,6 +144,8 @@ const layer = Layer.effect(
         return state.get().sources
       }),
       list,
+      save,
+      remove,
     })
   }),
 )

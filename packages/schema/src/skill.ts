@@ -25,6 +25,15 @@ export const Info = Schema.Struct({
   content: Schema.String,
 }).annotate({ identifier: "SkillV2.Info" })
 
+export interface SaveInput extends Schema.Schema.Type<typeof SaveInput> {}
+export const SaveInput = Schema.Struct({
+  name: Schema.String,
+  description: Schema.String,
+  content: Schema.String,
+  /** Location of the registered skill to rewrite. Omit to create a project skill. */
+  path: AbsolutePath.pipe(optional),
+}).annotate({ identifier: "SkillV2.SaveInput" })
+
 export interface EmbeddedSource extends Schema.Schema.Type<typeof EmbeddedSource> {}
 export const EmbeddedSource = Schema.Struct({
   type: Schema.Literal("embedded"),

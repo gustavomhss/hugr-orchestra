@@ -85,6 +85,10 @@ import type {
   CommandsListOutput,
   SkillsListInput,
   SkillsListOutput,
+  SkillsSaveInput,
+  SkillsSaveOutput,
+  SkillsRemoveInput,
+  SkillsRemoveOutput,
   EventsSubscribeOutput,
   PtysListInput,
   PtysListOutput,
@@ -803,6 +807,36 @@ export function make(options: ClientOptions) {
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      save: (input: SkillsSaveInput, requestOptions?: RequestOptions) =>
+        request<SkillsSaveOutput>(
+          {
+            method: "PUT",
+            path: `/api/skill`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              description: input["description"],
+              content: input["content"],
+              path: input["path"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: SkillsRemoveInput, requestOptions?: RequestOptions) =>
+        request<SkillsRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/skill`,
+            query: { location: input["location"], path: input["path"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

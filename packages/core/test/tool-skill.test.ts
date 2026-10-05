@@ -63,6 +63,8 @@ describe("SkillTool", () => {
               reload: () => Effect.die("unused"),
               sources: () => Effect.die("unused"),
               list: () => Effect.succeed(current),
+              save: () => Effect.die("unused"),
+              remove: () => Effect.die("unused"),
             }),
           )
           const skillToolLayer = AppNodeBuilder.build(

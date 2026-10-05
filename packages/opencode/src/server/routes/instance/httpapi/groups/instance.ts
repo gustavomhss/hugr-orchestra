@@ -40,6 +40,30 @@ export class ApiVcsApplyError extends Schema.ErrorClass<ApiVcsApplyError>("VcsAp
   { httpApiStatus: 400 },
 ) {}
 
+export const SkillSaveInput = Schema.Struct({
+  name: Schema.String,
+  description: Schema.String,
+  content: Schema.String,
+  /** Location of the registered skill to rewrite. Omit to create a project skill. */
+  path: Schema.optional(Schema.String),
+}).annotate({ identifier: "SkillSaveInput" })
+
+export const SkillRemoveQuery = Schema.Struct({
+  ...WorkspaceRoutingQueryFields,
+  path: Schema.String,
+})
+
+export class ApiSkillWriteError extends Schema.ErrorClass<ApiSkillWriteError>("SkillWriteError")(
+  {
+    name: Schema.Literal("SkillWriteError"),
+    data: Schema.Struct({
+      message: Schema.String,
+      reason: Schema.Literals(["invalid", "missing", "conflict"]),
+    }),
+  },
+  { httpApiStatus: 400 },
+) {}
+
 export const InstancePaths = {
   dispose: "/instance/dispose",
   path: "/path",
@@ -164,6 +188,30 @@ export const InstanceApi = HttpApi.make("instance")
             identifier: "app.skills",
             summary: "List skills",
             description: "Get a list of all available skills in the OpenCode system.",
+          }),
+        ),
+        HttpApiEndpoint.put("skillSave", InstancePaths.skill, {
+          query: WorkspaceRoutingQuery,
+          payload: SkillSaveInput,
+          success: described(Skill.Info, "Saved skill"),
+          error: ApiSkillWriteError,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "app.skillSave",
+            summary: "Save skill",
+            description:
+              "Create a project skill under .opencode/skills, or rewrite the file of a registered skill given its path.",
+          }),
+        ),
+        HttpApiEndpoint.delete("skillRemove", InstancePaths.skill, {
+          query: SkillRemoveQuery,
+          success: described(Schema.Boolean, "Skill removed"),
+          error: ApiSkillWriteError,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "app.skillRemove",
+            summary: "Remove skill",
+            description: "Delete the file of a registered skill given its path.",
           }),
         ),
         HttpApiEndpoint.get("lsp", InstancePaths.lsp, {

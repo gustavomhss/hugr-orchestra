@@ -6,10 +6,11 @@ import { Global } from "@opencode-ai/core/global"
 import { LSP } from "@/lsp/lsp"
 import { Vcs } from "@/project/vcs"
 import { Skill } from "@/skill"
+import { SkillFile } from "@opencode-ai/core/skill/file"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ApiVcsApplyError } from "../groups/instance"
+import { ApiSkillWriteError, ApiVcsApplyError, SkillRemoveQuery, SkillSaveInput } from "../groups/instance"
 import { markInstanceForDisposal } from "../lifecycle"
 
 export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance", (handlers) =>
@@ -85,6 +86,22 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       return yield* skill.all()
     })
 
+    const saveSkill = Effect.fn("InstanceHttpApi.skillSave")(function* (ctx: {
+      payload: typeof SkillSaveInput.Type
+    }) {
+      const input = ctx.payload
+      return yield* skill
+        .save({ name: input.name, description: input.description, content: input.content, location: input.path })
+        .pipe(Effect.mapError(skillWriteError))
+    })
+
+    const removeSkill = Effect.fn("InstanceHttpApi.skillRemove")(function* (ctx: {
+      query: typeof SkillRemoveQuery.Type
+    }) {
+      yield* skill.remove(ctx.query.path).pipe(Effect.mapError(skillWriteError))
+      return true
+    })
+
     const getLsp = Effect.fn("InstanceHttpApi.lsp")(function* () {
       return yield* lsp.status()
     })
@@ -104,7 +121,16 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       .handle("command", getCommand)
       .handle("agent", getAgent)
       .handle("skill", getSkill)
+      .handle("skillSave", saveSkill)
+      .handle("skillRemove", removeSkill)
       .handle("lsp", getLsp)
       .handle("formatter", getFormatter)
   }),
 )
+
+function skillWriteError(error: SkillFile.WriteError) {
+  return new ApiSkillWriteError({
+    name: "SkillWriteError",
+    data: { message: error.message, reason: error.reason },
+  })
+}
