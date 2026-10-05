@@ -1,6 +1,6 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { AppProcess } from "@opencode-ai/core/process"
-import { Duration, Effect, Layer, Context, Stream } from "effect"
+import { Duration, Effect, Layer, Context, Option, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 
 const cfg = [
@@ -62,13 +62,17 @@ export type Log = {
   readonly truncated: boolean
 }
 
-export interface LogOptions {
-  readonly since: number
-  readonly until: number
-  readonly merges: boolean
+export interface LogBounds {
   readonly limit: number
   readonly maxOutputBytes: number
   readonly timeout: Duration.Input
+}
+
+export interface LogOptions extends LogBounds {
+  readonly since: number
+  readonly until: number
+  readonly merges: boolean
+  readonly numstat: boolean
 }
 
 export type Patch = {
@@ -141,24 +145,54 @@ const numstat = (item: string) => {
 
 // `git log -z` emits each commit header as one NUL-terminated token and each numstat
 // row as another, so tokens that open with the record separator start a new commit.
-const commits = (text: string) =>
-  nuls(text).reduce<Commit[]>((list, token) => {
-    const item = token.startsWith("\n") ? token.slice(1) : token
-    if (item.startsWith("\x1e")) {
-      const fields = item.slice(1).split("\x1f")
-      list.push({
-        hash: fields[0] ?? "",
-        time: Number(fields[1]) * 1000,
-        email: fields[2] ?? "",
-        subject: fields.slice(3).join("\x1f"),
-        files: [],
-      })
-      return list
-    }
-    const stat = numstat(item)
-    if (stat) list.at(-1)?.files.push(stat)
-    return list
-  }, [])
+const parseLogToken = (list: Commit[], token: string) => {
+  const item = token.startsWith("\n") ? token.slice(1) : token
+  if (item.startsWith("\x1e")) {
+    const fields = item.slice(1).split("\x1f")
+    list.push({
+      hash: fields[0] ?? "",
+      time: Number(fields[1]) * 1000,
+      email: fields[2] ?? "",
+      subject: fields.slice(3).join("\x1f"),
+      files: [],
+    })
+    return
+  }
+  const stat = numstat(item)
+  if (stat) list.at(-1)?.files.push(stat)
+}
+
+// Streams `git log -z` output so a scan cut short by its time or byte budget still
+// returns every commit it received in full instead of nothing.
+export const collectLog = Effect.fnUntraced(function* (stdout: Stream.Stream<Uint8Array, unknown>, bounds: LogBounds) {
+  const decoder = new TextDecoder()
+  const state = { commits: [] as Commit[], pending: "", bytes: 0 }
+  const feed = (text: string) => {
+    const tokens = (state.pending + text).split("\0")
+    state.pending = tokens.pop() ?? ""
+    tokens.forEach((token) => parseLogToken(state.commits, token))
+  }
+  const finished = yield* stdout.pipe(
+    Stream.takeWhile(() => state.bytes <= bounds.maxOutputBytes),
+    Stream.runForEach((chunk) =>
+      Effect.sync(() => {
+        state.bytes += chunk.length
+        feed(decoder.decode(chunk, { stream: true }))
+      }),
+    ),
+    Effect.timeoutOption(bounds.timeout),
+    Effect.map(Option.isSome),
+    Effect.catch(() => Effect.succeed(false)),
+  )
+  const complete = finished && state.bytes <= bounds.maxOutputBytes
+  if (complete) feed(decoder.decode() + "\0")
+  // An interrupted scan may have stopped inside the last commit's numstat rows.
+  const received = complete ? state.commits : state.commits.slice(0, -1)
+  return {
+    commits: received.slice(0, bounds.limit),
+    truncated: !complete || received.length > bounds.limit,
+  } satisfies Log
+})
 
 const kind = (code: string): Kind => {
   if (code === "??") return "added"
@@ -380,32 +414,38 @@ const layer = Layer.effect(
     })
 
     const log = Effect.fn("Git.log")(function* (cwd: string, options: LogOptions) {
-      const result = yield* run(
-        [
-          "log",
-          options.merges ? "--merges" : "--no-merges",
-          ...(options.merges ? [] : ["--numstat", "--no-renames", "--no-ext-diff"]),
-          "--no-color",
-          "--no-show-signature",
-          "-z",
-          `--max-count=${options.limit + 1}`,
-          `--since=${epoch(options.since)}`,
-          `--until=${epoch(options.until)}`,
-          "--format=%x1e%h%x1f%at%x1f%ae%x1f%s",
-          "HEAD",
-          "--",
-        ],
-        { cwd, maxOutputBytes: options.maxOutputBytes, timeout: options.timeout },
+      const args = [
+        "log",
+        options.merges ? "--merges" : "--no-merges",
+        ...(options.numstat ? ["--numstat", "--no-renames", "--no-ext-diff"] : []),
+        "--no-color",
+        "--no-show-signature",
+        "-z",
+        `--max-count=${options.limit + 1}`,
+        `--since=${epoch(options.since)}`,
+        `--until=${epoch(options.until)}`,
+        "--format=%x1e%h%x1f%at%x1f%ae%x1f%s",
+        "HEAD",
+        "--",
+      ]
+      return yield* Effect.gen(function* () {
+        const handle = yield* appProcess.spawn(
+          ChildProcess.make("git", [...cfg, ...args], {
+            cwd,
+            extendEnv: true,
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "ignore",
+          }),
+        )
+        const result = yield* collectLog(handle.stdout, options)
+        if (result.truncated) return result
+        // A scan that git itself failed is reported as incomplete rather than as an empty window.
+        return (yield* handle.exitCode) === 0 ? result : { commits: result.commits, truncated: true }
+      }).pipe(
+        Effect.scoped,
+        Effect.catch(() => Effect.succeed({ commits: [], truncated: true } satisfies Log)),
       )
-      // A failed or timed-out scan is reported as incomplete rather than as an empty window.
-      if (result.exitCode !== 0) return { commits: [], truncated: true } satisfies Log
-      const list = commits(result.text())
-      // Output past the byte cap ends mid-record, so the last parsed commit may be missing rows.
-      const complete = result.truncated ? list.slice(0, -1) : list
-      return {
-        commits: complete.slice(0, options.limit),
-        truncated: result.truncated || complete.length > options.limit,
-      } satisfies Log
     })
 
     const upstream = Effect.fn("Git.upstream")(function* (cwd: string, branch: string) {

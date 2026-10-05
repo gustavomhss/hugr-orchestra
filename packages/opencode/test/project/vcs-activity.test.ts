@@ -105,6 +105,7 @@ describe("Vcs activity", () => {
         expect(result.recent.map((item) => item.time)).toEqual([at(12), at(11), at(10)])
         expect(result.recent.every((item) => /^[0-9a-f]{4,}$/.test(item.hash))).toBe(true)
         expect(result.truncated).toBe(false)
+        expect(result.partial).toEqual({ commits: false, lines: false })
       }),
     { git: true },
   )
@@ -206,13 +207,13 @@ describe("Vcs activity", () => {
   )
 
   it.instance(
-    "caps the scan at 5000 commits and flags truncation",
+    "caps the scan at 20000 commits and flags truncation",
     () =>
       Effect.gen(function* () {
         const test = yield* TestInstance
         const ref = yield* git(test.directory, ["symbolic-ref", "HEAD"])
         const head = yield* git(test.directory, ["rev-parse", "HEAD"])
-        const stream = Array.from({ length: 5001 }, (_, index) => {
+        const stream = Array.from({ length: 20_001 }, (_, index) => {
           const seconds = Math.floor(at(15) / 1000) + index
           const message = `bulk ${index}`
           return [
@@ -236,8 +237,9 @@ describe("Vcs activity", () => {
         const result = yield* activity(january)
 
         expect(result.truncated).toBe(true)
-        expect(result.totals.commits).toBe(5000)
-        expect(result.recent[0]?.subject).toBe("bulk 5000")
+        expect(result.partial.commits).toBe(true)
+        expect(result.totals.commits).toBe(20_000)
+        expect(result.recent[0]?.subject).toBe("bulk 20000")
       }),
     { git: true },
     30_000,
@@ -258,6 +260,7 @@ describe("Vcs activity", () => {
         ahead: null,
         behind: null,
         truncated: false,
+        partial: { commits: false, lines: false },
       })
     }),
   )

@@ -11,10 +11,13 @@ import { VcsEvent } from "@opencode-ai/schema/vcs-event"
 const PATCH_CONTEXT_LINES = 2_147_483_647
 const MAX_PATCH_BYTES = 10_000_000
 const MAX_TOTAL_PATCH_BYTES = 10_000_000
-const ACTIVITY_MAX_COMMITS = 5_000
+const ACTIVITY_MAX_COMMITS = 20_000
 const ACTIVITY_MAX_WINDOW_MS = 366 * 24 * 60 * 60 * 1000
 const ACTIVITY_MAX_OUTPUT_BYTES = 10_000_000
-const ACTIVITY_TIMEOUT = Duration.seconds(15)
+const ACTIVITY_TIMEOUT = Duration.seconds(5)
+// Line stats diff every commit, which is orders of magnitude slower than walking history,
+// so they get a short budget and may only cover the newest commits of the window.
+const ACTIVITY_LINES_BUDGET = Duration.seconds(1)
 type DiffOptions = {
   readonly context?: number
 }
@@ -320,7 +323,11 @@ export const Activity = Schema.Struct({
   recent: Schema.Array(ActivityCommit),
   ahead: Schema.NullOr(Schema.Finite),
   behind: Schema.NullOr(Schema.Finite),
-  truncated: Schema.Boolean.annotate({ description: "True when a commit, output or time bound cut the scan short" }),
+  truncated: Schema.Boolean.annotate({ description: "True when a commit, output or time bound cut any scan short" }),
+  partial: Schema.Struct({
+    commits: Schema.Boolean,
+    lines: Schema.Boolean,
+  }).annotate({ identifier: "VcsActivityPartial" }),
 }).annotate({ identifier: "VcsActivity" })
 export type Activity = Schema.Schema.Type<typeof Activity>
 
@@ -469,30 +476,33 @@ const layer: Layer.Layer<Service, never, Git.Service | EventV2Bridge.Service> = 
       activity: Effect.fn("Vcs.activity")(function* (input: ActivityInput) {
         const value = yield* InstanceState.get(state)
         const ctx = yield* InstanceState.context
-        const since = Math.max(input.since, input.until - ACTIVITY_MAX_WINDOW_MS)
-        const empty = summarize([], [], { since, until: input.until })
+        const window = { since: Math.max(input.since, input.until - ACTIVITY_MAX_WINDOW_MS), until: input.until }
+        const empty = summarize({ commits: [], merges: [], lines: [] }, window)
         if (ctx.project.vcs !== "git") return { ...empty, repository: false }
         if (!(yield* git.hasHead(ctx.directory))) return empty
         const scan = {
-          since,
-          until: input.until,
+          ...window,
+          merges: false,
+          numstat: false,
           limit: ACTIVITY_MAX_COMMITS,
           maxOutputBytes: ACTIVITY_MAX_OUTPUT_BYTES,
           timeout: ACTIVITY_TIMEOUT,
         }
-        const [commits, merges, divergence] = yield* Effect.all(
+        const [commits, merges, lines, divergence] = yield* Effect.all(
           [
-            git.log(ctx.directory, { ...scan, merges: false }),
+            git.log(ctx.directory, scan),
             git.log(ctx.directory, { ...scan, merges: true }),
+            git.log(ctx.directory, { ...scan, numstat: true, timeout: ACTIVITY_LINES_BUDGET }),
             upstreamDivergence(git, ctx.directory, value.root),
           ],
-          { concurrency: 3 },
+          { concurrency: 4 },
         )
         return {
-          ...summarize(commits.commits, merges.commits, { since, until: input.until }),
+          ...summarize({ commits: commits.commits, merges: merges.commits, lines: lines.commits }, window),
           ahead: divergence?.ahead ?? null,
           behind: divergence?.behind ?? null,
-          truncated: commits.truncated || merges.truncated,
+          truncated: commits.truncated || merges.truncated || lines.truncated,
+          partial: { commits: commits.truncated || merges.truncated, lines: lines.truncated },
         }
       }),
     })
@@ -500,9 +510,14 @@ const layer: Layer.Layer<Service, never, Git.Service | EventV2Bridge.Service> = 
 )
 
 // git bounds the walk by committer time; author time decides the window and day buckets.
-function summarize(commits: Git.Commit[], merges: Git.Commit[], window: { since: number; until: number }) {
+// Commit, author and merge counts come from the cheap scans; line and path figures come
+// from the budgeted numstat scan, which may cover fewer commits.
+function summarize(
+  scans: { commits: Git.Commit[]; merges: Git.Commit[]; lines: Git.Commit[] },
+  window: { since: number; until: number },
+) {
   const inWindow = (commit: Git.Commit) => commit.time >= window.since && commit.time <= window.until
-  const scanned = commits.filter(inWindow)
+  const scanned = scans.commits.filter(inWindow)
   const days = new Map<string, { day: string; commits: number; merges: number; additions: number; deletions: number }>()
   const bucket = (time: number) => {
     const date = new Date(time)
@@ -513,17 +528,19 @@ function summarize(commits: Git.Commit[], merges: Git.Commit[], window: { since:
     days.set(day, entry)
     return entry
   }
-  const paths = new Map<string, number>()
   scanned.forEach((commit) => {
+    bucket(commit.time).commits += 1
+  })
+  const paths = new Map<string, number>()
+  scans.lines.filter(inWindow).forEach((commit) => {
     const entry = bucket(commit.time)
-    entry.commits += 1
     commit.files.forEach((file) => {
       entry.additions += file.additions
       entry.deletions += file.deletions
       paths.set(file.file, (paths.get(file.file) ?? 0) + file.additions + file.deletions)
     })
   })
-  const merged = merges.filter(inWindow)
+  const merged = scans.merges.filter(inWindow)
   merged.forEach((commit) => {
     bucket(commit.time).merges += 1
   })
@@ -556,6 +573,7 @@ function summarize(commits: Git.Commit[], merges: Git.Commit[], window: { since:
     ahead: null,
     behind: null,
     truncated: false,
+    partial: { commits: false, lines: false },
   } satisfies Activity
 }
 
