@@ -1,7 +1,10 @@
 import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
-import { AppDockPlugin, createAppDockHooks } from "./app-dock"
+import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
+import { Permission } from "@/permission"
+
+type PermissionConfig = Parameters<typeof Permission.fromConfig>[0]
 
 const context = { ask: async () => {}, abort: new AbortController().signal } as unknown as ToolContext
 const input = {} as PluginInput
@@ -45,6 +48,16 @@ function fakePort(): { port: FakePort; sent: unknown[]; deliver: (payload: unkno
 }
 
 const toolNames = [
+  "ui_look",
+  "ui_enter",
+  "ui_up",
+  "ui_list",
+  "ui_read",
+  "ui_find",
+  "ui_act",
+  "ui_type",
+  "ui_keys",
+  "ui_wait",
   "dock_list",
   "dock_activate",
   "dock_read",
@@ -873,4 +886,65 @@ test("dock_keyboard sends native key combinations to a ref, a target or the one 
   expect(JSON.parse(String(await idle.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
     .toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
   expect(idle.calls.every((call) => call.op === "read")).toBe(true)
+})
+
+test("ui_* tools always address the Linux workspace and expose only native arguments", async () => {
+  const dock = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } } : page([control("n:open", "Open")]))
+  const scoped = { ...context, agent: "linux" } as ToolContext
+  await dock.hooks.tool.ui_find.execute({ name: "open" }, scoped)
+  await dock.hooks.tool.ui_act.execute({ target: { name: "open" } }, scoped)
+  await dock.hooks.tool.ui_keys.execute({ keys: "ctrl+comma", ref: "n:open" }, scoped)
+  expect(dock.calls.length).toBeGreaterThan(3)
+  expect(dock.calls.every((call) => call.args.world === "linux")).toBe(true)
+  expect(Object.keys(dock.hooks.tool.ui_read.args).sort()).toEqual(["budget", "cursor", "maxText", "rootRef", "textOffset"])
+  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target"])
+})
+
+test("dock_* called by an agent addresses browser tabs; without an agent the legacy envelope is unchanged", async () => {
+  const dock = host(() => ({ ok: true, value: [] }))
+  await dock.hooks.tool.dock_list.execute({}, { ...context, agent: "build" } as ToolContext)
+  await dock.hooks.tool.dock_list.execute({}, context)
+  expect(dock.calls.map((call) => call.args)).toEqual([{ world: "browser" }, {}])
+})
+
+test("the Linux workspace is its own scope: host agents lose its tools, the linux agent holds only them", () => {
+  const config: { permission?: unknown; agent?: Record<string, Record<string, unknown>> } = {
+    permission: { "*": "allow", dock: "ask" }, agent: { linux: { model: "opencode/mimo" } } }
+  scopeLinuxWorkspace(config)
+  const tools = ["bash", "read", "edit", "webfetch", "task", "todowrite", "linux_exec", "linux_read", "ui_find", "ui_act", "dock_read", "dock_find"]
+  const global = Permission.fromConfig(config.permission as PermissionConfig)
+  const linux = Permission.merge(global, Permission.fromConfig(config.agent!.linux!.permission as PermissionConfig))
+  expect([...Permission.disabled(tools, global)].sort()).toEqual(["linux_exec", "linux_read", "ui_act", "ui_find"])
+  expect(tools.filter((tool) => !Permission.disabled(tools, linux).has(tool)).sort())
+    .toEqual(["linux_exec", "linux_read", "todowrite", "ui_act", "ui_find"])
+  // Execution asks under the plugin permission names; the user's own dock rule still applies inside the scope.
+  expect(Permission.evaluate("linux", "exec", linux).action).toBe("allow")
+  expect(Permission.evaluate("dock", "action", linux).action).toBe("ask")
+  expect(config.agent!.linux).toMatchObject({ mode: "subagent", model: "opencode/mimo" })
+  const plain: { permission?: unknown } = { permission: "ask" }
+  scopeLinuxWorkspace(plain)
+  expect(plain.permission).toEqual({ "*": "ask", "linux_*": "deny", "ui_*": "deny" })
+})
+
+test("ui_look maps the workspace, ui_enter zooms into a numbered region and ui_up leaves it, per session", async () => {
+  const shown = [8, 24, 25, 30]
+  const items = [
+    { ref: "n:f", parentRef: null, role: 23, roleName: "frame", name: "Editor", states: [1, ...shown], actions: [] },
+    { ref: "n:tb", parentRef: "n:f", role: 63, roleName: "atspi-role-63", name: "Manage", states: shown, actions: [] },
+    control("n:gear", "Manage", { parentRef: "n:tb", states: shown }),
+    control("n:open", "Open Folder...", { parentRef: "n:f", states: shown }),
+  ]
+  const dock = host(() => page(items))
+  const scoped = { ...context, agent: "linux", sessionID: "ses_a" } as ToolContext
+  const look = String(await dock.hooks.tool.ui_look.execute({}, scoped))
+  expect(look).toContain('#1 tool bar "Manage" — 1 controls: Manage')
+  expect(look).toContain('push button "Open Folder..."')
+  const inside = String(await dock.hooks.tool.ui_enter.execute({ region: 1 }, scoped))
+  expect(inside).toContain('scope: tool bar "Manage" (ui_up to leave)')
+  expect(inside).not.toContain("Open Folder")
+  expect(String(await dock.hooks.tool.ui_list.execute({ kind: "buttons" }, scoped))).toBe('1 buttons in tool bar "Manage":\n  push button "Manage"')
+  // Another session keeps its own cursor.
+  expect(String(await dock.hooks.tool.ui_look.execute({}, { ...scoped, sessionID: "ses_b" } as ToolContext))).toContain("Open Folder")
+  expect(String(await dock.hooks.tool.ui_up.execute({}, scoped))).toContain("Open Folder")
+  expect(dock.calls.every((call) => call.op === "read" && call.args.world === "linux")).toBe(true)
 })
