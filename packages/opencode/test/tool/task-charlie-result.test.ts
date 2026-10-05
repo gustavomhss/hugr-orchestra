@@ -8,7 +8,7 @@ import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Deferred, Effect, Exit } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -195,6 +195,59 @@ const dispatch = Effect.fn("TaskCharlieResultTest.dispatch")(function* (
 })
 
 const workResult = (metadata: object) => ("workResult" in metadata ? metadata.workResult : undefined)
+
+// Runs a background Charlie Task whose child durably writes `text` as its final message, and returns the parent's
+// completion notice: the existing background delivery (F4 cl.35) and the only place the final result can still land.
+const deliverBackground = Effect.fn("TaskCharlieResultTest.deliverBackground")(function* (
+  text: string,
+  error?: NonNullable<SessionV1.Assistant["error"]>,
+) {
+  const sessions = yield* Session.Service
+  const jobs = yield* BackgroundJob.Service
+  const notice = yield* Deferred.make<Parameters<TaskPromptOps["prompt"]>[0]>()
+  const written: string[] = []
+  const result = yield* dispatch(text, {
+    background: true,
+    prompt: (input) =>
+      input.agent !== "charlie"
+        ? Deferred.succeed(notice, input).pipe(Effect.andThen(Effect.never))
+        : Effect.gen(function* () {
+            const info = yield* sessions.updateMessage({
+              id: MessageID.ascending(),
+              role: "assistant",
+              parentID: MessageID.ascending(),
+              sessionID: input.sessionID,
+              mode: "charlie",
+              agent: "charlie",
+              cost: 0,
+              path: { cwd: "/tmp", root: "/tmp" },
+              tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+              modelID: ref.modelID,
+              providerID: ref.providerID,
+              time: { created: Date.now() },
+              finish: "stop",
+              ...(error ? { error } : {}),
+            })
+            written.push(info.id)
+            const part = yield* sessions.updatePart({
+              id: PartID.ascending(),
+              messageID: info.id,
+              sessionID: input.sessionID,
+              type: "text",
+              text,
+            })
+            return { info, parts: [part] }
+          }),
+  })
+  if (!Exit.isSuccess(result.exit)) throw new Error("expected background start")
+  yield* jobs.wait({ id: result.exit.value.metadata.sessionId })
+  const delivered = (yield* Deferred.await(notice)).parts[0]
+  return {
+    started: result.exit.value.metadata,
+    childMessageID: written[0],
+    workResult: delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
+  }
+})
 
 const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [] }
 
@@ -390,6 +443,35 @@ describe("tool.task charlie-result", () => {
       })
       expect(result.streamed.at(-1)?.workResult).toMatchObject({
         card: { parsed: true },
+        terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") },
+      })
+    }),
+  )
+
+  background.instance("a finished background child delivers its final work result to the parent", () =>
+    Effect.gen(function* () {
+      const result = yield* deliverBackground(final(card))
+      // The Task part completed at start and keeps `running` (F4 amendment); the notice carries the final result.
+      expect(workResult(result.started)).toMatchObject({ terminal: { reason: "running" } })
+      expect(result.workResult).toEqual({
+        schema: "charlie-work-result-v1",
+        card: { parsed: true, messageID: result.childMessageID },
+        ...card,
+        terminal: { reason: "ended" },
+      })
+    }),
+  )
+
+  background.instance("a failed background child delivers a failed work result with the host reason", () =>
+    Effect.gen(function* () {
+      const result = yield* deliverBackground(
+        final(card),
+        new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(),
+      )
+      expect(result.workResult).toMatchObject({
+        card: { parsed: true, messageID: result.childMessageID },
+        outcome: "done",
+        changes: card.changes,
         terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") },
       })
     }),

@@ -631,6 +631,20 @@ export const TaskTool = Tool.define(
         text: string,
       ) {
         const currentParent = yield* sessions.get(ctx.sessionID)
+        // F4 cl.6/35: the Task part already completed with terminal `running`, so the completion notice carries the final
+        // work result, read from the child's durable last assistant message (a resumed job may have run several turns).
+        const last =
+          nextID === "charlie"
+            ? (yield* MessageV2.stream(nextSession.id)).findLast((message) => message.info.role === "assistant")
+            : undefined
+        const workResult =
+          nextID !== "charlie"
+            ? undefined
+            : state === "error"
+              ? CharlieResult.hostEnded({ message: last, reason: "failed", detail: text })
+              : last
+                ? CharlieResult.assemble(last)
+                : CharlieResult.hostEnded({ reason: "interrupted", detail: "No completed child message" })
         yield* ops
           .prompt({
             sessionID: ctx.sessionID,
@@ -640,6 +654,7 @@ export const TaskTool = Tool.define(
               {
                 type: "text",
                 synthetic: true,
+                ...(workResult ? { metadata: { workResult } } : {}),
                 text: renderOutput({
                   sessionID: nextSession.id,
                   state,
