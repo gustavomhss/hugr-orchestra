@@ -2,7 +2,6 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 
 const directory = "C:/OpenCode/ReviewStatePersistence"
 const projectID = "proj_review_state_persistence"
@@ -67,7 +66,6 @@ async function switchSession(page: Page, title: string) {
 }
 
 async function setup(page: Page) {
-  await page.addInitScript(railDefaulted)
   await mockOpenCodeServer(page, {
     protocol: "v1",
     directory,

@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 import { setupTimeline } from "../performance/timeline-stability/fixture"
 import { parentID, parentTitle, railTab, server, setupCockpit } from "./session-cockpit.fixture"
 
@@ -59,23 +58,29 @@ test("Create PR previews an editable proposal of the listed changes and download
   await openParent(page)
   await reviewButton(page).click()
   await expect(railTab(page, "review").locator('[data-slot="session-side-panel-tab-count"]')).toHaveText("2")
-  await expect(page.locator('[data-slot="orchestra-review-views"] [aria-current="page"]')).toHaveText(
-    "Files Changed 2",
-  )
+  await expect(page.locator('[data-slot="orchestra-review-views"] [aria-current="page"]')).toHaveText("Files Changed 2")
 
   const exported = page.waitForEvent("download")
   await page.getByRole("button", { name: "Export diff", exact: true }).click()
   const diff = await exported
   expect(diff.suggestedFilename()).toBe(`${parentID}.diff`)
   const text = await readFile((await diff.path())!, "utf8")
-  expect(text).toContain(patch("src/approval.ts"))
-  expect(text).toContain(patch("docs/flow.md"))
+  // One unified diff: both patches in order, with no blank line added between them.
+  expect([
+    patch("src/approval.ts") + patch("docs/flow.md"),
+    patch("docs/flow.md") + patch("src/approval.ts"),
+  ]).toContain(text)
 
   const sent: string[] = []
   page.on("request", (request) => {
     const url = new URL(request.url())
-    if (request.method() !== "GET" && url.port === new URL(server).port) sent.push(`${request.method()} ${url.pathname}`)
+    if (request.method() !== "GET" && url.port === new URL(server).port)
+      sent.push(`${request.method()} ${url.pathname}`)
   })
+  // Positive control: the filter sees a non-GET request to the server before it is trusted to see none.
+  await page.evaluate((url) => fetch(`${url}/orchestra-control`, { method: "POST" }).catch(() => undefined), server)
+  await expect.poll(() => sent).toEqual(["POST /orchestra-control"])
+  sent.length = 0
   await page.getByRole("button", { name: "Create PR", exact: true }).click()
   const draft = page.getByRole("dialog", { name: "Create pull request" })
   await expect(draft).toContainText("Preview the proposal. No remote pull request is created.")
@@ -84,8 +89,8 @@ test("Create PR previews an editable proposal of the listed changes and download
   await expect(draft.getByRole("textbox", { name: "Base branch" })).toHaveValue("main")
   const description = draft.getByRole("textbox", { name: "Description" })
   await expect(description).toHaveValue(/^Summary\n- Cockpit parent\n\nFiles\n/)
-  await expect(description).toHaveValue(/^- src\/approval\.ts \(\+48 −32\)$/m)
-  await expect(description).toHaveValue(/^- docs\/flow\.md \(\+18 −4\)$/m)
+  await expect(description).toHaveValue(/^- `src\/approval\.ts` \(\+48 −32\)$/m)
+  await expect(description).toHaveValue(/^- `docs\/flow\.md` \(\+18 −4\)$/m)
 
   await draft.getByRole("textbox", { name: "Title" }).fill("Approval proposal")
   await draft.getByRole("textbox", { name: "Base branch" }).fill("dev")
@@ -102,9 +107,28 @@ test("Create PR previews an editable proposal of the listed changes and download
   expect(proposal.suggestedFilename()).toBe("Approval proposal-pr.md")
   const markdown = await readFile((await proposal.path())!, "utf8")
   expect(markdown).toMatch(/^# Approval proposal\n\n`main` → `dev`\n\nSummary\n- Cockpit parent\n\nFiles\n/)
-  expect(markdown).toContain("- src/approval.ts (+48 −32)\n")
-  expect(markdown).toContain("- docs/flow.md (+18 −4)\n")
+  expect(markdown).toContain("- `src/approval.ts` (+48 −32)\n")
+  expect(markdown).toContain("- `docs/flow.md` (+18 −4)\n")
   expect(sent).toEqual([])
+})
+
+test("Files Changed and All files lead to each other", async ({ page }) => {
+  await setupCockpit(page, { bridge: false, empty: true })
+  await openParent(page)
+  await reviewButton(page).click()
+  const views = (tab: "review" | "files") =>
+    page.locator(`[data-session-tab="${tab}"] [data-slot="orchestra-review-views"]`)
+  await expect(views("review").getByRole("button", { name: "Files Changed 0" })).toHaveAttribute("aria-current", "page")
+  await views("review").getByRole("button", { name: "All files", exact: true }).click()
+  await expect(page.locator('[data-session-tab="files"]')).toBeVisible()
+  await expect(views("files").getByRole("button", { name: "All files", exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  )
+  await views("files").getByRole("button", { name: "Files Changed 0" }).click()
+  await expect(railTab(page, "review")).toHaveAttribute("aria-selected", "true")
+  await expect(views("review").getByRole("button", { name: "Files Changed 0" })).toHaveAttribute("aria-current", "page")
+  await expect(page.locator('[data-session-tab="files"]')).toBeHidden()
 })
 
 test("V1: the delivery toggle explains why every prompt steers", async ({ page }) => {
@@ -119,11 +143,11 @@ test("V1: the delivery toggle explains why every prompt steers", async ({ page }
   await delivery.click()
   await expect(delivery).toHaveText("Steer")
   await expect(delivery).toHaveAttribute("data-delivery", "steer")
+  await expect(delivery).toHaveAttribute("aria-pressed", "false")
 })
 
 test("V2: Steer is the default delivery and the Queue choice is sent with the next prompt", async ({ page }) => {
   const prompts: unknown[] = []
-  await page.addInitScript(railDefaulted)
   await setupTimeline(page, {
     protocol: "v2",
     locale: "en",
@@ -144,6 +168,7 @@ test("V2: Steer is the default delivery and the Queue choice is sent with the ne
   await delivery.click()
   await expect(delivery).toHaveText("Queue")
   await expect(delivery).toHaveAttribute("data-delivery", "queue")
+  await expect(delivery).toHaveAttribute("aria-pressed", "true")
   await expect(delivery).toHaveAccessibleDescription(/^Queue: /)
   await prompt.fill("Queued prompt")
   await prompt.press("Enter")

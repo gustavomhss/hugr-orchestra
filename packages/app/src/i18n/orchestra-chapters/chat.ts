@@ -7,7 +7,7 @@ export const CHAT_COPY = {
   "orchestra.chat.filesChanged": "Files Changed {{count}}",
   "orchestra.chat.allFiles": "All files",
   "orchestra.chat.exportDiff": "Export diff",
-  "orchestra.chat.exportDiffEmpty": "These changes have no patch text to export.",
+  "orchestra.chat.exportDiffSkipped": "{{count}} listed files had no patch text and were left out of the export.",
   "orchestra.chat.contextFiles": "Add files to context",
   "orchestra.chat.stop": "Stop",
   "orchestra.chat.placeholder": "Message Orchestra…",
@@ -40,6 +40,7 @@ export const CHAT_COPY = {
   "orchestra.chat.pr.download": "Download proposal",
   "orchestra.chat.pr.notSent":
     "Nothing was sent: Orchestra has no GitHub or GitLab connection yet. Download the proposal as Markdown and open the pull request from your host.",
+  "orchestra.chat.delivery.queued": "Queued: the prompt waits until the running work would otherwise stop.",
   "orchestra.chat.delivery.unsupported":
     "This server delivers every prompt as a steer; queueing needs a server that speaks the V2 protocol.",
 }

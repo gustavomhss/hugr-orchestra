@@ -41,12 +41,16 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(close).toHaveCSS("height", "20px")
     await expectTarget(close)
 
-    // The approved rail opens on a fresh profile; Context is a permanent tab, with no close of its own.
+    // The header's Review button opens the rail; Context is a permanent tab, with no close of its own.
+    await page.locator('[data-slot="session-title-actions"]').getByRole("button", { name: "Review" }).click()
     const context = page.getByRole("tab", { name: "Context", exact: true })
     await context.click()
     await expect(context).toHaveAttribute("aria-selected", "true")
     await expect(
-      page.locator('[data-slot="tabs-trigger-wrapper"]').filter({ has: context }).getByRole("button", { name: "Close tab" }),
+      page
+        .locator('[data-slot="tabs-trigger-wrapper"]')
+        .filter({ has: context })
+        .getByRole("button", { name: "Close tab" }),
     ).toHaveCount(0)
     const openFile = page.locator('[data-slot="session-side-panel-open-file"]').getByRole("button", {
       name: "Open file",

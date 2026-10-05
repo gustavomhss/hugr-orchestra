@@ -91,6 +91,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     hasReview,
     fileBrowser: actions.fileBrowser,
     cockpit: () => false,
+    permanent: settings.general.newLayoutDesigns,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab

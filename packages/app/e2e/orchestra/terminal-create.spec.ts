@@ -2,7 +2,6 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
-import { railDefaulted } from "../utils/review-rail"
 
 const directory = "/work/terminal-create"
 const projectID = "proj_terminal_create"
@@ -162,7 +161,6 @@ async function openTerminal(page: Page) {
 }
 
 async function setup(page: Page, protocol: "v1" | "v2", respond: (route: Route, attempt: number) => Promise<void>) {
-  await page.addInitScript(railDefaulted)
   const creates: { title?: string }[] = []
   const connections: string[] = []
   const errors: string[] = []

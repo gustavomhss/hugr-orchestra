@@ -4,8 +4,8 @@ import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
+import { downloadText } from "@/utils/download"
 import {
-  downloadText,
   pullRequestFilename,
   pullRequestMarkdown,
   pullRequestProposal,
@@ -50,7 +50,8 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
       .then((result) => {
         if (state.step !== "edit") return
         if (!state.proposal.from && result.data?.branch) setState("proposal", "from", result.data.branch)
-        if (!state.proposal.base && result.data?.default_branch) setState("proposal", "base", result.data.default_branch)
+        if (!state.proposal.base && result.data?.default_branch)
+          setState("proposal", "base", result.data.default_branch)
       })
       .catch(() => undefined)
   }
@@ -85,7 +86,9 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
                 <header class="mx-dialog-head">
                   <div>
                     <Dialog.Title as="h2">
-                      {language.t(state.step === "preview" ? "orchestra.chat.pr.previewTitle" : "orchestra.chat.pr.title")}
+                      {language.t(
+                        state.step === "preview" ? "orchestra.chat.pr.previewTitle" : "orchestra.chat.pr.title",
+                      )}
                     </Dialog.Title>
                     <Dialog.Description>
                       <Show when={state.step === "preview"} fallback={language.t("orchestra.chat.pr.description")}>
@@ -120,7 +123,11 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
                         </div>
                         <label class="mx-field">
                           <span>{language.t("orchestra.chat.pr.body")}</span>
-                          <textarea name="description" value={state.proposal.description} onInput={field("description")} />
+                          <textarea
+                            name="description"
+                            value={state.proposal.description}
+                            onInput={field("description")}
+                          />
                         </label>
                       </>
                     }

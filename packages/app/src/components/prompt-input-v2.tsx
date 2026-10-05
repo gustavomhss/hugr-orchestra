@@ -54,11 +54,25 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
   const dialog = useDialog()
   const command = useCommand()
   const language = useLanguage()
+  // The session composer reads "Message Orchestra…" in normal mode; Home and Janitor keep their copy.
+  // The view inherits from the controller's own, so its reactive getters stay live.
+  const view = Object.create(props.controller.view, {
+    placeholder: {
+      value: () =>
+        props.controller.state.mode === "normal"
+          ? language.t("orchestra.chat.placeholder")
+          : props.controller.view.placeholder?.(),
+    },
+  })
+  const controller = () =>
+    props.sessionID
+      ? (Object.create(props.controller, { view: { value: view } }) as PromptInputV2ComposerController)
+      : props.controller
 
   return (
     <div class="flex flex-col gap-3">
       <PromptInputV2
-        controller={props.controller}
+        controller={controller()}
         borderUnderlay={props.borderUnderlay}
         class={props.class}
         variantControlVisible={!props.controller.model.loading}
@@ -152,11 +166,9 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     }),
   )
   const designPlaceholder = () =>
-    props.controls.session.id && mode() === "normal" && commentCount() === 0
-      ? language.t("orchestra.chat.placeholder")
-      : promptDesignPlaceholder(mode(), placeholder(), (key, params) =>
-          language.t(key as Parameters<typeof language.t>[0], params as never),
-        )
+    promptDesignPlaceholder(mode(), placeholder(), (key, params) =>
+      language.t(key as Parameters<typeof language.t>[0], params as never),
+    )
 
   const historyComments = () => {
     const byID = new Map(comments.all().map((item) => [`${item.file}\n${item.id}`, item] as const))

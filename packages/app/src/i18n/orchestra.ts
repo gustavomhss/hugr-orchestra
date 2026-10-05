@@ -181,7 +181,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.sidebar.footer": "Build what matters.\nWith agents.",
   "orchestra.model.running": "Running",
   "orchestra.model.waiting": "Waiting for your response",
-  "orchestra.model.idle": "Stopped",
+  "orchestra.model.idle": "Idle",
   "orchestra.model.tooltip": "{{model}} · {{provider}} · {{activity}}",
   "orchestra.dock.description":
     "This repository's browser. Its live tabs are the same ones you see in Chat's Apps tab.",

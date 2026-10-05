@@ -46,7 +46,9 @@ test("Dock page and Chat's Apps tab share one live browser session", async ({ pa
   await nav(page, "Chat")
   await expect(page.getByRole("heading", { name: sessionTitle })).toBeVisible()
   const apps = page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps" })
-  if (!(await apps.isVisible())) await page.getByRole("button", { name: "Toggle review" }).click()
+  // The shared mock starts after the rail's one-time default, so the rail is closed here.
+  await expect(apps).toBeHidden()
+  await page.getByRole("button", { name: "Toggle review" }).click()
   await apps.click()
   await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
   await expect(page.getByRole("textbox", { name: "Address" })).toHaveValue("https://example.com/a")
@@ -90,7 +92,9 @@ test("an overlay over the Dock occludes the native browser until it closes", asy
   await page.goto(`/server/${base64Encode(serverA)}/session/${sessionID}`)
   await expect(page.getByRole("heading", { name: sessionTitle })).toBeVisible({ timeout: 30_000 })
   const apps = page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps" })
-  if (!(await apps.isVisible())) await page.getByRole("button", { name: "Toggle review" }).click()
+  // The shared mock starts after the rail's one-time default, so the rail is closed here.
+  await expect(apps).toBeHidden()
+  await page.getByRole("button", { name: "Toggle review" }).click()
   await apps.click()
   await openAddress(page, "https://example.com/a")
   await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
@@ -177,7 +181,9 @@ test("outside Orchestra the Apps panel keeps its manual browser profiles", async
   await expect(page.locator('[data-component="orchestra-sidebar"]')).toHaveCount(0)
   await expect(page.getByRole("heading", { name: sessionTitle })).toBeVisible({ timeout: 30_000 })
   const apps = page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps" })
-  if (!(await apps.isVisible())) await page.getByRole("button", { name: "Toggle review" }).click()
+  // The shared mock starts after the rail's one-time default, so the rail is closed here.
+  await expect(apps).toBeHidden()
+  await page.getByRole("button", { name: "Toggle review" }).click()
   await apps.click()
 
   const picker = page.getByRole("combobox", { name: "Browser profile" })

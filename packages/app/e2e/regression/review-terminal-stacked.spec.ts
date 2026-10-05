@@ -153,8 +153,12 @@ test("keeps the review tree and terminal sized when both panels are open", async
   await expectTree(page, 8, "git-0.ts")
 
   await selectMode(page, "Git changes", "Branch changes")
-  await expect(page.locator('#session-side-panel-review-tab [data-slot="session-side-panel-tab-count"]')).toHaveText("2740")
-  await expect(page.locator('[data-slot="orchestra-review-views"] [aria-current="page"]')).toHaveText("Files Changed 2740")
+  await expect(page.locator('#session-side-panel-review-tab [data-slot="session-side-panel-tab-count"]')).toHaveText(
+    "2740",
+  )
+  await expect(page.locator('[data-slot="orchestra-review-views"] [aria-current="page"]')).toHaveText(
+    "Files Changed 2740",
+  )
   await page.keyboard.press("Control+Backquote")
   await expect(page.locator("#terminal-panel")).toBeVisible()
   await expectTree(page, 2_773, "action.yml")

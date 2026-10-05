@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { pullRequestFilename, pullRequestMarkdown, pullRequestProposal } from "./orchestra-pull-request-data"
+import { codeSpan, pullRequestFilename, pullRequestMarkdown, pullRequestProposal } from "./orchestra-pull-request-data"
 
 const copy = { summary: "Summary", files: "Files", noFiles: "No changed files in this view." }
 
@@ -25,8 +25,8 @@ describe("pullRequestProposal", () => {
         "- Approval flow refactor",
         "",
         "Files",
-        "- src/approval.ts (+48 −32)",
-        "- docs/flow.md",
+        "- `src/approval.ts` (+48 −32)",
+        "- `docs/flow.md`",
       ].join("\n"),
     })
   })
@@ -41,9 +41,15 @@ describe("pullRequestProposal", () => {
 
 describe("pullRequestMarkdown", () => {
   test("writes the edited title, both branches and the description", () => {
-    expect(
-      pullRequestMarkdown({ title: "Fix", from: "fix-it", base: "dev", description: "Summary\n- Fix\n" }),
-    ).toBe("# Fix\n\n`fix-it` → `dev`\n\nSummary\n- Fix\n")
+    expect(pullRequestMarkdown({ title: "Fix", from: "fix-it", base: "dev", description: "Summary\n- Fix\n" })).toBe(
+      "# Fix\n\n`fix-it` → `dev`\n\nSummary\n- Fix\n",
+    )
+  })
+
+  test("fences branch names longer than any backtick run they contain", () => {
+    expect(pullRequestMarkdown({ title: "Fix", from: "a`b", base: "``dev", description: "Body" })).toBe(
+      "# Fix\n\n``a`b`` → ``` ``dev ```\n\nBody\n",
+    )
   })
 
   test("omits the branch line unless both branches are named", () => {
@@ -57,5 +63,12 @@ describe("pullRequestFilename", () => {
   test("keeps the title readable and strips path separators", () => {
     expect(pullRequestFilename("Review PR 231: session/drain")).toBe("Review PR 231- session-drain-pr.md")
     expect(pullRequestFilename("   ")).toBe("pull-request-pr.md")
+  })
+})
+
+describe("codeSpan", () => {
+  test("uses a single backtick for plain text and pads a leading or trailing backtick", () => {
+    expect(codeSpan("src/a.ts")).toBe("`src/a.ts`")
+    expect(codeSpan("`tick")).toBe("`` `tick ``")
   })
 })

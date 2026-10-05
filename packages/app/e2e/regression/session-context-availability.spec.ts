@@ -89,9 +89,11 @@ for (const newLayoutDesigns of [false, true]) {
       await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
       await expectSessionTitle(page, title)
       const button = page.getByRole("button", { name: "View context usage", exact: true })
-      // The approved layout has no usage ring: Context is a permanent rail tab, open on a fresh profile.
+      // The approved layout has no usage ring: the header's Review button opens the rail, where
+      // Context is a permanent tab.
       if (newLayoutDesigns) {
         await expect(button).toHaveCount(0)
+        await page.locator('[data-slot="session-title-actions"]').getByRole("button", { name: "Review" }).click()
         await page.getByRole("tab", { name: "Context", exact: true }).click()
       }
       if (!newLayoutDesigns) {
@@ -110,6 +112,10 @@ for (const newLayoutDesigns of [false, true]) {
         `Total Tokens${scenario.tokens}`,
       )
       await expect(panel.getByText("Usage", { exact: true }).locator("..")).toHaveText(`Usage${scenario.usage}`)
+      // The approved rail draws no usage ring, so nothing there can paint an unknown value as known; its
+      // honest-unknown signal is the Usage value asserted above ("—" when unknown, a percent otherwise).
+      if (newLayoutDesigns)
+        await expect(page.getByRole("tab", { name: "Context", exact: true }).locator("circle")).toHaveCount(0)
       // Unknown usage dashes the ring's track; any reported value, 0% included, keeps it solid.
       for (const ring of newLayoutDesigns ? [] : [button, page.getByRole("tab", { name: "Context", exact: true })]) {
         const track = ring.locator("circle").first()

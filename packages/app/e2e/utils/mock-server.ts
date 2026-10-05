@@ -1,10 +1,14 @@
 import type { Page, Route } from "@playwright/test"
+import { railDefaulted } from "./review-rail"
 
 const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff"])
 const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mcp", "/experimental/resource"])
 
 export interface MockServerConfig {
   protocol?: "v1" | "v2"
+  // Orchestra opens the review rail once per profile. Mocked pages start after that default unless a
+  // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
+  freshRail?: boolean
   provider: unknown | (() => unknown)
   integrationMethods?: Record<string, unknown[]>
   onConnectKey?: (input: { integrationID: string; body: unknown }) => void
@@ -32,6 +36,7 @@ export interface MockServerConfig {
 }
 
 export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
+  if (!config.freshRail) await page.addInitScript(railDefaulted)
   const cursors = new Map<string, string>()
   let nextCursor = 0
   const staticRoutes: Record<string, unknown> = {

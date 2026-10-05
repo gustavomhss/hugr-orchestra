@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { attachImage, editor, evidenceFixture, evidencePage, runCard } from "./evidence.fixture"
 import { directory, partUpdated, sessionID, status, toolPart } from "../performance/timeline-stability/fixture"
-import { railDefaulted } from "../utils/review-rail"
 
 test.setTimeout(120_000)
 
@@ -237,7 +236,6 @@ test("switching server with the same session ID cancels captured replay", async 
 })
 
 test("prepare PR uses real session summary and remains unsent", async ({ page }) => {
-  await page.addInitScript(railDefaulted)
   const fixture = await evidencePage(page, { protocol: "v1" })
   await page.getByRole("button", { name: "Toggle review", exact: true }).click()
   await expect(page.locator("#review-panel")).toContainText("approval.ts")

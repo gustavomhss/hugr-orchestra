@@ -52,6 +52,8 @@ type FollowupSendInput = {
   draft: FollowupDraft
   messageID?: string
   optimisticBusy?: boolean
+  // A queued prompt waits server-side until running work would stop; it gets no optimistic sent turn.
+  pending?: boolean
   before?: () => Promise<boolean> | boolean
 }
 
@@ -157,6 +159,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
     })
 
   batch(() => {
+    if (input.pending) return
     setBusy()
     add()
   })
@@ -653,6 +656,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return true
     }
 
+    const queued = draft.delivery === "queue" && input.working()
     void sendFollowupDraft({
       api: sdk().api.session,
       sync: sync(),
@@ -660,19 +664,24 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       draft,
       messageID,
       optimisticBusy: sessionDirectory === projectDirectory,
+      pending: queued,
       before: waitForWorktree,
-    }).catch((err) => {
-      pending.delete(pendingKey(session.id))
-      if (sessionDirectory === projectDirectory) {
-        sync().set("session_status", session.id, { type: "idle" })
-      }
-      showToast({
-        title: language.t("prompt.toast.promptSendFailed.title"),
-        description: errorMessage(err),
-      })
-      removeOptimisticMessage()
-      if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
     })
+      .then((sent) => {
+        if (sent && queued) showToast({ title: language.t("orchestra.chat.delivery.queued") })
+      })
+      .catch((err) => {
+        pending.delete(pendingKey(session.id))
+        if (sessionDirectory === projectDirectory && !queued) {
+          sync().set("session_status", session.id, { type: "idle" })
+        }
+        showToast({
+          title: language.t("prompt.toast.promptSendFailed.title"),
+          description: errorMessage(err),
+        })
+        removeOptimisticMessage()
+        if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
+      })
   }
 
   return {

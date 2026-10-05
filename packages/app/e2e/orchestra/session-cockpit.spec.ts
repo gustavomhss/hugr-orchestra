@@ -205,9 +205,9 @@ test("switching panes hides and shows the same native tab, and its bounds follow
   await expect.poll(() => hostBounds(dock)).toEqual(anchored)
   const back = (await calls(page)).slice(left)
   expect(back.filter((call) => ["open", "close", "close-tab", "navigate"].includes(call.type))).toEqual([])
-  expect(back.filter((call) => call.type === "select").map(({ tabID, generation }) => ({ tabID, generation }))).toEqual([
-    tab,
-  ])
+  expect(back.filter((call) => call.type === "select").map(({ tabID, generation }) => ({ tabID, generation }))).toEqual(
+    [tab],
+  )
   await shoot(page, "cockpit-desktop")
   await page.locator('[data-slot="orchestra-theme-toggle"]').click()
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "light")
