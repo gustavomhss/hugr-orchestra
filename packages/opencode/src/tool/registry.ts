@@ -5,6 +5,8 @@ import { PlanExitTool } from "./plan"
 import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
+import { ShellPrompt } from "./shell/prompt"
+import { roster } from "@/maestro/roster"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
@@ -491,10 +493,14 @@ const layer = Layer.effect(
             output.parameters === tool.parameters || output.jsonSchema !== tool.jsonSchema
               ? output.jsonSchema
               : undefined
+          const nativeShell =
+            tool.id === ShellTool.id &&
+            input.agent.native === true &&
+            roster.some((member) => member.memberId === input.agent.id && member.nativeProfile)
           return {
             id: tool.id,
             description: [
-              output.description,
+              nativeShell ? ShellPrompt.nativeSeat(output.description) : output.description,
               tool.id === TaskTool.id ? yield* describeTask(input.agent, input.permission) : undefined,
               tool.id === "execute" ? codeModeDescription : undefined,
             ]

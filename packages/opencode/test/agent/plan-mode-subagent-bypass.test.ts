@@ -75,7 +75,7 @@ it.instance("Task agent lookup resolves Charlie and Lucy", () =>
     const charlie = yield* Agent.use.get("charlie")
     const lucy = yield* Agent.use.get("lucy")
 
-    expect(charlie?.mode).toBe("subagent")
+    expect(charlie?.mode).toBe("all")
     expect(lucy?.mode).toBe("subagent")
   }),
 )

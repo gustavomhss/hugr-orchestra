@@ -32,7 +32,8 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
-import { roster, nativeProfiles } from "@/maestro/roster"
+import { roster, nativeProfiles, charlieSkills } from "@/maestro/roster"
+import { containsPath } from "@/project/instance-context"
 
 export const Info = Schema.Struct({
   id: Schema.optional(Schema.String),
@@ -139,6 +140,13 @@ const layer = Layer.effect(
         })
 
         const user = Permission.fromConfig(cfg.permission ?? {})
+        // Charlie's profile grants external access to its packaged skill root; edit patterns are worktree-relative,
+        // so the deny that keeps that root read-only is rendered here. Inside the project it is ordinary source.
+        const charlieReadOnly = containsPath(charlieSkills.root, ctx)
+          ? []
+          : Permission.fromConfig({
+              edit: { [path.join(path.relative(ctx.worktree, charlieSkills.root), "*")]: "deny" },
+            })
 
         const agents: Record<string, Info> = {
           build: {
@@ -296,11 +304,18 @@ const layer = Layer.effect(
                 {
                   id: member.memberId,
                   name: member.displayName,
-                  description: `${member.displayName} native team specialist.`,
+                  description:
+                    member.memberId === "charlie"
+                      ? "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. It returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review."
+                      : `${member.displayName} native team specialist.`,
                   prompt: member.prompt,
                   options: {},
-                  permission: Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
-                  mode: "subagent" as const,
+                  permission: Permission.merge(
+                    Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
+                    member.nativeProfile === "charlie" ? charlieReadOnly : [],
+                  ),
+                  // Charlie is primary-capable and still delegatable (F1.6); primary use adds no permissions.
+                  mode: member.memberId === "charlie" ? ("all" as const) : ("subagent" as const),
                   native: true,
                 },
               ]),

@@ -1,3 +1,4 @@
+import path from "path"
 import PROMPT_BILLY from "../agent/prompt/billy.txt"
 import PROMPT_BOBBY from "../agent/prompt/bobby.txt"
 import PROMPT_CHARLIE from "../agent/prompt/charlie.txt"
@@ -7,6 +8,19 @@ import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
 
+// Charlie's packaged skills (F6.2), resolved from this source tree. Installed builds do not ship this root yet (T6).
+export const charlieSkills = Object.freeze({
+  root: path.resolve(import.meta.dir, "../../../charlie/skills"),
+  names: Object.freeze([
+    "backend-implement",
+    "backend-api",
+    "backend-data",
+    "backend-concurrency",
+    "backend-refactor",
+    "backend-check",
+  ] as const),
+})
+
 export const nativeProfiles = Object.freeze({
   execution: Object.freeze({
     "*": "deny",
@@ -15,6 +29,21 @@ export const nativeProfiles = Object.freeze({
     grep: "allow",
     bash: "allow",
     edit: "allow",
+  } as const),
+  // Charlie-only (F1.8): the execution set plus its six entry skills and access to their packaged root. Agent
+  // registration adds the worktree-relative edit deny that keeps that root read-only.
+  charlie: Object.freeze({
+    "*": "deny",
+    read: "allow",
+    glob: "allow",
+    grep: "allow",
+    bash: "allow",
+    edit: "allow",
+    skill: Object.freeze({
+      "*": "deny",
+      ...Object.fromEntries(charlieSkills.names.map((name) => [name, "allow" as const])),
+    }),
+    external_directory: Object.freeze({ "*": "deny", [path.join(charlieSkills.root, "*")]: "allow" } as const),
   } as const),
   review: Object.freeze({
     "*": "deny",
@@ -56,9 +85,20 @@ export const roster = createRoster([
     memberId: "charlie",
     role: "backend execution",
     abilityClass: "scoped repository write",
-    returnCard: "implementation card, gates, diff receipt",
-    forbiddenActions: ["approve", "review own work", "merge"],
-    nativeProfile: "execution",
+    returnCard: "charlie-result",
+    // Single source of the charter's Forbidden line; native-team.test.ts asserts the prompt renders it verbatim.
+    forbiddenActions: [
+      "investigation or diagnosis",
+      "architecture or scope decisions",
+      "delegation",
+      "self-review",
+      "claims of verification or acceptance",
+      "commit, push, branch, merge or pull request",
+      "installing tools",
+      "working around permission denials or safety holds",
+      "editing Atlas memory files",
+    ],
+    nativeProfile: "charlie",
     prompt: PROMPT_CHARLIE,
   },
   {

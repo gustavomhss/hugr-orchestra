@@ -52,7 +52,7 @@ export const SkillTool = Tool.define(
             }
           }
           const info = yield* skill
-            .require(params.name)
+            .require(params.name, ctx.agentID)
             .pipe(Effect.catchTag("Skill.NotFoundError", (error) => Effect.die(new Error(error.message))))
 
           yield* ctx.ask({

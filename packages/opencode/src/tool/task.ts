@@ -27,6 +27,7 @@ import { readAuthorization } from "@/maestro/authorization"
 import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { CharlieResult } from "@/maestro/charlie-result"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -450,6 +451,7 @@ export const TaskTool = Tool.define(
         ...(runInBackground ? { background: true } : {}),
       }
       const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
+      const workEvidence: { value?: CharlieResult.WorkResult } = {}
 
       yield* ctx.metadata({
         title: params.description,
@@ -467,6 +469,8 @@ export const TaskTool = Tool.define(
                 message.info.role === "assistant" && message.info.finish !== undefined && !message.info.error,
             )
         const job = strictReplay ? yield* background.get(governedChildID) : undefined
+        const replayed = nextID === "charlie" && completed ? CharlieResult.assemble(completed) : undefined
+        if (replayed) yield* ctx.metadata({ metadata: { ...metadata, workResult: replayed } })
         if (
           strictReplay &&
           (!completed ||
@@ -487,7 +491,11 @@ export const TaskTool = Tool.define(
         const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
         return {
           title: params.description,
-          metadata: { ...metadata, ...(verified ? { completion: verified } : {}) },
+          metadata: {
+            ...metadata,
+            ...(verified ? { completion: verified } : {}),
+            ...(replayed ? { workResult: replayed } : {}),
+          },
           output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
         }
       }
@@ -558,6 +566,11 @@ export const TaskTool = Tool.define(
           },
           beforeModel ? { beforeModel } : undefined,
         )
+        // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
+        if (nextID === "charlie") {
+          workEvidence.value = CharlieResult.assemble(result)
+          yield* ctx.metadata({ metadata: { ...metadata, workResult: workEvidence.value } })
+        }
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -576,7 +589,13 @@ export const TaskTool = Tool.define(
         const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
         if (verified) {
           completionEvidence.value = verified
-          yield* ctx.metadata({ metadata: { ...metadata, completion: verified } })
+          yield* ctx.metadata({
+            metadata: {
+              ...metadata,
+              completion: verified,
+              ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
+            },
+          })
         }
         return result.parts.findLast((item) => item.type === "text")?.text ?? ""
       })
@@ -697,7 +716,11 @@ export const TaskTool = Tool.define(
             if (result?.status === "cancelled") return yield* Effect.fail(new Error("Task cancelled"))
             return {
               title: params.description,
-              metadata: { ...metadata, ...(completionEvidence.value ? { completion: completionEvidence.value } : {}) },
+              metadata: {
+                ...metadata,
+                ...(completionEvidence.value ? { completion: completionEvidence.value } : {}),
+                ...(workEvidence.value ? { workResult: workEvidence.value } : {}),
+              },
               output: renderOutput({ sessionID: nextSession.id, state: "completed", text: result?.output ?? "" }),
             }
           }),
