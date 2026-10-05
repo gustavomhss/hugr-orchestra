@@ -7,10 +7,11 @@ import PROMPT_JIMMY from "../agent/prompt/jimmy.txt"
 import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
+import { CharlieSkillRoot } from "./charlie-skill-root"
 
-// Charlie's packaged skills (F6.2), resolved from this source tree. Installed builds do not ship this root yet (T6).
+// Charlie's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const charlieSkills = Object.freeze({
-  root: path.resolve(import.meta.dir, "../../../charlie/skills"),
+  root: CharlieSkillRoot.root,
   names: Object.freeze([
     "backend-implement",
     "backend-api",
