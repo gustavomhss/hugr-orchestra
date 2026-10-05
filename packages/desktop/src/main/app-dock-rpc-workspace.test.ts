@@ -983,3 +983,21 @@ test("workspace: preparation watchdog fails caller/reset, retains capacity, and 
   recovered.fail(new NativeDockProtocol.NativeError("cancelled", "No acquisition"))
   await Promise.allSettled([recovered.completion])
 }, 30000)
+
+test("scoped callers reach their own world whatever tab the user has selected", async () => {
+  const f = fixture()
+  f.prepare(() => f.acquire())
+  f.viewer.tabs.push({ ...f.viewer.tabs[0]!, tabID: "browser", active: true })
+  f.viewer.tabs[0]!.active = false
+  const linux = { agent: "linux" }
+  expect(await f.json("ui_read", {}, linux)).toMatchObject({ backend: "linux-atspi", scopeKind: "workspace" })
+  expect(f.viewer.browserReads).toBe(0)
+  expect(await f.json("dock_read", {}, { agent: "build" })).toEqual({ backend: "browser", tabID: "browser" })
+  // Only the Linux tab left: a browser-scoped caller is refused instead of silently reading the workspace.
+  f.viewer.tabs = f.viewer.tabs.filter((tab) => tab.tabID === "workspace")
+  expect(await f.tool("dock_read", {}, { agent: "build" })).toContain("operated by the linux agent")
+  expect(await f.tool("dock_activate", { tabID: "workspace" }, { agent: "build" })).toContain("operated by the linux agent")
+  expect(f.viewer.browserReads).toBe(1)
+  f.viewer.tabs = []
+  expect(await f.tool("ui_read", {}, linux)).toContain("Apps > Linux workspace")
+})

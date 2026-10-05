@@ -415,12 +415,17 @@ export class AppDockRPC {
 
     const targetOps = ["activate", "read", "click", "type", "navigate", "go", "close", "scroll", "hover", "drag",
       "clickAt", "scrollTo", "storage", "evaluate", "network", "wait", "screenshot", "keyboard", "action"]
+    const world = args.world === undefined ? undefined : dockEnum(args.world, "world", ["browser", "linux"]) as "browser" | "linux"
     if (targetOps.includes(op) && !(op === "close" && args.tabID === undefined && dock.list(senderID).length === 0)) {
-      const tabID = op === "activate" ? dockString(args.tabID, "tabID") : this.resolveTabID(dock, senderID, args)
+      const tabID = op === "activate" ? dockString(args.tabID, "tabID") : this.resolveTabID(dock, senderID, args, world)
       const placement = dock.nativeWorkspace?.(senderID, tabID)
       const tab = dock.list(senderID).find((tab) => tab.tabID === tabID)
       if (placement && !tab) throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace viewer is not current")
       const workspace = tab && this.classifyWorkspace(dock, senderID, tab, placement)
+      if (world === "browser" && workspace)
+        throw new NativeDockProtocol.NativeError("wrong-scope", "dock_* tools operate browser tabs; apps in the Linux workspace are operated by the linux agent")
+      if (world === "linux" && !workspace)
+        throw new NativeDockProtocol.NativeError("wrong-scope", "Linux workspace tools only address the Linux workspace")
       const stored = this.nativeTargets.get(JSON.stringify([senderID, tabID]))
       const target = stored?.generation === tab?.generation ? stored : undefined
       // Browser snapshot shape has no AT-SPI equivalent; never drop it silently.
@@ -629,11 +634,22 @@ export class AppDockRPC {
     }
   }
 
-  private resolveTabID(dock: AppDock, senderID: number, args: Record<string, unknown>) {
+  private resolveTabID(dock: AppDock, senderID: number, args: Record<string, unknown>, world?: "browser" | "linux") {
     if (args.tabID !== undefined) return dockString(args.tabID, "tabID")
-    const tabs = dock.list(senderID)
+    // A scoped caller addresses its own world whether or not that tab is the one shown.
+    const all = dock.list(senderID)
+    const linux = (tab: (typeof all)[number]) => dock.nativeWorkspace?.(senderID, tab.tabID) !== undefined
+    if (world === "linux") {
+      const workspace = all.find(linux)
+      if (!workspace) throw new NativeDockProtocol.NativeError("not-ready",
+        "The Linux workspace is not open in the App Dock; report back that the user must open Apps > Linux workspace")
+      return workspace.tabID
+    }
+    const tabs = world === "browser" ? all.filter((tab) => !linux(tab)) : all
     const active = tabs.find((tab) => typeof tab === "object" && tab !== null && "active" in tab && tab.active === true)
     const target = active ?? tabs[0]
+    if (!target && world === "browser" && all.length)
+      throw new Error("App Dock has no open browser tabs; apps in the Linux workspace are operated by the linux agent")
     if (!target) throw new Error("App Dock has no open tabs")
     return target.tabID
   }
