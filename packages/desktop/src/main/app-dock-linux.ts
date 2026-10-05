@@ -277,6 +277,11 @@ export function create(options: {
         }
       }
       requireIntent()
+      // Warm the native helper in the background so the agent's first dock call skips its cold start.
+      const prewarm = (tab: LinuxTab) => {
+        void options.runtime.native().catch(() => undefined)
+        return tab
+      }
       if (!/^[A-Za-z0-9_-]{16,128}$/.test(profileStorage.storageKey)) throw new RuntimeError("failed")
       const key = `${senderID}:${profileStorage.storageKey}`
       const connected = views.get(key)
@@ -300,7 +305,7 @@ export function create(options: {
           bridge.owner = connected
           options.dock.select(senderID, win, connected.tabID, bounds)
           connected.contents!.focus()
-          return { tabID: connected.tabID, generation: connected.generation!, url: alias }
+          return prewarm({ tabID: connected.tabID, generation: connected.generation!, url: alias })
         }
       }
       // Provisioning belongs to the persistent workspace, not this sender's display admission.
@@ -601,7 +606,7 @@ export function create(options: {
         options.dock.select(senderID, win, view.tabID, bounds)
         view.contents!.focus()
         return { tabID: view.tabID, generation: view.generation!, url: alias }
-      })().catch((error: unknown) => {
+      })().then(prewarm).catch((error: unknown) => {
         if (view.intent === intent && (!wasReady || !view.ready || intents.get(senderID) === intent || !current(view)))
           discard(view, true)
         return failure(error)

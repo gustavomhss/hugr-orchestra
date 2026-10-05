@@ -24,6 +24,7 @@ RUNTIME = HOME / ".orchestra-runtime"
 STAGING = Path("/var/lib/orchestra-install/package.deb")
 SESSION_FIELDS = ("DISPLAY", "DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR", "XAUTHORITY",
                   "AT_SPI_BUS_ADDRESS", "ORCHESTRA_A11Y_SESSION_ID")
+ACCESSIBILITY_FIELDS = SESSION_FIELDS[4:]
 SESSION_BYTES = 8192
 CONFIG_BYTES = 65536
 
@@ -39,6 +40,9 @@ def session_environment(*, _runtime=RUNTIME):
 
 def native_session(*, _runtime=RUNTIME, _deadline=None, _cancelled=None):
     session = current_session(_runtime=_runtime)
+    if "accessibilityError" in session:
+        # Recorded at session start; only a workspace restart retries activation.
+        raise SessionError("native-session-a11y-unavailable")
     environment = {key: session[key] for key in SESSION_FIELDS if key in session}
     if accessibility_bus(environment, _runtime=_runtime, _deadline=_deadline, _cancelled=_cancelled) != environment["AT_SPI_BUS_ADDRESS"]:
         raise SessionError("native-session-stale")
@@ -266,20 +270,28 @@ def parse_session(data, *, _runtime=RUNTIME):
         session = json.loads(data)
         if not isinstance(session, dict):
             raise SessionError("native-session-record-invalid")
+        # A session without accessibility carries both fields absent plus a fixed
+        # failure code, never one field alone or an unexplained absence.
+        degraded = "accessibilityError" in session
+        if degraded and (any(key in session for key in ACCESSIBILITY_FIELDS) or not isinstance(session["accessibilityError"], str)
+                         or re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+){0,7}", session["accessibilityError"]) is None):
+            raise SessionError("native-session-record-invalid")
         for key in SESSION_FIELDS:
-            if key == "XAUTHORITY" and key not in session:
+            if (key == "XAUTHORITY" or degraded and key in ACCESSIBILITY_FIELDS) and key not in session:
                 continue
             value = session.get(key)
             if not isinstance(value, str) or not 1 <= len(value) <= 1024 or any(ord(char) < 32 for char in value):
                 raise SessionError("native-session-record-invalid")
         if (session["DISPLAY"] != ":100" or session["XDG_RUNTIME_DIR"] != str(_runtime / "run")
-                or str(uuid.UUID(session["ORCHESTRA_A11Y_SESSION_ID"])) != session["ORCHESTRA_A11Y_SESSION_ID"]):
+                or not degraded and str(uuid.UUID(session["ORCHESTRA_A11Y_SESSION_ID"])) != session["ORCHESTRA_A11Y_SESSION_ID"]):
             raise SessionError("native-session-record-invalid")
         bus_socket_path(session["DBUS_SESSION_BUS_ADDRESS"], _runtime=_runtime)
-        bus_socket_path(session["AT_SPI_BUS_ADDRESS"], accessibility=True, _runtime=_runtime)
+        if not degraded:
+            bus_socket_path(session["AT_SPI_BUS_ADDRESS"], accessibility=True, _runtime=_runtime)
         validate_identity(session.get("processIdentity"))
         # Never return unknown record fields, especially inherited credentials.
         return {**{key: session[key] for key in SESSION_FIELDS if key in session},
+                **({"accessibilityError": session["accessibilityError"]} if degraded else {}),
                 "processIdentity": session["processIdentity"]}
     except (ValueError, TypeError, RecursionError) as error:
         raise SessionError("native-session-record-invalid") from error
@@ -494,10 +506,17 @@ def main():
         if (environment.get("DISPLAY") != ":100" or environment.get("XDG_RUNTIME_DIR") != str(RUNTIME / "run")
                 or not environment.get("DBUS_SESSION_BUS_ADDRESS")):
             raise SessionError("native-session-environment-invalid")
-        environment["ORCHESTRA_A11Y_SESSION_ID"] = str(uuid.uuid4())
-        environment["AT_SPI_BUS_ADDRESS"] = accessibility_bus(environment, activate=True)
+        # Accessibility is an optional capability of the session: the terminal,
+        # files, apps and the browser bridge must still start without it. The
+        # native helper refuses a degraded session through native_session().
+        try:
+            accessibility = {"ORCHESTRA_A11Y_SESSION_ID": str(uuid.uuid4()),
+                             "AT_SPI_BUS_ADDRESS": accessibility_bus(environment, activate=True)}
+        except (SessionError, OSError) as error:
+            accessibility = {"accessibilityError": str(error) if isinstance(error, SessionError) else "a11y-startup-failed"}
+        os.environ.update({key: value for key, value in accessibility.items() if key in ACCESSIBILITY_FIELDS})
         os.environ.update(environment)
-        session = {**environment, "processIdentity": process_identity(os.getpid())}
+        session = {**environment, **accessibility, "processIdentity": process_identity(os.getpid())}
         data = json.dumps(session, separators=(",", ":")).encode()
         parse_session(data)
         atomic_private_file(RUNTIME / "session.json", data, SESSION_BYTES)

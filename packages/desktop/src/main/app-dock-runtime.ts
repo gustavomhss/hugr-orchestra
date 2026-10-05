@@ -56,6 +56,9 @@ type Container = {
 }
 
 type Volume = { Name: string; Labels: Record<string, string> | null }
+type NativeHandle = Awaited<ReturnType<typeof AppDockNativeRuntime.create>> & {
+  runtime: NativeDockProtocol.RuntimeIdentity; session: AppDockNativeRuntime.Options["session"]; endpoint: string; imageID: string
+}
 
 export function create(options: { root: string; context: string; image?: string; nativePayload?: string }) {
   const root = resolve(options.root)
@@ -75,10 +78,11 @@ export function create(options: { root: string; context: string; image?: string;
       | undefined,
     reading: undefined as { promise: Promise<LinuxState>; barrier: Promise<void> | undefined } | undefined,
     browserBridge: undefined as { key: string; endpoint: string; token: string } | undefined,
-    native: undefined as (Awaited<ReturnType<typeof AppDockNativeRuntime.create>> & {
-      runtime: NativeDockProtocol.RuntimeIdentity; session: AppDockNativeRuntime.Options["session"]; endpoint: string; imageID: string
-    }) | undefined,
+    native: undefined as NativeHandle | undefined,
     accessKey: undefined as string | undefined,
+    nativeStart: undefined as Promise<NativeHandle> | undefined,
+    // Bumped by stop/dispose so a helper admitted across a teardown is reaped, not published.
+    nativeEpoch: 0,
   }
 
   const command = (args: string[], timeout = 20_000, extraEnv = {}) =>
@@ -103,11 +107,15 @@ export function create(options: { root: string; context: string; image?: string;
     if (fingerprintPolicy(policy) !== sandboxFingerprint) throw new RuntimeError("unavailable")
     return { path, value: policy }
   }
-  const serialize = <T>(run: () => Promise<T>) => {
+  // Native observations pass marks=false: accessibility is optional, so its
+  // failures must not turn the whole workspace (terminal, apps, Slack) into an error.
+  const serialize = <T>(run: () => Promise<T>, marks = true) => {
     const result = (queues.get(root) ?? Promise.resolve()).then(run).catch((error: unknown) => {
       const failure = error instanceof RuntimeError ? error : new RuntimeError("failed")
-      current.catalogue = undefined
-      current.state = { phase: "error", apps: current.state.apps, error: failure.code }
+      if (marks) {
+        current.catalogue = undefined
+        current.state = { phase: "error", apps: current.state.apps, error: failure.code }
+      }
       if (error instanceof NativeDockProtocol.NativeError) throw error
       throw failure
     })
@@ -255,7 +263,10 @@ export function create(options: { root: string; context: string; image?: string;
   })
   const placement = (container: Container) => `${container.Id}:${container.State.StartedAt}`
   const nativeSession = async (metadata: Metadata, container: Container) => {
-    const value: unknown = JSON.parse((await guest(metadata, container, ["native-session"], false, 4000)).stdout)
+    const output = await guest(metadata, container, ["native-session"], false, 4000).catch(() => {
+      throw new NativeDockProtocol.NativeError("not-ready", "Linux accessibility is unavailable in this workspace session")
+    })
+    const value: unknown = JSON.parse(output.stdout)
     if (!NativeDockProtocol.object(value) || typeof value.sessionID !== "string" || !NativeDockProtocol.object(value.processIdentity)
       || !NativeDockProtocol.object(value.environment) || Object.keys(value.environment).length > 6
       || !Object.values(value.environment).every((entry) => typeof entry === "string" && entry.length <= 1024))
@@ -263,8 +274,7 @@ export function create(options: { root: string; context: string; image?: string;
     // The helper manager validates every identity/environment field before I/O.
     return value as AppDockNativeRuntime.Options["session"]
   }
-  const closeNative = async () => {
-    const native = current.native
+  const closeNative = async (native = current.native) => {
     if (!native) return
     try {
       await native.client.close()
@@ -455,6 +465,57 @@ export function create(options: { root: string; context: string; image?: string;
     })
   }
 
+  const startNative = async (): Promise<NativeHandle> => {
+    const epoch = current.nativeEpoch
+    // Only the ownership snapshot is serialized; it never marks the workspace state.
+    const target = await serialize(async () => {
+      const payload = nativePayload
+      if (!payload) throw new NativeDockProtocol.NativeError("not-ready", "Native helper payload is not configured")
+      const policy = await sandbox()
+      const metadata = await load()
+      const container = await owned(metadata)
+      if (!container?.State.Running) throw new NativeDockProtocol.NativeError("not-ready", "Linux workspace is not running")
+      const session = await nativeSession(metadata, container)
+      return { payload, policy, metadata, container, session,
+        runtime: { runtimeID: metadata.owner, runtimeEpoch: placement(container), accessibilitySessionID: session.sessionID } }
+    }, false)
+    const existing = current.native
+    if (existing?.active() && existing.runtime.runtimeEpoch === target.runtime.runtimeEpoch
+      && existing.runtime.runtimeID === target.runtime.runtimeID && existing.endpoint === target.metadata.endpoint
+      && existing.imageID === target.container.Image && JSON.stringify(existing.session) === JSON.stringify(target.session)) return existing
+    await closeNative()
+    const { AppDockNativeRuntime } = await import("./app-dock-native-runtime")
+    const native: NativeHandle = { ...await AppDockNativeRuntime.create({
+      endpoint: target.metadata.endpoint, owner: target.metadata.owner, workspaceID: target.container.Id,
+      workspaceStartedAt: target.container.State.StartedAt, imageID: target.container.Image,
+      homeVolume: `orchestra-linux-${target.metadata.owner}-home`, securityPolicy: target.policy.value, payloadDirectory: target.payload,
+      session: target.session,
+      verifyWorkspace: async () => {
+        const latest = await load()
+        if (current.nativeEpoch !== epoch || latest.owner !== target.metadata.owner || latest.endpoint !== target.metadata.endpoint
+          || latest.containerID !== target.container.Id)
+          throw new NativeDockProtocol.NativeError("wrong-scope", "Runtime ownership changed during helper admission")
+        const live = await owned(latest)
+        if (!live?.State.Running || placement(live) !== target.runtime.runtimeEpoch || live.Image !== target.container.Image
+          || JSON.stringify(await nativeSession(latest, live)) !== JSON.stringify(target.session))
+          throw new NativeDockProtocol.NativeError("wrong-scope", "Runtime session changed during helper admission")
+      },
+    }), runtime: target.runtime, session: target.session, endpoint: target.metadata.endpoint, imageID: target.container.Image }
+    if (current.nativeEpoch !== epoch) {
+      await closeNative(native)
+      throw new NativeDockProtocol.NativeError("wrong-scope", "Linux workspace stopped during helper admission")
+    }
+    current.native = native
+    native.channel.onExit(() => { if (current.native === native) current.native = undefined })
+    return native
+  }
+  // Teardown must not leave a helper container behind: invalidate admissions in
+  // flight, then wait for them to reap themselves before closing the current one.
+  const retireNative = async () => {
+    current.nativeEpoch++
+    await current.nativeStart?.catch(() => undefined)
+  }
+
   const access = LinuxWorkspaceAccess.create({
     prepare: () => serialize(async () => {
       if (!(await readMetadata(root))) throw new Error("workspace-not-configured")
@@ -482,6 +543,7 @@ export function create(options: { root: string; context: string; image?: string;
     access,
     dispose: async () => {
       const closed = await access.close().then(() => undefined, (error: unknown) => error)
+      await retireNative()
       await closeNative()
       current.engine?.client.close()
       current.engine = undefined
@@ -510,38 +572,13 @@ export function create(options: { root: string; context: string; image?: string;
         runtime: { runtimeID: metadata.owner, runtimeEpoch: placement(container), accessibilitySessionID: value.session.sessionID },
         processIdentities: value.processIdentities as NativeDockProtocol.ProcessIdentity[],
       }
-    }),
-    native: () => serialize(async () => {
-      if (!nativePayload) throw new NativeDockProtocol.NativeError("not-ready", "Native helper payload is not configured")
-      const policy = await sandbox()
-      const metadata = await load()
-      const container = await owned(metadata)
-      if (!container?.State.Running) throw new NativeDockProtocol.NativeError("not-ready", "Linux workspace is not running")
-      const session = await nativeSession(metadata, container)
-      const runtime = { runtimeID: metadata.owner, runtimeEpoch: placement(container), accessibilitySessionID: session.sessionID }
-      if (current.native?.active() && current.native.runtime.runtimeEpoch === runtime.runtimeEpoch
-        && current.native.runtime.runtimeID === runtime.runtimeID && current.native.endpoint === metadata.endpoint
-        && current.native.imageID === container.Image && JSON.stringify(current.native.session) === JSON.stringify(session)) return current.native
-      await closeNative()
-      const { AppDockNativeRuntime } = await import("./app-dock-native-runtime")
-      const native = { ...await AppDockNativeRuntime.create({
-        endpoint: metadata.endpoint, owner: metadata.owner, workspaceID: container.Id,
-        workspaceStartedAt: container.State.StartedAt, imageID: container.Image,
-        homeVolume: `orchestra-linux-${metadata.owner}-home`, securityPolicy: policy.value, payloadDirectory: nativePayload, session,
-        verifyWorkspace: async () => {
-          const latest = await load()
-          if (latest.owner !== metadata.owner || latest.endpoint !== metadata.endpoint || latest.containerID !== container.Id)
-            throw new NativeDockProtocol.NativeError("wrong-scope", "Runtime ownership changed during helper admission")
-          const live = await owned(latest)
-          if (!live?.State.Running || placement(live) !== runtime.runtimeEpoch || live.Image !== container.Image
-            || JSON.stringify(await nativeSession(latest, live)) !== JSON.stringify(session))
-            throw new NativeDockProtocol.NativeError("wrong-scope", "Runtime session changed during helper admission")
-        },
-      }), runtime, session, endpoint: metadata.endpoint, imageID: container.Image }
-      current.native = native
-      native.channel.onExit(() => { if (current.native === native) current.native = undefined })
-      return native
-    }),
+    }, false),
+    // Helper admission runs outside the mutation queue: a cold helper start must
+    // not hold app listing, launch or the Slack bridge. Concurrent callers join.
+    native: () => {
+      current.nativeStart ??= startNative().finally(() => { current.nativeStart = undefined })
+      return current.nativeStart
+    },
     configureBrowser: (connection: { endpoint: string; token: string }) => serialize(async () => {
       const metadata = await load()
       const container = await owned(metadata)
@@ -647,8 +684,10 @@ export function create(options: { root: string; context: string; image?: string;
       // waiting for its serialized ownership/deployment check. Its failure must
       // not skip helper/container teardown, so it is rethrown afterwards.
       const closed = await access.close().then(() => undefined, (error: unknown) => error)
+      await retireNative()
       await serialize(async () => {
         if (!current.metadata && !(await readMetadata(root))) return
+        current.nativeEpoch++
         await closeNative()
         await stopOwned(await load())
         current.catalogue = undefined

@@ -386,6 +386,35 @@ class RuntimeSessionTests(unittest.TestCase):
         self.publish(value)
         self.assertEqual(self.api.session_environment(_runtime=self.runtime), expected)
 
+    def test_degraded_accessibility_session(self):
+        degraded = {key: value for key, value in self.session.items()
+                    if key not in ("AT_SPI_BUS_ADDRESS", "ORCHESTRA_A11Y_SESSION_ID")}
+        degraded["accessibilityError"] = "a11y-startup-failed"
+        self.assertEqual(self.api.parse_session(json.dumps(degraded), _runtime=self.runtime), degraded)
+        self.publish(degraded)
+        # Terminal, files and apps read this environment; it must not need the a11y bus.
+        self.assertEqual(self.api.session_environment(_runtime=self.runtime),
+                         {key: self.session[key] for key in ("DISPLAY", "DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR", "XAUTHORITY")})
+        outcome = None
+        try:
+            self.api.native_session(_runtime=self.runtime)
+        except Exception as error:
+            outcome = error
+        self.assertIsInstance(outcome, self.api.SessionError, "degraded-native-session-refused")
+        self.assertEqual(str(outcome), "native-session-a11y-unavailable")
+        with self.assertRaisesRegex(self.api.SessionError, "^native-workspace-scope-unavailable$"):
+            self.api.native_scope(_runtime=self.runtime)
+        for name, value in (
+                ("bus-with-error", {**degraded, "AT_SPI_BUS_ADDRESS": self.session["AT_SPI_BUS_ADDRESS"]}),
+                ("id-with-error", {**degraded, "ORCHESTRA_A11Y_SESSION_ID": self.session["ORCHESTRA_A11Y_SESSION_ID"]}),
+                ("both-with-error", {**self.session, "accessibilityError": "a11y-startup-failed"}),
+                ("unexplained-absence", {key: value for key, value in degraded.items() if key != "accessibilityError"}),
+                ("free-text-code", {**degraded, "accessibilityError": "Bus said: no"}),
+                ("non-string-code", {**degraded, "accessibilityError": 1})):
+            with self.subTest(record=name):
+                with self.assertRaisesRegex(self.api.SessionError, "^native-session-record-invalid$"):
+                    self.api.parse_session(json.dumps(value), _runtime=self.runtime)
+
     def test_record_bounds_and_mode(self):
         for value in (b"{" + b" " * self.api.SESSION_BYTES, b"[1]", b"null", b"{", b"\xff",
                       b"[" * 2000 + b"]" * 2000):
@@ -786,6 +815,10 @@ class LiveSessionTests(unittest.TestCase):
 
 
 MUTATIONS = (
+    ("degraded-pair", "test_degraded_accessibility_session",
+     "if degraded and (any(key in session for key in ACCESSIBILITY_FIELDS) or ", "if degraded and ("),
+    ("degraded-native", "test_degraded_accessibility_session",
+     '    if "accessibilityError" in session:', '    if False:'),
     ("identity", "test_stale_identity",
      '    if process_identity(session["processIdentity"]["pid"]) != session["processIdentity"]:', '    if False:'),
     ("active-socket", "test_active_socket_preserved",
