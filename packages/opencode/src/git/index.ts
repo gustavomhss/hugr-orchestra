@@ -176,8 +176,10 @@ export const collectLog = Effect.fnUntraced(function* (stdout: Stream.Stream<Uin
     Stream.takeWhile(() => state.bytes <= bounds.maxOutputBytes),
     Stream.runForEach((chunk) =>
       Effect.sync(() => {
+        // Parse only bytes inside the budget: one chunk can carry whole commits past the cap.
+        const room = Math.max(bounds.maxOutputBytes - state.bytes, 0)
         state.bytes += chunk.length
-        feed(decoder.decode(chunk, { stream: true }))
+        feed(decoder.decode(chunk.length > room ? chunk.subarray(0, room) : chunk, { stream: true }))
       }),
     ),
     Effect.timeoutOption(bounds.timeout),

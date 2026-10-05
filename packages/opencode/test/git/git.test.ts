@@ -232,7 +232,8 @@ describe("Git", () => {
         [{ file: "one.txt", additions: 1, deletions: 2 }],
         [{ file: "two.txt", additions: 3, deletions: 4 }],
       ])
-      expect(clipped.truncated).toBe(true)
+      // One chunk carries both commits; bytes past the 8-byte budget must not be parsed.
+      expect(clipped).toEqual({ commits: [], truncated: true })
     }),
   )
 })
