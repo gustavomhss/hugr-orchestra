@@ -1270,7 +1270,7 @@ const layer = Layer.effect(
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
-            const result = yield* handle.process({
+            const streamInput = {
               contextMemory: prepared.system.length > 0,
               user: lastUser,
               agent,
@@ -1284,8 +1284,14 @@ const layer = Layer.effect(
               ],
               tools,
               model,
-              toolChoice: format.type === "json_schema" ? "required" : undefined,
+              toolChoice: format.type === "json_schema" ? ("required" as const) : undefined,
+            }
+            yield* continuity.observe({
+              sessionID,
+              request: streamInput,
+              messageIDs: prepared.messages.map((message) => message.info.id),
             })
+            const result = yield* handle.process(streamInput)
 
             if (structured !== undefined) {
               handle.message.structured = structured

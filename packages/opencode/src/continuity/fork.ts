@@ -2,6 +2,7 @@ import type { Agent } from "@/agent/agent"
 import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import type { LLM } from "@/session/llm"
+import type { Tool } from "ai"
 import { MessageID, SessionID } from "@/session/schema"
 import { Effect, Pull, Stream } from "effect"
 import type { LLMEvent } from "@opencode-ai/llm"
@@ -15,6 +16,82 @@ import type { ArchiveChunk, ArchiveReference, MemoryArtifact, MemorySnapshot } f
 import PROMPT from "./prompt.txt"
 
 const TAIL_SIZE = 8
+
+/** The parent's most recent model request and the stored messages it was built from. */
+export type ParentRequest = { input: LLM.StreamInput; messageIDs: readonly MessageID[] }
+
+const REPLAY_NOTE = [
+  "CONTEXT CONTINUITY CHECKPOINT",
+  "This message comes from the host, not from the user. For this single reply, stop the task above",
+  "and act only as the maintenance producer described below. Tool calls are rejected and discard the reply.",
+  "The conversation above is the session's active context, shown so the provider can reuse its cache.",
+  "Prior working memory, if any, is the system section that begins with \"Historical working memory follows\".",
+].join("\n")
+
+function snippet(message: SessionV1.WithParts) {
+  for (const part of message.parts) {
+    if (part.type === "text" && part.text.trim()) return inline(part.text.trim().slice(0, 120))
+    if (part.type === "tool") return inline(`tool call ${part.tool}`)
+  }
+  return inline(`${message.info.role} message`)
+}
+
+// Keep the definition bytes the provider sees; only host-side execution changes.
+function denied(tool: Tool): Tool {
+  return { ...tool, execute: async () => { throw new Error("Context maintenance cannot execute tools") } } as Tool
+}
+
+/**
+ * Rebuild the parent's last request with one appended instruction so the provider
+ * reuses the parent's prompt cache: same model, system, tools, options and cache key.
+ * Returns undefined when that request cannot carry this snapshot safely.
+ */
+export function replay(
+  parent: ParentRequest,
+  captured: MemorySnapshot,
+  model: Provider.Model,
+  instruction: string,
+): LLM.StreamInput | undefined {
+  const input = parent.input
+  if (input.sessionID !== captured.sessionID || input.purpose !== undefined) return
+  // A forced tool call or structured output would make the producer reply unusable.
+  if (input.toolChoice === "required" || input.responseSchema !== undefined) return
+  if (input.model.providerID !== model.providerID || input.model.id !== model.id) return
+  const sent = new Set(parent.messageIDs)
+  if (!captured.head.length || !captured.head.every((message) => sent.has(message.info.id))) return
+  const tools = Object.entries(input.tools)
+  // Provider-executed tools run remotely; host-side denial cannot stop them.
+  if (tools.some(([, tool]) => tool.type === "provider" || typeof tool.execute !== "function")) return
+  return {
+    ...input,
+    messages: [...input.messages, { role: "user", content: instruction }],
+    tools: Object.fromEntries(tools.map(([name, tool]) => [name, denied(tool)])),
+    retries: 0,
+  }
+}
+
+export function replayInstruction(captured: MemorySnapshot, known: ArchiveReference[], role: string) {
+  const first = captured.head[0]
+  const last = captured.head.at(-1)!
+  const tail = captured.tail[0]
+  return [
+    REPLAY_NOTE,
+    role,
+    "## Coverage",
+    `Write working memory for the prior memory plus the conversation from the ${first.info.role} message ` +
+      `beginning "${snippet(first)}" through the ${last.info.role} message beginning "${snippet(last)}". ` +
+      `Messages from the ${tail.info.role} message beginning "${snippet(tail)}" onward remain native context; ` +
+      "do not summarize them.",
+    "## Available archive references",
+    ...known.map((reference) => {
+      const message = captured.head.find((item) => item.info.id === reference.first)
+      const why = captured.previous?.references.find((prior) => prior.id === reference.id)?.why
+      return `- ${reference.id} — ${inline(reference.title)}` +
+        (message ? ` — begins "${snippet(message)}"` : "") +
+        ` — ${inline(why ?? "Newly displaced transcript; retain if useful for continuation.")}`
+    }),
+  ].join("\n\n")
+}
 
 export function snapshot(
   sessionID: SessionID,
@@ -101,6 +178,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   services: { provider: Provider.Interface; llm: LLM.Interface },
   chunks: ArchiveChunk[],
   available: ArchiveReference[],
+  parentRequest?: ParentRequest,
 ) {
   if (captured.canRecall !== true || !validSnapshot(captured)) return
   const parent = captured.tail.findLast((message) => message.info.role === "user")?.info
@@ -127,7 +205,11 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   const schema = responseSchema(known)
   const role = PROMPT + `\nHOST CAPACITY: rendered memory and reference footer must fit ${maxTokens} tokens.\n` +
     `HOST TRANSPORT SCHEMA:\n${JSON.stringify(schema)}`
-  if (Token.estimate(role + "\n" + prepared.messages[0].content) > inputLimit) return
+  const instruction = parentRequest ? replayInstruction(captured, known, role) : undefined
+  // The replayed parent request already fit; only the appended instruction is new.
+  const replayed = parentRequest && instruction && observed + Token.estimate(instruction) <= inputLimit
+    ? replay(parentRequest, captured, model, instruction) : undefined
+  if (!replayed && Token.estimate(role + "\n" + prepared.messages[0].content) > inputLimit) return
   const defaults = ProviderTransform.options({ model, sessionID })
   const verbosity = parent.model.variant ? model.variants?.[parent.model.variant]?.textVerbosity : undefined
   const agent: Agent.Info = {
@@ -144,7 +226,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   // Bind transport pulls to this Effect's scope. The runFold/Channel.runWith
   // runner owns a separate scope; cancellation must join transport cleanup before
   // the timeout worker exits and the service releases its maintenance slot.
-  const result = yield* services.llm.stream({
+  const result = yield* services.llm.stream(replayed ?? {
     user, agent, permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
     purpose: "context-maintenance", model, ...prepared,
     ...(model.api.npm === "@ai-sdk/openai" ? { responseSchema: schema } : {}),

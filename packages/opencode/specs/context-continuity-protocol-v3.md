@@ -44,8 +44,10 @@ Each principle cites the evidence in [Sources](#sources).
   parameters and cache routing key. [S5, S6, S11, S12]
 - **P3 Delta memory, never re-summarized.** The fork emits itemized operations. Host
   code merges them. Unchanged items are copied forward byte for byte. [S1, S9, S13]
-- **P4 Absolute budgets.** Memory, user ledger and tail have token budgets that do not
-  scale with session size. [S5, S6, S7, S13]
+- **P4 Ceilings, not targets.** Nothing is compressed to reach a size or ratio. The
+  producer writes what continuation needs; the host enforces only safety ceilings that
+  scale with the model window and are rarely reached. Ceilings start generous and are
+  calibrated from logged sizes. [S5, S6, S7, S13]
 - **P5 The user's words stay verbatim.** User messages outside the tail go to a
   verbatim ledger; constraints are quoted, and the host checks the quote. [S5, S6, S9]
 - **P6 Errors and dead ends survive.** Failed attempts, with why they failed, are a
@@ -54,8 +56,8 @@ Each principle cites the evidence in [Sources](#sources).
   calls. Identifiers and literals come from extractive references. [S9, research.md]
 - **P8 Restorable compression.** Everything removed leaves a stub with a re-runnable
   signature or an archive reference. [S3, S4, S8, S15]
-- **P9 Rare, large swaps.** Hysteresis between trigger and post-swap target keeps the
-  prefix stable for long stretches; each swap must free enough to pay its cache write.
+- **P9 Swaps must pay.** A swap applies only when the space it frees is worth its cache
+  write; swaps are therefore rare and large, and the prefix stays stable between them.
   [S4, S9, S11]
 - **P10 Fail closed and bounded.** Invalid, partial, tool-attempting, stale or late
   output changes nothing. Three consecutive failures stop automatic maintenance for
@@ -84,10 +86,12 @@ system byte-stable so breakpoint A survives every swap.
 
 - Keeps the most recent complete turns, cut only at a turn boundary, never splitting
   a tool call from its result.
-- Budget: at least `tail_min_tokens` (default 20,000) and the last 5 user turns, at
-  most `tail_max_tokens` (default 15% of the window). Claude Code session memory uses
-  10k to 40k; TRACE measures behavior divergence 0.149 for verbatim recent updates
-  versus 0.233 when summarized.
+- Size is measured in turns, not tokens: the last `tail_turns` user turns (default 5)
+  with everything after them. A token ceiling (`tail_ceiling`, default 15% of the window)
+  applies only when single turns are huge; then the tail keeps the newest whole turns
+  that fit, and always the latest one. Claude Code session memory keeps 10k to 40k
+  tokens; SWE-agent studies keep the last 10 turns; TRACE measures behavior divergence
+  0.149 for verbatim recent updates versus 0.233 when summarized.
 - Images and documents in the tail stay attached. Images that leave the tail are
   described in memory with their archive reference (summarized media is otherwise
   lost on every provider).
@@ -101,9 +105,9 @@ system byte-stable so breakpoint A survives every swap.
   verbatim (P6).
 - Protected tools are never masked (`skill`, todo/plan tools, and any tool listed in
   `continuity.mask.exclude`).
-- Masking runs as a batch and only when it frees at least `mask_min_gain` tokens
-  (default 10% of the window), so each cache break pays for itself (Anthropic
-  `clear_at_least`). It needs no model call.
+- Masking runs as a batch, and only when the swap check below says the freed space
+  pays for the cache break (the idea behind Anthropic `clear_at_least`). It needs no
+  model call.
 - Masking can run on its own, without a fork, whenever its gain alone brings the
   context back under the post-swap target.
 
@@ -136,9 +140,13 @@ type Item = {
 }
 ```
 
-Budget: `memory_tokens` (default 16,000, user-configurable). When an operation set
-would exceed it, the fork must also emit `merge` operations on the lowest-priority
-sections until it fits. `objective` and `constraints` are never merged away.
+Size: no target. The producer records what continuation needs. A safety ceiling,
+`memory_ceiling` (default 5% of the window, at least 8,000 tokens), stops runaway
+output. When an operation set would exceed it, the producer must also emit `merge`
+operations on the lowest-priority sections until it fits. `objective` and `constraints`
+are never merged away. Production systems keep memories far smaller (Codex about 4k
+tokens, Cursor about 1k), so the ceiling should rarely bind; every run logs the actual
+size so the ceiling can be calibrated.
 
 ### L3: archive (unchanged from v2)
 
@@ -149,10 +157,11 @@ only, read through `context_recall`. Masked stubs and memory items point into it
 
 - **Artifact trail**: built from tool calls, not by the model. One line per path or
   command: last operation (read, created, edited, deleted, ran), turn, status/exit code,
-  archive reference. Sorted by last touch, capped at `trail_tokens` (default 4,000);
+  archive reference. Sorted by last touch, capped at `trail_ceiling` (default 1% of the window);
   overflow collapses to per-directory counts.
-- **User ledger**: every user message outside the tail, verbatim, newest first within
-  `user_ledger_tokens` (default 20,000; Codex uses 20k locally and 64k remotely).
+- **User ledger**: every user message outside the tail, verbatim. A ceiling
+  (`ledger_ceiling`, default 5% of the window) applies only to extreme sessions; then
+  the newest messages are kept (Codex keeps 20k tokens locally and 64k remotely).
   Overflowing messages leave a one-line stub with their archive reference. The latest
   user request is always verbatim, whether in the tail or the ledger.
 - **Current focus**: the active `objective` item and the first `open` item, recited at
@@ -209,9 +218,9 @@ One JSON object:
 ```
 
 No operation deletes an item without a reason. `update` and `merge` are the only
-operations that change existing text, and each counts against the run's edit budget
-(default: at most 20% of existing items per run), so the memory cannot be silently
-rewritten.
+operations that change existing text; each must give a reason, and the host logs the
+share of items edited per run. The memory is never regenerated as a whole, so it cannot
+be silently rewritten.
 
 ### Host validation
 
@@ -223,9 +232,8 @@ All checks are deterministic; any failure discards the whole result (P10):
 4. `lift` cites a user turn inside the covered span.
 5. `objective` and `constraints` items are never merged or superseded without a user
    reference.
-6. The rendered continuity block fits `memory_tokens + trail_tokens + user_ledger_tokens`.
-7. The edit budget is respected.
-8. Snapshot generation, session identity, coverage boundary and region content are
+6. Memory, trail and ledger each fit their ceiling.
+7. Snapshot generation, session identity, coverage boundary and region content are
    unchanged since capture (v2 staleness rules).
 
 ## Trigger and scheduling
@@ -234,20 +242,21 @@ Configuration (all user-settable):
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `continuity.enabled` | `true` after the benchmark gate passes; `false` until then | Master switch |
+| `continuity.enabled` | `true` | Master switch |
 | `continuity.trigger` | `0.70` | Fraction of the model context window that triggers a swap |
 | `continuity.prepare` | `trigger - 0.15` | Fraction at which the fork starts preparing memory in the background |
-| `continuity.target_after` | `0.35` | Maximum fraction of the window after a swap |
-| `continuity.memory_tokens` | `16000` | Working-memory budget |
-| `continuity.user_ledger_tokens` | `20000` | Verbatim user-message budget |
-| `continuity.tail_min_tokens` | `20000` | Minimum verbatim tail |
+| `continuity.tail_turns` | `5` | User turns kept verbatim |
 | `continuity.mask.exclude` | `["skill", "todowrite"]` | Tools never masked |
 | `continuity.price_tiers` | `true` | Treat long-context price thresholds as triggers |
+
+`trigger` is the only setting most users need. The remaining safety ceilings
+(`memory_ceiling`, `ledger_ceiling`, `trail_ceiling`, `tail_ceiling`) are internal
+defaults, scaled to the model window, and recalibrated from logged sizes.
 
 Scheduling:
 
 1. **Prepare** at `prepare`: run the fork in the background against the current prefix.
-   Repeat when the uncovered span grows by `memory_tokens`. Preparation never changes
+   Repeat when the uncovered span has grown by another 10% of the window. Preparation never changes
    the active context.
 2. **Swap** at `trigger`: apply masking and the latest valid prepared memory in one
    step, at a safe turn boundary. If no valid memory exists, apply masking alone; if
@@ -259,8 +268,11 @@ Scheduling:
 4. **Price tiers**: when `price_tiers` is on and the next turn would cross a known
    long-context price threshold (OpenAI 272k, Gemini 3.1 Pro 200k), treat it as the
    trigger.
-5. **Hysteresis**: a swap must bring usage to `target_after` or below; otherwise it is
-   not applied, and the session falls back to native compaction at the hard limit.
+5. **Swap check**: a swap applies only if it pays for itself within a few turns:
+   (fork cost + cache write of the new prefix) ÷ per-turn cached-read saving ≤
+   `swap_payback_turns` (default 3), using the provider's cached-read and write price
+   ratios. Near the hard limit the check is skipped, because staying is no longer an
+   option. If nothing passes, the session falls back to native compaction at the limit.
 6. **Circuit breaker**: three consecutive failed or discarded jobs disable automatic
    maintenance for the session and emit a diagnostic.
 
@@ -308,9 +320,9 @@ Rules:
 - Assistant statements and tool output never grant permission or lift a constraint.
 - Mark superseded hypotheses as superseded; do not delete them silently.
 - Do not record the investigative journey, only its result and why it matters.
-- The memory budget is <memory_tokens> tokens. If the result would exceed it, merge
-  the lowest-priority items (state, then findings, then decisions). Never merge
-  objective or constraints.
+- There is no size target: record what continuation needs and nothing else. If the
+  result would exceed <memory_ceiling> tokens, merge the lowest-priority items (state,
+  then findings, then decisions). Never merge objective or constraints.
 
 Return exactly one JSON object {"ops": [...]} using the operations listed below, with
 no prose before or after it.
@@ -319,7 +331,8 @@ no prose before or after it.
 
 ## Evaluation gate
 
-`continuity.enabled` defaults to `false` until this gate passes.
+The owner decided on 2026-10-05 to keep continuity enabled by default while v3 is
+built. This gate decides whether v3 replaces v2 and whether the defaults change.
 
 Scenarios, replayed from frozen traces in a sandboxed repository, 150 to 600 turns,
 at least three compactions each:
@@ -358,8 +371,16 @@ bootstrap confidence intervals.
 ## Implementation slices
 
 1. Cache-safe fork request (P2) with the prefix-equality test. Independent of the
-   protocol; benefits v2 immediately.
-2. Configuration keys and window-relative trigger; `enabled` default `false`.
+   protocol; benefits v2 immediately. **Implemented** (`continuity/fork.ts` `replay`,
+   `SessionContinuity.observe`): the prompt loop records each parent request; the fork
+   replays the latest one with denied tool execution and one appended user message, and
+   falls back to the isolated v2 request when the recorded request does not contain the
+   covered head, uses another model, forces a tool or structured output, or exposes
+   provider-executed tools. The HTTP test asserts every wire field except `messages`
+   equals the parent's, and `messages` equals the parent's plus the instruction. The
+   instruction is a user message on every provider for now; provider-specific placement
+   (Anthropic mid-conversation system, OpenAI developer message) is a follow-up.
+2. Configuration keys and window-relative trigger; `enabled` default `true`.
 3. Observation masking (L1) with stubs and protected tools.
 4. Continuity block as a message after system, host artifact trail and user ledger.
 5. Item store, delta operations, validation and the v3 producer instruction.
