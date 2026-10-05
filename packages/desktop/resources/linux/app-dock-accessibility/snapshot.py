@@ -147,7 +147,10 @@ def read(context, query):
             item = {"role": record["role"], "roleName": ROLES.get(record["role"], f"atspi-role-{record['role']}"),
                     "name": record["name"], "states": sorted(record["states"]), "interfaces": record["interfaces"],
                     "depth": state["text"]["depth"] if repeat else len(state["stack"]), "scopeDepth": record["scopeDepth"],
-                    "actions": [{"id": action["id"], "name": action["name"]} for action in record["actions"]], "capabilities": capabilities}
+                    "actions": [{"id": action["id"], "name": action["name"]} for action in record["actions"]], "capabilities": capabilities,
+                    # Pre-order plus depth is ambiguous once workspace roots are catalogued before
+                    # their subtrees; the parent's ref (possibly from an earlier page) names it exactly.
+                    "parentRef": state["stack"][-1].get("ref") if state["stack"] and not repeat else None}
             if not options["maxText"]:
                 capabilities["text"].update(requested=False, reason="protected" if record["role"] == 40 else "request-disabled")
             if options["maxText"] and record["role"] != 40 and A + "Text" in record["interfaces"]:
@@ -193,7 +196,7 @@ def read(context, query):
                     _reason(result, "depth-limit")
                 else:
                     (state["deferred"] if state["rootFirst"] and not state["stack"] else state["stack"]).append(
-                        {**anchor, "count": count, "index": 0, "last": None})
+                        {**anchor, "count": count, "index": 0, "last": None, "ref": item["ref"]})
             if state["text"] is not None:
                 break
     except BusError as error:

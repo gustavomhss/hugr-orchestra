@@ -392,6 +392,10 @@ class SnapshotTests(unittest.TestCase):
                          "workspace-root-first-exact-dfs-order")
         self.assertEqual([item["depth"] for item in page["items"]], [0, 0, 1, 2, 1, 1, 1])
         self.assertEqual([item["scopeDepth"] for item in page["items"]], [0, 0, 1, 2, 1, 1, 1])
+        names = {item["ref"]: item["name"] for item in page["items"]}
+        self.assertEqual([names.get(item["parentRef"]) for item in page["items"]],
+                         [None, None, "window-0", "entry", "window-0", "window-1", "window-1"],
+                         "workspace-parent-refs-survive-root-first-order")
         self.assertEqual(page["scopeKind"], "workspace")
         self.assertEqual(page["title"], "window-0")
         self.assertEqual([window["ref"] for window in page["windows"]], [item["ref"] for item in page["items"][:2]])
@@ -413,6 +417,9 @@ class SnapshotTests(unittest.TestCase):
                                  ["window-0", "window-1", "entry", "button", "entry-1", "button-1"],
                                  "workspace-pages-preserve-root-catalogue-and-children")
                 self.assertEqual([item["depth"] for item in items], [0, 0, 1, 1, 1, 1])
+                names = {item["ref"]: item["name"] for item in items}
+                self.assertEqual([names.get(item["parentRef"]) for item in items],
+                                 [None, None, "window-0", "window-0", "window-1", "window-1"], "parent-refs-across-pages")
                 self.assertEqual(len({item["ref"] for item in items}), len(items))
                 self.assertTrue(all(0 < len(page["items"]) <= budget for page in pages))
                 for page in pages[:-1]:
