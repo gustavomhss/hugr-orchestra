@@ -210,13 +210,39 @@ describe("App Dock controller", () => {
     detach()
     gate.resolve()
     await opening
-    // A popup the page opens while the Dock is hidden is attached by the desktop as well.
+    // A popup the desktop attached from the tab on screen as the view went away is hidden as well.
     dock.emit({ type: "tab-opened", payload: { tabID: "popup", generation: 9, url: "https://example.com/popup" } })
     expect(dock.calls.filter((call) => call[0] === "hide").slice(1)).toEqual([
       ["hide", tab("tab-1", 1)],
       ["hide", tab("tab-3", 3)],
       ["hide", tab("popup", 9)],
     ])
+  })
+
+  test("a popup from a background tab joins the tabs without being selected or shown", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    await controller.openNewTab()
+    await until(() => dock.manifest().tabs[profileA]?.length === 2)
+    const before = dock.calls.length
+
+    const popup = { tabID: "popup", generation: 9, url: "https://example.com/popup" }
+    dock.emit({ type: "tab-opened-background", payload: popup })
+    dock.emit({ type: "tab-opened-background", payload: popup })
+    await until(() => dock.manifest().tabs[profileA]?.length === 3)
+    expect(controller.state.tabs.map((item) => item.tabID)).toEqual(["tab-1", "tab-2", "popup"])
+    expect(controller.state.active).toEqual(tab("tab-2", 2))
+    expect(controller.state.url).toBe("https://opencode.ai")
+    expect(dock.calls.slice(before)).toEqual([])
+
+    // Selecting it is what shows it.
+    controller.select(controller.state.tabs[2]!)
+    await settle()
+    expect(dock.calls.slice(before)).toEqual([["select", tab("popup", 9)]])
   })
 
   test("a crashed tab is not shown, so selecting it hides the tab shown before it", async () => {

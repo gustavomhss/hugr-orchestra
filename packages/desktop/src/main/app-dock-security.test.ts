@@ -6,8 +6,16 @@ import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { createRequire } from "node:module"
+import {
+  attached,
+  attachedContents,
+  backgroundPopups,
+  check,
+  popupsAtCapacity,
+  waitFor,
+} from "./app-dock-security.popups"
 
-const required = Array.from({ length: 31 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
+const required = Array.from({ length: 33 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
 const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock/s1.json")
 const schemes = ["http://127.0.0.1/", "file:///etc/passwd", "javascript:document.title='pwned'", "data:text/html,pwned"]
@@ -15,9 +23,6 @@ const cacheableBody = `cacheable fixture${"x".repeat(1_000_000)}`
 type Case = { id: string; status: "pass"; detail: string }
 const cases: Case[] = []
 
-const check = (condition: unknown, message: string) => {
-  if (!condition) throw new Error(message)
-}
 const pass = (id: string, detail: string) => cases.push({ id, status: "pass", detail })
 const rejects = async (fn: () => unknown | Promise<unknown>, text: string) => {
   try {
@@ -425,21 +430,6 @@ async function child() {
     await readEvents()
     return events.length
   }
-  const attached = (win: BrowserWindow, contents: Electron.WebContents) =>
-    (win.contentView as unknown as { children: { webContents?: Electron.WebContents }[] }).children.some(
-      (child) => child.webContents === contents,
-    )
-  const attachedContents = (win: BrowserWindow) =>
-    (win.contentView as unknown as { children: { webContents?: Electron.WebContents }[] }).children
-      .map((child) => child.webContents)
-      .find(Boolean)
-  const waitFor = async (predicate: () => boolean | Promise<boolean>, label: string) => {
-    const deadline = Date.now() + 5_000
-    while (!(await predicate())) {
-      if (Date.now() >= deadline) throw new Error(`Timed out waiting for ${label}`)
-      await new Promise<void>((resolve) => setTimeout(resolve, 25))
-    }
-  }
   const waitEvent = (after: number, predicate: (event: any) => boolean, label: string) => {
     const deadline = Date.now() + 5_000
     return new Promise<any>((resolve, reject) => {
@@ -459,6 +449,7 @@ async function child() {
   await installEventStore()
   const profile = "e2e-profile"
   const bounds = { x: 0, y: 0, width: 400, height: 300 }
+  const harness = { ipcWin, webContents, base: site.base, bounds, execute, invoke }
   const identity = (tab: { tabID: string; generation: number }) => ({ tabID: tab.tabID, generation: tab.generation })
   const open = async (url = site.base, profileID = profile) =>
     invoke(ipcWin.webContents.mainFrame, "app-dock-open", [url, bounds, profileID])
@@ -890,6 +881,8 @@ async function child() {
     await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(popupOpened.payload)])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupOpened.payload.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [popupSource.tabID])
+
+    pass("U32", await backgroundPopups(harness))
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightA.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightC.tabID])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [rightTarget.tabID])
@@ -1087,6 +1080,7 @@ async function child() {
         `${site.base}/ticker?capacity=a0`,
       "U28 recently selected tab remains usable",
     )
+    pass("U33", await popupsAtCapacity(harness, ipcWinB!, u28ActiveContents, u28ActiveB))
 
     const u28DownloadStart = await eventCount()
     const u28CancelledStart = site.cancelledDownloads()

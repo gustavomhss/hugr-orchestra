@@ -108,7 +108,7 @@ export function SessionContextUsage(props: SessionContextUsageProps) {
       <ProgressCircle
         size={16}
         strokeWidth={2}
-        percentage={context()?.usage ?? 0}
+        percentage={context()?.usage ?? undefined}
         style={
           variant() === "indicator"
             ? {
@@ -123,7 +123,7 @@ export function SessionContextUsage(props: SessionContextUsageProps) {
   )
   const circleV2 = () => (
     <div class="flex items-center justify-center">
-      <ProgressCircleV2 percentage={context()?.usage ?? 0} />
+      <ProgressCircleV2 percentage={context()?.usage ?? undefined} />
     </div>
   )
 

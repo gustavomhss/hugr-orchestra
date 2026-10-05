@@ -33,3 +33,22 @@ PLAYWRIGHT_PORT=5031 bunx playwright test --grep '@development-only|@source-fixt
 The native-frame spec starts its own isolated real-component server and also
 runs alongside production verification. Passing it is not packaged Electron or OS hit-zone proof.
 Recorded screenshots and benchmark receipts must name their tested source/bundle.
+
+## Visual acceptance pack
+
+`e2e/orchestra-screenshots` captures a screenshot matrix for owner review. It is not a
+gate: its `.visual.ts` file is outside the default and integration runners. Run it from
+`packages/app` with an output directory outside the repository:
+
+```sh
+ORCHESTRA_VISUAL_OUT=/tmp/orchestra-visual-pack PLAYWRIGHT_PORT=5121 \
+  bunx playwright test --config e2e/orchestra-screenshots/playwright.config.ts
+```
+
+It builds and previews the production bundle like the integration runner, but on the
+release `prod` channel; set `OPENCODE_CHANNEL=dev` to match the integration bundle.
+It covers dark and light, English LTR and Arabic RTL, at 1672×941, 1366×768, 1152×720
+and 900×700, plus a few 2x shots, using the existing mocked-API fixtures. Without
+`ORCHESTRA_VISUAL_OUT`, each test writes to its own Playwright output directory.
+`manifest.json` lists every PNG with its source commit and the measured sidebar width,
+toolbar height and logo box beside the identity contract values. Never commit the PNGs.

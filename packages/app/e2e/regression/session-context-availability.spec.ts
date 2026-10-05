@@ -103,6 +103,12 @@ for (const newLayoutDesigns of [false, true]) {
         `Total Tokens${scenario.tokens}`,
       )
       await expect(panel.getByText("Usage", { exact: true }).locator("..")).toHaveText(`Usage${scenario.usage}`)
+      // Unknown usage dashes the ring's track; any reported value, 0% included, keeps it solid.
+      for (const ring of [button, page.getByRole("tab", { name: "Context", exact: true })]) {
+        const track = ring.locator("circle").first()
+        if (scenario.usage === "—") await expect(track).not.toHaveCSS("stroke-dasharray", "none")
+        if (scenario.usage !== "—") await expect(track).toHaveCSS("stroke-dasharray", "none")
+      }
     })
   }
 }

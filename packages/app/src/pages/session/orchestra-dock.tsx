@@ -112,7 +112,7 @@ export function OrchestraDock(props: {
               <Switch>
                 <Match when={dock.state.status === "loading"}>
                   <p class="orchestra-dock-note" role="status">
-                    {language.t("orchestra.dock.loading")}
+                    <span>{language.t("orchestra.dock.loading")}</span>
                   </p>
                 </Match>
                 <Match when={dock.state.status === "failed"}>
@@ -125,7 +125,7 @@ export function OrchestraDock(props: {
                 </Match>
                 <Match when={dock.state.status === "ready" && dock.state.tabs.length === 0}>
                   <p class="orchestra-dock-note" role="status">
-                    {language.t("orchestra.dock.empty")}
+                    <span>{language.t("orchestra.dock.empty")}</span>
                   </p>
                 </Match>
               </Switch>

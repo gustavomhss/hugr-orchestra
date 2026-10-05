@@ -18,6 +18,7 @@ import {
   type TabIdentity,
 } from "./apps-panel-controller"
 import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
+import { TabMenu } from "./apps-panel-tab-menu"
 import "./apps-panel.css"
 
 const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
@@ -65,7 +66,7 @@ export function AppsPanel(
     findResult: undefined as { requestID: number; activeMatchOrdinal: number; matches: number } | undefined,
     downloadsOpen: false,
     sidebarCollapsed: localStorage.getItem(sidebarCollapsedKey) === "true",
-    menu: undefined as { tab: Tab; x: number; y: number; invoker: HTMLButtonElement } | undefined,
+    menu: undefined as { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement } | undefined,
     profileCreating: false,
     profileDraft: "",
   })
@@ -105,10 +106,6 @@ export function AppsPanel(
       { defer: true },
     ),
   )
-  // The tab menu is drawn in place, not in a portal, and can reach over the browser.
-  createEffect(() => {
-    if (view.menu && menuElement) onCleanup(dock.overlay(menuElement))
-  })
   onMount(() => {
     const unsubscribeFind = api?.appDockFindResult?.((result) => {
       if (sameTab(result, state.active) && result.requestID === findRequestID) setView("findResult", result)
@@ -119,7 +116,7 @@ export function AppsPanel(
     window.addEventListener("resize", resize.request)
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
-      if (!target || !root?.contains(target)) return
+      if (!target || !(root?.contains(target) || menuElement?.contains(target))) return
       const editable = !!target.closest("input, textarea, select, [contenteditable]")
       if (event.key === "Escape") {
         if (view.menu) closeMenu()
@@ -545,7 +542,9 @@ export function AppsPanel(
             tab={view.menu.tab}
             x={view.menu.x}
             y={view.menu.y}
+            rtl={view.menu.rtl}
             setElement={(element) => (menuElement = element)}
+            onDismiss={() => closeMenu()}
             canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
             canReload={capability("appDockCommand") && !view.menu.tab.crashed}
             canClose={capability("appDockCloseTab")}
@@ -591,10 +590,10 @@ function TabButton(props: {
   tab: Tab
   active: () => TabIdentity | undefined
   select: (tab: Tab) => void
-  setMenu: (menu: { tab: Tab; x: number; y: number; invoker: HTMLButtonElement }) => void
+  setMenu: (menu: { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement }) => void
 }) {
   const openMenu = (x: number, y: number, invoker: HTMLButtonElement) =>
-    props.setMenu({ tab: props.tab, x, y, invoker })
+    props.setMenu({ tab: props.tab, x, y, rtl: getComputedStyle(invoker).direction === "rtl", invoker })
   const keydown = (event: KeyboardEvent) => {
     const current = event.currentTarget
     if (!(current instanceof HTMLButtonElement)) return
@@ -604,7 +603,7 @@ function TabButton(props: {
     } else if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
       event.preventDefault()
       const rect = current.getBoundingClientRect()
-      openMenu(rect.left + 8, rect.bottom + 4, current)
+      openMenu(getComputedStyle(current).direction === "rtl" ? rect.right - 8 : rect.left + 8, rect.bottom + 4, current)
     } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       const tabs = [...(current.parentElement?.querySelectorAll<HTMLButtonElement>("[role='tab']") ?? [])]
       const index = tabs.indexOf(current)
@@ -654,62 +653,5 @@ function TabButton(props: {
       {props.tab.pinned ? "Pinned" : ""}
       {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
     </button>
-  )
-}
-
-function TabMenu(props: {
-  tab: Tab
-  x: number
-  y: number
-  setElement: (element: HTMLDivElement) => void
-  canDuplicate: boolean
-  canReload: boolean
-  canClose: boolean
-  hasOthers: boolean
-  hasRight: boolean
-  onDuplicate: () => void
-  onTogglePin: () => void
-  onReload: () => void
-  onClose: () => void
-  onCloseOthers: () => void
-  onCloseRight: () => void
-}) {
-  let firstItem: HTMLButtonElement | undefined
-  return (
-    <div
-      ref={props.setElement}
-      class="zen-tab-menu"
-      role="menu"
-      aria-label={`Actions for ${tabLabel(props.tab)}`}
-      style={{ left: `${props.x}px`, top: `${props.y}px` }}
-    >
-      <button
-        ref={(element) => {
-          firstItem = element
-          requestAnimationFrame(() => firstItem?.focus())
-        }}
-        type="button"
-        role="menuitem"
-        disabled={!props.canDuplicate}
-        onClick={props.onDuplicate}
-      >
-        Duplicate
-      </button>
-      <button type="button" role="menuitem" onClick={props.onTogglePin}>
-        {props.tab.pinned ? "Unpin" : "Pin"}
-      </button>
-      <button type="button" role="menuitem" disabled={!props.canReload} onClick={props.onReload}>
-        Reload
-      </button>
-      <button type="button" role="menuitem" disabled={!props.canClose} onClick={props.onClose}>
-        Close
-      </button>
-      <button type="button" role="menuitem" disabled={!props.hasOthers} onClick={props.onCloseOthers}>
-        Close others
-      </button>
-      <button type="button" role="menuitem" disabled={!props.hasRight} onClick={props.onCloseRight}>
-        Close right
-      </button>
-    </div>
   )
 }
