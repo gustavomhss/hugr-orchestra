@@ -241,29 +241,46 @@ export function AppsPanel(
   const recover = () => (activeLinux() ? void linuxMenu.run({ type: "open" }) : void dock.recover())
   return (
     <div ref={root} class="zen-browser-frame">
-      <div class="zen-dock-modes" role="tablist" aria-label={language.t("appDock.contexts")}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={!activeLinux()}
-          class={!activeLinux() ? "is-active" : ""}
-          onClick={() => dock.showBrowser()}
-        >
-          <span aria-hidden="true">◎</span>
-          {language.t("appDock.browser.title")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeLinux()}
-          disabled={linuxMenu.blocked() || !capability("appDockLinuxOpen")}
-          class={activeLinux() ? "is-active" : ""}
-          onClick={() => void linuxMenu.run({ type: "open" })}
-        >
-          <span aria-hidden="true">▣</span>
-          {language.t("appDock.linux.workspace")}
-        </button>
-      </div>
+      {/* The cockpit card already names its panes as tabs (Browser among them), so there the Linux
+          workspace is a toggle instead of a second tab list with a second Browser tab. */}
+      {props.compact ? (
+        <div class="zen-dock-modes">
+          <button
+            type="button"
+            aria-pressed={activeLinux()}
+            disabled={!activeLinux() && (linuxMenu.blocked() || !capability("appDockLinuxOpen"))}
+            class={activeLinux() ? "is-active" : ""}
+            onClick={() => (activeLinux() ? dock.showBrowser() : void linuxMenu.run({ type: "open" }))}
+          >
+            <span aria-hidden="true">▣</span>
+            {language.t("appDock.linux.workspace")}
+          </button>
+        </div>
+      ) : (
+        <div class="zen-dock-modes" role="tablist" aria-label={language.t("appDock.contexts")}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!activeLinux()}
+            class={!activeLinux() ? "is-active" : ""}
+            onClick={() => dock.showBrowser()}
+          >
+            <span aria-hidden="true">◎</span>
+            {language.t("appDock.browser.title")}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeLinux()}
+            disabled={linuxMenu.blocked() || !capability("appDockLinuxOpen")}
+            class={activeLinux() ? "is-active" : ""}
+            onClick={() => void linuxMenu.run({ type: "open" })}
+          >
+            <span aria-hidden="true">▣</span>
+            {language.t("appDock.linux.workspace")}
+          </button>
+        </div>
+      )}
     <div
       class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
       data-status={state.status}
