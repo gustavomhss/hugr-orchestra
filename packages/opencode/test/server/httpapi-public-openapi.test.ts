@@ -347,4 +347,14 @@ describe("PublicApi OpenAPI v2 errors", () => {
       "ProjectNotFoundError",
     )
   })
+
+  test("documents nullable VCS activity divergence", () => {
+    const spec = OpenApi.fromApi(PublicApi) as OpenApiSpec
+    const schema = spec.components.schemas.VcsActivity
+
+    expect(componentName(responseRef(spec.paths["/vcs/activity"]?.get?.responses?.["200"]) ?? "")).toBe("VcsActivity")
+    expect(schema?.properties?.ahead).toEqual({ anyOf: [{ type: "number" }, { type: "null" }] })
+    expect(schema?.properties?.behind).toEqual({ anyOf: [{ type: "number" }, { type: "null" }] })
+    expect(schema?.required).toEqual(expect.arrayContaining(["ahead", "behind", "totals", "truncated"]))
+  })
 })

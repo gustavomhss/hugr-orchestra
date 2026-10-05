@@ -1,5 +1,5 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { Effect, Layer, Context, Schema, Scope } from "effect"
+import { Duration, Effect, Layer, Context, Schema, Scope } from "effect"
 import { formatPatch, structuredPatch } from "diff"
 import { InstanceState } from "@/effect/instance-state"
 import { Watcher } from "@opencode-ai/core/filesystem/watcher"
@@ -11,6 +11,10 @@ import { VcsEvent } from "@opencode-ai/schema/vcs-event"
 const PATCH_CONTEXT_LINES = 2_147_483_647
 const MAX_PATCH_BYTES = 10_000_000
 const MAX_TOTAL_PATCH_BYTES = 10_000_000
+const ACTIVITY_MAX_COMMITS = 5_000
+const ACTIVITY_MAX_WINDOW_MS = 366 * 24 * 60 * 60 * 1000
+const ACTIVITY_MAX_OUTPUT_BYTES = 10_000_000
+const ACTIVITY_TIMEOUT = Duration.seconds(15)
 type DiffOptions = {
   readonly context?: number
 }
@@ -273,6 +277,53 @@ export const ApplyResult = Schema.Struct({
 })
 export type ApplyResult = Schema.Schema.Type<typeof ApplyResult>
 
+export type ActivityInput = {
+  readonly since: number
+  readonly until: number
+}
+
+export const ActivityTotals = Schema.Struct({
+  commits: Schema.Finite,
+  merges: Schema.Finite,
+  authors: Schema.Finite,
+  additions: Schema.Finite,
+  deletions: Schema.Finite,
+  filesChanged: Schema.Finite,
+}).annotate({ identifier: "VcsActivityTotals" })
+
+export const ActivityDay = Schema.Struct({
+  day: Schema.String.annotate({ description: "Server-local YYYY-MM-DD of the commit author time" }),
+  commits: Schema.Finite,
+  merges: Schema.Finite,
+  additions: Schema.Finite,
+  deletions: Schema.Finite,
+}).annotate({ identifier: "VcsActivityDay" })
+
+export const ActivityPath = Schema.Struct({
+  path: Schema.String,
+  changes: Schema.Finite,
+}).annotate({ identifier: "VcsActivityPath" })
+
+export const ActivityCommit = Schema.Struct({
+  hash: Schema.String,
+  subject: Schema.String,
+  time: Schema.Finite,
+}).annotate({ identifier: "VcsActivityCommit" })
+
+export const Activity = Schema.Struct({
+  repository: Schema.Boolean,
+  since: Schema.Finite,
+  until: Schema.Finite,
+  totals: ActivityTotals,
+  days: Schema.Array(ActivityDay),
+  topPaths: Schema.Array(ActivityPath),
+  recent: Schema.Array(ActivityCommit),
+  ahead: Schema.NullOr(Schema.Finite),
+  behind: Schema.NullOr(Schema.Finite),
+  truncated: Schema.Boolean.annotate({ description: "True when a commit, output or time bound cut the scan short" }),
+}).annotate({ identifier: "VcsActivity" })
+export type Activity = Schema.Schema.Type<typeof Activity>
+
 export class PatchApplyError extends Schema.TaggedErrorClass<PatchApplyError>()("VcsPatchApplyError", {
   message: Schema.String,
   reason: Schema.Literals(["non-git", "not-clean"]),
@@ -286,6 +337,7 @@ export interface Interface {
   readonly diff: (mode: Mode, options?: DiffOptions) => Effect.Effect<FileDiff[]>
   readonly diffRaw: () => Effect.Effect<string>
   readonly apply: (input: ApplyInput) => Effect.Effect<ApplyResult, PatchApplyError>
+  readonly activity: (input: ActivityInput) => Effect.Effect<Activity>
 }
 
 interface State {
@@ -414,9 +466,106 @@ const layer: Layer.Layer<Service, never, Git.Service | EventV2Bridge.Service> = 
         }
         return { applied: true }
       }),
+      activity: Effect.fn("Vcs.activity")(function* (input: ActivityInput) {
+        const value = yield* InstanceState.get(state)
+        const ctx = yield* InstanceState.context
+        const since = Math.max(input.since, input.until - ACTIVITY_MAX_WINDOW_MS)
+        const empty = summarize([], [], { since, until: input.until })
+        if (ctx.project.vcs !== "git") return { ...empty, repository: false }
+        if (!(yield* git.hasHead(ctx.directory))) return empty
+        const scan = {
+          since,
+          until: input.until,
+          limit: ACTIVITY_MAX_COMMITS,
+          maxOutputBytes: ACTIVITY_MAX_OUTPUT_BYTES,
+          timeout: ACTIVITY_TIMEOUT,
+        }
+        const [commits, merges, divergence] = yield* Effect.all(
+          [
+            git.log(ctx.directory, { ...scan, merges: false }),
+            git.log(ctx.directory, { ...scan, merges: true }),
+            upstreamDivergence(git, ctx.directory, value.root),
+          ],
+          { concurrency: 3 },
+        )
+        return {
+          ...summarize(commits.commits, merges.commits, { since, until: input.until }),
+          ahead: divergence?.ahead ?? null,
+          behind: divergence?.behind ?? null,
+          truncated: commits.truncated || merges.truncated,
+        }
+      }),
     })
   }),
 )
+
+// git bounds the walk by committer time; author time decides the window and day buckets.
+function summarize(commits: Git.Commit[], merges: Git.Commit[], window: { since: number; until: number }) {
+  const inWindow = (commit: Git.Commit) => commit.time >= window.since && commit.time <= window.until
+  const scanned = commits.filter(inWindow)
+  const days = new Map<string, { day: string; commits: number; merges: number; additions: number; deletions: number }>()
+  const bucket = (time: number) => {
+    const date = new Date(time)
+    const day = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+      .map((part) => String(part).padStart(2, "0"))
+      .join("-")
+    const entry = days.get(day) ?? { day, commits: 0, merges: 0, additions: 0, deletions: 0 }
+    days.set(day, entry)
+    return entry
+  }
+  const paths = new Map<string, number>()
+  scanned.forEach((commit) => {
+    const entry = bucket(commit.time)
+    entry.commits += 1
+    commit.files.forEach((file) => {
+      entry.additions += file.additions
+      entry.deletions += file.deletions
+      paths.set(file.file, (paths.get(file.file) ?? 0) + file.additions + file.deletions)
+    })
+  })
+  const merged = merges.filter(inWindow)
+  merged.forEach((commit) => {
+    bucket(commit.time).merges += 1
+  })
+  const list = [...days.values()]
+  return {
+    repository: true,
+    since: window.since,
+    until: window.until,
+    totals: {
+      commits: scanned.length,
+      merges: merged.length,
+      authors: new Set(scanned.map((commit) => commit.email.trim().toLowerCase())).size,
+      additions: list.reduce((sum, day) => sum + day.additions, 0),
+      deletions: list.reduce((sum, day) => sum + day.deletions, 0),
+      filesChanged: paths.size,
+    },
+    days: list.toSorted((a, b) => a.day.localeCompare(b.day)),
+    topPaths: [...paths.entries()]
+      .toSorted((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 8)
+      .map((entry) => ({ path: entry[0], changes: entry[1] })),
+    recent: scanned
+      .toSorted((a, b) => b.time - a.time)
+      .slice(0, 10)
+      .map((commit) => ({
+        hash: commit.hash,
+        subject: Array.from(commit.subject.trim()).slice(0, 120).join(""),
+        time: commit.time,
+      })),
+    ahead: null,
+    behind: null,
+    truncated: false,
+  } satisfies Activity
+}
+
+const upstreamDivergence = Effect.fnUntraced(function* (git: Git.Interface, cwd: string, root: Git.Base | undefined) {
+  if (!root) return
+  // Prefer the default branch's configured upstream, else the remote-tracking default ref.
+  const upstream = (yield* git.upstream(cwd, root.name)) ?? (root.ref === root.name ? undefined : root.ref)
+  if (!upstream) return
+  return yield* git.aheadBehind(cwd, upstream, ACTIVITY_TIMEOUT)
+})
 
 export const node = LayerNode.make({ service: Service, layer: layer, deps: [Git.node, EventV2Bridge.node] })
 

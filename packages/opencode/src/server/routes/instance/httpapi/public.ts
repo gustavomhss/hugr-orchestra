@@ -67,6 +67,8 @@ const QueryParameterSchemas: Record<string, OpenApiSchema> = {
   "GET /session limit": { type: "number" },
   "GET /session/{sessionID}/message limit": { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
   "GET /vcs/diff context": { type: "integer", minimum: 0 },
+  "GET /vcs/activity since": { type: "integer", minimum: 0 },
+  "GET /vcs/activity until": { type: "integer", minimum: 0 },
   "GET /api/session limit": { type: "number" },
   "GET /api/session start": { type: "number" },
   "GET /api/session roots": QueryBooleanOpenApi,
@@ -269,6 +271,8 @@ function applyLegacySchemaOverrides(spec: OpenApiSpec) {
   }
   if (schemas.GlobalSession?.properties?.project)
     schemas.GlobalSession.properties.project = nullable(schemas.GlobalSession.properties.project)
+  const activity = schemas.VcsActivity?.properties
+  if (activity) Object.assign(activity, { ahead: nullable(activity.ahead), behind: nullable(activity.behind) })
   const providerOptions = schemas.ProviderConfig?.properties?.options
   if (providerOptions) providerOptions.additionalProperties = {}
   const model = schemas.ProviderConfig?.properties?.models?.additionalProperties

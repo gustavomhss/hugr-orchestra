@@ -6,10 +6,10 @@ import { Global } from "@opencode-ai/core/global"
 import { LSP } from "@/lsp/lsp"
 import { Vcs } from "@/project/vcs"
 import { Skill } from "@/skill"
-import { Effect } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { Clock, Effect } from "effect"
+import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ApiVcsApplyError } from "../groups/instance"
+import { ApiVcsApplyError, VcsActivityQuery } from "../groups/instance"
 import { markInstanceForDisposal } from "../lifecycle"
 
 export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance", (handlers) =>
@@ -73,6 +73,14 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       )
     })
 
+    const getVcsActivity = Effect.fn("InstanceHttpApi.vcsActivity")(function* (ctx: {
+      query: typeof VcsActivityQuery.Type
+    }) {
+      const until = ctx.query.until ?? (yield* Clock.currentTimeMillis)
+      if (until <= ctx.query.since) return yield* new HttpApiError.BadRequest({})
+      return yield* vcs.activity({ since: ctx.query.since, until })
+    })
+
     const getCommand = Effect.fn("InstanceHttpApi.command")(function* () {
       return yield* command.list()
     })
@@ -101,6 +109,7 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       .handle("vcsDiff", getVcsDiff)
       .handle("vcsDiffRaw", getVcsDiffRaw)
       .handle("vcsApply", applyVcs)
+      .handle("vcsActivity", getVcsActivity)
       .handle("command", getCommand)
       .handle("agent", getAgent)
       .handle("skill", getSkill)
