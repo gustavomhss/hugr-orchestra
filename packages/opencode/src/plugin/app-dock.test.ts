@@ -827,3 +827,29 @@ test("parallel native scans run one after another instead of fencing each other'
   expect(dock.calls.map((call) => call.args.cursor === undefined ? `${call.op}:fresh` : `${call.op}:page`)).toEqual([
     "read:fresh", "read:page", "read:fresh", "read:page", "read:fresh", "read:page", "action:fresh"])
 })
+
+test("target acts with a ref from the winner's own page because each native page retires earlier refs", async () => {
+  const state = { latest: 0 }
+  const dock = host((op, args) => {
+    // The real host keeps only the latest page's observation; refs carry the page they were read on.
+    if (op === "action") return String(args.ref).endsWith(`@${state.latest}`) ? { ok: true, value: { dispatch: "acknowledged" } }
+      : nativeError("stale-ref")
+    state.latest = args.cursor === undefined ? 1 : 2
+    return state.latest === 1 ? page([control("n:open@1", "Open")], "c") : page([control("n:x@2", "Explorer")])
+  })
+  expect(JSON.parse(String(await dock.hooks.tool.dock_action.execute({ target: { name: "open" } }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(dock.calls.map((call) => call.args.cursor === undefined ? `${call.op}:fresh` : `${call.op}:page`))
+    .toEqual(["read:fresh", "read:page", "read:fresh", "read:page", "read:fresh", "action:fresh"])
+})
+
+test("dock_find lists a role without a name and dock_action takes an actionID passed as action", async () => {
+  const dock = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : page([control("n:a", "Open"), field("n:search", "Search settings"), field("n:filter", "Filter")]))
+  expect(JSON.parse(String(await dock.hooks.tool.dock_find.execute({ role: "Entry" }, context))))
+    .toMatchObject({ found: 2, items: [{ ref: "n:search" }, { ref: "n:filter" }] })
+  expect(await dock.hooks.tool.dock_find.execute({}, context)).toBe("dock_find needs name, role or both")
+  expect(JSON.parse(String(await dock.hooks.tool.dock_action.execute({ ref: "n:a", action: "a:n:a" }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(dock.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:a", actionID: "a:n:a" } })
+})

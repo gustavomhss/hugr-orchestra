@@ -159,7 +159,7 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
     })
 }
 
-type NativeQuery = { name: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number }
+type NativeQuery = { name?: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
 // occurrence counts earlier matches with the same name and roleName on the same page, and index is the item's position
 // on that page, so a rescan can re-identify the control.
@@ -183,8 +183,9 @@ function nativePage(value: unknown) {
 
 function matches(item: unknown, query: NativeQuery): item is NativeItem {
   if (!object(item) || typeof item.ref !== "string" || typeof item.name !== "string" || typeof item.roleName !== "string") return false
-  const name = query.name.trim().toLowerCase()
-  if (name.length === 0 || !item.name.toLowerCase().includes(name)) return false
+  // An omitted name lists every control of the role; a blank one matches nothing.
+  const name = query.name?.trim().toLowerCase()
+  if (name !== undefined && (name.length === 0 || !item.name.toLowerCase().includes(name))) return false
   return fits(item as NativeItem, query)
 }
 
@@ -245,9 +246,15 @@ const compactScan = (scan: NativeScan, code?: string) => toJSON({
 const expired = (scan: NativeScan) =>
   ({ ...scan, complete: false, reasons: [...(Array.isArray(scan.reasons) ? scan.reasons : []), "tool-deadline"] })
 
+// Re-identifies a control across scans by position and shape; refs themselves change with every observation.
+const same = (match: NativeMatch, winner: NativeMatch) => match.page === winner.page && match.index === winner.index
+  && match.occurrence === winner.occurrence && match.item.name === winner.item.name
+  && match.item.roleName === winner.item.roleName && match.item.depth === winner.item.depth
+  && match.item.scopeDepth === winner.item.scopeDepth
+
 // Names are substring-matched, so "Open" also hits "Open Quick Access": a single match wins, else a unique exact name.
 function pick(scan: NativeScan, query: NativeQuery) {
-  const exact = scan.found.filter((match) => match.item.name.trim().toLowerCase() === query.name.trim().toLowerCase())
+  const exact = scan.found.filter((match) => match.item.name.trim().toLowerCase() === query.name?.trim().toLowerCase())
   if (scan.found.length === 1) return scan.found[0]
   if (exact.length === 1) return exact[0]
   return undefined
@@ -323,12 +330,16 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     const current = pick(fresh, query)
     // A homonym surfacing on any page between the scans leaves no single pick; a moved position or tree depth means
     // the tree no longer has the shape the winner was chosen from.
-    if (current === undefined || current.page !== winner.page || current.index !== winner.index
-      || current.occurrence !== winner.occurrence || current.item.name !== winner.item.name
-      || current.item.roleName !== winner.item.roleName || current.item.depth !== winner.item.depth
-      || current.item.scopeDepth !== winner.item.scopeDepth)
+    if (current === undefined || !same(current, winner))
       return toJSON({ code: "target-changed", outcome: "not-dispatched", item: compactItem(winner.item) })
-    return Promise.resolve(run(current.item, clock)).catch((error: unknown) => {
+    // Each native page is a new observation that retires the refs of earlier pages, so a winner before the last
+    // page needs a scan that stops on its page to hold a live ref, re-identified the same way.
+    const live = current.page === fresh.pages ? current
+      : only(await find(context, loose, (scan) => scan.pages >= winner.page, clock), query).found.find((match) =>
+        same(match, winner))
+    if (Date.now() >= clock.deadline) return compactScan(expired(all), "target-search-incomplete")
+    if (live === undefined) return toJSON({ code: "target-changed", outcome: "not-dispatched", item: compactItem(winner.item) })
+    return Promise.resolve(run(live.item, clock)).catch((error: unknown) => {
       if (!(error instanceof NativeRPCError) || error.code !== "stale-ref" || error.outcome !== "not-dispatched" || attempt >= 1) throw error
       return act(context, query, run, clock, attempt + 1)
     })
@@ -386,12 +397,13 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         description:
           "Find controls in the native Linux workspace by accessible name (case-insensitive substring) and optional roleName. The tool pages the accessibility tree itself and returns compact matches from the first page that has any, with refs usable immediately by dock_action/dock_type; searchComplete:false means part of the tree was not searched (later pages, or subtrees listed in reasons). Prefer dock_action/dock_type with `target` to locate and act in one call, because native refs expire when the app changes.",
         args: {
-          name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the accessible name"),
-          role: tool.schema.string().min(1).max(64).optional().describe("Exact roleName, e.g. push-button, entry, check-box"),
+          name: tool.schema.string().min(1).max(256).optional().describe("Case-insensitive substring of the accessible name; omit it to list every control of a role"),
+          role: tool.schema.string().min(1).max(64).optional().describe("roleName, e.g. push-button, entry, check-box (case, spaces and hyphens are ignored)"),
           includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
         },
-        execute: (args, context) =>
-          exclusive(() => find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) },
+        execute: (args, context) => args.name === undefined && args.role === undefined
+          ? Promise.resolve("dock_find needs name, role or both")
+          : exclusive(() => find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) },
             (scan) => scan.found.length > 0, { deadline: Date.now() + findDeadlineMs })).then((result) => compactScan(result), toolError),
       }),
       dock_wait: tool({
@@ -475,9 +487,11 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           mode: tool.schema.enum(["stable", "observed"]).optional().describe("Native control identity policy (default stable)") },
         execute: (args, context) => {
           const mode = args.mode === undefined ? {} : { mode: args.mode }
+          // Models often pass the actionID they just read in `action`; it is unambiguous, so accept it there.
+          const actionID = args.actionID ?? (args.action?.startsWith("a:") ? args.action : undefined)
           if (args.target === undefined) {
-            if (args.ref === undefined || args.actionID === undefined) return Promise.resolve("dock_action with ref needs the actionID from that item's actions (dock_find/dock_read); or pass target {name, role} with an action name to locate and act in one call")
-            return call(context, "action", { ref: args.ref, actionID: args.actionID, ...mode }).then(toJSON, toolError)
+            if (args.ref === undefined || actionID === undefined) return Promise.resolve("dock_action with ref needs the actionID from that item's actions (dock_find/dock_read); or pass target {name, role} with an action name to locate and act in one call")
+            return call(context, "action", { ref: args.ref, actionID, ...mode }).then(toJSON, toolError)
           }
           const wanted = args.target
           return exclusive(() => act(context, { ...wanted, capability: args.mode === "observed" ? "observedAction" : "action" }, (item, clock) => {
