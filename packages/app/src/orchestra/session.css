@@ -1030,10 +1030,17 @@
     --orchestra-chat-button-hover-background: rgba(255, 255, 255, 0.85);
   }
 
-  /* The header height is measured for the virtualizer's scroll margin. */
+  /* The header height is measured for the virtualizer's scroll margin. Like the mock's .conv-head it is
+   * transparent over the pane's glass; the timeline masks rows out beneath it (.scroll's 18px fade). */
   body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
     padding: 24px 30px 18px;
-    background: linear-gradient(to bottom, var(--orchestra-evidence-solid) calc(100% - 18px), transparent);
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-timeline-virtual-content] {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 18px);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-row"] {

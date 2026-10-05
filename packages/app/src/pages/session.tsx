@@ -1340,7 +1340,7 @@ export default function Page() {
   const reviewPanelV2Rendered = createMemo<boolean>((prev) => prev || !store.deferRender, false)
 
   const reviewPanelV2 = () => (
-    <div class="flex flex-col h-full overflow-hidden bg-v2-background-bg-base contain-strict">
+    <div class="flex flex-col h-full overflow-hidden contain-strict">
       <Show when={reviewPanelV2Rendered()}>
         <OrchestraReviewPanel {...reviewPanelV2Props()} />
       </Show>
