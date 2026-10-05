@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 import { installDockBridge } from "./session-cockpit-bridge"
+import { railDefaulted } from "../utils/review-rail"
 
 const directory = "/work/cockpit-review"
 const parent = "ses_review_parent"
@@ -153,6 +154,7 @@ async function openCockpit(page: Page) {
 }
 
 async function setup(page: Page, scheme: "dark" | "light" = "dark") {
+  await page.addInitScript(railDefaulted)
   const session = (id: string, title: string, parentID?: string) => ({
     id,
     slug: id,

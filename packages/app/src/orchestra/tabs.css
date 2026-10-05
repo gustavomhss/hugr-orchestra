@@ -68,6 +68,8 @@
     border-radius: 7px;
     background: transparent;
     color: var(--orchestra-tab-text);
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
     font-size: 12px;
     line-height: 16px;
     transition:
@@ -142,6 +144,36 @@
     color: inherit;
   }
 
+  /* The mock's .chat-tab-x: a bare 20px glyph, visible at .55 on the active or hovered tab. */
+  [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"] {
+    inline-size: 20px;
+    block-size: 20px;
+    min-inline-size: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+    opacity: 0;
+    transition:
+      opacity 0.16s ease,
+      background 0.16s ease;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab]:is(:hover, [data-active="true"]) [data-slot="tab-close"] [data-component="icon-button-v2"] {
+    opacity: 0.55;
+  }
+
+  [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
+    background: rgba(200, 220, 238, 0.09);
+    opacity: 1;
+  }
+
+  html[data-color-scheme="light"] [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
+    background: rgba(40, 56, 74, 0.08);
+  }
+
   #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > [data-component="tooltip"] {
     flex: none;
   }
@@ -167,7 +199,8 @@
 
   [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
     color: var(--orchestra-toolbar-brand);
-    font-weight: 520;
+    font-family: var(--mx-emphasis, "Mx Inter Medium", var(--orchestra-font-family-sans));
+    font-weight: 600;
   }
 
   [data-slot="orchestra-titlebar-caption"] {

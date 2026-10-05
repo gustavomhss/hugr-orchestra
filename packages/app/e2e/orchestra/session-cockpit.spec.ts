@@ -32,11 +32,12 @@ test("the Apps tab shows the Dock, Tasks and Activity together, with local panes
   await openCockpit(page)
   await page.getByRole("textbox", { name: "Prompt", exact: true }).fill("Keep this cockpit draft")
   const bar = page.locator('[data-slot="session-side-panel-tab-bar"]')
-  await expect(bar.getByRole("tab", { name: /^Apps/ })).toHaveAttribute("aria-selected", "true")
-  await expect(
-    bar.getByRole("tab", { name: /^Apps/ }).locator('[data-slot="session-side-panel-tab-count"]'),
-  ).toHaveText("1")
-  await expect(bar.getByRole("tab", { name: "Tasks" })).toHaveCount(0)
+  const count = '[data-slot="session-side-panel-tab-count"]'
+  await expect(bar.getByRole("tab")).toHaveText([/^Review/, "Context", /^Tasks/, "Apps"])
+  await expect(bar.getByRole("tab", { name: "Apps", exact: true })).toHaveAttribute("aria-selected", "true")
+  // The live count belongs to the Tasks tab, as in the approved rail; the Apps cockpit carries none.
+  await expect(bar.getByRole("tab", { name: /^Tasks/ }).locator(count)).toHaveText("1")
+  await expect(bar.getByRole("tab", { name: "Apps", exact: true }).locator(count)).toHaveCount(0)
 
   // All three at once: the Dock on top, Tasks and Activity under it.
   const dock = dockCard(page)

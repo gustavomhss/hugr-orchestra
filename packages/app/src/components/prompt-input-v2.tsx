@@ -28,6 +28,7 @@ import { useLocal } from "@/context/local"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
 import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
 import { createSessionTabs } from "@/pages/session/helpers"
+import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { showToast } from "@/utils/toast"
 import { PromptInputV2, type PromptInputV2Suggestion } from "@opencode-ai/session-ui/v2/prompt-input"
 import {
@@ -62,7 +63,14 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
         variantControlVisible={!props.controller.model.loading}
         attachKeybind={command.keybindParts("file.attach")}
         attachShortcut={command.keybind("file.attach")}
-        subagentModelsControl={<PromptInputV2SubagentModelsControl sessionID={props.sessionID} />}
+        subagentModelsControl={
+          <>
+            <Show when={props.sessionID}>
+              <OrchestraComposeTools controller={props.controller} />
+            </Show>
+            <PromptInputV2SubagentModelsControl sessionID={props.sessionID} />
+          </>
+        }
         modelControl={
           <PromptInputV2ModelControl
             loading={props.controller.model.loading}
@@ -143,9 +151,11 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     }),
   )
   const designPlaceholder = () =>
-    promptDesignPlaceholder(mode(), placeholder(), (key, params) =>
-      language.t(key as Parameters<typeof language.t>[0], params as never),
-    )
+    props.controls.session.id && mode() === "normal" && commentCount() === 0
+      ? language.t("orchestra.chat.placeholder")
+      : promptDesignPlaceholder(mode(), placeholder(), (key, params) =>
+          language.t(key as Parameters<typeof language.t>[0], params as never),
+        )
 
   const historyComments = () => {
     const byID = new Map(comments.all().map((item) => [`${item.file}\n${item.id}`, item] as const))

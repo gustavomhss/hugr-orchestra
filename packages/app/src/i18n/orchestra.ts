@@ -13,6 +13,7 @@ import { AGENTS_COPY } from "./orchestra-chapters/agents"
 import { WORKSPACES_COPY } from "./orchestra-chapters/workspaces"
 import { DOCK_COPY } from "./orchestra-chapters/dock"
 import { SETTINGS_COPY } from "./orchestra-chapters/settings"
+import { CHAT_COPY } from "./orchestra-chapters/chat"
 
 // Preserve approved identity copy across locales; inherited product labels retain their translations.
 export const ORCHESTRA_COPY = {
@@ -180,7 +181,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.sidebar.footer": "Build what matters.\nWith agents.",
   "orchestra.model.running": "Running",
   "orchestra.model.waiting": "Waiting for your response",
-  "orchestra.model.idle": "Idle",
+  "orchestra.model.idle": "Stopped",
   "orchestra.model.tooltip": "{{model}} · {{provider}} · {{activity}}",
   "orchestra.dock.description":
     "This repository's browser. Its live tabs are the same ones you see in Chat's Apps tab.",
@@ -412,4 +413,5 @@ export const ORCHESTRA_COPY = {
   ...WORKSPACES_COPY,
   ...DOCK_COPY,
   ...SETTINGS_COPY,
+  ...CHAT_COPY,
 }
