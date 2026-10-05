@@ -33,21 +33,27 @@ const cases = [
     "text-error-array",
     "structured-error-zero",
     "text-error-zero",
-    "flagged",
-  ].map((mode) => ({ mode, expected: undefined })),
-  { mode: "plain", expected: "ok" },
+    // A code outside the closed set is redacted like any other backend text.
+    "structured-bad-coded",
+    "text-bad-coded",
+  ].map((mode) => ({ mode, expected: undefined, code: "unknown" })),
+  { mode: "flagged", expected: undefined, code: "backend-error" },
+  ...["structured-coded", "text-coded"].map((mode) => ({ mode, expected: undefined, code: "target-exists" })),
+  { mode: "plain", expected: "ok", code: undefined },
   ...["structured-success", "text-success"].map((mode) => ({
     mode,
     expected: { success: false, data: { error: secret, errors: [secret], ok: false, success: false } },
+    code: undefined,
   })),
   ...[null, false, "", "  ", [], {}].map((error) => ({
     mode: `empty-${JSON.stringify(error)}`,
     expected: { error, data: "ok" },
+    code: undefined,
   })),
 ]
 
 // Each semantic case owns its native instance and one real peer. Failures cannot hide later controls.
-cases.forEach(({ mode, expected }) => {
+cases.forEach(({ mode, expected, code }) => {
   it.instance(
     `Composer ${mode}: all five tools over real stdio`,
     () =>
@@ -63,7 +69,10 @@ cases.forEach(({ mode, expected }) => {
         yield* Effect.forEach(calls, (call) =>
           Effect.promise(async () => {
             if (expected === undefined) {
-              await expect(call()).rejects.toMatchObject({ message: "HuGR Composer backend operation failed" })
+              await expect(call()).rejects.toMatchObject({
+                message: `HuGR Composer backend operation failed: ${code}`,
+                code,
+              })
               return
             }
             const result = await call()

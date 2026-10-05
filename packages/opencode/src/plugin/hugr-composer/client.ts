@@ -17,6 +17,11 @@ type ComposerCommand = {
   forwardAuth?: boolean
 }
 
+/** Redacted backend failure: only a closed-set reason code, never backend text. */
+export function composerFailure(code: string) {
+  return Object.assign(new Error(`HuGR Composer backend operation failed: ${code}`), { code })
+}
+
 export class HugrComposerClient {
   #client: Client | undefined
   #connecting: Promise<Client> | undefined
@@ -85,7 +90,7 @@ export class HugrComposerClient {
         throw error
       })
     if (!result.isError) return result
-    throw new Error("HuGR Composer backend operation failed")
+    throw composerFailure("backend-error")
   }
 
   async close() {
