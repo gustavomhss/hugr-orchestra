@@ -3,7 +3,15 @@ import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { MxBadge } from "./kit"
 import { mcpErrorDetail } from "./mcp-actions"
-import { type McpCard, mcpConfig, type McpServerConfig, type McpTransport } from "./mcp-model"
+import {
+  type McpCard,
+  mcpConfig,
+  mcpDraft,
+  mcpNameValid,
+  type McpServerConfig,
+  type McpTransport,
+  mcpUnchanged,
+} from "./mcp-model"
 
 // Native modal like the mock: top layer, Escape and backdrop close, focus returns to the opener.
 function McpDialog(props: {
@@ -12,7 +20,8 @@ function McpDialog(props: {
   error?: string
   busy?: boolean
   save?: string
-  onSubmit?: () => void
+  // Receives the native close, so a finished write returns focus to the opener like Cancel does.
+  onSubmit?: (close: () => void) => void
   onClose: () => void
   children: JSX.Element
 }) {
@@ -46,7 +55,7 @@ function McpDialog(props: {
         aria-busy={props.busy}
         onSubmit={(event) => {
           event.preventDefault()
-          if (!props.busy) props.onSubmit?.()
+          if (!props.busy) props.onSubmit?.(() => dialog.close())
         }}
       >
         <header class="mx-dialog-head">
@@ -91,25 +100,29 @@ function McpDialog(props: {
 export function McpEditDialog(props: {
   card?: McpCard
   names: readonly string[]
+  // False when the server cannot report an existing server's config (V2): saving would guess.
+  writable: boolean
   onSave: (name: string, config: McpServerConfig) => Promise<unknown>
   onRemove: () => void
   onClose: () => void
 }) {
   const language = useLanguage()
+  const initial = mcpDraft(props.card?.entry)
+  const locked = !!props.card && !props.writable
   const [draft, setDraft] = createStore({
     name: props.card?.name ?? "",
-    transport: props.card?.transport ?? ("stdio" as McpTransport),
-    endpoint: props.card?.endpoint ?? "",
+    transport: initial?.transport ?? ("stdio" as McpTransport),
+    endpoint: initial?.endpoint ?? "",
     error:
       props.card && "error" in props.card.status
         ? language.t("orchestra.mcp.lastError", { detail: props.card.status.error })
         : "",
     busy: false,
   })
-  const close = () => props.onClose()
 
-  async function submit() {
+  async function submit(close: () => void) {
     const name = draft.name.trim()
+    if (!mcpNameValid(name)) return setDraft("error", language.t("orchestra.mcp.invalidName"))
     if (!props.card && props.names.includes(name)) return setDraft("error", language.t("orchestra.mcp.duplicate"))
     const result = mcpConfig(draft.transport, draft.endpoint)
     if ("error" in result)
@@ -117,6 +130,8 @@ export function McpEditDialog(props: {
         "error",
         language.t(result.error === "url" ? "orchestra.mcp.invalidUrl" : "orchestra.mcp.invalidCommand"),
       )
+    // Saving restarts every MCP server in the profile, so an unedited dialog writes nothing.
+    if (props.card && mcpUnchanged(props.card.entry, result.config)) return close()
     setDraft({ busy: true, error: "" })
     await props
       .onSave(name, result.config)
@@ -141,9 +156,9 @@ export function McpEditDialog(props: {
       subtitle={language.t("orchestra.mcp.editSubtitle")}
       error={draft.error}
       busy={draft.busy}
-      save={language.t("orchestra.mcp.save")}
-      onSubmit={() => void submit()}
-      onClose={close}
+      save={locked ? undefined : language.t("orchestra.mcp.save")}
+      onSubmit={(close) => void submit(close)}
+      onClose={() => props.onClose()}
     >
       <label class="mx-field">
         <span>{language.t("orchestra.mcp.name")}</span>
@@ -160,6 +175,7 @@ export function McpEditDialog(props: {
         <span>{language.t("orchestra.mcp.transport")}</span>
         <select
           name="transport"
+          disabled={locked}
           value={draft.transport}
           onChange={(event) => setDraft("transport", event.currentTarget.value === "http" ? "http" : "stdio")}
         >
@@ -173,10 +189,16 @@ export function McpEditDialog(props: {
           name="endpoint"
           type="text"
           required
+          disabled={locked}
           value={draft.endpoint}
           onInput={(event) => setDraft("endpoint", event.currentTarget.value)}
         />
       </label>
+      <Show when={props.card && !initial}>
+        <p class="mx-note orchestra-mcp-dialog-note" role="note">
+          {language.t(locked ? "orchestra.mcp.configUnavailable" : "orchestra.mcp.configOutside")}
+        </p>
+      </Show>
       <Show when={props.card}>
         <button type="button" class="mx-btn" onClick={() => props.onRemove()}>
           {language.t("orchestra.mcp.remove")}
@@ -243,11 +265,11 @@ export function McpRemoveDialog(props: {
       error={state.error}
       busy={state.busy}
       save={language.t("orchestra.mcp.confirm")}
-      onSubmit={() => {
+      onSubmit={(close) => {
         setState({ busy: true, error: "" })
         void props
           .onConfirm()
-          .then(() => props.onClose())
+          .then(close)
           .catch((error: unknown) =>
             setState({
               busy: false,

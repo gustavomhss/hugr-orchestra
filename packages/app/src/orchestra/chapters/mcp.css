@@ -60,3 +60,7 @@
 .orchestra-mcp-dialog .mx-field input:read-only {
   color: var(--mx-dim);
 }
+
+.orchestra-mcp-dialog .orchestra-mcp-dialog-note {
+  margin: 0 0 16px;
+}

@@ -1,6 +1,7 @@
 import { getFilename } from "@opencode-ai/core/util/path"
 import { useQuery } from "@tanstack/solid-query"
 import { createMemo, createResource, For, Match, onCleanup, Show, Switch } from "solid-js"
+import { toggleMcp } from "@/context/global-sync/mcp"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -14,7 +15,7 @@ import { pathKey } from "@/utils/path-key"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { createMcpActions, mcpErrorDetail } from "./mcp-actions"
 import { McpEditDialog, McpRemoveDialog, McpToolsDialog } from "./mcp-dialogs"
-import { mcpBadges, type McpCard, mcpCards, mcpEnabled, mcpMatches } from "./mcp-model"
+import { mcpAction, mcpBadges, type McpCard, mcpCards, mcpError, mcpMatches } from "./mcp-model"
 import { createMcpSource } from "./mcp-source"
 import "./mcp.css"
 
@@ -35,23 +36,37 @@ export default function McpPage(props: ChapterPageProps) {
     fetch: (url, init) => (platform.fetch ?? globalThis.fetch)(url, init),
   })
   const [v1] = createResource(source.v1)
-  // ServerSync owns the status query shape for both protocols; the route's client observes it.
-  const status = useQuery(() => ({
-    ...sync().queryOptions.mcp(key),
-    retry: false,
-    refetchOnMount: "always",
-  }))
-  const config = useQuery(() => ({
-    queryKey: [serverSDK().scope, key, "orchestra-mcp-config"] as const,
-    queryFn: source.config,
-    retry: false,
-  }))
-  const tools = useQuery(() => ({
-    queryKey: [serverSDK().scope, key, "orchestra-mcp-tools"] as const,
-    queryFn: source.tools,
-    retry: false,
-  }))
-  const refresh = () => Promise.all([status.refetch(), config.refetch(), tools.refetch()])
+  // Observe the server's own query client so the status popover and @-resources share this cache.
+  const client = () => global.ensureServerCtx(props.server).queryClient
+  const status = useQuery(() => ({ ...sync().queryOptions.mcp(key), retry: false, refetchOnMount: "always" }), client)
+  const config = useQuery(
+    () => ({
+      queryKey: [serverSDK().scope, key, "orchestra-mcp-config"] as const,
+      queryFn: source.config,
+      retry: false,
+    }),
+    client,
+  )
+  const entries = useQuery(
+    () => ({
+      queryKey: [serverSDK().scope, key, "orchestra-mcp-entries"] as const,
+      queryFn: source.entries,
+      retry: false,
+    }),
+    client,
+  )
+  const tools = useQuery(
+    () => ({ queryKey: [serverSDK().scope, key, "orchestra-mcp-tools"] as const, queryFn: source.tools, retry: false }),
+    client,
+  )
+  const refresh = () =>
+    Promise.all([
+      status.refetch(),
+      config.refetch(),
+      entries.refetch(),
+      tools.refetch(),
+      client().refetchQueries(sync().queryOptions.mcpResources(key)),
+    ]).then(() => undefined)
   onCleanup(
     serverSDK().event.on(props.directory, (event) => {
       const type: string = event.type
@@ -72,13 +87,40 @@ export default function McpPage(props: ChapterPageProps) {
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
   const cards = createMemo(() =>
-    mcpCards(status.isPending || status.isError ? {} : (status.data ?? {}), config.data, tools.data),
+    mcpCards(status.isPending || status.isError ? {} : (status.data ?? {}), config.data, entries.data, tools.data),
   )
+  const byName = createMemo(() => new Map(cards().map((card) => [card.name, card])))
   const label = (card: McpCard) => language.t(mcpBadges[card.status.status].label)
-  const visible = createMemo(() => cards().filter((card) => mcpMatches(card, state.search, label(card))))
-  const selected = createMemo(() => cards().find((card) => card.name === state.dialog?.name))
-  const close = () => setState("dialog", undefined)
-  // Dialogs close once the write lands; the reload after a config write can take as long as MCP startup.
+  // Rows are keyed by name so a status refresh updates cards in place instead of recreating them.
+  const visible = createMemo(() =>
+    cards()
+      .filter((card) => mcpMatches(card, state.search, label(card)))
+      .map((card) => card.name),
+  )
+  const selected = createMemo(() => (state.dialog?.name ? byName().get(state.dialog.name) : undefined))
+  const opener = { element: undefined as HTMLElement | undefined }
+  const open = (dialog: NonNullable<typeof state.dialog>) => {
+    if (!state.dialog && document.activeElement instanceof HTMLElement) opener.element = document.activeElement
+    setState("dialog", dialog)
+  }
+  // The native close restores focus; when a dialog replaced another one, return it to the card.
+  const close = () => {
+    setState("dialog", undefined)
+    queueMicrotask(() => {
+      if (document.activeElement === document.body && opener.element?.isConnected) opener.element.focus()
+    })
+  }
+  const toggle = (card: McpCard) =>
+    actions.run(card.name, () =>
+      toggleMcp({
+        status: card.status.status,
+        connect: () => source.connect(card.name),
+        disconnect: () => source.disconnect(card.name),
+        authenticate: () => source.authenticate(card.name),
+        refresh,
+      }),
+    )
+  // The refresh after a config write can take as long as MCP startup, so dialogs do not wait for it.
   const save = (name: string, value: Parameters<typeof source.save>[1]) =>
     source.save(name, value).then(() => void refresh())
   const remove = (name: string) => source.remove(name).then(() => void refresh())
@@ -90,7 +132,7 @@ export default function McpPage(props: ChapterPageProps) {
       title={language.t("orchestra.nav.mcp")}
       description={language.t("orchestra.mcp.description")}
       action={
-        <button type="button" class="mx-btn primary" onClick={() => setState("dialog", { type: "edit" })}>
+        <button type="button" class="mx-btn primary" onClick={() => open({ type: "edit" })}>
           {language.t("orchestra.mcp.add")}
         </button>
       }
@@ -138,109 +180,98 @@ export default function McpPage(props: ChapterPageProps) {
         <Match when={visible().length}>
           <div class="mx-grid" role="list" aria-label={language.t("orchestra.nav.mcp")}>
             <For each={visible()}>
-              {(card) => (
-                <article
-                  class="mx-card orchestra-mcp-card"
-                  role="listitem"
-                  data-mcp-name={card.name}
-                  data-status={card.status.status}
-                  aria-busy={!!actions.state.pending[card.name]}
-                >
-                  <div class="mx-card-top">
-                    <span class="mx-mark">
-                      <svg class="orchestra-mcp-ic" viewBox="0 0 16 16" aria-hidden="true">
-                        <path d="M5 2v3M11 2v3M3 5h10v3a5 5 0 0 1-10 0V5ZM8 13v2" />
-                      </svg>
-                    </span>
-                    <h3>
-                      <bdi>{card.name}</bdi>
-                    </h3>
-                  </div>
-                  <Show when={card.endpoint}>
-                    <p>
-                      <bdi>{card.endpoint}</bdi>
-                    </p>
-                  </Show>
-                  <div class="mx-meta">
-                    <span
-                      class={["mx-badge", mcpBadges[card.status.status].tone].filter(Boolean).join(" ")}
-                      title={"error" in card.status ? card.status.error : undefined}
+              {(name) => (
+                <Show when={byName().get(name)}>
+                  {(card) => (
+                    <article
+                      class="mx-card orchestra-mcp-card"
+                      role="listitem"
+                      data-mcp-name={name}
+                      data-status={card().status.status}
+                      aria-busy={!!actions.state.pending[name]}
                     >
-                      {label(card)}
-                    </span>
-                    <Show when={card.transport}>
-                      <MxBadge>{card.transport}</MxBadge>
-                    </Show>
-                    <Show when={card.tools}>
-                      {(list) => (
-                        <MxBadge>
-                          {language.t(list().length === 1 ? "orchestra.mcp.toolCountOne" : "orchestra.mcp.toolCount", {
-                            count: list().length,
-                          })}
-                        </MxBadge>
-                      )}
-                    </Show>
-                  </div>
-                  <Show when={"error" in card.status && card.status.error}>
-                    {(detail) => <p class="orchestra-mcp-detail">{detail()}</p>}
-                  </Show>
-                  <Show when={actions.state.failures[card.name]}>
-                    {(failure) => (
-                      <p role="alert" class="orchestra-mcp-detail">
-                        {language.t("orchestra.mcp.actionError", {
-                          detail: failure().detail ?? language.t("common.requestFailed"),
-                        })}
-                      </p>
-                    )}
-                  </Show>
-                  <footer class="mx-card-foot">
-                    <div>
-                      <button
-                        type="button"
-                        class="mx-btn"
-                        onClick={() => setState("dialog", { type: "edit", name: card.name })}
-                      >
-                        {language.t("orchestra.mcp.configure")}
-                      </button>{" "}
-                      <button
-                        type="button"
-                        class="mx-btn"
-                        onClick={() => setState("dialog", { type: "tools", name: card.name })}
-                      >
-                        {language.t("orchestra.mcp.tools")}
-                      </button>
-                    </div>
-                    <Show
-                      when={card.status.status !== "needs_auth"}
-                      fallback={
-                        <button
-                          type="button"
-                          class="mx-btn"
-                          disabled={!!actions.state.pending[card.name]}
-                          onClick={() =>
-                            void actions.run(card.name, () => source.authenticate(card.name).then(refresh))
+                      <div class="mx-card-top">
+                        <span class="mx-mark">
+                          <svg class="orchestra-mcp-ic" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M5 2v3M11 2v3M3 5h10v3a5 5 0 0 1-10 0V5ZM8 13v2" />
+                          </svg>
+                        </span>
+                        <h3>
+                          <bdi>{name}</bdi>
+                        </h3>
+                      </div>
+                      <Show when={card().endpoint}>
+                        {(endpoint) => (
+                          <p>
+                            <bdi>{endpoint()}</bdi>
+                          </p>
+                        )}
+                      </Show>
+                      <div class="mx-meta">
+                        <span class={["mx-badge", mcpBadges[card().status.status].tone].filter(Boolean).join(" ")}>
+                          {label(card())}
+                        </span>
+                        <Show when={card().transport}>{(transport) => <MxBadge>{transport()}</MxBadge>}</Show>
+                        <Show when={card().tools}>
+                          {(list) => (
+                            <MxBadge>
+                              {language.t(
+                                list().length === 1 ? "orchestra.mcp.toolCountOne" : "orchestra.mcp.toolCount",
+                                { count: list().length },
+                              )}
+                            </MxBadge>
+                          )}
+                        </Show>
+                      </div>
+                      <Show when={mcpError(card().status)}>
+                        {(detail) => <p class="orchestra-mcp-detail">{detail()}</p>}
+                      </Show>
+                      <Show when={actions.state.failures[name]}>
+                        {(failure) => (
+                          <p role="alert" class="orchestra-mcp-detail">
+                            {language.t("orchestra.mcp.actionError", {
+                              detail: failure().detail ?? language.t("common.requestFailed"),
+                            })}
+                          </p>
+                        )}
+                      </Show>
+                      <footer class="mx-card-foot">
+                        <div>
+                          <button type="button" class="mx-btn" onClick={() => open({ type: "edit", name })}>
+                            {language.t("orchestra.mcp.configure")}
+                          </button>{" "}
+                          <button type="button" class="mx-btn" onClick={() => open({ type: "tools", name })}>
+                            {language.t("orchestra.mcp.tools")}
+                          </button>
+                        </div>
+                        <Show
+                          when={mcpAction(card().status.status) !== "authenticate"}
+                          fallback={
+                            <button
+                              type="button"
+                              class="mx-btn"
+                              disabled={!!actions.state.pending[name]}
+                              onClick={() => void toggle(card())}
+                            >
+                              {language.t("orchestra.mcp.authenticate")}
+                            </button>
                           }
                         >
-                          {language.t("orchestra.mcp.authenticate")}
-                        </button>
-                      }
-                    >
-                      <MxToggle
-                        checked={mcpEnabled(card.status.status)}
-                        label={language.t("orchestra.mcp.enable", { name: card.name })}
-                        disabled={card.status.status === "pending" || !!actions.state.pending[card.name]}
-                        onChange={(next) =>
-                          void actions.run(card.name, () =>
-                            (next ? source.connect(card.name) : source.disconnect(card.name)).then(refresh),
-                          )
-                        }
-                      />
-                    </Show>
-                  </footer>
-                </article>
+                          <MxToggle
+                            checked={card().status.status === "connected"}
+                            label={language.t("orchestra.mcp.enable", { name })}
+                            disabled={!mcpAction(card().status.status) || !!actions.state.pending[name]}
+                            onChange={() => void toggle(card())}
+                          />
+                        </Show>
+                      </footer>
+                    </article>
+                  )}
+                </Show>
               )}
             </For>
           </div>
+          <p class="mx-note">{language.t("orchestra.mcp.note")}</p>
         </Match>
       </Switch>
       <Switch>
@@ -248,6 +279,7 @@ export default function McpPage(props: ChapterPageProps) {
           <McpEditDialog
             card={selected()}
             names={cards().map((card) => card.name)}
+            writable={v1() !== false}
             onSave={save}
             onRemove={() => setState("dialog", { type: "remove", name: state.dialog?.name })}
             onClose={close}
