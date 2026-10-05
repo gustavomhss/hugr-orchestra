@@ -77,3 +77,11 @@ describe("roster hash", () => {
     ])
   })
 })
+
+// Windows checkouts may convert prompt files to CRLF; the roster normalizes them so hashes match every platform.
+test("roster hash is independent of prompt line endings", () => {
+  const crlf = createRoster(
+    roster.map((member) => (member.prompt === undefined ? member : { ...member, prompt: member.prompt.replaceAll("\n", "\r\n") })),
+  )
+  expect(rosterHash(crlf)).toBe(rosterHash(roster))
+})

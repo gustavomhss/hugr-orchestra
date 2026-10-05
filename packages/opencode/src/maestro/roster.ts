@@ -203,7 +203,12 @@ export function createRoster(members: readonly RosterMember[]): Roster {
       if (!wellFormedMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
       if (memberIds.has(member.memberId)) throw new Error(`Roster memberId must be unique: ${member.memberId}`)
       memberIds.add(member.memberId)
-      return Object.freeze({ ...member, forbiddenActions: Object.freeze([...member.forbiddenActions]) })
+      // Windows checkouts may convert prompt files to CRLF; prompts and their hashes must not depend on the checkout.
+      return Object.freeze({
+        ...member,
+        ...(member.prompt === undefined ? {} : { prompt: member.prompt.replaceAll("\r\n", "\n") }),
+        forbiddenActions: Object.freeze([...member.forbiddenActions]),
+      })
     }),
   )
 }

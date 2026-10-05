@@ -42,7 +42,8 @@ function search(word: string) {
     .map((line) => {
       const [file, number, ...text] = line.split("\0")
       if (text.length === 0) return { file: line, line: 0, text: "" }
-      return { file, line: Number(number), text: text.join("\0") }
+      // Windows checkouts may carry CRLF; the trailing carriage return is not part of the line.
+      return { file, line: Number(number), text: text.join("\0").replace(/\r$/, "") }
     })
 }
 

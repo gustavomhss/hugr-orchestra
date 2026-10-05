@@ -294,8 +294,8 @@ export function render(name: string, platform: NodeJS.Platform, limits: Limits, 
 // description drops the tmp claim and the Git and GitHub section.
 export function nativeSeat(description: string) {
   return description
-    .replace(/\nUse `[^`\n]+` for temporary work outside the workspace\.[^\n]*\n/, "")
-    .replace(/\n+# Git and GitHub\n[\s\S]*$/, "\n")
+    .replace(/\r?\nUse `[^`\r\n]+` for temporary work outside the workspace\.[^\r\n]*\r?\n/, "")
+    .replace(/(\r?\n)+# Git and GitHub\r?\n[\s\S]*$/, "\n")
 }
 
 export * as ShellPrompt from "./prompt"

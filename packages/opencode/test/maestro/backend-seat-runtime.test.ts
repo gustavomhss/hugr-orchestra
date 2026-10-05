@@ -139,7 +139,8 @@ it.instance("backend loads its entry skill, reads a companion and cannot load an
     expect(Exit.isSuccess(loaded)).toBe(true)
     if (Exit.isSuccess(loaded)) {
       expect(JSON.stringify(loaded.value)).toContain(`<skill_content name=\\"backend-implement\\">`)
-      expect(JSON.stringify(loaded.value)).toContain(path.join(backendSkills.root, "backend-implement"))
+      // Compare against the JSON-escaped path: Windows separators are backslashes, which JSON doubles.
+      expect(JSON.stringify(loaded.value)).toContain(JSON.stringify(path.join(backendSkills.root, "backend-implement")).slice(1, -1))
     }
 
     const reference = path.join(backendSkills.root, "backend-implement", "references", "continuity.md")
