@@ -85,9 +85,14 @@ for (const newLayoutDesigns of [false, true]) {
         localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale: "en" }))
         localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.17.20" }))
       }, newLayoutDesigns)
+      // The legacy layout retires on the oldInterfaceSunset date and the app then renders the new layout
+      // whatever the stored choice; run before it so the legacy layout still renders.
+      if (!newLayoutDesigns) await page.clock.setSystemTime(new Date(2026, 8, 1))
       await page.setViewportSize({ width: 1400, height: 900 })
       await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
       await expectSessionTitle(page, title)
+      if (newLayoutDesigns) await expect(page.locator("body")).toHaveAttribute("data-new-layout", "")
+      if (!newLayoutDesigns) await expect(page.locator("body")).not.toHaveAttribute("data-new-layout")
       const button = page.getByRole("button", { name: "View context usage", exact: true })
       // The approved layout has no usage ring: the header's Review button opens the rail, where
       // Context is a permanent tab.

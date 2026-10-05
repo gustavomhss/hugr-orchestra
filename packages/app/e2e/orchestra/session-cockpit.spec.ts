@@ -565,11 +565,13 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
       await page.keyboard.press("Escape")
       await expect(menu).toHaveCount(0)
 
-      // In a short window the menu opens upward from the pointer instead.
-      await page.setViewportSize({ width, height: 460 })
+      // In a short window the menu opens upward from the pointer instead. The window is short enough
+      // that the menu cannot fit below the pointer, which the first check proves.
+      const shortHeight = 440
+      await page.setViewportSize({ width, height: shortHeight })
       const short = await rect(tabs.nth(3))
       const low = { x: Math.round(rtl ? short.left + 4 : short.right - 4), y: Math.round(short.bottom - 2) }
-      expect(low.y + size.height).toBeGreaterThan(460)
+      expect(low.y + size.height).toBeGreaterThan(shortHeight)
       await page.mouse.click(low.x, low.y, { button: "right" })
       await expect(menu).toBeVisible()
       await expectAnchored(page, menu, low, { x: end, y: "bottom" })

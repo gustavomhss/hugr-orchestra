@@ -63,6 +63,9 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
           ? language.t("orchestra.chat.placeholder")
           : props.controller.view.placeholder?.(),
     },
+    // The Orchestra tools carry the session's one Stop, so send stays send while a run works, as in the
+    // approved mock; a second control named Stop would only repeat it.
+    submit: { value: Object.create(props.controller.view.submit, { stopping: { value: () => false } }) },
   })
   const controller = () =>
     props.sessionID
