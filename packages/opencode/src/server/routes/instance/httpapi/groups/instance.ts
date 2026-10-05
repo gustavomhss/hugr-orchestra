@@ -5,7 +5,7 @@ import { LSP } from "@/lsp/lsp"
 import { Vcs } from "@/project/vcs"
 import { Skill } from "@/skill"
 import { Schema } from "effect"
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
+import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 import { Authorization } from "../middleware/authorization"
 import { InstanceContextMiddleware } from "../middleware/instance-context"
 import {
@@ -29,6 +29,14 @@ export const VcsDiffQuery = Schema.Struct({
   context: Schema.optional(Schema.NumberFromString.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0))),
 })
 
+const EpochMillis = Schema.NumberFromString.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0))
+
+export const VcsActivityQuery = Schema.Struct({
+  ...WorkspaceRoutingQueryFields,
+  since: EpochMillis,
+  until: Schema.optional(EpochMillis),
+})
+
 export class ApiVcsApplyError extends Schema.ErrorClass<ApiVcsApplyError>("VcsApplyError")(
   {
     name: Schema.Literal("VcsApplyError"),
@@ -48,6 +56,7 @@ export const InstancePaths = {
   vcsDiff: "/vcs/diff",
   vcsDiffRaw: "/vcs/diff/raw",
   vcsApply: "/vcs/apply",
+  vcsActivity: "/vcs/activity",
   command: "/command",
   agent: "/agent",
   skill: "/skill",
@@ -134,6 +143,18 @@ export const InstanceApi = HttpApi.make("instance")
             identifier: "vcs.apply",
             summary: "Apply VCS patch",
             description: "Apply a raw patch to the current working tree.",
+          }),
+        ),
+        HttpApiEndpoint.get("vcsActivity", InstancePaths.vcsActivity, {
+          query: VcsActivityQuery,
+          success: described(Vcs.Activity, "VCS activity"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "vcs.activity",
+            summary: "Get VCS activity",
+            description:
+              "Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.",
           }),
         ),
         HttpApiEndpoint.get("command", InstancePaths.command, {

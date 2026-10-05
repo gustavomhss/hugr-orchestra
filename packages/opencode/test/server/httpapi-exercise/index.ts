@@ -36,6 +36,7 @@ import { runScenario } from "./runner"
 import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
 import { type Scenario } from "./types"
+import { vcsScenarios } from "./vcs"
 
 function cursor(input: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(input)).toString("base64url")
@@ -120,25 +121,7 @@ const scenarios: Scenario[] = [
     check(body.directory === ctx.directory, "directory should resolve from x-opencode-directory")
     check(body.worktree === ctx.directory, "worktree should resolve from x-opencode-directory")
   }),
-  http.protected.get("/vcs", "vcs.get").json(),
-  http.protected.get("/vcs/status", "vcs.status").json(200, array),
-  http.protected
-    .get("/vcs/diff", "vcs.diff")
-    .at((ctx) => ({ path: "/vcs/diff?mode=git", headers: ctx.headers() }))
-    .json(200, array),
-  http.protected.get("/vcs/diff/raw", "vcs.diff.raw").status(
-    200,
-    (_ctx, result) =>
-      Effect.sync(() => {
-        check(typeof result.text === "string", "raw VCS diff should return text")
-      }),
-    "status",
-  ),
-  http.protected
-    .post("/vcs/apply", "vcs.apply")
-    .inProject({ git: false })
-    .at((ctx) => ({ path: "/vcs/apply", headers: ctx.headers(), body: { patch: "" } }))
-    .status(400, undefined, "status"),
+  ...vcsScenarios,
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   http.protected.get("/skill", "app.skills").json(200, array, "status"),
