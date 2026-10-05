@@ -40,6 +40,7 @@
   --zen-popover-dim: var(--text-weak);
   --zen-popover-hover: var(--surface-raised-stronger);
   --zen-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --zen-focus: var(--text-strong);
 }
 
 body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
@@ -80,6 +81,18 @@ body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
   --zen-popover-dim: #75859a;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
   --zen-library-empty: #6b7480;
+  --zen-focus: #9dbde4;
+}
+
+/* The mock's base type, not the app body's 13px/24px/440. */
+body[data-new-layout] .zen-browser-shell {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+}
+
+body[data-new-layout] .zen-tab-menu {
+  line-height: normal;
 }
 
 html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
@@ -116,6 +129,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-popover-dim: #6b7480;
   --zen-popover-hover: rgba(40, 56, 74, 0.06);
   --zen-library-empty: #8a929c;
+  --zen-focus: #2f6bbf;
 }
 
 .zen-browser-shell {
@@ -126,10 +140,6 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-workspace-indicator-height: 44px;
   --zen-active-tab-scale: 0.985;
   font-family: var(--zen-font);
-  /* The mock's base type, not the app body's 13px/24px/440. */
-  font-size: 16px;
-  font-weight: 400;
-  line-height: normal;
   display: flex;
   width: 100%;
   height: 100%;
@@ -325,8 +335,14 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-new-tab:focus-visible,
 .zen-nav-button:focus-visible,
 .zen-open-button:focus-visible {
-  outline: 2px solid var(--zen-text);
+  outline: 2px solid var(--zen-focus);
   outline-offset: 1px;
+}
+
+/* The mock's fields show no ring; keyboard focus still needs a visible one. */
+:is(.zen-urlbar, .zen-findbar, .zen-profile-form) input:focus-visible {
+  outline: 2px solid var(--zen-focus);
+  outline-offset: -2px;
 }
 
 .zen-tab.is-active {
@@ -509,7 +525,8 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   text-transform: uppercase;
 }
 
-.zen-library > button,
+/* As in the mock, every button in the popover, a download's Open or Cancel included, is a full-width row. */
+.zen-library button,
 .zen-download {
   display: flex;
   width: 100%;
@@ -525,20 +542,17 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   text-align: left;
 }
 
-.zen-library > button {
+.zen-library button {
   cursor: pointer;
 }
 
-.zen-library > button:hover {
+.zen-library button:hover {
   background: var(--zen-popover-hover);
 }
 
-.zen-library > button span,
-.zen-download span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.zen-download .zen-open-button {
+  height: 28px;
+  min-width: 28px;
 }
 
 .zen-library small {
@@ -659,7 +673,6 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   z-index: 50;
   font-family: var(--zen-font);
   font-weight: 400;
-  line-height: normal;
   display: flex;
   min-width: 132px;
   flex-direction: column;
@@ -692,7 +705,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-tab-menu button:focus-visible,
 .zen-findbar button:focus-visible,
 .zen-library button:focus-visible {
-  outline: 2px solid var(--zen-text);
+  outline: 2px solid var(--zen-focus);
   outline-offset: 1px;
 }
 

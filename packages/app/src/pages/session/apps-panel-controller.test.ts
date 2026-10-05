@@ -140,6 +140,35 @@ describe("App Dock controller", () => {
     ])
   })
 
+  test("a popover registered inside the Dock occludes the browser only while it covers the page", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const host = placed()
+    controller.attach(host, profileA)
+    await until(() => controller.state.status === "ready")
+    const before = dock.calls.length
+
+    // Drawn in the Dock's own tree, so the body watch alone would never see it.
+    const popover = sized(element(), { x: 960, y: 140, width: 230, height: 200 })
+    host.parentElement!.append(popover)
+    const release = controller.registerOverlay(popover)
+    await until(() => dock.calls.at(-1)?.[0] === "occlude")
+    release()
+    popover.remove()
+    await until(() => dock.calls.length > before + 1)
+    // Outside the page area a registered element does not occlude.
+    const aside = sized(element(), { x: 0, y: 0, width: 200, height: 80 })
+    host.parentElement!.append(aside)
+    const releaseAside = controller.registerOverlay(aside)
+    await settle()
+    releaseAside()
+    await settle()
+    expect(dock.calls.slice(before)).toEqual([
+      ["occlude", true],
+      ["occlude", false],
+    ])
+  })
+
   test("a view attached while an overlay is open is occluded before its tab is shown", async () => {
     const dock = fakeDock()
     const controller = createAppDockController(dock.api)
@@ -373,62 +402,6 @@ describe("App Dock controller", () => {
     ])
   })
 
-  test("a repository owns its browser profiles: Personal first, created ones in their own native profile", async () => {
-    const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
-    controller.attach(element(), profileA)
-    await until(() => controller.state.status === "ready")
-    expect(controller.state.profile).toBe(profileA)
-    expect(controller.state.profiles).toEqual([{ id: profileA, name: "Personal" }])
-    controller.setURL("https://example.com/personal")
-    await controller.launch()
-    await until(() => dock.manifest().tabs[profileA]?.length === 1)
-
-    expect(controller.createProfile("Research Notes")).toBe(true)
-    await until(() => controller.state.status === "ready")
-    const research = `${profileA}-research-notes`.slice(0, 32).replace(/-+$/, "")
-    expect(research).toMatch(/^[a-z0-9][a-z0-9-]{0,31}$/)
-    expect(controller.state.profile).toBe(research)
-    expect(controller.state.profiles).toEqual([
-      { id: profileA, name: "Personal" },
-      { id: research, name: "Research Notes" },
-    ])
-    expect(controller.state.tabs).toEqual([])
-    // The manifest lists every repository's native profiles; the Dock lists only this repository's.
-    expect(dock.manifest().profiles.map((item) => item.id)).toContain("default")
-    expect(controller.createProfile("Research Notes")).toBe(false)
-    expect(controller.createProfile("   ")).toBe(false)
-
-    controller.setURL("https://example.com/research")
-    await controller.launch()
-    await until(() => dock.manifest().tabs[research]?.length === 1)
-    expect(dock.calls.filter((call) => call[0] === "open").at(-1)).toEqual([
-      "open",
-      "https://example.com/research",
-      research,
-    ])
-    expect(controller.state.profiles.map((item) => item.id)).toEqual([profileA, research])
-
-    await controller.switchProfile(profileA)
-    await until(() => controller.state.status === "ready" && controller.state.profile === profileA)
-    expect(controller.state.tabs.map((tab) => tab.url)).toEqual(["https://example.com/personal"])
-
-    // The list and the choice survive a new window; another repository keeps only its own Personal.
-    await controller.switchProfile(research)
-    await until(() => controller.state.status === "ready" && controller.state.profile === research)
-    const reopened = createAppDockController(dock.api)
-    reopened.attach(element(), profileA)
-    await until(() => reopened.state.status === "ready")
-    expect(reopened.state.profile).toBe(research)
-    expect(reopened.state.tabs.map((tab) => tab.url)).toEqual(["https://example.com/research"])
-    expect(reopened.state.profiles.map((item) => item.name)).toEqual(["Personal", "Research Notes"])
-    const other = createAppDockController(dock.api)
-    other.attach(element(), profileB)
-    await until(() => other.state.status === "ready")
-    expect(other.state.profiles).toEqual([{ id: profileB, name: "Personal" }])
-    expect(other.state.profile).toBe(profileB)
-  })
-
   test("without the native bridge the Dock is unavailable and issues no calls", async () => {
     const missing = createAppDockController(undefined)
     expect(missing.available).toBe(false)
@@ -459,10 +432,7 @@ function tab(tabID: string, generation: number) {
 }
 
 const mounted: Element[] = []
-afterEach(() => {
-  mounted.splice(0).forEach((item) => item.remove())
-  localStorage.clear()
-})
+afterEach(() => mounted.splice(0).forEach((item) => item.remove()))
 
 // A Dock host laid out in the document beside the sidebar; happy-dom has no layout of its own.
 function placed() {

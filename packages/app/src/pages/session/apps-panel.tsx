@@ -18,6 +18,7 @@ import {
   type TabIdentity,
 } from "./apps-panel-controller"
 import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
+import { FindBar, LibraryPopover } from "./apps-panel-library"
 import { TabMenu } from "./apps-panel-tab-menu"
 import "./apps-panel.css"
 
@@ -229,34 +230,38 @@ export function AppsPanel(
             ||
           </button>
           <span class="zen-workspace-indicator-dot" aria-hidden="true" />
-          <select
-            class="zen-workspace-indicator-name"
-            value={state.profile ?? state.profiles[0]?.id}
-            aria-label="Browser profile"
-            disabled={state.status === "loading"}
-            onChange={(event) => {
-              setView("libraryOpen", undefined)
-              void dock.switchProfile(event.currentTarget.value)
-            }}
-          >
-            {/* Manifest writes replace these options; mark the selection on each one so the
-                select does not fall back to the first profile. */}
-            {state.profiles.map((item) => (
-              <option value={item.id} selected={item.id === (state.profile ?? state.profiles[0]?.id)}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          <button
-            class="zen-profile-add"
-            type="button"
-            aria-label="Create browser profile"
-            onClick={() => setView("profileCreating", true)}
-          >
-            +
-          </button>
+          {!repository() && (
+            <>
+              <select
+                class="zen-workspace-indicator-name"
+                value={state.profile}
+                aria-label="Browser profile"
+                disabled={state.status === "loading"}
+                onChange={(event) => {
+                  setView("libraryOpen", undefined)
+                  void dock.switchProfile(event.currentTarget.value)
+                }}
+              >
+                {/* Manifest writes replace these options; mark the selection on each one so the
+                    select does not fall back to the first profile. */}
+                {state.profiles.map((item) => (
+                  <option value={item.id} selected={item.id === state.profile}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                class="zen-profile-add"
+                type="button"
+                aria-label="Create browser profile"
+                onClick={() => setView("profileCreating", true)}
+              >
+                +
+              </button>
+            </>
+          )}
         </div>
-        {view.profileCreating && (
+        {!repository() && view.profileCreating && (
           <form class="zen-profile-form" onSubmit={createProfile}>
             <input
               autofocus
@@ -459,90 +464,28 @@ export function AppsPanel(
             </button>
           </div>
         )}
-        <Show when={view.libraryOpen === "bookmarks" || view.libraryOpen === "history"}>
-          <div
-            ref={(element) => onCleanup(dock.registerOverlay(element))}
-            class="zen-library"
-            role="dialog"
-            aria-label={view.libraryOpen === "bookmarks" ? "Bookmarks" : "History"}
-          >
-            <div class="zen-library-title">{view.libraryOpen === "bookmarks" ? "Bookmarks" : "History"}</div>
-            {(view.libraryOpen === "bookmarks" ? state.bookmarks : state.history).map((entry) => (
-              <button type="button" onClick={() => openLibraryItem(entry)}>
-                <span>{entry.title}</span>
-                <small>{new URL(entry.url).hostname}</small>
-              </button>
-            ))}
-            {(view.libraryOpen === "bookmarks" ? state.bookmarks : state.history).length === 0 && (
-              <p>Nothing here yet.</p>
-            )}
-          </div>
-        </Show>
-        <Show when={view.libraryOpen === "downloads"}>
-          <div
-            ref={(element) => onCleanup(dock.registerOverlay(element))}
-            class="zen-library"
-            role="dialog"
-            aria-label="Downloads"
-          >
-            <div class="zen-library-title">Downloads</div>
-            {state.downloads.map((download) => (
-              <div class="zen-download">
-                <span>{download.filename}</span>
-                <small>
-                  {download.state === "progressing" && download.totalBytes > 0
-                    ? `${Math.round((download.receivedBytes / download.totalBytes) * 100)}%`
-                    : download.state}
-                </small>
-                {download.state === "completed" ? (
-                  <button
-                    class="zen-open-button"
-                    type="button"
-                    onClick={() => void api?.appDockOpenDownload(download.id)}
-                  >
-                    Open
-                  </button>
-                ) : download.state === "progressing" || download.state === "paused" ? (
-                  <button
-                    class="zen-open-button"
-                    type="button"
-                    onClick={() => void api?.appDockCancelDownload(download.id)}
-                  >
-                    Cancel
-                  </button>
-                ) : null}
-              </div>
-            ))}
-            {state.downloads.length === 0 && <p>No downloads yet.</p>}
-          </div>
-        </Show>
-        {view.findOpen && (
-          <form
-            class="zen-findbar"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void find(true)
-            }}
-          >
-            <input
-              autofocus
-              value={view.findText}
-              onInput={(event) => setView("findText", event.currentTarget.value)}
-              aria-label="Find in page"
-              placeholder="Find in page"
+        <Show when={view.libraryOpen}>
+          {(kind) => (
+            <LibraryPopover
+              kind={kind()}
+              entries={kind() === "bookmarks" ? state.bookmarks : state.history}
+              downloads={state.downloads}
+              register={dock.registerOverlay}
+              onOpen={openLibraryItem}
+              onOpenDownload={(id) => void api?.appDockOpenDownload(id)}
+              onCancelDownload={(id) => void api?.appDockCancelDownload(id)}
             />
-            <span>{view.findResult ? `${view.findResult.activeMatchOrdinal}/${view.findResult.matches}` : ""}</span>
-            <button type="button" aria-label="Previous match" onClick={() => void find(false)}>
-              &#8593;
-            </button>
-            <button type="submit" aria-label="Next match">
-              &#8595;
-            </button>
-            <button type="button" aria-label="Close find" onClick={closeFind}>
-              x
-            </button>
-          </form>
-        )}
+          )}
+        </Show>
+        <Show when={view.findOpen}>
+          <FindBar
+            text={view.findText}
+            result={view.findResult}
+            onInput={(text) => setView("findText", text)}
+            onFind={(forward) => void find(forward)}
+            onClose={closeFind}
+          />
+        </Show>
         {/* The page area. The native browser covers the view inside it, which starts below the find
             bar while that is open so the bar stays above the page it searches. */}
         <div class="zen-browser-host">

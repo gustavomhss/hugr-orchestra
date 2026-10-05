@@ -33,17 +33,13 @@ test("Dock page and Chat's Apps tab share one live browser session", async ({ pa
 
   await openDock(page)
   await expectNoTabs(page)
-  // The repository's own browser profile is listed as Personal, and it is the native profile tabs open in.
-  const picker = page.getByRole("combobox", { name: "Browser profile" })
-  await expect(picker).toHaveValue(/^repo-[a-z0-9]+$/)
-  await expect(picker.locator("option")).toHaveText(["Personal"])
-  await expect(page.getByRole("button", { name: "Create browser profile" })).toBeVisible()
-  const repository = await picker.inputValue()
+  await expect(page.getByRole("combobox", { name: "Browser profile" })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Create browser profile" })).toHaveCount(0)
   await openAddress(page, "https://example.com/a")
   await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
   const opened = await fake(page)
   expect(opened.calls.filter((call) => call.type === "open")).toEqual([
-    { type: "open", url: "https://example.com/a", profile: repository },
+    { type: "open", url: "https://example.com/a", profile: expect.stringMatching(/^repo-[a-z0-9]+$/) },
   ])
   const before = opened.calls.length
 
@@ -54,7 +50,7 @@ test("Dock page and Chat's Apps tab share one live browser session", async ({ pa
   await apps.click()
   await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
   await expect(page.getByRole("textbox", { name: "Address" })).toHaveValue("https://example.com/a")
-  await expect(page.getByRole("combobox", { name: "Browser profile" })).toHaveValue(repository)
+  await expect(page.getByRole("combobox", { name: "Browser profile" })).toHaveCount(0)
 
   await openDock(page)
   await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
@@ -149,7 +145,7 @@ test("an overlay over the Dock occludes the native browser until it closes", asy
   const beforeFind = (await fake(page)).calls.length
   const area = page.locator(".orchestra-dock .zen-browser-host")
   const view = page.locator(".orchestra-dock .zen-browser-view")
-  expect(await view.boundingBox()).toEqual(await area.boundingBox())
+  await expect.poll(async () => JSON.stringify(await view.boundingBox())).toBe(JSON.stringify(await area.boundingBox()))
   await page.getByRole("button", { name: "Find in page", exact: true }).click()
   const bar = page.locator(".zen-findbar")
   await expect(bar).toBeVisible()
@@ -247,7 +243,7 @@ test("loading, failure and retry are explicit", async ({ page }) => {
   // Each state fills the browser's page area, where the mock draws its empty state.
   const area = page.locator(".orchestra-dock .zen-browser-host")
   await expect(area.getByRole("status")).toHaveText("Restoring tabs…")
-  await expect(page.getByRole("combobox", { name: "Browser profile" })).toBeDisabled()
+  await expect(page.getByRole("button", { name: "+ New tab", exact: true })).toBeDisabled()
   await page.evaluate(() => (window as unknown as { __dock: DockFake }).__dock.release.manifest?.())
   const failed = area.getByRole("alert")
   await expect(failed.locator("strong")).toHaveText("Could not load the Dock.")
@@ -279,64 +275,6 @@ test("without the native bridge the Dock is unavailable and makes no Dock calls"
   expect((await fake(page)).calls).toEqual([])
 })
 
-test("a repository keeps its own browser profiles in their own native profiles", async ({ page }) => {
-  await setup(page, { bridge: true, session: false })
-  await page.goto("/")
-  await chooseProfile(page, "Profile A")
-  await openDock(page)
-  const picker = page.getByRole("combobox", { name: "Browser profile" })
-  await expect(picker).toHaveValue(/^repo-[a-z0-9]+$/)
-  const repository = await picker.inputValue()
-  await openAddress(page, "https://example.com/a")
-  await expect(tab(page, "Page /a")).toBeVisible()
-
-  await page.getByRole("button", { name: "Create browser profile" }).click()
-  const name = page.getByRole("textbox", { name: "New profile name" })
-  await name.fill("Research")
-  await name.press("Enter")
-  const research = `${repository}-research`
-  await expect(picker).toHaveValue(research)
-  await expect(picker.locator("option")).toHaveText(["Personal", "Research"])
-  await expect(name).toHaveCount(0)
-  await expectNoTabs(page)
-  await expect(tab(page, "Page /a")).toHaveCount(0)
-  await openAddress(page, "https://example.com/r")
-  await expect(tab(page, "Page /r")).toBeVisible()
-  expect((await fake(page)).calls.filter((call) => call.type === "open").at(-1)).toEqual({
-    type: "open",
-    url: "https://example.com/r",
-    profile: research,
-  })
-
-  // A duplicate name is refused and keeps the form open.
-  await page.getByRole("button", { name: "Create browser profile" }).click()
-  await name.fill("research")
-  await name.press("Enter")
-  await expect(name).toBeVisible()
-  await expect(picker.locator("option")).toHaveText(["Personal", "Research"])
-  await page.getByRole("button", { name: "Cancel profile creation" }).click()
-
-  await picker.selectOption(repository)
-  await expect(tab(page, "Page /a")).toHaveAttribute("aria-selected", "true")
-  await expect(tab(page, "Page /r")).toHaveCount(0)
-  const live = (await fake(page)).live
-  expect(live.map((item) => [item.url, item.profile])).toEqual([["https://example.com/a", repository]])
-
-  // The list and the choice belong to this repository and survive a reload (the fake bridge itself
-  // starts over, so the reloaded window restores from a fresh manifest).
-  await picker.selectOption(research)
-  await expect(tab(page, "Page /r")).toHaveAttribute("aria-selected", "true")
-  await page.reload()
-  await openDock(page)
-  await expect(page.getByRole("combobox", { name: "Browser profile" })).toHaveValue(research)
-  await expect(page.getByRole("combobox", { name: "Browser profile" }).locator("option")).toHaveText([
-    "Personal",
-    "Research",
-  ])
-  await chooseProfile(page, "Profile B")
-  await expect(page.getByRole("combobox", { name: "Browser profile" }).locator("option")).toHaveText(["Personal"])
-})
-
 function tab(page: Page, title: string) {
   return page.locator(".zen-tab", { hasText: title })
 }
@@ -355,10 +293,16 @@ async function nav(page: Page, name: string) {
 async function openDock(page: Page) {
   await nav(page, "Dock")
   await expect(page).toHaveURL(/\/orchestra\/dock$/)
-  // Like the mock, the page is the browser itself: its title is for assistive technology only.
+  // Like the mock, the page is the browser itself: its title is for assistive technology only, so it
+  // stays in the accessibility tree but paints nothing.
   const region = page.getByRole("region", { name: "Dock", exact: true })
   await expect(region).toBeVisible()
-  await expect(region.getByRole("heading", { name: "Dock", exact: true, level: 1 })).toHaveClass(/sr-only/)
+  const heading = region.getByRole("heading", { name: "Dock", exact: true, level: 1 })
+  await expect(heading).toHaveCount(1)
+  const box = await heading.boundingBox()
+  expect(box === null || (box.width <= 1 && box.height <= 1)).toBe(true)
+  await expect(heading).toHaveCSS("overflow", "hidden")
+  await expect(heading).toHaveCSS("position", "absolute")
   await expect(region.locator(".zen-browser-shell .zen-urlbar")).toBeVisible()
 }
 
