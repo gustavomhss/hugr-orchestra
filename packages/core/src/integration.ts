@@ -170,13 +170,13 @@ export interface Interface extends State.Transformable<Draft> {
       /** User-facing label for the credential created on completion. */
       readonly label?: string
     }) => Effect.Effect<Attempt, AuthorizationError>
-    /** Updates a stored credential exposed as a connection. */
+    /** Updates a stored credential exposed as a connection. Inherited credentials are read-only. */
     readonly update: (
       credentialID: Credential.ID,
       updates: Partial<Pick<Credential.Info, "label">>,
-    ) => Effect.Effect<void>
-    /** Removes a stored credential connection. */
-    readonly remove: (credentialID: Credential.ID) => Effect.Effect<void>
+    ) => Effect.Effect<void, Credential.InheritedError>
+    /** Removes a stored credential connection. Inherited credentials are read-only. */
+    readonly remove: (credentialID: Credential.ID) => Effect.Effect<void, Credential.InheritedError>
   }
   readonly attempt: {
     /** Returns the current state of an OAuth attempt. */
@@ -398,7 +398,9 @@ export const locationLayer = Layer.effect(
           const now = yield* Clock.currentTimeMillis
           if (credential.value.expires > now + Duration.toMillis(Duration.minutes(5))) return credential.value
           const value = yield* authorize(implementation.refresh(credential.value))
-          yield* credentials.update(credential.id, { value })
+          // A new value is always storable: rotating an inherited credential
+          // writes it to the active database instead of failing.
+          yield* credentials.update(credential.id, { value }).pipe(Effect.orDie)
           return value
         }),
         key: Effect.fn("Integration.connection.key")(function* (input) {
