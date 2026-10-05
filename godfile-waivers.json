@@ -415,13 +415,13 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 6957,
+      "maximumLines": 7023,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-09-29"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 13849,
+      "maximumLines": 13970,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
       "authorizedBy": "generated-code-policy",
       "authorizedAt": "2026-09-29"
