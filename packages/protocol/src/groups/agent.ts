@@ -3,7 +3,7 @@ import { AgentFile } from "@opencode-ai/schema/agent-file"
 import { Location } from "@opencode-ai/schema/location"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { InvalidRequestError, UnknownError } from "../errors"
+import { ConflictError, InvalidRequestError, UnknownError } from "../errors"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
 export const AgentGroup = HttpApiGroup.make("server.agent")
@@ -26,7 +26,7 @@ export const AgentGroup = HttpApiGroup.make("server.agent")
       params: { agentID: Schema.String },
       query: LocationQuery,
       success: Location.response(AgentFile.Info),
-      error: InvalidRequestError,
+      error: [InvalidRequestError, UnknownError],
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
@@ -43,7 +43,7 @@ export const AgentGroup = HttpApiGroup.make("server.agent")
       query: LocationQuery,
       payload: AgentFile.Input,
       success: Location.response(AgentFile.Info),
-      error: [InvalidRequestError, UnknownError],
+      error: [InvalidRequestError, ConflictError, UnknownError],
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
@@ -51,7 +51,7 @@ export const AgentGroup = HttpApiGroup.make("server.agent")
           identifier: "v2.agent.file.update",
           summary: "Update agent file",
           description:
-            "Write the agent definition to this location's .opencode/agent directory and reload the registered agents.",
+            "Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.",
         }),
       ),
   )
