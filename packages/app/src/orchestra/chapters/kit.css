@@ -1,6 +1,44 @@
 /* Shared page kit ported 1:1 from the approved mock (mock-features.js `.mx-*`).
    Capability screens compose these classes so every page shares one geometry and palette.
    Tokens live on body so portaled dialogs and menus resolve them too. */
+
+/* The mock's "SF Pro Text" is not addressable by name on macOS, so the mock renders with the installed static
+   Inter faces, and Chrome draws every weight from 501 to 599 as Inter Medium plus synthetic bold. The app's own
+   `Inter` @font-face (bundled variable font) shadows those faces and renders a true 590, which reads much lighter.
+   "Mx Inter" picks the same static faces (bundled font where Inter is not installed). Blink only synthesizes bold
+   for web fonts at a requested weight of 600 or more against a lighter face, so the mock's 501-599 weights are
+   written as `font-family: var(--mx-emphasis); font-weight: 600` against the Medium-only "Mx Inter Medium". */
+@font-face {
+  font-family: "Mx Inter";
+  src: local("Inter Regular"), local("Inter-Regular"), url("/assets/Inter.ttf") format("truetype");
+  font-weight: 1 450;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src: local("Inter Medium"), local("Inter-Medium"), url("/assets/Inter.ttf") format("truetype");
+  font-weight: 451 599;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src: local("Inter SemiBold"), local("Inter-SemiBold"), url("/assets/Inter.ttf") format("truetype");
+  font-weight: 600 649;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src: local("Inter Bold"), local("Inter-Bold"), url("/assets/Inter.ttf") format("truetype");
+  font-weight: 650 799;
+}
+@font-face {
+  font-family: "Mx Inter";
+  src: local("Inter ExtraBold"), local("Inter-ExtraBold"), url("/assets/Inter.ttf") format("truetype");
+  font-weight: 800 1000;
+}
+@font-face {
+  font-family: "Mx Inter Medium";
+  src: local("Inter Medium"), local("Inter-Medium"), url("/assets/Inter.ttf") format("truetype");
+  font-weight: 500;
+}
+
 html[data-color-scheme] body[data-new-layout] {
   --mx-line: rgba(166, 189, 211, 0.14);
   --mx-soft: rgba(170, 196, 220, 0.055);
@@ -19,6 +57,8 @@ html[data-color-scheme] body[data-new-layout] {
   --mx-primary-text: #fff;
   --mx-enabled: rgba(84, 135, 178, 0.22);
   --mx-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --mx-sans: "Mx Inter", var(--orchestra-font-family-sans);
+  --mx-emphasis: "Mx Inter Medium", var(--orchestra-font-family-sans);
 }
 
 html[data-color-scheme="light"] body[data-new-layout] {
@@ -43,6 +83,17 @@ html[data-color-scheme="light"] body[data-new-layout] {
   flex: 1;
   overflow: auto;
   color-scheme: dark;
+}
+
+/* The app body is 13px/24px at weight 440; the mock's pages and dialogs inherit 16px/normal/400.
+   Static Inter has no optical sizes, so the bundled fallback keeps its text cut at every size. */
+.mx-page,
+.mx-dialog {
+  font-family: var(--mx-sans);
+  font-optical-sizing: none;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
 }
 html[data-color-scheme="light"] .mx-page,
 html[data-color-scheme="light"] .mx-dialog {
@@ -73,7 +124,8 @@ html[data-color-scheme="light"] .mx-dialog {
   color: var(--mx-strong);
   font-size: 30px;
   letter-spacing: -0.035em;
-  font-weight: 590;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
   line-height: 1.2;
 }
 .mx-heading p {
@@ -149,7 +201,8 @@ html[data-color-scheme="light"] .mx-dialog {
   letter-spacing: -0.015em;
   margin: 0;
   color: var(--mx-strong);
-  font-weight: 580;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
 }
 .mx-card p {
   margin: 12px 0;
@@ -281,7 +334,8 @@ html[data-color-scheme="light"] .mx-dialog {
 .mx-section {
   margin: 26px 0 12px;
   font-size: 12px;
-  font-weight: 550;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
   color: var(--mx-strong);
 }
 .mx-table {
@@ -309,7 +363,8 @@ html[data-color-scheme="light"] .mx-dialog {
   display: block;
   font-size: 12px;
   color: var(--mx-strong);
-  font-weight: 550;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
 }
 .mx-row small {
   display: block;
@@ -375,7 +430,8 @@ html[data-color-scheme="light"] .mx-dialog {
 .mx-dialog-head h2 {
   margin: 0;
   font-size: 20px;
-  font-weight: 570;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 .mx-dialog-head p {
