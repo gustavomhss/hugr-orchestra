@@ -6,8 +6,7 @@
 
 Usage notes:
   - IMPORTANT: if another tool is present that offers better web fetching capabilities, is more targeted to the task, or has fewer restrictions, prefer using that tool instead of this one.
-  - The URL must be a fully-formed valid URL
-  - HTTP URLs will be automatically upgraded to HTTPS
+  - The URL must be a fully-formed URL starting with http:// or https://; it is fetched as given
   - Format options: "markdown" (default), "text", or "html"
   - This tool is read-only and does not modify any files
-  - Results may be summarized if the content is very large
+  - Responses over 5 MB fail; long results are truncated and the full content is saved to a file you can Read or Grep

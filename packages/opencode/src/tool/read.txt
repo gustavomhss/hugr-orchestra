@@ -1,7 +1,8 @@
 Read a file or directory from local filesystem. Missing paths return an error.
 
 - `filePath` is absolute path.
-- Default read returns up to 2000 lines from start.
+- Default read returns up to 2000 lines from start; file output also stops at 50 KB. When more remains, the output says `Use offset=N to continue.`
+- With an explicit `offset` or `limit`, the file slice must fit in 50 KB or the read fails; continue dense files with `offset` plus a smaller `limit`.
 - Positive `offset` is 1-indexed start line. Negative `offset` reads from end: `-3` starts last 3 lines.
 - `limit` is positive maximum line count.
 - Use `glob` to locate unknown paths. Use `grep` for large-file search.

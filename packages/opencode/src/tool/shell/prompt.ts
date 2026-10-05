@@ -67,12 +67,12 @@ function chainGuidance(name: string) {
     return "If the commands depend on each other and must run sequentially, avoid '&&' in this shell because Windows PowerShell (5.1) does not support it. Use PowerShell conditionals such as `cmd1; if ($?) { cmd2 }` when later commands must depend on earlier success."
   }
   if (PS.has(name)) {
-    return "If the commands depend on each other and must run sequentially, use a single bash tool call with '&&' to chain them together (e.g., `git add . && git commit -m \"message\" && git push`). For instance, if one operation must complete before another starts (like New-Item before Copy-Item, Write before bash for git operations, or git add before git commit), run these operations sequentially instead."
+    return "If the commands depend on each other and must run sequentially, use a single bash tool call with '&&' to chain them together (e.g., `git add src/app.ts && git commit -m 'message' && git push`). For instance, if one operation must complete before another starts (like New-Item before Copy-Item, Write before bash for git operations, or git add before git commit), run these operations sequentially instead."
   }
   if (CMD.has(name)) {
     return "If the commands depend on each other and must run sequentially, use a single bash tool call with `&&` to chain them together (e.g., `mkdir out && dir out`). For instance, if one operation must complete before another starts, run these operations sequentially instead."
   }
-  return "If the commands depend on each other and must run sequentially, use a single Bash call with '&&' to chain them together (e.g., `git add . && git commit -m \"message\" && git push`). For instance, if one operation must complete before another starts (like mkdir before cp, Write before Bash for git operations, or git add before git commit), run these operations sequentially instead."
+  return "If the commands depend on each other and must run sequentially, use a single Bash call with '&&' to chain them together (e.g., `git add src/app.ts && git commit -m 'message' && git push`). For instance, if one operation must complete before another starts (like mkdir before cp, Write before Bash for git operations, or git add before git commit), run these operations sequentially instead."
 }
 
 function bashCommandSection(chain: string, limits: Limits, defaultTimeoutMs: number) {
@@ -223,7 +223,9 @@ function profile(name: string, platform: NodeJS.Platform, limits: Limits, defaul
   const chain = chainGuidance(name)
   if (CMD.has(name)) {
     return {
-      intro: `Executes a given ${shellDisplayName(name)} command with optional timeout, ensuring proper handling and security measures.`,
+      intro: `Executes a given ${shellDisplayName(name)} command in a fresh, non-interactive process with optional timeout.`,
+      // cmd.exe does not treat single quotes as quoting.
+      commitExample: `git commit -m "subject" -m "body"`,
       workdirSection:
         "All commands run in the current working directory by default. Use the `workdir` parameter if you need to run a command in a different directory. AVOID changing directories inside the command - use `workdir` instead.",
       commandSection: cmdCommandSection(chain, limits, defaultTimeoutMs),
@@ -235,7 +237,8 @@ function profile(name: string, platform: NodeJS.Platform, limits: Limits, defaul
   }
   if (isPowerShell) {
     return {
-      intro: `Executes a given ${shellDisplayName(name)} command with optional timeout, ensuring proper handling and security measures.`,
+      intro: `Executes a given ${shellDisplayName(name)} command in a fresh, non-interactive process with optional timeout.`,
+      commitExample: "git commit -m 'subject' -m 'body'",
       workdirSection:
         "All commands run in the current working directory by default. Use the `workdir` parameter if you need to run a command in a different directory. AVOID changing directories inside the command - use `workdir` instead.",
       commandSection: powershellCommandSection(
@@ -255,8 +258,8 @@ function profile(name: string, platform: NodeJS.Platform, limits: Limits, defaul
     }
   }
   return {
-    intro:
-      "Executes a given bash command in a persistent shell session with optional timeout, ensuring proper handling and security measures.",
+    intro: "Executes a given bash command in a fresh, non-interactive process with optional timeout.",
+    commitExample: "git commit -m 'subject' -m 'body'",
     workdirSection:
       "All commands run in the current working directory by default. Use the `workdir` parameter if you need to run a command in a different directory. AVOID using `cd <directory> && <command>` patterns - use `workdir` instead.",
     commandSection: bashCommandSection(chain, limits, defaultTimeoutMs),
@@ -280,6 +283,7 @@ export function render(name: string, platform: NodeJS.Platform, limits: Limits, 
       tmp: Global.Path.tmp,
       workdirSection: selected.workdirSection,
       commandSection: selected.commandSection,
+      commitExample: selected.commitExample,
       gitCommands: selected.gitCommands,
       toolName: ShellID.ToolID,
       gitCommandRestriction: selected.gitCommandRestriction,

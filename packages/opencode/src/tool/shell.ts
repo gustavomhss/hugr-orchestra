@@ -612,6 +612,10 @@ export const ShellTool = Tool.define(
       let output = end.text
       if (!output) output = "(no output)"
 
+      // Timeout and abort already explain themselves below. This note goes first because the app's
+      // test evidence cards parse the end of the output, where runners print their summaries.
+      if (code !== null && code !== 0) output = `<shell_metadata>\nexit code: ${code}\n</shell_metadata>\n\n${output}`
+
       if (cut && file) {
         output = `...output truncated...\n\nFull output saved to: ${file}\n\n` + output
       }

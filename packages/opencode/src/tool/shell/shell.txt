@@ -2,6 +2,8 @@ ${intro}
 
 Be aware: OS: ${os}, Shell: ${shell}
 
+Shell state such as `cd` and variables does not carry over between calls. Stdin is empty, and credential-like variables such as `GH_TOKEN` and the SSH agent are removed.
+
 ${workdirSection}
 
 Use `${tmp}` for temporary work outside the workspace. This directory has already been created, already exists, and is pre-approved for external directory access.
@@ -10,10 +12,14 @@ IMPORTANT: This tool is for terminal operations like git, npm, docker, etc. DO N
 
 ${commandSection}
 
+# Results
+- A non-zero exit code is reported as `exit code: N` before the output.
+- The app shows a test evidence card only for one direct runner command (`bun test`, `vitest`, `jest`, `playwright test`, `pytest`, `go test`, `cargo test`; `npx`/`bunx` and a trailing `2>&1` are fine), with no pipes, `;`, `&&`, redirects or package scripts like `npm test`.
+
 # Git and GitHub
 - Only commit, amend, push, or create PRs when explicitly requested.
 - Before committing, inspect `git status`, `git diff`, and `git log --oneline -10`; stage only intended files and never commit secrets.
-- Write a concise commit message that matches the repo style.
+- Write a concise commit message in the repo's style, one `-m` per paragraph: `${commitExample}`. For every agent, a safety guard refuses `git add`/`git commit` commands with `$`, backticks, heredocs or redirects, or options such as `-am`, `--no-edit`, `-F` and `--author`.
 - Do not update git config, skip hooks, use interactive `-i`, force-push, or create empty commits unless explicitly requested.
 - If a commit fails or hooks reject it, fix the issue and create a new commit; do not amend the failed commit.
 - Before creating a PR, inspect status, diff, remote tracking, recent commits, and the diff from the base branch.
