@@ -83,6 +83,24 @@ sessão Linux. Se ela falhar, terminal, arquivos, apps e Slack continuam; só `d
 - Suíte desktop inteira: 441 passam; as 2 falhas são de carga de módulo em arquivos intocados desde a
   base (`draft-store` precisa de `node:sqlite`, `wsl/servers` importa o electron do link).
 
+## Validação por exploração (regra do dono)
+
+O dono valida as ferramentas do dock deixando o modelo explorar sozinho, sem roteiro de ferramentas:
+se o modelo sofre para usar, a ferramenta não presta. As dores que o dono já levantou no navegador
+(sessão "Avaliação completa do dock") são backlog conhecido: `dock_read` verboso e sem filtro por
+nome, ref vencida exige reler tudo, `dock_action`/`dock_type` recusam abas do navegador,
+`dock_evaluate` morre com CSP, só HTTPS, `dock_screenshot` devolve base64 cru, retângulos de viewport
+confusos.
+
+Primeira rodada aberta no app real (2026-10-05, MiMo-V2.6-Flash Free, tarefa: ativar e desfazer
+"trim trailing whitespace" pela interface do VS Code): o agente não concluiu em 19 min. Sob load
+80–150 vieram `native-preparation-timeout`/`transport-timeout`; depois de um timeout, toda chamada
+passou a responder `helper-termination-failed` para sempre. Causa: o canal do helper guarda como
+definitiva a falha de limpeza que perdeu o prazo de 5 s, e o runtime ficava preso nesse helper
+morto (o container ficou `Exited (137)` sem remoção). Correção `d522ca3495`: o runtime remove o
+container do helper pelo ID e rótulos comprovados e só solta o handle depois de provar a remoção;
+teste Docker dedicado, mutação morta. Falta repetir a rodada aberta com o host aliviado.
+
 ## Pendências (próximas fatias)
 
 1. Rodar `app-dock-runtime-native.test.ts` com Docker (ver acima) e provar no app real: abrir a view
