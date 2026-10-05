@@ -43,6 +43,8 @@ html[data-color-scheme="light"] body[data-new-layout] {
   flex: 1;
   overflow: auto;
   color-scheme: dark;
+  /* The app body sets a 24px line height; the mock inherits the browser default. */
+  line-height: normal;
 }
 html[data-color-scheme="light"] .mx-page,
 html[data-color-scheme="light"] .mx-dialog {
@@ -352,6 +354,7 @@ html[data-color-scheme="light"] .mx-dialog {
 
 /* Dialog: render inside the app's Dialog/portal and apply these classes to its content. */
 .mx-dialog {
+  line-height: normal;
   inline-size: min(680px, calc(100vw - 48px));
   max-block-size: calc(100vh - 64px);
   display: flex;
