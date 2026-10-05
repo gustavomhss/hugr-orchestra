@@ -8,6 +8,7 @@ import { evaluate } from "@/permission/evaluate"
 import { Config } from "@/config/config"
 import { ToolID } from "./schema"
 import { TRUNCATION_DIR } from "./truncation-dir"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
 
 const RETENTION = Duration.days(7)
 
@@ -66,6 +67,7 @@ const layer = Layer.effect(
     })
 
     const write = Effect.fn("Truncate.write")(function* (text: string) {
+      yield* ToolSafety.inspect(text).pipe(Effect.orDie)
       const file = path.join(TRUNCATION_DIR, ToolID.ascending())
       yield* fs.ensureDir(TRUNCATION_DIR).pipe(Effect.orDie)
       yield* fs.writeFileString(file, text).pipe(Effect.orDie)
@@ -83,6 +85,7 @@ const layer = Layer.effect(
     })
 
     const output = Effect.fn("Truncate.output")(function* (text: string, options: Options = {}, agent?: Agent.Info) {
+      yield* ToolSafety.inspect(text).pipe(Effect.orDie)
       const resolved = yield* limits()
       const maxLines = options.maxLines ?? resolved.maxLines
       const maxBytes = options.maxBytes ?? resolved.maxBytes
@@ -129,12 +132,13 @@ const layer = Layer.effect(
       const hint = hasTaskTool(agent)
         ? `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.`
         : `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse Grep to search the full content or Read with offset/limit to view specific sections.`
+      const pressure = `Context pressure: this result exceeds the configured ${maxBytes}-byte/${maxLines}-line tool budget. Use bounded saved-output slices or the existing compaction flow; do not paste the full transcript.`
 
       return {
         content:
           direction === "head"
-            ? `${preview}\n\n...${removed} ${unit} truncated...\n\n${hint}`
-            : `...${removed} ${unit} truncated...\n\n${hint}\n\n${preview}`,
+            ? `${preview}\n\n...${removed} ${unit} truncated...\n\n${hint}\n${pressure}`
+            : `...${removed} ${unit} truncated...\n\n${hint}\n${pressure}\n\n${preview}`,
         truncated: true,
         outputPath: file,
       } as const

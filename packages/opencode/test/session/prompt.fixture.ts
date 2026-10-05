@@ -1,5 +1,6 @@
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
@@ -157,9 +158,9 @@ function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[] }) {
 function makePrompt(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
   const layers = replacements(input)
   if (input?.processor === "blocking") {
-    return LayerNode.compile(promptRoot, [...layers, [SessionProcessor.node, blockingProcessor]])
+    return TestAppNodeBuilder.build(promptRoot, [...layers, [SessionProcessor.node, blockingProcessor]])
   }
-  return LayerNode.compile(promptRoot, layers)
+  return TestAppNodeBuilder.build(promptRoot, layers)
 }
 
 export function makeHttp(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
@@ -169,9 +170,9 @@ export function makeHttp(input?: { mcpInstructions?: MCP.ServerInstructions[]; p
   ])
   const layers = replacements(input)
   if (input?.processor === "blocking") {
-    return LayerNode.compile(root, [...layers, [SessionProcessor.node, blockingProcessor]])
+    return TestAppNodeBuilder.build(root, [...layers, [SessionProcessor.node, blockingProcessor]])
   }
-  return LayerNode.compile(root, layers)
+  return TestAppNodeBuilder.build(root, layers)
 }
 
 export function makeHttpNoLLMServer(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {

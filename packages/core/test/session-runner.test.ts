@@ -58,6 +58,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { Cause, DateTime, Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
+import { PermissionFixture } from "./permission-fixture"
 
 const requests: LLMRequest[] = []
 let response: LLMEvent[] = []
@@ -110,17 +111,6 @@ const recoveryModel = Model.make({
 })
 const authorizations: Tool.Context[] = []
 const executions: string[] = []
-const permission = Layer.succeed(
-  PermissionV2.Service,
-  PermissionV2.Service.of({
-    assert: () => Effect.die("unused"),
-    ask: () => Effect.die("unused"),
-    reply: () => Effect.die("unused"),
-    get: () => Effect.die("unused"),
-    forSession: () => Effect.die("unused"),
-    list: () => Effect.die("unused"),
-  }),
-)
 const echo = Layer.effectDiscard(
   ToolRegistry.Service.use((registry) =>
     registry.register({
@@ -233,7 +223,7 @@ const runnerLayer = AppNodeBuilder.build(SessionRunnerLLM.node, [
   [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
   [SkillGuidance.node, skillGuidance],
   [ReferenceGuidance.node, referenceGuidance],
-  [PermissionV2.node, permission],
+  [PermissionV2.node, PermissionFixture.normalLayer],
   [Config.node, config],
 ])
 const execution = Layer.effect(
@@ -276,7 +266,7 @@ const it = testEffect(
     ]),
     [
       [LayerNodePlatform.llmClient, client],
-      [PermissionV2.node, permission],
+      [PermissionV2.node, PermissionFixture.normalLayer],
       [SessionRunnerModel.node, models],
       [SystemContextRegistry.node, systemContext],
       [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],

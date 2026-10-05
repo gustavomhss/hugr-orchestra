@@ -20,6 +20,8 @@ export class AppProcessError extends Schema.TaggedErrorClass<AppProcessError>()(
 }
 
 export interface RunOptions {
+  /** Optional producer-owned hook; runs on raw chunks before capture limits. */
+  readonly inspect?: (chunk: Uint8Array) => void
   readonly combineOutput?: boolean
   readonly maxOutputBytes?: number
   readonly maxErrorBytes?: number
@@ -118,7 +120,7 @@ const normalizeStdin = (
       ? Stream.make(input)
       : input
 
-export const collectStream = (stream: Stream.Stream<Uint8Array, PlatformError>, maxOutputBytes: number | undefined) =>
+export const collectStream = <E>(stream: Stream.Stream<Uint8Array, E>, maxOutputBytes: number | undefined) =>
   Stream.runFold(
     stream,
     () => ({ chunks: [] as Uint8Array[], bytes: 0, truncated: false }),
@@ -143,12 +145,17 @@ const layer = Layer.effect(
 
     const runCommand = (command: ChildProcess.Command, options?: RunOptions) => {
       const description = describeCommand(command)
+      const inspected = (stream: Stream.Stream<Uint8Array, PlatformError>) => options?.inspect
+        ? stream.pipe(Stream.tap((chunk) => Effect.try({
+            try: () => options.inspect?.(chunk),
+            catch: (cause) => wrapError(description, cause),
+          }))) : stream
       const collect = Effect.scoped(
         Effect.gen(function* () {
           const handle = yield* spawner.spawn(command)
           if (options?.combineOutput) {
             const [output, exitCode] = yield* Effect.all(
-              [collectStream(handle.all, options.maxOutputBytes), handle.exitCode],
+              [collectStream(inspected(handle.all), options.maxOutputBytes), handle.exitCode],
               { concurrency: "unbounded" },
             )
             return {
@@ -164,8 +171,8 @@ const layer = Layer.effect(
           }
           const [stdout, stderr, exitCode] = yield* Effect.all(
             [
-              collectStream(handle.stdout, options?.maxOutputBytes),
-              collectStream(handle.stderr, options?.maxErrorBytes),
+              collectStream(inspected(handle.stdout), options?.maxOutputBytes),
+              collectStream(inspected(handle.stderr), options?.maxErrorBytes),
               handle.exitCode,
             ],
             { concurrency: "unbounded" },

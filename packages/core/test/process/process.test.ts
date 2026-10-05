@@ -41,7 +41,7 @@ describe("AppProcess", () => {
     )
 
     it.effect(
-      "captures stdout and stderr in emission order",
+      "captures both output streams while preserving each stream's order",
       Effect.gen(function* () {
         const svc = yield* AppProcess.Service
         const script = [
@@ -50,7 +50,11 @@ describe("AppProcess", () => {
           'setTimeout(() => process.stdout.write("out 2\\n"), 20)',
         ].join(";")
         const result = yield* svc.run(cmd("-e", script), { combineOutput: true })
-        expect(result.output?.toString("utf8")).toBe("out 1\nerr 1\nout 2\n")
+        // Separate OS pipes do not define a total order between stdout and stderr reads.
+        const lines = result.output?.toString("utf8").split("\n")
+        expect(lines?.at(-1)).toBe("")
+        expect(lines?.slice(0, -1).toSorted()).toEqual(["err 1", "out 1", "out 2"])
+        expect(lines?.filter((line) => line.startsWith("out "))).toEqual(["out 1", "out 2"])
         expect(result.stdout.toString("utf8")).toBe("")
         expect(result.stderr.toString("utf8")).toBe("")
       }),

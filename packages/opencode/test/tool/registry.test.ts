@@ -4,6 +4,7 @@ import fs from "fs/promises"
 import { fileURLToPath, pathToFileURL } from "url"
 import { Effect, Layer, Result, Schema } from "effect"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { ToolRegistry, allowedTaskModels } from "@/tool/registry"
 import { Tool } from "@/tool/tool"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
@@ -15,7 +16,9 @@ import { Agent } from "@/agent/agent"
 import { InstanceState } from "@/effect/instance-state"
 
 import { ToolJsonSchema } from "@/tool/json-schema"
-import { MessageID, SessionID } from "@/session/schema"
+import { MessageID } from "@/session/schema"
+import { Session } from "@/session/session"
+import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
@@ -50,15 +53,15 @@ const brokenPluginLayer = Layer.succeed(
   }),
 )
 
-const root = LayerNode.group([ToolRegistry.node, Agent.node])
+const root = LayerNode.group([ToolRegistry.node, Agent.node, Session.node, SessionProjector.node])
 const replacements = [
   [Config.node, configLayer],
   [RuntimeFlags.node, RuntimeFlags.layer()],
 ] as const
 
-const it = testEffect(LayerNode.compile(root, replacements))
+const it = testEffect(TestAppNodeBuilder.build(root, replacements))
 const withCodeMode = testEffect(
-  LayerNode.compile(root, [
+  TestAppNodeBuilder.build(root, [
     [Config.node, configLayer],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalCodeMode: true })],
     [
@@ -81,7 +84,7 @@ const withCodeMode = testEffect(
   ]),
 )
 const withEmptyCodeMode = testEffect(
-  LayerNode.compile(root, [
+  TestAppNodeBuilder.build(root, [
     [Config.node, configLayer],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalCodeMode: true })],
     [
@@ -93,7 +96,7 @@ const withEmptyCodeMode = testEffect(
     ],
   ]),
 )
-const withBrokenPlugin = testEffect(LayerNode.compile(root, [...replacements, [Plugin.node, brokenPluginLayer]]))
+const withBrokenPlugin = testEffect(TestAppNodeBuilder.build(root, [...replacements, [Plugin.node, brokenPluginLayer]]))
 
 afterEach(async () => {
   await disposeAllInstances()
@@ -445,8 +448,10 @@ describe("tool.registry", () => {
       const loaded = (yield* registry.all()).find((tool) => tool.id === "image")
       if (!loaded) throw new Error("custom image tool was not loaded")
       const agents = yield* Agent.Service
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({})
       const result = yield* loaded.execute({}, {
-        sessionID: SessionID.make("ses_test"),
+        sessionID: session.id,
         messageID: MessageID.make("msg_test"),
         agent: (yield* agents.defaultInfo()).name,
         abort: new AbortController().signal,

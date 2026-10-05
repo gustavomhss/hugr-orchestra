@@ -337,6 +337,7 @@ const layer = Layer.effect(
                 finish: stepSettlement.finish,
                 cost: 0,
                 tokens: stepSettlement.tokens,
+                usageKnown: stepSettlement.usageKnown,
                 snapshot: endSnapshot,
                 files,
               }),

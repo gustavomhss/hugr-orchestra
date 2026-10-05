@@ -85,12 +85,7 @@ export class HugrComposerClient {
         throw error
       })
     if (!result.isError) return result
-    throw new Error(
-      result.content
-        .flatMap((item) => (item.type === "text" ? [item.text] : []))
-        .filter((text) => text.trim())
-        .join("\n\n") || "HuGR Composer retornou erro",
-    )
+    throw new Error("HuGR Composer backend operation failed")
   }
 
   async close() {

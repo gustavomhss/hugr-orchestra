@@ -6,6 +6,10 @@ import type { Data, Definition, Payload } from "@opencode-ai/schema/event"
 import { and, asc, eq, gt, inArray, sql } from "drizzle-orm"
 import { Database } from "./database/database"
 import { EventSequenceTable, EventTable } from "./event/sql"
+import { EventSeal } from "./event/seal"
+import { SNAPSHOT_COMPACTION_MARKER } from "./event/compaction"
+export { SNAPSHOT_TYPES, hasCompactedSnapshotEvents, compactSnapshotEvents } from "./event/compaction"
+export { SealWindowInput, SealWindowResult, SealWindowError } from "./event/seal"
 import { Location } from "./location"
 import { makeGlobalNode } from "./effect/app-node"
 import { isDeepStrictEqual } from "node:util"
@@ -153,6 +157,9 @@ export interface Interface {
   ) => Effect.Effect<string | undefined>
   readonly remove: (aggregateID: string) => Effect.Effect<void>
   readonly claim: (aggregateID: string, ownerID: string) => Effect.Effect<void>
+  readonly verifySealWindow: (
+    input: EventSeal.SealWindowInput,
+  ) => Effect.Effect<EventSeal.SealWindowResult, EventSeal.SealWindowError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/Event") {}
@@ -388,17 +395,25 @@ export const layerWith = (options?: LayerOptions) =>
                             })
                             .run()
                             .pipe(Effect.orDie)
+                          const predecessor = yield* db
+                            .select(EventSeal.columns)
+                            .from(EventTable)
+                            .where(and(eq(EventTable.aggregate_id, aggregateID), eq(EventTable.seq, latest)))
+                            .get()
+                            .pipe(Effect.orDie)
+                          // Materialize JSON once so user toJSON values cannot change between sealing and storage.
+                          const record = {
+                            id: event.id,
+                            aggregate_id: aggregateID,
+                            seq,
+                            type: versionedType(definition.type, durable.version),
+                            data: Schema.decodeUnknownSync(
+                              Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown)),
+                            )(JSON.stringify(encoded)),
+                          }
                           yield* db
                             .insert(EventTable)
-                            .values([
-                              {
-                                id: event.id,
-                                aggregate_id: aggregateID,
-                                seq,
-                                type: versionedType(definition.type, durable.version),
-                                data: encoded,
-                              },
-                            ])
+                            .values([{ ...record, ...EventSeal.sealRow(record, predecessor) }])
                             .run()
                             .pipe(Effect.orDie)
                           return { aggregateID, seq }
@@ -708,119 +723,10 @@ export const layerWith = (options?: LayerOptions) =>
         replayAll,
         remove,
         claim,
+        verifySealWindow: (input) => EventSeal.verifyWindow(db, input),
       })
     }),
   )
 
 const layer = layerWith()
 export const node = makeGlobalNode({ service: Service, layer: layer, deps: [Database.node] })
-
-export const SNAPSHOT_TYPES = ["message.updated", "message.part.updated"] as const
-const SNAPSHOT_COMPACTION_MARKER = "event_snapshot_compaction"
-
-export function hasCompactedSnapshotEvents(db: Pick<Database.Interface["db"], "get">) {
-  return Effect.gen(function* () {
-    return Boolean(
-      yield* db
-        .get(
-          sql`SELECT 1 WHERE EXISTS (SELECT 1 FROM data_migration WHERE name = ${SNAPSHOT_COMPACTION_MARKER}) OR EXISTS (SELECT 1 FROM event_sequence AS sequence WHERE NOT EXISTS (SELECT 1 FROM event WHERE aggregate_id = sequence.aggregate_id AND seq = 0) OR NOT EXISTS (SELECT 1 FROM event WHERE aggregate_id = sequence.aggregate_id AND seq = sequence.seq) OR EXISTS (SELECT 1 FROM event WHERE aggregate_id = sequence.aggregate_id GROUP BY aggregate_id HAVING COUNT(*) != MAX(seq) - MIN(seq) + 1))`,
-        )
-        .pipe(Effect.orDie),
-    )
-  })
-}
-
-/**
- * Compact snapshot-like durable events, keeping only the latest occurrence per
- * (aggregate, type, entity) and deleting intermediate full-state copies.
- *
- * These events carry the complete message/part payload on every update, so a
- * single message renders N rows whose payloads are total supersets of their
- * predecessors. Replaying the retained latest row reproduces the identical
- * final projection (the projector upserts by id), while intermediate rows are
- * pure write amplification.
- *
- * Deleting rows leaves `seq` gaps. Compaction records a durable marker in the
- * same transaction so workspace sync can permanently refuse unsafe replay.
- *
- * Non-snapshot lifecycle rows (`session.created`, `message.removed`,
- * `message.part.delta`, ...) are never touched, and `event_sequence` is left
- * at its current high-water mark.
- */
-export const compactSnapshotEvents = Effect.fn("EventV2.compactSnapshotEvents")(function* (
-  db: Database.Interface["db"],
-) {
-  if (yield* hasCompactedSnapshotEvents(db))
-    return yield* Effect.die(
-      new Error("Snapshot compaction already ran; refusing to compact a database that may have sync sequence gaps."),
-    )
-  const snapshotTypes = SNAPSHOT_TYPES.map((type) => versionedType(type, 1))
-  const result = yield* db
-    .transaction(
-      (tx) =>
-        Effect.gen(function* () {
-          const stats = yield* tx
-            .select({
-              rows: sql<number>`count(*)`,
-              bytes: sql<number>`sum(length(data))`,
-            })
-            .from(EventTable)
-            .where(inArray(EventTable.type, snapshotTypes))
-            .get()
-            .pipe(Effect.orDie)
-          yield* tx
-            .run(
-              sql.raw(`
-        DELETE FROM "event"
-        WHERE "type" IN ('message.updated.1', 'message.part.updated.1')
-          AND "id" NOT IN (
-            SELECT "id" FROM (
-              SELECT
-                "id",
-                ROW_NUMBER() OVER (
-                  PARTITION BY "aggregate_id", "type", "entity"
-                  ORDER BY "seq" DESC
-                ) AS "rn"
-              FROM (
-                SELECT
-                  "id",
-                  "aggregate_id",
-                  "type",
-                  "seq",
-                  CASE "type"
-                    WHEN 'message.updated.1' THEN json_extract("data", '$.info.id')
-                    WHEN 'message.part.updated.1' THEN json_extract("data", '$.part.id')
-                  END AS "entity"
-                FROM "event"
-                WHERE "type" IN ('message.updated.1', 'message.part.updated.1')
-              )
-            )
-            WHERE "rn" = 1
-           )
-       `),
-            )
-            .pipe(Effect.orDie)
-          const remaining = yield* tx
-            .select({
-              rows: sql<number>`count(*)`,
-              bytes: sql<number>`sum(length(data))`,
-            })
-            .from(EventTable)
-            .where(inArray(EventTable.type, snapshotTypes))
-            .get()
-            .pipe(Effect.orDie)
-          const removed = (stats?.rows ?? 0) - (remaining?.rows ?? 0)
-          const bytes = (stats?.bytes ?? 0) - (remaining?.bytes ?? 0)
-          if (removed > 0)
-            yield* tx
-              .run(
-                sql`INSERT OR REPLACE INTO data_migration (name, time_completed) VALUES (${SNAPSHOT_COMPACTION_MARKER}, ${Date.now()})`,
-              )
-              .pipe(Effect.orDie)
-          return { removed, bytes }
-        }),
-      { behavior: "immediate" },
-    )
-    .pipe(Effect.orDie)
-  return result
-})

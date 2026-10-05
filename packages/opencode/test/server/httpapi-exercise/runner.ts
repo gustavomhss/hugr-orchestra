@@ -18,6 +18,10 @@ export function runScenario(options: Options) {
   return (scenario: Scenario) => {
     if (scenario.kind === "todo") return Effect.succeed({ status: "skip", scenario } as Result)
     return runActive(options, scenario).pipe(
+      // Effect scenarios acquire AppLayer in their scope, so cached handlers
+      // cannot survive them. Auth probes own only their cached web-handler scope.
+      Effect.ensuring(options.mode === "auth" ? Effect.void : Effect.promise(() => disposeApps())),
+      Effect.ensuring(options.mode !== "auth" && scenario.reset ? resetState : Effect.void),
       Effect.timeoutOrElse({
         duration: options.scenarioTimeout,
         orElse: () => Effect.die(new Error(`scenario timed out after ${Duration.format(options.scenarioTimeout)}`)),
@@ -193,7 +197,6 @@ function withContext<A, E>(
         return result
       }).pipe(Effect.ensuring(context.llm ? context.llm.reset : Effect.void)),
     ),
-    Effect.ensuring(scenario.reset ? resetState : Effect.void),
   )
 }
 
@@ -260,7 +263,6 @@ const resetState = Effect.promise(async () => {
   const modules = await runtime()
   Flag.OPENCODE_SERVER_PASSWORD = original.OPENCODE_SERVER_PASSWORD
   Flag.OPENCODE_SERVER_USERNAME = original.OPENCODE_SERVER_USERNAME
-  await disposeApps()
   await modules.disposeAllInstances()
   await modules.resetDatabase()
   await Bun.sleep(25)

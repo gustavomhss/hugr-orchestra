@@ -35,6 +35,7 @@ const capture = () => {
     replayAll: () => Effect.succeed(undefined),
     remove: () => Effect.void,
     claim: () => Effect.void,
+    verifySealWindow: () => Effect.die("Event capture has no durable SQLite store"),
   })
   return {
     published,

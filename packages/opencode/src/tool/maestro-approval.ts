@@ -9,8 +9,9 @@ import { Git } from "@/git"
 import { Config } from "@/config/config"
 import { findReview, readValidation, validationRecordHash } from "@/maestro/validation-record"
 import { renderPresentation } from "@/maestro/approval"
+import { taskHash } from "@/maestro/task-hash"
 import { Session } from "@/session/session"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 
 const PresentationParameters = Schema.Struct({
   planRevisionID: Schema.String,
@@ -20,7 +21,12 @@ const PresentationParameters = Schema.Struct({
   contextHash: Schema.String,
   contextRecordID: Schema.optional(Schema.String),
   policyHash: Schema.String,
-  taskHash: Schema.optional(Schema.String),
+  taskHash: Schema.optional(
+    Schema.NonEmptyString.annotate({
+      description:
+        "Optional matching task binding hash. Runtime computes the canonical hash from intent and durable evidence.",
+    }),
+  ),
   intent: Schema.Struct({
     subagentType: Schema.String,
     prompt: Schema.String,
@@ -47,7 +53,7 @@ export const MaestroPresentApprovalTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
     return {
       description:
-        "Unavailable until durable plan revision and validation readers exist. Refuses rather than treat model-supplied fields as approval authority.",
+        "Present exact task intent for direct user approval. Requires native Maestro, same-Session/project durable plan and VALID validation, current clean context, and Lucy APPROVE. Runtime computes the task hash; an optional supplied hash must match.",
       parameters: PresentationParameters,
       execute: (_params: Schema.Schema.Type<typeof PresentationParameters>, ctx) =>
         Effect.gen(function* () {
@@ -57,9 +63,7 @@ export const MaestroPresentApprovalTool = Tool.define(
           }
           if (!_params.planRevisionID.startsWith("evt_") || !_params.validationRecordID.startsWith("evt_")) {
             return yield* Effect.fail(
-              new Error(
-                "Approval presentation unavailable: durable plan revision and validation readers are not implemented",
-              ),
+              new Error("Approval presentation requires durable plan revision and validation event IDs"),
             )
           }
           const plan = yield* readPlanRevision(_params.planRevisionID)
@@ -98,6 +102,20 @@ export const MaestroPresentApprovalTool = Tool.define(
           const review = yield* findReview(ctx.sessionID, validation.id)
           if (!review || review.data.verdict !== "APPROVE")
             return yield* Effect.fail(new Error("Approval presentation requires Lucy APPROVE"))
+          const validationHash = validationRecordHash(validation)
+          const canonicalTaskHash = taskHash({
+            ..._params.intent,
+            planRevisionID: plan.id,
+            revisionHash: plan.revisionHash,
+            validationRecordID: validation.id,
+            validationHash,
+            contextHash: context.contextHash,
+            policyHash: validation.reviewPolicyHash,
+          })
+          if (_params.taskHash !== undefined && _params.taskHash !== canonicalTaskHash)
+            return yield* Effect.fail(
+              new Error("Approval presentation task hash does not match intent and durable evidence"),
+            )
           const presentation = yield* presentApprovalFromSession({
             sessionID: ctx.sessionID,
             assistantMessageID: ctx.messageID,
@@ -106,10 +124,10 @@ export const MaestroPresentApprovalTool = Tool.define(
             planRevisionID: plan.id,
             validationRecordID: validation.id,
             revisionHash: plan.revisionHash,
-            validationHash: validationRecordHash(validation),
+            validationHash,
             contextHash: context.contextHash,
             policyHash: validation.reviewPolicyHash,
-            taskHash: _params.taskHash ?? "",
+            taskHash: canonicalTaskHash,
             intent: _params.intent,
             methodVersion: _params.methodVersion,
             plan: plan.goal.value,
@@ -126,7 +144,7 @@ export const MaestroPresentApprovalTool = Tool.define(
           )
           return {
             title: "Approval presented",
-            metadata: { presentationID: presentation.id },
+            metadata: { presentationID: presentation.id, truncated: false },
             output: renderPresentation(presentation),
           }
         }).pipe(

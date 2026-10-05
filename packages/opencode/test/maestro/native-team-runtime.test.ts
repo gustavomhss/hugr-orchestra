@@ -5,6 +5,7 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { Event } from "@opencode-ai/schema/event"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
@@ -40,7 +41,7 @@ afterEach(async () => {
 })
 
 const it = testEffect(
-  LayerNode.compile(
+  TestAppNodeBuilder.build(
     LayerNode.group([
       filesystem,
       Agent.node,
@@ -91,9 +92,10 @@ it.instance("native team enforces runtime writes, task bypass, and durable Maest
       time: { created: Date.now() },
     }
     yield* sessions.updateMessage(message)
+    const metadataCalls: string[] = []
     const processor = {
       message,
-      updateToolCall: () => Effect.die("unexpected tool metadata update"),
+      updateToolCall: (callID: string) => Effect.sync(() => { metadataCalls.push(callID); return undefined }),
       completeToolCall: () => Effect.void,
     }
     const promptOps: TaskPromptOps = {
@@ -139,6 +141,8 @@ it.instance("native team enforces runtime writes, task bypass, and durable Maest
 
     yield* executeWrite(charlie, file, "Charlie wrote this")
     expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toBe("Charlie wrote this")
+    expect(metadataCalls).toContain("call_charlie")
+    expect(metadataCalls).not.toContain("call_lucy")
 
     const task = yield* TaskTool
     const taskDef = yield* task.init()

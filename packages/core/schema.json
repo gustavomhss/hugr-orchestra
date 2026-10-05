@@ -1,8 +1,8 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "f14a9b18-8207-487e-a3d3-227e629ba9ad",
-  "prevIds": ["169a0f0f-d58f-479f-b024-fa1c7b9a09db"],
+  "id": "a989dbf0-525d-4a8a-bb4b-cdeebcdc5ff1",
+  "prevIds": ["f14a9b18-8207-487e-a3d3-227e629ba9ad"],
   "ddl": [
     {
       "name": "workspace",
@@ -537,6 +537,36 @@
       "default": null,
       "generated": null,
       "name": "data",
+      "entityType": "columns",
+      "table": "event"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "seal_version",
+      "entityType": "columns",
+      "table": "event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "seal_prev",
+      "entityType": "columns",
+      "table": "event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "seal_hash",
       "entityType": "columns",
       "table": "event"
     },

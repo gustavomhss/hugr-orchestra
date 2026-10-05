@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Fiber, Layer } from "effect"
+import { Cause, Deferred, Effect, Fiber, Layer, Schema } from "effect"
 import { AgentV2 } from "@opencode-ai/core/agent"
 import { Database } from "@opencode-ai/core/database/database"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
@@ -102,7 +102,69 @@ function waitForRequest() {
   })
 }
 
+function waitExplicit(input: PermissionV2.AssertInput) {
+  return Effect.gen(function* () {
+    const service = yield* PermissionV2.Service
+    const events = yield* EventV2.Service
+    const asked = yield* Deferred.make<PermissionV2.Request>()
+    const unsubscribe = yield* events.listen((event) => {
+      if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+      const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+      return request.id === input.id ? Deferred.succeed(asked, request).pipe(Effect.asVoid) : Effect.void
+    })
+    yield* Effect.addFinalizer(() => unsubscribe)
+    const fiber = yield* service.askExplicit(input).pipe(Effect.result, Effect.forkChild)
+    const request = yield* Effect.raceFirst(Deferred.await(asked), Fiber.join(fiber).pipe(Effect.flatMap(() => Effect.fail(new Error("EXPLICIT_INTENT_BYPASSED_ALLOW")))))
+    return { service, fiber, request }
+  })
+}
+
 describe("PermissionV2", () => {
+  it.effect("explicit native intent queues despite agent or saved allow and waits for actual once/reject", () => Effect.gen(function* () {
+    yield* setup([{ action: "read", resource: "*", effect: "allow" }])
+    const saved = yield* PermissionSaved.Service
+    yield* saved.add({ projectID: Project.ID.global, action: "read", resources: ["*"] })
+    const service = yield* PermissionV2.Service
+    yield* service.assert(assertion())
+    expect(yield* service.list()).toEqual([])
+    const once = yield* waitExplicit(assertion({ id: PermissionV2.ID.create("per_explicit_once"), save: ["*"] }))
+    expect(once.request.save).toBeUndefined()
+    expect(yield* service.list()).toEqual([once.request])
+    yield* service.reply({ requestID: once.request.id, reply: "once" })
+    expect((yield* Fiber.join(once.fiber))._tag).toBe("Success")
+    const reject = yield* waitExplicit(assertion({ id: PermissionV2.ID.create("per_explicit_reject") }))
+    yield* service.reply({ requestID: reject.request.id, reply: "reject" })
+    expect(yield* Fiber.join(reject.fiber)).toMatchObject({ _tag: "Failure", failure: { _tag: "PermissionV2.DeclinedError" } })
+    expect(yield* service.list()).toEqual([])
+  }))
+
+  it.effect("explicit native intent checks configured deny before agent/saved allow and emits no grant", () => Effect.gen(function* () {
+    yield* setup([{ action: "read", resource: "*", effect: "deny" }])
+    const saved = yield* PermissionSaved.Service
+    yield* saved.add({ projectID: Project.ID.global, action: "read", resources: ["*"] })
+    const service = yield* PermissionV2.Service
+    const events = yield* EventV2.Service
+    const asked = yield* Deferred.make<void>()
+    const unsubscribe = yield* events.listen((event) => event.type === PermissionV2.Event.Asked.type ? Deferred.succeed(asked, undefined) : Effect.void)
+    yield* Effect.addFinalizer(() => unsubscribe)
+    const pending = yield* service.askExplicit(assertion()).pipe(Effect.result, Effect.forkChild)
+    const result = yield* Effect.raceFirst(Fiber.join(pending), Deferred.await(asked).pipe(Effect.andThen(Effect.fail(new Error("EXPLICIT_INTENT_OVERRIDDEN_DENY")))))
+    expect(result).toMatchObject({ _tag: "Failure", failure: { _tag: "PermissionV2.BlockedError" } })
+    expect(yield* service.list()).toEqual([])
+    expect(yield* service.ask(assertion())).toMatchObject({ effect: "deny" })
+  }))
+
+  it.effect("another ordinary always approval cannot complete pending explicit native intent", () => Effect.gen(function* () {
+    yield* setup([])
+    const explicit = yield* waitExplicit(assertion({ id: PermissionV2.ID.create("per_explicit_pending") }))
+    const normal = yield* explicit.service.ask(assertion({ id: PermissionV2.ID.create("per_normal_always"), save: ["*"] }))
+    expect(normal.effect).toBe("ask")
+    yield* explicit.service.reply({ requestID: normal.id, reply: "always" })
+    expect(yield* explicit.service.list()).toEqual([explicit.request])
+    yield* explicit.service.assert(assertion({ id: PermissionV2.ID.create("per_normal_saved") }))
+    yield* explicit.service.reply({ requestID: explicit.request.id, reply: "once" })
+    expect((yield* Fiber.join(explicit.fiber))._tag).toBe("Success")
+  }))
   it.effect("returns the evaluated effect and only queues prompts", () =>
     Effect.gen(function* () {
       yield* setup([{ action: "read", resource: "*", effect: "allow" }])

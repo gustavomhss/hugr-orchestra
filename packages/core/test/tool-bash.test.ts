@@ -47,6 +47,7 @@ let afterPermission = (_input: PermissionV2.AssertInput): Effect.Effect<void> =>
 const permission = Layer.succeed(
   PermissionV2.Service,
   PermissionV2.Service.of({
+    askExplicit: () => Effect.die("Native askExplicit is unavailable in this normal-path fixture"),
     assert: (input) =>
       Effect.sync(() => assertions.push(input)).pipe(
         Effect.andThen(Effect.suspend(() => afterPermission(input))),

@@ -25,6 +25,12 @@ import { isRecord } from "@/util/record"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { nativeProfiles, roster } from "@/maestro/roster"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { InstanceRef } from "@/effect/instance-ref"
+import { FSUtil } from "@opencode-ai/core/fs-util"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { AppProcess } from "@opencode-ai/core/process"
+import { Global } from "@opencode-ai/core/global"
 
 const MCP_RESOURCE_TOOLS = {
   list: "list_mcp_resources",
@@ -57,6 +63,8 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
+  const safety = yield* ToolSafety.make.pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
+  const binding = yield* InstanceRef
   const nativeSeat = input.agent.native
     ? roster.find((member) => member.memberId === input.agent.id && member.nativeProfile)
     : undefined
@@ -70,7 +78,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     agent: input.agent.name,
     agentID: input.agent.id,
     messages: input.messages,
-    metadata: (val) =>
+    metadata: (val) => safety.inspect(val).pipe(Effect.orDie, Effect.andThen(
       input.processor.updateToolCall(options.toolCallId, (match) => {
         if (!["running", "pending"].includes(match.state.status)) return match
         return {
@@ -84,6 +92,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           },
         }
       }),
+    )),
     ask: (req) =>
       Effect.gen(function* () {
         if (nativeSeat?.nativeProfile) {
@@ -104,6 +113,18 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       }).pipe(Effect.orDie),
   })
 
+  const guard = <A, E, R>(name: string, args: unknown, options: ToolExecutionOptions, effect: Effect.Effect<A, E, R>) =>
+    intercept(safety, {
+      tool: name,
+      args,
+      sessionID: input.session.id,
+      callID: options.toolCallId,
+      directory: binding?.directory,
+      projectID: binding?.project.id,
+      projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
+    }, effect, (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
+    () => !!options.abortSignal?.aborted).pipe(Effect.orDie)
+
   for (const item of yield* registry.tools({
     modelID: ModelV2.ID.make(input.model.api.id),
     providerID: input.model.providerID,
@@ -116,14 +137,17 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       inputSchema: jsonSchema(schema),
       execute(args, options) {
         return run.promise(
-          Effect.gen(function* () {
+          guard(item.id, args, options, Effect.gen(function* () {
             const ctx = context(args, options)
             yield* plugin.trigger(
               "tool.execute.before",
               { tool: item.id, sessionID: ctx.sessionID, callID: ctx.callID },
               { args },
             )
+            yield* safety.before({ tool: item.id, args, sessionID: ctx.sessionID, callID: options.toolCallId,
+              directory: binding?.directory, projectID: binding?.project.id })
             const result = yield* item.execute(args, ctx)
+            yield* safety.inspect(result)
             const output = {
               ...result,
               attachments: result.attachments?.map((attachment) => ({
@@ -142,7 +166,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               yield* input.processor.completeToolCall(options.toolCallId, output)
             }
             return output
-          }),
+          })),
         )
       },
     })
@@ -169,7 +193,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       ),
       execute(args, opts) {
         return run.promise(
-          Effect.gen(function* () {
+          guard(MCP_RESOURCE_TOOLS.list, args, opts, Effect.gen(function* () {
             const parsed = parseListMcpResourcesArgs(args)
             const ctx = context(toRecord(args), opts)
             const clients = yield* mcp.clients()
@@ -207,6 +231,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
                   b.client + "\u0000" + b.name + "\u0000" + b.uri,
                 ),
               )
+            yield* safety.inspect(filtered)
             const content = JSON.stringify({ resources: filtered.map(formatMcpResource) }, null, 2)
             const truncated = yield* truncate.output(content, {}, input.agent)
             const output = {
@@ -229,7 +254,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               yield* input.processor.completeToolCall(opts.toolCallId, output)
             }
             return output
-          }),
+          })),
         )
       },
     })
@@ -252,7 +277,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       ),
       execute(args, opts) {
         return run.promise(
-          Effect.gen(function* () {
+          guard(MCP_RESOURCE_TOOLS.listTemplates, args, opts, Effect.gen(function* () {
             const parsed = parseListMcpResourcesArgs(args)
             const ctx = context(toRecord(args), opts)
             const clients = yield* mcp.clients()
@@ -290,6 +315,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
                   b.client + "\u0000" + b.name + "\u0000" + b.uriTemplate,
                 ),
               )
+            yield* safety.inspect(filtered)
             const content = JSON.stringify({ resourceTemplates: filtered.map(formatMcpResourceTemplate) }, null, 2)
             const truncated = yield* truncate.output(content, {}, input.agent)
             const output = {
@@ -312,7 +338,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               yield* input.processor.completeToolCall(opts.toolCallId, output)
             }
             return output
-          }),
+          })),
         )
       },
     })
@@ -339,7 +365,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       ),
       execute(args, opts) {
         return run.promise(
-          Effect.gen(function* () {
+          guard(MCP_RESOURCE_TOOLS.read, args, opts, Effect.gen(function* () {
             const parsed = parseReadMcpResourceArgs(args)
             const ctx = context(toRecord(args), opts)
             const clients = yield* mcp.clients()
@@ -364,6 +390,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
 
             const content = yield* mcp.readResource(parsed.server, parsed.uri)
             if (!content) throw new Error(`Failed to read MCP resource: ${parsed.server}/${parsed.uri}`)
+            yield* safety.inspect(content)
 
             const formatted = formatMcpResourceContent(parsed.server, parsed.uri, content)
             const truncated = yield* truncate.output(formatted.text, {}, input.agent)
@@ -394,7 +421,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               yield* input.processor.completeToolCall(opts.toolCallId, output)
             }
             return output
-          }),
+          })),
         )
       },
     })
@@ -412,13 +439,15 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     item.inputSchema = jsonSchema(transformed)
     item.execute = (args, opts) =>
       run.promise(
-        Effect.gen(function* () {
+        guard(key, args, opts, Effect.gen(function* () {
           const ctx = context(args, opts)
           yield* plugin.trigger(
             "tool.execute.before",
             { tool: key, sessionID: ctx.sessionID, callID: opts.toolCallId },
             { args },
           )
+          yield* safety.before({ tool: key, args, sessionID: ctx.sessionID, callID: opts.toolCallId,
+            directory: binding?.directory, projectID: binding?.project.id })
           const result: Awaited<ReturnType<NonNullable<typeof execute>>> = yield* Effect.gen(function* () {
             yield* ctx.ask({ permission: key, metadata: {}, patterns: ["*"], always: ["*"] })
             return yield* Effect.promise(() => execute(args, opts))
@@ -432,11 +461,13 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               },
             }),
           )
+          yield* safety.inspect(result)
           yield* plugin.trigger(
             "tool.execute.after",
             { tool: key, sessionID: ctx.sessionID, callID: opts.toolCallId, args },
             result,
           )
+          yield* safety.inspect(result)
 
           const textParts: string[] = []
           const attachments: Omit<SessionV1.FilePart, "id" | "sessionID" | "messageID">[] = []
@@ -494,18 +525,31 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               messageID: input.processor.message.id,
             })),
             content: result.content,
+            isError: result.isError === true,
           }
           if (opts.abortSignal?.aborted) {
             yield* input.processor.completeToolCall(opts.toolCallId, output)
           }
           return output
-        }),
+        })),
       )
     tools[key] = item
   }
 
   return tools
 })
+
+/** Shared actual V1 invocation boundary: custom/native, MCP tools, and resource tools all call this. */
+export function intercept<A, E, R>(
+  safety: ToolSafety.Interface,
+  input: ToolSafety.Invocation,
+  effect: Effect.Effect<A, E, R>,
+  observe: (observation: ToolSafety.Observation) => Effect.Effect<void>,
+  cancelled: () => boolean,
+) {
+  return safety.run(input, effect.pipe(Effect.tap((output) => safety.inspect(output))), observe,
+    (output) => cancelled() ? "cancelled" : isRecord(output) && output.isError === true ? "failure" : "success")
+}
 
 function toRecord(value: unknown) {
   if (isRecord(value)) return value
