@@ -12,6 +12,26 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar).toHaveCSS("width", "230px")
   const frame = await header.boundingBox()
   const toggle = page.getByRole("button", { name: "Collapse sidebar", exact: true })
+  const crumb = header.locator('[data-slot="orchestra-titlebar-breadcrumb"] > span')
+  // Reference shell: the collapse control shares the brand row, rows are 31px on a 32px pitch,
+  // and the profile card reads the selected repository's agents and branch.
+  const brand = (await sidebar.locator(".orchestra-brand").boundingBox())!
+  const control = (await toggle.boundingBox())!
+  expect(control.width).toBe(28)
+  expect(control.y + control.height).toBeLessThanOrEqual(brand.y + brand.height)
+  const rows = await sidebar
+    .locator("#orchestra-navigation .orchestra-nav-button")
+    .evaluateAll((items) => items.map((item) => item.getBoundingClientRect()).map((box) => [box.top, box.height]))
+  expect(rows[0][0]).toBeCloseTo(brand.y + brand.height + 2, 1)
+  expect(rows.map((row) => row[1])).toEqual(rows.map(() => 31))
+  expect(rows[1][0] - rows[0][0]).toBeCloseTo(32, 1)
+  await expect(sidebar.locator('[data-slot="orchestra-profile"] small')).toHaveText("1 agent · main")
+  await expect(sidebar.locator('[data-slot="project-avatar-surface"]')).toHaveCSS(
+    "background-color",
+    "rgb(44, 112, 189)",
+  )
+  await expect(crumb.last()).toHaveText("home")
+  await expect(crumb.last()).toHaveCSS("font-size", "12px")
   await toggle.focus()
   await page.keyboard.press("Enter")
   await expect(sidebar).toHaveCSS("width", "56px")
@@ -21,7 +41,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   expect(await header.boundingBox()).toEqual(frame)
   await expect(sidebar.getByRole("button", { name: "Home", exact: true })).toHaveAttribute("aria-current", "page")
   await expect(sidebar.getByRole("button", { name: "Home", exact: true })).toHaveCSS("width", "40px")
-  await expect(sidebar.getByRole("button", { name: "Home", exact: true })).toHaveCSS("height", "34px")
+  await expect(sidebar.getByRole("button", { name: "Home", exact: true })).toHaveCSS("height", "31px")
   await expect(sidebar.getByRole("button", { name: "Home", exact: true }).locator("svg")).toHaveCSS("width", "20px")
   await expect(sidebar.getByRole("img", { name: "HuGR", exact: true })).toHaveCSS("width", "32px")
   await expect(sidebar.locator('[data-component="project-avatar-v2"]')).toHaveCSS("width", "30px")
@@ -41,6 +61,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(page.getByRole("tooltip", { name: "MCP", exact: true })).toBeVisible()
   await page.keyboard.press("Enter")
   await expect(page.getByRole("heading", { name: "MCP", exact: true })).toBeVisible()
+  await expect(crumb.last()).toHaveText("MCP")
   await expect(sidebar.getByRole("button", { name: "MCP", exact: true })).toHaveAttribute("aria-current", "page")
   await sidebar.getByRole("button", { name: "Choose repository profile" }).click()
   await expect(page.getByRole("menuitemradio", { name: "Compact project", exact: true })).toBeVisible()
@@ -49,6 +70,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar.getByRole("button", { name: "Choose repository profile" })).toBeFocused()
   await sidebar.getByRole("button", { name: "Chat", exact: true }).click()
   await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
+  await expect(crumb.last()).toHaveText("session")
   const editor = page.locator('[data-component="prompt-input-v2"] [contenteditable="true"]')
   await editor.fill("Keep this draft while changing navigation")
   const route = page.url()

@@ -16,6 +16,7 @@ import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
+import { agentRoster } from "@/orchestra/chapters/agents-roster"
 import { navigation } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
@@ -127,6 +128,28 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                 project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory)),
           ),
     }
+  })
+
+  // The profile card reads the selected directory, so selecting a repository loads its agents and branch.
+  const workspace = createMemo(() => {
+    const target = profile()
+    if (!target.conn || !target.project || !target.directory) return
+    return global.ensureServerCtx(target.conn).sync.child(target.directory)[0]
+  })
+  const meta = createMemo(() => {
+    const store = workspace()
+    if (!store) return
+    const count = store.load.agent === "ready" ? agentRoster(store.agent).length : undefined
+    return [
+      count === undefined
+        ? undefined
+        : language.t(count === 1 ? "orchestra.shell.profile.agents.one" : "orchestra.shell.profile.agents.other", {
+            count,
+          }),
+      store.vcs?.branch,
+    ]
+      .filter(Boolean)
+      .join(" · ")
   })
 
   async function projectTab(conn: ServerConnection.Any, project: LocalProject) {
@@ -256,7 +279,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
     chooseProject(conn, true)
   }
 
-  async function openSettingsPanel(panel: "providers" | "shortcuts") {
+  async function openSettingsPanel(panel?: "providers" | "shortcuts") {
     const current = ++requests.settings
     const target = profile()
     const route = layout.route()
@@ -345,7 +368,12 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
   return (
     <aside data-component="orchestra-sidebar" class="orchestra-sidebar" aria-label={language.t("home.projects")}>
       <HugrBrand compact={props.compact} />
-      <OrchestraNavigationToggle compact={props.compact} constrained={props.constrained} onToggle={props.onToggle} />
+      <OrchestraNavigationToggle
+        compact={props.compact}
+        constrained={props.constrained}
+        iconOnly
+        onToggle={props.onToggle}
+      />
       <Show when={state.settings} keyed>
         {(launch) => launch()}
       </Show>
@@ -375,7 +403,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       }
                       disabled={
                         (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
-                        (item.id === "settings" && !command.options.some((option) => option.id === "settings.open")) ||
                         (item.id === "chat" &&
                           (!layout.ready() ||
                             !tabs.ready() ||
@@ -387,7 +414,10 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                         if (item.id === "chat") return openChat()
                         if (item.id === "maestro") return openMaestro()
                         if (item.id === "search") return command.show()
-                        if (item.id === "settings") return command.trigger("settings.open")
+                        // Pages that register Settings keep their own opener; chapter pages use the shell's.
+                        if (item.id === "settings" && command.options.some((option) => option.id === "settings.open"))
+                          return command.trigger("settings.open")
+                        if (item.id === "settings") return void openSettingsPanel()
                         if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
                         if (chapterPages[item.id]) return openChapter(item.id)
                         if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
@@ -450,10 +480,12 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                     </bdi>
                   </strong>
                   <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
-                    {profile().project?.worktree ?? serverName(profile().conn)}
+                    {profile().project ? meta() : serverName(profile().conn)}
                   </small>
                 </span>
-                <Icon name="chevron-down" class="orchestra-profile-chevron" />
+                <span class="orchestra-profile-chevron" aria-hidden="true">
+                  ⌄
+                </span>
               </Trigger>
             )}
           </OrchestraNavigationTooltip>

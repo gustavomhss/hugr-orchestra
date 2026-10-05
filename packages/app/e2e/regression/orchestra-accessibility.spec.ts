@@ -42,6 +42,7 @@ for (const scheme of ["dark", "light"] as const) {
     const nav = page.locator(sidebar)
     await expect(nav).toHaveCSS("width", "230px")
     await expect(nav.getByRole("button", { name: "Chat", exact: true })).toBeEnabled()
+    await expect(nav.locator(".orchestra-profile-text small")).toHaveText("1 agent · main")
     expect(await auditAccessibility(page, [sidebar])).toEqual([])
     await expectTabOrder(page, [sidebar], { trap: false })
     const results = await measureContrast(page, sidebarText)
@@ -532,7 +533,8 @@ async function report(results: ContrastResult[], name: string) {
 
 const sidebarText: ContrastTarget[] = [
   { name: "brand descriptor", selector: `${sidebar} [data-slot="orchestra-brand-descriptor"]` },
-  { name: "toggle label", selector: `${sidebar} .orchestra-navigation-toggle .orchestra-nav-label` },
+  // Expanded, the collapse control is icon-only in the brand row; its glyph is the visible ink.
+  { name: "toggle icon", selector: `${sidebar} .orchestra-navigation-toggle-icon`, kind: "graphic" },
   { name: "nav label", selector: `${sidebar} .orchestra-nav-button:not([aria-current]) .orchestra-nav-label` },
   { name: "current nav label", selector: `${sidebar} .orchestra-nav-button[aria-current="page"] .orchestra-nav-label` },
   {
@@ -542,7 +544,7 @@ const sidebarText: ContrastTarget[] = [
   },
   { name: "search key", selector: `${sidebar} .orchestra-nav-button kbd` },
   { name: "profile name", selector: `${sidebar} .orchestra-profile-text strong` },
-  { name: "profile path", selector: `${sidebar} .orchestra-profile-text small` },
+  { name: "profile meta", selector: `${sidebar} .orchestra-profile-text small` },
   { name: "sidebar footer", selector: `${sidebar} .orchestra-sidebar-footer` },
 ]
 
