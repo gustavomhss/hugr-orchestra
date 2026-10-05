@@ -664,6 +664,18 @@ const scenarios: Scenario[] = [
   }),
   http.protected.get("/api/location", "v2.location.get").json(200, object),
   http.protected.get("/api/agent", "v2.agent.list").json(200, locationData(array)),
+  http.protected
+    .get("/api/agent/{agentID}/file", "v2.agent.file.get")
+    .at((ctx) => ({ path: route("/api/agent/{agentID}/file", { agentID: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(200, object),
+  http.protected
+    .put("/api/agent/{agentID}/file", "v2.agent.file.update")
+    .at((ctx) => ({
+      path: route("/api/agent/{agentID}/file", { agentID: "not a name" }),
+      headers: ctx.headers(),
+      body: { description: "rejected before any write" },
+    }))
+    .status(400, undefined, "status"),
   http.protected.get("/api/model", "v2.model.list").json(200, locationData(array)),
   http.protected.get("/api/provider", "v2.provider.list").json(200, locationData(array)),
   http.protected.get("/api/integration", "v2.integration.list").json(200, locationData(array)),

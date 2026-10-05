@@ -3045,6 +3045,12 @@ export type UnauthorizedError = {
   message: string
 }
 
+export type UnknownError1 = {
+  _tag: "UnknownError"
+  message: string
+  ref?: string
+}
+
 export type SessionsResponse = {
   data: Array<SessionV2Info>
   cursor: {
@@ -3091,12 +3097,6 @@ export type MessageNotFoundError = {
   sessionID: string
   messageID: string
   message: string
-}
-
-export type UnknownError1 = {
-  _tag: "UnknownError"
-  message: string
-  ref?: string
 }
 
 export type SessionDurableEvent =
@@ -4768,6 +4768,40 @@ export type AgentV2Info = {
   color?: AgentColor
   steps?: number
   permissions: PermissionV2Ruleset
+}
+
+export type AgentFileAction = "allow" | "ask" | "deny"
+
+export type AgentFilePermission =
+  | AgentFileAction
+  | {
+      [key: string]: AgentFileAction
+    }
+
+export type AgentFileInfo = {
+  path: string
+  exists: boolean
+  description?: string
+  mode?: "subagent" | "primary" | "all"
+  model?: string
+  steps?: number
+  system?: string
+  permission?: {
+    [key: string]: AgentFilePermission
+  }
+  disable?: boolean
+}
+
+export type AgentFileInput = {
+  description?: string
+  mode?: "subagent" | "primary" | "all"
+  model?: string
+  steps?: number
+  system?: string
+  permission?: {
+    [key: string]: AgentFilePermission
+  }
+  disable?: boolean
 }
 
 export type SessionV2Info = {
@@ -13010,6 +13044,88 @@ export type V2AgentListResponses = {
 }
 
 export type V2AgentListResponse = V2AgentListResponses[keyof V2AgentListResponses]
+
+export type V2AgentFileGetData = {
+  body?: never
+  path: {
+    agentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/agent/{agentID}/file"
+}
+
+export type V2AgentFileGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2AgentFileGetError = V2AgentFileGetErrors[keyof V2AgentFileGetErrors]
+
+export type V2AgentFileGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: AgentFileInfo
+  }
+}
+
+export type V2AgentFileGetResponse = V2AgentFileGetResponses[keyof V2AgentFileGetResponses]
+
+export type V2AgentFileUpdateData = {
+  body: AgentFileInput
+  path: {
+    agentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/agent/{agentID}/file"
+}
+
+export type V2AgentFileUpdateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type V2AgentFileUpdateError = V2AgentFileUpdateErrors[keyof V2AgentFileUpdateErrors]
+
+export type V2AgentFileUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: AgentFileInfo
+  }
+}
+
+export type V2AgentFileUpdateResponse = V2AgentFileUpdateResponses[keyof V2AgentFileUpdateResponses]
 
 export type V2SessionListData = {
   body?: never

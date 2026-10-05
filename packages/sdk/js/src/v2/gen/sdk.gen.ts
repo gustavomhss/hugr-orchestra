@@ -3,6 +3,7 @@
 import { client } from "./client.gen.js"
 import { buildClientParams, type Client, type Options as Options2, type TDataShape } from "./client/index.js"
 import type {
+  AgentFileInput,
   AgentPartInput,
   AppAgentsErrors,
   AppAgentsResponses,
@@ -263,6 +264,10 @@ import type {
   TuiShowToastResponses,
   TuiSubmitPromptErrors,
   TuiSubmitPromptResponses,
+  V2AgentFileGetErrors,
+  V2AgentFileGetResponses,
+  V2AgentFileUpdateErrors,
+  V2AgentFileUpdateResponses,
   V2AgentListErrors,
   V2AgentListResponses,
   V2CommandListErrors,
@@ -5059,6 +5064,81 @@ export class Location extends HeyApiClient {
   }
 }
 
+export class File2 extends HeyApiClient {
+  /**
+   * Get agent file
+   *
+   * Read the agent definition stored in this location's .opencode/agent directory.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      agentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "agentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2AgentFileGetResponses, V2AgentFileGetErrors, ThrowOnError>({
+      url: "/api/agent/{agentID}/file",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update agent file
+   *
+   * Write the agent definition to this location's .opencode/agent directory and reload the registered agents.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      agentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      agentFileInput: AgentFileInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "agentID" },
+            { in: "query", key: "location" },
+            { key: "agentFileInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2AgentFileUpdateResponses, V2AgentFileUpdateErrors, ThrowOnError>({
+      url: "/api/agent/{agentID}/file",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Agent extends HeyApiClient {
   /**
    * List agents
@@ -5080,6 +5160,11 @@ export class Agent extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _file?: File2
+  get file(): File2 {
+    return (this._file ??= new File2({ client: this.client }))
   }
 }
 
