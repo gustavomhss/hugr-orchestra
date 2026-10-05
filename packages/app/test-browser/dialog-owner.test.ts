@@ -8,7 +8,7 @@ const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir
 Bun.plugin({
   name: "solid-dialog-context",
   setup(build) {
-    build.onLoad({ filter: /\/packages\/ui\/src\/context\/dialog\.tsx\?solid$/ }, async (args) => {
+    build.onLoad({ filter: /[\\/]packages[\\/]ui[\\/]src[\\/]context[\\/]dialog\.tsx\?solid$/ }, async (args) => {
       const result = await solid("@babel/core").transformAsync(
         await Bun.file(args.path.replace(/\?solid$/, "")).text(),
         {
