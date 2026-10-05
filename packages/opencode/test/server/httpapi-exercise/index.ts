@@ -37,6 +37,7 @@ import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
 import { type Scenario } from "./types"
 import { vcsScenarios } from "./vcs"
+import { sessionActivityScenarios } from "./session-activity"
 
 function cursor(input: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(input)).toString("base64url")
@@ -1147,17 +1148,7 @@ const scenarios: Scenario[] = [
     .get("/session/status", "session.status")
     .seeded((ctx) => ctx.session({ title: "Status session" }))
     .json(200, object),
-  http.protected
-    .get("/session/activity", "session.activity")
-    .seeded((ctx) => ctx.session({ title: "Activity session" }))
-    .at((ctx) => ({ path: `/session/activity?edges=0,${Number.MAX_SAFE_INTEGER}`, headers: ctx.headers() }))
-    .json(200, (body) => {
-      object(body)
-      array(body.edges)
-      array(body.sessions)
-      array(body.facts)
-      check(body.edges.length === 2, "activity should echo its bucket edges")
-    }),
+  ...sessionActivityScenarios,
   http.protected
     .post("/session", "session.create")
     .mutating()
