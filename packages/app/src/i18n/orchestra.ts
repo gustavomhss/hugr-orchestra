@@ -165,13 +165,10 @@ export const ORCHESTRA_COPY = {
   "orchestra.model.waiting": "Waiting for your response",
   "orchestra.model.idle": "Stopped",
   "orchestra.model.tooltip": "{{model}} · {{provider}} · {{activity}}",
-  "orchestra.dock.description":
-    "This repository's browser. Its live tabs are the same ones you see in Chat's Apps tab.",
   "orchestra.dock.loading": "Restoring tabs…",
   "orchestra.dock.empty": "No tabs open. Enter an address to start browsing.",
   "orchestra.dock.loadFailed": "Could not load the Dock.",
   "orchestra.dock.retry": "Retry",
-  "orchestra.dock.unavailable": "The Dock needs the desktop app. Native browser tabs are not available in the web app.",
   "orchestra.dock.browser": "Browser",
   "orchestra.dock.files": "Files",
   "orchestra.dock.docs": "Docs",

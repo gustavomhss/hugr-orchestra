@@ -32,7 +32,7 @@ test("Dock page and Chat's Apps tab share one live browser session", async ({ pa
   await expect(page.getByRole("heading", { name: sessionTitle })).toBeVisible({ timeout: 30_000 })
 
   await openDock(page)
-  await expect(page.getByRole("status")).toHaveText("No tabs open. Enter an address to start browsing.")
+  await expectNoTabs(page)
   await expect(page.getByRole("combobox", { name: "Browser profile" })).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Create browser profile" })).toHaveCount(0)
   await openAddress(page, "https://example.com/a")
@@ -127,6 +127,39 @@ test("an overlay over the Dock occludes the native browser until it closes", asy
   await expect(menu).toHaveCount(0)
   await expect.poll(occluded).toBe(false)
   expect(await moves(beforeMenu)).toEqual([true, false])
+
+  // Bookmarks, history and downloads float over the page area, so they occlude it like the menu.
+  for (const name of ["Bookmarks", "History", "Downloads"]) {
+    const before = (await fake(page)).calls.length
+    await page.getByRole("button", { name, exact: true }).click()
+    const library = page.getByRole("dialog", { name, exact: true })
+    await expect(library).toBeVisible()
+    await expect.poll(occluded).toBe(true)
+    await page.keyboard.press("Escape")
+    await expect(library).toHaveCount(0)
+    await expect.poll(occluded).toBe(false)
+    expect(await moves(before)).toEqual([true, false])
+  }
+
+  // The find bar floats over the page area too, but searching needs the page: the native view
+  // starts below the bar instead of being occluded.
+  const beforeFind = (await fake(page)).calls.length
+  const area = page.locator(".orchestra-dock .zen-browser-host")
+  const view = page.locator(".orchestra-dock .zen-browser-view")
+  await expect.poll(async () => JSON.stringify(await view.boundingBox())).toBe(JSON.stringify(await area.boundingBox()))
+  await page.getByRole("button", { name: "Find in page", exact: true }).click()
+  const bar = page.locator(".zen-findbar")
+  await expect(bar).toBeVisible()
+  await expect
+    .poll(async () => {
+      const [found, shown] = [await bar.boundingBox(), await view.boundingBox()]
+      return !!found && !!shown && shown.y >= found.y + found.height
+    })
+    .toBe(true)
+  await page.getByRole("button", { name: "Close find", exact: true }).click()
+  await expect(bar).toHaveCount(0)
+  await expect.poll(async () => JSON.stringify(await view.boundingBox())).toBe(JSON.stringify(await area.boundingBox()))
+  expect((await fake(page)).calls.slice(beforeFind).filter((call) => call.type === "occlude")).toEqual([])
 })
 
 test("a profile switch selects the other repository's native profile, ignoring late tabs", async ({ page }) => {
@@ -145,7 +178,7 @@ test("a profile switch selects the other repository's native profile, ignoring l
   await page.getByRole("button", { name: "+ New tab" }).click()
   await expect.poll(async () => (await fake(page)).calls.at(-1)?.type).toBe("open")
   await chooseProfile(page, "Profile B")
-  await expect(page.getByRole("status")).toHaveText("No tabs open. Enter an address to start browsing.")
+  await expectNoTabs(page)
   await page.evaluate(() => (window as unknown as { __dock: DockFake }).__dock.release.open?.())
   await expect.poll(async () => (await fake(page)).calls.at(-1)).toEqual({ type: "close-tab", tabID: "tab-2" })
   await expect(page.locator(".zen-tab")).toHaveCount(0)
@@ -208,14 +241,21 @@ test("loading, failure and retry are explicit", async ({ page }) => {
     dock.failManifest = true
   })
   await openDock(page)
-  await expect(page.getByRole("status")).toHaveText("Restoring tabs…")
+  // Each state fills the browser's page area, where the mock draws its empty state.
+  const area = page.locator(".orchestra-dock .zen-browser-host")
+  await expect(area.getByRole("status")).toHaveText("Restoring tabs…")
+  await expect(page.getByRole("button", { name: "+ New tab", exact: true })).toBeDisabled()
   await page.evaluate(() => (window as unknown as { __dock: DockFake }).__dock.release.manifest?.())
-  await expect(page.locator(".orchestra-dock").getByRole("alert").first()).toContainText("Could not load the Dock.")
+  const failed = area.getByRole("alert")
+  await expect(failed.locator("strong")).toHaveText("Could not load the Dock.")
+  await expect(page.locator(".orchestra-dock .zen-error")).toHaveText("Manifest unavailable")
+  await expect(area.getByRole("status")).toHaveCount(0)
   await page.evaluate(() => {
     ;(window as unknown as { __dock: DockFake }).__dock.failManifest = false
   })
-  await page.getByRole("button", { name: "Retry", exact: true }).click()
-  await expect(page.getByRole("status")).toHaveText("No tabs open. Enter an address to start browsing.")
+  await failed.getByRole("button", { name: "Retry", exact: true }).click()
+  await expectNoTabs(page)
+  await expect(failed).toHaveCount(0)
 })
 
 test("without the native bridge the Dock is unavailable and makes no Dock calls", async ({ page }) => {
@@ -223,10 +263,16 @@ test("without the native bridge the Dock is unavailable and makes no Dock calls"
   await page.goto("/")
   await chooseProfile(page, "Profile A")
   await openDock(page)
-  await expect(page.getByRole("status")).toHaveText(
-    "The Dock needs the desktop app. Native browser tabs are not available in the web app.",
-  )
-  await expect(page.locator(".zen-browser-shell")).toHaveCount(0)
+  // The browser chrome renders as in the mock; its page area says why no page can load, and no
+  // control that needs the native browser is enabled.
+  const area = page.locator(".orchestra-dock .zen-browser-host")
+  await expect(area.locator(".zen-empty-state strong")).toHaveText("Browser needs OpenCode Desktop.")
+  await expect(area.locator(".zen-empty-state span")).toHaveText("Native browser tabs are unavailable in web app.")
+  await expect(area.getByRole("status")).toHaveCount(0)
+  for (const name of ["Back", "Forward", "Reload", "Open", "+ New tab"])
+    await expect(page.getByRole("button", { name, exact: true })).toBeDisabled()
+  await expect(page.getByRole("button", { name: "Close tab" })).toHaveCount(0)
+  await expect(page.locator(".zen-tab")).toHaveCount(0)
   expect((await fake(page)).calls).toEqual([])
 })
 
@@ -248,7 +294,24 @@ async function nav(page: Page, name: string) {
 async function openDock(page: Page) {
   await nav(page, "Dock")
   await expect(page).toHaveURL(/\/orchestra\/dock$/)
-  await expect(page.getByRole("heading", { name: "Dock", exact: true })).toBeVisible()
+  // Like the mock, the page is the browser itself: its title is for assistive technology only, so it
+  // stays in the accessibility tree but paints nothing.
+  const region = page.getByRole("region", { name: "Dock", exact: true })
+  await expect(region).toBeVisible()
+  const heading = region.getByRole("heading", { name: "Dock", exact: true, level: 1 })
+  await expect(heading).toHaveCount(1)
+  const box = await heading.boundingBox()
+  expect(box === null || (box.width <= 1 && box.height <= 1)).toBe(true)
+  await expect(heading).toHaveCSS("overflow", "hidden")
+  await expect(heading).toHaveCSS("position", "absolute")
+  await expect(region.locator(".zen-browser-shell .zen-urlbar")).toBeVisible()
+}
+
+async function expectNoTabs(page: Page) {
+  const empty = page.locator(".orchestra-dock .zen-browser-host").getByRole("status")
+  await expect(empty.locator("strong")).toHaveText("No tabs open.")
+  await expect(empty.locator("span")).toHaveText("Enter an address to start browsing.")
+  await expect(page.locator(".orchestra-dock .zen-tab")).toHaveCount(0)
 }
 
 async function openAddress(page: Page, url: string) {
@@ -402,6 +465,7 @@ function installDockBridge(partial: boolean) {
           dock.calls.push({ type: "navigate", tabID, url })
         },
         appDockCommand: async () => undefined,
+        appDockStopFind: async () => undefined,
         appDockFindResult: () => () => undefined,
         appDockEvent: (listener: (event: unknown) => void) => {
           listeners.add(listener)
