@@ -21,7 +21,7 @@ import { Effect } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { TestLLMServer } from "../../lib/llm-server"
 import path from "path"
-import { array, boolean, check, isRecord, message, object, stable } from "./assertions"
+import { array, boolean, check, data, isRecord, locationData, message, object, stable } from "./assertions"
 import { controlledPtyInput, http, route } from "./dsl"
 import {
   cleanupExercisePaths,
@@ -39,22 +39,6 @@ import { type Scenario } from "./types"
 
 function cursor(input: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(input)).toString("base64url")
-}
-
-function data(validate: (value: any) => void) {
-  return (body: any) => {
-    object(body)
-    validate(body.data)
-  }
-}
-
-function locationData(validate: (value: any) => void) {
-  return (body: any) => {
-    object(body)
-    object(body.location)
-    object(body.location.project)
-    validate(body.data)
-  }
 }
 
 const scenarios: Scenario[] = [
