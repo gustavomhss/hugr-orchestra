@@ -1,14 +1,15 @@
 name: nix-eval
 
+# CI runs once per epic, not per unit of work: add the `epic` label to the epic PR
+# (remove and re-add it to rerun) or dispatch the workflow manually.
 on:
-  push:
-    branches: [dev]
   pull_request:
-    branches: [dev]
+    types: [labeled]
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic') && format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) || format('{0}-skip-{1}', github.workflow, github.run_id) }}
   cancel-in-progress: true
 
 permissions:
@@ -16,7 +17,8 @@ permissions:
 
 jobs:
   nix-eval:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout repository

@@ -1,0 +1,76 @@
+name: native
+
+# The Linux accessibility helper is Python run inside the pinned a11y test image (real D-Bus, Xvfb,
+# AT-SPI registry and GTK). CI runs once per epic like the other workflows: add the `epic` label to
+# the epic PR (remove and re-add it to rerun) or dispatch the workflow manually.
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic') && format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) || format('{0}-skip-{1}', github.workflow, github.run_id) }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  helper:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: packages/desktop
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Build a11y test image
+        run: docker build --provenance=false --tag orchestra-a11y-test:ci test/native
+
+      # Every suite runs in a fresh container without network, as the image's own UID, with the package
+      # mounted read-only. Xvfb must exist before D-Bus activates the registry, so DISPLAY is exported
+      # into the activation environment; without it at-spi2-registryd cannot synthesize keys.
+      - name: Write suite runner
+        run: |
+          cat > "$RUNNER_TEMP/suite" <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          script="$1"
+          shift
+          docker run --rm --network none --user 1000:1000 -v "$PWD":/work:ro -w /work \
+            --entrypoint dbus-run-session orchestra-a11y-test:ci -- \
+            xvfb-run -a sh -c 'dbus-update-activation-environment DISPLAY XAUTHORITY && exec python3 -B "$@"' \
+            suite "test/native/$script" "$@"
+          SH
+          chmod +x "$RUNNER_TEMP/suite"
+
+      - name: Snapshot
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite test_snapshot.py --self-check
+
+      - name: Helper
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite test_helper.py --payload resources/linux/app-dock-accessibility --self-check
+
+      - name: Workspace scope
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite test_workspace.py --payload resources/linux/app-dock-accessibility --self-check
+
+      - name: Bus transport
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite test_bus.py --self-check
+
+      - name: Runtime session
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite test_runtime_session.py --workspace resources/linux-runtime/workspace.py --self-check
+
+      - name: Actions with the real registry
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite test_actions.py
+
+      - name: Keyboard
+        if: ${{ !cancelled() }}
+        run: $RUNNER_TEMP/suite keyboard_regression.py
