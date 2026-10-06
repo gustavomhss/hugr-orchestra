@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { basename, join, resolve } from "node:path"
 import type { Backend, Helper, Metadata, Workspace } from "./app-dock-runtime-backend"
 import { AppDockRuntime } from "./app-dock-runtime"
+import { rejection } from "./rejection.fixture"
 
 const owner = "11dc45b7-3ed8-40ea-a56e-232a1c39f381"
 const pinned = "a".repeat(64)
@@ -98,7 +99,7 @@ function running(id: string): Workspace {
 test("never re-creates a workspace whose pinned ID is gone", async () => {
   const f = await fixture({ pin: pinned, workspace: undefined })
 
-  await expect(f.runtime.start()).rejects.toMatchObject({ code: "failed" })
+  expect(await rejection(f.runtime.start())).toMatchObject({ code: "failed" })
   expect(f.calls).toEqual([])
 })
 
@@ -106,7 +107,7 @@ test("never copies or executes into a workspace the backend reports under a diff
   const f = await fixture({ pin: pinned, workspace: running(foreign) })
 
   // Terminal access provisions its helper with direct copy/exec, not through the guest helper path.
-  await expect(f.runtime.access.run({ argv: ["true"] })).rejects.toMatchObject({ code: "failed" })
+  expect(await rejection(f.runtime.access.run({ argv: ["true"] }))).toMatchObject({ code: "failed" })
   expect((await f.runtime.state()).phase).toBe("error")
   expect(f.calls).toEqual([])
 })

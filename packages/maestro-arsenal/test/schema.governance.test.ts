@@ -7,6 +7,7 @@ import relay from "../src/tools/relay-arm.ts"
 import ledger from "../src/tools/wave-ledger.ts"
 import scheduler from "../src/tools/wave-scheduler.ts"
 import { capture, check, fixture, operation } from "./fixtures.governance.ts"
+import { rethrow } from "./rejection.ts"
 test("native exact operation schemas accept real contracts, reject unknown capabilities/prose greens", async () => {
   const f = await fixture()
   const valid = { operation: "acceptance", baseline: capture(check("new", "fail")), final: capture(check("new")), acceptance: [{ name: "new", mode: "red-green" }] }
@@ -19,8 +20,8 @@ test("native exact operation schemas accept real contracts, reject unknown capab
   expect(validateArgs(relay.inputSchema, { action: "arm", contract: { label: "raw-shell", chain: [{ cmd: "true" }] } }).ok).toBe(false)
   expect(validateArgs(scheduler.inputSchema, { wps: [], events: [], cap: 0 }).ok).toBe(true)
   expect((await scheduler.handler({ wps: [], events: [], cap: 0 })).content.length).toBe(1)
-  await expect(operation({ operation: "audit", observations: { complete: false, actions: [], usage: [] } }, f.context)).rejects.toThrow("OBSERVATION_ACQUISITION_INCOMPLETE")
-  await expect(governance.handler({ operation: "ruleset-propose", repository: "owner/project" })).rejects.toThrow("NATIVE_CONTEXT_REQUIRED")
+  expect(await rethrow(operation({ operation: "audit", observations: { complete: false, actions: [], usage: [] } }, f.context))).toThrow("OBSERVATION_ACQUISITION_INCOMPLETE")
+  expect(await rethrow(governance.handler({ operation: "ruleset-propose", repository: "owner/project" }))).toThrow("NATIVE_CONTEXT_REQUIRED")
 })
 test("source capability trace covers native operation enum and resolves actual targets/tests", async () => {
   const mapped = new Set(GOVERNANCE_CAPABILITIES.flatMap((entry) => [...entry.capabilities]))

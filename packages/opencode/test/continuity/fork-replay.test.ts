@@ -8,6 +8,7 @@ import { carriesMemory, replay, run, snapshot, type ParentRequest } from "@/cont
 import type { MemoryArtifact } from "@/continuity/memory-types"
 import { testEffect } from "../lib/effect"
 import { finding, host, memory, messages, model, provider, sessionID } from "./memory-fixture"
+import { rethrow } from "../lib/rejection"
 
 const it = testEffect(Layer.empty)
 const body = JSON.stringify({ ops: [finding()] })
@@ -89,8 +90,7 @@ test("replayed tools keep their definitions but never execute", async () => {
   const source = parent()
   const sent = replay(source, captured(), model, "instruction")
   expect(sent).toBeDefined()
-  await expect(sent!.tools.read.execute!({ path: "x" }, { toolCallId: "call", messages: [] }))
-    .rejects.toThrow("Context maintenance cannot execute tools")
+  expect(await rethrow(sent!.tools.read.execute!({ path: "x" }, { toolCallId: "call", messages: [] }))).toThrow("Context maintenance cannot execute tools")
   expect(await source.input.tools.read.execute!({ path: "x" }, { toolCallId: "call", messages: [] }))
     .toBe("parent read executed")
 })

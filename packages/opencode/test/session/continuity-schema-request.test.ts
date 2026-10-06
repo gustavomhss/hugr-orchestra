@@ -18,6 +18,7 @@ import { MessageID, SessionID } from "@/session/schema"
 import PROMPT from "@/continuity/prompt.txt"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
+import { rethrow } from "../lib/rejection"
 
 const schema: JSONSchema7 = {
   type: "object", properties: { status: { type: "string", enum: ["ready", "needs_context"] } },
@@ -292,7 +293,7 @@ test("real SDK Output.object exposes JSON text and terminal parse; host complete
     expect(parts.filter((part) => part.type === "text-delta").map((part) => part.text).join("")).toBe(text)
     expect(parts.some((part) => part.type === "finish")).toBe(true)
     expect(wire.bodies[0].text).toMatchObject({ format: { type: "json_schema", strict: true, name: "response", schema } })
-    if (text === "not JSON") await expect(Promise.resolve(result.output)).rejects.toThrow("No object generated")
+    if (text === "not JSON") expect(await rethrow(Promise.resolve(result.output))).toThrow("No object generated")
     // jsonSchema(schema) has no local validator; the wire schema is not host completeness proof.
     if (text !== "not JSON") expect(await result.output).toEqual(JSON.parse(text))
   }

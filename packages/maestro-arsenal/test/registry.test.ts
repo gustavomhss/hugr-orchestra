@@ -3,6 +3,7 @@ import { Arsenal } from "../src/index"
 import { buildPlan, planHash } from "../src/plan"
 import { validateArgs } from "../src/validate"
 import { conflictVerdict, normalizeSite, patternScope, sitesConflict, unresolvedScopes } from "../src/tools/conflict-semantics"
+import { rethrow } from "./rejection"
 
 // Frozen live source registry at a68e7af92c7ed5aaf8b6574b7ad2f705fb38eeb5, not historical README count.
 const sourceNames = ["anchor-gen", "brief-usage-check", "conflict-map", "context-packer", "contract-freezer", "decompose", "enrich-plan", "governance", "move-in", "plan-check", "plan-compiler", "plan-to-barrel", "plan-to-briefs", "plan-to-dag", "plan-to-gates", "plan-to-policy", "profile", "relay-arm", "repo-hygiene-check", "repo-mapper", "seam-checker", "sliceability", "stub-gen", "symbol-flow-check", "wave-ledger", "wave-scheduler"]
@@ -21,7 +22,7 @@ test("catalog matches frozen live source register and survives descriptor mutati
     tool.inputSchema.properties = {}
     expect(await Arsenal.describe(tool.name)).not.toEqual(tool)
   }
-  await expect(Arsenal.describe("wp-sizer")).rejects.toThrow("unknown tool")
+  expect(await rethrow(Arsenal.describe("wp-sizer"))).toThrow("unknown tool")
 })
 
 test("selected handlers run without loading absent acquisition/state modules", async () => {

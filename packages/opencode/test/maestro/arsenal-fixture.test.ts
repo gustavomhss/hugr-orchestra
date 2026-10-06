@@ -3,6 +3,7 @@ import path from "node:path"
 import { mkdir, realpath, symlink } from "node:fs/promises"
 import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
+import { rethrow } from "../lib/rejection"
 
 test("SDK fixture preserves actual package-resolution identity; conflicting existing modules are rejected", async () => {
   await using tmp = await tmpdir()
@@ -16,7 +17,7 @@ test("SDK fixture preserves actual package-resolution identity; conflicting exis
   }
   await using conflict = await tmpdir()
   await mkdir(path.join(conflict.path, ".opencode/node_modules/@opencode-ai/plugin"), { recursive: true })
-  await expect(prepareArsenalSDK(conflict.path, path.join(conflict.path, "config"))).rejects.toThrow("Arsenal fixture SDK installation mismatch")
+  expect(await rethrow(prepareArsenalSDK(conflict.path, path.join(conflict.path, "config")))).toThrow("Arsenal fixture SDK installation mismatch")
 })
 
 test("SDK fixture accepts an existing distinct modules root only with the same physical SDK", async () => {
@@ -51,7 +52,6 @@ test("SDK fixture refuses workspace aliases at modules root and scoped parent", 
     await mkdir(scoped ? target : path.dirname(target), { recursive: true })
     await symlink(scoped ? scope : modules,
       scoped ? path.join(target, "@opencode-ai") : target, process.platform === "win32" ? "junction" : "dir")
-    await expect(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))
-      .rejects.toThrow("modules parent outside fixture ownership")
+    expect(await rethrow(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))).toThrow("modules parent outside fixture ownership")
   }
 })

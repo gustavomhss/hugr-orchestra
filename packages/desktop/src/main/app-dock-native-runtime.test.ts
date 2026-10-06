@@ -6,6 +6,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { AppDockNativeRuntime } from "./app-dock-native-runtime"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
+import { rejection } from "./rejection.fixture"
 
 // The Docker fixture listens on a unix:// socket, which the runtime rejects on Windows by design (it accepts only
 // npipe:// there). Every case would fail, or pass only because the endpoint was refused first.
@@ -543,7 +544,7 @@ unixSocketTest("late old cleanup refuses replacement identity", async () => {
   const result = await AppDockNativeRuntime.create(f.options)
   channels.push(result.channel)
   f.state.mutate = (found) => { found.Id = "e".repeat(64) }
-  await expect(result.channel.terminate()).rejects.toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
+  expect(await rejection(result.channel.terminate())).toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
   expect(f.state.events.slice(-2)).toEqual(["start", "inspect"])
   expect(f.state.container!.State.Running).toBe(true)
 })
@@ -556,7 +557,7 @@ unixSocketTest("unreaped helper exhausts one absolute stop budget and reports un
   const exits: NativeDockProtocol.Exit[] = []
   result.channel.onExit((exit) => { exits.push(exit) })
   const started = performance.now()
-  await expect(result.channel.terminate()).rejects.toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
+  expect(await rejection(result.channel.terminate())).toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
   expect(performance.now() - started).toBeGreaterThanOrEqual(3800)
   expect(performance.now() - started).toBeLessThan(4700)
   expect(exits).toEqual([])

@@ -7,6 +7,7 @@ import { createTuiPluginApi } from "../../fixture/tui-plugin"
 import { createTuiResolvedConfig } from "../../fixture/tui-runtime"
 import { TuiConfig } from "../../../src/config/tui"
 import { Npm } from "@opencode-ai/core/npm"
+import { rethrow } from "../../lib/rejection"
 
 const { TuiPluginRuntime } = await import("../../../src/plugin/tui/runtime")
 
@@ -61,7 +62,7 @@ test("loads npm tui plugin from package ./tui export", async () => {
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).resolves.toBe("called")
+    expect(await fs.readFile(tmp.extra.marker, "utf8")).toBe("called")
     const hit = TuiPluginRuntime.list().find((item) => item.id === "demo.tui.export")
     expect(hit?.enabled).toBe(true)
     expect(hit?.active).toBe(true)
@@ -122,7 +123,7 @@ test("does not use npm package exports dot for tui entry", async () => {
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).rejects.toThrow()
+    expect(await rethrow(fs.readFile(tmp.extra.marker, "utf8"))).toThrow()
     expect(TuiPluginRuntime.list().some((item) => item.spec === tmp.extra.spec)).toBe(false)
   } finally {
     await TuiPluginRuntime.dispose()
@@ -185,7 +186,7 @@ test("rejects npm tui export that resolves outside plugin directory", async () =
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
     // plugin code never ran
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).rejects.toThrow()
+    expect(await rethrow(fs.readFile(tmp.extra.marker, "utf8"))).toThrow()
     // plugin not listed
     expect(TuiPluginRuntime.list().some((item) => item.spec === tmp.extra.spec)).toBe(false)
   } finally {
@@ -246,7 +247,7 @@ test("rejects npm tui plugin that exports server and tui together", async () => 
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).rejects.toThrow()
+    expect(await rethrow(fs.readFile(tmp.extra.marker, "utf8"))).toThrow()
     expect(TuiPluginRuntime.list().some((item) => item.spec === tmp.extra.spec)).toBe(false)
   } finally {
     await TuiPluginRuntime.dispose()
@@ -306,7 +307,7 @@ test("does not use npm package main for tui entry", async () => {
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).rejects.toThrow()
+    expect(await rethrow(fs.readFile(tmp.extra.marker, "utf8"))).toThrow()
     expect(TuiPluginRuntime.list().some((item) => item.spec === tmp.extra.spec)).toBe(false)
     expect(error).not.toHaveBeenCalled()
     expect(warn.mock.calls.some((call) => String(call[0]).includes("tui plugin has no entrypoint"))).toBe(true)
@@ -368,7 +369,7 @@ test("does not use directory package main for tui entry", async () => {
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).rejects.toThrow()
+    expect(await rethrow(fs.readFile(tmp.extra.marker, "utf8"))).toThrow()
     expect(TuiPluginRuntime.list().some((item) => item.spec === tmp.extra.spec)).toBe(false)
   } finally {
     await TuiPluginRuntime.dispose()
@@ -415,7 +416,7 @@ test("uses directory index fallback for tui when package.json is missing", async
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).resolves.toBe("called")
+    expect(await fs.readFile(tmp.extra.marker, "utf8")).toBe("called")
     expect(TuiPluginRuntime.list().find((item) => item.id === "demo.dir.index")?.active).toBe(true)
   } finally {
     await TuiPluginRuntime.dispose()
@@ -473,7 +474,7 @@ test("uses npm package name when tui plugin id is omitted", async () => {
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).resolves.toBe("called")
+    expect(await fs.readFile(tmp.extra.marker, "utf8")).toBe("called")
     expect(TuiPluginRuntime.list().find((item) => item.spec === tmp.extra.spec)?.id).toBe("acme-plugin")
   } finally {
     await TuiPluginRuntime.dispose()
