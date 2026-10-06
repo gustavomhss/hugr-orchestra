@@ -1,0 +1,10 @@
+{
+  "criterion": "is it reviewed?",
+  "files": [],
+  "env": {
+    "RELAY_JUDGE_BACKEND": "stub",
+    "RELAY_JUDGE_STUB": "pass"
+  },
+  "status": 200,
+  "replies": []
+}

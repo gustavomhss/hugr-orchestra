@@ -1,0 +1,33 @@
+{
+  "ledger": "test/golden/audit/legacy-unverified-truncated/input/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 1 chained entries [PLAIN (SHA-256)], chain head 537d79501968…\n  (1 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.\n  NOTE: trace ends on 'checklist-item', not a terminal event — possible tail-truncation; only an out-of-band anchor of the head can rule it out.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "C1",
+      "assert": "real control",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 1,
+  "deterministic_passed": 1,
+  "advisory": 0,
+  "last_event": "checklist-item",
+  "truncated": true,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "unverified",
+    "items": [],
+    "unverified": [
+      "C1"
+    ],
+    "note": "Legacy graded events lack oracles; no full oracle agreement established."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "TRUNCATED",
+  "exit": 2
+}

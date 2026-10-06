@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/missing-ledger/input/absent.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

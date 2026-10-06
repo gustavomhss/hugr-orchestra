@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/legacy-unverified-truncated/input/ledger.jsonl",
+  "problems": []
+}

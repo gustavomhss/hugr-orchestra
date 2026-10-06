@@ -1,7 +1,9 @@
 export * as JudgeConfig from "./config"
 
-import { Context, Effect, Redacted } from "effect"
+import { Context, Effect, Layer, Redacted } from "effect"
+import { JudgeApi } from "./api"
 import type { JudgeBallot } from "./ballot"
+import { JudgeStub } from "./stub"
 
 // The judge as the gate core sees it. Its settings come from Orchestra config `relay.judge.*`, never from provider
 // auth or the process environment (WP4). There is no CLI backend: it spawned a third-party CLI.
@@ -45,3 +47,13 @@ export interface Interface {
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/relay/Judge") {}
+
+// Replaces `pick_backend`: the backend comes from config alone, so a provider key in the environment can neither turn
+// the stub into an API call nor become the API's key.
+export const layer = (config: Config) =>
+  Layer.succeed(
+    Service,
+    Service.of({
+      judge: (input) => (config.backend === "api" ? JudgeApi.judge(config, input) : JudgeStub.judge(input, config.stub)),
+    }),
+  )

@@ -87,13 +87,21 @@ runs with packages/relay as its cwd and relative paths, so paths inside messages
   extra mode in `keys` (`keyed`, `wrong-key`); `verify.json`, `verify.<mode>.json`, `problems.json`, `cost.json`
   (`bin/relay … --json`, parsed, null when empty), their exit codes in `exits.json` and, when nonempty, their stderr in
   `stderr.json` (a traceback cut to its last line).
+- `audit/<name>/`: synthetic records and sprint variants for `verify`/`problems`/`cost`: `input/**` (run directories
+  keep the ledger under `.relay-state/`, arm directories beside `sprint.json`), `case.json`
+  `{target, verify, key, chmod}`, then the same `<cmd>.json`, `exits.json` and `stderr.json` as `ledger/`.
 - `ledger/writer-<name>/`: `bin/relay-note` appends: `case.json` `{sprint, key, bodies}`, `outcomes.json`
   `[{exit, stderr}]` (stderr informational), the resulting `ledger.jsonl`, and its `verify.stdout`/`verify.exit`.
 - `json/`: what `jq -c` printed: `escape.json` (one string per code point, lone surrogates, invalid UTF-8 via
   `--arg`), `numbers.json` (`literal` passed through, `computed` after `+ 0`), `objects.json` (key order, duplicate
   keys); `string.json` (`relay_json_string`) and `decode.json` (`strict_json_loads`, with Python's message).
-- `authoring/<name>/`: `input.json` and either `output.json` or `refusal.json` (`{status, code, message}`).
-- `judge/<name>/`: the fake Messages server exchange and the resulting response line.
+- `authoring/<name>/`: `input.json` (`{op, ...}`: compile, project, roundtrip, hook, isHook, validate, loads,
+  nodeTypes, lint, checksum, store) and either `output.json` or `refusal.json` (`{status, code, message}`). A case
+  name contains `-refused-` exactly when it refuses. `test/fixtures/authoring.sqlite3` is a store the Python `Store`
+  wrote; `authoring/store-fixture/output.json` is what it reads back (open a copy: WAL mode writes beside the file).
+- `judge/<name>/`: `case.json` `{criterion, files, env, status, replies}` (`{server}` in `env` is the fake
+  server's base URL), `exchange.json` `{requests, exit, stderr}` (method, path, three headers and the parsed body
+  of each request), and `response.jsonl`, judge.py's stdout byte for byte. Stub cases need no server.
 
 ## Exit paths that need a scenario
 

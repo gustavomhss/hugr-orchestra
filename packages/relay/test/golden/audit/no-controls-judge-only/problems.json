@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/no-controls-judge-only/input/ledger.jsonl",
+  "problems": []
+}

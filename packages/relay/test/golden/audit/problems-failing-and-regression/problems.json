@@ -1,0 +1,15 @@
+{
+  "ledger": "test/golden/audit/problems-failing-and-regression/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "gate-failing",
+      "wp": "wp1",
+      "cause": "retry 1: C1"
+    },
+    {
+      "category": "regression",
+      "wp": "wp1",
+      "cause": "earlier accepted controls have backslid: C0"
+    }
+  ]
+}

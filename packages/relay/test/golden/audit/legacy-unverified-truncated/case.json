@@ -1,0 +1,9 @@
+{
+  "target": "test/golden/audit/legacy-unverified-truncated/input/ledger.jsonl",
+  "verify": [
+    "--sprint",
+    "test/golden/audit/legacy-unverified-truncated/input/sprint.json"
+  ],
+  "key": null,
+  "chmod": {}
+}

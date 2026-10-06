@@ -191,13 +191,16 @@ def relay_cli(*args, key=None):
     return run([sys.executable, "bin/relay", *args], env=oracle_env(RELAY_LEDGER_KEY=key))
 
 
-def record_audit(out, target, verify_args=(), keys=None):
-    """verify/problems/cost --json for one target, written as <cmd>.json plus exits.json and stderr.json."""
+def record_audit(out, target, verify_args=(), keys=None, key=None):
+    """verify/problems/cost --json for one target, written as <cmd>.json plus exits.json and stderr.json.
+
+    `key` is RELAY_LEDGER_KEY for every command; `keys` adds one `verify.<mode>` run per extra key.
+    """
     exits, errors = {}, {}
-    runs = [("verify", relay_cli("verify", target, *verify_args, "--json"))]
-    runs += [(f"verify.{mode}", relay_cli("verify", target, *verify_args, "--json", key=key))
-             for mode, key in (keys or {}).items()]
-    runs += [(cmd, relay_cli(cmd, target, "--json")) for cmd in ("problems", "cost")]
+    runs = [("verify", relay_cli("verify", target, *verify_args, "--json", key=key))]
+    runs += [(f"verify.{mode}", relay_cli("verify", target, *verify_args, "--json", key=mode_key))
+             for mode, mode_key in (keys or {}).items()]
+    runs += [(cmd, relay_cli(cmd, target, "--json", key=key)) for cmd in ("problems", "cost")]
     for name, result in runs:
         write_json(out / f"{name}.json", parsed(result.stdout))
         exits[name] = result.returncode
