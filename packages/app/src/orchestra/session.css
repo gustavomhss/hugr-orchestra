@@ -252,13 +252,22 @@
     clip-path: inset(0 round 9px);
   }
 
-  /* The workspace's photograph and overlay (theme.css), laid over the same box. */
+  /* The workspace's box. Chromium repaints an anchor-positioned box whenever layout runs elsewhere in
+   * the shell (the dev debug bar's counters are enough), even when it does not move. So this box paints
+   * nothing and its child holds the blurred copy: the copy keeps its raster instead of being redrawn
+   * over the whole workspace, which also made every backdrop blur on top of it redraw. */
   body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div {
     position: fixed;
     top: anchor(--orchestra-workspace top);
     right: anchor(--orchestra-workspace right);
     bottom: anchor(--orchestra-workspace bottom);
     left: anchor(--orchestra-workspace left);
+  }
+
+  /* The workspace's photograph and overlay (theme.css), laid over the same box. */
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div > div {
+    position: absolute;
+    inset: 0;
     background:
       var(--orchestra-workspace-overlay),
       url("/orchestra/mtn-src.jpg") center / cover no-repeat;

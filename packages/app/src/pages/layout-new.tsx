@@ -48,6 +48,12 @@ export default function NewLayout(props: ParentProps) {
           "padding-bottom": "env(safe-area-inset-bottom, 0px)",
         }}
       >
+        <Show when={desktop()}>
+          {/* The toolbar's drop shadow; see the glass plates in orchestra/theme.css. */}
+          <div class="orchestra-toolbar-shadow" aria-hidden="true">
+            <div />
+          </div>
+        </Show>
         <Titlebar
           navigation={
             <Show when={desktop() && narrow()}>
@@ -84,25 +90,38 @@ export default function NewLayout(props: ParentProps) {
             {/* The session panels' blur; see the glass layer in orchestra/session.css. */}
             <div class="orchestra-glass-layer" aria-hidden="true">
               <div data-orchestra-glass="session-body">
-                <div />
+                <div>
+                  <div />
+                </div>
               </div>
               <div data-orchestra-glass="session-side-panel">
-                <div />
+                <div>
+                  <div />
+                </div>
               </div>
               <div data-orchestra-glass="session-new-design">
-                <div />
+                <div>
+                  <div />
+                </div>
               </div>
             </div>
+            {/* The sidebar's blur; see the glass plates in orchestra/theme.css. */}
+            <div data-glass-plate="sidebar" aria-hidden="true" />
             <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
           </Show>
           <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
             <Show when={desktop()}>
               <div
-                id="orchestra-session-tabs"
-                class="orchestra-session-tabs"
-                ref={(element) => setState("tabsMount", element)}
+                class="orchestra-session-tabs-frame"
                 hidden={layout.route().type !== "session" && layout.route().type !== "draft"}
-              />
+              >
+                <div data-glass-plate="session-tabs" aria-hidden="true" />
+                <div
+                  id="orchestra-session-tabs"
+                  class="orchestra-session-tabs"
+                  ref={(element) => setState("tabsMount", element)}
+                />
+              </div>
             </Show>
             <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
               <Suspense>{props.children}</Suspense>

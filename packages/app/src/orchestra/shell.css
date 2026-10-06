@@ -183,10 +183,6 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     backdrop-filter: var(--glass-filter);
   }
 
-  .orchestra-session-tabs[hidden] {
-    display: none;
-  }
-
   /* Every main view is one glass panel, as the reference's .main.glass: chapter pages carry
      .orchestra-glass, and Home's container takes the same shared glass here. */
   .orchestra-shell [data-component="orchestra-home"] {

@@ -19,7 +19,8 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-shell-shadow: 0 32px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --orchestra-toolbar-background: linear-gradient(180deg, rgba(22, 31, 41, 0.86), rgba(12, 18, 25, 0.8));
   --orchestra-toolbar-border: rgba(155, 174, 192, 0.08);
-  --orchestra-toolbar-shadow: inset 0 1px 0 rgba(214, 231, 247, 0.06), 0 6px 20px rgba(0, 0, 0, 0.22);
+  --orchestra-toolbar-highlight: inset 0 1px 0 rgba(214, 231, 247, 0.06);
+  --orchestra-toolbar-drop: 0 6px 20px rgba(0, 0, 0, 0.22);
   --orchestra-toolbar-label: #7d8b9b;
   --orchestra-toolbar-brand: #b9c4cf;
   --orchestra-toolbar-caption: #718091;
@@ -255,7 +256,8 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-shell-shadow: 0 32px 90px rgba(28, 36, 46, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --orchestra-toolbar-background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(238, 242, 246, 0.82));
   --orchestra-toolbar-border: rgba(70, 84, 98, 0.12);
-  --orchestra-toolbar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 16px rgba(40, 50, 62, 0.09);
+  --orchestra-toolbar-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --orchestra-toolbar-drop: 0 6px 16px rgba(40, 50, 62, 0.09);
   --orchestra-toolbar-label: #6b7480;
   --orchestra-toolbar-brand: #2b3440;
   --orchestra-toolbar-caption: #818a95;
@@ -409,9 +411,10 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-log
     min-block-size: 45px;
     border-block-end: 1px solid var(--orchestra-toolbar-border);
     background: var(--orchestra-toolbar-background);
-    box-shadow: var(--orchestra-toolbar-shadow);
+    box-shadow: var(--orchestra-toolbar-highlight);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
+    anchor-name: --orchestra-toolbar;
   }
 
   html[data-color-scheme] body[data-new-layout] .orchestra-workspace {
@@ -444,6 +447,65 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-log
     box-shadow: var(--orchestra-glass-shadow);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);
     backdrop-filter: var(--orchestra-glass-filter);
+  }
+
+  /* The compositor blurs a backdrop again over its element's whole drawn area, drop shadow included,
+   * whenever anything in that area changes. The toolbar's, the sidebar's and the tab strip's shadows
+   * reach into each other's glass across the 6px gutters, so a busy tab's animated logo made all three
+   * blur again on every frame, which software rendering (headless CI) cannot keep up with. So no blur
+   * is drawn with a shadow: the sidebar and the tab strip each get a plate right under them
+   * (layout-new.tsx) that holds the blur, and keep a no-op backdrop filter so they stay the backdrop
+   * root of the glass nested in them and are composited as before. */
+  html[data-color-scheme] body[data-new-layout] :is(.orchestra-sidebar, #orchestra-session-tabs) {
+    -webkit-backdrop-filter: brightness(1);
+    backdrop-filter: brightness(1);
+  }
+
+  html[data-color-scheme] body[data-new-layout] [data-glass-plate] {
+    border-radius: 9px;
+    -webkit-backdrop-filter: var(--orchestra-glass-filter);
+    backdrop-filter: var(--orchestra-glass-filter);
+    pointer-events: none;
+  }
+
+  /* The sidebar and its plate share the first grid cell; the content flows into the next one. */
+  html[data-color-scheme] body[data-new-layout] :is([data-glass-plate="sidebar"], .orchestra-sidebar) {
+    grid-area: 1 / 1;
+  }
+
+  html[data-color-scheme] body[data-new-layout] [data-glass-plate="sidebar"] {
+    display: var(--orchestra-navigation-display, block);
+    position: relative;
+  }
+
+  html[data-color-scheme] body[data-new-layout] .orchestra-session-tabs-frame {
+    position: relative;
+    flex: none;
+    min-inline-size: 0;
+  }
+
+  html[data-color-scheme] body[data-new-layout] [data-glass-plate="session-tabs"] {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* The toolbar keeps its blur and draws its drop shadow, which falls on the workspace, through a twin
+   * anchored to it. Chromium repaints an anchor-positioned box whenever layout runs elsewhere, so the
+   * twin paints nothing and its child, on a compositor layer of its own, draws the shadow. */
+  html[data-color-scheme] body[data-new-layout] .orchestra-toolbar-shadow {
+    position: absolute;
+    top: anchor(--orchestra-toolbar top);
+    right: anchor(--orchestra-toolbar right);
+    bottom: anchor(--orchestra-toolbar bottom);
+    left: anchor(--orchestra-toolbar left);
+    pointer-events: none;
+  }
+
+  html[data-color-scheme] body[data-new-layout] .orchestra-toolbar-shadow > div {
+    position: absolute;
+    inset: 0;
+    box-shadow: var(--orchestra-toolbar-drop);
+    will-change: transform;
   }
 
   html[data-color-scheme] body[data-new-layout] .orchestra-sidebar {
