@@ -78,7 +78,8 @@ export type Tag = typeof Tag.Type
 /**
  * Relay metadata. `sprint` retains plan fields the graph does not show (self_check, dod, policy origins, …) so a
  * round trip keeps them; `names` maps node IDs to the names last compiled; `diagnostics` explains why a draft cannot
- * publish or run.
+ * publish or run; `profile` names the shipped profile a seeded document was projected from, which run admission reads
+ * (WP8, owner decision R8).
  */
 export const RelayMeta = Schema.Struct({
   schema: Schema.optionalKey(Schema.Literal(1)),
@@ -86,6 +87,7 @@ export const RelayMeta = Schema.Struct({
   sprint: Schema.optionalKey(Sprint),
   names: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   diagnostics: Schema.optionalKey(Schema.Array(Schema.String)),
+  profile: Schema.optionalKey(Schema.String),
 }).annotate({ identifier: "RelayAuthoring.RelayMeta", ...preserve })
 export interface RelayMeta extends Schema.Schema.Type<typeof RelayMeta> {}
 
