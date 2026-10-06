@@ -6,13 +6,17 @@
 // waits for the test-ci workflow and prints the test output. Nothing is committed or pushed from the local checkout,
 // so no git hook runs and the current branch is untouched.
 //
+// Named test files run exactly and in the given order. Any other argument, such as a directory, is a Bun substring
+// filter that may match several files, which Bun runs in its own order.
+//
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]
 
 import { $ } from "bun"
 import os from "node:os"
 import path from "node:path"
+import { statSync } from "node:fs"
 import { mkdtemp, rm } from "node:fs/promises"
-import { closestBase, parseResponse, rateLimitDelay } from "./test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
 
 const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
@@ -78,8 +82,11 @@ function parse(argv: string[]) {
   if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
   if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
     fail(`-t needs a pattern\n${USAGE}`, 2)
-  // Test paths may be given from the repository root or from the package directory.
-  const files = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
+  const files = testPaths(
+    name,
+    positional.slice(1),
+    (file) => statSync(path.join(root, "packages", name, file), { throwIfNoEntry: false })?.isFile() ?? false,
+  )
   return {
     package: name,
     os: options.os,
