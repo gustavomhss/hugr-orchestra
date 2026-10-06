@@ -120,6 +120,10 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  PullRequestsListInput,
+  PullRequestsListOutput,
+  PullRequestsCreateInput,
+  PullRequestsCreateOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -1056,6 +1060,33 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    pullRequests: {
+      list: (input?: PullRequestsListInput, requestOptions?: RequestOptions) =>
+        request<PullRequestsListOutput>(
+          {
+            method: "GET",
+            path: `/api/pull-request`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: PullRequestsCreateInput, requestOptions?: RequestOptions) =>
+        request<PullRequestsCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/pull-request`,
+            query: { location: input["location"] },
+            body: { title: input["title"], body: input["body"], base: input["base"], head: input["head"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
           },
           requestOptions,
         ),
