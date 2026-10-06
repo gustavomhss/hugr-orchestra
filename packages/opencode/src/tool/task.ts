@@ -23,9 +23,7 @@ import { Permission } from "@/permission"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Git } from "@/git"
 import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
-import { readAuthorization } from "@/maestro/authorization"
-import { readValidation } from "@/maestro/validation-record"
-import { readContext } from "@/maestro/context-record"
+import { GroundedSkills } from "@/maestro/grounded-skills"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { BackendWork } from "@/maestro/backend-work"
 import { WriteRoots } from "@/maestro/write-roots"
@@ -531,20 +529,8 @@ export const TaskTool = Tool.define(
           )
         }
         const parts = yield* ops.resolvePromptParts(params.prompt)
-        const authorizationID = params.authorizationID
-        const own = authorizationID
-          ? yield* Effect.gen(function* () {
-              const authorization = yield* readAuthorization(authorizationID)
-              const validation = authorization ? yield* readValidation(authorization.validationRecordID) : undefined
-              const context = validation?.contextRecordID ? yield* readContext(validation.contextRecordID) : undefined
-              return context?.mode === "GROUNDED"
-                ? context.skills.map((skill) => ({
-                    type: "text" as const,
-                    synthetic: true,
-                    text: `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
-                  }))
-                : []
-            }).pipe(Effect.provideService(Database.Service, database))
+        const own = params.authorizationID
+          ? yield* GroundedSkills.parts(params.authorizationID).pipe(Effect.provideService(Database.Service, database))
           : []
         const beforeModel = params.authorizationID
           ? reserveDispatch({
