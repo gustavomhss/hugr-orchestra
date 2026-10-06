@@ -3,6 +3,7 @@ import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import path from "path"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { WriteRoots } from "@/maestro/write-roots"
 import { AppProcess } from "@opencode-ai/core/process"
 import { Global } from "@opencode-ai/core/global"
 import { InstanceStore } from "@/project/instance-store"
@@ -1063,13 +1064,12 @@ const layer = Layer.effect(
       const message = yield* createUserMessage(input)
       yield* sessions.touch(input.sessionID)
 
-      const permissions: PermissionV1.Rule[] = []
-      for (const [t, enabled] of Object.entries(input.tools ?? {})) {
-        permissions.push({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" })
-      }
+      const permissions = Object.entries(input.tools ?? {}).map(
+        ([t, enabled]): PermissionV1.Rule => ({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" }),
+      )
       if (permissions.length > 0) {
-        session.permission = permissions
-        yield* sessions.setPermission({ sessionID: session.id, permission: permissions })
+        session.permission = WriteRoots.keep(session.permission, permissions)
+        yield* sessions.setPermission({ sessionID: session.id, permission: session.permission })
       }
 
       if (input.noReply === true) return message

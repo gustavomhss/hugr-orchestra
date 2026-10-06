@@ -9,8 +9,9 @@ import type { Session } from "@/session/session"
 
 // The backend seat's write scope is bound by the host at Task dispatch (F2.14) and enforced by ToolSafety, never by the
 // charter. It is stored as reserved rules in the child Session's permission ruleset, so it is durable, travels through
-// governed and authorized reservation snapshots unchanged, and no tool permission ever matches it.
-const PERMISSION = "tool_safety_write_root"
+// governed and authorized reservation snapshots unchanged, and no tool permission ever matches it. Only the host
+// writes these rules: client payloads that carry them are refused and ruleset replacements keep them (`keep`).
+export const PERMISSION = "tool_safety_write_root"
 
 export type Rule = { readonly permission: string; readonly pattern: string; readonly action: "allow" | "deny" | "ask" }
 
@@ -31,13 +32,34 @@ export const bind = Effect.fn("WriteRoots.bind")(function* <T extends Rule>(
   permission: ReadonlyArray<T>,
 ) {
   if (memberID !== "backend") return [...permission]
-  const roots = yield* validate(writePaths ?? [])
-  return [
-    ...permission.filter((rule) => rule.permission !== PERMISSION),
-    { permission: PERMISSION, pattern: "*", action: "deny" as const },
-    ...roots.map((root) => ({ permission: PERMISSION, pattern: root, action: "allow" as const })),
-  ]
+  return [...permission.filter((rule) => rule.permission !== PERMISSION), ...reserved(yield* validate(writePaths ?? []))]
 })
+
+/**
+ * Bind write roots on an existing Session (direct use). Binding the roots it already holds is a no-op; a Session bound
+ * to other roots keeps them and the rebind is refused.
+ */
+export const bindSession = Effect.fn("WriteRoots.bindSession")(function* (
+  sessions: Session.Interface,
+  session: Session.Info,
+  writePaths: ReadonlyArray<string>,
+) {
+  const roots = yield* validate(writePaths)
+  // Re-read so a binding made since the caller loaded `session` is not overwritten.
+  const current = yield* sessions.get(session.id)
+  const bound = read(current.permission)
+  if (bound && JSON.stringify(bound.toSorted()) === JSON.stringify(roots.toSorted())) return
+  if (bound) return yield* Effect.fail(new Error("Task denied: write-scope-rebind-refused"))
+  yield* sessions.setPermission({ sessionID: current.id, permission: [...(current.permission ?? []), ...reserved(roots)] })
+})
+
+/** A replacement of a Session's ruleset keeps the reserved rules of the ruleset it replaces and adds none of its own. */
+export function keep<T extends Rule>(previous: ReadonlyArray<T> | undefined, next: ReadonlyArray<T>) {
+  return [
+    ...next.filter((rule) => rule.permission !== PERMISSION),
+    ...(previous ?? []).filter((rule) => rule.permission === PERMISSION),
+  ]
+}
 
 /** Bound write roots of a Session, or undefined when the host bound none (direct use and other members). */
 export function read(permission: ReadonlyArray<Rule> | undefined) {
@@ -62,14 +84,21 @@ export const rebind = Effect.fn("WriteRoots.rebind")(function* (
   })
 })
 
-/** Wrap a Session's project profile loader with its bound write roots; unbound Sessions keep the loader unchanged. */
+/**
+ * Wrap a Session's project profile loader with its bound write roots. The Session is re-read on every load (ToolSafety
+ * loads once per invocation), so a binding made while the Session runs applies to its next tool call.
+ */
 export function loader(
   load: () => Effect.Effect<ToolSafety.Profile | undefined, ToolSafety.Denied>,
-  session: { readonly directory: string; readonly permission?: ReadonlyArray<Rule> },
+  session: () => Effect.Effect<{ readonly directory: string; readonly permission?: ReadonlyArray<Rule> }>,
 ) {
-  const roots = read(session.permission)
-  if (!roots) return load
-  return () => load().pipe(Effect.map((project) => profile(project, roots, session.directory)))
+  return () =>
+    Effect.gen(function* () {
+      const current = yield* session()
+      const project = yield* load()
+      const roots = read(current.permission)
+      return roots ? profile(project, roots, current.directory) : project
+    })
 }
 
 /**
@@ -112,6 +141,13 @@ function intersect(project: ReadonlyArray<string> | undefined, roots: ReadonlyAr
         }),
       ),
     ),
+  ]
+}
+
+function reserved(roots: ReadonlyArray<string>) {
+  return [
+    { permission: PERMISSION, pattern: "*", action: "deny" as const },
+    ...roots.map((root) => ({ permission: PERMISSION, pattern: root, action: "allow" as const })),
   ]
 }
 
