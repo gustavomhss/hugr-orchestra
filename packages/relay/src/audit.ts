@@ -1,6 +1,7 @@
 export * as RelayAudit from "./audit"
 
-import { stat } from "node:fs/promises"
+import { createHash } from "node:crypto"
+import { readFile, stat } from "node:fs/promises"
 import { constants } from "node:os"
 import path from "node:path"
 import { Effect, Redacted, Result } from "effect"
@@ -13,7 +14,7 @@ import { LedgerVerify } from "./ledger/verify"
 // and messages are the Python JSON's. Values `problems` and `cost` copy from the ledger keep whatever type was recorded,
 // as Python passes them through, so they are typed `unknown`. Where Python raised on a record it could not process
 // (a traceback, exit 1, no JSON), `problems` and `cost` fail with `LedgerRead.ReadError` carrying the exception's
-// message.
+// message. Runtime APIs are Node's only: the desktop server runs this under Node, not Bun.
 
 export interface Control {
   readonly id: string
@@ -393,16 +394,14 @@ function findSprint(target: string) {
 // `open(path)` then `read()`: strict UTF-8 decoded in one pass, universal newlines, CPython's error text.
 function sprintText(sprint: string): Effect.Effect<Result.Result<string, Raised>> {
   return Effect.promise(() =>
-    Bun.file(sprint)
-      .bytes()
-      .then(
-        (bytes) => {
-          const decoded = Result.try(() => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes))
-          if (Result.isFailure(decoded)) return Result.fail(undecodable(bytes))
-          return Result.succeed(decoded.success.replace(/\r\n?/g, "\n"))
-        },
-        (error: unknown) => Result.fail(osError(code(error), sprint, error)),
-      ),
+    readFile(sprint).then(
+      (bytes) => {
+        const decoded = Result.try(() => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes))
+        if (Result.isFailure(decoded)) return Result.fail(undecodable(bytes))
+        return Result.succeed(decoded.success.replace(/\r\n?/g, "\n"))
+      },
+      (error: unknown) => Result.fail(osError(code(error), sprint, error)),
+    ),
   )
 }
 
@@ -568,7 +567,7 @@ function prefix(oracle: unknown): Result.Result<string, Raised> {
 
 // `hashlib.sha256(text.encode())`: a lone surrogate cannot be encoded, and the sprint is then invalid.
 function sha256(value: string): Result.Result<string, Raised> {
-  if (value.isWellFormed()) return Result.succeed(new Bun.CryptoHasher("sha256").update(value).digest("hex"))
+  if (value.isWellFormed()) return Result.succeed(createHash("sha256").update(value, "utf8").digest("hex"))
   const points = Array.from(value)
   const at = points.findIndex(
     (point) => point.length === 1 && point.charCodeAt(0) >= 0xd800 && point.charCodeAt(0) <= 0xdfff,

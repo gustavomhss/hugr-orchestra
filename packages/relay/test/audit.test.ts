@@ -352,6 +352,18 @@ async function sprintFile(bytes: string | Uint8Array) {
   return sprint
 }
 
+describe("RelayAudit runtime", () => {
+  test("the module uses Node APIs only: the desktop server runs it under Node", async () => {
+    const bunOnly = /\bBun\.\w+|from "bun(:\w+)?"/g
+    // Positive control: the pattern finds a Bun call and a bun: import where there is one.
+    expect('await Bun.file(x).text()\nimport { Database } from "bun:sqlite"'.match(bunOnly)).toEqual([
+      "Bun.file",
+      'from "bun:sqlite"',
+    ])
+    expect((await Bun.file(path.join(root, "src", "audit.ts")).text()).match(bunOnly)).toBeNull()
+  })
+})
+
 describe("RelayAudit verify", () => {
   test("the sprint is read as open().read() reads it: one-pass UTF-8, universal newlines, encodable oracles", async () => {
     // Recorded: `relay verify <BARE> --sprint <file> --json`, oracle_recheck.reason.
