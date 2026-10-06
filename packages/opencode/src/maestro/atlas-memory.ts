@@ -6,6 +6,7 @@ import type {
   RecordRef,
   StoreState,
 } from "@opencode-ai/atlas-boundary/native-memory"
+import { BackendToolkit } from "@opencode-ai/core/backend-toolkit"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Effect, Schema } from "effect"
 import { InstanceRef } from "@/effect/instance-ref"
@@ -73,6 +74,12 @@ export const open = Effect.fn("AtlasMemory.open")(function* (execution: Executio
   const revision = head.text().trim()
   if (head.exitCode !== 0 || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision))
     return { unavailable: `the worktree '${root}' has no readable HEAD revision` }
+  // F3-D9: Atlas scans writes with the toolkit's pinned gitleaks, fetched on first use. When the toolkit cannot supply
+  // it, Atlas looks for a scanner on PATH and, without one, refuses every write `scanner-unavailable`.
+  const scanner = yield* BackendToolkit.ensure("gitleaks").pipe(
+    Effect.map((ready) => ({ name: "gitleaks" as const, command: ready.executable })),
+    Effect.orElseSucceed(() => undefined),
+  )
   return yield* Effect.try({
     try: (): NativeMemory =>
       createNativeMemory({
@@ -85,6 +92,7 @@ export const open = Effect.fn("AtlasMemory.open")(function* (execution: Executio
           executionSessionID: execution.sessionID,
           invocation: { callID: execution.callID, assistantMessageID: execution.assistantMessageID },
         },
+        ...(scanner && { scanner }),
       }),
     catch: (cause) => cause,
   }).pipe(

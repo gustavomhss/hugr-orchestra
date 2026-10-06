@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { chmod, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { createNativeMemory } from "@opencode-ai/atlas-boundary/native-memory"
+import { BackendToolkit } from "@opencode-ai/core/backend-toolkit"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Database } from "@opencode-ai/core/database/database"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
@@ -80,8 +81,10 @@ const tools = (scanner?: keyof typeof SCANNERS) =>
         await Bun.write(command, SCANNERS[scanner])
         await chmod(command, 0o755)
       })
+    // The test pins its own scanner, so the toolkit never fetches one.
     const open = (execution: AtlasMemory.Execution) =>
       AtlasMemory.open(execution).pipe(
+        Effect.provideService(BackendToolkit.Target, { unsupported: "test-pins-its-scanner" }),
         Effect.map((memory) =>
           "unavailable" in memory || !scanner
             ? memory

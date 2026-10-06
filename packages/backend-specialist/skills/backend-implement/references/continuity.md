@@ -29,7 +29,7 @@ An Atlas header is in context or marked absent or degraded, the packet declares 
 
 ### Resume
 
-1. Never ask for the fold again; if compaction removed it from context, recall it explicitly.
+1. Never request the fold. The host restores it once after compaction; if it is gone again, recall it explicitly.
 2. Continue retained work only while current: same scope and write paths, named targets still matching the checkpoint.
 3. A stale packet or changed scope is a `packet` blocker; do not investigate the drift.
 4. A fresh task without a fold is normal. A resume that depends on a missing or ambiguous fold is a `packet` blocker; a `partial` or `unavailable` store is an `atlas` blocker. Neither triggers a search or cross-owner recall.
