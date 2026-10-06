@@ -111,6 +111,21 @@ it.instance("registers native team specialists with fixed profiles", () =>
   }),
 )
 
+it.instance("native team seats cannot read .env files but can read .env.example", () =>
+  Effect.gen(function* () {
+    for (const seat of nativeTeam) {
+      const agent = yield* load((service) => service.get(seat.id))
+      // The runtime check reads the native profile directly; the agent carries the same rules.
+      for (const ruleset of [agent.permission, Permission.fromConfig(nativeProfiles[seat.profile])]) {
+        for (const file of [".env", ".env.local", "config/.env.production", "deploy/prod.env", "../other/.env"])
+          expect(Permission.evaluate("read", file, ruleset).action).toBe("deny")
+        for (const file of [".env.example", "config/.env.example", "src/index.ts", "environment.ts"])
+          expect(Permission.evaluate("read", file, ruleset).action).toBe("allow")
+      }
+    }
+  }),
+)
+
 it.instance("native team prompts use roster return cards", () =>
   Effect.sync(() => {
     for (const member of roster) {

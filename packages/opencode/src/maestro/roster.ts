@@ -7,23 +7,39 @@ import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
 
+// Seats never get a permission prompt, so what asks the owner elsewhere, reading .env files and publishing, is denied.
 export const nativeProfiles = Object.freeze({
   execution: Object.freeze({
     "*": "deny",
-    read: "allow",
+    read: envRead("deny"),
     glob: "allow",
     grep: "allow",
-    bash: "allow",
+    bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
     edit: "allow",
   } as const),
   review: Object.freeze({
     "*": "deny",
-    read: "allow",
+    read: envRead("deny"),
     glob: "allow",
     grep: "allow",
     maestro_record_review: "allow",
   } as const),
 } as const)
+
+// Reads every file but .env files, which hold secrets; .env.example stays readable.
+// Mirrors the github.com/github/gitignore Node.gitignore pattern for .env files.
+export function envRead<Action extends "ask" | "deny">(action: Action) {
+  return Object.freeze({ "*": "allow", "*.env": action, "*.env.*": action, "*.env.example": "allow" } as const)
+}
+
+// Commands that publish work. Maestro and general ask the owner before them; seats and explore are denied them.
+export function publishRules<Action extends "ask" | "deny">(action: Action) {
+  return Object.fromEntries(
+    ["git push *", "git -C * push *", "gh pr create *", "gh pr merge *", "gh release *"].map(
+      (command) => [command, action] as const,
+    ),
+  )
+}
 
 export type RosterMember = {
   readonly displayName: string

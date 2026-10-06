@@ -11,6 +11,7 @@ import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Global } from "@opencode-ai/core/global"
 import { Agent } from "../../src/agent/agent"
 import { Auth } from "../../src/auth"
+import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { provideInstance, provideTmpdirInstance, testInstanceStoreLayer, tmpdir, tmpdirScoped } from "../fixture/fixture"
@@ -589,7 +590,7 @@ description: A skill in the .opencode/skills directory.
     ),
   )
 
-  withAgents.live("lists skills from the global Claude and agents directories for every agent but maestro", () =>
+  withAgents.live("lists global and built-in skills for every agent but maestro and general", () =>
     Effect.gen(function* () {
       const home = yield* globalSkills()
       yield* provideTmpdirInstance(
@@ -607,9 +608,9 @@ description: A skill in the .opencode/skills directory.
               "agents-project",
               "claude-project",
               "configured-path",
-              "customize-opencode",
               "opencode-project",
             ])
+            expect(yield* listed("general")).toEqual(yield* listed("maestro"))
             expect(yield* listed("build")).toEqual([
               "agents-global",
               "agents-project",
@@ -632,7 +633,7 @@ description: A skill in the .opencode/skills directory.
       yield* provideTmpdirInstance(
         () =>
           Effect.gen(function* () {
-            expect(yield* listed("maestro")).toEqual(["claude-global", "customize-opencode"])
+            expect(yield* listed("maestro")).toEqual(["claude-global"])
           }).pipe(Effect.provide(agentLayer(home))),
         {
           git: true,
@@ -640,6 +641,35 @@ description: A skill in the .opencode/skills directory.
             agent: { maestro: { permission: { skill: { [path.join(home, ".claude", "skills", "*")]: "allow" } } } },
           },
         },
+      )
+    }),
+  )
+
+  withAgents.live("hides the built-in opencode skill from maestro and every teammate", () =>
+    Effect.gen(function* () {
+      const home = yield* globalSkills()
+      yield* provideTmpdirInstance(
+        () =>
+          Effect.gen(function* () {
+            const skill = yield* Skill.Service
+            const agents = yield* Agent.Service
+            const team = (yield* agents.list()).filter((agent) => !["build", "plan"].includes(agent.id ?? agent.name))
+            expect(team.map((agent) => agent.id)).toEqual(
+              expect.arrayContaining(["maestro", "general", "explore", "charlie", "lucy"]),
+            )
+            // build still lists it, so the skill exists to be hidden.
+            expect(yield* listed("build")).toContain(Skill.CUSTOMIZE_OPENCODE_SKILL_NAME)
+            for (const agent of team) {
+              expect((yield* skill.available(agent)).map((item) => item.name)).not.toContain(
+                Skill.CUSTOMIZE_OPENCODE_SKILL_NAME,
+              )
+              // Loading it by name asks the skill permission with its name, so it is refused too.
+              expect(Permission.evaluate("skill", Skill.CUSTOMIZE_OPENCODE_SKILL_NAME, agent.permission).action).toBe(
+                "deny",
+              )
+            }
+          }).pipe(Effect.provide(agentLayer(home))),
+        { git: true },
       )
     }),
   )

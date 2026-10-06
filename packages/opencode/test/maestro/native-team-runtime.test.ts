@@ -198,3 +198,66 @@ it.instance("native team enforces runtime writes, task bypass, and durable Maest
     ])
   }),
 )
+
+it.instance("native seats cannot read .env files or publish at runtime", () =>
+  Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const agents = yield* Agent.Service
+    const directory = (yield* TestInstance).directory
+    const session = yield* sessions.create({})
+    const message: SessionV1.Assistant = {
+      id: MessageID.ascending(),
+      sessionID: session.id,
+      parentID: MessageID.ascending(),
+      role: "assistant",
+      agent: "maestro",
+      mode: "maestro",
+      path: { cwd: directory, root: directory },
+      cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+      modelID: ModelV2.ID.make("test-model"),
+      providerID: ProviderV2.ID.make("test"),
+      time: { created: Date.now() },
+    }
+    yield* sessions.updateMessage(message)
+    const run = (agent: Agent.Info, tool: string, args: Record<string, unknown>) =>
+      Effect.gen(function* () {
+        const tools = yield* SessionTools.resolve({
+          agent,
+          model,
+          session,
+          processor: { message, updateToolCall: () => Effect.succeed(undefined), completeToolCall: () => Effect.void },
+          bypassAgentCheck: true,
+          messages: [],
+          promptOps: {} as never,
+        })
+        const execute = tools[tool]?.execute
+        if (!execute) return yield* Effect.die(`${tool} tool missing`)
+        return yield* Effect.promise(() =>
+          execute(args, {
+            toolCallId: `call_${agent.id}_${tool}`,
+            abortSignal: new AbortController().signal,
+            messages: [],
+          }),
+        ).pipe(Effect.exit)
+      })
+    yield* Effect.promise(() =>
+      Promise.all([
+        fs.writeFile(path.join(directory, ".env"), "TOKEN=value\n"),
+        fs.writeFile(path.join(directory, ".env.example"), "TOKEN=\n"),
+      ]),
+    )
+
+    for (const id of ["lucy", "charlie"]) {
+      const seat = yield* agents.get(id)
+      const secret = yield* run(seat, "read", { filePath: path.join(directory, ".env") })
+      expect(Exit.isFailure(secret)).toBe(true)
+      if (Exit.isFailure(secret)) expect(Cause.pretty(secret.cause)).toContain("PermissionDeniedError")
+      expect(Exit.isSuccess(yield* run(seat, "read", { filePath: path.join(directory, ".env.example") }))).toBe(true)
+    }
+    const charlie = yield* agents.get("charlie")
+    const push = yield* run(charlie, "bash", { command: "git push origin HEAD" })
+    expect(Exit.isFailure(push)).toBe(true)
+    if (Exit.isFailure(push)) expect(Cause.pretty(push.cause)).toContain("PermissionDeniedError")
+  }),
+)

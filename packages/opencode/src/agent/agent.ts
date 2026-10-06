@@ -12,6 +12,7 @@ import { ProviderTransform } from "@/provider/transform"
 import PROMPT_GENERATE from "./generate.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
+import PROMPT_GENERAL from "./prompt/general.txt"
 import PROMPT_MAESTRO from "./prompt/maestro.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
@@ -32,7 +33,7 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
-import { roster, nativeProfiles } from "@/maestro/roster"
+import { roster, nativeProfiles, envRead, publishRules } from "@/maestro/roster"
 
 export const Info = Schema.Struct({
   id: Schema.optional(Schema.String),
@@ -136,12 +137,18 @@ const layer = Layer.effect(
           question: "deny",
           plan_enter: "deny",
           plan_exit: "deny",
-          // mirrors github.com/github/gitignore Node.gitignore pattern for .env files
-          read: {
-            "*": "allow",
-            "*.env": "ask",
-            "*.env.*": "ask",
-            "*.env.example": "allow",
+          read: envRead("ask"),
+        })
+
+        // Maestro and general ask before publishing, and user config can allow it. Their skill list leaves out the
+        // built-in skill for configuring opencode and the skills in the global Claude and agents directories, which
+        // are written for other tools. Location rules affect only that list (see Skill.available).
+        const team = Permission.fromConfig({
+          bash: publishRules("ask"),
+          skill: {
+            [Skill.CUSTOMIZE_OPENCODE_SKILL_NAME]: "deny",
+            [path.join(global.home, ".claude", "skills", "*")]: "deny",
+            [path.join(global.home, ".agents", "skills", "*")]: "deny",
           },
         })
 
@@ -197,41 +204,17 @@ const layer = Layer.effect(
             description: "High-agency development orchestrator. Uses governed approval only when explicitly requested.",
             prompt: PROMPT_MAESTRO,
             options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                question: "allow",
-                // Publishing asks by default; user config can allow it.
-                bash: {
-                  "git push *": "ask",
-                  "git -C * push *": "ask",
-                  "gh pr create *": "ask",
-                  "gh pr merge *": "ask",
-                  "gh release *": "ask",
-                },
-                // Skills in the global Claude and agents directories are written for other tools; keep them
-                // off Maestro's skill list. Location rules affect only that list (see Skill.available).
-                skill: {
-                  [path.join(global.home, ".claude", "skills", "*")]: "deny",
-                  [path.join(global.home, ".agents", "skills", "*")]: "deny",
-                },
-              }),
-              user,
-            ),
+            permission: Permission.merge(defaults, Permission.fromConfig({ question: "allow" }), team, user),
             mode: "primary",
             native: true,
           },
           general: {
             id: "general",
             name: "general",
-            description: `General-purpose agent for researching complex questions and executing multi-step tasks. Use this agent to execute multiple units of work in parallel.`,
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                todowrite: "deny",
-              }),
-              user,
-            ),
+            description:
+              "General-purpose work from a full brief: research, analysis or multi-step changes no seat covers. Edits files and runs shell commands; cannot ask the owner questions or start teammates. Returns the outcome, what changed, how it was checked and what is left.",
+            prompt: PROMPT_GENERAL,
+            permission: Permission.merge(defaults, Permission.fromConfig({ todowrite: "deny" }), team, user),
             options: {},
             mode: "subagent",
             native: true,
@@ -246,15 +229,17 @@ const layer = Layer.effect(
                 grep: "allow",
                 glob: "allow",
                 list: "allow",
-                bash: "allow",
+                // Explore only reads, so it never publishes.
+                bash: { "*": "allow", ...publishRules("deny") },
                 webfetch: "allow",
                 websearch: "allow",
-                read: "allow",
+                read: envRead("ask"),
                 external_directory: readonlyExternalDirectory,
               }),
               user,
             ),
-            description: `Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions.`,
+            description:
+              'Read-only codebase exploration: finds files and code and explains how they work. Reads and searches files and the web, and runs read-only shell commands; cannot edit. Say how thorough to be: "quick", "medium" or "very thorough". Returns findings with file and line references.',
             prompt: PROMPT_EXPLORE,
             options: {},
             mode: "subagent",

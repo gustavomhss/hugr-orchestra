@@ -7,6 +7,7 @@ import { Agent } from "../../src/agent/agent"
 import { Auth } from "../../src/auth"
 import { Config } from "../../src/config/config"
 import { RuntimeFlags } from "../../src/effect/runtime-flags"
+import { nativeProfiles, roster } from "../../src/maestro/roster"
 import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
@@ -44,16 +45,31 @@ function bash(agent: Agent.Info, command: string) {
   return Permission.evaluate("bash", command, agent.permission).action
 }
 
-it.instance("maestro asks before publishing and other agents keep their bash access", () =>
+// Maestro and general ask the owner. Seats with a shell never get a prompt and explore only reads, so they are denied.
+const asking = ["maestro", "general"]
+const denied = [
+  ...roster.filter((member) => member.nativeProfile === "execution").map((member) => member.memberId),
+  "explore",
+]
+
+it.instance("maestro and general ask before publishing, shell seats and explore cannot, others keep their access", () =>
   Effect.gen(function* () {
     const agents = yield* load((svc) => svc.list())
-    const maestro = agents.find((agent) => agent.id === "maestro")!
+    expect(denied).toEqual(["charlie", "patty", "rosie", "explore"])
 
-    for (const command of publishing) expect(bash(maestro, command)).toBe("ask")
-    for (const command of ["git status", "git commit -m 'push gate'", "git -C /tmp/repo log", "gh pr view 12"])
-      expect(bash(maestro, command)).toBe("allow")
-    for (const agent of agents.filter((agent) => agent.id !== "maestro"))
-      for (const command of publishing) expect(bash(agent, command)).toBe(bash(agent, "git status"))
+    for (const agent of agents) {
+      const id = agent.id ?? agent.name
+      if (!asking.includes(id) && !denied.includes(id)) {
+        for (const command of publishing) expect(bash(agent, command)).toBe(bash(agent, "git status"))
+        continue
+      }
+      for (const command of publishing) expect(bash(agent, command)).toBe(asking.includes(id) ? "ask" : "deny")
+      for (const command of ["git status", "git commit -m 'push gate'", "git -C /tmp/repo log", "gh pr view 12"])
+        expect(bash(agent, command)).toBe("allow")
+    }
+    // A seat's runtime check reads its native profile directly.
+    for (const command of publishing)
+      expect(Permission.evaluate("bash", command, Permission.fromConfig(nativeProfiles.execution)).action).toBe("deny")
   }),
 )
 
@@ -70,13 +86,17 @@ it.instance(
 )
 
 it.instance(
-  "maestro publishing follows top-level permission",
+  "maestro and general publishing follow top-level permission, seats stay denied",
   () =>
     Effect.gen(function* () {
-      const maestro = yield* load((svc) => svc.get("maestro"))
-      expect(bash(maestro, "gh pr create --fill")).toBe("allow")
-      expect(bash(maestro, "gh pr merge 12 --squash")).toBe("allow")
-      expect(bash(maestro, "gh release create v1.2.3")).toBe("ask")
+      for (const id of asking) {
+        const agent = yield* load((svc) => svc.get(id))
+        expect(bash(agent, "gh pr create --fill")).toBe("allow")
+        expect(bash(agent, "gh pr merge 12 --squash")).toBe("allow")
+        expect(bash(agent, "gh release create v1.2.3")).toBe("ask")
+      }
+      const charlie = yield* load((svc) => svc.get("charlie"))
+      expect(bash(charlie, "gh pr create --fill")).toBe("deny")
     }),
   { config: { permission: { bash: { "gh pr *": "allow" } } } },
 )
