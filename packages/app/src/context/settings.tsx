@@ -455,12 +455,11 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
           setStore("keybinds", action, keybind)
         },
         reset(action: string) {
-          setStore("keybinds", (current) => {
-            if (!Object.prototype.hasOwnProperty.call(current, action)) return current
-            const next = { ...current }
-            delete next[action]
-            return next
-          })
+          // A new object set on a store path is merged and would keep the removed key; reconcile replaces the map.
+          setStore(
+            "keybinds",
+            reconcile(Object.fromEntries(Object.entries(store.keybinds ?? {}).filter(([key]) => key !== action))),
+          )
         },
         resetAll() {
           setStore("keybinds", reconcile({}))

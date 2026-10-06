@@ -2701,6 +2701,59 @@ export type VcsApplyError = {
   }
 }
 
+export type VcsActivityTotals = {
+  commits: number
+  merges: number
+  authors: number
+  additions: number
+  deletions: number
+  filesChanged: number
+}
+
+export type VcsActivityDay = {
+  /**
+   * Server-local YYYY-MM-DD of the commit author time
+   */
+  day: string
+  commits: number
+  merges: number
+  additions: number
+  deletions: number
+}
+
+export type VcsActivityPath = {
+  path: string
+  changes: number
+}
+
+export type VcsActivityCommit = {
+  hash: string
+  subject: string
+  time: number
+}
+
+export type VcsActivityPartial = {
+  commits: boolean
+  lines: boolean
+}
+
+export type VcsActivity = {
+  repository: boolean
+  since: number
+  until: number
+  totals: VcsActivityTotals
+  days: Array<VcsActivityDay>
+  topPaths: Array<VcsActivityPath>
+  recent: Array<VcsActivityCommit>
+  ahead: number | null
+  behind: number | null
+  /**
+   * True when a commit, output or time bound cut any scan short
+   */
+  truncated: boolean
+  partial: VcsActivityPartial
+}
+
 export type Command = {
   name: string
   description?: string
@@ -2733,6 +2786,29 @@ export type Agent = {
     [key: string]: unknown
   }
   steps?: number
+}
+
+export type SkillSaveInput = {
+  name: string
+  description: string
+  content: string
+  path?: string
+  mtime?: number
+}
+
+export type SkillWriteError = {
+  name: "SkillWriteError"
+  data: {
+    message: string
+    reason: "invalid" | "missing" | "readonly"
+  }
+}
+
+export type SkillConflictError = {
+  name: "SkillConflictError"
+  data: {
+    message: string
+  }
 }
 
 export type LspStatus = {
@@ -2777,14 +2853,18 @@ export type McpStatus =
   | McpStatusNeedsAuth
   | McpStatusNeedsClientRegistration
 
-export type McpUnsupportedOAuthError = {
-  error: string
+export type McpConfigError = {
+  message: string
 }
 
 export type McpServerNotFoundError = {
   _tag: "McpServerNotFoundError"
   name: string
   message: string
+}
+
+export type McpUnsupportedOAuthError = {
+  error: string
 }
 
 export type Project = {
@@ -2904,6 +2984,54 @@ export type ProviderAuthError1 = {
     message?: string
     kind?: string
   }
+}
+
+export type SessionActivitySession = {
+  id: string
+  title: string
+  parentID: string
+  created: number
+  updated: number
+  additions: number
+  deletions: number
+  files: number
+}
+
+export type SessionActivityFact = {
+  bucket: number
+  sessionID: string
+  providerID: string
+  modelID: string
+  user: number
+  assistant: number
+  failed: number
+  tokens: number
+}
+
+export type SessionActivity = {
+  period: "7d" | "30d" | "90d" | "all"
+  /**
+   * Ascending bucket boundaries at server-local midnights; bucket i is [edges[i], edges[i + 1])
+   */
+  edges: Array<number>
+  /**
+   * Server-local YYYY-MM-DD of each edge
+   */
+  days: Array<string>
+  /**
+   * True when bucket 0 is the equal window before the period
+   */
+  previous: boolean
+  /**
+   * Per bucket, wall clock during which any root-session assistant turn was running
+   */
+  activeMs: Array<number>
+  sessions: Array<SessionActivitySession>
+  facts: Array<SessionActivityFact>
+  /**
+   * True when more than 200000 messages were in range
+   */
+  truncated: boolean
 }
 
 export type NotFoundError = {
@@ -3048,6 +3176,18 @@ export type UnauthorizedError = {
   message: string
 }
 
+export type UnknownError1 = {
+  _tag: "UnknownError"
+  message: string
+  ref?: string
+}
+
+export type ConflictError = {
+  _tag: "ConflictError"
+  message: string
+  resource?: string
+}
+
 export type SessionsResponse = {
   data: Array<SessionV2Info>
   cursor: {
@@ -3077,12 +3217,6 @@ export type PromptInput = {
   agents?: Array<PromptAgentAttachment>
 }
 
-export type ConflictError = {
-  _tag: "ConflictError"
-  message: string
-  resource?: string
-}
-
 export type ServiceUnavailableError = {
   _tag: "ServiceUnavailableError"
   message: string
@@ -3094,12 +3228,6 @@ export type MessageNotFoundError = {
   sessionID: string
   messageID: string
   message: string
-}
-
-export type UnknownError1 = {
-  _tag: "UnknownError"
-  message: string
-  ref?: string
 }
 
 export type SessionDurableEvent =
@@ -4765,6 +4893,43 @@ export type AgentV2Info = {
   permissions: PermissionV2Ruleset
 }
 
+export type AgentFileAction = "allow" | "ask" | "deny"
+
+export type AgentFilePermission =
+  | AgentFileAction
+  | {
+      [key: string]: AgentFileAction
+    }
+
+export type AgentFileInfo = {
+  path: string
+  exists: boolean
+  revision: string
+  invalid?: boolean
+  description?: string
+  mode?: "subagent" | "primary" | "all"
+  model?: string
+  steps?: number
+  system?: string
+  permission?: {
+    [key: string]: AgentFilePermission
+  }
+  disable?: boolean
+}
+
+export type AgentFileInput = {
+  description?: string
+  mode?: "subagent" | "primary" | "all"
+  model?: string
+  steps?: number
+  system?: string
+  permission?: {
+    [key: string]: AgentFilePermission
+  }
+  disable?: boolean
+  revision?: string
+}
+
 export type SessionV2Info = {
   id: string
   parentID?: string
@@ -5875,6 +6040,15 @@ export type SkillV2Info = {
   slash?: boolean
   location: string
   content: string
+  mtime?: number
+}
+
+export type SkillV2SaveInput = {
+  name: string
+  description: string
+  content: string
+  path?: string
+  mtime?: number
 }
 
 export type ModelsDevRefreshed = {
@@ -9944,6 +10118,36 @@ export type VcsApplyResponses = {
 
 export type VcsApplyResponse = VcsApplyResponses[keyof VcsApplyResponses]
 
+export type VcsActivityData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    since: number
+    until?: number
+  }
+  url: "/vcs/activity"
+}
+
+export type VcsActivityErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type VcsActivityError = VcsActivityErrors[keyof VcsActivityErrors]
+
+export type VcsActivityResponses = {
+  /**
+   * VCS activity
+   */
+  200: VcsActivity
+}
+
+export type VcsActivityResponse = VcsActivityResponses[keyof VcsActivityResponses]
+
 export type CommandListData = {
   body?: never
   path?: never
@@ -10000,6 +10204,39 @@ export type AppAgentsResponses = {
 
 export type AppAgentsResponse = AppAgentsResponses[keyof AppAgentsResponses]
 
+export type AppSkillRemoveData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    path: string
+  }
+  url: "/skill"
+}
+
+export type AppSkillRemoveErrors = {
+  /**
+   * SkillWriteError | InvalidRequestError
+   */
+  400: SkillWriteError | InvalidRequestError
+  /**
+   * SkillConflictError
+   */
+  409: SkillConflictError
+}
+
+export type AppSkillRemoveError = AppSkillRemoveErrors[keyof AppSkillRemoveErrors]
+
+export type AppSkillRemoveResponses = {
+  /**
+   * Skill removed
+   */
+  200: boolean
+}
+
+export type AppSkillRemoveResponse = AppSkillRemoveResponses[keyof AppSkillRemoveResponses]
+
 export type AppSkillsData = {
   body?: never
   path?: never
@@ -10028,10 +10265,49 @@ export type AppSkillsResponses = {
     description?: string
     location: string
     content: string
+    mtime?: number
   }>
 }
 
 export type AppSkillsResponse = AppSkillsResponses[keyof AppSkillsResponses]
+
+export type AppSkillSaveData = {
+  body?: SkillSaveInput
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/skill"
+}
+
+export type AppSkillSaveErrors = {
+  /**
+   * SkillWriteError | InvalidRequestError
+   */
+  400: SkillWriteError | InvalidRequestError
+  /**
+   * SkillConflictError
+   */
+  409: SkillConflictError
+}
+
+export type AppSkillSaveError = AppSkillSaveErrors[keyof AppSkillSaveErrors]
+
+export type AppSkillSaveResponses = {
+  /**
+   * Saved skill
+   */
+  200: {
+    name: string
+    description?: string
+    location: string
+    content: string
+    mtime?: number
+  }
+}
+
+export type AppSkillSaveResponse = AppSkillSaveResponses[keyof AppSkillSaveResponses]
 
 export type LspStatusData = {
   body?: never
@@ -10151,6 +10427,136 @@ export type McpAddResponses = {
 }
 
 export type McpAddResponse = McpAddResponses[keyof McpAddResponses]
+
+export type McpToolsData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/tools"
+}
+
+export type McpToolsErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type McpToolsError = McpToolsErrors[keyof McpToolsErrors]
+
+export type McpToolsResponses = {
+  /**
+   * Tool names reported by each connected MCP server
+   */
+  200: {
+    [key: string]: Array<string>
+  }
+}
+
+export type McpToolsResponse = McpToolsResponses[keyof McpToolsResponses]
+
+export type McpConfigListData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/config"
+}
+
+export type McpConfigListErrors = {
+  /**
+   * McpConfigError | InvalidRequestError
+   */
+  400: McpConfigError | InvalidRequestError
+}
+
+export type McpConfigListError = McpConfigListErrors[keyof McpConfigListErrors]
+
+export type McpConfigListResponses = {
+  /**
+   * MCP servers defined in the project's own config files, unresolved
+   */
+  200: {
+    [key: string]: {
+      type?: "local" | "remote"
+      command?: Array<string>
+      url?: string
+    }
+  }
+}
+
+export type McpConfigListResponse = McpConfigListResponses[keyof McpConfigListResponses]
+
+export type McpConfigRemoveData = {
+  body?: never
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/{name}/config"
+}
+
+export type McpConfigRemoveErrors = {
+  /**
+   * McpConfigError | InvalidRequestError
+   */
+  400: McpConfigError | InvalidRequestError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError
+}
+
+export type McpConfigRemoveError = McpConfigRemoveErrors[keyof McpConfigRemoveErrors]
+
+export type McpConfigRemoveResponses = {
+  /**
+   * MCP server removed from the project config
+   */
+  200: boolean
+}
+
+export type McpConfigRemoveResponse = McpConfigRemoveResponses[keyof McpConfigRemoveResponses]
+
+export type McpConfigUpdateData = {
+  body?: {
+    config: McpLocalConfig | McpRemoteConfig
+  }
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/mcp/{name}/config"
+}
+
+export type McpConfigUpdateErrors = {
+  /**
+   * McpConfigError | InvalidRequestError
+   */
+  400: McpConfigError | InvalidRequestError
+}
+
+export type McpConfigUpdateError = McpConfigUpdateErrors[keyof McpConfigUpdateErrors]
+
+export type McpConfigUpdateResponses = {
+  /**
+   * MCP server saved to the project config
+   */
+  200: boolean
+}
+
+export type McpConfigUpdateResponse = McpConfigUpdateResponses[keyof McpConfigUpdateResponses]
 
 export type McpAuthRemoveData = {
   body?: never
@@ -11202,6 +11608,35 @@ export type SessionStatusResponses = {
 }
 
 export type SessionStatusResponse = SessionStatusResponses[keyof SessionStatusResponses]
+
+export type SessionActivityData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    period: "7d" | "30d" | "90d" | "all"
+  }
+  url: "/session/activity"
+}
+
+export type SessionActivityErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type SessionActivityError = SessionActivityErrors[keyof SessionActivityErrors]
+
+export type SessionActivityResponses = {
+  /**
+   * Session activity
+   */
+  200: SessionActivity
+}
+
+export type SessionActivityResponse = SessionActivityResponses[keyof SessionActivityResponses]
 
 export type SessionDeleteData = {
   body?: never
@@ -12990,6 +13425,96 @@ export type V2AgentListResponses = {
 
 export type V2AgentListResponse = V2AgentListResponses[keyof V2AgentListResponses]
 
+export type V2AgentFileGetData = {
+  body?: never
+  path: {
+    agentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/agent/{agentID}/file"
+}
+
+export type V2AgentFileGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type V2AgentFileGetError = V2AgentFileGetErrors[keyof V2AgentFileGetErrors]
+
+export type V2AgentFileGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: AgentFileInfo
+  }
+}
+
+export type V2AgentFileGetResponse = V2AgentFileGetResponses[keyof V2AgentFileGetResponses]
+
+export type V2AgentFileUpdateData = {
+  body: AgentFileInput
+  path: {
+    agentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/agent/{agentID}/file"
+}
+
+export type V2AgentFileUpdateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type V2AgentFileUpdateError = V2AgentFileUpdateErrors[keyof V2AgentFileUpdateErrors]
+
+export type V2AgentFileUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: AgentFileInfo
+  }
+}
+
+export type V2AgentFileUpdateResponse = V2AgentFileUpdateResponses[keyof V2AgentFileUpdateResponses]
+
 export type V2SessionListData = {
   body?: never
   path?: never
@@ -14589,6 +15114,44 @@ export type V2CommandListResponses = {
 
 export type V2CommandListResponse = V2CommandListResponses[keyof V2CommandListResponses]
 
+export type V2SkillRemoveData = {
+  body?: never
+  path?: never
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    path: string
+  }
+  url: "/api/skill"
+}
+
+export type V2SkillRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2SkillRemoveError = V2SkillRemoveErrors[keyof V2SkillRemoveErrors]
+
+export type V2SkillRemoveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: boolean
+  }
+}
+
+export type V2SkillRemoveResponse = V2SkillRemoveResponses[keyof V2SkillRemoveResponses]
+
 export type V2SkillListData = {
   body?: never
   path?: never
@@ -14625,6 +15188,47 @@ export type V2SkillListResponses = {
 }
 
 export type V2SkillListResponse = V2SkillListResponses[keyof V2SkillListResponses]
+
+export type V2SkillSaveData = {
+  body: SkillV2SaveInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/skill"
+}
+
+export type V2SkillSaveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2SkillSaveError = V2SkillSaveErrors[keyof V2SkillSaveErrors]
+
+export type V2SkillSaveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: SkillV2Info
+  }
+}
+
+export type V2SkillSaveResponse = V2SkillSaveResponses[keyof V2SkillSaveResponses]
 
 export type V2EventSubscribeData = {
   body?: never

@@ -1,61 +1,8 @@
+/* The mock's dedicated Dock view (`#viewDock > .dock-host`): the browser fills the page with no
+   heading, inset by the host's 6px before the browser's own 6px padding. */
 .orchestra-dock {
   display: flex;
   min-block-size: 0;
   flex: 1;
-  flex-direction: column;
-  padding: 28px;
-  color: var(--orchestra-text);
-}
-
-.orchestra-dock h1 {
-  margin: 0;
-  font-size: 24px;
-  line-height: 32px;
-}
-
-.orchestra-dock header p {
-  margin-block: 6px 20px;
-  color: var(--orchestra-body);
-}
-
-.orchestra-dock-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  margin-block-end: 16px;
-}
-
-.orchestra-dock-toolbar p {
-  margin: 0;
-  color: var(--orchestra-muted);
-}
-
-.orchestra-dock-directory {
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
-  color: var(--orchestra-muted);
-  font-size: 12px;
-}
-
-.orchestra-dock-message {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  color: var(--orchestra-body);
-}
-
-.orchestra-dock-message p {
-  color: var(--orchestra-danger);
-}
-
-.orchestra-dock-browser {
-  display: flex;
-  min-block-size: 0;
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid var(--orchestra-border);
-  border-radius: 12px;
+  padding: 6px;
 }

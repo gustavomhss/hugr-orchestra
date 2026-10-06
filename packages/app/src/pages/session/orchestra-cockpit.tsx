@@ -16,10 +16,47 @@ import type { TasksData, TasksItem } from "./tasks-data"
 import { TasksPanel } from "./tasks-panel"
 import "./orchestra-cockpit.css"
 
-// Orchestra's Apps tab: the compact Dock anchored on top, with Tasks and Activity below it at the same
-// time. Both cards read the one Tasks projection the side panel owns, and Activity reads the Dock
-// controller's existing state rather than subscribing to the desktop again.
-export function OrchestraCockpit(props: { tasks: TasksData }) {
+// Orchestra's Apps tab hosts the session's Dock, as in the approved rail. The pane is restored
+// whenever the Dock mounts; only a pane chosen in this Dock may take the terminal from the bottom panel.
+export function OrchestraCockpit() {
+  const { sessionKey } = useSessionLayout()
+  return (
+    <Show when={sessionKey()} keyed>
+      {(key) => {
+        const view = () => cockpitView(key)
+        const update = (patch: Partial<CockpitView>) => {
+          if (key === sessionKey()) updateCockpitView(key, patch)
+        }
+        const [chosen, setChosen] = createSignal(false)
+        return (
+          <div class="orchestra-cockpit" data-variant="dock">
+            <OrchestraDock
+              pane={view().pane}
+              onPaneChange={(pane) => {
+                setChosen(true)
+                update({ pane })
+              }}
+              files={() => <OrchestraEvidenceFiles path={view().file} onPathChange={(file) => update({ file })} />}
+              docs={() => (
+                <OrchestraEvidenceDocs
+                  path={view().doc}
+                  onPathChange={(doc) => update({ doc })}
+                  onOpenFiles={(file) => update({ pane: "files", file })}
+                />
+              )}
+              terminal={() => <OrchestraEvidenceTerminal takeover={chosen()} />}
+            />
+          </div>
+        )
+      }}
+    </Show>
+  )
+}
+
+// Orchestra's Tasks tab: the Tasks and Activity cards. Both read the one Tasks projection the side
+// panel owns, and Activity reads the Dock controller's existing state rather than subscribing again.
+// Showing an observed browser tab selects it and its Browser pane, then brings the Apps tab forward.
+export function OrchestraTaskFeed(props: { tasks: TasksData; onShowBrowser: () => void }) {
   const { sessionKey } = useSessionLayout()
   const navigate = useNavigate()
   const serverSDK = useServerSDK()
@@ -39,27 +76,8 @@ export function OrchestraCockpit(props: { tasks: TasksData }) {
         const update = (patch: Partial<CockpitView>) => {
           if (key === sessionKey()) updateCockpitView(key, patch)
         }
-        // The pane is restored whenever the cockpit mounts, including when live work opens the Apps tab
-        // unprompted. Only a pane chosen in this Dock may take the terminal from the bottom panel.
-        const [chosen, setChosen] = createSignal(false)
         return (
-          <div class="orchestra-cockpit">
-            <OrchestraDock
-              pane={view().pane}
-              onPaneChange={(pane) => {
-                setChosen(true)
-                update({ pane })
-              }}
-              files={() => <OrchestraEvidenceFiles path={view().file} onPathChange={(file) => update({ file })} />}
-              docs={() => (
-                <OrchestraEvidenceDocs
-                  path={view().doc}
-                  onPathChange={(doc) => update({ doc })}
-                  onOpenFiles={(file) => update({ pane: "files", file })}
-                />
-              )}
-              terminal={() => <OrchestraEvidenceTerminal takeover={chosen()} />}
-            />
+          <div class="orchestra-cockpit" data-variant="feed">
             <div class="orchestra-cockpit-feed">
               <TasksPanel
                 data={props.tasks}
@@ -79,6 +97,7 @@ export function OrchestraCockpit(props: { tasks: TasksData }) {
                   if (key !== sessionKey() || !tab || dock.state.profile !== observed.profile) return
                   if (!sameTab(tab, dock.state.active)) dock.select(tab)
                   update({ pane: "browser" })
+                  props.onShowBrowser()
                 }}
               />
             </div>

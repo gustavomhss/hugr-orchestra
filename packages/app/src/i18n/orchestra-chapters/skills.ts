@@ -1,0 +1,38 @@
+// Copy owned by the skills screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
+export const SKILLS_COPY = {
+  "orchestra.skills.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.skills.add": "Add skill",
+  "orchestra.skills.disabled": "Disabled",
+  "orchestra.skills.source.project": "Project",
+  "orchestra.skills.source.global": "Global",
+  "orchestra.skills.source.builtin": "Built-in",
+  "orchestra.skills.noDescription": "No description.",
+  "orchestra.skills.readOnly": "Read",
+  "orchestra.skills.toggle": "Enable {{name}}",
+  "orchestra.skills.localNote":
+    "Availability is saved for this profile in this app; agents still receive every registered skill.",
+  "orchestra.skills.notListed":
+    "Saved to {{location}}. The server lists it after it reloads this project's configuration.",
+  "orchestra.skills.reload": "Reload list",
+  "orchestra.skills.dialog.add": "Add skill",
+  "orchestra.skills.dialog.addDetail": "Saved as .opencode/skills/<name>/SKILL.md in this profile's repository.",
+  "orchestra.skills.dialog.edit": "Edit {{name}}",
+  "orchestra.skills.dialog.read": "Read {{name}}",
+  "orchestra.skills.dialog.builtin": "Built into opencode. Read-only.",
+  "orchestra.skills.dialog.global": "Stored at {{location}}. Global skills are read-only here.",
+  "orchestra.skills.dialog.governed": "Stored at {{location}}. Governed by Atlas, so it is read-only.",
+  "orchestra.skills.dialog.fixed":
+    "Stored at {{location}}. Outside this project's skill folders, so it is read-only here.",
+  "orchestra.skills.dialog.close": "Close dialog",
+  "orchestra.skills.dialog.cancel": "Cancel",
+  "orchestra.skills.dialog.save": "Save",
+  "orchestra.skills.dialog.name": "Name",
+  "orchestra.skills.dialog.description": "Description",
+  "orchestra.skills.dialog.remove": "Remove skill",
+  "orchestra.skills.remove.title": "Remove this skill?",
+  "orchestra.skills.remove.detail": "Deletes {{location}}.",
+  "orchestra.skills.remove.note": "The file is deleted from disk for every profile that loads it.",
+  "orchestra.skills.remove.confirm": "Confirm",
+  "orchestra.skills.writeFailed": "The server could not change this skill.",
+  "orchestra.skills.writeUnavailable": "This server cannot change skill files.",
+}

@@ -5,6 +5,8 @@ import path from "path"
 import { Effect, Option, Schema } from "effect"
 import { AgentV2 } from "../../agent"
 import { Config } from "../../config"
+import { Location } from "../../location"
+import { AbsolutePath } from "../../schema"
 import { ConfigAgent } from "../agent"
 import { ConfigMarkdown } from "../markdown"
 import { FSUtil } from "../../fs-util"
@@ -49,9 +51,19 @@ export const Plugin = define({
     const config = yield* Config.Service
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
+    const location = Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
     yield* ctx.agent.transform(
       Effect.fn(function* (draft) {
-        const documents = yield* Effect.forEach(yield* config.entries(), (entry) => {
+        const entries = yield* config.entries()
+        // Config lists `.opencode` folders once, when the location opens. One created later (by the agent
+        // file API) is scanned here too, so reloading agents picks it up without reopening the location.
+        const local = location && path.join(location.directory, ".opencode")
+        const late =
+          local &&
+          !entries.some((entry) => entry.type === "directory" && path.resolve(entry.path) === path.resolve(local))
+            ? [new Config.Directory({ type: "directory", path: AbsolutePath.make(local) })]
+            : []
+        const documents = yield* Effect.forEach([...entries, ...late], (entry) => {
           if (entry.type === "document") return Effect.succeed([entry])
           return Effect.gen(function* () {
             const files = yield* discover(fs, entry.path)
@@ -158,15 +170,19 @@ function decode(file: { directory: string; filepath: string; primary: boolean },
     .replaceAll("\\", "/")
     .replace(/^(agent|agents|mode|modes)\//, "")
     .replace(/\.md$/, "")
+  // A file without a body overrides other fields only; it keeps the agent's built-in instructions.
   const body = markdown.content.trim()
   const legacy = Object.keys(markdown.data).some((key) => !agentKeys.has(key))
   const agent = Option.getOrUndefined(
     legacy
       ? Option.map(
-          decodeLegacyAgent({ name, ...markdown.data, prompt: body }, { errors: "all", propertyOrder: "original" }),
+          decodeLegacyAgent(
+            { name, ...markdown.data, ...(body ? { prompt: body } : {}) },
+            { errors: "all", propertyOrder: "original" },
+          ),
           ConfigMigrateV1.migrateAgent,
         )
-      : decodeAgent({ ...markdown.data, system: body }, { errors: "all", propertyOrder: "original" }),
+      : decodeAgent({ ...markdown.data, ...(body ? { system: body } : {}) }, { errors: "all", propertyOrder: "original" }),
   )
   if (!agent) return
   const info = Option.getOrUndefined(

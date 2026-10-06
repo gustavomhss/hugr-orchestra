@@ -62,3 +62,19 @@ export function indent(value: string) {
     .map((line) => `  ${line}`)
     .join("\n")
 }
+
+export function data(validate: (value: any) => void) {
+  return (body: any) => {
+    object(body)
+    validate(body.data)
+  }
+}
+
+export function locationData(validate: (value: any) => void) {
+  return (body: any) => {
+    object(body)
+    object(body.location)
+    object(body.location.project)
+    validate(body.data)
+  }
+}

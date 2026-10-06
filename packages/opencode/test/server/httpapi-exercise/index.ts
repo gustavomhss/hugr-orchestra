@@ -21,7 +21,7 @@ import { Effect } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { TestLLMServer } from "../../lib/llm-server"
 import path from "path"
-import { array, boolean, check, isRecord, message, object, stable } from "./assertions"
+import { array, boolean, check, data, isRecord, locationData, message, object, stable } from "./assertions"
 import { controlledPtyInput, http, route } from "./dsl"
 import {
   cleanupExercisePaths,
@@ -32,29 +32,17 @@ import {
 } from "./environment"
 import { color, printHeader, printResults } from "./report"
 import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } from "./routing"
+import { mcpScenarios } from "./mcp"
 import { runScenario } from "./runner"
+import { skillScenarios } from "./skill"
 import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
 import { type Scenario } from "./types"
+import { vcsScenarios } from "./vcs"
+import { sessionActivityScenarios } from "./session-activity"
 
 function cursor(input: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(input)).toString("base64url")
-}
-
-function data(validate: (value: any) => void) {
-  return (body: any) => {
-    object(body)
-    validate(body.data)
-  }
-}
-
-function locationData(validate: (value: any) => void) {
-  return (body: any) => {
-    object(body)
-    object(body.location)
-    object(body.location.project)
-    validate(body.data)
-  }
 }
 
 const scenarios: Scenario[] = [
@@ -120,28 +108,10 @@ const scenarios: Scenario[] = [
     check(body.directory === ctx.directory, "directory should resolve from x-opencode-directory")
     check(body.worktree === ctx.directory, "worktree should resolve from x-opencode-directory")
   }),
-  http.protected.get("/vcs", "vcs.get").json(),
-  http.protected.get("/vcs/status", "vcs.status").json(200, array),
-  http.protected
-    .get("/vcs/diff", "vcs.diff")
-    .at((ctx) => ({ path: "/vcs/diff?mode=git", headers: ctx.headers() }))
-    .json(200, array),
-  http.protected.get("/vcs/diff/raw", "vcs.diff.raw").status(
-    200,
-    (_ctx, result) =>
-      Effect.sync(() => {
-        check(typeof result.text === "string", "raw VCS diff should return text")
-      }),
-    "status",
-  ),
-  http.protected
-    .post("/vcs/apply", "vcs.apply")
-    .inProject({ git: false })
-    .at((ctx) => ({ path: "/vcs/apply", headers: ctx.headers(), body: { patch: "" } }))
-    .status(400, undefined, "status"),
+  ...vcsScenarios,
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
-  http.protected.get("/skill", "app.skills").json(200, array, "status"),
+  ...skillScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),
@@ -371,66 +341,7 @@ const scenarios: Scenario[] = [
         }),
       "status",
     ),
-  http.protected.get("/mcp", "mcp.status").json(),
-  http.protected
-    .post("/mcp", "mcp.add")
-    .mutating()
-    .at((ctx) => ({
-      path: "/mcp",
-      headers: ctx.headers(),
-      body: { name: "httpapi-disabled", config: { type: "local", command: ["bun", "--version"], enabled: false } },
-    }))
-    .json(
-      200,
-      (body) => {
-        object(body)
-        object(body["httpapi-disabled"])
-        check(body["httpapi-disabled"].status === "disabled", "disabled MCP server should be added without spawning")
-      },
-      "status",
-    ),
-  http.protected
-    .post("/mcp", "mcp.add.invalid")
-    .at((ctx) => ({
-      path: "/mcp",
-      headers: ctx.headers(),
-      body: { name: "httpapi-invalid", config: { type: "invalid" } },
-    }))
-    .status(400),
-  http.protected
-    .post("/mcp/{name}/auth", "mcp.auth.start")
-    .at((ctx) => ({ path: route("/mcp/{name}/auth", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
-  http.protected
-    .delete("/mcp/{name}/auth", "mcp.auth.remove")
-    .mutating()
-    .at((ctx) => ({ path: route("/mcp/{name}/auth", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/auth/authenticate", "mcp.auth.authenticate")
-    .at((ctx) => ({
-      path: route("/mcp/{name}/auth/authenticate", { name: "httpapi-missing" }),
-      headers: ctx.headers(),
-    }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/auth/callback", "mcp.auth.callback")
-    .at((ctx) => ({
-      path: route("/mcp/{name}/auth/callback", { name: "httpapi-missing" }),
-      headers: ctx.headers(),
-      body: { code: "code" },
-    }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/connect", "mcp.connect")
-    .mutating()
-    .at((ctx) => ({ path: route("/mcp/{name}/connect", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/mcp/{name}/disconnect", "mcp.disconnect")
-    .mutating()
-    .at((ctx) => ({ path: route("/mcp/{name}/disconnect", { name: "httpapi-missing" }), headers: ctx.headers() }))
-    .json(404, object, "status"),
+  ...mcpScenarios,
   http.protected.get("/pty/shells", "pty.shells").json(200, array),
   http.protected.get("/pty", "pty.list").json(200, array),
   http.protected
@@ -664,6 +575,18 @@ const scenarios: Scenario[] = [
   }),
   http.protected.get("/api/location", "v2.location.get").json(200, object),
   http.protected.get("/api/agent", "v2.agent.list").json(200, locationData(array)),
+  http.protected
+    .get("/api/agent/{agentID}/file", "v2.agent.file.get")
+    .at((ctx) => ({ path: route("/api/agent/{agentID}/file", { agentID: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(200, object),
+  http.protected
+    .put("/api/agent/{agentID}/file", "v2.agent.file.update")
+    .at((ctx) => ({
+      path: route("/api/agent/{agentID}/file", { agentID: "not a name" }),
+      headers: ctx.headers(),
+      body: { description: "rejected before any write" },
+    }))
+    .status(400, undefined, "status"),
   http.protected.get("/api/model", "v2.model.list").json(200, locationData(array)),
   http.protected.get("/api/provider", "v2.provider.list").json(200, locationData(array)),
   http.protected.get("/api/integration", "v2.integration.list").json(200, locationData(array)),
@@ -728,7 +651,6 @@ const scenarios: Scenario[] = [
     }))
     .status(204, undefined, "status"),
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
-  http.protected.get("/api/skill", "v2.skill.list").json(200, locationData(array)),
   http.protected
     .get("/api/event", "v2.event.subscribe")
     .stream()
@@ -1164,6 +1086,7 @@ const scenarios: Scenario[] = [
     .get("/session/status", "session.status")
     .seeded((ctx) => ctx.session({ title: "Status session" }))
     .json(200, object),
+  ...sessionActivityScenarios,
   http.protected
     .post("/session", "session.create")
     .mutating()

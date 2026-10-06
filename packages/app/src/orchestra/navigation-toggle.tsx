@@ -12,7 +12,7 @@ export function OrchestraNavigationToggle(props: {
   const label = () => language.t(props.compact ? "orchestra.nav.expand" : "orchestra.nav.collapse")
   return (
     <OrchestraNavigationTooltip
-      compact={props.compact || props.iconOnly === true}
+      enabled={props.compact || props.iconOnly === true}
       value={props.constrained ? language.t("orchestra.nav.compactWidth") : label()}
     >
       {(Trigger) => (
@@ -25,7 +25,7 @@ export function OrchestraNavigationToggle(props: {
           aria-disabled={props.constrained || undefined}
           onClick={props.onToggle}
         >
-          <Icon name="sidebar-right" />
+          <Icon name="sidebar-right" class="orchestra-navigation-toggle-icon" />
           <span class="orchestra-nav-label">{label()}</span>
         </Trigger>
       )}

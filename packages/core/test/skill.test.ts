@@ -71,18 +71,22 @@ describe("SkillV2", () => {
             { type: "directory", path: AbsolutePath.make(first) },
             { type: "directory", path: AbsolutePath.make(second) },
           ])
-          expect(yield* skill.list()).toEqual([
+          const listed = yield* skill.list()
+          expect(listed.every((item) => typeof item.mtime === "number")).toBe(true)
+          expect(listed.map((item): SkillV2.Info => ({ ...item, mtime: 0 }))).toEqual([
             SkillV2.Info.make({
               name: "foo",
               slash: true,
               location: AbsolutePath.make(path.join(first, "foo.md")),
               content: "# foo",
+              mtime: 0,
             }),
             {
               name: "review",
               description: "Second",
               location: AbsolutePath.make(path.join(second, "review", "SKILL.md")),
               content: "# review",
+              mtime: 0,
             },
           ])
         }),

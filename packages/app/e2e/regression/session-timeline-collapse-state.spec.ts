@@ -229,7 +229,11 @@ test.describe("regression: session timeline local row state", () => {
     await expect.poll(() => wrapper.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThan(500)
     const samples = await wrapper.evaluate(async (element) => {
       const root = element.closest<HTMLElement>(".scroll-view__viewport")!
+      const header = root.querySelector<HTMLElement>("[data-session-title]")!
+      // The approved session header is transparent and masks rows beneath it with an 18px fade, so the
+      // visible scroll area starts 18px below it. Start with the edit row at that visible top.
       element.scrollIntoView({ block: "start" })
+      root.scrollBy(0, element.getBoundingClientRect().top - header.getBoundingClientRect().bottom - 18)
       const result = []
       for (const offset of [0, 120, 240, 360, 480]) {
         root.scrollBy(0, offset - (result.at(-1)?.offset ?? 0))
@@ -241,6 +245,7 @@ test.describe("regression: session timeline local row state", () => {
           trigger: trigger.getBoundingClientRect().y,
           diff: diff.getBoundingClientRect().y,
           bottom: element.getBoundingClientRect().bottom,
+          visible: header.getBoundingClientRect().bottom + 18,
         })
       }
       return result
@@ -248,6 +253,8 @@ test.describe("regression: session timeline local row state", () => {
 
     expect(samples[0]!.trigger).toBeLessThan(samples[0]!.diff)
     expect(samples.every((sample) => Math.abs(sample.trigger - samples[0]!.trigger) <= 1)).toBe(true)
+    // The stuck header sits exactly at the visible top: never under the transparent header or its fade.
+    expect(samples.every((sample) => Math.abs(sample.trigger - sample.visible) <= 1)).toBe(true)
     expect(samples.every((sample) => sample.trigger < sample.bottom)).toBe(true)
   })
 })

@@ -18,7 +18,8 @@ export function isLocalWorkspaceRoute(method: string, path: string) {
 }
 
 export function getWorkspaceRouteSessionID(url: URL) {
-  if (url.pathname === "/session/status") return null
+  // Static routes under /session are not session IDs.
+  if (url.pathname === "/session/status" || url.pathname === "/session/activity") return null
 
   const id =
     url.pathname.match(/^\/session\/([^/]+)(?:\/|$)/)?.[1] ??

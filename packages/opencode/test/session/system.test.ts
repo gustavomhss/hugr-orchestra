@@ -81,6 +81,8 @@ const it = testEffect(
           all: () => Effect.succeed(skills),
           dirs: () => Effect.succeed([]),
           available: () => Effect.succeed(skills),
+          save: () => Effect.die("unused"),
+          remove: () => Effect.die("unused"),
         }),
       ),
     ],

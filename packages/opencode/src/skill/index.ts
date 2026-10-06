@@ -8,6 +8,7 @@ import type { Agent } from "@/agent/agent"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstanceState } from "@/effect/instance-state"
 import { Global } from "@opencode-ai/core/global"
+import { SkillFile } from "@opencode-ai/core/skill/file"
 import { Permission } from "@/permission"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Config } from "@/config/config"
@@ -35,6 +36,8 @@ export const Info = Schema.Struct({
   description: Schema.optional(Schema.String),
   location: Schema.String,
   content: Schema.String,
+  /** Last modification time (ms) of the skill file, for optimistic concurrency on save. */
+  mtime: Schema.optional(Schema.Finite),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 
@@ -97,9 +100,17 @@ export interface Interface {
   readonly all: () => Effect.Effect<Info[]>
   readonly dirs: () => Effect.Effect<string[]>
   readonly available: (agent?: Agent.Info) => Effect.Effect<Info[]>
+  /** Writes a skill file (see SkillFile.save) and rescans this instance's skills. */
+  readonly save: (input: SkillFile.SaveInput) => Effect.Effect<Info, SkillFile.WriteError>
+  readonly remove: (location: string) => Effect.Effect<void, SkillFile.WriteError>
 }
 
-const add = Effect.fnUntraced(function* (state: State, match: string, events: EventV2Bridge.Service["Service"]) {
+const add = Effect.fnUntraced(function* (
+  state: State,
+  match: string,
+  events: EventV2Bridge.Service["Service"],
+  fsys: FSUtil.Interface,
+) {
   const md = yield* Effect.tryPromise({
     try: () => ConfigMarkdown.parse(match),
     catch: (err) => err,
@@ -138,6 +149,7 @@ const add = Effect.fnUntraced(function* (state: State, match: string, events: Ev
     description: md.data.description,
     location: match,
     content: md.content,
+    mtime: yield* SkillFile.modified(match).pipe(Effect.provideService(FSUtil.Service, fsys)),
   }
 })
 
@@ -279,12 +291,16 @@ const loadSkills = Effect.fnUntraced(function* (
   state: State,
   discovered: DiscoveryState,
   events: EventV2Bridge.Service["Service"],
+  fsys: FSUtil.Interface,
 ) {
   // Playbooks load first, so a skill of the same name from any other source replaces one.
   yield* Effect.forEach(
     [discovered.playbooks, discovered.matches],
     (matches) =>
-      Effect.forEach(matches, (match) => add(state, match, events), { concurrency: "unbounded", discard: true }),
+      Effect.forEach(matches, (match) => add(state, match, events, fsys), {
+        concurrency: "unbounded",
+        discard: true,
+      }),
     { discard: true },
   )
 
@@ -321,7 +337,7 @@ const layer = Layer.effect(
     const state = yield* InstanceState.make(
       Effect.fn("Skill.state")(function* () {
         const s: State = { skills: {}, dirs: new Set() }
-        yield* loadSkills(s, yield* InstanceState.get(discovered), events)
+        yield* loadSkills(s, yield* InstanceState.get(discovered), events, fsys)
         return s
       }),
     )
@@ -361,7 +377,29 @@ const layer = Layer.effect(
       )
     })
 
-    return Service.of({ get, require, all, dirs, available })
+    const rescan = Effect.fnUntraced(function* () {
+      yield* InstanceState.invalidate(discovered)
+      yield* InstanceState.invalidate(state)
+    })
+
+    const save = Effect.fn("Skill.save")(function* (input: SkillFile.SaveInput) {
+      const directory = yield* InstanceState.directory
+      const saved = yield* SkillFile.save({ directory, registered: yield* all(), skill: input }).pipe(
+        Effect.provideService(FSUtil.Service, fsys),
+      )
+      yield* rescan()
+      return saved
+    })
+
+    const remove = Effect.fn("Skill.remove")(function* (location: string) {
+      const directory = yield* InstanceState.directory
+      yield* SkillFile.remove({ directory, registered: yield* all(), location }).pipe(
+        Effect.provideService(FSUtil.Service, fsys),
+      )
+      yield* rescan()
+    })
+
+    return Service.of({ get, require, all, dirs, available, save, remove })
   }),
 )
 

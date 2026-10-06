@@ -42,7 +42,7 @@ export function TabButton(props: {
   }
   return (
     <button
-      class={`zen-tab ${sameTab(props.active(), props.tab) ? "is-active" : ""}`}
+      class={`zen-tab ${sameTab(props.active(), props.tab) ? "is-active" : ""} ${props.tab.crashed ? "is-crashed" : ""}`}
       type="button"
       role="tab"
       tabindex={sameTab(props.active(), props.tab) ? 0 : -1}
@@ -64,7 +64,7 @@ export function TabButton(props: {
       <bdi dir="auto" class="zen-tab-title">
         {tabLabel(props.tab)}
       </bdi>
-      {props.tab.pinned ? "Pinned" : ""}
+      {props.tab.pinned && <span class="zen-tab-pinmark">Pinned</span>}
       {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
     </button>
   )

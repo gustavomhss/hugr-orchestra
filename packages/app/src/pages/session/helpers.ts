@@ -23,6 +23,8 @@ type TabsInput = {
   apps?: Accessor<boolean>
   /** Orchestra's Apps tab is the cockpit, so a persisted Tasks tab resolves to it. */
   cockpit?: Accessor<boolean>
+  /** Orchestra's rail keeps Context and Tasks as permanent tabs, so tab commands never close them. */
+  permanent?: Accessor<boolean>
 }
 
 export const getSessionKey = (dir: string | undefined, id: string | undefined) => `${dir ?? ""}${id ? `/${id}` : ""}`
@@ -88,6 +90,7 @@ export const createSessionTabs = (input: TabsInput) => {
   })
   const closableTab = createMemo(() => {
     const active = activeTab()
+    if ((active === "context" || active === "tasks") && input.permanent?.()) return
     if (active === "context") return active
     if (active === "tasks") return active
     if (active === SESSION_OPEN_FILE_TAB && openFileOpen()) return active

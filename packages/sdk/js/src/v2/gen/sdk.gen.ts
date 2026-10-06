@@ -3,11 +3,16 @@
 import { client } from "./client.gen.js"
 import { buildClientParams, type Client, type Options as Options2, type TDataShape } from "./client/index.js"
 import type {
+  AgentFileInput,
   AgentPartInput,
   AppAgentsErrors,
   AppAgentsResponses,
   AppLogErrors,
   AppLogResponses,
+  AppSkillRemoveErrors,
+  AppSkillRemoveResponses,
+  AppSkillSaveErrors,
+  AppSkillSaveResponses,
   AppSkillsErrors,
   AppSkillsResponses,
   Auth as Auth3,
@@ -17,7 +22,7 @@ import type {
   AuthSetResponses,
   CommandListErrors,
   CommandListResponses,
-  Config as Config3,
+  Config as Config4,
   ConfigGetErrors,
   ConfigGetResponses,
   ConfigProvidersErrors,
@@ -103,6 +108,12 @@ import type {
   McpAuthRemoveResponses,
   McpAuthStartErrors,
   McpAuthStartResponses,
+  McpConfigListErrors,
+  McpConfigListResponses,
+  McpConfigRemoveErrors,
+  McpConfigRemoveResponses,
+  McpConfigUpdateErrors,
+  McpConfigUpdateResponses,
   McpConnectErrors,
   McpConnectResponses,
   McpDisconnectErrors,
@@ -111,6 +122,8 @@ import type {
   McpRemoteConfig,
   McpStatusErrors,
   McpStatusResponses,
+  McpToolsErrors,
+  McpToolsResponses,
   ModelRef,
   MoveSessionDestination,
   OutputFormat,
@@ -177,6 +190,8 @@ import type {
   QuestionV2Reply,
   SessionAbortErrors,
   SessionAbortResponses,
+  SessionActivityErrors,
+  SessionActivityResponses,
   SessionChildrenErrors,
   SessionChildrenResponses,
   SessionCommandErrors,
@@ -223,6 +238,8 @@ import type {
   SessionUnshareResponses,
   SessionUpdateErrors,
   SessionUpdateResponses,
+  SkillSaveInput,
+  SkillV2SaveInput,
   SubtaskPartInput,
   SyncHistoryListErrors,
   SyncHistoryListResponses,
@@ -263,6 +280,10 @@ import type {
   TuiShowToastResponses,
   TuiSubmitPromptErrors,
   TuiSubmitPromptResponses,
+  V2AgentFileGetErrors,
+  V2AgentFileGetResponses,
+  V2AgentFileUpdateErrors,
+  V2AgentFileUpdateResponses,
   V2AgentListErrors,
   V2AgentListResponses,
   V2CommandListErrors,
@@ -385,6 +406,12 @@ import type {
   V2SessionWaitResponses,
   V2SkillListErrors,
   V2SkillListResponses,
+  V2SkillRemoveErrors,
+  V2SkillRemoveResponses,
+  V2SkillSaveErrors,
+  V2SkillSaveResponses,
+  VcsActivityErrors,
+  VcsActivityResponses,
   VcsApplyErrors,
   VcsApplyResponses,
   VcsDiffErrors,
@@ -584,6 +611,38 @@ export class App extends HeyApiClient {
   }
 
   /**
+   * Remove skill
+   *
+   * Delete a registered project skill file given its path, and its folder when that is left empty.
+   */
+  public skillRemove<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      path: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<AppSkillRemoveResponses, AppSkillRemoveErrors, ThrowOnError>({
+      url: "/skill",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List skills
    *
    * Get a list of all available skills in the OpenCode system.
@@ -610,6 +669,43 @@ export class App extends HeyApiClient {
       url: "/skill",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Save skill
+   *
+   * Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
+   */
+  public skillSave<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      skillSaveInput?: SkillSaveInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "skillSaveInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<AppSkillSaveResponses, AppSkillSaveErrors, ThrowOnError>({
+      url: "/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -1297,7 +1393,7 @@ export class Config extends HeyApiClient {
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
-      config?: Config3
+      config?: Config4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1454,7 +1550,7 @@ export class Config2 extends HeyApiClient {
     parameters?: {
       directory?: string
       workspace?: string
-      config?: Config3
+      config?: Config4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2150,6 +2246,40 @@ export class Vcs extends HeyApiClient {
     })
   }
 
+  /**
+   * Get VCS activity
+   *
+   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      since: number
+      until?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "since" },
+            { in: "query", key: "until" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<VcsActivityResponses, VcsActivityErrors, ThrowOnError>({
+      url: "/vcs/activity",
+      ...options,
+      ...params,
+    })
+  }
+
   private _diff?: Diff
   get diff2(): Diff {
     return (this._diff ??= new Diff({ client: this.client }))
@@ -2248,6 +2378,109 @@ export class Formatter extends HeyApiClient {
       url: "/formatter",
       ...options,
       ...params,
+    })
+  }
+}
+
+export class Config3 extends HeyApiClient {
+  /**
+   * List project MCP server config
+   *
+   * List the type, command and URL of each MCP server the project's own config files define, as written (variables are not resolved).
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<McpConfigListResponses, McpConfigListErrors, ThrowOnError>({
+      url: "/mcp/config",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Remove MCP server config
+   *
+   * Remove an MCP server from the project's own config files.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<McpConfigRemoveResponses, McpConfigRemoveErrors, ThrowOnError>({
+      url: "/mcp/{name}/config",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Save MCP server config
+   *
+   * Create or update an MCP server in the project's own config file. Fields that are not sent keep their existing values.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+      config?: McpLocalConfig | McpRemoteConfig
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "config" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<McpConfigUpdateResponses, McpConfigUpdateErrors, ThrowOnError>({
+      url: "/mcp/{name}/config",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -2462,6 +2695,36 @@ export class Mcp extends HeyApiClient {
   }
 
   /**
+   * List MCP tools
+   *
+   * List the tool names each connected Model Context Protocol (MCP) server reports.
+   */
+  public tools<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<McpToolsResponses, McpToolsErrors, ThrowOnError>({
+      url: "/mcp/tools",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * Connect an MCP server.
    */
   public connect<ThrowOnError extends boolean = false>(
@@ -2519,6 +2782,11 @@ export class Mcp extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _config?: Config3
+  get config(): Config3 {
+    return (this._config ??= new Config3({ client: this.client }))
   }
 
   private _auth?: Auth2
@@ -3482,6 +3750,38 @@ export class Session2 extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<SessionStatusResponses, SessionStatusErrors, ThrowOnError>({
       url: "/session/status",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get session activity
+   *
+   * Aggregate the user and assistant messages of this project's sessions for a period into one fact per bucket, session and model, plus the wall clock of root-session assistant turns per bucket. Buckets are server-local days; a fixed period has the equal window before it as bucket 0.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      period: "7d" | "30d" | "90d" | "all"
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "period" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SessionActivityResponses, SessionActivityErrors, ThrowOnError>({
+      url: "/session/activity",
       ...options,
       ...params,
     })
@@ -5059,6 +5359,81 @@ export class Location extends HeyApiClient {
   }
 }
 
+export class File2 extends HeyApiClient {
+  /**
+   * Get agent file
+   *
+   * Read the agent definition stored in this location's .opencode/agent directory.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      agentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "agentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2AgentFileGetResponses, V2AgentFileGetErrors, ThrowOnError>({
+      url: "/api/agent/{agentID}/file",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update agent file
+   *
+   * Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      agentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      agentFileInput: AgentFileInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "agentID" },
+            { in: "query", key: "location" },
+            { key: "agentFileInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2AgentFileUpdateResponses, V2AgentFileUpdateErrors, ThrowOnError>({
+      url: "/api/agent/{agentID}/file",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Agent extends HeyApiClient {
   /**
    * List agents
@@ -5080,6 +5455,11 @@ export class Agent extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _file?: File2
+  get file(): File2 {
+    return (this._file ??= new File2({ client: this.client }))
   }
 }
 
@@ -6524,6 +6904,39 @@ export class Command2 extends HeyApiClient {
 
 export class Skill extends HeyApiClient {
   /**
+   * Remove skill
+   *
+   * Delete a registered project skill file given its path, and its folder when that is left empty.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      path: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2SkillRemoveResponses, V2SkillRemoveErrors, ThrowOnError>({
+      url: "/api/skill",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List skills
    *
    * Retrieve currently registered skills.
@@ -6542,6 +6955,44 @@ export class Skill extends HeyApiClient {
       url: "/api/skill",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Save skill
+   *
+   * Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
+   */
+  public save<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      skillV2SaveInput: SkillV2SaveInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "skillV2SaveInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2SkillSaveResponses, V2SkillSaveErrors, ThrowOnError>({
+      url: "/api/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
