@@ -50,7 +50,7 @@ The general procedures in [cancellation](../lifetimes/cancellation.md) and [atom
 
 - Scoped to the packet's packages: the project's formatter (`gofmt -l`), `go vet`, and `go test -count=1`; add `-race` when concurrency is assigned.
 - Outputs: handwritten handler, service, repository and test code. Generated code is regenerated from its inputs, never edited.
-- Toolkit engines, only for the artifacts the packet assigns: [sqlc](../recipes/external/sqlc.md) to regenerate query code, [ast-grep](../recipes/external/ast-grep.md) for bounded syntax rewrites, [buf](../recipes/external/buf.md) for Protobuf schema checks, [kiota](../recipes/external/kiota.md) for API clients from an OpenAPI description.
+- Toolkit engines, only for the artifacts the packet assigns: [sqlc](../recipes/external/sqlc.md) to regenerate query code, [ast-grep](../recipes/external/ast-grep.md) for bounded syntax rewrites, [buf](../recipes/external/buf.md) for Protobuf schema checks, [kiota](../recipes/external/kiota.md) for API clients from an OpenAPI description, [ogen](../recipes/external/ogen.md) for Go server interfaces and clients from an OpenAPI description.
 - The standard `ServeMux` (Go 1.22 patterns) registers `"POST /projects/{projectID}/tasks"` and reads `r.PathValue("projectID")`. A chi component uses chi's API instead.
 
 ## Limits and checks
