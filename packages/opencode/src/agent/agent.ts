@@ -134,12 +134,11 @@ const layer = Layer.effect(
         })
 
         // Maestro and general ask before publishing, and user config can allow it. Their skill list leaves out the
-        // built-in skill for configuring opencode and the skills in the global Claude and agents directories, which
-        // are written for other tools. Location rules affect only that list (see Skill.available).
+        // skills in the global Claude and agents directories, which are written for other tools. Location rules
+        // affect only that list (see Skill.available).
         const team = Permission.fromConfig({
           bash: publishRules("ask"),
           skill: {
-            [Skill.CUSTOMIZE_OPENCODE_SKILL_NAME]: "deny",
             [path.join(global.home, ".claude", "skills", "*")]: "deny",
             [path.join(global.home, ".agents", "skills", "*")]: "deny",
           },
