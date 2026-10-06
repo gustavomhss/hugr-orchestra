@@ -452,9 +452,15 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           call(context, "wait", { milliseconds: args.milliseconds }).then(toJSON, toolError),
       }),
       dock_screenshot: tool({
-        description: "Capture the active browser tab as a base64 PNG.",
+        description: "Capture the active browser tab as a PNG image.",
         args: {},
-        execute: (_args, context) => call(context, "screenshot", {}).then(toJSON, toolError),
+        // Base64 in the text output would exceed the tool-output cap and is unreadable as text; an attachment reaches
+        // the model as an image, as `read` returns image files.
+        execute: (_args, context) => call(context, "screenshot", {}).then((value) =>
+          object(value) && value.mime === "image/png" && typeof value.data === "string"
+            ? { output: "Screenshot of the active tab attached as a PNG image.",
+              attachments: [{ type: "file" as const, mime: "image/png", url: `data:image/png;base64,${value.data}` }] }
+            : toJSON(value), toolError),
       }),
       dock_scroll: tool({
         description: "Scroll the active browser tab up or down by a number of pixels, or to its top or bottom.",
