@@ -6,16 +6,12 @@ Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude C
 
 This file and **everything under `specs/backend-specialist/` is UNTRACKED** — a fresh clone will NOT contain it. Do not respawn in a fresh clone. Either (a) work in this same worktree (`/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin`, branch `backend-plugin`), or (b) copy `specs/backend-specialist/` into the new checkout first, or (c) ask the user to commit it. Verify with `git status --short | head` that `specs/backend-specialist/` is present before doing anything else.
 
-## 1. Where we are
+## 1. Where we are (2026-10-06)
 
-- Worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin`
-- Branch: `backend-plugin`, HEAD `d11d8652aa` = `fork/dev` (fast-forwarded 2026-10-05 from `76015a9`; no local commits). Refresh findings in `execution-plan.md` §1.1. Backup of `specs/backend-specialist/`: `_worktrees/backend-specs-backup-2026-10-05.tgz`.
-- Original checkout preserved untouched: `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical`.
-- Canonical Atlas: `/Users/gustavoschneiter/Documents/HuGR/atlas` @ `b319723d5c5c86a45ad362386d8c0583ed3a10f4`.
-- Canonical Composer: `/Users/gustavoschneiter/Documents/HuGR/skill-001-fastapi-production` @ `df04cf8f9c9c4307d22b6447d513b05b94c08572`.
-- All work is **untracked** under `specs/backend-specialist/`. No commits, pushes or PRs. No tests/builds/installs executed by planning work (one narrow in-memory Atlas probe ran Bun against pure template/header functions only).
-- No active subagents or temp worktrees remain; all P1–P5 (`backend-{host,atlas,toolkit,composer,quality}-plan`) and R46–R64 metadata worktrees were archived into `specs/backend-specialist/research/` and removed. `git worktree list` shows only this worktree for our work (verified 2026-10-05).
-- No stashes belong to this work (`git stash list` entries are on unrelated branches). Our changes live only as untracked files under `specs/backend-specialist/`.
+- Phase 1 is in `dev` (PR #21, merge `2bb9192f52`). Phase 2 is open as PR #54 (branch `specialist-phase2`, `epic` label, auto-fix on).
+- The specialist's stable id is `backend`. Its display name is a variable whose default lives only in `BACKEND_DEFAULT_LABEL` (`packages/opencode/src/maestro/roster.ts`); `test/agent/specialist-name-guard.test.ts` rejects any other occurrence of that name in the repo. Refer to it by role or by id.
+- Charter v3a is installed (`agent/prompt/backend.txt` = `charter-draft.md`). Evaluation lives in github.com/gustavomhss/backend-bench.
+- Open owner confirmation: Maestro's display name fixed (not configurable) while other seats stay configurable; then document the name rule in `AGENTS.md` and make the guard's message explain it.
 
 ## 2. Objective (frozen)
 
@@ -69,11 +65,13 @@ Research: `01-codex.md` … `28-backend-depth.md` (R01–R28 history), `29-http-
 
 ## 7. Next move (resume here)
 
-1. ~~Rebase/refresh~~ done 2026-10-05 (§1.1 of `execution-plan.md`).
-2. ~~Phase 0~~ done 2026-10-05: F1–F6 frozen for Phase 1 in `contracts/` (rulings in `contracts/README.md`). Composer error-code fix committed locally: Composer `399b4698` (branch `error-codes`, PR blocked: remote repo not reachable from either GitHub account), Orchestra `8b9d5d010f` (branch `composer-error-codes`, ships with the next backend specialist block).
-3. **Phase 1 status 2026-10-05:** integration branch `backend-phase1` (fork, `c5b1694dbf`) holds charter v2 installed, backend-specialist-only profile with six seat-scoped skills, `backend-implement` skill, skills embedded in compiled builds, configurable labels for every native seat (`agent.<id>.name`, `HUGR_BACKEND_NAME`) with label-free versioned hashes and stable-ID routing in host/app/TUI/session-ui, `backend-result` decoder with workResult on failure and background paths, and Atlas native memory in `foundation/atlas` with union-merge `.gitattributes`. 99-test backend specialist set green locally; typecheck clean per package; CI not run (epic label). Eval bench: github.com/gustavomhss/backend-bench. Open: background workResult delivery is best effort (completion notice, `Effect.ignore`); internal `Tool.Context.agentID` is optional and plugin `agentID` falls back to the label; root `.gitattributes` lines untested (A4); old extracted skill versions accumulate; adapter-io scanner timeouts under load unconfirmed on a quiet machine; Composer fix `399b4698` unpushed (no repo access).
-4. Phase 1 (parallel, ≤5 lanes, one worktree per agent, disjoint file groups from the plan): H1/H2 scaffolding, A1, T1–T4, CQ seam, S-implement drafting, Go-slice fixture prep.
-4. Then Phases 2–5 per plan; first demonstrable slice is the Go/pgx/Postgres reservation repair with pause/resume + rename.
+1. Land PR #54 (rerun dev-owned flaky jobs; merge when green).
+2. Maestro fixed-name change + `AGENTS.md` name-rule section + explanatory guard message (after owner confirms).
+3. Atlas recall/emit tools for the specialist and the once-only resume fold (F3 clauses 12-25, A1/A2/A4 remainder).
+4. Toolkit on demand (F5, owner ruling F5-OD): ten engines plus gitleaks, fetched by the host with pinned checksums.
+5. Language/framework references (F-family) for the six skills.
+6. End-to-end Go/pgx reservation slice in backend-bench; repeat the charter eval with n >= 3 per cell before freezing.
+7. Logical `taskId` (F2), direct-mode write roots, install/update/rollback (Q-install). Composer stays blocked (legacy repo, no access).
 
 ## 8. Working agreements for the respawned agent
 
