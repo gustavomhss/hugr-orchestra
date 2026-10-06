@@ -135,8 +135,6 @@ const layer = Layer.effect(
             ...Object.fromEntries(whitelistedDirs.map((dir) => [dir, "allow"])),
           },
           question: "deny",
-          plan_enter: "deny",
-          plan_exit: "deny",
           read: envRead("ask"),
         })
 
@@ -155,49 +153,6 @@ const layer = Layer.effect(
         const user = Permission.fromConfig(cfg.permission ?? {})
 
         const agents: Record<string, Info> = {
-          build: {
-            id: "build",
-            name: "build",
-            description: "The default agent. Executes tools based on configured permissions.",
-            options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                question: "allow",
-                plan_enter: "allow",
-              }),
-              user,
-            ),
-            mode: "primary",
-            native: true,
-          },
-          plan: {
-            id: "plan",
-            name: "plan",
-            description: "Plan mode. Disallows all edit tools.",
-            options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                question: "allow",
-                plan_exit: "allow",
-                task: {
-                  general: "deny",
-                },
-                external_directory: {
-                  [path.join(Global.Path.data, "plans", "*")]: "allow",
-                },
-                edit: {
-                  "*": "deny",
-                  [path.join(".opencode", "plans", "*.md")]: "allow",
-                  [path.relative(ctx.worktree, path.join(Global.Path.data, path.join("plans", "*.md")))]: "allow",
-                },
-              }),
-              user,
-            ),
-            mode: "primary",
-            native: true,
-          },
           maestro: {
             id: "maestro",
             name: "maestro",
@@ -214,7 +169,13 @@ const layer = Layer.effect(
             description:
               "General-purpose work from a full brief: research, analysis or multi-step changes no seat covers. Edits files and runs shell commands; cannot ask the owner questions or start teammates. Returns the outcome, what changed, how it was checked and what is left.",
             prompt: PROMPT_GENERAL,
-            permission: Permission.merge(defaults, Permission.fromConfig({ todowrite: "deny" }), team, user),
+            permission: Permission.merge(
+              defaults,
+              // Playbooks are Maestro's procedures: general's skill list leaves them out, but a brief can still name one.
+              Permission.fromConfig({ todowrite: "deny", skill: { [path.join(Skill.PLAYBOOKS_DIR, "*")]: "deny" } }),
+              team,
+              user,
+            ),
             options: {},
             mode: "subagent",
             native: true,
@@ -373,7 +334,7 @@ const layer = Layer.effect(
 
         const list = Effect.fnUntraced(function* () {
           const cfg = yield* config.get()
-          const defaultID = cfg.default_agent ?? "build"
+          const defaultID = cfg.default_agent || "maestro"
           return values(agents).toSorted((a, b) => {
             if (a.id === defaultID) return -1
             if (b.id === defaultID) return 1
@@ -381,18 +342,16 @@ const layer = Layer.effect(
           })
         })
 
+        // Maestro is the default. Another primary agent becomes the default only when default_agent names it, so
+        // disabling Maestro without naming a replacement fails instead of picking a configured agent.
         const defaultInfo = Effect.fnUntraced(function* () {
-          const c = yield* config.get()
-          if (c.default_agent) {
-            const agent = agents[c.default_agent]
-            if (!agent) throw new Error(`default agent "${c.default_agent}" not found`)
-            if (agent.mode === "subagent") throw new Error(`default agent "${c.default_agent}" is a subagent`)
-            if (agent.hidden === true) throw new Error(`default agent "${c.default_agent}" is hidden`)
-            return agent
-          }
-          const visible = Object.values(agents).find((a) => a.mode !== "subagent" && a.hidden !== true)
-          if (!visible) throw new Error("no primary visible agent found")
-          return visible
+          const cfg = yield* config.get()
+          const id = cfg.default_agent || "maestro"
+          const agent = agents[id]
+          if (!agent) throw new Error(`default agent "${id}" not found`)
+          if (agent.mode === "subagent") throw new Error(`default agent "${id}" is a subagent`)
+          if (agent.hidden === true) throw new Error(`default agent "${id}" is hidden`)
+          return agent
         })
 
         const defaultAgent = Effect.fnUntraced(function* () {

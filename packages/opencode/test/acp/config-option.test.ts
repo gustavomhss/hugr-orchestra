@@ -117,10 +117,10 @@ describe("acp config options", () => {
   test("builds the mode select option with descriptions when present", () => {
     expect(
       buildModeSelectOption({
-        currentModeId: "build",
+        currentModeId: "maestro",
         modes: [
-          { id: "build", name: "Build", description: "Make code changes" },
-          { id: "plan", name: "Plan" },
+          { id: "maestro", name: "Maestro", description: "Make code changes" },
+          { id: "reviewer", name: "Reviewer" },
         ],
       }),
     ).toEqual({
@@ -128,10 +128,10 @@ describe("acp config options", () => {
       name: "Session Mode",
       category: "mode",
       type: "select",
-      currentValue: "build",
+      currentValue: "maestro",
       options: [
-        { value: "build", name: "Build", description: "Make code changes" },
-        { value: "plan", name: "Plan" },
+        { value: "maestro", name: "Maestro", description: "Make code changes" },
+        { value: "reviewer", name: "Reviewer" },
       ],
     })
   })
@@ -142,10 +142,10 @@ describe("acp config options", () => {
       currentModel: { providerID: "anthropic", modelID: "claude/sonnet-4" },
       currentVariant: "very-high",
       modes: [
-        { id: "build", name: "Build" },
-        { id: "plan", name: "Plan" },
+        { id: "maestro", name: "Maestro" },
+        { id: "reviewer", name: "Reviewer" },
       ],
-      currentModeId: "plan",
+      currentModeId: "reviewer",
     })
 
     expect(options.map((option) => option.id)).toEqual(["model", "effort", "mode"])

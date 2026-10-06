@@ -40,7 +40,9 @@ const assistantRow = (
     id: _,
     type,
     ...data
-  } = encodeMessage(SessionMessage.Assistant.make({ id, type: "assistant", agent: "build", model, content: [], time }))
+  } = encodeMessage(
+    SessionMessage.Assistant.make({ id, type: "assistant", agent: "maestro", model, content: [], time }),
+  )
   return { id, session_id: sessionID, type, seq, time_created: DateTime.toEpochMillis(time.created), data }
 }
 
@@ -269,7 +271,7 @@ describe("SessionProjector", () => {
         sessionID,
         messageID: SessionMessage.ID.create(),
         timestamp: created,
-        agent: "build",
+        agent: "maestro",
       })
       yield* events.publish(SessionEvent.ModelSwitched, {
         sessionID,
@@ -363,7 +365,7 @@ describe("SessionProjector", () => {
       expect(
         yield* db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get().pipe(Effect.orDie),
       ).toMatchObject({
-        agent: "build",
+        agent: "maestro",
         model,
         time_updated: DateTime.toEpochMillis(created),
       })
@@ -399,7 +401,7 @@ describe("SessionProjector", () => {
           sessionID,
           assistantMessageID: id,
           timestamp: created,
-          agent: "build",
+          agent: "maestro",
           model,
         })
         .pipe(Effect.exit)
@@ -416,7 +418,7 @@ describe("SessionProjector", () => {
       const stale = SessionMessage.Assistant.make({
         id: SessionMessage.ID.make("msg_assistant_stale"),
         type: "assistant",
-        agent: "build",
+        agent: "maestro",
         model,
         content: [],
         time: { created },
@@ -424,7 +426,7 @@ describe("SessionProjector", () => {
       const completed = SessionMessage.Assistant.make({
         id: SessionMessage.ID.make("msg_assistant_completed"),
         type: "assistant",
-        agent: "build",
+        agent: "maestro",
         model,
         content: [],
         time: { created: DateTime.makeUnsafe(1), completed: DateTime.makeUnsafe(2) },
@@ -548,7 +550,7 @@ describe("SessionProjector", () => {
         SessionMessage.Assistant.make({
           id: SessionMessage.ID.make("msg_assistant_completed"),
           type: "assistant",
-          agent: "build",
+          agent: "maestro",
           model,
           content: [SessionMessage.AssistantText.make({ type: "text", id: "text-stale", text: "" })],
           time: { created: DateTime.makeUnsafe(1), completed: DateTime.makeUnsafe(2) },
@@ -556,7 +558,7 @@ describe("SessionProjector", () => {
         SessionMessage.Assistant.make({
           id: SessionMessage.ID.make("msg_assistant_stale"),
           type: "assistant",
-          agent: "build",
+          agent: "maestro",
           model,
           content: [],
           time: { created },

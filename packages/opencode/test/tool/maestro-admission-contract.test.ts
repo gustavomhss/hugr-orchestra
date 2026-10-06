@@ -165,7 +165,7 @@ describe("Maestro admission contract", () => {
         const tool = yield* MaestroRecordAdmissionTool
         const def = yield* Tool.init(tool)
         const rejected = yield* Effect.exit(
-          def.execute({ methodVersion: "admit-request-v1", assessment }, context("maestro", "build")),
+          def.execute({ methodVersion: "admit-request-v1", assessment }, context("maestro", "general")),
         )
         expect(Exit.isFailure(rejected)).toBe(true)
         expect(Exit.isFailure(rejected) && String(Cause.squash(rejected.cause))).toContain(

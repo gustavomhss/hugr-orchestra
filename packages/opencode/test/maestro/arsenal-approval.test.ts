@@ -17,16 +17,16 @@ const it = testEffect(Layer.empty)
 
 it.live("askBefore awaits actual native permission reply despite automatic allow; reject and unbound host HOLD", () =>
   Effect.promise(async () => {
-    await using tmp = await tmpdir({ git: true, config: { agent: { build: { permission: { "*": "allow" } } } } })
+    await using tmp = await tmpdir({ git: true, config: { agent: { maestro: { permission: { "*": "allow" } } } } })
     await prepareArsenalSDK(tmp.path, Global.Path.config)
     await AppRuntime.runPromise(Effect.scoped(Effect.gen(function* () {
       const instances = yield* InstanceStore.Service
       const instance = yield* instances.load({ directory: tmp.path })
       yield* Effect.gen(function* () {
         const sessions = yield* Session.Service
-        const session = yield* sessions.create({ agent: "build" })
+        const session = yield* sessions.create({ agent: "maestro" })
         const agents = yield* Agent.Service
-        const actor = yield* agents.get("build")
+        const actor = yield* agents.get("maestro")
         expect(Permission.evaluate("bash", "git push origin fixture", actor.permission).action).toBe("allow")
         const permissions = yield* Permission.Service
         const host = yield* ArsenalBindings.makeApprovalHost

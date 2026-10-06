@@ -20,7 +20,7 @@ const baseCtx: Omit<Tool.Context, "ask"> = {
   sessionID: SessionID.make("ses_test"),
   messageID: MessageID.make("msg_test"),
   callID: "",
-  agent: "build",
+  agent: "maestro",
   abort: AbortSignal.any([]),
   messages: [],
   metadata: () => Effect.void,
@@ -47,7 +47,7 @@ describe("tool.skill", () => {
       )
 
       const registry = yield* ToolRegistry.Service
-      const agent = { name: "build", mode: "primary" as const, permission: [], options: {} }
+      const agent = { name: "maestro", mode: "primary" as const, permission: [], options: {} }
       const tool = (yield* registry.tools({
         providerID: "opencode" as any,
         modelID: "gpt-5" as any,
@@ -60,7 +60,7 @@ describe("tool.skill", () => {
 
       const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
       const sessions = yield* Session.Service
-      const session = yield* sessions.create({ agent: "build" })
+      const session = yield* sessions.create({ agent: "maestro" })
       const ctx: Tool.Context = {
         ...baseCtx,
         sessionID: session.id,
@@ -111,7 +111,7 @@ Use this skill.
       )
 
       const registry = yield* ToolRegistry.Service
-      const agent = { name: "build", mode: "primary" as const, permission: [], options: {} }
+      const agent = { name: "maestro", mode: "primary" as const, permission: [], options: {} }
       const tool = (yield* registry.tools({
         providerID: "opencode" as any,
         modelID: "gpt-5" as any,
@@ -120,7 +120,7 @@ Use this skill.
       if (!tool) throw new Error("Skill tool not found")
 
       const sessions = yield* Session.Service
-      const session = yield* sessions.create({ agent: "build" })
+      const session = yield* sessions.create({ agent: "maestro" })
       const exit = yield* tool
         .execute(
           { name: "missing-skill" },

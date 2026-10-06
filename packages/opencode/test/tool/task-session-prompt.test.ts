@@ -71,7 +71,7 @@ const setup = Effect.fn("TaskSessionPromptTest.setup")(function* () {
     id: MessageID.ascending(),
     role: "user",
     sessionID: chat.id,
-    agent: "build",
+    agent: "maestro",
     model,
     time: { created: Date.now() },
   })
@@ -80,8 +80,8 @@ const setup = Effect.fn("TaskSessionPromptTest.setup")(function* () {
     role: "assistant",
     parentID: user.id,
     sessionID: chat.id,
-    mode: "build",
-    agent: "build",
+    mode: "maestro",
+    agent: "maestro",
     cost: 0,
     path: { cwd: "/tmp", root: "/tmp" },
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -104,7 +104,7 @@ const setup = Effect.fn("TaskSessionPromptTest.setup")(function* () {
     context: {
       sessionID: chat.id,
       messageID: assistant.id,
-      agent: "build",
+      agent: "maestro",
       abort: new AbortController().signal,
       extra: {
         bypassAgentCheck: true,

@@ -2299,13 +2299,10 @@ export type Config = {
   subagent_depth?: number
   username?: string
   mode?: {
-    build?: AgentConfig
-    plan?: AgentConfig
-    [key: string]: AgentConfig | undefined
+    [key: string]: AgentConfig
   }
   agent?: {
-    plan?: AgentConfig
-    build?: AgentConfig
+    maestro?: AgentConfig
     general?: AgentConfig
     explore?: AgentConfig
     title?: AgentConfig

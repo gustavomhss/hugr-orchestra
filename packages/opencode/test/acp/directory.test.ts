@@ -74,10 +74,10 @@ const snapshot = (directory: string) => {
     directory,
     providers,
     modes: [
-      { id: "build", name: `build-${directory}` },
-      { id: "plan", name: `plan-${directory}`, description: "plan first" },
+      { id: "maestro", name: `maestro-${directory}` },
+      { id: "reviewer", name: `reviewer-${directory}`, description: "review first" },
     ],
-    defaultModeID: "build",
+    defaultModeID: "maestro",
     commands: [command(`init-${directory}`), command(`review-${directory}`)],
     defaultModel: { providerID, modelID },
   })
@@ -162,10 +162,10 @@ describe("ACP directory snapshot", () => {
 
       expect(alpha.availableCommands.map((item) => item.name)).toEqual(["init-alpha", "review-alpha"])
       expect(alpha.availableModes).toEqual([
-        { id: "build", name: "build-alpha" },
-        { id: "plan", name: "plan-alpha", description: "plan first" },
+        { id: "maestro", name: "maestro-alpha" },
+        { id: "reviewer", name: "reviewer-alpha", description: "review first" },
       ])
-      expect(alpha.defaultModeID).toBe("build")
+      expect(alpha.defaultModeID).toBe("maestro")
     }).pipe(Effect.provide(fakeLayer([]))),
   )
 
@@ -176,13 +176,13 @@ describe("ACP directory snapshot", () => {
           directory: "alpha",
           providers: {},
           modes: [
-            { id: "build", name: "Build" },
-            { id: "plan", name: "Plan" },
+            { id: "maestro", name: "Maestro" },
+            { id: "reviewer", name: "Reviewer" },
           ],
           defaultModeID: "hidden",
           commands: [],
         }).defaultModeID,
-      ).toBe("build")
+      ).toBe("maestro")
     }),
   )
 })

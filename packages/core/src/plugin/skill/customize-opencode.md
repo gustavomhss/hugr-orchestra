@@ -269,14 +269,14 @@ Allowed top-level frontmatter fields: `name, model, variant, description, mode,
 hidden, color, steps, options, permission, disable, temperature, top_p`. Any
 unknown field is silently routed into `options`.
 
-To disable a built-in agent: `agent: { build: { disable: true } }`, or in a
+To disable a built-in agent: `agent: { explore: { disable: true } }`, or in a
 file, `disable: true` in frontmatter.
 
 `default_agent` must point to a non-hidden, primary-mode agent.
 
 ### Built-in agents
 
-opencode ships with `build`, `plan`, `general`, `explore`. Hidden internal agents:
+opencode ships with `maestro` (the default), `general`, `explore`. Hidden internal agents:
 `compaction`, `title`, `summary`. To override a built-in's fields, define the
 same key in `agent: { <name>: { ... } }`.
 
@@ -294,7 +294,7 @@ Frontmatter:
 ```markdown
 ---
 description: One sentence describing what the command does.
-agent: build
+agent: maestro
 model: anthropic/claude-sonnet-4-6
 ---
 
@@ -419,8 +419,7 @@ action, not a per-pattern object.
 `external_directory` patterns are filesystem paths (use `~/`, absolute paths,
 or globs like `~/projects/**`).
 
-Per-agent `permission:` overrides top-level `permission:`. Plan Mode lives on
-the `plan` agent's permission ruleset (`edit: deny *`).
+Per-agent `permission:` overrides top-level `permission:`.
 
 ## Escape hatches
 
