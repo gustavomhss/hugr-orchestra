@@ -15,6 +15,7 @@ import {
   CONDITION,
   type Flow,
   type FlowEdge,
+  type FlowNode,
   flowFromDocument,
   type Issue,
   issueNode,
@@ -66,7 +67,7 @@ export function CanvasTab(props: Props) {
   const base = () => layerBase(props.route)
   const step = (id: string) => props.run?.steps.find((item) => item.wp === id)
 
-  const overlay = (node: import("./graph").FlowNode): NodeOverlay | undefined => {
+  const overlay = (node: FlowNode): NodeOverlay | undefined => {
     if (props.test) return props.test.path.includes(node.id) ? undefined : { dim: true }
     if (!workflow() || !props.run || node.type === START) return
     const result = step(node.id)
@@ -95,7 +96,7 @@ export function CanvasTab(props: Props) {
       return { badge: "bad", subTone: "bad", sub: copy.t("orchestra.workflows.canvas.failed") }
     if (result.status === "running") return { badge: "run", sub: copy.t("orchestra.workflows.canvas.running") }
   }
-  const sub = (node: import("./graph").FlowNode) => {
+  const sub = (node: FlowNode) => {
     if (node.type === START)
       return copy.t("orchestra.workflows.canvas.budget", { count: Number(node.parameters.relayRetryBudget ?? 3) })
     if (node.type === TRIGGER)

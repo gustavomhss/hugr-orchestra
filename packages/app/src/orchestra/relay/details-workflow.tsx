@@ -1,4 +1,4 @@
-import { createSignal, For, Index, Show } from "solid-js"
+import { createEffect, createSignal, For, Index, type JSX, on, Show } from "solid-js"
 import type { RelayRun } from "./client"
 import { workflowKey } from "./catalog"
 import { CheckList } from "./checks"
@@ -31,7 +31,7 @@ type Props = {
   issues: string[]
   skills: string[]
   focusPhase?: string
-  save: import("solid-js").JSX.Element
+  save: JSX.Element
   onChange: (flow: Flow) => void
   onNav: (id: string) => void
   onClose: () => void
@@ -360,6 +360,14 @@ function StartOutput(props: Props) {
 function Params(props: Props) {
   const copy = useRelayCopy()
   const [nameError, setNameError] = createSignal(false)
+  // Walking to another node starts its name field clean.
+  createEffect(
+    on(
+      () => props.node.id,
+      () => setNameError(false),
+      { defer: true },
+    ),
+  )
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
   const rename = (value: string) => {

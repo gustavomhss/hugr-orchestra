@@ -1,4 +1,4 @@
-import { createSignal, For, Show } from "solid-js"
+import { createEffect, createSignal, For, type JSX, on, Show } from "solid-js"
 import type { RelayDecision, RelayNodeType } from "./client"
 import { Empty, NodeDetails, Rows, Switchable } from "./details"
 import {
@@ -53,7 +53,7 @@ type Props = {
   types: RelayNodeType[] | undefined
   decision: RelayDecision | undefined
   issues: string[]
-  save: import("solid-js").JSX.Element
+  save: JSX.Element
   onChange: (flow: Flow) => void
   onNav: (id: string) => void
   onClose: () => void
@@ -189,6 +189,14 @@ function Output(props: Props) {
 function Params(props: Props) {
   const copy = useRelayCopy()
   const [nameError, setNameError] = createSignal(false)
+  // Walking to another node starts its name field clean.
+  createEffect(
+    on(
+      () => props.node.id,
+      () => setNameError(false),
+      { defer: true },
+    ),
+  )
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
   const rename = (value: string) => {
