@@ -144,8 +144,6 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["5a2df5f95e6c6783322fcf59f39af317639f9fdec9ad1a704e4b9ad75661ea3a", ROSTER_V2],
   // Backend charter v2, before the v3a checks rule.
   ["8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", ROSTER_V2],
-  // Backend charter v3a, before v3c removed direct use.
-  ["d409ee796e265fb4f6ed0908bef20e2c5ac36b173231b7b86719ddd1d5e247f5", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],

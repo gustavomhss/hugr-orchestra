@@ -51,7 +51,7 @@ Write sets are disjoint inside a wave. Files near the godfile limit: `tool/task.
 | WP | Writes | Delivers | Tests |
 | --- | --- | --- | --- |
 | W3-RESUME | new `maestro/{atlas-resume,atlas-resume-restore}.ts`, `tool/task.ts` (`memoryUnit`), `session/compaction.ts` (one call) | Once-only resume fold admission and residency restore | new `test/tool/task-atlas-resume.test.ts`, `test/session/atlas-resume-compaction.test.ts` |
-| W3-CHARTER | `agent/prompt/backend.txt`, `specs/backend-specialist/charter-draft.md`, `maestro/validation-record.ts` (roster hash ledger), `skills/backend-implement/**` direct-use wording | Charter v3c = v3a without direct use (one caller, Maestro; prose in English) | `roster-hash.test.ts` pin, `native-seat-label.test.ts` prompt assertions |
+| W3-CHARTER | `agent/prompt/backend.txt`, `specs/backend-specialist/charter-draft.md`, `maestro/validation-record.ts` (roster hash ledger), `skills/backend-implement/**` direct-use wording | Charter v3c = v3a without direct use. Evaluated and not adopted (A8: opus 21/24 vs 23/24); v3a stays, its direct-use clauses dead | `roster-hash.test.ts` pin, `native-seat-label.test.ts` prompt assertions |
 | W3-EVAL | backend-bench `results/<campaign>/**` | Campaign `2026-10-06-n3` (v2 vs v3a, A6), then v3c n=3 on Claude before installing it, and the Go/pgx slice (A7) | report with per-cell k/3 |
 
 ## 4. Close
