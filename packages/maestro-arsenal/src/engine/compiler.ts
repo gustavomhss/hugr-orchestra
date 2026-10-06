@@ -87,7 +87,7 @@ export async function compile(request: CompilerRequest, context: ArsenalContext)
     return source === undefined ? undefined : compiler.createSourceFile(path, source, languageVersion, true);
   };
   host.writeFile = () => { throw new AcquisitionError("COMPILER_EMIT_FORBIDDEN", "noEmit boundary"); };
-  const roots = [...new Set([...(request.includeProject && configPath ? parsed.fileNames.map((file) => resolve(file)) : []), ...virtual.keys()])];
+  const roots = [...new Set([...(request.includeProject && configPath ? parsed.fileNames : []), ...virtual.keys()])];
   if (!roots.length) throw new AcquisitionError("COMPILER_EMPTY_INPUT", "no compilation roots");
   const diagnostics = await Promise.resolve().then(() => compiler.getPreEmitDiagnostics(compiler.createProgram(roots, options, host))).catch((error: unknown) => {
     if (error instanceof AcquisitionError) throw error;
