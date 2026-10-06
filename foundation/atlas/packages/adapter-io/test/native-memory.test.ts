@@ -43,11 +43,12 @@ const taskEntry = (taskId: string, tag: string): TaskMemoryEntry => ({
   stoppedAt: `s-${tag}`,
   lesson: `l-${tag}`,
 })
-const prEntry = (prId: string): PrMemoryEntry => ({
+const prEntry = (prId: string, tag = "x"): PrMemoryEntry => ({
   prId,
-  decisions: ["d"],
-  reviewOutcomes: ["r"],
-  knowledgeDelta: [],
+  decisions: [`d-${tag}`],
+  reviewOutcomes: [`r-${tag}`],
+  knowledgeDelta: [{ id: `k-${tag}` } as never],
+  ref: `pr-ref-${tag}`,
 })
 const rule = (text: string): ProjectMemoryEntry => ({ rule: text, scope: "*", frecency: 1 })
 
@@ -205,13 +206,27 @@ describe("clause 15 — exact fold resolution", () => {
     expect(mem.resolveFold(unit)).toMatchObject({ ok: false, refusal: "ambiguous" })
   })
 
-  it("a pr unit resolves to its exact record with no fold (the PrClosingFold projection is A2's)", () => {
+  it("a pr ref resolves to exactly { decisions, reviewOutcomes, knowledgeDelta } of the referenced record", () => {
     const mem = createNativeMemory(binding())
-    const w = mem.write(prEntry("P1"))
+    mem.write(prEntry("P1", "old"))
+    const w = mem.write(prEntry("P1", "new"))
     if (!w.ok) throw new Error(w.reason)
     const v = mem.resolveFold({ kind: "pr", id: "P1" }, w.ref)
-    expect(v).toMatchObject({ ok: true, record: w.record })
-    expect(v.ok && "fold" in v).toBe(false)
+    expect(v).toMatchObject({ ok: true, unit: { kind: "pr", id: "P1" }, ref: w.ref, record: w.record })
+    expect(v.ok && v.fold).toEqual({
+      decisions: ["d-new"],
+      reviewOutcomes: ["r-new"],
+      knowledgeDelta: [{ id: "k-new" }],
+    })
+  })
+
+  it("a pr unit without a receipt: one own record resolves, two are ambiguous", () => {
+    const mem = createNativeMemory(binding())
+    const unit = { kind: "pr" as const, id: "P1" }
+    mem.write(prEntry("P1", "one"))
+    expect(mem.resolveFold(unit)).toMatchObject({ ok: true, fold: { decisions: ["d-one"] } })
+    mem.write(prEntry("P1", "two"))
+    expect(mem.resolveFold(unit)).toMatchObject({ ok: false, refusal: "ambiguous" })
   })
 
   it("refuses store-partial when the ref is absent from a torn log, store-unavailable when unreadable", () => {

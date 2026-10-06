@@ -24,8 +24,7 @@ export type ClosingFold = Pick<TaskMemoryEntry, "attempted" | "failedWith" | "st
 
 /**
  * The `pr` closing fold (F3 clause 14; owner ruling F3-D2 keeps `knowledgeDelta`): the
- * `{ decisions, reviewOutcomes, knowledgeDelta }` projection of `PrMemoryEntry`. Type only — no projection
- * produces it yet; F3 work package A2 owns that semantics.
+ * `{ decisions, reviewOutcomes, knowledgeDelta }` projection of `PrMemoryEntry`, produced by `prClosingFold`.
  */
 export type PrClosingFold = Pick<PrMemoryEntry, "decisions" | "reviewOutcomes" | "knowledgeDelta">
 
@@ -132,6 +131,18 @@ export function taskClosingFold(t: TaskMemoryEntry): ClosingFold {
     failedWith: t.failedWith,
     stoppedAt: t.stoppedAt,
     lesson: t.lesson,
+  }
+}
+
+/**
+ * The `pr` closing-fold projection (F3 clause 14, owner ruling F3-D2): the `{ decisions, reviewOutcomes,
+ * knowledgeDelta }` `Pick` of a `PrMemoryEntry`. `prId` names the unit and `ref` is evidence, so neither is in it.
+ */
+export function prClosingFold(p: PrMemoryEntry): PrClosingFold {
+  return {
+    decisions: p.decisions,
+    reviewOutcomes: p.reviewOutcomes,
+    knowledgeDelta: p.knowledgeDelta,
   }
 }
 

@@ -31,8 +31,8 @@
 // unit id — it never consults `spawnFold`/`makeRespawn`, whose `archive.find` returns the FIRST own match in
 // log order, i.e. the OLDEST checkpoint. Without a ref (no host receipt, clause 16) exactly one own record
 // is selected; several refuse `ambiguous` (owner ruling F3-D3); log order is never read as "latest".
-// The `pr` projection (`PrClosingFold`, clause 14) belongs to work package A2 and does not exist yet: a `pr`
-// resolution returns the exact verified `record` and no `fold`.
+// The same rules hold for a `task` and a `pr` unit; only the projection differs (`taskClosingFold` /
+// `prClosingFold`, clause 14).
 //
 // ── ADMISSION CONCURRENCY, BOUNDED (clause 26, owner ruling F3-D8) ───────────────────────────────────────
 // Correct for ONE writer process per storage root. The emit door reads the incumbent/cap state, scans, then
@@ -41,7 +41,7 @@
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
 import { isAbsolute } from "node:path"
-import { put, taskClosingFold, tok, versioned } from "@atlas/memory"
+import { prClosingFold, put, taskClosingFold, tok, versioned } from "@atlas/memory"
 import type {
   Awareness,
   ClosingFold,
@@ -131,15 +131,14 @@ export type FoldRefusal =
   | "store-partial"
   | "store-unavailable"
   | "ambiguous"
-/** Clause 15. `fold` is present for a `task` unit; a `pr` unit carries no `PrClosingFold` until A2 projects one
- *  (see the header). */
+/** Clause 15. `fold` is the `ClosingFold` of a `task` unit and the `PrClosingFold` of a `pr` unit. */
 export type FoldVerdict =
   | {
       readonly ok: true
       readonly unit: ResumeUnit
       readonly ref: RecordRef
       readonly record: MemoryRecord
-      readonly fold?: ClosingFold | PrClosingFold
+      readonly fold: ClosingFold | PrClosingFold
     }
   | { readonly ok: false; readonly refusal: FoldRefusal; readonly reason: string }
 
@@ -217,8 +216,16 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       return refuse("foreign-owner", `record ${ref.eventId} belongs to '${record.owner}', not '${owner}'`)
     if (!isOwnUnit(record, unit))
       return refuse("unit-mismatch", `record ${ref.eventId} is not the ${unit.kind} '${unit.id}'`)
-    const base = { ok: true as const, unit: { kind: unit.kind, id: unit.id }, ref, record }
-    return unit.kind === "task" ? { ...base, fold: taskClosingFold(record.entry as TaskMemoryEntry) } : base
+    return {
+      ok: true,
+      unit: { kind: unit.kind, id: unit.id },
+      ref,
+      record,
+      fold:
+        unit.kind === "task"
+          ? taskClosingFold(record.entry as TaskMemoryEntry)
+          : prClosingFold(record.entry as PrMemoryEntry),
+    }
   }
 
   function isOwnUnit(record: MemoryRecord, unit: ResumeUnit): boolean {
