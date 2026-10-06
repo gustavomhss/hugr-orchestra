@@ -107,7 +107,6 @@ export const dict = {
   "command.category.terminal": "ޓާމިނަލް އެވެ",
   "command.category.model": "މޮޑެލް",
   "command.category.mcp": "MCP އެވެ",
-  "command.category.agent": "އޭޖެންޓު",
   "command.category.permissions": "ހުއްދަތައް",
   "command.category.workspace": "ވޯކްސްޕޭސް",
   "command.category.settings": "ސެޓިންގސް",
@@ -157,10 +156,6 @@ export const dict = {
   "command.model.choose.description": "ތަފާތު މޮޑެލްއެއް ހޮވާށެވެ",
   "command.mcp.toggle": "MCPs ޓޮގްލް ކުރާށެވެ",
   "command.mcp.toggle.description": "MCPs ޓޮގްލް ކުރާށެވެ",
-  "command.agent.cycle": "ސައިކަލް އޭޖެންޓެވެ",
-  "command.agent.cycle.description": "ދެން ހުރި އޭޖެންޓަކަށް ބަދަލުވާށެވެ",
-  "command.agent.cycle.reverse": "ސައިކަލް އޭޖެންޓް ފަހަތަށް",
-  "command.agent.cycle.reverse.description": "ކުރީގެ އޭޖެންޓަށް ބަދަލުވާށެވެ",
   "command.model.variant.cycle": "ސައިކަލް ވިސްނުމުގެ މަސައްކަތެވެ",
   "command.model.variant.cycle.description": "ދެން އޮންނަ މަސައްކަތުގެ ފެންވަރަށް ބަދަލުވާށެވެ",
   "command.prompt.mode.shell": "ޝެލް",
@@ -1022,9 +1017,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "ތިރީގައި ދަތުރުކުރުން",
   "settings.general.row.mobileTitlebarBottom.description":
     "މޯބައިލްގައި ސްކްރީންގެ ތިރީގައި ޓައިޓަލް ބާރ އާއި ސެޝަން ޓެބްތައް ބަހައްޓާށެވެ",
-  "settings.general.row.showCustomAgents.title": "ޝޯ އޭޖެންޓް",
-  "settings.general.row.showCustomAgents.description":
-    "ކޮމްޕޯސަރުގައި ތިބި އޭޖެންޓުންގެ މެދުގައި ބަދަލުވުން. ފޮރުވާއިރު، ޑިފޯލްޓް ވާނީ ބިލްޑް އޭޖެންޓަށެވެ.",
   "settings.general.row.reasoningSummaries.title": "ރިޒަނިންގ ސުމާރީސް ދައްކާށެވެ",
   "settings.general.row.reasoningSummaries.description": "ޓައިމްލައިންގައި މޮޑެލް ރިޒަނިންގ ސުމާރީތައް ދައްކާލުން",
   "settings.general.row.shellToolPartsExpanded.title": "ޝެލް ޓޫލް ބައިތައް ފުޅާކުރުން",

@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "Терминал",
   "command.category.model": "Модел",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Агент",
   "command.category.permissions": "дозволе",
   "command.category.workspace": "Радни простор",
   "command.category.settings": "Подешавања",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "Изаберите други модел",
   "command.mcp.toggle": "Пребаци MCPс",
   "command.mcp.toggle.description": "Пребаци MCPс",
-  "command.agent.cycle": "Следећи агент",
-  "command.agent.cycle.description": "Пребаците се на следећег агента",
-  "command.agent.cycle.reverse": "Претходни агент",
-  "command.agent.cycle.reverse.description": "Пребаците се на претходног агента",
   "command.model.variant.cycle": "Следећи ниво размишљања",
   "command.model.variant.cycle.description": "Пребаците се на следећи ниво напора",
   "command.prompt.mode.shell": "Shell",
@@ -1010,9 +1005,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Доња навигација",
   "settings.general.row.mobileTitlebarBottom.description":
     "Поставите насловну траку и картице сесије на дно екрана на мобилном телефону",
-  "settings.general.row.showCustomAgents.title": "Прикажи агента",
-  "settings.general.row.showCustomAgents.description":
-    "Пребацивање између агената у композитору. Када је скривено, подразумевано је Буилд агент.",
   "settings.general.row.reasoningSummaries.title": "Прикажи резимее образложења",
   "settings.general.row.reasoningSummaries.description": "Приказ резимеа образложења модела на временској линији",
   "settings.general.row.shellToolPartsExpanded.title": "Проширите shell делова алата",

@@ -16,7 +16,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Modell",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Berechtigungen",
   "command.category.workspace": "Arbeitsbereich",
   "command.category.settings": "Einstellungen",
@@ -65,10 +64,6 @@ export const dict = {
   "command.model.choose.description": "Ein anderes Modell auswählen",
   "command.mcp.toggle": "MCPs umschalten",
   "command.mcp.toggle.description": "MCPs umschalten",
-  "command.agent.cycle": "Agent wechseln",
-  "command.agent.cycle.description": "Zum nächsten Agenten wechseln",
-  "command.agent.cycle.reverse": "Agent rückwärts wechseln",
-  "command.agent.cycle.reverse.description": "Zum vorherigen Agenten wechseln",
   "command.model.variant.cycle": "Denkaufwand wechseln",
   "command.model.variant.cycle.description": "Zum nächsten Aufwandslevel wechseln",
   "command.prompt.mode.shell": "Shell",
@@ -824,9 +819,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigation unten",
   "settings.general.row.mobileTitlebarBottom.description":
     "Titelleiste und Sitzungs-Tabs auf Mobilgeräten am unteren Bildschirmrand platzieren",
-  "settings.general.row.showCustomAgents.title": "Agent anzeigen",
-  "settings.general.row.showCustomAgents.description":
-    "Im Eingabebereich zwischen Agenten wechseln. Ist die Auswahl ausgeblendet, wird standardmäßig der Build-Agent verwendet.",
   "settings.general.row.reasoningSummaries.title": "Reasoning-Zusammenfassungen anzeigen",
   "settings.general.row.reasoningSummaries.description":
     "Zusammenfassungen des Modell-Reasonings in der Timeline anzeigen",

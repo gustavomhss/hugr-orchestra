@@ -105,7 +105,6 @@ export const dict: Record<string, string> = {
   "command.category.terminal": "टर्मिनल",
   "command.category.model": "मोडेल",
   "command.category.mcp": "MCP",
-  "command.category.agent": "एजेन्ट",
   "command.category.permissions": "अनुमतिहरू",
   "command.category.workspace": "कार्यस्थान",
   "command.category.settings": "सेटिङहरू",
@@ -155,10 +154,6 @@ export const dict: Record<string, string> = {
   "command.model.choose.description": "फरक मोडेल चयन गर्नुहोस्",
   "command.mcp.toggle": "MCPs टगल गर्नुहोस्",
   "command.mcp.toggle.description": "MCPs टगल गर्नुहोस्",
-  "command.agent.cycle": "साइकल एजेन्ट",
-  "command.agent.cycle.description": "अर्को एजेन्टमा स्विच गर्नुहोस्",
-  "command.agent.cycle.reverse": "साइकल एजेन्ट पछाडि",
-  "command.agent.cycle.reverse.description": "अघिल्लो एजेन्टमा स्विच गर्नुहोस्",
   "command.model.variant.cycle": "साइकल सोच प्रयास",
   "command.model.variant.cycle.description": "अर्को प्रयास स्तरमा स्विच गर्नुहोस्",
   "command.prompt.mode.shell": "शेल",
@@ -1006,9 +1001,6 @@ export const dict: Record<string, string> = {
   "settings.general.row.mobileTitlebarBottom.title": "तल्लो नेभिगेसन",
   "settings.general.row.mobileTitlebarBottom.description":
     "मोबाइलमा स्क्रिनको फेदमा शीर्षक पट्टी र सत्र ट्याबहरू राख्नुहोस्",
-  "settings.general.row.showCustomAgents.title": "एजेन्ट देखाउनुहोस्",
-  "settings.general.row.showCustomAgents.description":
-    "कम्पोजरमा एजेन्टहरू बीच स्विच गर्नुहोस्। लुकेको बेला, बिल्ड एजेन्टमा पूर्वनिर्धारित हुन्छ।",
   "settings.general.row.reasoningSummaries.title": "तर्क सारांशहरू देखाउनुहोस्",
   "settings.general.row.reasoningSummaries.description": "टाइमलाइनमा मोडेल तर्क सारांशहरू प्रदर्शन गर्नुहोस्",
   "settings.general.row.shellToolPartsExpanded.title": "शेल उपकरणका भागहरू विस्तार गर्नुहोस्",

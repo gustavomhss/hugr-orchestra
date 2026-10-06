@@ -112,7 +112,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Modelo",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agente",
   "command.category.permissions": "Permisos",
   "command.category.workspace": "Espacio de trabajo",
   "command.category.settings": "Ajustes",
@@ -168,10 +167,6 @@ export const dict = {
   "command.model.choose.description": "Seleccionar un modelo diferente",
   "command.mcp.toggle": "Activar o desactivar servidores MCP",
   "command.mcp.toggle.description": "Activar o desactivar servidores MCP",
-  "command.agent.cycle": "Cambiar de agente",
-  "command.agent.cycle.description": "Cambiar al siguiente agente",
-  "command.agent.cycle.reverse": "Cambiar al agente anterior",
-  "command.agent.cycle.reverse.description": "Cambiar al agente anterior",
   "command.model.variant.cycle": "Cambiar esfuerzo de razonamiento",
   "command.model.variant.cycle.description": "Cambiar al siguiente nivel de esfuerzo",
   "command.prompt.mode.shell": "Shell",
@@ -1001,9 +996,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navegación inferior",
   "settings.general.row.mobileTitlebarBottom.description":
     "Colocar la barra de título y las pestañas de sesión en la parte inferior de la pantalla en dispositivos móviles",
-  "settings.general.row.showCustomAgents.title": "Mostrar agente",
-  "settings.general.row.showCustomAgents.description":
-    "Cambiar de agente en el editor. Si se oculta, se usa el agente Build de forma predeterminada.",
   "settings.general.row.reasoningSummaries.title": "Mostrar resúmenes de razonamiento",
   "settings.general.row.reasoningSummaries.description":
     "Mostrar resúmenes del razonamiento del modelo en la línea de tiempo",

@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Dovoljenja",
   "command.category.workspace": "Delovni prostor",
   "command.category.settings": "nastavitve",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Izberite drug model",
   "command.mcp.toggle": "Preklop MCP-jev",
   "command.mcp.toggle.description": "Preklop MCP-jev",
-  "command.agent.cycle": "Naslednji agent",
-  "command.agent.cycle.description": "Preklopite na naslednjega agenta",
-  "command.agent.cycle.reverse": "Prejšnji agent",
-  "command.agent.cycle.reverse.description": "Preklopite na prejšnjega agenta",
   "command.model.variant.cycle": "Naslednja raven razmišljanja",
   "command.model.variant.cycle.description": "Preklopite na naslednjo stopnjo napora",
   "command.prompt.mode.shell": "školjka",
@@ -1011,9 +1006,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Spodnja navigacija",
   "settings.general.row.mobileTitlebarBottom.description":
     "Postavite naslovno vrstico in zavihke seje na dno zaslona mobilne naprave",
-  "settings.general.row.showCustomAgents.title": "Razstavni agent",
-  "settings.general.row.showCustomAgents.description":
-    "Preklapljanje med agenti v skladatelju. Ko je skrit, je privzeto nastavljen na Build agent.",
   "settings.general.row.reasoningSummaries.title": "Prikažite povzetke sklepanja",
   "settings.general.row.reasoningSummaries.description": "Prikažite povzetke sklepanja modela na časovnici",
   "settings.general.row.shellToolPartsExpanded.title": "Razširite dele orodja lupine",

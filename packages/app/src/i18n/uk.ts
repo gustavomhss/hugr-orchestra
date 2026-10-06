@@ -112,7 +112,6 @@ export const dict = {
   "command.category.terminal": "Термінал",
   "command.category.model": "Модель",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Агент",
   "command.category.permissions": "Дозволи",
   "command.category.workspace": "Робоча область",
   "command.category.settings": "Налаштування",
@@ -168,10 +167,6 @@ export const dict = {
   "command.model.choose.description": "Вибрати іншу модель",
   "command.mcp.toggle": "Перемкнути MCP",
   "command.mcp.toggle.description": "Перемкнути MCP",
-  "command.agent.cycle": "Перемкнути агента",
-  "command.agent.cycle.description": "Перемкнути на наступного агента",
-  "command.agent.cycle.reverse": "Перемкнути агента в зворотному напрямку",
-  "command.agent.cycle.reverse.description": "Перемкнути на попереднього агента",
   "command.model.variant.cycle": "Перемкнути рівень мислення",
   "command.model.variant.cycle.description": "Перемкнути на наступний рівень зусилля",
   "command.prompt.mode.shell": "Команда",
@@ -1103,9 +1098,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Нижня навігація",
   "settings.general.row.mobileTitlebarBottom.description":
     "Розмістити панель заголовка та вкладки сесії внизу екрана на мобільних пристроях",
-  "settings.general.row.showCustomAgents.title": "Показувати агента",
-  "settings.general.row.showCustomAgents.description":
-    "Перемикатися між агентами в редакторі запиту. Якщо приховано, типовим є агент Build.",
   "settings.general.row.reasoningSummaries.title": "Показувати підсумки мислення",
   "settings.general.row.reasoningSummaries.description": "Відображати підсумки мислення моделі на часовій шкалі",
   "settings.general.row.shellToolPartsExpanded.title": "Розгортати частини інструменту оболонки",

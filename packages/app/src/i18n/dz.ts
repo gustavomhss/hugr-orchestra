@@ -107,7 +107,6 @@ export const dict: Record<string, string> = {
   "command.category.terminal": "ཊར་མི་ནཱལ།",
   "command.category.model": "དཔེ་ཚད།",
   "command.category.mcp": "MCP།",
-  "command.category.agent": "ལས་ཚབ།",
   "command.category.permissions": "གནང་བ་ཚུ།",
   "command.category.workspace": "ལཱ་གི་ས་སྒོ།",
   "command.category.settings": "སྒྲིག་སྟངས་ཚུ།",
@@ -157,10 +156,6 @@ export const dict: Record<string, string> = {
   "command.model.choose.description": "དཔེ་ཚད་སོ་སོ་ཅིག་སེལ་འཐུ་འབད།",
   "command.mcp.toggle": "MCPsསོར་སྟོན་འབད།",
   "command.mcp.toggle.description": "MCPsསོར་སྟོན་འབད།",
-  "command.agent.cycle": "ལས་ཚབ་ཤུལ་མམ།",
-  "command.agent.cycle.description": "ཤུལ་མམ་གྱི་ལས་ཚབ་ལུ་སོར་བསྒྱུར་འབད།",
-  "command.agent.cycle.reverse": "རྐང་འཁོར་ལས་ཚབ་རྒྱབ་ལུ་བསྒྱུར།",
-  "command.agent.cycle.reverse.description": "ཧེ་མའི་ལས་ཚབ་ལུ་སོར་བསྒྱུར་འབད།",
   "command.model.variant.cycle": "འཁོར་སྐྱོད་བསམ་བློའི་འབད་བརྩོན།",
   "command.model.variant.cycle.description": "འབད་བརྩོན་གནས་རིམ་ཤུལ་མམ་ལུ་སོར་བསྒྱུར་འབད།",
   "command.prompt.mode.shell": "Shell",
@@ -1025,9 +1020,6 @@ export const dict: Record<string, string> = {
   "settings.general.row.mobileTitlebarBottom.title": "འོག་གི་འགྲུལ་བསྐྱོད།",
   "settings.general.row.mobileTitlebarBottom.description":
     "མོ་བཱ་ཡེལ་གུ་ གསལ་གཞི་གི་མཇུག་ལུ་ མགོ་མིང་ཕྲ་རིང་དང་ ལཱ་ཡུན་མཆོང་ལྡེ་ཚུ་བཙུགས།",
-  "settings.general.row.showCustomAgents.title": "ལས་ཚབ་སྟོན།",
-  "settings.general.row.showCustomAgents.description":
-    "བརྩམ་མི་ནང་ལུ་ ལས་ཚབ་ཚུ་གི་བར་ན་ སོར་བསྒྱུར་འབད། སྦ་བཞག་པའི་སྐབས་ བཟོ་བསྐྲུན་ལས་ཚབ་ལུ་སྔོན་སྒྲིག་འབདཝ་ཨིན།",
   "settings.general.row.reasoningSummaries.title": "རྒྱུ་མཚན་བཅུད་བསྡུས་ཚུ་སྟོན།",
   "settings.general.row.reasoningSummaries.description":
     "དུས་ཚོད་གྲལ་ཐིག་ནང་དཔེ་ཚད་དོན་དག་བཅུད་བསྡུས་ཚུ་བཀྲམ་སྟོན་འབད།",

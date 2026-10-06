@@ -12,7 +12,6 @@ export const dict = {
   "command.category.terminal": "Terminale",
   "command.category.model": "Modello",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agente",
   "command.category.permissions": "Autorizzazioni",
   "command.category.workspace": "Area di lavoro",
   "command.category.settings": "Impostazioni",
@@ -62,10 +61,6 @@ export const dict = {
   "command.model.choose.description": "Seleziona un modello diverso",
   "command.mcp.toggle": "Attiva o disattiva gli MCP",
   "command.mcp.toggle.description": "Attiva o disattiva gli MCP",
-  "command.agent.cycle": "Cambia agente",
-  "command.agent.cycle.description": "Passa all'agente successivo",
-  "command.agent.cycle.reverse": "Cambia agente all'indietro",
-  "command.agent.cycle.reverse.description": "Passa all'agente precedente",
   "command.model.variant.cycle": "Cambia livello di ragionamento",
   "command.model.variant.cycle.description": "Passa al livello di ragionamento successivo",
   "command.prompt.mode.shell": "Shell",
@@ -929,9 +924,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigazione in basso",
   "settings.general.row.mobileTitlebarBottom.description":
     "Posiziona la barra del titolo e le schede della sessione nella parte inferiore dello schermo sul dispositivo mobile",
-  "settings.general.row.showCustomAgents.title": "Mostra agente",
-  "settings.general.row.showCustomAgents.description":
-    "Passa da un agente all'altro nel campo di composizione. Se nascosto, viene usato l'agente Build.",
   "settings.general.row.reasoningSummaries.title": "Mostra riassunti del ragionamento",
   "settings.general.row.reasoningSummaries.description":
     "Visualizza i riepiloghi del ragionamento del modello nella sequenza temporale",

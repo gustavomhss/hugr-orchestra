@@ -116,7 +116,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Ajan",
   "command.category.permissions": "İzinler",
   "command.category.workspace": "Çalışma Alanı",
   "command.category.settings": "Ayarlar",
@@ -172,10 +171,6 @@ export const dict = {
   "command.model.choose.description": "Farklı bir model seç",
   "command.mcp.toggle": "MCP'leri aç/kapat",
   "command.mcp.toggle.description": "MCP'leri aç/kapat",
-  "command.agent.cycle": "Ajan değiştir",
-  "command.agent.cycle.description": "Sonraki ajana geç",
-  "command.agent.cycle.reverse": "Ajanı geri değiştir",
-  "command.agent.cycle.reverse.description": "Önceki ajana geç",
   "command.model.variant.cycle": "Düşünme eforu değiştir",
   "command.model.variant.cycle.description": "Sonraki efor seviyesine geç",
   "command.prompt.mode.shell": "Kabuk",
@@ -1001,9 +996,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Alt gezinme",
   "settings.general.row.mobileTitlebarBottom.description":
     "Mobil cihazlarda başlık çubuğunu ve oturum sekmelerini ekranın altına yerleştir",
-  "settings.general.row.showCustomAgents.title": "Ajanı göster",
-  "settings.general.row.showCustomAgents.description":
-    "Düzenleyicide ajanlar arasında geçiş yapın. Gizlendiğinde varsayılan olarak Build ajanı kullanılır.",
   "settings.general.row.reasoningSummaries.title": "Akıl yürütme özetlerini göster",
   "settings.general.row.reasoningSummaries.description": "Zaman çizelgesinde model akıl yürütme özetlerini görüntüle",
   "settings.general.row.shellToolPartsExpanded.title": "Kabuk araç bileşenlerini genişlet",

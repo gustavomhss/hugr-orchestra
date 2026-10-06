@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Терминал",
   "command.category.model": "Загвар",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Агент",
   "command.category.permissions": "Зөвшөөрөл",
   "command.category.workspace": "Ажлын талбар",
   "command.category.settings": "Тохиргоо",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "Өөр загвар сонгоно уу",
   "command.mcp.toggle": "MCPс сэлгэх",
   "command.mcp.toggle.description": "MCPс сэлгэх",
-  "command.agent.cycle": "Циклийн агент",
-  "command.agent.cycle.description": "Дараагийн агент руу шилжих",
-  "command.agent.cycle.reverse": "Агентийг арагш эргүүлэх",
-  "command.agent.cycle.reverse.description": "Өмнөх агент руу шилжих",
   "command.model.variant.cycle": "Цикл сэтгэх хүчин чармайлт",
   "command.model.variant.cycle.description": "Дараагийн хүчин чармайлтын түвшинд шилжинэ",
   "command.prompt.mode.shell": "Shell",
@@ -1016,9 +1011,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Доод навигаци",
   "settings.general.row.mobileTitlebarBottom.description":
     "Гар утасны дэлгэцийн доод хэсэгт гарчгийн мөр болон сешн табуудыг байрлуул",
-  "settings.general.row.showCustomAgents.title": "Агентийг харуулах",
-  "settings.general.row.showCustomAgents.description":
-    "Хөгжмийн зохиолч дахь агентуудын хооронд шилжих. Нуусан үед өгөгдмөл нь Build agent.",
   "settings.general.row.reasoningSummaries.title": "Шалтгаануудын хураангуйг харуул",
   "settings.general.row.reasoningSummaries.description": "Загварын үндэслэлийн хураангуйг цагийн хуваарьт харуул",
   "settings.general.row.shellToolPartsExpanded.title": "shell хэрэгслийн хэсгүүдийг өргөжүүлэх",

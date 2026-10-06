@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminál",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Oprávnenia",
   "command.category.workspace": "Pracovný priestor",
   "command.category.settings": "Nastavenia",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Vybrať iný model",
   "command.mcp.toggle": "Prepnúť MCP",
   "command.mcp.toggle.description": "Prepnúť MCP",
-  "command.agent.cycle": "Prepnúť agenta",
-  "command.agent.cycle.description": "Prepnúť na ďalšieho agenta",
-  "command.agent.cycle.reverse": "Prepnúť agenta späť",
-  "command.agent.cycle.reverse.description": "Prepnúť na predchádzajúceho agenta",
   "command.model.variant.cycle": "Prepnúť úroveň premýšľania",
   "command.model.variant.cycle.description": "Prepnúť na ďalšiu úroveň úsilia",
   "command.prompt.mode.shell": "Shell",
@@ -1010,9 +1005,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Spodná navigácia",
   "settings.general.row.mobileTitlebarBottom.description":
     "Umiestniť panel s názvom a karty relácií na spodok obrazovky v mobile",
-  "settings.general.row.showCustomAgents.title": "Zobraziť agenta",
-  "settings.general.row.showCustomAgents.description":
-    "Prepínať medzi agentmi v editore. Ak je skryté, predvolený je Build agent.",
   "settings.general.row.reasoningSummaries.title": "Zobraziť súhrny uvažovania",
   "settings.general.row.reasoningSummaries.description": "Zobrazovať súhrny uvažovania modelu v časovej osi",
   "settings.general.row.shellToolPartsExpanded.title": "Rozbaliť časti shell nástroja",

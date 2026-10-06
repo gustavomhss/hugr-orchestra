@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Modell",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Behörigheter",
   "command.category.workspace": "Arbetsyta",
   "command.category.settings": "Inställningar",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "Välj en annan modell",
   "command.mcp.toggle": "Växla MCP:er",
   "command.mcp.toggle.description": "Växla MCP:er",
-  "command.agent.cycle": "Växla agent",
-  "command.agent.cycle.description": "Byt till nästa agent",
-  "command.agent.cycle.reverse": "Växla agent bakåt",
-  "command.agent.cycle.reverse.description": "Byt till föregående agent",
   "command.model.variant.cycle": "Växla resonemangsnivå",
   "command.model.variant.cycle.description": "Växla till nästa resonemangsnivå",
   "command.prompt.mode.shell": "Shell",
@@ -1011,9 +1006,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Bottennavigering",
   "settings.general.row.mobileTitlebarBottom.description":
     "Placera titelfältet och sessionsflikarna längst ned på skärmen på mobilen",
-  "settings.general.row.showCustomAgents.title": "Visa agent",
-  "settings.general.row.showCustomAgents.description":
-    "Växla mellan agenter i inmatningsfältet. När alternativet är dolt används agenten Bygg som standard.",
   "settings.general.row.reasoningSummaries.title": "Visa resonemangssammanfattningar",
   "settings.general.row.reasoningSummaries.description": "Visa modellresonemangssammanfattningar i tidslinjen",
   "settings.general.row.shellToolPartsExpanded.title": "Expandera skalverktygsdelar",

@@ -108,7 +108,6 @@ export const dict = {
   "command.category.terminal": "Skjáhermir",
   "command.category.model": "Líkan",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Fulltrúi",
   "command.category.permissions": "Heimildir",
   "command.category.workspace": "Vinnurými",
   "command.category.settings": "Stillingar",
@@ -158,10 +157,6 @@ export const dict = {
   "command.model.choose.description": "Veldu aðra gerð",
   "command.mcp.toggle": "Skiptu um MCPs",
   "command.mcp.toggle.description": "Skiptu um MCPs",
-  "command.agent.cycle": "Skipta um fulltrúa",
-  "command.agent.cycle.description": "Skiptu yfir í næsta fulltrúa",
-  "command.agent.cycle.reverse": "Skipta yfir í fyrri fulltrúa",
-  "command.agent.cycle.reverse.description": "Skiptu yfir í fyrri fulltrúa",
   "command.model.variant.cycle": "Hringrásarhugsunarátak",
   "command.model.variant.cycle.description": "Skiptu yfir á næsta átaksstig",
   "command.prompt.mode.shell": "Skel",
@@ -1008,9 +1003,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Botnleiðsögn",
   "settings.general.row.mobileTitlebarBottom.description":
     "Settu titilstikuna og lotuflipana neðst á skjánum á farsímanum",
-  "settings.general.row.showCustomAgents.title": "Sýna fulltrúa",
-  "settings.general.row.showCustomAgents.description":
-    "Skiptu á milli fulltrúa í innsláttarreitnum. Þegar þeir eru faldir er Build-fulltrúinn sjálfgefinn.",
   "settings.general.row.reasoningSummaries.title": "Sýndu samantektir um rökstuðning",
   "settings.general.row.reasoningSummaries.description": "Birta rökstuðningssamantektir líkana á tímalínunni",
   "settings.general.row.shellToolPartsExpanded.title": "Stækkaðu hluta skeljaverkfæra",

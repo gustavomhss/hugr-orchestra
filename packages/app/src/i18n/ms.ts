@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Ejen",
   "command.category.permissions": "Kebenaran",
   "command.category.workspace": "Ruang kerja",
   "command.category.settings": "Tetapan",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Pilih model lain",
   "command.mcp.toggle": "Togol MCP",
   "command.mcp.toggle.description": "Togol MCP",
-  "command.agent.cycle": "Pusing ejen",
-  "command.agent.cycle.description": "Tukar ke ejen seterusnya",
-  "command.agent.cycle.reverse": "Pusing ejen ke belakang",
-  "command.agent.cycle.reverse.description": "Tukar ke ejen sebelumnya",
   "command.model.variant.cycle": "Pusing tahap usaha",
   "command.model.variant.cycle.description": "Tukar ke tahap usaha seterusnya",
   "command.prompt.mode.shell": "Shell",
@@ -1006,9 +1001,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigasi bawah",
   "settings.general.row.mobileTitlebarBottom.description":
     "Letakkan bar tajuk dan tab sesi di bahagian bawah skrin pada peranti mudah alih",
-  "settings.general.row.showCustomAgents.title": "Papar ejen",
-  "settings.general.row.showCustomAgents.description":
-    "Tukar antara ejen dalam penyusun. Jika disembunyikan, lalai kepada ejen Build.",
   "settings.general.row.reasoningSummaries.title": "Papar ringkasan penaakulan",
   "settings.general.row.reasoningSummaries.description": "Papar ringkasan penaakulan model dalam garis masa",
   "settings.general.row.shellToolPartsExpanded.title": "Kembangkan bahagian alat shell",

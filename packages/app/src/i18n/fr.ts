@@ -112,7 +112,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Modèle",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Permissions",
   "command.category.workspace": "Espace de travail",
   "command.category.settings": "Paramètres",
@@ -162,10 +161,6 @@ export const dict = {
   "command.model.choose.description": "Sélectionner un modèle différent",
   "command.mcp.toggle": "Activer ou désactiver les MCP",
   "command.mcp.toggle.description": "Activer ou désactiver les MCP",
-  "command.agent.cycle": "Changer d'agent",
-  "command.agent.cycle.description": "Passer à l'agent suivant",
-  "command.agent.cycle.reverse": "Changer d'agent (inverse)",
-  "command.agent.cycle.reverse.description": "Passer à l'agent précédent",
   "command.model.variant.cycle": "Changer l'effort de réflexion",
   "command.model.variant.cycle.description": "Passer au niveau d'effort suivant",
   "command.prompt.mode.shell": "Shell",
@@ -938,8 +933,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigation en bas",
   "settings.general.row.mobileTitlebarBottom.description":
     "Placer la barre de titre et les onglets de session en bas de l'écran sur mobile",
-  "settings.general.row.showCustomAgents.title": "Agents personnalisés",
-  "settings.general.row.showCustomAgents.description": "Afficher le sélecteur d'agent dans la zone de saisie",
   "settings.general.row.reasoningSummaries.title": "Afficher les résumés de raisonnement",
   "settings.general.row.reasoningSummaries.description":
     "Afficher les résumés de raisonnement du modèle dans la chronologie",

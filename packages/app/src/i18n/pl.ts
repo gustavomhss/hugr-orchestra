@@ -111,7 +111,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Uprawnienia",
   "command.category.workspace": "Przestrzeń robocza",
   "command.category.settings": "Ustawienia",
@@ -161,10 +160,6 @@ export const dict = {
   "command.model.choose.description": "Wybierz inny model",
   "command.mcp.toggle": "Przełącz MCP",
   "command.mcp.toggle.description": "Przełącz MCP",
-  "command.agent.cycle": "Przełącz agenta",
-  "command.agent.cycle.description": "Przełącz na następnego agenta",
-  "command.agent.cycle.reverse": "Przełącz agenta wstecz",
-  "command.agent.cycle.reverse.description": "Przełącz na poprzedniego agenta",
   "command.model.variant.cycle": "Przełącz wysiłek myślowy",
   "command.model.variant.cycle.description": "Przełącz na następny poziom wysiłku",
   "command.prompt.mode.shell": "Terminal",
@@ -932,9 +927,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Dolna nawigacja",
   "settings.general.row.mobileTitlebarBottom.description":
     "Umieść pasek tytułu i karty sesji u dołu ekranu na urządzeniach mobilnych",
-  "settings.general.row.showCustomAgents.title": "Wybór agenta",
-  "settings.general.row.showCustomAgents.description":
-    "Umożliwiaj przełączanie agentów w edytorze wiadomości. Po ukryciu domyślnie używany jest agent Build.",
   "settings.general.row.reasoningSummaries.title": "Pokaż podsumowania wnioskowania",
   "settings.general.row.reasoningSummaries.description": "Wyświetlaj podsumowania wnioskowania modelu na osi czasu",
   "settings.general.row.shellToolPartsExpanded.title": "Rozwijaj elementy narzędzia shell",

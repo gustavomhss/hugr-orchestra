@@ -112,7 +112,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Modelo",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agente",
   "command.category.permissions": "Permissões",
   "command.category.workspace": "Espaço de trabalho",
   "command.category.settings": "Configurações",
@@ -162,10 +161,6 @@ export const dict = {
   "command.model.choose.description": "Selecionar um modelo diferente",
   "command.mcp.toggle": "Alternar MCPs",
   "command.mcp.toggle.description": "Alternar MCPs",
-  "command.agent.cycle": "Alternar agente",
-  "command.agent.cycle.description": "Mudar para o próximo agente",
-  "command.agent.cycle.reverse": "Alternar agente (reverso)",
-  "command.agent.cycle.reverse.description": "Mudar para o agente anterior",
   "command.model.variant.cycle": "Alternar nível de raciocínio",
   "command.model.variant.cycle.description": "Mudar para o próximo nível de esforço",
   "command.prompt.mode.shell": "Shell",
@@ -931,9 +926,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navegação inferior",
   "settings.general.row.mobileTitlebarBottom.description":
     "Posicionar a barra de título e as abas da sessão na parte inferior da tela em dispositivos móveis",
-  "settings.general.row.showCustomAgents.title": "Mostrar agente",
-  "settings.general.row.showCustomAgents.description":
-    "Alternar entre agentes na área de composição. Quando oculto, usa o agente Build como padrão.",
   "settings.general.row.reasoningSummaries.title": "Mostrar resumos de raciocínio",
   "settings.general.row.reasoningSummaries.description": "Exibir resumos de raciocínio do modelo na linha do tempo",
   "settings.general.row.shellToolPartsExpanded.title": "Expandir partes da ferramenta shell",

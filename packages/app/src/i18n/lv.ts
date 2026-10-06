@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminālis",
   "command.category.model": "Modelis",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Aģents",
   "command.category.permissions": "Atļaujas",
   "command.category.workspace": "Darbtelpa",
   "command.category.settings": "Iestatījumi",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Izvēlieties citu modeli",
   "command.mcp.toggle": "Pārslēgt MCP",
   "command.mcp.toggle.description": "Pārslēgt MCP",
-  "command.agent.cycle": "Mainīt aģentu",
-  "command.agent.cycle.description": "Pārslēgt uz nākamo aģentu",
-  "command.agent.cycle.reverse": "Mainīt aģentu atpakaļ",
-  "command.agent.cycle.reverse.description": "Pārslēgt uz iepriekšējo aģentu",
   "command.model.variant.cycle": "Mainīt domāšanas līmeni",
   "command.model.variant.cycle.description": "Pārslēgt uz nākamo līmeni",
   "command.prompt.mode.shell": "Čaula",
@@ -1012,9 +1007,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Apakšējā navigācija",
   "settings.general.row.mobileTitlebarBottom.description":
     "Rādīt virsraksta joslu un sesiju cilnes ekrāna apakšā mobilajās ierīcēs",
-  "settings.general.row.showCustomAgents.title": "Rādīt aģentu",
-  "settings.general.row.showCustomAgents.description":
-    "Pārslēgties starp aģentiem redaktorā. Ja paslēpts, tiek izmantots Build aģents.",
   "settings.general.row.reasoningSummaries.title": "Rādīt pamatojuma kopsavilkumus",
   "settings.general.row.reasoningSummaries.description": "Rādīt modeļa pamatojuma kopsavilkumus laika joslā",
   "settings.general.row.shellToolPartsExpanded.title": "Izvērst čaulas rīka daļas",

@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Farstøð",
   "command.category.model": "Fyrimynd",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agentur",
   "command.category.permissions": "Loyvi",
   "command.category.workspace": "Workspace",
   "command.category.settings": "Innstillingar",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Vel eitt annað modell",
   "command.mcp.toggle": "Skift MCPs",
   "command.mcp.toggle.description": "Skift MCPs",
-  "command.agent.cycle": "Næsti agentur",
-  "command.agent.cycle.description": "Skift til næsta agent",
-  "command.agent.cycle.reverse": "Fyrri agentur",
-  "command.agent.cycle.reverse.description": "Skift til fyrra agent",
   "command.model.variant.cycle": "Átak í súkkluhugsan",
   "command.model.variant.cycle.description": "Skift til næsta átaksstig",
   "command.prompt.mode.shell": "Shell",
@@ -1005,9 +1000,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigatión niðast",
   "settings.general.row.mobileTitlebarBottom.description":
     "Set tittullinjuna og setufliparnar niðast á skerminum á fartelefonini",
-  "settings.general.row.showCustomAgents.title": "Vís agentar",
-  "settings.general.row.showCustomAgents.description":
-    "Skift millum agentar í tónaskaldinum. Tá ið tað er fjalt, er tað forsett til Build agent.",
   "settings.general.row.reasoningSummaries.title": "Vís grundgevingarsamantektir",
   "settings.general.row.reasoningSummaries.description": "Vís modellgrundgevingarsamantektir í tíðarlinjuni",
   "settings.general.row.shellToolPartsExpanded.title": "Víðka shell-tólpartar",

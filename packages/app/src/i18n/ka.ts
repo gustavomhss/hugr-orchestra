@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "ტერმინალი",
   "command.category.model": "მოდელი",
   "command.category.mcp": "MCP",
-  "command.category.agent": "აგენტი",
   "command.category.permissions": "ნებართვები",
   "command.category.workspace": "სამუშაო სივრცე",
   "command.category.settings": "პარამეტრები",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "აირჩიე სხვა მოდელი",
   "command.mcp.toggle": "გადართვა MCPs",
   "command.mcp.toggle.description": "გადართვა MCPs",
-  "command.agent.cycle": "შემდეგ აგენტზე გადასვლა",
-  "command.agent.cycle.description": "გადართვა შემდეგ აგენტზე",
-  "command.agent.cycle.reverse": "წინა აგენტზე გადასვლა",
-  "command.agent.cycle.reverse.description": "წინა აგენტზე გადასვლა",
   "command.model.variant.cycle": "აზროვნების ძალისხმევის დონის შეცვლა",
   "command.model.variant.cycle.description": "გადართვა ძალისხმევის შემდეგ დონეზე",
   "command.prompt.mode.shell": "Shell",
@@ -1006,9 +1001,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "ქვედა ნავიგაცია",
   "settings.general.row.mobileTitlebarBottom.description":
     "მოათავსეთ სათაურის ზოლი და სესიის ჩანართები ეკრანის ბოლოში მობილურზე",
-  "settings.general.row.showCustomAgents.title": "აგენტის ჩვენება",
-  "settings.general.row.showCustomAgents.description":
-    "გადართვა კომპოზიტორში აგენტებს შორის. როდესაც დამალულია, ნაგულისხმევად არის Build აგენტი.",
   "settings.general.row.reasoningSummaries.title": "მსჯელობის შეჯამების ჩვენება",
   "settings.general.row.reasoningSummaries.description": "მოდელების მსჯელობის რეზიუმეების ჩვენება ვადებში",
   "settings.general.row.shellToolPartsExpanded.title": "Shell ხელსაწყოს ნაწილების გაფართოება",

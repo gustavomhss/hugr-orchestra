@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Терминал",
   "command.category.model": "Модел",
   "command.category.mcp": "MCP",
-  "command.category.agent": "агент",
   "command.category.permissions": "Разрешения",
   "command.category.workspace": "Работно пространство",
   "command.category.settings": "Настройки",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "Изберете друг модел",
   "command.mcp.toggle": "Превключване на MCPs",
   "command.mcp.toggle.description": "Превключване на MCPs",
-  "command.agent.cycle": "Следващ агент",
-  "command.agent.cycle.description": "Преминете към следващия агент",
-  "command.agent.cycle.reverse": "Предишен агент",
-  "command.agent.cycle.reverse.description": "Преминете към предишния агент",
   "command.model.variant.cycle": "Следващо ниво на разсъждение",
   "command.model.variant.cycle.description": "Преминете към следващото ниво на усилие",
   "command.prompt.mode.shell": "Shell",
@@ -1015,9 +1010,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Долна навигация",
   "settings.general.row.mobileTitlebarBottom.description":
     "Поставете заглавната лента и разделите на сесиите в долната част на екрана на мобилно устройство",
-  "settings.general.row.showCustomAgents.title": "Показване на агента",
-  "settings.general.row.showCustomAgents.description":
-    "Превключвайте между агенти в композитора. Когато е скрит, по подразбиране е Build agent.",
   "settings.general.row.reasoningSummaries.title": "Показване на обобщения на разсъжденията",
   "settings.general.row.reasoningSummaries.description":
     "Показване на обобщения на разсъжденията на модела във времевата линия",

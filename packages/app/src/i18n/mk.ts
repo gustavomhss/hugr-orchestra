@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "Терминал",
   "command.category.model": "Модел",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Агент",
   "command.category.permissions": "Дозволи",
   "command.category.workspace": "Работен простор",
   "command.category.settings": "Поставки",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "Изберете различен модел",
   "command.mcp.toggle": "Вклучи MCPs",
   "command.mcp.toggle.description": "Вклучи MCPs",
-  "command.agent.cycle": "Циклус агент",
-  "command.agent.cycle.description": "Префрлете се на следниот агент",
-  "command.agent.cycle.reverse": "Циклирајте го агентот наназад",
-  "command.agent.cycle.reverse.description": "Префрлете се на претходниот агент",
   "command.model.variant.cycle": "Циклус напор за размислување",
   "command.model.variant.cycle.description": "Префрлете се на следното ниво на напор",
   "command.prompt.mode.shell": "Школка",
@@ -1014,9 +1009,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Долна навигација",
   "settings.general.row.mobileTitlebarBottom.description":
     "Поставете ја лентата за наслов и јазичињата за сесии на дното на екранот на мобилниот телефон",
-  "settings.general.row.showCustomAgents.title": "Покажи агент",
-  "settings.general.row.showCustomAgents.description":
-    "Префрлете се помеѓу агенти во композиторот. Кога е скриено, стандардно е Build agent.",
   "settings.general.row.reasoningSummaries.title": "Прикажи резимеа за расудување",
   "settings.general.row.reasoningSummaries.description":
     "Прикажи резимеа на расудувањето на моделите во временската линија",

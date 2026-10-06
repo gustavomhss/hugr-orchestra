@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Տերմինալ",
   "command.category.model": "Մոդել",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Գործակալ",
   "command.category.permissions": "Թույլտվություններ",
   "command.category.workspace": "Աշխատանքային տարածք",
   "command.category.settings": "Կարգավորումներ",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "Ընտրեք այլ մոդել",
   "command.mcp.toggle": "Փոխարկել MCPs",
   "command.mcp.toggle.description": "Փոխարկել MCPs",
-  "command.agent.cycle": "Փոխարկել գործակալը",
-  "command.agent.cycle.description": "Անցնել հաջորդ գործակալին",
-  "command.agent.cycle.reverse": "Անցնել նախորդ գործակալին",
-  "command.agent.cycle.reverse.description": "Անցնել նախորդ գործակալին",
   "command.model.variant.cycle": "Փոխել մտածողության ջանքի մակարդակը",
   "command.model.variant.cycle.description": "Անցնել հաջորդ ջանքերի մակարդակին",
   "command.prompt.mode.shell": "Shell",
@@ -1013,9 +1008,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Նավարկություն ներքևում",
   "settings.general.row.mobileTitlebarBottom.description":
     "Տեղադրեք վերնագրի տողն ու նիստի ներդիրները էկրանի ներքևի մասում բջջային հեռախոսի վրա",
-  "settings.general.row.showCustomAgents.title": "Ցույց տալ գործակալին",
-  "settings.general.row.showCustomAgents.description":
-    "Փոխարկեք կոմպոզիտորի գործակալների միջև։ Երբ թաքնված է, կանխադրված է Build agent:",
   "settings.general.row.reasoningSummaries.title": "Ցույց տալ հիմնավորման ամփոփագրերը",
   "settings.general.row.reasoningSummaries.description": "Ցուցադրել մոդելի հիմնավորման ամփոփագրերը ժամանակացույցում",
   "settings.general.row.shellToolPartsExpanded.title": "Ընդարձակել Shell գործիքի մասերը",

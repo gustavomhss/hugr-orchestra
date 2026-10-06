@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Ruxsatlar",
   "command.category.workspace": "Ish maydoni",
   "command.category.settings": "Sozlamalar",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "Boshqa modelni tanlang",
   "command.mcp.toggle": "MCPlarni almashtirish",
   "command.mcp.toggle.description": "MCPlarni almashtirish",
-  "command.agent.cycle": "Keyingi agent",
-  "command.agent.cycle.description": "Keyingi agentga o'ting",
-  "command.agent.cycle.reverse": "Oldingi agent",
-  "command.agent.cycle.reverse.description": "Oldingi agentga o'tish",
   "command.model.variant.cycle": "Keyingi fikrlash darajasi",
   "command.model.variant.cycle.description": "Keyingi harakat darajasiga o'ting",
   "command.prompt.mode.shell": "Shell",
@@ -1017,9 +1012,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Pastki navigatsiya",
   "settings.general.row.mobileTitlebarBottom.description":
     "Sarlavha satrini va seans yorliqlarini mobil telefonda ekranning pastki qismiga joylashtiring",
-  "settings.general.row.showCustomAgents.title": "Agentni ko'rsatish",
-  "settings.general.row.showCustomAgents.description":
-    "Kompozitorda agentlar o'rtasida almashish. Yashirin bo'lsa, birlamchi Build agenti bo'ladi.",
   "settings.general.row.reasoningSummaries.title": "Fikrlash xulosalarini ko'rsating",
   "settings.general.row.reasoningSummaries.description": "Vaqt jadvalida model asoslarini ko'rsatish",
   "settings.general.row.shellToolPartsExpanded.title": "Qobiq asboblari qismlarini kengaytiring",

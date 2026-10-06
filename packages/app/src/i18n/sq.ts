@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "Terminali",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agjenti",
   "command.category.permissions": "Lejet",
   "command.category.workspace": "Hapësira e punës",
   "command.category.settings": "Cilësimet",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "Zgjidhni një model tjetër",
   "command.mcp.toggle": "Aktivizo MCP-të",
   "command.mcp.toggle.description": "Aktivizo MCP-të",
-  "command.agent.cycle": "Agjenti tjetër",
-  "command.agent.cycle.description": "Kalo te agjenti tjetër",
-  "command.agent.cycle.reverse": "Agjenti i mëparshëm",
-  "command.agent.cycle.reverse.description": "Kalo te agjenti i mëparshëm",
   "command.model.variant.cycle": "Niveli tjetër i arsyetimit",
   "command.model.variant.cycle.description": "Kalo në nivelin tjetër të përpjekjes",
   "command.prompt.mode.shell": "Shell",
@@ -1013,9 +1008,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigimi i poshtëm",
   "settings.general.row.mobileTitlebarBottom.description":
     "Vendosni shiritin e titullit dhe skedat e sesionit në fund të ekranit në celular",
-  "settings.general.row.showCustomAgents.title": "Trego agjentin",
-  "settings.general.row.showCustomAgents.description":
-    "Kaloni ndërmjet agjentëve në kompozitor. Kur fshihet, si parazgjedhje është Build agent.",
   "settings.general.row.reasoningSummaries.title": "Trego përmbledhjet e arsyetimit",
   "settings.general.row.reasoningSummaries.description": "Shfaqni përmbledhjet e arsyetimit të modelit në afatin kohor",
   "settings.general.row.shellToolPartsExpanded.title": "Zgjeroni pjesët e veglave të guaskës",

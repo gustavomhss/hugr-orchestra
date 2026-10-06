@@ -105,7 +105,6 @@ export const dict: Record<string, string> = {
   "command.category.terminal": "টার্মিনাল",
   "command.category.model": "মডেল",
   "command.category.mcp": "MCP",
-  "command.category.agent": "এজেন্ট",
   "command.category.permissions": "অনুমতি",
   "command.category.workspace": "ওয়ার্কস্পেস",
   "command.category.settings": "সেটিংস",
@@ -155,10 +154,6 @@ export const dict: Record<string, string> = {
   "command.model.choose.description": "একটি ভিন্ন মডেল নির্বাচন করুন",
   "command.mcp.toggle": "টগল করুন MCPs",
   "command.mcp.toggle.description": "টগল করুন MCPs",
-  "command.agent.cycle": "সাইকেল এজেন্ট",
-  "command.agent.cycle.description": "পরবর্তী এজেন্টে যান",
-  "command.agent.cycle.reverse": "সাইকেল এজেন্ট পিছনের দিকে",
-  "command.agent.cycle.reverse.description": "আগের এজেন্টে স্যুইচ করুন",
   "command.model.variant.cycle": "চক্র চিন্তা প্রচেষ্টা",
   "command.model.variant.cycle.description": "পরবর্তী প্রচেষ্টা স্তরে স্যুইচ করুন",
   "command.prompt.mode.shell": "শেল",
@@ -1004,9 +999,6 @@ export const dict: Record<string, string> = {
   "settings.general.row.mobileTitlebarBottom.title": "নীচের নেভিগেশন",
   "settings.general.row.mobileTitlebarBottom.description":
     "মোবাইলে স্ক্রিনের নীচে শিরোনাম বার এবং সেশন ট্যাবগুলি রাখুন৷",
-  "settings.general.row.showCustomAgents.title": "এজেন্ট দেখান",
-  "settings.general.row.showCustomAgents.description":
-    "কম্পোজারে এজেন্টদের মধ্যে স্যুইচ করুন। লুকানো হলে, বিল্ড এজেন্টে ডিফল্ট।",
   "settings.general.row.reasoningSummaries.title": "যুক্তির সারাংশ দেখান",
   "settings.general.row.reasoningSummaries.description": "টাইমলাইনে মডেল যুক্তির সারাংশ প্রদর্শন করুন",
   "settings.general.row.shellToolPartsExpanded.title": "শেল টুল অংশ প্রসারিত",

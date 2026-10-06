@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "İcazələr",
   "command.category.workspace": "İş sahəsi",
   "command.category.settings": "Tənzimləmələr",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "Fərqli model seç",
   "command.mcp.toggle": "MCP-ləri aç/bağla",
   "command.mcp.toggle.description": "MCP-ləri aç/bağla",
-  "command.agent.cycle": "Agenti dəyiş",
-  "command.agent.cycle.description": "Növbəti agentə keç",
-  "command.agent.cycle.reverse": "Agenti geri dəyiş",
-  "command.agent.cycle.reverse.description": "Əvvəlki agentə keç",
   "command.model.variant.cycle": "Düşünmə səviyyəsini dəyiş",
   "command.model.variant.cycle.description": "Növbəti səviyyəyə keç",
   "command.prompt.mode.shell": "Shell",
@@ -1018,9 +1013,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Aşağı naviqasiya",
   "settings.general.row.mobileTitlebarBottom.description":
     "Başlıq çubuğunu və sessiya tablarını mobil cihazda ekranın aşağısına yerləşdirin",
-  "settings.general.row.showCustomAgents.title": "Agenti göstər",
-  "settings.general.row.showCustomAgents.description":
-    "Mesaj sahəsində agentlər arasında keçid edin. Gizlədildikdə Build agenti seçilir.",
   "settings.general.row.reasoningSummaries.title": "Düşünmə xülasələrini göstər",
   "settings.general.row.reasoningSummaries.description": "Zaman xəttində modelin düşünmə xülasələrini göstər",
   "settings.general.row.shellToolPartsExpanded.title": "Shell alət hissələrini genişlət",

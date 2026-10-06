@@ -12,7 +12,6 @@ export const dict = {
   "command.category.terminal": "Terminaali",
   "command.category.model": "Malli",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agentti",
   "command.category.permissions": "Käyttöoikeudet",
   "command.category.workspace": "Työtila",
   "command.category.settings": "Asetukset",
@@ -61,10 +60,6 @@ export const dict = {
   "command.model.choose.description": "Valitse eri malli",
   "command.mcp.toggle": "Ota MCP:t käyttöön tai poista käytöstä",
   "command.mcp.toggle.description": "Ota MCP:t käyttöön tai poista käytöstä",
-  "command.agent.cycle": "Vaihda agenttia",
-  "command.agent.cycle.description": "Vaihda seuraavaan agenttiin",
-  "command.agent.cycle.reverse": "Vaihda agenttia taaksepäin",
-  "command.agent.cycle.reverse.description": "Vaihda edelliseen agenttiin",
   "command.model.variant.cycle": "Vaihda päättelyn tasoa",
   "command.model.variant.cycle.description": "Vaihda seuraavalle päättelyn tasolle",
   "command.prompt.mode.shell": "Shell",
@@ -907,9 +902,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigointi alareunassa",
   "settings.general.row.mobileTitlebarBottom.description":
     "Sijoita otsikkopalkki ja istuntovälilehdet mobiililaitteen näytön alareunaan",
-  "settings.general.row.showCustomAgents.title": "Näytä agentin valinta",
-  "settings.general.row.showCustomAgents.description":
-    "Vaihda agenttien välillä viestikentässä. Kun valinta on piilotettu, Build-agenttia käytetään oletuksena.",
   "settings.general.row.reasoningSummaries.title": "Näytä päättelyn yhteenvedot",
   "settings.general.row.reasoningSummaries.description": "Näytä mallin päättelyn yhteenvedot aikajanalla",
   "settings.general.row.shellToolPartsExpanded.title": "Laajenna shell-työkalun osat",

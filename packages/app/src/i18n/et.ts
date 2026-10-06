@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Mudel",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "load",
   "command.category.workspace": "Tööruum",
   "command.category.settings": "Seaded",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Valige mõni muu mudel",
   "command.mcp.toggle": "MCP-de sisse- ja väljalülitamine",
   "command.mcp.toggle.description": "MCP-de sisse- ja väljalülitamine",
-  "command.agent.cycle": "Tsükli agent",
-  "command.agent.cycle.description": "Lülituge järgmisele agendile",
-  "command.agent.cycle.reverse": "Tsükli agent tagurpidi",
-  "command.agent.cycle.reverse.description": "Lülituge eelmisele agendile",
   "command.model.variant.cycle": "Tsükli mõtlemise pingutus",
   "command.model.variant.cycle.description": "Lülituge järgmisele pingutustasemele",
   "command.prompt.mode.shell": "Shell",
@@ -1002,9 +997,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Alumine navigeerimine",
   "settings.general.row.mobileTitlebarBottom.description":
     "Asetage tiitliriba ja seansi vahekaardid mobiilis ekraani allossa",
-  "settings.general.row.showCustomAgents.title": "Näita agenti",
-  "settings.general.row.showCustomAgents.description":
-    "Helilooja agentide vahel vahetamine. Kui see on peidetud, on vaikimisi Agent.",
   "settings.general.row.reasoningSummaries.title": "Näita põhjenduste kokkuvõtteid",
   "settings.general.row.reasoningSummaries.description": "Kuva mudeli arutluskäigu kokkuvõtted ajaskaalal",
   "settings.general.row.shellToolPartsExpanded.title": "Laienda shellitööriista osi",

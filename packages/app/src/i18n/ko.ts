@@ -12,7 +12,6 @@ export const dict = {
   "command.category.terminal": "터미널",
   "command.category.model": "모델",
   "command.category.mcp": "MCP",
-  "command.category.agent": "에이전트",
   "command.category.permissions": "권한",
   "command.category.workspace": "작업 공간",
   "command.category.settings": "설정",
@@ -57,10 +56,6 @@ export const dict = {
   "command.model.choose.description": "다른 모델 선택",
   "command.mcp.toggle": "MCP 전환",
   "command.mcp.toggle.description": "MCP 전환",
-  "command.agent.cycle": "에이전트 순환",
-  "command.agent.cycle.description": "다음 에이전트로 전환",
-  "command.agent.cycle.reverse": "에이전트 역순환",
-  "command.agent.cycle.reverse.description": "이전 에이전트로 전환",
   "command.model.variant.cycle": "생각 수준 순환",
   "command.model.variant.cycle.description": "다음 생각 수준으로 전환",
   "command.prompt.mode.shell": "셸",
@@ -1083,9 +1078,6 @@ export const dict = {
   "settings.general.row.showStatus.description": "제목 표시줄에 서버 상태 버튼 표시",
   "settings.general.row.mobileTitlebarBottom.title": "하단 탐색",
   "settings.general.row.mobileTitlebarBottom.description": "모바일에서 제목 표시줄과 세션 탭을 화면 하단에 배치",
-  "settings.general.row.showCustomAgents.title": "에이전트 표시",
-  "settings.general.row.showCustomAgents.description":
-    "입력창에서 에이전트를 전환합니다. 숨기면 기본적으로 Build 에이전트를 사용합니다.",
   "settings.general.row.newInterface.title": "새 레이아웃",
   "settings.general.row.newInterface.badge": "신규",
   "settings.general.row.newInterface.description":

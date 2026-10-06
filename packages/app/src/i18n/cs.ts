@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminál",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Oprávnění",
   "command.category.workspace": "Pracovní prostor",
   "command.category.settings": "Nastavení",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Vyberte jiný model",
   "command.mcp.toggle": "Přepnout MCP",
   "command.mcp.toggle.description": "Přepnout MCP",
-  "command.agent.cycle": "Agent cyklu",
-  "command.agent.cycle.description": "Přepněte na dalšího agenta",
-  "command.agent.cycle.reverse": "Cyklujte agenta zpět",
-  "command.agent.cycle.reverse.description": "Přepnout na předchozího agenta",
   "command.model.variant.cycle": "Cyklické myšlení",
   "command.model.variant.cycle.description": "Přepněte na další úroveň úsilí",
   "command.prompt.mode.shell": "Shell",
@@ -1012,9 +1007,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Spodní navigace",
   "settings.general.row.mobileTitlebarBottom.description":
     "Umístěte záhlaví a karty relací do spodní části obrazovky na mobilu",
-  "settings.general.row.showCustomAgents.title": "Zobrazit agenta",
-  "settings.general.row.showCustomAgents.description":
-    "Přepínání mezi agenty ve skladateli. Když je skrytý, výchozí nastavení je Sestavit agenta.",
   "settings.general.row.reasoningSummaries.title": "Ukažte shrnutí odůvodnění",
   "settings.general.row.reasoningSummaries.description": "Zobrazte souhrny zdůvodnění modelu na časové ose",
   "settings.general.row.shellToolPartsExpanded.title": "Rozbalte části nástroje shell",

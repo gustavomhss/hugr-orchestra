@@ -114,7 +114,6 @@ export const dict = {
   "command.category.terminal": "終端機",
   "command.category.model": "模型",
   "command.category.mcp": "MCP",
-  "command.category.agent": "代理程式",
   "command.category.permissions": "權限",
   "command.category.workspace": "工作區",
 
@@ -170,10 +169,6 @@ export const dict = {
   "command.model.choose.description": "選擇不同的模型",
   "command.mcp.toggle": "切換 MCP",
   "command.mcp.toggle.description": "切換 MCP",
-  "command.agent.cycle": "切換下一個代理程式",
-  "command.agent.cycle.description": "切換到下一個代理程式",
-  "command.agent.cycle.reverse": "切換上一個代理程式",
-  "command.agent.cycle.reverse.description": "切換到上一個代理程式",
   "command.model.variant.cycle": "切換思考強度",
   "command.model.variant.cycle.description": "切換到下一個強度等級",
   "command.prompt.mode.shell": "Shell",
@@ -971,8 +966,6 @@ export const dict = {
   "settings.general.row.showStatus.description": "在標題列中顯示伺服器狀態按鈕",
   "settings.general.row.mobileTitlebarBottom.title": "底部導覽",
   "settings.general.row.mobileTitlebarBottom.description": "在行動裝置上將標題列和工作階段分頁置於畫面底部",
-  "settings.general.row.showCustomAgents.title": "自訂代理程式",
-  "settings.general.row.showCustomAgents.description": "在輸入區顯示代理程式選擇器",
   "settings.general.row.reasoningSummaries.title": "顯示推理摘要",
   "settings.general.row.reasoningSummaries.description": "在時間軸中顯示模型推理摘要",
 

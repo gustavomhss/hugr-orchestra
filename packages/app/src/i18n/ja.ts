@@ -110,7 +110,6 @@ export const dict = {
   "command.category.terminal": "ターミナル",
   "command.category.model": "モデル",
   "command.category.mcp": "MCP",
-  "command.category.agent": "エージェント",
   "command.category.permissions": "権限",
   "command.category.workspace": "ワークスペース",
   "command.category.settings": "設定",
@@ -160,10 +159,6 @@ export const dict = {
   "command.model.choose.description": "別のモデルを選択",
   "command.mcp.toggle": "MCPの切り替え",
   "command.mcp.toggle.description": "MCPを切り替える",
-  "command.agent.cycle": "エージェントの切り替え",
-  "command.agent.cycle.description": "次のエージェントに切り替え",
-  "command.agent.cycle.reverse": "エージェントを逆順に切り替え",
-  "command.agent.cycle.reverse.description": "前のエージェントに切り替え",
   "command.model.variant.cycle": "思考レベルの切り替え",
   "command.model.variant.cycle.description": "次の思考レベルに切り替え",
   "command.prompt.mode.shell": "シェル",
@@ -915,9 +910,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "下部ナビゲーション",
   "settings.general.row.mobileTitlebarBottom.description":
     "モバイルではタイトルバーとセッションタブを画面下部に配置します",
-  "settings.general.row.showCustomAgents.title": "エージェントを表示",
-  "settings.general.row.showCustomAgents.description":
-    "コンポーザーでエージェントを切り替えます。非表示の場合は、デフォルトでBuildエージェントが使用されます。",
   "settings.general.row.reasoningSummaries.title": "推論の要約を表示",
   "settings.general.row.reasoningSummaries.description": "タイムラインにモデルの推論の要約を表示します",
   "settings.general.row.shellToolPartsExpanded.title": "shell ツールパーツを展開",

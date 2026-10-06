@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Permisiuni",
   "command.category.workspace": "Spațiu de lucru",
   "command.category.settings": "Setări",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Selectează alt model",
   "command.mcp.toggle": "Comută MCP-uri",
   "command.mcp.toggle.description": "Activează sau dezactivează MCP-uri",
-  "command.agent.cycle": "Schimbă agentul",
-  "command.agent.cycle.description": "Treci la următorul agent",
-  "command.agent.cycle.reverse": "Schimbă agentul înapoi",
-  "command.agent.cycle.reverse.description": "Treci la agentul anterior",
   "command.model.variant.cycle": "Schimbă nivelul de efort",
   "command.model.variant.cycle.description": "Treci la următorul nivel de efort",
   "command.prompt.mode.shell": "Shell",
@@ -1011,9 +1006,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigare jos",
   "settings.general.row.mobileTitlebarBottom.description":
     "Afișează bara de titlu și filele de sesiune în partea de jos pe mobil",
-  "settings.general.row.showCustomAgents.title": "Afișează agentul",
-  "settings.general.row.showCustomAgents.description":
-    "Comută între agenți în editor. Când este ascuns, se folosește agentul Build.",
   "settings.general.row.reasoningSummaries.title": "Afișează rezumatele de raționament",
   "settings.general.row.reasoningSummaries.description":
     "Afișează rezumatele de raționament ale modelului în cronologie",

@@ -110,7 +110,6 @@ export const dict = {
   "command.category.terminal": "เทอร์มินัล",
   "command.category.model": "โมเดล",
   "command.category.mcp": "MCP",
-  "command.category.agent": "เอเจนต์",
   "command.category.permissions": "สิทธิ์",
   "command.category.workspace": "พื้นที่ทำงาน",
   "command.category.settings": "การตั้งค่า",
@@ -166,10 +165,6 @@ export const dict = {
   "command.model.choose.description": "เลือกโมเดลอื่น",
   "command.mcp.toggle": "สลับ MCPs",
   "command.mcp.toggle.description": "สลับ MCPs",
-  "command.agent.cycle": "เปลี่ยนเอเจนต์",
-  "command.agent.cycle.description": "สลับไปยังเอเจนต์ถัดไป",
-  "command.agent.cycle.reverse": "เปลี่ยนเอเจนต์ย้อนกลับ",
-  "command.agent.cycle.reverse.description": "สลับไปยังเอเจนต์ก่อนหน้า",
   "command.model.variant.cycle": "เปลี่ยนความพยายามในการคิด",
   "command.model.variant.cycle.description": "สลับไปยังระดับความพยายามถัดไป",
   "command.prompt.mode.shell": "เชลล์",
@@ -981,9 +976,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "การนำทางด้านล่าง",
   "settings.general.row.mobileTitlebarBottom.description":
     "วางแถบชื่อเรื่องและแท็บเซสชันไว้ด้านล่างของหน้าจอบนอุปกรณ์เคลื่อนที่",
-  "settings.general.row.showCustomAgents.title": "แสดงเอเจนต์",
-  "settings.general.row.showCustomAgents.description":
-    "สลับระหว่างเอเจนต์ในช่องเขียนข้อความ เมื่อซ่อน ระบบจะใช้เอเจนต์ Build เป็นค่าเริ่มต้น",
   "settings.general.row.reasoningSummaries.title": "แสดงสรุปการใช้เหตุผล",
   "settings.general.row.reasoningSummaries.description": "แสดงสรุปการใช้เหตุผลของโมเดลในไทม์ไลน์",
   "settings.general.row.shellToolPartsExpanded.title": "ขยายส่วนเครื่องมือ shell",

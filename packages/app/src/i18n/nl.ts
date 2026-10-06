@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Machtigingen",
   "command.category.workspace": "Werkruimte",
   "command.category.settings": "Instellingen",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Selecteer een ander model",
   "command.mcp.toggle": "MCP's in- of uitschakelen",
   "command.mcp.toggle.description": "MCP's in- of uitschakelen",
-  "command.agent.cycle": "Volgende agent",
-  "command.agent.cycle.description": "Schakel over naar de volgende agent",
-  "command.agent.cycle.reverse": "Vorige agent",
-  "command.agent.cycle.reverse.description": "Schakel over naar de vorige agent",
   "command.model.variant.cycle": "Volgend denkniveau",
   "command.model.variant.cycle.description": "Ga naar het volgende inspanningsniveau",
   "command.prompt.mode.shell": "Shell",
@@ -1018,9 +1013,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigatie onderaan",
   "settings.general.row.mobileTitlebarBottom.description":
     "Plaats de titelbalk en sessietabbladen onderaan het scherm op mobiel",
-  "settings.general.row.showCustomAgents.title": "Toon agent",
-  "settings.general.row.showCustomAgents.description":
-    "Schakel tussen agenten in het invoerveld. Indien verborgen wordt standaard de Build-agent gebruikt.",
   "settings.general.row.reasoningSummaries.title": "Toon redeneeroverzichten",
   "settings.general.row.reasoningSummaries.description":
     "Geef samenvattingen van modelredeneringen weer in de tijdlijn",

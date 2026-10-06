@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "ترمینال",
   "command.category.model": "مدل",
   "command.category.mcp": "MCP",
-  "command.category.agent": "عامل",
   "command.category.permissions": "مجوزها",
   "command.category.workspace": "فضای کار",
   "command.category.settings": "تنظیمات",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "مدل متفاوتی را انتخاب کنید",
   "command.mcp.toggle": "MCPs را تغییر دهید",
   "command.mcp.toggle.description": "MCPs را تغییر دهید",
-  "command.agent.cycle": "عامل چرخه",
-  "command.agent.cycle.description": "به عامل بعدی بروید",
-  "command.agent.cycle.reverse": "چرخه عامل به عقب",
-  "command.agent.cycle.reverse.description": "به عامل قبلی بروید",
   "command.model.variant.cycle": "چرخه تلاش برای تفکر",
   "command.model.variant.cycle.description": "به سطح تلاش بعدی بروید",
   "command.prompt.mode.shell": "پوسته",
@@ -1004,9 +999,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "ناوبری پایین",
   "settings.general.row.mobileTitlebarBottom.description":
     "نوار عنوان و برگه‌های جلسه را در پایین صفحه در تلفن همراه قرار دهید",
-  "settings.general.row.showCustomAgents.title": "نشان دادن عامل",
-  "settings.general.row.showCustomAgents.description":
-    "بین عوامل در آهنگساز جابجا شوید. هنگامی که مخفی می شود، به طور پیش فرض بر روی Build agent قرار می گیرد.",
   "settings.general.row.reasoningSummaries.title": "نمایش خلاصه های استدلال",
   "settings.general.row.reasoningSummaries.description": "نمایش خلاصه های استدلال مدل در جدول زمانی",
   "settings.general.row.shellToolPartsExpanded.title": "قطعات ابزار پوسته را گسترش دهید",

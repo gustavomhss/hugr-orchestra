@@ -112,7 +112,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Dozvole",
   "command.category.workspace": "Radni prostor",
   "command.category.settings": "Postavke",
@@ -168,10 +167,6 @@ export const dict = {
   "command.model.choose.description": "Odaberi drugi model",
   "command.mcp.toggle": "Prikaži/sakrij MCP-ove",
   "command.mcp.toggle.description": "Prikaži/sakrij MCP-ove",
-  "command.agent.cycle": "Promijeni agenta",
-  "command.agent.cycle.description": "Prebaci na sljedećeg agenta",
-  "command.agent.cycle.reverse": "Promijeni agenta unazad",
-  "command.agent.cycle.reverse.description": "Prebaci na prethodnog agenta",
   "command.model.variant.cycle": "Promijeni nivo razmišljanja",
   "command.model.variant.cycle.description": "Prebaci na sljedeći nivo",
   "command.prompt.mode.shell": "Shell",
@@ -995,8 +990,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Donja navigacija",
   "settings.general.row.mobileTitlebarBottom.description":
     "Postavi naslovnu traku i kartice sesije na dno ekrana na mobilnim uređajima",
-  "settings.general.row.showCustomAgents.title": "Prilagođeni agenti",
-  "settings.general.row.showCustomAgents.description": "Prikaži izbor agenta u uređivaču poruke",
   "settings.general.row.reasoningSummaries.title": "Prikaži sažetke rasuđivanja",
   "settings.general.row.reasoningSummaries.description": "Prikaži sažetke rasuđivanja modela na vremenskoj traci",
 

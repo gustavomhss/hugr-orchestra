@@ -108,7 +108,6 @@ export const dict = {
   "command.category.terminal": "Terminalas",
   "command.category.model": "Modelis",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agentas",
   "command.category.permissions": "Leidimai",
   "command.category.workspace": "Darbo sritis",
   "command.category.settings": "Nustatymai",
@@ -158,10 +157,6 @@ export const dict = {
   "command.model.choose.description": "Pasirinkite kitą modelį",
   "command.mcp.toggle": "Perjungti MCPs",
   "command.mcp.toggle.description": "Perjungti MCPs",
-  "command.agent.cycle": "Perjungti agentą",
-  "command.agent.cycle.description": "Perjunkite į kitą agentą",
-  "command.agent.cycle.reverse": "Perjungti į ankstesnį agentą",
-  "command.agent.cycle.reverse.description": "Perjungti į ankstesnį agentą",
   "command.model.variant.cycle": "Perkelkite mąstymo pastangas",
   "command.model.variant.cycle.description": "Perjunkite į kitą pastangų lygį",
   "command.prompt.mode.shell": "Apvalkalas",
@@ -1021,9 +1016,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Apatinė navigacija",
   "settings.general.row.mobileTitlebarBottom.description":
     "Įdėkite pavadinimo juostą ir seanso skirtukus mobiliojo telefono ekrano apačioje",
-  "settings.general.row.showCustomAgents.title": "Rodyti agentą",
-  "settings.general.row.showCustomAgents.description":
-    "Perjunkite tarp kompozitoriaus agentų. Kai paslėpta, numatytasis kūrimo agentas.",
   "settings.general.row.reasoningSummaries.title": "Rodyti samprotavimų santraukas",
   "settings.general.row.reasoningSummaries.description": "Rodyti modelio motyvų santraukas laiko juostoje",
   "settings.general.row.shellToolPartsExpanded.title": "Išskleiskite apvalkalo įrankių dalis",

@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "Терминал",
   "command.category.model": "Модели",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Агент",
   "command.category.permissions": "Иҷозатҳо",
   "command.category.workspace": "Фазои корӣ",
   "command.category.settings": "Танзимотҳо",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "Модели дигарро интихоб кунед",
   "command.mcp.toggle": "Гузариш MCPс",
   "command.mcp.toggle.description": "Гузариш MCPс",
-  "command.agent.cycle": "Агенти сикли",
-  "command.agent.cycle.description": "Ба агенти навбатӣ гузаред",
-  "command.agent.cycle.reverse": "Агенти даврӣ ба ақиб",
-  "command.agent.cycle.reverse.description": "Ба агенти қаблӣ гузаред",
   "command.model.variant.cycle": "Кӯшиши фикрронии даврӣ",
   "command.model.variant.cycle.description": "Ба сатҳи навбатии кӯшишҳо гузаред",
   "command.prompt.mode.shell": "Shell",
@@ -1012,9 +1007,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Навигатсия дар поён",
   "settings.general.row.mobileTitlebarBottom.description":
     "Сатри унвон ва ҷадвалҳои сессияро дар поёни экран дар мобилӣ ҷойгир кунед",
-  "settings.general.row.showCustomAgents.title": "Намоиши агент",
-  "settings.general.row.showCustomAgents.description":
-    "Гузариш байни агентҳо дар оҳангсоз. Ҳангоми пинҳон, пешфарз ба Сохтани агент.",
   "settings.general.row.reasoningSummaries.title": "Ҷамъбасти далелҳоро нишон диҳед",
   "settings.general.row.reasoningSummaries.description": "Дар ҷадвали вақт хулосаҳои далелҳои моделиро нишон диҳед",
   "settings.general.row.shellToolPartsExpanded.title": "Қисмҳои shell асбобро васеъ кунед",

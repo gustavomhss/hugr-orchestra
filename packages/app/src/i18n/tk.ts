@@ -105,7 +105,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Rugsatlar",
   "command.category.workspace": "Workspace",
   "command.category.settings": "Sazlamalar",
@@ -155,10 +154,6 @@ export const dict = {
   "command.model.choose.description": "Başga modeli saýlaň",
   "command.mcp.toggle": "MCP-leri çalyşyň",
   "command.mcp.toggle.description": "MCP-leri çalyşyň",
-  "command.agent.cycle": "Indiki agent",
-  "command.agent.cycle.description": "Indiki agente geçiň",
-  "command.agent.cycle.reverse": "Öňki agent",
-  "command.agent.cycle.reverse.description": "Öňki agente geçiň",
   "command.model.variant.cycle": "Indiki pikirleniş derejesi",
   "command.model.variant.cycle.description": "Indiki synanyşyk derejesine geçiň",
   "command.prompt.mode.shell": "Shell",
@@ -1008,9 +1003,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Aşakdaky nawigasiýa",
   "settings.general.row.mobileTitlebarBottom.description":
     "Adyň setirini we sessiýa belliklerini ekranyň aşagyna ykjam ýerleşdiriň",
-  "settings.general.row.showCustomAgents.title": "Agent görkez",
-  "settings.general.row.showCustomAgents.description":
-    "Kompozitordaky agentleriň arasynda geçiň. Gizlenende, agent gurmak üçin defolt.",
   "settings.general.row.reasoningSummaries.title": "Pikirleriň gysgaça mazmunyny görkeziň",
   "settings.general.row.reasoningSummaries.description":
     "Wagt görkezijisinde model pikirlenişiň gysgaça mazmunyny görkeziň",

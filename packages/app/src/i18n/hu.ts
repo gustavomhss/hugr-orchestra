@@ -108,7 +108,6 @@ export const dict = {
   "command.category.terminal": "Terminál",
   "command.category.model": "Modell",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Ügynök",
   "command.category.permissions": "Engedélyek",
   "command.category.workspace": "Munkaterület",
   "command.category.settings": "Beállítások",
@@ -158,10 +157,6 @@ export const dict = {
   "command.model.choose.description": "Válasszon másik modellt",
   "command.mcp.toggle": "MCPs váltás",
   "command.mcp.toggle.description": "MCPs váltás",
-  "command.agent.cycle": "Ügynök váltása",
-  "command.agent.cycle.description": "Váltson a következő ügynökre",
-  "command.agent.cycle.reverse": "Váltás az előző ügynökre",
-  "command.agent.cycle.reverse.description": "Váltás az előző ügynökre",
   "command.model.variant.cycle": "Ciklikus gondolkodási erőfeszítés",
   "command.model.variant.cycle.description": "Váltson a következő erőfeszítési szintre",
   "command.prompt.mode.shell": "Shell",
@@ -1016,9 +1011,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Alsó navigáció",
   "settings.general.row.mobileTitlebarBottom.description":
     "Helyezze el a címsort és a munkamenet füleket a képernyő aljára mobileszközön",
-  "settings.general.row.showCustomAgents.title": "Mutasd az ügynököt",
-  "settings.general.row.showCustomAgents.description":
-    "Váltás az ágensek között a zeneszerzőben. Ha rejtett, alapértelmezés szerint Build agent.",
   "settings.general.row.reasoningSummaries.title": "Mutasson érvelési összefoglalókat",
   "settings.general.row.reasoningSummaries.description": "Modell indoklási összefoglalók megjelenítése az idővonalon",
   "settings.general.row.shellToolPartsExpanded.title": "Shelleszköz részeinek kibontása",

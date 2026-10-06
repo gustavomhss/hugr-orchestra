@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Permisos",
   "command.category.workspace": "Espai de treball",
   "command.category.settings": "Configuració",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "Seleccioneu un model diferent",
   "command.mcp.toggle": "Commuta els MCP",
   "command.mcp.toggle.description": "Commuta els MCP",
-  "command.agent.cycle": "Agent de cicle",
-  "command.agent.cycle.description": "Canvia al següent agent",
-  "command.agent.cycle.reverse": "Cicle l'agent cap enrere",
-  "command.agent.cycle.reverse.description": "Canvia a l'agent anterior",
   "command.model.variant.cycle": "Esforç de pensar en cicle",
   "command.model.variant.cycle.description": "Canvia al següent nivell d'esforç",
   "command.prompt.mode.shell": "Shell",
@@ -1017,9 +1012,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navegació inferior",
   "settings.general.row.mobileTitlebarBottom.description":
     "Col·loqueu la barra de títol i les pestanyes de sessió a la part inferior de la pantalla al mòbil",
-  "settings.general.row.showCustomAgents.title": "Agent d'espectacles",
-  "settings.general.row.showCustomAgents.description":
-    "Canvia entre agents del compositor. Quan s'amaga, el valor predeterminat és Build agent.",
   "settings.general.row.reasoningSummaries.title": "Mostra resums de raonament",
   "settings.general.row.reasoningSummaries.description": "Mostra els resums de raonament del model a la línia de temps",
   "settings.general.row.shellToolPartsExpanded.title": "Amplieu les peces de l'eina de closca",

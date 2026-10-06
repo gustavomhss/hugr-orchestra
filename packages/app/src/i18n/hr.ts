@@ -108,7 +108,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Dozvole",
   "command.category.workspace": "Radni prostor",
   "command.category.settings": "Postavke",
@@ -158,10 +157,6 @@ export const dict = {
   "command.model.choose.description": "Odaberite drugi model",
   "command.mcp.toggle": "Uključi/isključi MCPs",
   "command.mcp.toggle.description": "Uključi/isključi MCPs",
-  "command.agent.cycle": "Promijeni agenta",
-  "command.agent.cycle.description": "Prijeđite na sljedećeg agenta",
-  "command.agent.cycle.reverse": "Vrati se na prethodnog agenta",
-  "command.agent.cycle.reverse.description": "Prijeđi na prethodnog agenta",
   "command.model.variant.cycle": "Ciklusni napor razmišljanja",
   "command.model.variant.cycle.description": "Prijeđite na sljedeću razinu napora",
   "command.prompt.mode.shell": "Ljuska",
@@ -1017,9 +1012,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Donja navigacija",
   "settings.general.row.mobileTitlebarBottom.description":
     "Postavite naslovnu traku i kartice sesije na dno zaslona na mobilnom telefonu",
-  "settings.general.row.showCustomAgents.title": "Prikaži agenta",
-  "settings.general.row.showCustomAgents.description":
-    "Prebacivanje između agenata u skladatelju. Kada je skriven, zadana je Build agent.",
   "settings.general.row.reasoningSummaries.title": "Prikaži sažetke obrazloženja",
   "settings.general.row.reasoningSummaries.description": "Prikažite sažetke obrazloženja modela na vremenskoj traci",
   "settings.general.row.shellToolPartsExpanded.title": "Proširite dijelove alata školjke",

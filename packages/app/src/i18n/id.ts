@@ -112,7 +112,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agen",
   "command.category.permissions": "Izin",
   "command.category.workspace": "Ruang kerja",
   "command.category.settings": "Pengaturan",
@@ -168,10 +167,6 @@ export const dict = {
   "command.model.choose.description": "Pilih model yang berbeda",
   "command.mcp.toggle": "Alihkan MCP",
   "command.mcp.toggle.description": "Alihkan MCP",
-  "command.agent.cycle": "Ganti agen",
-  "command.agent.cycle.description": "Beralih ke agen berikutnya",
-  "command.agent.cycle.reverse": "Ganti agen mundur",
-  "command.agent.cycle.reverse.description": "Beralih ke agen sebelumnya",
   "command.model.variant.cycle": "Ganti usaha berpikir",
   "command.model.variant.cycle.description": "Beralih ke tingkat usaha berikutnya",
   "command.prompt.mode.shell": "Shell",
@@ -1087,9 +1082,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigasi bawah",
   "settings.general.row.mobileTitlebarBottom.description":
     "Tempatkan bilah judul dan tab sesi di bagian bawah layar pada perangkat seluler",
-  "settings.general.row.showCustomAgents.title": "Tampilkan agen",
-  "settings.general.row.showCustomAgents.description":
-    "Beralih antaragen di penyusun. Saat disembunyikan, Agen Build digunakan sebagai bawaan.",
   "settings.general.row.reasoningSummaries.title": "Tampilkan ringkasan penalaran",
   "settings.general.row.reasoningSummaries.description": "Tampilkan ringkasan penalaran model di linimasa",
   "settings.general.row.shellToolPartsExpanded.title": "Bentangkan bagian alat shell",

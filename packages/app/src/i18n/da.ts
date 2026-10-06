@@ -12,7 +12,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Tilladelser",
   "command.category.workspace": "Arbejdsområde",
 
@@ -67,10 +66,6 @@ export const dict = {
   "command.model.choose.description": "Vælg en anden model",
   "command.mcp.toggle": "Skift MCP'er",
   "command.mcp.toggle.description": "Skift MCP'er",
-  "command.agent.cycle": "Skift agent",
-  "command.agent.cycle.description": "Skift til næste agent",
-  "command.agent.cycle.reverse": "Skift agent baglæns",
-  "command.agent.cycle.reverse.description": "Skift til forrige agent",
   "command.model.variant.cycle": "Skift tænkeindsats",
   "command.model.variant.cycle.description": "Skift til næste indsatsniveau",
   "command.prompt.mode.shell": "Shell",
@@ -871,9 +866,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigation nederst",
   "settings.general.row.mobileTitlebarBottom.description":
     "Placer titellinjen og sessionsfanerne nederst på skærmen på mobilenheder",
-  "settings.general.row.showCustomAgents.title": "Vis agent",
-  "settings.general.row.showCustomAgents.description":
-    "Skift mellem agenter i promptfeltet. Når vælgeren er skjult, bruges Build-agenten som standard.",
   "settings.general.row.reasoningSummaries.title": "Vis ræsonneringsoversigter",
   "settings.general.row.reasoningSummaries.description": "Vis oversigter over modellens ræsonnering på tidslinjen",
 

@@ -111,7 +111,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Mô hình",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Tác nhân",
   "command.category.permissions": "Quyền",
   "command.category.workspace": "Không gian làm việc",
   "command.category.settings": "Cài đặt",
@@ -161,10 +160,6 @@ export const dict = {
   "command.model.choose.description": "Chọn một mô hình khác",
   "command.mcp.toggle": "Bật/tắt MCP",
   "command.mcp.toggle.description": "Bật hoặc tắt MCP",
-  "command.agent.cycle": "Chuyển tác nhân",
-  "command.agent.cycle.description": "Chuyển sang tác nhân tiếp theo",
-  "command.agent.cycle.reverse": "Chuyển tác nhân theo chiều ngược",
-  "command.agent.cycle.reverse.description": "Chuyển sang tác nhân trước đó",
   "command.model.variant.cycle": "Chuyển mức độ suy luận",
   "command.model.variant.cycle.description": "Chuyển sang mức nỗ lực tiếp theo",
   "command.prompt.mode.shell": "Shell",
@@ -1019,9 +1014,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Điều hướng dưới cùng",
   "settings.general.row.mobileTitlebarBottom.description":
     "Đặt thanh tiêu đề và tab phiên ở cuối màn hình trên thiết bị di động",
-  "settings.general.row.showCustomAgents.title": "Hiển thị tác nhân",
-  "settings.general.row.showCustomAgents.description":
-    "Chuyển đổi giữa các tác nhân trong trình soạn thảo. Khi ẩn, tác nhân mặc định là Build.",
   "settings.general.row.reasoningSummaries.title": "Hiển thị tóm tắt lý luận",
   "settings.general.row.reasoningSummaries.description": "Hiển thị tóm tắt lý luận mô hình trong dòng thời gian",
   "settings.general.row.shellToolPartsExpanded.title": "Mở rộng các phần của công cụ shell",

@@ -110,7 +110,6 @@ export const dict = {
   "command.category.terminal": "محطة طرفية",
   "command.category.model": "نموذج",
   "command.category.mcp": "MCP",
-  "command.category.agent": "وكيل",
   "command.category.permissions": "أذونات",
   "command.category.workspace": "مساحة عمل",
   "command.category.settings": "إعدادات",
@@ -160,10 +159,6 @@ export const dict = {
   "command.model.choose.description": "حدد نموذجًا مختلفًا",
   "command.mcp.toggle": "تبديل خوادم MCP",
   "command.mcp.toggle.description": "تبديل خوادم MCP",
-  "command.agent.cycle": "تغيير الوكيل",
-  "command.agent.cycle.description": "التبديل إلى الوكيل التالي",
-  "command.agent.cycle.reverse": "تغيير الوكيل للخلف",
-  "command.agent.cycle.reverse.description": "التبديل إلى الوكيل السابق",
   "command.model.variant.cycle": "تغيير جهد الاستدلال",
   "command.model.variant.cycle.description": "التبديل إلى مستوى الجهد التالي",
   "command.prompt.mode.shell": "Shell",
@@ -926,9 +921,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "التنقل السفلي",
   "settings.general.row.mobileTitlebarBottom.description":
     "وضع شريط العنوان وعلامات تبويب الجلسات أسفل الشاشة على الأجهزة المحمولة",
-  "settings.general.row.showCustomAgents.title": "إظهار الوكيل",
-  "settings.general.row.showCustomAgents.description":
-    "التبديل بين الوكلاء في محرر الرسائل. عند إخفائه، يُستخدم وكيل Build افتراضيًا.",
   "settings.general.row.reasoningSummaries.title": "إظهار ملخصات الاستدلال",
   "settings.general.row.reasoningSummaries.description": "عرض ملخصات استدلال النموذج في الشريط الزمني",
   "settings.general.row.shellToolPartsExpanded.title": "توسيع أجزاء أداة shell",
