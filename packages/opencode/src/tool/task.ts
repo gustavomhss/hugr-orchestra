@@ -25,6 +25,7 @@ import { Git } from "@/git"
 import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
 import { GroundedSkills } from "@/maestro/grounded-skills"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { AtlasResume } from "@/maestro/atlas-resume"
 import { BackendWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
 import { WriteRoots } from "@/maestro/write-roots"
@@ -97,6 +98,7 @@ const BaseParameterFields = {
     description: "AuthorizationGranted ID for current team dispatch.",
   }),
   writePaths: WriteRoots.Param,
+  memoryUnit: AtlasResume.Param,
 }
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
@@ -514,6 +516,7 @@ export const TaskTool = Tool.define(
 
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
+      const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
         // Session-start hooks run after reservation and can change the repository.
@@ -563,7 +566,7 @@ export const TaskTool = Tool.define(
             },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
-            parts: [...parts, ...own],
+            parts: [...parts, ...own, ...resume],
           },
           beforeModel ? { beforeModel } : undefined,
         )
