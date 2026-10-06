@@ -31,6 +31,24 @@
     "@opencode-ai/session-ui#test": {
       "dependsOn": ["^build"],
       "outputs": []
+    },
+    "@opencode-ai/codemode#test": {
+      "outputs": []
+    },
+    "@opencode-ai/effect-drizzle-sqlite#test": {
+      "outputs": []
+    },
+    "@opencode-ai/http-recorder#test": {
+      "outputs": []
+    },
+    "@opencode-ai/httpapi-codegen#test": {
+      "outputs": []
+    },
+    "@opencode-ai/llm#test": {
+      "outputs": []
+    },
+    "@opencode-ai/maestro-arsenal#test": {
+      "outputs": []
     }
   }
 }
