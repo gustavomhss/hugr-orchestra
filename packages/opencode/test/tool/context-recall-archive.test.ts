@@ -283,8 +283,6 @@ describe("context_recall real archive node", () => {
       const missing = reply((yield* reopened.execute({ archive_query: "[ZX.+]" }, f.ctx)).output)
       expect(missing).toMatchObject({ status: "not_found", total: 0, complete: true, references: [] })
     }),
-    // Many real file writes and a recursive scan; Windows CI file I/O is far slower.
-    120_000,
   )
 
   it.instance("enforces own-session permission and isolation against real foreign archives and forged context", () =>
@@ -347,8 +345,6 @@ describe("context_recall real archive node", () => {
         expect(output).not.toContain("HASH_RECEIPT")
       }
     }),
-    // Many real file writes and a recursive scan; Windows CI file I/O is far slower.
-    120_000,
   )
 
   it.instance("keeps legacy message/part source quotes executable alongside archive modes", () =>
