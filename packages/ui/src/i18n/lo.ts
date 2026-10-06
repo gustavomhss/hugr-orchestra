@@ -121,7 +121,6 @@ export const dict = {
   "ui.promptInput.attachments": "ຮູບພາບແລະໄຟລ໌",
   "ui.promptInput.context": "ບໍລິບົດ",
   "ui.promptInput.shell": "ຄໍາສັ່ງ Shell",
-  "ui.promptInput.chooseAgent": "ເລືອກຕົວແທນ",
   "ui.promptInput.chooseModel": "ເລືອກຕົວແບບ",
   "ui.promptInput.chooseVariant": "ເລືອກຕົວແປຕົວແບບ",
   "ui.promptInput.send": "ສົ່ງ",
