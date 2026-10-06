@@ -61,6 +61,19 @@ export function authorizationTaskIntentHash(input: { subagentType: string; promp
   return hash(`${input.subagentType}\0${input.prompt}\0${input.model ?? ""}`)
 }
 
+// Why an authorized Task in this Session does not dispatch the approved seat and intent, worded for the model to retry.
+export function authorizedTaskMismatch(
+  authorization: { sessionID: string; routedMemberID: string; taskIntentHash: string } | undefined,
+  task: { sessionID: string; memberID: string; subagentType: string; prompt: string; model?: string },
+) {
+  if (authorization?.sessionID !== task.sessionID) return undefined
+  if (authorization.routedMemberID !== task.memberID)
+    return `Authorized Task denied: routed-seat-mismatch. This authorization dispatches only ${authorization.routedMemberID}; retry with exactly the approved seat, prompt and model.`
+  if (authorization.taskIntentHash !== authorizationTaskIntentHash(task))
+    return "Authorized Task denied: task-intent-mismatch. subagent_type, prompt and model must match the approved intent byte for byte; retry with exactly what was presented and approved."
+  return undefined
+}
+
 function eventID(input: AuthorizationInput) {
   return EventV2.ID.make(
     `evt_maestro_authorization_${hash(`${input.sessionID}\0${input.validationRecordID}\0${input.approvalMessageID}`)}`,

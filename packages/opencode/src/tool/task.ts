@@ -17,13 +17,12 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@opencode-ai/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { reserveDispatch } from "@/maestro/dispatch"
-import { authorizationTaskIntentHash } from "@/maestro/authorization"
+import { authorizedTaskMismatch, readAuthorization } from "@/maestro/authorization"
 import { canonicalMemberId, nativeProfiles, roster } from "@/maestro/roster"
 import { Permission } from "@/permission"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Git } from "@/git"
 import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
-import { readAuthorization } from "@/maestro/authorization"
 import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
@@ -201,29 +200,14 @@ export const TaskTool = Tool.define(
         }
         // The reservation is write-once and snapshots the child's permissions, so check the approved seat and
         // intent before reserving; a wrong subagent_type would otherwise pin its snapshot and spend the approval.
-        const authorization = yield* readAuthorization(params.authorizationID)
-        if (authorization?.sessionID === ctx.sessionID && authorization.routedMemberID !== nextID) {
-          return yield* Effect.fail(
-            new Error(
-              `Authorized Task denied: routed-seat-mismatch. This authorization dispatches only ${authorization.routedMemberID}; retry with exactly the approved seat, prompt and model.`,
-            ),
-          )
-        }
-        if (
-          authorization?.sessionID === ctx.sessionID &&
-          authorization.taskIntentHash !==
-            authorizationTaskIntentHash({
-              subagentType: params.subagent_type,
-              prompt: params.prompt,
-              model: params.model,
-            })
-        ) {
-          return yield* Effect.fail(
-            new Error(
-              "Authorized Task denied: task-intent-mismatch. subagent_type, prompt and model must match the approved intent byte for byte; retry with exactly what was presented and approved.",
-            ),
-          )
-        }
+        const mismatch = authorizedTaskMismatch(yield* readAuthorization(params.authorizationID), {
+          sessionID: ctx.sessionID,
+          memberID: nextID,
+          subagentType: params.subagent_type,
+          prompt: params.prompt,
+          model: params.model,
+        })
+        if (mismatch) return yield* Effect.fail(new Error(mismatch))
         const reservation = yield* reserveDispatch({
           sessionID: ctx.sessionID,
           authorizationID: params.authorizationID,
