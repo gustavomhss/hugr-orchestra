@@ -398,6 +398,8 @@ A pin in a recipe that differs from the inventory is a packaging-lint failure. R
 
 F6.12 The installed skill root is a real-filesystem copy of `C/skills/`. Installers MUST ship it byte-identical with `C/skills-manifest.json` (Schema F6-A), which sits next to it (outside `skills/`, so no loader lists it). T6 owns placement, and the root is resolved like F5.14 (`<hostRoot>/backend/skills/`). Q-native verifies installed bytes against the manifest, which detects stale bodies after update or restart.
 
+Amendment (M3-5): in a compiled build the manifest is the content digest of the embedded skill tree (SHA-256 over sorted `path\0sha256(bytes)` lines). The host copies the tree to `<cache>/backend-skills/<version>-<digest12>/` (the first 12 hex digits of that digest), so two builds never share a copy even when their version strings match (every unversioned build is `local`). A copy that fails verification against its digest is replaced whole; no other copy is touched. Old copies are kept, so an update never removes a tree a running process reads and a rollback re-selects the older install's own copy.
+
 F6.13 Registration uses existing source mechanisms only:
 - V1: config `skills.paths` (`S/packages/core/src/v1/config/skills.ts:5-12`, scanned with `**/SKILL.md` at `index.ts:255-264`), or a config directory's `skill/`/`skills/` (`index.ts:212-215`).
 - V2: a plugin `ctx.skill.transform(draft => draft.source(DirectorySource{ type: "directory", path }))`, the pattern of `S/packages/core/src/config/plugin/skill.ts:18-46`.
