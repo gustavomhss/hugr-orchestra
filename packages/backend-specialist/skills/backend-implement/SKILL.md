@@ -79,7 +79,7 @@ The final message is the result. Write, in as few sentences as it takes:
 4. How to use or run the change.
 5. Remaining limits and risks.
 
-Delegated: English, terse; the caller reads the typed card, so do not restate it. Direct: the language of the user's latest message; when blocked, list what the user must supply and who owns any diagnosis. Then write exactly one `backend-result` block as the prompt defines, with no tool call after it. The card carries worker claims only: no verification, acceptance, memory status, Session or task IDs.
+English, terse; the caller reads the typed card, so do not restate it. Then write exactly one `backend-result` block as the prompt defines, with no tool call after it. The card carries worker claims only: no verification, acceptance, memory status, Session or task IDs.
 
 ## 6. Continuity
 

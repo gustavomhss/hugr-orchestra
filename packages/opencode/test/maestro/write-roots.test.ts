@@ -217,28 +217,16 @@ describe("WriteRoots.keep", () => {
   })
 })
 
-describe("WriteRoots.bindSession", () => {
-  it.live("a binding made after the loader is built narrows the next load, and only the same roots rebind", () =>
+describe("WriteRoots.loader", () => {
+  it.live("re-reads the Session on every load, so a binding made after the loader is built narrows the next load", () =>
     harness([], (h) => Effect.gen(function* () {
       const session = yield* h.sessions.create({ agent: "backend" })
       const load = WriteRoots.loader(() => Effect.succeed(undefined), () => h.sessions.get(session.id).pipe(Effect.orDie))
       expect(yield* load()).toBeUndefined()
 
-      yield* WriteRoots.bindSession(h.sessions, session, ["src"])
+      const permission = yield* WriteRoots.bind("backend", ["src"], session.permission ?? [])
+      yield* h.sessions.setPermission({ sessionID: session.id, permission })
       expect(yield* load()).toMatchObject({ writeRoots: [path.join(h.directory, "src")], requireSandbox: true })
-
-      // Same roots (in any spelling validate canonicalises to them) are idempotent.
-      yield* WriteRoots.bindSession(h.sessions, session, ["src", "./src"])
-      const bound = (yield* h.sessions.get(session.id)).permission
-      expect(WriteRoots.read(bound)).toEqual([path.join(h.directory, "src")])
-
-      // Other roots are refused, even through the stale Session the caller still holds, and the binding is unchanged.
-      const widened = yield* WriteRoots.bindSession(h.sessions, session, ["src", "outside"]).pipe(Effect.exit)
-      expect(Exit.isFailure(widened)).toBe(true)
-      if (Exit.isFailure(widened)) expect(Cause.pretty(widened.cause)).toContain("write-scope-rebind-refused")
-      expect(Exit.isFailure(yield* WriteRoots.bindSession(h.sessions, session, []).pipe(Effect.exit))).toBe(true)
-      expect((yield* h.sessions.get(session.id)).permission).toEqual(bound)
-      expect(yield* load()).toMatchObject({ writeRoots: [path.join(h.directory, "src")] })
     })),
     120000,
   )

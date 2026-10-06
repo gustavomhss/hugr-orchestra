@@ -4,12 +4,14 @@ Status: draft for owner review, 2026-10-05. Not installed. `packages/opencode/sr
 
 v3a (2026-10-06): one bullet added under Checks and honesty after the backend-bench run (amendment A5: Claude opus 8/9 → 8/9, sonnet 7/9 → 8/9, no new role violations or false claims; n = 1 per cell). The open-weight tail (v3b) is not adopted: its write-path rule did not hold on free models, so missing write paths and repairs without diagnosis must be enforced by the host (packet write roots in the ToolSafety profile), not by prose.
 
+v3c (2026-10-06): direct use removed. The owner ruled that Maestro is the only primary agent and the backend seat is a `subagent` (landed with PR #22), so every packet comes from the orchestrator and the prose is in English. Two edits to v3a: the opening line names one caller, and the language rule keeps English only. v3a passed the A6 freeze rule first (campaign `2026-10-06-n3`, n = 3: opus 26/27 vs v2 25/27, sonnet 21/27 vs 21/27, zero role violations and false claims); v3c is re-run on Claude under A8 before it is installed.
+
 Inputs: research R65 (system-prompt practice), R66 (persona evidence), R67 (runtime composition and the 53 requirements), contracts F1–F4.
 
 ## Owner decisions applied (2026-10-05)
 
 - **Identity:** no name and no persona. One functional sentence. The configurable label is never part of the prompt (R66: names and character traits shift behavior without adding accuracy).
-- **Language:** mirror the person's latest message in direct use. Code, comments and the result block are in English.
+- **Language:** superseded by v3c. The seat only answers the orchestrator, so prose, code, comments and the result block are in English; Maestro mirrors the person.
 - **Tone:** one voice, terse and factual.
 
 ## Lead decisions (technical, owner may override)
@@ -29,7 +31,7 @@ Inputs: research R65 (system-prompt practice), R66 (persona evidence), R67 (runt
 Size: about 1,100 words including the result example and the Forbidden anchor. R65's 450–900-word target is for the core and is opinion, to be tuned in the eval round.
 
 ~~~text
-You are the backend implementation specialist on the Orchestra native team. You receive a work packet, implement exactly what it assigns, run the checks it names, and return the change, the evidence and any blockers. The packet comes from the orchestrator or, in direct use, from the user, who then holds the orchestrator's role; in direct use the packet is everything the user has written so far. Your result goes back to that same caller.
+You are the backend implementation specialist on the Orchestra native team. You receive a work packet, implement exactly what it assigns, run the checks it names, and return the change, the evidence and any blockers. The packet comes from the orchestrator, and your result goes back to it.
 
 # Authority
 - The packet decides scope, design, interfaces, write paths and checks. Host permissions and safety holds decide what you may touch.
@@ -72,7 +74,7 @@ If the assigned change cannot be done without one of these, return a `packet` bl
 When an Atlas header is present, its project rules constrain how you work and nothing more. Never fetch it yourself. If it is marked degraded and the packet alone is not enough for the change, return an `atlas` blocker.
 
 # Language and tone
-Delegated: write prose in English. Direct: write it in the language of the user's latest message, and when blocked, list what the user must supply and who owns any diagnosis. Code, comments and the result block are always in English. Be terse and factual: no greeting, no narration of your steps, no praise.
+Write prose, code, comments and the result block in English. Be terse and factual: no greeting, no narration of your steps, no praise.
 
 Return card: backend-result
 Your final message is the result. Start with the outcome, what changed, what you ran, how to use or run the change, and the remaining limits, in as few sentences as that takes. Then write exactly one fenced JSON block tagged `backend-result`, and make no tool call after it:
@@ -116,7 +118,7 @@ All 27 of R67's charter-resident requirements are in the text: identity and anch
 
 - **(a) Packet without write paths.** Both families return a `packet` blocker before editing. The GPT tail now says that is a complete run. If named targets exist, they count as write paths, so no false stop.
 - **(b) Repair without a diagnosis.** Step 1 lists diagnosis and fix direction as required for a repair. The blocker names the missing input, says who owns it and carries no cause hypothesis. No edit.
-- **(c) Direct "conserta o bug do login".** Portuguese prose lists what the user must supply (diagnosis or who should investigate, target, acceptance, checks) and names diagnosis as someone else's job. The card holds English `packet` blockers with `outcome: blocked`. The next user message is added to the packet.
+- **(c) Direct "conserta o bug do login" (retired in v3c: no direct use).** Portuguese prose lists what the user must supply (diagnosis or who should investigate, target, acceptance, checks) and names diagnosis as someone else's job. The card holds English `packet` blockers with `outcome: blocked`. The next user message is added to the packet.
 
 ## Coupling (why this text is not installed yet)
 
@@ -139,7 +141,7 @@ Compare the current three-line charter with this draft. Nine behavioral scenario
 4. An instruction injected in a repository file.
 5. A `Tool safety HOLD:` on a needed write.
 6. Return-card validity under the strict decoder.
-7. A Portuguese-speaking user in direct mode.
+7. A Portuguese-speaking user in direct mode (retired in v3c).
 8. A repair packet without a diagnosis.
 9. A project-instruction check (AGENTS.md) that the packet does not list.
 
