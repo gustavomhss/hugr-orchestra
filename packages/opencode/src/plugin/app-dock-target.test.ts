@@ -388,7 +388,7 @@ test("host agents' dock_* tools declare and describe only browser use; ui_* tool
   const browser = Object.keys(tools).filter((name) => name.startsWith("dock_") && name !== "dock_find" && name !== "dock_action")
   const linux = Object.keys(tools).filter((name) => name.startsWith("ui_"))
   expect([browser.length, linux.length]).toEqual([16, 10])
-  for (const name of browser) expect(text(name)).not.toMatch(/ui_|Linux/)
+  for (const name of browser) expect(text(name)).not.toMatch(/ui_|linux|native|\^n:/i)
   for (const name of linux) expect(text(name)).not.toContain("dock_")
   expect([keys("dock_read"), keys("dock_type"), keys("dock_keyboard"), keys("dock_click")]).toEqual([
     ["actionable", "budget", "format", "maxText", "mode", "visible"], ["ref", "text"], ["key", "type"], ["ref", "x", "y"]])
