@@ -1,5 +1,6 @@
 import { $ } from "bun"
 import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
+import { rmSync } from "fs"
 import * as fs from "fs/promises"
 import os from "os"
 import path from "path"
@@ -63,6 +64,27 @@ function clean(dir: string) {
   })
 }
 
+// Every git fixture used to spawn `git init` plus four `git config` processes, and process spawns dominate fixture
+// cost on Windows. Build that repository once per process and copy its .git instead. Callers still make their own
+// root commit, so each fixture keeps a unique root commit and therefore a unique project ID.
+let gitTemplate: Promise<string> | undefined
+
+export async function gitInit(dir: string) {
+  gitTemplate ??= createGitTemplate()
+  await fs.cp(await gitTemplate, path.join(dir, ".git"), { recursive: true })
+}
+
+async function createGitTemplate() {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-test-git-template-"))
+  process.once("exit", () => rmSync(dir, { recursive: true, force: true }))
+  await $`git init`.cwd(dir).quiet()
+  await $`git config core.fsmonitor false`.cwd(dir).quiet()
+  await $`git config commit.gpgsign false`.cwd(dir).quiet()
+  await $`git config user.email "test@opencode.test"`.cwd(dir).quiet()
+  await $`git config user.name "Test"`.cwd(dir).quiet()
+  return path.join(dir, ".git")
+}
+
 type TmpDirOptions<T> = {
   git?: boolean
   config?: Partial<ConfigV1.Info>
@@ -73,15 +95,11 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
   const dirpath = sanitizePath(path.join(os.tmpdir(), "opencode-test-" + Math.random().toString(36).slice(2)))
   await fs.mkdir(dirpath, { recursive: true })
   if (options?.git) {
-    await $`git init`.cwd(dirpath).quiet()
-    await $`git config core.fsmonitor false`.cwd(dirpath).quiet()
-    await $`git config commit.gpgsign false`.cwd(dirpath).quiet()
-    await $`git config user.email "test@opencode.test"`.cwd(dirpath).quiet()
-    await $`git config user.name "Test"`.cwd(dirpath).quiet()
+    await gitInit(dirpath)
     await $`git commit --allow-empty -m "root commit ${dirpath}"`.cwd(dirpath).quiet()
   }
   if (options?.config) {
-    await Bun.write(
+    await fs.writeFile(
       path.join(dirpath, "opencode.json"),
       JSON.stringify({
         $schema: "https://opencode.ai/config.json",
@@ -127,11 +145,7 @@ export function tmpdirScoped<E = never, R = never>(options?: {
       spawner.spawn(ChildProcess.make("git", args, { cwd: dir })).pipe(Effect.flatMap((handle) => handle.exitCode))
 
     if (options?.git) {
-      yield* git("init")
-      yield* git("config", "core.fsmonitor", "false")
-      yield* git("config", "commit.gpgsign", "false")
-      yield* git("config", "user.email", "test@opencode.test")
-      yield* git("config", "user.name", "Test")
+      yield* Effect.promise(() => gitInit(dir))
       yield* git("commit", "--allow-empty", "-m", `root commit ${dir}`)
     }
 

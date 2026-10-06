@@ -15,12 +15,13 @@ import { Session } from "@/session/session"
 import { LLM } from "../../src/session/llm"
 import { MessageV2 } from "../../src/session/message-v2"
 import { SessionProcessor } from "../../src/session/processor"
+import { SessionRetry } from "../../src/session/retry"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { SessionStatus } from "../../src/session/status"
 import { SessionSummary } from "../../src/session/summary"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { TestInstance, provideTmpdirInstance, provideTmpdirServer } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { releaseFirstSleep, testEffect } from "../lib/effect"
 import { raw, reply, TestLLMServer } from "../lib/llm-server"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -77,11 +78,9 @@ const interruptLLM = Layer.succeed(LLM.Service, LLM.Service.of({ stream: () => S
 const interruptEnv = LayerNode.compile(root, [...replacements, [LLM.node, interruptLLM]])
 const itInterrupt = testEffect(interruptEnv)
 
+const releaseBackoff = releaseFirstSleep(SessionRetry.RETRY_INITIAL_DELAY)
 
-
-// ---------------------------------------------------------------------------
 // Tests
-// ---------------------------------------------------------------------------
 
 it.live("session.processor effect tests capture llm input cleanly", () =>
   provideTmpdirServer(
@@ -343,7 +342,7 @@ it.live("session.processor effect tests reset reasoning state across retries", (
           system: [],
           messages: [{ role: "user", content: "reason" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
         const reasoning = parts.filter((part): part is SessionV1.ReasoningPart => part.type === "reasoning")
@@ -434,7 +433,7 @@ it.live("session.processor effect tests retry recognized structured json errors"
           system: [],
           messages: [{ role: "user", content: "retry json" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
 
@@ -481,7 +480,7 @@ it.live("session.processor effect tests retry OpenAI-compatible midstream server
           system: [],
           messages: [{ role: "user", content: "retry midstream server error" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
 
@@ -538,7 +537,7 @@ it.live("session.processor effect tests retry network_error finish reasons", () 
           system: [],
           messages: [{ role: "user", content: "retry network error" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
 
@@ -593,7 +592,7 @@ it.live("session.processor effect tests publish retry status updates", () =>
           system: [],
           messages: [{ role: "user", content: "retry" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         yield* off
 

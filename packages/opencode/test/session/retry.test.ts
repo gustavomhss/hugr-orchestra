@@ -3,7 +3,6 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import type { NamedError } from "@opencode-ai/core/util/error"
 import { APICallError } from "ai"
-import { setTimeout as sleep } from "node:timers/promises"
 import { Effect, Schedule, Schema } from "effect"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { SessionRetry } from "../../src/session/retry"
@@ -431,17 +430,16 @@ describe("session.message-v2.fromError", () => {
   test.concurrent(
     "converts ECONNRESET socket errors to retryable APIError",
     async () => {
+      // The body never finishes; once headers arrive the server force-closes the
+      // socket mid-body, which Bun's fetch reports as ECONNRESET. Closing it
+      // explicitly avoids waiting out the server idle timeout.
       using server = Bun.serve({
         port: 0,
-        idleTimeout: 8,
-        async fetch(_req) {
+        fetch() {
           return new Response(
             new ReadableStream({
-              async pull(controller) {
+              start(controller) {
                 controller.enqueue("Hello,")
-                await sleep(10000)
-                controller.enqueue(" World!")
-                controller.close()
               },
             }),
             { headers: { "Content-Type": "text/plain" } },
@@ -450,7 +448,10 @@ describe("session.message-v2.fromError", () => {
       })
 
       const error = await fetch(new URL("/", server.url.origin))
-        .then((res) => res.text())
+        .then((res) => {
+          server.stop(true)
+          return res.text()
+        })
         .catch((e) => e)
 
       const result = MessageV2.fromError(error, { providerID })
