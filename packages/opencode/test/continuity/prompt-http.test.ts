@@ -291,3 +291,46 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     expect((yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })).system).toEqual(saved.system)
   }), 120_000)
 }
+
+it.instance("read shows nested rules again after working memory drops the turn that showed them", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const jobs = yield* BackgroundJob.Service
+  yield* configure(llm.url, instance.directory)
+  const rules = path.join(instance.directory, "rules")
+  yield* Effect.promise(() => Bun.write(path.join(rules, "AGENTS.md"), "NESTED_RULE_5C1E"))
+  yield* Effect.promise(() => Bun.write(path.join(rules, "first.txt"), "first"))
+  yield* Effect.promise(() => Bun.write(path.join(rules, "second.txt"), "second"))
+  const chat = yield* sessions.create({ title: "Nested rules after working memory" })
+  const capture = ledger()
+  const seed = Array.from({ length: 6 }, (_, index) => `RULES_SEED_${index}`)
+  yield* llm.pushMatch(parent(seed[0]), reply().tool("read", { filePath: path.join(rules, "first.txt") }))
+  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+  const memory = forkAnswer(FIRST, maintenance)
+  yield* llm.pushMatch(memory.match, memory.response)
+  yield* llm.pushMatch(capture.record("next", parent("RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
+  yield* llm.pushMatch(parent("RULES_NEXT"), answer("NEXT_DONE"))
+  yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unexpected nested-rules request" } }))
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+    parts: [{ type: "text", text }] }), "Nested-rules HTTP request stalled", "30 seconds")
+  for (const text of seed) yield* send(text)
+  const history = yield* sessions.messages({ sessionID: chat.id })
+  const job = yield* jobFor(chat.id, history.at(-1)!.info.id)
+  const done = yield* jobs.wait({ id: job.id, timeout: 10_000 })
+  expect(done.info?.output).toBe("applied")
+  yield* send("RULES_NEXT")
+  const durable = yield* sessions.messages({ sessionID: chat.id })
+  const reads = durable.flatMap((message) => message.parts).flatMap((part) =>
+    part.type === "tool" && part.tool === "read" && part.state.status === "completed" ? [part.state] : [])
+  expect(reads).toHaveLength(2)
+  expect(reads[0].output).toContain("NESTED_RULE_5C1E")
+  // Working memory kept the first read's turn, and the rules it showed, out of the request that made the second read.
+  const conversation = wireMessages(capture.hits[0].hit.body).filter((entry) => entry.role !== "system")
+    .map((entry) => entry.content).join("\n")
+  expect(conversation).not.toContain(seed[0])
+  expect(conversation).not.toContain("NESTED_RULE_5C1E")
+  expect(reads[1].output).toContain(`Instructions from: ${path.join(rules, "AGENTS.md")}\nNESTED_RULE_5C1E`)
+  expect(reads[1].metadata.loaded).toEqual([path.join(rules, "AGENTS.md")])
+}), 120_000)
