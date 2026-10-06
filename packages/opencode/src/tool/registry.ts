@@ -406,10 +406,10 @@ const layer = Layer.effect(
       const description = list
         .map(
           (item) =>
-            `- ${item.id ?? item.name}: ${item.description ?? "This subagent should only be called manually by the user."}`,
+            `- ${item.id ?? item.name}: ${item.description ?? "No description; start it only when the owner names it."}`,
         )
         .join("\n")
-      const sections = ["Available agent types and the tools they have access to:", description]
+      const sections = ["Teammates you can start:", description]
       const allowed = allowedTaskModels(Permission.merge(agent.permission, sessionPermission ?? []))
       if (allowed.length > 0) {
         sections.push(
