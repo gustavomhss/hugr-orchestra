@@ -47,7 +47,8 @@ async function optional(file: string) {
 }
 
 async function goldenCases(prefix: (name: string) => boolean) {
-  return (await readdir(path.join(golden, "ledger"))).filter(prefix).sort()
+  // GENERATOR.json records the generator's tool versions; it is not a case.
+  return (await readdir(path.join(golden, "ledger"))).filter((name) => name !== "GENERATOR.json" && prefix(name)).sort()
 }
 
 // Bodies sealed by hand with Node's crypto, an implementation independent of LedgerChain.mac.
