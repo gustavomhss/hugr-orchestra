@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { omit } from "remeda"
 import { createRoster, nativeProfiles, roster } from "../../src/maestro/roster"
 import { lookupRouteGrant } from "../../src/maestro/route-grant"
 import {
@@ -100,6 +101,11 @@ test("the current roster hash is pinned and superseded ones stay verifiable", ()
   expect(
     verifyReviewPolicyHash("3d84eb72e8c4bc22d0e4cbb50affaab01f45b0fb2a41c7375d02640d095a9f2a", lucy, profile),
   ).toBe("maestro-review-policy-v2")
+  // The review policy before review seats could read saved tool output.
+  const superseded = "b6996d6a55dfa44e2b781b06bb8ddac2be43c7c1f8b7c1d63b2068b985de4a22"
+  expect(reviewPolicyHash(lucy, profile)).not.toBe(superseded)
+  expect(reviewPolicyHash(lucy, omit(profile, ["external_directory"]))).toBe(superseded)
+  expect(verifyReviewPolicyHash(superseded, lucy, profile)).toBe("maestro-review-policy-v2")
   expect(verifyRosterHash("constructor", roster)).toBeUndefined()
   expect(verifyRosterHash("0".repeat(64), roster)).toBeUndefined()
 })

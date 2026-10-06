@@ -14,6 +14,7 @@ import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { Skill } from "../../src/skill"
+import { Truncate } from "../../src/tool/truncate"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -109,6 +110,10 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "websearch")).toBe("deny")
       expect(evaluate(agent, "skill")).toBe("deny")
       expect(evaluate(agent, "external_directory")).toBe("deny")
+      // External access covers bash and edit too, so only the review profile, which holds neither, reaches saved output.
+      expect(Permission.evaluate("external_directory", Truncate.GLOB, agent.permission).action).toBe(
+        seat.profile === "review" ? "allow" : "deny",
+      )
       expect(evaluate(agent, "bash")).toBe(seat.profile === "review" ? "deny" : "allow")
       expect(evaluate(agent, "edit")).toBe(seat.profile === "review" ? "deny" : "allow")
       const profile = Permission.fromConfig(nativeProfiles[seat.profile])
@@ -165,6 +170,7 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
       glob: "allow",
       grep: "allow",
       maestro_record_review: "allow",
+      external_directory: { "*": "deny", [Truncate.GLOB]: "allow" },
     })
     // The backend specialist keeps the seat rules: no .env reads and no publishing.
     expect(nativeProfiles.backend.read).toEqual(envRead)

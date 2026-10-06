@@ -234,9 +234,15 @@ describe("Truncate", () => {
         expect(result.content).toContain("its paging arguments (cursor, offset)")
         expect(result.content).not.toContain(result.outputPath)
         expect(result.content).not.toContain("Grep")
-        // One file tool left is enough to reach the saved output.
+        // A file tool reaches the saved output only with external access to its directory.
         const reader = { permission: [...linux.permission, { permission: "read", pattern: "*", action: "allow" as const }] }
-        expect((yield* svc.output(lines, { maxLines: 10 }, reader as any)).content).toContain("Full output saved to:")
+        const outside = (yield* svc.output(lines, { maxLines: 10 }, reader as any)).content
+        expect(outside).toContain("do not look for a file")
+        expect(outside).not.toContain("Full output saved to:")
+        const granted = {
+          permission: [...reader.permission, { permission: "external_directory", pattern: Truncate.GLOB, action: "allow" as const }],
+        }
+        expect((yield* svc.output(lines, { maxLines: 10 }, granted as any)).content).toContain("Full output saved to:")
       }),
     )
 
