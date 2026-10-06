@@ -130,12 +130,17 @@ const toolErrorMessage = (error: unknown) => {
   return message === "App Dock has no open tabs"
     ? `${message}; ask the user to open the App Dock (for Linux apps: Apps > Linux workspace)` : message
 }
+const busy = "The app did not answer in time; it may be busy, e.g. showing a dialog an action opened. Look again (ui_look) before retrying an action: it may already have happened"
 // What the model can do next for codes that otherwise led unscripted runs into blind retries.
 const hints: Record<string, string> = {
   "unstable-ref": 'This control sits below virtual ancestry (lists, trees); retry dock_action with mode: "observed"',
   "unsupported-interface": 'This field has no editable-text interface; retry dock_type with mode: "keyboard"',
   "stale-ref": "Native refs expire when the app changes; pass target {name, role} to locate and act in one call",
   "unsupported-backend": "The active App Dock tab is a browser page; ask the user to open Apps > Linux workspace, or use dock_read for the page",
+  timeout: busy,
+  "transport-timeout": busy,
+  "app-not-responding": "The app stopped answering, likely busy in a dialog it opened. Do not repeat the action; look again (ui_look) in a moment, and if the app stays missing, report it",
+  "menu-closed": "Open the menu that holds this item first (ui_act on the menu, e.g. File), then act on the item",
 }
 const toolError = (error: unknown) => error instanceof NativeRPCError
   ? toJSON({ backend: error.backend, code: error.code, message: error.message, outcome: error.outcome,
@@ -658,7 +663,12 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     while (stack.length && !AppDockOutline.locate(roots, stack.at(-1)!)) stack.pop()
     scopes.set(context.sessionID, stack)
     const scope = stack.length ? AppDockOutline.locate(roots, stack.at(-1)!) : undefined
-    const note = scan.complete ? "" : `\n(partial view: ${JSON.stringify(scan.reasons)})`
+    // The helper leaves out an app that stops answering (busy in a dialog, hung) and names it as app-not-responding:<process>.
+    const reasons = Array.isArray(scan.reasons) ? scan.reasons.filter((reason): reason is string => typeof reason === "string") : []
+    const silent = reasons.flatMap((reason) => reason.startsWith("app-not-responding:") ? [reason.slice(19)] : [])
+    const partial = reasons.filter((reason) => !reason.startsWith("app-not-responding:"))
+    const note = (silent.length ? `\nNot responding, so missing from this view: ${silent.join(", ")} (it may be busy in a dialog; ui_look again in a moment)` : "")
+      + (scan.complete || (silent.length && !partial.length) ? "" : `\n(partial view: ${JSON.stringify(partial)})`)
     return { roots, scope, stack, note }
   })
   const view = (context: ToolContext, roots: AppDockOutline.Node[], scope: AppDockOutline.Node | undefined, note: string) => {
