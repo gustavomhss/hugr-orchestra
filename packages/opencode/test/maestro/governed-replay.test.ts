@@ -102,7 +102,7 @@ it.instance("completion-bearing governed replay requires actual terminal worker 
 
     expect(promptCount()).toBe(1)
   }),
-  { git: true, config: { agent: { maestro: { name: "Conductor" } } } },
+  { git: true },
   60000,
 )
 
@@ -122,6 +122,6 @@ it.instance("governed replay binds the backend seat's write roots through the re
     expect(WriteRoots.read((yield* sessions.get(first.metadata.sessionId)).permission)).toEqual(bound)
     expect((yield* def.execute(input, context)).metadata).toMatchObject({ workResult: { writeRoots: ["src"] } })
   }),
-  { git: true, config: { agent: { maestro: { name: "Conductor" } } } },
+  { git: true },
   60000,
 )
