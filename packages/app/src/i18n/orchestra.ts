@@ -185,7 +185,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.activity.agents": "Agents",
   "orchestra.tasks.count.one": "{{count}} task",
   "orchestra.tasks.count.other": "{{count}} tasks",
-  "orchestra.tasks.finished": "Finished",
+  "orchestra.tasks.finished": "Completed",
   "orchestra.tasks.state.unknown": "Status unknown",
   "orchestra.tasks.stopping": "Stopping…",
   "orchestra.tasks.stopFailed": "Could not stop this task.",
