@@ -8,6 +8,8 @@ import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
 import { RelayHookInstall } from "../src/relay-hook-install"
+import { MaestroArsenal } from "../src/tool/maestro-arsenal"
+import { ToolSafetyProfile } from "../src/tool-safety-profile"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(FSUtil.node))
@@ -451,6 +453,31 @@ describe("RelayHookInstall lifecycle", () => {
 })
 
 describe("RelayHookInstall hooks.json", () => {
+  it.effect("lives beside preferences.json, in the directory the ToolSafety profile loader reads", () =>
+    Effect.gen(function* () {
+      const binding = yield* fixture
+      const fs = yield* FSUtil.Service
+      yield* install(binding, guard())
+      const project = path.join(binding.data, "project")
+      const stateDirectory = MaestroArsenal.stateDirectory(binding.data, projectID)
+      const preferences = {
+        scrutiny: "balanced",
+        askBefore: [],
+        neverTouch: ["secrets/**"],
+        riskTolerance: "low",
+        waiverAuthority: "human-only",
+      }
+      yield* Effect.promise(async () => {
+        await mkdir(project)
+        await writeFile(path.join(path.dirname(binding.file), "preferences.json"), JSON.stringify(preferences))
+      })
+      // The native registry's binding: the state directory of `MaestroArsenal.stateDirectory`.
+      const loaded = yield* ToolSafetyProfile.makeLoader(fs, { directory: project, stateDirectory, projectID })()
+      expect(loaded?.neverTouch).toEqual(["secrets/**"])
+      expect(readdirSync(path.dirname(binding.file)).toSorted()).toEqual(["hooks.json", "preferences.json"])
+    }),
+  )
+
   it.effect("a corrupt file yields profile-invalid and is left as found", () =>
     Effect.gen(function* () {
       const binding = yield* fixture
@@ -495,9 +522,10 @@ describe("RelayHookInstall hooks.json", () => {
       expect((yield* refusal(install(binding, guard()))).reason).toBe("profile-symlink-denied")
       // A symlinked profile directory, with no hooks.json yet.
       const linked = { ...binding, projectID: "project-2" }
+      const profile = path.dirname(RelayHookInstall.file(binding.data, "project-2"))
       yield* Effect.promise(async () => {
-        await mkdir(path.join(binding.data, "project-2"))
-        await symlink(elsewhere, path.join(binding.data, "project-2", "profile"))
+        await mkdir(path.dirname(profile), { recursive: true })
+        await symlink(elsewhere, profile)
       })
       expect((yield* refusal(install(linked, guard()))).reason).toBe("profile-symlink-denied")
       expect(readdirSync(elsewhere)).toEqual([])

@@ -8,10 +8,13 @@ import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
 import { KeyedMutex } from "./effect/keyed-mutex"
 import { FSUtil } from "./fs-util"
+import { MaestroArsenal } from "./tool/maestro-arsenal"
+import { ToolSafetyProfile } from "./tool-safety-profile"
 
 // The hook install writer (relay-exec-spec H1). Orchestra's server is the only writer of `hooks.json`: every install
 // pins a published `relay.hook.v1` snapshot under the graph rules of Relay's `compile_hook`, so enforcement never sees
-// a graph the compiler would refuse, even from a crafted export. Reads follow the ToolSafety profile loader's rules.
+// a graph the compiler would refuse, even from a crafted export. `hooks.json` sits beside `preferences.json` in the
+// project's ToolSafety profile directory, and reads follow the profile loader's rules.
 
 /** The profile loader's cap. A larger file would hold every tool call, so the writer never produces one. */
 export const MAX_BYTES = 512 * 1024
@@ -42,7 +45,7 @@ export class Refused extends Schema.TaggedErrorClass<Refused>()("RelayHookInstal
   message: Schema.String,
 }) {}
 
-/** `data` is `Global.data`; installs are pinned per project. */
+/** `data` is `Global.data`; installs are pinned per project, in `file(data, projectID)`. */
 export interface Binding {
   readonly data: string
   readonly projectID: string
@@ -56,7 +59,9 @@ export interface Changed {
   readonly receipt: Receipt
 }
 
-export const file = (data: string, projectID: string) => path.join(data, projectID, "profile", "hooks.json")
+/** Beside `preferences.json`, in the ToolSafety profile directory the profile loader reads. */
+export const file = (data: string, projectID: string) =>
+  path.join(ToolSafetyProfile.profileDirectory(MaestroArsenal.stateDirectory(data, projectID), projectID), "hooks.json")
 
 /**
  * The installs of a project; an absent file is none. Refuses `profile-invalid` when the file does not decode strictly
