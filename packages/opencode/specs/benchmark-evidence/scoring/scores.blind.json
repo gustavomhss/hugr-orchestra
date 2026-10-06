@@ -1,0 +1,13 @@
+{"rubric":"gold.md, fixed before answers existed; deterministic parts in deterministic.json; judged parts noted",
+ "A":{"P01":1,"P02":0.857,"P03":1,"P04":1,"P05":1,"P06":1,"P07":1,"P08":1,"P09":1,"P10":1,"P11":0.833,"P12":1,"P13":1,"P14":1,"P15":1,"P16":1,"P17":0.5},
+ "B":{"P01":1,"P02":0.857,"P03":1,"P04":1,"P05":1,"P06":1,"P07":1,"P08":1,"P09":1,"P10":0.5,"P11":0.833,"P12":1,"P13":1,"P14":1,"P15":1,"P16":1,"P17":1},
+ "notes":{
+  "P02":"A: recall 6/8 (G1,G3,G5,G6,G7,G8; misses G2 admission-once, G4 don't call maestro_record_review yourself), 10 items all user-traceable. B: recall 6/8 (G1,G3,G4,G5,G6,G7; misses G2, G8), all traceable. F1 0.857 each.",
+  "P05":"Both 2/2. A adds a misattributed 'correction' (the tool printing the real hashes is presented as a user correction).",
+  "P07":"Both: exact command + names the pre-existing files (2/2).",
+  "P10":"B lacks the exact first error text ('the detailed text of each is not in the context').",
+  "P11":"Both miss MaestroReviewRejected.",
+  "P12":"Both 2/2: wait for the user, no redo, flag Charlie's 'no approved scope found'.",
+  "P13":"Both name exactly Lucy and Charlie, Lucy final APPROVE.",
+  "P15":"Both why 2/2 and by=Maestro (3/3).",
+  "P17":"A gives approve/aprovo/decline only."}}
