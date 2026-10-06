@@ -85,6 +85,7 @@ delete process.env["OTEL_RESOURCE_ATTRIBUTES"]
 
 // Use in-memory sqlite
 process.env["OPENCODE_DB"] = ":memory:"
+process.env["OPENCODE_INHERIT_CREDENTIALS"] = "0"
 
 // Seed the installed workspace SDK before any real bootstrap can populate the
 // shared config with a registry copy. Arsenal factory proofs require this identity.

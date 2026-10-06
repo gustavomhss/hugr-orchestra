@@ -149,7 +149,7 @@ export interface Interface extends State.Transformable<Draft> {
     /** Resolves a connection into usable credential material. */
     readonly resolve: (
       connection: IntegrationConnection.Info,
-    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError>
+    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError | Credential.InheritedError>
     /** Runs a key method and stores the resulting credential. */
     readonly key: (input: {
       /** Integration receiving the credential. */
@@ -170,13 +170,13 @@ export interface Interface extends State.Transformable<Draft> {
       /** User-facing label for the credential created on completion. */
       readonly label?: string
     }) => Effect.Effect<Attempt, AuthorizationError>
-    /** Updates a stored credential exposed as a connection. */
+    /** Updates a stored credential exposed as a connection. Inherited credentials are read-only. */
     readonly update: (
       credentialID: Credential.ID,
       updates: Partial<Pick<Credential.Info, "label">>,
-    ) => Effect.Effect<void>
-    /** Removes a stored credential connection. */
-    readonly remove: (credentialID: Credential.ID) => Effect.Effect<void>
+    ) => Effect.Effect<void, Credential.InheritedError>
+    /** Removes a stored credential connection. Inherited credentials are read-only. */
+    readonly remove: (credentialID: Credential.ID) => Effect.Effect<void, Credential.InheritedError>
   }
   readonly attempt: {
     /** Returns the current state of an OAuth attempt. */
@@ -397,6 +397,10 @@ export const locationLayer = Layer.effect(
           if (!implementation?.refresh) return credential.value
           const now = yield* Clock.currentTimeMillis
           if (credential.value.expires > now + Duration.toMillis(Duration.minutes(5))) return credential.value
+          const source = yield* credentials.inheritedFrom(credential.id)
+          if (source) {
+            return yield* new Credential.InheritedError({ credentialID: credential.id, source, reason: "refresh" })
+          }
           const value = yield* authorize(implementation.refresh(credential.value))
           yield* credentials.update(credential.id, { value })
           return value
