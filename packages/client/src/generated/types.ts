@@ -2327,6 +2327,24 @@ export type SkillsRemoveOutput = {
   readonly data: boolean
 }
 
+export type BehaviorsSetInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly behaviors: {
+    readonly behaviors: ReadonlyArray<{ readonly id: string; readonly name: string; readonly instructions: string }>
+  }["behaviors"]
+}
+
+export type BehaviorsSetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{ readonly id: string; readonly name: string; readonly instructions: string }>
+}
+
 export type EventsSubscribeOutput = OpenCodeEventEncoded
 
 export type PtysListInput = {

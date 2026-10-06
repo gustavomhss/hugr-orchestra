@@ -1,6 +1,7 @@
 import { Effect, Layer, LayerMap } from "effect"
 import { AgentV2 } from "./agent"
 import { AISDK } from "./aisdk"
+import { BehaviorV2 } from "./behavior"
 import { Catalog } from "./catalog"
 import { CommandV2 } from "./command"
 import { Config } from "./config"
@@ -60,6 +61,7 @@ export const locationServices = LayerNode.group([
   SkillV2.node,
   SystemContextRegistry.node,
   SystemContextBuiltIns.node,
+  BehaviorV2.node,
   LocationMutation.node,
   FileMutation.node,
   PermissionV2.node,

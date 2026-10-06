@@ -9,6 +9,7 @@ import { makePermissionGroup } from "./groups/permission"
 import { FileSystemGroup } from "./groups/fs"
 import { CommandGroup } from "./groups/command"
 import { SkillGroup } from "./groups/skill"
+import { BehaviorGroup } from "./groups/behavior"
 import { EventGroup, makeEventGroup } from "./groups/event"
 import type { Definition } from "@opencode-ai/schema/event"
 import { AgentGroup } from "./groups/agent"
@@ -48,6 +49,7 @@ const makeApiFromGroup = <
     .add(FileSystemGroup.middleware(locationMiddleware))
     .add(CommandGroup.middleware(locationMiddleware))
     .add(SkillGroup.middleware(locationMiddleware))
+    .add(BehaviorGroup.middleware(locationMiddleware))
     .add(eventGroup)
     .add(PtyGroup.middleware(locationMiddleware))
     .add(makeQuestionGroup(locationMiddleware, sessionLocationMiddleware))

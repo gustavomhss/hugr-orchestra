@@ -93,6 +93,8 @@ import type {
   SkillsSaveOutput,
   SkillsRemoveInput,
   SkillsRemoveOutput,
+  BehaviorsSetInput,
+  BehaviorsSetOutput,
   EventsSubscribeOutput,
   PtysListInput,
   PtysListOutput,
@@ -874,6 +876,21 @@ export function make(options: ClientOptions) {
             method: "DELETE",
             path: `/api/skill`,
             query: { location: input["location"], path: input["path"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    behaviors: {
+      set: (input: BehaviorsSetInput, requestOptions?: RequestOptions) =>
+        request<BehaviorsSetOutput>(
+          {
+            method: "PUT",
+            path: `/api/behavior`,
+            query: { location: input["location"] },
+            body: { behaviors: input["behaviors"] },
             successStatus: 200,
             declaredStatuses: [400, 401],
             empty: false,

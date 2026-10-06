@@ -14822,6 +14822,104 @@
         ]
       }
     },
+    "/api/behavior": {
+      "put": {
+        "tags": ["behaviors"],
+        "operationId": "v2.behavior.set",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BehaviorInfo"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Replace the behaviors of the requested location's project and return the stored set. Every session of the project receives them as system context from its next provider turn; removed behaviors leave the next turn's request.",
+        "summary": "Set behaviors",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BehaviorSetInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.behavior.set({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/api/event": {
       "get": {
         "tags": ["events"],
@@ -24060,6 +24158,18 @@
               "reserved": {
                 "type": "integer",
                 "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "continuity": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "trigger": {
+                "type": "number"
               }
             },
             "additionalProperties": false
@@ -35647,6 +35757,39 @@
         "required": ["name", "description", "content"],
         "additionalProperties": false
       },
+      "BehaviorInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$",
+            "description": "Stable behavior identifier: lowercase letters, digits, dots, underscores and hyphens."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "instructions": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["id", "name", "instructions"],
+        "additionalProperties": false
+      },
+      "BehaviorSetInput": {
+        "type": "object",
+        "properties": {
+          "behaviors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BehaviorInfo"
+            }
+          }
+        },
+        "required": ["behaviors"],
+        "additionalProperties": false
+      },
       "Models-devRefreshed": {
         "type": "object",
         "properties": {
@@ -44868,6 +45011,10 @@
     {
       "name": "skills",
       "description": "Experimental skill routes."
+    },
+    {
+      "name": "behaviors",
+      "description": "Project-scoped model behaviors applied as system context."
     },
     {
       "name": "events",

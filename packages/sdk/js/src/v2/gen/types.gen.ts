@@ -6054,6 +6054,19 @@ export type SkillV2SaveInput = {
   mtime?: number
 }
 
+export type BehaviorInfo = {
+  /**
+   * Stable behavior identifier: lowercase letters, digits, dots, underscores and hyphens.
+   */
+  id: string
+  name: string
+  instructions: string
+}
+
+export type BehaviorSetInput = {
+  behaviors: Array<BehaviorInfo>
+}
+
 export type ModelsDevRefreshed = {
   id: string
   metadata?: {
@@ -15232,6 +15245,43 @@ export type V2SkillSaveResponses = {
 }
 
 export type V2SkillSaveResponse = V2SkillSaveResponses[keyof V2SkillSaveResponses]
+
+export type V2BehaviorSetData = {
+  body: BehaviorSetInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/behavior"
+}
+
+export type V2BehaviorSetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2BehaviorSetError = V2BehaviorSetErrors[keyof V2BehaviorSetErrors]
+
+export type V2BehaviorSetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<BehaviorInfo>
+  }
+}
+
+export type V2BehaviorSetResponse = V2BehaviorSetResponses[keyof V2BehaviorSetResponses]
 
 export type V2EventSubscribeData = {
   body?: never

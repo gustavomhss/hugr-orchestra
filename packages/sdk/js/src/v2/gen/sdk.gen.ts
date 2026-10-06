@@ -20,6 +20,7 @@ import type {
   AuthRemoveResponses,
   AuthSetErrors,
   AuthSetResponses,
+  BehaviorSetInput,
   CommandListErrors,
   CommandListResponses,
   Config as Config4,
@@ -286,6 +287,8 @@ import type {
   V2AgentFileUpdateResponses,
   V2AgentListErrors,
   V2AgentListResponses,
+  V2BehaviorSetErrors,
+  V2BehaviorSetResponses,
   V2CommandListErrors,
   V2CommandListResponses,
   V2CredentialRemoveErrors,
@@ -6997,6 +7000,46 @@ export class Skill extends HeyApiClient {
   }
 }
 
+export class Behavior extends HeyApiClient {
+  /**
+   * Set behaviors
+   *
+   * Replace the behaviors of the requested location's project and return the stored set. Every session of the project receives them as system context from its next provider turn; removed behaviors leave the next turn's request.
+   */
+  public set<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      behaviorSetInput: BehaviorSetInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "behaviorSetInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2BehaviorSetResponses, V2BehaviorSetErrors, ThrowOnError>({
+      url: "/api/behavior",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Event2 extends HeyApiClient {
   /**
    * Subscribe to events
@@ -7497,6 +7540,11 @@ export class V2 extends HeyApiClient {
   private _skill?: Skill
   get skill(): Skill {
     return (this._skill ??= new Skill({ client: this.client }))
+  }
+
+  private _behavior?: Behavior
+  get behavior(): Behavior {
+    return (this._behavior ??= new Behavior({ client: this.client }))
   }
 
   private _event?: Event2
