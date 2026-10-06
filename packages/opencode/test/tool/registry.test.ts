@@ -108,7 +108,7 @@ const renamed = testEffect(
         directories: () => InstanceState.directory.pipe(Effect.map((dir) => [path.join(dir, ".opencode")])),
         get: () =>
           Effect.succeed({
-            agent: { maestro: { name: "Pikachu" }, backend: { name: "Raichu" } },
+            agent: { backend: { name: "Raichu" } },
           }),
       }),
     ],
@@ -651,7 +651,8 @@ describe("tool.registry agent identity", () => {
     () =>
       Effect.gen(function* () {
         const agents = yield* Agent.Service
-        expect((yield* agents.get("maestro")).name).toBe("Pikachu")
+        // Maestro's name is fixed, so "Pikachu" is a stale or spoofed label the caller still sends beside the id.
+        expect((yield* agents.get("maestro")).name).toBe("maestro")
         expect(yield* agents.get("Pikachu")).toBeUndefined()
         const run = yield* identityTool()
         // Past Truncate.MAX_LINES, so the registry truncates and hints with the resolved agent's tools.
