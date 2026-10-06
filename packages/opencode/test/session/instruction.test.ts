@@ -229,6 +229,23 @@ describe("Instruction.system", () => {
     }),
   )
 
+  it.live("never loads Claude Code's global CLAUDE.md but keeps the project CLAUDE.md", () =>
+    Effect.gen(function* () {
+      const globalTmp = yield* tmpWithFiles({ ".claude/CLAUDE.md": "# Global Claude" })
+      const projectTmp = yield* tmpWithFiles({ "CLAUDE.md": "# Project Claude" })
+
+      yield* Effect.gen(function* () {
+        const svc = yield* Instruction.Service
+        const paths = yield* svc.systemPaths()
+        expect(paths.has(path.join(globalTmp, ".claude", "CLAUDE.md"))).toBe(false)
+        expect(paths.has(path.join(projectTmp, "CLAUDE.md"))).toBe(true)
+        expect(yield* svc.system()).toEqual([
+          `Instructions from: ${path.join(projectTmp, "CLAUDE.md")}\n# Project Claude`,
+        ])
+      }).pipe(provideInstance(projectTmp), provideInstruction({ home: globalTmp, config: globalTmp }))
+    }),
+  )
+
   it.live("skips project and global CLAUDE.md when Claude Code prompt is disabled", () =>
     Effect.gen(function* () {
       const globalTmp = yield* tmpWithFiles({ ".claude/CLAUDE.md": "# Global Claude" })
