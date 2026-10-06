@@ -133,10 +133,25 @@ export function rosterHash(members: Roster) {
   return hash({ version: ROSTER_V2, members: members.map(behavior) })
 }
 
+// Hashes of superseded rosters. Recomputing them from the current prompts stops working once any prompt changes, so
+// when the roster changes its previous current hash is recorded here (roster-hash.test pins the current hash to force it).
+// A Map, not an object literal: a recorded value such as "constructor" must never find an inherited entry.
+const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
+  ["fab95c176e80b185e87f31599aa9f0008d4a35d9ff4c01f9a9d19cb8df149a45", "maestro-roster-v1"],
+  // Before the backend seat's stable id became `backend`.
+  ["5a2df5f95e6c6783322fcf59f39af317639f9fdec9ad1a704e4b9ad75661ea3a", ROSTER_V2],
+  // Backend charter v2, before the v3a checks rule.
+  ["8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", ROSTER_V2],
+])
+const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
+  ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
+])
+
 /** The hash version a recorded roster hash verifies under against `members`, if any. */
 export function verifyRosterHash(recorded: string, members: Roster) {
   if (recorded === rosterHash(members) || recorded === rosterHash(members.map(preRename))) return ROSTER_V2
   if (recorded === hash(members.map((member) => legacy(preRename(member))))) return "maestro-roster-v1"
+  return HISTORICAL_ROSTER_HASHES.get(recorded)
 }
 
 export function reviewPolicyHash(reviewer: RosterMember, profile: unknown) {
@@ -148,6 +163,7 @@ export function verifyReviewPolicyHash(recorded: string, reviewer: RosterMember,
   if (recorded === reviewPolicyHash(reviewer, profile)) return REVIEW_POLICY_V2
   if (recorded === hash({ version: "maestro-review-policy-v1", reviewer: legacy(reviewer), profile }))
     return "maestro-review-policy-v1"
+  return HISTORICAL_REVIEW_POLICY_HASHES.get(recorded)
 }
 
 function behavior(member: RosterMember) {
