@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { readdir } from "node:fs/promises"
 import path from "node:path"
-import { draculaTheme } from "@opencode-ai/ui/theme/default-themes"
+import { nordTheme } from "@opencode-ai/ui/theme/default-themes"
 import { PALETTES, recolors } from "./catalog"
 import { parseColor, toLch } from "./color"
 import { convertTheme } from "./convert"
@@ -62,7 +62,7 @@ describe("Orchestra palettes", () => {
   )
 
   test("the gate rejects a palette whose muted text drops below AA", async () => {
-    const css = (await shipped("palette-dracula.css")).replace(
+    const css = (await shipped("palette-nord.css")).replace(
       /--orchestra-muted: #[0-9a-f]{6}/,
       "--orchestra-muted: #3a3b45",
     )
@@ -88,40 +88,30 @@ describe("Orchestra palettes", () => {
     }
   })
 
-  test("Orchestra Dark holds its role colors at AA; Light's shortfalls stay listed until the owner decides", () => {
+  test("Orchestra Dark and Light hold every role color at AA, like the palettes", () => {
     const roles = /^--(orchestra-(text|body|muted|accent|success|warm|danger)|mx-(strong|dim|blue|good|bad))$/
-    const short = (scheme: "dark" | "light") =>
-      measureBase(sources, scheme)
-        .filter((check) => roles.test(check.name) && check.ratio < AA)
-        .map((check) => `${check.name} ${check.value}`)
-    expect(short("dark")).toEqual([])
-    // Left as they are on purpose: Light must stay pixel-identical. Measured like every palette, on the panel glass
-    // over the photograph's darkest band.
-    expect(short("light")).toEqual([
-      "--orchestra-body #454d58",
-      "--orchestra-muted #48515c",
-      "--orchestra-accent #3f6f9f",
-      "--orchestra-warm #846f45",
-      "--orchestra-success #4f7d68",
-      "--orchestra-danger #d29e9b",
-      "--mx-dim #48515c",
-      "--mx-blue #376ea5",
-      "--mx-good #3d7e5e",
-      "--mx-bad #a75249",
-    ])
+    for (const scheme of ["dark", "light"] as const) {
+      const checks = measureBase(sources, scheme).filter((check) => roles.test(check.name))
+      // Every role token is measured, or an empty shortfall list means nothing.
+      expect(new Set(checks.map((check) => check.name)).size, scheme).toBe(12)
+      expect(
+        checks.filter((check) => check.ratio < AA).map((check) => `${check.name} ${check.value}`),
+        scheme,
+      ).toEqual([])
+    }
   })
 
   test("the converter reads an inherited theme's colors into palette roles", () => {
-    const roles = convertTheme(draculaTheme, "dark")
+    const roles = convertTheme(nordTheme, "dark")
     expect(roles).toMatchObject({
-      background: "#1d1e28",
-      text: "#f8f8f2",
-      accent: "#bd93f9",
-      success: "#50fa7b",
-      warning: "#ffb86c",
-      danger: "#ff5555",
+      background: "#2e3440",
+      text: "#e5e9f0",
+      accent: "#88c0d0",
+      success: "#a3be8c",
+      warning: "#d08770",
+      danger: "#bf616a",
     })
-    expect(roles.syntax).toMatchObject({ comment: "#6272a4", keyword: "#ff79c6", string: "#f1fa8c" })
+    expect(roles.syntax).toMatchObject({ comment: "#616e88", keyword: "#81a1c1", constant: "#b48ead" })
   })
 
   test("AMOLED paints true black behind its glass", async () => {

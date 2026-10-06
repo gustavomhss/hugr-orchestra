@@ -45,7 +45,7 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 describe("terminal palette", () => {
   test.each([
     { mode: "dark", background: "#0e141b", foreground: "#eef1f5", accent: "#7ea5cc", alpha: 0.25 },
-    { mode: "light", background: "#e9ecf0", foreground: "#1a1f26", accent: "#3f6f9f", alpha: 0.2 },
+    { mode: "light", background: "#e9ecf0", foreground: "#1a1f26", accent: "#164775", alpha: 0.2 },
   ] as const)("reads the approved $mode Orchestra tokens", ({ mode, background, foreground, accent, alpha }) => {
     document.documentElement.dataset.colorScheme = mode
     const terminal = fixture()
