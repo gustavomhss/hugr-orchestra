@@ -10,7 +10,7 @@ export const SHORTCUTS_COPY = {
   "orchestra.shortcuts.kind.general": "General shortcut",
   "orchestra.shortcuts.kind.session": "Session shortcut",
   "orchestra.shortcuts.kind.navigation": "Navigation shortcut",
-  "orchestra.shortcuts.kind.modelAndAgent": "Model and agent shortcut",
+  "orchestra.shortcuts.kind.modelAndMcp": "Model and MCP shortcut",
   "orchestra.shortcuts.kind.terminal": "Terminal shortcut",
   "orchestra.shortcuts.kind.prompt": "Prompt shortcut",
   "orchestra.shortcuts.unassigned": "Unassigned",
