@@ -23,10 +23,6 @@
       "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/function#test": {
-      "dependsOn": ["transit"],
-      "outputs": []
-    },
     "@opencode-ai/app#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": []

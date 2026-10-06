@@ -437,12 +437,6 @@
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
       "authorizedBy": "owner (gustavomhss), mock-parity integration",
       "authorizedAt": "2026-10-05"
-    },
-    "packages/stats/app/src/routes/index.tsx": {
-      "maximumLines": 1596,
-      "reason": "Human waiver: pre-existing file over Godfile cap.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-08"
     }
   }
 }
