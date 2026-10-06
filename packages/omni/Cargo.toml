@@ -33,3 +33,10 @@ panic = "deny"
 
 [profile.release]
 panic = "unwind"
+
+# H1 (WP-H): napi-rs debug-asserts, inside its finalize callbacks, that deleting a JS reference succeeded. Bun runs the
+# finalizers of a terminated Worker with the termination pending, so the delete is refused, the assert panics inside an
+# `extern "C"` callback, and the whole host aborts (rc 134). Release builds compile these asserts out; a debug build of
+# the addon (the one the gates test) must behave the same. Nothing may panic across FFI (AGENTS.md).
+[profile.dev.package.napi]
+debug-assertions = false

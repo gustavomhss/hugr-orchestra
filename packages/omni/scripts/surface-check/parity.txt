@@ -25,8 +25,11 @@ sandbox | PLAN phases 2-3: arrives with SANDBOX_UNAVAILABLE, not in v0.1 (docs/a
 label | PLAN Apêndice E, `processes()` decision: no agent or session label
 
 [parity]
+# WP-H (proposed, lead approves at merge): `configure` sits under spawn. It says where the native addon and the supervisor
+# that every spawn starts are. The addon has no Rust meaning (Rust links the core); a Rust host names its supervisor with
+# HUGR_OMNI_SUPERVISOR or by placing it next to its executable, which is not an item of the API.
 run | run, CommonOptions, RunOptions | Command, Command::new, Command::arg, Command::args, Command::run
-spawn | spawn, SpawnOptions, PipeChild | Command::spawn, Command::spawn_pty, PipeChild
+spawn | spawn, SpawnOptions, PipeChild, configure, ConfigureOptions, ConfigureOptions.addon, ConfigureOptions.supervisor | Command::spawn, Command::spawn_pty, PipeChild
 cwd | CommonOptions.cwd | Command::cwd
 environment | CommonOptions.env, CommonOptions.inheritEnv | Command::env, Command::env_remove, Command::inherit_env
 terminal | RunOptions.pty, SpawnOptions.pty, spawn.pty, PtyOption, PtyOption.cols, PtyOption.rows, PtyChild, PtyChild.resize | Command::pty, PtySize, PtySize.cols, PtySize.rows, PtyChild, PtyChild::resize
@@ -36,9 +39,9 @@ cancellation | CommonOptions.signal | Command::cancel_on, CancellationToken
 stdin | RunOptions.input, SpawnOptions.stdin, Child.write, PipeChild.closeStdin | Command::input, Command::stdin, Stdin, Child::write, PipeChild::close_stdin
 output limit | RunOptions.maxOutputBytes | Command::max_output_bytes
 text vs bytes | CommonOptions.text, run.text, spawn.text | Command::text, Data
-output | CommonOptions.mergeStderr, Child.output, Child.lines, Child.droppedBytes, Child.droppedBytes.stdout, Child.droppedBytes.stderr,
+output | CommonOptions.mergeStderr, SpawnOptions.backpressure, Child.output, Child.lines, Child.droppedBytes, Child.droppedBytes.stdout, Child.droppedBytes.stderr,
   Chunk, Chunk.stream, Chunk.data, Chunk.lostBefore, Line, Line.stream, Line.text, Line.lostBefore, Line.continues |
-  Command::merge_stderr, Child::output, Child::lines, Child::dropped_bytes, DroppedBytes, DroppedBytes.stdout, DroppedBytes.stderr,
+  Command::merge_stderr, Command::backpressure, Child::output, Child::lines, Child::dropped_bytes, DroppedBytes, DroppedBytes.stdout, DroppedBytes.stderr,
   Output, Output::next, Lines, Lines::next, Chunk, Chunk.stream, Chunk.data, Chunk.lost_before, Line, Line.stream, Line.text,
   Line.lost_before, Line.continues, Stream
 Child | Child, Child.pid, Child.wait, Child.stop, Child.processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parentPid, ProcessInfo.name | Child, Child::pid, Child::wait, Child::stop, Child::processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parent_pid, ProcessInfo.name

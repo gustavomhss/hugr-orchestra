@@ -6,19 +6,59 @@ use napi::bindgen_prelude::{FnArgs, Function, FunctionRef, JsValue, Unknown};
 use napi::{Env, ValueType};
 use napi_derive::napi;
 
+use std::sync::Arc;
+
 use crate::convert::{self, RunResultJs};
 use crate::exec;
+use crate::teardown::Owned;
 
 /// `new OmniError(code, message, result)`.
 type Args = FnArgs<(String, String, Option<RunResultJs>)>;
 type Ctor = FunctionRef<Args, ()>;
 
-/// Called once by `index.js` as it loads: keeps its `OmniError` class for this JS environment (a worker has its own),
-/// and starts the thread that polls the binding's futures.
+/// What the binding keeps per JS environment (a worker has its own): its `OmniError` class and its children.
+pub(crate) struct Instance {
+    ctor: Ctor,
+    pub(crate) owned: Arc<Owned>,
+}
+
+/// Called once by `index.js` as it loads: keeps its `OmniError` class for this JS environment, starts the thread that
+/// polls the binding's futures, and arranges that the environment's trees are stopped when it goes away (H1).
 #[napi]
 pub fn setup(env: Env, omni_error: Function<'_, Args, ()>) -> napi::Result<()> {
     exec::start().map_err(|e| napi::Error::from_reason(format!("hugr-omni: cannot start its thread: {e}")))?;
-    env.set_instance_data(omni_error.create_ref()?, (), |_| {})
+    let owned = Arc::new(Owned::default());
+    env.add_env_cleanup_hook(Arc::clone(&owned), |owned| owned.stop_all())?;
+    let instance = Instance {
+        ctor: omni_error.create_ref()?,
+        owned,
+    };
+    env.set_instance_data(instance, (), |done| release(done.value))
+}
+
+/// `configure({ supervisor })` (WP-H): the supervisor binary for this process, which `index.js` passes before the
+/// first spawn (from `configure()`, else `HUGR_OMNI_SUPERVISOR` as JS sees it). `INVALID_ARGUMENT` once a supervisor
+/// was started with another path.
+#[napi]
+pub fn configure(env: Env, supervisor: String) -> napi::Result<()> {
+    hugr_omni::binding::supervisor(supervisor).map_err(|e| omni(&env, &e))
+}
+
+/// The environment's data goes with it. Its `OmniError` reference is let go of, not deleted: the environment is being
+/// torn down and frees it itself, and a dying environment may refuse the delete (Bun, with the termination of a Worker
+/// pending), which napi-rs would turn into a panic inside a finalizer.
+fn release(instance: Instance) {
+    let Instance { ctor, owned } = instance;
+    std::mem::forget(ctor);
+    drop(owned);
+}
+
+/// The children of `env` (none before `setup`).
+pub(crate) fn owned(env: &Env) -> Option<Arc<Owned>> {
+    env.get_instance_data::<Instance>()
+        .ok()
+        .flatten()
+        .map(|i| Arc::clone(&i.owned))
 }
 
 /// The `OmniError` for `e`, ready to throw or to reject with (it keeps the JS object itself).
@@ -38,9 +78,10 @@ pub(crate) fn refused(env: &Env, field: &str, value: &Unknown<'_>, want: &str) -
 
 fn make(env: &Env, code: &str, message: String, result: Option<RunResultJs>) -> napi::Error {
     let made = || -> napi::Result<napi::Error> {
-        let ctor = env
-            .get_instance_data::<Ctor>()?
-            .ok_or_else(|| napi::Error::from_reason("hugr-omni: index.js did not call setup()"))?;
+        let ctor = &env
+            .get_instance_data::<Instance>()?
+            .ok_or_else(|| napi::Error::from_reason("hugr-omni: index.js did not call setup()"))?
+            .ctor;
         let args = FnArgs::from((code.to_owned(), message, result));
         Ok(napi::Error::from(ctor.borrow_back(env)?.new_instance(args)?))
     };

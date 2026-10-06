@@ -8,7 +8,8 @@
 //! - **Event loop:** a pending promise holds the loop (its threadsafe function is referenced). `index.js` asks for the
 //!   root's exit at spawn, so a Child holds the loop until its root exits; after that only a pending read does.
 //! - **GC never kills a child** (`child`): a collected Child goes to a keeper until its tree is gone.
-//! - **No signal handler, no exit hook:** when the host dies, the supervisor stops the trees (ADR-0005 §9).
+//! - **No signal handler, no exit hook:** when the host dies, the supervisor stops the trees (ADR-0005 §9). When one JS
+//!   environment ends (a terminated `Worker`), its own cleanup hook stops the trees it started (`teardown`, H1).
 //! - **Never blocking the JS thread** except `spawn`, which blocks for the core's bounded round trips.
 
 // napi-derive registers the exports only outside `cfg(test)`, and this cdylib has no Rust tests (`test = false`; its
@@ -20,3 +21,4 @@ mod convert;
 mod error;
 mod exec;
 mod run;
+mod teardown;
