@@ -699,9 +699,13 @@ class ActionsTest(NativeFixtureTest):
         except BusError as error:
             outcome = error
         self.assertEqual("stale-ref", getattr(outcome, "code", None), "Pointer moved over a renamed control")
+        # A virtual row qualifies; a control the provider marks stale does not.
         self.command("reset")
         self.command("wire", role=56)
-        self.rejected("unstable-ref", actions.pointer, self.issue(unstable=True), "hover")
+        self.assertEqual("acknowledged", actions.pointer(self.context(), self.issue(unstable=True), "hover")["dispatch"])
+        self.command("reset")
+        self.command("wire", states=[7, 8, 12, 24, 25, 27])
+        self.rejected("unstable-ref", actions.pointer, self.issue(), "hover")
 
 
 def mutation_controls():
@@ -724,7 +728,7 @@ def mutation_controls():
         ("focused-guard", "test_focused_typing_refuses_a_field_that_lost_focus", "Focused typing reached a field without focus",
          "        if focused and 12 not in live and \"focus\" not in evidence:", "        if False:", 1),
         ("pointer-identity", "test_pointer_needs_fresh_identity", "unstable-ref must reject",
-         "    if record[\"unstable\"] and not (set(record[\"unstableReasons\"]) <= {\"virtual\"} and record[\"role\"] not in VIRTUAL_ROLES):\n        raise BusError(\"unstable-ref\", \"Native target identity is not stable enough for pointer",
+         "    if not set(record[\"unstableReasons\"]) <= {\"virtual\"}:\n        raise BusError(\"unstable-ref\", \"Native target identity is not stable enough for pointer",
          "    if False:\n        raise BusError(\"unstable-ref\", \"Native target identity is not stable enough for pointer", 1),
     ]
     with tempfile.TemporaryDirectory(prefix="w2b-actions-mutations-") as directory:

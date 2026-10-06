@@ -188,7 +188,8 @@ def _editable(call, ref, evidence=None):
 
 def _ancestry(call, ref, stop=None, expected_role=None):
     paths, window = [], None
-    for _ in range(32):
+    # The same depth bound as ownership proof; VS Code settings labels sit deeper than 32 levels.
+    for _ in range(LIMITS["depth"]):
         if ref[1] in paths:
             raise BusError("ownership-unresolved", "Native ancestry cycle")
         paths.append(ref[1])
@@ -502,10 +503,10 @@ def point(bus, node, kind, timeout_ms, allowed_window):
 
 
 def _hit(call, ref, window, paths, x, y):
-    """Which control lies under the point: the target (or inside it), or "unavailable" when the app has no hit test.
+    """What the app reports under the point: "target" (or inside it), "other", or "unavailable" without a hit test.
 
-    Anything else on top of the target (a popup, an overlay) refuses the event, and a protected control on the path
-    refuses it through _ancestry."""
+    "other" is evidence, not a refusal: Chromium reports full-window layers above VS Code rows that do not take the
+    mouse. A protected control under the point, or above it, refuses the event through _ancestry."""
     current, seen = (ref[0], window), set()
     for _ in range(32):
         try:
@@ -524,10 +525,8 @@ def _hit(call, ref, window, paths, x, y):
     hit, _ = _ancestry(call, current)
     if ref[1] in hit:
         return "target"
-    # The descent stopped above the target: the app's hit test cannot say what is under the point.
-    if current[1] in paths:
-        return "unavailable"
-    raise BusError("target-obscured", "Another control lies on top of the target at its center")
+    # A descent that stopped above the target cannot say what is under the point.
+    return "unavailable" if current[1] in paths else "other"
 
 
 def _segments(text):

@@ -410,7 +410,7 @@ class PointerTest(NativeFixtureTest):
         self.refused("protected", "contextMenu", "protected-text")
         for setup, code in (({"windowStates": [8, 24, 25]}, "focus-unconfirmed"), ({"states": [7, 8, 24]}, "offscreen"),
                             ({"extents": [500, 10, 100, 20]}, "offscreen"), ({"extents": [10, 10, 0, 20]}, "offscreen"),
-                            ({"hit": "group"}, "target-obscured")):
+                            ({"hit": "group", "groupRole": 40}, "protected-text")):
             with self.subTest(setup=setup):
                 self.command("reset")
                 self.command("wire", **setup)
@@ -420,7 +420,7 @@ class PointerTest(NativeFixtureTest):
         self.assertEqual("protocol-error", caught.exception.code)
 
     def test_hit_test_evidence_is_reported_not_assumed(self):
-        for setup, hit in (({}, "unavailable"), ({"hit": "field"}, "target")):
+        for setup, hit in (({}, "unavailable"), ({"hit": "field"}, "target"), ({"hit": "group"}, "other")):
             with self.subTest(setup=setup):
                 self.command("reset")
                 self.command("wire", **setup)
@@ -458,9 +458,10 @@ def pointer_controls():
          "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
         ("no-window-bounds", "        if not (frame[0] <= x < frame[0] + frame[2]", "        if False and not (frame[0] <= x < frame[0] + frame[2]",
          "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
-        ("no-obscured-refusal", '    if current[1] in paths:\n        return "unavailable"\n    raise',
-         '    if True:\n        return "unavailable"\n    raise', "test_pointer_refuses_before_any_event",
-         "Pointer event reached the controller for an unsafe target"),
+        ("unchecked-hit", "    hit, _ = _ancestry(call, current)\n    if ref[1] in hit:", "    hit = [current[1]]\n    if ref[1] in hit:",
+         "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
+        ("other-claimed-target", 'return "unavailable" if current[1] in paths else "other"', 'return "unavailable" if current[1] in paths else "target"',
+         "test_hit_test_evidence_is_reported_not_assumed", "Hit-test evidence misreported"),
         ("claimed-hit", '    if current[1] == window:\n        return "unavailable"', '    if current[1] == window:\n        return "target"',
          "test_hit_test_evidence_is_reported_not_assumed", "Hit-test evidence misreported"),
     ]

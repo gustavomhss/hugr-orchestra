@@ -123,8 +123,10 @@ def pointer(context, ref, kind):
     """Hover over or right-click the center of a showing control; the app decides what that shows."""
     record = context.registry.resolve(ref, context)  # Fresh ownership, role, name and parent.
     context.registry.invalidate(context.binding)
-    # Like observed actions, a row of a virtual list qualifies once its identity is fresh.
-    if record["unstable"] and not (set(record["unstableReasons"]) <= {"virtual"} and record["role"] not in VIRTUAL_ROLES):
+    # Rows of virtual lists and trees qualify, unlike for actions: hover and right-click land on a point that
+    # the resolve above (fresh role, name and parent), fresh extents and a hit test tie to this row, so a
+    # recycled row shows another name and refuses. Stale, transient or unreadable identity still refuses.
+    if not set(record["unstableReasons"]) <= {"virtual"}:
         raise BusError("unstable-ref", "Native target identity is not stable enough for pointer events")
     evidence = context.require_owned(record)
     try:
