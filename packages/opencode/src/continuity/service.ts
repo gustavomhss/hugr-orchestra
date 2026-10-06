@@ -17,7 +17,7 @@ import { create } from "./context"
 import { carriesMemory, measure, run, snapshot, type ParentRequest, type Pass } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
 import { hardLimit, isSafe, PREPARE_MARGIN, PRUNE_STEP, settings, shouldStart, tokenCount } from "./trigger"
-import { apply as applyMasks, candidates as maskCandidates, urgent } from "./masking"
+import { apply as applyMasks, candidates as maskCandidates, estimate, urgent } from "./masking"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
 type Active = { generation: number; boundary: MessageID; done: Deferred.Deferred<void> }
@@ -182,7 +182,7 @@ const layer = Layer.effect(
         Effect.map((model) => Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)),
         Effect.catch(() => Effect.succeed(0)),
       )
-      if (Token.estimate(prepared.system.join("\n") + JSON.stringify(prepared.messages)) + 2048 > capacity)
+      if (Token.estimate(prepared.system.join("\n")) + estimate(prepared.messages) + 2048 > capacity)
         return { messages: input.messages, system: [] }
       const unchanged = current.sessions.get(input.sessionID) === item && item?.generation === generation &&
         current.contexts.get(input.sessionID)?.artifact === artifact
@@ -305,9 +305,12 @@ const layer = Layer.effect(
         if (active === "prune") {
           // No model call: stub tool output that left the verbatim tail, restorable through context_recall.
           const tokens = tokenCount(message.tokens)
-          const freed = yield* stubs(current, sessionID, yield* sessions.messages({ sessionID }), maskCandidates)
-          entry(current, sessionID).pruned = tokens - freed
-          if (freed > 0) yield* diagnostic(sessionID, message.id, "pruned")
+          yield* sessions.messages({ sessionID }).pipe(
+            Effect.flatMap((stored) => stubs(current, sessionID, stored, maskCandidates)),
+            Effect.tap((freed) => Effect.sync(() => { entry(current, sessionID).pruned = tokens - freed })),
+            Effect.flatMap((freed) => freed > 0 ? diagnostic(sessionID, message.id, "pruned") : Effect.void),
+            Effect.catchCause(() => diagnostic(sessionID, message.id, "prune-failed")),
+          )
           return
         }
         if (!active) return
@@ -561,7 +564,7 @@ const layer = Layer.effect(
         const view = yield* prepare({ sessionID, messages: history, canRecall: input.canRecall })
         const sent = yield* MessageV2.toModelMessagesEffect(view.messages, model).pipe(Effect.orElseSucceed(() => view.messages))
         return { stored, history,
-          tokens: (current.overheads.get(sessionID) ?? 0) + Token.estimate(view.system.join("\n") + JSON.stringify(sent)) }
+          tokens: (current.overheads.get(sessionID) ?? 0) + Token.estimate(view.system.join("\n")) + estimate(sent) }
       })
       if (!input.force && (yield* pressure).tokens < limit) return "fits" as const
       const item = entry(current, sessionID)

@@ -49,7 +49,7 @@ it.instance("past the hard limit with no usable pass, every old result the archi
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     const history = yield* sessions.messages({ sessionID })
-    // A large result inside the last six steps: ordinary masking never reaches it.
+    // A large result inside the last five steps: ordinary masking never reaches it.
     const recent = history[9]
     yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: recent.info.id, type: "tool", tool: "read", callID: "call_large",
       state: { status: "completed", input: { filePath: "build.log" }, output: "build log line\n".repeat(8_000), title: "build.log",
@@ -106,7 +106,7 @@ it.instance("below the trigger, a long turn is pruned by steps every PRUNE_STEP 
       yield* continuity.start({ sessionID, message: step, canRecall: true })
       const output = (yield* prepare(sessionID)).messages.find((message) => message.info.id === steps[0].id)!.parts[0]
       if (output.type !== "tool" || output.state.status !== "completed") throw new Error("Expected the completed read")
-      // Step 6 is the first past 60,000 tokens (the seed's 50,000 plus PRUNE_STEP), and the read has left the last six steps.
+      // Step 6 is the first past 60,000 tokens (the seed's 50,000 plus PRUNE_STEP), and the read has left the last five steps.
       expect(output.state.output.startsWith("[masked tool result: read filePath=step-0.log")).toBe(index >= 6)
     }
     expect((yield* prepare(sessionID)).system).toEqual([])

@@ -25,7 +25,7 @@ import { run, snapshot } from "@/continuity/fork"
 import { create as contexts } from "@/continuity/context"
 import { child } from "@/continuity/alias"
 import { DEFAULT_TRIGGER, hardLimit, isSafe, PREPARE_MARGIN, PRUNE_STEP } from "@/continuity/trigger"
-import { apply as applyMasks, candidates, urgent } from "@/continuity/masking"
+import { apply as applyMasks, candidates, estimate, urgent } from "@/continuity/masking"
 import type { MemoryArtifact } from "@/continuity/memory-types"
 import { buildPrompt } from "@opencode-ai/core/session/compaction"
 import PROMPT_COMPACTION from "@/agent/prompt/compaction.txt"
@@ -94,7 +94,7 @@ const done = (name: string) => existsSync(path.join(OUT, `${name}.json`))
 const size = (services: Services, view: SessionV1.WithParts[], system: string[]) => Effect.gen(function* () {
   const shaped = yield* services.provider.getModel("" as never, "" as never)
   const sent = yield* MessageV2.toModelMessagesEffect(view, shaped)
-  return config.overhead + Token.estimate(system.join("\n")) + Token.estimate(JSON.stringify(sent))
+  return config.overhead + Token.estimate(system.join("\n")) + estimate(sent)
 })
 
 // ---- replay ----
