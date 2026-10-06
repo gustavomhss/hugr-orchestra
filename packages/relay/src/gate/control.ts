@@ -228,7 +228,8 @@ const grade = (input: ChecklistInput, control: unknown, j: number) =>
 
     const criterion = text(field(control, "judge"))
     if (!criterion) return graded("fail", "judge:unavailable(invalid-criterion)", "", true)
-    const blocking = field(control, "blocking") === true
+    // `jq -r '.blocking // false'` compared with "true", and the same for `diff`.
+    const blocking = raw(field(control, "blocking")) === "true"
     const scope = scopeText(field(control, "paths"))
     if (scope === undefined) return graded("fail", "judge:unavailable(invalid-scope)", "", true)
     // The oracle and the ledger hold the raw scope: `${spec_dir}/x.json` is the same question in every run.
@@ -238,7 +239,7 @@ const grade = (input: ChecklistInput, control: unknown, j: number) =>
     const files = yield* Effect.forEach(contextNames(field(control, "context")), (name) =>
       readContext(`${input.workdir}/${substitution(expandParams(name, input.params))}`),
     )
-    if (field(control, "diff") === true) {
+    if (raw(field(control, "diff")) === "true") {
       const diff = yield* GateDiff.compute({ workdir: input.workdir, baseRef: input.baseRef, pathspec: scopePaths })
       // Fail closed, but an advisory control that cannot run still only advises.
       if (Option.isNone(diff)) return graded("fail", "judge:unavailable(no-diff)", oracle, blocking, scope, artifact)

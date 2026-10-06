@@ -1,6 +1,7 @@
 export * as GateCheck from "./check"
 
-import { mkdir, rmdir, stat } from "node:fs/promises"
+import { mkdirSync, rmdirSync } from "node:fs"
+import { stat } from "node:fs/promises"
 import path from "node:path"
 import { Effect, Schema } from "effect"
 import type { RelayArm } from "@opencode-ai/schema/relay-arm"
@@ -43,14 +44,15 @@ export const check = (
       return yield* new GateControl.PlanError({ message: `relay-gate: workdir not found: ${input.workdir}` })
     const stateDir = input.stateDir
     if (stateDir === undefined) return yield* evaluate(input)
-    // One evaluation at a time per state directory; a held lock is reported, never queued.
+    // One evaluation at a time per state directory; a held lock is reported, never queued. Acquire and release stay
+    // synchronous: effect beta.83 drops an async release step when the fiber is interrupted.
     const lock = path.join(stateDir, ".run.lock")
     return yield* Effect.acquireUseRelease(
-      Effect.promise(() => mkdir(stateDir, { recursive: true })).pipe(
-        Effect.andThen(Effect.tryPromise({ try: () => mkdir(lock), catch: () => new Busy({ lock }) })),
+      Effect.sync(() => mkdirSync(stateDir, { recursive: true })).pipe(
+        Effect.andThen(Effect.try({ try: () => mkdirSync(lock), catch: () => new Busy({ lock }) })),
       ),
       () => evaluate(input),
-      () => Effect.promise(() => rmdir(lock).catch(() => undefined)),
+      () => Effect.try({ try: () => rmdirSync(lock), catch: () => undefined }).pipe(Effect.ignore),
     )
   })
 
