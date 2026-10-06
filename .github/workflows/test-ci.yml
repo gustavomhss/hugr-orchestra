@@ -2,6 +2,7 @@ name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
 # with a .ci-run.json request ({ package, args }). This workflow runs exactly those tests, then deletes the branch.
+# A package with a package.json runs `bun test`; a Python package (requirements-dev.txt, no package.json) runs pytest.
 on:
   push:
     branches:
@@ -27,8 +28,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      - name: Read request
+        id: request
+        run: |
+          package=$(jq -r '.package' .ci-run.json | tr -d '\r')
+          case "$package" in
+            "" | /* | *..*)
+              echo "::error::.ci-run.json names no valid package"
+              exit 2
+              ;;
+          esac
+          if [ -f "packages/$package/package.json" ]; then
+            runner=bun
+          elif [ -f "packages/$package/requirements-dev.txt" ]; then
+            runner=pytest
+          else
+            echo "::error::packages/$package does not exist"
+            exit 2
+          fi
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+          echo "runner=$runner" >> "$GITHUB_OUTPUT"
+
       - name: Setup Bun
+        if: steps.request.outputs.runner == 'bun'
         uses: ./.github/actions/setup-bun
+
+      - name: Setup Python
+        if: steps.request.outputs.runner == 'pytest'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: packages/${{ steps.request.outputs.package }}/requirements-dev.txt
+
+      - name: Install Python test dependencies
+        if: steps.request.outputs.runner == 'pytest'
+        env:
+          PACKAGE: ${{ steps.request.outputs.package }}
+        run: python -m pip install -r "packages/$PACKAGE/requirements-dev.txt"
 
       - name: Configure git identity
         run: |
@@ -38,21 +75,16 @@ jobs:
       - name: Run tests
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          PACKAGE: ${{ steps.request.outputs.package }}
+          RUNNER: ${{ steps.request.outputs.runner }}
         run: |
-          package=$(jq -r '.package' .ci-run.json | tr -d '\r')
-          case "$package" in
-            "" | /* | *..*)
-              echo "::error::.ci-run.json names no valid package"
-              exit 2
-              ;;
-          esac
-          if [ ! -f "packages/$package/package.json" ]; then
-            echo "::error::packages/$package does not exist"
-            exit 2
-          fi
           mapfile -t args < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
-          cd "packages/$package"
-          GITHUB_ACTIONS=false bun test "${args[@]}"
+          cd "packages/$PACKAGE"
+          if [ "$RUNNER" = pytest ]; then
+            python -m pytest -p no:cacheprovider "${args[@]}"
+          else
+            GITHUB_ACTIONS=false bun test "${args[@]}"
+          fi
 
   cleanup:
     needs: test

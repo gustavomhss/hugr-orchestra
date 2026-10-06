@@ -7,8 +7,11 @@
 // so no git hook runs and the current branch is untouched.
 //
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]
+// A Python package (requirements-dev.txt and no package.json, such as packages/relay) runs pytest: -t becomes
+// pytest's -k expression and --timeout does not apply.
 
 import { $ } from "bun"
+import { existsSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
@@ -80,6 +83,8 @@ function parse(argv: string[]) {
     fail(`-t needs a pattern\n${USAGE}`, 2)
   // Test paths may be given from the repository root or from the package directory.
   const files = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
+  if (pythonPackage(name))
+    return { package: name, os: options.os, args: [...files, ...(options.pattern ? ["-k", options.pattern] : [])] }
   return {
     package: name,
     os: options.os,
@@ -87,8 +92,17 @@ function parse(argv: string[]) {
   }
 }
 
+// test-ci.yml makes the same choice: package.json means bun test, otherwise requirements-dev.txt means pytest.
+function pythonPackage(name: string) {
+  const dir = path.join(root, "packages", name)
+  return !existsSync(path.join(dir, "package.json")) && existsSync(path.join(dir, "requirements-dev.txt"))
+}
+
 async function findRemote() {
-  if (!(await Bun.file(path.join(root, "packages", request.package, "package.json")).exists()))
+  if (
+    !(await Bun.file(path.join(root, "packages", request.package, "package.json")).exists()) &&
+    !pythonPackage(request.package)
+  )
     fail(`packages/${request.package} is not a package in this checkout`, 2)
   const pattern = new RegExp(`github\\.com[:/]${repo.replace(".", "\\.")}(\\.git)?$`)
   const line = (await $`git remote -v`.cwd(root).text())
