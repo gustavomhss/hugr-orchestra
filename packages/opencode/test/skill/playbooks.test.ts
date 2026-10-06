@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Effect } from "effect"
+import { Npm } from "@opencode-ai/core/npm"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Agent } from "../../src/agent/agent"
 import { Permission } from "../../src/permission"
@@ -9,6 +10,7 @@ import { MessageV2 } from "../../src/session/message-v2"
 import { SessionPrompt } from "../../src/session/prompt"
 import { Session } from "../../src/session/session"
 import { Skill } from "../../src/skill"
+import { NpmTest } from "../fake/npm"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
@@ -16,7 +18,9 @@ import { testProviderConfig } from "../lib/test-provider"
 import { makeHttp } from "../session/prompt.fixture"
 
 // Maestro's playbooks ship with Orchestra, so they reach repositories that have no copy of their own.
-const it = testEffect(makeHttp())
+// Config starts a detached npm install into every .opencode directory it loads. A real one outlives its test and,
+// on Windows, starves file I/O for later test files in the same process.
+const it = testEffect(makeHttp({ replacements: [[Npm.node, NpmTest.noop]] }))
 
 it.instance(
   "a Maestro session in a repository without .opencode/skills lists and loads maestro-governed",

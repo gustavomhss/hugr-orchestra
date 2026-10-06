@@ -163,12 +163,16 @@ function makePrompt(input?: { mcpInstructions?: MCP.ServerInstructions[]; proces
   return TestAppNodeBuilder.build(promptRoot, layers)
 }
 
-export function makeHttp(input?: { mcpInstructions?: MCP.ServerInstructions[]; processor?: "blocking" }) {
+export function makeHttp(input?: {
+  mcpInstructions?: MCP.ServerInstructions[]
+  processor?: "blocking"
+  replacements?: LayerNode.Replacements
+}) {
   const root = LayerNode.group([
     promptRoot,
     LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] }),
   ])
-  const layers = replacements(input)
+  const layers = [...replacements(input), ...(input?.replacements ?? [])]
   if (input?.processor === "blocking") {
     return TestAppNodeBuilder.build(root, [...layers, [SessionProcessor.node, blockingProcessor]])
   }
