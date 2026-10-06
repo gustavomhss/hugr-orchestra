@@ -4,7 +4,7 @@ import path from "node:path"
 import { existsSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from "node:fs/promises"
 import { Deferred, Effect, Exit, Fiber, Option, Schema } from "effect"
-import type { RelayArm } from "@opencode-ai/schema/relay-arm"
+import { RelayArm } from "@opencode-ai/schema/relay-arm"
 import { RelaySprint } from "@opencode-ai/schema/relay-sprint"
 import { ArmCreate } from "../src/arm/create"
 import { ArmLoad } from "../src/arm/load"
@@ -166,6 +166,48 @@ describe("golden position table", () => {
     expect(rows.some((row) => row.expected === undefined)).toBe(true)
     for (const row of rows)
       expect({ ...row, actual: Option.getOrUndefined(row.actual) }).toEqual({ ...row, actual: row.expected })
+  })
+})
+
+describe("golden safe table", () => {
+  // Every per-WP state file the hook wrote in the G2 arm goldens is `<prefix><safe(x)>`: x is a WP ID, or a macro ID
+  // for `macro_`. Prestate files are the scenario's, not the hook's, and are left out.
+  interface Scenario {
+    sprint: { work_packages?: { id?: unknown; macro?: unknown }[] } | null
+    prestate?: Record<string, unknown>
+  }
+  const strings = (values: unknown[]) => values.filter((value): value is string => typeof value === "string")
+
+  test("per-WP file names in arm/** are safe() of their WP or macro ID", async () => {
+    const dir = path.join(import.meta.dir, "golden", "arm")
+    const names = [...new Bun.Glob("*/scenario.json").scanSync(dir)].map((file) => path.dirname(file)).sort()
+    const prefixes = Object.values(RelayArm.WpFilePrefix)
+    const rows = await Promise.all(
+      names.map(async (name) => {
+        const scenario: Scenario = await Bun.file(path.join(dir, name, "scenario.json")).json()
+        const wps = Array.isArray(scenario.sprint?.work_packages) ? scenario.sprint.work_packages : []
+        const ids = new Set(strings(wps.map((wp) => wp.id)).map(ArmState.safe))
+        const macros = new Set(strings(wps.map((wp) => wp.macro)).map(ArmState.safe))
+        const files = [...new Bun.Glob("expected/*/arm/*").scanSync(path.join(dir, name))].map((file) =>
+          path.basename(file),
+        )
+        return files
+          .filter((file) => !Object.hasOwn(scenario.prestate ?? {}, file))
+          .flatMap((file) => {
+            const prefix = prefixes.find((candidate) => file.startsWith(candidate))
+            if (prefix === undefined) return []
+            const known = prefix === RelayArm.WpFilePrefix.macro ? macros : ids
+            return [{ name, file, known: known.has(file.slice(prefix.length)) }]
+          })
+      }),
+    ).then((all) => all.flat())
+
+    // Positive control: the walk reaches names where safe() rewrote a CR or LF, so an identity safe() would fail.
+    expect(rows).toContainEqual({ name: "b8-literal-cr-position", file: "retry_target_", known: true })
+    expect(rows).toContainEqual({ name: "identity-lossless-advance", file: "retry_target__", known: true })
+    expect(rows).toContainEqual({ name: "identity-lossless-advance", file: "macro_next_", known: true })
+    expect(rows.length).toBeGreaterThanOrEqual(100)
+    expect(rows.filter((row) => !row.known)).toEqual([])
   })
 })
 
