@@ -366,11 +366,18 @@ class ActionsTest(NativeFixtureTest):
                     self.assertEqual(value, receipt[name], "Independent GTK application value differs")
                     self.assertIn([name, value], receipt["changes"], "GTK application never received change")
 
+    def clicks(self, expected):
+        # A GTK click goes out as a pointer click (actions._click), which the app handles after the reply.
+        deadline = monotonic() + 3
+        while self.command("receipt")["clicks"] != expected and monotonic() < deadline:
+            sleep(0.05)
+        return self.command("receipt")["clicks"]
+
     def test_live_click_ack_is_not_postcondition(self):
         result = actions.invoke(self.context(), self.issue("button"))
         self.assertEqual("acknowledged", result["dispatch"])
         self.assertEqual("unverified", result["postcondition"])
-        self.assertEqual(1, self.command("receipt")["clicks"])
+        self.assertEqual(1, self.clicks(1))
 
     def test_observed_action_is_explicit_and_still_consumes_ref(self):
         ref = self.issue("button", unstable=True)
@@ -383,7 +390,7 @@ class ActionsTest(NativeFixtureTest):
         self.assertEqual("observed-control", result["identity"])
         self.assertEqual("unverified", result["logicalIdentity"])
         self.assertEqual("non-atomic", result["consistency"])
-        self.assertEqual(1, self.command("receipt")["clicks"])
+        self.assertEqual(1, self.clicks(1))
         self.rejected("stale-ref", actions.invoke, ref, record["actions"][0]["id"], "observed")
 
     def test_observed_mode_does_not_bypass_target_state_or_record_identity(self):

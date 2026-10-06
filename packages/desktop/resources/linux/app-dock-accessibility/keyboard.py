@@ -34,8 +34,9 @@ KEYSYMS = {"return": 0xFF0D, "enter": 0xFF0D, "escape": 0xFF1B, "esc": 0xFF1B, "
            "comma": 0x2C, "period": 0x2E, "slash": 0x2F, "minus": 0x2D, "equal": 0x3D, "semicolon": 0x3B,
            "backslash": 0x5C, "grave": 0x60, "apostrophe": 0x27, "bracketleft": 0x5B, "bracketright": 0x5D,
            **{f"f{n}": 0xFFBE + n - 1 for n in range(1, 13)}}
-# Registry mouse event names: absolute motion, then a button-3 click at the same point.
-POINTER = {"hover": ("abs",), "contextMenu": ("abs", "b3c")}
+# Registry mouse event names: absolute motion, then a button-3 (or button-1) click at the same point. "click" is not
+# a pointer kind of its own: actions.invoke uses it in place of DoAction for GTK (see there), never main.py's pointer op.
+POINTER = {"hover": ("abs",), "contextMenu": ("abs", "b3c"), "click": ("abs", "b1c")}
 
 
 def replace_text(bus, node, text, timeout_ms, allowed_window=None):
@@ -449,7 +450,7 @@ def point(bus, node, kind, timeout_ms, allowed_window):
 
     What a hover or a right-click shows is application-defined, so the effect is never verified."""
     if kind not in POINTER:
-        raise BusError("protocol-error", "Pointer kind must be hover or contextMenu")
+        raise BusError("protocol-error", "Pointer kind must be hover, contextMenu or click")
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 60000:
         raise BusError("protocol-error", "Invalid pointer deadline")
     if not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
@@ -516,6 +517,9 @@ def point(bus, node, kind, timeout_ms, allowed_window):
             raise BusError("offscreen", "Control center lies outside its owned window")
         result["point"] = {"x": x, "y": y}
         result["hit"] = _hit(call, ref, window, paths, x, y)
+        if kind == "click" and result["hit"] != "target":
+            # A left click stands in for an action on this control, so it must land on it, not on what lies around it.
+            raise BusError("hit-unconfirmed", "The app does not report this control under its center")
         controller = call(DBUS, DBUS[0], "GetNameOwner", "(s)", ("org.a11y.atspi.Registry",), "(s)"), DEC
         for event in POINTER[kind]:
             active()
@@ -538,7 +542,10 @@ def _hit(call, ref, window, paths, x, y):
 
     "other" is evidence, not a refusal: Chromium reports full-window layers above VS Code rows that do not take the
     mouse. A protected control under the point, or above it, refuses the event through _ancestry."""
-    current, seen = (ref[0], window), set()
+    # A menu item's popup is its own X window above the frame, so a descent from the frame finds what lies under the
+    # popup; the item's menu answers for its popup (GTK).
+    start = paths[1] if len(paths) > 1 and call((ref[0], paths[1]), A + "Accessible", "GetRole", reply="(u)") in (33, 41) else window
+    current, seen = (ref[0], start), set()
     for _ in range(32):
         try:
             child = call(current, A + "Component", "GetAccessibleAtPoint", "(iiu)", (x, y, 0), "((so))")
@@ -551,7 +558,7 @@ def _hit(call, ref, window, paths, x, y):
             break
         seen.add((owner, path))
         current = owner, path
-    if current[1] == window:
+    if current[1] == start:
         return "unavailable"
     hit, _ = _ancestry(call, current)
     if ref[1] in hit:
