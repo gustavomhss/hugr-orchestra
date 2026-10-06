@@ -375,7 +375,11 @@ jobs:
 
       - name: Run app e2e tests
         working-directory: packages/app
-        run: bun run test:e2e:local --shard=${{ matrix.shard }}/3
+        # Specs are split by measured time (script/e2e-shard.ts), not file count; the assignment fails the step
+        # if the script fails instead of falling back to every spec.
+        run: |
+          files=$(bun script/e2e-shard.ts ${{ matrix.shard }} 3)
+          bun run test:e2e:local $files
         env:
           CI: true
         # The unsharded single-worker suite took 20-30 minutes.
