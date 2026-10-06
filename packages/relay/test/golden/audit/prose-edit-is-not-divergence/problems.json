@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/prose-edit-is-not-divergence/input/run/.relay-state/ledger.jsonl",
+  "problems": []
+}

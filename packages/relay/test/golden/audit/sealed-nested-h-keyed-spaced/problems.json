@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/sealed-nested-h-keyed-spaced/input/ledger.jsonl",
+  "problems": []
+}

@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/diverged-added/input/run",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

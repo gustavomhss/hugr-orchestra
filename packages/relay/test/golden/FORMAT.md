@@ -83,6 +83,9 @@ runs with packages/relay as its cwd and relative paths, so paths inside messages
   extra mode in `keys` (`keyed`, `wrong-key`); `verify.json`, `verify.<mode>.json`, `problems.json`, `cost.json`
   (`bin/relay … --json`, parsed, null when empty), their exit codes in `exits.json` and, when nonempty, their stderr in
   `stderr.json` (a traceback cut to its last line).
+- `audit/<name>/`: synthetic records and sprint variants for `verify`/`problems`/`cost`: `input/**` (run directories
+  keep the ledger under `.relay-state/`, arm directories beside `sprint.json`), `case.json`
+  `{target, verify, key, chmod}`, then the same `<cmd>.json`, `exits.json` and `stderr.json` as `ledger/`.
 - `ledger/writer-<name>/`: `bin/relay-note` appends: `case.json` `{sprint, key, bodies}`, `outcomes.json`
   `[{exit, stderr}]` (stderr informational), the resulting `ledger.jsonl`, and its `verify.stdout`/`verify.exit`.
 - `json/`: what `jq -c` printed: `escape.json` (one string per code point, lone surrogates, invalid UTF-8 via
