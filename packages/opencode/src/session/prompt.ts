@@ -697,6 +697,8 @@ const layer = Layer.effect(
         ...part,
         id: part.id ? PartID.make(part.id) : PartID.ascending(),
       })
+      // Briefs attach files the same way, so only a top-level session's attachments come from the owner.
+      const sender = current.parentID ? "Your caller" : "The owner"
 
       const resolvePart: (part: PromptInput["parts"][number]) => Effect.Effect<Draft<SessionV1.Part>[]> = Effect.fn(
         "SessionPrompt.resolveUserPart",
@@ -794,7 +796,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify({ filePath: part.filename })}`,
+                    text: `${sender} attached ${part.filename ?? "a text file"}. Its content as of when they sent this message:`,
                   },
                   {
                     messageID: info.id,
@@ -860,7 +862,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
+                    text: `${sender} attached ${filepath}. Its content as of when they sent this message:`,
                   },
                 ]
                 const exit = yield* provider.getModel(info.model.providerID, info.model.modelID).pipe(
@@ -902,7 +904,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Read tool failed to read ${filepath} with the following error: ${message}`,
+                    text: `${sender} attached ${filepath}, but it could not be read: ${message}`,
                   })
                 }
                 return pieces
@@ -925,7 +927,7 @@ const layer = Layer.effect(
                       sessionID: input.sessionID,
                       type: "text",
                       synthetic: true,
-                      text: `Read tool failed to read ${filepath} with the following error: ${message}`,
+                      text: `${sender} attached ${filepath}, but it could not be read: ${message}`,
                     },
                   ]
                 }
@@ -935,7 +937,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
+                    text: `${sender} attached the directory ${filepath}. Its listing as of when they sent this message:`,
                   },
                   {
                     messageID: info.id,
@@ -954,7 +956,7 @@ const layer = Layer.effect(
                   sessionID: input.sessionID,
                   type: "text",
                   synthetic: true,
-                  text: `Called the Read tool with the following input: {"filePath":"${filepath}"}`,
+                  text: `${sender} attached ${filepath}. Its content as of when they sent this message:`,
                 },
                 {
                   id: part.id,

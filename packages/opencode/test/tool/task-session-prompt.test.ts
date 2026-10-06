@@ -10,6 +10,7 @@ import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { MessageID, PartID } from "../../src/session/schema"
 import { TaskTool } from "../../src/tool/task"
+import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
 import { makeHttp } from "../session/prompt.fixture"
@@ -179,6 +180,29 @@ it.instance(
       expect(request).toContain("Hand the cache findings to @explore afterwards")
       expect(request).not.toContain("call the task tool with subagent")
       expect(parts.filter((part) => part.type === "agent")).toEqual([])
+    }),
+  options,
+  60_000,
+)
+
+it.instance(
+  "TaskTool presents a file the brief references as the caller's attachment",
+  () =>
+    Effect.gen(function* () {
+      const llm = yield* TestLLMServer
+      const test = yield* TestInstance
+      const { def, context } = yield* setup()
+      const file = path.join(test.directory, "notes.txt")
+      yield* Effect.promise(() => Bun.write(file, "cache key notes\n"))
+
+      yield* llm.text("child reply")
+      yield* def.execute({ description: "read notes", prompt: `Summarize @${file}`, subagent_type: "general" }, context)
+      const request = JSON.stringify((yield* llm.hits).at(-1)?.body)
+
+      expect(request).toContain("Your caller attached ")
+      expect(request).toContain(". Its content as of when they sent this message:")
+      expect(request).toContain("cache key notes")
+      expect(request).not.toContain("The owner attached")
     }),
   options,
   60_000,

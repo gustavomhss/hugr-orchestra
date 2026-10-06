@@ -332,7 +332,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "background": {
-      "description": "Run the agent in the background. You will be notified when it completes. DO NOT sleep, poll, or proactively check on its progress",
+      "description": "Return at once while the teammate works; its result arrives as a new message when it finishes, so do not wait for it or poll it.",
       "type": "boolean",
     },
     "command": {
@@ -340,7 +340,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "description": {
-      "description": "The short label the user sees for this task (3-5 words)",
+      "description": "A 3-5 word label the owner sees for this task",
       "type": "string",
     },
     "governed": {
@@ -396,19 +396,19 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "object",
     },
     "model": {
-      "description": "Run the subagent on a specific model as 'providerID/modelID' (e.g. 'openrouter/deepseek/deepseek-chat', 'groq/llama-3.3-70b-versatile'). Overrides the subagent's configured model and the parent session model. The provider part also selects credentials: OAuth subscriptions (Claude Max, ChatGPT) and API keys resolve per providerID at run time — use a custom provider alias in opencode.json to pin a second key for the same backend.",
+      "description": "The model to run the teammate on, as 'providerID/modelID'. Without it, the teammate runs on its configured model, or else on yours.",
       "type": "string",
     },
     "prompt": {
-      "description": "The task for the agent to perform",
+      "description": "The teammate's whole brief",
       "type": "string",
     },
     "subagent_type": {
-      "description": "The type of specialized agent to use for this task",
+      "description": "The teammate to start, from the list in this tool's description",
       "type": "string",
     },
     "task_id": {
-      "description": "Set only to continue an earlier task: the exact task_id that call returned. The agent resumes with its earlier context. An unknown id fails.",
+      "description": "Set only to continue an earlier task: the exact task_id that call returned. The teammate resumes with its earlier context. An unknown id fails.",
       "type": "string",
     },
   },
