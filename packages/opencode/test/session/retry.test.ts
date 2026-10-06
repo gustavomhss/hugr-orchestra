@@ -334,26 +334,23 @@ describe("session.retry.retryable", () => {
     expect(retryable).toEqual({ message: "Response decompression failed" })
   })
 
-  test("treats Zen and Go limit errors like any other provider error", () => {
-    for (const [provider, type] of [
-      ["opencode", "FreeUsageLimitError"],
-      ["opencode-go", "GoUsageLimitError"],
-    ] as const) {
-      const error = Schema.decodeUnknownSync(SessionV1.APIError.Schema)(
+  test("usage-limit errors from OpenCode Zen and Go retry with the provider message and no upsell action", () => {
+    const error = (type: string, message: string) =>
+      Schema.decodeUnknownSync(SessionV1.APIError.Schema)(
         new SessionV1.APIError({
-          message: "Usage limit reached",
+          message,
           isRetryable: true,
           statusCode: 429,
-          responseBody: JSON.stringify({
-            type: "error",
-            error: { type, message: "Usage limit reached" },
-            metadata: { workspace: "wrk_01K6XGM22R6FM8JVABE9XDQXGH" },
-          }),
+          responseBody: JSON.stringify({ type: "error", error: { type, message } }),
         }).toObject(),
       )
 
-      expect(SessionRetry.retryable(error, provider)).toEqual({ message: "Usage limit reached" })
-    }
+    expect(SessionRetry.retryable(error("FreeUsageLimitError", "Free usage exceeded"), "opencode")).toEqual({
+      message: "Free usage exceeded",
+    })
+    expect(SessionRetry.retryable(error("GoUsageLimitError", "Subscription quota exceeded"), "opencode-go")).toEqual({
+      message: "Subscription quota exceeded",
+    })
   })
 })
 

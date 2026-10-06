@@ -19,7 +19,7 @@ const args = hideBin(process.argv)
 
 function show(out: string) {
   const text = out.trimStart()
-  if (!text.startsWith("opencode ")) {
+  if (!text.startsWith("orchestra ")) {
     process.stderr.write(UI.logo() + EOL + EOL)
     process.stderr.write(text + EOL)
     return
@@ -29,7 +29,7 @@ function show(out: string) {
 
 const cli = yargs(args)
   .parserConfiguration({ "populate--": true })
-  .scriptName("opencode")
+  .scriptName("orchestra")
   .wrap(100)
   .help("help", "show help")
   .alias("help", "h")
@@ -82,7 +82,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "$0 [project]",
-      describe: "start opencode tui",
+      describe: "start Orchestra tui",
       load: () => import("./cli/cmd/tui"),
       resolve: (m) => m.TuiThreadCommand,
     }),
@@ -90,7 +90,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "attach <url>",
-      describe: "attach to a running opencode server",
+      describe: "attach to a running Orchestra server",
       load: () => import("./cli/cmd/attach"),
       resolve: (m) => m.AttachCommand,
     }),
@@ -98,7 +98,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "run [message..]",
-      describe: "run opencode with a message",
+      describe: "run Orchestra with a message",
       load: () => import("./cli/cmd/run"),
       resolve: (m) => m.RunCommand,
     }),
@@ -140,7 +140,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "upgrade [target]",
-      describe: "upgrade opencode to the latest or a specific version",
+      describe: "upgrade Orchestra to the latest or a specific version",
       load: () => import("./cli/cmd/upgrade"),
       resolve: (m) => m.UpgradeCommand,
     }),
@@ -148,7 +148,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "uninstall",
-      describe: "uninstall opencode and remove all related files",
+      describe: "uninstall Orchestra and remove all related files",
       load: () => import("./cli/cmd/uninstall"),
       resolve: (m) => m.UninstallCommand,
     }),
@@ -156,7 +156,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "serve",
-      describe: "starts a headless opencode server",
+      describe: "starts a headless Orchestra server",
       load: () => import("./cli/cmd/serve"),
       resolve: (m) => m.ServeCommand,
     }),
@@ -164,7 +164,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "web",
-      describe: "start opencode server and open web interface",
+      describe: "start Orchestra server and open web interface",
       load: () => import("./cli/cmd/web"),
       resolve: (m) => m.WebCommand,
     }),
@@ -212,7 +212,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "pr <number>",
-      describe: "fetch and checkout a GitHub PR branch, then run opencode",
+      describe: "fetch and checkout a GitHub PR branch, then run Orchestra",
       load: () => import("./cli/cmd/pr"),
       resolve: (m) => m.PrCommand,
     }),
