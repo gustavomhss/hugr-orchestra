@@ -177,7 +177,7 @@ describe("relay documents", () => {
     })
   })
 
-  test("publish records the signed-in principal and refuses a stale version or checksum", async () => {
+  test("publish records the machine user, never the shared credential name, and refuses a stale version or checksum", async () => {
     await using tmp = await tmpdir({ git: true })
     const empty = await ok(tmp.path, "POST", "/api/relay/document", { name: "Empty" })
     // What does not compile is not published.
@@ -204,9 +204,9 @@ describe("relay documents", () => {
       { versionId: document.versionId, expectedChecksum: document.checksum },
       ALICE,
     )
-    expect(published).toMatchObject({ active: true, activeVersionId: document.versionId, publishedBy: "alice" })
+    expect(published).toMatchObject({ active: true, activeVersionId: document.versionId, publishedBy: os.userInfo().username })
     expect(published.activeVersion).toMatchObject({ versionId: document.versionId, workflowId: document.id })
-    expect(await ok(tmp.path, "GET", route)).toMatchObject({ publishedBy: "alice" })
+    expect(await ok(tmp.path, "GET", route)).toMatchObject({ publishedBy: os.userInfo().username })
 
     // Without a credential, the account the server runs as is the one acting.
     const unpublished = await ok(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: published.checksum })
@@ -300,7 +300,7 @@ describe("relay hooks", () => {
       version: published.activeVersionId,
       order: 0,
       enabled: true,
-      installedBy: "alice",
+      installedBy: os.userInfo().username,
       snapshot: { schema: "relay.hook.v1", name: "No generated edits" },
     })
     const exported = await ok(tmp.path, "GET", `/api/relay/document/${hook.id}/export`)
@@ -349,10 +349,10 @@ describe("relay hooks", () => {
 
     const receipts = await ledger(root, installed.installID)
     expect(receipts.map((line) => [line.event, line.principal, line.seq])).toEqual([
-      ["hook-installed", "alice", 0],
-      ["hook-disabled", "alice", 1],
-      ["hook-enabled", "alice", 2],
-      ["hook-updated", "alice", 3],
+      ["hook-installed", os.userInfo().username, 0],
+      ["hook-disabled", os.userInfo().username, 1],
+      ["hook-enabled", os.userInfo().username, 2],
+      ["hook-updated", os.userInfo().username, 3],
       ["hook-uninstalled", os.userInfo().username, 4],
     ])
     expect(receipts[0]).toMatchObject({ install: installed.installID, document: hook.id, sha256: installed.sha256 })
