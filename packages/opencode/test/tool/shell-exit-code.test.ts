@@ -1,36 +1,15 @@
 import { describe, expect } from "bun:test"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { Effect, Layer } from "effect"
+import { Effect } from "effect"
 import path from "path"
-import { Config } from "@/config/config"
 import { ShellTool } from "../../src/tool/shell"
-import { provideInstance, testInstanceStoreLayer } from "../fixture/fixture"
-import { Agent } from "../../src/agent/agent"
+import { provideInstance } from "../fixture/fixture"
 import { Truncate } from "@/tool/truncate"
 import { SessionID, MessageID } from "../../src/session/schema"
-import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Plugin } from "../../src/plugin"
 import { testEffect } from "../lib/effect"
 import { Tool } from "@/tool/tool"
-import { RuntimeFlags } from "@/effect/runtime-flags"
+import { shellLayer } from "./shell.fixture"
 
-const it = testEffect(
-  Layer.mergeAll(
-    LayerNode.compile(
-      LayerNode.group([
-        CrossSpawnSpawner.node,
-        FSUtil.node,
-        Plugin.node,
-        Truncate.node,
-        Config.node,
-        Agent.node,
-        RuntimeFlags.node,
-      ]),
-    ),
-    testInstanceStoreLayer,
-  ),
-)
+const it = testEffect(shellLayer)
 
 const ctx = {
   sessionID: SessionID.make("ses_test"),
