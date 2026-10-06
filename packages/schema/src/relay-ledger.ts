@@ -94,12 +94,19 @@ export interface GateEnvelope extends Schema.Schema.Type<typeof GateEnvelope> {}
  * Who graded a control. Judge backends are open display tags (`judge:llm:<model>(votes:2/3)(truncated:a,b)…`), so any
  * `judge:` text is accepted; the gate core writes:
  * - `deterministic`, `unavailable(invalid-command)`;
+ * - `unavailable(missing|timeout|spawn)`: TS-only and additive, a command the shell port could not run (WP3);
  * - `judge:unavailable(invalid-criterion|invalid-scope|no-diff)`;
  * - `judge:<backend>(non-independent)`, `judge:unavailable(exit-N|invalid-response)(non-independent)`;
  * - `judge:unavailable` on an uncorroborated blocked claim.
  */
 export const GradedBy = Schema.Union([
-  Schema.Literals(["deterministic", "unavailable(invalid-command)"]),
+  Schema.Literals([
+    "deterministic",
+    "unavailable(invalid-command)",
+    "unavailable(missing)",
+    "unavailable(timeout)",
+    "unavailable(spawn)",
+  ]),
   Schema.String.check(Schema.isStartsWith("judge:")),
 ])
 export type GradedBy = typeof GradedBy.Type
