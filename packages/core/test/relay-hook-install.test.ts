@@ -1,9 +1,9 @@
 import { describe, expect } from "bun:test"
 import path from "path"
 import { createHash } from "crypto"
-import { readFileSync, readdirSync } from "fs"
+import { readdirSync } from "fs"
 import { mkdir, readFile, symlink, writeFile } from "fs/promises"
-import { Effect, Exit, Fiber, Option, Schema } from "effect"
+import { Effect, Exit, Schema } from "effect"
 import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
@@ -510,24 +510,12 @@ describe("RelayHookInstall hooks.json", () => {
 })
 
 describe("RelayHookInstall atomic writes", () => {
-  it.live("concurrent installs all land and a reader never sees a partial file", () =>
+  // What a reader can see is pinned by the two failure tests below; this one pins the lock: no install is lost.
+  it.live("concurrent installs all land, each once and in its own place", () =>
     Effect.gen(function* () {
       const binding = yield* fixture
-      const seen: string[] = []
-      // Samples the raw file between the writers' steps; a torn file would not decode.
-      const reader = yield* Effect.forkChild(
-        Effect.sync(() => Option.liftThrowable(() => readFileSync(binding.file, "utf8"))()).pipe(
-          Effect.tap((text) => Effect.sync(() => Option.map(text, (value) => seen.push(value)))),
-          Effect.andThen(Effect.sleep("1 millis")),
-          Effect.forever,
-        ),
-      )
       const documents = Array.from({ length: 40 }, (_, index) => `doc-${index}`)
       yield* Effect.forEach(documents, (document) => install(binding, guard(), document), { concurrency: "unbounded" })
-      yield* Fiber.interrupt(reader)
-      expect(seen.length).toBeGreaterThan(0)
-      for (const text of seen)
-        expect(Exit.isSuccess(Schema.decodeUnknownExit(Schema.fromJsonString(RelayHook.Installs))(text))).toBe(true)
       const installs = (yield* RelayHookInstall.read(binding)).installs
       expect(installs.map((item) => item.document).toSorted()).toEqual(documents.toSorted())
       expect(installs.map((item) => item.order).toSorted((a, b) => a - b)).toEqual(documents.map((_, index) => index))
