@@ -1,6 +1,8 @@
 export * as BackendWork from "./backend-work"
 
 import { Effect } from "effect"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
 import type { SessionID } from "@/session/schema"
@@ -16,8 +18,12 @@ export function track(input: {
   readonly publish: (workResult: BackendResult.WorkResult) => Effect.Effect<void>
 }) {
   const evidence: { value?: BackendResult.WorkResult } = {}
-  const bound = (result: BackendResult.WorkResult) =>
-    input.writeRoots ? { ...result, writeRoots: [...input.writeRoots] } : result
+  // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
+  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult) {
+    if (!input.writeRoots) return result
+    const shell = ToolSafety.shellFact(input.sessionID) ?? (yield* ToolSafetySandbox.status())
+    return { ...result, writeRoots: [...input.writeRoots], ...shell }
+  })
   const lastAssistant = () =>
     MessageV2.stream(input.sessionID).pipe(
       Effect.map((messages) => messages.findLast((message) => message.info.role === "assistant")),
@@ -30,7 +36,7 @@ export function track(input: {
     }),
     record: Effect.fn("BackendWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      evidence.value = bound(BackendResult.assemble(message))
+      evidence.value = yield* bound(BackendResult.assemble(message))
       yield* input.publish(evidence.value)
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
@@ -42,7 +48,7 @@ export function track(input: {
       if (!input.enabled) return
       evidence.value = evidence.value
         ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : bound(BackendResult.hostEnded({ message: yield* lastAssistant(), reason, detail }))
+        : yield* bound(BackendResult.hostEnded({ message: yield* lastAssistant(), reason, detail }))
       yield* input.publish(evidence.value)
     }),
     // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
@@ -51,9 +57,9 @@ export function track(input: {
     notice: Effect.fn("BackendWork.notice")(function* (state: "completed" | "error", text: string) {
       if (!input.enabled) return undefined
       const last = yield* lastAssistant()
-      if (state === "error") return bound(BackendResult.hostEnded({ message: last, reason: "failed", detail: text }))
-      if (last) return bound(BackendResult.assemble(last))
-      return bound(BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" }))
+      if (state === "error") return yield* bound(BackendResult.hostEnded({ message: last, reason: "failed", detail: text }))
+      if (last) return yield* bound(BackendResult.assemble(last))
+      return yield* bound(BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" }))
     }),
   }
 }

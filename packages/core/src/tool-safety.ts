@@ -30,8 +30,33 @@ export type Profile = {
     readonly denyPaths?: ReadonlyArray<string>
     /** Give each sandboxed command a fresh writable directory as TMPDIR, removed when the command ends. */
     readonly scratch?: boolean
+    /** Where no sandbox can run, run the command without the write jail and report it instead of holding it. */
+    readonly unconfinedFallback?: boolean
   }
 }
+
+/** Host fact about the write jail of sandbox-bound shell commands. */
+export type ShellFact = {
+  readonly shellWrites: "enforced" | "unenforced"
+  readonly shellSandbox: { readonly kind: "seatbelt" | "srt" | "none"; readonly reason?: string }
+}
+
+/** Per-invocation cell that ToolSafetySandbox.wrap fills and ToolSafety.run attaches to its observation. */
+export const ShellReport = Context.Reference<{ fact?: ShellFact } | undefined>("@opencode/ToolSafety/ShellReport", {
+  defaultValue: () => undefined,
+})
+
+/** Record a shell command's fact; an unenforced command is never hidden by a later enforced one. */
+export const reportShell = (fact: ShellFact) => Effect.gen(function* () {
+  const cell = yield* ShellReport
+  if (cell) cell.fact = worse(cell.fact, fact)
+})
+
+// Process-local worst fact per Session, read by the backend work result. Bounded; the oldest Sessions drop first.
+const shells = new Map<string, ShellFact>()
+export const shellFact = (sessionID: string) => shells.get(sessionID)
+
+const worse = (current: ShellFact | undefined, next: ShellFact) => current?.shellWrites === "unenforced" ? current : next
 
 export const RuntimeProfile = Context.Reference<Profile | undefined>("@opencode/ToolSafety/Profile", {
   defaultValue: () => undefined,
@@ -87,6 +112,8 @@ export type Observation = {
   readonly projectID?: string
   readonly outcome: "started" | "success" | "failure" | "cancelled" | "held"
   readonly reason?: string
+  readonly shellWrites?: ShellFact["shellWrites"]
+  readonly shellSandbox?: ShellFact["shellSandbox"]
 }
 
 export interface Interface {
@@ -235,7 +262,11 @@ export const make = Effect.gen(function* () {
       directory: input.directory,
       projectID: input.projectID,
     }
+    // Nested runs (the registry's durable observation inside the session's) share the outermost cell, so every
+    // observation of the call carries the fact.
+    const report: { cell: { fact?: ShellFact } } = { cell: {} }
     return Effect.gen(function* () {
+      report.cell = (yield* ShellReport) ?? report.cell
       const loader = yield* RuntimeProfileLoader
       const profile = loader ? yield* loader() : yield* RuntimeProfile
       yield* before(input).pipe(Effect.provideService(RuntimeProfile, profile))
@@ -243,13 +274,22 @@ export const make = Effect.gen(function* () {
       return yield* effect.pipe(
         Effect.provideService(RuntimeProfile, profile),
         Effect.provideService(NativeContext, input.directory ? { directory: input.directory, projectID: input.projectID } : undefined),
+        Effect.provideService(ShellReport, report.cell),
         sanitizeFailure,
       )
     }).pipe(Effect.onExit((exit) => {
-      if (Exit.isSuccess(exit)) return observe({ ...observation, outcome: outcome?.(exit.value) ?? "success" })
+      const shell = report.cell.fact
+      if (shell) {
+        const recorded = worse(shells.get(input.sessionID), shell)
+        shells.delete(input.sessionID)
+        shells.set(input.sessionID, recorded)
+        if (shells.size > 1024) shells.delete(shells.keys().next().value!)
+      }
+      if (Exit.isSuccess(exit)) return observe({ ...observation, ...shell, outcome: outcome?.(exit.value) ?? "success" })
       const error = Option.getOrUndefined(Cause.findErrorOption(exit.cause)) ?? Result.getOrUndefined(Cause.findDefect(exit.cause))
       return observe({
         ...observation,
+        ...shell,
         outcome: Cause.hasInterrupts(exit.cause) ? "cancelled" : error instanceof Denied ? "held" : "failure",
         ...(error instanceof Denied ? { reason: error.reason } : {}),
       })

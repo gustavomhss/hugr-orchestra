@@ -1,5 +1,6 @@
 import { afterEach, describe, expect } from "bun:test"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
+import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
@@ -250,8 +251,10 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   }
 })
 
-// No writePaths in these dispatches: the host binds a read-only backend child and reports it.
-const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [] }
+// No writePaths in these dispatches: the host binds a read-only backend child and reports it, with the shell fact this
+// host gives a child that ran no command.
+const shell = await Effect.runPromise(ToolSafetySandbox.status())
+const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [], ...shell }
 
 describe("tool.task backend-result", () => {
   it.instance("decodes a valid card into the work result", () =>
@@ -269,6 +272,7 @@ describe("tool.task backend-result", () => {
         nextActions: [],
         terminal: { reason: "ended" },
         writeRoots: [],
+        ...shell,
       })
     }),
   )
@@ -462,6 +466,7 @@ describe("tool.task backend-result", () => {
         ...card,
         terminal: { reason: "ended" },
         writeRoots: [],
+        ...shell,
       })
     }),
   )

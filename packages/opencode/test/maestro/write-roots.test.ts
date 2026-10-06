@@ -14,7 +14,10 @@ import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
 import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
+import { BackendWork } from "@/maestro/backend-work"
+import { Database } from "@opencode-ai/core/database/database"
 import { Service } from "@/tool/registry"
 import { Tool } from "@/tool/tool"
 import { Permission } from "@/permission"
@@ -26,9 +29,9 @@ import { testEffect } from "../lib/effect"
 // tools through ArsenalBindings.withSession, the per-Session binding every native tool call goes through.
 
 const it = testEffect(Layer.empty)
-const sandbox = ["darwin", "linux"].includes(process.platform)
-  ? await Effect.runPromise(ToolSafetySandbox.available())
-  : null
+// What this host gives a bound child's shell: a jail (seatbelt or srt), or none yet and the reason.
+const host = await Effect.runPromise(ToolSafetySandbox.status())
+const sandbox = host.shellWrites === "enforced" ? host.shellSandbox.kind : undefined
 
 const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
   directory: string
@@ -36,6 +39,9 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
   unbound: SessionID
   write: (sessionID: SessionID, filePath: string) => Effect.Effect<Exit.Exit<unknown, unknown>>
   shell: (sessionID: SessionID, command: string) => Effect.Effect<Exit.Exit<{ metadata: { exit?: number | null }; output: string }, unknown>>
+  // The production path: the shell call goes through ToolSafety.run, which observes it and records its shell fact.
+  guarded: (sessionID: SessionID, command: string, observed: ToolSafety.Observation[]) => Effect.Effect<Exit.Exit<unknown, unknown>>
+  database: Database.Interface
 }) => Effect.Effect<void, unknown, never>) =>
   Effect.promise(async () => {
     await using tmp = await tmpdir({ git: true })
@@ -77,6 +83,13 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
               Effect.map((result) => ({ metadata: result.metadata as { exit?: number | null }, output: result.output })),
               Effect.exit,
             ),
+          database: yield* Database.Service,
+          guarded: (sessionID, command, observed) =>
+            native.withSession(sessionID, ToolSafety.make.pipe(Effect.flatMap((safety) => safety.run(
+              { tool: "bash", args: { command }, sessionID, callID: `call-${MessageID.ascending()}`, directory, projectID: instance.project.id },
+              tool("bash").execute({ command, description: "write roots probe" }, context(sessionID)),
+              (value) => Effect.sync(() => observed.push(value)),
+            )))).pipe(Effect.exit),
         })
       }).pipe(Effect.provideService(InstanceRef, instance))
     }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node, filesystem]))))))
@@ -111,18 +124,22 @@ describe("backend write roots enforcement", () => {
     120000,
   )
 
-  it.live(`the bound child's shell is confined (${sandbox ? `sandbox ${path.basename(sandbox)}` : "no sandbox: held"})`, () =>
+  it.live(`the bound child's shell is confined (${sandbox ? `sandbox ${sandbox}` : `no sandbox: ${host.shellSandbox.reason}`})`, () =>
     harness([["src"]], (h) => Effect.gen(function* () {
       const [child] = h.bound
       const outside = path.join(h.directory, "outside")
       yield* Effect.promise(() => fs.writeFile(path.join(outside, "locked"), "x", { mode: 0o444 }))
       const escape = yield* h.shell(child, `printf escaped > outside/shell.txt`)
-      expect(yield* exists(path.join(outside, "shell.txt"))).toBe(false)
       if (!sandbox) {
-        // Without a platform sandbox the host refuses the command rather than running it unconfined.
-        held(escape, "required-process-sandbox-unavailable")
+        // Owner decision 2026-10-06: without a sandbox the shell runs without the write jail (the host fact says so,
+        // see below); the edit tools still hold writes outside the roots.
+        expect(Exit.isSuccess(escape) && escape.value.metadata.exit).toBe(0)
+        expect(yield* exists(path.join(outside, "shell.txt"))).toBe(true)
+        held(yield* h.write(child, path.join(outside, "edit.txt")), "write-outside-physical-roots")
+        expect(yield* exists(path.join(outside, "edit.txt"))).toBe(false)
         return
       }
+      expect(yield* exists(path.join(outside, "shell.txt"))).toBe(false)
       if (Exit.isSuccess(escape)) expect(escape.value.metadata.exit).not.toBe(0)
       const chmod = yield* h.shell(child, `chmod 644 outside/locked`)
       if (Exit.isSuccess(chmod)) expect(chmod.value.metadata.exit).not.toBe(0)
@@ -130,6 +147,19 @@ describe("backend write roots enforcement", () => {
       const inside = yield* h.shell(child, `printf kept > src/shell.txt && printf t > "$TMPDIR/probe" && cat "$TMPDIR/probe" > /dev/null`)
       expect(Exit.isSuccess(inside) && inside.value.metadata.exit).toBe(0)
       expect(yield* Effect.promise(() => fs.readFile(path.join(h.directory, "src", "shell.txt"), "utf8"))).toBe("kept")
+    })),
+    120000,
+  )
+
+  it.live("the observation and the work result carry the shell fact", () =>
+    harness([["src"]], (h) => Effect.gen(function* () {
+      const [child] = h.bound
+      const observed: ToolSafety.Observation[] = []
+      expect(Exit.isSuccess(yield* h.guarded(child, `printf fact > src/fact.txt`, observed))).toBe(true)
+      expect(observed.at(-1)).toMatchObject({ outcome: "success", ...host })
+      const work = BackendWork.track({ enabled: true, sessionID: child, writeRoots: ["src"], publish: () => Effect.void })
+      expect(yield* work.notice("completed", "done").pipe(Effect.provideService(Database.Service, h.database)))
+        .toMatchObject({ writeRoots: ["src"], ...host })
     })),
     120000,
   )
@@ -151,7 +181,7 @@ describe("WriteRoots.profile", () => {
     expect(WriteRoots.profile(undefined, [at("src")], directory)).toEqual({
       writeRoots: [at("src")],
       requireSandbox: true,
-      sandbox: { enabled: true, scratch: true },
+      sandbox: { enabled: true, scratch: true, unconfinedFallback: true },
     })
     expect(WriteRoots.profile({ writeRoots: ["src"] }, [at("src", "a"), at("other"), directory], directory).writeRoots)
       .toEqual([at("src", "a"), "src"])

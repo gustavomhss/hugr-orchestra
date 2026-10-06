@@ -68,14 +68,15 @@ export function loader(
 
 /**
  * The child's profile: the project profile with write roots narrowed to the bound roots, and every shell command
- * confined by the platform sandbox (fail closed where none is available) with a per-command scratch TMPDIR.
+ * confined by the platform sandbox with a per-command scratch TMPDIR. Where this host has no sandbox yet, shell
+ * commands run without the jail and the host fact says so; edit tools enforce the roots everywhere.
  */
 export function profile(project: ToolSafety.Profile | undefined, roots: ReadonlyArray<string>, directory: string) {
   return {
     ...project,
     writeRoots: intersect(project?.writeRoots, roots, directory),
     requireSandbox: true,
-    sandbox: { ...project?.sandbox, enabled: true, scratch: true },
+    sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: true },
   } satisfies ToolSafety.Profile
 }
 

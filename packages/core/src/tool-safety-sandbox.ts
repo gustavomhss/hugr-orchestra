@@ -7,6 +7,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
+import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
 
 /** Tool-child environment only. Never applied to provider adapters or the server process. */
 export function environment(input: NodeJS.ProcessEnv = process.env) {
@@ -31,6 +32,14 @@ export const backend = Effect.fn("ToolSafetySandbox.backend")(function* () {
   return binary ? { kind: binary === "/usr/bin/sandbox-exec" ? "seatbelt" as const : "srt" as const, binary } : undefined
 })
 
+/** The write-jail fact this host would give a sandbox-bound command now, without starting an acquisition. */
+export const status = Effect.fn("ToolSafetySandbox.status")(function* () {
+  const picked = yield* pick(false).pipe(Effect.catch((error) => Effect.succeed({ kind: "none" as const, reason: error.reason })))
+  return (picked.kind === "none"
+    ? { shellWrites: "unenforced", shellSandbox: { kind: "none", reason: picked.reason } }
+    : { shellWrites: "enforced", shellSandbox: { kind: picked.kind } }) satisfies ToolSafety.ShellFact
+})
+
 /** Caller keeps this Scope open through child exit; policy file is removed on success/failure/cancellation. */
 export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   command: ChildProcess.Command,
@@ -46,11 +55,17 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     : { ...process.env, ...command.options.env })
   const ordinary = ChildProcess.make(command.command, command.args, { ...command.options, env, extendEnv: false })
   if (!profile?.requireSandbox && !profile?.sandbox?.enabled) return ordinary
-  if (process.platform !== "darwin" && process.platform !== "linux")
-    return yield* new ToolSafety.Denied({ reason: "sandbox-platform-unavailable" })
-  const binary = yield* available()
-  if (!binary) return yield* new ToolSafety.Denied({ reason: "required-process-sandbox-unavailable" })
-  const seatbelt = binary === "/usr/bin/sandbox-exec"
+  const sandbox = yield* pick(true)
+  if (sandbox.kind === "none") {
+    if (!profile.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
+      reason: process.platform === "darwin" || process.platform === "linux"
+        ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable",
+    })
+    // Owner decision 2026-10-06: without a sandbox the command runs without the write jail, and the host fact says so.
+    yield* ToolSafety.reportShell({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: sandbox.reason } })
+    return ordinary
+  }
+  const seatbelt = sandbox.kind === "seatbelt"
   if (seatbelt && profile.sandbox?.allowedDomains?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-seatbelt-domain-policy-unenforceable" })
   const fs = yield* FSUtil.Service
@@ -73,7 +88,13 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       )
     : undefined
   const roots = scratch ? [...declared, scratch] : declared
-  const confined = scratch ? { ...env, TMPDIR: scratch, TMP: scratch, TEMP: scratch } : env
+  // Toolchain caches move into the scratch dir: the real ones lie outside the roots and are not writable in the jail.
+  const confined = scratch ? {
+    ...env, TMPDIR: scratch, TMP: scratch, TEMP: scratch,
+    GOCACHE: path.join(scratch, "go-build"), XDG_CACHE_HOME: path.join(scratch, "cache"),
+    npm_config_cache: path.join(scratch, "npm"), BUN_INSTALL_CACHE_DIR: path.join(scratch, "bun"),
+    PIP_CACHE_DIR: path.join(scratch, "pip"), UV_CACHE_DIR: path.join(scratch, "uv"),
+  } : env
   const entries = [...new Set([
     Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
     path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
@@ -83,6 +104,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const protectedWrites = yield* Effect.forEach(profile.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
   if (protectedWrites.length && profile.allowedConfigEdits?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-config-write-exception-unenforceable" })
+  yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   const invocation = command.options.shell
     ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
     : [command.command, ...command.args]
@@ -95,7 +117,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`),
       ...protectedWrites.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
     ].join("\n")
-    return ChildProcess.make(binary, ["-p", policy, ...invocation], {
+    return ChildProcess.make(sandbox.binary, ["-p", policy, ...invocation], {
       ...command.options, cwd, shell: false, env: confined, extendEnv: false,
     })
   }
@@ -107,11 +129,34 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...protectedWrites] },
     network: { allowedDomains: profile.sandbox?.allowedDomains ?? [], deniedDomains: [], allowUnixSockets: [], allowLocalBinding: false },
     enableWeakerNestedSandbox: false, enableWeakerNetworkIsolation: false, allowAppleEvents: false,
+    ...(sandbox.ripgrep ? { ripgrep: { command: sandbox.ripgrep } } : {}),
   }), { mode: 0o600 }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-write" })))
-  const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`
-  return ChildProcess.make(binary, ["--settings", policy, "--", invocation.map(quote).join(" ")], {
-    ...command.options, cwd, shell: false, env: confined, extendEnv: false,
+  // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
+  return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--", ...invocation], {
+    ...command.options, cwd, shell: false, env: { ...confined, ...sandbox.env }, extendEnv: false,
   })
+})
+
+/**
+ * The sandbox for this host: `srt` on PATH, else seatbelt on macOS, else on Linux the fetched sandbox runtime run by
+ * this process's own JavaScript runtime. `start` lets a Linux host begin fetching that runtime on first need.
+ */
+const pick = Effect.fnUntraced(function* (start: boolean) {
+  if (process.platform !== "darwin" && process.platform !== "linux")
+    return { kind: "none" as const, reason: `sandbox-platform-unsupported: ${process.platform}` }
+  const binary = yield* available()
+  if (binary === "/usr/bin/sandbox-exec") return { kind: "seatbelt" as const, binary }
+  if (binary) return { kind: "srt" as const, command: binary, args: [], env: {}, ripgrep: undefined }
+  const runtime = yield* ToolSafetySandboxRuntime.resolve(start)
+  if (runtime.reason !== undefined) return { kind: "none" as const, reason: runtime.reason }
+  return {
+    kind: "srt" as const,
+    command: process.execPath,
+    args: [ToolSafetySandboxRuntime.cli(runtime.directory)],
+    // A compiled Bun binary runs scripts only when told to; Electron runs as Node only when told to.
+    env: process.versions.bun ? { BUN_BE_BUN: "1" } : process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {},
+    ripgrep: ToolSafetySandboxRuntime.ripgrep(runtime.directory),
+  }
 })
 
 /** Resolve existing symlinks and missing leaves before handing paths to an OS policy. */
