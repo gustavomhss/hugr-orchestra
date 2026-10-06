@@ -3,6 +3,7 @@ import path from "path"
 import * as fs from "fs/promises"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
 import { Cause, Effect, Exit, Layer, Schema } from "effect"
 import { ApplyPatchTool } from "../../src/tool/apply_patch"
 import { LSP } from "@/lsp/lsp"
@@ -693,6 +694,107 @@ EOF`
       yield* execute({ patchText }, ctx)
       // Result has ASCII quotes because that's what the patch specifies
       expect(yield* readText(target)).toBe(`He said "hi"\nsome${emDash}dash\nend\n`)
+    }),
+  )
+
+  it.instance("reads an empty line between hunk lines as a blank context line", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "blank_context.txt")
+      yield* writeText(target, "alpha\n\nbeta\n")
+
+      // Models often drop the leading space of a blank context line; Codex reads the empty line as context too
+      const patchText = "*** Begin Patch\n*** Update File: blank_context.txt\n@@\n alpha\n\n-beta\n+gamma\n*** End Patch"
+
+      yield* execute({ patchText }, ctx)
+      expect(yield* readText(target)).toBe("alpha\n\ngamma\n")
+    }),
+  )
+
+  it.instance("writes an empty line between Add File lines", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+
+      yield* execute({ patchText: "*** Begin Patch\n*** Add File: notes.md\n+first\n\n+second\n*** End Patch" }, ctx)
+      expect(yield* readText(path.join(test.directory, "notes.md"))).toBe("first\n\nsecond\n")
+    }),
+  )
+
+  it.instance("rejects an empty line between + lines of a hunk without context", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "append.txt")
+      yield* writeText(target, "alpha\n\nomega\n")
+
+      const patchText = "*** Begin Patch\n*** Update File: append.txt\n@@\n+one\n\n+two\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "write an added blank line as +")
+      expect(yield* readText(target)).toBe("alpha\n\nomega\n")
+    }),
+  )
+
+  it.instance("keeps empty lines around hunks out of them", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "separated.txt")
+      yield* writeText(target, "a\nb\n\nc\nd\n")
+
+      // Read as context, the empty line after +e would move it to the file's blank line instead of the end
+      const patchText =
+        "*** Begin Patch\n*** Update File: separated.txt\n@@\n-a\n+A\n\n@@\n-d\n+D\n\n@@\n+e\n\n*** End Patch"
+
+      yield* execute({ patchText }, ctx)
+      expect(yield* readText(target)).toBe("A\nb\n\nc\nD\ne\n")
+    }),
+  )
+
+  it.instance("applies under a safety profile the patch shapes it applies without one", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      yield* writeText(path.join(test.directory, "shapes.txt"), "one\ntwo\n\nthree\n")
+
+      // With a profile loaded, ToolSafety parses each patch before the tool runs and holds one it cannot parse
+      for (const shape of [
+        "*** Update File: shapes.txt\n-one\n+ONE",
+        "\n*** Update File: shapes.txt\n\n@@\n two\n\n-three\n+THREE\n",
+        "*** Update File: shapes.txt\n*** Move to: moved.txt",
+        "*** Add File: added.txt\n+a\n\n+b",
+      ])
+        yield* execute({ patchText: `*** Begin Patch\n${shape}\n*** End Patch` }, ctx).pipe(
+          Effect.provideService(ToolSafety.RuntimeProfile, { writeRoots: ["."] }),
+        )
+
+      expect(yield* readText(path.join(test.directory, "moved.txt"))).toBe("ONE\ntwo\n\nTHREE\n")
+      expect(yield* readText(path.join(test.directory, "added.txt"))).toBe("a\n\nb\n")
+      yield* expectReadFailure(path.join(test.directory, "shapes.txt"))
+    }),
+  )
+
+  it.instance("holds a patch whose file after a context line that reads *** End Patch is never-touch", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const secret = path.join(test.directory, "secret.txt")
+      yield* writeText(path.join(test.directory, "format.md"), "intro\n*** End Patch\nold\n")
+      yield* writeText(secret, "secret\n")
+
+      // The guard must check every file the tool writes, so both read the patch up to its last *** End Patch
+      const patchText =
+        "*** Begin Patch\n*** Update File: format.md\n@@\n intro\n *** End Patch\n-old\n+new\n*** Update File: secret.txt\n@@\n-secret\n+leaked\n*** End Patch"
+
+      yield* expectFailure(
+        execute({ patchText }, ctx).pipe(
+          Effect.provideService(ToolSafety.RuntimeProfile, { neverTouch: ["secret.txt"] }),
+        ),
+        "Tool safety HOLD: project-never-touch",
+      )
+      expect(yield* readText(secret)).toBe("secret\n")
+      expect(yield* readText(path.join(test.directory, "format.md"))).toBe("intro\n*** End Patch\nold\n")
     }),
   )
 })

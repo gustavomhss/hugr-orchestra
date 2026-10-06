@@ -271,6 +271,7 @@ export const make = Effect.gen(function* () {
     const writing = ["write", "edit", "multiedit", "apply_patch"].includes(input.tool)
     const reading = input.tool === "read"
     if (!writing && !reading) return
+    // Patch.parse is the grammar the apply_patch tools apply, so these are exactly the files a patch writes
     const paths = input.tool === "apply_patch"
       ? yield* Effect.try({
           try: () => Patch.parse(typeof args.patchText === "string" ? args.patchText : "").flatMap((hunk) =>
