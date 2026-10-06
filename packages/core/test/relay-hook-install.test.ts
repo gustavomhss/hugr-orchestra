@@ -197,6 +197,22 @@ describe("RelayHookInstall.install", () => {
     }),
   )
 
+  it.effect("takes the sha256 over jq's compact form, which writes a lone surrogate as U+FFFD", () =>
+    Effect.gen(function* () {
+      const binding = yield* fixture
+      const snapshot = guard()
+      snapshot.nodes[3] = node("record", RelayHook.NodeType.record, { message: "a\ud800b" })
+      // JSON.stringify escapes the lone surrogate instead.
+      const text = JSON.stringify(snapshot)
+      expect(text).toContain("a\\ud800b")
+      const request = (digest: string) =>
+        RelayHookInstall.install({ ...binding, document: "d", version: "v", principal: "p", snapshot, sha256: digest })
+      expect((yield* refusal(request(sha256(text)))).reason).toBe("sha256-mismatch")
+      const changed = yield* request(sha256(text.replace("a\\ud800b", "a\ufffdb")))
+      expect(changed.install.snapshot.nodes[3]).toMatchObject({ parameters: { message: "a\ufffdb" } })
+    }),
+  )
+
   it.effect("refuses a value JSON cannot carry instead of changing it", () =>
     Effect.gen(function* () {
       const binding = yield* fixture
@@ -209,9 +225,14 @@ describe("RelayHookInstall.install", () => {
           snapshot,
           sha256: "0".repeat(64),
         })
+      const notJSON = { reason: "snapshot-invalid", message: "The snapshot is not JSON." } as const
+      // Compact JSON writes safe integers only (R1): NaN is refused, where JSON.stringify would have written null.
       const nan = guard()
       nan.nodes[0] = { ...nan.nodes[0], typeVersion: Number.NaN }
-      expect((yield* refusal(request(nan))).message).toStartWith("The snapshot is not a relay.hook.v1 export")
+      expect(yield* refusal(request(nan))).toEqual(notJSON)
+      const fraction = guard()
+      fraction.nodes[0] = { ...fraction.nodes[0], position: [0.5, 0] }
+      expect(yield* refusal(request(fraction))).toEqual(notJSON)
       expect(yield* refusal(request({ ...guard(), name: 1n }))).toEqual({
         reason: "snapshot-invalid",
         message: "The snapshot is not JSON.",
