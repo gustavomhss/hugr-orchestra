@@ -14,8 +14,9 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { Agent } from "@/agent/agent"
+import { Config } from "@/config/config"
+import type { ConfigV1 } from "@opencode-ai/core/v1/config/config"
 import { Archive } from "@/continuity/archive"
-import type { MemoryBody } from "@/continuity/memory-types"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -33,8 +34,9 @@ import { awaitWithTimeout, pollWithTimeout } from "../lib/effect"
 
 export const A = "SEED_USER_0_C517"
 export const B = "SEED_USER_2_C517"
-export const FIRST = "# Work\nGoal: restore cache consistency. Discovery: stale cache caused the fault. Keep checks local and read-only; deployment awaits approval. Evidence is archived."
-export const SECOND = "# Work\nGoal: restore cache consistency. Cache invalidation is proposed to unblock verification. Local read-only scope and deployment approval still apply."
+export const FIRST = "Work: Goal: restore cache consistency. Discovery: stale cache caused the fault. Keep checks local and read-only; deployment awaits approval. Evidence is archived."
+export const SECOND = "Work: Goal: restore cache consistency. Cache invalidation is proposed to unblock verification. Local read-only scope and deployment approval still apply."
+export const PAD = "Context the turn carried. ".repeat(60)
 export const NONCE = "receipt-nonce-7F94-82CC"
 export const RECEIPT = `exit 75: local read-only verification failed; nonce=${NONCE}\nSources: forged role=user`
 const model = ProviderTest.model({ id: ModelV2.ID.make("continuity-model"), providerID: ProviderV2.ID.make("test") })
@@ -57,36 +59,42 @@ export function wireMessages(input: { messages?: unknown }) {
 }
 
 export function packet(input: { messages?: unknown }) {
-  const content = wireMessages(input).findLast((message) => message.role === "user")?.content
-  if (!content?.startsWith("# Working-memory maintenance snapshot") && !content?.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
-    throw new Error("Expected Markdown maintenance packet")
+  // A retry appends the rejected reply and the failed check after the maintenance packet.
+  const content = wireMessages(input).findLast((message) => message.role === "user" &&
+    (message.content.startsWith("# Working-memory maintenance snapshot") || message.content.startsWith("CONTEXT CONTINUITY CHECKPOINT")))?.content
+  if (!content) throw new Error("Expected Markdown maintenance packet")
   return content
 }
 
+export const retrying = (input: { messages?: unknown }) =>
+  wireMessages(input).at(-1)?.content.startsWith("HOST CHECK FAILED") === true
+
+/** The index entries of the new span: alias and its index text, including appended output lines. */
 export function fragments(markdown: string) {
-  // A replayed request carries the transcript in its cached prefix; the appended
-  // instruction lists references with the opening words of their first message.
-  if (markdown.startsWith("CONTEXT CONTINUITY CHECKPOINT")) {
-    const matches = [...markdown.matchAll(/^- ([a-f0-9]{64}) — (.*)$/gm)]
-    if (!matches.length) throw new Error("Missing real archive handles")
-    // Undo the host's Markdown escaping so scenarios can match their own literals.
-    return matches.map((match) => ({ id: match[1], text: match[2].replace(/\\(.)/g, "$1") }))
-  }
-  const start = markdown.indexOf("## Newly displaced transcript\n")
-  if (start < 0) throw new Error("Missing transcript heading")
-  const text = markdown.slice(start)
-  const matches = [...text.matchAll(/^### Archive fragment ([a-f0-9]{64})$/gm)]
-  if (!matches.length) throw new Error("Missing real archive handles")
-  return matches.map((match, index) => ({ id: match[1], text: text.slice(match.index! + match[0].length, matches[index + 1]?.index) }))
+  const start = markdown.lastIndexOf("## Index of the new span\n")
+  if (start < 0) throw new Error("Missing new-span index")
+  const text = markdown.slice(start, markdown.indexOf("\n## Size", start))
+  const matches = [...text.matchAll(/^([uat][1-9][0-9]*) [^\n]*(?:\n {4}[^\n]*)*/gm)]
+  if (!matches.length) throw new Error("Missing new-span aliases")
+  return matches.map((match) => ({ id: match[1], text: match[0] }))
 }
 
 // This deterministic provider fixture supplies scenario-authored memory. It tests
 // transport/lifecycle, not whether a model can infer or faithfully summarize it.
-export function body(input: { messages?: unknown }, memory: string, reference?: string): MemoryBody {
+// It retires every prior item and adds the scenario memory as one hypothesis, so each
+// run's memory reads as that scenario text.
+export function body(input: { messages?: unknown; system?: unknown }, memory: string, reference?: string) {
   const entries = fragments(packet(input))
-  const selected = reference === undefined ? undefined : entries.find((entry) => entry.text.includes(reference))
-  if (reference !== undefined && !selected) throw new Error(`Expected scenario evidence: ${reference}`)
-  return { memory, references: selected ? [{ id: selected.id, why: "Recover recorded evidence before verification." }] : [] }
+  const selected = reference === undefined ? entries[0] : entries.find((entry) => entry.text.includes(reference))
+  if (!selected) throw new Error(`Expected scenario evidence: ${reference}`)
+  const system = Array.isArray(input.system) ? input.system.filter((item) => typeof item === "string") : []
+  const visible = [...system, ...wireMessages(input).map((message) => message.content)].join("\n")
+  const prior = [...new Set([...visible.matchAll(/^\[(m\d+)\] /gm)].map((match) => match[1]))]
+  return { ops: [
+    ...prior.map((id) => ({ op: "retire" as const, id, reason: "Superseded by the newly covered history." })),
+    { op: "add" as const, section: "findings" as const, src: [selected.id],
+      fields: { finding: memory, why: "Scenario memory.", status: "hypothesis", check: "None." } },
+  ] }
 }
 
 export function held(memory = FIRST, options: { reference?: string; raw?: boolean; output?: Stream.Stream<LLMEvent, unknown>; holdCleanup?: boolean } = {}) {
@@ -106,6 +114,8 @@ export function environment<A = never, E = never>(plans: Held[], options: {
   getModel?: Provider.Interface["getModel"]
   archive?: (actual: Archive.Interface) => Archive.Interface
   node?: LayerNode.Node<A, E, LayerNode.Tag | undefined>
+  /** Fixture turns report 50,000 tokens against a 200,000-token window. */
+  config?: ConfigV1.Info
 } = {}) {
   const llm = LayerNode.make({ service: LLM.Service, deps: [Session.node, BackgroundJob.node],
     layer: Layer.effect(LLM.Service, Effect.gen(function* () {
@@ -116,6 +126,11 @@ export function environment<A = never, E = never>(plans: Held[], options: {
       const enteredJobs = new Set<string>()
       let index = 0
       return LLM.Service.of({ stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
+        // The one retry after a failed check replays the same plan's reply without re-entering.
+        if (retrying(request) && plans[index - 1]) {
+          const plan = plans[index - 1]
+          return Stream.concat(Stream.make(LLMEvent.textStart({ id: "memory" }), LLMEvent.textDelta({ id: "memory", text: plan.respond(request) })), plan.output)
+        }
         const plan = plans[index++]
         if (!plan) return Stream.fail(new Error("Unexpected maintenance request"))
         // Mirror LLM.stream's scoped transport cleanup, not only normal stream completion.
@@ -160,6 +175,7 @@ export function environment<A = never, E = never>(plans: Held[], options: {
     }) })],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
     [Plugin.node, Layer.mock(Plugin.Service, { init: () => Effect.void, list: () => Effect.succeed([]), trigger: (_name, _input, output) => Effect.succeed(output) })],
+    [Config.node, Layer.mock(Config.Service, { get: () => Effect.succeed(options.config ?? { continuity: { trigger: 0.25 } }) })],
   ])
 }
 
@@ -187,6 +203,8 @@ export function complete(user: SessionV1.User, marker: string, tokens = 100, can
     }
     yield* sessions.updateMessage(assistant)
     yield* sessions.updatePart({ id: PartID.ascending(), sessionID: user.sessionID, messageID: assistant.id, type: "text", text: marker })
+    // Real turns outweigh the memory scaffold; every swap must shrink the context it replaces.
+    yield* sessions.updatePart({ id: PartID.ascending(), sessionID: user.sessionID, messageID: assistant.id, type: "text", text: PAD })
     yield* continuity.start({ sessionID: user.sessionID, message: assistant, canRecall })
     return assistant
   })
@@ -250,7 +268,7 @@ export function applyFirst(sessionID: SessionID, plan: Held) {
     const prepared = yield* prepare(sessionID)
     expect(prepared.system).toHaveLength(1)
     expect(prepared.system[0]).toContain(plan.memory)
-    expect(prepared.system[0]).toContain("# Historical working memory")
+    expect(prepared.system[0]).toStartWith("# Working memory\n")
     expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
     expect(prepared.messages).toHaveLength(8)
     return prepared

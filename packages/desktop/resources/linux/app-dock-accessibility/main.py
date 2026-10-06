@@ -85,7 +85,7 @@ class Helper:
                     args = request["args"]
                     value = read(context, args) if request["op"] == "read" else (
                         invoke(context, args["ref"], args.get("actionID"), args.get("mode", "stable")) if request["op"] == "action" else
-                        press(context, args["ref"], args["keys"]) if request["op"] == "key" else
+                        press(context, args["ref"], args.get("keys"), args.get("text")) if request["op"] == "key" else
                         pointer(context, args["ref"], args["kind"]) if request["op"] == "pointer" else
                         replace_text(context, args["ref"], args["text"], args.get("mode", "editable"), args.get("focused", False)))
                 terminal = {"value": value}
@@ -205,8 +205,9 @@ def _arguments(op, args):
     if op == "read":
         return  # snapshot._query validates the bounded discriminated read arguments.
     if op == "key":
-        if set(args) != {"ref", "keys"} or not word(args.get("ref")) or not args["ref"].startswith("n:") or not isinstance(args.get("keys"), str):
-            raise BusError("protocol-error", "Key combination requires an opaque ref and keys")
+        field = "text" if "text" in args else "keys"
+        if set(args) != {"ref", field} or not word(args.get("ref")) or not args["ref"].startswith("n:") or not isinstance(args.get(field), str):
+            raise BusError("protocol-error", "Keys require an opaque ref and either keys or text")
         return
     if op == "pointer":
         if set(args) != {"ref", "kind"} or not word(args.get("ref")) or not args["ref"].startswith("n:") or args.get("kind") not in ("hover", "contextMenu"):

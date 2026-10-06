@@ -2379,6 +2379,10 @@ export type Config = {
     preserve_recent_tokens?: number
     reserved?: number
   }
+  continuity?: {
+    enabled?: boolean
+    trigger?: number
+  }
   experimental?: {
     disable_paste_summary?: boolean
     batch_tool?: boolean

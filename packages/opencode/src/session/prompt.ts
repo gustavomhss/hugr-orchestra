@@ -20,6 +20,7 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
+import { commandSource } from "@/continuity/alias"
 import { SystemPrompt } from "./system"
 import { Instruction } from "./instruction"
 import { Plugin } from "../plugin"
@@ -212,7 +213,8 @@ const layer = Layer.effect(
       const firstInfo = firstUser.info
 
       const subtasks = firstUser.parts.filter((p): p is SessionV1.SubtaskPart => p.type === "subtask")
-      const onlySubtasks = subtasks.length > 0 && firstUser.parts.every((p) => p.type === "subtask")
+      const onlySubtasks = subtasks.length > 0 &&
+        firstUser.parts.every((p) => p.type === "subtask" || (p.type === "text" && p.ignored))
 
       const ag = yield* agents.get("title")
       if (!ag) return
@@ -1467,7 +1469,9 @@ const layer = Layer.effect(
         throw error
       }
 
-      const templateParts = yield* resolvePromptParts(template)
+      const { invocation, source } = commandSource(input.command, input.arguments)
+      const templateParts = (yield* resolvePromptParts(template)).map((part) =>
+        part.type === "text" ? { ...part, metadata: { ...part.metadata, source } } : part)
       const inputFiles = new Set(
         input.parts?.filter((part) => new URL(part.url).protocol === "file:").map((part) => fileURLToPath(part.url)),
       )
@@ -1485,6 +1489,7 @@ const layer = Layer.effect(
               model: { providerID: taskModel.providerID, modelID: taskModel.modelID },
               prompt: templateParts.find((y) => y.type === "text")?.text ?? "",
             },
+            { type: "text" as const, text: invocation, ignored: true, metadata: { source } }, // typed invocation
           ]
         : [...uniqueTemplateParts, ...(input.parts ?? [])]
 

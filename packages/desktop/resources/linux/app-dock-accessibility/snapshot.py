@@ -9,7 +9,7 @@ import os
 from secrets import token_hex
 
 from bus import BusError
-from context import A, LIMITS, ROOT, interface_name, text_length_matches
+from context import A, LIMITS, ROOT, WINDOW_ROLES, interface_name, text_length_matches
 from refs import VIRTUAL_ROLES, ancestry_reasons, fingerprint, scope_kind
 
 # Default JSON escaping costs up to 12 bytes per Unicode character. Text appears
@@ -190,7 +190,7 @@ def read(context, query):
             candidate = {**result, "items": [*result["items"], item], "text": result["text"] + item.get("text", "")}
             if (not state["stack"] and not repeat) or (repeat and position[1].get("rootPending", False)):
                 candidate["title"] = result["title"] or record["name"]
-                if record["role"] in (16, 23, 69):
+                if record["role"] in WINDOW_ROLES:
                     candidate["windows"] = [*result["windows"], {"ref": item["ref"], "title": record["name"], "role": record["role"]}]
             item_bytes = len(json.dumps(item)) + (2 if result["items"] else 0)
             candidate_text = len(json.dumps(candidate["text"])) if item.get("text") else text_bytes

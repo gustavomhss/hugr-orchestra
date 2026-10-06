@@ -436,6 +436,38 @@ test("pointer and focused typing refuse malformed arguments before client work",
   expect(f.client.calls.length).toBe(before)
 })
 
+test("typed text reaches the helper as a key operation, bounded and never mixed with keys", async () => {
+  const f = fixture()
+  const binding = await f.dock.bind(identity(), target(), f.client, confirm)
+  const scope = { bindingID: binding.bindingID, bindingEpoch: binding.bindingEpoch }
+  await f.dock.dispatch("keyboard", identity(), { ref: "n:focus", text: "trim trailing whitespace", world: "linux" })
+  expect(f.client.calls.at(-1)).toEqual({ op: "key", args: { ref: "n:focus", text: "trim trailing whitespace" }, ...scope })
+  const before = f.client.calls.length
+  for (const args of [{ text: "" }, { text: "x".repeat(257) }, { text: 7 }, { text: "x", keys: "Return" }])
+    await expect(f.dock.dispatch("keyboard", identity(), { ref: "n:focus", ...args })).rejects.toMatchObject({ code: "invalid-argument" })
+  expect(f.client.calls.length).toBe(before)
+})
+
+test("top-level file choosers, alerts and other app dialogs are proposable windows; other roles are not", async () => {
+  const f = fixture()
+  const roles = [2, 9, 16, 19, 22, 23, 69]
+  f.client.reply = async (call) => call.args.phase === "discover"
+    ? { status: "proposal", proposalID: "proposal-dialogs", roots: roles.map((role) => ({ ...root(), path: `/w${role}`, name: "Window", role })) }
+    : f.client.defaultReply(call)
+  const proposals: NativeDockProtocol.Proposal[] = []
+  await f.dock.bind(identity(), target(), f.client, async (proposal) => {
+    proposals.push(proposal)
+    return [{ ...root(), path: "/w19" }]
+  })
+  expect(proposals[0]!.roots.map((proposed) => proposed.role)).toEqual(roles)
+  const other = fixture()
+  for (const role of [32, 40, 75]) {
+    const client = new BoundaryClient()
+    client.reply = async () => ({ status: "proposal", proposalID: "proposal", roots: [{ ...root(), name: "Window", role }] })
+    await expect(other.dock.bind(identity(), target(), client, confirm)).rejects.toMatchObject({ code: "protocol-error" })
+  }
+})
+
 test("numeric native refs, invalid args and browser-only operations fail before client work", async () => {
   const f = fixture()
   await f.dock.bind(identity(), target(), f.client, confirm)

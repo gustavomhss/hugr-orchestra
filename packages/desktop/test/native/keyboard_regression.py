@@ -360,6 +360,69 @@ class KeyCombinationTest(NativeFixtureTest):
         self.assertEqual("focus-unconfirmed", outcome.code)
         self.assertEqual("unknown", outcome.result["dispatch"])
 
+    def type_text(self, name, text, context=None):
+        context = context or self.context()
+        return context, keyboard.press_keys(context, self.nodes[name], None, context.remaining(), self.evidence(context, name), text)
+
+    def refused_text(self, name, text, code, context=None):
+        context = context or self.context()
+        outcome = None
+        try:
+            self.type_text(name, text, context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([], context.events, "Typed text reached the controller for an unsafe target")
+        self.assertEqual(code, getattr(outcome, "code", None), "Typed-text guard returned the wrong named failure")
+        return context, outcome
+
+    def test_text_reaches_focused_real_gtk_entry(self):
+        self.command("edit", name="entry", text="")
+        text = "Trim Trailing: 1+1 = 2!"
+        context, result = self.type_text("entry", text)
+        self.assertEqual(("acknowledged", "unverified", len(text)), (result["dispatch"], result["postcondition"], result["characters"]))
+        self.assertTrue(result["focus"]["confirmed"], "Typed text went out without the target holding focus")
+        self.assertEqual(text, self.entry(text), "Real GTK did not receive the typed text")
+        self.assertEqual([(0, text, 4)], context.events, "Text must be one KEY_STRING event")
+        self.assertEqual([(77, "", 6), (77, "", 6)], context.cleanup, "Shortcut modifiers must be released before and after typing")
+
+    def test_text_refuses_before_any_dispatch(self):
+        for text in ("", "x" * 257, "line\n", "tab\t", "caf\u00e9", "\x1b[A", 7):
+            with self.subTest(text=text):
+                context, outcome = self.refused_text("entry", text, "unsupported-operation")
+                self.assertEqual([], context.cleanup, "Unprintable text reached modifier cleanup")
+        context, outcome = self.refused_text("protected", "secret", "protected-text")
+        self.assertEqual("not-dispatched", outcome.result["dispatch"])
+        # A target that does not hold focus (and cannot take it) never receives text, though keys would go to its window.
+        for setup in ({"states": [8, 24, 25]}, {"states": [8, 12, 24, 25], "windowStates": [8, 24, 25]}):
+            with self.subTest(setup=setup):
+                self.command("reset")
+                self.command("wire", **setup)
+                context, outcome = self.refused_text("wire", "x", "focus-unconfirmed")
+                self.assertEqual([], context.cleanup, "Text refused at admission still touched the keyboard")
+                self.assertEqual("not-dispatched", outcome.result["dispatch"], "Text refused before typing reported a dispatch")
+        self.command("reset")
+        self.command("wire", states=[8, 24, 25])
+        self.assertEqual("acknowledged", self.press("wire", "Escape")[1]["dispatch"], "Keys mode lost its window-anchor behavior")
+
+    def test_focus_or_window_lost_before_typing_stops_the_text(self):
+        test = self
+        for change in ({"states": [8, 24, 25]}, {"windowStates": [8, 24, 25]}):
+            with self.subTest(change=change):
+                self.command("reset")
+                self.command("wire", states=[8, 12, 24, 25])
+
+                class MoveFocusOnRelease(TappedContext):
+                    def cleanup_call(self, *args):
+                        value = super().cleanup_call(*args)
+                        if len(self.cleanup) == 1:
+                            test.command("wire", **change)
+                        return value
+
+                context = MoveFocusOnRelease(self.bus, None, self.binding, 8000)
+                context, outcome = self.refused_text("wire", "typed after focus moved", "focus-unconfirmed", context)
+                self.assertEqual([(77, "", 6), (77, "", 6)], context.cleanup, "Modifiers must still be released after a refusal")
+                self.assertEqual("not-dispatched", outcome.result["dispatch"], "Modifier unlocks alone reported a dispatch")
+
 
 class PointerTest(NativeFixtureTest):
     context = KeyboardRegressionTest.context
@@ -486,9 +549,22 @@ def key_controls():
     source = (SOURCE / "keyboard.py").read_text()
     digest = hashlib.sha256(source.encode()).hexdigest()
     controls = [
-        ("no-active-recheck", "        def generate(code, kind):\n            active()\n", "        def generate(code, kind):\n",
+        ("no-active-recheck", "        def generate(code, kind, string=\"\"):\n            active()\n", "        def generate(code, kind, string=\"\"):\n",
          "test_window_lost_after_modifier_lock_releases_and_stops", "Key was sent after the owned window lost activity"),
-        ("no-release", "            if mask and result[\"controllerCalls\"]:\n                _release(bus, controller, result, mask)",
+        ("text-no-active-recheck", "        def generate(code, kind, string=\"\"):\n            active()\n", "        def generate(code, kind, string=\"\"):\n",
+         "test_focus_or_window_lost_before_typing_stops_the_text", "Typed text reached the controller for an unsafe target"),
+        ("text-no-focus-recheck", "            if text is not None and 12 not in _states(call, ref):\n", "            if False:\n",
+         "test_focus_or_window_lost_before_typing_stops_the_text", "Typed text reached the controller for an unsafe target"),
+        ("text-no-focus-admission", "        if text is not None and not result[\"focus\"][\"confirmed\"]:\n", "        if False:\n",
+         "test_text_refuses_before_any_dispatch", "Text refused at admission still touched the keyboard"),
+        ("text-no-pre-release", "                _release(bus, controller, result, SHORTCUT_MODIFIERS)\n                generate(0, 4, text)",
+         "                generate(0, 4, text)", "test_text_reaches_focused_real_gtk_entry", "Shortcut modifiers must be released before and after typing"),
+        ("text-printable-only", "any(not 32 <= ord(c) <= 126 for c in text)", "False",
+         "test_text_refuses_before_any_dispatch", "Typed text reached the controller for an unsafe target"),
+        ("text-cleanup-not-dispatch", "        sent = result[\"controllerCalls\"] > result.get(\"cleanupCalls\", 0)\n",
+         "        sent = result[\"controllerCalls\"] > 0\n", "test_focus_or_window_lost_before_typing_stops_the_text",
+         "Modifier unlocks alone reported a dispatch"),
+        ("no-release", "            if (mask or text is not None) and result[\"controllerCalls\"]:\n                _release(bus, controller, result, mask or SHORTCUT_MODIFIERS)",
          "            if False:\n                pass", "test_window_lost_after_modifier_lock_releases_and_stops",
          "Shortcut modifiers must still be released"),
         ("server-combos", '    if mask & 4 and mask & 8 and (', '    if False and (',

@@ -19,6 +19,9 @@ import tempfile
 import unittest
 
 KEY = "editor.accessibilitySupport"
+# VS Code's in-window open/save dialog, which the accessibility tree can reach (Electron's GTK dialog it cannot).
+DIALOG = "files.simpleDialog.enable"
+SEEDED = {KEY: "on", DIALOG: True}
 
 
 class EditorSettingsTests(unittest.TestCase):
@@ -44,7 +47,7 @@ class EditorSettingsTests(unittest.TestCase):
     def test_absent_file_is_created_on(self):
         self.seed("code.desktop", "codium.desktop")
         for product in ("Code", "VSCodium"):
-            self.assertEqual({KEY: "on"}, json.loads(self.settings(product).read_bytes()), "seed-absent-file-on")
+            self.assertEqual(SEEDED, json.loads(self.settings(product).read_bytes()), "seed-absent-file-on")
         self.assertFalse(self.settings("Code - OSS").exists(), "seed-only-launched-editors")
 
     def test_missing_key_is_added_and_other_settings_kept(self):
@@ -52,16 +55,21 @@ class EditorSettingsTests(unittest.TestCase):
             with self.subTest(data=data):
                 self.write(data)
                 self.seed("code.desktop")
-                expected = {KEY: "on"} | ({"files.trimTrailingWhitespace": True, "[python]": {KEY: "off"}} if data.strip() else {})
+                expected = SEEDED | ({"files.trimTrailingWhitespace": True, "[python]": {KEY: "off"}} if data.strip() else {})
                 self.assertEqual(expected, json.loads(self.settings().read_bytes()), "seed-missing-key")
 
     def test_explicit_choice_is_never_overwritten(self):
-        for value in ("off", "auto", "on"):
-            with self.subTest(value=value):
-                data = json.dumps({KEY: value, "window.zoomLevel": 1}, indent=2).encode()
-                self.write(data)
+        for chosen in ({KEY: "off"}, {KEY: "auto"}, {DIALOG: False}, {KEY: "off", DIALOG: False}):
+            with self.subTest(chosen=chosen):
+                self.write(json.dumps({**chosen, "window.zoomLevel": 1}, indent=2).encode())
                 self.seed("code.desktop")
-                self.assertEqual(data, self.settings().read_bytes(), "seed-keeps-user-choice")
+                self.assertEqual(SEEDED | chosen | {"window.zoomLevel": 1}, json.loads(self.settings().read_bytes()), "seed-keeps-user-choice")
+
+    def test_complete_file_is_not_rewritten(self):
+        data = json.dumps({KEY: "off", DIALOG: False, "window.zoomLevel": 1}, indent=2).encode()
+        self.write(data)
+        self.seed("code.desktop")
+        self.assertEqual(data, self.settings().read_bytes(), "seed-no-rewrite-when-complete")
 
     def test_unparsed_or_foreign_files_are_left_alone(self):
         commented = b'{\n    // tabs please\n    "editor.insertSpaces": false,\n}\n'
@@ -88,7 +96,11 @@ class EditorSettingsTests(unittest.TestCase):
 
 MUTATIONS = (
     ("keeps-user-choice", "test_explicit_choice_is_never_overwritten", "seed-keeps-user-choice",
-     ' or "editor.accessibilitySupport" in settings:', ":"),
+     "            settings = {**EDITOR_DEFAULTS, **settings}", "            settings = {**settings, **EDITOR_DEFAULTS}"),
+    ("no-simple-dialog", "test_absent_file_is_created_on", "seed-absent-file-on",
+     '    "files.simpleDialog.enable": True,\n', ""),
+    ("no-rewrite", "test_complete_file_is_not_rewritten", "seed-no-rewrite-when-complete",
+     " or set(EDITOR_DEFAULTS) <= set(settings):", ":"),
     ("jsonc", "test_unparsed_or_foreign_files_are_left_alone", "seed-leaves-jsonc-alone",
      "            settings = json.loads(data) if data.strip() else {}", "            settings = {}"),
     ("symlink", "test_unparsed_or_foreign_files_are_left_alone", "seed-keeps-linked-settings",

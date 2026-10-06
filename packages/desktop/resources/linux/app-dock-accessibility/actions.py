@@ -105,14 +105,16 @@ def replace_text(context, ref, text, mode="editable", focused=False):
         raise
 
 
-def press(context, ref, keys):
-    """Send one key combination to the owned window holding ref; the app decides what it means."""
+def press(context, ref, keys=None, text=None):
+    """Send one key combination, or printable text as key events, to the owned window holding ref; the app decides
+    what it means. Text goes only to ref when ref holds focus."""
     record = context.registry.resolve(ref, context)
     context.registry.invalidate(context.binding)
-    keyboard.parse_keys(keys)  # Refuse unknown or server-level combinations before any native call.
+    # Refuse unknown or server-level combinations and unprintable text before any native call.
+    keyboard.parse_keys(keys) if text is None else keyboard.parse_text(text)
     evidence = context.require_owned(record)
     try:
-        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence))
+        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence, text))
     except BusError as error:
         if hasattr(error, "result"):
             error.result = _keys_result(error.result)
@@ -147,7 +149,8 @@ def _pointer_result(result):
 
 def _keys_result(result):
     focus = result.get("focus", {})
-    bounded = {"method": "keys", "keys": str(result.get("keys", ""))[:64], "dispatch": result["dispatch"],
+    typed = {"characters": result["characters"]} if type(result.get("characters")) is int else {"keys": str(result.get("keys", ""))[:64]}
+    bounded = {"method": "keys", **typed, "dispatch": result["dispatch"],
                "postcondition": "unverified", "focus": {"requested": bool(focus.get("requested")),
                "confirmed": bool(focus.get("confirmed")), "externalRaces": "unfenced"},
                "controllerCalls": result.get("controllerCalls", 0)}

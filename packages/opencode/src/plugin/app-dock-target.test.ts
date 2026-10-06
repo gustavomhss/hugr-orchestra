@@ -1,8 +1,7 @@
 import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
-import { AppDockPlugin, createAppDockHooks } from "./app-dock"
-import { scopeLinuxWorkspace } from "./linux-agent"
+import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
 import { Permission } from "@/permission"
 import { context, input, fakePort, host, page, control, field, nativeError, type Reply } from "./app-dock.fixture"
 
@@ -343,7 +342,7 @@ test("dock_keyboard sends native key combinations to a ref, a target or the one 
   await dock.hooks.tool.dock_keyboard.execute({ type: "keyDown", key: "Enter" }, context)
   expect(sent().at(-1)).toEqual({ type: "keyDown", key: "Enter" })
   expect(await dock.hooks.tool.dock_keyboard.execute({ key: "Enter" }, context)).toBe("Pass type and key")
-  expect(await dock.hooks.tool.ui_keys.execute({ ref: "n:a" }, context)).toBe("Pass keys, e.g. ctrl+comma")
+  expect(await dock.hooks.tool.ui_keys.execute({ ref: "n:a" }, context)).toBe("Pass keys, such as ctrl+comma, or text")
   const idle = host(() => page([frame("n:term", "xterm", false)]))
   expect(JSON.parse(String(await idle.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
     .toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
@@ -382,7 +381,7 @@ test("ui_* tools always address the Linux workspace and expose only native argum
   expect(dock.calls.length).toBeGreaterThan(3)
   expect(dock.calls.every((call) => call.args.world === "linux")).toBe(true)
   expect(Object.keys(dock.hooks.tool.ui_read.args).sort()).toEqual(["budget", "cursor", "maxText", "rootRef", "textOffset"])
-  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target"])
+  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target", "text"])
 })
 
 test("host agents' dock_* tools declare and describe only browser use; ui_* tools never name dock_* tools", () => {
@@ -435,6 +434,16 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
   // The linux agent speaks as Orchestra's, never as the upstream product.
   expect(config.agent!.linux!.prompt).toStartWith("You are the Linux workspace agent of HuGR Orchestra")
   expect(`${config.agent!.linux!.prompt} ${config.agent!.linux!.description}`.toLowerCase()).not.toContain("opencode")
+  // Run 13: after the task the model ran its own "behavior proof", drove a native dialog with xdotool and killed VS Code.
+  const prompt = String(config.agent!.linux!.prompt)
+  for (const rule of ["Do exactly the task. Verify it through the app's own state or the file the task names; do not run extra experiments",
+    "Never close or kill app windows or processes unless the task asks for it.",
+    "Operate what is on screen with ui_*, not linux_exec; xdotool, wmctrl and the like are not tools for UI work.",
+    "ui_keys with text types it as key events into whatever has focus"])
+    expect(prompt).toContain(rule)
+  // It cannot ask anyone: a blocker ends in a report.
+  expect(prompt).toContain("stop and report exactly what blocked you; you cannot ask the owner")
+  expect(prompt).not.toContain("ask the user")
   const plain: { permission?: unknown } = { permission: "ask" }
   scopeLinuxWorkspace(plain)
   expect(plain.permission).toEqual({ "*": "ask", "linux_*": "deny", "ui_*": "deny", dock_find: "deny", dock_action: "deny" })

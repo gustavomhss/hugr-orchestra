@@ -166,6 +166,17 @@ export const Info = Schema.Struct({
       }),
     }),
   ),
+  continuity: Schema.optional(
+    Schema.Struct({
+      enabled: Schema.optional(Schema.Boolean).annotate({
+        description: "Keep long sessions under the context limit with background working memory (default: true)",
+      }),
+      trigger: Schema.optional(Schema.Finite).annotate({
+        description:
+          "Fraction of the model context window at which background maintenance runs, between 0 and 1 (default: 0.7)",
+      }),
+    }),
+  ),
   experimental: Schema.optional(
     Schema.Struct({
       disable_paste_summary: Schema.optional(Schema.Boolean),
