@@ -185,9 +185,12 @@ function decode(file: { directory: string; filepath: string; primary: boolean },
       : decodeAgent({ ...markdown.data, ...(body ? { system: body } : {}) }, { errors: "all", propertyOrder: "original" }),
   )
   if (!agent) return
+  // Every session runs on Maestro, so its agent file (what the agent editor writes) can neither disable it nor take it
+  // out of primary mode. Configuration documents still set both.
+  const fields = name === AgentV2.defaultID ? { ...agent, disabled: undefined, mode: undefined } : agent
   const info = Option.getOrUndefined(
     decodeConfig({
-      agents: { [name]: file.primary ? { ...agent, mode: "primary" } : agent },
+      agents: { [name]: file.primary ? { ...fields, mode: "primary" } : fields },
     }),
   )
   if (!info) return

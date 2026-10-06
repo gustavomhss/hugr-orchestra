@@ -298,6 +298,53 @@ Use native v2 fields.`,
       ),
     ),
   )
+
+  it.live("an agent file can neither disable Maestro nor take it out of primary mode", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(async () => {
+            for (const folder of ["agent", "agents", "mode"])
+              await fs.mkdir(path.join(tmp.path, folder), { recursive: true })
+            // The editor's legacy keys, the native keys and a legacy mode file all name Maestro.
+            await fs.writeFile(
+              path.join(tmp.path, "agent", "maestro.md"),
+              "---\ndescription: Hand edited\nmode: all\ndisable: true\n---\n",
+            )
+            await fs.writeFile(
+              path.join(tmp.path, "agents", "maestro.md"),
+              "---\nmode: subagent\ndisabled: true\n---\n",
+            )
+            await fs.writeFile(path.join(tmp.path, "mode", "maestro.md"), "---\ndisable: true\n---\n")
+            // Other agents keep both keys.
+            await fs.writeFile(path.join(tmp.path, "agents", "helper.md"), "---\nmode: primary\n---\nHelp.")
+            await fs.writeFile(path.join(tmp.path, "agents", "gone.md"), "---\ndisabled: true\n---\nGone.")
+          })
+          const agents = yield* AgentV2.Service
+          yield* agents.transform((editor) =>
+            editor.update(AgentV2.defaultID, (agent) => {
+              agent.mode = "primary"
+            }),
+          )
+          const config = Config.Service.of({
+            entries: () =>
+              Effect.succeed([new Config.Directory({ type: "directory", path: AbsolutePath.make(tmp.path) })]),
+          })
+
+          yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+            Effect.provideService(Config.Service, config),
+          )
+
+          expect(yield* agents.get(AgentV2.defaultID)).toMatchObject({ description: "Hand edited", mode: "primary" })
+          expect(yield* agents.get(AgentV2.ID.make("helper"))).toMatchObject({ mode: "primary" })
+          expect(yield* agents.get(AgentV2.ID.make("gone"))).toBeUndefined()
+        }),
+      ),
+    ),
+  )
 })
 
 function loadHomePermissions(home: string) {
