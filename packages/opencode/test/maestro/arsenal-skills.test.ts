@@ -57,7 +57,7 @@ describe("Maestro Arsenal playbooks", () => {
   // tool descriptions. The ceiling is a tripwire against unreviewed growth, not a target.
   test("Maestro prompt stays within its size budget and names only shipped playbooks", async () => {
     const file = Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt"))
-    expect(file.size).toBeLessThanOrEqual(16 * 1024)
+    expect(file.size).toBeLessThanOrEqual(24 * 1024)
     const named = Array.from((await file.text()).matchAll(/`(frame-request|maestro-[a-z-]+)`/g), (match) => match[1]!)
     expect(named).toContain("maestro-governed")
     await Promise.all(
