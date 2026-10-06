@@ -79,6 +79,10 @@ jobs:
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_editor_settings.py --workspace resources/linux-runtime/workspace.py --self-check
 
+      - name: App launch
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
+        run: $RUNNER_TEMP/suite test_app_launch.py --workspace resources/linux-runtime/workspace.py --self-check
+
       - name: Actions with the real registry
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_actions.py
