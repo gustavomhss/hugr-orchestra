@@ -1,14 +1,12 @@
 import { createSimpleContext } from "@opencode-ai/ui/context"
 import { base64Encode } from "@opencode-ai/core/util/encode"
-import { useParams, useSearchParams } from "@solidjs/router"
+import { useParams } from "@solidjs/router"
 import { batch, createEffect, createMemo, startTransition } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useModels } from "@/context/models"
-import { useSettings } from "@/context/settings"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { Persist, persisted } from "@/utils/persist"
-import { agentChoiceVisible, hasCustomAgent, resolveAgent } from "./local-agent"
 import { cycleModelVariant, getConfiguredAgentVariant, resolveModelVariant } from "./model-variant"
 import { useSDK } from "./sdk"
 import { useSync } from "./sync"
@@ -60,17 +58,13 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
   name: "Local",
   init: () => {
     const params = useParams()
-    const [search] = useSearchParams<{ draftId?: string }>()
     const sdk = useSDK()
     const sync = useSync()
     const serverSDK = useServerSDK()
     const providers = useProviders(() => sdk().directory)
     const models = useModels()
-    const settings = useSettings()
 
     const id = createMemo(() => params.id || undefined)
-    const list = createMemo(() => sync().data.agent.filter((item) => item.mode !== "subagent" && !item.hidden))
-    const agentsVisible = createMemo(() => settings.visibility.customAgents() || hasCustomAgent(list()))
     const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
 
     const [saved, setSaved, , savedReady] = persisted(
@@ -84,8 +78,6 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     )
 
     const [store, setStore] = createStore<{
-      current?: string
-      explicitDraft?: string
       draft?: State
       promoting?: State
       last?: {
@@ -95,8 +87,6 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         variant?: string | null
       }
     }>({
-      current: list()[0]?.name,
-      explicitDraft: undefined,
       draft: undefined,
       last: undefined,
     })
@@ -113,20 +103,6 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         if (validModel(model)) return model
       }
     }
-
-    const pickAgent = (name: string | undefined) => {
-      return resolveAgent(list(), name)
-    }
-
-    createEffect(() => {
-      const items = list()
-      if (items.length === 0) {
-        if (store.current !== undefined) setStore("current", undefined)
-        return
-      }
-      if (items.some((item) => item.name === store.current)) return
-      setStore("current", items[0]?.name)
-    })
 
     const scope = createMemo<State | undefined>(() => {
       const session = id()
@@ -182,62 +158,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
     const fallback = createMemo<ModelKey | undefined>(() => configuredModel() ?? recentModel() ?? defaultModel())
 
+    // The user talks only to Maestro: every draft, new session and follow-up runs on it.
     const agent = {
-      list,
-      visible: () =>
-        agentChoiceVisible({
-          custom: agentsVisible(),
-          sessionID: id(),
-          explicitDraft: store.explicitDraft,
-          draftID: search.draftId,
-        }),
-      current() {
-        return pickAgent(agent.visible() ? (scope()?.agent ?? store.current) : "build")
-      },
-      set(name: string | undefined, options?: { draftID?: string }) {
-        const item = pickAgent(name)
-        if (!item) {
-          setStore("current", undefined)
-          return
-        }
-
-        batch(() => {
-          if (options?.draftID) setStore("explicitDraft", options.draftID)
-          setStore("current", item.name)
-          setStore("last", {
-            type: "agent",
-            agent: item.name,
-            model: item.model,
-            variant: item.variant ?? null,
-          })
-          const prev = scope()
-          const next = {
-            agent: item.name,
-            model: item.model ?? prev?.model,
-            variant: item.variant ?? prev?.variant,
-          } satisfies State
-          const session = id()
-          if (session) {
-            setSaved("session", session, next)
-            return
-          }
-          setStore("draft", next)
-        })
-      },
-      move(direction: 1 | -1) {
-        const items = list()
-        if (items.length === 0) {
-          setStore("current", undefined)
-          return
-        }
-
-        let next = items.findIndex((item) => item.name === agent.current()?.name) + direction
-        if (next < 0) next = items.length - 1
-        if (next >= items.length) next = 0
-        const item = items[next]
-        if (!item) return
-        agent.set(item.name)
-      },
+      current: () => sync().data.agent.find((item) => item.name === "maestro"),
     }
 
     const current = () => {
