@@ -148,6 +148,11 @@ function cleanupEvidence(value: unknown) {
 }
 
 const toJSON = (value: unknown) => JSON.stringify(value, null, 2)
+// Native pages name roles as ui_look does ("static", not "atspi-role-116"), so a role copied from any tool reads alike.
+const readable = (value: unknown) => object(value) && value.backend === "linux-atspi" && Array.isArray(value.items)
+  ? { ...value, items: value.items.map((item) => object(item) && typeof item.roleName === "string"
+    ? { ...item, roleName: AppDockOutline.role({ role: item.role, roleName: item.roleName }) } : item) }
+  : value
 const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Record<string, unknown>, timeoutMs: number,
   clock?: Clock) => {
   const asked = Date.now()
@@ -196,8 +201,12 @@ function matches(item: unknown, query: NativeQuery): item is NativeItem {
   return fits(item as NativeItem, query)
 }
 
-// Toolkits and models spell roles differently ("check-box", "checkbox", "check box"), so only letters and digits count.
-const roleKey = (role: string) => role.toLowerCase().replace(/[^a-z0-9]/g, "")
+// Toolkits, tools and models spell roles differently ("check-box", "Check Box", "atspi-role-7"), so roles compare by
+// their readable name with only letters and digits counting.
+const roleKey = (role: string) => {
+  const number = /^atspi-?role-?(\d+)$/i.exec(role.trim())
+  return (number ? AppDockOutline.role({ role: Number(number[1]), roleName: role }) : role).toLowerCase().replace(/[^a-z0-9]/g, "")
+}
 
 function fits(item: NativeItem, query: NativeQuery) {
   if (query.role !== undefined && roleKey(item.roleName) !== roleKey(query.role)) return false
@@ -211,20 +220,35 @@ function supports(item: NativeItem, capability: string) {
   return object(entry) && entry.supported === true
 }
 
+function reason(item: NativeItem, capability: string) {
+  const entry = object(item.capabilities) ? item.capabilities[capability] : undefined
+  return object(entry) && typeof entry.reason === "string" ? entry.reason : "not advertised"
+}
+
+// The capabilities that serve the same intent in another input mode.
+const ALTERNATIVES: Record<string, string[]> = { action: ["action", "observedAction"], observedAction: ["action", "observedAction"],
+  type: ["type", "keyboardType"], keyboardType: ["type", "keyboardType"] }
+
 // A target that names real controls but excludes them by role or input mode must say so, or models keep guessing.
 function missed(scan: NativeScan, query: NativeQuery) {
   if (query.window) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
     hint: "No app window is active in the Linux workspace; pass ref or target for the window, or ask the user to click the app" })
   if (scan.found.length === 0) return compactScan(scan, "target-not-found")
   const items = scan.found.map((match) => match.item)
-  const roles = [...new Set(items.map((item) => item.roleName))]
+  const roles = [...new Set(items.map((item) => AppDockOutline.role(item)))]
+  const shaped = items.filter((item) => query.role === undefined || roleKey(item.roleName) === roleKey(query.role))
   const hints = [
-    ...(query.role !== undefined && !items.some((item) => roleKey(item.roleName) === roleKey(query.role!))
-      ? [`No control with this name has role "${query.role}"; roles found: ${roles.join(", ")}`] : []),
-    ...(query.capability === "action" && items.some((item) => supports(item, "observedAction"))
+    ...(shaped.length === 0 ? [`No control with this name has role "${query.role}"; roles found: ${roles.join(", ")}`] : []),
+    ...(query.capability === "action" && shaped.some((item) => supports(item, "observedAction"))
       ? ['Controls with this name only support observed actions; retry with mode: "observed"'] : []),
-    ...(query.capability === "type" && items.some((item) => supports(item, "keyboardType"))
+    ...(query.capability === "type" && shaped.some((item) => supports(item, "keyboardType"))
       ? ['Fields with this name only accept keyboard input; retry with mode: "keyboard"'] : []),
+    // The helper never acts on list and tree rows themselves, so a row matched by name otherwise looked like a typo.
+    ...(query.capability !== undefined && shaped.length > 0
+      && !shaped.some((item) => ALTERNATIVES[query.capability!].some((capability) => supports(item, capability)))
+      ? [`The control with this name accepts no ${query.capability === "type" || query.capability === "keyboardType" ? "typing" : "action"} (${
+        [...new Set(shaped.map((item) => `${AppDockOutline.role(item)}: ${reason(item, ALTERNATIVES[query.capability!][0]!)}`))].join("; ")
+      }); act on a control inside or beside it instead, such as its check box or button (ui_list shows them)`] : []),
   ]
   return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0, nameMatches: items.length,
     ...(hints.length ? { hints } : {}), nearMisses: items.slice(0, 10).map(compactItem) })
@@ -236,7 +260,7 @@ function compactItem(item: NativeItem) {
   const capabilities = object(item.capabilities) ? item.capabilities : {}
   return {
     ref: item.ref,
-    role: item.roleName,
+    role: AppDockOutline.role(item),
     name: item.name,
     ...(Array.isArray(item.states) ? { states: item.states.flatMap((state) => (STATES[Number(state)] ? [STATES[Number(state)]] : [])) } : {}),
     ...(Array.isArray(item.actions) && item.actions.length ? { actions: item.actions } : {}),
@@ -264,8 +288,11 @@ const same = (match: NativeMatch, winner: NativeMatch) => match.page === winner.
   && match.item.scopeDepth === winner.item.scopeDepth
 
 // Names are substring-matched, so "Open" also hits "Open Quick Access": a single match wins, else a unique exact name.
+// ui_look prints names with their shortcut split off ("Explorer" keys=Ctrl+Shift+E), so that spelling is exact too.
 function pick(scan: NativeScan, query: NativeQuery) {
-  const exact = scan.found.filter((match) => match.item.name.trim().toLowerCase() === query.name?.trim().toLowerCase())
+  const wanted = query.name?.trim().toLowerCase()
+  const exact = scan.found.filter((match) => [match.item.name, AppDockOutline.keys(match.item.name).name]
+    .some((name) => name.trim().toLowerCase() === wanted))
   if (scan.found.length === 1) return scan.found[0]
   if (exact.length === 1) return exact[0]
   return undefined
@@ -287,7 +314,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   const ref = tool.schema.union([tool.schema.number().min(1), tool.schema.string().min(3).max(256).startsWith("n:")])
   const target = tool.schema.object({
     name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the control's accessible name; when several controls contain it, the one whose whole name equals it wins"),
-    role: tool.schema.string().min(1).max(64).optional().describe("Exact roleName from dock_find/dock_read, e.g. push-button, entry"),
+    role: tool.schema.string().min(1).max(64).optional().describe("Role as ui_look or dock_find prints it, e.g. push button, entry, check box; any spelling of the same role matches"),
   })
 
   // A model turn takes far longer than a native continuation lives, so the tool,
@@ -418,14 +445,14 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             ...(args.mode === undefined ? {} : { mode: args.mode }),
             ...(args.format === undefined ? {} : { format: args.format }),
             ...(args.actionable === undefined ? {} : { actionable: args.actionable }),
-            ...(args.visible === undefined ? {} : { visible: args.visible }) }).then(toJSON, toolError),
+            ...(args.visible === undefined ? {} : { visible: args.visible }) }).then((value) => toJSON(readable(value)), toolError),
       }),
       dock_find: tool({
         description:
           "Find controls in the native Linux workspace by accessible name (case-insensitive substring) and optional roleName. The tool pages the accessibility tree itself and returns compact matches from the first page that has any, with refs usable immediately by dock_action/dock_type; searchComplete:false means part of the tree was not searched (later pages, or subtrees listed in reasons). Prefer dock_action/dock_type with `target` to locate and act in one call, because native refs expire when the app changes.",
         args: {
           name: tool.schema.string().min(1).max(256).optional().describe("Case-insensitive substring of the accessible name; omit it to list every control of a role"),
-          role: tool.schema.string().min(1).max(64).optional().describe("roleName, e.g. push-button, entry, check-box (case, spaces and hyphens are ignored)"),
+          role: tool.schema.string().min(1).max(64).optional().describe("Role as ui_look prints it, e.g. push button, entry, check box (any spelling of the same role matches)"),
           includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
         },
         execute: (args, context) => args.name === undefined && args.role === undefined
@@ -705,8 +732,9 @@ Tools: linux_* run commands and read or write files inside the workspace; ui_* s
 
 How to work:
 - Use linux_* for files, configuration files, processes and command-line work. Use ui_* when the task has to go through an app's interface.
-- Start with ui_look: it shows the windows, any open dialog, the focus and a numbered map of regions. ui_enter zooms into a region, ui_up leaves it, ui_list lists one kind of control. Look again after anything that changes the screen.
-- Act in one call: each line from ui_look is role "name"; pass it as target {name, role} to ui_act or ui_type. ui_find searches by name across everything. Use ui_keys for shortcuts: names often show them (e.g. "Explorer (Ctrl+Shift+E)"), and many apps open settings with ctrl+comma and a command palette with ctrl+shift+p.
+- Start with ui_look: it shows the windows, any open dialog, the focus and a numbered map of regions. ui_enter zooms into a region by a number from the latest ui_look or ui_enter output, ui_up leaves it, ui_list lists one kind of control. Look again after anything that changes the screen.
+- Act in one call: copy role and name from a ui_look or ui_list line (role "name") into target {name, role} for ui_act or ui_type. ui_find searches by name across everything. Use ui_keys for shortcuts: names often show them (e.g. "Explorer (Ctrl+Shift+E)"), and many apps open settings with ctrl+comma and a command palette with ctrl+shift+p.
+- For a check box, ui_act with action check or uncheck when it offers them (mode observed inside lists and trees). Rows of lists and trees take no action themselves; act on the check box or button inside the row.
 - Refs expire when an app changes; prefer target over refs you saw earlier.
 - After an action, read again or check the resulting file or state, and say what you verified and how.
 - If something blocks you (the workspace is not open, an app exposes no controls, a permission is missing), stop and report exactly what blocked you. Do not look for other ways out of the workspace.
