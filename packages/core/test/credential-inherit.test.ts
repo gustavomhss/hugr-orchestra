@@ -1,7 +1,8 @@
-import { Database as Sqlite } from "bun:sqlite"
+import { constants, Database as Sqlite } from "bun:sqlite"
 import { afterAll, afterEach, describe, expect, test } from "bun:test"
 import { createHash } from "crypto"
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs"
+import { rm } from "fs/promises"
 import os from "os"
 import path from "path"
 import { Effect, Exit, Layer } from "effect"
@@ -14,7 +15,8 @@ import { EventV2 } from "@opencode-ai/core/event"
 import { Integration } from "@opencode-ai/core/integration"
 
 const root = mkdtempSync(path.join(os.tmpdir(), "opencode-inherit-"))
-afterAll(() => rmSync(root, { recursive: true, force: true }))
+// Windows keeps a closed SQLite file locked while a lazily closed handle lives, so temp cleanup is best effort there.
+afterAll(() => rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined))
 
 const openai = Integration.ID.make("openai")
 const anthropic = Integration.ID.make("anthropic")
@@ -37,21 +39,31 @@ const run = <A, E>(
     }).pipe(Effect.provide(Credential.layerFrom(release).pipe(Layer.provide(Database.layerFromPath(filename))))),
   )
 
-/** Creates a fully migrated release database, then closes it the way a clean exit leaves it. */
+/**
+ * Creates a fully migrated release database, then leaves it the way a clean exit does. It is built in a sibling staging
+ * directory and copied into place: on Windows a closed database's -wal stays locked while a lazily closed handle lives,
+ * so "removed" means the log is never copied rather than deleted. `edit` changes the staged database before the copy.
+ */
 async function seedRelease(
   filename: string,
   seed: (credentials: Credential.Interface) => Effect.Effect<unknown>,
   wal: "kept" | "removed" = "kept",
+  edit: (db: Sqlite) => void = () => {},
 ) {
-  require("fs").mkdirSync(path.dirname(filename), { recursive: true })
-  await run(filename, undefined, seed)
-  const db = new Sqlite(filename)
+  const staged = path.join(path.dirname(filename), "..", "staging", path.basename(filename))
+  mkdirSync(path.dirname(staged), { recursive: true })
+  mkdirSync(path.dirname(filename), { recursive: true })
+  await run(staged, undefined, seed)
+  const db = new Sqlite(staged)
+  edit(db)
   db.run("PRAGMA wal_checkpoint(TRUNCATE)")
   db.close()
-  if (wal === "removed") ["-wal", "-shm"].forEach((suffix) => rmSync(filename + suffix, { force: true }))
+  ;["", ...(wal === "kept" ? ["-wal", "-shm"] : [])]
+    .filter((suffix) => existsSync(staged + suffix))
+    .forEach((suffix) => copyFileSync(staged + suffix, filename + suffix))
 }
 
-const createIn = (filename: string) => require("fs").mkdirSync(path.dirname(filename), { recursive: true })
+const createIn = (filename: string) => mkdirSync(path.dirname(filename), { recursive: true })
 
 /** Names, bytes, and mtimes of every file next to the release database. */
 function snapshot(filename: string) {
@@ -68,8 +80,9 @@ function snapshot(filename: string) {
 }
 
 const migrations = (filename: string) => {
-  // Immutable: a plain read-only open fails on a WAL database without -wal.
-  const db = new Sqlite(`file:${filename}?immutable=1`, { readonly: true })
+  // Immutable: a plain read-only open fails on a WAL database without -wal. URI names need SQLITE_OPEN_URI on builds
+  // that do not enable them by default (Linux).
+  const db = new Sqlite(`file:${filename}?immutable=1`, constants.SQLITE_OPEN_READONLY | constants.SQLITE_OPEN_URI)
   const ids = db
     .query<{ id: string }, []>("SELECT id FROM migration ORDER BY id")
     .all()
@@ -213,6 +226,7 @@ describe("Credential inheritance from the release database", () => {
 
   test("dev writes never touch or migrate the release database", async () => {
     const paths = fixture()
+    let latest = ""
     await seedRelease(
       paths.release,
       (credentials) =>
@@ -220,14 +234,16 @@ describe("Credential inheritance from the release database", () => {
           yield* credentials.create({ integrationID: openai, label: "installed", value: key("sk-installed") })
           yield* credentials.create({ integrationID: anthropic, label: "installed-ant", value: key("sk-ant") })
         }),
+      "removed",
+      // Pretend the installed app predates the newest migration.
+      (raw) => {
+        // Finalized at once: a live statement holds a read transaction that stops the checkpoint before the copy.
+        const newest = raw.prepare<{ id: string }, []>("SELECT id FROM migration ORDER BY id DESC LIMIT 1")
+        latest = newest.get()!.id
+        newest.finalize()
+        raw.run("DELETE FROM migration WHERE id = ?", [latest])
+      },
     )
-    // Pretend the installed app predates the newest migration.
-    const raw = new Sqlite(paths.release)
-    const latest = raw.query<{ id: string }, []>("SELECT id FROM migration ORDER BY id DESC LIMIT 1").get()!.id
-    raw.run("DELETE FROM migration WHERE id = ?", [latest])
-    raw.run("PRAGMA wal_checkpoint(TRUNCATE)")
-    raw.close()
-    ;["-wal", "-shm"].forEach((suffix) => rmSync(paths.release + suffix, { force: true }))
     const migrated = migrations(paths.release)
     const before = snapshot(paths.release)
     createIn(paths.dev)

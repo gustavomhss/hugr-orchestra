@@ -202,19 +202,14 @@ export const node = makeGlobalNode({ service: Service, layer: layerFrom(inherite
  * without values because decode failures can echo secret material.
  */
 function readRelease(filename: string) {
-  return query(filename).pipe(
-    // Some SQLite builds (the macOS system SQLite Bun uses) cannot open a WAL
-    // database read-only while its -wal file is absent. Without a -wal file
-    // every committed page is in the main file, so an immutable read sees the
-    // same data. Rollback-journal databases never take this path: immutable
-    // reads skip locking, and a locked database must be skipped instead.
-    Effect.catchCause((cause) =>
-      walWithoutLog(filename).pipe(
-        Effect.flatMap((fallback) =>
-          fallback ? query(`${pathToFileURL(filename).href}?immutable=1`) : Effect.failCause(cause),
-        ),
-      ),
-    ),
+  return walWithoutLog(filename).pipe(
+    // A WAL database whose -wal file is absent keeps every committed page in
+    // the main file, so it is read immutable. A plain read-only open would
+    // fail on the macOS system SQLite Bun uses, and on Linux it creates -wal
+    // and -shm next to the release database. Rollback-journal databases never
+    // take this path: immutable reads skip locking, and a locked database
+    // must be skipped instead.
+    Effect.flatMap((immutable) => query(immutable ? `${pathToFileURL(filename).href}?immutable=1` : filename)),
     Effect.catchCause((cause) =>
       Effect.logDebug("release credentials unavailable", { path: filename, reason: String(Cause.squash(cause)) }).pipe(
         Effect.as([]),
