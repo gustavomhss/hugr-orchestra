@@ -2,6 +2,7 @@ export * as BackendResult from "./backend-result"
 
 import { Option, Schema } from "effect"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
+import type { ToolSafety } from "@opencode-ai/core/tool-safety"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
 // Closed at every level: excess properties fail the decode.
@@ -54,6 +55,12 @@ export type WorkResult = {
   risks: Card["risks"]
   nextActions: Card["nextActions"]
   terminal: Terminal
+  // Host fact set by the Task path: the write roots enforced for the child, worktree-relative; empty is read-only.
+  writeRoots?: string[]
+  // Host fact: whether the child's shell commands ran inside the write jail. `unenforced` means at least one ran
+  // without it (no sandbox on this host yet); `shellSandbox.reason` says why.
+  shellWrites?: ToolSafety.ShellFact["shellWrites"]
+  shellSandbox?: ToolSafety.ShellFact["shellSandbox"]
 }
 
 /**

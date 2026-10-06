@@ -28,6 +28,7 @@ import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { BackendWork } from "@/maestro/backend-work"
+import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -95,6 +96,10 @@ const BaseParameterFields = {
   }),
   authorizationID: Schema.optional(Schema.String).annotate({
     description: "AuthorizationGranted ID for current team dispatch.",
+  }),
+  writePaths: Schema.optional(Schema.Array(Schema.String)).annotate({
+    description:
+      "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
   }),
 }
 
@@ -182,11 +187,11 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
-      const childPermissions = GovernedTaskReservation.childPermissions({
+      const childPermissions = yield* WriteRoots.bind(nextID, params.writePaths, GovernedTaskReservation.childPermissions({
         parent,
         next,
         primaryTools: cfg.experimental?.primary_tools,
-      })
+      }))
       let reservedChildPermissions:
         | readonly {
             readonly permission: string
@@ -381,6 +386,7 @@ export const TaskTool = Tool.define(
         })
       }
       const session = governedChildID ? reserved : resumed
+      if (!governedChildID) yield* WriteRoots.rebind(sessions, resumed, childPermissions)
       const permissionSnapshot = reservedChildPermissions
       if (
         reserved &&
@@ -463,6 +469,7 @@ export const TaskTool = Tool.define(
       const work = BackendWork.track({
         enabled: nextID === "backend",
         sessionID: nextSession.id,
+        writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
 
