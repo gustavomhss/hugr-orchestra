@@ -8,8 +8,10 @@ import { join } from "node:path"
 import { promisify } from "node:util"
 import { DockerEngine } from "./docker-engine"
 
-test("uses a captured local socket, preserves status failures and bounds response size", async () => {
-  const root = await mkdtemp(join(tmpdir(), "opencode/docker-api-"))
+// Docker is reached through a named pipe (npipe://) on Windows, and Bun cannot serve HTTP on one there
+// (listen fails with ENOENT on \\.\pipe\..., Bun 1.3.14), so this fixture covers the unix socket path only.
+test.skipIf(process.platform === "win32")("uses a captured local socket, preserves status failures and bounds response size", async () => {
+  const root = await mkdtemp(join(tmpdir(), "opencode-docker-api-"))
   const path = join(root, "local socket")
   const sockets = new Set<import("node:net").Socket>()
   const server = http.createServer((request, response) => {
