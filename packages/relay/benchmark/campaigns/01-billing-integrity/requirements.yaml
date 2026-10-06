@@ -1,0 +1,65 @@
+# Campaign 01 — billing-integrity. Frozen requirement set (ground truth, the RSR denominator).
+# Original, self-contained; no external/CoreLink artifacts.
+campaign: 01-billing-integrity
+goal: "Make the usage->billing path lossless, tenant-isolated, priced, and auditable."
+requirements:
+  - id: R1
+    statement: "ingest(tenant_id, request_id, metric, quantity, timestamp) records a usage event."
+    verifier: { type: test, node: "checks/test_billing.py::test_R1_ingest" }
+    weight: 1
+    deps: []
+  - id: R2
+    statement: "A second event with the same (tenant_id, request_id) is a no-op (dedup); no loss, no duplication."
+    verifier: { type: test, node: "checks/test_billing.py::test_R2_dedup" }
+    weight: 2
+    deps: [R1]
+  - id: R3
+    statement: "Every accepted ingest appends a 'usage.ingested' audit entry; audit_log is an immutable tuple (append-only)."
+    verifier: { type: test, node: "checks/test_billing.py::test_R3_audit_append_only" }
+    weight: 2
+    deps: [R1]
+  - id: R4
+    statement: "usage_for(tenant) returns only that tenant's events; never another tenant's (isolation)."
+    verifier: { type: test, node: "checks/test_billing.py::test_R4_tenant_isolation" }
+    weight: 2
+    deps: [R1]
+  - id: R5
+    statement: "metered(tenant, metric) returns the summed deduped quantity for that tenant+metric."
+    verifier: { type: test, node: "checks/test_billing.py::test_R5_metered_aggregate" }
+    weight: 1
+    deps: [R2, R4]
+  - id: R6
+    statement: "Each invoice line uses tiered pricing: first 1000 units at $0.01, the remainder at $0.008."
+    verifier: { type: test, node: "checks/test_billing.py::test_R6_tiered_pricing" }
+    weight: 1
+    deps: [R5]
+  - id: R7
+    statement: "The invoice total has a minimum floor of $5.00."
+    verifier: { type: test, node: "checks/test_billing.py::test_R7_minimum_charge" }
+    weight: 1
+    deps: [R6]
+  - id: R8
+    statement: "All monetary amounts are rounded to 2 decimals."
+    verifier: { type: test, node: "checks/test_billing.py::test_R8_rounding" }
+    weight: 1
+    deps: [R6, R7]
+  - id: R9
+    statement: "issue_invoice is idempotent: re-issuing returns the same invoice id and totals."
+    verifier: { type: test, node: "checks/test_billing.py::test_R9_invoice_idempotent" }
+    weight: 2
+    deps: [R6, R7, R8]
+  - id: R10
+    statement: "reconcile(tenant) returns the drift between invoiced quantities and metered usage; 0.0 when consistent."
+    verifier: { type: test, node: "checks/test_billing.py::test_R10_reconcile_zero_drift" }
+    weight: 1
+    deps: [R5, R6]
+  - id: R11
+    statement: "Issuing an invoice appends an 'invoice.issued' audit entry."
+    verifier: { type: test, node: "checks/test_billing.py::test_R11_audit_on_issue" }
+    weight: 1
+    deps: [R3, R9]
+  - id: R12
+    statement: "ingest rejects a negative quantity with BillingError (no negative usage)."
+    verifier: { type: test, node: "checks/test_billing.py::test_R12_reject_negative" }
+    weight: 1
+    deps: [R1]
