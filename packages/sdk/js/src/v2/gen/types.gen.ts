@@ -3479,6 +3479,17 @@ export type PullRequestError = {
   }
 }
 
+export type ScheduleNotFoundError = {
+  _tag: "ScheduleNotFoundError"
+  scheduleID: string
+  message: string
+}
+
+export type ScheduleRunError = {
+  _tag: "ScheduleRunError"
+  message: string
+}
+
 export type EffectHttpApiErrorForbidden = {
   _tag: "Forbidden"
 }
@@ -7714,6 +7725,75 @@ export type PullRequestCreated = {
   repository: string
   number: number
   url: string
+}
+
+export type ScheduledTaskCadence = "once" | "hourly" | "daily" | "weekly"
+
+export type ScheduledTaskStartedRun = {
+  outcome: "started"
+  time: number
+  slot?: number
+  sessionID: string
+}
+
+export type ScheduledTaskFailedRun = {
+  outcome: "failed"
+  time: number
+  slot?: number
+  error: string
+}
+
+export type ScheduledTaskRun = ScheduledTaskStartedRun | ScheduledTaskFailedRun
+
+export type ScheduledTaskInfo = {
+  id: string
+  name: string
+  prompt: string
+  agent: string
+  cadence: ScheduledTaskCadence
+  timezone: string
+  minute: number
+  next: number
+  enabled: boolean
+  runs: number
+  missed?: number
+  last?: ScheduledTaskRun
+}
+
+export type ScheduledTaskHistory = {
+  runs: number
+  missed?: number
+  last?: {
+    time: number
+    sessionID: string
+  }
+}
+
+export type ScheduledTaskCreateInput = {
+  id?: string
+  name: string
+  prompt: string
+  agent: string
+  cadence: ScheduledTaskCadence
+  next: number
+  timezone: string
+  minute?: number
+  enabled?: boolean
+  history?: ScheduledTaskHistory
+}
+
+export type ScheduledTaskUpdateInput = {
+  name?: string
+  prompt?: string
+  agent?: string
+  cadence?: ScheduledTaskCadence
+  next?: number
+  timezone?: string
+  enabled?: boolean
+}
+
+export type ScheduledTaskRunResult = {
+  sessionID: string
 }
 
 export type EventModelsDevRefreshed = {
@@ -16026,6 +16106,214 @@ export type V2PullRequestCreateResponses = {
 }
 
 export type V2PullRequestCreateResponse = V2PullRequestCreateResponses[keyof V2PullRequestCreateResponses]
+
+export type V2ScheduleListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/schedule"
+}
+
+export type V2ScheduleListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ScheduleListError = V2ScheduleListErrors[keyof V2ScheduleListErrors]
+
+export type V2ScheduleListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<ScheduledTaskInfo>
+  }
+}
+
+export type V2ScheduleListResponse = V2ScheduleListResponses[keyof V2ScheduleListResponses]
+
+export type V2ScheduleCreateData = {
+  body: ScheduledTaskCreateInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/schedule"
+}
+
+export type V2ScheduleCreateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2ScheduleCreateError = V2ScheduleCreateErrors[keyof V2ScheduleCreateErrors]
+
+export type V2ScheduleCreateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ScheduledTaskInfo
+  }
+}
+
+export type V2ScheduleCreateResponse = V2ScheduleCreateResponses[keyof V2ScheduleCreateResponses]
+
+export type V2ScheduleRemoveData = {
+  body?: never
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/schedule/{scheduleID}"
+}
+
+export type V2ScheduleRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ScheduleNotFoundError
+   */
+  404: ScheduleNotFoundError
+}
+
+export type V2ScheduleRemoveError = V2ScheduleRemoveErrors[keyof V2ScheduleRemoveErrors]
+
+export type V2ScheduleRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2ScheduleRemoveResponse = V2ScheduleRemoveResponses[keyof V2ScheduleRemoveResponses]
+
+export type V2ScheduleUpdateData = {
+  body: ScheduledTaskUpdateInput
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/schedule/{scheduleID}"
+}
+
+export type V2ScheduleUpdateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ScheduleNotFoundError
+   */
+  404: ScheduleNotFoundError
+}
+
+export type V2ScheduleUpdateError = V2ScheduleUpdateErrors[keyof V2ScheduleUpdateErrors]
+
+export type V2ScheduleUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ScheduledTaskInfo
+  }
+}
+
+export type V2ScheduleUpdateResponse = V2ScheduleUpdateResponses[keyof V2ScheduleUpdateResponses]
+
+export type V2ScheduleRunData = {
+  body?: never
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/schedule/{scheduleID}/run"
+}
+
+export type V2ScheduleRunErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ScheduleNotFoundError
+   */
+  404: ScheduleNotFoundError
+  /**
+   * ScheduleRunError
+   */
+  500: ScheduleRunError
+}
+
+export type V2ScheduleRunError = V2ScheduleRunErrors[keyof V2ScheduleRunErrors]
+
+export type V2ScheduleRunResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ScheduledTaskRunResult
+  }
+}
+
+export type V2ScheduleRunResponse = V2ScheduleRunResponses[keyof V2ScheduleRunResponses]
 
 export type PtyConnectData = {
   body?: never

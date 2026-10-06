@@ -1,83 +1,86 @@
 import { useQuery } from "@tanstack/solid-query"
-import { makeEventListener } from "@solid-primitives/event-listener"
 import { getFilename } from "@opencode-ai/core/util/path"
-import { Option, Schema } from "effect"
 import {
-  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
   For,
   Match,
-  on,
   onCleanup,
   onMount,
   Show,
   Switch,
   type JSX,
 } from "solid-js"
-import { createStore, reconcile } from "solid-js/store"
+import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
-import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
-import { displayName, errorMessage } from "@/pages/layout/helpers"
-import { Identifier } from "@/utils/id"
+import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import { Persist, persisted } from "@/utils/persist"
-import { normalizeSessionInfo } from "@/utils/session"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge, MxPage, MxToggle } from "./kit"
-import { claimStorage, createClaims } from "./schedule-claims"
 import {
-  CADENCES,
-  canResume,
-  localInput,
-  localMinute,
-  plan,
-  readTasks,
-  recordRun,
-  resume,
-  skipRun,
-  slotIDs,
-  type ScheduleTask,
-} from "./schedule-model"
+  createDeviceSchedule,
+  type DeviceStore,
+  type ScheduleFields,
+  type ScheduleItem,
+  type ScheduleSource,
+} from "./schedule-device"
+import { CADENCES, localInput, readTasks, type ScheduleTask } from "./schedule-model"
+import { createServerSchedule } from "./schedule-server"
 import "./schedule.css"
-
-// Due tasks are checked once the saved list is ready and then on this cadence while the page is mounted.
-const TICK = 15_000
-// One hung request must not stall the scheduler; the slot claim outlives this (CLAIM_TTL).
-const TIMEOUT = 60_000
-const decode = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 
 type DialogInput = { type: "edit"; id?: string; resume?: boolean } | { type: "remove"; id: string }
 type Dialog = DialogInput & { key: number }
 
+// Servers that schedule tasks themselves own them; with an older server, tasks stay on this device and run
+// from this page while it is open.
 export default function SchedulePage(props: ChapterPageProps) {
-  const language = useLanguage()
   const sdk = useSDK()
-  const sync = useSync()
-  const serverSync = useServerSync()
-  const global = useGlobal()
-  const tabs = useTabs()
-  const agents = useQuery(() => serverSync().queryOptions.agents(pathKey(props.directory)))
   const target = Persist.serverWorkspace(sdk().scope, props.directory, "orchestra.schedule")
   const [saved, setSaved, , ready] = persisted(
     { ...target, migrate: readTasks },
     createStore({ tasks: [] as ScheduleTask[] }),
   )
-  const [state, setState] = createStore({
-    search: "",
-    running: {} as Record<string, boolean>,
-    error: "",
-  })
+  const store: DeviceStore = { saved, setSaved, ready, key: `${target.storage}:${target.key}` }
+  const [mode, setMode] = createSignal<"server" | "device">("server")
+  return (
+    <Show when={mode()} keyed>
+      {(current) => (
+        <ScheduleScreen
+          {...props}
+          source={() =>
+            current === "server"
+              ? createServerSchedule({ directory: props.directory, store, onUnsupported: () => setMode("device") })
+              : createDeviceSchedule({ directory: props.directory, store })
+          }
+          device={current === "device"}
+        />
+      )}
+    </Show>
+  )
+}
+
+function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource; device: boolean }) {
+  const language = useLanguage()
+  const serverSync = useServerSync()
+  const global = useGlobal()
+  const tabs = useTabs()
+  const agents = useQuery(() => serverSync().queryOptions.agents(pathKey(props.directory)))
+  // Created once per screen: a source owns its timers and requests for as long as the screen is mounted.
+  const source = props.source()
+  const [state, setState] = createStore({ search: "" })
   // A signal, not the store: a store merges a new dialog into the open one instead of replacing it.
   const [dialog, setDialog] = createSignal<Dialog>()
-  const lifetime = { disposed: false, dialogs: 0, ticking: false }
-  const claims = createClaims(claimStorage(), typeof navigator === "undefined" ? undefined : navigator.locks)
+  const lifetime = { dialogs: 0, disposed: false }
+  onCleanup(() => {
+    lifetime.disposed = true
+  })
   const profile = createMemo(() => {
     const project = global
       .ensureServerCtx(props.server)
@@ -86,22 +89,31 @@ export default function SchedulePage(props: ChapterPageProps) {
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
   const choices = createMemo(() => (agents.data ?? []).filter((agent) => agent.mode !== "subagent" && !agent.hidden))
-  const cadence = (task: ScheduleTask) => language.t(`orchestra.schedule.cadence.${task.cadence}`)
-  const status = (task: ScheduleTask) =>
+  const cadence = (task: ScheduleItem) => language.t(`orchestra.schedule.cadence.${task.cadence}`)
+  const status = (task: ScheduleItem) =>
     language.t(task.enabled ? "orchestra.schedule.status.enabled" : "orchestra.schedule.status.paused")
   const visible = createMemo(() => {
     const query = state.search.trim().toLowerCase()
-    if (!query) return saved.tasks
-    return saved.tasks.filter((task) =>
-      [task.name, task.prompt, task.agent, cadence(task), status(task)].some((text) =>
-        text.toLowerCase().includes(query),
-      ),
-    )
+    if (!query) return source.tasks()
+    return source
+      .tasks()
+      .filter((task) =>
+        [task.name, task.prompt, task.agent, cadence(task), status(task)].some((text) =>
+          text.toLowerCase().includes(query),
+        ),
+      )
   })
-  const nextFormat = createMemo(
-    () => new Intl.DateTimeFormat(language.intl(), { dateStyle: "medium", timeStyle: "short" }),
-  )
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  // Slots are shown in the task's own zone, the one that anchors its daily and weekly runs.
+  const formats = createMemo(() => {
+    const locale = language.intl()
+    const cache = new Map<string, Intl.DateTimeFormat>()
+    return (time: number, timeZone: string) => {
+      const format =
+        cache.get(timeZone) ?? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone })
+      cache.set(timeZone, format)
+      return format.format(time)
+    }
+  })
   const runs = (count: number) =>
     language.t(
       new Intl.PluralRules(language.intl()).select(count) === "one"
@@ -109,168 +121,32 @@ export default function SchedulePage(props: ChapterPageProps) {
         : "orchestra.schedule.runs.other",
       { count },
     )
-  const find = (id: string) => saved.tasks.find((task) => task.id === id)
-  const update = (id: string, next: (task: ScheduleTask) => ScheduleTask) =>
-    setSaved("tasks", (task) => task.id === id, next)
   const show = (input: DialogInput) => setDialog({ ...input, key: ++lifetime.dialogs })
   // A replaced dialog still fires its close event later; only the current one may clear the state.
   const hide = (key: number) => {
     if (dialog()?.key === key) setDialog(undefined)
   }
-
-  // Other tabs and windows save the same list; adopt their writes so this page plans from fresh data.
-  // The key mirrors the persisted web storage layout (`<storage>:<key>`); desktop storage has no events.
-  makeEventListener(window, "storage", (event) => {
-    if (event.key !== `${target.storage}:${target.key}`) return
-    setSaved(reconcile(readTasks(Option.getOrUndefined(decode(event.newValue ?? "")))))
-  })
-
-  // Starts a real session on this profile. The scheduler only serves a due slot it could claim; Run now
-  // (`forced`) serves the due slot when it can claim it and otherwise starts an extra run.
-  const dispatch = async (id: string, forced: boolean) => {
-    const task = find(id)
-    if (!task || state.running[id]) return
-    // Mark the task busy before any await so a Run now and a tick in this page cannot both start it.
-    setState("running", id, true)
-    try {
-      const now = Date.now()
-      const due = plan(task, now)
-      if (!forced && due.type !== "run") return
-      const claimed = due.type === "run" ? await claims.take(id, due.slot, now, forced).catch(() => false) : false
-      const slot = due.type === "run" && claimed ? due.slot : undefined
-      // Re-check live after the claim: the task may have been removed, paused or rescheduled meanwhile.
-      const live = find(id)
-      const recheck = live ? plan(live, Date.now()) : undefined
-      if (!live || (!forced && (slot === undefined || recheck?.type !== "run" || recheck.slot !== slot))) {
-        if (slot !== undefined) claims.settle(id, slot, undefined)
-        return
-      }
-      setState("error", "")
-      const ids = slot === undefined ? undefined : slotIDs(id, slot)
-      const signal = AbortSignal.timeout(TIMEOUT)
-      const v2 = (await sdk().protocol) !== "v1"
-      const result = await abortable(
-        sdk().api.session.create(
-          { id: ids?.session, agent: live.agent, location: { directory: props.directory } },
-          { signal },
-        ),
-        signal,
-      )
-        .then(normalizeSessionInfo)
-        .then((session) => {
-          sync().session.remember(session)
-          return abortable(
-            sdk().api.session.prompt({
-              sessionID: session.id,
-              id: ids?.message ?? Identifier.ascending("message"),
-              text: live.prompt,
-              agent: live.agent,
-            }),
-            signal,
-          ).then(
-            () => ({ sessionID: session.id, error: undefined }),
-            async (error: unknown) => {
-              // An unprompted session is noise. Keep it only when Run now released the slot on V2,
-              // where a retry of the slot adopts it through the same deterministic IDs.
-              if (!(v2 && ids && forced))
-                await sdk()
-                  .api.session.remove({ sessionID: session.id, directory: props.directory })
-                  .catch(() => undefined)
-              throw error
-            },
-          )
-        })
-        .catch((error: unknown) => ({ sessionID: "", error: error ?? new Error() }))
-      if (!result.sessionID) {
-        // Only the scheduler marks a slot failed; a failed Run now leaves it for the scheduler or a retry.
-        if (slot !== undefined) claims.settle(id, slot, forced ? undefined : "failed")
-        if (lifetime.disposed) return
-        // V2 rejects with the parsed error body, V1 with its legacy body; both may carry only `message`.
-        const error = result.error
-        const message =
-          error && typeof error === "object" && "message" in error && typeof error.message === "string"
-            ? error.message
-            : language.t("common.requestFailed")
-        setState(
-          "error",
-          language.t("orchestra.schedule.runError", { name: live.name, detail: errorMessage(error, message) }),
-        )
-        return
-      }
-      if (slot !== undefined) claims.settle(id, slot, "done")
-      const time = Date.now()
-      update(id, (current) =>
-        recordRun(
-          current,
-          // A task rescheduled during the run keeps its new time; the run counts as an extra run.
-          slot !== undefined && current.next === live.next
-            ? { time, sessionID: result.sessionID, slot, missed: due.type === "run" ? due.missed : undefined }
-            : { time, sessionID: result.sessionID },
-        ),
-      )
-      return result.sessionID
-    } finally {
-      setState("running", id, false)
-    }
-  }
   const openSession = (sessionID: string) =>
     tabs.select(tabs.addSessionTab({ server: ServerConnection.key(props.server), sessionId: sessionID }))
-
-  const tick = async () => {
-    if (!ready() || lifetime.ticking || lifetime.disposed) return
-    lifetime.ticking = true
-    try {
-      const now = Date.now()
-      const work = saved.tasks.map((task) => ({ id: task.id, next: plan(task, now) }))
-      // Too late to run: mark the slot missed and move on. Writing the same result twice is harmless.
-      work.forEach((item) => {
-        if (item.next.type !== "skip") return
-        update(item.id, (task) => {
-          const live = plan(task, now)
-          return live.type === "skip" ? skipRun(task, live.slot, now) : task
-        })
-      })
-      for (const item of work) {
-        if (lifetime.disposed) return
-        if (item.next.type === "run") await dispatch(item.id, false)
-      }
-    } finally {
-      lifetime.ticking = false
-    }
+  const note = () => {
+    if (props.device) return language.t("orchestra.schedule.noteDevice")
+    if (source.status() === "ready") return language.t("orchestra.schedule.note")
   }
-  createEffect(on(ready, (value) => value && void tick()))
-  onMount(() => {
-    const timer = setInterval(() => void tick(), TICK)
-    onCleanup(() => clearInterval(timer))
-  })
-  onCleanup(() => {
-    lifetime.disposed = true
-  })
 
   const save = (edit: Extract<Dialog, { type: "edit" }>, form: FormData) => {
-    const name = String(form.get("name") ?? "").trim()
-    const prompt = String(form.get("prompt") ?? "").trim()
-    const agent = String(form.get("agent") ?? "")
-    const next = new Date(String(form.get("date") ?? "")).getTime()
-    if (!name) return language.t("orchestra.schedule.error.name")
-    if (!prompt) return language.t("orchestra.schedule.error.prompt")
-    if (!agent) return language.t("orchestra.schedule.error.agent")
-    if (!Number.isFinite(next)) return language.t("orchestra.schedule.error.date")
-    if (next <= Date.now()) return language.t("orchestra.schedule.error.past")
-    const fields = {
-      name,
-      prompt,
-      agent,
-      next,
-      minute: localMinute(next),
+    const fields: ScheduleFields = {
+      name: String(form.get("name") ?? "").trim(),
+      prompt: String(form.get("prompt") ?? "").trim(),
+      agent: String(form.get("agent") ?? ""),
+      next: new Date(String(form.get("date") ?? "")).getTime(),
       cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
-      missed: undefined,
     }
-    if (edit.id) {
-      update(edit.id, (task) => ({ ...task, ...fields, enabled: edit.resume ? true : task.enabled }))
-      return
-    }
-    setSaved("tasks", saved.tasks.length, { id: crypto.randomUUID(), ...fields, enabled: true, runs: 0 })
+    if (!fields.name) return Promise.resolve(language.t("orchestra.schedule.error.name"))
+    if (!fields.prompt) return Promise.resolve(language.t("orchestra.schedule.error.prompt"))
+    if (!fields.agent) return Promise.resolve(language.t("orchestra.schedule.error.agent"))
+    if (!Number.isFinite(fields.next)) return Promise.resolve(language.t("orchestra.schedule.error.date"))
+    if (fields.next <= Date.now()) return Promise.resolve(language.t("orchestra.schedule.error.past"))
+    return source.save(edit.id, fields, !!edit.resume)
   }
 
   return (
@@ -280,7 +156,14 @@ export default function SchedulePage(props: ChapterPageProps) {
       title={language.t("orchestra.nav.schedule")}
       description={language.t("orchestra.schedule.description")}
       action={
-        <button type="button" class="mx-btn primary" onClick={() => show({ type: "edit" })}>
+        // Until the server answers it is unknown where tasks are saved, and a switch to device storage would
+        // drop an open dialog.
+        <button
+          type="button"
+          class="mx-btn primary"
+          disabled={source.status() === "loading"}
+          onClick={() => show({ type: "edit" })}
+        >
           {language.t("orchestra.schedule.add")}
         </button>
       }
@@ -297,25 +180,29 @@ export default function SchedulePage(props: ChapterPageProps) {
           <bdi>{profile()}</bdi>
         </MxBadge>
       </div>
-      <Show when={state.error}>
+      <Show when={source.error()}>
         <p class="mx-error" role="alert">
-          {state.error}
+          {source.error()}
         </p>
       </Show>
-      <Show
-        when={saved.tasks.length > 0}
-        fallback={
+      <Switch>
+        <Match when={source.status() === "loading"}>
+          <div class="mx-empty">{language.t("orchestra.schedule.loading")}</div>
+        </Match>
+        <Match when={source.status() === "error"}>
+          <div class="mx-empty">{language.t("orchestra.schedule.loadError")}</div>
+        </Match>
+        <Match when={source.tasks().length === 0}>
           <div class="mx-empty">
             {language.t("orchestra.schedule.empty")}
             <br />
             {language.t("orchestra.schedule.emptyHint")}
           </div>
-        }
-      >
-        <Show
-          when={visible().length > 0}
-          fallback={<div class="mx-empty">{language.t("orchestra.schedule.noMatches")}</div>}
-        >
+        </Match>
+        <Match when={visible().length === 0}>
+          <div class="mx-empty">{language.t("orchestra.schedule.noMatches")}</div>
+        </Match>
+        <Match when={true}>
           <div class="mx-grid">
             <For each={visible()}>
               {(task) => (
@@ -337,10 +224,10 @@ export default function SchedulePage(props: ChapterPageProps) {
                     <MxBadge tone={task.enabled ? "good" : undefined}>{status(task)}</MxBadge>
                   </div>
                   <p>
-                    {language.t("orchestra.schedule.next", { date: nextFormat().format(task.next) })}
+                    {language.t("orchestra.schedule.next", { date: formats()(task.next, task.timezone) })}
                     <br />
                     <small>
-                      {timezone} · {runs(task.runs)}
+                      {task.timezone} · {runs(task.runs)}
                     </small>
                   </p>
                   <footer class="mx-card-foot">
@@ -348,9 +235,9 @@ export default function SchedulePage(props: ChapterPageProps) {
                       <button
                         type="button"
                         class="mx-btn"
-                        disabled={!!state.running[task.id]}
+                        disabled={source.running(task.id)}
                         onClick={() =>
-                          void dispatch(task.id, true).then((sessionID) => {
+                          void source.run(task.id).then((sessionID) => {
                             if (sessionID && !lifetime.disposed) openSession(sessionID)
                           })
                         }
@@ -365,21 +252,31 @@ export default function SchedulePage(props: ChapterPageProps) {
                       checked={task.enabled}
                       label={language.t("orchestra.schedule.enable", { name: task.name })}
                       onChange={(enabled) => {
-                        if (!enabled) return update(task.id, (current) => ({ ...current, enabled: false }))
                         // A one-off whose time passed needs a new time; resuming opens the editor.
-                        if (!canResume(task, Date.now())) return show({ type: "edit", id: task.id, resume: true })
-                        update(task.id, (current) => resume(current, Date.now()))
+                        if (enabled && task.cadence === "once" && task.next <= Date.now())
+                          return show({ type: "edit", id: task.id, resume: true })
+                        void source.setEnabled(task.id, enabled)
                       }}
                     />
                   </footer>
                   <Show when={task.missed}>
                     {(missed) => (
                       <p class="mx-note schedule-missed">
-                        {language.t("orchestra.schedule.missed", { date: nextFormat().format(missed()) })}
+                        {language.t("orchestra.schedule.missed", { date: formats()(missed(), task.timezone) })}
                       </p>
                     )}
                   </Show>
-                  <Show when={task.last}>
+                  <Show when={task.last?.outcome === "failed" && task.last}>
+                    {(last) => (
+                      <p class="mx-note schedule-missed">
+                        {language.t("orchestra.schedule.failed", {
+                          date: new Date(last().time).toLocaleString(language.intl()),
+                          detail: last().error,
+                        })}
+                      </p>
+                    )}
+                  </Show>
+                  <Show when={task.last?.outcome === "started" && task.last}>
                     {(last) => (
                       <p class="mx-note">
                         {language.t("orchestra.schedule.last", {
@@ -396,15 +293,15 @@ export default function SchedulePage(props: ChapterPageProps) {
               )}
             </For>
           </div>
-        </Show>
-      </Show>
-      <p class="mx-note">{language.t("orchestra.schedule.note")}</p>
+        </Match>
+      </Switch>
+      <Show when={note()}>{(text) => <p class="mx-note">{text()}</p>}</Show>
       <Show when={dialog()} keyed>
         {(current) => (
           <Switch>
             <Match when={current.type === "edit" && current}>
               {(edit) => {
-                const task = saved.tasks.find((item) => item.id === edit().id)
+                const task = source.tasks().find((item) => item.id === edit().id)
                 // Keep a saved agent selectable even when the profile no longer lists it.
                 const options = () => {
                   const names = choices().map((agent) => agent.name)
@@ -505,11 +402,7 @@ export default function SchedulePage(props: ChapterPageProps) {
                   closeLabel={language.t("orchestra.schedule.dialog.close")}
                   cancel={language.t("orchestra.schedule.cancel")}
                   submit={language.t("orchestra.schedule.confirm.submit")}
-                  onSubmit={() => {
-                    setSaved("tasks", (tasks) => tasks.filter((task) => task.id !== remove().id))
-                    claims.forget(remove().id)
-                    return undefined
-                  }}
+                  onSubmit={() => source.remove(remove().id).then(() => undefined)}
                   onClose={() => hide(current.key)}
                 >
                   <p class="mx-note">{language.t("orchestra.schedule.confirm.detail", { profile: profile() })}</p>
@@ -530,11 +423,13 @@ function ScheduleDialog(props: {
   closeLabel: string
   cancel: string
   submit: string
-  onSubmit: (form: FormData) => string | undefined
+  // Resolves with a message to show, or nothing to close the dialog.
+  onSubmit: (form: FormData) => Promise<string | undefined>
   onClose: () => void
   children: JSX.Element
 }) {
   const [error, setError] = createSignal("")
+  const [pending, setPending] = createSignal(false)
   const id = createUniqueId()
   let dialog!: HTMLDialogElement
   onMount(() => dialog.showModal())
@@ -559,9 +454,15 @@ function ScheduleDialog(props: {
         autocomplete="off"
         onSubmit={(event) => {
           event.preventDefault()
-          const message = props.onSubmit(new FormData(event.currentTarget))
-          if (message) return setError(message)
-          dialog.close()
+          if (pending()) return
+          setPending(true)
+          void props
+            .onSubmit(new FormData(event.currentTarget))
+            .then((message) => {
+              if (message) return setError(message)
+              dialog.close()
+            })
+            .finally(() => setPending(false))
         }}
       >
         <header class="mx-dialog-head">
@@ -585,7 +486,7 @@ function ScheduleDialog(props: {
           <button type="button" class="mx-btn" onClick={() => dialog.close()}>
             {props.cancel}
           </button>
-          <button type="submit" class="mx-btn primary">
+          <button type="submit" class="mx-btn primary" disabled={pending()}>
             {props.submit}
           </button>
         </footer>
@@ -601,12 +502,4 @@ function ClockIcon() {
       <path d="M8 4v4l3 2" />
     </svg>
   )
-}
-
-function abortable<T>(promise: Promise<T>, signal: AbortSignal) {
-  return new Promise<T>((resolve, reject) => {
-    if (signal.aborted) return reject(signal.reason)
-    signal.addEventListener("abort", () => reject(signal.reason), { once: true })
-    promise.then(resolve, reject)
-  })
 }

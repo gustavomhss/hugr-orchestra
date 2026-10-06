@@ -390,17 +390,23 @@
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
+    "packages/client/src/generated-effect/client.ts": {
+      "maximumLines": 911,
+      "reason": "Generated V2 HttpApi Effect client (packages/client bun run generate); splitting requires generator redesign.",
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "authorizedAt": "2026-10-06"
+    },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1150,
+      "maximumLines": 1243,
       "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Raised from 1111 to 1150 by the regenerated pull request and behavior routes.",
-      "authorizedBy": "owner (gustavomhss), mock-parity integration; raise to 1150 authorized 2026-10-06 (generated code)",
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
       "authorizedAt": "2026-10-06"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 2965,
+      "maximumLines": 3049,
       "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss), mock-parity integration",
-      "authorizedAt": "2026-10-05"
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "authorizedAt": "2026-10-06"
     },
     "packages/opencode/src/provider/provider.ts": {
       "maximumLines": 1940,
@@ -427,16 +433,16 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 7540,
+      "maximumLines": 7977,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss), mock-parity integration",
-      "authorizedAt": "2026-10-05"
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "authorizedAt": "2026-10-06"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 14663,
+      "maximumLines": 16352,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss), mock-parity integration",
-      "authorizedAt": "2026-10-05"
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "authorizedAt": "2026-10-06"
     },
     "packages/stats/app/src/routes/index.tsx": {
       "maximumLines": 1596,
