@@ -19,6 +19,8 @@ import {
   homeProjectDirectories,
   homeSessionServerStatus,
   latestRootSession,
+  projectForDirectory,
+  projectForSession,
   sortedRootSessions,
   toggleHomeProjectSelection,
 } from "./helpers"
@@ -343,5 +345,32 @@ describe("layout workspace helpers", () => {
     expect(errorMessage({ data: { message: "boom" } }, "fallback")).toBe("boom")
     expect(errorMessage(new Error("broken"), "fallback")).toBe("broken")
     expect(errorMessage("unknown", "fallback")).toBe("fallback")
+  })
+
+  test("resolves a directory to the project it is the root or a sandbox of, without asking for an owner", () => {
+    const repo = { id: "repo", worktree: "/repos/orchestra", sandboxes: ["/sandboxes/one"] }
+    const windows = { id: "win", worktree: "C:\\repos\\app", sandboxes: ["D:\\copies\\app"] }
+    const owner = () => {
+      throw new Error("owner read on a listed directory")
+    }
+    expect(projectForDirectory("/repos/orchestra/", [repo], owner)).toBe(repo)
+    expect(projectForDirectory("/sandboxes/one", [repo], owner)).toBe(repo)
+    expect(projectForDirectory("C:/repos/app", [repo, windows], owner)).toBe(windows)
+    expect(projectForDirectory("D:/copies/app/", [repo, windows], owner)).toBe(windows)
+  })
+
+  test("resolves a V2 copy, absent from sandboxes, through the project its server reported", () => {
+    const projects = [
+      { id: "other", worktree: "/repos/other" },
+      { id: "repo", worktree: "/repos/orchestra", sandboxes: [] },
+    ]
+    expect(projectForDirectory("/repos/orchestra-workspaces/feature-a", projects, () => "repo")).toBe(projects[1])
+    expect(projectForDirectory("/repos/orchestra-workspaces/feature-a", projects)).toBeUndefined()
+    expect(projectForDirectory("/tmp/scratch", projects, () => "global")).toBeUndefined()
+    expect(projectForDirectory("/tmp/scratch", projects, () => "closed")).toBeUndefined()
+    expect(projectForSession(session({ id: "s", directory: "/repos/orchestra" }), projects)).toBe(projects[1])
+    expect(projectForSession(session({ id: "s", directory: "/elsewhere", projectID: "other" }), projects)).toBe(
+      projects[0],
+    )
   })
 })
