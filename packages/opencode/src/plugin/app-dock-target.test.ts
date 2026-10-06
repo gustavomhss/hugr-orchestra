@@ -41,9 +41,15 @@ test("dock_action target locates and acts in one call, refusing ambiguity withou
   expect(JSON.parse(String(await one.hooks.tool.dock_action.execute({ target: { name: "continue without" }, action: "press" }, context))))
     .toEqual({ dispatch: "acknowledged" })
   expect(one.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:b", actionID: "a:n:b" } })
-  const two = host(() => page([control("n:a", "Search files"), control("n:b", "Search (Ctrl+Shift+F)")]))
+  const two = host(() => page([control("n:a", "Search files"), control("n:b", "Search folders")]))
   expect(JSON.parse(String(await two.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "target-ambiguous", outcome: "not-dispatched", found: 2 })
+  // A name copied from ui_look without its shortcut is the whole name, so it wins over a partial match.
+  const shortcut = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : page([control("n:a", "Search files"), control("n:b", "Search (Ctrl+Shift+F)")]))
+  expect(JSON.parse(String(await shortcut.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(shortcut.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:b", actionID: "a:n:b" } })
   const actions = host(() => page([control("n:a", "Search", { actions: [{ id: "a1", name: "press" }, { id: "a2", name: "showContextMenu" }] })]))
   expect(JSON.parse(String(await actions.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "action-ambiguous", outcome: "not-dispatched" })
