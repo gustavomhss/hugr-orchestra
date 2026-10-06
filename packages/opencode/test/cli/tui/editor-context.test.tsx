@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { afterEach, expect, spyOn, test } from "bun:test"
+import { afterEach, expect, mock, spyOn, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { EditorContextProvider, useEditorContext, type EditorIntegration } from "@opencode-ai/tui/context/editor"
 import { tmpdir } from "../../fixture/fixture"
@@ -13,6 +13,8 @@ const originalClaudePort = process.env.CLAUDE_CODE_SSE_PORT
 const originalOpencodePort = process.env.OPENCODE_EDITOR_SSE_PORT
 
 afterEach(() => {
+  // The tests spy on process.cwd and os.homedir without restoring them, and Bun keeps spies across files.
+  mock.restore()
   process.env.CLAUDE_CODE_SSE_PORT = originalClaudePort
   process.env.OPENCODE_EDITOR_SSE_PORT = originalOpencodePort
 })
