@@ -148,9 +148,9 @@ describe("backend skill root", () => {
 })
 
 // Writes `contents` as real files under `dir` and returns the map the generated module would export.
-async function embed(dir: string, contents: Record<string, string>) {
-  await Promise.all(Object.entries(contents).map(([file, text]) => Bun.write(path.join(dir, "src", file), text)))
-  return Object.fromEntries(Object.keys(contents).map((file) => [file, path.join(dir, "src", file)]))
+// The generated module maps tree-relative paths to file text (script/backend-skills.ts).
+async function embed(_dir: string, contents: Record<string, string>) {
+  return contents
 }
 
 async function tree(dir: string) {
