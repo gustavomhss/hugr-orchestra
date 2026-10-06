@@ -114,16 +114,26 @@ describe("RelayJson goldens", () => {
       path.join(golden, "json", "numbers.json"),
     ).json()
     expect(rows.length).toBe(34)
+    const written = { count: 0 }
     for (const row of rows) {
       expect(RelayJson.compactNode(Result.getOrThrow(RelayJson.read(row.input, { flavor: "jq" })))).toBe(row.literal)
+      // A JS number has no literal: `1e2` and `1.0` are the safe integers 100 and 1, printed as jq computes them.
       const value = Number(row.input)
-      // PARITY-EXCEPTIONS WP1-6: a JS number has no literal, and the ledger's numbers are integers.
-      if (/^-?\d+$/.test(row.input) && Number.isSafeInteger(value)) {
-        expect(await run(RelayJson.compact(value))).toBe(row.computed)
+      if (Number.isSafeInteger(value)) {
+        expect({ input: row.input, written: await run(RelayJson.compact(value)) }).toEqual({
+          input: row.input,
+          written: row.computed,
+        })
+        written.count++
         continue
       }
-      expect(Result.isFailure(await attempt(RelayJson.compact(value)))).toBe(true)
+      // PARITY-EXCEPTIONS WP1-6: the ledger's numbers are integers.
+      expect({ input: row.input, refused: Result.isFailure(await attempt(RelayJson.compact(value))) }).toEqual({
+        input: row.input,
+        refused: true,
+      })
     }
+    expect(written.count).toBe(18)
   })
 
   test("object table: member order, repeated keys and escaped keys as jq prints them", async () => {
