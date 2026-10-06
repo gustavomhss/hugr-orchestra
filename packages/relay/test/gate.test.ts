@@ -36,7 +36,7 @@ const SHA = {
   octal: "9c46ead7efbae803d09497a7215e58c2aa46d960be62f9603b7bde7170840b54", // "x\101:absent\n" through %b
   directory: "197960e79fdb4ac8db892f1c428f9cfb4b3a489835d07fd69421527e0cf660a5", // "sub:absent\n"
   emptyFile: "113e28c6015af49cc6abf591e4c0cb22072083dd07e51f099e59e9167a408f80", // "sub/b.txt:<sha of empty>\n"
-  glob: "44146f3c48b1aca4dbe43ee866a2e5a1259fc6ec23986d2e9a0c171c8be575ac", // "*.txt:absent\n"
+  glob: "bb825a31103d93cb31e446602d7ad0b2d9e193e69c313a7c3086d980a2f40729", // "*.md:absent\n"
   surrogate: "1feca42b606b81c4e11f13652df81c1af8432af0f865b9ed776aa623e94d76b6", // ed a0 80 ":absent\n"
 }
 
@@ -720,8 +720,8 @@ describe("parity exceptions", () => {
   })
 
   test("WP3-2: scope words are split, never globbed", async () => {
-    const env = await scratch({ "a.txt": "RELAY_JUDGE_OK\n" })
-    expect(await Effect.runPromise(GateControl.artifactSha("*.txt", env.work))).toEqual(Option.some(SHA.glob))
+    const env = await scratch({ "a.md": "RELAY_JUDGE_OK\n" })
+    expect(await Effect.runPromise(GateControl.artifactSha("*.md", env.work))).toEqual(Option.some(SHA.glob))
   })
 
   test("WP3-3: a command the shell port cannot run is unavailable, never deterministic", async () => {
