@@ -1,18 +1,18 @@
 import { render } from "solid-js/web"
 import { ThemeProvider, useTheme } from "@opencode-ai/ui/theme/context"
+import { OrchestraPaletteProvider, useOrchestraPalette } from "../../src/orchestra/palette/context"
 import "../../src/index.css"
 
 function Controls() {
   const theme = useTheme()
+  const palette = useOrchestraPalette()
   return (
     <>
-      <output aria-label="Selected theme">{theme.themeId()}</output>
-      <button onClick={() => theme.setColorScheme("light")}>Light</button>
-      <button onClick={() => theme.setColorScheme("dark")}>Dark</button>
-      <button onClick={() => theme.previewTheme("nord")}>Preview</button>
-      <button onClick={() => theme.previewColorScheme(theme.mode() === "dark" ? "light" : "dark")}>Preview mode</button>
-      <button onClick={() => theme.cancelPreview()}>Cancel</button>
-      <button onClick={() => theme.setTheme("nightowl")}>Select Night Owl</button>
+      <output aria-label="Selected palette">{palette.id()}</output>
+      <button onClick={() => palette.select("graphite")}>Graphite</button>
+      <button onClick={() => palette.select("dark")}>Dark</button>
+      {/* The titlebar toggle: it only switches Orchestra's color scheme. */}
+      <button onClick={() => theme.setColorScheme(theme.mode() === "dark" ? "light" : "dark")}>Toggle scheme</button>
     </>
   )
 }
@@ -22,7 +22,9 @@ export function mount() {
   render(
     () => (
       <ThemeProvider>
-        <Controls />
+        <OrchestraPaletteProvider>
+          <Controls />
+        </OrchestraPaletteProvider>
       </ThemeProvider>
     ),
     document.getElementById("root")!,

@@ -14793,6 +14793,10 @@ export type V2CredentialRemoveErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
 }
 
 export type V2CredentialRemoveError = V2CredentialRemoveErrors[keyof V2CredentialRemoveErrors]
@@ -14831,6 +14835,10 @@ export type V2CredentialUpdateErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
 }
 
 export type V2CredentialUpdateError = V2CredentialUpdateErrors[keyof V2CredentialUpdateErrors]

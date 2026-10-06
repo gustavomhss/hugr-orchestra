@@ -14,6 +14,7 @@ import { loadActiveSessionsQuery, loadMcpQuery, loadMcpResourcesQuery, seedActiv
 import { ServerScope } from "@/utils/server-scope"
 import { createServerSession } from "./server-session"
 import type { ServerApi } from "@/utils/server"
+import { rethrow } from "../testing/rejection"
 
 type McpApi = ServerApi["mcp"]
 
@@ -145,18 +146,20 @@ describe("loadRootSessions", () => {
     expect(calls).toEqual([{ directory: "dir", parentID: null, limit: 10, order: "desc" }])
   })
 
-  test("propagates list failures", () => {
+  test("propagates list failures", async () => {
     expect(
-      loadRootSessions({
-        api: {
-          list: async () => {
-            throw new Error("failed")
-          },
-        } satisfies Pick<SessionApi, "list">,
-        directory: "dir",
-        limit: 25,
-      }),
-    ).rejects.toThrow("failed")
+      await rethrow(
+        loadRootSessions({
+          api: {
+            list: async () => {
+              throw new Error("failed")
+            },
+          } satisfies Pick<SessionApi, "list">,
+          directory: "dir",
+          limit: 25,
+        }),
+      ),
+    ).toThrow("failed")
   })
 })
 

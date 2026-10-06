@@ -240,15 +240,15 @@ html[data-color-scheme] body[data-new-layout] {
 
 html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-text: #1a1f26;
-  --orchestra-body: #454d58;
-  /* AA over the light glass, including where it sits on the photo's darker slopes. */
-  --orchestra-muted: #48515c;
+  /* Role colors darkened, hue kept, to WCAG AA on the light glass over the photograph's darkest band
+     (the palette gate in orchestra/palette). Danger was the dark scheme's pink, nearly invisible here. */
+  --orchestra-body: #3e4651;
+  --orchestra-muted: #3d4651;
   --orchestra-faint: #68707a;
-  --orchestra-accent: #3f6f9f;
-  --orchestra-warm: #846f45;
-  --orchestra-success: #4f7d68;
-  /* The reference leaves --danger unchanged in light mode. */
-  --orchestra-danger: #d29e9b;
+  --orchestra-accent: #164775;
+  --orchestra-warm: #564218;
+  --orchestra-success: #1f4d3a;
+  --orchestra-danger: #653938;
 
   --orchestra-shell-background: #e9ecf0;
   --orchestra-shell-border: rgba(60, 72, 86, 0.22);

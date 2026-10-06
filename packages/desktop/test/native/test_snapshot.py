@@ -748,6 +748,9 @@ class SnapshotTests(unittest.TestCase):
             observed.clear()
             self.service.signal(member)
             self.assertTrue(observed.wait(2), "actual-private-bus-lifecycle-delivery:" + member)
+            # StateChanged matches both the defunct and the generic object-event subscription, so a second dirty
+            # callback can still be queued; left alone it lands inside the next read and invalidates it.
+            self.bus.fence()
             self.assertTrue(self.denied(current["items"][0]["ref"]))
             self.error("cursor-stale", lambda: self.registry.resume(self.binding, current["cursor"]))
         current = self.read({"maxText": 0})

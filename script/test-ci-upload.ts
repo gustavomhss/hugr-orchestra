@@ -1,7 +1,22 @@
-// Decisions script/test-ci.ts makes while uploading a snapshot, kept apart so tests can import them: test-ci.ts starts
-// uploading as soon as it is loaded.
+// Decisions script/test-ci.ts makes about its arguments and while uploading a snapshot, kept apart so tests can import
+// them: test-ci.ts starts uploading as soon as it is loaded.
 
 import { $ } from "bun"
+
+// Bun runs an argument that starts with ./ or / as exactly that file, in the order given, but treats any other argument
+// as a substring filter over every test path: it can match more files, and Bun runs the matches in its own sorted
+// order. So an argument naming an existing file of packages/<name> (`isFile` answers relative to that directory) becomes
+// ./<file> with forward slashes. Anything else, such as a directory, a filter or a glob, passes through as a filter.
+// Paths may be given from the repository root or from the package directory.
+export function testPaths(name: string, args: string[], isFile: (file: string) => boolean) {
+  const prefix = new RegExp(`^(\\./)?packages/${name}/`)
+  return args.map((arg) => {
+    const file = arg.replaceAll("\\", "/").replace(prefix, "")
+    if (file.startsWith("/")) return arg
+    if (file.startsWith("./") || isFile(file)) return `./${file.replace(/^\.\//, "")}`
+    return arg.replace(prefix, "")
+  })
+}
 
 // Of the merge-bases of HEAD with each ref that exists, the one whose tree differs from `tree` in the fewest files.
 // Earlier refs win ties.

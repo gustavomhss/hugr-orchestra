@@ -7,6 +7,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { promisify } from "node:util"
 import { DockerEngine } from "./docker-engine"
+import { rejection, rethrow } from "./rejection.fixture"
 
 // Docker is reached through a named pipe (npipe://) on Windows, and Bun cannot serve HTTP on one there
 // (listen fails with ENOENT on \\.\pipe\..., Bun 1.3.14), so this fixture covers the unix socket path only.
@@ -61,17 +62,17 @@ test.skipIf(process.platform === "win32")("uses a captured local socket, preserv
     expect(await engine.get("/ok")).toEqual({ socket: true })
     // A second actual response exercises the reusable socket path.
     expect(await engine.get("/ok")).toEqual({ socket: true })
-    await expect(engine.get("/missing")).rejects.toMatchObject({ status: 404 })
-    await expect(engine.get("/invalid")).rejects.toBeInstanceOf(SyntaxError)
-    await expect(engine.get("/oversized")).rejects.toThrow("Docker API response exceeded the byte limit")
-    await expect(engine.get("/redirect")).rejects.toMatchObject({ status: 302 })
+    expect(await rejection(engine.get("/missing"))).toMatchObject({ status: 404 })
+    expect(await rejection(engine.get("/invalid"))).toBeInstanceOf(SyntaxError)
+    expect(await rethrow(engine.get("/oversized"))).toThrow("Docker API response exceeded the byte limit")
+    expect(await rejection(engine.get("/redirect"))).toMatchObject({ status: 302 })
     expect(await engine.post("/create", { name: "owned helper", environment: ["LANG=C.UTF-8"] })).toEqual({ received: { name: "owned helper", environment: ["LANG=C.UTF-8"] } })
     expect(await engine.post("/empty")).toBeNull()
     expect(await engine.delete("/empty")).toBeNull()
-    await expect(engine.post("/missing", {})).rejects.toMatchObject({ status: 404 })
-    await expect(engine.post("/redirect", {})).rejects.toMatchObject({ status: 302 })
-    await expect(engine.post("/create", { value: "x".repeat(2 * 1024 * 1024) })).rejects.toThrow("Docker API request exceeded the byte limit")
-    await expect(engine.post("/held", {}, 10)).rejects.toThrow("Docker API request timed out")
+    expect(await rejection(engine.post("/missing", {}))).toMatchObject({ status: 404 })
+    expect(await rejection(engine.post("/redirect", {}))).toMatchObject({ status: 302 })
+    expect(await rethrow(engine.post("/create", { value: "x".repeat(2 * 1024 * 1024) }))).toThrow("Docker API request exceeded the byte limit")
+    expect(await rethrow(engine.post("/held", {}, 10))).toThrow("Docker API request timed out")
   } finally {
     engine.close()
     sockets.forEach(socket => socket.destroy())

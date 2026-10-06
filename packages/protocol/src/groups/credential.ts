@@ -1,6 +1,7 @@
 import { Credential } from "@opencode-ai/schema/credential"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
+import { ConflictError } from "../errors"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
 export const CredentialGroup = HttpApiGroup.make("server.credential")
@@ -10,6 +11,7 @@ export const CredentialGroup = HttpApiGroup.make("server.credential")
       query: LocationQuery,
       payload: Schema.Struct({ label: Schema.String }),
       success: HttpApiSchema.NoContent,
+      error: ConflictError,
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
@@ -25,6 +27,7 @@ export const CredentialGroup = HttpApiGroup.make("server.credential")
       params: { credentialID: Credential.ID },
       query: LocationQuery,
       success: HttpApiSchema.NoContent,
+      error: ConflictError,
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(

@@ -6,6 +6,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { promisify } from "node:util"
+import { rejection } from "./rejection.fixture"
 
 const exec = promisify(execFile)
 const enabled = process.env.APP_DOCK_RUNTIME_INTEGRATION === "1"
@@ -58,7 +59,7 @@ async function removeFixture(id: string, home: string, owner: string) {
   expect(container.Id).toBe(id)
   expect(container.Config.Labels[`${label}.owner`]).toBe(owner)
   await docker(["rm", "--force", id])
-  await expect(docker(["container", "inspect", id])).rejects.toMatchObject({
+  expect(await rejection(docker(["container", "inspect", id]))).toMatchObject({
     stderr: `Error response from daemon: No such container: ${id}\n`,
   })
   const volume = JSON.parse((await docker(["volume", "inspect", "--format", "{{json .}}", home])).stdout) as {
@@ -68,7 +69,7 @@ async function removeFixture(id: string, home: string, owner: string) {
   expect(volume.Name).toBe(home)
   expect(volume.Labels[`${label}.owner`]).toBe(owner)
   await docker(["volume", "rm", home])
-  await expect(docker(["volume", "inspect", home])).rejects.toMatchObject({
+  expect(await rejection(docker(["volume", "inspect", home]))).toMatchObject({
     stderr: `Error response from daemon: get ${home}: no such volume\n`,
   })
 }
@@ -150,14 +151,14 @@ subprocess.run(['dpkg-deb','--build','--root-owner-group',str(base),'/tmp/orches
       await docker(["cp", `${cleanup.id}:/tmp/orchestra-wrong.deb`, join(root, "wrong.deb")])
       await docker(["cp", `${cleanup.id}:/tmp/orchestra-stale-display.tar`, join(root, "stale-display.tar")])
       await writeFile(join(root, "invalid.deb"), "not a Debian package")
-      await expect(runtime.install(join(root, "wrong.deb"))).rejects.toMatchObject({ code: "architecture-mismatch" })
-      await expect(runtime.install(join(root, "invalid.deb"))).rejects.toMatchObject({ code: "invalid-package" })
+      expect(await rejection(runtime.install(join(root, "wrong.deb")))).toMatchObject({ code: "architecture-mismatch" })
+      expect(await rejection(runtime.install(join(root, "invalid.deb")))).toMatchObject({ code: "invalid-package" })
       const installed = await runtime.install(join(root, "native package.deb"))
       expect(installed.some((app) => app.id === "orchestra-runtime-test.desktop")).toBe(true)
       expect((await docker(["exec", cleanup.id, "dpkg-query", "-W", "-f=${Status}", "bc"])).stdout).toBe(
         "install ok installed",
       )
-      await expect(runtime.launch("orchestra-runtime-test.desktop; touch /tmp/not-a-command")).rejects.toMatchObject({
+      expect(await rejection(runtime.launch("orchestra-runtime-test.desktop; touch /tmp/not-a-command"))).toMatchObject({
         code: "failed",
       })
       await runtime.launch("orchestra-runtime-test.desktop")
@@ -177,7 +178,7 @@ subprocess.run(['dpkg-deb','--build','--root-owner-group',str(base),'/tmp/orches
       }
       expect(await launched()).toEqual({ display: ":100", dbus: true, args: ["%"] })
       await docker(["update", "--pids-limit", "1024", cleanup.id])
-      await expect(runtime.stop()).rejects.toMatchObject({ code: "failed" })
+      expect(await rejection(runtime.stop())).toMatchObject({ code: "failed" })
       expect((await docker(["inspect", "--format", "{{.State.Running}}", cleanup.id])).stdout.trim()).toBe("true")
       await docker(["update", "--pids-limit", "512", cleanup.id])
       await runtime.stop()
@@ -330,8 +331,8 @@ test.skipIf(!enabled)(
         { mode: 0o600 },
       )
       const runtime = AppDockRuntime.create({ root, context, image })
-      await expect(runtime.stop()).rejects.toMatchObject({ code: "failed" })
-      await expect(runtime.start()).rejects.toMatchObject({ code: "failed" })
+      expect(await rejection(runtime.stop())).toMatchObject({ code: "failed" })
+      expect(await rejection(runtime.start())).toMatchObject({ code: "failed" })
       expect((await docker(["inspect", "--format", "{{.State.Running}}", id])).stdout.trim()).toBe("true")
       await removeFixture(cleanup.id, home, cleanup.owner)
       cleanup.id = ""
@@ -350,7 +351,7 @@ test.skipIf(!enabled)(
         JSON.stringify({ version: 1, owner, password, dockerContext, endpoint, containerID: "0".repeat(64) }),
         { mode: 0o600 },
       )
-      await expect(AppDockRuntime.create({ root, context, image }).stop()).rejects.toMatchObject({ code: "failed" })
+      expect(await rejection(AppDockRuntime.create({ root, context, image }).stop())).toMatchObject({ code: "failed" })
       expect((await docker(["inspect", "--format", "{{.State.Running}}", cleanup.id])).stdout.trim()).toBe("true")
     } finally {
       if (!cleanup.id) {

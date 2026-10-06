@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { createApiForServer, createSdkForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
 import { normalizeSessionInfo } from "./session"
+import { rethrow } from "../testing/rejection"
 
 function setup(
   protocol: "v1" | "v2" | Promise<"v1" | "v2">,
@@ -275,30 +276,32 @@ describe("createCompatibleApi", () => {
   })
 
   test("rethrows non-missing-route failures from connect.key", async () => {
-    await expect(
-      (async () => {
-        const requests: Request[] = []
-        const fetcher = Object.assign(
-          async (input: string | URL | Request, init?: RequestInit) => {
-            const request = new Request(input, init)
-            requests.push(request)
-            return new Response("bad key", { status: 400 })
-          },
-          { preconnect: globalThis.fetch.preconnect },
-        )
-        const server = { url: "http://localhost:4096" }
-        const api = createCompatibleApi({
-          protocol: Promise.resolve("v2"),
-          current: createApiForServer({ server, fetch: fetcher }),
-          legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
-          directory: "/repo",
-        })
-        await api.integration.connect.key({
-          integrationID: "openrouter",
-          key: "bad",
-          location: { directory: "/repo" },
-        })
-      })(),
-    ).rejects.toThrow()
+    expect(
+      await rethrow(
+        (async () => {
+          const requests: Request[] = []
+          const fetcher = Object.assign(
+            async (input: string | URL | Request, init?: RequestInit) => {
+              const request = new Request(input, init)
+              requests.push(request)
+              return new Response("bad key", { status: 400 })
+            },
+            { preconnect: globalThis.fetch.preconnect },
+          )
+          const server = { url: "http://localhost:4096" }
+          const api = createCompatibleApi({
+            protocol: Promise.resolve("v2"),
+            current: createApiForServer({ server, fetch: fetcher }),
+            legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
+            directory: "/repo",
+          })
+          await api.integration.connect.key({
+            integrationID: "openrouter",
+            key: "bad",
+            location: { directory: "/repo" },
+          })
+        })(),
+      ),
+    ).toThrow()
   })
 })
