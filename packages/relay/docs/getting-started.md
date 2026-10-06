@@ -2,9 +2,9 @@
 
 Audience: agents. Status: current.
 
-Load [relay-integration](../.opencode/skills/relay-integration/SKILL.md). Use the
-[arm-hook skill](../.opencode/skills/relay-arm-hook/SKILL.md) for Claude Code
-subagents or the [gate-CLI skill](../.opencode/skills/relay-gate-cli/SKILL.md) for
+Load [relay-integration](skills/relay-integration/SKILL.md). Use the
+[arm-hook skill](skills/relay-arm-hook/SKILL.md) for Claude Code
+subagents or the [gate-CLI skill](skills/relay-gate-cli/SKILL.md) for
 another harness.
 
 ## Inputs
@@ -93,7 +93,7 @@ whole during regression. Preserve each program's failure status explicitly.
    For a fresh arm, mark the supplied opening macro entered **before the first
    evaluation**: create `$ARM/macro_<safe-id>`, sanitizing the first WP's macro with
    `printf '%s' "$macro" | tr -c 'A-Za-z0-9._-' '_'`. Follow
-   [integration procedure, step 3](../.opencode/skills/relay-integration/SKILL.md#procedure)
+   [integration procedure, step 3](skills/relay-integration/SKILL.md#procedure)
    for the actual marker initialization; otherwise later entry can repeat that protocol.
 5. Dispatch one runner for that arm. Pass `agent_transcript_path` and `agent_id`
    in stop payloads. The hook evaluates the current checklist and reveals later

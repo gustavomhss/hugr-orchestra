@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../../SPEC.md). Procedures: [operational skills](../../.opencode/skills/).
+Current authority: [SPEC.md](../../SPEC.md). Procedures: [operational skills](../skills/).
 This card records a completed local scope, not an instruction to deploy a service.
 
 ## Delivered scope

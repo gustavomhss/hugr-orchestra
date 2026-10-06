@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../docs/skills/).
 These definitions preserve the intended study. They are not claims that all KPIs are instrumented
 or all fairness controls were enforced. Evidence: [RESULTS.md](RESULTS.md).
 

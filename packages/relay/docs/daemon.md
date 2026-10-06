@@ -2,7 +2,7 @@
 
 Audience: agents. Status: current.
 
-Procedure: [relay-integration skill](../.opencode/skills/relay-integration/SKILL.md).
+Procedure: [relay-integration skill](skills/relay-integration/SKILL.md).
 Sources: [daemon](../bin/relay-daemon.py), [portable CLI](../bin/relay-gate), [shared core](../lib/relay-gate.sh).
 Evidence: [daemon tests](../tests/test_daemon.py), [wait-channel tests](../tests/test_ask.py).
 

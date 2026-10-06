@@ -3,8 +3,8 @@
 Audience: agents. Status: current.
 
 Use this vocabulary when authoring plans or reading state. Load
-[relay-gate-core](../.opencode/skills/relay-gate-core/SKILL.md) for evaluation
-changes and [relay-audit](../.opencode/skills/relay-audit/SKILL.md) for evidence.
+[relay-gate-core](skills/relay-gate-core/SKILL.md) for evaluation
+changes and [relay-audit](skills/relay-audit/SKILL.md) for evidence.
 
 ## Terms
 

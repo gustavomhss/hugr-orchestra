@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../../../SPEC.md). Procedures: [operational skills](../../../.opencode/skills/).
+Current authority: [SPEC.md](../../../SPEC.md). Procedures: [operational skills](../../../docs/skills/).
 Input contract: [campaign records](../README.md). Evidence: [RESULTS.md](../../RESULTS.md).
 
 ## Original task and profile

@@ -2,7 +2,7 @@
 
 Audience: agents. Status: current.
 
-Load [relay-autodecompose](../.opencode/skills/relay-autodecompose/SKILL.md).
+Load [relay-autodecompose](skills/relay-autodecompose/SKILL.md).
 `bin/relay-autodecompose.py` collects pytest node IDs and emits a checklist
 draft. It does not prove test success, control fidelity, or complete requirements.
 

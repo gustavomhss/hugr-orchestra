@@ -5,11 +5,11 @@ Audience: agents. Status: current.
 Use YAML profiles as source and neighboring `*.sprint.json` files as generated data.
 Read implementation before inferring guarantees from protocol prose. Follow these skills:
 
-- [relay-profiles](../.opencode/skills/relay-profiles/SKILL.md): compilation, binding, lint, and propagation.
-- [relay-planning](../.opencode/skills/relay-planning/SKILL.md): planning artifacts and graph/check tools.
-- [relay-specification](../.opencode/skills/relay-specification/SKILL.md): spec-decompose registries and traceability.
-- [relay-design](../.opencode/skills/relay-design/SKILL.md): design artifacts and ratification limits.
-- [relay-research](../.opencode/skills/relay-research/SKILL.md): capture, evidence, contest, calibration, and report checks.
+- [relay-profiles](skills/relay-profiles/SKILL.md): compilation, binding, lint, and propagation.
+- [relay-planning](skills/relay-planning/SKILL.md): planning artifacts and graph/check tools.
+- [relay-specification](skills/relay-specification/SKILL.md): spec-decompose registries and traceability.
+- [relay-design](skills/relay-design/SKILL.md): design artifacts and ratification limits.
+- [relay-research](skills/relay-research/SKILL.md): capture, evidence, contest, calibration, and report checks.
 
 Follow each skill's mandatory **Cold review** lifecycle after validation: freeze the baseline and
 diff/artifact list, obtain review from someone other than the author in a fresh isolated context,

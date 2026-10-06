@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](skills/).
 This record preserves the R5–R10 design rationale and its reconciliation against baseline
 `684456d571e8deb5f435d39e789e1b1258453d85`. Current-behavior notes also follow the runtime
 repair candidate on that baseline; historical reproductions remain observations of their time.

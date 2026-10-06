@@ -58,7 +58,7 @@ Route integration workflow changes to [relay-integration](../relay-integration/S
 - Keep edit claims disjoint at file granularity, including tests; shared test coverage does not grant concurrent edit permission.
 - Reserve `AGENTS.md`, `docs/README.md`, `docs/skills.json`, and generated `docs/INDEX.md` for the lead during a documentation wave.
 - Reserve shared documentation-validator changes for the lead during that wave and route their long-term maintenance through `doc-tooling`.
-- Create new agent-facing operational documentation as `.opencode/skills/<name>/SKILL.md` with matching `name` and a single-sentence description.
+- Create new agent-facing operational documentation as `docs/skills/<name>/SKILL.md` with matching `name` and a single-sentence description.
 
 ## Procedure
 

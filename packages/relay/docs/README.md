@@ -6,12 +6,12 @@ Audience: agents. Status: current.
 
 | Task | Load |
 |---|---|
-| Claim files and assign work | [relay-ownership](../.opencode/skills/relay-ownership/SKILL.md) |
-| Change or recover a module | [relay-maintenance](../.opencode/skills/relay-maintenance/SKILL.md) |
-| Determine downstream impact | [relay-blast-radius](../.opencode/skills/relay-blast-radius/SKILL.md) |
-| Connect a harness | [relay-integration](../.opencode/skills/relay-integration/SKILL.md) |
+| Claim files and assign work | [relay-ownership](skills/relay-ownership/SKILL.md) |
+| Change or recover a module | [relay-maintenance](skills/relay-maintenance/SKILL.md) |
+| Determine downstream impact | [relay-blast-radius](skills/relay-blast-radius/SKILL.md) |
+| Connect a harness | [relay-integration](skills/relay-integration/SKILL.md) |
 | Locate module maintenance | [skills.json](skills.json): `modules[].skill` |
-| Maintain this corpus | [relay-doc-tooling](../.opencode/skills/relay-doc-tooling/SKILL.md) |
+| Maintain this corpus | [relay-doc-tooling](skills/relay-doc-tooling/SKILL.md) |
 | Inspect this wave's independent review record | [reviews/agent-skills.json](reviews/agent-skills.json) |
 
 Catalog assigns in-scope executable sources to modules, lists tests and declares dependencies.

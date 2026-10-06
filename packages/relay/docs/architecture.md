@@ -3,10 +3,10 @@ Audience: agents. Status: current.
 # Architecture reference
 
 Use [SPEC.md](../SPEC.md) as the canonical current contract. Use operational skills for
-[ARM changes](../.opencode/skills/relay-arm-hook/SKILL.md),
-[core changes](../.opencode/skills/relay-gate-core/SKILL.md),
-[CLI changes](../.opencode/skills/relay-gate-cli/SKILL.md), and
-[maintenance](../.opencode/skills/relay-maintenance/SKILL.md).
+[ARM changes](skills/relay-arm-hook/SKILL.md),
+[core changes](skills/relay-gate-core/SKILL.md),
+[CLI changes](skills/relay-gate-cli/SKILL.md), and
+[maintenance](skills/relay-maintenance/SKILL.md).
 
 ## 1. Component ownership
 
@@ -196,4 +196,4 @@ records for what was captured, not a fabricated full-run bill.
 HMAC authenticates bytes only when the key and trusted writer are outside the producer's control.
 Same-user processes and editable commands/state remain inside Relay's trust boundary. Structural
 verification, control verdicts, and current-plan oracle agreement are separate audit questions; use
-the [audit skill](../.opencode/skills/relay-audit/SKILL.md) and [SPEC §6](../SPEC.md#6-ledger-and-audit-boundary).
+the [audit skill](skills/relay-audit/SKILL.md) and [SPEC §6](../SPEC.md#6-ledger-and-audit-boundary).

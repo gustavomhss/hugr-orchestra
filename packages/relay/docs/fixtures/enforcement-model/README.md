@@ -4,7 +4,7 @@ Audience: agents. Status: historical.
 
 These labeled artifacts preserve a recorded experiment. Preserve their contents and labels; do not
 treat expected verdicts as guaranteed outputs of every current model. Use
-[relay-judge](../../../.opencode/skills/relay-judge/SKILL.md) for current calibration procedure.
+[relay-judge](../../skills/relay-judge/SKILL.md) for current calibration procedure.
 
 These are the inputs behind the one **[MEASURED]** claim in [`../../enforcement-model.md`](../../enforcement-model.md)
 §5: *8 judge runs over 5 condition types, all verdicts correct*. They are kept so the claim can be

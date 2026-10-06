@@ -5,13 +5,13 @@ Audience: agents. Status: current.
 ## Establish scope
 
 1. Read [AGENTS.md](AGENTS.md),
-   [relay-ownership](.opencode/skills/relay-ownership/SKILL.md), and
-   [relay-blast-radius](.opencode/skills/relay-blast-radius/SKILL.md).
+   [relay-ownership](docs/skills/relay-ownership/SKILL.md), and
+   [relay-blast-radius](docs/skills/relay-blast-radius/SKILL.md).
 2. Inspect branch baseline, working-tree changes, affected runtime source, and
    tests. Treat unfamiliar edits as another author's work.
 3. Claim explicit, disjoint paths before editing. Resolve shared-path ownership
    with the lead; include generated artifacts in the claim or request their owner.
-4. Load [relay-maintenance](.opencode/skills/relay-maintenance/SKILL.md) and the
+4. Load [relay-maintenance](docs/skills/relay-maintenance/SKILL.md) and the
    affected module skills through [documentation routes](docs/README.md).
 
 ## Change contract
@@ -25,7 +25,7 @@ Audience: agents. Status: current.
 - Trace both gate consumers and audit readers when changing controls or ledger
   fields. Keep-best means regression checks, not immutable files or rollback.
 - Update affected docs and project skills in the same change. New task guides
-  belong in `.opencode/skills/relay-*/SKILL.md`; route them from the owned index.
+  belong in `docs/skills/relay-*/SKILL.md`; route them from the owned index.
 - Keep docs aimed at agents: required inputs, commands, outcomes, source authority,
   and actual limits. Mark current references `Audience: agents. Status: current.`
 - Use relative links. Distinguish deterministic fixtures, recorded live evidence,

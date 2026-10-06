@@ -3,7 +3,7 @@
 Audience: agents. Status: current evidence brief.
 
 Source baseline: `684456d571e8deb5f435d39e789e1b1258453d85`.
-Current authority: [SPEC.md](SPEC.md). Procedures: [operational skills](.opencode/skills/).
+Current authority: [SPEC.md](SPEC.md). Procedures: [operational skills](docs/skills/).
 Product scope: [PRODUCT.md](PRODUCT.md). This brief reconciles the May 2026 white-paper
 observations with committed evidence and current code; it is not an execution guide.
 

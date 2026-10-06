@@ -4,7 +4,7 @@ Audience: agents. Status: current product brief.
 
 Baseline commit: `684456d571e8deb5f435d39e789e1b1258453d85`; installed-behavior notes
 also reconcile the current runtime repair candidate on that baseline.
-Use [SPEC.md](SPEC.md) for the current contract and [operational skills](.opencode/skills/)
+Use [SPEC.md](SPEC.md) for the current contract and [operational skills](docs/skills/)
 for procedures. This brief records product scope and claim limits; it is not a runbook.
 
 ## 1. Product claim

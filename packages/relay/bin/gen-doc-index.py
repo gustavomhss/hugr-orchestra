@@ -2,9 +2,10 @@
 """
 gen-doc-index.py — regenerate docs/INDEX.md, the hashed integrity manifest of the doc set.
 
-Hash authored Markdown at the repository root and recursively under docs/, benchmark/, examples/
-and .opencode/skills/. Runtime/generated directories and the index itself are excluded. This detects
-byte drift, not semantic freshness. --check preserves the existing file and ignores only its stamp.
+Hash authored Markdown at the repository root and recursively under docs/ (including the skills in
+docs/skills/), benchmark/ and examples/. Runtime/generated directories and the index itself are
+excluded. This detects byte drift, not semantic freshness. --check preserves the existing file and
+ignores only its stamp.
 
 Usage:  bin/gen-doc-index.py [--check]      # --check: exit 1 if the index is stale, write nothing
 The --check mode is CI-friendly: it fails the build if someone edited docs without regenerating.
@@ -15,7 +16,7 @@ import stat
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX = os.path.join("docs", "INDEX.md")
-DOC_ROOTS = ("docs", "benchmark", "examples", ".opencode/skills")
+DOC_ROOTS = ("docs", "benchmark", "examples")
 EXCLUDED = {".git", "__pycache__", ".pytest_cache", ".relay-state", ".relay-ledger",
             "_runs", "runs", ".live-runs", "node_modules", ".venv", "venv"}
 

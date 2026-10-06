@@ -2,7 +2,7 @@
 
 Audience: agents. Status: current.
 
-Procedure: [relay-policies skill](../.opencode/skills/relay-policies/SKILL.md).
+Procedure: [relay-policies skill](skills/relay-policies/SKILL.md).
 Sources: [preprocessor](../bin/relay-policy.py), [bundles](../policies), [gate core](../lib/relay-gate.sh).
 Evidence: [policy tests](../tests/test_policy.py), [lint tests](../tests/test_spec_lint.py).
 

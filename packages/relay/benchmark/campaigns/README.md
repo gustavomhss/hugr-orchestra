@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../../SPEC.md). Procedures: [operational skills](../../.opencode/skills/).
+Current authority: [SPEC.md](../../SPEC.md). Procedures: [operational skills](../../docs/skills/).
 Evidence: [RESULTS.md](../RESULTS.md). These records describe frozen experiment inputs, not
 current operational guides or reference solutions.
 

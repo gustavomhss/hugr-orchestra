@@ -2,8 +2,8 @@
 
 Audience: agents. Status: current.
 
-Load [relay-arm-hook](../.opencode/skills/relay-arm-hook/SKILL.md) when changing
-feedback and [relay-telemetry](../.opencode/skills/relay-telemetry/SKILL.md) when
+Load [relay-arm-hook](skills/relay-arm-hook/SKILL.md) when changing
+feedback and [relay-telemetry](skills/relay-telemetry/SKILL.md) when
 reading checkpoint events. Relay reduces repeated feedback; the harness owns
 actual context compaction.
 

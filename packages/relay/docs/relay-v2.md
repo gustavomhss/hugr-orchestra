@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](skills/).
 This record preserves campaign decisions and evidence reconciled against baseline
 `684456d571e8deb5f435d39e789e1b1258453d85`. Current-behavior notes also follow the runtime
 repair candidate on that baseline; retained campaign observations are unchanged. It is not a

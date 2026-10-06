@@ -17,25 +17,25 @@ records controls and outcomes. Acceptance covers what those commands check.
 
 ## Select task skill
 
-New operational guides live in `.opencode/skills/relay-*/SKILL.md`.
+New operational guides live in `docs/skills/relay-*/SKILL.md`.
 
 | Task | Skill |
 |---|---|
-| Claim paths and locate owners | [relay-ownership](.opencode/skills/relay-ownership/SKILL.md) |
-| Change and verify repository artifacts | [relay-maintenance](.opencode/skills/relay-maintenance/SKILL.md) |
-| Trace affected modules and checks | [relay-blast-radius](.opencode/skills/relay-blast-radius/SKILL.md) |
-| Wire an agent harness or arm | [relay-integration](.opencode/skills/relay-integration/SKILL.md) |
+| Claim paths and locate owners | [relay-ownership](docs/skills/relay-ownership/SKILL.md) |
+| Change and verify repository artifacts | [relay-maintenance](docs/skills/relay-maintenance/SKILL.md) |
+| Trace affected modules and checks | [relay-blast-radius](docs/skills/relay-blast-radius/SKILL.md) |
+| Wire an agent harness or arm | [relay-integration](docs/skills/relay-integration/SKILL.md) |
 
 ## Select module skill
 
 | Surface | Skills |
 |---|---|
-| Gate evaluation and hooks | [relay-gate-core](.opencode/skills/relay-gate-core/SKILL.md), [relay-arm-hook](.opencode/skills/relay-arm-hook/SKILL.md), [relay-gate-cli](.opencode/skills/relay-gate-cli/SKILL.md) |
-| Audit and run views | [relay-audit](.opencode/skills/relay-audit/SKILL.md), [relay-telemetry](.opencode/skills/relay-telemetry/SKILL.md) |
-| Runtime coordination | [relay-daemon](.opencode/skills/relay-daemon/SKILL.md) |
-| Plan authoring | [relay-profiles](.opencode/skills/relay-profiles/SKILL.md), [relay-autodecompose](.opencode/skills/relay-autodecompose/SKILL.md), [relay-spec-library](.opencode/skills/relay-spec-library/SKILL.md), [relay-policies](.opencode/skills/relay-policies/SKILL.md) |
-| Work protocols | [relay-planning](.opencode/skills/relay-planning/SKILL.md), [relay-specification](.opencode/skills/relay-specification/SKILL.md), [relay-design](.opencode/skills/relay-design/SKILL.md), [relay-research](.opencode/skills/relay-research/SKILL.md) |
-| Evidence and documentation | [relay-benchmark](.opencode/skills/relay-benchmark/SKILL.md), [relay-doc-tooling](.opencode/skills/relay-doc-tooling/SKILL.md), [relay-examples](.opencode/skills/relay-examples/SKILL.md) |
+| Gate evaluation and hooks | [relay-gate-core](docs/skills/relay-gate-core/SKILL.md), [relay-arm-hook](docs/skills/relay-arm-hook/SKILL.md), [relay-gate-cli](docs/skills/relay-gate-cli/SKILL.md) |
+| Audit and run views | [relay-audit](docs/skills/relay-audit/SKILL.md), [relay-telemetry](docs/skills/relay-telemetry/SKILL.md) |
+| Runtime coordination | [relay-daemon](docs/skills/relay-daemon/SKILL.md) |
+| Plan authoring | [relay-profiles](docs/skills/relay-profiles/SKILL.md), [relay-autodecompose](docs/skills/relay-autodecompose/SKILL.md), [relay-spec-library](docs/skills/relay-spec-library/SKILL.md), [relay-policies](docs/skills/relay-policies/SKILL.md) |
+| Work protocols | [relay-planning](docs/skills/relay-planning/SKILL.md), [relay-specification](docs/skills/relay-specification/SKILL.md), [relay-design](docs/skills/relay-design/SKILL.md), [relay-research](docs/skills/relay-research/SKILL.md) |
+| Evidence and documentation | [relay-benchmark](docs/skills/relay-benchmark/SKILL.md), [relay-doc-tooling](docs/skills/relay-doc-tooling/SKILL.md), [relay-examples](docs/skills/relay-examples/SKILL.md) |
 
 ## Run or inspect
 

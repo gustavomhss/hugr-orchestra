@@ -2,8 +2,8 @@
 
 Audience: agents. Status: current.
 
-Load [relay-examples](../../.opencode/skills/relay-examples/SKILL.md) and
-[relay-arm-hook](../../.opencode/skills/relay-arm-hook/SKILL.md).
+Load [relay-examples](../../docs/skills/relay-examples/SKILL.md) and
+[relay-arm-hook](../../docs/skills/relay-arm-hook/SKILL.md).
 This deterministic, model-free harness drives the actual arm hook with scripted
 artifact edits. Use it to inspect feedback mechanics.
 

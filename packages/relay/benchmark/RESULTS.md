@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../docs/skills/).
 These are May 2026 observations, reconciled against baseline
 `684456d571e8deb5f435d39e789e1b1258453d85`. They are not a current benchmark runbook.
 Agents quoting them must preserve the artifact/provenance distinctions and limits below.

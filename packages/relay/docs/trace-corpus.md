@@ -2,7 +2,7 @@
 
 Audience: agents. Status: current.
 
-Procedure: [relay-telemetry skill](../.opencode/skills/relay-telemetry/SKILL.md).
+Procedure: [relay-telemetry skill](skills/relay-telemetry/SKILL.md).
 Sources: [archive writer](../bin/relay-arm-hook.sh), [corpus reader](../bin/relay-corpus.py), [chain verifier](../benchmark/verify_ledger.py).
 Evidence: [corpus tests](../tests/test_corpus.py), [dash outcome tests](../tests/test_dash.py).
 

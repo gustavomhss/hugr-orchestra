@@ -71,7 +71,7 @@ python3 bin/gen-doc-index.py
 python3 bin/gen-doc-index.py --check
 ```
 
-Read the current generator and validator before claiming coverage; the index covers authored root Markdown and recursively selected Markdown under `docs/`, `benchmark/`, `examples/`, and `.opencode/skills/`.
+Read the current generator and validator before claiming coverage; the index covers authored root Markdown and recursively selected Markdown under `docs/` (including `docs/skills/`), `benchmark/`, and `examples/`.
 Treat the guard's link, skill-structure, and catalog-ownership checks as structural validation, not semantic freshness or evidence that cold review occurred.
 Report dependency or import failures as blocked checks rather than treating their commands as successful; use `requirements-dev.txt` for documentation-check dependencies.
 

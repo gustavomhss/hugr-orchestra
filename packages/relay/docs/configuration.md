@@ -3,8 +3,8 @@ Audience: agents. Status: current.
 # Configuration and integration reference
 
 Use [SPEC.md](../SPEC.md) for the current contract and
-[relay-integration](../.opencode/skills/relay-integration/SKILL.md) for the operational guide.
-Use [maintenance](../.opencode/skills/relay-maintenance/SKILL.md) for repository checks.
+[relay-integration](skills/relay-integration/SKILL.md) for the operational guide.
+Use [maintenance](skills/relay-maintenance/SKILL.md) for repository checks.
 Run examples from the Relay repository root; child-process cwd is explicit where needed.
 
 ## 1. Dependencies
@@ -218,7 +218,7 @@ resolved ID's sanitized `retry_`, `round_`, `repeat_`, and `blocked_` files, leg
 and `reg_retry`, preserving unrelated WP keys. Set `active`, restore the compatibility `counter`
 to that WP's current array index, and recheck. A failure charges the restored budget normally;
 release does not waive controls or authenticate a human. A lost position leaves the reason unconsumed.
-See the [ARM skill](../.opencode/skills/relay-arm-hook/SKILL.md) for state repair operations.
+See the [ARM skill](skills/relay-arm-hook/SKILL.md) for state repair operations.
 
 `relay verify` reports recorded checklist verdicts and chain integrity; it does not rerun controls
 or certify current artifacts. With a reachable sprint or explicit `--sprint`, it compares named
@@ -239,5 +239,5 @@ explicit recorded-controls-only scope, even when its result is `PASS`.
 | ARM/CLI busy (`3`) | `<arm-or-state>/.run.lock`; establish whether an evaluation is alive before removing a stale lock. |
 | Audit cannot certify | Chain integrity, terminal event, deterministic controls, oracle drift, invalid record/sprint, and `oracle_recheck` status/scope. |
 
-Use [relay-gate-cli](../.opencode/skills/relay-gate-cli/SKILL.md) for outcome handling and
-[relay-audit](../.opencode/skills/relay-audit/SKILL.md) for evidence review.
+Use [relay-gate-cli](skills/relay-gate-cli/SKILL.md) for outcome handling and
+[relay-audit](skills/relay-audit/SKILL.md) for evidence review.

@@ -2,8 +2,8 @@
 
 Audience: agents. Status: current.
 
-Load [relay-gate-cli](../.opencode/skills/relay-gate-cli/SKILL.md) and
-[relay-integration](../.opencode/skills/relay-integration/SKILL.md).
+Load [relay-gate-cli](skills/relay-gate-cli/SKILL.md) and
+[relay-integration](skills/relay-integration/SKILL.md).
 `bin/relay-gate` evaluates controls; the caller runs the agent and delivers
 instructions. It emits outcomes, not Claude hook `decision` responses.
 

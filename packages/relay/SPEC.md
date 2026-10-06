@@ -9,14 +9,14 @@ Use this reference for shipped behavior and terminology. Resolve implementation 
 Run commands from the repository root unless a command explicitly sets a child working directory.
 
 Operational guides:
-[integration](.opencode/skills/relay-integration/SKILL.md),
-[maintenance](.opencode/skills/relay-maintenance/SKILL.md),
-[ARM hook](.opencode/skills/relay-arm-hook/SKILL.md),
-[gate core](.opencode/skills/relay-gate-core/SKILL.md),
-[gate CLI](.opencode/skills/relay-gate-cli/SKILL.md),
-[audit](.opencode/skills/relay-audit/SKILL.md),
-[profiles](.opencode/skills/relay-profiles/SKILL.md),
-[spec library](.opencode/skills/relay-spec-library/SKILL.md).
+[integration](docs/skills/relay-integration/SKILL.md),
+[maintenance](docs/skills/relay-maintenance/SKILL.md),
+[ARM hook](docs/skills/relay-arm-hook/SKILL.md),
+[gate core](docs/skills/relay-gate-core/SKILL.md),
+[gate CLI](docs/skills/relay-gate-cli/SKILL.md),
+[audit](docs/skills/relay-audit/SKILL.md),
+[profiles](docs/skills/relay-profiles/SKILL.md),
+[spec library](docs/skills/relay-spec-library/SKILL.md).
 
 ## 1. Terms and driver boundaries
 

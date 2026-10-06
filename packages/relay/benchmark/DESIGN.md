@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../docs/skills/).
 Read this as the intended experiment, not a current runbook or a completed statistical study.
 Actual observations and their limits are in [RESULTS.md](RESULTS.md).
 

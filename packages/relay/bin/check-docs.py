@@ -90,7 +90,7 @@ def check(root):
                 if not target.is_relative_to(root) or not target.exists():
                     errors.append(f"broken-link: {rel} -> {dest}")
 
-    skills = {p for p in documents if p.startswith(".opencode/skills/") and Path(p).name == "SKILL.md"}
+    skills = {p for p in documents if p.startswith("docs/skills/") and Path(p).name == "SKILL.md"}
     if not skills:
         errors.append("skills-empty: no project skills")
     for rel in sorted(skills):

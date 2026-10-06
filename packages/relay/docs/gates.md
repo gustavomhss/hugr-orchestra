@@ -3,9 +3,9 @@ Audience: agents. Status: current.
 # Gate and verdict reference
 
 Use [SPEC.md](../SPEC.md) for canonical fields and driver contracts. Use
-[relay-gate-core](../.opencode/skills/relay-gate-core/SKILL.md),
-[relay-gate-cli](../.opencode/skills/relay-gate-cli/SKILL.md), and
-[relay-audit](../.opencode/skills/relay-audit/SKILL.md) for operational work.
+[relay-gate-core](skills/relay-gate-core/SKILL.md),
+[relay-gate-cli](skills/relay-gate-cli/SKILL.md), and
+[relay-audit](skills/relay-audit/SKILL.md) for operational work.
 
 ## 1. Executable controls
 
@@ -286,7 +286,7 @@ through `parse_constant`; quoted strings and valid lexical JSON numbers such as 
 allowed. This is not arbitrary numeric exactness or complete finite-valued schema validation.
 Integrity failure dominates validity errors. Other JSON labels remain `NO-CONTROLS`, `CONTROL-FAIL`,
 `ORACLE-CHANGED`, `ORACLE-DRIFT`, `ESCALATED`, and `TRUNCATED`; see [SPEC §6](../SPEC.md#6-ledger-and-audit-boundary)
-and the [audit skill](../.opencode/skills/relay-audit/SKILL.md). Judges are reported but never counted
+and the [audit skill](skills/relay-audit/SKILL.md). Judges are reported but never counted
 as deterministic controls, even when they blocked runtime advancement. DoD coverage, every WP's
 completion, non-oracle fields, and fresh artifact validity remain outside this comparison.
 

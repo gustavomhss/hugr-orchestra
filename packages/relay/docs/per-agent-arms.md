@@ -2,8 +2,8 @@
 
 Audience: agents. Status: current.
 
-Use [relay-arm-hook](../.opencode/skills/relay-arm-hook/SKILL.md) for this runtime
-and [relay-integration](../.opencode/skills/relay-integration/SKILL.md) for dispatch.
+Use [relay-arm-hook](skills/relay-arm-hook/SKILL.md) for this runtime
+and [relay-integration](skills/relay-integration/SKILL.md) for dispatch.
 An arm is one runner's token-keyed plan and trace, not a scheduler.
 
 ## Files the author supplies
@@ -34,7 +34,7 @@ instructions and record its base ref beforehand. For a fresh arm, when supplying
 the opening macro protocol, also mark it entered **before the first evaluation**:
 create `$ARM/macro_<safe-id>` using the first WP's macro and the hook's sanitization,
 `printf '%s' "$macro" | tr -c 'A-Za-z0-9._-' '_'`. Follow
-[integration procedure, step 3](../.opencode/skills/relay-integration/SKILL.md#procedure)
+[integration procedure, step 3](skills/relay-integration/SKILL.md#procedure)
 for the actual marker initialization. On later advances, the hook captures workdir
 `HEAD`, reveals next instructions and self-checks, and injects a macro's protocol
 only when its marker is absent. A missing workdir falls back to `.`; prevent that

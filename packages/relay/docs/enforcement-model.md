@@ -6,7 +6,7 @@ This records the design and measurements that preceded later implementations. It
 and `MEASURED` labels describe that snapshot, not the current checkout. In particular, position,
 locking, diff delivery, waiting and escalation changed after these sections were written.
 Do not execute its prescriptions as an installed contract. Use [SPEC.md](../SPEC.md) and
-[relay-maintenance](../.opencode/skills/relay-maintenance/SKILL.md) for current behavior and review.
+[relay-maintenance](skills/relay-maintenance/SKILL.md) for current behavior and review.
 The measurement inputs in [fixtures/enforcement-model/](fixtures/enforcement-model/README.md)
 remain evidence; their historical outcomes are not guarantees about another model or current run.
 

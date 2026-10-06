@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../docs/skills/).
 This is the question register behind [DESIGN.md](DESIGN.md), not a promise that every metric
 was collected. [RESULTS.md](RESULTS.md) bounds the evidence; [KPIS.md](KPIS.md) defines instruments.
 

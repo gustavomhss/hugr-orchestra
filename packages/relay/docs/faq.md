@@ -2,8 +2,8 @@
 
 Audience: agents. Status: current.
 
-Start with [relay-integration](../.opencode/skills/relay-integration/SKILL.md) for
-harness issues or [relay-audit](../.opencode/skills/relay-audit/SKILL.md) for trace
+Start with [relay-integration](skills/relay-integration/SKILL.md) for
+harness issues or [relay-audit](skills/relay-audit/SKILL.md) for trace
 issues. Runtime source wins when historical descriptions disagree.
 
 ## Hook returns no JSON. Is the task done?

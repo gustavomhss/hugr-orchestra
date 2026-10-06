@@ -3,8 +3,8 @@
 Audience: agents. Status: historical.
 
 Read this as the **2026-08-24 finding snapshot**, followed by residuals checked against source at
-`684456d571e8deb5f435d39e789e1b1258453d85`. Use [relay-research](../.opencode/skills/relay-research/SKILL.md)
-and [relay-profiles](../.opencode/skills/relay-profiles/SKILL.md) for current operating instructions.
+`684456d571e8deb5f435d39e789e1b1258453d85`. Use [relay-research](skills/relay-research/SKILL.md)
+and [relay-profiles](skills/relay-profiles/SKILL.md) for current operating instructions.
 
 ## Preserve the historical defect
 

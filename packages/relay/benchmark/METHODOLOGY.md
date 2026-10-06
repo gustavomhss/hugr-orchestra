@@ -2,7 +2,7 @@
 
 Audience: agents. Status: historical.
 
-Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../.opencode/skills/).
+Current authority: [SPEC.md](../SPEC.md). Procedures: [operational skills](../docs/skills/).
 This records the intended campaign-to-WP method. It is not a current authoring runbook or proof
 that one canonical decomposer implements every step. Study scope: [DESIGN.md](DESIGN.md).
 

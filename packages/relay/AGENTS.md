@@ -5,14 +5,14 @@ Audience: agents. Status: current.
 ## Route before editing
 
 1. Read [SPEC.md](SPEC.md) for installed contracts and driver differences.
-2. Load [relay-ownership](.opencode/skills/relay-ownership/SKILL.md); claim exact files.
-3. Load [relay-blast-radius](.opencode/skills/relay-blast-radius/SKILL.md); identify consumers and checks.
+2. Load [relay-ownership](docs/skills/relay-ownership/SKILL.md); claim exact files.
+3. Load [relay-blast-radius](docs/skills/relay-blast-radius/SKILL.md); identify consumers and checks.
 4. Read [docs/skills.json](docs/skills.json), then load the module's `SKILL.md`.
-5. Use [relay-maintenance](.opencode/skills/relay-maintenance/SKILL.md) for changes/recovery or
-   [relay-integration](.opencode/skills/relay-integration/SKILL.md) for harness integration.
+5. Use [relay-maintenance](docs/skills/relay-maintenance/SKILL.md) for changes/recovery or
+   [relay-integration](docs/skills/relay-integration/SKILL.md) for harness integration.
 
-Skills live under `.opencode/skills/`; load on demand, not all at once. Restart an existing session
-when its skill discovery has not picked up newly added skills.
+Skills live under `docs/skills/`; load them by path on demand, not all at once. No harness
+discovers them automatically.
 
 ## Authority and scope
 

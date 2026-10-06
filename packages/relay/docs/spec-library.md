@@ -2,7 +2,7 @@
 
 Audience: agents. Status: current.
 
-Procedure: [relay-spec-library skill](../.opencode/skills/relay-spec-library/SKILL.md).
+Procedure: [relay-spec-library skill](skills/relay-spec-library/SKILL.md).
 Sources: [renderer/lint/amendment tool](../bin/relay-spec.py), [catalog](../specs).
 Evidence: [render tests](../tests/test_spec.py), [lint tests](../tests/test_spec_lint.py), [amendment tests](../tests/test_amend.py).
 

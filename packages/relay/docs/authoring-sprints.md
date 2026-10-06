@@ -3,11 +3,11 @@ Audience: agents. Status: current.
 # Sprint authoring reference
 
 Use [SPEC.md](../SPEC.md) for fields and driver contracts. Use
-[integration](../.opencode/skills/relay-integration/SKILL.md) to dispatch an arm,
-[gate core](../.opencode/skills/relay-gate-core/SKILL.md) to change evaluation, and
-[maintenance](../.opencode/skills/relay-maintenance/SKILL.md) to keep generated artifacts current.
-Use [profiles](../.opencode/skills/relay-profiles/SKILL.md) and
-[spec library](../.opencode/skills/relay-spec-library/SKILL.md) for compiler and renderer limits.
+[integration](skills/relay-integration/SKILL.md) to dispatch an arm,
+[gate core](skills/relay-gate-core/SKILL.md) to change evaluation, and
+[maintenance](skills/relay-maintenance/SKILL.md) to keep generated artifacts current.
+Use [profiles](skills/relay-profiles/SKILL.md) and
+[spec library](skills/relay-spec-library/SKILL.md) for compiler and renderer limits.
 Run commands below from the repository root.
 
 ## 1. Select the driver before writing controls
@@ -183,7 +183,7 @@ quoting as fallback for unparseable input. Use reviewed shell-word positions rat
 placeholders. This is not safe composition into embedded Python or an already quoted shell snippet,
 nor validation of Python identifiers or application semantics. Prefer an external script with
 explicit arguments; inspect every rendered command. See the
-[spec-library skill](../.opencode/skills/relay-spec-library/SKILL.md) for the composition boundary.
+[spec-library skill](skills/relay-spec-library/SKILL.md) for the composition boundary.
 
 ```bash
 python3 bin/relay-spec.py list
@@ -225,7 +225,7 @@ The command-template compiler replaces bare `{macro}` and `{sub}`, plus `{criter
 criteria-command mappings, while preserving `${macro}`/`${sub}`/`${criterion}` for later binding.
 The reserved-name collision is historical; those dollar-prefixed names no longer require renaming.
 Descriptions/instructions, judge text, context, and paths do not pass through this command expander.
-See the [profiles skill](../.opencode/skills/relay-profiles/SKILL.md) for exact placeholder-stage rules.
+See the [profiles skill](skills/relay-profiles/SKILL.md) for exact placeholder-stage rules.
 
 ## 6. Amend a live plan explicitly
 

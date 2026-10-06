@@ -36,8 +36,8 @@ def corpus(tmp_path):
         "README.md": "# Corpus\n\n[Catalog](docs/skills.json)\n",
         "bin/a.py": "print('fixture')\n",
         "tests/test_a.py": "def test_a():\n    assert 1 == 1\n",
-        ".opencode/skills/relay-example/SKILL.md": skill("relay-example"),
-        ".opencode/skills/relay-route/SKILL.md": skill("relay-route"),
+        "docs/skills/relay-example/SKILL.md": skill("relay-example"),
+        "docs/skills/relay-route/SKILL.md": skill("relay-route"),
     }.items():
         target = tmp_path / path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -47,8 +47,8 @@ def corpus(tmp_path):
     (tmp_path / "docs").mkdir(exist_ok=True)
     manifest = {
         "version": 1, "source_roots": sorted(guard.SOURCE_ROOTS),
-        "workflows": [{"id": "route", "skill": ".opencode/skills/relay-route/SKILL.md"}],
-        "modules": [{"id": "example", "skill": ".opencode/skills/relay-example/SKILL.md",
+        "workflows": [{"id": "route", "skill": "docs/skills/relay-route/SKILL.md"}],
+        "modules": [{"id": "example", "skill": "docs/skills/relay-example/SKILL.md",
                      "sources": ["bin/a.py"], "tests": ["tests/test_a.py"], "depends_on": []}],
     }
     (tmp_path / "docs/skills.json").write_text(json.dumps(manifest))
@@ -85,7 +85,7 @@ def test_bad_catalog(corpus, replacement):
     (lambda d: d["modules"][0].update(sources=["bin/missing.py"]), "catalog-source"),
     (lambda d: d["modules"][0].update(tests=["tests/missing.py"]), "catalog-test"),
     (lambda d: d["modules"][0].update(depends_on=["missing"]), "catalog-dependency"),
-    (lambda d: d["modules"][0].update(skill=".opencode/skills/missing/SKILL.md"), "catalog-skill"),
+    (lambda d: d["modules"][0].update(skill="docs/skills/missing/SKILL.md"), "catalog-skill"),
     (lambda d: d["modules"].append(dict(d["modules"][0])), "catalog-id"),
     (lambda d: d["modules"][0].update(id={"bad": 1}), "catalog-id"),
 ])
@@ -187,13 +187,13 @@ def test_post_open_inventory_failure_is_not_optional(corpus, monkeypatch):
     (lambda t: t.replace("---\n", "", 1), "skill-metadata"),
 ])
 def test_skill_defects(corpus, mutate, expected):
-    path = corpus / ".opencode/skills/relay-example/SKILL.md"
+    path = corpus / "docs/skills/relay-example/SKILL.md"
     path.write_text(mutate(path.read_text()))
     assert any(expected in e for e in guard.check(corpus))
 
 
 def test_unregistered_skill(corpus):
-    path = corpus / ".opencode/skills/relay-orphan/SKILL.md"
+    path = corpus / "docs/skills/relay-orphan/SKILL.md"
     path.parent.mkdir()
     path.write_text(skill("relay-orphan"))
     assert any("skill-unregistered" in e for e in guard.check(corpus))
@@ -219,7 +219,7 @@ def test_recursive_index_and_runtime_exclusion(corpus):
     files = index.doc_files(corpus)
     assert "docs/roadmaps/example.md" in files
     assert "benchmark/RESULTS.md" in files and "examples/demo/README.md" in files
-    assert ".opencode/skills/relay-example/SKILL.md" in files
+    assert "docs/skills/relay-example/SKILL.md" in files
     assert not any("_gen-example" in p or p.startswith("runs/") for p in files)
 
 
@@ -228,7 +228,7 @@ def test_index_detects_nested_skill_drift(corpus):
     cmd = [sys.executable, str(corpus / "bin/gen-doc-index.py")]
     assert subprocess.run(cmd, capture_output=True).returncode == 0
     assert subprocess.run(cmd + ["--check"], capture_output=True).returncode == 0
-    path = corpus / ".opencode/skills/relay-example/SKILL.md"
+    path = corpus / "docs/skills/relay-example/SKILL.md"
     path.write_text(path.read_text() + "\nChanged artifact.\n")
     result = subprocess.run(cmd + ["--check"], capture_output=True, text=True)
     assert result.returncode == 1 and "STALE" in result.stderr
@@ -240,7 +240,7 @@ def test_repository_structure_and_real_source_coverage():
 
 def test_real_catalog_row_removal_is_detected(tmp_path):
     """Probe an actual catalog against actual sources, not only a synthetic expected list."""
-    for folder in (*guard.SOURCE_ROOTS, "docs", ".opencode/skills", "tests", "profiles", "specs", "policies"):
+    for folder in (*guard.SOURCE_ROOTS, "docs", "tests", "profiles", "specs", "policies"):
         shutil.copytree(ROOT / folder, tmp_path / folder, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("__pycache__", "_gen*", "_runs", ".relay-ledger"))
     for path in [*ROOT.glob("*.md"), ROOT / "requirements-dev.txt"]:
