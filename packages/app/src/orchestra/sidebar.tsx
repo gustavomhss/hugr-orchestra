@@ -37,6 +37,7 @@ import {
   errorMessage,
   getProjectAvatarSource,
   homeProjectDirectories,
+  profileProject,
   projectForSession,
 } from "@/pages/layout/helpers"
 import { createMenuDismissController } from "@/utils/menu-dismiss-controller"
@@ -120,36 +121,17 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
       }
     })()
     const group = groups().find((item) => item.key === target.server)
-    const directory = target.directory ? pathKey(target.directory) : undefined
-    const session =
-      route.type === "session" && group
-        ? global.ensureServerCtx(group.conn).sync.session.peek(route.sessionId)
-        : undefined
+    const ctx = group ? global.ensureServerCtx(group.conn) : undefined
+    const session = route.type === "session" ? ctx?.sync.session.peek(route.sessionId) : undefined
+    // A draft in a V2 copy stays on its repository profile, so chapters opened from it get the repository root.
     return {
       ...target,
       conn: group?.conn,
       project:
         (session ? projectForSession(session, group?.projects() ?? []) : undefined) ??
-        group
-          ?.projects()
-          .find(
-            (project) =>
-              !!directory &&
-              (pathKey(project.worktree) === directory ||
-                project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory)),
-          ) ??
-        (group && target.directory ? copyOwner(group.conn, group.projects(), target.directory) : undefined),
+        (ctx && target.directory ? profileProject(ctx, target.directory) : undefined),
     }
   })
-
-  // A V2 project copy (a workspace) never appears in `sandboxes`, but its directory's bootstrap already asked the
-  // server which project owns it. Reading that answer passively keeps a draft in a copy on its repository profile,
-  // so chapters opened from it get the repository root.
-  function copyOwner(conn: ServerConnection.Any, projects: LocalProject[], directory: string) {
-    const id = global.ensureServerCtx(conn).sync.peek(directory, { bootstrap: false })[0].project
-    if (!id || id === "global") return
-    return projects.find((project) => project.id === id)
-  }
 
   // The profile card only reads: passive reads must not initialize (bootstrap) the selected directory.
   // The agent list shares the bootstrap's query cache.

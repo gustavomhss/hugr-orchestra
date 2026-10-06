@@ -2,6 +2,7 @@ import { getFilename } from "@opencode-ai/core/util/path"
 import { type Session } from "@opencode-ai/sdk/v2/client"
 import { pathKey } from "@/utils/path-key"
 import type { ServerConnection } from "@/context/server"
+import type { ServerCtx } from "@/context/global"
 import type { HomeProjectSelection } from "@/context/layout"
 
 type SessionStore = {
@@ -100,10 +101,33 @@ export function projectForSession<T extends { id?: string; worktree: string; san
 ) {
   const direct = byID.get(session.projectID)
   if (direct) return direct
-  const directory = pathKey(session.directory)
-  return projects.find(
-    (project) =>
-      pathKey(project.worktree) === directory || project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory),
+  return projectForDirectory(session.directory, projects)
+}
+
+// The project a directory is the root or a V1 sandbox of. A V2 project copy (a workspace) never appears in
+// `sandboxes`, so on a miss `owner` supplies the project ID the server reported for the directory.
+export function projectForDirectory<T extends { id?: string; worktree: string; sandboxes?: string[] }>(
+  directory: string,
+  projects: T[],
+  owner: () => string | undefined = () => undefined,
+) {
+  const key = pathKey(directory)
+  const listed = projects.find(
+    (project) => pathKey(project.worktree) === key || project.sandboxes?.some((sandbox) => pathKey(sandbox) === key),
+  )
+  if (listed) return listed
+  const id = owner()
+  if (!id || id === "global") return
+  return projects.find((project) => project.id === id)
+}
+
+// The repository profile that owns a directory on this server. The owner comes from the directory's own bootstrap,
+// read passively: a lookup must not initialize (bootstrap) the directory.
+export function profileProject(ctx: ServerCtx, directory: string) {
+  return projectForDirectory(
+    directory,
+    ctx.projects.list(),
+    () => ctx.sync.peek(directory, { bootstrap: false })[0].project,
   )
 }
 

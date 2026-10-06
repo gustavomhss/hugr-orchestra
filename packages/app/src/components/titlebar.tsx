@@ -43,8 +43,7 @@ import type { PromptSession } from "@/context/prompt"
 import "./titlebar.css"
 import { newTabTooltipKeybind } from "./command-tooltip-keybind"
 import { normalizeSessionInfo } from "@/utils/session"
-import { projectForSession } from "@/pages/layout/helpers"
-import { pathKey } from "@/utils/path-key"
+import { profileProject, projectForSession } from "@/pages/layout/helpers"
 import { createNativeTitlebarFrame } from "./orchestra/native-frame"
 import { breadcrumbLabel } from "../orchestra/navigation"
 
@@ -292,15 +291,13 @@ export function Titlebar(props: {
                     : route.type === "session"
                       ? tabs.info[tabKey({ type: "session", server: key, sessionId: route.sessionId })]?.directory
                       : layout.home.selection().directory)
-              const projects = ctx?.projects.list() ?? []
+              // The sidebar's lookup: a draft in a V2 copy belongs to its repository, whose saved workspace choice
+              // then steers the new draft.
               const project = value
-                ? projectForSession(value, projects)
-                : projects.find(
-                    (item) =>
-                      !!directory &&
-                      (pathKey(item.worktree) === pathKey(directory) ||
-                        item.sandboxes?.some((sandbox) => pathKey(sandbox) === pathKey(directory))),
-                  )
+                ? projectForSession(value, ctx?.projects.list() ?? [])
+                : ctx && directory
+                  ? profileProject(ctx, directory)
+                  : undefined
               return { server: key, directory: project?.worktree ?? directory }
             })
 
