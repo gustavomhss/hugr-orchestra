@@ -357,8 +357,8 @@ describe("context_recall", () => {
       const f = yield* seed
       const registry = yield* ToolRegistry.Service
       const agents = yield* Agent.Service
-      const agent = yield* agents.get("build")
-      if (!agent) throw new Error("build agent missing")
+      const agent = yield* agents.get("maestro")
+      if (!agent) throw new Error("maestro agent missing")
       const tools = yield* registry.tools({ ...ref, agent })
       const recall = tools.find((tool) => tool.id === "context_recall")
       if (!recall) throw new Error("context_recall missing from normal model tools")
