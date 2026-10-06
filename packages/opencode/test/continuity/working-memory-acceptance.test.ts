@@ -35,13 +35,13 @@ test("durable Markdown fragments preserve captured text, have content IDs, and s
     const host = { history: [...messages, ...tail], delegations: {}, member: false }
     const first = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "findings", src: ["u1"], fields: {
       finding: "Read-only verification succeeded; deployment awaits approval.", why: "Deployment is next.", status: "confirmed" } }] }),
-      snapshot, producerID: SessionID.descending(), host, ceiling: 100000 })
+      snapshot, producerID: SessionID.descending(), host, budget: 100000 })
     if (!("artifact" in first)) throw new Error("Expected first memory")
     // Retiring the only item leaves a valid memory with zero items; the archive keeps every fragment.
     const after = [...tail, { info: { ...messages[0].info, id: MessageID.make("msg_next_tail") }, parts: [] }]
     const next = decode({ text: JSON.stringify({ ops: [{ op: "retire", id: "m1", reason: "Verification details are no longer active." }] }),
       snapshot: { ...snapshot, previous: first.artifact, head: tail, boundary: after[1].info.id, tailStart: after[1].info.id, tail: after.slice(1) },
-      producerID: SessionID.descending(), host: { ...host, history: [...messages, ...after] }, ceiling: 100000 })
+      producerID: SessionID.descending(), host: { ...host, history: [...messages, ...after] }, budget: 100000 })
     expect("artifact" in next && next.artifact.items).toEqual([])
     expect("artifact" in next && next.artifact.text).toContain("## Findings\n(none)")
     const inventory = yield* archive.list(sessionID)
