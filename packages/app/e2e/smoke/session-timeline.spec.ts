@@ -32,6 +32,9 @@ test.describe("smoke: session timeline", () => {
 
   test("keeps the visible message fixed while prepending history", async ({ page }) => {
     const requests: { before?: string; phase: "start" | "end"; at: number }[] = []
+    // The history page is held until the visible rows are measured instead of racing the 3s delay: frame speed
+    // varies (headless glass repaints are slow), and the oracle needs the prepend to land after the measurement.
+    const history = Promise.withResolvers<void>()
     await mockOpenCodeServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
@@ -39,6 +42,7 @@ test.describe("smoke: session timeline", () => {
       project: fixture.project,
       pageMessages,
       messageDelay: 3_000,
+      beforeMessagesResponse: (request) => (request.before ? history.promise : Promise.resolve()),
       onMessages: (input) => requests.push({ before: input.before, phase: input.phase, at: performance.now() }),
     })
     await configureSmokePage(page, fixture.directory)
@@ -83,6 +87,7 @@ test.describe("smoke: session timeline", () => {
       }, keys)
     const before = await positions()
     expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
+    history.resolve()
 
     await expect.poll(() => requests.some((request) => request.before && request.phase === "end")).toBe(true)
     await waitForTimelineStable(page)

@@ -1,21 +1,21 @@
 import { Show, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { useSettings } from "@/context/settings"
 import { getRelativeTime } from "@/utils/time"
 
 // One transcript entry in the approved layout: a 30px mark, who/when, then the entry body.
 // Rows after the first of a turn continue in the body column without repeating the head.
+// Without `chrome` the entry renders bare, as the compact (mobile) transcript has no turn styles.
 export function OrchestraTurn(props: {
+  chrome: boolean
   role: "user" | "assistant"
   head: boolean
   who?: string
   time?: number
   children: JSX.Element
 }) {
-  const settings = useSettings()
   const language = useLanguage()
   return (
-    <Show when={settings.general.newLayoutDesigns()} fallback={props.children}>
+    <Show when={props.chrome} fallback={props.children}>
       <div data-component="orchestra-turn" data-role={props.role} data-head={props.head ? "" : undefined}>
         <Show when={props.head}>
           <span data-slot="orchestra-turn-mark" aria-hidden="true">
