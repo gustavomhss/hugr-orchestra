@@ -104,3 +104,25 @@ jobs:
         run: |
           $RUNNER_TEMP/suite test_modal_actions.py
           $RUNNER_TEMP/suite test_modal_actions.py --mutations
+
+  # The Docker-backed runtime cycle: create, launch, stop (recording open apps), restart (reopening them), stop.
+  # The runner's Docker builds the workspace image from resources/linux-runtime when no image is given.
+  workspace:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: packages/desktop
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Runtime cycle with real Docker
+        env:
+          APP_DOCK_RUNTIME_INTEGRATION: "1"
+          APP_DOCK_RUNTIME_TEST_TMP: ${{ runner.temp }}/orchestra
+        run: bun test --timeout 1200000 src/main/app-dock-runtime.test.ts
