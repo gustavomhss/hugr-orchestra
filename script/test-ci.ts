@@ -168,7 +168,10 @@ async function uploadBlobs() {
     if (start > 0 && start % 20 === 0) console.log(`test-ci: uploaded ${start} of ${blobs.length} files`)
     await Promise.all(
       blobs.slice(start, start + 2).map(async (change) => {
-        const content = Buffer.from(await $`git cat-file blob ${change.sha}`.cwd(root).arrayBuffer())
+        // Read synchronously: under heavy load an awaited Bun shell read stalled the upload partway, with no error.
+        const read = Bun.spawnSync(["git", "cat-file", "blob", change.sha], { cwd: root })
+        if (read.exitCode !== 0) fail(`git cat-file blob ${change.sha} failed: ${read.stderr.toString().trim()}`)
+        const content = Buffer.from(read.stdout)
         const created = await api("POST", `repos/${repo}/git/blobs`, {
           content: content.toString("base64"),
           encoding: "base64",
