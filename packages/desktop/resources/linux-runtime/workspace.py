@@ -27,6 +27,17 @@ SESSION_FIELDS = ("DISPLAY", "DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR", "XAU
 ACCESSIBILITY_FIELDS = SESSION_FIELDS[4:]
 SESSION_BYTES = 8192
 CONFIG_BYTES = 65536
+# VS Code-family desktop IDs and their profile directories under ~/.config.
+EDITORS = {"code.desktop": "Code", "code-oss.desktop": "Code - OSS", "codium.desktop": "VSCodium"}
+# Settings that keep those editors operable through the accessibility tree, each seeded only while absent.
+EDITOR_DEFAULTS = {
+    # With "auto" VS Code asks once whether to enable screen-reader support and stores "off" when declined; its
+    # editors and inputs then expose only "The editor is not accessible at this time".
+    "editor.accessibilitySupport": "on",
+    # Electron's native GTK open/save dialog never reaches the AT-SPI bus (Chromium owns the accessibility root), so
+    # no ui_* tool can see or type into it; VS Code's own simple dialog opens inside the window instead.
+    "files.simpleDialog.enable": True,
+}
 
 
 class SessionError(RuntimeError):
@@ -445,6 +456,28 @@ def accessibility_bus(environment, *, activate=False, _runtime=RUNTIME, _deadlin
         timer.join()
 
 
+def seed_editor_accessibility(app_ids, *, _home=HOME):
+    """Start VS Code-family editors with EDITOR_DEFAULTS, keeping every value the user already chose.
+
+    A file that already holds every key is not rewritten; one that is not plain JSON (comments) is left alone."""
+    for app_id in app_ids:
+        if app_id not in EDITORS:
+            continue
+        path = _home / ".config" / EDITORS[app_id] / "User" / "settings.json"
+        try:
+            if path.is_symlink():
+                continue
+            data = path.read_bytes() if path.exists() else b""
+            settings = json.loads(data) if data.strip() else {}
+            if not isinstance(settings, dict) or set(EDITOR_DEFAULTS) <= set(settings):
+                continue
+            settings = {**EDITOR_DEFAULTS, **settings}
+            path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            atomic_private_file(path, (json.dumps(settings, indent=4, ensure_ascii=False) + "\n").encode(), CONFIG_BYTES)
+        except (OSError, ValueError, SessionError):
+            continue  # Accessibility stays optional: a settings problem never blocks the session or a launch.
+
+
 def applications():
     from gi.repository import Gio
 
@@ -520,6 +553,10 @@ def main():
         data = json.dumps(session, separators=(",", ":")).encode()
         parse_session(data)
         atomic_private_file(RUNTIME / "session.json", data, SESSION_BYTES)
+        try:
+            seed_editor_accessibility(applications())
+        except (ImportError, ValueError):
+            pass  # Gio is optional for the session itself; launch seeds again.
         subprocess.Popen(["xterm"])
         # Xpra strips an inherited DBus address. Its child owns this session bus;
         # keep it alive when the initial terminal window is closed.
@@ -556,6 +593,7 @@ def main():
         app = applications().get(sys.argv[2])
         if app is None:
             raise RuntimeError("failed")
+        seed_editor_accessibility([sys.argv[2]])
         context = Gio.AppLaunchContext()
         for key, value in environment.items():
             context.setenv(key, value)

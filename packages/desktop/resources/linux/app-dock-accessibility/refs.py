@@ -8,7 +8,7 @@ from threading import Lock
 from time import monotonic
 
 from bus import BusError
-from context import A, LIMITS, interface_name, states
+from context import A, LIMITS, WINDOW_ROLES, interface_name, states
 
 VIRTUAL_ROLES = {31, 32, 55, 56, 65, 66, 90, 91}
 INSTABILITY = {"virtual", "stale", "transient", "fingerprint", "interface", "protected"}
@@ -32,11 +32,29 @@ def scope(binding):
 
 
 def fingerprint(context, handle, within=None):
-    """Fresh wire evidence. Protected providers' names are never requested."""
+    """Wire evidence. Protected providers' names are never requested.
+
+    Roots and refs (no `within`) are always fresh; indexed traversal children may
+    come from the request's fenced, event-invalidated cache."""
     evidence = context.require_owned(handle) if within is None else {"scopeDepth": within["scopeDepth"] + 1}
     if within is not None and (handle["owner"] != within["owner"] or evidence["scopeDepth"] >= LIMITS["depth"]):
         raise BusError("wrong-scope", "Indexed child leaves its request-owned ancestry")
     owner, path = handle["owner"], handle["path"]
+    fetch = lambda: _facts(context, owner, path)
+    role, live, name, parent, interfaces, error = fetch() if within is None else context.cached(
+        owner, path, "facts", fetch, keep=lambda facts: facts[5] is None and not facts[1] & {27, 28, 31})
+    live, interfaces = set(live), list(interfaces)
+    if within is not None and (parent[0] or owner, parent[1]) != (within["owner"], within["path"]):
+        raise BusError("wrong-scope", "Indexed child parent differs from its request-owned traversal anchor")
+    reasons = instability(role, live, len(name) <= LIMITS["field"], error)
+    return {"owner": owner, "path": path, "role": role, "name": name[:LIMITS["field"]],
+            "nameDigest": sha256(name.encode()).hexdigest() if LIMITS["field"] < len(name) <= LIMITS["text"] else None,
+            "parent": (parent[0] or owner, parent[1]), "states": live, "interfaces": interfaces, "actions": [],
+            "unstable": bool(reasons), "unstableReasons": reasons,
+            "fingerprintComplete": len(name) <= LIMITS["field"], "scopeDepth": evidence["scopeDepth"], "interfaceError": error}
+
+
+def _facts(context, owner, path):
     role = context.call(owner, path, A + "Accessible", "GetRole", reply="(u)")[0]
     live = states(context.call(owner, path, A + "Accessible", "GetState", reply="(au)")[0])
     if 6 in live:
@@ -47,8 +65,6 @@ def fingerprint(context, handle, within=None):
             or not all(isinstance(value, str) and len(value) <= LIMITS["field"] for value in parent)
             or len(owner) > LIMITS["field"] or len(path) > LIMITS["field"]):
         raise BusError("field-limit", "Native fingerprint exceeds bounded fields")
-    if within is not None and (parent[0] or owner, parent[1]) != (within["owner"], within["path"]):
-        raise BusError("wrong-scope", "Indexed child parent differs from its request-owned traversal anchor")
     error, interfaces = None, []
     try:
         interfaces = context.call(owner, path, A + "Accessible", "GetInterfaces", reply="(as)")[0]
@@ -60,12 +76,68 @@ def fingerprint(context, handle, within=None):
         if failure.code in ("cancelled", "timeout", "read-budget"):
             raise
         error, interfaces = failure.code[:64], []
-    reasons = instability(role, live, len(name) <= LIMITS["field"], error)
-    return {"owner": owner, "path": path, "role": role, "name": name[:LIMITS["field"]],
-            "nameDigest": sha256(name.encode()).hexdigest() if LIMITS["field"] < len(name) <= LIMITS["text"] else None,
-            "parent": (parent[0] or owner, parent[1]), "states": live, "interfaces": interfaces, "actions": [],
-            "unstable": bool(reasons), "unstableReasons": reasons,
-            "fingerprintComplete": len(name) <= LIMITS["field"], "scopeDepth": evidence["scopeDepth"], "interfaceError": error}
+    return role, frozenset(live), name, tuple(parent), tuple(interfaces), error
+
+
+class TreeCache:
+    """Traversal facts per exporter, dropped by that exporter's AT-SPI change events.
+
+    Only exporters whose change events were registered are enabled. A request may
+    read an exporter's entries only after RequestContext.fence. A fetch that raced
+    an invalidation of its path is never stored. The TTL bounds staleness for an
+    exporter that drops events; it never touches refs, roots or mutation checks.
+    """
+
+    # Covers a whole-tree scan plus the confirming rescan of one locate-and-act call.
+    TTL = 120
+
+    def __init__(self, limit=LIMITS["cache"]):
+        self.limit, self._lock, self._owners = limit, Lock(), {}
+
+    def enable(self, owner):
+        with self._lock:
+            self._owners.setdefault(owner, {"seq": 0, "floor": 0, "stamps": {}, "nodes": {}})
+
+    def disable(self, owner):
+        with self._lock:
+            self._owners.pop(owner, None)
+
+    def enabled(self, owner):
+        with self._lock:
+            return owner in self._owners
+
+    def invalidate(self, owner, path=None):
+        """GLib-thread safe; constant work per event."""
+        with self._lock:
+            entry = self._owners.get(owner)
+            if entry is None:
+                return
+            entry["seq"] += 1
+            if path is None or len(entry["stamps"]) >= self.limit:
+                entry.update(floor=entry["seq"], stamps={}, nodes={})
+                return
+            entry["stamps"][path] = entry["seq"]
+            entry["nodes"].pop(path, None)
+
+    def mark(self, owner):
+        with self._lock:
+            entry = self._owners.get(owner)
+            return None if entry is None else entry["seq"]
+
+    def get(self, owner, path, field):
+        with self._lock:
+            entry = self._owners.get(owner)
+            value = entry and entry["nodes"].get(path, {}).get(field)
+        return value[0] if value and monotonic() - value[1] < self.TTL else None
+
+    def put(self, owner, path, field, value, seen):
+        with self._lock:
+            entry = self._owners.get(owner)
+            if entry is None or seen is None or seen < entry["floor"] or entry["stamps"].get(path, 0) > seen:
+                return
+            if path not in entry["nodes"] and sum(len(item["nodes"]) for item in self._owners.values()) >= self.limit:
+                entry["nodes"].clear()
+            entry["nodes"].setdefault(path, {})[field] = (value, monotonic())
 
 
 def instability(role, live, complete=True, error=None):
@@ -81,7 +153,7 @@ def ancestry_reasons(context, record):
     for _ in range(LIMITS["depth"]):
         reasons.update(current["unstableReasons"])
         if any(root["owner"] == current["owner"] and root["path"] == current["path"] for root in context.binding["roots"]):
-            if current["role"] not in (16, 23, 69):
+            if current["role"] not in WINDOW_ROLES:
                 raise BusError("wrong-scope", "Native window role changed")
             return sorted(reasons)
         owner, path = current["parent"]
@@ -201,6 +273,9 @@ class RefRegistry:
         fresh = fingerprint(context, record)
         if (not record.get("fingerprintComplete", True) or not fresh["fingerprintComplete"]
                 or any(fresh[key] != record[key] for key in ("role", "name", "parent", "scopeDepth"))):
+            if context.cache is not None:
+                # A ref drifted from its read: whatever the exporter failed to announce goes.
+                context.cache.invalidate(record["owner"])
             raise BusError("stale-ref", "Native role, name, parent or ownership depth changed")
         if fresh["interfaceError"] or not all(interface_name(value) for value in fresh["interfaces"]):
             raise BusError(fresh["interfaceError"] or "invalid-interface", "Fresh native interfaces are unavailable or invalid")
