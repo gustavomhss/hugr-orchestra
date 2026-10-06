@@ -114,7 +114,7 @@ describe("Maestro Arsenal playbooks", () => {
 
   test("dispatch uses native context pressure and fresh Own facts", async () => {
     const skill = await readSkill("maestro-pack")
-    expect(skill.content).toContain("Use existing OpenCode truncation, output/resource pointers, Session evidence")
+    expect(skill.content).toContain("Use existing Orchestra truncation, output/resource pointers, Session evidence")
     expect(skill.content).toContain("Current static `own_*` facts dominate reconnaissance")
     expect(skill.content).toContain("Source pointers must match current identities")
     expect(skill.content).toContain("Arming alone is not enforcement.")

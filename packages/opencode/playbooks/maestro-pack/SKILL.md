@@ -10,7 +10,7 @@ description: Prepare bounded dispatch briefs, compact evidence returns, and cont
 Use before an actual delegation or to trim a bloated working set. No workers means no dispatch ceremony.
 Lead resolves scope/interface forks and gives a precise target; workers report newly discovered forks.
 Bounded briefs reduce rediscovery and drift, not eliminate judgment or guarantee zero decisions.
-Use existing OpenCode truncation, output/resource pointers, Session evidence, and whole-context pressure
+Use existing Orchestra truncation, output/resource pointers, Session evidence, and whole-context pressure
 handling. Do not add a context assembler, copy transcripts, or invent fixed model-brand budgets.
 
 ## Inputs

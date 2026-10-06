@@ -47,7 +47,7 @@ Backend `fastapi_meta_*` names are transport details, not extra callable native 
    and unfinished skeleton behavior. Run actual project formatter/type/import checks and meaningful tests.
    Backend success is not validation in this repository. Never claim passing checks that were not run.
 8. Keep selected descriptor, output paths, source identity, and check pointers in a compact card. Use existing
-   OpenCode truncation/resource pointers and whole-context pressure handling; avoid repeated generated source.
+   Orchestra truncation/resource pointers and whole-context pressure handling; avoid repeated generated source.
 
 ## Exact tool arguments (bridge surface)
 
