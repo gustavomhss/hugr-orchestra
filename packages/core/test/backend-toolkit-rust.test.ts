@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
-import { RUST, SQLX, SQLX_UNSUPPORTED } from "../src/backend-toolkit/hosted/rust"
+import { RUST, SQLX } from "../src/backend-toolkit/hosted/rust"
 
 // The milestone 5 pins; changing one is a contract amendment.
 const pins = Object.entries(RUST.targets).map(([target, pin]) => ({ target, ...pin }))
@@ -24,7 +24,7 @@ describe("backend toolkit Rust runtime and source-built SQLx CLI", () => {
       "sqlx",
       ["rustls", "postgres", "mysql", "sqlite", "sqlx-toml"],
     ])
-    expect(SQLX_UNSUPPORTED).toEqual({ "win32-x64": "needs-msvc-linker" })
+    expect(SQLX.unsupported).toEqual({ "win32-x64": "needs-msvc-linker" })
   })
 
   test("every download is a distinct sha256 pin from static.rust-lang.org or static.crates.io", () => {
@@ -60,7 +60,7 @@ describe("backend toolkit Rust runtime and source-built SQLx CLI", () => {
       ])
       expect(pin.executable).toBe(`bin/cargo${exe}`)
     }
-    expect(source?.artifact.entries.map((entry) => entry.to)).toContain("Cargo.lock")
-    for (const entry of source?.artifact.entries ?? []) expect(entry.from).toBe(`sqlx-cli-0.9.0/${entry.to}`)
+    expect(source?.artifact.entries.map((entry) => entry.to)).toContain("src/Cargo.lock")
+    for (const entry of source?.artifact.entries ?? []) expect(`src/${entry.from.slice("sqlx-cli-0.9.0/".length)}`).toBe(entry.to)
   })
 })

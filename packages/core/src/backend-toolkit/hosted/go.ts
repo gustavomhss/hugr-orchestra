@@ -1,33 +1,7 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
 import type { TargetId } from "../target"
+import type { HostedEngine, Runtime } from "../manifest"
 
-// Local copies of the frozen milestone 5 shapes (RuntimeId gains "go", EngineId gains "ogen", install gains the
-// "source" kind). They are replaced by the manifest's own types when the two branches merge.
-type Runtime = {
-  readonly id: "go"
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly targets: Readonly<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
-}
-
-type HostedEngine = {
-  readonly id: "ogen"
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly env?: Readonly<Record<string, string>>
-  readonly runtime: "go"
-  readonly install: {
-    readonly kind: "source"
-    readonly artifact: PinnedArtifact.Artifact
-    readonly build: "go" | "cargo"
-    readonly path: string
-    readonly binary: string
-    readonly features?: ReadonlyArray<string>
-  }
-  readonly launch: ReadonlyArray<string>
-}
 
 // Go pins are the sha256 fields of https://go.dev/dl/?mode=json&include=all for the release, in SRI form; each download
 // hashed to the same value when pinning. ogen 1.24.0's go.mod declares `go 1.25.0`, which this toolchain satisfies.
@@ -152,7 +126,7 @@ export const OGEN: HostedEngine = {
       url: `https://proxy.golang.org/github.com/ogen-go/ogen/@v/v${OGEN_VERSION}.zip`,
       integrity: "sha256-QAbV57ez2whdMjgjZ2SVFjcb6Cbzc4fx9PJ9lyEZOAk=",
       format: "zip",
-      entries: OGEN_SOURCE.map((name) => ({ from: `${OGEN_MODULE}/${name}`, to: name })),
+      entries: OGEN_SOURCE.map((name) => ({ from: `${OGEN_MODULE}/${name}`, to: `src/${name}` })),
     },
     build: "go",
     path: "./cmd/ogen",

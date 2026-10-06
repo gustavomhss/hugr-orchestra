@@ -29,7 +29,7 @@ const ASSETS = {
   "win32-x64": "go1.25.14.windows-amd64.zip",
 } as Record<string, string>
 const pins = Object.entries(GO.targets).map(([target, pin]) => ({ target, ...pin }))
-const artifacts = [...pins.map((pin) => pin.artifact), OGEN.install.artifact]
+const artifacts = [...pins.map((pin) => pin.artifact), ...(OGEN.install.kind === "source" ? [OGEN.install.artifact] : [])]
 
 describe("backend toolkit Go runtime and ogen source engine", () => {
   test("pins Go 1.25.14 and ogen 1.24.0 with their licenses", () => {
@@ -74,8 +74,9 @@ describe("backend toolkit Go runtime and ogen source engine", () => {
     }
   })
 
-  test("ogen is built from the proxy's module zip with go, laid out at the module root", () => {
+  test("ogen is built from the proxy's module zip with go, laid out under src/", () => {
     const install = OGEN.install
+    if (install.kind !== "source") throw new Error("ogen must be a source engine")
     expect([install.kind, install.build, install.path, install.binary, install.features]).toEqual([
       "source",
       "go",
@@ -87,12 +88,12 @@ describe("backend toolkit Go runtime and ogen source engine", () => {
     expect(install.artifact.format).toBe("zip")
     const tos = install.artifact.entries.map((entry) => entry.to)
     for (const entry of install.artifact.entries) {
-      expect(entry.from).toBe(`github.com/ogen-go/ogen@v1.24.0/${entry.to}`)
-      expect(entry.to).not.toContain("/")
+      expect(`src/${entry.from.slice("github.com/ogen-go/ogen@v1.24.0/".length)}`).toBe(entry.to)
+      expect(entry.to.slice("src/".length)).not.toContain("/")
       expect(entry.executable).toBeUndefined()
     }
     expect(new Set(tos).size).toBe(tos.length)
-    expect(tos).toEqual(expect.arrayContaining(["go.mod", "go.sum", "cmd", "LICENSE"]))
+    expect(tos).toEqual(expect.arrayContaining(["src/go.mod", "src/go.sum", "src/cmd", "src/LICENSE"]))
     expect(OGEN.launch).toEqual([])
   })
 })

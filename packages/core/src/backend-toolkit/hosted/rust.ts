@@ -1,24 +1,6 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
 import type { TargetId } from "../target"
-import type { BackendToolkitManifest } from "../manifest"
-
-// Milestone 5 frozen shapes, kept local until the manifest grows the `rust` runtime and the `source` install kind.
-type RuntimeId = BackendToolkitManifest.RuntimeId | "go" | "rust"
-type Runtime = Omit<BackendToolkitManifest.Runtime, "id"> & { readonly id: RuntimeId }
-type HostedEngine = Omit<BackendToolkitManifest.HostedEngine, "id" | "runtime" | "install"> & {
-  readonly id: BackendToolkitManifest.EngineId | "ogen" | "sqlx"
-  readonly runtime: RuntimeId
-  readonly install:
-    | BackendToolkitManifest.HostedEngine["install"]
-    | {
-        readonly kind: "source"
-        readonly artifact: PinnedArtifact.Artifact
-        readonly build: "go" | "cargo"
-        readonly path: string
-        readonly binary: string
-        readonly features?: ReadonlyArray<string>
-      }
-}
+import type { HostedEngine, Runtime } from "../manifest"
 
 // Pins are the sha256 digests in SRI form: each toolchain's from its static.rust-lang.org `.sha256` companion, which
 // the downloaded darwin-x64 archive matched; the crate's from the crates.io index `cksum`, which its download matched.
@@ -81,7 +63,7 @@ export const SQLX: HostedEngine = {
       // so every target path the manifest declares exists.
       entries: ["Cargo.toml", "Cargo.lock", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "src", "tests"].map((name) => ({
         from: `sqlx-cli-${SQLX_VERSION}/${name}`,
-        to: name,
+        to: `src/${name}`,
       })),
     },
     build: "cargo",
@@ -90,10 +72,7 @@ export const SQLX: HostedEngine = {
     features: ["rustls", "postgres", "mysql", "sqlite", "sqlx-toml"],
   },
   launch: [],
+  // The msvc toolchain links only through Microsoft's `link.exe`, and the standalone gnu toolchain ships a linker but
+  // no C compiler for ring and SQLite.
+  unsupported: { "win32-x64": "needs-msvc-linker" },
 }
-
-/**
- * Targets where the engine cannot be built, with the reason. The msvc toolchain links only through Microsoft's
- * `link.exe`, and the standalone gnu toolchain ships a linker but no C compiler for ring and SQLite.
- */
-export const SQLX_UNSUPPORTED: Readonly<Partial<Record<TargetId, string>>> = { "win32-x64": "needs-msvc-linker" }
