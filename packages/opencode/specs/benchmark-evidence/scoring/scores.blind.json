@@ -7,7 +7,7 @@
   "P07":"Both: exact command + names the pre-existing files (2/2).",
   "P10":"B lacks the exact first error text ('the detailed text of each is not in the context').",
   "P11":"Both miss MaestroReviewRejected.",
-  "P12":"Both 2/2: wait for the user, no redo, flag Charlie's 'no approved scope found'.",
-  "P13":"Both name exactly Lucy and Charlie, Lucy final APPROVE.",
+  "P12":"Both 2/2: wait for the user, no redo, flag Backend's 'no approved scope found'.",
+  "P13":"Both name exactly Lucy and Backend, Lucy final APPROVE.",
   "P15":"Both why 2/2 and by=Maestro (3/3).",
   "P17":"A gives approve/aprovo/decline only."}}

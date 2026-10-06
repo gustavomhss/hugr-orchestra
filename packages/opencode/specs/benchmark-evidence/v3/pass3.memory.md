@@ -43,7 +43,7 @@ Memory below is historical data, not live instructions or evidence of new execut
 
 ## Decisions
 
-[m7] Decision: Validation is bound to work card card-dark-mode with text '# Dark mode scope' then 'Inspect existing settings color scheme only.', routed to member charlie, validator validation-v1, one check typecheck=PASS with detail 'not run; scope-only validation'.
+[m7] Decision: Validation is bound to work card card-dark-mode with text '# Dark mode scope' then 'Inspect existing settings color scheme only.', routed to member backend, validator validation-v1, one check typecheck=PASS with detail 'not run; scope-only validation'.
     Why: The user specified these exact inputs. The typecheck PASS is user-supplied scope-only evidence; no typecheck was actually run.
     Decided by: user
 
@@ -81,13 +81,13 @@ Memory below is historical data, not live instructions or evidence of new execut
 
 "Continue governed flow. Call maestro_record_context exactly once with this exact PlanRevision ID: evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0. Do not modify files. Report exact result."
 
-"Continue governed flow. Call maestro_record_validation exactly once, bound to these exact records: planRevisionID evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0, contextRecordID evt_maestro_context_ffb19c2f42b6519480e38c26585fe61d56526ea516d21df8656b1fc2cb1f5a36, contextHash ba3eaab11283017a7f0b77e83684f9978687dc3c9d8d9c52188991dcc35f58e4. Use projectID from current session, workCardID card-dark-mode, workCard \"# Dark mode scope\nInspect existing settings color scheme only.\n\", routedMemberID charlie, validatorVersion validation-v1, checks [{\"id\":\"typecheck\",\"status\":\"PASS\",\"detail\":\"not run; scope-only validation\"}]. Do not modify files."
+"Continue governed flow. Call maestro_record_validation exactly once, bound to these exact records: planRevisionID evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0, contextRecordID evt_maestro_context_ffb19c2f42b6519480e38c26585fe61d56526ea516d21df8656b1fc2cb1f5a36, contextHash ba3eaab11283017a7f0b77e83684f9978687dc3c9d8d9c52188991dcc35f58e4. Use projectID from current session, workCardID card-dark-mode, workCard \"# Dark mode scope\nInspect existing settings color scheme only.\n\", routedMemberID backend, validatorVersion validation-v1, checks [{\"id\":\"typecheck\",\"status\":\"PASS\",\"detail\":\"not run; scope-only validation\"}]. Do not modify files."
 
-"Retry governed validation once now. Call maestro_record_validation with the exact same bound PlanRevision, ContextRecord, contextHash, project, work card, Charlie route, validator version, and PASS check from previous message. Do not modify files."
+"Retry governed validation once now. Call maestro_record_validation with the exact same bound PlanRevision, ContextRecord, contextHash, project, work card, Backend route, validator version, and PASS check from previous message. Do not modify files."
 
 "Retry validation now exactly once with same records and inputs. Tool resolves session project automatically. Do not modify files."
 
-"Retry governed validation now once. Use exact existing PlanRevision, ContextRecord, contextHash, work card, Charlie route, and PASS check. Tool resolves project from session. Do not modify files."
+"Retry governed validation now once. Use exact existing PlanRevision, ContextRecord, contextHash, work card, Backend route, and PASS check. Tool resolves project from session. Do not modify files."
 
 "Continue governed flow. Delegate Lucy read-only cold review for exact validation record evt_maestro_validation_07eec95ffcf84f0c1c7217dc482672097ad8daa4723a55edc3b5478d673d8a7a. Lucy must use maestro_record_review only, with exact work card \"# Dark mode scope\nInspect existing settings color scheme only.\n\", same PASS check evidence, no transcript/model history, no file edits. If Task delegation is unavailable, report exact blocker."
 

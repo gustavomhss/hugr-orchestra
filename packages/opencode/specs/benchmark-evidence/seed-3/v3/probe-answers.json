@@ -5,7 +5,7 @@
   },
   {
     "id": "P02",
-    "answer": "Standing rules and their scope:\n- \"Do not modify files.\" Applies to the whole governed flow and every step. The later child task also said \"do not edit files, do not commit.\"\n- \"do not implement.\" Maestro only inspects and proposes scope for the dark mode toggle.\n- \"Lucy must use maestro_record_review only\", with \"no transcript/model history, no file edits\". Applies to the Lucy review: read-only, based on the exact validation record, work card and PASS check evidence. If Task delegation was unavailable, Maestro was to report the exact blocker. The later correction (see 5) moved the review path to maestro_request_review.\n- \"Do not use generic Task.\" Applies to the Lucy review, which goes through maestro_request_review with review-v1.\n- \"Return receipt ID only if trusted runner persisted Lucy APPROVE.\" Applies to reporting review receipts. APPROVE text without a persisted receipt is not a recorded review.\n- \"Do not dispatch Task yet\" / \"Do not call Task yet\". Applied to the approval and authorization steps only. The user then explicitly asked for one task call to charlie, and it was made.\n- Narrower step-specific instructions: \"Do not inspect unrelated files\" (a review retry) and \"Do not explain after tool call\" (the v2 present_approval).\n- Retry rule: do not retry the review without a user instruction."
+    "answer": "Standing rules and their scope:\n- \"Do not modify files.\" Applies to the whole governed flow and every step. The later child task also said \"do not edit files, do not commit.\"\n- \"do not implement.\" Maestro only inspects and proposes scope for the dark mode toggle.\n- \"Lucy must use maestro_record_review only\", with \"no transcript/model history, no file edits\". Applies to the Lucy review: read-only, based on the exact validation record, work card and PASS check evidence. If Task delegation was unavailable, Maestro was to report the exact blocker. The later correction (see 5) moved the review path to maestro_request_review.\n- \"Do not use generic Task.\" Applies to the Lucy review, which goes through maestro_request_review with review-v1.\n- \"Return receipt ID only if trusted runner persisted Lucy APPROVE.\" Applies to reporting review receipts. APPROVE text without a persisted receipt is not a recorded review.\n- \"Do not dispatch Task yet\" / \"Do not call Task yet\". Applied to the approval and authorization steps only. The user then explicitly asked for one task call to backend, and it was made.\n- Narrower step-specific instructions: \"Do not inspect unrelated files\" (a review retry) and \"Do not explain after tool call\" (the v2 present_approval).\n- Retry rule: do not retry the review without a user instruction."
   },
   {
     "id": "P03",
@@ -21,11 +21,11 @@
   },
   {
     "id": "P06",
-    "answer": "None, as far as the context shows.\n- Maestro reported no files modified. That is a claim, not independently verified.\n- The child Charlie also reported \"No files edited\" and \"No commits created.\""
+    "answer": "None, as far as the context shows.\n- Maestro reported no files modified. That is a claim, not independently verified.\n- The child Backend also reported \"No files edited\" and \"No commits created.\""
   },
   {
     "id": "P07",
-    "answer": "The command was `git status --short`.\n- Maestro's summary says it showed pre-existing uncommitted maestro-related changes in packages/opencode and packages/schema, which the scope inspection did not make. The worktree is orchestra-canonical-maestro-dev.\n- The exact output is not in the context.\n- Charlie later reported 10 modified and 5 untracked Maestro-related files, with no dark-mode files in the diff."
+    "answer": "The command was `git status --short`.\n- Maestro's summary says it showed pre-existing uncommitted maestro-related changes in packages/opencode and packages/schema, which the scope inspection did not make. The worktree is orchestra-canonical-maestro-dev.\n- The exact output is not in the context.\n- Backend later reported 10 modified and 5 untracked Maestro-related files, with no dark-mode files in the diff."
   },
   {
     "id": "P08",
@@ -45,11 +45,11 @@
   },
   {
     "id": "P12",
-    "answer": "Nothing further is instructed, so Maestro should report and wait for the user's next instruction.\n- The plan is approved, authorization evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e is granted, and the one requested charlie task has completed.\n- The original goal was a scope proposal only, so no implementation, no file changes and no further dispatch without a user instruction.\n- Maestro should flag that Charlie reported \"No approved implementation scope found\" and that no dark-mode files are in the diff. That sits oddly against the approved plan revision."
+    "answer": "Nothing further is instructed, so Maestro should report and wait for the user's next instruction.\n- The plan is approved, authorization evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e is granted, and the one requested backend task has completed.\n- The original goal was a scope proposal only, so no implementation, no file changes and no further dispatch without a user instruction.\n- Maestro should flag that Backend reported \"No approved implementation scope found\" and that no dark-mode files are in the diff. That sits oddly against the approved plan revision."
   },
   {
     "id": "P13",
-    "answer": "Delegations:\n- Lucy (cold reviewer). The generic Task attempt failed. maestro_request_review failed repeatedly, then succeeded. Final state: APPROVE persisted with receipt evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6. Earlier runs gave inconsistent verdicts, including one FIX_FIRST.\n- Charlie (routed member, subagent_type \"charlie\"). One task call with authorizationID. Final state: completed, task ID ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e. No runtime child-session ID was exposed. No files edited, no commits, no tests run. Branch `maestro-dev`, HEAD `cfcaa7026c`."
+    "answer": "Delegations:\n- Lucy (cold reviewer). The generic Task attempt failed. maestro_request_review failed repeatedly, then succeeded. Final state: APPROVE persisted with receipt evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6. Earlier runs gave inconsistent verdicts, including one FIX_FIRST.\n- Backend (routed member, subagent_type \"backend\"). One task call with authorizationID. Final state: completed, task ID ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e. No runtime child-session ID was exposed. No files edited, no commits, no tests run. Branch `maestro-dev`, HEAD `cfcaa7026c`."
   },
   {
     "id": "P14",

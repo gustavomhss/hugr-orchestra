@@ -47,7 +47,7 @@ Evidence is in `specs/benchmark-evidence/`. The harness is in `script/continuity
 | Transport | File exchange (`BENCH_MODEL=file`): each harness writes the exact request it would send and reads the reply from a file |
 | Producer request | The isolated transport for both versions (no parent request), byte-identical to what `LLMRequestPrep.prepare` sends. v3's provider response schema is included as text, since Claude has no constrained decoding for it. |
 | v4 code | Seed 1: strict run at `6d601b939e` (as merged), then the fixed run at `4287d5595e`. Seeds 2–3: `97de756523`, which adds the quote-rendering change in `278042aa09` and a merge of `dev`. The producer prompt is the same for all fixed runs; the seed-2 pass-1 request is byte-identical to seed 1's apart from session IDs. |
-| Trace | `ses_f1511c48bffeDAL863Z2Lw4p1b` "Dark Mode Toggle Scope Inspection Plan": 90 messages (28 user, 62 assistant), 43 tool calls, 15 child sessions (14 Lucy, 1 Charlie). Read from a scratch copy of `opencode-local.db`. |
+| Trace | `ses_f1511c48bffeDAL863Z2Lw4p1b` "Dark Mode Toggle Scope Inspection Plan": 90 messages (28 user, 62 assistant), 43 tool calls, 15 child sessions (14 Lucy, 1 Backend). Read from a scratch copy of `opencode-local.db`. |
 | Model window override | `limit.context` 55,000. 0.7 × 55k = 38.5k is crossed at message 35 of 90, about 40% of the trace. |
 | Output limit | `limit.output` 12,000, which gives an input limit of 43k. At 16k, v3's first request (39.7k) would be skipped on its input limit. |
 | Head budget | 32,000, the service cap, for both versions. The service formula min(32k, inputLimit/2) gives 21.5k here, but the trace's first turn alone is 24.3k transcript tokens, and v3's `snapshot` has no first-whole-turn rule, so v3 could never run. |
@@ -85,7 +85,7 @@ What happened in each pass of seed 1's strict run (evidence in `benchmark-eviden
 
 | Pass | Attempt 1 | Retry |
 | --- | --- | --- |
-| 1 | C2 `op 1: key must be a handle n1, n2, … unique within the reply`. The producer used `o1`, `r1`, `f1`, `p1`… | C8 on op 18 of 24. The value `"workCardID card-dark-mode; projectID orchestra-canonical-maestro-dev; routedMemberID charlie; validatorVersion validation-v1"` is composed: it occurs in no source, and one of its four pieces occurs nowhere at all. Correct rejection, but it discards 23 good ops. |
+| 1 | C2 `op 1: key must be a handle n1, n2, … unique within the reply`. The producer used `o1`, `r1`, `f1`, `p1`… | C8 on op 18 of 24. The value `"workCardID card-dark-mode; projectID orchestra-canonical-maestro-dev; routedMemberID backend; validatorVersion validation-v1"` is composed: it occurs in no source, and one of its four pieces occurs nowhere at all. Correct rejection, but it discards 23 good ops. |
 | 2 | Same C2 handle error | C8 on op 20 of 25: `"ses_f1511c48bffeDAL863Z2Lw4p1b"`. The producer could see it, but only on host-written `Session:` lines in the transcript (49 times) and in t24's tool metadata. C8's `raw()` searches neither, and the cited `u1` does not contain it. |
 
 These are two defects in the merged format.
@@ -109,7 +109,7 @@ The fixed v4 producer therefore saw a slightly different instruction than strict
 | Op | Value | Why the host could not locate it |
 | --- | --- | --- |
 | 21, `values`, src `u1` | `ses_f1511c48bffeDAL863Z2Lw4p1b` (named "sessionID") | It appears only in host framing: the transcript's `Session:` lines and the request header. It is in no covered source's text, `KEY_ARGS` input or output; t24's metadata is outside pass 1's span. This is the same case as strict pass 2. |
-| 28, `values`, src `t23` | `"projectID orchestra-canonical-maestro-dev; workCardID card-dark-mode; routedMemberID charlie; validatorVersion validation-v1"` (named "validation binding") | It was composed by joining arguments, despite the new "never joined" instruction. It occurs nowhere, not even in the request. This is the same case as strict pass 1. |
+| 28, `values`, src `t23` | `"projectID orchestra-canonical-maestro-dev; workCardID card-dark-mode; routedMemberID backend; validatorVersion validation-v1"` (named "validation binding") | It was composed by joining arguments, despite the new "never joined" instruction. It occurs nowhere, not even in the request. This is the same case as strict pass 1. |
 
 Both drops cost only their own item, and the other 31 ops of the pass applied. The session ID would be lost in every
 run that tries to store it. Either the host should accept strings from its own framing, or the transcript should not
@@ -281,7 +281,7 @@ Counted over the final memories of the three seeds, and over passes 2 and 3 for 
 | Lost reply options | 0 of 3 | All six approve/decline words kept in every seed |
 | Stale objective | 0 of 3 | v3 updates the objective each pass; its "done when" is current in all seeds |
 | Per-message instruction promoted to a standing rule | 0 of 3 as a rule | v3 broadens existing rules instead (row 2) |
-| Tool list without outcomes or members | 3 of 3 | "maestro_request_review → ok" for runs that returned `LUCY_ERROR`; no Lucy/Charlie names or child IDs |
+| Tool list without outcomes or members | 3 of 3 | "maestro_request_review → ok" for runs that returned `LUCY_ERROR`; no Lucy/Backend names or child IDs |
 | Archive-reference footer | 3 of 3 | About 44% of the memory in seed 1 (27 references, 3,880 tokens) |
 
 **v4 (fixed)**
@@ -299,7 +299,7 @@ Counted over the final memories of the three seeds, and over passes 2 and 3 for 
 | Valid string dropped by C8 | 1 of 3 | Seed 3, `ses_f1511c48bffeDAL863Z2Lw4p1b`, visible only in host framing (section 3) |
 
 Neither version, in any seed, recorded a tool or delegate claim as a user approval, and neither lost a delegation.
-v4's host Activity lists all 10 Lucy delegations in every seed. Charlie's delegation sits in the native tail.
+v4's host Activity lists all 10 Lucy delegations in every seed. Backend's delegation sits in the native tail.
 
 ## 8. Threats to validity
 

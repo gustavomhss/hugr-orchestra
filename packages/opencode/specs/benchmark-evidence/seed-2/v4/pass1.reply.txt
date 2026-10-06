@@ -25,7 +25,7 @@
 {"op":"add","key":"v5","section":"values","fields":{"name":"ValidationRecord ID","value":"evt_maestro_validation_07eec95ffcf84f0c1c7217dc482672097ad8daa4723a55edc3b5478d673d8a7a","use":"record Lucy's cold review is bound to"},"src":["t23"]},
 {"op":"add","key":"v6","section":"values","fields":{"name":"workCardID","value":"card-dark-mode"},"src":["t23"]},
 {"op":"add","key":"v7","section":"values","fields":{"name":"workCard","value":"# Dark mode scope\\nInspect existing settings color scheme only.\\n","use":"exact work card for validation and Lucy's review"},"src":["t23"]},
-{"op":"add","key":"v8","section":"values","fields":{"name":"routedMemberID","value":"charlie","use":"route for validation"},"src":["t23"]},
+{"op":"add","key":"v8","section":"values","fields":{"name":"routedMemberID","value":"backend","use":"route for validation"},"src":["t23"]},
 {"op":"add","key":"v9","section":"values","fields":{"name":"projectID","value":"orchestra-canonical-maestro-dev"},"src":["t23"]},
 {"op":"add","key":"v10","section":"values","fields":{"name":"validatorVersion","value":"validation-v1"},"src":["t23"]},
 {"op":"add","key":"v11","section":"values","fields":{"name":"worktree","value":"/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-maestro-dev","use":"repo inspected and Maestro tooling worktree"},"src":["t18"]},
