@@ -117,7 +117,8 @@ for (const scheme of ["dark", "light"] as const) {
         6,
         "session strip spans remaining workspace",
       )
-      for (const locator of [sidebar, tabs, active]) expectGlass(await readGlass(locator), glass[scheme])
+      for (const locator of [sidebar, tabs]) expectGlass(await readPlatedGlass(locator), glass[scheme])
+      expectGlass(await readGlass(active), glass[scheme])
       await expect(sidebar).toHaveCSS("border-radius", "9px")
       await expect(tabs).toHaveCSS("border-radius", "9px")
 
@@ -350,6 +351,25 @@ function readGlass(locator: Locator) {
       boxShadow: style.boxShadow,
     }
   })
+}
+
+// The sidebar and the session tab strip draw their blur on a plate painted right under them (theme.css).
+// The plate must cover exactly the glass's rounded box, and the glass keeps a no-op backdrop filter so
+// it stays the backdrop root of the glass nested in it; the fingerprint then reads the plate's blur.
+async function readPlatedGlass(locator: Locator) {
+  const plate = locator.locator("xpath=preceding-sibling::*[1][@data-glass-plate]")
+  await expect(plate, "glass plate right under the glass").toHaveCount(1)
+  const box = await readBox(locator)
+  const under = await readBox(plate)
+  for (const edge of ["top", "right", "bottom", "left"] as const)
+    expectPixels(under[edge], box[edge], `glass plate ${edge}`)
+  await expect(plate).toHaveCSS(
+    "border-radius",
+    await locator.evaluate((element) => getComputedStyle(element).borderRadius),
+  )
+  const glass = await readGlass(locator)
+  expect(glass.backdropFilter, "plated glass keeps a no-op backdrop root").toBe("brightness(1)")
+  return { ...glass, backdropFilter: (await readGlass(plate)).backdropFilter }
 }
 
 function expectGlass(actual: Awaited<ReturnType<typeof readGlass>>, expected: Awaited<ReturnType<typeof readGlass>>) {
