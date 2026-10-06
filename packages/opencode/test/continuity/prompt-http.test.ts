@@ -312,7 +312,7 @@ it.instance("read shows nested rules again after working memory drops the turn t
   const capture = ledger()
   const seed = Array.from({ length: 6 }, (_, index) => `RULES_SEED_${index}`)
   yield* llm.pushMatch(parent(seed[0]), reply().tool("read", { filePath: path.join(rules, "first.txt") }))
-  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
   const memory = forkAnswer(FIRST, maintenance)
   yield* llm.pushMatch(memory.match, memory.response)
   yield* llm.pushMatch(capture.record("next", parent("RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
