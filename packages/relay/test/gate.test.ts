@@ -19,10 +19,11 @@ import { RelayJson } from "../src/json"
 // `printf … | shasum -a 256`, never by the code under test. Linux-only like every check test (R11).
 const root = path.join(import.meta.dir, "..")
 const PATH = process.env.PATH ?? "/usr/bin:/bin"
+// The generator's pinned identity (test/golden/check/GENERATOR.json), so fixture commits have the oracle's SHAs.
 const PINNED = Object.fromEntries(
   ["AUTHOR", "COMMITTER"].flatMap((role) => [
-    [`GIT_${role}_NAME`, "relay"],
-    [`GIT_${role}_EMAIL`, "relay@example.invalid"],
+    [`GIT_${role}_NAME`, "Relay Golden"],
+    [`GIT_${role}_EMAIL`, "golden@relay.invalid"],
     [`GIT_${role}_DATE`, "1700000000 +0000"],
   ]),
 )
@@ -88,7 +89,7 @@ const gitText = async (env: Env, ...args: string[]) =>
   new TextDecoder().decode((await git(env.work, env.home, ...args)).stdout)
 
 async function repo(env: Env, commits: ReadonlyArray<Files>) {
-  await git(env.work, env.home, "init", "-q")
+  await git(env.work, env.home, "-c", "init.defaultBranch=main", "init", "-q")
   const shas: string[] = []
   for (const files of commits) {
     await write(env.work, files)
@@ -165,8 +166,20 @@ describe("check goldens", () => {
     ? readdirSync(dir).filter((name) => existsSync(path.join(dir, name, "scenario.json")))
     : []
 
-  // G2 covers K1–K8 with at least one scenario each; until the goldens land this fails rather than passing empty.
+  // G2 covers K1–K8 with at least one scenario each; without the goldens this fails rather than passing empty.
   test("the check goldens are present", () => expect(names.length).toBeGreaterThanOrEqual(8))
+
+  // Goldens the TS engine departs from on purpose: the declaring PARITY-EXCEPTIONS row and the TS result per fire.
+  const hidden = { outcome: "check", i: 0, wp: "alpha", failing: ["SEES-WP-ID", "SEES-SPRINT", "SEES-MODE"] }
+  const declared: Record<string, { readonly row: string; readonly fires: ReadonlyArray<unknown> }> = {
+    "check-hook-variables-visible": { row: "WP3-1", fires: [{ exit: 1, stdout: hidden }] },
+  }
+  test("every declared golden departure names its PARITY-EXCEPTIONS row", async () => {
+    const rows = (await Bun.file(path.join(root, "test/golden/PARITY-EXCEPTIONS.md")).text()).split("\n")
+    Object.entries(declared).forEach(([name, entry]) =>
+      expect(rows.find((line) => line.startsWith(`| ${entry.row} |`))).toContain(`check/${name}`),
+    )
+  })
 
   names.sort().forEach((name) =>
     test(name, async () => {
@@ -175,23 +188,23 @@ describe("check goldens", () => {
       const env = await scratch()
       const state = path.join(env.dir, "arm")
       await mkdir(state)
-      const shas = scenario.commits?.length
-        ? await repo(
-            env,
-            scenario.commits.map((c) => bytes(c.files, [])),
-          )
-        : []
+      const commits = (scenario.commits ?? []).map((commit) => bytes(commit.files, []))
+      const shas = commits.length ? await repo(env, commits) : []
       await write(env.work, bytes(scenario.tree ?? {}, shas))
       await write(state, bytes(scenario.prestate ?? {}, shas))
       const forced = scenario.env?.RELAY_JUDGE_STUB
       const judge = JudgeStub.layer(forced === "pass" || forced === "fail" ? forced : undefined)
       for (const [n, fire] of scenario.fires.entries()) {
         await write(env.work, bytes(fire.tree ?? {}, shas))
+        // Like the generator: a counter goes through the state file, a number as `<N>\n`, a string as its bytes.
+        const counter = fire.check.counter
+        if (counter !== undefined)
+          await write(state, { counter: typeof counter === "number" ? `${counter}\n` : counter })
         const baseRef = fire.check.baseRef === undefined ? undefined : String(value(fire.check.baseRef, shas))
         const input = { sprint: scenario.sprint, workdir: env.work, params: scenario.env ?? {}, stateDir: state }
         // The CLI's exit codes: 0 pass or complete, 1 failing or a plan error, 2 unknown position, 3 busy.
         const actual = await Effect.runPromise(
-          GateCheck.check({ ...input, position: fire.check.position, counter: fire.check.counter, baseRef }).pipe(
+          GateCheck.check({ ...input, position: fire.check.position, baseRef }).pipe(
             Effect.map((outcome) => ({
               exit: outcome.outcome === "error" ? 2 : outcome.outcome === "check" && outcome.failing.length ? 1 : 0,
               stdout: outcome as unknown,
@@ -205,7 +218,9 @@ describe("check goldens", () => {
         )
         const expected = path.join(dir, name, "expected", String(n))
         const outcome = await Bun.file(path.join(expected, "outcome.json")).json()
-        expect(JSON.stringify(actual)).toBe(JSON.stringify({ exit: outcome.exit, stdout: outcome.stdout }))
+        const oracle = JSON.stringify({ exit: outcome.exit, stdout: outcome.stdout })
+        if (declared[name]) expect(JSON.stringify(declared[name].fires[n])).not.toBe(oracle)
+        expect(JSON.stringify(actual)).toBe(declared[name] ? JSON.stringify(declared[name].fires[n]) : oracle)
         expect(await armFiles(state)).toEqual(await armFiles(path.join(expected, "arm")))
       }
     }),
@@ -220,7 +235,7 @@ interface Scenario {
   readonly tree?: Record<string, unknown>
   readonly fires: ReadonlyArray<{
     readonly tree?: Record<string, unknown>
-    readonly check: { readonly position?: string; readonly counter?: number; readonly baseRef?: unknown }
+    readonly check: { readonly position?: string; readonly counter?: number | string; readonly baseRef?: unknown }
   }>
 }
 
@@ -263,9 +278,8 @@ describe("checklist-item bodies", () => {
       },
     ])
     const envelope = { arm: "tok", wp: "wp1", i: 0, macro: "build" }
-    const lines = await Promise.all(
-      result.verdicts.map((verdict) => Effect.runPromise(RelayJson.compact(GateControl.body(envelope, verdict)))),
-    )
+    // Plain ASCII values, where JSON.stringify and `jq -c` agree; escapes are the golden rebuild's business below.
+    const lines = result.verdicts.map((verdict) => JSON.stringify(GateControl.body(envelope, verdict)))
     const head = `{"arm":"tok","wp":"wp1","i":0,"event":"checklist-item"`
     expect(lines).toEqual([
       `${head},"item":"D","assert":"alpha exists","verdict":"pass","graded_by":"deterministic","oracle":"${SHA.tabbed}","origin":"injected:lead","macro":"build"}`,
