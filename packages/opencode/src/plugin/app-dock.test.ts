@@ -1,7 +1,7 @@
 import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
-import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
+import { AppDockPlugin, createAppDockHooks } from "./app-dock"
 import { Permission } from "@/permission"
 import { context, input, fakePort, turn, admission, control, type Envelope } from "./app-dock.fixture"
 
