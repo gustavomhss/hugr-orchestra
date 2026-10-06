@@ -2,8 +2,11 @@
 
 import keyboard
 from bus import BusError
-from context import A, LIMITS, interface_name, states, text_length_matches
+from context import A, LIMITS, ROOT, interface_name, states, text_length_matches
 from refs import VIRTUAL_ROLES, ancestry_reasons, instability
+
+# Pointer refusals that only mean "a click cannot stand in here"; the advertised action is used instead.
+CLICK_INELIGIBLE = ("unsupported-operation", "focus-unconfirmed", "offscreen", "unsupported-interface", "hit-unconfirmed")
 
 
 def invoke(context, ref, action_id=None, mode="stable"):
@@ -29,13 +32,16 @@ def invoke(context, ref, action_id=None, mode="stable"):
         if not isinstance(action_id, str) or len(matches) != 1:
             raise BusError("invalid-action", "Action ID is not in this observation")
         action = matches[0]
-    _target(context, record, observed=mode == "observed")
+    evidence, live = _target(context, record, observed=mode == "observed")
     if _action_names(context, record) != names:
         raise BusError("action-drift", "Provider actions changed during admission")
-    result = {"method": "action", "action": action["name"],
+    result = {"method": "action", "action": action["name"], "via": "action",
               "dispatch": "unknown", "postcondition": "unverified", "consistency": "non-atomic",
               "identity": "observed-control" if mode == "observed" else "snapshot-bound-control",
               "logicalIdentity": "unverified"}
+    clicked = _click(context, record, action, evidence, live, result)
+    if clicked:
+        return clicked
     try:
         accepted = context.call(record["owner"], record["path"], A + "Action", "DoAction",
                                 "(i)", (action["index"],), "(b)")[0]
@@ -43,6 +49,7 @@ def invoke(context, ref, action_id=None, mode="stable"):
             result["dispatch"] = "rejected"
             raise BusError("provider-rejected", "Provider rejected DoAction")
         result["dispatch"] = "acknowledged"
+        _responding(context, record["owner"])
         return result
     except BusError as error:
         if context.dispatch_started:
@@ -50,13 +57,62 @@ def invoke(context, ref, action_id=None, mode="stable"):
         raise
 
 
-def replace_text(context, ref, text, mode="editable"):
+def _click(context, record, action, evidence, live, result):
+    """GTK 3 (at-spi2-atk) runs DoAction's handler inside its D-Bus dispatch. A handler that runs a modal dialog
+    (gtk_dialog_run, e.g. Thunar "Create Folder...", Mousepad "Go to...") nests a main loop there: the app stops
+    answering AT-SPI until the dialog closes, and the first key event then deadlocks it for good. A left click at the
+    control's center runs the same handler from GDK's event dispatch instead, as a person's click does. The click goes
+    through the pointer guards (owned active window, showing, protected refusal, fresh identity) and must hit the
+    control; when it cannot stand in (no X11, inactive window, offscreen, hit elsewhere) the action itself is used,
+    except for an item of a closed menu: "..." items open dialogs, and a person would open the menu first too."""
+    if action["name"] != "click":
+        return None
+    try:
+        toolkit = context.property(record["owner"], ROOT, A + "Application", "ToolkitName")
+    except BusError as error:
+        if error.code in ("cancelled", "timeout"):
+            raise
+        return None
+    if not isinstance(toolkit, str) or toolkit.lower() != "gtk":
+        return None
+    if record["role"] in (8, 35, 45) and 25 not in live:
+        raise BusError("menu-closed", "This menu item is not on screen; open its menu first")
+    try:
+        pointed = keyboard.point(context, record, "click", context.remaining(), evidence)
+    except BusError as error:
+        sent = getattr(error, "result", {}).get("controllerCalls")
+        if error.code in CLICK_INELIGIBLE and not sent:
+            result["clickRefused"] = error.code  # Why the action itself is used: evidence for the reader.
+            return None
+        if sent:
+            error.result = {**result, "via": "pointer", "dispatch": "unknown"}
+        raise
+    return {**result, "via": "pointer", "dispatch": pointed["dispatch"], "point": pointed["point"], "hit": pointed["hit"]}
+
+
+def _responding(context, owner):
+    # An acknowledged action whose app then stops answering is running something modal inside the accessibility
+    # call (see _click); say so now rather than let every later read time out without a reason.
+    if context.remaining() < 900:
+        return  # Too little time left to tell a busy app from an expiring request.
+    try:
+        context.call(owner, ROOT, A + "Accessible", "GetRole", reply="(u)")
+    except BusError as error:
+        if error.code != "timeout":
+            raise
+        raise BusError("app-not-responding", "The action was delivered, then the app stopped answering") from error
+
+
+def replace_text(context, ref, text, mode="editable", focused=False):
+    """focused: the field must still hold keyboard focus (typing into the focused field); refused before any dispatch."""
     record = context.registry.resolve(ref, context)
     context.registry.invalidate(context.binding)
     if not isinstance(text, str) or "\x00" in text or any(0xD800 <= ord(c) <= 0xDFFF for c in text):
         raise BusError("protocol-error", "Text must be a valid D-Bus Unicode string")
     if mode not in ("editable", "keyboard"):
         raise BusError("unsupported-operation", "Unknown text replacement mode")
+    if focused and mode != "keyboard":
+        raise BusError("protocol-error", "Typing into the focused field uses keyboard mode")
     limit = keyboard.MAX_TEXT if mode == "keyboard" else LIMITS["text"]
     if len(text) > limit:
         raise BusError("verification-incomplete", "Replacement exceeds native Text verification budget")
@@ -65,6 +121,8 @@ def replace_text(context, ref, text, mode="editable"):
     evidence, live = _target(context, record, mode)
     if mode == "keyboard":
         evidence = _keyboard_window(context, record, evidence, live)
+        if focused and 12 not in live and "focus" not in evidence:
+            raise BusError("focus-unconfirmed", "The field no longer holds keyboard focus")
         result = {"method": "keyboard", "dispatch": "unknown", "postcondition": "unverified", "value": None}
         try:
             result = _keyboard_result(keyboard.replace_text(context, record, text, context.remaining(), evidence))
@@ -100,23 +158,52 @@ def replace_text(context, ref, text, mode="editable"):
         raise
 
 
-def press(context, ref, keys):
-    """Send one key combination to the owned window holding ref; the app decides what it means."""
+def press(context, ref, keys=None, text=None):
+    """Send one key combination, or printable text as key events, to the owned window holding ref; the app decides
+    what it means. Text goes only to ref when ref holds focus."""
     record = context.registry.resolve(ref, context)
     context.registry.invalidate(context.binding)
-    keyboard.parse_keys(keys)  # Refuse unknown or server-level combinations before any native call.
+    # Refuse unknown or server-level combinations and unprintable text before any native call.
+    keyboard.parse_keys(keys) if text is None else keyboard.parse_text(text)
     evidence = context.require_owned(record)
     try:
-        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence))
+        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence, text))
     except BusError as error:
         if hasattr(error, "result"):
             error.result = _keys_result(error.result)
         raise
 
 
+def pointer(context, ref, kind):
+    """Hover over or right-click the center of a showing control; the app decides what that shows."""
+    record = context.registry.resolve(ref, context)  # Fresh ownership, role, name and parent.
+    context.registry.invalidate(context.binding)
+    # Rows of virtual lists and trees qualify, unlike for actions: hover and right-click land on a point that
+    # the resolve above (fresh role, name and parent), fresh extents and a hit test tie to this row, so a
+    # recycled row shows another name and refuses. Stale, transient or unreadable identity still refuses.
+    if not set(record["unstableReasons"]) <= {"virtual"}:
+        raise BusError("unstable-ref", "Native target identity is not stable enough for pointer events")
+    evidence = context.require_owned(record)
+    try:
+        return _pointer_result(keyboard.point(context, record, kind, context.remaining(), evidence))
+    except BusError as error:
+        if hasattr(error, "result"):
+            error.result = _pointer_result(error.result)
+        raise
+
+
+def _pointer_result(result):
+    point = result.get("point")
+    return {"method": "pointer", "kind": str(result.get("kind", ""))[:16], "dispatch": result["dispatch"],
+            "postcondition": "unverified", "hit": str(result.get("hit", "unverified"))[:16],
+            "point": {"x": point["x"], "y": point["y"]} if isinstance(point, dict) else None,
+            "controllerCalls": result.get("controllerCalls", 0)}
+
+
 def _keys_result(result):
     focus = result.get("focus", {})
-    bounded = {"method": "keys", "keys": str(result.get("keys", ""))[:64], "dispatch": result["dispatch"],
+    typed = {"characters": result["characters"]} if type(result.get("characters")) is int else {"keys": str(result.get("keys", ""))[:64]}
+    bounded = {"method": "keys", **typed, "dispatch": result["dispatch"],
                "postcondition": "unverified", "focus": {"requested": bool(focus.get("requested")),
                "confirmed": bool(focus.get("confirmed")), "externalRaces": "unfenced"},
                "controllerCalls": result.get("controllerCalls", 0)}

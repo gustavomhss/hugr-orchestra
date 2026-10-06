@@ -144,9 +144,39 @@ nenhuma concluiu (encerradas após ~30 e ~15 min, `settings.json` intacto no fim
 - O modelo confunde `/tmp` do container com o do host e pede permissão para ler o do Mac; a recusa
   encerra o turno.
 
+## Camadas e rodadas 7–14 (2026-10-05/06)
+
+Desenho: `LAYERS.md`. Agente `linux` com escopo próprio (só `linux_*` e `ui_*`); agentes do host perdem
+essas ferramentas e delegam por `task`; `task` recusa agentes primários. Dentro do app, navegação de leitor
+de tela: `ui_look` (janelas, modal, foco, regiões numeradas), `ui_enter`/`ui_up`, `ui_list`.
+
+PRs no `dev`: #20 (camadas, navegação, merge com o controller do Dock), #27 (interface de runtime na
+frente do Docker), #34 (helper rápido em árvores grandes: páginas por tempo e cache invalidado por
+eventos AT-SPI), #36 (papéis legíveis únicos, `ui_enter` estável, dicas de alvo), #40 (`ui_type` no foco,
+`ui_pointer` hover/menu de contexto, VS Code com leitor de tela, prazo de limpeza do helper), #42
+(`ui_keys text`, diálogos do próprio app no escopo, prompt "só a tarefa").
+
+| Rodada | Resultado | Causa / correção |
+|---|---|---|
+| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como opencode |
+| 8–10 | ponte nunca liga | carga (memória/swap); preparação do helper morta a cada timeout → preparação em fundo |
+| 11 | lê, mas configurações do VS Code estouram | varreduras repetidas e custo quadrático → #34 |
+| 12 | liga a opção pela UI; não desfaz; 9× `xdotool` | faltavam verbos (foco, ponteiro), papéis inconsistentes → #36, #40 |
+| 13 | liga em ~5 min sem `xdotool`; sai do escopo e derruba o VS Code | diálogo nativo fora do barramento, digitação letra a letra → #42 |
+| 14 | **tarefa completa**: liga, confere no JSON pela UI, desfaz, confere; oráculo volta ao original | 6,5 min, 43 chamadas, 4 erros, 0 `xdotool`, 0 `linux_exec` |
+
+Pré-requisito de validação: home com `settings.json` limpo (o workspace grava `editor.accessibilitySupport:
+"on"` e `files.simpleDialog.enable: true` só quando ausentes; homes antigas guardam o "off" explícito).
+
+Carga da máquina: o load 300–400 vinha de swap (16 GB, VM do Docker com 8 GB fixos), não de CPU; rodar
+validação com load < ~100 e o Docker só ligado quando necessário. Alternativa leve em estudo: Lightr `vz`
+(spike: ~1 GB com VS Code contra 8 GB reservados; ADR 0024 e correções locais no repositório do Lightr).
+
 ## Pendências (próximas fatias)
 
-0. Ergonomia (pela regra do dono), em ordem de custo para o modelo:
+0. Generalizar: a mesma validação aberta com apps de outros toolkits (GTK, Qt, gerenciador de arquivos),
+   com oráculo externo por app (`VALIDATION-APPS.md`, em preparação).
+1. Ergonomia remanescente (lista antiga, parte resolvida pelas rodadas 7–14):
    - repetir a rodada aberta com as correções acima (Linux aberto e VS Code rodando antes da tarefa);
    - preparação por chamada (censo `native-scope` por `docker exec`, 2–5 s com load) torna cada leitura nova lenta;
    - o agente não consegue abrir o workspace Linux sozinho se o usuário não abriu a view;

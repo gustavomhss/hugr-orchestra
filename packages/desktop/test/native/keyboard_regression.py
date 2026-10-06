@@ -31,7 +31,7 @@ class TappedContext(RequestContext):
 
     def call(self, owner, path, interface, method, signature="()", parameters=(), reply="()", timeout_ms=None):
         value = super().call(owner, path, interface, method, signature, parameters, reply, timeout_ms)
-        if method == "GenerateKeyboardEvent":
+        if method in ("GenerateKeyboardEvent", "GenerateMouseEvent"):
             self.events.append(parameters)
         return value
 
@@ -360,14 +360,211 @@ class KeyCombinationTest(NativeFixtureTest):
         self.assertEqual("focus-unconfirmed", outcome.code)
         self.assertEqual("unknown", outcome.result["dispatch"])
 
+    def type_text(self, name, text, context=None):
+        context = context or self.context()
+        return context, keyboard.press_keys(context, self.nodes[name], None, context.remaining(), self.evidence(context, name), text)
+
+    def refused_text(self, name, text, code, context=None):
+        context = context or self.context()
+        outcome = None
+        try:
+            self.type_text(name, text, context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([], context.events, "Typed text reached the controller for an unsafe target")
+        self.assertEqual(code, getattr(outcome, "code", None), "Typed-text guard returned the wrong named failure")
+        return context, outcome
+
+    def test_text_reaches_focused_real_gtk_entry(self):
+        self.command("edit", name="entry", text="")
+        text = "Trim Trailing: 1+1 = 2!"
+        context, result = self.type_text("entry", text)
+        self.assertEqual(("acknowledged", "unverified", len(text)), (result["dispatch"], result["postcondition"], result["characters"]))
+        self.assertTrue(result["focus"]["confirmed"], "Typed text went out without the target holding focus")
+        self.assertEqual(text, self.entry(text), "Real GTK did not receive the typed text")
+        self.assertEqual([(0, text, 4)], context.events, "Text must be one KEY_STRING event")
+        self.assertEqual([(77, "", 6), (77, "", 6)], context.cleanup, "Shortcut modifiers must be released before and after typing")
+
+    def test_text_refuses_before_any_dispatch(self):
+        for text in ("", "x" * 257, "line\n", "tab\t", "caf\u00e9", "\x1b[A", 7):
+            with self.subTest(text=text):
+                context, outcome = self.refused_text("entry", text, "unsupported-operation")
+                self.assertEqual([], context.cleanup, "Unprintable text reached modifier cleanup")
+        context, outcome = self.refused_text("protected", "secret", "protected-text")
+        self.assertEqual("not-dispatched", outcome.result["dispatch"])
+        # A target that does not hold focus (and cannot take it) never receives text, though keys would go to its window.
+        for setup in ({"states": [8, 24, 25]}, {"states": [8, 12, 24, 25], "windowStates": [8, 24, 25]}):
+            with self.subTest(setup=setup):
+                self.command("reset")
+                self.command("wire", **setup)
+                context, outcome = self.refused_text("wire", "x", "focus-unconfirmed")
+                self.assertEqual([], context.cleanup, "Text refused at admission still touched the keyboard")
+                self.assertEqual("not-dispatched", outcome.result["dispatch"], "Text refused before typing reported a dispatch")
+        self.command("reset")
+        self.command("wire", states=[8, 24, 25])
+        self.assertEqual("acknowledged", self.press("wire", "Escape")[1]["dispatch"], "Keys mode lost its window-anchor behavior")
+
+    def test_focus_or_window_lost_before_typing_stops_the_text(self):
+        test = self
+        for change in ({"states": [8, 24, 25]}, {"windowStates": [8, 24, 25]}):
+            with self.subTest(change=change):
+                self.command("reset")
+                self.command("wire", states=[8, 12, 24, 25])
+
+                class MoveFocusOnRelease(TappedContext):
+                    def cleanup_call(self, *args):
+                        value = super().cleanup_call(*args)
+                        if len(self.cleanup) == 1:
+                            test.command("wire", **change)
+                        return value
+
+                context = MoveFocusOnRelease(self.bus, None, self.binding, 8000)
+                context, outcome = self.refused_text("wire", "typed after focus moved", "focus-unconfirmed", context)
+                self.assertEqual([(77, "", 6), (77, "", 6)], context.cleanup, "Modifiers must still be released after a refusal")
+                self.assertEqual("not-dispatched", outcome.result["dispatch"], "Modifier unlocks alone reported a dispatch")
+
+
+class PointerTest(NativeFixtureTest):
+    context = KeyboardRegressionTest.context
+    evidence = KeyboardRegressionTest.evidence
+
+    def setUp(self):
+        super().setUp()
+        # No window manager on bare Xvfb: give the fixture X focus, and start with the pointer off the button.
+        for argv in (["search", "--sync", "--name", "W2-B GTK fixture", "windowfocus", "--sync"], ["mousemove", "0", "0"]):
+            subprocess.run(["xdotool", *argv], check=True, capture_output=True, timeout=10)
+
+    def point(self, name, kind, context=None):
+        context = context or self.context()
+        return context, keyboard.point(context, self.nodes[name], kind, context.remaining(), self.evidence(context, name))
+
+    def receipt(self, field, expected):
+        deadline = monotonic() + 3
+        value = self.command("receipt")[field]
+        while value < expected and monotonic() < deadline:
+            sleep(0.05)
+            value = self.command("receipt")[field]
+        return value
+
+    def refused(self, name, kind, code, context=None):
+        context = context or self.context()
+        outcome = None
+        try:
+            self.point(name, kind, context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([], context.events, "Pointer event reached the controller for an unsafe target")
+        self.assertEqual(code, getattr(outcome, "code", None), "Pointer guard returned the wrong named failure")
+        self.assertEqual("not-dispatched", outcome.result["dispatch"])
+
+    def test_hover_and_context_click_reach_real_gtk_button(self):
+        context, result = self.point("button", "hover")
+        self.assertEqual(("acknowledged", "unverified", "target"), (result["dispatch"], result["postcondition"], result["hit"]))
+        center = (result["point"]["x"], result["point"]["y"])
+        self.assertEqual([(*center, "abs")], context.events, "Hover must be exactly one absolute motion to the center")
+        self.assertGreaterEqual(self.receipt("hovers", 1), 1, "Real GTK button never saw the pointer enter")
+        self.assertEqual(0, self.command("receipt")["rightClicks"], "Hover pressed a button")
+        context, result = self.point("button", "contextMenu")
+        self.assertEqual([(*center, "abs"), (*center, "b3c")], context.events, "Context click must move then press button 3")
+        self.assertEqual(1, self.receipt("rightClicks", 1), "Real GTK button never saw the right-click")
+        self.assertEqual(0, self.command("receipt")["clicks"], "A right-click activated the button")
+
+    def test_pointer_refuses_before_any_event(self):
+        self.refused("protected", "contextMenu", "protected-text")
+        for setup, code in (({"windowStates": [8, 24, 25]}, "focus-unconfirmed"), ({"states": [7, 8, 24]}, "offscreen"),
+                            ({"extents": [500, 10, 100, 20]}, "offscreen"), ({"extents": [10, 10, 0, 20]}, "offscreen"),
+                            ({"hit": "group", "groupRole": 40}, "protected-text")):
+            with self.subTest(setup=setup):
+                self.command("reset")
+                self.command("wire", **setup)
+                self.refused("wire", "hover", code)
+        with self.assertRaises(BusError) as caught:
+            self.point("button", "doubleClick")
+        self.assertEqual("protocol-error", caught.exception.code)
+
+    def test_hit_test_evidence_is_reported_not_assumed(self):
+        for setup, hit in (({}, "unavailable"), ({"hit": "field"}, "target"), ({"hit": "group"}, "other")):
+            with self.subTest(setup=setup):
+                self.command("reset")
+                self.command("wire", **setup)
+                _, result = self.point("wire", "hover")
+                self.assertEqual(hit, result["hit"], "Hit-test evidence misreported")
+
+    def test_window_lost_after_hover_stops_the_click(self):
+        test = self
+
+        class DropWindowAfterMove(TappedContext):
+            def call(self, owner, path, interface, method, signature="()", parameters=(), reply="()", timeout_ms=None):
+                value = super().call(owner, path, interface, method, signature, parameters, reply, timeout_ms)
+                if method == "GenerateMouseEvent" and parameters[2] == "abs":
+                    test.command("wire", windowStates=[8, 24, 25])
+                return value
+
+        context = DropWindowAfterMove(self.bus, None, self.binding, 8000)
+        outcome = None
+        try:
+            self.point("wire", "contextMenu", context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([(60, 20, "abs")], context.events, "Right-click was sent after the owned window lost activity")
+        self.assertIsInstance(outcome, BusError)
+        self.assertEqual(("focus-unconfirmed", "unknown"), (outcome.code, outcome.result["dispatch"]))
+
+
+def pointer_controls():
+    source = (SOURCE / "keyboard.py").read_text()
+    digest = hashlib.sha256(source.encode()).hexdigest()
+    controls = [
+        ("no-active-recheck", "        for event in POINTER[kind]:\n            active()\n", "        for event in POINTER[kind]:\n",
+         "test_window_lost_after_hover_stops_the_click", "Right-click was sent after the owned window lost activity"),
+        ("no-showing-guard", "        if 25 not in target:", "        if False:",
+         "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
+        ("no-window-bounds", "        if not (frame[0] <= x < frame[0] + frame[2]", "        if False and not (frame[0] <= x < frame[0] + frame[2]",
+         "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
+        ("unchecked-hit", "    hit, _ = _ancestry(call, current)\n    if ref[1] in hit:", "    hit = [current[1]]\n    if ref[1] in hit:",
+         "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
+        ("other-claimed-target", 'return "unavailable" if current[1] in paths else "other"', 'return "unavailable" if current[1] in paths else "target"',
+         "test_hit_test_evidence_is_reported_not_assumed", "Hit-test evidence misreported"),
+        ("claimed-hit", '    if current[1] == window:\n        return "unavailable"', '    if current[1] == window:\n        return "target"',
+         "test_hit_test_evidence_is_reported_not_assumed", "Hit-test evidence misreported"),
+    ]
+    with tempfile.TemporaryDirectory(prefix="native-pointer-controls-") as directory:
+        for name, old, new, test, assertion in controls:
+            if source.count(old) != 1:
+                raise AssertionError("Pointer mutation anchor missing or ambiguous: " + name)
+            path = Path(directory) / (name + ".py")
+            path.write_text(source.replace(old, new))
+            run = subprocess.run([sys.executable, str(Path(__file__).resolve()), "PointerTest." + test],
+                                 env=dict(os.environ, A11Y_KEYBOARD_MODULE=str(path)), capture_output=True, text=True, timeout=60)
+            output = run.stdout + run.stderr
+            if run.returncode == 0 or "AssertionError" not in output or assertion not in output or test not in output:
+                raise AssertionError("Pointer mutation did not produce named failure: " + name + "\n" + output)
+            print("MUTATION " + name + ": named assertion failed: " + assertion, flush=True)
+    if hashlib.sha256((SOURCE / "keyboard.py").read_bytes()).hexdigest() != digest:
+        raise AssertionError("Production keyboard changed during pointer controls")
+    print("RESTORED: pointer source SHA256 " + digest, flush=True)
+
 
 def key_controls():
     source = (SOURCE / "keyboard.py").read_text()
     digest = hashlib.sha256(source.encode()).hexdigest()
     controls = [
-        ("no-active-recheck", "        def generate(code, kind):\n            active()\n", "        def generate(code, kind):\n",
+        ("no-active-recheck", "        def generate(code, kind, string=\"\"):\n            active()\n", "        def generate(code, kind, string=\"\"):\n",
          "test_window_lost_after_modifier_lock_releases_and_stops", "Key was sent after the owned window lost activity"),
-        ("no-release", "            if mask and result[\"controllerCalls\"]:\n                _release(bus, controller, result, mask)",
+        ("text-no-active-recheck", "        def generate(code, kind, string=\"\"):\n            active()\n", "        def generate(code, kind, string=\"\"):\n",
+         "test_focus_or_window_lost_before_typing_stops_the_text", "Typed text reached the controller for an unsafe target"),
+        ("text-no-focus-recheck", "            if text is not None and 12 not in _states(call, ref):\n", "            if False:\n",
+         "test_focus_or_window_lost_before_typing_stops_the_text", "Typed text reached the controller for an unsafe target"),
+        ("text-no-focus-admission", "        if text is not None and not result[\"focus\"][\"confirmed\"]:\n", "        if False:\n",
+         "test_text_refuses_before_any_dispatch", "Text refused at admission still touched the keyboard"),
+        ("text-no-pre-release", "                _release(bus, controller, result, SHORTCUT_MODIFIERS)\n                generate(0, 4, text)",
+         "                generate(0, 4, text)", "test_text_reaches_focused_real_gtk_entry", "Shortcut modifiers must be released before and after typing"),
+        ("text-printable-only", "any(not 32 <= ord(c) <= 126 for c in text)", "False",
+         "test_text_refuses_before_any_dispatch", "Typed text reached the controller for an unsafe target"),
+        ("text-cleanup-not-dispatch", "        sent = result[\"controllerCalls\"] > result.get(\"cleanupCalls\", 0)\n",
+         "        sent = result[\"controllerCalls\"] > 0\n", "test_focus_or_window_lost_before_typing_stops_the_text",
+         "Modifier unlocks alone reported a dispatch"),
+        ("no-release", "            if (mask or text is not None) and result[\"controllerCalls\"]:\n                _release(bus, controller, result, mask or SHORTCUT_MODIFIERS)",
          "            if False:\n                pass", "test_window_lost_after_modifier_lock_releases_and_stops",
          "Shortcut modifiers must still be released"),
         ("server-combos", '    if mask & 4 and mask & 8 and (', '    if False and (',
@@ -452,6 +649,9 @@ def focus_controls():
 
 
 if __name__ == "__main__":
+    if "--pointer-mutations" in sys.argv:
+        pointer_controls()
+        sys.exit(0)
     if "--key-mutations" in sys.argv:
         key_controls()
         sys.exit(0)

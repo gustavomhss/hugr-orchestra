@@ -93,7 +93,7 @@ const report = await Effect.runPromise(Effect.gen(function* () {
     const available = { exports: ["foo"], helpers: [], importNames: [] };
     const source = "export const foo: string = 123";
     const bad = yield* Effect.promise(() => invoke({ declared: ["foo"], source }));
-    assert.notEqual(bad.isError, true);
+    assert.notEqual(bad.isError, true, bad.content[0].text);
     assert.equal(decode(bad).ok, false);
     assert.equal(decode(bad).backend, "typescript");
     assert.ok(decode(bad).diagnostics.some((line) => line.includes("TS2322")));

@@ -70,8 +70,8 @@ git worktree list --porcelain
 ```
 
 Resolve parameters in actual assigned worktree; inspect untracked paths separately.
-Run `bun test <resolved-suite> --timeout 30000` and `bun typecheck` from `packages/opencode` for
-this package. Use `maestro-repo-maintenance` when an authorized Git/PR/release procedure is needed.
+Run tests on Actions with `bun run test:ci opencode <resolved-suite>` from the repository root and
+`bun typecheck` from `packages/opencode`. Use `maestro-repo-maintenance` when an authorized Git/PR/release procedure is needed.
 Commands here inspect/verify; they do not implicitly authorize commit, push, PR, merge, or release.
 
 ## Success / fail

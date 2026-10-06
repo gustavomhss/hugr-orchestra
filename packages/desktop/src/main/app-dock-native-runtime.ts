@@ -173,7 +173,10 @@ export async function create(options: Options) {
       state.retiring = true
       return channel.terminate()
     } }
-    const client = await NativeDockClient.create(state.channel, { sessionID: captured.session.sessionID })
+    // The channel's own cleanup (kill, inspect, delete) has a 5 s deadline. A shorter client watchdog
+    // declared helpers unreaped that the channel then proved gone, and that verdict is permanent: under
+    // load it failed the next workspace rebind and retired the fresh helper with it.
+    const client = await NativeDockClient.create(state.channel, { sessionID: captured.session.sessionID, reapMs: 6000 })
     const identity = client.hello.processIdentity
     // Placement evidence belongs to this helper container, not an app binding.
     if (!identity || identity.bootID !== captured.session.processIdentity.bootID

@@ -19,6 +19,7 @@ export class NativeDockClient implements NativeDockProtocol.Client {
   private startupMs: number = NativeDockProtocol.limits.startupMs
   private timeoutMs: number = NativeDockProtocol.limits.timeoutMs
   private graceMs: number = NativeDockProtocol.limits.cancelGraceMs
+  private reapMs: number = NativeDockProtocol.limits.cancelGraceMs
   private startup?: ReturnType<typeof setTimeout>
   private startupDeadline = 0
   private readonly started = Promise.withResolvers<void>()
@@ -69,6 +70,7 @@ export class NativeDockClient implements NativeDockProtocol.Client {
     this.startupMs = duration(this.config.startupMs, this.startupMs)
     this.timeoutMs = duration(this.config.timeoutMs, this.timeoutMs)
     this.graceMs = duration(this.config.cancelGraceMs, this.graceMs)
+    this.reapMs = duration(this.config.reapMs, this.graceMs, 60_000)
     this.startupDeadline = performance.now() + this.startupMs
     this.startup = setTimeout(() => this.fail(new NativeDockProtocol.NativeError(
       "startup-timeout", "Native helper startup deadline expired",
@@ -124,9 +126,9 @@ export class NativeDockClient implements NativeDockProtocol.Client {
   }
 
   private scope(call: NativeDockProtocol.Call) {
-    if (!["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"].includes(call.op))
+    if (!["bind", "read", "action", "type", "key", "pointer", "unbind", "cancel", "shutdown"].includes(call.op))
       throw new NativeDockProtocol.NativeError("unsupported-operation", "Unsupported native operation")
-    if (["read", "action", "type", "key", "unbind"].includes(call.op)) {
+    if (["read", "action", "type", "key", "pointer", "unbind"].includes(call.op)) {
       if (!call.bindingID || !call.bindingEpoch || this.bindings.get(call.bindingID) !== call.bindingEpoch)
         throw new NativeDockProtocol.NativeError("stale-binding", "Native binding is not current")
       return
@@ -356,7 +358,7 @@ export class NativeDockClient implements NativeDockProtocol.Client {
     this.used = 0
     const watchdog = setTimeout(() => deferred.reject(new NativeDockProtocol.NativeError(
       "helper-termination-timeout", "Native helper reaping deadline expired", "unknown",
-    )), this.graceMs)
+    )), this.reapMs)
     try {
       Promise.resolve(this.channel.terminate()).then(() => {
         clearTimeout(watchdog)

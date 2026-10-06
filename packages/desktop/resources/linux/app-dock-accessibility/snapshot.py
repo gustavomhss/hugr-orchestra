@@ -9,7 +9,7 @@ import os
 from secrets import token_hex
 
 from bus import BusError
-from context import A, LIMITS, ROOT, interface_name, text_length_matches
+from context import A, LIMITS, ROOT, WINDOW_ROLES, interface_name, text_length_matches
 from refs import VIRTUAL_ROLES, ancestry_reasons, fingerprint, scope_kind
 
 # Default JSON escaping costs up to 12 bytes per Unicode character. Text appears
@@ -21,6 +21,8 @@ FRAME_RESERVE = 4096
 # Text has its own 24-byte-per-character allowance, including both copies.
 NODE_RESERVE = 49152
 NULL = "/org/a11y/atspi/null"
+# Stale, transient and manages-descendants: their children are not announced by events.
+VOLATILE = frozenset((27, 28, 31))
 ROLES = {7: "check-box", 16: "dialog", 23: "frame", 31: "list", 32: "list-item", 33: "menu",
          34: "menu-bar", 35: "menu-item", 39: "panel", 40: "password-text", 43: "push-button",
          55: "table", 56: "table-cell", 61: "text", 65: "tree", 66: "tree-table", 69: "window",
@@ -40,6 +42,7 @@ def read(context, query):
         if any(key in query and options[key] != state["query"][key] for key in ("budget", "maxText", "textOffset")):
             raise BusError("cursor-stale", "Native continuation query changed")
         options = state["query"]
+        context.fence({root["owner"] for root in state["roots"]})
         _anchors(context, state)
     else:
         try:
@@ -55,17 +58,24 @@ def read(context, query):
                  "rootIndex": 0, "stack": [], "deferred": [], "rootFirst": root is None and scope_kind(binding) == "workspace",
                  "text": None, "textStarted": False,
                   "rootUnstable": bool(root and root["unstable"]), "rootReasons": root["unstableReasons"] if root else [], "partial": []}
+        context.fence({root["owner"] for root in state["roots"]})
     result = {"backend": "linux-atspi", "scopeKind": scope_kind(binding), "observation": observation, "title": "", "items": [], "text": "",
               "truncated": False, "windows": [], "coverage": {"scope": "owned-controls-excluding-hidden-menu-subtrees", "complete": False,
               "visited": 0, "calls": 0, "omittedHiddenMenus": 0, "reasons": list(state["partial"])}, "consistency": "non-atomic", "capabilities": {
               "read": {"supported": True, "reason": "bounded-live-traversal"},
               "mutation": {"supported": False, "reason": "per-item-capabilities; no-logical-dataset-identity"}}}
-    seen = set()
+    for name in binding.get("unresponsive", ())[:8]:
+        _reason(result, "app-not-responding:" + name)  # Left out of this binding; see BindingStore.discover.
+    seen, position = set(), None
+    context.paged = True
+    # Exact JSON bytes of the accepted items (with their ", " separators) and of
+    # the aggregate text; re-encoding the whole page per record was quadratic.
+    items_bytes, text_bytes = 0, len(json.dumps(result["text"]))
     try:
         while len(result["items"]) < options["budget"]:
             registry.check(binding, observation)
             context.remaining()
-            available = LIMITS["frameBytes"] - FRAME_RESERVE - len(json.dumps(result).encode())
+            available = LIMITS["frameBytes"] - FRAME_RESERVE - _size(result, items_bytes, text_bytes)
             if available < NODE_RESERVE:
                 _reason(result, "reply-byte-limit")
                 break
@@ -76,6 +86,11 @@ def read(context, query):
                 # Preserve the next indexed position before a record can exhaust
                 # its fresh-ownership/property budget. The next page resumes it.
                 _reason(result, "read-budget")
+                break
+            if result["items"] and context.sliced():
+                # A slow provider ends the page at its frontier with a cursor instead
+                # of losing every fetched record to the request deadline.
+                _reason(result, "time-slice")
                 break
             position = (state["rootIndex"], state["text"], state["textStarted"])
             frame = state["stack"][-1] if state["stack"] else None
@@ -100,8 +115,7 @@ def read(context, query):
                 if frame["index"] >= frame["count"]:
                     state["stack"].pop()
                     continue
-                child = context.call(frame["owner"], frame["path"], A + "Accessible", "GetChildAtIndex",
-                                     "(i)", (frame["index"],), "((so))")[0]
+                child = _child(context, frame, frame["index"])
                 frame["index"] += 1
                 frame["last"] = (child[0] or frame["owner"], child[1])
                 result["coverage"]["visited"] += 1
@@ -140,10 +154,11 @@ def read(context, query):
                 raise BusError("cursor-stale", "Native text anchor changed")
             seen.add((record["owner"], record["path"]))
             capabilities = _capabilities(context, record, observation, result)
-            count = state["text"]["count"] if repeat else context.property(record["owner"], record["path"], A + "Accessible", "ChildCount")
+            anchor = {**{key: record[key] for key in ("owner", "path", "role", "name", "nameDigest", "parent", "unstable", "unstableReasons", "scopeDepth")},
+                      "volatile": bool(record["states"] & VOLATILE)}
+            count = state["text"]["count"] if repeat else _count(context, anchor)
             if type(count) is not int or not 0 <= count < 2**31:
                 raise BusError("defunct", "Invalid native child count")
-            anchor = {key: record[key] for key in ("owner", "path", "role", "name", "nameDigest", "parent", "unstable", "unstableReasons", "scopeDepth")}
             item = {"role": record["role"], "roleName": ROLES.get(record["role"], f"atspi-role-{record['role']}"),
                     "name": record["name"], "states": sorted(record["states"]), "interfaces": record["interfaces"],
                     "depth": state["text"]["depth"] if repeat else len(state["stack"]), "scopeDepth": record["scopeDepth"],
@@ -177,9 +192,11 @@ def read(context, query):
             candidate = {**result, "items": [*result["items"], item], "text": result["text"] + item.get("text", "")}
             if (not state["stack"] and not repeat) or (repeat and position[1].get("rootPending", False)):
                 candidate["title"] = result["title"] or record["name"]
-                if record["role"] in (16, 23, 69):
+                if record["role"] in WINDOW_ROLES:
                     candidate["windows"] = [*result["windows"], {"ref": item["ref"], "title": record["name"], "role": record["role"]}]
-            if len(json.dumps(candidate).encode()) + FRAME_RESERVE > LIMITS["frameBytes"]:
+            item_bytes = len(json.dumps(item)) + (2 if result["items"] else 0)
+            candidate_text = len(json.dumps(candidate["text"])) if item.get("text") else text_bytes
+            if _size(candidate, items_bytes + item_bytes, candidate_text) + FRAME_RESERVE > LIMITS["frameBytes"]:
                 # Keep the pre-record indexed frontier even if a future field
                 # violates the conservative reserve; never lose a fetched node.
                 state.update(rootIndex=position[0], text=position[1], textStarted=position[2])
@@ -191,6 +208,7 @@ def read(context, query):
             if len(candidate["windows"]) > len(result["windows"]):
                 candidate["windows"][-1]["ref"] = item["ref"]
             result.update(items=candidate["items"], text=candidate["text"], title=candidate["title"], windows=candidate["windows"])
+            items_bytes, text_bytes = items_bytes + item_bytes, candidate_text
             if not repeat and count:
                 if record["scopeDepth"] >= LIMITS["depth"] - 1:
                     _reason(result, "depth-limit")
@@ -200,19 +218,30 @@ def read(context, query):
             if state["text"] is not None:
                 break
     except BusError as error:
-        if error.code in ("cancelled", "timeout", "wrong-scope", "stale-ref", "cursor-stale", "invalid-text-offset"):
+        if error.code == "timeout" and result["items"] and position is not None and context.stalled():
+            # A stalled provider call ends the page before its record: the cursor
+            # retries that record, and the reply still beats the host deadline.
+            state.update(rootIndex=position[0], text=position[1], textStarted=position[2])
+            if frame:
+                frame["index"], frame["last"] = index
+            _reason(result, "provider-stall")
+        elif error.code in ("cancelled", "timeout", "wrong-scope", "stale-ref", "cursor-stale", "invalid-text-offset"):
             registry.begin(binding)
             raise
-        _reason(result, error.code)
-        # An interrupted record cannot be resumed without inventing its identity.
-        state.update(stack=[], deferred=[], text=None, rootIndex=len(state["roots"]))
+        else:
+            _reason(result, error.code)
+            # An interrupted record cannot be resumed without inventing its identity.
+            state.update(stack=[], deferred=[], text=None, rootIndex=len(state["roots"]))
+    context.paged = False
     registry.check(binding, observation)
     while state["stack"] and state["stack"][-1]["index"] >= state["stack"][-1]["count"] and state["text"] is None:
         state["stack"].pop()
     more = bool(state["text"] or state["stack"] or state["deferred"] or state["rootIndex"] < len(state["roots"]))
+    if not more and "time-slice" in result["coverage"]["reasons"]:
+        result["coverage"]["reasons"].remove("time-slice")  # The slice ended with nothing left to read.
     if more:
         state["partial"] = [code for code in result["coverage"]["reasons"]
-                            if code not in ("page-limit", "text-limit", "reply-byte-limit", "read-budget", "cursor-limit")]
+                            if code not in ("page-limit", "text-limit", "reply-byte-limit", "read-budget", "time-slice", "provider-stall", "cursor-limit")]
         try:
             result["cursor"] = registry.cursor(binding, state)
         except BusError as error:
@@ -243,6 +272,11 @@ def _query(query):
     return options
 
 
+def _size(result, items_bytes, text_bytes):
+    """json.dumps length of result given its items' and text's own encoded lengths (ASCII-escaped)."""
+    return len(json.dumps({**result, "items": [], "text": ""})) + items_bytes + text_bytes - 2
+
+
 def _reason(result, code):
     reasons = result["coverage"]["reasons"]
     if code[:64] not in reasons and len(reasons) < 16:
@@ -260,14 +294,10 @@ def _capabilities(context, record, observation, result):
         if record["interfaceError"] or not all(interface_name(value) for value in record["interfaces"]):
             raise BusError(record["interfaceError"] or "invalid-interface", "Native interfaces are unavailable or invalid")
         if (reason is None or observed) and A + "Action" in record["interfaces"]:
-            count = context.property(record["owner"], record["path"], A + "Action", "NActions")
-            if type(count) is not int or not 0 <= count <= LIMITS["actions"]:
-                raise BusError("action-limit", "Native action count exceeds limit")
-            for index in range(count):
-                name = context.call(record["owner"], record["path"], A + "Action", "GetName", "(i)", (index,), "(s)")[0]
-                if not name or len(name) > LIMITS["field"] or any(action["name"] == name for action in record["actions"]):
-                    raise BusError("action-ambiguous", "Native action name is unavailable or ambiguous")
-                record["actions"].append({"id": f"a:{observation}:{token_hex(8)}", "name": name, "index": index})
+            # Mutations re-read action names fresh and refuse drift, so traversal may reuse them.
+            names = context.cached(record["owner"], record["path"], "actions", lambda: _action_names(context, record))
+            record["actions"] = [{"id": f"a:{observation}:{token_hex(8)}", "name": name, "index": index}
+                                 for index, name in enumerate(names)]
     except BusError as error:
         if error.code in ("cancelled", "timeout", "read-budget"):
             raise
@@ -290,6 +320,30 @@ def _capabilities(context, record, observation, result):
             "text": {"supported": record["role"] != 40 and A + "Text" in record["interfaces"],
                      "reason": record["interfaceError"] or ("protected" if record["role"] == 40 else (
                      "bounded-native-text" if A + "Text" in record["interfaces"] else "text-unavailable"))}}
+
+
+def _action_names(context, record):
+    count = context.property(record["owner"], record["path"], A + "Action", "NActions")
+    if type(count) is not int or not 0 <= count <= LIMITS["actions"]:
+        raise BusError("action-limit", "Native action count exceeds limit")
+    names = []
+    for index in range(count):
+        name = context.call(record["owner"], record["path"], A + "Action", "GetName", "(i)", (index,), "(s)")[0]
+        if not name or len(name) > LIMITS["field"] or name in names:
+            raise BusError("action-ambiguous", "Native action name is unavailable or ambiguous")
+        names.append(name)
+    return tuple(names)
+
+
+def _child(context, parent, index):
+    fetch = lambda: tuple(context.call(parent["owner"], parent["path"], A + "Accessible", "GetChildAtIndex", "(i)", (index,), "((so))")[0])
+    # Like libatspi, children of descendant-managing or transient containers are never cached.
+    return fetch() if parent.get("volatile", True) else context.cached(parent["owner"], parent["path"], ("child", index), fetch)
+
+
+def _count(context, parent):
+    fetch = lambda: context.property(parent["owner"], parent["path"], A + "Accessible", "ChildCount")
+    return fetch() if parent.get("volatile", True) else context.cached(parent["owner"], parent["path"], "count", fetch)
 
 
 def _text(context, record, item, result, state, offset, remaining, count, anchor):
@@ -375,12 +429,10 @@ def _anchors(context, state, *, expanding=False):
                 anchor["unstableReasons"] = sorted(set(anchor["unstableReasons"]) | inherited)
                 anchor["unstable"] |= bool(anchor["unstableReasons"])
                 if "count" in anchor:
-                    count = context.property(anchor["owner"], anchor["path"], A + "Accessible", "ChildCount")
-                    if count != anchor["count"]:
+                    if _count(context, anchor) != anchor["count"]:
                         raise BusError("cursor-stale", "Native continuation child count changed")
                     if anchor["last"] is not None:
-                        child = context.call(anchor["owner"], anchor["path"], A + "Accessible", "GetChildAtIndex",
-                                             "(i)", (anchor["index"] - 1,), "((so))")[0]
+                        child = _child(context, anchor, anchor["index"] - 1)
                         if (child[0] or anchor["owner"], child[1]) != anchor["last"]:
                             raise BusError("cursor-stale", "Native continuation child anchor changed")
         if not expanding and state["text"]:

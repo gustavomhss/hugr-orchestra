@@ -1,0 +1,69 @@
+name: test-ci
+
+# `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
+# with a .ci-run.json request ({ package, args }). This workflow runs exactly those tests, then deletes the branch.
+on:
+  push:
+    branches:
+      - "ci-run-*"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.host }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-* or ci-run-both-*.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || '["ubuntu-latest"]') }}
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "bot@opencode.ai"
+          git config --global user.name "opencode"
+
+      - name: Run tests
+        env:
+          OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+        run: |
+          package=$(jq -r '.package' .ci-run.json | tr -d '\r')
+          case "$package" in
+            "" | /* | *..*)
+              echo "::error::.ci-run.json names no valid package"
+              exit 2
+              ;;
+          esac
+          if [ ! -f "packages/$package/package.json" ]; then
+            echo "::error::packages/$package does not exist"
+            exit 2
+          fi
+          mapfile -t args < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
+          cd "packages/$package"
+          GITHUB_ACTIONS=false bun test "${args[@]}"
+
+  cleanup:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete the snapshot branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: gh api --method DELETE "repos/$REPO/git/refs/heads/$BRANCH" || true

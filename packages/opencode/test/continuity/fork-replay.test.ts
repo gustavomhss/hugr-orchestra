@@ -4,17 +4,19 @@ import { LLMEvent } from "@opencode-ai/llm"
 import { jsonSchema, tool, type Tool } from "ai"
 import type { ModelMessage } from "ai"
 import type { LLM } from "@/session/llm"
-import { replay, run, snapshot, type ParentRequest } from "@/continuity/fork"
-import { chunks } from "@/continuity/transcript"
+import { carriesMemory, replay, run, snapshot, type ParentRequest } from "@/continuity/fork"
+import type { MemoryArtifact } from "@/continuity/memory-types"
 import { testEffect } from "../lib/effect"
-import { memory, messages, model, provider, sessionID } from "./memory-fixture"
+import { finding, host, memory, messages, model, provider, sessionID } from "./memory-fixture"
 
 const it = testEffect(Layer.empty)
-const body = JSON.stringify({ memory, references: [] })
+const body = JSON.stringify({ ops: [finding()] })
 const stopped = () => Stream.fromIterable([LLMEvent.textStart({ id: "text" }),
   LLMEvent.textDelta({ id: "text", text: body }), LLMEvent.textEnd({ id: "text" }), LLMEvent.finish({ reason: "stop" })])
 
 const history = messages().slice(0, 10)
+// Every swap must shrink the context, so the covered head outweighs the memory scaffold.
+if (history[0].parts[0].type === "text") history[0].parts[0].text = `turn-0 ${"historical context ".repeat(1_000)}`
 const captured = () => {
   const value = snapshot(sessionID, history, undefined, true)
   if (!value) throw new Error("Expected whole-turn snapshot")
@@ -32,7 +34,7 @@ function parent(overrides: Partial<LLM.StreamInput> = {}, ids = history.map((mes
   return {
     input: {
       user, sessionID, model, agent: { name: "build", mode: "primary", permission: [], options: {} },
-      system: ["parent system", "Historical working memory follows."], messages: parentMessages,
+      system: ["parent system"], messages: parentMessages,
       tools: { read }, toolChoice: "auto", contextMemory: false, ...overrides,
     } as LLM.StreamInput,
     messageIDs: ids,
@@ -42,12 +44,10 @@ function parent(overrides: Partial<LLM.StreamInput> = {}, ids = history.map((mes
 function execute(request?: ParentRequest) {
   return Effect.gen(function* () {
     const requests: LLM.StreamInput[] = []
-    const value = captured()
-    const archived = chunks(sessionID, value.head)
-    const artifact = yield* run(value, { provider: provider(), llm: { stream: (input) => {
+    const { artifact } = yield* run(captured(), { provider: provider(), llm: { stream: (input) => {
       requests.push(input)
       return stopped()
-    } } }, archived, archived, request)
+    } } }, host(history), { trigger: 0.7, parent: request })
     return { artifact, requests }
   })
 }
@@ -55,7 +55,7 @@ function execute(request?: ParentRequest) {
 it.live("maintenance replays the parent request prefix and appends one instruction", () => Effect.gen(function* () {
   const source = parent()
   const { artifact, requests } = yield* execute(source)
-  expect(artifact?.memory).toBe(memory)
+  expect(artifact?.text).toContain(memory)
   expect(requests).toHaveLength(1)
   const sent = requests[0]
   expect(sent.purpose).toBeUndefined()
@@ -69,13 +69,20 @@ it.live("maintenance replays the parent request prefix and appends one instructi
   expect(sent.messages.slice(0, -1)).toEqual(source.input.messages)
   const appended = sent.messages.at(-1)!
   expect(appended.role).toBe("user")
-  expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT")
-  expect(String(appended.content)).toContain("CONTEXT CONTINUITY PRODUCER PROTOCOL v2")
+  expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v4")
+  expect(String(appended.content)).toContain("The current working memory, if any, is the system\nblock that begins `# Working memory`.")
+  expect(String(appended.content)).toContain("## Index of the new span\nu1 ")
   expect(Object.keys(sent.tools)).toEqual(Object.keys(source.input.tools))
   expect(sent.tools.read.description).toBe(source.input.tools.read.description)
   expect(sent.tools.read.inputSchema).toBe(source.input.tools.read.inputSchema)
   // The parent request is not mutated by the replay.
   expect(source.input.messages).toHaveLength(1)
+}))
+
+it.live("the parent's system and tool definitions count against the ceiling", () => Effect.gen(function* () {
+  // 0.55 of the 200,000-token window cannot hold a 125,000-token parent overhead: no pass runs.
+  const { requests } = yield* execute(parent({ system: ["x".repeat(500_000)] }))
+  expect(requests).toEqual([])
 }))
 
 test("replayed tools keep their definitions but never execute", async () => {
@@ -112,4 +119,17 @@ test("replay refuses requests whose reply cannot be a producer artifact", () => 
 test("replay refuses provider-executed tools that host denial cannot stop", () => {
   const remote = { type: "provider", id: "openai.web_search", args: {} } as unknown as Tool
   expect(replay(parent({ tools: { web_search: remote } }), captured(), model, "x")).toBeUndefined()
+})
+
+test("replay requires the parent request to carry the memory this pass edits", () => {
+  const withMemory = { ...captured(), previous: { text: "# Working memory\nK" } as MemoryArtifact }
+  // First pass: no prior memory, so a request that carries one is out of date.
+  expect(replay(parent({ contextMemory: true }), captured(), model, "x")).toBeUndefined()
+  // A turn that started before the last swap carries no memory or the older one.
+  expect(replay(parent(), withMemory, model, "x")).toBeUndefined()
+  expect(replay(parent({ contextMemory: true, system: ["parent system", "# Working memory\nJ"] }),
+    withMemory, model, "x")).toBeUndefined()
+  const current = parent({ contextMemory: true, system: ["parent system", "# Working memory\nK"] })
+  expect(carriesMemory(current, withMemory.previous)).toBe(true)
+  expect(replay(current, withMemory, model, "x")).toBeDefined()
 })

@@ -2,9 +2,10 @@
 // Adapted from TechLead a68e7af. Copyright 2026 HuGR Labs. Apache-2.0.
 import { constants } from "node:fs"
 import { lstat, mkdir, open, realpath, rename, unlink } from "node:fs/promises"
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { dirname, isAbsolute, join, relative, resolve, sep, win32 } from "node:path"
 import { randomUUID } from "node:crypto"
 import { type GovernanceContext, id, requireValue } from "./contracts.ts"
+import { inside } from "../engine/acquisition.ts"
 
 export const STATE_BYTES = 512 * 1024
 const queues = new Map<string, { tail: Promise<unknown>; pending: number }>()
@@ -20,7 +21,7 @@ export async function sourceRoot(context: GovernanceContext, requested?: string)
 export async function scopedPath(root: string, path: string) {
   requireValue(path.length > 0 && !path.includes("\0"), "PATH_INVALID")
   const target = resolve(root, path)
-  requireValue(target !== root && !relative(root, target).startsWith(`..${sep}`) && relative(root, target) !== "..", "PATH_ESCAPE")
+  requireValue(target !== root && inside(root, target), "PATH_ESCAPE")
   const parts = relative(root, target).split(sep)
   await parts.reduce(async (previous, part) => {
     const parent = await previous
@@ -34,6 +35,11 @@ export async function scopedPath(root: string, path: string) {
   }, Promise.resolve(root))
   return target
 }
+// Request paths become native paths. Windows also splits on backslash, resolves "C:x" against that drive's
+// cwd, and NTFS opens ".git" as ".GIT", ".git.", ".git::$DATA" or "git~1", so every OS refuses all of them.
+export function worktreePath(path: string) {
+  return !win32.isAbsolute(path) && !/^[A-Za-z]:/.test(path) && !path.split(/[\\/]/).some((segment) => /^(?:\.git|git~1)[. ]*(?::.*)?$/i.test(segment))
+}
 
 async function stateFile(context: GovernanceContext, kind: string, key: string, write: boolean) {
   id(context.projectID)
@@ -43,7 +49,8 @@ async function stateFile(context: GovernanceContext, kind: string, key: string, 
   await context.authorize({ effect: "read", paths: [context.directory, context.stateDirectory], commands: [] })
   const root = await realpath(context.stateDirectory)
   const repo = await realpath(context.directory)
-  requireValue(root !== repo && relative(repo, root) !== "" && (relative(repo, root).startsWith(`..${sep}`) || isAbsolute(relative(repo, root))), "STATE_ROOT_INSIDE_REPOSITORY")
+  // Disjoint both ways: a state root above the repository could place projectID/kind/key.json inside it.
+  requireValue(!inside(repo, root) && !inside(root, repo), "STATE_ROOT_INSIDE_REPOSITORY")
   const file = await scopedPath(root, join(context.projectID, kind, `${key}.json`))
   await context.authorize({ effect: "read", paths: [file], commands: [] })
   if (write) {
