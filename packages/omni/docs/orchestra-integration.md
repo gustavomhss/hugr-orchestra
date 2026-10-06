@@ -1,6 +1,7 @@
 # hugr-omni inside HuGR Orchestra — integration plan
 
-Status: **v2** (2026-10-06, lead). v1 was reviewed by three independent reviewers (architecture, tests/CI,
+Status: **v3** (2026-10-06, lead). §10 (round-2 amendments) overrides anything above it that it contradicts.
+v2 history: v1 was reviewed by three independent reviewers (architecture, tests/CI,
 packaging/OS with live probes); every BLOCKER and MAJOR is folded in below (§9 lists them and where each landed).
 
 Owner decision (2026-10-06): omni lives in Orchestra at `packages/omni`. `github.com/gustavomhss/hugr-omni` is a
@@ -594,3 +595,83 @@ adds 3-8 min of cargo.
   - `__dirname` → D-L8.
   - Signing entitlements and warm-up → WP4 and WP5.
   - Electron notes → WP4.
+
+## 10. Review round 2: amendments (binding; they override §1–§9 where the two differ)
+
+- **R2-1 Output loss with a fast consumer (BLOCKER).** omni hands out one item of at most 64 KiB per pull, so any stall
+  in the event loop can push past 16 MiB. Three fixes:
+  - **H7 (WP-H):** batched `next()`, plus an opt-in `backpressure: true` for pipe children. A full queue stops the
+    native reader, the OS pipe fills and the child blocks, so nothing is lost. `wait()` and `stop()` are never
+    blocked.
+  - **Under the flag, the WP1 spawner always spawns with `backpressure: true`**, which restores legacy semantics.
+  - **`AppProcess.run`** uses omni's own collection path, which never drops below its limit.
+  - **WP1 test 5 is replaced:** a 200 ms event-loop block during a 64 MiB `cat-file` loses 0 bytes.
+- **R2-2 Shell tool.** Gaps can no longer happen (R2-1). The shell tool still gets a `marker` gap policy as a second
+  line of defence, because it shows only the tail of the output.
+- **R2-3 Adoption seam.** WP0 freezes an Effect service `OmniAdoption` (`{sessionID, policy}`), read at spawn time.
+  - The release adopts only when `Exit.isSuccess` and the service is present. Interrupt or cancel stops the tree.
+  - The registry interface is frozen in WP0, with a stub that stops the tree.
+  - There is no `adopt()` method on Effect's handle.
+- **R2-4 Adopted output.** While adoption is possible, the pump never detaches. After the grace period it writes into
+  the registry's 1 MiB ring; otherwise it discards. The text "whatever omni keeps after detach" is dropped.
+- **R2-5 WP11 builds on `packages/core/src/background-job.ts`.** Adopted children become `BackgroundJob`s with
+  `type: "process"`.
+  - "Session end" means `Session.remove` or server stop.
+  - User cancel (Esc) stops the run, **not** adopted jobs. Recommendation, following O1(b): an adopted dev server
+    outlives the turn, and the UI panel stops it.
+  - `core/src/background/**` is dropped.
+- **R2-6 Lazy loading (WP-H H4).** The dlopen is lazy and `configure` is plain JS. Frozen resolution order:
+  1. `configure()`;
+  2. the `HUGR_OMNI_*` env vars (read in JS);
+  3. the platform package;
+  4. the checkout, only when nothing explicit was given.
+
+  The core loader (WP0) has its own order: an injected path, then next to `realpath(execPath)` or
+  `resourcesPath/omni`, then the dev checkout. WP4 and WP5 only place the files.
+- **R2-7 GUARANTEES.** H6 promotes every row the plan cites (C-HOST-01, C-KILL-01/02, C-IO-01..04, C-SCOPE-01,
+  C-ENV-01, C-PTY-01..04, C-TS-02), each backed by a real run, and adds a ConPTY close-bound row. The KPIs cite only
+  promoted rows.
+- **R2-8 Wave graph.**
+  - `omni.yml` moves into WP0.
+  - WP8a comes before WP6's `omni-artifacts`.
+  - `release.yml` is edited by WP-H (H5), then WP8a, then WP6, in that order.
+- **R2-9 Node smoke tests.** `runner: node` runs `*.node-smoke.mjs` `node:test` scripts against the `build-node.ts`
+  bundle. It never runs `bun:test` files.
+- **R2-10 test-ci.**
+  - A macOS branch prefix, with `startsWith` ordering.
+  - A rust toolchain step on a cache miss, on every OS.
+  - The preload is registered in each consuming package's `bunfig.toml`; WP0 owns those files.
+  - Hosted macOS is capped at 5 concurrent jobs.
+- **R2-11 Oracle.**
+  - Fixtures write `{pid, startTime, nonce}`.
+  - Polling uses `kill(pid, 0)` plus a start-time check.
+  - On Windows, one final CIM sweep: JSON output filtered in JS, the query's own pid excluded, one retry.
+  - On macOS, `ps -axww`.
+- **R2-12 Windows env.** `childEnv()` merges case-insensitively on win32, and H8 does the same in the binding.
+- **R2-13 Skill loader.** The skill-loader fix is dropped: `skills.paths` already resolves against the project.
+- **R2-14 Daemons.** Gradle, Kotlin and Windows git fsmonitor daemons die under the generic policy. This is
+  documented. Nobody dogfoods with the flag on before WP11.
+- **R2-15 Rollback.** WP9 splits in two:
+  - **WP9a** flips the default and ships one release with `=0` still working;
+  - **WP9b** deletes legacy after a clean release.
+- **R2-16 Upstream merges.** WP0 adds `script/check-spawn-imports.ts` with `script/spawn-allowlist.json`, and a
+  root `AGENTS.md` rule.
+  - The check fails on imports of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or
+    `StdioClientTransport` outside the allow-list.
+  - WP9b adds `docs/upstream-merge.md`, with a resolution per seam: `ChildProcessSpawner`, `Process`, `Pty` `Proc`,
+    MCP transport.
+- **R2-17 Telemetry.**
+  - Structured log events for spawn, delegation, gap, adoption, supervisor restart and fallback.
+  - The counters appear in `opencode debug omni`.
+  - Owner: WP1, with the WP0 counters.
+- **R2-18 Changelog.** WP9a writes the user-facing entries: adopted background processes and their panel, the
+  120 s `!` deadline, Windows GUI launches closing with the session, and musl/arm64 Windows on legacy until WP8a.
+
+Wave graph (v3):
+
+```
+Wave 1:  WP0 (+omni.yml, guard, adoption seam)   WP-H (H1–H8) → WP8a → WP8b     WP7
+Wave 2:  WP1  WP2  WP3        (after WP0 + WP-H)      WP6 (after WP8a)
+Wave 3:  WP4  WP5             WP11 (after WP1, WP2)
+Wave 4:  WP10 → WP9a → (one clean release) → WP9b
+```
