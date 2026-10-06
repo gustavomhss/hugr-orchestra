@@ -421,3 +421,32 @@ test("ui_look maps the workspace, ui_enter zooms into a numbered region and ui_u
   expect(String(await dock.hooks.tool.ui_up.execute({}, scoped))).toContain("Open Folder")
   expect(dock.calls.every((call) => call.op === "read" && call.args.world === "linux")).toBe(true)
 })
+
+// Run 12: inside VS Code's Settings dialog every row wraps its toolbar in an unnamed section, and ui_enter refused the
+// numbers ui_look had just printed; after a successful enter, numbers refer to the entered region's own map.
+test("ui_enter takes every number ui_look printed and says precisely why a number cannot be entered", async () => {
+  const shown = [8, 24, 25, 30]
+  const bars = (count: number) => [
+    { ref: "n:f", parentRef: null, role: 23, roleName: "frame", name: "Editor", states: [1, ...shown], actions: [] },
+    { ref: "n:d", parentRef: "n:f", role: 16, roleName: "dialog", name: "Settings", states: [1, 16, ...shown], actions: [] },
+    ...Array.from({ length: count }, (_, index) => index + 1).flatMap((row) => [
+      { ref: `n:w${row}`, parentRef: "n:d", role: 85, roleName: "atspi-role-85", name: "", states: shown, actions: [] },
+      { ref: `n:t${row}`, parentRef: `n:w${row}`, role: 63, roleName: "atspi-role-63", name: "", states: shown, actions: [] },
+      control(`n:b${row}`, `Button ${row}`, { parentRef: `n:t${row}`, states: shown }),
+    ]),
+  ]
+  const screen = { items: bars(2) }
+  const dock = host(() => page(screen.items))
+  const scoped = { ...context, agent: "linux", sessionID: "ses_enter" } as ToolContext
+  const enter = (region: number) => dock.hooks.tool.ui_enter.execute({ region }, scoped).then(String)
+  expect(await enter(1)).toBe("No view yet in this session; call ui_look and use one of its region numbers")
+  expect(String(await dock.hooks.tool.ui_look.execute({}, scoped))).toContain("#2 tool bar — 1 controls: Button 2")
+  const second = await enter(2)
+  expect(second).toContain("scope: tool bar (ui_up to leave)")
+  expect(second).toContain('push button "Button 2"')
+  expect(second).not.toContain("Button 1")
+  expect(await enter(2)).toBe("The last view (scope tool bar) listed 0 regions, so there is no #2; numbers refer to the latest ui_look or ui_enter output, and ui_up leaves an entered region")
+  expect(String(await dock.hooks.tool.ui_up.execute({}, scoped))).toContain("#2 tool bar")
+  screen.items = bars(1)
+  expect(await enter(2)).toBe("Region #2 (tool bar) from the last view is no longer on screen; call ui_look again")
+})

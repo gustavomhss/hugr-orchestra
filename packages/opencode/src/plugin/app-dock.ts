@@ -599,7 +599,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   }
   // A scope cursor per session: ui_enter zooms into a region, ui_up leaves it, and looks and lists stay inside.
   const scopes = new Map<string, AppDockOutline.Handle[]>()
-  const looks = new Map<string, AppDockOutline.Handle[]>()
+  const looks = new Map<string, AppDockOutline.Look>()
   const outline = (context: ToolContext) => exclusive(() => find({ ...context, world: "linux" } as Scoped, {}, () => false,
     { deadline: Date.now() + findDeadlineMs })).then((scan) => {
     const roots = AppDockOutline.tree(scan.found.map((match) => match.item as AppDockOutline.Item))
@@ -613,7 +613,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   })
   const view = (context: ToolContext, roots: AppDockOutline.Node[], scope: AppDockOutline.Node | undefined, note: string) => {
     const result = AppDockOutline.look(roots, scope)
-    looks.set(context.sessionID, result.regions)
+    looks.set(context.sessionID, result)
     return result.text + note
   }
   const navigation = {
@@ -630,20 +630,28 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         role: tool.schema.string().min(1).max(64).optional().describe("Region role, e.g. tool bar, page tab list, list"),
       },
       execute: (args, context) => outline(context).then((state) => {
-        const numbered = args.region === undefined ? undefined : looks.get(context.sessionID)?.[args.region - 1]
-        const candidates: AppDockOutline.Node[] = []
-        if (!numbered) state.roots.forEach(function collect(node) {
-          if ((args.name === undefined || node.name.toLowerCase().includes(args.name.toLowerCase()))
-            && (args.role === undefined || node.role.replace(/[^a-z0-9]/g, "") === args.role.toLowerCase().replace(/[^a-z0-9]/g, ""))
-            && (args.name !== undefined || args.role !== undefined)) candidates.push(node)
-          node.children.forEach(collect)
-        })
-        const node = numbered ? AppDockOutline.locate(state.roots, numbered) : candidates.length === 1 ? candidates[0] : undefined
-        if (!node) return candidates.length > 1
+        const last = looks.get(context.sessionID)
+        if (args.region !== undefined) {
+          const wanted = last?.regions[args.region - 1]
+          // Numbers always come from the latest view; after an enter, that is the entered region's own map.
+          if (!last || !wanted) return last
+            ? `The last view (scope ${last.scope}) listed ${last.regions.length} region${last.regions.length === 1 ? "" : "s"}, so there is no #${args.region}; numbers refer to the latest ui_look or ui_enter output, and ui_up leaves an entered region`
+            : "No view yet in this session; call ui_look and use one of its region numbers"
+          const node = AppDockOutline.locate(state.roots, wanted)
+          const step = wanted.at(-1)!
+          if (!node) return `Region #${args.region} (${step.role}${step.name ? ` "${step.name}"` : ""}) from the last view is no longer on screen; call ui_look again`
+          state.stack.push(wanted)
+          return view(context, state.roots, node, state.note)
+        }
+        if (args.name === undefined && args.role === undefined) return "ui_enter needs a region number from ui_look, or a name or role"
+        const candidates = AppDockOutline.visible(state.roots).filter((node) =>
+          (args.name === undefined || node.name.toLowerCase().includes(args.name.toLowerCase()))
+          && (args.role === undefined || roleKey(node.role) === roleKey(args.role)))
+        if (candidates.length !== 1) return candidates.length > 1
           ? `${candidates.length} regions match; use a number from ui_look or add the role:\n${candidates.slice(0, 12).map((item) => `  ${AppDockOutline.line(item)}`).join("\n")}`
-          : "No such region in the current view; call ui_look and use one of its numbers"
-        state.stack.push(AppDockOutline.handle(node))
-        return view(context, state.roots, node, state.note)
+          : "No region with that name and role is on screen; call ui_look and use one of its numbers"
+        state.stack.push(AppDockOutline.handle(state.roots, candidates[0]!))
+        return view(context, state.roots, candidates[0]!, state.note)
       }, toolError),
     }),
     ui_up: tool({
