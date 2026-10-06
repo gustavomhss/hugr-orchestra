@@ -41,23 +41,37 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(close).toHaveCSS("height", "20px")
     await expectTarget(close)
 
-    await page.getByRole("button", { name: "View context usage", exact: true }).click()
+    // The header's Review button opens the rail; Context is a permanent tab, with no close of its own.
+    await page.locator('[data-slot="session-title-actions"]').getByRole("button", { name: "Review" }).click()
     const context = page.getByRole("tab", { name: "Context", exact: true })
+    await context.click()
     await expect(context).toHaveAttribute("aria-selected", "true")
-    const panelClose = page
-      .locator('[data-slot="tabs-trigger-wrapper"]')
-      .filter({ has: context })
-      .getByRole("button", { name: "Close tab", exact: true })
-    await panelClose.focus()
-    await expect(panelClose).toBeFocused()
-    await expect(panelClose).toHaveCSS("width", "20px")
-    await expect(panelClose).toHaveCSS("height", "20px")
-    await expectTarget(panelClose)
+    await expect(
+      page
+        .locator('[data-slot="tabs-trigger-wrapper"]')
+        .filter({ has: context })
+        .getByRole("button", { name: "Close tab" }),
+    ).toHaveCount(0)
+    const openFile = page.locator('[data-slot="session-side-panel-open-file"]').getByRole("button", {
+      name: "Open file",
+      exact: true,
+    })
+    await openFile.focus()
+    await expect(openFile).toBeFocused()
+    await expect(openFile).toHaveCSS("width", "24px")
+    await expect(openFile).toHaveCSS("height", "24px")
+    await expectTarget(openFile)
+    await expectTarget(page.locator('[data-slot="session-title-actions"]').getByRole("button", { name: "Review" }))
 
+    // Plugins is a page now; its Add behavior dialog keeps the shared DialogHeader close control.
     await sidebar.getByRole("button", { name: /^Plugins/ }).click()
+    await page.locator('[data-mx-page="orchestra-plugins"]').getByRole("button", { name: "Add behavior" }).click()
     const dialog = page.getByRole("dialog")
-    await expect(dialog).toContainText("Plugins")
-    const dialogClose = dialog.getByRole("button", { name: "Close", exact: true })
+    await expect(dialog).toContainText("Add LLM behavior")
+    const dialogClose = dialog
+      .locator('[data-slot="dialog-header"]')
+      .getByRole("button", { name: "Close", exact: true })
+    await expect(dialogClose).toHaveAttribute("data-slot", "dialog-close-button")
     await expect(dialogClose).toHaveCSS("width", "20px")
     await expect(dialogClose).toHaveCSS("height", "20px")
     await expectTarget(dialogClose)

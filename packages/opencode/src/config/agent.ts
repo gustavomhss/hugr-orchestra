@@ -21,10 +21,12 @@ export async function load(dir: string) {
 
     const name = configEntryNameFromPath(path.relative(dir, item), ["agent/", "agents/"])
 
+    // A file without a body overrides other fields only; it keeps the agent's built-in prompt.
+    const prompt = md.content.trim()
     const config = {
       name,
       ...md.data,
-      prompt: md.content.trim(),
+      ...(prompt ? { prompt } : {}),
     }
     result[config.name] = ConfigParse.schema(ConfigAgentV1.Info, config, item)
   }
@@ -42,10 +44,11 @@ export async function loadMode(dir: string) {
     const md = await ConfigMarkdown.parse(item).catch(() => undefined)
     if (!md) continue
 
+    const prompt = md.content.trim()
     const config = {
       name: configEntryNameFromPath(path.relative(dir, item), ["mode/", "modes/"]),
       ...md.data,
-      prompt: md.content.trim(),
+      ...(prompt ? { prompt } : {}),
     }
     const parsed = Schema.decodeUnknownExit(ConfigAgentV1.Info)(config, { errors: "all", propertyOrder: "original" })
     if (Exit.isSuccess(parsed)) {

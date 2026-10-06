@@ -79,9 +79,10 @@ const fixture = Effect.fn("AtlasTest.fixture")(function* (
   yield* command(test.directory, ["add", "src"])
   yield* command(test.directory, ["commit", "-m", "source fixture"])
   const revision = yield* command(test.directory, ["rev-parse", "HEAD"])
-  const blobs = yield* Effect.forEach(["src/alpha.ts", "src/beta.ts"], (file) =>
-    command(test.directory, ["hash-object", "--no-filters", "--", file]),
-  )
+  // One hash-object process for both files: git spawns dominate this fixture's cost on Windows.
+  const blobs = (yield* command(test.directory, ["hash-object", "--no-filters", "--", "src/alpha.ts", "src/beta.ts"]))
+    .split(/\r?\n/)
+  expect(blobs).toHaveLength(2)
   const snapshot = parseOwnSnapshot(
     JSON.stringify({
       schemaVersion: 1,

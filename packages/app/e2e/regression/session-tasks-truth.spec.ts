@@ -125,9 +125,12 @@ function row(panel: ReturnType<Page["locator"]>, headline: string) {
 async function openPanel(page: Page, owner = server) {
   await page.goto(`/server/${base64Encode(owner)}/session/${parentID}`)
   await expectSessionTitle(page, parentTitle)
-  // Once the side panel mounts, the running child opens Orchestra's cockpit, whose Tasks card
+  // Once the side panel mounts, the running child opens Orchestra's Tasks tab, whose Tasks card
   // expands into the full list.
   await page.getByRole("button", { name: "Toggle review" }).click()
+  await expect(
+    page.locator('[data-slot="session-side-panel-tab-bar"] [role="tab"][data-value="tasks"]'),
+  ).toHaveAttribute("aria-selected", "true")
   const panel = page.locator('[data-component="tasks-panel"]')
   await expect(panel).toBeVisible()
   await panel.getByRole("button", { name: "View all (5)" }).click()

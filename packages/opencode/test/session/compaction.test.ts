@@ -4,7 +4,7 @@ import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Database } from "@opencode-ai/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { APICallError } from "ai"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
+import { Cause, Clock, Deferred, Effect, Exit, Fiber, Layer, Queue, Schema } from "effect"
 import * as Stream from "effect/Stream"
 import { Config } from "@/config/config"
 import { LLM } from "../../src/session/llm"
@@ -24,7 +24,7 @@ import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { Provider } from "@/provider/provider"
 import * as SessionProcessorModule from "../../src/session/processor"
 import { ProviderTest } from "../fake/provider"
-import { testEffect } from "../lib/effect"
+import { heldClock, testEffect } from "../lib/effect"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { TestConfig } from "../fixture/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -1225,20 +1225,16 @@ describe("session.compaction.process", () => {
 
       return Effect.gen(function* () {
         const ssn = yield* SessionNs.Service
-        const events = yield* EventV2Bridge.Service
-        const ready = yield* Deferred.make<void>()
         const session = yield* ssn.create({})
         const msg = yield* createUserMessage(session.id, "hello")
         const msgs = yield* ssn.messages({ sessionID: session.id })
-        const off = yield* events.listen((evt) => {
-          if (evt.type !== SessionStatus.Event.Status.type) return Effect.void
-          const data = evt.data as typeof SessionStatus.Event.Status.data.Type
-          if (data.sessionID !== session.id || data.status.type !== "retry") return Effect.void
-          Deferred.doneUnsafe(ready, Effect.void)
-          return Effect.void
-        })
-        yield* Effect.addFinalizer(() => off)
+        const held = yield* heldClock
 
+        // On the held clock the backoff sleep never elapses on its own, so the
+        // interrupt can only complete by cancelling the backoff itself, however
+        // loaded the machine is. Waiting for the sleep request (rather than the
+        // retry status event, which precedes it) guarantees the interrupt lands
+        // inside the backoff.
         const fiber = yield* SessionCompaction.use
           .process({
             parentID: msg.id,
@@ -1246,18 +1242,19 @@ describe("session.compaction.process", () => {
             sessionID: session.id,
             auto: false,
           })
-          .pipe(Effect.forkChild)
+          .pipe(Effect.provideService(Clock.Clock, held.clock), Effect.forkChild)
 
-        yield* Deferred.await(ready).pipe(Effect.timeout("5 seconds"))
-        const start = Date.now()
-        yield* Fiber.interrupt(fiber)
-        const exit = yield* Fiber.await(fiber).pipe(Effect.timeout("250 millis"))
+        // Instance services started by this fiber also schedule minute-long cleanup
+        // sleeps on the held clock; leave those held and wait for the backoff,
+        // which is exactly the 10s the provider asked for in retry-after-ms.
+        yield* Effect.gen(function* () {
+          while ((yield* Queue.take(held.sleeps)).millis !== 10_000) {}
+        }).pipe(Effect.timeout("5 seconds"))
+        yield* Fiber.interrupt(fiber).pipe(Effect.timeout("5 seconds"))
+        const exit = yield* Fiber.await(fiber)
 
         expect(Exit.isFailure(exit)).toBe(true)
-        if (Exit.isFailure(exit)) {
-          expect(Cause.hasInterrupts(exit.cause)).toBe(true)
-          expect(Date.now() - start).toBeLessThan(250)
-        }
+        if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true)
       }).pipe(withCompaction({ llm: stub.llmLayer }))
     },
     { git: true },

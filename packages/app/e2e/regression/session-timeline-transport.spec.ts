@@ -3,6 +3,7 @@ import {
   assistantMessage,
   partUpdated,
   setupTimeline,
+  shell,
   textPart,
   userMessage,
 } from "../performance/timeline-stability/fixture"
@@ -50,7 +51,10 @@ test("parses split JSON and a split multibyte code point", async ({ page }) => {
 })
 
 test("delivers server heartbeat without mutating the timeline", async ({ page }) => {
-  const sentinelID = "prt_transport_heartbeat_sentinel"
+  // The sentinel must leave the steady row's own content alone. Part IDs ascend in arrival order, so it sorts
+  // after the steady part like any streamed part (a lower ID would take over the turn's who/when head), and it
+  // is a tool part (a later text part would take over the turn's agent/model footer).
+  const sentinelID = "prt_transport_z_heartbeat_sentinel"
   const timeline = await setupTimeline(page, {
     messages: [userMessage(), assistantMessage([textPart("prt_transport_steady", "steady")])],
   })
@@ -58,7 +62,7 @@ test("delivers server heartbeat without mutating the timeline", async ({ page })
   const before = await stableTimelineRows(page)
 
   await timeline.transport.writeRaw(": heartbeat\n\n")
-  await timeline.transport.send(partUpdated(textPart(sentinelID, "heartbeat processed")))
+  await timeline.transport.send(partUpdated(shell(sentinelID, "completed", "heartbeat processed")))
   await timeline.waitForPart(sentinelID)
 
   await expect

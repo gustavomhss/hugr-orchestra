@@ -27,6 +27,10 @@ for (const scheme of ["dark", "light"] as const) {
       config,
       messages: governedMessages(),
     })
+    const documents: string[] = []
+    page.on("request", (request) => {
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url())
+    })
     await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
     await expectSessionTitle(page, title)
     await expect(page.getByRole("dialog")).toHaveCount(0)
@@ -89,6 +93,8 @@ for (const scheme of ["dark", "light"] as const) {
     expect(requests.slice(before).filter((request) => request.method !== "GET")).toEqual([])
     // Positive control: the request observer sees the bootstrap reads.
     expect(requests.some((request) => new URL(request.url).pathname === "/agent")).toBe(true)
+    // A dev-server dependency reload remounts the page mid-test; the records above must come from one load.
+    expect(documents).toHaveLength(1)
   })
 }
 

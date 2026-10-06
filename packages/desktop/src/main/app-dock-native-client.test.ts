@@ -109,6 +109,8 @@ describe("native channel framing and shared contract", () => {
     expect(channel.writes.length).toBe(1)
   })
 
+  // On Windows the parent sees the eof child's closed stdout only when its 5 s exit timer fires (measured 5.05 s),
+  // which the default 5 s test timeout cannot hold.
   test.each(["crash", "eof", "utf8"])("real process %s retires and reaps", async (mode) => {
     const channel = new StdioChannel(mode)
     const client = await NativeDockClient.create(channel)
@@ -121,7 +123,7 @@ describe("native channel framing and shared contract", () => {
     expect(channel.ended).toBe(true)
     expect(channel.writes.length).toBe(1)
     if (mode === "eof") expect(channel.eofBeforeExit).toBe(true)
-  })
+  }, 10_000)
 })
 
 describe("startup and retirement", () => {

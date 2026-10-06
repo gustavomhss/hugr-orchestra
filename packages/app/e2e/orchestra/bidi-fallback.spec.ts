@@ -4,7 +4,7 @@ import { expectSessionTitle } from "../utils/waits"
 import { expectInOrder, expectStartAligned, expectTrailing, glyphs } from "./bidi"
 import { setupCompactNavigation } from "./compact-navigation.fixture"
 import { evidencePage, runCard } from "./evidence.fixture"
-import { dockCard, pane, parentID, parentTitle, server, setupCockpit } from "./session-cockpit.fixture"
+import { dockCard, pane, parentID, parentTitle, railTab, server, setupCockpit } from "./session-cockpit.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -91,6 +91,9 @@ for (const scenario of scenarios) {
   }) => {
     await setupCockpit(page, { bridge: true, many: true, locale: scenario.locale })
     await openSession(page, scenario.review)
+    // Live work opens the Tasks tab; the Dock lives alone in Apps.
+    await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+    await railTab(page, "apps").click()
     const dock = dockCard(page)
     await expect(dock).toBeVisible()
     await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)
@@ -98,6 +101,7 @@ for (const scenario of scenarios) {
     await expect(dock.getByRole("status")).toHaveText(browsing)
     expectTrailing(await glyphs(dock.getByRole("status")), browsing)
 
+    await railTab(page, "tasks").click()
     const tasks = page.locator('[data-component="tasks-panel"][data-variant="summary"]')
     const count = tasks.locator('[data-slot="tasks-count"]')
     await expect(count).toHaveText("65 tasks")
@@ -121,21 +125,21 @@ for (const scenario of scenarios) {
   }) => {
     await setupCockpit(page, { bridge: false, empty: true, locale: scenario.locale })
     await openSession(page, scenario.review)
-    await page
-      .locator('[data-slot="session-side-panel-tab-bar"]')
-      .getByRole("tab", { name: "Apps", exact: true })
-      .click()
+    await railTab(page, "apps").click()
     const dock = dockCard(page)
     const unavailable =
       "The embedded browser requires the desktop app. Files, docs and terminal remain available when supported."
     expectTrailing(await glyphs(dock.getByText(unavailable, { exact: true })), unavailable)
 
+    // Activity lives in the Tasks tab.
+    await railTab(page, "tasks").click()
     const events = "Events appear here as they arrive from their sources."
     const body = page.getByRole("region", { name: "Activity" }).getByText(events, { exact: true })
     expectTrailing(await glyphs(body), events)
     // The empty state stretches the sentence across the card, so its line shows the alignment.
     await expectStartAligned(body, scenario.direction)
 
+    await railTab(page, "apps").click()
     await pane(dock, "Files").click()
     const files = "This workspace has no files to show."
     await expect(dock.getByRole("status")).toHaveText(files)
@@ -157,30 +161,54 @@ for (const scenario of scenarios) {
     await expect(env).toBeVisible()
     await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)
 
-    const title = env.getByRole("heading", { name: ".env", level: 1 })
+    // The page frame (title, description) wraps the env body; dialogs portal outside both.
+    const screen = page.locator('[data-mx-page="orchestra-env"]')
+    const title = screen.getByRole("heading", { name: ".env", level: 1 })
     expectInOrder(await glyphs(title), 0, 1)
     await expectStartAligned(title, scenario.direction)
     const crumb = page.locator('[data-slot="orchestra-titlebar-breadcrumb"] > span').last()
     await expect(crumb).toHaveText(".env")
     expectInOrder(await glyphs(crumb), 0, 1)
 
-    const description = "Open, edit, and download your environment keys."
-    const intro = env.getByText(description, { exact: true })
+    const description = "Your project's environment keys. Open, edit, and download a .env file."
+    const intro = screen.getByText(description, { exact: true })
     expectTrailing(await glyphs(intro), description)
     await expectStartAligned(intro, scenario.direction)
-    const empty = "Open a local file or add your first key."
-    expectTrailing(await glyphs(env.getByText(empty, { exact: true })), empty)
+    // The empty state is two sentences separated by a line break, each ending in its own period.
+    const empty = "No environment keys yet."
+    const hint = "Open a .env file or add a key to start from an empty list."
+    await expect(env.locator(".mx-empty")).toHaveText(empty + hint)
+    const lines = await glyphs(env.locator(".mx-empty"))
+    expectTrailing(lines, empty)
+    expectTrailing(lines, empty + hint)
 
     // A file name reads left to right whatever its first letter: the Arabic name (itself right to
-    // left, so its last letter paints first), then ".env".
+    // left, so its last letter paints first), then ".env". View file titles the preview with it.
     const name = `${project.split(" ")[0]}.env`
     await page
       .getByLabel("Open .env", { exact: true })
       .setInputFiles({ name, mimeType: "text/plain", buffer: Buffer.from("KEY=value\n") })
-    const filename = env.locator(".env-filename")
+    await expect(env.locator('[data-env-key="KEY"]')).toBeVisible()
+    await env.getByRole("button", { name: "View file", exact: true }).click()
+    const filename = page.getByRole("dialog").getByRole("heading", { level: 2 }).locator("bdi")
     await expect(filename).toHaveText(name)
     const extension = name.indexOf(".")
     expectInOrder(await glyphs(filename), extension - 1, 0, extension, extension + 1, extension + 2, extension + 3)
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+
+    // The portaled confirmation keeps its English sentences in order, ending punctuation last.
+    await env.locator('[data-env-key="KEY"]').getByRole("button", { name: "Remove", exact: true }).click()
+    const confirm = page.getByRole("dialog")
+    const removal = "The key is removed from this draft. Download to save the file."
+    const subtitle = confirm.locator(".mx-dialog-head p")
+    await expect(subtitle).toHaveText(removal)
+    expectTrailing(await glyphs(subtitle), removal)
+    await expectStartAligned(subtitle, scenario.direction)
+    // The profile name is isolated (FSI…PDI), so the period follows its last letter.
+    const note = `This changes the .env draft for \u2068Compact project\u2069.`
+    await expect(confirm.locator(".mx-note")).toHaveText(note)
+    expectInOrder(await glyphs(confirm.locator(".mx-note")), 0, 1, note.length - 3, note.length - 1)
     await page.screenshot({ path: test.info().outputPath(`bidi-chapter-${scenario.locale}.png`) })
   })
 }
