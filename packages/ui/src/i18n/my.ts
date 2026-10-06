@@ -122,7 +122,6 @@ export const dict = {
   "ui.promptInput.attachments": "ရုပ်ပုံများနှင့် ဖိုင်များ",
   "ui.promptInput.context": "ဆက်စပ်အကြောင်းအရာ",
   "ui.promptInput.shell": "Shell အမိန့်",
-  "ui.promptInput.chooseAgent": "အေးဂျင့်ကို ရွေးပါ။",
   "ui.promptInput.chooseModel": "မော်ဒယ်ကို ရွေးပါ။",
   "ui.promptInput.chooseVariant": "မော်ဒယ်အမျိုးအစားကို ရွေးပါ။",
   "ui.promptInput.send": "ပို့ပါ။",

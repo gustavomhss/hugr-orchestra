@@ -7,14 +7,12 @@ const native = (name: string) => ({ name, mode: "primary", native: true })
 const roster = [native("build"), native("plan"), native("maestro")]
 
 let params: { id?: string } = {}
-let search: { draftId?: string } = {}
 let agents = roster
 let sessions: Record<string, { agent?: string } | undefined> = {}
 
 beforeAll(async () => {
   mock.module("@solidjs/router", () => ({
     useParams: () => params,
-    useSearchParams: () => [search, () => undefined],
   }))
 
   // Each use() runs the real Local init against the route, roster and saved state of the current test.
@@ -57,7 +55,6 @@ beforeAll(async () => {
 
 beforeEach(() => {
   params = {}
-  search = {}
   agents = roster
   sessions = {}
 })
@@ -78,8 +75,6 @@ describe("Local agent", () => {
   })
 
   test("new sessions and drafts start on maestro", () => {
-    search = { draftId: "draft_1" }
-
     expect(currentAgent()).toBe("maestro")
   })
 
