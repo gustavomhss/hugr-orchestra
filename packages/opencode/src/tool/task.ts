@@ -267,7 +267,7 @@ export const TaskTool = Tool.define(
         if (ancestorDepth >= (cfg.subagent_depth ?? 1)) {
           return yield* Effect.fail(
             new Error(
-              `Subagent depth limit reached (${cfg.subagent_depth ?? 1}). Increase "subagent_depth" to allow nested subagents.`,
+              "You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.",
             ),
           )
         }
@@ -328,7 +328,7 @@ export const TaskTool = Tool.define(
       if (depth >= (cfg.subagent_depth ?? 1)) {
         return yield* Effect.fail(
           new Error(
-            `Subagent depth limit reached (${cfg.subagent_depth ?? 1}). Increase "subagent_depth" to allow nested subagents.`,
+            "You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.",
           ),
         )
       }

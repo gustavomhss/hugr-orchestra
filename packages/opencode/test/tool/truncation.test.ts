@@ -181,7 +181,7 @@ describe("Truncate", () => {
 
         expect(result.truncated).toBe(true)
         expect(result.content).toContain("The tool call succeeded but the output was truncated")
-        expect(result.content).toContain("Grep")
+        expect(result.content).toContain("Use `grep` to search the full content")
         if (!result.truncated) throw new Error("expected truncated")
         expect(result.outputPath).toBeDefined()
         expect(result.outputPath).toContain("tool_")
@@ -192,7 +192,7 @@ describe("Truncate", () => {
       }),
     )
 
-    it.live("suggests Task tool when agent has task permission", () =>
+    it.live("suggests an explore teammate when agent has task permission", () =>
       Effect.gen(function* () {
         const svc = yield* Truncate.Service
         const lines = Array.from({ length: 100 }, (_, i) => `line${i}`).join("\n")
@@ -200,12 +200,12 @@ describe("Truncate", () => {
         const result = yield* svc.output(lines, { maxLines: 10 }, agent as any)
 
         expect(result.truncated).toBe(true)
-        expect(result.content).toContain("Grep")
-        expect(result.content).toContain("Task tool")
+        expect(result.content).toContain("Use `grep` to search the full content or `read` with offset/limit")
+        expect(result.content).toContain("hand it to an `explore` teammate with `task`.")
       }),
     )
 
-    it.live("omits Task tool hint when agent lacks task permission", () =>
+    it.live("omits the teammate hint when agent lacks task permission", () =>
       Effect.gen(function* () {
         const svc = yield* Truncate.Service
         const lines = Array.from({ length: 100 }, (_, i) => `line${i}`).join("\n")
@@ -213,8 +213,8 @@ describe("Truncate", () => {
         const result = yield* svc.output(lines, { maxLines: 10 }, agent as any)
 
         expect(result.truncated).toBe(true)
-        expect(result.content).toContain("Grep")
-        expect(result.content).not.toContain("Task tool")
+        expect(result.content).toContain("Use `grep` to search the full content or `read` with offset/limit")
+        expect(result.content).not.toContain("hand it to an `explore` teammate with `task`.")
       }),
     )
 
