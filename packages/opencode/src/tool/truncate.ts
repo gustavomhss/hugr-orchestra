@@ -31,11 +31,15 @@ function hasTaskTool(agent?: Agent.Info) {
 }
 
 // A scoped agent (the Linux workspace agent holds only linux_* and ui_*) cannot open the saved file, and its own
-// file tools reach a different machine: run 16 grepped the host path inside the workspace. Such an agent gets no
-// path, only how to ask its own tools for less.
+// file tools reach a different machine: run 16 grepped the host path inside the workspace. Neither can a seat whose
+// external-directory rules deny the saved-output directory. Such an agent gets no path, only how to ask its own tools
+// for less.
 function canReadSaved(agent?: Agent.Info) {
   if (!agent?.permission) return true
-  return [...disabled(["read", "grep", "task"], agent.permission)].length < 3
+  const off = disabled(["read", "grep", "task"], agent.permission)
+  if (!off.has("task")) return true
+  if (off.has("read") && off.has("grep")) return false
+  return evaluate("external_directory", GLOB, agent.permission).action !== "deny"
 }
 
 export interface Interface {

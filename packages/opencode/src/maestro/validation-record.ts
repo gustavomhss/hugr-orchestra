@@ -159,6 +159,9 @@ const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
   // Before the harness rewrite reworded the cold reviewer's role and denied seats .env reads.
   ["3d84eb72e8c4bc22d0e4cbb50affaab01f45b0fb2a41c7375d02640d095a9f2a", REVIEW_POLICY_V2],
+  // Before review seats could read saved tool output. The current hash holds that directory's absolute path, so it
+  // varies with the data directory; this one does not.
+  ["b6996d6a55dfa44e2b781b06bb8ddac2be43c7c1f8b7c1d63b2068b985de4a22", REVIEW_POLICY_V2],
 ])
 
 /** The hash version a recorded roster hash verifies under against `members`, if any. */

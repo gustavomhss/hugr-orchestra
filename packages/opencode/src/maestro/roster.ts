@@ -8,6 +8,7 @@ import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
 import { BackendSkillRoot } from "./backend-skill-root"
+import { TRUNCATION_DIR } from "../tool/truncation-dir"
 
 // The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const backendSkills = Object.freeze({
@@ -62,12 +63,15 @@ export const nativeProfiles = Object.freeze({
     }),
     external_directory: Object.freeze({ "*": "deny", [path.join(backendSkills.root, "*")]: "allow" } as const),
   } as const),
+  // A truncated tool result points at its saved full output, so review seats may read that directory. External access
+  // also covers bash and edit, so only this profile, which holds neither, gets it; the others get no saved-file hint.
   review: Object.freeze({
     "*": "deny",
     read: envRead("deny"),
     glob: "allow",
     grep: "allow",
     maestro_record_review: "allow",
+    external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),
 } as const)
 
