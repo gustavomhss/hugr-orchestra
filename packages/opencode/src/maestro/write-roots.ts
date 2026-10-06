@@ -35,24 +35,6 @@ export const bind = Effect.fn("WriteRoots.bind")(function* <T extends Rule>(
   return [...permission.filter((rule) => rule.permission !== PERMISSION), ...reserved(yield* validate(writePaths ?? []))]
 })
 
-/**
- * Bind write roots on an existing Session (direct use). Binding the roots it already holds is a no-op; a Session bound
- * to other roots keeps them and the rebind is refused.
- */
-export const bindSession = Effect.fn("WriteRoots.bindSession")(function* (
-  sessions: Session.Interface,
-  session: Session.Info,
-  writePaths: ReadonlyArray<string>,
-) {
-  const roots = yield* validate(writePaths)
-  // Re-read so a binding made since the caller loaded `session` is not overwritten.
-  const current = yield* sessions.get(session.id)
-  const bound = read(current.permission)
-  if (bound && JSON.stringify(bound.toSorted()) === JSON.stringify(roots.toSorted())) return
-  if (bound) return yield* Effect.fail(new Error("Task denied: write-scope-rebind-refused"))
-  yield* sessions.setPermission({ sessionID: current.id, permission: [...(current.permission ?? []), ...reserved(roots)] })
-})
-
 /** A replacement of a Session's ruleset keeps the reserved rules of the ruleset it replaces and adds none of its own. */
 export function keep<T extends Rule>(previous: ReadonlyArray<T> | undefined, next: ReadonlyArray<T>) {
   return [
@@ -61,7 +43,7 @@ export function keep<T extends Rule>(previous: ReadonlyArray<T> | undefined, nex
   ]
 }
 
-/** Bound write roots of a Session, or undefined when the host bound none (direct use and other members). */
+/** Bound write roots of a Session, or undefined when the host bound none (other members, or no Task dispatch). */
 export function read(permission: ReadonlyArray<Rule> | undefined) {
   if (!permission?.some((rule) => rule.permission === PERMISSION)) return undefined
   return permission.filter((rule) => rule.permission === PERMISSION && rule.action === "allow").map((rule) => rule.pattern)
