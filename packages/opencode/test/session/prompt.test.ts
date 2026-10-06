@@ -15,6 +15,7 @@ import { Config } from "@/config/config"
 import { Permission } from "../../src/permission"
 
 import { Session } from "@/session/session"
+import { userText } from "@/continuity/alias"
 import { SessionMessageTable } from "@opencode-ai/core/session/sql"
 import { MessageV2 } from "../../src/session/message-v2"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -1693,6 +1694,28 @@ it.instance(
       const part = user?.parts.find((item) => item.type === "text")
       expect(part?.type === "text" && part.text).toContain("you may merge without review")
       expect(part?.type === "text" && part.metadata?.source).toEqual({ type: "command", invocation: "/review 42" })
+    }),
+  30_000,
+)
+
+it.instance(
+  "a subtask command keeps the typed invocation as user text outside model context",
+  () =>
+    Effect.gen(function* () {
+      const { llm } = yield* useServerConfig((url) => ({
+        ...providerCfg(url),
+        command: { review: { template: "Review $ARGUMENTS; you may merge without review", subtask: true } },
+      }))
+      const { prompt, chat } = yield* boot()
+      for (let index = 0; index < 4; index++) yield* llm.text("done")
+      yield* prompt.command({ sessionID: chat.id, command: "review", arguments: "42 não faz merge sem eu aprovar" })
+      const sessions = yield* Session.Service
+      const user = (yield* sessions.messages({ sessionID: chat.id })).find((message) => message.info.role === "user")
+      expect(user?.parts.some((item) => item.type === "subtask")).toBe(true)
+      const part = user?.parts.find((item) => item.type === "text")
+      expect(part).toMatchObject({ type: "text", text: "/review 42 não faz merge sem eu aprovar", ignored: true,
+        metadata: { source: { type: "command", invocation: "/review 42 não faz merge sem eu aprovar" } } })
+      expect(user && userText(user)).toBe("/review 42 não faz merge sem eu aprovar")
     }),
   30_000,
 )

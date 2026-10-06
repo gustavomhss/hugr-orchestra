@@ -1,15 +1,15 @@
 import { expect } from "bun:test"
-import { Deferred, Effect, Stream } from "effect"
+import { Deferred, Effect, Logger, Stream } from "effect"
 import { LLMEvent } from "@opencode-ai/llm"
 import { Archive } from "@/continuity/archive"
 import { BackgroundJob } from "@/background/job"
 import { Session } from "@/session/session"
 import { MessageV2 } from "@/session/message-v2"
-import { MessageID, PartID } from "@/session/schema"
+import { MessageID, PartID, SessionID } from "@/session/schema"
 import { SessionContinuity } from "@/continuity/service"
 import type { LLM } from "@/session/llm"
 import { awaitWithTimeout, it } from "../lib/effect"
-import { A, B, FIRST, SECOND, applyFirst, begin, complete, entered, environment, fragments, held, jobFor, packet, prepare, seed, terminal } from "./service-fixture"
+import { A, B, FIRST, NONCE, RECEIPT, SECOND, applyFirst, begin, complete, entered, environment, fragments, held, jobFor, packet, prepare, seed, terminal } from "./service-fixture"
 
 it.instance("repeat maintenance receives prior Markdown and only newly displaced whole turns", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
@@ -329,4 +329,55 @@ it.instance("C13: history that grows during a pass without an advance discards t
     yield* terminal(hit.jobID, "completed", "discarded")
     expect((yield* prepare(sessionID)).system).toEqual([])
   }).pipe(Effect.provide(environment([first])))
+}), 30_000)
+
+it.instance("C-R1: a trigger with no positive ceiling skips passes without opening the breaker; masking continues", () => Effect.gen(function* () {
+  yield* Effect.gen(function* () {
+    const output = "build log line\n".repeat(2_000)
+    const sessionID = yield* seed(B, A, output)
+    const sessions = yield* Session.Service
+    const jobs = yield* BackgroundJob.Service
+    // (0.15 - 0.15) of the window leaves no room: every pass skips, and no plan exists for a fork request.
+    for (let turn = 0; turn < 4; turn++) {
+      if (turn > 0) yield* complete(yield* begin(sessionID, `SKIP_TURN_${turn}`), `SKIP_REPLY_${turn}`, 50_000)
+      const latest = (yield* sessions.messages({ sessionID })).at(-1)!.info.id
+      yield* terminal((yield* jobFor(sessionID, latest)).id, "completed", "skipped")
+    }
+    expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toHaveLength(4)
+    const tool = (yield* prepare(sessionID)).messages.flatMap((message) => message.parts).find((part) => part.type === "tool")
+    expect(tool?.type === "tool" && tool.state.status === "completed" && tool.state.output).toContain("masked")
+  }).pipe(Effect.provide(environment([], { config: { continuity: { trigger: 0.15 } } })))
+}), 60_000)
+
+it.instance("C-R10: one structural event per pass, without op contents", () => Effect.gen(function* () {
+  const first = yield* held(FIRST, { reference: NONCE })
+  const events: unknown[] = []
+  yield* Effect.gen(function* () {
+    const sessionID = yield* seed(B, A, RECEIPT)
+    yield* applyFirst(sessionID, first)
+  }).pipe(Effect.provide(environment([first])), Effect.provide(Logger.layer([
+    Logger.make<unknown, void>((options) => { events.push(options.message) })])))
+  const passes = events.filter((event) => Array.isArray(event) && event[0] === "continuity maintenance")
+  expect(passes).toEqual([["continuity maintenance", expect.objectContaining({ reason: "applied", retried: false,
+    ops: [{ op: "add", section: "findings" }], size: expect.any(Number), ceiling: expect.any(Number) })]])
+  expect(JSON.stringify(events)).not.toContain(FIRST)
+  expect(JSON.stringify(events)).not.toContain(NONCE)
+}), 30_000)
+
+it.instance("C-R11: the parent's overhead outlives its evicted request", () => Effect.gen(function* () {
+  yield* Effect.gen(function* () {
+    const continuity = yield* SessionContinuity.Service
+    const sessions = yield* Session.Service
+    // Seeded without recall, so maintenance first runs after the observations below.
+    const sessionID = yield* seed(B, A, undefined, false)
+    const request = (id: string, system: string[]) => ({ sessionID: id, model: { providerID: "none", id: "none" }, system, messages: [],
+      tools: {}, contextMemory: false }) as unknown as LLM.StreamInput
+    // A 150,000-token system prompt leaves no post-swap room at trigger 0.25 of 200,000.
+    yield* continuity.observe({ sessionID, request: request(sessionID, ["x".repeat(600_000)]), messageIDs: [] })
+    for (let index = 0; index < 4; index++)
+      yield* continuity.observe({ sessionID: SessionID.make(`ses_other_${index}`), request: request(`ses_other_${index}`, []), messageIDs: [] })
+    yield* complete(yield* begin(sessionID, "AFTER_EVICTION"), "AFTER_EVICTION_REPLY", 50_000)
+    const latest = (yield* sessions.messages({ sessionID })).at(-1)!.info.id
+    yield* terminal((yield* jobFor(sessionID, latest)).id, "completed", "skipped")
+  }).pipe(Effect.provide(environment([])))
 }), 30_000)

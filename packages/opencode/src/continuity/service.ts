@@ -14,7 +14,7 @@ import { child } from "./alias"
 import { Token } from "@/util/token"
 import { Cause, Context, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
-import { carriesMemory, run, snapshot, type ParentRequest } from "./fork"
+import { carriesMemory, measure, run, snapshot, type ParentRequest, type Pass } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
 import { isSafe, PREPARE_MARGIN, settings, shouldStart, tokenCount } from "./trigger"
 import { apply as applyMasks, candidates as maskCandidates } from "./masking"
@@ -39,6 +39,8 @@ type State = {
   scope: Scope.Scope
   /** Latest parent model request per session, kept so maintenance can reuse its prompt cache. */
   requests: Map<SessionID, ParentRequest>
+  /** The parent's measured system and tool overhead per session; it outlives the evicted request. */
+  overheads: Map<SessionID, number>
   /** Masked tool part IDs per session, mapped to the archive reference with the full output. */
   masks: Map<SessionID, Map<string, string>>
 }
@@ -81,8 +83,9 @@ function entry(state: State, sessionID: SessionID) {
 }
 
 // Provider causes may contain conversation content. Keep diagnostics structural.
-function diagnostic(sessionID: SessionID, boundary: MessageID | undefined, reason: string) {
-  return Effect.logWarning("continuity maintenance", { sessionID, boundary, reason })
+// One event per pass, whatever its outcome; a pass summary carries op kinds, sections and IDs, never contents.
+function diagnostic(sessionID: SessionID, boundary: MessageID | undefined, reason: string, pass?: Omit<Pass, "artifact">) {
+  return Effect.logWarning("continuity maintenance", { sessionID, boundary, reason, ...pass })
 }
 
 const layer = Layer.effect(
@@ -97,7 +100,7 @@ const layer = Layer.effect(
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
-      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map(), masks: new Map() }
+      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map(), masks: new Map(), overheads: new Map() }
     }))
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
@@ -133,7 +136,9 @@ const layer = Layer.effect(
 
     const observe: Interface["observe"] = Effect.fn("SessionContinuity.observe")(function* (input) {
       const current = yield* InstanceState.get(state)
+      const overhead = yield* measure({ input: input.request, messageIDs: input.messageIDs }, current.contexts.get(input.sessionID)?.text)
       yield* Effect.sync(() => {
+        current.overheads.set(input.sessionID, overhead)
         current.requests.delete(input.sessionID)
         current.requests.set(input.sessionID, { input: input.request, messageIDs: [...input.messageIDs] })
         for (const key of current.requests.keys()) {
@@ -159,6 +164,7 @@ const layer = Layer.effect(
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
       current.requests.delete(sessionID)
+      current.overheads.delete(sessionID)
       current.masks.delete(sessionID)
       const item = entry(current, sessionID)
       item.attempted = undefined
@@ -172,6 +178,7 @@ const layer = Layer.effect(
       current.contexts.discard(sessionID)
       current.sessions.delete(sessionID)
       current.requests.delete(sessionID)
+      current.overheads.delete(sessionID)
       current.masks.delete(sessionID)
     })
 
@@ -276,10 +283,12 @@ const layer = Layer.effect(
                 return freed
               })
               if (masked > 0 && tokenCount(message.tokens) - masked <= context * (options.trigger - PREPARE_MARGIN)) {
-                yield* Effect.logInfo("continuity masked tool output", { sessionID, freed: masked })
+                yield* diagnostic(sessionID, active.boundary, "masked")
                 yield* outcome(true)
                 return "masked"
               }
+              const request = current.requests.get(sessionID)
+              let budget = headBudget
               const selected = yield* Effect.sync(() => {
                 const item = current.sessions.get(sessionID)
                 if (
@@ -293,23 +302,20 @@ const layer = Layer.effect(
                 const previous = current.contexts.get(sessionID)
                 // Full history is required for incompatible or unavailable prior coverage.
                 if (previous && !hasArtifact(previous)) current.contexts.discard(sessionID)
-                return snapshot(
-                  sessionID,
-                  activeHistory,
-                  prepared.system.length ? previous?.artifact : undefined,
-                  pending.canRecall,
-                  headBudget,
-                )
+                const prior = prepared.system.length ? previous?.artifact : undefined
+                // The replay transport sends the index, not the head transcript: only the isolated path caps the head.
+                if (request && carriesMemory(request, prior) && request.input.model.providerID === model.providerID &&
+                  request.input.model.id === model.id) budget = Infinity
+                return snapshot(sessionID, activeHistory, prior, pending.canRecall, budget)
               })
               if (!selected) {
                 yield* diagnostic(sessionID, active.boundary, "no-current-snapshot")
                 return "discarded"
               }
-              const request = current.requests.get(sessionID)
               // A turn that started before the last swap replays older memory than this
               // pass edits. Wait for a turn that carries the current memory instead of
               // paying for an uncached isolated request.
-              if (request && !carriesMemory(request, selected)) {
+              if (request && !carriesMemory(request, selected.previous)) {
                 yield* diagnostic(sessionID, active.boundary, "stale-request")
                 return "discarded"
               }
@@ -321,10 +327,12 @@ const layer = Layer.effect(
                 return [id, { member: info?.agent, status: job?.status }] as const
               })))
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
-              const artifact = yield* run(selected, { provider, llm }, { history, delegations, member },
-                { trigger: options.trigger, masks: current.masks.get(sessionID), parent: request })
+              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member },
+                { trigger: options.trigger, masks: current.masks.get(sessionID), parent: request, overhead: current.overheads.get(sessionID) })
+              // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
-                yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
+                yield* diagnostic(sessionID, active.boundary, pass.skip ? `skipped-${pass.skip}` : "rejected", pass)
+                if (pass.skip) return "skipped"
                 yield* outcome(false)
                 return "discarded"
               }
@@ -357,13 +365,14 @@ const layer = Layer.effect(
                   })
                 )
                   return false
-                item.refresh = !!snapshot(sessionID, activeHistory, artifact, pending.canRecall, headBudget)
+                item.refresh = !!snapshot(sessionID, activeHistory, artifact, pending.canRecall, budget)
                 return true
               })
               if (!applied) {
-                yield* diagnostic(sessionID, active.boundary, "stale-or-mismatched-artifact")
+                yield* diagnostic(sessionID, active.boundary, "stale-or-mismatched-artifact", pass)
                 return "discarded"
               }
+              yield* diagnostic(sessionID, active.boundary, "applied", pass)
               yield* outcome(true)
               return "applied"
             }).pipe(

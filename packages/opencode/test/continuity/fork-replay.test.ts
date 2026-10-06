@@ -44,7 +44,7 @@ function parent(overrides: Partial<LLM.StreamInput> = {}, ids = history.map((mes
 function execute(request?: ParentRequest) {
   return Effect.gen(function* () {
     const requests: LLM.StreamInput[] = []
-    const artifact = yield* run(captured(), { provider: provider(), llm: { stream: (input) => {
+    const { artifact } = yield* run(captured(), { provider: provider(), llm: { stream: (input) => {
       requests.push(input)
       return stopped()
     } } }, host(history), { trigger: 0.7, parent: request })
@@ -130,6 +130,6 @@ test("replay requires the parent request to carry the memory this pass edits", (
   expect(replay(parent({ contextMemory: true, system: ["parent system", "# Working memory\nJ"] }),
     withMemory, model, "x")).toBeUndefined()
   const current = parent({ contextMemory: true, system: ["parent system", "# Working memory\nK"] })
-  expect(carriesMemory(current, withMemory)).toBe(true)
+  expect(carriesMemory(current, withMemory.previous)).toBe(true)
   expect(replay(current, withMemory, model, "x")).toBeDefined()
 })

@@ -25,13 +25,13 @@ const FIELDS: Record<Section, { required: string[]; optional: string[]; labels?:
 const EXACT = new Set(["quote", "error", "value"])
 
 type Fields = Record<string, string | string[] | null>
-type Op =
+export type Op =
   | { op: "add"; section: Section; fields: Fields; src: string[]; key?: string }
   | { op: "update"; id: string; fields: Fields; src: string[] }
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-export type Decoded = { artifact: MemoryArtifact; ops: unknown[]; retired: { id: string; reason: string }[] }
+export type Decoded = { artifact: MemoryArtifact; ops: Op[] }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
 const parse = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
@@ -104,7 +104,6 @@ export function decode(input: {
 
   const items = new Map(live)
   const handles = new Map<string, string>()
-  const retired: Decoded["retired"] = []
   let next = snapshot.previous?.next ?? 1
   for (const op of ops) {
     if (op.op === "retire") {
@@ -115,13 +114,13 @@ export function decode(input: {
         if ("check" in found) return found
       }
       items.delete(op.id)
-      retired.push({ id: op.id, reason: op.reason })
       continue
     }
     const base = op.op === "update" ? items.get(op.id)! : undefined
     const section = base?.section ?? (op as Extract<Op, { op: "add" }>).section
     const fields: Record<string, string | readonly string[]> = { ...base?.fields }
     const src = [...(base?.src ?? []), ...op.src]
+    const evidence = [...op.src]
     for (const [name, value] of Object.entries(op.fields)) {
       if (value === null) delete fields[name]
       else if (Array.isArray(value)) fields[name] = value
@@ -131,8 +130,13 @@ export function decode(input: {
         if ("check" in found) return found
         fields[name] = found.text
         src.push(found.alias)
+        evidence.push(found.alias)
       }
     }
+    // C9: the op that makes an item confirmed or done cites the evidence itself.
+    if ((section === "findings" && op.fields.status === "confirmed" || section === "plan" && op.fields.status === "done") &&
+      !evidence.some((alias) => alias.startsWith("t") || alias.startsWith("u")))
+      return fail("C9", `${base?.id ?? "the new item"} becomes ${op.fields.status} without citing a tool result or user text`)
     if (guarded({ section, fields }) && !op.src.some((alias) => alias.startsWith("u")))
       return fail("C7", `${section === "decisions" ? `a decision by ${fields.by}` : `the ${section}`} must cite a u alias`)
     if (section === "decisions" && guarded({ section, fields }) && !fields.quote)
@@ -150,9 +154,6 @@ export function decode(input: {
   const result = [...items.values()]
   for (const item of result) {
     const f = item.fields
-    if ((item.section === "findings" && f.status === "confirmed" || item.section === "plan" && f.status === "done") &&
-      !item.src.some((alias) => alias.startsWith("t") || alias.startsWith("u")))
-      return fail("C9", `${item.id} is ${f.status} but cites no tool result or user text`)
     if (item.section === "findings" && f.status === "hypothesis" && !f.check) return fail("C9", `${item.id} is a hypothesis without check`)
     if (item.section === "plan" && f.status === "done" && !f.detail) return fail("C9", `${item.id} is done without detail (the outcome)`)
   }
@@ -172,7 +173,6 @@ export function decode(input: {
   }
   return {
     ops,
-    retired,
     artifact: {
       version: 4,
       parentID: snapshot.sessionID,
@@ -373,8 +373,8 @@ function team(covered: Source[], host: Host) {
     const part = source.part
     const task = part && marker(part)
     if (task?.type === "task-return") return task.task_id
-    const id = part ? child(part) : undefined
-    return id && returns.get(id) === source ? id : undefined
+    return part?.type === "tool" && !background(part) && (part.state.status === "completed" || part.state.status === "error")
+      ? child(part) : undefined
   }
   return { launches, returns, member, description, returned }
 }
@@ -477,12 +477,14 @@ function activity(ctx: Scope, host: Host, budget: number) {
 }
 
 function ledger(ctx: Scope, host: Host, budget: number) {
-  const cap = Math.floor(budget / 8) * 4
+  // One rendered entry, header and newline included, is at most an eighth of the ledger.
+  const cap = Math.floor(budget / 8) * 4 - 1
   const users = ctx.covered.filter((source) => source.alias.startsWith("u"))
   const entries = users.map((source) => {
-    const body = source.text.length > cap
-      ? `${source.text.slice(0, cap)} … (truncated; context_recall {"reference":"${source.alias}"})` : source.text
-    return `${source.alias} · ${stamp(source.time)}${source.answers ? ` · answer to ${source.answers}` : ""}\n    ${indent(body, 4)}`
+    const entry = `${source.alias} · ${stamp(source.time)}${source.answers ? ` · answer to ${source.answers}` : ""}\n    ${indent(source.text, 4)}`
+    if (entry.length <= cap) return entry
+    const suffix = ` … (truncated; context_recall {"reference":"${source.alias}"})`
+    return `${entry.slice(0, Math.max(0, cap - suffix.length))}${suffix}`
   })
   // Keep the newest entries; render them oldest to newest.
   const { kept } = within(entries.toReversed().map((entry) => ({ text: entry })), budget)
@@ -530,6 +532,11 @@ function render(items: MemoryItem[], ctx: Scope, host: Host, ceiling: number) {
   ].join("\n\n")
 }
 
+/** The size of the memory with no items: the scaffold, the ledger and Activity at this ceiling. */
+export function scaffold(snapshot: MemorySnapshot, host: Host, ceiling: number) {
+  return Token.estimate(render([], scope(snapshot, host), host, ceiling))
+}
+
 /** The host-appended part of the producer instruction: the new span, its index and the size (4.2). */
 export function index(snapshot: MemorySnapshot, host: Host, size: number, ceiling: number) {
   const ctx = scope(snapshot, host)
@@ -539,7 +546,7 @@ export function index(snapshot: MemorySnapshot, host: Host, size: number, ceilin
   })
   const lines = ctx.span.map((source) => {
     const head = `${source.alias} ${stamp(source.time)}`
-    if (source.alias.startsWith("u")) return `${head} "${cut(source.text, 160)}"`
+    if (source.alias.startsWith("u")) return `${head} "${cut(source.text, 160)}"${source.answers ? ` · answer to ${source.answers}` : ""}`
     if (source.alias.startsWith("a")) return `${head} "${cut(source.text, 100)}"`
     const part = source.part!
     const task = marker(part)

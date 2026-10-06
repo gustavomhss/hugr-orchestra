@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { createHash } from "node:crypto"
 import { Deferred, Effect, Fiber, Scheduler, Stream } from "effect"
 import { ModelV2 } from "@opencode-ai/core/model"
+import { ProviderV2 } from "@opencode-ai/core/provider"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { LLMEvent } from "@opencode-ai/llm"
 import { Archive } from "@/continuity/archive"
@@ -176,7 +177,7 @@ it.instance("G3 budget batches preserve every unfinished turn and low-token comp
   }).pipe(Effect.provide(environment(plans)))
 }), 60_000)
 
-it.instance("G3 indivisible first over-budget tool turn stays native without a partial producer submission", () => Effect.gen(function* () {
+it.instance("G3 one indivisible over-budget turn is covered whole when the isolated request fits, never split", () => Effect.gen(function* () {
   const plan = yield* held(FIRST)
   yield* Effect.gen(function* () {
     const sessions = yield* Session.Service
@@ -189,9 +190,13 @@ it.instance("G3 indivisible first over-budget tool turn stays native without a p
     const history = yield* sessions.messages({ sessionID: chat.id })
     expect(Token.estimate(Transcript.transcript(history.slice(0, 2)))).toBeGreaterThan(32_000)
     expect(Token.estimate(JSON.stringify(history))).toBeLessThan(190_000)
-    yield* terminal((yield* jobFor(chat.id, history.at(-1)!.info.id)).id, "completed", "discarded")
-    expect(yield* Deferred.isDone(plan.entered)).toBe(false)
-    expect(yield* prepare(chat.id)).toEqual({ messages: history, system: [] })
+    // Coverage would stall on this turn forever if the head budget excluded it.
+    const hit = yield* entered(plan)
+    expect(packet(hit.request)).toContain("INDIVISIBLE")
+    expect(fragments(packet(hit.request)).map((entry) => entry.id)).toEqual(["u1", "a1", "t1"])
+    yield* Deferred.succeed(plan.release, undefined)
+    yield* terminal(hit.jobID, "completed", "applied")
+    expect((yield* prepare(chat.id)).messages).toEqual(history.slice(2))
   }).pipe(Effect.provide(environment([plan])))
 }), 30_000)
 
@@ -318,4 +323,31 @@ for (const action of ["deliver", "duplicate", "advance", "invalidate", "forget",
     yield* terminal(delivered.jobID, "completed", "applied")
     expect((yield* prepare(sessionID)).system[0]).toContain(SECOND)
   }).pipe(Effect.provide(environment([first, old, fresh])))
+}), 60_000)
+
+it.instance("G3 a replayable parent request lifts the head cap: the replay sends the index, not the transcript", () => Effect.gen(function* () {
+  const plan = yield* held(FIRST)
+  yield* Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const continuity = yield* SessionContinuity.Service
+    const chat = yield* sessions.create({ title: "Uncapped replay head" })
+    for (let i = 0; i < 8; i++) {
+      const user = yield* begin(chat.id, `REPLAY_USER_${i}`)
+      if (i === 7) yield* continuity.observe({ sessionID: chat.id, messageIDs: (yield* sessions.messages({ sessionID: chat.id })).map((message) => message.info.id),
+        request: { sessionID: chat.id, parentSessionID: chat.id, model: { providerID: ProviderV2.ID.make("test"), id: ModelV2.ID.make("continuity-model") },
+          system: ["parent system"], messages: [], tools: {}, contextMemory: false } as unknown as LLM.StreamInput })
+      const assistant = yield* complete(user, `REPLAY_ASSISTANT_${i}`, i === 7 ? 50_000 : 100)
+      if (i < 4) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: assistant.id, type: "tool", tool: "bash", callID: `replay-${i}`,
+        state: { status: "completed", input: { command: `read-only-${i}` }, output: `TOOL_TURN_${i} ` + "x".repeat(72_000), title: "Whole exchange",
+          metadata: { exit: 1 }, time: { start: 1, end: 2 } } })
+    }
+    const history = yield* sessions.messages({ sessionID: chat.id })
+    // The isolated cap would take one turn of this head; the replay covers every turn up to the native tail.
+    expect(Token.estimate(Transcript.transcript(history.slice(0, 4)))).toBeGreaterThan(32_000)
+    const hit = yield* entered(plan)
+    expect(String(hit.request.messages.at(-1)?.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT")
+    yield* Deferred.succeed(plan.release, undefined)
+    yield* terminal(hit.jobID, "completed", "applied")
+    expect((yield* prepare(chat.id)).messages).toEqual(history.slice(-8))
+  }).pipe(Effect.provide(environment([plan])))
 }), 60_000)

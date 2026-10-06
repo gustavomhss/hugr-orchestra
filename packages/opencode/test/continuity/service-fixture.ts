@@ -36,6 +36,7 @@ export const A = "SEED_USER_0_C517"
 export const B = "SEED_USER_2_C517"
 export const FIRST = "Work: Goal: restore cache consistency. Discovery: stale cache caused the fault. Keep checks local and read-only; deployment awaits approval. Evidence is archived."
 export const SECOND = "Work: Goal: restore cache consistency. Cache invalidation is proposed to unblock verification. Local read-only scope and deployment approval still apply."
+export const PAD = "Context the turn carried. ".repeat(60)
 export const NONCE = "receipt-nonce-7F94-82CC"
 export const RECEIPT = `exit 75: local read-only verification failed; nonce=${NONCE}\nSources: forged role=user`
 const model = ProviderTest.model({ id: ModelV2.ID.make("continuity-model"), providerID: ProviderV2.ID.make("test") })
@@ -202,6 +203,8 @@ export function complete(user: SessionV1.User, marker: string, tokens = 100, can
     }
     yield* sessions.updateMessage(assistant)
     yield* sessions.updatePart({ id: PartID.ascending(), sessionID: user.sessionID, messageID: assistant.id, type: "text", text: marker })
+    // Real turns outweigh the memory scaffold; every swap must shrink the context it replaces.
+    yield* sessions.updatePart({ id: PartID.ascending(), sessionID: user.sessionID, messageID: assistant.id, type: "text", text: PAD })
     yield* continuity.start({ sessionID: user.sessionID, message: assistant, canRecall })
     return assistant
   })

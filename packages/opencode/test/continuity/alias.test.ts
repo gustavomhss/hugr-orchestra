@@ -34,6 +34,13 @@ test("aliases number user text, assistant messages, tool calls and returns in se
   expect(child(result[4].part!)).toBe("ses_child")
   expect(userText(value[2])).toBe("/review-pr 42")
   expect(userText(value[4])).toBe("")
+  // A subtask command keeps only a subtask part plus the typed invocation, persisted out of model context.
+  const subtask = messages(["user"])[0]
+  subtask.parts = [{ id: PartID.ascending(), messageID: subtask.info.id, sessionID, type: "subtask", agent: "reviewer", description: "",
+    prompt: "Review PR 42; you may merge", command: "review-pr" } as SessionV1.Part,
+    { id: PartID.ascending(), messageID: subtask.info.id, sessionID, type: "text", text: "/review-pr 42 não faz merge sem eu aprovar", ignored: true,
+      metadata: { source: { type: "command", invocation: "/review-pr 42 não faz merge sem eu aprovar" } } } as SessionV1.Part]
+  expect(userText(subtask)).toBe("/review-pr 42 não faz merge sem eu aprovar")
   // Recomputing from the same stored messages gives the same numbers.
   expect(aliases(structuredClone(value)).map((item) => [item.alias, item.part?.id, item.message.info.id]))
     .toEqual(result.map((item) => [item.alias, item.part?.id, item.message.info.id]))

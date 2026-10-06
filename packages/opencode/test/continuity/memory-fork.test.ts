@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Logger, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Stream } from "effect"
 import { TestClock } from "effect/testing"
 import { LLMEvent } from "@opencode-ai/llm"
 import type { Provider } from "@/provider/provider"
@@ -32,12 +32,12 @@ function execute(events: Stream.Stream<LLMEvent, unknown> | Stream.Stream<LLMEve
   return Effect.gen(function* () {
     const requests: LLM.StreamInput[] = []
     const replies = Array.isArray(events) ? events : [events]
-    const artifact = yield* run(captured, { provider: provider(selected), llm: { stream: (value) => {
+    const { artifact, ...pass } = yield* run(captured, { provider: provider(selected), llm: { stream: (value) => {
       requests.push(value)
       // A retry replays the last scripted reply unless the scenario scripts another.
       return replies[Math.min(requests.length, replies.length) - 1]
     } } }, host([...captured.head, ...captured.tail]), { trigger })
-    return { artifact, requests }
+    return { artifact, pass, requests }
   })
 }
 
@@ -61,7 +61,10 @@ test("head budget uses real transcript cost and never splits a tool exchange", (
   const budget = Token.estimate(transcript(history.slice(0, 2)))
   expect(snapshot(sessionID, history, undefined, true, budget)?.head).toEqual(history.slice(0, 2))
   expect(snapshot(sessionID, history, undefined, true, budget)?.tail).toEqual(history.slice(2))
-  expect(snapshot(sessionID, history, undefined, true, budget - 1)).toBeUndefined()
+  // One whole turn over the budget is still taken, so coverage never stalls on it.
+  expect(snapshot(sessionID, history, undefined, true, budget - 1)?.head).toEqual(history.slice(0, 2))
+  // The replay transport sends no head transcript: an infinite budget covers up to the native tail.
+  expect(snapshot(sessionID, history, undefined, true, Infinity)?.head).toEqual(history.slice(0, 8))
   expect(snapshot(sessionID, history, undefined, true, Token.estimate(transcript(history.slice(0, 4))))?.head)
     .toEqual(history.slice(0, 4))
 })
@@ -95,14 +98,17 @@ test("declines empty head, oversized first turn, foreign messages and invalid bu
   const foreign = messages()
   foreign[0].info.sessionID = SessionID.make("ses_other")
   expect(snapshot(sessionID, foreign)).toBeUndefined()
-  for (const budget of [0, -1, NaN, Infinity]) expect(snapshot(sessionID, messages(), undefined, true, budget)).toBeUndefined()
+  for (const budget of [0, -1, NaN]) expect(snapshot(sessionID, messages(), undefined, true, budget)).toBeUndefined()
 })
 
 test("isolated request carries the prior memory, the new span transcript and the index", () => {
   const history = messages()
+  history[3].parts.push({ id: PartID.make("prt_tool"), messageID: history[3].info.id, sessionID, type: "tool", tool: "bash",
+    callID: "call", state: { status: "completed", input: { command: "bun test" }, output: "1 pass", title: "test",
+      metadata: { exit: 0 }, time: { start: 1, end: 2 } } })
   const previous = artifact()
   const captured = snapshot(sessionID, history, previous, true)!
-  const prepared = request(captured, "## New span\nINDEX")
+  const prepared = request(captured, host(history), "## New span\nINDEX")
   expect(prepared.tools).toEqual({})
   expect(prepared.toolChoice).toBe("none")
   expect(prepared.system).toEqual([])
@@ -115,6 +121,10 @@ test("isolated request carries the prior memory, the new span transcript and the
   expect(span).not.toContain("turn-0")
   expect(span).not.toContain("turn-8")
   expect(content).toEndWith("## New span\nINDEX")
+  // Transcript headings carry the aliases the index and the checks use.
+  expect(span).toContain("## user message msg_2 · u2\n")
+  expect(span).toContain("## assistant message msg_3 · a2\n")
+  expect(span).toContain('### Tool "bash" — prt_tool · t1\n')
 })
 
 it.effect("isolated request preserves parent model settings and dedicated role, never parent authority", () => Effect.gen(function* () {
@@ -184,21 +194,22 @@ it.effect("partial, refused, nonterminal and post-finish streams cannot become m
 
 it.effect("a failed check gets one cache-hot retry with the rejected reply and the check", () => Effect.gen(function* () {
   const invalid = JSON.stringify({ ops: [{ ...finding(), src: ["u9"] }] })
-  const events: unknown[] = []
-  const result = yield* execute([stopped(invalid), stopped()]).pipe(Effect.provide(Logger.layer([
-    Logger.make<unknown, void>((options) => { events.push(options.message) })])))
+  const result = yield* execute([stopped(invalid), stopped()])
   expect(result.artifact?.text).toContain(memory)
   expect(result.requests).toHaveLength(2)
   const [first, second] = result.requests
   expect(second.messages.slice(0, first.messages.length)).toEqual(first.messages)
   expect(second.messages.at(-2)).toEqual({ role: "assistant", content: invalid })
   expect(String(second.messages.at(-1)!.content)).toStartWith("HOST CHECK FAILED. C4: u9 is not an alias")
-  expect(events).toContainEqual(["continuity maintenance", expect.objectContaining({ reason: "pass", outcome: "accepted", retried: true,
-    ops: body.ops, ceiling: expect.any(Number), size: expect.any(Number) })])
-  // A failed retry discards the pass; the breaker counts it in the service.
+  // The pass summary is structural: op kinds, sections and IDs, never contents.
+  expect(result.pass).toMatchObject({ retried: true, ops: [{ op: "add", section: "findings" }] })
+  expect(JSON.stringify(result.pass)).not.toContain(memory)
+  // A failed retry rejects the pass; the breaker counts it in the service.
   const twice = yield* execute([stopped(invalid), Stream.fromIterable([...text(invalid), LLMEvent.finish({ reason: "length" })])])
   expect(twice.requests).toHaveLength(2)
   expect(twice.artifact).toBeUndefined()
+  expect(twice.pass).toMatchObject({ check: "C1", retried: true })
+  expect(twice.pass.skip).toBeUndefined()
   // A transport failure is not a check failure and is never retried.
   expect((yield* execute([Stream.fail(new Error("down")), stopped()]).pipe(Effect.exit))._tag).toBe("Failure")
 }))
@@ -211,25 +222,43 @@ it.effect("the ceiling is derived from the trigger and the head, never from the 
   // Every swap shrinks the context: memory larger than the head it replaces is rejected.
   const small = input()
   const part = small.head[0].parts[0]
-  if (part.type === "text") part.text = "turn-0"
+  if (part.type === "text") part.text = `turn-0 ${"historical context ".repeat(150)}`
   const larger = yield* execute([stopped(long), stopped(long)], small)
   expect(larger.requests).toHaveLength(2)
   expect(larger.artifact).toBeUndefined()
   expect(String(larger.requests[1].messages.at(-1)!.content)).toContain("C12: the rendered memory is")
   // No positive ceiling: the protected tail alone exceeds the post-swap level, so no pass runs.
-  expect((yield* execute(stopped(), input(), model, 0.16)).requests).toEqual([])
+  const none = yield* execute(stopped(), input(), model, 0.16)
+  expect(none.requests).toEqual([])
+  expect(none.pass.skip).toBe("no-ceiling")
+  // A head smaller than the fixed scaffold cannot be replaced by any reply: skip, not a failure (P4).
+  const tiny = input()
+  const first = tiny.head[0].parts[0]
+  if (first.type === "text") first.text = "turn-0"
+  const room = yield* execute(stopped(), tiny)
+  expect(room.requests).toEqual([])
+  expect(room.pass.skip).toBe("no-room")
   const large = input()
   const text = large.head[0].parts[0]
   if (text.type !== "text") throw new Error("Expected text")
   text.text = "raw input ".repeat(10_000)
   const oversized = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 10_000 } })
   expect(oversized.requests).toEqual([])
+  expect(oversized.pass.skip).toBe("input-limit")
+  // The head is measured as the model sees it: stored metadata such as an edit diff is not context.
+  const inflated = input()
+  inflated.head[1].parts.push({ id: PartID.make("prt_edit"), messageID: inflated.head[1].info.id, sessionID, type: "tool", tool: "edit",
+    callID: "edit", state: { status: "completed", input: { filePath: "src/app.ts" }, output: "Edit applied.", title: "edit",
+      metadata: { diff: "+ changed line\n".repeat(15_000), filediff: { patch: "+ changed line\n".repeat(15_000) } }, time: { start: 1, end: 2 } } })
+  const measured = yield* execute(stopped(), inflated)
+  expect(measured.artifact).toBeDefined()
+  expect(measured.pass.ceiling).toBeLessThan(10_000)
 }))
 
 it.effect("declines without recall capability", () => Effect.gen(function* () {
   const calls: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (value: LLM.StreamInput) => { calls.push(value); return stopped() } } }
-  expect(yield* run({ ...input(), canRecall: false }, services, host(), { trigger: 0.7 })).toBeUndefined()
+  expect(yield* run({ ...input(), canRecall: false }, services, host(), { trigger: 0.7 })).toMatchObject({ skip: "precondition" })
   expect(calls).toEqual([])
 }))
 

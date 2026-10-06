@@ -21,7 +21,7 @@ import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { httpError, raw, reply, TestLLMServer } from "../lib/llm-server"
 import { testProviderConfig } from "../lib/test-provider"
-import { FIRST, NONCE, body, fragments, jobFor, packet, wireMessages } from "./service-fixture"
+import { FIRST, NONCE, PAD, body, fragments, jobFor, packet, wireMessages } from "./service-fixture"
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 const llmNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
@@ -106,7 +106,7 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const chat = yield* sessions.create({ title: "HTTP working memory and recall" })
   const head = `HEAD_ONLY_FACT_7E5D: ${FIRST}\nRecorded nonce=${NONCE}`
   const tail = "TAIL_KEEP_A129"
-  const seed = Array.from({ length: 6 }, (_, index) => ({ user: index === 0 ? head : index === 5 ? tail : `SEED_USER_${index}`, assistant: `SEED_REPLY_${index}` }))
+  const seed = Array.from({ length: 6 }, (_, index) => ({ user: index === 0 ? head : index === 5 ? tail : `SEED_USER_${index}`, assistant: `SEED_REPLY_${index} ${PAD}` }))
   const a = yield* gate
   const b = yield* gate
   const capture = ledger()
@@ -200,7 +200,7 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
     const chat = yield* sessions.create({ title: "Closed working-memory HTTP validation" })
     const capture = ledger()
     const seed = Array.from({ length: 6 }, (_, index) => `CLOSED_SEED_${index}`)
-    for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+    for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
     const valid = forkAnswer(FIRST, maintenance)
     yield* llm.pushMatch(valid.match, valid.response)
     yield* llm.pushMatch(parent("REFRESH_CLOSED"), answer("REFRESH_DONE", 50_000))
@@ -249,7 +249,7 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
       permission: [{ permission: "context_recall", pattern: chat.id, action: "deny" }] })
     const capture = ledger()
     const seed = Array.from({ length: 6 }, (_, index) => `CAPABILITY_SEED_${index}`)
-    for (const text of seed) yield* llm.pushMatch(capture.record(text, parent(text)), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+    for (const text of seed) yield* llm.pushMatch(capture.record(text, parent(text)), answer(`REPLY_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
     const response = forkAnswer(FIRST, capture.record("memory", maintenance), seed[0])
     yield* llm.pushMatch(response.match, response.response)
     yield* llm.pushMatch(capture.record("next", parent("CAPABILITY_NEXT")), answer("NEXT_DONE"))

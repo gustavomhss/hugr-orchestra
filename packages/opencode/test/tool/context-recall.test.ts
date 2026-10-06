@@ -166,9 +166,14 @@ describe("context_recall", () => {
       expect((yield* lookup("u2")).content).toContain("Ship it")
       // Numbering is a pure function of stored history: the same alias resolves the same way again.
       expect((yield* lookup("t1")).content).toBe((yield* lookup("t1")).content)
+      // u1 exists in both sessions: each resolves only its own stored message.
       const foreign = yield* seed
-      const denied = reply((yield* foreign.tool.execute({ reference: "a1" }, foreign.ctx)).output)
-      expect(denied.status).toBe("unavailable")
+      yield* foreign.session.updatePart({ ...foreign.text, text: "Foreign record QX-7." })
+      const theirs = reply((yield* foreign.tool.execute({ reference: "u1" }, foreign.ctx)).output)
+      expect(theirs.source).toEqual({ message_id: foreign.user.id })
+      expect(theirs.content).toContain("Foreign record QX-7.")
+      expect(theirs.content).not.toContain("Stored own receipt ZX-19.")
+      expect((yield* lookup("u1")).content).not.toContain("QX-7")
       expect((yield* lookup("t9")).status).toBe("unavailable")
     }).pipe(Effect.provide(layer)),
   )

@@ -213,7 +213,8 @@ const layer = Layer.effect(
       const firstInfo = firstUser.info
 
       const subtasks = firstUser.parts.filter((p): p is SessionV1.SubtaskPart => p.type === "subtask")
-      const onlySubtasks = subtasks.length > 0 && firstUser.parts.every((p) => p.type === "subtask")
+      const onlySubtasks = subtasks.length > 0 &&
+        firstUser.parts.every((p) => p.type === "subtask" || (p.type === "text" && p.ignored))
 
       const ag = yield* agents.get("title")
       if (!ag) return
@@ -1469,8 +1470,9 @@ const layer = Layer.effect(
 
       // Mark the expansion so only the typed invocation counts as user text for continuity.
       const invocation = `/${input.command}${input.arguments.trim() ? ` ${input.arguments.trim()}` : ""}`
+      const source = { type: "command", invocation }
       const templateParts = (yield* resolvePromptParts(template)).map((part) =>
-        part.type === "text" ? { ...part, metadata: { ...part.metadata, source: { type: "command", invocation } } } : part)
+        part.type === "text" ? { ...part, metadata: { ...part.metadata, source } } : part)
       const inputFiles = new Set(
         input.parts?.filter((part) => new URL(part.url).protocol === "file:").map((part) => fileURLToPath(part.url)),
       )
@@ -1488,6 +1490,8 @@ const layer = Layer.effect(
               model: { providerID: taskModel.providerID, modelID: taskModel.modelID },
               prompt: templateParts.find((y) => y.type === "text")?.text ?? "",
             },
+            // The subtask part keeps no arguments: persist what the user typed, out of model context.
+            { type: "text" as const, text: invocation, ignored: true, metadata: { source } },
           ]
         : [...uniqueTemplateParts, ...(input.parts ?? [])]
 
