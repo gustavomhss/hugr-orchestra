@@ -50,13 +50,16 @@ def invoke(context, ref, action_id=None, mode="stable"):
         raise
 
 
-def replace_text(context, ref, text, mode="editable"):
+def replace_text(context, ref, text, mode="editable", focused=False):
+    """focused: the field must still hold keyboard focus (typing into the focused field); refused before any dispatch."""
     record = context.registry.resolve(ref, context)
     context.registry.invalidate(context.binding)
     if not isinstance(text, str) or "\x00" in text or any(0xD800 <= ord(c) <= 0xDFFF for c in text):
         raise BusError("protocol-error", "Text must be a valid D-Bus Unicode string")
     if mode not in ("editable", "keyboard"):
         raise BusError("unsupported-operation", "Unknown text replacement mode")
+    if focused and mode != "keyboard":
+        raise BusError("protocol-error", "Typing into the focused field uses keyboard mode")
     limit = keyboard.MAX_TEXT if mode == "keyboard" else LIMITS["text"]
     if len(text) > limit:
         raise BusError("verification-incomplete", "Replacement exceeds native Text verification budget")
@@ -65,6 +68,8 @@ def replace_text(context, ref, text, mode="editable"):
     evidence, live = _target(context, record, mode)
     if mode == "keyboard":
         evidence = _keyboard_window(context, record, evidence, live)
+        if focused and 12 not in live and "focus" not in evidence:
+            raise BusError("focus-unconfirmed", "The field no longer holds keyboard focus")
         result = {"method": "keyboard", "dispatch": "unknown", "postcondition": "unverified", "value": None}
         try:
             result = _keyboard_result(keyboard.replace_text(context, record, text, context.remaining(), evidence))
@@ -112,6 +117,30 @@ def press(context, ref, keys):
         if hasattr(error, "result"):
             error.result = _keys_result(error.result)
         raise
+
+
+def pointer(context, ref, kind):
+    """Hover over or right-click the center of a showing control; the app decides what that shows."""
+    record = context.registry.resolve(ref, context)  # Fresh ownership, role, name and parent.
+    context.registry.invalidate(context.binding)
+    # Like observed actions, a row of a virtual list qualifies once its identity is fresh.
+    if record["unstable"] and not (set(record["unstableReasons"]) <= {"virtual"} and record["role"] not in VIRTUAL_ROLES):
+        raise BusError("unstable-ref", "Native target identity is not stable enough for pointer events")
+    evidence = context.require_owned(record)
+    try:
+        return _pointer_result(keyboard.point(context, record, kind, context.remaining(), evidence))
+    except BusError as error:
+        if hasattr(error, "result"):
+            error.result = _pointer_result(error.result)
+        raise
+
+
+def _pointer_result(result):
+    point = result.get("point")
+    return {"method": "pointer", "kind": str(result.get("kind", ""))[:16], "dispatch": result["dispatch"],
+            "postcondition": "unverified", "hit": str(result.get("hit", "unverified"))[:16],
+            "point": {"x": point["x"], "y": point["y"]} if isinstance(point, dict) else None,
+            "controllerCalls": result.get("controllerCalls", 0)}
 
 
 def _keys_result(result):

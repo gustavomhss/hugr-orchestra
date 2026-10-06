@@ -124,9 +124,9 @@ export class NativeDockClient implements NativeDockProtocol.Client {
   }
 
   private scope(call: NativeDockProtocol.Call) {
-    if (!["bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown"].includes(call.op))
+    if (!["bind", "read", "action", "type", "key", "pointer", "unbind", "cancel", "shutdown"].includes(call.op))
       throw new NativeDockProtocol.NativeError("unsupported-operation", "Unsupported native operation")
-    if (["read", "action", "type", "key", "unbind"].includes(call.op)) {
+    if (["read", "action", "type", "key", "pointer", "unbind"].includes(call.op)) {
       if (!call.bindingID || !call.bindingEpoch || this.bindings.get(call.bindingID) !== call.bindingEpoch)
         throw new NativeDockProtocol.NativeError("stale-binding", "Native binding is not current")
       return

@@ -31,7 +31,7 @@ class TappedContext(RequestContext):
 
     def call(self, owner, path, interface, method, signature="()", parameters=(), reply="()", timeout_ms=None):
         value = super().call(owner, path, interface, method, signature, parameters, reply, timeout_ms)
-        if method == "GenerateKeyboardEvent":
+        if method in ("GenerateKeyboardEvent", "GenerateMouseEvent"):
             self.events.append(parameters)
         return value
 
@@ -361,6 +361,126 @@ class KeyCombinationTest(NativeFixtureTest):
         self.assertEqual("unknown", outcome.result["dispatch"])
 
 
+class PointerTest(NativeFixtureTest):
+    context = KeyboardRegressionTest.context
+    evidence = KeyboardRegressionTest.evidence
+
+    def setUp(self):
+        super().setUp()
+        # No window manager on bare Xvfb: give the fixture X focus, and start with the pointer off the button.
+        for argv in (["search", "--sync", "--name", "W2-B GTK fixture", "windowfocus", "--sync"], ["mousemove", "0", "0"]):
+            subprocess.run(["xdotool", *argv], check=True, capture_output=True, timeout=10)
+
+    def point(self, name, kind, context=None):
+        context = context or self.context()
+        return context, keyboard.point(context, self.nodes[name], kind, context.remaining(), self.evidence(context, name))
+
+    def receipt(self, field, expected):
+        deadline = monotonic() + 3
+        value = self.command("receipt")[field]
+        while value < expected and monotonic() < deadline:
+            sleep(0.05)
+            value = self.command("receipt")[field]
+        return value
+
+    def refused(self, name, kind, code, context=None):
+        context = context or self.context()
+        outcome = None
+        try:
+            self.point(name, kind, context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([], context.events, "Pointer event reached the controller for an unsafe target")
+        self.assertEqual(code, getattr(outcome, "code", None), "Pointer guard returned the wrong named failure")
+        self.assertEqual("not-dispatched", outcome.result["dispatch"])
+
+    def test_hover_and_context_click_reach_real_gtk_button(self):
+        context, result = self.point("button", "hover")
+        self.assertEqual(("acknowledged", "unverified", "target"), (result["dispatch"], result["postcondition"], result["hit"]))
+        center = (result["point"]["x"], result["point"]["y"])
+        self.assertEqual([(*center, "abs")], context.events, "Hover must be exactly one absolute motion to the center")
+        self.assertGreaterEqual(self.receipt("hovers", 1), 1, "Real GTK button never saw the pointer enter")
+        self.assertEqual(0, self.command("receipt")["rightClicks"], "Hover pressed a button")
+        context, result = self.point("button", "contextMenu")
+        self.assertEqual([(*center, "abs"), (*center, "b3c")], context.events, "Context click must move then press button 3")
+        self.assertEqual(1, self.receipt("rightClicks", 1), "Real GTK button never saw the right-click")
+        self.assertEqual(0, self.command("receipt")["clicks"], "A right-click activated the button")
+
+    def test_pointer_refuses_before_any_event(self):
+        self.refused("protected", "contextMenu", "protected-text")
+        for setup, code in (({"windowStates": [8, 24, 25]}, "focus-unconfirmed"), ({"states": [7, 8, 24]}, "offscreen"),
+                            ({"extents": [500, 10, 100, 20]}, "offscreen"), ({"extents": [10, 10, 0, 20]}, "offscreen"),
+                            ({"hit": "group"}, "target-obscured")):
+            with self.subTest(setup=setup):
+                self.command("reset")
+                self.command("wire", **setup)
+                self.refused("wire", "hover", code)
+        with self.assertRaises(BusError) as caught:
+            self.point("button", "doubleClick")
+        self.assertEqual("protocol-error", caught.exception.code)
+
+    def test_hit_test_evidence_is_reported_not_assumed(self):
+        for setup, hit in (({}, "unavailable"), ({"hit": "field"}, "target")):
+            with self.subTest(setup=setup):
+                self.command("reset")
+                self.command("wire", **setup)
+                _, result = self.point("wire", "hover")
+                self.assertEqual(hit, result["hit"], "Hit-test evidence misreported")
+
+    def test_window_lost_after_hover_stops_the_click(self):
+        test = self
+
+        class DropWindowAfterMove(TappedContext):
+            def call(self, owner, path, interface, method, signature="()", parameters=(), reply="()", timeout_ms=None):
+                value = super().call(owner, path, interface, method, signature, parameters, reply, timeout_ms)
+                if method == "GenerateMouseEvent" and parameters[2] == "abs":
+                    test.command("wire", windowStates=[8, 24, 25])
+                return value
+
+        context = DropWindowAfterMove(self.bus, None, self.binding, 8000)
+        outcome = None
+        try:
+            self.point("wire", "contextMenu", context)
+        except BusError as error:
+            outcome = error
+        self.assertEqual([(60, 20, "abs")], context.events, "Right-click was sent after the owned window lost activity")
+        self.assertIsInstance(outcome, BusError)
+        self.assertEqual(("focus-unconfirmed", "unknown"), (outcome.code, outcome.result["dispatch"]))
+
+
+def pointer_controls():
+    source = (SOURCE / "keyboard.py").read_text()
+    digest = hashlib.sha256(source.encode()).hexdigest()
+    controls = [
+        ("no-active-recheck", "        for event in POINTER[kind]:\n            active()\n", "        for event in POINTER[kind]:\n",
+         "test_window_lost_after_hover_stops_the_click", "Right-click was sent after the owned window lost activity"),
+        ("no-showing-guard", "        if 25 not in target:", "        if False:",
+         "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
+        ("no-window-bounds", "        if not (frame[0] <= x < frame[0] + frame[2]", "        if False and not (frame[0] <= x < frame[0] + frame[2]",
+         "test_pointer_refuses_before_any_event", "Pointer event reached the controller for an unsafe target"),
+        ("no-obscured-refusal", '    if current[1] in paths:\n        return "unavailable"\n    raise',
+         '    if True:\n        return "unavailable"\n    raise', "test_pointer_refuses_before_any_event",
+         "Pointer event reached the controller for an unsafe target"),
+        ("claimed-hit", '    if current[1] == window:\n        return "unavailable"', '    if current[1] == window:\n        return "target"',
+         "test_hit_test_evidence_is_reported_not_assumed", "Hit-test evidence misreported"),
+    ]
+    with tempfile.TemporaryDirectory(prefix="native-pointer-controls-") as directory:
+        for name, old, new, test, assertion in controls:
+            if source.count(old) != 1:
+                raise AssertionError("Pointer mutation anchor missing or ambiguous: " + name)
+            path = Path(directory) / (name + ".py")
+            path.write_text(source.replace(old, new))
+            run = subprocess.run([sys.executable, str(Path(__file__).resolve()), "PointerTest." + test],
+                                 env=dict(os.environ, A11Y_KEYBOARD_MODULE=str(path)), capture_output=True, text=True, timeout=60)
+            output = run.stdout + run.stderr
+            if run.returncode == 0 or "AssertionError" not in output or assertion not in output or test not in output:
+                raise AssertionError("Pointer mutation did not produce named failure: " + name + "\n" + output)
+            print("MUTATION " + name + ": named assertion failed: " + assertion, flush=True)
+    if hashlib.sha256((SOURCE / "keyboard.py").read_bytes()).hexdigest() != digest:
+        raise AssertionError("Production keyboard changed during pointer controls")
+    print("RESTORED: pointer source SHA256 " + digest, flush=True)
+
+
 def key_controls():
     source = (SOURCE / "keyboard.py").read_text()
     digest = hashlib.sha256(source.encode()).hexdigest()
@@ -452,6 +572,9 @@ def focus_controls():
 
 
 if __name__ == "__main__":
+    if "--pointer-mutations" in sys.argv:
+        pointer_controls()
+        sys.exit(0)
     if "--key-mutations" in sys.argv:
         key_controls()
         sys.exit(0)

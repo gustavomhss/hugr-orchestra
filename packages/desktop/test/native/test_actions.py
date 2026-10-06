@@ -80,7 +80,11 @@ def fixture():
       <interface name="{A}EditableText">
         <method name="SetTextContents"><arg type="s" direction="in"/><arg type="b" direction="out"/></method>
       </interface>
-      <interface name="{A}Component"><method name="GrabFocus"><arg type="b" direction="out"/></method></interface>
+      <interface name="{A}Component">
+        <method name="GrabFocus"><arg type="b" direction="out"/></method>
+        <method name="GetExtents"><arg type="u" direction="in"/><arg type="(iiii)" direction="out"/></method>
+        <method name="GetAccessibleAtPoint"><arg type="i" direction="in"/><arg type="i" direction="in"/><arg type="u" direction="in"/><arg type="(so)" direction="out"/></method>
+      </interface>
     </node>"""
 
     def native_states(path):
@@ -143,6 +147,10 @@ def fixture():
             if "nameAfterSetter" in wire:
                 wire["fieldName"] = wire.pop("nameAfterSetter")
             value = ("(b)", (setter != "false",))
+        elif name == "GetExtents":
+            value = ("((iiii))", (tuple(wire.get("extents", [10, 10, 100, 20]) if path == field_path else [0, 0, 400, 300]),))
+        elif name == "GetAccessibleAtPoint" and "hit" in wire:
+            value = ("((so))", ((owner, {"group": group_path, "field": field_path}[wire["hit"]] if path == window_path else "/org/a11y/atspi/null"),))
         elif name == "GrabFocus":
             if wire["relation"] == "none" and 12 not in wire["states"] and not wire.get("keepUnfocused"):
                 wire["states"].append(12)
@@ -169,7 +177,7 @@ def fixture():
     registered = []
     for path in (ROOT, window_path, field_path, group_path, focus_path):
         for interface in Gio.DBusNodeInfo.new_for_xml(xml).interfaces:
-            if path == field_path or interface.name == A + "Accessible":
+            if path == field_path or interface.name == A + "Accessible" or path == window_path and interface.name == A + "Component":
                 registered.append(connection.register_object(path, interface, method, property, None))
 
     window = Gtk.Window(title="W2-B GTK fixture")
@@ -179,7 +187,7 @@ def fixture():
     widgets["multiline"] = Gtk.TextView()
     widgets["button"] = Gtk.Button(label="Receipt button")
     widgets["label"] = Gtk.Label(label="No mutation interface")
-    receipt = {"changes": [], "clicks": 0}
+    receipt = {"changes": [], "clicks": 0, "hovers": 0, "rightClicks": 0}
     for name, widget in widgets.items():
         widget.get_accessible().set_name("W2-B " + name)
         box.pack_start(widget, True, True, 0)
@@ -188,6 +196,9 @@ def fixture():
     buffer = widgets["multiline"].get_buffer()
     buffer.connect("changed", lambda b: receipt["changes"].append(["multiline", b.get_text(b.get_start_iter(), b.get_end_iter(), True)]))
     widgets["button"].connect("clicked", lambda w: receipt.update(clicks=receipt["clicks"] + 1))
+    # Pointer receipts come from GTK's own X events, never from AT-SPI.
+    widgets["button"].connect("enter-notify-event", lambda w, e: receipt.update(hovers=receipt["hovers"] + 1) and False)
+    widgets["button"].connect("button-press-event", lambda w, e: receipt.update(rightClicks=receipt["rightClicks"] + (e.button == 3)) and False)
     widgets["disabled"].set_sensitive(False)
     widgets["readonly"].set_editable(False)
     widgets["protected"].set_visibility(False)
@@ -214,7 +225,7 @@ def fixture():
                 if isinstance(widget, Gtk.Entry):
                     widget.set_text("start")
             buffer.set_text("start")
-            receipt.update(changes=[], clicks=0)
+            receipt.update(changes=[], clicks=0, hovers=0, rightClicks=0)
             answer = True
         else:
             answer = dict(receipt, entry=widgets["entry"].get_text(),
@@ -662,6 +673,36 @@ class ActionsTest(NativeFixtureTest):
         with self.assertRaises(BusError):
             actions.replace_text(self.context(), ref, "replacement", "keyboard")
 
+    def test_focused_typing_refuses_a_field_that_lost_focus(self):
+        self.command("wire", states=[7, 8, 24, 25])
+        outcome = None
+        try:
+            actions.replace_text(self.context(), self.issue(), "replacement", "keyboard", True)
+        except BusError as error:
+            outcome = error
+        self.assertEqual(0, self.command("wire-receipt")["calls"].get("GrabFocus", 0), "Focused typing reached a field without focus")
+        self.assertEqual("focus-unconfirmed", getattr(outcome, "code", None))
+        self.command("reset")
+        result = actions.replace_text(self.context(), self.issue(), "start", "keyboard", True)
+        self.assertEqual(("verified", 0), (result["postcondition"], result["controllerCalls"]))
+        self.rejected("protocol-error", actions.replace_text, self.issue(), "start", "editable", True)
+
+    def test_pointer_needs_fresh_identity(self):
+        result = actions.pointer(self.context(), self.issue(unstable=True), "hover")
+        self.assertEqual({"method": "pointer", "kind": "hover", "dispatch": "acknowledged", "postcondition": "unverified",
+                          "hit": "unavailable", "point": {"x": 60, "y": 20}, "controllerCalls": 1}, result)
+        ref = self.issue()
+        self.command("wire", fieldName="renamed field")
+        outcome = None
+        try:
+            actions.pointer(self.context(), ref, "contextMenu")
+        except BusError as error:
+            outcome = error
+        self.assertEqual("stale-ref", getattr(outcome, "code", None), "Pointer moved over a renamed control")
+        self.command("reset")
+        self.command("wire", role=56)
+        self.rejected("unstable-ref", actions.pointer, self.issue(unstable=True), "hover")
+
 
 def mutation_controls():
     source = (SOURCE / "actions.py").read_text()
@@ -671,7 +712,7 @@ def mutation_controls():
          "        if not accepted:\n            result[\"dispatch\"] = \"rejected\"\n            raise BusError(\"provider-rejected\", \"Provider rejected DoAction\")",
          "        if False:\n            result[\"dispatch\"] = \"rejected\"\n            raise BusError(\"provider-rejected\", \"Provider rejected DoAction\")", 1),
         ("consume", "test_action_consumes_ref_once", "consumed native ref must reject replay",
-         "    context.registry.invalidate(context.binding)\n", "    # Mutation control: leave observation live.\n", 2),
+         "    context.registry.invalidate(context.binding)\n", "    # Mutation control: leave observation live.\n", 4),
         ("drift", "test_action_drift_exact_name_and_index", "action-drift must reject",
          "    if [(a[\"index\"], a[\"name\"]) for a in advertised] != list(enumerate(names)):", "    if False:", 1),
         ("equality", "test_text_equality_is_mandatory", "postcondition-mismatch must reject",
@@ -680,6 +721,11 @@ def mutation_controls():
          "    if not {8, 24}.issubset(live) or mode == \"keyboard\" and 25 not in live:", "    if False:", 1),
         ("post-name-drift", "test_post_setter_name_drift_preserves_uncertainty_and_consumes_ref", "stale-ref must reject",
          "or name != record[\"name\"] ", "", 1),
+        ("focused-guard", "test_focused_typing_refuses_a_field_that_lost_focus", "Focused typing reached a field without focus",
+         "        if focused and 12 not in live and \"focus\" not in evidence:", "        if False:", 1),
+        ("pointer-identity", "test_pointer_needs_fresh_identity", "unstable-ref must reject",
+         "    if record[\"unstable\"] and not (set(record[\"unstableReasons\"]) <= {\"virtual\"} and record[\"role\"] not in VIRTUAL_ROLES):\n        raise BusError(\"unstable-ref\", \"Native target identity is not stable enough for pointer",
+         "    if False:\n        raise BusError(\"unstable-ref\", \"Native target identity is not stable enough for pointer", 1),
     ]
     with tempfile.TemporaryDirectory(prefix="w2b-actions-mutations-") as directory:
         for name, test, assertion, old, new, count in controls:
