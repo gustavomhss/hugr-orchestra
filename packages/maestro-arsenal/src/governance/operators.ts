@@ -7,7 +7,7 @@ import { constants } from "node:fs"
 import { open, rename, unlink } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { id, isSourceRevision, requireValue } from "./contracts.ts"
-import { readBounded, readBoundedBytes, scopedPath, sourceRoot } from "./state.ts"
+import { readBounded, readBoundedBytes, scopedPath, sourceRoot, worktreePath } from "./state.ts"
 import { git, gitBytes, processOutput, requireGitRoot } from "./process.ts"
 import { changelogProposal, rulesetProposal } from "./repository.ts"
 export interface OperatorRequest {
@@ -29,8 +29,8 @@ export async function runRelease(context: ArsenalContext, options: {
 }) {
   const root = await sourceRoot(context)
   await requireOperator(context, root, options.operatorRequest, "run-release-recipe")
+  requireValue(worktreePath(options.recipePath), "RELEASE_RECIPE_PATH_INVALID")
   const recipe = await scopedPath(root, options.recipePath)
-  requireValue(!options.recipePath.startsWith("/") && !options.recipePath.split("/").includes(".git"), "RELEASE_RECIPE_PATH_INVALID")
   requireValue(/^[a-f0-9]{64}$/.test(options.recipeDigest), "RELEASE_RECIPE_DIGEST_INVALID")
   requireValue(/^v\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$/.test(options.tag), "RELEASE_TAG_INVALID")
   const branch = options.branch ?? "dev"

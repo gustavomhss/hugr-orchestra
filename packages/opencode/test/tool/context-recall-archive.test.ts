@@ -11,6 +11,7 @@ import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Effect, Exit, Layer, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Archive } from "@/continuity/archive"
+import { Global } from "@opencode-ai/core/global"
 import type { ArchiveReference } from "@/continuity/memory-types"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
@@ -323,9 +324,11 @@ describe("context_recall real archive node", () => {
       expect(chunks.length).toBeGreaterThan(0)
       const chunk = chunks[0]
       expect(reply((yield* f.tool.execute({ reference: chunk.id, limit: 1 }, f.ctx)).output).status).toBe("found")
-      // Discover real published bytes without freezing a private storage layout.
+      // Discover real published bytes under the archive root only: the shared data directory
+      // also holds other tests' trees, and a recursive scan of it can stall on Windows.
       const root = process.env.XDG_DATA_HOME!
-      const files = yield* Effect.promise(() => fs.readdir(root, { recursive: true, withFileTypes: true }))
+      const files = yield* Effect.promise(() =>
+        fs.readdir(path.join(Global.Path.data, "continuity"), { recursive: true, withFileTypes: true }))
       const matches: string[] = []
       for (const file of files.filter((file) => file.isFile() && file.name.endsWith(".md"))) {
         const name = path.join(file.parentPath, file.name)
