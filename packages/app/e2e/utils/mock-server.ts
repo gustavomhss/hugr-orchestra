@@ -34,7 +34,14 @@ export interface MockServerConfig {
   findFiles?: (input: { query: string; dirs?: string; limit?: number }) => unknown | Promise<unknown>
   sessionStatus?: Record<string, unknown> | (() => Record<string, unknown>)
   activity?: (period: string) => unknown
+  // The host pull request routes; a reply is the HTTP status and JSON body the server would send.
+  pullRequests?: {
+    list?: (url: URL) => PullRequestReply | Promise<PullRequestReply>
+    create?: (input: { url: URL; body: unknown }) => PullRequestReply | Promise<PullRequestReply>
+  }
 }
+
+export type PullRequestReply = { status: number; body: unknown }
 
 export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
   if (!config.freshRail) await page.addInitScript(railDefaulted)
@@ -192,6 +199,16 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
         location: location(config),
         data: typeof config.questions === "function" ? config.questions() : (config.questions ?? []),
       })
+    if (path === "/api/pull-request" && config.pullRequests) {
+      const request = route.request()
+      const reply =
+        request.method() === "POST"
+          ? await config.pullRequests.create?.({ url, body: request.postDataJSON() })
+          : request.method() === "GET"
+            ? await config.pullRequests.list?.(url)
+            : undefined
+      if (reply) return json(route, reply.body, undefined, reply.status)
+    }
     if (path === "/api/vcs")
       return json(route, { location: location(config), data: { branch: "main", defaultBranch: "main" } })
     if (path === "/api/vcs/status") return json(route, { location: location(config), data: [] })

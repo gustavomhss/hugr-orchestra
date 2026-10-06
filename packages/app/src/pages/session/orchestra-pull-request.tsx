@@ -1,10 +1,12 @@
 import { Dialog } from "@kobalte/core/dialog"
-import { Show } from "solid-js"
+import { Match, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
+import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { downloadText } from "@/utils/download"
+import { createdPullRequest, pullRequestCall, pullRequestCli, type PullRequestFailure } from "@/utils/pull-request"
 import {
   pullRequestFilename,
   pullRequestMarkdown,
@@ -14,15 +16,19 @@ import {
 } from "./orchestra-pull-request-data"
 import "@/orchestra/chapters/kit.css"
 
-// The Review rail's Create PR flow from the approved mock: an editable proposal, then a preview the
-// user can download as Markdown. Orchestra has no GitHub or GitLab connection, so nothing is sent.
+// The Review rail's Create PR flow from the approved mock: an editable proposal, then a result. The server
+// opens the pull request with the gh or glab CLI signed in there; success is only the address that CLI
+// returned. Any other answer keeps the proposal as a Markdown download with one line saying why.
 export function OrchestraPullRequest(props: { sessionID?: string; files: () => PullRequestFile[] }) {
   const language = useLanguage()
   const sync = useSync()
   const sdk = useSDK()
   const [state, setState] = createStore({
-    step: undefined as "edit" | "preview" | undefined,
+    step: undefined as "edit" | "result" | undefined,
+    busy: false,
     proposal: { title: "", from: "", base: "", description: "" } as PullRequestProposal,
+    created: undefined as { url: string; number: number } | undefined,
+    failure: undefined as PullRequestFailure | undefined,
   })
   let opener: HTMLButtonElement | undefined
 
@@ -32,6 +38,9 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
     const vcs = sync().data.vcs
     setState({
       step: "edit",
+      busy: false,
+      created: undefined,
+      failure: undefined,
       proposal: pullRequestProposal({
         title: props.sessionID ? sync().session.get(props.sessionID)?.title : undefined,
         branch: vcs?.branch,
@@ -55,9 +64,58 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
       })
       .catch(() => undefined)
   }
-  const close = () => setState("step", undefined)
+  // A request in flight keeps the dialog open so its answer, and any address, is never dropped.
+  const close = () => !state.busy && setState("step", undefined)
   const field = (name: keyof PullRequestProposal) => (event: { currentTarget: { value: string } }) =>
     setState("proposal", name, event.currentTarget.value)
+
+  const submit = async () => {
+    const proposal = state.proposal
+    if (state.step !== "edit" || state.busy || !proposal.title.trim() || !proposal.base.trim()) return
+    setState("busy", true)
+    const result = await pullRequestCall(
+      sdk().client.v2.pullRequest.create(
+        {
+          location: { directory: sdk().directory },
+          pullRequestCreateInput: {
+            title: proposal.title.trim(),
+            body: proposal.description,
+            base: proposal.base.trim(),
+            head: proposal.from.trim() || undefined,
+          },
+        },
+        { throwOnError: false },
+      ),
+      createdPullRequest,
+    )
+    setState({
+      busy: false,
+      step: "result",
+      created: "data" in result ? result.data : undefined,
+      failure: "failure" in result ? result.failure : undefined,
+    })
+  }
+
+  const reason = (failure: PullRequestFailure) => {
+    const cli = pullRequestCli(failure.host)
+    if (failure.reason === "not_installed") return language.t("orchestra.chat.pr.reason.notInstalled", { cli })
+    if (failure.reason === "not_authenticated") return language.t("orchestra.chat.pr.reason.notAuthenticated", { cli })
+    if (failure.reason === "no_remote") return language.t("orchestra.chat.pr.reason.noRemote")
+    if (failure.reason === "branch_not_pushed" && failure.branch && failure.remote)
+      return language.t("orchestra.chat.pr.reason.notPushed", { branch: failure.branch, remote: failure.remote })
+    if (failure.reason === "branch_not_pushed") return language.t("orchestra.chat.pr.reason.noBranch")
+    if (failure.reason === "cli_failed")
+      return language.t("orchestra.chat.pr.reason.cliFailed", {
+        message: (failure.message ?? cli).replace(/[.\s]+$/, ""),
+      })
+    if (failure.reason === "unavailable") return language.t("orchestra.chat.pr.reason.unavailable")
+    return language.t("orchestra.chat.pr.reason.unconfirmed")
+  }
+
+  const title = () => {
+    if (state.step === "edit") return language.t("orchestra.chat.pr.title")
+    return language.t(state.created ? "orchestra.chat.pr.createdTitle" : "orchestra.chat.pr.previewTitle")
+  }
 
   return (
     <>
@@ -71,6 +129,8 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
             <Dialog.Content
               class="mx-dialog orchestra-pr-dialog"
               data-step={state.step}
+              data-outcome={state.step === "result" ? (state.created ? "created" : "fallback") : undefined}
+              aria-busy={state.busy}
               onCloseAutoFocus={(event) => {
                 event.preventDefault()
                 opener?.focus()
@@ -80,33 +140,32 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
                 autocomplete="off"
                 onSubmit={(event) => {
                   event.preventDefault()
-                  if (state.step === "edit") setState("step", "preview")
+                  void submit()
                 }}
               >
                 <header class="mx-dialog-head">
                   <div>
-                    <Dialog.Title as="h2">
-                      {language.t(
-                        state.step === "preview" ? "orchestra.chat.pr.previewTitle" : "orchestra.chat.pr.title",
-                      )}
-                    </Dialog.Title>
+                    <Dialog.Title as="h2">{title()}</Dialog.Title>
                     <Dialog.Description>
-                      <Show when={state.step === "preview"} fallback={language.t("orchestra.chat.pr.description")}>
+                      <Show when={state.step === "result"} fallback={language.t("orchestra.chat.pr.description")}>
                         <bdi dir="ltr">{`${state.proposal.from || "—"} → ${state.proposal.base || "—"}`}</bdi>
                       </Show>
                     </Dialog.Description>
                   </div>
-                  <Dialog.CloseButton class="mx-link" aria-label={language.t("orchestra.chat.pr.close")}>
+                  <Dialog.CloseButton
+                    class="mx-link"
+                    disabled={state.busy}
+                    aria-label={language.t("orchestra.chat.pr.close")}
+                  >
                     <svg class="orchestra-pr-icon" viewBox="0 0 16 16" aria-hidden="true">
                       <path d="m4 4 8 8m0-8-8 8" />
                     </svg>
                   </Dialog.CloseButton>
                 </header>
                 <div class="mx-dialog-body">
-                  <Show
-                    when={state.step === "preview"}
-                    fallback={
-                      <>
+                  <Switch>
+                    <Match when={state.step === "edit"}>
+                      <fieldset class="orchestra-pr-fields" disabled={state.busy}>
                         <label class="mx-field">
                           <span>{language.t("orchestra.chat.pr.titleField")}</span>
                           <input name="title" required value={state.proposal.title} onInput={field("title")} />
@@ -129,35 +188,55 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
                             onInput={field("description")}
                           />
                         </label>
-                      </>
-                    }
-                  >
-                    <h3 class="orchestra-pr-heading">{state.proposal.title}</h3>
-                    <pre class="mx-log">{state.proposal.description}</pre>
-                    <p class="mx-note">{language.t("orchestra.chat.pr.notSent")}</p>
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      data-action="pr-download"
-                      onClick={() =>
-                        downloadText(
-                          pullRequestFilename(state.proposal.title),
-                          pullRequestMarkdown(state.proposal),
-                          "text/markdown",
-                        )
-                      }
-                    >
-                      {language.t("orchestra.chat.pr.download")}
-                    </button>
-                  </Show>
+                      </fieldset>
+                    </Match>
+                    <Match when={state.created}>
+                      {(created) => (
+                        <>
+                          <h3 class="orchestra-pr-heading">{state.proposal.title}</h3>
+                          <p class="mx-note" role="status">
+                            {language.t("orchestra.chat.pr.created")}{" "}
+                            <ExternalLink href={created().url} class="mx-link" data-action="pr-open">
+                              {created().url}
+                            </ExternalLink>
+                          </p>
+                        </>
+                      )}
+                    </Match>
+                    <Match when={state.failure}>
+                      {(failure) => (
+                        <>
+                          <h3 class="orchestra-pr-heading">{state.proposal.title}</h3>
+                          <pre class="mx-log">{state.proposal.description}</pre>
+                          <p class="mx-note" role="status" data-reason={failure().reason}>
+                            {reason(failure())}
+                          </p>
+                          <button
+                            type="button"
+                            class="mx-btn"
+                            data-action="pr-download"
+                            onClick={() =>
+                              downloadText(
+                                pullRequestFilename(state.proposal.title),
+                                pullRequestMarkdown(state.proposal),
+                                "text/markdown",
+                              )
+                            }
+                          >
+                            {language.t("orchestra.chat.pr.download")}
+                          </button>
+                        </>
+                      )}
+                    </Match>
+                  </Switch>
                 </div>
                 <footer class="mx-dialog-foot">
-                  <button type="button" class="mx-btn" onClick={close}>
-                    {language.t("orchestra.chat.pr.cancel")}
+                  <button type="button" class="mx-btn" disabled={state.busy} onClick={close}>
+                    {language.t(state.step === "result" ? "orchestra.chat.pr.done" : "orchestra.chat.pr.cancel")}
                   </button>
                   <Show when={state.step === "edit"}>
-                    <button type="submit" class="mx-btn primary">
-                      {language.t("orchestra.chat.pr.submit")}
+                    <button type="submit" class="mx-btn primary" disabled={state.busy}>
+                      {language.t(state.busy ? "orchestra.chat.pr.creating" : "orchestra.chat.pr.submit")}
                     </button>
                   </Show>
                 </footer>
