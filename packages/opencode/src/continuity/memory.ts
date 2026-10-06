@@ -23,6 +23,8 @@ const FIELDS: Record<Section, { required: string[]; optional: string[]; labels?:
 }
 // Fields the host locates in the source and stores as the source's own bytes.
 const EXACT = new Set(["quote", "error", "value"])
+const ITEM_ID = /^m[1-9][0-9]*$/
+const SENTENCE = 280
 
 type Fields = Record<string, string | string[] | null>
 export type Op =
@@ -31,7 +33,8 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-export type Decoded = { artifact: MemoryArtifact; ops: Op[] }
+/** `dropped` counts ops whose exact value or error was not found; the rest of the pass still applies. */
+export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
 const parse = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
@@ -55,7 +58,8 @@ export function scope(snapshot: MemorySnapshot, host: Host) {
   const span = covered.filter((source) => head.has(source.message.info.id))
   const end = span.at(-1) ?? covered.at(-1)
   return { covered, span, end, tail: all.find((source) => (position.get(source.message.info.id) ?? -1) > last),
-    sources: new Map(covered.map((source) => [source.alias, source])), team: team(covered, host) }
+    sources: new Map(covered.map((source) => [source.alias, source])), team: team(covered, host),
+    sessionID: snapshot.sessionID }
 }
 type Scope = ReturnType<typeof scope>
 
@@ -86,7 +90,7 @@ export function decode(input: {
   }
   const ops = body.ops as Op[]
   for (const op of ops) for (const need of op.op === "retire" ? [] : op.fields.needs ?? [])
-    if (need.startsWith("n") && !keys.has(need)) return fail("C2", `needs names ${need}, which is no key in this reply`)
+    if (!ITEM_ID.test(need) && !keys.has(need)) return fail("C2", `needs names ${need}, which is no item ID or key in this reply`)
   const ctx = scope(snapshot, host)
   for (const op of ops) for (const alias of op.src ?? [])
     if (!ctx.sources.has(alias)) return fail("C4", `${alias} is not an alias at or before ${ctx.end?.alias ?? "the new span"}`)
@@ -104,16 +108,23 @@ export function decode(input: {
 
   const items = new Map(live)
   const handles = new Map<string, string>()
+  const lost = new Set<string>()
+  const applied: Op[] = []
   let next = snapshot.previous?.next ?? 1
-  for (const op of ops) {
+  each: for (const op of ops) {
     if (op.op === "retire") {
       const item = items.get(op.id)!
-      if (quoted(item)) {
+      // The user changes a goal by asking for something else, rarely with revoking words.
+      if (item.section === "objective") {
+        if (!(op.src ?? []).some((alias) => alias.startsWith("u") && ctx.span.some((source) => source.alias === alias)))
+          return fail("C7", `retiring the objective ${op.id} cites the user's message in the new span that changed it`)
+      } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
         const found = quote(op.quote, ctx, op.src ?? [], true)
         if ("check" in found) return found
       }
       items.delete(op.id)
+      applied.push(op)
       continue
     }
     const base = op.op === "update" ? items.get(op.id)! : undefined
@@ -127,6 +138,11 @@ export function decode(input: {
       else if (!EXACT.has(name)) fields[name] = value.replace(/\s+/g, " ").trim()
       else {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
+        // A wrong exact value or error costs only its own op; a wrong user quote rejects the pass.
+        if ("check" in found && name !== "quote") {
+          if (op.op === "add" && op.key) lost.add(op.key)
+          continue each
+        }
         if ("check" in found) return found
         fields[name] = found.text
         src.push(found.alias)
@@ -144,11 +160,13 @@ export function decode(input: {
     const id = base?.id ?? `m${next++}`
     if (op.op === "add" && op.key) handles.set(op.key, id)
     items.set(id, { id, section, fields, src: [...new Set(src)] })
+    applied.push(op)
   }
   for (const item of items.values()) {
     const needs = item.fields.needs
-    if (Array.isArray(needs) && needs.some((need) => handles.has(need)))
-      items.set(item.id, { ...item, fields: { ...item.fields, needs: needs.map((need) => handles.get(need) ?? need) } })
+    if (Array.isArray(needs) && needs.some((need) => handles.has(need) || lost.has(need)))
+      items.set(item.id, { ...item, fields: { ...item.fields,
+        needs: needs.filter((need) => !lost.has(need)).map((need) => handles.get(need) ?? need) } })
   }
 
   const result = [...items.values()]
@@ -172,7 +190,8 @@ export function decode(input: {
       `Items you can retire without a quote: ${offer.join(", ") || "none"}`)
   }
   return {
-    ops,
+    ops: applied,
+    dropped: ops.length - applied.length,
     artifact: {
       version: 4,
       parentID: snapshot.sessionID,
@@ -207,8 +226,8 @@ function shape(op: unknown, live: Map<string, MemoryItem>, keys: Set<string>): s
   if (op.op === "add") {
     if (!SECTIONS.includes(op.section as Section)) return `unknown section ${JSON.stringify(op.section)}`
     section = op.section as Section
-    if (op.key !== undefined && (typeof op.key !== "string" || !/^n[1-9][0-9]*$/.test(op.key) || keys.has(op.key)))
-      return "key must be a handle n1, n2, … unique within the reply"
+    if (op.key !== undefined && (!text(op.key) || ITEM_ID.test(op.key) || keys.has(op.key)))
+      return "key must be a name unique within the reply, not an item ID"
     if (typeof op.key === "string") keys.add(op.key)
   }
   const fields = op.fields
@@ -223,8 +242,7 @@ function shape(op: unknown, live: Map<string, MemoryItem>, keys: Set<string>): s
       continue
     }
     if (name === "needs") {
-      if (!Array.isArray(value) || !value.every((need) => typeof need === "string" && /^[mn][1-9][0-9]*$/.test(need)))
-        return "needs must be an array of item IDs or handles"
+      if (!Array.isArray(value) || !value.every(text)) return "needs must be an array of item IDs or keys"
       continue
     }
     if (!text(value)) return `${section}.${name} must be a non-empty string`
@@ -292,13 +310,18 @@ function quote(needle: string, ctx: Scope, cited: readonly string[], revoking: b
     if (hit.size !== 1 || hit.has(-1))
       return fail("C6", `quote "${needle}" matches more than one sentence of ${source.alias}; quote more of the sentence`)
     const [from, to] = spans[[...hit][0]]
+    // A pasted blob without sentence breaks is no sentence: keep the quoted words themselves.
+    if (to - from > SENTENCE) {
+      const [start, end] = matches[0]
+      return { text: `…${source.text.slice(start, end).trim()}…`, alias: source.alias }
+    }
     return { text: source.text.slice(from, to).trim(), alias: source.alias }
   }
   return fail("C6", `quote "${needle}" not found in ${revoking ? "the user text of the new span" :
     `${cited.filter((alias) => alias.startsWith("u")).join(", ") || "the cited aliases"} or the new span's user text`}`)
 }
 
-/** C8: errors come from a tool's raw output or error; values also from its identity arguments or user text. */
+/** C8: errors come from a tool's raw output or error; values also from its identity arguments, user text or the host. */
 function exact(name: string, needle: string, ctx: Scope, cited: readonly string[]) {
   for (const source of candidates(ctx, cited)) for (const haystack of raw(source, name)) {
     const [match] = find(haystack, needle)
@@ -308,6 +331,9 @@ function exact(name: string, needle: string, ctx: Scope, cited: readonly string[
       return fail("C8", `value "${needle}" spans a line break in ${source.alias}; values are single-line`)
     return { text: value, alias: source.alias }
   }
+  // The session ID shows only on host-written framing lines (`Session: ses_…`) of every source, so the
+  // op's own first alias already shows it: no new source is credited.
+  if (name === "value" && needle === ctx.sessionID) return { text: needle, alias: cited[0] }
   return fail("C8", `${name} "${needle}" not found in ${cited.join(", ")} or the new span`)
 }
 
@@ -333,6 +359,8 @@ export function stamp(time: number) {
     `${offset < 0 ? "-" : "+"}${pad(Math.floor(Math.abs(offset) / 60))}${minutes ? `:${pad(minutes)}` : ""}`
 }
 
+// Quote marks the source sentence carries at either end are not doubled.
+export const inQuotes = (value: string) => `"${value.replace(/^["“]/, "").replace(/["”]$/, "")}"`
 const oneLine = (value: string) => value.replace(/\s+/g, " ").trim()
 const cut = (value: string, length: number) => {
   const line = oneLine(value)
@@ -394,14 +422,14 @@ function renderItem(item: MemoryItem, ctx: Scope) {
   const f = item.fields as Record<string, string | undefined>
   const needs = Array.isArray(item.fields.needs) ? item.fields.needs : []
   const line = (label: string, value?: string) => value ? [`    ${label}: ${value}`] : []
-  const said = f.quote ? ` — "${f.quote}"` : ""
+  const said = f.quote ? ` — ${inQuotes(f.quote)}` : ""
   const lines = {
     objective: () => [`Goal: ${f.goal}`, ...line("Why", f.why), ...line("Done when", f.done_when)],
     rules: () => [`${RULE[f.kind!]}: ${f.rule}${said}`],
     decisions: () => [`Decision: ${f.decision}`, ...line("Why", f.why), ...line("Rejected", f.rejected), `    By: ${BY[f.by!]}${said}`],
     findings: () => [`${f.status === "confirmed" ? "Confirmed" : "Hypothesis"}: ${f.finding}`, ...line("Why it matters", f.why),
       ...line("Check", f.check)],
-    failures: () => [`Tried: ${f.tried}`, ...line("Error", f.error && `"${f.error}"`), ...line("Cause", f.cause), ...line("Lesson", f.lesson)],
+    failures: () => [`Tried: ${f.tried}`, ...line("Error", f.error && inQuotes(f.error)), ...line("Cause", f.cause), ...line("Lesson", f.lesson)],
     values: () => [`${f.name}: ${f.value!.includes("`") ? `\`\` ${f.value} \`\`` : `\`${f.value}\``}${f.use ? ` — ${f.use}` : ""}`],
     plan: () => [`${f.status!.toUpperCase()}: ${f.task}${f.detail ? ` — ${DETAIL[f.status!]}: ${f.detail}` : ""}`,
       ...line("Done when", f.done_when), ...(f.status !== "done" && needs.length ? [`    Needs: ${needs.join(", ")}`] : []),

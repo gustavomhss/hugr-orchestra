@@ -403,6 +403,13 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "description": "Set only to continue an earlier task: the exact task_id that call returned. The teammate resumes with its earlier context. An unknown id fails.",
       "type": "string",
     },
+    "writePaths": {
+      "description": "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
+      "items": {
+        "type": "string",
+      },
+      "type": "array",
+    },
   },
   "required": [
     "description",

@@ -314,6 +314,13 @@ const layer = Layer.effect(
           yield* Effect.logWarning("deprecated native seat configuration", { path: `agent.${LEGACY_BACKEND_ID}` })
           yield* events.publish(SessionV1.Event.Error, { error: new NamedError.Unknown({ message }).toObject() })
         }
+        // Maestro's name is fixed: the app and other Sessions find and address the conductor by it. Team seats stay
+        // renameable through their own `agent.<id>.name`.
+        if (agentConfig.maestro?.name !== undefined) {
+          const message = "Configuration agent.maestro.name is ignored: Maestro's name is fixed."
+          yield* Effect.logWarning("fixed agent name", { path: "agent.maestro.name" })
+          yield* events.publish(SessionV1.Event.Error, { error: new NamedError.Unknown({ message }).toObject() })
+        }
 
         for (const [key, value] of Object.entries(agentConfig)) {
           // Native seats accept only model, variant, temperature and their display label (resolved below).
@@ -348,7 +355,7 @@ const layer = Layer.effect(
           item.mode = key === "maestro" ? item.mode : (value.mode ?? item.mode)
           item.color = value.color ?? item.color
           item.hidden = value.hidden ?? item.hidden
-          item.name = value.name ?? item.name
+          if (key !== "maestro") item.name = value.name ?? item.name
           item.steps = value.steps ?? item.steps
           item.options = mergeDeep(item.options, value.options ?? {})
           item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))

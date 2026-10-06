@@ -130,7 +130,10 @@ export const seed = Effect.fn("MaestroLifecycleTest.seed")(function* () {
 })
 
 
-export const dispatch = Effect.fn("MaestroLifecycleFixture.dispatch")(function* () {
+export const dispatch = Effect.fn("MaestroLifecycleFixture.dispatch")(function* (
+  options: { subagentType?: string; writePaths?: string[] } = {},
+) {
+  const subagentType = options.subagentType ?? "general"
   const { chat, user, assistant, sessions } = yield* seed()
   yield* sessions.updatePart({
     id: PartID.ascending(),
@@ -167,7 +170,7 @@ export const dispatch = Effect.fn("MaestroLifecycleFixture.dispatch")(function* 
     contextHash: "context-hash",
     policyHash: "policy-hash",
     taskHash: taskHash({
-      subagentType: "general",
+      subagentType,
       prompt: "implement dark mode",
       planRevisionID: "plan_v1",
       revisionHash: "revision-hash",
@@ -176,7 +179,7 @@ export const dispatch = Effect.fn("MaestroLifecycleFixture.dispatch")(function* 
       contextHash: "context-hash",
       policyHash: "policy-hash",
     }),
-    intent: { subagentType: "general", prompt: "implement dark mode" },
+    intent: { subagentType, prompt: "implement dark mode" },
     methodVersion: "request-approval-v1",
     plan: "Add dark mode to settings.",
     provenance: `request ${user.id}`,
@@ -238,7 +241,8 @@ export const dispatch = Effect.fn("MaestroLifecycleFixture.dispatch")(function* 
   const input = {
     description: "implement dark mode",
     prompt: "implement dark mode",
-    subagent_type: "general",
+    subagent_type: subagentType,
+    ...(options.writePaths ? { writePaths: options.writePaths } : {}),
     governed: {
       sessionID: chat.id,
       projectID: chat.projectID,

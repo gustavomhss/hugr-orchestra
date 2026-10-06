@@ -83,6 +83,19 @@ describe("native seat label", () => {
   )
 
   it.instance(
+    "Maestro's name is fixed: a configured name is ignored with a warning",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* resolve("maestro")
+        expect(result.agent).toMatchObject({ id: "maestro", name: "maestro" })
+        expect(result.errors).toEqual([
+          { name: "UnknownError", message: "Configuration agent.maestro.name is ignored: Maestro's name is fixed." },
+        ])
+      }),
+    { config: { agent: { maestro: { name: "Boss" } } } },
+  )
+
+  it.instance(
     "the mechanism is generic for every native seat and renders the charter label",
     () =>
       Effect.gen(function* () {

@@ -10,6 +10,12 @@ Use a short branch name of at most three words, separated by hyphens. Do not use
 
 Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
+## Agent Names
+
+- Maestro's name is fixed. The app and other Sessions find and address the conductor by it, so config cannot rename it.
+- Every other native seat is addressed by its stable id (for example `backend`); its display name is a user setting (`agent.<id>.name`). Code, tests, docs, commits and PR text refer to a seat by role or id, never by a default display name.
+- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`packages/opencode/src/maestro/roster.ts`). `packages/opencode/test/agent/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
+
 ## Commits and PR Titles
 
 Use conventional commit-style messages and PR titles: `type(scope): summary`.

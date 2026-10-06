@@ -175,7 +175,6 @@ describe("Maestro admission contract", () => {
           yield* def.execute({ methodVersion: "admit-request-v1", assessment }, context("Conductor", "maestro")),
         ).toMatchObject({ metadata: { outcome: "READY_TO_DRAFT" } })
       }),
-    { config: { agent: { maestro: { name: "Conductor" } } } },
   )
 
   it.instance("requires direct user message and retains open method-version input", () =>

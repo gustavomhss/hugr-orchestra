@@ -1,0 +1,70 @@
+[
+  {
+    "id": "P01",
+    "answer": "The first request (u1), quoted verbatim:\n- \"Governed flow. Call maestro_record_admission exactly once before inspection with methodVersion \\\"admit-request-v1\\\" and valid assessment for this request: {\\\"kind\\\":\\\"work\\\",\\\"goal\\\":\\\"Inspect repository and propose scope for a small dark mode toggle in settings; do not implement.\\\",\\\"known\\\":[{\\\"text\\\":\\\"Settings page exists.\\\",\\\"source\\\":\\\"orientation\\\"}],\\\"proposals\\\":[{\\\"text\\\":\\\"Draft bounded scope.\\\",\\\"source\\\":\\\"maestro\\\"}],\\\"unknowns:[],\\\"uncertainty\\\":\\\"Implementation seam needs inspection.\\\",\\\"activeWorkEffect\\\":\\\"none\\\",\\\"reason\\\":\\\"Goal is usable for a draft.\\\"}. After READY_TO_DRAFT, use the exact admission message ID printed in the admission tool output to call maestro_record_plan_revision with methodVersion \\\"draft-plan-v1\\\". Do not modify files.\"\n- Should do: inspect the repository and propose scope for a small dark mode toggle in settings, recording the admission and plan revision.\n- Should not do: implement (\"do not implement\") and modify files (\"Do not modify files.\")."
+  },
+  {
+    "id": "P02",
+    "answer": "Standing rules and restrictions, with scope:\n- \"Do not modify files.\" (u1; the whole task, repeated in later steps).\n- \"Report exact result.\" (u2; when asked for a tool result, report it verbatim).\n- Cold review goes to Lucy, read-only, using maestro_record_review only, with the exact work card \"# Dark mode scope\\nInspect existing settings color scheme only.\\n\", the same PASS check evidence, no transcript or model history, and no file edits (u7; Lucy review).\n- \"If Task delegation is unavailable, report exact blocker.\" (u7; Lucy delegation).\n- \"Do not use generic Task.\" (u10; Lucy review, which goes through maestro_request_review).\n- \"Return receipt ID only if trusted runner persisted Lucy APPROVE.\" (u16; review receipt).\n- \"Do not inspect unrelated files.\" (u18; the review retries).\n- \"Do not dispatch Task yet; report exact decision.\" (u24; limited to the approval step until lifted). The later message \"Do not call Task yet. Report exact authorization ID.\" applied to the grant-authorization step. The user then explicitly asked for a task call, so the restriction was lifted.\n- \"Do not explain after tool call.\" (u25; the v2 maestro_present_approval call).\n- \"Do not use governed field.\" (the later task call to backend; that call only)."
+  },
+  {
+    "id": "P03",
+    "answer": "No. The user did not approve the review. Lucy, the cold reviewer child, produced the APPROVE verdict. The trusted runner persisted it (t37) and returned the receipt. The user's \"approve\" replies were about the plan revision, which is a separate step."
+  },
+  {
+    "id": "P04",
+    "answer": "No, the first \"approve\" reply (u24, after the v1 presentation) was not recorded as approval.\n- maestro_record_approval returned \"HOLD: reply-not-immediate\".\n- The plan was actually approved after the fresh v2 presentation (request-approval-v2, t40). The user replied \"approve\", and maestro_record_approval returned \"APPROVED: exact plan revision evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0\"."
+  },
+  {
+    "id": "P05",
+    "answer": "The user's corrections:\n- Validation: the user said the tool resolves the project from the session (\"Tool resolves session project automatically\", \"Tool resolves project from session\"), and asked for retries with the same bound inputs.\n- Review: the user said not to use generic Task and to use maestro_request_review (\"Do not use generic Task.\").\n- The Lucy child had no explicit model (\"Child now receives explicit current model\"). The agent identity was wrong (\"Child agent identity fix is now active\").\n- The seam now supplies the exact artifact and check JSON. The runner now binds the real HEAD parent diff artifact. The sandbox artifact guard was fixed. A Git root artifact was used. The check evidence now matches the validation.\n- The user also corrected the approval call: the first call passed revisionHash and validationHash as record IDs and policyHash \"policy-current\", and the tool printed the real hashes, which the v2 call used."
+  },
+  {
+    "id": "P06",
+    "answer": "None. Maestro edited or created no files. git status showed only unrelated pre-existing Maestro governance changes."
+  },
+  {
+    "id": "P07",
+    "answer": "The command was `git status --short` (exit 0, t18). It showed unrelated uncommitted changes in the orchestra-canonical-maestro-dev worktree:\n- Modified: maestro.txt, maestro-admission.ts, registry.ts, maestro-event.ts.\n- Untracked: plan-revision.ts and maestro-plan.ts.\nThe raw output is not in the context, only this summary."
+  },
+  {
+    "id": "P08",
+    "answer": "maestro_record_context recorded the ContextRecord ID `evt_maestro_context_ffb19c2f42b6519480e38c26585fe61d56526ea516d21df8656b1fc2cb1f5a36`.\nThe contextHash recorded for validation is `ba3eaab11283017a7f0b77e83684f9978687dc3c9d8d9c52188991dcc35f58e4`. The user supplied it in u3, so the context does not show the context tool printing it."
+  },
+  {
+    "id": "P09",
+    "answer": "`evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6`"
+  },
+  {
+    "id": "P10",
+    "answer": "The first maestro_record_validation call returned: \"The maestro_record_validation tool was called with invalid arguments: unknown parameter.\"\n- The next two attempts, with identical inputs, each returned \"MaestroValidationRejected\".\n- The attempt at t23 then succeeded with VALID."
+  },
+  {
+    "id": "P11",
+    "answer": "Failures before success, in order:\n- \"LUCY_ERROR: UnknownError: UnknownError\". This happened on three attempts: the generic Task (t24) and two maestro_request_review attempts (t26, t27).\n- Then a run (t28) returned verdict FIX_FIRST, a non-approving verdict rather than an error. A later run on the same record returned APPROVE.\n- \"REVIEW_REJECTED: artifact-worktree-mismatch\" (t34, t35).\n- \"REVIEW_REJECTED: check-evidence-mismatch\" (t36).\n- t37 then succeeded. The context does not record the exact results of t29 to t33 beyond this."
+  },
+  {
+    "id": "P12",
+    "answer": "Next, wait for the user's instruction. The chain is complete and nothing further is queued in the context:\n- The plan was APPROVED.\n- The authorization was granted: `evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e`.\n- The backend task completed and its result was reported.\nDo not redo the review, approval, authorization or dispatch.\nWorth flagging to the user: backend found \"No approved implementation scope found\" and reported 10 modified and 5 untracked files, whereas the earlier git status showed 4 modified and 2 untracked."
+  },
+  {
+    "id": "P13",
+    "answer": "Delegations:\n- Lucy (cold review):\n  - Several launches, from t24 to t37.\n  - The generic Task (t24) and two maestro_request_review attempts (t26, t27) ended in LUCY_ERROR.\n  - t28 returned FIX_FIRST.\n  - t34 and t35 were rejected with artifact-worktree-mismatch, and t36 with check-evidence-mismatch.\n  - The final t37 returned APPROVE, persisted with receipt `evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6`.\n  - The results of t29 and t30 are not recorded in detail.\n- backend (authorized scoped child): task id `ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e`, state `completed`."
+  },
+  {
+    "id": "P14",
+    "answer": "No. Lucy's APPROVE is already persisted (t37) and the plan is approved and authorized, so a repeat request would redo finished work. Request it again only if the user asks."
+  },
+  {
+    "id": "P15",
+    "answer": "Maestro made the call (a1, agent), not the user. The user only asked for a proposed scope.\n- Why: a system/light/dark selector and theme commands already exist, so a separate toggle would duplicate or conflict with them.\n- Evidence: the legacy settings-general.tsx, the V2 general.tsx and general-controllers.ts, and the theme commands in pages/layout.tsx.\n- Rejected: a new theme engine or separate dark-mode state.\n- The proposal: reuse theme.colorScheme()/setColorScheme(), and add a toggle to the legacy and V2 settings only if the UX is explicitly binary."
+  },
+  {
+    "id": "P16",
+    "answer": "Lucy returned the verdict FIX_FIRST (t28). The finding: SyntaxStyle allocated before map(...) at src/cli/cmd/run/theme.ts:674-686 is not destroyed when the catch returns RUN_THEME_FALLBACK. That code is outside the scope-only dark mode review, and the next run on the same record returned APPROVE."
+  },
+  {
+    "id": "P17",
+    "answer": "The v2 presentation's tool output (t40) asked the user to reply \"approve\" or \"aprovo\", or decline. Maestro added no explanation of its own, because the user said \"Do not explain after tool call.\""
+  }
+]
