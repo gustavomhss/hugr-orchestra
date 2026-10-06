@@ -6,7 +6,7 @@ import { chmod, open, rename, unlink } from "node:fs/promises"
 import { dirname, join, relative } from "node:path"
 import { type GovernanceContext, type Capture, requireValue, validateCapture, isSourceRevision } from "./contracts.ts"
 import { readBoundedBytes, scopedPath, readState, updateState } from "./state.ts"
-import { git, gitBytes } from "./process.ts"
+import { git, gitBytes, gitToplevel } from "./process.ts"
 
 const digest = (value: string) => createHash("sha256").update(value).digest("hex")
 async function contentDigest(file: string) {
@@ -35,7 +35,7 @@ function validateState(value: unknown, context: GovernanceContext, root: string,
   return state
 }
 export async function recoveryBegin(context: GovernanceContext, root: string, wave: string, ownedPaths: readonly string[]) {
-  requireValue((await git(context, root, ["rev-parse", "--show-toplevel"])).trim() === root, "RECOVERY_REQUIRES_REPOSITORY_ROOT")
+  requireValue(await gitToplevel(context, root) === root, "RECOVERY_REQUIRES_REPOSITORY_ROOT")
   requireValue(ownedPaths.length > 0 && ownedPaths.length <= 128 && new Set(ownedPaths).size === ownedPaths.length, "RECOVERY_OWNERSHIP_EMPTY_OR_DUPLICATE")
   const snapshot = await repositorySnapshot(context, root)
   const files = await Promise.all(ownedPaths.map(async (path) => {

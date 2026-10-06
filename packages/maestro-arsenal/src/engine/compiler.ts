@@ -1,7 +1,7 @@
 // Maestro adaptation of TechLead a68e7af (Copyright 2026 HuGR Labs, Apache-2.0).
 // TypeScript API replaces fail-open stdout scraping and temporary source-tree writes.
 import { existsSync, realpathSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import type ts from "typescript";
 import { type ArsenalContext } from "../contract.ts";
@@ -47,7 +47,9 @@ export async function compile(request: CompilerRequest, context: ArsenalContext)
   const readFile = (path: string) => virtual.get(resolve(path)) ?? (allowed(path) ? compiler.sys.readFile(path) : undefined);
   const fileExists = (path: string) => virtual.has(resolve(path)) || (allowed(path) && compiler.sys.fileExists(path));
   const configPath = request.targetPath ? findTsconfig(dirname(await physical(resolve(context.directory, request.targetPath))), root, fileExists) : undefined;
-  const config = configPath ? compiler.readConfigFile(configPath, readFile) : { config: {} };
+  // TypeScript keys config files by forward-slash names and asserts on native Windows spellings.
+  const configName = configPath?.split(sep).join("/");
+  const config = configName ? compiler.readConfigFile(configName, readFile) : { config: {} };
   if (config.error) throw new AcquisitionError("COMPILER_CONFIG_FAILED", compiler.flattenDiagnosticMessageText(config.error.messageText, "\n"));
   const parsed = compiler.parseJsonConfigFileContent(config.config, {
     useCaseSensitiveFileNames: compiler.sys.useCaseSensitiveFileNames,
@@ -59,10 +61,10 @@ export async function compile(request: CompilerRequest, context: ArsenalContext)
         return file;
       });
     },
-  }, configPath ? dirname(configPath) : root, configPath ? undefined : {
+  }, configName ? dirname(configName) : root, configName ? undefined : {
     target: compiler.ScriptTarget.ES2020, module: compiler.ModuleKind.ESNext,
     moduleResolution: compiler.ModuleResolutionKind.Bundler, strict: true, skipLibCheck: true,
-  }, configPath);
+  }, configName);
   // TS18003 is expected for virtual-only acquisition; all other config failures are real.
   const configErrors = parsed.errors.filter((error) => error.code !== 18003);
   if (configErrors.length) throw new AcquisitionError("COMPILER_CONFIG_FAILED", configErrors.map((error) => compiler.flattenDiagnosticMessageText(error.messageText, "\n")).join("\n"));
@@ -85,7 +87,7 @@ export async function compile(request: CompilerRequest, context: ArsenalContext)
     return source === undefined ? undefined : compiler.createSourceFile(path, source, languageVersion, true);
   };
   host.writeFile = () => { throw new AcquisitionError("COMPILER_EMIT_FORBIDDEN", "noEmit boundary"); };
-  const roots = [...new Set([...(request.includeProject && configPath ? parsed.fileNames : []), ...virtual.keys()])];
+  const roots = [...new Set([...(request.includeProject && configPath ? parsed.fileNames.map((file) => resolve(file)) : []), ...virtual.keys()])];
   if (!roots.length) throw new AcquisitionError("COMPILER_EMPTY_INPUT", "no compilation roots");
   const diagnostics = await Promise.resolve().then(() => compiler.getPreEmitDiagnostics(compiler.createProgram(roots, options, host))).catch((error: unknown) => {
     if (error instanceof AcquisitionError) throw error;
@@ -97,7 +99,8 @@ export async function compile(request: CompilerRequest, context: ArsenalContext)
     tsconfig: configPath ?? null,
     diagnostics: diagnostics.filter((item) => item.category === compiler.DiagnosticCategory.Error).map((item): CompilerDiagnostic => ({
       code: item.code, message: compiler.flattenDiagnosticMessageText(item.messageText, "\n"),
-      file: item.file?.fileName, start: item.start, length: item.length,
+      // Callers match diagnostics against native paths; TypeScript reports forward-slash names.
+      file: item.file && resolve(item.file.fileName), start: item.start, length: item.length,
     })),
   };
 }
