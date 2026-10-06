@@ -25,6 +25,8 @@ const REGIONS = new Set(["frame", "dialog", "alert", "window", "menu bar", "menu
 const WRAPPERS = new Set(["filler", "panel", "section", "redundant object", "unknown", "grouping", "html container",
   "layered pane", "root pane", "glass pane", "viewport", "scroll pane", "static", "label", "paragraph"])
 const MODALS = new Set(["dialog", "alert", "file chooser", "color chooser", "font chooser"])
+// Top-level app windows: GTK and Qt give their own file, color and font choosers and message boxes those roles.
+export const WINDOWS = new Set(["frame", "window", ...MODALS])
 
 // Rotor kinds for list(kind), by readable role.
 export const KINDS: Record<string, string[]> = {
@@ -66,7 +68,7 @@ export function focused<T extends { item: Item }>(matches: T[]) {
   const top = (item: Item, depth = 0): Item =>
     item.parentRef && items.has(item.parentRef) && depth < 64 ? top(items.get(item.parentRef)!, depth + 1) : item
   return matches.filter((match) => match.item.states?.includes(12)
-    && ["frame", "dialog", "window"].includes(role(top(match.item))) && top(match.item).states?.includes(1))
+    && WINDOWS.has(role(top(match.item))) && top(match.item).states?.includes(1))
 }
 
 export function tree(items: Item[]) {
@@ -169,7 +171,7 @@ function contents(scope: Node) {
 }
 
 export function windows(roots: Node[]) {
-  return roots.flatMap((root) => ["frame", "dialog", "window", "alert", "application"].includes(root.role) ? [root] : [])
+  return roots.flatMap((root) => WINDOWS.has(root.role) || root.role === "application" ? [root] : [])
 }
 
 // scope is the line of the view's scope, so a later ui_enter can say which view its numbers came from.
@@ -185,6 +187,8 @@ export function look(roots: Node[], scope?: Node, limit = 40): Look {
   const lines: string[] = []
   if (!base) return { text: "No app windows are visible in the Linux workspace.", regions: [], scope: "" }
   lines.push(`windows: ${windows(roots).map(line).join("; ") || "none"}`)
+  if (windows(roots).length && !windows(roots).some((node) => has(node, 1)))
+    lines.push("input: none of these windows is active; a window that shows no controls here (such as a native file dialog) or nothing holds the keyboard")
   if (modal) lines.push(`modal: ${line(modal)} — it holds the input until it is closed`)
   if (focused) {
     const trail: string[] = []

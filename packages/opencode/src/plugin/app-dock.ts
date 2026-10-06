@@ -168,7 +168,7 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
     })
 }
 
-// window: only an active frame, dialog or window (where native key combinations land). focused: only the control with focus.
+// window: only an active top-level window (where native key combinations land). focused: only the control with focus.
 type NativeQuery = { name?: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number;
   window?: boolean; focused?: boolean }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
@@ -213,7 +213,7 @@ const roleKey = (role: string) => {
 
 function fits(item: NativeItem, query: NativeQuery) {
   if (query.role !== undefined && roleKey(item.roleName) !== roleKey(query.role)) return false
-  if (query.window && !(["frame", "dialog", "window"].includes(roleKey(item.roleName)) && Array.isArray(item.states)
+  if (query.window && !(AppDockOutline.WINDOWS.has(AppDockOutline.role(item)) && Array.isArray(item.states)
     && item.states.includes(1))) return false
   return query.capability === undefined || supports(item, query.capability)
 }
@@ -234,10 +234,11 @@ const ALTERNATIVES: Record<string, string[]> = { action: ["action", "observedAct
 
 // A target that names real controls but excludes them by role or input mode must say so, or models keep guessing.
 function missed(scan: NativeScan, query: NativeQuery) {
-  if (query.window) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
-    hint: "No app window is active in the Linux workspace; pass ref or target for the window, or ask the user to click the app" })
-  if (query.focused && query.capability === undefined && scan.found.length === 0) return toJSON({ code: "target-not-found",
-    outcome: "not-dispatched", found: 0, hint: "No control in the active app window has keyboard focus; open the field with its shortcut or pass target {name, role}" })
+  // Keys and text would land in a window ui_* cannot see (often a native file dialog that exposes no controls).
+  if (query.window || (query.focused && query.capability === undefined && scan.found.length === 0))
+    return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
+      hint: query.window ? "No app window in the Linux workspace is active, so keys would go to a window ui_* cannot see, often a native dialog that exposes no controls. Do not close or kill windows or processes to get around it; report what blocks you or ask the user to click the app"
+        : "No control in the active app window has keyboard focus; open the field with its shortcut or pass target {name, role}" })
   if (query.focused && scan.found.length === 0) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
     hint: "No control has keyboard focus; pass target {name, role} for the field" })
   if (scan.found.length === 0) return compactScan(scan, "target-not-found")

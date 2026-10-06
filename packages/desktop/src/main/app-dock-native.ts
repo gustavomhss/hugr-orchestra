@@ -42,6 +42,9 @@ const scopeFields = [
   "senderID", "tabID", "generation", "profileID", "runtimeID", "runtimeEpoch",
   "accessibilitySessionID", "appID", "launchEpoch", "ownershipRevision", "scopeKind",
 ] as const
+// Top-level window roles the helper proposes (context.py WINDOW_ROLES): alert, color chooser, dialog, file chooser,
+// font chooser, frame, window. GTK and Qt give their own modal dialogs the specific roles.
+const WINDOW_ROLES = [2, 9, 16, 19, 22, 23, 69]
 
 export class NativeDock {
   private readonly slots = new Map<string, Slot>()
@@ -520,7 +523,7 @@ function requireProposal(value: NativeDockProtocol.JSONValue): NativeDockProtoco
       || !Array.isArray(roots) || roots.length < 1 || roots.length > 32
       || !roots.every((root): root is NativeDockProtocol.Proposal["roots"][number] => NativeDockProtocol.object(root)
         && typeof root.name === "string" && root.name.length <= 256 && integer(root.role, 0)
-        && [16, 23, 69].includes(root.role) && handle(root))
+        && WINDOW_ROLES.includes(root.role) && handle(root))
       || roots.some((root, index) => roots.slice(0, index).some((prior) => sameHandle(prior, root))))
     throw new NativeDockProtocol.NativeError("protocol-error", "Invalid native root proposal")
   return { status: "proposal", proposalID: value.proposalID, roots: roots.map((root) => ({

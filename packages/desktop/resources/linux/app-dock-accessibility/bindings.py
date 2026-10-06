@@ -6,7 +6,7 @@ from threading import RLock
 from time import monotonic
 
 from bus import BusError
-from context import A, DBUS, LIMITS, ROOT, RequestContext, process_identity
+from context import A, DBUS, LIMITS, ROOT, WINDOW_ROLES, RequestContext, process_identity
 from refs import TreeCache, scope_kind
 
 
@@ -69,7 +69,7 @@ class BindingStore:
                 if child[0] not in ("", owner) or child[1] == "/org/a11y/atspi/null":
                     continue
                 role = context.call(owner, child[1], A + "Accessible", "GetRole", reply="(u)")[0]
-                if role not in (16, 23, 69):
+                if role not in WINDOW_ROLES:
                     continue
                 root = {"owner": owner, "path": child[1]}
                 context.binding["roots"] = [root]

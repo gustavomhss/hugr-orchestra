@@ -14,7 +14,7 @@ from time import monotonic, sleep
 from weakref import WeakValueDictionary
 
 from bus import BusError
-from context import LIMITS, text_length_matches
+from context import LIMITS, WINDOW_ROLES, text_length_matches
 
 A = "org.a11y.atspi."
 ROOT = "/org/a11y/atspi/accessible/root"
@@ -206,7 +206,7 @@ def _ancestry(call, ref, stop=None, expected_role=None):
         if role in (23, 69) and window is None:
             window = ref[1]
         if ref[1] == stop:
-            return paths, window
+            return paths, window or (ref[1] if role in WINDOW_ROLES else None)
         if ref[1] == ROOT:
             if role != 75:
                 raise BusError("ownership-unresolved", "Native root is not an application")
@@ -214,6 +214,9 @@ def _ancestry(call, ref, stop=None, expected_role=None):
         parent = call(ref, "org.freedesktop.DBus.Properties", "Get", "(ss)", (A + "Accessible", "Parent"), "(v)")
         if parent[0] not in ("", ref[0]) or parent[1] == "/org/a11y/atspi/null":
             raise BusError("wrong-scope", "Ancestry left the confirmed exporter")
+        # A top-level file chooser, alert or dialog holds no frame; it is the window itself.
+        if parent[1] == ROOT and window is None and role in WINDOW_ROLES:
+            window = ref[1]
         ref = ref[0], parent[1]
     raise BusError("verification-incomplete", "Ancestry exceeds keyboard budget")
 

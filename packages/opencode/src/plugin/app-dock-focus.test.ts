@@ -67,3 +67,15 @@ test("ui_keys text refuses without dispatch when nothing in the active window ha
   expect([...unfocused.calls, ...both.calls].every((call) => call.op === "read")).toBe(true)
 })
 
+test("with no active app window, keys and text refuse and say not to close or kill what holds the input", async () => {
+  // A native dialog the app opened outside the accessibility tree leaves every exported window inactive.
+  const dialog = host(() => page([control("n:code", "Welcome - Visual Studio Code", { role: 23, roleName: "frame", states: [8], parentRef: null }),
+    { ...field("n:entry", "Search settings"), parentRef: "n:code" }]))
+  for (const args of [{ keys: "Escape" }, { text: "x" }]) {
+    const refused = JSON.parse(String(await dialog.hooks.tool.ui_keys.execute(args, context)))
+    expect(refused).toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
+  }
+  expect(JSON.parse(String(await dialog.hooks.tool.ui_keys.execute({ keys: "Escape" }, context))).hint)
+    .toContain("Do not close or kill windows or processes to get around it")
+  expect(dialog.calls.every((call) => call.op === "read")).toBe(true)
+})

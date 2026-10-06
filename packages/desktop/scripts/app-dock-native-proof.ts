@@ -226,7 +226,7 @@ async function runWithControl(options: Options, suppressAction: boolean): Promis
       bindings.set(appID, await rpc.registerNative(identity, target, state.client, async (proposal) => {
         await command(["docker", "exec", "--user", "1000:1000", options.container, "python3", "-B", "-c",
           validateLaunches, JSON.stringify(manifest.apps)], record)
-        check(proposal.roots.length > 0 && proposal.roots.every((root) => [16, 23, 69].includes(root.role)
+        check(proposal.roots.length > 0 && proposal.roots.every((root) => [2, 9, 16, 19, 22, 23, 69].includes(root.role)
           && root.owner.startsWith(":") && !["/org/a11y/atspi/accessible/root", "/org/a11y/atspi/null"].includes(root.path)), "confirm-not-concrete-owned-window")
         record("controller.root-authorization", { identity, target, proposal,
           authority: "exclusive isolated supervisor launch; confirms only concrete proposed windows; runtime/X11 pairing untested" })
