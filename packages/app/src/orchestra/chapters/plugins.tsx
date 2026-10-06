@@ -1,6 +1,6 @@
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { getFilename } from "@opencode-ai/core/util/path"
-import { createMemo, For, Match, Show, Switch } from "solid-js"
+import { createEffect, createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -9,6 +9,7 @@ import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import {
+  behaviorInstructions,
   behaviorProfileDirectory,
   filterBehaviors,
   removeBehavior,
@@ -32,12 +33,40 @@ export default function PluginsPage(props: ChapterPageProps) {
   const platform = usePlatform()
   const dialog = useDialog()
   // Same profile resolution as the composer, so a sandbox selection still edits its repository's behaviors.
-  const store = createMemo(() =>
-    llmBehaviors(platform, serverSDK().scope, behaviorProfileDirectory(serverSync().data.project, props.directory)),
-  )
+  const directory = createMemo(() => behaviorProfileDirectory(serverSync().data.project, props.directory))
+  const store = createMemo(() => llmBehaviors(platform, serverSDK().scope, directory()))
   const [state, setState] = createStore({ query: "" })
-  // Only the V1 prompt contract carries per-message instructions; elsewhere an enabled behavior is saved, not active.
-  const applied = () => protocol() === "v1"
+  // A V1 prompt carries the behaviors itself. A V2 server keeps the profile's active set and applies it to every turn
+  // of the profile's sessions; until it accepts the set this page shows, enabled behaviors are saved, not active.
+  const [server, setServer] = createSignal<"supported" | "unsupported" | "failed">()
+  const applied = () => protocol() === "v1" || (protocol() === "v2" && server() === "supported")
+  const note = () => {
+    if (protocol() === "v1") return "orchestra.plugins.applied"
+    if (protocol() !== "v2") return
+    if (server() === "supported") return "orchestra.plugins.appliedServer"
+    if (server() === "unsupported") return "orchestra.plugins.notApplied"
+    if (server() === "failed") return "orchestra.plugins.syncFailed"
+  }
+  // Push the set this page shows when it opens and after every change, one request at a time so the server ends on
+  // the latest set. Only the latest request's answer sets the status.
+  const push = { latest: 0, queue: Promise.resolve() }
+  createEffect(() => {
+    if (protocol() !== "v2" || store().loading()) return
+    const input = {
+      location: { directory: directory() },
+      behaviorSetInput: { behaviors: behaviorInstructions(store().behaviors()) },
+    }
+    const id = ++push.latest
+    push.queue = push.queue.then(async () => {
+      const result = await serverSDK()
+        .client.v2.behavior.set(input, { throwOnError: false })
+        .catch(() => undefined)
+      if (id !== push.latest) return
+      const status = result?.response?.status
+      if (result?.response?.ok) return void setServer("supported")
+      setServer(status === 404 || status === 405 || status === 501 ? "unsupported" : "failed")
+    })
+  })
   const labels: BehaviorCardLabels = {
     get kind() {
       return language.t("orchestra.plugins.kind")
@@ -166,10 +195,10 @@ export default function PluginsPage(props: ChapterPageProps) {
           </div>
         </Match>
       </Switch>
-      <Show when={protocol()}>
-        {(kind) => (
+      <Show when={note()}>
+        {(key) => (
           <p class="mx-note" data-slot="plugins-application">
-            {language.t(kind() === "v1" ? "orchestra.plugins.applied" : "orchestra.plugins.notApplied")}
+            {language.t(key())}
           </p>
         )}
       </Show>

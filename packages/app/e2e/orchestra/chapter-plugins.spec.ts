@@ -175,9 +175,83 @@ for (const scheme of ["dark", "light"] as const) {
   })
 }
 
-test("V2 servers keep behaviors on the profile without claiming they reach turns", async ({ page }) => {
+// Stands in for the V2 behavior route: records every set the page pushes and answers with `status`.
+async function serveBehaviors(page: Page, status = 200) {
+  const sets: Array<{
+    directory: string | null
+    behaviors: Array<{ id: string; name: string; instructions: string }>
+  }> = []
+  await page.route("**/api/behavior**", (route) => {
+    const request = route.request()
+    if (request.method() !== "PUT") return route.fallback()
+    const location = new URL(request.url()).searchParams.get("location[directory]")
+    const body = request.postDataJSON()
+    sets.push({ directory: location, behaviors: body.behaviors })
+    if (status !== 200) return route.fulfill({ status, json: { name: "NotFound", message: "Not found" } })
+    return route.fulfill({
+      json: {
+        location: { directory: location, project: { id: "timeline", directory: location } },
+        data: body.behaviors,
+      },
+    })
+  })
+  return sets
+}
+
+// The prompt a V2 composer sends must carry only what the user typed: behaviors reach turns through the server.
+function expectPlainPrompt(body: unknown, text: string) {
+  const sent = JSON.stringify(body)
+  expect(sent).toContain(text)
+  expect(body).not.toHaveProperty("system")
+  for (const leak of ["Caveman", "caveman", "Respond terse", "LLM behaviors", "intensity"])
+    expect(sent).not.toContain(leak)
+}
+
+test("V2 servers apply the profile's behaviors to turns without touching the prompt", async ({ page }) => {
   const prompts = await openSession(page, "dark", "v2")
   await serveV2Catalog(page)
+  const sets = await serveBehaviors(page)
+  await openPlugins(page)
+  const note = chapter(page).locator('[data-slot="plugins-application"]')
+  await expect(note).toHaveText(
+    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+  )
+  // Opening the page hands the server the set it shows: nothing is enabled on a new profile.
+  await expect.poll(() => sets.at(-1)).toEqual({ directory, behaviors: [] })
+
+  const caveman = card(page, "Caveman")
+  await caveman.getByRole("switch", { name: "Enable Caveman" }).click()
+  await expect(caveman.locator(".mx-badge")).toHaveText(["LLM behavior", "full", "Active"])
+  await expect
+    .poll(() => sets.at(-1)?.behaviors.map((item) => [item.id, item.name]))
+    .toEqual([["caveman", "Caveman (intensity: full)"]])
+  expect(sets.at(-1)?.behaviors[0]?.instructions).toContain(
+    "Respond terse like smart caveman. Preserve technical accuracy.",
+  )
+  expect(sets.at(-1)?.directory).toBe(directory)
+  await caveman.getByRole("button", { name: "Configure", exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toContainText("Active behaviors are added to new chat messages in this profile.")
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+
+  await sendPrompt(page, "Explain the failing test")
+  await expect.poll(() => prompts.length).toBe(1)
+  expectPlainPrompt(prompts[0]?.body, "Explain the failing test")
+
+  await openPlugins(page)
+  const pushed = sets.length
+  await card(page, "Caveman").getByRole("switch", { name: "Enable Caveman" }).click()
+  await expect(card(page, "Caveman").locator(".mx-badge")).toHaveText(["LLM behavior", "full", "Disabled"])
+  await expect.poll(() => sets.slice(pushed).at(-1)?.behaviors).toEqual([])
+})
+
+test("V2 servers without the behavior route keep behaviors on the profile without claiming they reach turns", async ({
+  page,
+}) => {
+  const prompts = await openSession(page, "dark", "v2")
+  await serveV2Catalog(page)
+  const sets = await serveBehaviors(page, 404)
   await openPlugins(page)
   await expect(chapter(page).locator('[data-slot="plugins-application"]')).toHaveText(
     "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
@@ -185,6 +259,7 @@ test("V2 servers keep behaviors on the profile without claiming they reach turns
   const caveman = card(page, "Caveman")
   await caveman.getByRole("switch", { name: "Enable Caveman" }).click()
   await expect(caveman.getByRole("switch", { name: "Enable Caveman" })).toHaveAttribute("aria-checked", "true")
+  await expect.poll(() => sets.at(-1)?.behaviors.map((item) => item.id)).toEqual(["caveman"])
   await expect(caveman.locator(".mx-badge")).toHaveText(["LLM behavior", "full", "Enabled"])
   await expect(chapter(page)).not.toContainText("Active")
   await caveman.getByRole("button", { name: "Configure", exact: true }).click()
@@ -195,8 +270,7 @@ test("V2 servers keep behaviors on the profile without claiming they reach turns
   await expect(dialog).toHaveCount(0)
   await sendPrompt(page, "Explain the failing test")
   await expect.poll(() => prompts.length).toBe(1)
-  expect(JSON.stringify(prompts[0]?.body)).toContain("Explain the failing test")
-  expect(JSON.stringify(prompts[0]?.body)).not.toContain("Caveman")
+  expectPlainPrompt(prompts[0]?.body, "Explain the failing test")
 })
 
 test("each repository profile owns its behaviors", async ({ page }) => {
