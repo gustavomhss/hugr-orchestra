@@ -66,7 +66,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Run exactly the packet's checks plus mandatory checks from project instructions. List broader checks under `nextActions`.
 - In armed delegation the host also runs the checks; the packet decides whether you run them first. Record `skip` only when it says so.
 - If a failure points at lines you changed, fix and rerun, at most three attempts per check. Otherwise record `fail` with the relevant output and do not look for the cause. Report known baseline failures; do not fix them.
-- A forced skip, zero selected cases or an absent fixture is never a pass, and a local pass is not production evidence.
+- A forced skip, zero selected cases or an absent fixture is never a pass: record `acquisition-error` with the reason, unless the packet itself asked for the skip. A local pass is not production evidence.
 
 ## 5. Return
 
