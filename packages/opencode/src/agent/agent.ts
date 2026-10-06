@@ -10,12 +10,7 @@ import { Auth } from "../auth"
 import { ProviderTransform } from "@/provider/transform"
 
 import PROMPT_GENERATE from "./generate.txt"
-import PROMPT_COMPACTION from "./prompt/compaction.txt"
-import PROMPT_EXPLORE from "./prompt/explore.txt"
-import PROMPT_GENERAL from "./prompt/general.txt"
-import PROMPT_MAESTRO from "./prompt/maestro.txt"
-import PROMPT_SUMMARY from "./prompt/summary.txt"
-import PROMPT_TITLE from "./prompt/title.txt"
+import { AgentPrompt } from "@opencode-ai/core/agent/prompt"
 import { Permission } from "@/permission"
 import { mergeDeep, values } from "remeda"
 import { Global } from "@opencode-ai/core/global"
@@ -157,7 +152,7 @@ const layer = Layer.effect(
             id: "maestro",
             name: "maestro",
             description: "High-agency development orchestrator. Uses governed approval only when explicitly requested.",
-            prompt: PROMPT_MAESTRO,
+            prompt: AgentPrompt.maestro,
             options: {},
             permission: Permission.merge(defaults, Permission.fromConfig({ question: "allow" }), team, user),
             mode: "primary",
@@ -168,7 +163,7 @@ const layer = Layer.effect(
             name: "general",
             description:
               "General-purpose work from a full brief: research, analysis or multi-step changes no seat covers. Edits files and runs shell commands; cannot ask the owner questions or start teammates. Returns the outcome, what changed, how it was checked and what is left.",
-            prompt: PROMPT_GENERAL,
+            prompt: AgentPrompt.general,
             permission: Permission.merge(
               defaults,
               // Playbooks are Maestro's procedures: general's skill list leaves them out, but a brief can still name one.
@@ -201,7 +196,7 @@ const layer = Layer.effect(
             ),
             description:
               'Read-only codebase exploration: finds files and code and explains how they work. Reads and searches files and the web, and runs read-only shell commands; cannot edit. Say how thorough to be: "quick", "medium" or "very thorough". Returns findings with file and line references.',
-            prompt: PROMPT_EXPLORE,
+            prompt: AgentPrompt.explore,
             options: {},
             mode: "subagent",
             native: true,
@@ -212,7 +207,7 @@ const layer = Layer.effect(
             mode: "primary",
             native: true,
             hidden: true,
-            prompt: PROMPT_COMPACTION,
+            prompt: AgentPrompt.compaction,
             permission: Permission.merge(
               defaults,
               Permission.fromConfig({
@@ -237,7 +232,7 @@ const layer = Layer.effect(
               }),
               user,
             ),
-            prompt: PROMPT_TITLE,
+            prompt: AgentPrompt.title,
           },
           summary: {
             id: "summary",
@@ -253,7 +248,7 @@ const layer = Layer.effect(
               }),
               user,
             ),
-            prompt: PROMPT_SUMMARY,
+            prompt: AgentPrompt.summary,
           },
           ...Object.fromEntries(
             roster
