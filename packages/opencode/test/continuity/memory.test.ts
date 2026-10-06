@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
-import { decode, index, type Decoded, type Failure } from "@/continuity/memory"
+import { decode, index, inQuotes, type Decoded, type Failure } from "@/continuity/memory"
 import type { MemoryArtifact } from "@/continuity/memory-types"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { messages, producerID, sessionID } from "./memory-fixture"
@@ -412,4 +412,11 @@ test("background return notices get their own alias and render the member", () =
   expect(index(snap(0, 4), { history: team, member: false, delegations: {} }, 0, 1)).toMatch(/\nt5 [^\n]+ return bobby "Design" → completed/)
   // The notice is never user text.
   expect(memory.text).not.toContain("u2 ·")
+})
+
+test("a quoted source sentence is not wrapped in quote marks twice", () => {
+  expect(inQuotes("Do not modify files.")).toBe('"Do not modify files."')
+  expect(inQuotes('"Do not modify files."')).toBe('"Do not modify files."')
+  expect(inQuotes("“Não mexe.”")).toBe("“Não mexe.”")
+  expect(inQuotes('"open quote only')).toBe('""open quote only"')
 })

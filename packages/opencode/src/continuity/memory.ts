@@ -345,6 +345,8 @@ export function stamp(time: number) {
     `${offset < 0 ? "-" : "+"}${pad(Math.floor(Math.abs(offset) / 60))}${minutes ? `:${pad(minutes)}` : ""}`
 }
 
+// A source sentence that already carries its own quote marks is not wrapped again.
+export const inQuotes = (value: string) => /^["“].*["”]$/s.test(value) ? value : `"${value}"`
 const oneLine = (value: string) => value.replace(/\s+/g, " ").trim()
 const cut = (value: string, length: number) => {
   const line = oneLine(value)
@@ -406,14 +408,14 @@ function renderItem(item: MemoryItem, ctx: Scope) {
   const f = item.fields as Record<string, string | undefined>
   const needs = Array.isArray(item.fields.needs) ? item.fields.needs : []
   const line = (label: string, value?: string) => value ? [`    ${label}: ${value}`] : []
-  const said = f.quote ? ` — "${f.quote}"` : ""
+  const said = f.quote ? ` — ${inQuotes(f.quote)}` : ""
   const lines = {
     objective: () => [`Goal: ${f.goal}`, ...line("Why", f.why), ...line("Done when", f.done_when)],
     rules: () => [`${RULE[f.kind!]}: ${f.rule}${said}`],
     decisions: () => [`Decision: ${f.decision}`, ...line("Why", f.why), ...line("Rejected", f.rejected), `    By: ${BY[f.by!]}${said}`],
     findings: () => [`${f.status === "confirmed" ? "Confirmed" : "Hypothesis"}: ${f.finding}`, ...line("Why it matters", f.why),
       ...line("Check", f.check)],
-    failures: () => [`Tried: ${f.tried}`, ...line("Error", f.error && `"${f.error}"`), ...line("Cause", f.cause), ...line("Lesson", f.lesson)],
+    failures: () => [`Tried: ${f.tried}`, ...line("Error", f.error && inQuotes(f.error)), ...line("Cause", f.cause), ...line("Lesson", f.lesson)],
     values: () => [`${f.name}: ${f.value!.includes("`") ? `\`\` ${f.value} \`\`` : `\`${f.value}\``}${f.use ? ` — ${f.use}` : ""}`],
     plan: () => [`${f.status!.toUpperCase()}: ${f.task}${f.detail ? ` — ${DETAIL[f.status!]}: ${f.detail}` : ""}`,
       ...line("Done when", f.done_when), ...(f.status !== "done" && needs.length ? [`    Needs: ${needs.join(", ")}`] : []),
