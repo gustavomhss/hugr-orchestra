@@ -94,3 +94,14 @@ Built on branch `write-roots`; the charter v3a note asked for this instead of mo
 - **Host fact.** `workResult.writeRoots` lists the enforced roots, worktree-relative; `[]` means read-only. `workResult.shellWrites`/`shellSandbox` say whether the child's shell commands got the jail: the worst fact among the child's commands in this process (`unenforced` sticks), or, if none ran, what this host would give one now.
 - **Gaps.** A missing directory root can be created by the edit tools, not by the shell (creating its parent is outside the roots). `writePaths` is not part of the approval `taskHash` or the authorization intent hash: the user approves the prompt, and the reservation, not the approval, binds the roots. Root `.` includes `.git`. The fetched `srt` is checked when downloaded, not on every use: an unconfined command that ran before it was installed could have changed files under the cache dir, as it could any binary on `PATH`. Ubuntu 24.04+ restricts unprivileged user namespaces by default; there every `srt` command fails (it does not fall back to unconfined) until the host's AppArmor setting allows bubblewrap. The Linux `srt` path has no live test here (CI runners have no bubblewrap); the tests run a stand-in `srt` to check the invocation, settings and env.
 - **Direct use (F2-D3), not built.** A primary backend Session has no dispatch to carry `writePaths`. It needs a host-owned binding the user sets for the Session (a session-level command or API that writes the same reserved rules after validation), plus a default for an unbound direct Session (today: unrestricted, as before). The model must never be able to set it.
+
+## 6. F5 Amendment M3 (2026-10-06)
+
+F5 now describes engines fetched on demand (`f5-f6-toolkit-skills.md`, "Amendment M3"), applying F5-OD, M3-3 and M3-4:
+
+- The toolkit lives in the user cache (`Global.Path.cache/backend-toolkit`, override `BACKEND_TOOLKIT_ROOT`); eviction is fine, an evicted engine is fetched again.
+- Per-engine states (`absent`, `fetching`, `ready`, `failed`, `unsupported`) replace releases, inventory and activation (F5.15–F5.24, F5-A, F5-C, F5-D).
+- Routes: ast-grep from npm, buf as the raw executable; gitleaks 8.30.1 joins F5.5.
+- F5-D7 is satisfied: the manifest compiles into the host.
+- First cut is five engines: ast-grep, sqlc, buf, gitleaks, kiota (M3-3).
+- The shell tool exposes `BACKEND_TOOLKIT_BIN` to the native backend seat only and fetches the engines a command names before running it; a failure blocks the command with `toolkit-not-ready:failed:<engine>:<cause>` or `unsupported-target:<reason>`. `toolkit status` and `toolkit prefetch` are the CLI.
