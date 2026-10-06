@@ -1,0 +1,34 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "create done",
+        "checklist": [
+          {
+            "id": "A-file",
+            "cmd": "test -f done"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "state": "awaiting-human",
+    "position": "A",
+    "counter": "1\n",
+    "retry_A": "3\n"
+  },
+  "fires": [
+    {
+      "release": "GS: fixture repaired",
+      "tree": {
+        "done": "yes\n"
+      }
+    }
+  ]
+}

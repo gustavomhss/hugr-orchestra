@@ -1,0 +1,57 @@
+{
+  "sprint": {
+    "retry_budget": 1,
+    "work_packages": [
+      {
+        "id": "first\n",
+        "instructions": "do first\n",
+        "checklist": [
+          {
+            "id": "first-control",
+            "cmd": "true"
+          }
+        ],
+        "macro": "scope\n"
+      },
+      {
+        "id": "target\r\n",
+        "instructions": "do target\r\n",
+        "checklist": [
+          {
+            "id": "next-control",
+            "cmd": "false"
+          }
+        ],
+        "macro": "next\n"
+      },
+      {
+        "id": "target\r",
+        "instructions": "do target\r",
+        "checklist": [
+          {
+            "id": "wrong",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "counter": "0\n"
+  },
+  "commits": [
+    {
+      "message": "seed",
+      "files": {
+        "seed.txt": "seed\n"
+      }
+    }
+  ],
+  "fires": [
+    {},
+    {}
+  ]
+}
