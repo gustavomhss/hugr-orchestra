@@ -22,7 +22,6 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-toolbar-shadow: inset 0 1px 0 rgba(214, 231, 247, 0.06), 0 6px 20px rgba(0, 0, 0, 0.22);
   --orchestra-toolbar-label: #7d8b9b;
   --orchestra-toolbar-brand: #b9c4cf;
-  --orchestra-toolbar-caption: #718091;
   --orchestra-toolbar-button: #657383;
   --orchestra-workspace-overlay:
     linear-gradient(180deg, rgba(9, 14, 20, 0.7), rgba(9, 14, 20, 0.58) 42%, rgba(9, 14, 20, 0.74)),
@@ -258,7 +257,6 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-toolbar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 16px rgba(40, 50, 62, 0.09);
   --orchestra-toolbar-label: #6b7480;
   --orchestra-toolbar-brand: #2b3440;
-  --orchestra-toolbar-caption: #818a95;
   --orchestra-toolbar-button: #5f6874;
   --orchestra-workspace-overlay:
     linear-gradient(180deg, rgba(226, 231, 236, 0.5), rgba(226, 231, 236, 0.34) 42%, rgba(222, 228, 234, 0.56)),
