@@ -568,7 +568,7 @@ export const TaskTool = Tool.define(
           beforeModel ? { beforeModel } : undefined,
         )
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
-        yield* work.record(result)
+        yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"

@@ -254,8 +254,8 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
 // No writePaths in these dispatches: the host binds a read-only backend child and reports it, with the shell fact this
 // host gives a child that ran no command.
 const shell = await Effect.runPromise(ToolSafetySandbox.status())
-// Every backend Task binds a host-generated logical task (F2.11).
-const host = { taskId: expect.stringMatching(/^tsk_/) }
+// Every backend Task binds a host-generated logical task (F2.11), and no Atlas Memory tool ran in these children.
+const host = { taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] } }
 const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [], ...host, ...shell }
 
 describe("tool.task backend-result", () => {
