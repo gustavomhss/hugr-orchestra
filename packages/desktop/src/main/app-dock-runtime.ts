@@ -223,12 +223,12 @@ export function create(options: { root: string; context: string; image?: string;
     }
     return apps.map((app) => ({ ...app }))
   }
-  const stopOwned = async (metadata: Metadata) => {
+  const stopOwned = async (metadata: Metadata, remember = true) => {
     const found = await owned(metadata)
     if (!found?.running) return
     // Record the open apps for the next start to reopen. Best effort and bounded as a whole (helper refresh
     // included): it must never keep the container, and its resources, alive past quit.
-    await Promise.race([
+    if (remember) await Promise.race([
       Promise.resolve().then(() => guest(metadata, found, ["remember"], false, 3_000)).catch(() => undefined),
       new Promise((resolve) => setTimeout(resolve, 3_000).unref()),
     ])
@@ -292,7 +292,8 @@ export function create(options: { root: string; context: string; image?: string;
         placement: { runtimeID: metadata.owner, runtimeEpoch: placement(running) } }
     })().catch(async (error: unknown) => {
       // Keep installed packages and the primary failure, even when Docker cleanup fails.
-      if (started.value) await stopOwned(metadata).catch(() => undefined)
+      // A start that failed may not have reopened the saved apps yet; recording now would erase that list.
+      if (started.value) await stopOwned(metadata, false).catch(() => undefined)
       throw error
     })
   }

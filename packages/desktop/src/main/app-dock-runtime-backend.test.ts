@@ -29,6 +29,7 @@ async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
   const state = {
     workspace: "workspace" in input ? input.workspace : running(pinned),
     terminate: async () => {},
+    start: async () => {},
     copy: async () => {},
     exec: async (_command: { argv: string[]; timeout?: number }) => {},
   }
@@ -52,6 +53,7 @@ async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
     },
     start: async (_metadata, workspace) => {
       calls.push(`start ${workspace.id}`)
+      await state.start()
     },
     stop: async (_metadata, workspace) => {
       calls.push(`stop ${workspace.id}`)
@@ -218,4 +220,16 @@ test("an unpinned running workspace is stopped without running remember into it"
 
   await f.runtime.stop()
   expect(f.calls).toEqual([`stop ${pinned}`])
+})
+
+test("a start that fails after starting the workspace stops it without overwriting the saved open apps", async () => {
+  const f = await fixture({ pin: pinned, workspace: { ...running(pinned), running: false } })
+  f.state.start = async () => {
+    if (f.state.workspace) f.state.workspace = { ...f.state.workspace, running: true }
+  }
+
+  expect(await rejection(f.runtime.start())).toBeDefined()
+  expect(f.calls).toContain(`start ${pinned}`)
+  expect(f.calls.at(-1)).toBe(`stop ${pinned}`)
+  expect(f.calls.filter((call) => call.endsWith(" remember"))).toEqual([])
 })
