@@ -336,6 +336,24 @@ test("Activity lists edits, failures and the latest commands; older successful o
   expect(activity).toContain("22 earlier successful commands: sqlite3 ×14, ls ×8 (t4–t25)")
 })
 
+test("Activity lists open delegations and the latest returns; older returns are counted per member", () => {
+  const team = structuredClone(HISTORY)
+  const task = (index: number, extra: Record<string, unknown> = {}) => team[1].parts.push({ id: PartID.ascending(),
+    messageID: team[1].info.id, sessionID, type: "tool", tool: "task", callID: `task_${index}`, state: { status: "completed",
+      input: { description: `Survey ${index}`, subagent_type: index % 2 ? "lucy" : "jimmy" }, output: "<task>card</task>", title: "Survey",
+      metadata: { sessionId: `ses_task_${index}`, ...extra }, time: { start: 1000 + index, end: 1000 + index } } } as SessionV1.Part)
+  for (let index = 0; index < 12; index++) task(index)
+  task(12, { background: true })
+  const text = ok(decode({ text: '{"ops":[]}', snapshot: snap(0, 4), producerID, budget: 20_000,
+    host: { history: team, delegations: { ses_task_12: { member: "bobby", status: "running" } }, member: false } })).text
+  const activity = text.slice(text.indexOf("## Activity"), text.indexOf("## User messages"))
+  expect(activity).toMatch(/\nbobby "Survey 12" [^\n]+ job running · task_id ses_task_12\n/)
+  expect(activity.match(/→ returned /g)).toHaveLength(8)
+  for (let index = 4; index < 12; index++) expect(activity).toContain(`"Survey ${index}"`)
+  for (let index = 0; index < 4; index++) expect(activity).not.toContain(`"Survey ${index}"`)
+  expect(activity).toContain("4 earlier returned delegations: lucy ×2, jimmy ×2 (t4–t7)")
+})
+
 test("ledger and Activity trim oldest-first at their ceilings; one entry is capped", () => {
   const long = structuredClone(HISTORY)
   long[2].parts = [{ ...long[2].parts[0], type: "text", text: "pasted log line\n".repeat(2_000) } as SessionV1.Part]
