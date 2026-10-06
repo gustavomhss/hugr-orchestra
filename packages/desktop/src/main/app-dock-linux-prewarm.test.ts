@@ -1,10 +1,13 @@
 import { expect, mock, test } from "bun:test"
 
 // The Electron module only resolves inside the Electron runtime; open() needs a partition session.
-mock.module("electron", () => ({
+// Bun keeps a module mock for the rest of the test process, so it also needs the default export that later
+// files reach through `import electron from "electron"` (store.ts, imported by wsl/servers.test.ts).
+const electron = {
   session: { fromPartition: () => ({ setCertificateVerifyProc: () => undefined }) },
   WebContentsView: class {},
-}))
+}
+mock.module("electron", () => ({ ...electron, default: electron }))
 
 const { AppDockLinux } = await import("./app-dock-linux")
 
