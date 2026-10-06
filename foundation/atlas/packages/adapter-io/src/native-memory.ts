@@ -51,6 +51,9 @@ import type {
   MemoryRecord,
   NamedScanner,
   Orientation,
+  PrClosingFold,
+  PrMemoryEntry,
+  ProjectMemoryEntry,
   ResumeUnit,
   TaskMemoryEntry,
   TurnHeader,
@@ -128,14 +131,15 @@ export type FoldRefusal =
   | "store-partial"
   | "store-unavailable"
   | "ambiguous"
-/** Clause 15. `fold` is present for a `task` unit; a `pr` projection is A2's (see the header). */
+/** Clause 15. `fold` is present for a `task` unit; a `pr` unit carries no `PrClosingFold` until A2 projects one
+ *  (see the header). */
 export type FoldVerdict =
   | {
       readonly ok: true
       readonly unit: ResumeUnit
       readonly ref: RecordRef
       readonly record: MemoryRecord
-      readonly fold?: ClosingFold
+      readonly fold?: ClosingFold | PrClosingFold
     }
   | { readonly ok: false; readonly refusal: FoldRefusal; readonly reason: string }
 
@@ -149,13 +153,20 @@ export type ReconcileVerdict =
   | { readonly present: true; readonly ref: RecordRef }
   | { readonly present: false; readonly store: StoreState }
 
+/** A `project` rule as a seat proposes it: Atlas owns the initial `frecency` (clause 22, work package A2), so the
+ *  bound write takes no caller-supplied score. */
+export type ProjectRuleProposal = Omit<ProjectMemoryEntry, "frecency">
+/** The entries the bound write and reconcile doors accept: a seat's own `task`/`pr` checkpoint or `project` rule.
+ *  `logbook` is orchestrator-only and never reaches a seat's binding. */
+export type BoundEntry = TaskMemoryEntry | PrMemoryEntry | ProjectRuleProposal
+
 export interface NativeMemory {
   readonly binding: AtlasBinding
   header(awareness: Awareness, orientation: Orientation): BoundHeader
   recall(query: BoundRecallQuery): BoundRecall
   resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict
-  write(entry: MemoryEntry): WriteVerdict
-  reconcile(entry: MemoryEntry): ReconcileVerdict
+  write(entry: BoundEntry): WriteVerdict
+  reconcile(entry: BoundEntry): ReconcileVerdict
 }
 
 export function createNativeMemory(input: AtlasBinding): NativeMemory {
@@ -243,15 +254,17 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
 
     resolveFold,
 
+    // Until A2 supplies Atlas's initial `frecency` (clause 22), a `project` proposal reaches the emit door exactly as
+    // given, and the door's own kind and template gates refuse the missing field as they would for any caller.
     write(entry): WriteVerdict {
-      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(entry)
+      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(entry as MemoryEntry)
       return verdict.ok ? { ok: true, record: verdict.record, ref: refOfRecord(verdict.record) } : verdict
     },
 
     reconcile(entry): ReconcileVerdict {
       const read = store.read()
       const state = storeStateOf(read)
-      const ref = admissibleRef(entry, owner)
+      const ref = admissibleRef(entry as MemoryEntry, owner)
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
     },
