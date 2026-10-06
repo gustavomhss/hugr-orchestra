@@ -6,16 +6,19 @@
 // waits for the test-ci workflow and prints the test output. Nothing is committed or pushed from the local checkout,
 // so no git hook runs and the current branch is untouched.
 //
+// Named test files run exactly and in the given order. Any other argument, such as a directory, is a Bun substring
+// filter that may match several files, which Bun runs in its own order.
+//
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]
 // A Python package (requirements-dev.txt and no package.json, such as packages/relay) runs pytest: -t becomes
 // pytest's -k expression and --timeout does not apply.
 
 import { $ } from "bun"
-import { existsSync } from "node:fs"
+import { existsSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
-import { closestBase, parseResponse, rateLimitDelay } from "./test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
 
 const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
@@ -81,10 +84,16 @@ function parse(argv: string[]) {
   if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
   if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
     fail(`-t needs a pattern\n${USAGE}`, 2)
-  // Test paths may be given from the repository root or from the package directory.
-  const files = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
-  if (pythonPackage(name))
+  if (pythonPackage(name)) {
+    // Test paths may be given from the repository root or from the package directory.
+    const files = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
     return { package: name, os: options.os, args: [...files, ...(options.pattern ? ["-k", options.pattern] : [])] }
+  }
+  const files = testPaths(
+    name,
+    positional.slice(1),
+    (file) => statSync(path.join(root, "packages", name, file), { throwIfNoEntry: false })?.isFile() ?? false,
+  )
   return {
     package: name,
     os: options.os,
@@ -171,10 +180,14 @@ async function changed() {
 // Two at a time: GitHub's secondary rate limits punish bursts of requests that create content.
 async function uploadBlobs() {
   const blobs = changes.filter((change) => change.status !== "D" && change.mode !== "160000")
-  for (let start = 0; start < blobs.length; start += 2)
+  for (let start = 0; start < blobs.length; start += 2) {
+    if (start > 0 && start % 20 === 0) console.log(`test-ci: uploaded ${start} of ${blobs.length} files`)
     await Promise.all(
       blobs.slice(start, start + 2).map(async (change) => {
-        const content = Buffer.from(await $`git cat-file blob ${change.sha}`.cwd(root).arrayBuffer())
+        // Read synchronously: under heavy load an awaited Bun shell read stalled the upload partway, with no error.
+        const read = Bun.spawnSync(["git", "cat-file", "blob", change.sha], { cwd: root })
+        if (read.exitCode !== 0) fail(`git cat-file blob ${change.sha} failed: ${read.stderr.toString().trim()}`)
+        const content = Buffer.from(read.stdout)
         const created = await api("POST", `repos/${repo}/git/blobs`, {
           content: content.toString("base64"),
           encoding: "base64",
@@ -182,6 +195,7 @@ async function uploadBlobs() {
         if (created.sha !== change.sha) fail(`GitHub stored ${change.path} as ${created.sha}, expected ${change.sha}`)
       }),
     )
+  }
 }
 
 async function follow(id: number) {
@@ -237,15 +251,32 @@ async function report(view: RunView) {
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {
   const input = body === undefined ? [] : ["--input", "-"]
+  let timeouts = 0
   for (let attempt = 0; ; attempt++) {
-    // --include prints the response headers, which carry GitHub's rate-limit hints.
-    const result =
-      await $`gh api --include --method ${method} ${route} ${input} < ${Buffer.from(JSON.stringify(body ?? {}))}`
-        .quiet()
-        .nothrow()
-    const response = parseResponse(result.text())
-    if (result.exitCode === 0) return response.body.length > 0 ? JSON.parse(response.body) : undefined
-    const error = `gh api ${method} ${route} failed: ${result.stderr.toString().trim()}`
+    // --include prints the response headers, which carry GitHub's rate-limit hints. A gh call can stall without output
+    // when this machine is overloaded, so each one gets a deadline; every request here is safe to repeat.
+    const child = Bun.spawn(["gh", "api", "--include", "--method", method, route, ...input], {
+      stdin: Buffer.from(JSON.stringify(body ?? {})),
+      stdout: "pipe",
+      stderr: "pipe",
+      timeout: 90_000,
+    })
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ])
+    if (child.signalCode) {
+      if (++timeouts > 3)
+        throw new Error(`gh api ${method} ${route} timed out ${timeouts} times; run test:ci again later.`)
+      console.log(`test-ci: gh api ${method} ${route} got no answer in 90 s, retrying`)
+      continue
+    }
+    const response = parseResponse(stdout)
+    if (exitCode === 0) return response.body.length > 0 ? JSON.parse(response.body) : undefined
+    // A timed-out request may still have created the branch; the name is unique to this run, so it is ours.
+    if (timeouts > 0 && response.status === 422 && route.endsWith("/git/refs")) return undefined
+    const error = `gh api ${method} ${route} failed: ${stderr.trim()}`
     const delay = rateLimitDelay(response, attempt)
     if (delay === undefined) throw new Error(error)
     rateLimitDeadline ||= Date.now() + 10 * 60_000

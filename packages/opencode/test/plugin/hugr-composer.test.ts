@@ -5,6 +5,7 @@ import type { ToolContext } from "@opencode-ai/plugin"
 import { createHuGRTools } from "../../src/plugin/hugr-composer/tools"
 import type { HugrComposerClient } from "../../src/plugin/hugr-composer/client"
 import { tmpdir } from "../fixture/fixture"
+import { rethrow } from "../lib/rejection"
 
 test("rejects Composer writes outside worktree and symlink escapes", async () => {
   await using root = await tmpdir()
@@ -13,24 +14,26 @@ test("rejects Composer writes outside worktree and symlink escapes", async () =>
   await fs.symlink(outside.path, link, "dir")
   const { tools, calls, asks, context } = fixture(root.path)
 
-  await expect(tools["hugr-compose"].execute({ output_dir: outside.path, dry_run: true }, context)).rejects.toThrow(
+  expect(await rethrow(tools["hugr-compose"].execute({ output_dir: outside.path, dry_run: true }, context))).toThrow(
     "inside worktree",
   )
-  await expect(tools["hugr-compose"].execute({ output_dir: link, dry_run: true }, context)).rejects.toThrow(
+  expect(await rethrow(tools["hugr-compose"].execute({ output_dir: link, dry_run: true }, context))).toThrow(
     /inside worktree|symlinks/,
   )
   const dangling = path.join(root.path, "dangling")
   await fs.symlink(path.join(outside.path, "missing"), dangling)
-  await expect(tools["hugr-compose"].execute({ output_dir: dangling, dry_run: true }, context)).rejects.toThrow(
+  expect(await rethrow(tools["hugr-compose"].execute({ output_dir: dangling, dry_run: true }, context))).toThrow(
     "symlinks",
   )
   const real = path.join(root.path, "real")
   await fs.mkdir(real)
   const nested = path.join(root.path, "nested")
   await fs.symlink(real, nested)
-  await expect(
-    tools["hugr-compose"].execute({ output_dir: path.join(nested, "generated"), dry_run: true }, context),
-  ).rejects.toThrow("symlinks")
+  expect(
+    await rethrow(
+      tools["hugr-compose"].execute({ output_dir: path.join(nested, "generated"), dry_run: true }, context),
+    ),
+  ).toThrow("symlinks")
   expect(calls).toHaveLength(0)
   expect(asks).toHaveLength(0)
 })

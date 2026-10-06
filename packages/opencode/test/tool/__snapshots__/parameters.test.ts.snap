@@ -411,6 +411,13 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "description": "This should only be set if you mean to resume a previous task (you can pass a prior task_id and the task will continue the same subagent session as before instead of creating a fresh one)",
       "type": "string",
     },
+    "writePaths": {
+      "description": "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
+      "items": {
+        "type": "string",
+      },
+      "type": "array",
+    },
   },
   "required": [
     "description",

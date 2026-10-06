@@ -178,38 +178,81 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # Re-labeling an epic re-runs every job; a shard whose inputs already passed in this PR skips.
+      - name: Check for a previous pass
+        id: previous
+        uses: ./.github/actions/previous-pass
+        with:
+          task: opencode#test
+          name: opencode-${{ matrix.shard }}of${{ matrix.shards }}
+
       - name: Setup Bun
+        if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
 
       - name: Configure git identity
+        if: steps.previous.outputs.hit != 'true'
         run: |
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "opencode"
 
       # Per-file timings show where suite time goes; the edit stays inside the runner checkout.
       - name: Enable JUnit timings
+        if: steps.previous.outputs.hit != 'true'
         run: printf "\n[test.reporter]\njunit = '%s'\n" "$RUNNER_TEMP/junit-opencode-${{ matrix.shard }}.xml" >> packages/opencode/bunfig.toml
 
       - name: Run opencode tests
+        if: steps.previous.outputs.hit != 'true'
         timeout-minutes: 30
         working-directory: packages/opencode
         # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
         # Shards are balanced by measured time (script/test-shard.ts), not by file count; the
         # assignment fails the step if the script fails instead of falling back to every file.
+        #
+        # A test that blocks the event loop never reaches its per-test timeout, and Bun writes JUnit only on
+        # exit, so a hung run used to end at the step timeout with no clue. Windows, where runs have hung, prints
+        # every test, so the log ends at the file and test that hung. The watchdog stops the run three minutes
+        # before the step timeout and lists the processes still running.
         run: |
           files=$(bun script/test-shard.ts ${{ matrix.name }} ${{ matrix.shard }} ${{ matrix.shards }})
-          bun test --timeout 30000 --only-failures $files
+          report=$([ "$RUNNER_OS" = Windows ] || echo --only-failures)
+          bun test --timeout 30000 $report $files &
+          tests=$!
+          deadline=$((SECONDS + 27 * 60))
+          while kill -0 $tests 2>/dev/null && [ $SECONDS -lt $deadline ]; do sleep 5; done
+          if kill -0 $tests 2>/dev/null; then
+            echo "::error::opencode tests still running after 27 minutes; the last file and test above hung. Processes still running:"
+            if [ "$RUNNER_OS" = Windows ]; then
+              powershell -NoProfile -Command 'Get-CimInstance Win32_Process | Sort-Object ProcessId | Format-Table ProcessId, ParentProcessId, CreationDate, CommandLine -Wrap | Out-String -Width 400'
+            else
+              ps -eo pid,ppid,etime,args
+            fi
+            kill $tests
+            exit 1
+          fi
+          wait $tests
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
       - name: Upload JUnit timings
-        if: always()
+        if: always() && steps.previous.outputs.hit != 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: junit-${{ matrix.name }}-opencode-${{ matrix.shard }}-${{ github.run_attempt }}
           if-no-files-found: ignore
           retention-days: 14
           path: ${{ runner.temp }}/junit-*.xml
+
+      - name: Record the pass
+        if: steps.previous.outputs.hit != 'true' && steps.previous.outputs.key != ''
+        run: mkdir -p .tests-passed && echo "${{ github.sha }}" > .tests-passed/sha
+
+      - name: Save the pass
+        if: steps.previous.outputs.hit != 'true' && steps.previous.outputs.key != ''
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .tests-passed
+          key: ${{ steps.previous.outputs.key }}
 
   unit-rest:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
@@ -239,15 +282,16 @@ jobs:
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "opencode"
 
-      # Turbo 2 keeps its local cache in .turbo/cache. Only cache-warm saves it (on dev), so every
-      # pull_request run restores the same dev-scoped entry instead of short-lived PR-scoped copies.
-      # Turbo checks each entry against its own task hash, so the key only selects the newest blob.
+      # Turbo 2 keeps its local cache in .turbo/cache. A run restores its PR's newest entry, else the one cache-warm
+      # saved on dev. Turbo checks each entry against its own task hash, so the key only selects the newest blob.
       - name: Restore Turbo cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ github.sha }}
+          key: turbo-test-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          # PR entries carry their own prefix so typecheck.yml, which restores turbo-<os>-, keeps reading dev's.
           restore-keys: |
+            turbo-test-${{ runner.os }}-
             turbo-${{ runner.os }}-
 
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
@@ -279,6 +323,15 @@ jobs:
           GITHUB_ACTIONS=false bun turbo test --concurrency=2 "${filters[@]}"
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+
+      # Saved even when a package failed: Turbo records only passing tasks, so re-labeling the PR replays them
+      # (about 1 MB per entry).
+      - name: Save Turbo cache
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-test-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
 
       - name: Check generated client
         if: runner.os == 'Linux'
@@ -344,16 +397,27 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # e2e drives the app package; its Turbo hash covers the app plus every workspace dependency.
+      - name: Check for a previous pass
+        id: previous
+        uses: ./.github/actions/previous-pass
+        with:
+          task: "@opencode-ai/app#test"
+          name: e2e-${{ matrix.settings.name }}-${{ matrix.shard }}of3
+
       - name: Setup Node
+        if: steps.previous.outputs.hit != 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # Playwright 1.59 hangs while extracting Chromium with Node 24.16.
           node-version: "24.15"
 
       - name: Setup Bun
+        if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
 
       - name: Read Playwright version
+        if: steps.previous.outputs.hit != 'true'
         id: playwright-version
         run: |
           version=$(node -e 'console.log(require("./package.json").workspaces.catalog["@playwright/test"])')
@@ -361,6 +425,7 @@ jobs:
 
       # cache-warm saves the browsers on dev; per-PR copies (about 540 MB each) only crowd the 10 GB quota.
       - name: Restore Playwright browsers
+        if: steps.previous.outputs.hit != 'true'
         id: playwright-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -368,25 +433,30 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ steps.playwright-version.outputs.version }}-chromium
 
       - name: Install Playwright system dependencies
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && steps.previous.outputs.hit != 'true'
         working-directory: packages/app
         run: bunx playwright install-deps chromium
 
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.previous.outputs.hit != 'true'
         working-directory: packages/app
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
+        if: steps.previous.outputs.hit != 'true'
         working-directory: packages/app
-        run: bun run test:e2e:local --shard=${{ matrix.shard }}/3
+        # Specs are split by measured time (script/e2e-shard.ts), not file count; the assignment fails the step
+        # if the script fails instead of falling back to every spec.
+        run: |
+          files=$(bun script/e2e-shard.ts ${{ matrix.shard }} 3)
+          bun run test:e2e:local $files
         env:
           CI: true
         # The unsharded single-worker suite took 20-30 minutes.
         timeout-minutes: 30
 
       - name: Upload Playwright artifacts
-        if: always()
+        if: always() && steps.previous.outputs.hit != 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-${{ matrix.settings.name }}-${{ matrix.shard }}-${{ github.run_attempt }}
@@ -395,3 +465,14 @@ jobs:
           path: |
             packages/app/e2e/test-results
             packages/app/e2e/playwright-report
+
+      - name: Record the pass
+        if: steps.previous.outputs.hit != 'true' && steps.previous.outputs.key != ''
+        run: mkdir -p .tests-passed && echo "${{ github.sha }}" > .tests-passed/sha
+
+      - name: Save the pass
+        if: steps.previous.outputs.hit != 'true' && steps.previous.outputs.key != ''
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .tests-passed
+          key: ${{ steps.previous.outputs.key }}

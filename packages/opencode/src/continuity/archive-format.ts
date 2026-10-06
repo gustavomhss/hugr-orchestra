@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto"
 import { Option, Schema } from "effect"
-import { MessageID } from "@/session/schema"
-import type { SessionID } from "@/session/schema"
-import type { ArchiveChunk, ArchiveReference } from "./memory-types"
+import { MessageID, SessionID } from "@/session/schema"
+import { SECTIONS, type ArchiveChunk, type ArchiveReference, type MemoryArtifact } from "./memory-types"
+import { hasArtifact, type ContinuityContext } from "./model"
 
 export const payloadLimit = 32 * 1024
 // An absolute end assertion: JavaScript's `$` also accepts a final newline.
@@ -22,8 +22,31 @@ const manifest = Schema.Struct({
   sessionID: Schema.String.check(Schema.isPattern(sessionPattern)),
   references: Schema.Array(reference),
 })
+const item = Schema.Struct({
+  id: Schema.String,
+  section: Schema.Literals(SECTIONS),
+  fields: Schema.Record(Schema.String, Schema.Union([Schema.String, Schema.Array(Schema.String)])),
+  src: Schema.Array(Schema.String),
+})
+const memory = Schema.Struct({
+  version: Schema.Literal(1),
+  sessionID: Schema.String,
+  entry: Schema.NullOr(Schema.Struct({
+    boundary: MessageID,
+    tailStart: MessageID,
+    artifact: Schema.Struct({
+      version: Schema.Literal(4), parentID: SessionID, producerID: SessionID, boundary: MessageID, coveredThrough: MessageID,
+      tailStart: MessageID, items: Schema.Array(item), next: Schema.Int, text: Schema.String,
+    }),
+  })),
+  masks: Schema.Array(Schema.Tuple([Schema.NonEmptyString, Schema.String.check(Schema.isPattern(hashPattern))])),
+})
 const parse = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 const decode = Schema.decodeUnknownOption(manifest, { onExcessProperty: "error" })
+const decodeStored = Schema.decodeUnknownOption(memory, { onExcessProperty: "error" })
+
+/** A session's persisted working memory and tool-output masks (part ID, archive reference). */
+export type StoredMemory = { context?: ContinuityContext & { artifact: MemoryArtifact }; masks: [string, string][] }
 
 export function hash(value: string | Uint8Array) {
   return createHash("sha256").update(value).digest("hex")
@@ -43,6 +66,22 @@ export function readManifest(text: string, sessionID: SessionID): ArchiveReferen
   if (new Set(refs.map((ref) => ref.id)).size !== refs.length || refs.some((ref) => ref.first !== ref.last))
     throw new Error("archive-corrupt-index")
   return refs.map((ref) => ({ ...ref }))
+}
+
+export function readStored(text: string, sessionID: SessionID): StoredMemory {
+  const json = parse(text)
+  const result = Option.isSome(json) ? decodeStored(json.value) : Option.none()
+  if (Option.isNone(result) || result.value.sessionID !== sessionID) throw new Error("archive-corrupt-memory")
+  const entry = result.value.entry
+  const context = entry ? { sessionID, boundary: entry.boundary, tailStart: entry.tailStart, text: entry.artifact.text,
+    artifact: { ...entry.artifact, items: [...entry.artifact.items] } } : undefined
+  if (context && !hasArtifact(context)) throw new Error("archive-corrupt-memory")
+  return { context, masks: result.value.masks.map(([part, reference]) => [part, reference]) }
+}
+
+export function writeStored(sessionID: SessionID, value: StoredMemory) {
+  const entry = value.context && { boundary: value.context.boundary, tailStart: value.context.tailStart, artifact: value.context.artifact }
+  return JSON.stringify({ version: 1, sessionID, entry: entry ?? null, masks: value.masks })
 }
 
 export function fenced(text: string, language = "text") {

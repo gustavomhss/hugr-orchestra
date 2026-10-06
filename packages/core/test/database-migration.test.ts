@@ -30,6 +30,7 @@ import { Database } from "@opencode-ai/core/database/database"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { tmpdir } from "./fixture/tmpdir"
+import { rethrow } from "./lib/rejection"
 
 const run = <A, E>(effect: Effect.Effect<A, E, SqlClientService>) =>
   Effect.runPromise(
@@ -89,16 +90,20 @@ describe("DatabaseMigration", () => {
   })
 
   test("rejects unknown legacy Drizzle journal timestamps instead of guessing completed migrations", async () => {
-    await expect(
-      run(
-        Effect.gen(function* () {
-          const db = yield* makeDb
-          yield* db.run(sql`CREATE TABLE __drizzle_migrations (id integer PRIMARY KEY, hash text, created_at integer)`)
-          yield* db.run(sql`INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('', 1234567890000)`)
-          yield* DatabaseMigration.applyOnly(db, [workspaceNameMigration])
-        }),
+    expect(
+      await rethrow(
+        run(
+          Effect.gen(function* () {
+            const db = yield* makeDb
+            yield* db.run(
+              sql`CREATE TABLE __drizzle_migrations (id integer PRIMARY KEY, hash text, created_at integer)`,
+            )
+            yield* db.run(sql`INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('', 1234567890000)`)
+            yield* DatabaseMigration.applyOnly(db, [workspaceNameMigration])
+          }),
+        ),
       ),
-    ).rejects.toThrow("does not match any known migration")
+    ).toThrow("does not match any known migration")
   })
 
   test("serializes concurrent embedded initialization for one database path", async () => {
@@ -163,15 +168,17 @@ describe("DatabaseMigration", () => {
   })
 
   test("rejects a non-empty database without a session table", async () => {
-    await expect(
-      run(
-        Effect.gen(function* () {
-          const db = yield* makeDb
-          yield* db.run(sql`CREATE TABLE unrelated (id text PRIMARY KEY)`)
-          yield* DatabaseMigration.apply(db)
-        }),
+    expect(
+      await rethrow(
+        run(
+          Effect.gen(function* () {
+            const db = yield* makeDb
+            yield* db.run(sql`CREATE TABLE unrelated (id text PRIMARY KEY)`)
+            yield* DatabaseMigration.apply(db)
+          }),
+        ),
       ),
-    ).rejects.toThrow("Database is not empty and has no session table")
+    ).toThrow("Database is not empty and has no session table")
   })
 
   test("backfills existing Context Epoch rows to the build agent", async () => {

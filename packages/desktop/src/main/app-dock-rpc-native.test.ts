@@ -6,6 +6,7 @@ import { AppDockRPC } from "./app-dock-rpc"
 import { NativeDock } from "./app-dock-native"
 import { NativeDockClient } from "./app-dock-native-client"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
+import { rejection } from "./rejection.fixture"
 
 const target: NativeDockProtocol.Target = {
   runtime: { runtimeID: "runtime", runtimeEpoch: "epoch", accessibilitySessionID: "session" },
@@ -194,7 +195,7 @@ test("reset reserves old client retirement before rebind and fresh replacement s
   const joining = observe(f.rpc.reset())
   f.viewer.install(2)
   f.configure()
-  await expect(f.rpc.registerNative(f.identity(), target, old.client, confirm)).rejects.toMatchObject({ code: "client-retiring" })
+  expect(await rejection(f.rpc.registerNative(f.identity(), target, old.client, confirm))).toMatchObject({ code: "client-retiring" })
   expect(old.wire.requests.filter((request) => request.op === "bind")).toHaveLength(2)
   const fresh = await f.client()
   const binding = await f.rpc.registerNative(f.identity(), target, fresh.client, confirm)
@@ -230,9 +231,9 @@ test("reset preserves failed retirement occupancy and rejects the next client be
   f.viewer.install(33)
   f.configure()
   const extra = await f.client()
-  await expect(f.rpc.registerNative(f.identity(), target, extra.client, confirm)).rejects.toMatchObject({ code: "capacity" })
+  expect(await rejection(f.rpc.registerNative(f.identity(), target, extra.client, confirm))).toMatchObject({ code: "capacity" })
   expect(extra.wire.requests).toEqual([])
-  await expect(f.rpc.reset()).rejects.toMatchObject({ code: "helper-termination-failed" })
+  expect(await rejection(f.rpc.reset())).toMatchObject({ code: "helper-termination-failed" })
 })
 
 test("reset joins an already outstanding unbind and preserves its failure", async () => {
@@ -325,7 +326,7 @@ test.each(["unregistered", "failed-bind"])("%s native tombstone supports viewer 
     await f.rpc.unregisterNative(1, "native")
   }
   if (mode === "failed-bind")
-    await expect(f.rpc.registerNative(f.identity(), target, old.client, async () => [])).rejects.toMatchObject({ code: "ownership-unresolved" })
+    expect(await rejection(f.rpc.registerNative(f.identity(), target, old.client, async () => []))).toMatchObject({ code: "ownership-unresolved" })
   expect(await f.tool("dock_read")).toMatchObject({ code: "not-ready", backend: "linux-atspi" })
   f.viewer.profileID = "other"
   expect(await f.tool("dock_activate", { tabID: "native" })).toMatchObject({ code: "wrong-scope" })
@@ -412,7 +413,7 @@ test("NativeDock reset is reusable, repeated joins share pending work, and close
   expect(native.close()).toBe(closing)
   expect(native.reset()).toBe(closing)
   await closing
-  await expect(native.bind(f.identity(), target, fresh.client, confirm)).rejects.toMatchObject({ code: "closed" })
+  expect(await rejection(native.bind(f.identity(), target, fresh.client, confirm))).toMatchObject({ code: "closed" })
 })
 
 test("browser read shape reaches the browser and invalid shape is rejected", async () => {

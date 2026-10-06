@@ -3,6 +3,7 @@ import { getEventListeners } from "node:events"
 import { NativeDockClient } from "./app-dock-native-client"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import { bind, block, clients, closeClients, discover, encoder, failure, goldens, invalid, memory, MemoryChannel, read, StdioChannel, until } from "./app-dock-native-client.fixture"
+import { rejection } from "./rejection.fixture"
 
 afterEach(closeClients)
 
@@ -19,7 +20,7 @@ test("startup absolute deadline rejects delayed hello and delayed subscription r
       if (stage === "hello") channel.emit(goldens[0])
       return off
     }
-    await expect(NativeDockClient.create(channel, { startupMs: 5 })).rejects.toMatchObject({ code: "startup-timeout" })
+    expect(await rejection(NativeDockClient.create(channel, { startupMs: 5 }))).toMatchObject({ code: "startup-timeout" })
     expect(channel.reaped).toBe(true)
     expect(channel.data.size + channel.exits.size).toBe(0)
   }

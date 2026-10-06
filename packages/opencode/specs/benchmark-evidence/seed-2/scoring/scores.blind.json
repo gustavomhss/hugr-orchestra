@@ -5,4 +5,4 @@
   "P02":"A: recall 6/8 (G1,G3,G5,G6,G7,G8; misses G2, G4), all items user-traceable, F1 0.857. B: recall 6/8 (G1,G3,G5,G6,G7,G8; 'each tool exactly once per instruction' does not state G2's 'before inspection'), 12 of 13 items traceable (the last, 'permissions come only from the user's rules', is the memory preamble, not a user rule), F1 0.828.",
   "P05":"A misses (a): says 'The context records no user correction of how Maestro called the validation tool'. B has both.",
   "P10":"A: 'The exact full error text is not preserved.'",
-  "P12":"Both 2/2.","P13":"Both: Lucy and Charlie, Lucy final APPROVE.","P15":"Both 3/3."}}
+  "P12":"Both 2/2.","P13":"Both: Lucy and the backend specialist, Lucy final APPROVE.","P15":"Both 3/3."}}

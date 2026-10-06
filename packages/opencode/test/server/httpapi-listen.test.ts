@@ -8,6 +8,7 @@ import { PtyPaths } from "../../src/server/routes/instance/httpapi/groups/pty"
 import { withTimeout } from "../../src/util/timeout"
 import { resetDatabase } from "../fixture/db"
 import { disposeAllInstances, tmpdir } from "../fixture/fixture"
+import { rethrow } from "../lib/rejection"
 
 const original = {
   OPENCODE_SERVER_PASSWORD: Flag.OPENCODE_SERVER_PASSWORD,
@@ -279,9 +280,9 @@ describe("HttpApi Server.listen", () => {
     const listener = await startListener()
     await withTimeout(listener.stop(), 10_000, "timed out waiting for graceful listener.stop()")
     await withTimeout(listener.stop(), 5_000, "timed out waiting for repeated graceful listener.stop()")
-    await expect(
-      fetch(new URL(PtyPaths.shells, listener.url), { headers: { authorization: authorization() } }),
-    ).rejects.toThrow()
+    expect(
+      await rethrow(fetch(new URL(PtyPaths.shells, listener.url), { headers: { authorization: authorization() } })),
+    ).toThrow()
   })
 
   test("default in-process handler does not emit Effect HTTP response logs", async () => {

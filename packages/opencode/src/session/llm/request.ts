@@ -9,6 +9,7 @@ import type { MessageV2 } from "../message-v2"
 import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import { SystemPrompt } from "../system"
+import { AtlasHeader } from "@/maestro/atlas-header"
 import { InstallationVersion } from "@opencode-ai/core/installation/version"
 import { Effect, Record } from "effect"
 import { jsonSchema, tool as aiTool, type ModelMessage, type Tool } from "ai"
@@ -89,11 +90,15 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
     },
   } : { sessionID: input.sessionID, agent: input.agent.id ?? input.agent.name,
     model: input.model, provider: input.provider, message: input.user }
+  // F2.8: the executing member's Atlas header is admitted here, last, so the charter and the other parts keep their
+  // bytes; never through the agent-blind system.transform hook.
+  const atlas = maintenance ? undefined : yield* AtlasHeader.render(input.agent)
   const system = [
     [
       ...(maintenance ? [role] : input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)),
       ...(maintenance ? [] : input.system),
       ...(!maintenance && input.user.system ? [input.user.system] : []),
+      ...(atlas ? [atlas] : []),
     ]
       .filter((x) => x)
       .join("\n"),
