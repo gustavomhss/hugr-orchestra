@@ -72,7 +72,12 @@ function load() {
   if (native !== undefined) return native;
   const path = addonPath();
   const addon = { exports: {} };
-  process.dlopen(addon, path);
+  try {
+    process.dlopen(addon, path);
+  } catch (e) {
+    // Windows' LoadLibrary message does not name the file; say which one, whatever the OS.
+    throw new Error(`hugr-omni could not load its native addon ${path}: ${e instanceof Error ? e.message : e}`, { cause: e });
+  }
   addon.exports.setup(OmniError); // the addon throws and rejects with this class
   [native, loadedFrom] = [addon.exports, path];
   // The supervisor, in this order: configure({ supervisor }); HUGR_OMNI_SUPERVISOR as JS sees it (Bun's process.env is
