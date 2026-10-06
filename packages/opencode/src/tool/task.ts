@@ -97,10 +97,7 @@ const BaseParameterFields = {
   authorizationID: Schema.optional(Schema.String).annotate({
     description: "AuthorizationGranted ID for current team dispatch.",
   }),
-  writePaths: Schema.optional(Schema.Array(Schema.String)).annotate({
-    description:
-      "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
-  }),
+  writePaths: WriteRoots.Param,
 }
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
@@ -187,18 +184,12 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
-      const childPermissions = yield* WriteRoots.bind(nextID, params.writePaths, GovernedTaskReservation.childPermissions({
-        parent,
-        next,
-        primaryTools: cfg.experimental?.primary_tools,
-      }))
-      let reservedChildPermissions:
-        | readonly {
-            readonly permission: string
-            readonly pattern: string
-            readonly action: "allow" | "deny" | "ask"
-          }[]
-        | undefined
+      const childPermissions = yield* WriteRoots.bind(
+        nextID,
+        params.writePaths,
+        GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }),
+      )
+      let reservedChildPermissions: readonly WriteRoots.Rule[] | undefined
       if (params.authorizationID) {
         if (caller?.id !== "maestro" || caller.native !== true) {
           return yield* Effect.fail(new Error("Authorized Task requires Maestro"))

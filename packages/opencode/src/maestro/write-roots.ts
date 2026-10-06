@@ -1,7 +1,7 @@
 export * as WriteRoots from "./write-roots"
 
 import path from "node:path"
-import { Effect, FileSystem } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { ToolSafety } from "@opencode-ai/core/tool-safety"
 import { InstanceState } from "@/effect/instance-state"
@@ -12,7 +12,13 @@ import type { Session } from "@/session/session"
 // governed and authorized reservation snapshots unchanged, and no tool permission ever matches it.
 const PERMISSION = "tool_safety_write_root"
 
-type Rule = { readonly permission: string; readonly pattern: string; readonly action: "allow" | "deny" | "ask" }
+export type Rule = { readonly permission: string; readonly pattern: string; readonly action: "allow" | "deny" | "ask" }
+
+/** The Task tool parameter through which Maestro (or the user) declares the backend seat's write scope. */
+export const Param = Schema.optional(Schema.Array(Schema.String)).annotate({
+  description:
+    "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
+})
 
 /**
  * Append the backend seat's write-root rules to a child ruleset. Other members ignore `writePaths`. For the backend
