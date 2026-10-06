@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite"
+import { constants, Database } from "bun:sqlite"
 import { drizzle } from "drizzle-orm/bun-sqlite"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
@@ -155,11 +155,21 @@ const nativeLayer = (config: Config) =>
   Layer.effect(
     Sqlite.Native,
     Effect.gen(function* () {
-      const native = new Database(config.filename, {
-        readonly: config.readonly,
-        readwrite: config.readwrite ?? true,
-        create: config.create ?? true,
-      })
+      // A `file:` URI name (immutable release reads) needs SQLITE_OPEN_URI: Bun's bundled SQLite on Linux and Windows
+      // does not enable URI names by default, unlike the macOS system SQLite.
+      const native = config.filename.startsWith("file:")
+        ? new Database(
+            config.filename,
+            constants.SQLITE_OPEN_URI |
+              (config.readonly
+                ? constants.SQLITE_OPEN_READONLY
+                : constants.SQLITE_OPEN_READWRITE | (config.create === false ? 0 : constants.SQLITE_OPEN_CREATE)),
+          )
+        : new Database(config.filename, {
+            readonly: config.readonly,
+            readwrite: config.readwrite ?? true,
+            create: config.create ?? true,
+          })
       yield* Effect.addFinalizer(() => Effect.sync(() => native.close()))
       if (config.disableWAL !== true) native.run("PRAGMA journal_mode = WAL;")
       return native
