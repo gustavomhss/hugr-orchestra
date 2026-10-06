@@ -341,8 +341,7 @@ interface Awareness {
 export type ClosingFold = Pick<TaskMemoryEntry, "attempted" | "failedWith" | "stoppedAt" | "lesson">;
 /**
  * The `pr` closing fold (F3 clause 14; owner ruling F3-D2 keeps `knowledgeDelta`): the
- * `{ decisions, reviewOutcomes, knowledgeDelta }` projection of `PrMemoryEntry`. Type only — no projection
- * produces it yet; F3 work package A2 owns that semantics.
+ * `{ decisions, reviewOutcomes, knowledgeDelta }` projection of `PrMemoryEntry`, produced by `prClosingFold`.
  */
 export type PrClosingFold = Pick<PrMemoryEntry, "decisions" | "reviewOutcomes" | "knowledgeDelta">;
 /**
@@ -452,14 +451,13 @@ export interface BoundRecall {
 	readonly store: StoreState;
 }
 export type FoldRefusal = "no-own-fold" | "record-not-found" | "foreign-owner" | "unit-mismatch" | "store-partial" | "store-unavailable" | "ambiguous";
-/** Clause 15. `fold` is present for a `task` unit; a `pr` unit carries no `PrClosingFold` until A2 projects one
- *  (see the header). */
+/** Clause 15. `fold` is the `ClosingFold` of a `task` unit and the `PrClosingFold` of a `pr` unit. */
 export type FoldVerdict = {
 	readonly ok: true;
 	readonly unit: ResumeUnit;
 	readonly ref: RecordRef;
 	readonly record: MemoryRecord;
-	readonly fold?: ClosingFold | PrClosingFold;
+	readonly fold: ClosingFold | PrClosingFold;
 } | {
 	readonly ok: false;
 	readonly refusal: FoldRefusal;
