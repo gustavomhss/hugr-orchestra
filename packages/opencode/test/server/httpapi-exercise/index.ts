@@ -34,6 +34,8 @@ import { color, printHeader, printResults } from "./report"
 import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } from "./routing"
 import { mcpScenarios } from "./mcp"
 import { runScenario } from "./runner"
+import { credentialScenarios } from "./credential"
+import { scheduleScenarios } from "./schedule"
 import { skillScenarios } from "./skill"
 import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
@@ -112,6 +114,7 @@ const scenarios: Scenario[] = [
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
+  ...scheduleScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),
@@ -635,21 +638,7 @@ const scenarios: Scenario[] = [
       headers: ctx.headers(),
     }))
     .status(204, undefined, "status"),
-  http.protected
-    .delete("/api/credential/{credentialID}", "v2.credential.remove")
-    .at((ctx) => ({
-      path: route("/api/credential/{credentialID}", { credentialID: "cred_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .patch("/api/credential/{credentialID}", "v2.credential.update")
-    .at((ctx) => ({
-      path: route("/api/credential/{credentialID}", { credentialID: "cred_missing" }),
-      headers: ctx.headers(),
-      body: { label: "Work" },
-    }))
-    .status(204, undefined, "status"),
+  ...credentialScenarios,
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
   http.protected
     .get("/api/event", "v2.event.subscribe")

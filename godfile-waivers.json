@@ -390,11 +390,17 @@
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
+    "packages/client/src/generated-effect/client.ts": {
+      "maximumLines": 786,
+      "reason": "Generated V2 HttpApi Effect client (packages/client bun run generate); splitting requires generator redesign.",
+      "authorizedBy": "pending owner confirmation (schedule-daemon: regenerated for the scheduled task routes)",
+      "authorizedAt": "2026-10-06"
+    },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1111,
+      "maximumLines": 1182,
       "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss), mock-parity integration",
-      "authorizedAt": "2026-10-05"
+      "authorizedBy": "pending owner confirmation (schedule-daemon: regenerated for the scheduled task routes)",
+      "authorizedAt": "2026-10-06"
     },
     "packages/client/src/generated/types.ts": {
       "maximumLines": 2965,
@@ -427,10 +433,10 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 7540,
+      "maximumLines": 7571,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss), mock-parity integration",
-      "authorizedAt": "2026-10-05"
+      "authorizedBy": "pending owner confirmation (schedule-daemon: regenerated for the scheduled task routes)",
+      "authorizedAt": "2026-10-06"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
       "maximumLines": 14663,

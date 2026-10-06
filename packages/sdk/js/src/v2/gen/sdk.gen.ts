@@ -188,6 +188,8 @@ import type {
   QuestionReplyErrors,
   QuestionReplyResponses,
   QuestionV2Reply,
+  ScheduledTaskCreateInput,
+  ScheduledTaskUpdateInput,
   SessionAbortErrors,
   SessionAbortResponses,
   SessionActivityErrors,
@@ -354,6 +356,16 @@ import type {
   V2QuestionRequestListResponses,
   V2ReferenceListErrors,
   V2ReferenceListResponses,
+  V2ScheduleCreateErrors,
+  V2ScheduleCreateResponses,
+  V2ScheduleListErrors,
+  V2ScheduleListResponses,
+  V2ScheduleRemoveErrors,
+  V2ScheduleRemoveResponses,
+  V2ScheduleRunErrors,
+  V2ScheduleRunResponses,
+  V2ScheduleUpdateErrors,
+  V2ScheduleUpdateResponses,
   V2SessionActiveErrors,
   V2SessionActiveResponses,
   V2SessionCompactErrors,
@@ -7438,6 +7450,174 @@ export class ProjectCopy2 extends HeyApiClient {
   }
 }
 
+export class Schedule extends HeyApiClient {
+  /**
+   * List scheduled tasks
+   *
+   * List the location's scheduled tasks with the outcome of each task's latest run.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2ScheduleListResponses, V2ScheduleListErrors, ThrowOnError>({
+      url: "/api/schedule",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create scheduled task
+   *
+   * Schedule a prompt for the location. The server runs due slots itself; creating with an ID the location already has returns that task unchanged.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      scheduledTaskCreateInput: ScheduledTaskCreateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "scheduledTaskCreateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2ScheduleCreateResponses, V2ScheduleCreateErrors, ThrowOnError>({
+      url: "/api/schedule",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Remove scheduled task
+   *
+   * Remove a scheduled task and its run history.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2ScheduleRemoveResponses, V2ScheduleRemoveErrors, ThrowOnError>({
+      url: "/api/schedule/{scheduleID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update scheduled task
+   *
+   * Edit, pause or resume a scheduled task.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      scheduledTaskUpdateInput: ScheduledTaskUpdateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+            { key: "scheduledTaskUpdateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2ScheduleUpdateResponses, V2ScheduleUpdateErrors, ThrowOnError>({
+      url: "/api/schedule/{scheduleID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Run scheduled task now
+   *
+   * Admit the task's prompt into a Session now. Serves the due slot when no run holds it, otherwise starts an extra run. A failed run is not recorded.
+   */
+  public run<ThrowOnError extends boolean = false>(
+    parameters: {
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2ScheduleRunResponses, V2ScheduleRunErrors, ThrowOnError>({
+      url: "/api/schedule/{scheduleID}/run",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class V2 extends HeyApiClient {
   private _health?: Health
   get health(): Health {
@@ -7522,6 +7702,11 @@ export class V2 extends HeyApiClient {
   private _projectCopy?: ProjectCopy2
   get projectCopy(): ProjectCopy2 {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
+  }
+
+  private _schedule?: Schedule
+  get schedule(): Schedule {
+    return (this._schedule ??= new Schedule({ client: this.client }))
   }
 }
 
