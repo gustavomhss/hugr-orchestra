@@ -63,6 +63,14 @@ export const Flag = {
   get OPENCODE_CONFIG_DIR() {
     return process.env["OPENCODE_CONFIG_DIR"]
   },
+  // Dev and branch builds read integration credentials from the release
+  // database (<data>/opencode.db) read-only when their own database has none
+  // for an integration. "0"/"false" disables it; "1"/"true" forces it on even
+  // with OPENCODE_DB=":memory:". Unset means on, except for ":memory:".
+  get OPENCODE_INHERIT_CREDENTIALS() {
+    if (process.env["OPENCODE_INHERIT_CREDENTIALS"] === undefined) return undefined
+    return truthy("OPENCODE_INHERIT_CREDENTIALS")
+  },
   get OPENCODE_PURE() {
     return truthy("OPENCODE_PURE")
   },

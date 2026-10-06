@@ -8,6 +8,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   readAttachment,
 } from "./attachment-picker"
+import { rethrow } from "./rejection.fixture"
 
 describe("assertAttachmentBudget", () => {
   test("accepts selections within the media ingest limit", () => {
@@ -37,7 +38,7 @@ describe("assertAttachmentBudget", () => {
     try {
       await writeFile(file, "")
       await truncate(file, MAX_ATTACHMENT_BYTES + 1)
-      await expect(readAttachment(file)).rejects.toThrow("20 MB limit")
+      expect(await rethrow(readAttachment(file))).toThrow("20 MB limit")
     } finally {
       await rm(directory, { recursive: true, force: true })
     }
@@ -63,7 +64,7 @@ describe("picked file authorizations", () => {
     const second = authorizations.add(1, ["b.txt"])
     authorizations.release(1, first)
 
-    await expect(authorizations.read(1, first, "a.txt")).rejects.toThrow("not selected")
+    expect(await rethrow(authorizations.read(1, first, "a.txt"))).toThrow("not selected")
     expect(new TextDecoder().decode(await authorizations.read(1, second, "b.txt"))).toBe("b.txt")
   })
 
@@ -71,7 +72,7 @@ describe("picked file authorizations", () => {
     const authorizations = createPickedFileAuthorizations(read)
     const token = authorizations.add(1, ["a.txt"])
 
-    await expect(authorizations.read(2, token, "a.txt")).rejects.toThrow("not selected")
+    expect(await rethrow(authorizations.read(2, token, "a.txt"))).toThrow("not selected")
   })
 
   test("charges actual reads against the selection budget", async () => {
@@ -82,6 +83,6 @@ describe("picked file authorizations", () => {
     const token = authorizations.add(1, ["a.txt", "b.txt"])
 
     await authorizations.read(1, token, "a.txt")
-    await expect(authorizations.read(1, token, "b.txt")).rejects.toThrow("budget exceeded")
+    expect(await rethrow(authorizations.read(1, token, "b.txt"))).toThrow("budget exceeded")
   })
 })

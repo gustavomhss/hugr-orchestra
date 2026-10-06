@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { AssistantMessage, Message, UserMessage } from "@opencode-ai/sdk/v2"
 import { isTimelineReady, loadOlderTimeline, selectUserMessages, selectVisibleUserMessages } from "./model"
+import { rethrow } from "../../../testing/rejection"
 
 const user = (id: string) => ({ id, role: "user" }) as UserMessage
 const assistant = (id: string) => ({ id, role: "assistant" }) as AssistantMessage
@@ -76,19 +77,21 @@ describe("timeline model", () => {
   test("releases the anchor when loading history fails", async () => {
     let restore = 0
 
-    await expect(
-      loadOlderTimeline({
-        sessionID: () => "ses_test",
-        more: () => true,
-        loading: () => false,
-        loadMore: async () => {
-          throw new Error("history failed")
-        },
-        after: () => {
-          restore += 1
-        },
-      }),
-    ).rejects.toThrow("history failed")
+    expect(
+      await rethrow(
+        loadOlderTimeline({
+          sessionID: () => "ses_test",
+          more: () => true,
+          loading: () => false,
+          loadMore: async () => {
+            throw new Error("history failed")
+          },
+          after: () => {
+            restore += 1
+          },
+        }),
+      ),
+    ).toThrow("history failed")
 
     expect(restore).toBe(1)
   })

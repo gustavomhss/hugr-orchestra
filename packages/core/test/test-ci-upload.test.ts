@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, test } from "bun:test"
-import { closestBase, parseResponse, rateLimitDelay } from "../../../script/test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay, testPaths } from "../../../script/test-ci-upload"
 
 const repos: string[] = []
 
@@ -99,5 +99,64 @@ describe("test:ci rate limit", () => {
     ).toBeUndefined()
     expect(rateLimitDelay(parseResponse(output("422 Unprocessable Entity", {}, "{}")), 0)).toBeUndefined()
     expect(rateLimitDelay(parseResponse(""), 0)).toBeUndefined()
+  })
+})
+
+// The files of packages/opencode the tests below pretend exist; test/cli is a directory.
+const files = new Set(["a.test.ts", "test/cli/run/permission.shared.test.ts", "test/cli/tui/editor-context.test.tsx"])
+const isFile = (file: string) => files.has(file)
+
+describe("test:ci test paths", () => {
+  test("passes an existing file as ./<file>, nested or not", () => {
+    expect(testPaths("opencode", ["a.test.ts", "test/cli/run/permission.shared.test.ts"], isFile)).toEqual([
+      "./a.test.ts",
+      "./test/cli/run/permission.shared.test.ts",
+    ])
+  })
+
+  test("keeps the caller's order", () => {
+    expect(
+      testPaths(
+        "opencode",
+        ["test/cli/tui/editor-context.test.tsx", "test/cli/run/permission.shared.test.ts", "a.test.ts"],
+        isFile,
+      ),
+    ).toEqual(["./test/cli/tui/editor-context.test.tsx", "./test/cli/run/permission.shared.test.ts", "./a.test.ts"])
+  })
+
+  test("keeps paths that are already explicit", () => {
+    expect(testPaths("opencode", ["./a.test.ts", "./missing.test.ts", "/abs/a.test.ts"], isFile)).toEqual([
+      "./a.test.ts",
+      "./missing.test.ts",
+      "/abs/a.test.ts",
+    ])
+  })
+
+  test("accepts paths from the repository root and with Windows separators", () => {
+    expect(
+      testPaths(
+        "opencode",
+        [
+          "packages/opencode/a.test.ts",
+          "./packages/opencode/test/cli/run/permission.shared.test.ts",
+          "test\\cli\\tui\\editor-context.test.tsx",
+          "packages\\opencode\\a.test.ts",
+          ".\\a.test.ts",
+        ],
+        isFile,
+      ),
+    ).toEqual([
+      "./a.test.ts",
+      "./test/cli/run/permission.shared.test.ts",
+      "./test/cli/tui/editor-context.test.tsx",
+      "./a.test.ts",
+      "./a.test.ts",
+    ])
+  })
+
+  test("passes directories and filters through unchanged", () => {
+    expect(
+      testPaths("opencode", ["test/cli", "permission", "packages/opencode/test/cli", "*.test.ts", "--bail"], isFile),
+    ).toEqual(["test/cli", "permission", "test/cli", "*.test.ts", "--bail"])
   })
 })

@@ -101,7 +101,7 @@ before relying on their contents.
 [m24] ValidationRecord ID: `evt_maestro_validation_07eec95ffcf84f0c1c7217dc482672097ad8daa4723a55edc3b5478d673d8a7a` — record Lucy's cold review is bound to (t23)
 [m25] workCardID: `card-dark-mode` (t23, u3)
 [m26] workCard: `# Dark mode scope\nInspect existing settings color scheme only.\n` — exact work card for validation and Lucy's review (t23, u3)
-[m27] routedMemberID: `charlie` — route for validation (t23, u3)
+[m27] routedMemberID: `backend` — route for validation (t23, u3)
 [m28] projectID: `orchestra-canonical-maestro-dev` (t23, t2)
 [m29] validatorVersion: `validation-v1` (t23, u3)
 [m30] worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-canonical-maestro-dev` — repo inspected and Maestro tooling worktree (t18, t2)
@@ -136,13 +136,13 @@ u1 · 09-28 23:11 -03
 u2 · 09-29 13:18 -03
     "Continue governed flow. Call maestro_record_context exactly once with this exact PlanRevision ID: evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0. Do not modify files. Report exact result."
 u3 · 09-29 13:29 -03
-    "Continue governed flow. Call maestro_record_validation exactly once, bound to these exact records: planRevisionID evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0, contextRecordID evt_maestro_context_ffb19c2f42b6519480e38c26585fe61d56526ea516d21df8656b1fc2cb1f5a36, contextHash ba3eaab11283017a7f0b77e83684f9978687dc3c9d8d9c52188991dcc35f58e4. Use projectID from current session, workCardID card-dark-mode, workCard \"# Dark mode scope\nInspect existing settings color scheme only.\n\", routedMemberID charlie, validatorVersion validation-v1, checks [{\"id\":\"typecheck\",\"status\":\"PASS\",\"detail\":\"not run; scope-only validation\"}]. Do not modify files."
+    "Continue governed flow. Call maestro_record_validation exactly once, bound to these exact records: planRevisionID evt_maestro_plan_revision_82443a6eeec037a81cce5a3b43e0a3a0a54d576f7188fb9628c77f2f1f60edf0, contextRecordID evt_maestro_context_ffb19c2f42b6519480e38c26585fe61d56526ea516d21df8656b1fc2cb1f5a36, contextHash ba3eaab11283017a7f0b77e83684f9978687dc3c9d8d9c52188991dcc35f58e4. Use projectID from current session, workCardID card-dark-mode, workCard \"# Dark mode scope\nInspect existing settings color scheme only.\n\", routedMemberID backend, validatorVersion validation-v1, checks [{\"id\":\"typecheck\",\"status\":\"PASS\",\"detail\":\"not run; scope-only validation\"}]. Do not modify files."
 u4 · 09-29 13:30 -03
-    "Retry governed validation once now. Call maestro_record_validation with the exact same bound PlanRevision, ContextRecord, contextHash, project, work card, Charlie route, validator version, and PASS check from previous message. Do not modify files."
+    "Retry governed validation once now. Call maestro_record_validation with the exact same bound PlanRevision, ContextRecord, contextHash, project, work card, the backend specialist route, validator version, and PASS check from previous message. Do not modify files."
 u5 · 09-29 13:35 -03
     "Retry validation now exactly once with same records and inputs. Tool resolves session project automatically. Do not modify files."
 u6 · 09-29 13:53 -03
-    "Retry governed validation now once. Use exact existing PlanRevision, ContextRecord, contextHash, work card, Charlie route, and PASS check. Tool resolves project from session. Do not modify files."
+    "Retry governed validation now once. Use exact existing PlanRevision, ContextRecord, contextHash, work card, the backend specialist route, and PASS check. Tool resolves project from session. Do not modify files."
 u7 · 09-29 13:54 -03
     "Continue governed flow. Delegate Lucy read-only cold review for exact validation record evt_maestro_validation_07eec95ffcf84f0c1c7217dc482672097ad8daa4723a55edc3b5478d673d8a7a. Lucy must use maestro_record_review only, with exact work card \"# Dark mode scope\nInspect existing settings color scheme only.\n\", same PASS check evidence, no transcript/model history, no file edits. If Task delegation is unavailable, report exact blocker."
 u8 · 09-29 13:54 -03

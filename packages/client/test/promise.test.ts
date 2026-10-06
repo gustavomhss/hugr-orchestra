@@ -77,7 +77,15 @@ test("events.subscribe terminates on malformed Promise SSE data", async () => {
     fetch: async () => new Response("data: {not-json}\n\n", { headers: { "content-type": "text/event-stream" } }),
   })
 
-  await expect(client.events.subscribe()[Symbol.asyncIterator]().next()).rejects.toMatchObject({
+  const next = client.events.subscribe()[Symbol.asyncIterator]().next()
+  expect(
+    await next.then(
+      () => {
+        throw new Error("Expected promise to reject")
+      },
+      (error: unknown) => error,
+    ),
+  ).toMatchObject({
     name: "ClientError",
     reason: "MalformedResponse",
   })

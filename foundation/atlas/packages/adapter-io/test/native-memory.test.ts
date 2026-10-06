@@ -8,10 +8,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { appendFileSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { createNativeMemory } from "../src/native-memory.js"
+import { createNativeMemory, readBoundHeader } from "../src/native-memory.js"
 import type { AtlasBinding } from "../src/native-memory.js"
 import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
 import { createMemoryRead } from "../src/memory-read.js"
+import { createAwarenessStore } from "../src/awareness-store.js"
+import { createDurableOrientation } from "../src/orientation-store.js"
 import type { Awareness, MemoryEntry, MemoryRecord, Orientation } from "@atlas/memory"
 
 let root: string
@@ -371,8 +373,67 @@ describe("legacyOwners — a renamed member reads its earlier records, and write
     expect(written.ok && written.record.owner).toBe("backend")
   })
 
+  it("the header ranks a legacy-owned rule as the owner's own, and never another owner's rule", () => {
+    createDurableMemory(root).append({ owner: "former", kind: "project", entry: rule("keep handlers thin") })
+    createDurableMemory(root).append({ owner: "other", kind: "project", entry: rule("foreign rule") })
+    createDurableMemory(root).append({ owner: "backend", kind: "project", entry: rule("keep handlers thin") })
+    createDurableMemory(root).append({ owner: "backend", kind: "project", entry: rule("wrap errors") })
+
+    const h = createNativeMemory(binding({ legacyOwners: ["former"] })).header(AW, OR)
+    expect(h.header?.rules.map((r) => r.rule).sort()).toEqual(["keep handlers thin", "wrap errors"])
+    createDurableMemory(root).append({ owner: "former", kind: "project", entry: rule("legacy only") })
+    expect(
+      createNativeMemory(binding({ legacyOwners: ["former"] }))
+        .header(AW, OR)
+        .header?.rules.map((r) => r.rule),
+    ).toContain("legacy only")
+    expect(
+      createNativeMemory(binding())
+        .header(AW, OR)
+        .header?.rules.map((r) => r.rule),
+    ).not.toContain("legacy only")
+  })
+
   it("refuses a binding whose legacy owners are empty or repeat memoryOwner", () => {
     expect(() => createNativeMemory(binding({ legacyOwners: [""] }))).toThrow(/legacyOwners/)
     expect(() => createNativeMemory(binding({ legacyOwners: ["backend"] }))).toThrow(/legacyOwners/)
+  })
+})
+
+describe("readBoundHeader — the installed header read composes the root's own slabs under a header-only binding", () => {
+  const headerBinding = (over: { legacyOwners?: readonly string[] } = {}) => ({
+    storage: { projectID: "proj", root },
+    memoryOwner: "backend",
+    ...over,
+  })
+
+  it("serves the owner's rules with the root's Awareness and Orientation, and no execution provenance", () => {
+    createDurableMemory(root).append({ owner: "backend", kind: "project", entry: rule("own rule") })
+    createDurableMemory(root).append({ owner: "lucy", kind: "project", entry: rule("lucy rule") })
+    const h = readBoundHeader(headerBinding())
+    expect(h.state.rules).toBe("complete")
+    expect(h.header?.rules.map((r) => r.rule)).toEqual(["own rule"])
+    expect(h.header?.awareness).toEqual(createAwarenessStore(root).read())
+    expect(h.header?.orientation).toEqual(createDurableOrientation(root).orientation())
+    expect(h.state.awareness.mission).toBe("UN-SEEDED")
+  })
+
+  it("reads legacy-owned rules, and an unreadable log is unavailable with no header", () => {
+    createDurableMemory(root).append({ owner: "former", kind: "project", entry: rule("old rule") })
+    expect(readBoundHeader(headerBinding({ legacyOwners: ["former"] })).header?.rules.map((r) => r.rule)).toEqual([
+      "old rule",
+    ])
+    rmSync(memoryLogPath(root))
+    mkdirSync(memoryLogPath(root))
+    const h = readBoundHeader(headerBinding())
+    expect(h.state.rules).toBe("unavailable")
+    expect(h.header).toBeUndefined()
+  })
+
+  it("refuses a relative root or an empty owner before reading anything", () => {
+    expect(() => readBoundHeader({ storage: { projectID: "proj", root: "rel" }, memoryOwner: "backend" })).toThrow(
+      /absolute/,
+    )
+    expect(() => readBoundHeader({ storage: { projectID: "proj", root }, memoryOwner: "" })).toThrow(/memoryOwner/)
   })
 })

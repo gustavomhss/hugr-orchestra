@@ -165,7 +165,7 @@ export type { ScanVerdict, ScannerBinarySpec } from "./scanner.js"
 // F3 / A1 — the BOUND Memory composition: the same doors, composed under one immutable `AtlasBinding` a
 // harness supplies (owner, root and scanner path forced from it), never through `composeRuntime`'s
 // `ATLAS_ACTOR ?? git user.email` resolution. Its consumer lives outside this tree (see the file header).
-export { createNativeMemory, storeStateOf } from "./native-memory.js"
+export { createNativeMemory, readBoundHeader, storeStateOf } from "./native-memory.js"
 export type {
   AtlasBinding,
   BoundHeader,
@@ -173,6 +173,7 @@ export type {
   BoundRecallQuery,
   FoldRefusal,
   FoldVerdict,
+  HeaderBinding,
   HeaderBound,
   NativeMemory,
   ReconcileVerdict,

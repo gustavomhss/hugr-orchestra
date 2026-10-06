@@ -106,7 +106,7 @@ describe("Maestro governed lifecycle", () => {
         expect(promptCount()).toBe(2)
         expect(yield* sessions.children(chat.id)).toHaveLength(1)
       }),
-    { git: true, config: { agent: { maestro: { name: "Conductor" } } } },
+    { git: true },
     60_000,
   )
 
@@ -140,12 +140,13 @@ describe("Maestro governed lifecycle", () => {
   )
 
   it.instance(
-    "uses stable Maestro identity for approval after config rename and denies spoofed identity",
+    "uses stable Maestro identity for approval under a stale label and denies spoofed identity",
     () =>
       Effect.gen(function* () {
         const { chat, assistant } = yield* seed()
         const agents = yield* Agent.Service
-        expect((yield* agents.get("maestro")).name).toBe("Conductor")
+        // Maestro's name is fixed; "Conductor" is a stale label the caller still sends beside the id.
+        expect((yield* agents.get("maestro")).name).toBe("maestro")
         const tool = yield* MaestroPresentApprovalTool
         const def = yield* tool.init()
         const exit = yield* Effect.exit(
@@ -218,7 +219,6 @@ describe("Maestro governed lifecycle", () => {
         if (Exit.isFailure(spoofed))
           expect(Cause.pretty(spoofed.cause)).toContain("Approval presentation requires Maestro")
       }),
-    { config: { agent: { maestro: { name: "Conductor" } } } },
   )
 
   it.instance("denies governed Task before child Session creation without exact approval", () =>

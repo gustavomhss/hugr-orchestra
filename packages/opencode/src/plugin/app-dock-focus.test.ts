@@ -27,10 +27,10 @@ test("ui_type into focus refuses without dispatch when focus is not on a text fi
   expect(JSON.parse(String(await nothing.hooks.tool.ui_type.execute({ text: "x" }, context))))
     .toMatchObject({ code: "target-not-found", hint: "No control has keyboard focus; pass target {name, role} for the field" })
   const editable = host(() => windows(field("n:focused", "Search settings")))
-  await expect(editable.hooks.tool.ui_type.execute({ text: "x", mode: "editable" }, context)).resolves.toContain("uses keyboard mode")
+  expect(await editable.hooks.tool.ui_type.execute({ text: "x", mode: "editable" }, context)).toContain("uses keyboard mode")
   expect([...button.calls, ...nothing.calls, ...editable.calls].every((call) => call.op === "read")).toBe(true)
   // dock_type still addresses browser tabs and keeps requiring a ref or target there.
-  await expect(editable.hooks.tool.dock_type.execute({ text: "x" }, context)).resolves.toBe("dock_type requires ref or target")
+  expect(await editable.hooks.tool.dock_type.execute({ text: "x" }, context)).toBe("dock_type requires ref or target")
 })
 
 test("ui_pointer hovers or right-clicks a located control and passes refs straight through", async () => {
@@ -42,7 +42,7 @@ test("ui_pointer hovers or right-clicks a located control and passes refs straig
   expect(calls.filter((call) => call.op === "pointer")).toEqual([
     { op: "pointer", args: { ref: "n:row", kind: "contextMenu", world: "linux" } },
     { op: "pointer", args: { ref: "n:row", kind: "hover", world: "linux" } }])
-  await expect(hooks.tool.ui_pointer.execute({ kind: "hover" }, context)).resolves.toBe("ui_pointer requires target or ref")
+  expect(await hooks.tool.ui_pointer.execute({ kind: "hover" }, context)).toBe("ui_pointer requires target or ref")
 })
 
 const keyed = { ok: true as const, value: { method: "keys", characters: 6, dispatch: "acknowledged", postcondition: "unverified" } }

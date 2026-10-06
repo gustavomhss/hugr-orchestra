@@ -1,4 +1,5 @@
 import { expect, mock, test } from "bun:test"
+import { rejection } from "./rejection.fixture"
 
 // The Electron module only resolves inside the Electron runtime; open() needs a partition session.
 // Bun keeps a module mock for the rest of the test process, so it also needs the default export that later
@@ -48,7 +49,7 @@ test("a failed open does not warm the native helper", async () => {
     throw new Error("Linux workspace failed to start")
   }
 
-  await expect(f.open()).rejects.toMatchObject({ name: "RuntimeError" })
+  expect(await rejection(f.open())).toMatchObject({ name: "RuntimeError" })
   await Bun.sleep(0)
   expect(f.calls).not.toContain("native")
   f.linux.closeSender(f.senderID)

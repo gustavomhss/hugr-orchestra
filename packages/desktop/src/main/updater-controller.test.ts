@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createUpdaterController, type UpdaterBackend, type UpdaterReadyRecord } from "./updater-controller"
+import { rethrow } from "./rejection.fixture"
 
 function setup(input?: { currentVersion?: string; ready?: UpdaterReadyRecord }) {
   const calls: string[] = []
@@ -105,7 +106,7 @@ describe("updater controller", () => {
     })
     await failed.start()
 
-    await expect(failed.install()).rejects.toThrow("stop failed")
+    expect(await rethrow(failed.install())).toThrow("stop failed")
     expect(failed.getState()).toEqual({ status: "ready", version: "2.0.0" })
   })
 })

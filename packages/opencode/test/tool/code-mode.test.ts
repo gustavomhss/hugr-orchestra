@@ -11,6 +11,7 @@ import { Tool } from "@/tool/tool"
 import * as Truncate from "@/tool/truncate"
 import { MessageID, SessionID } from "@/session/schema"
 import { Cause, Effect, Exit, Layer, Schema } from "effect"
+import { rethrow } from "../lib/rejection"
 
 const ctx: Tool.Context = {
   sessionID: SessionID.make("ses_code-mode"),
@@ -96,8 +97,8 @@ async function failure(effect: Effect.Effect<unknown>) {
 describe("code mode execute", () => {
   test("defines execute input with an Effect schema", async () => {
     const decode = Schema.decodeUnknownEffect(Parameters)
-    await expect(Effect.runPromise(decode({ code: "return 1" }))).resolves.toEqual({ code: "return 1" })
-    await expect(Effect.runPromise(decode({}))).rejects.toThrow()
+    expect(await Effect.runPromise(decode({ code: "return 1" }))).toEqual({ code: "return 1" })
+    expect(await rethrow(Effect.runPromise(decode({})))).toThrow()
     expect(Schema.toJsonSchemaDocument(Parameters).schema).toMatchObject({
       properties: {
         code: {

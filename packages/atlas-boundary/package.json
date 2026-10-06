@@ -11,6 +11,10 @@
     "./materialize": {
       "types": "./src/generated/materialize.d.ts",
       "default": "./src/generated/materialize.js"
+    },
+    "./native-header": {
+      "types": "./src/generated/native-header.d.ts",
+      "default": "./src/generated/native-header.js"
     }
   },
   "scripts": {

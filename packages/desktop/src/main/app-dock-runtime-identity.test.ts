@@ -6,6 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { promisify } from "node:util"
+import { rejection } from "./rejection.fixture"
 
 const exec = promisify(execFile)
 const enabled = process.env.APP_DOCK_RUNTIME_INTEGRATION === "1"
@@ -87,7 +88,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
     expect(found.Name).toBe(`/orchestra-linux-${cleanup.owner}`)
     expect(found.Config.Labels[`${label}.owner`]).toBe(cleanup.owner)
     await docker(["rm", "--force", found.Id])
-    await expect(docker(["container", "inspect", found.Id])).rejects.toMatchObject({
+    expect(await rejection(docker(["container", "inspect", found.Id]))).toMatchObject({
       code: 1, stderr: `Error response from daemon: No such container: ${found.Id}\n`,
     })
   }
@@ -100,7 +101,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
 
     // A failed startup leaves B holding ID-less metadata before A creates the workspace.
     const b = AppDockRuntime.create({ root, context: buildContext, image: `orchestra-runtime-missing-${randomUUID()}:identity` })
-    await expect(b.start()).rejects.toMatchObject({ code: "unavailable" })
+    expect(await rejection(b.start())).toMatchObject({ code: "unavailable" })
     const initial = await metadata()
     cleanup.owner = initial.owner
     expect(initial.owner).toMatch(/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/)
@@ -122,7 +123,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
       Endpoints: { docker: { Host: string } }
     }[])[0].Endpoints.docker.Host).toBe("ssh://invalid")
     // Positive control: commands really routed through this context now fail over SSH.
-    await expect(command(["--context", privateContext, "info"], 8_000)).rejects.toMatchObject({
+    expect(await rejection(command(["--context", privateContext, "info"], 8_000))).toMatchObject({
       code: 1, killed: false,
     })
 
@@ -157,7 +158,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
       original.Mounts.filter((mount) => mount.Destination === "/home/dock"),
     )
 
-    await expect(b.stop()).rejects.toMatchObject({ code: "failed" })
+    expect(await rejection(b.stop())).toMatchObject({ code: "failed" })
     expect((await container(replacementID)).State.Running).toBe(true)
     expect((await metadata()).containerID).toBe(saved.containerID)
 
@@ -190,7 +191,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
           expect(inspected.Name).toBe(home)
           expect(inspected.Labels[`${label}.owner`]).toBe(cleanup.owner)
           await docker(["volume", "rm", home])
-          await expect(docker(["volume", "inspect", home])).rejects.toMatchObject({
+          expect(await rejection(docker(["volume", "inspect", home]))).toMatchObject({
             code: 1, stderr: `Error response from daemon: get ${home}: no such volume\n`,
           })
         }
@@ -199,7 +200,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
       if (cleanup.context) {
         await command(["context", "update", privateContext, "--docker", `host=${endpoint}`])
         await command(["context", "rm", privateContext])
-        await expect(command(["context", "inspect", privateContext])).rejects.toMatchObject({ code: 1 })
+        expect(await rejection(command(["context", "inspect", privateContext]))).toMatchObject({ code: 1 })
       }
       await rm(root, { recursive: true })
     }
