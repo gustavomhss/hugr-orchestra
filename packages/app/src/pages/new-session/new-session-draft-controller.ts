@@ -1,6 +1,5 @@
 import { useSearchParams } from "@solidjs/router"
 import { createEffect, untrack } from "solid-js"
-import { createStore } from "solid-js/store"
 import { usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { useComments } from "@/context/comments"
 import { useLocal } from "@/context/local"
@@ -19,20 +18,6 @@ export function createNewSessionDraftController(workspace: { worktree: () => str
   const route = useSessionKey()
   const [searchParams, setSearchParams] = useSearchParams<{ draftId?: string; prompt?: string }>()
   const model = createPromptModelSelection({ agent: () => local.agent.current() })
-  const [seed, setSeed] = createStore({ applied: false })
-
-  // Wait for the profile's roster before applying the draft-specific agent choice.
-  createEffect(() => {
-    if (!prompt.ready()) return
-    if (seed.applied) {
-      prompt.capture().store[1]("agent", local.agent.current()?.name)
-      return
-    }
-    const agent = prompt.capture().store[0]().agent
-    if (!agent || !local.agent.list().some((item) => item.name === agent)) return
-    local.agent.set(agent, { draftID: searchParams.draftId })
-    setSeed("applied", true)
-  })
 
   useComposerCommands({ model })
 
