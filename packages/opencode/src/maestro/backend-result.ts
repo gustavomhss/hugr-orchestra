@@ -2,6 +2,9 @@ export * as BackendResult from "./backend-result"
 
 import { Option, Schema } from "effect"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
+import type { ToolSafety } from "@opencode-ai/core/tool-safety"
+import type { RecordRef } from "@opencode-ai/atlas-boundary/native-memory"
+import { AtlasMemory } from "./atlas-memory"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
 // Closed at every level: excess properties fail the decode.
@@ -44,8 +47,16 @@ type Terminal = {
   hostDetail?: string
 }
 
+// F4 cl.30: each Atlas Memory call of the execution Session with its own F3 outcome, keyed by tool call.
+export type Memory = {
+  reads: { outcome: AtlasMemory.Receipt["outcome"]; callID: string; refs?: RecordRef[] }[]
+  writes: { outcome: AtlasMemory.Receipt["outcome"]; callID: string; receiptRef?: RecordRef }[]
+}
+
 export type WorkResult = {
   schema: "backend-work-result-v1"
+  // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
+  taskId?: string
   card: { parsed: boolean; messageID?: string }
   outcome?: Card["outcome"]
   changes: Card["changes"]
@@ -54,14 +65,22 @@ export type WorkResult = {
   risks: Card["risks"]
   nextActions: Card["nextActions"]
   terminal: Terminal
+  memory: Memory
+  // Host fact set by the Task path: the write roots enforced for the child, worktree-relative; empty is read-only.
+  writeRoots?: string[]
+  // Host fact: whether the child's shell commands ran inside the write jail. `unenforced` means at least one ran
+  // without it (no sandbox on this host yet); `shellSandbox.reason` says why.
+  shellWrites?: ToolSafety.ShellFact["shellWrites"]
+  shellSandbox?: ToolSafety.ShellFact["shellSandbox"]
 }
 
 /**
  * Assemble `backend-work-result-v1` from the child's final message. Worker fields come only from a strictly decoded
  * card; a missing, duplicated or invalid card leaves them empty. Host failure or interruption overrides the card,
- * and the card can only lower `ended` to `blocked` (F4 cl.11).
+ * and the card can only lower `ended` to `blocked` (F4 cl.11). Memory outcomes come from the receipts in `session`
+ * (the execution Session's stored history) and the final message, and never touch any other field (F4 cl.30).
  */
-export function assemble(message: SessionV1.WithParts): WorkResult {
+export function assemble(message: SessionV1.WithParts, session: readonly SessionV1.WithParts[] = []): WorkResult {
   const text = message.parts.findLast((part) => part.type === "text")
   const card = text?.type === "text" ? parse(text.text) : undefined
   const host = terminal(message)
@@ -75,6 +94,7 @@ export function assemble(message: SessionV1.WithParts): WorkResult {
     risks: card?.risks ?? [],
     nextActions: card?.nextActions ?? [],
     terminal: { reason: host === "ended" && card?.outcome === "blocked" ? "blocked" : host },
+    memory: memory([...session.filter((stored) => stored.info.id !== message.info.id), message]),
   }
 }
 
@@ -85,11 +105,12 @@ export function assemble(message: SessionV1.WithParts): WorkResult {
  */
 export function hostEnded(input: {
   message?: SessionV1.WithParts
+  session?: readonly SessionV1.WithParts[]
   reason: "failed" | "interrupted" | "running"
   detail: string
 }): WorkResult {
   const base = input.message
-    ? assemble(input.message)
+    ? assemble(input.message, input.session)
     : {
         schema: "backend-work-result-v1" as const,
         card: { parsed: false },
@@ -98,8 +119,52 @@ export function hostEnded(input: {
         blockers: [],
         risks: [],
         nextActions: [],
+        memory: memory(input.session ?? []),
       }
   return { ...base, terminal: { reason: input.reason, hostDetail: input.detail } }
+}
+
+// Receipts are host-written by the Atlas Memory tools into their tool part's result metadata (F3 cl.24). A refused,
+// unavailable or uncertain write is reported as such, never as remembered.
+export function memory(messages: readonly SessionV1.WithParts[]): Memory {
+  const receipts = messages
+    .flatMap((message) => message.parts)
+    .flatMap((part) => {
+      if (part.type !== "tool") return []
+      const receipt: unknown =
+        ("metadata" in part.state ? part.state.metadata?.[AtlasMemory.RECEIPT_KEY] : undefined) ??
+        part.metadata?.[AtlasMemory.RECEIPT_KEY]
+      return isReceipt(receipt) ? [{ callID: part.callID, receipt }] : []
+    })
+  return {
+    reads: receipts
+      .filter((item) => item.receipt.op === "recall")
+      .map((item) => ({
+        outcome: item.receipt.outcome,
+        callID: item.callID,
+        ...(item.receipt.refs ? { refs: [...item.receipt.refs] } : {}),
+      })),
+    writes: receipts
+      .filter((item) => item.receipt.op === "emit")
+      .map((item) => ({
+        outcome: item.receipt.outcome,
+        callID: item.callID,
+        ...(item.receipt.ref ? { receiptRef: item.receipt.ref } : {}),
+      })),
+  }
+}
+
+function isReceipt(value: unknown): value is AtlasMemory.Receipt {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "schema" in value &&
+    value.schema === "atlas-memory-receipt-v1" &&
+    "op" in value &&
+    (value.op === "recall" || value.op === "emit") &&
+    "outcome" in value &&
+    typeof value.outcome === "string"
+  )
 }
 
 function parse(text: string): Card | undefined {

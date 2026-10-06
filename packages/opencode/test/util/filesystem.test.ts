@@ -3,6 +3,7 @@ import path from "path"
 import fs from "fs/promises"
 import { Filesystem } from "@/util/filesystem"
 import { tmpdir } from "../fixture/fixture"
+import { rethrow } from "../lib/rejection"
 
 describe("filesystem", () => {
   describe("exists()", () => {
@@ -186,7 +187,7 @@ describe("filesystem", () => {
       await using tmp = await tmpdir()
       const filepath = path.join(tmp.path, "does-not-exist.txt")
 
-      await expect(Filesystem.readText(filepath)).rejects.toThrow()
+      expect(await rethrow(Filesystem.readText(filepath))).toThrow()
     })
 
     test("reads UTF-8 content correctly", async () => {
@@ -215,14 +216,14 @@ describe("filesystem", () => {
       const filepath = path.join(tmp.path, "invalid.json")
       await fs.writeFile(filepath, "{ invalid json", "utf-8")
 
-      await expect(Filesystem.readJson(filepath)).rejects.toThrow()
+      expect(await rethrow(Filesystem.readJson(filepath))).toThrow()
     })
 
     test("throws for non-existent file", async () => {
       await using tmp = await tmpdir()
       const filepath = path.join(tmp.path, "does-not-exist.json")
 
-      await expect(Filesystem.readJson(filepath)).rejects.toThrow()
+      expect(await rethrow(Filesystem.readJson(filepath))).toThrow()
     })
 
     test("returns typed data", async () => {
@@ -257,7 +258,7 @@ describe("filesystem", () => {
       await using tmp = await tmpdir()
       const filepath = path.join(tmp.path, "does-not-exist.bin")
 
-      await expect(Filesystem.readBytes(filepath)).rejects.toThrow()
+      expect(await rethrow(Filesystem.readBytes(filepath))).toThrow()
     })
   })
 

@@ -25,7 +25,15 @@ describe("specialist name guard", () => {
 
   test("the only tracked occurrence of the name is the default label constant", () => {
     const hits = search(NAME)
-    expect(hits.filter((hit) => !(hit.file === ALLOWED_FILE && ALLOWED_LINE.test(hit.text)))).toEqual([])
+    const stray = hits.filter((hit) => !(hit.file === ALLOWED_FILE && ALLOWED_LINE.test(hit.text)))
+    if (stray.length > 0)
+      throw new Error(
+        [
+          `The backend specialist's default name may appear only in BACKEND_DEFAULT_LABEL (${ALLOWED_FILE}).`,
+          'Write "the backend specialist" or its id `backend` instead; see "Agent Names" in AGENTS.md.',
+          ...stray.map((hit) => `${hit.file}:${hit.line}: ${hit.text}`),
+        ].join("\n"),
+      )
     expect(hits).toHaveLength(1)
   })
 })

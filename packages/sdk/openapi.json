@@ -13496,6 +13496,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
           }
         },
         "description": "Update a stored credential label.",
@@ -13577,6 +13587,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
                 }
               }
             }
@@ -16228,6 +16248,3162 @@
         ]
       }
     },
+    "/api/relay/document": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.list",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RelayDocumentView"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "The project's workflow and hook documents, newest first. The shipped profiles are seeded once per server.",
+        "summary": "List Relay documents",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.list({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.create",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayDocumentView"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a document. A draft that does not compile yet is saved with its diagnostics.",
+        "summary": "Create Relay document",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayDocumentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.create({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.get",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayDocumentView"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "One document with its checksum and published version.",
+        "summary": "Get Relay document",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.get({\n  ...\n})"
+          }
+        ]
+      },
+      "patch": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.update",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayDocumentView"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Save a new version of the loaded one. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.",
+        "summary": "Save Relay document",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayDocumentUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.update({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.remove",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.",
+        "summary": "Delete Relay document",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.remove({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/version": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.versions",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RelayAuthoringVersion"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "A document's saved versions, newest first.",
+        "summary": "List document versions",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.versions({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/version/{versionID}": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.version",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "versionID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayAuthoringVersion"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "One saved version of a document.",
+        "summary": "Get document version",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.version({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/sprint": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.sprint",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelaySprintView"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Compile a workflow document to its sprint and the skill bindings resolved from the skill catalog.",
+        "summary": "Compile workflow",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.sprint({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/export": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.export",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayExport"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "A hook document as its relay.hook.v1 export, a workflow document as its compiled sprint.",
+        "summary": "Export Relay document",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.export({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/check": {
+      "post": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.check",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayArmCheckOutcome"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Grade one step of a workflow in the project directory without recording anything or charging retries.",
+        "summary": "Check workflow step",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayCheckInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.check({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/node-types": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.document.nodeTypes",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayNodeTypes"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "The workflow and hook node catalogs.",
+        "summary": "List Relay node types",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.document.nodeTypes({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/scope": {
+      "get": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.scope.list",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RelayAuthoringScope"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "The project's document scopes.",
+        "summary": "List Relay scopes",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.scope.list({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.scope.create",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayAuthoringScope"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a scope. A name equal to another scope's under case folding is a 409 duplicate-scope.",
+        "summary": "Create Relay scope",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayScopeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.scope.create({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/scope/{scopeID}": {
+      "patch": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.scope.update",
+        "parameters": [
+          {
+            "name": "scopeID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayAuthoringScope"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Rename or describe a scope.",
+        "summary": "Update Relay scope",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayScopeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.scope.update({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["relay documents"],
+        "operationId": "v2.relay.scope.remove",
+        "parameters": [
+          {
+            "name": "scopeID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Delete a scope and remove it from every document's tags.",
+        "summary": "Delete Relay scope",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.scope.remove({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/publish": {
+      "post": {
+        "tags": ["relay publish"],
+        "operationId": "v2.relay.publish.publish",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayDocumentView"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Publish the document's current version once it compiles. The signed-in principal is recorded as publishedBy.",
+        "summary": "Publish Relay document",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayPublishInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.publish.publish({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/document/{documentID}/unpublish": {
+      "post": {
+        "tags": ["relay publish"],
+        "operationId": "v2.relay.publish.unpublish",
+        "parameters": [
+          {
+            "name": "documentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayDocumentView"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Withdraw the published version. The signed-in principal is recorded as unpublishedBy.",
+        "summary": "Unpublish Relay document",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayUnpublishInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.publish.unpublish({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook": {
+      "get": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.list",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookInstalls"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "The project's installed hooks in evaluation order. A corrupt hooks.json is a 409 profile-invalid.",
+        "summary": "List installed hooks",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.list({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.install",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookInstall"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Pin the published version of a hook document for every session of the project, recording the signed-in principal.",
+        "summary": "Install hook",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayHookInstallInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.install({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/{installID}/update": {
+      "post": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.update",
+        "parameters": [
+          {
+            "name": "installID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookInstall"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Repin an install to its document's published version, keeping its ID, order and enabled state.",
+        "summary": "Update installed hook",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayHookUpdateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.update({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/{installID}/enable": {
+      "post": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.enable",
+        "parameters": [
+          {
+            "name": "installID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookInstall"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Enable an install; recorded.",
+        "summary": "Enable installed hook",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.enable({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/{installID}/disable": {
+      "post": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.disable",
+        "parameters": [
+          {
+            "name": "installID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookInstall"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Disable an install; recorded.",
+        "summary": "Disable installed hook",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.disable({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/order": {
+      "patch": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.order",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookInstalls"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Set the evaluation order. The list must name every install exactly once, else 409 order-mismatch.",
+        "summary": "Reorder installed hooks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayHookOrderInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.order({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/{installID}": {
+      "delete": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.uninstall",
+        "parameters": [
+          {
+            "name": "installID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Remove an install; recorded. Its ledger is kept.",
+        "summary": "Uninstall hook",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.uninstall({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/{installID}/decisions": {
+      "get": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.decisions",
+        "parameters": [
+          {
+            "name": "installID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RelayHookDecision"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "The most recent 500 decisions in the install's ledger, oldest first.",
+        "summary": "List hook decisions",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.decisions({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/relay/hook/repair": {
+      "post": {
+        "tags": ["relay hooks"],
+        "operationId": "v2.relay.hook.repair",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RelayHookRepaired"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RelayInvalidError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RelayInvalidError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RelayNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayNotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RelayConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RelayUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Only on this explicit request: a corrupt hooks.json (a regular file that does not decode or verify, or is over the size cap) is moved aside to a backup and replaced by an empty install list. A valid file, a symlink, a non-file or an unreadable file is never touched and answers 409.",
+        "summary": "Repair hooks.json",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelayHookRepairInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.relay.hook.repair({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/pty/{ptyID}/connect": {
       "get": {
         "tags": ["pty"],
@@ -16489,6 +19665,9 @@
           },
           {
             "$ref": "#/components/schemas/EventMaestroDispatchReserved"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroTaskBound"
           },
           {
             "$ref": "#/components/schemas/EventMessagePartDelta"
@@ -21518,6 +24697,59 @@
                   },
                   "type": {
                     "type": "string",
+                    "enum": ["maestro.task.bound"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "taskId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "memberID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "executionSessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "authoritySessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": ["host", "user", "dispatch", "governed"]
+                      }
+                    },
+                    "required": [
+                      "taskId",
+                      "projectID",
+                      "memberID",
+                      "executionSessionID",
+                      "authoritySessionID",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
                     "enum": ["message.part.delta"]
                   },
                   "properties": {
@@ -23056,6 +26288,9 @@
               },
               {
                 "$ref": "#/components/schemas/SyncEventMaestroDispatchReserved"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroTaskBound"
               }
             ]
           }
@@ -24063,6 +27298,21 @@
               }
             },
             "additionalProperties": false
+          },
+          "continuity": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "trigger": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "relay": {
+            "$ref": "#/components/schemas/ConfigV2Relay"
           },
           "experimental": {
             "type": "object",
@@ -27081,6 +30331,9 @@
             "$ref": "#/components/schemas/MaestroDispatchReserved"
           },
           {
+            "$ref": "#/components/schemas/MaestroTaskBound"
+          },
+          {
             "$ref": "#/components/schemas/MessagePartDelta"
           },
           {
@@ -27260,6 +30513,586 @@
           }
         },
         "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "RelayDocumentView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNode"
+            }
+          },
+          "connections": {
+            "$ref": "#/components/schemas/RelayAuthoringConnections"
+          },
+          "nodeGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNodeGroup"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringScope"
+            }
+          },
+          "isArchived": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "activeVersionId": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RelayAuthoringMeta"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "versionId": {
+            "type": "string"
+          },
+          "versionCounter": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "checksum": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "activeVersion": {
+            "$ref": "#/components/schemas/RelayAuthoringVersion"
+          },
+          "runnable": {
+            "type": "boolean"
+          },
+          "publishedBy": {
+            "type": "string"
+          },
+          "unpublishedBy": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "nodes",
+          "connections",
+          "tags",
+          "isArchived",
+          "active",
+          "activeVersionId",
+          "meta",
+          "createdAt",
+          "updatedAt",
+          "versionId",
+          "versionCounter",
+          "checksum",
+          "activeVersion",
+          "runnable"
+        ],
+        "additionalProperties": false
+      },
+      "RelayInvalidError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["RelayInvalidError"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "code", "message"],
+        "additionalProperties": false
+      },
+      "RelayNotFoundError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["RelayNotFoundError"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "code", "message"],
+        "additionalProperties": false
+      },
+      "RelayConflictError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["RelayConflictError"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "code", "message"],
+        "additionalProperties": false
+      },
+      "RelayUnavailableError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["RelayUnavailableError"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "code", "message"],
+        "additionalProperties": false
+      },
+      "RelayDocumentCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNode"
+            }
+          },
+          "connections": {
+            "$ref": "#/components/schemas/RelayAuthoringConnections"
+          },
+          "nodeGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNodeGroup"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RelayAuthoringMeta"
+          },
+          "isArchived": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelayDocumentUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNode"
+            }
+          },
+          "connections": {
+            "$ref": "#/components/schemas/RelayAuthoringConnections"
+          },
+          "nodeGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNodeGroup"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RelayAuthoringMeta"
+          },
+          "isArchived": {
+            "type": "boolean"
+          },
+          "versionId": {
+            "type": "string"
+          },
+          "expectedChecksum": {
+            "type": "string"
+          },
+          "force": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelaySprintView": {
+        "type": "object",
+        "properties": {
+          "sprint": {
+            "$ref": "#/components/schemas/RelaySprintSprint"
+          },
+          "skillBindings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "wp": {
+                  "type": "string"
+                },
+                "skill": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": ["combine", "replace"]
+                }
+              },
+              "required": ["wp", "skill", "sha256", "mode"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["sprint", "skillBindings"],
+        "additionalProperties": false
+      },
+      "RelayExport": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["hook"]
+              },
+              "definition": {
+                "$ref": "#/components/schemas/RelayHookV1"
+              }
+            },
+            "required": ["kind", "definition"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["workflow"]
+              },
+              "definition": {
+                "$ref": "#/components/schemas/RelaySprintSprint"
+              }
+            },
+            "required": ["kind", "definition"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "RelayCheckInput": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "string"
+          },
+          "counter": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "baseRef": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelayNodeTypes": {
+        "type": "object",
+        "properties": {
+          "workflow": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNodeTypeDescriptor"
+            }
+          },
+          "hook": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNodeTypeDescriptor"
+            }
+          }
+        },
+        "required": ["workflow", "hook"],
+        "additionalProperties": false
+      },
+      "RelayScopeInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "RelayPublishInput": {
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string"
+          },
+          "expectedChecksum": {
+            "type": "string"
+          }
+        },
+        "required": ["versionId"],
+        "additionalProperties": false
+      },
+      "RelayUnpublishInput": {
+        "type": "object",
+        "properties": {
+          "expectedChecksum": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelayHookInstalls": {
+        "type": "object",
+        "properties": {
+          "installs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayHookInstall"
+            }
+          }
+        },
+        "required": ["installs"],
+        "additionalProperties": false
+      },
+      "RelayHookInstallInput": {
+        "type": "object",
+        "properties": {
+          "document": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": ["document"],
+        "additionalProperties": false
+      },
+      "RelayHookUpdateInput": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelayHookOrderInput": {
+        "type": "object",
+        "properties": {
+          "installIDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["installIDs"],
+        "additionalProperties": false
+      },
+      "RelayHookDecision": {
+        "type": "object",
+        "properties": {
+          "ts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "event": {
+            "type": "string",
+            "enum": ["hook-decision"]
+          },
+          "decision": {
+            "type": "string"
+          },
+          "install": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "node": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["remind", "block", "approve", "verify", "repair", "record", "allow"]
+          },
+          "trigger": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "call": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "blocked",
+              "approved",
+              "rejected",
+              "cancelled",
+              "passed",
+              "failed",
+              "unavailable",
+              "repair-required",
+              "reminded",
+              "recorded",
+              "allowed"
+            ]
+          },
+          "deferred": {
+            "type": "boolean",
+            "enum": [true]
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "ts",
+          "event",
+          "decision",
+          "install",
+          "version",
+          "node",
+          "action",
+          "trigger",
+          "tool",
+          "session",
+          "call",
+          "subject",
+          "outcome",
+          "seq"
+        ],
+        "additionalProperties": false
+      },
+      "RelayHookRepairInput": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "required": ["confirm"],
+        "additionalProperties": false
+      },
+      "RelayHookRepaired": {
+        "type": "object",
+        "properties": {
+          "backup": {
+            "type": "string"
+          },
+          "installs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayHookInstall"
+            }
+          }
+        },
+        "required": ["backup", "installs"],
         "additionalProperties": false
       },
       "effect_HttpApiError_Forbidden": {
@@ -31840,6 +35673,73 @@
         "required": ["type", "id", "syncEvent"],
         "additionalProperties": false
       },
+      "SyncEventMaestroTaskBound": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.task.bound.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "taskId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "memberID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "executionSessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "authoritySessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["host", "user", "dispatch", "governed"]
+                  }
+                },
+                "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
       "ConfigMaestro": {
         "type": "object",
         "properties": {
@@ -31898,6 +35798,46 @@
           }
         },
         "required": ["path"],
+        "additionalProperties": false
+      },
+      "ConfigV2RelayJudge": {
+        "type": "object",
+        "properties": {
+          "backend": {
+            "type": "string",
+            "enum": ["stub", "api"]
+          },
+          "model": {
+            "type": "string"
+          },
+          "baseURL": {
+            "type": "string"
+          },
+          "apiKey": {
+            "type": "string"
+          },
+          "votes": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "maxContext": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "maxTokens": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfigV2Relay": {
+        "type": "object",
+        "properties": {
+          "judge": {
+            "$ref": "#/components/schemas/ConfigV2RelayJudge"
+          }
+        },
         "additionalProperties": false
       },
       "PolicyEffect": {
@@ -38088,6 +42028,74 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
+      "MaestroTaskBound": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.task.bound"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executionSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authoritySessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "enum": ["host", "user", "dispatch", "governed"]
+              }
+            },
+            "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
       "MessagePartDelta": {
         "type": "object",
         "properties": {
@@ -40437,6 +44445,1380 @@
           }
         },
         "required": ["directory"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringNode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "position": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "maxItems": 2,
+            "minItems": 2
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "typeVersion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["NaN"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["-Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          }
+        },
+        "required": ["id", "name", "type", "position", "parameters"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringEdge": {
+        "type": "object",
+        "properties": {
+          "node": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["main"]
+          },
+          "index": {
+            "type": "number",
+            "enum": [0]
+          }
+        },
+        "required": ["node", "type", "index"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringConnections": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "main": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RelayAuthoringEdge"
+                }
+              }
+            }
+          },
+          "required": ["main"],
+          "additionalProperties": false
+        }
+      },
+      "RelayAuthoringNodeGroup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nodeIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "name", "nodeIds"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringScope": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "description", "createdAt", "updatedAt"],
+        "additionalProperties": false
+      },
+      "RelaySprintMacro": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "RelaySprintControl": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          },
+          "assert": {
+            "type": "string"
+          },
+          "cmd": {
+            "type": "string"
+          },
+          "judge": {
+            "type": "string"
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "diff": {
+            "type": "boolean"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "host_check": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "RelaySprintDod": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "cmd": {
+            "type": "string"
+          }
+        },
+        "required": ["cmd"],
+        "additionalProperties": false
+      },
+      "RelaySprintWorkPackage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "macro": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["execute", "gate", "review", "inject", "human"]
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "self_check": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checklist": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelaySprintControl"
+            }
+          },
+          "dod": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelaySprintDod"
+            }
+          },
+          "file": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "RelaySprintSprint": {
+        "type": "object",
+        "properties": {
+          "brief": {
+            "type": "string"
+          },
+          "gen": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["NaN"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["-Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "retry_budget": {
+            "type": "integer"
+          },
+          "macros": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelaySprintMacro"
+            }
+          },
+          "work_packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelaySprintWorkPackage"
+            }
+          }
+        },
+        "required": ["work_packages"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringRelayMeta": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "number",
+            "enum": [1]
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["workflow", "hook"]
+          },
+          "sprint": {
+            "$ref": "#/components/schemas/RelaySprintSprint"
+          },
+          "names": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "profile": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelayAuthoringMeta": {
+        "type": "object",
+        "properties": {
+          "relay": {
+            "$ref": "#/components/schemas/RelayAuthoringRelayMeta"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelayAuthoringVersion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNode"
+            }
+          },
+          "connections": {
+            "$ref": "#/components/schemas/RelayAuthoringConnections"
+          },
+          "nodeGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringNodeGroup"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "isArchived": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "activeVersionId": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RelayAuthoringMeta"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "versionId": {
+            "type": "string"
+          },
+          "versionCounter": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "workflowId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "nodes",
+          "connections",
+          "tags",
+          "isArchived",
+          "active",
+          "activeVersionId",
+          "meta",
+          "createdAt",
+          "updatedAt",
+          "versionId",
+          "versionCounter",
+          "workflowId"
+        ],
+        "additionalProperties": false
+      },
+      "RelayHookTriggerParameters": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": ["read", "edit", "write", "command", "tool"]
+              },
+              "timing": {
+                "type": "string",
+                "enum": ["before", "after"]
+              }
+            },
+            "required": ["operation", "timing"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": ["session-start"]
+              },
+              "timing": {
+                "type": "string",
+                "enum": ["after"]
+              }
+            },
+            "required": ["operation", "timing"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": ["prompt"]
+              },
+              "timing": {
+                "type": "string",
+                "enum": ["before"]
+              }
+            },
+            "required": ["operation", "timing"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": ["session-idle"]
+              },
+              "timing": {
+                "type": "string",
+                "enum": ["after"]
+              }
+            },
+            "required": ["operation", "timing"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "RelayHookConditionParameters": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": ["path", "tool", "command", "event"]
+          },
+          "pattern": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          }
+        },
+        "required": ["field", "pattern"],
+        "additionalProperties": false
+      },
+      "RelayHookMessageParameters": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          }
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      },
+      "RelayHookVerifyParameters": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          },
+          "check": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          }
+        },
+        "required": ["message", "check"],
+        "additionalProperties": false
+      },
+      "RelayHookAllowParameters": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$"
+          }
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      },
+      "RelayHookNode": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookEventTrigger"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookTriggerParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookCondition"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookConditionParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookRemind"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookMessageParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookBlock"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookMessageParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookApprove"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookMessageParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookVerify"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookVerifyParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookRepair"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookMessageParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookRecord"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookMessageParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[^\\u0000]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["relay.hookAllow"]
+              },
+              "position": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "parameters": {
+                "$ref": "#/components/schemas/RelayHookAllowParameters"
+              },
+              "typeVersion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["NaN"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["-Infinity"]
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["Infinity", "-Infinity", "NaN"]
+                  }
+                ]
+              }
+            },
+            "required": ["id", "name", "type", "position", "parameters"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "RelayHookConnection": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          }
+        },
+        "required": ["from", "port", "to"],
+        "additionalProperties": false
+      },
+      "RelayHookV1": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "enum": ["relay.hook.v1"]
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayHookNode"
+            }
+          },
+          "connections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayHookConnection"
+            }
+          },
+          "binding": {
+            "type": "string",
+            "enum": ["host-required"]
+          },
+          "installed": {
+            "type": "boolean",
+            "enum": [false]
+          }
+        },
+        "required": ["schema", "name", "nodes", "connections", "binding", "installed"],
+        "additionalProperties": false
+      },
+      "RelayArmCheckOutcome": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "type": "string",
+                "enum": ["check"]
+              },
+              "i": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "wp": {
+                "type": "string"
+              },
+              "failing": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "macro": {
+                "type": "string"
+              }
+            },
+            "required": ["outcome", "i", "wp", "failing"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "type": "string",
+                "enum": ["complete"]
+              },
+              "i": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": ["outcome", "i"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "type": "string",
+                "enum": ["error"]
+              },
+              "error": {
+                "type": "string",
+                "enum": ["unknown-position"]
+              },
+              "position": {
+                "type": "string"
+              }
+            },
+            "required": ["outcome", "error", "position"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "RelayAuthoringParameterDescriptor": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "default": {},
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": ["value", "label"],
+              "additionalProperties": false
+            }
+          },
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["NaN"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["-Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": ["NaN"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["-Infinity"]
+              },
+              {
+                "type": "string",
+                "enum": ["Infinity", "-Infinity", "NaN"]
+              }
+            ]
+          },
+          "placeholder": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "label", "type", "default"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringNodeTypeDescriptor": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "maximum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringParameterDescriptor"
+            }
+          }
+        },
+        "required": ["type", "label", "inputs", "outputs", "parameters"],
+        "additionalProperties": false
+      },
+      "RelayHookInstall": {
+        "type": "object",
+        "properties": {
+          "installID": {
+            "type": "string",
+            "pattern": "^[^\\u0000]+$"
+          },
+          "document": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "installedBy": {
+            "type": "string"
+          },
+          "installedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/RelayHookV1"
+          }
+        },
+        "required": [
+          "installID",
+          "document",
+          "version",
+          "sha256",
+          "order",
+          "enabled",
+          "installedBy",
+          "installedAt",
+          "snapshot"
+        ],
         "additionalProperties": false
       },
       "EventModels-devRefreshed": {
@@ -43368,6 +48750,52 @@
         "required": ["id", "type", "properties"],
         "additionalProperties": false
       },
+      "EventMaestroTaskBound": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.task.bound"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executionSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authoritySessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "enum": ["host", "user", "dispatch", "governed"]
+              }
+            },
+            "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
       "EventMessagePartDelta": {
         "type": "object",
         "properties": {
@@ -44888,6 +50316,18 @@
     {
       "name": "projectCopy",
       "description": "Project copy management routes."
+    },
+    {
+      "name": "relay documents",
+      "description": "Relay authoring document routes."
+    },
+    {
+      "name": "relay publish",
+      "description": "Relay document publication routes."
+    },
+    {
+      "name": "relay hooks",
+      "description": "Installed Relay hook routes."
     },
     {
       "name": "pty",

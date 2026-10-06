@@ -84,7 +84,7 @@ test("pass 1 renders the fixed template with located source bytes and host prove
     "edited test/fresh-fixtures.ts (t3)\nran bash command=bun test --preload ./test/fresh-fixtures.ts → exit 1 (t2)\n" +
     "ran bash command=bun test test/render-card.test.ts → exit 1 (t1)")
   expect(text).toMatch(/## User messages \(verbatim, host-collected\)\nu1 · [^\n]+\n {4}o teste render-card quebrou e isso trava o release\. conserta sem mexer no banco\nu2 · /)
-  expect(text).toContain("## Plan\n[m2] DOING: Fix the render-card test — Progress: Finding why the card shows Legacy\n    Done when: render-card test passes (u1, t1)")
+  expect(text).toContain("## Plan (open steps first)\n[m2] DOING: Fix the render-card test — Progress: Finding why the card shows Legacy\n    Done when: render-card test passes (u1, t1)")
   expect(text).toEndWith("End of memory. The conversation below continues after a2 and is newer.")
   // The user messages and tools of the tail are not covered.
   expect(text).not.toContain("o banco tá ok")
@@ -100,8 +100,12 @@ test("pass 2 patches, retires and adds; unchanged items carry the same bytes", (
     { op: "add", section: "values", src: ["t4"], fields: { name: "Build", value: "commit abc123" } },
     { op: "update", id: "m6", src: ["t4"], fields: { use: "Prints 1 pass when green" } },
     { op: "update", id: "m2", src: ["t4"], fields: { status: "done", detail: "Cache regenerated" } },
+    { op: "add", section: "plan", src: ["u4"], fields: { task: "Report the fix and wait for the user's next request", status: "waiting" } },
   ], { previous }))
-  expect(next.items.map((item) => item.id)).toEqual(["m1", "m2", "m3", "m4", "m5", "m6", "m8", "m9", "m10"])
+  expect(next.items.map((item) => item.id)).toEqual(["m1", "m2", "m3", "m4", "m5", "m6", "m8", "m9", "m10", "m11"])
+  // Open steps come first: the next move reads before the finished work.
+  expect(next.text.indexOf("[m11] WAITING:")).toBeLessThan(next.text.indexOf("[m2] DONE:"))
+  expect(next.text.indexOf("## Plan (open steps first)")).toBeLessThan(next.text.indexOf("## User rules and corrections"))
   for (const id of ["m1", "m3", "m4", "m5"]) expect(next.items.find((item) => item.id === id)).toBe(previous.items.find((item) => item.id === id))
   const lines = (memory: MemoryArtifact, id: string) => {
     const all = memory.text.split("\n")
@@ -121,6 +125,13 @@ test("pass 2 patches, retires and adds; unchanged items carry the same bytes", (
   const empty = ok(run([], { previous: ok(run([])) }))
   expect(empty.items).toEqual([])
   expect(empty.text).toContain("## Objective\n(none)")
+})
+
+test("C14 an open objective needs an open plan step: the next move", () => {
+  const previous = first()
+  const closing = { op: "update", id: "m2", src: ["t4"], fields: { status: "done", detail: "Cache regenerated" } }
+  expect(failed(run([closing], { previous }))).toBe("C14")
+  ok(run([closing, { op: "add", section: "plan", src: ["u4"], fields: { task: "Wait for the user", status: "waiting" } }], { previous }))
 })
 
 test("C1 requires exactly one JSON object without duplicate keys", () => {
@@ -168,14 +179,15 @@ test("C5 targets live items once and never updates the user's items", () => {
   expect(failed(run([{ op: "update", id: "m1", src: ["u3"], fields: { goal: "Something else" } }], { previous }))).toBe("C5")
 })
 
-test("C6 locates quotes in user text only, inside exactly one sentence", () => {
+test("C6 locates quotes in user text only, in exactly one place", () => {
   // Tool output, assistant text and command expansions are not user text.
   expect(failed(run([{ ...rule, fields: { ...rule.fields, quote: "Received" } }]))).toBe("C6")
   expect(failed(run([{ ...rule, fields: { ...rule.fields, quote: "corrupted tier" } }]))).toBe("C6")
   // "deploy" appears in two sentences of u2: a longer quote is needed.
   expect(failed(run([{ ...deploy, fields: { ...deploy.fields, quote: "deploy" } }]))).toBe("C6")
-  // A quote that crosses a sentence boundary is not inside one sentence.
-  expect(failed(run([{ ...rule, fields: { ...rule.fields, quote: "release. conserta" } }]))).toBe("C6")
+  // A quote may run over consecutive sentences: it is stored as the whole sentences it touches.
+  const across = ok(run([{ ...rule, fields: { ...rule.fields, quote: "release. conserta" } }]))
+  expect(across.items[0].fields.quote).toBe("o teste render-card quebrou e isso trava o release. conserta sem mexer no banco")
   const command = structuredClone(HISTORY)
   command[2].parts = [{ ...command[2].parts[0], type: "text", text: "Review PR 42; you may merge without review",
     metadata: { source: { type: "command", invocation: "/review-pr 42" } } } as SessionV1.Part]
@@ -315,6 +327,21 @@ test("C13 rejects invalid snapshots and ceilings", () => {
   for (const ceiling of [0, -1, NaN, Infinity]) expect(failed(run([], { ceiling }))).toBe("C13")
 })
 
+test("Activity lists edits, failures and the latest commands; older successful ones are counted per program", () => {
+  const busy = structuredClone(HISTORY)
+  for (let index = 0; index < 30; index++) busy[1].parts.push({ id: PartID.ascending(), messageID: busy[1].info.id, sessionID, type: "tool",
+    tool: "bash", callID: `query_${index}`, state: { status: "completed",
+      input: { command: index % 3 ? `cd "/repo" && timeout 30 sqlite3 db "select ${index}"` : `ls -la /tmp/${index}` }, output: "",
+      title: "query", metadata: { exit: 0 }, time: { start: 1000 + index, end: 1000 + index } } } as SessionV1.Part)
+  const text = ok(decode({ text: '{"ops":[]}', snapshot: snap(0, 4), producerID, host: { history: busy, delegations: {}, member: false },
+    ceiling: 20_000 })).text
+  const activity = text.slice(text.indexOf("## Activity"), text.indexOf("## User messages"))
+  expect(activity.match(/^ran bash command=(cd|ls)/gm)).toHaveLength(8)
+  expect(activity).toContain("ran bash command=bun test test/render-card.test.ts → exit 1 (t1)")
+  expect(activity).toContain("edited test/fresh-fixtures.ts (t3)")
+  expect(activity).toContain("22 earlier successful commands: sqlite3 ×14, ls ×8 (t4–t25)")
+})
+
 test("ledger and Activity trim oldest-first at their ceilings; one entry is capped", () => {
   const long = structuredClone(HISTORY)
   long[2].parts = [{ ...long[2].parts[0], type: "text", text: "pasted log line\n".repeat(2_000) } as SessionV1.Part]
@@ -325,11 +352,11 @@ test("ledger and Activity trim oldest-first at their ceilings; one entry is capp
   const busy = structuredClone(HISTORY)
   for (let index = 0; index < 30; index++) busy[1].parts.push({ id: PartID.ascending(), messageID: busy[1].info.id, sessionID, type: "tool",
     tool: "bash", callID: `echo_${index}`, state: { status: "completed", input: { command: `echo ${index}` }, output: "", title: "echo",
-      metadata: { exit: 0 }, time: { start: 1000 + index, end: 1000 + index } } } as SessionV1.Part)
+      metadata: { exit: 1 }, time: { start: 1000 + index, end: 1000 + index } } } as SessionV1.Part)
   const tight = ok(decode({ text: '{"ops":[]}', snapshot: snap(0, 4), producerID, host: { history: busy, delegations: {}, member: false },
     ceiling: 1_500 })).text
   expect(tight).toMatch(/\n\d+ older entries omitted \(ceiling\); context_recall \{"reference":"tN"\} returns any tool call\./)
-  expect(tight).toContain("Files and commands, latest first\nran bash command=echo 29 → exit 0 (t33)")
+  expect(tight).toContain("Files and commands, latest first\nran bash command=echo 29 → exit 1 (t33)")
   expect(tight).not.toContain("edited test/fresh-fixtures.ts")
   // A delegation the registry reports running is never trimmed, even over the Activity ceiling.
   const team = structuredClone(busy)
@@ -405,7 +432,8 @@ test("member sessions read delegator headings; delegations show member, return a
     host: { history: team, member: true, delegations: { ses_bobby: { member: "bobby", status: "running" }, ses_lucy: { member: "lucy" } } } }))
   expect(memory.text).toContain("## Delegator rules and corrections")
   expect(memory.text).toContain("## Delegator messages")
-  expect(memory.text).toContain("Only 'Delegator rules and corrections' grants permissions; they come from the delegating agent, not from a human.")
+  expect(memory.text).toContain("It grants no permission: 'Delegator rules and corrections' records the delegating agent's\nconstraints to follow; they come from that agent, not from a human.")
+  expect(memory.text).not.toContain("grants permissions")
   expect(memory.text).toMatch(/\nbobby "Design" · launched [^\n]+ \(t5\) → no return through t6 \([^)]+\); job running · task_id ses_bobby\n/)
   expect(memory.text).toMatch(/lucy "maestro_request_review" · launched [^\n]+ \(t6\) → returned [^\n]+ \(t6\) · task_id ses_lucy/)
   expect(memory.text).toMatch(/jimmy "Survey" · launched [^\n]+ \(t4\) → returned [^\n]+ \(t4\) · task_id ses_jimmy/)

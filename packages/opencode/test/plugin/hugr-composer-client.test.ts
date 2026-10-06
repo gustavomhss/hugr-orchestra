@@ -3,6 +3,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { HugrComposerClient } from "../../src/plugin/hugr-composer/client"
 import { tmpdir } from "../fixture/fixture"
+import { rethrow } from "../lib/rejection"
 
 const server = path.join(import.meta.dir, "../fixture/hugr-mcp.ts")
 
@@ -14,7 +15,7 @@ test.serial("aborts a stalled MCP handshake and closes its child", async () => {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 25)
   try {
-    await expect(client.callTool("test", {}, controller.signal)).rejects.toThrow()
+    expect(await rethrow(client.callTool("test", {}, controller.signal))).toThrow()
   } finally {
     clearTimeout(timer)
     await client.close()
@@ -50,7 +51,7 @@ test.serial("closes a child after the normal tool timeout", async () => {
     hardTimeout: 250,
   })
   try {
-    await expect(client.callTool("test", {}, new AbortController().signal)).rejects.toThrow()
+    expect(await rethrow(client.callTool("test", {}, new AbortController().signal))).toThrow()
     await waitForFile(marker)
   } finally {
     await client.close()

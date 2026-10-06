@@ -15,6 +15,10 @@ export const Preferences = Schema.Struct({
 })
 const Bytes = 512 * 1024
 
+/** A project's profile directory under a host state directory: `preferences.json` and Relay's `hooks.json`. */
+export const profileDirectory = (stateDirectory: string, projectID: string) =>
+  path.join(stateDirectory, projectID, "profile")
+
 /** One project-bound helper/cache; the caller owns its Location/Instance lifetime. No new service or state writes. */
 export function makeLoader(fs: FSUtil.Interface, binding: {
   readonly directory: string
@@ -32,7 +36,7 @@ export function makeLoader(fs: FSUtil.Interface, binding: {
       Effect.mapError(() => new ToolSafety.Denied({ reason: "profile-project-root-acquisition" })),
     )
     if (FSUtil.contains(directory, root)) return yield* new ToolSafety.Denied({ reason: "profile-state-inside-project" })
-    const file = path.join(root, binding.projectID, "profile", "preferences.json")
+    const file = path.join(profileDirectory(root, binding.projectID), "preferences.json")
     const info = yield* fs.stat(file).pipe(
       Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
       Effect.mapError(() => new ToolSafety.Denied({ reason: "profile-stat-acquisition" })),

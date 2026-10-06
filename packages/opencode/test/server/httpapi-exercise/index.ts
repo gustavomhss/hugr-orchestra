@@ -32,7 +32,9 @@ import {
 } from "./environment"
 import { color, printHeader, printResults } from "./report"
 import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } from "./routing"
+import { integrationScenarios } from "./integration"
 import { mcpScenarios } from "./mcp"
+import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
 import { skillScenarios } from "./skill"
 import { disposeApps } from "./backend"
@@ -112,6 +114,7 @@ const scenarios: Scenario[] = [
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
+  ...relayScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),
@@ -589,67 +592,7 @@ const scenarios: Scenario[] = [
     .status(400, undefined, "status"),
   http.protected.get("/api/model", "v2.model.list").json(200, locationData(array)),
   http.protected.get("/api/provider", "v2.provider.list").json(200, locationData(array)),
-  http.protected.get("/api/integration", "v2.integration.list").json(200, locationData(array)),
-  http.protected
-    .get("/api/integration/{integrationID}", "v2.integration.get")
-    .at((ctx) => ({
-      path: route("/api/integration/{integrationID}", { integrationID: "missing" }),
-      headers: ctx.headers(),
-    }))
-    .json(200, object),
-  http.protected
-    .post("/api/integration/{integrationID}/connect/key", "v2.integration.connect.key")
-    .at((ctx) => ({
-      path: route("/api/integration/{integrationID}/connect/key", { integrationID: "missing" }),
-      headers: ctx.headers(),
-      body: { key: "test" },
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .post("/api/integration/{integrationID}/connect/oauth", "v2.integration.connect.oauth")
-    .at((ctx) => ({
-      path: route("/api/integration/{integrationID}/connect/oauth", { integrationID: "missing" }),
-      headers: ctx.headers(),
-      body: { methodID: "missing", inputs: {} },
-    }))
-    .status(500, undefined, "status"),
-  http.protected
-    .get("/api/integration/attempt/{attemptID}", "v2.integration.attempt.status")
-    .at((ctx) => ({
-      path: route("/api/integration/attempt/{attemptID}", { attemptID: "con_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(500, undefined, "status"),
-  http.protected
-    .post("/api/integration/attempt/{attemptID}/complete", "v2.integration.attempt.complete")
-    .at((ctx) => ({
-      path: route("/api/integration/attempt/{attemptID}/complete", { attemptID: "con_missing" }),
-      headers: ctx.headers(),
-      body: {},
-    }))
-    .status(500, undefined, "status"),
-  http.protected
-    .delete("/api/integration/attempt/{attemptID}", "v2.integration.attempt.cancel")
-    .at((ctx) => ({
-      path: route("/api/integration/attempt/{attemptID}", { attemptID: "con_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .delete("/api/credential/{credentialID}", "v2.credential.remove")
-    .at((ctx) => ({
-      path: route("/api/credential/{credentialID}", { credentialID: "cred_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .patch("/api/credential/{credentialID}", "v2.credential.update")
-    .at((ctx) => ({
-      path: route("/api/credential/{credentialID}", { credentialID: "cred_missing" }),
-      headers: ctx.headers(),
-      body: { label: "Work" },
-    }))
-    .status(204, undefined, "status"),
+  ...integrationScenarios,
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
   http.protected
     .get("/api/event", "v2.event.subscribe")
@@ -1510,10 +1453,11 @@ const scenarios: Scenario[] = [
       (body, ctx) =>
         Effect.gen(function* () {
           check(body === true, "summarize should return true")
+          // Summarize runs a working-memory pass; the legacy summary message is gone.
           const messages = yield* ctx.messages(ctx.state.id)
           check(
-            messages.some((message) => message.info.role === "assistant" && message.info.summary === true),
-            "summarize should create a summary assistant message",
+            !messages.some((message) => message.info.role === "assistant" && message.info.summary === true),
+            "summarize should not create a legacy summary message",
           )
           yield* ctx.llmWait(1)
         }),

@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "Connection type must be non-empty text without NUL"
+}

@@ -342,6 +342,7 @@
         "@opencode-ai/llm": "workspace:*",
         "@opencode-ai/maestro-arsenal": "workspace:*",
         "@opencode-ai/plugin": "workspace:*",
+        "@opencode-ai/relay": "workspace:*",
         "@opencode-ai/schema": "workspace:*",
         "@openrouter/ai-sdk-provider": "2.9.0",
         "@opentelemetry/api": "1.9.0",
@@ -767,6 +768,19 @@
         "@typescript/native-preview": "catalog:",
       },
     },
+    "packages/relay": {
+      "name": "@opencode-ai/relay",
+      "version": "0.0.0",
+      "dependencies": {
+        "@opencode-ai/schema": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "packages/schema": {
       "name": "@opencode-ai/schema",
       "dependencies": {
@@ -823,6 +837,8 @@
       "dependencies": {
         "@opencode-ai/core": "workspace:*",
         "@opencode-ai/protocol": "workspace:*",
+        "@opencode-ai/relay": "workspace:*",
+        "@opencode-ai/schema": "workspace:*",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -2024,6 +2040,8 @@
     "@opencode-ai/plugin": ["@opencode-ai/plugin@workspace:packages/plugin"],
 
     "@opencode-ai/protocol": ["@opencode-ai/protocol@workspace:packages/protocol"],
+
+    "@opencode-ai/relay": ["@opencode-ai/relay@workspace:packages/relay"],
 
     "@opencode-ai/schema": ["@opencode-ai/schema@workspace:packages/schema"],
 

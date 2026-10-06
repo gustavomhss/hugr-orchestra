@@ -10,7 +10,6 @@ import { SessionActivity } from "@/session/activity"
 import { Database } from "@opencode-ai/core/database/database"
 import { ProjectV2 } from "@opencode-ai/core/project"
 import { SessionContinuity } from "@/continuity/service"
-import { SessionCompaction } from "@/session/compaction"
 import { MessageV2 } from "@/session/message-v2"
 import { SessionPrompt } from "@/session/prompt"
 import { SessionRevert } from "@/session/revert"
@@ -18,6 +17,7 @@ import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
 import { SessionSummary } from "@/session/summary"
 import { Todo } from "@/session/todo"
+import { WriteRoots } from "@/maestro/write-roots"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { NamedError } from "@opencode-ai/core/util/error"
 import { Cause, Clock, Effect, Option, Schema, Scope } from "effect"
@@ -50,6 +50,11 @@ const tryParseJson = (text: string) =>
     catch: () => new HttpApiError.BadRequest({}),
   })
 
+// Write-root rules bind a delegated child's write scope (F2.14). Only the host writes them; a client that could add an
+// allow rule would widen a child's bound roots.
+const reservesWriteRoots = (permission: ReadonlyArray<{ readonly permission: string }> | undefined) =>
+  permission?.some((rule) => rule.permission === WriteRoots.PERMISSION) ?? false
+
 export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", (handlers) =>
   Effect.gen(function* () {
     const session = yield* Session.Service
@@ -57,7 +62,6 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     const shareSvc = yield* SessionShare.Service
     const promptSvc = yield* SessionPrompt.Service
     const revertSvc = yield* SessionRevert.Service
-    const compactSvc = yield* SessionCompaction.Service
     const runState = yield* SessionRunState.Service
     const agentSvc = yield* Agent.Service
     const permissionSvc = yield* Permission.Service
@@ -174,6 +178,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     })
 
     const create = Effect.fn("SessionHttpApi.create")(function* (ctx: { payload?: Session.CreateInput }) {
+      if (reservesWriteRoots(ctx.payload?.permission)) return yield* new HttpApiError.BadRequest({})
       return yield* shareSvc.create(ctx.payload)
     })
 
@@ -208,6 +213,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       params: { sessionID: SessionID }
       payload: typeof UpdatePayload.Type
     }) {
+      if (reservesWriteRoots(ctx.payload.permission)) return yield* new HttpApiError.BadRequest({})
       const current = yield* requireSession(ctx.params.sessionID)
       if (ctx.payload.title !== undefined) {
         yield* session.setTitle({ sessionID: ctx.params.sessionID, title: ctx.payload.title })
@@ -299,20 +305,8 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       payload: typeof SummarizePayload.Type
     }) {
       yield* revertSvc.cleanup(yield* requireSession(ctx.params.sessionID))
-      const messages = yield* SessionError.mapStorageNotFound(session.messages({ sessionID: ctx.params.sessionID }))
-      const defaultAgent = yield* agentSvc.defaultAgent()
-      const currentAgent = messages.findLast((message) => message.info.role === "user")?.info.agent ?? defaultAgent
-
-      yield* compactSvc.create({
-        sessionID: ctx.params.sessionID,
-        agent: currentAgent,
-        model: {
-          providerID: ctx.payload.providerID,
-          modelID: ctx.payload.modelID,
-        },
-        auto: ctx.payload.auto ?? false,
-      })
-      yield* promptSvc.loop({ sessionID: ctx.params.sessionID })
+      // Manual compaction runs a working-memory pass now; the legacy summary is gone.
+      yield* continuity.compact({ sessionID: ctx.params.sessionID, force: true })
       return true
     })
 

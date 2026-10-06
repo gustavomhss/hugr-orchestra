@@ -130,7 +130,7 @@ has a forced wall-clock interruption.
 | V9 | Compiler, local profile mappings, regeneration `--check`; unmapped criteria compile to nothing | [relay-profile.py](../bin/relay-profile.py), [profiles/](../profiles/) |
 | V10 | Ask/answer HTTP endpoints, checklist precondition, ticket/cap/deadline accounting, shared chain append | [daemon](../bin/relay-daemon.py); no authenticated actor boundary |
 | V11 | Offline must-pass comparison and textual attribution | `relay-spec.py amend-check`; no cryptographic signature, automatic mutation enforcement or full reachability proof |
-| V12 | Recorded wp-execute walking skeleton | [ledger fixture](fixtures/v12-walking-skeleton.ledger.jsonl), bounded below |
+| V12 | Recorded wp-execute walking skeleton | [ledger fixture](../test/fixtures/v12-walking-skeleton.ledger.jsonl), bounded below |
 
 V3's historical premise was wrong: the earlier regression guard had not recorded successful
 re-runs, so "the data exists; change the report" was insufficient. Recording `regression-item`

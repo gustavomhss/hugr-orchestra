@@ -1,0 +1,23 @@
+{
+  "ledger": "test/fixtures/mutants/sealed-keyed-spaced.ledger.jsonl",
+  "chain_intact": false,
+  "chain_detail": "REFUSED line 1: this is a KEYED chain (mac=hmac-sha256) — set RELAY_LEDGER_KEY to verify it. Validating it as plain would accept a forgery.",
+  "record_errors": [],
+  "controls": [],
+  "deterministic_total": 0,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": null,
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Broken or unusable record; sprint comparison not run."
+  },
+  "no_controls": true,
+  "escalated": false,
+  "result": "TAMPERED",
+  "exit": 1
+}

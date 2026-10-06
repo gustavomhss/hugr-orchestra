@@ -7,11 +7,15 @@ const check = Bun.argv.includes("--check")
 await Promise.all(
   (
     [
-      ["boundary", "host-context.ts"],
-      ["materialize", "own-snapshot.ts"],
+      ["boundary", "retrieval/src/host-context.ts"],
+      ["materialize", "retrieval/src/own-snapshot.ts"],
+      // F3 A3: the bound Memory header read alone, for hosts that must not reach recall, fold or write.
+      ["native-header", "adapter-io/src/native-header.ts"],
+      // F3 A1/A3: the bound Memory composition (recall, exact fold, write, reconcile) for the backend seat's tools.
+      ["native-memory", "adapter-io/src/native-bound.ts"],
     ] as const
   ).map(async ([name, file]) => {
-    const entry = path.join(root, "foundation/atlas/packages/retrieval/src", file)
+    const entry = path.join(root, "foundation/atlas/packages", file)
     const result = await Bun.build({
       entrypoints: [entry],
       target: "node",

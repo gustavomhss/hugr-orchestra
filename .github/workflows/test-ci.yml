@@ -2,7 +2,8 @@ name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
 # with a .ci-run.json request ({ package, args }). This workflow runs exactly those tests, then deletes the branch.
-# A package with a package.json runs `bun test`; a Python package (requirements-dev.txt, no package.json) runs pytest.
+# The request names its runner (`bun` or `pytest`). A request without one falls back to the files: a package.json means
+# `bun test`, otherwise requirements-dev.txt means pytest.
 on:
   push:
     branches:
@@ -38,12 +39,19 @@ jobs:
               exit 2
               ;;
           esac
-          if [ -f "packages/$package/package.json" ]; then
+          runner=$(jq -r '.runner // ""' .ci-run.json | tr -d '\r')
+          if [ -z "$runner" ] && [ -f "packages/$package/package.json" ]; then
             runner=bun
-          elif [ -f "packages/$package/requirements-dev.txt" ]; then
+          elif [ -z "$runner" ] && [ -f "packages/$package/requirements-dev.txt" ]; then
             runner=pytest
-          else
-            echo "::error::packages/$package does not exist"
+          fi
+          case "$runner" in
+            bun) required=package.json ;;
+            pytest) required=requirements-dev.txt ;;
+            *) required="" ;;
+          esac
+          if [ -z "$required" ] || [ ! -f "packages/$package/$required" ]; then
+            echo "::error::packages/$package cannot run ${runner:-any} tests"
             exit 2
           fi
           echo "package=$package" >> "$GITHUB_OUTPUT"

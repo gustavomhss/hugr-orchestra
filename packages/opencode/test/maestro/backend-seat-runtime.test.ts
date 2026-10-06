@@ -129,11 +129,13 @@ it.instance("backend loads its entry skill, reads a companion and cannot load an
     expect(tools.skill).toBeDefined()
 
     // Seat skills stay out of the instance-wide list and are offered only to the native seat.
-    expect((yield* skills.all()).map((item) => item.name)).not.toContain("backend-implement")
-    expect((yield* skills.available(backend)).map((item) => item.name)).toEqual(["backend-implement"])
-    expect((yield* skills.available(yield* agents.get("build"))).map((item) => item.name)).not.toContain(
-      "backend-implement",
+    const listed = (yield* skills.all()).map((item) => item.name)
+    expect(backendSkills.names.filter((name) => listed.includes(name))).toEqual([])
+    expect((yield* skills.available(backend)).map((item) => item.name).toSorted()).toEqual(
+      backendSkills.names.toSorted(),
     )
+    const offeredToBuild = (yield* skills.available(yield* agents.get("build"))).map((item) => item.name)
+    expect(backendSkills.names.filter((name) => offeredToBuild.includes(name))).toEqual([])
 
     const loaded = yield* call(tools.skill, { name: "backend-implement" })
     expect(Exit.isSuccess(loaded)).toBe(true)

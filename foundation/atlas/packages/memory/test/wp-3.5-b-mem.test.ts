@@ -13,7 +13,7 @@
 // digest is `<filled-at-freeze>` (simulated) — resolved by disciplined judgment, not a real freeze hash.
 
 import { describe, it, expect } from "vitest"
-import type { MemoryRecord, MemoryStore, TaskMemoryEntry } from "../src/types.js"
+import type { MemoryRecord, MemoryStore, PrMemoryEntry, TaskMemoryEntry } from "../src/types.js"
 import type { ResumeUnit } from "../src/respawn.js"
 import {
   versioned,
@@ -23,6 +23,7 @@ import {
   makeRespawn,
   foldArchiveFromRecord,
   archiveTaskFold,
+  prClosingFold,
 } from "../src/respawn.js"
 
 /** A deep clone to another machine = an independent copy of the git-tracked record (no shared refs). */
@@ -174,5 +175,22 @@ describe("MEM-13 — recall fires at re-spawn (push, not pull) off the archived 
     expect(second).toEqual(first)
     // and it is a copy, not an alias of mutable archive state.
     expect(second).not.toBe(first)
+  })
+})
+
+describe("F3 clause 14 — the pr closing fold (owner ruling F3-D2)", () => {
+  it("projects exactly decisions, reviewOutcomes and knowledgeDelta, dropping prId and ref", () => {
+    const pr: PrMemoryEntry = {
+      prId: "#41",
+      decisions: ["ship the guard"],
+      reviewOutcomes: ["approve"],
+      knowledgeDelta: [{ id: "k1" } as never],
+      ref: "commit-abc",
+    }
+    expect(prClosingFold(pr)).toEqual({
+      decisions: ["ship the guard"],
+      reviewOutcomes: ["approve"],
+      knowledgeDelta: [{ id: "k1" }],
+    })
   })
 })

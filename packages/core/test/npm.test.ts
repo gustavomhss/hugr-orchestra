@@ -6,6 +6,7 @@ import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { Global } from "@opencode-ai/core/global"
 import { Npm } from "@opencode-ai/core/npm"
 import { tmpdir } from "./fixture/tmpdir"
+import { rethrow } from "./lib/rejection"
 
 const win = process.platform === "win32"
 
@@ -78,7 +79,7 @@ describe("Npm.install", () => {
 
     await Npm.install(tmp.path)
 
-    await expect(fs.stat(path.join(tmp.path, "node_modules", "prod-pkg"))).resolves.toBeDefined()
-    await expect(fs.stat(path.join(tmp.path, "node_modules", "dev-pkg"))).rejects.toThrow()
+    expect(await fs.stat(path.join(tmp.path, "node_modules", "prod-pkg"))).toBeDefined()
+    expect(await rethrow(fs.stat(path.join(tmp.path, "node_modules", "dev-pkg")))).toThrow()
   })
 })

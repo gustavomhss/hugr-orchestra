@@ -1,5 +1,6 @@
 import { afterEach, expect } from "bun:test"
 import { Database } from "@opencode-ai/core/database/database"
+import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { Skill } from "../../src/skill"
@@ -262,6 +263,10 @@ it.instance(
         risks: [],
         nextActions: [],
         terminal: { reason: "interrupted", hostDetail: "Governed Task denied: reserved-child-incomplete" },
+        taskId: expect.stringMatching(/^tsk_[0-9a-f]{64}$/),
+        memory: { reads: [], writes: [] },
+        writeRoots: [],
+        ...(yield* ToolSafetySandbox.status()),
       })
       if (!child) throw new Error("missing child")
       const childUser = yield* sessions.updateMessage({

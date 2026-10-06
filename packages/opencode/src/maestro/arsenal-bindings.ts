@@ -51,6 +51,7 @@ import { ArsenalVerification } from "@/maestro/arsenal-verification"
 import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
 import { canonicalMemberId } from "./roster"
+import { WriteRoots } from "./write-roots"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -608,7 +609,7 @@ export const make = Effect.gen(function* () {
         Effect.gen(function* () {
           const local = yield* InstanceState.get(state).pipe(Effect.orDie)
           return yield* effect.pipe(
-            Effect.provideService(ToolSafety.RuntimeProfileLoader, local.loadProfile),
+            Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, () => sessions.get(session.id).pipe(Effect.orDie))),
             Effect.provideService(ArsenalCompletion.NativeHost, host),
             Effect.provideService(ToolSafety.NativeHost, approvalHost),
             Effect.provideService(ToolSafety.NativeContext, { directory: session.directory, projectID: session.projectID }),

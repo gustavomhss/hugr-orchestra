@@ -1,5 +1,6 @@
 import { afterEach, describe, expect } from "bun:test"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
+import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
 import { Database } from "@opencode-ai/core/database/database"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
@@ -250,7 +251,12 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   }
 })
 
-const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [] }
+// No writePaths in these dispatches: the host binds a read-only backend child and reports it, with the shell fact this
+// host gives a child that ran no command.
+const shell = await Effect.runPromise(ToolSafetySandbox.status())
+// Every backend Task binds a host-generated logical task (F2.11), and no Atlas Memory tool ran in these children.
+const host = { taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] } }
+const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [], ...host, ...shell }
 
 describe("tool.task backend-result", () => {
   it.instance("decodes a valid card into the work result", () =>
@@ -267,6 +273,9 @@ describe("tool.task backend-result", () => {
         risks: card.risks,
         nextActions: [],
         terminal: { reason: "ended" },
+        writeRoots: [],
+        ...host,
+        ...shell,
       })
     }),
   )
@@ -459,6 +468,9 @@ describe("tool.task backend-result", () => {
         card: { parsed: true, messageID: result.childMessageID },
         ...card,
         terminal: { reason: "ended" },
+        writeRoots: [],
+        ...host,
+        ...shell,
       })
     }),
   )

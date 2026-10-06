@@ -23,11 +23,12 @@ import { Permission } from "@/permission"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Git } from "@/git"
 import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
-import { readAuthorization } from "@/maestro/authorization"
-import { readValidation } from "@/maestro/validation-record"
-import { readContext } from "@/maestro/context-record"
+import { GroundedSkills } from "@/maestro/grounded-skills"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { AtlasResume } from "@/maestro/atlas-resume"
 import { BackendWork } from "@/maestro/backend-work"
+import { LogicalTask } from "@/maestro/logical-task"
+import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -96,6 +97,8 @@ const BaseParameterFields = {
   authorizationID: Schema.optional(Schema.String).annotate({
     description: "AuthorizationGranted ID for current team dispatch.",
   }),
+  writePaths: WriteRoots.Param,
+  memoryUnit: AtlasResume.Param,
 }
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
@@ -109,14 +112,14 @@ export const Parameters = Schema.Struct({
 })
 
 function renderOutput(input: {
-  sessionID: SessionID
+  id: string
   state: "running" | "completed" | "error"
   summary?: string
   text: string
 }) {
   const tag = input.state === "error" ? "task_error" : "task_result"
   return [
-    `<task id="${input.sessionID}" state="${input.state}">`,
+    `<task id="${input.id}" state="${input.state}">`,
     ...(input.summary ? [`<summary>${input.summary}</summary>`] : []),
     `<${tag}>`,
     input.text,
@@ -182,18 +185,12 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
-      const childPermissions = GovernedTaskReservation.childPermissions({
-        parent,
-        next,
-        primaryTools: cfg.experimental?.primary_tools,
-      })
-      let reservedChildPermissions:
-        | readonly {
-            readonly permission: string
-            readonly pattern: string
-            readonly action: "allow" | "deny" | "ask"
-          }[]
-        | undefined
+      const childPermissions = yield* WriteRoots.bind(
+        nextID,
+        params.writePaths,
+        GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }),
+      )
+      let reservedChildPermissions: readonly WriteRoots.Rule[] | undefined
       if (params.authorizationID) {
         if (caller?.id !== "maestro" || caller.native !== true) {
           return yield* Effect.fail(new Error("Authorized Task requires Maestro"))
@@ -221,12 +218,9 @@ export const TaskTool = Tool.define(
         replayReserved = true
         requireCompletedReplay = true
       }
-      const resumed = params.task_id
-        ? yield* sessions.get(SessionID.make(params.task_id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
-        : undefined
-      if (resumed && (resumed.parentID !== ctx.sessionID || canonicalMemberId(resumed.agent) !== nextID)) {
-        return yield* Effect.fail(new Error("Task resume denied: task is not direct child for selected agent"))
-      }
+      const strictTask = nextID === "backend" || params.governed !== undefined || params.authorizationID !== undefined
+      const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
+        parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
       if (params.governed) {
         const message = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
           Effect.provideService(Database.Service, database),
@@ -285,7 +279,7 @@ export const TaskTool = Tool.define(
           subagentType: params.subagent_type,
           prompt: params.prompt,
           model: params.model,
-          taskID: params.task_id,
+          taskID: resumed?.id,
           sessionID: ctx.sessionID,
           agent: ctx.agent,
           agentID: ctx.agentID,
@@ -381,6 +375,7 @@ export const TaskTool = Tool.define(
         })
       }
       const session = governedChildID ? reserved : resumed
+      if (!governedChildID) yield* WriteRoots.rebind(sessions, resumed, childPermissions)
       const permissionSnapshot = reservedChildPermissions
       if (
         reserved &&
@@ -433,6 +428,11 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error("Governed Task denied: reservation-child-permission-mismatch"))
       }
 
+      const logical = strictTask
+        ? yield* LogicalTask.ensure({ executionSessionID: nextSession.id, authoritySessionID: ctx.sessionID,
+            projectID: parent.projectID, memberID: nextID, ...LogicalTask.origin(governedChildID, !!params.governed) })
+        : undefined
+      const shownID = logical?.taskId ?? nextSession.id
       const placement = yield* InstanceState.context
       const completionReceipt = yield* completion.beforeDispatch({
         sessionID: ctx.sessionID, taskID: nextSession.id, callID: ctx.callID ?? "",
@@ -463,6 +463,8 @@ export const TaskTool = Tool.define(
       const work = BackendWork.track({
         enabled: nextID === "backend",
         sessionID: nextSession.id,
+        taskId: logical?.taskId,
+        writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
 
@@ -508,12 +510,13 @@ export const TaskTool = Tool.define(
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
-          output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
+          output: renderOutput({ id: shownID, state: "completed", text: output }),
         }
       }
 
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
+      const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
         // Session-start hooks run after reservation and can change the repository.
@@ -533,20 +536,8 @@ export const TaskTool = Tool.define(
           )
         }
         const parts = yield* ops.resolvePromptParts(params.prompt)
-        const authorizationID = params.authorizationID
-        const own = authorizationID
-          ? yield* Effect.gen(function* () {
-              const authorization = yield* readAuthorization(authorizationID)
-              const validation = authorization ? yield* readValidation(authorization.validationRecordID) : undefined
-              const context = validation?.contextRecordID ? yield* readContext(validation.contextRecordID) : undefined
-              return context?.mode === "GROUNDED"
-                ? context.skills.map((skill) => ({
-                    type: "text" as const,
-                    synthetic: true,
-                    text: `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
-                  }))
-                : []
-            }).pipe(Effect.provideService(Database.Service, database))
+        const own = params.authorizationID
+          ? yield* GroundedSkills.parts(params.authorizationID).pipe(Effect.provideService(Database.Service, database))
           : []
         const beforeModel = params.authorizationID
           ? reserveDispatch({
@@ -575,12 +566,12 @@ export const TaskTool = Tool.define(
             },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
-            parts: [...parts, ...own],
+            parts: [...parts, ...own, ...resume],
           },
           beforeModel ? { beforeModel } : undefined,
         )
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
-        yield* work.record(result)
+        yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -632,7 +623,7 @@ export const TaskTool = Tool.define(
                   ...(workResult ? { workResult } : {}),
                 },
                 text: renderOutput({
-                  sessionID: nextSession.id,
+                  id: shownID,
                   state,
                   summary:
                     state === "completed"
@@ -663,7 +654,7 @@ export const TaskTool = Tool.define(
           title: params.description,
           metadata: work.attach({ ...metadata, background: true, jobId: nextSession.id }),
           output: renderOutput({
-            sessionID: nextSession.id,
+            id: shownID,
             state: "running",
             summary: "Background task updated",
             text: BACKGROUND_UPDATED,
@@ -693,7 +684,7 @@ export const TaskTool = Tool.define(
           title: params.description,
           metadata: work.attach({ ...metadata, background: true, jobId: info.id }),
           output: renderOutput({
-            sessionID: nextSession.id,
+            id: shownID,
             state: "running",
             summary: "Background task started",
             text: BACKGROUND_STARTED,
@@ -739,7 +730,7 @@ export const TaskTool = Tool.define(
                 ...metadata,
                 ...(completionEvidence.value ? { completion: completionEvidence.value } : {}),
               }),
-              output: renderOutput({ sessionID: nextSession.id, state: "completed", text: result?.output ?? "" }),
+              output: renderOutput({ id: shownID, state: "completed", text: result?.output ?? "" }),
             }
           }),
         (_, exit) =>

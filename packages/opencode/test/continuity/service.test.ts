@@ -211,10 +211,10 @@ it.instance("native compaction archives durable old history but supplies only su
   }).pipe(Effect.provide(environment([plan])))
 }), 30_000)
 
-for (const config of [{ continuity: { enabled: false } }, { continuity: { trigger: 0.9 } }]) {
+for (const config of [{ continuity: { enabled: false } }, { continuity: { trigger: 0.8 } }]) {
   it.instance(`no maintenance starts below the configured trigger or when disabled: ${JSON.stringify(config)}`, () => Effect.gen(function* () {
     yield* Effect.gen(function* () {
-      // Seed reports 50,000 tokens on a 200,000-token window: 25%, below 0.9 and irrelevant when disabled.
+      // Seed reports 50,000 tokens on a 200,000-token window: 25%, below 0.8 and irrelevant when disabled.
       const sessionID = yield* seed()
       const jobs = yield* BackgroundJob.Service
       expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toEqual([])
@@ -315,7 +315,7 @@ it.instance("a parent request built before the current memory waits for a turn t
   }).pipe(Effect.provide(environment([first, second])))
 }), 60_000)
 
-it.instance("C13: history that grows during a pass without an advance discards the result", () => Effect.gen(function* () {
+it.instance("C13: history that grows during a pass without an advance keeps the result; the growth stays native", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
   yield* Effect.gen(function* () {
     const sessionID = yield* seed()
@@ -326,8 +326,11 @@ it.instance("C13: history that grows during a pass without an advance discards t
       id: MessageID.ascending(), time: { created: Date.now() } }
     yield* sessions.updateMessage(user)
     yield* Deferred.succeed(first.release, undefined)
-    yield* terminal(hit.jobID, "completed", "discarded")
-    expect((yield* prepare(sessionID)).system).toEqual([])
+    // A long turn keeps adding steps while maintenance runs: the memory still applies and the new message is in the tail.
+    yield* terminal(hit.jobID, "completed", "applied")
+    const prepared = yield* prepare(sessionID)
+    expect(prepared.system[0]).toContain(FIRST)
+    expect(prepared.messages.at(-1)!.info.id).toBe(user.id)
   }).pipe(Effect.provide(environment([first])))
 }), 30_000)
 

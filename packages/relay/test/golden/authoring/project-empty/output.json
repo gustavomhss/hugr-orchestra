@@ -1,0 +1,17 @@
+{
+  "name": "Empty",
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "tags": [],
+  "meta": {
+    "relay": {
+      "schema": 1,
+      "kind": "workflow",
+      "sprint": {
+        "work_packages": []
+      },
+      "names": {}
+    }
+  }
+}

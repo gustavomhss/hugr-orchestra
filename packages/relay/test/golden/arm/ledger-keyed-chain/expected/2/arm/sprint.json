@@ -1,0 +1,1 @@
+{"gen":9,"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"A-ok","cmd":"true"}]},{"id":"B","instructions":"do B","checklist":[{"id":"B-file","cmd":"test -f b.txt"}]}]}

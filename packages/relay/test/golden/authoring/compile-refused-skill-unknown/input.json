@@ -1,0 +1,172 @@
+{
+  "op": "compile",
+  "document": {
+    "name": "Title",
+    "nodes": [
+      {
+        "id": "relay-start",
+        "name": "Workflow start",
+        "type": "relay.startTrigger",
+        "typeVersion": 1,
+        "position": [
+          16,
+          240
+        ],
+        "parameters": {
+          "relayBrief": "Exact author intent\n",
+          "relayRetryBudget": 2
+        }
+      },
+      {
+        "id": "first\n",
+        "name": "Same name",
+        "type": "relay.execute",
+        "typeVersion": 1,
+        "position": [
+          240,
+          240
+        ],
+        "parameters": {
+          "title": "Same name",
+          "macro": "phase",
+          "instructions": "Do it\n\n",
+          "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+          "skill": "repo:absent",
+          "skillMode": "combine",
+          "text": "",
+          "file": ""
+        }
+      },
+      {
+        "id": "second",
+        "name": "Same name · second",
+        "type": "relay.review",
+        "typeVersion": 1,
+        "position": [
+          464,
+          240
+        ],
+        "parameters": {
+          "title": "Same name",
+          "macro": "phase",
+          "instructions": "Review",
+          "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+          "skill": "",
+          "skillMode": "combine",
+          "text": "",
+          "file": ""
+        }
+      }
+    ],
+    "connections": {
+      "Same name": {
+        "main": [
+          [
+            {
+              "node": "Same name · second",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Workflow start": {
+        "main": [
+          [
+            {
+              "node": "Same name",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [
+      {
+        "id": "phase",
+        "name": "Phase",
+        "description": "Context\n",
+        "nodeIds": [
+          "first\n",
+          "second"
+        ]
+      }
+    ],
+    "tags": [],
+    "meta": {
+      "relay": {
+        "schema": 1,
+        "kind": "workflow",
+        "sprint": {
+          "brief": "Exact author intent\n",
+          "gen": 7,
+          "retry_budget": 2,
+          "extra": {
+            "retained": true
+          },
+          "macros": [
+            {
+              "id": "phase",
+              "title": "Phase",
+              "instructions": "Context\n",
+              "extra": 3
+            }
+          ],
+          "work_packages": [
+            {
+              "id": "first\n",
+              "title": "Same name",
+              "macro": "phase",
+              "instructions": "Do it\n\n",
+              "self_check": [
+                "Evidence?"
+              ],
+              "checklist": [
+                {
+                  "id": "check\r\n",
+                  "assert": "Keep\tbytes\n",
+                  "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                  "context": [
+                    "a.md"
+                  ],
+                  "origin": "test"
+                }
+              ],
+              "dod": [
+                {
+                  "cmd": "test -s evidence.txt"
+                }
+              ]
+            },
+            {
+              "id": "second",
+              "title": "Same name",
+              "macro": "phase",
+              "kind": "review",
+              "instructions": "Review",
+              "checklist": [
+                {
+                  "id": "review",
+                  "judge": "Keep exact\n",
+                  "blocking": true
+                }
+              ]
+            }
+          ]
+        },
+        "names": {
+          "first\n": "Same name",
+          "second": "Same name · second"
+        }
+      }
+    }
+  },
+  "skills": {
+    "repo:review": {
+      "id": "repo:review",
+      "content": "# Review\n\nUse evidence.\n\n",
+      "sha256": "a243b08dfc315dea53948c4f60942399cbd66112859793876e144f14c3859197"
+    }
+  }
+}

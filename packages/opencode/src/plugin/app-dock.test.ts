@@ -79,7 +79,7 @@ test("AppDockPlugin executes posts dock.rpc envelope and resolves matching resul
     expect(typeof envelope.id).toBe("string")
     expect(envelope.id.length).toBeGreaterThan(0)
     deliver({ type: "dock.rpc.result", id: envelope.id, ok: true, value: { count: 2 } })
-    await expect(promise).resolves.toBe('{\n  "count": 2\n}')
+    expect(await promise).toBe('{\n  "count": 2\n}')
 })
 
 test("AppDockPlugin asks scoped dock permission before sending RPC", async () => {
@@ -97,7 +97,7 @@ test("AppDockPlugin asks scoped dock permission before sending RPC", async () =>
     const envelope = sent[0] as { id: string; op: string }
     expect(envelope.op).toBe("evaluate")
     deliver({ type: "dock.rpc.result", id: envelope.id, ok: true, value: "ok" })
-    await expect(promise).resolves.toBe('"ok"')
+    expect(await promise).toBe('"ok"')
 })
 
 test("AppDockPlugin ignores results for other request ids", async () => {
@@ -109,7 +109,7 @@ test("AppDockPlugin ignores results for other request ids", async () => {
     deliver({ type: "dock.rpc.result", id: "other", ok: true, value: 1 })
     await new Promise((resolve) => setTimeout(resolve, 0))
     deliver({ type: "dock.rpc.result", id: envelope.id, ok: true, value: 2 })
-    await expect(promise).resolves.toBe("2")
+    expect(await promise).toBe("2")
 })
 
 test("AppDockPlugin rejects with error message from result", async () => {
@@ -121,7 +121,7 @@ test("AppDockPlugin rejects with error message from result", async () => {
     expect(envelope.op).toBe("click")
     expect(envelope.args.ref).toBe(7)
     deliver({ type: "dock.rpc.result", id: envelope.id, ok: false, error: { message: "Element ref 7 is gone" } })
-    await expect(promise).resolves.toBe("Element ref 7 is gone")
+    expect(await promise).toBe("Element ref 7 is gone")
 })
 
 test("AppDockPlugin passes typed args through envelope", async () => {
@@ -139,8 +139,8 @@ test("AppDockPlugin passes typed args through envelope", async () => {
     expect(goEnvelope.args.command).toBe("back")
     deliver({ type: "dock.rpc.result", id: envelope.id, ok: true, value: "done" })
     deliver({ type: "dock.rpc.result", id: goEnvelope.id, ok: true, value: "gone" })
-    await expect(promise).resolves.toBe('"done"')
-    await expect(go).resolves.toBe('"gone"')
+    expect(await promise).toBe('"done"')
+    expect(await go).toBe('"gone"')
 })
 
 test("AppDockPlugin routes coordinate clicks and scoped closes without destructive defaults", async () => {
@@ -152,14 +152,14 @@ test("AppDockPlugin routes coordinate clicks and scoped closes without destructi
     const clickEnvelope = sent[0] as { id: string; op: string; args: Record<string, unknown> }
     expect(clickEnvelope).toMatchObject({ op: "clickAt", args: { x: 12, y: 34 } })
     deliver({ type: "dock.rpc.result", id: clickEnvelope.id, ok: true, value: { ok: true } })
-    await expect(click).resolves.toBe("{\n  \"ok\": true\n}")
+    expect(await click).toBe("{\n  \"ok\": true\n}")
 
     const close = hooks.tool.dock_close.execute({ tabID: "tab-1" }, context)
     await new Promise((resolve) => setTimeout(resolve, 0))
     const closeEnvelope = sent[1] as { id: string; op: string; args: Record<string, unknown> }
     expect(closeEnvelope).toMatchObject({ op: "close", args: { tabID: "tab-1" } })
     deliver({ type: "dock.rpc.result", id: closeEnvelope.id, ok: true, value: [] })
-    await expect(close).resolves.toBe("[]")
+    expect(await close).toBe("[]")
 })
 
 test("workspace pending is nonterminal and leaves full target for first admission", async () => {
@@ -245,8 +245,8 @@ test("browser envelopes omit additive native fields and preserve coordinate prec
   expect((f.sent[1] as Envelope).args).toEqual({ ref: 7, text: "" })
   expect(Object.keys((f.sent[1] as Envelope).args)).toEqual(["ref", "text"])
   expect(f.sent[2]).toMatchObject({ op: "clickAt", args: { x: 12, y: 34 } })
-  await expect(hooks.tool.dock_click.execute({ ref: 7, x: 12 }, context)).resolves.toBe("dock_click requires both x and y")
-  await expect(hooks.tool.dock_click.execute({}, context)).resolves.toBe("dock_click requires ref or both x and y")
+  expect(await hooks.tool.dock_click.execute({ ref: 7, x: 12 }, context)).toBe("dock_click requires both x and y")
+  expect(await hooks.tool.dock_click.execute({}, context)).toBe("dock_click requires ref or both x and y")
   expect(f.sent.length).toBe(3)
   f.sent.forEach((sent) => f.deliver({ type: "dock.rpc.result", id: (sent as Envelope).id, ok: true, value: "ok" }))
   await Promise.all([read, type, click])
@@ -266,7 +266,7 @@ test("browser dock_read forwards tree-shape args exactly and keeps browser error
   expect(args).toEqual({ budget: 50, maxText: undefined, mode: "a11y", format: "tree", actionable: true, visible: false })
   expect(Object.keys(args)).toEqual(["budget", "maxText", "mode", "format", "actionable", "visible"])
   f.deliver({ type: "dock.rpc.result", id: (f.sent[0] as Envelope).id, ok: false, error: { message: "Browser read failed" } })
-  await expect(shaped).resolves.toBe("Browser read failed")
+  expect(await shaped).toBe("Browser read failed")
   // A native binding rejects shape args; the rejection stays visible instead of being ignored.
   const id = (f.sent[1] as Envelope).id
   f.deliver({ type: "dock.rpc.native-pending", id, backend: "linux-atspi", scopeKind: "workspace" })
@@ -276,7 +276,7 @@ test("browser dock_read forwards tree-shape args exactly and keeps browser error
   // The browser shape `mode` is not native input policy: a browser read timeout stays plain text and posts no cancel.
   const slow = fakePort()
   const timed = (createAppDockHooks(slow.port, { timeoutMs: 25 }) as Required<Hooks>).tool.dock_read.execute({ mode: "skeleton" }, context)
-  await expect(timed).resolves.toBe("App Dock read request timed out")
+  expect(await timed).toBe("App Dock read request timed out")
   await turn()
   expect(slow.sent.map((sent) => (sent as Envelope).type)).toEqual(["dock.rpc"])
 })
@@ -305,7 +305,7 @@ test("native read selectors/action/default click/input mode are wired without im
 test("permission denial retains existing behavior and posts no request", async () => {
   const f = fakePort()
   const hooks = createAppDockHooks(f.port) as Required<Hooks>
-  await expect(hooks.tool.dock_type.execute({ ref: 7, text: "text" }, { ...context, ask: async () => { throw new Error("Permission denied") } })).resolves.toBe("Permission denied")
+  expect(await hooks.tool.dock_type.execute({ ref: 7, text: "text" }, { ...context, ask: async () => { throw new Error("Permission denied") } })).toBe("Permission denied")
   expect(f.sent).toEqual([])
 })
 
@@ -322,7 +322,7 @@ test("routing checks exact message type and does not confuse native notification
   f.deliver({ type: "dock.rpc.result", id: "foreign", ok: true, value: "wrong" })
   await turn()
   f.deliver({ type: "dock.rpc.result", id, ok: false, error: { message: "Browser error unchanged" } })
-  await expect(work).resolves.toBe("Browser error unchanged")
+  expect(await work).toBe("Browser error unchanged")
 })
 
 test("native intent and admission preserve backend/code/outcome/result in model-visible JSON", async () => {
@@ -444,7 +444,10 @@ test("native outer timeout is conservative unknown plus original-ID cancellation
   f.deliver(admission(ids[0]))
   expect(JSON.parse(await admitted as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock wait request timed out", outcome: "unknown", target: admission(ids[0]).target, hint: busy })
   expect(JSON.parse(await intent as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock click request timed out", outcome: "unknown", hint: busy })
-  await expect(browser).resolves.toBe("App Dock click request timed out")
+  // A plain await, not expect().resolves: resolves waits by running a nested event loop, and on Windows Bun 1.3.14
+  // cannot fire a timer from it while it is inside another timer's callbacks. Here it would run inside the drain
+  // that timed out `intent`, so `browser`'s timer never fired and the whole test process spun forever.
+  expect(await browser).toBe("App Dock click request timed out")
   await turn()
   expect(f.sent.slice(3)).toEqual([{ type: "dock.rpc.cancel", id: ids[0] }, { type: "dock.rpc.cancel", id: ids[1] }])
   expect(remove.mock.calls.length).toBe(1)
@@ -457,14 +460,14 @@ test("pending requests are bounded per port and settlement recovers admission ca
   const hooks = createAppDockHooks(f.port) as Required<Hooks>
   const work = Array.from({ length: 32 }, () => hooks.tool.dock_list.execute({}, context))
   await turn()
-  await expect(hooks.tool.dock_list.execute({}, context)).resolves.toBe("App Dock request capacity exhausted")
+  expect(await hooks.tool.dock_list.execute({}, context)).toBe("App Dock request capacity exhausted")
   expect(f.sent.length).toBe(32)
   f.sent.forEach((sent) => f.deliver({ type: "dock.rpc.result", id: (sent as Envelope).id, ok: true, value: "done" }))
   await Promise.all(work)
   const next = hooks.tool.dock_list.execute({}, context)
   await turn()
   f.deliver({ type: "dock.rpc.result", id: (f.sent[32] as Envelope).id, ok: true, value: "next" })
-  await expect(next).resolves.toBe('"next"')
+  expect(await next).toBe('"next"')
 })
 
 test("post failures release pending capacity/timers/listeners and preserve native transport failure", async () => {
@@ -474,7 +477,7 @@ test("post failures release pending capacity/timers/listeners and preserve nativ
   f.port.postMessage = (message) => { f.sent.push(message); throw new Error("Port gone") }
   const hooks = createAppDockHooks(f.port, { timeoutMs: 25 }) as Required<Hooks>
   for (const _ of Array.from({ length: 33 }))
-    await expect(hooks.tool.dock_list.execute({}, { ...context, abort: controller.signal })).resolves.toBe("Port gone")
+    expect(await hooks.tool.dock_list.execute({}, { ...context, abort: controller.signal })).toBe("Port gone")
   expect(JSON.parse(await hooks.tool.dock_click.execute({ ref: "n:button" }, { ...context, abort: controller.signal }) as string)).toEqual({ backend: "linux-atspi", code: "transport-error", message: "Port gone", outcome: "unknown" })
   expect(remove.mock.calls.length).toBe(34)
   controller.abort()

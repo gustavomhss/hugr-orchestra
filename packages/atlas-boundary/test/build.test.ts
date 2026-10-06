@@ -3,11 +3,21 @@ import { cp, mkdir, mkdtemp, realpath, rm, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
+// Eighteen real generator runs over four bundles: Windows runners need well over two minutes.
 test("real generator reproduces committed bytes and rejects every generated-file mismatch or absence", async () => {
   const root = path.resolve(import.meta.dir, "../../..")
   const fixture = await realpath(await mkdtemp(path.join(tmpdir(), "atlas-boundary-build-")))
   const base = path.join(fixture, "packages/atlas-boundary")
-  const files = ["boundary.js", "boundary.d.ts", "materialize.js", "materialize.d.ts"]
+  const files = [
+    "boundary.js",
+    "boundary.d.ts",
+    "materialize.js",
+    "materialize.d.ts",
+    "native-header.js",
+    "native-header.d.ts",
+    "native-memory.js",
+    "native-memory.d.ts",
+  ]
   const run = async (check: boolean) => {
     const child = Bun.spawn([process.execPath, "script/build.ts", ...(check ? ["--check"] : [])], {
       cwd: base,
@@ -65,4 +75,4 @@ test("real generator reproduces committed bytes and rejects every generated-file
   } finally {
     await rm(fixture, { recursive: true, force: true })
   }
-}, 120_000)
+}, 480_000)

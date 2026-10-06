@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/tdd-feature-untracked-defect.ledger.jsonl",
+  "keys": {}
+}

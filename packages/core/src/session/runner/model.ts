@@ -71,6 +71,7 @@ export type Error =
   | VariantUnavailableError
   | UnsupportedApiError
   | Integration.AuthorizationError
+  | Credential.InheritedError
 
 export interface Interface {
   readonly resolve: (session: SessionSchema.Info) => Effect.Effect<Model, Error>

@@ -1,0 +1,38 @@
+{
+  "sprint": {
+    "retry_budget": 1,
+    "work_packages": [
+      {
+        "id": "target\n",
+        "instructions": "do target\n",
+        "checklist": [
+          {
+            "id": "actual",
+            "cmd": "printf actual >> selected; false"
+          }
+        ],
+        "macro": "scope"
+      },
+      {
+        "id": "scope.target",
+        "instructions": "do scope.target",
+        "checklist": [
+          {
+            "id": "sibling",
+            "cmd": "printf sibling >> wrong; true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "position": "scope.target\n",
+    "counter": "0\n"
+  },
+  "fires": [
+    {}
+  ]
+}

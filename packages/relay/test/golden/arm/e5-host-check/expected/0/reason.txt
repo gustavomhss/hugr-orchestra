@@ -1,0 +1,1 @@
+Relay gate 'A' is NOT satisfied. Still failing:; permissions. Address these, then finish. Instructions: do A

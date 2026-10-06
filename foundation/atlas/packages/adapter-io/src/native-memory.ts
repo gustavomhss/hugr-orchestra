@@ -31,8 +31,13 @@
 // unit id — it never consults `spawnFold`/`makeRespawn`, whose `archive.find` returns the FIRST own match in
 // log order, i.e. the OLDEST checkpoint. Without a ref (no host receipt, clause 16) exactly one own record
 // is selected; several refuse `ambiguous` (owner ruling F3-D3); log order is never read as "latest".
-// The `pr` projection (`PrClosingFold`, clause 14) belongs to work package A2 and does not exist yet: a `pr`
-// resolution returns the exact verified `record` and no `fold`.
+// The same rules hold for a `task` and a `pr` unit; only the projection differs (`taskClosingFold` /
+// `prClosingFold`, clause 14).
+//
+// ── ATLAS OWNS A RULE'S FRECENCY (clause 22, owner ruling F3-D6) ─────────────────────────────────────────
+// `write` and `reconcile` complete a `project` proposal with `INITIAL_PROJECT_FRECENCY`, so both derive the
+// same record and the same ref. An entry that carries its own `frecency` is refused `template-invalid` before
+// the emit door sees it; everything else is still judged by the door's own gates.
 //
 // ── ADMISSION CONCURRENCY, BOUNDED (clause 26, owner ruling F3-D8) ───────────────────────────────────────
 // Correct for ONE writer process per storage root. The emit door reads the incumbent/cap state, scans, then
@@ -40,7 +45,8 @@
 // writing `project` rules for one owner at once can each pass the cap against the same pre-state. Each
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
-import { put, taskClosingFold, tok, versioned } from "@atlas/memory"
+import { isAbsolute } from "node:path"
+import { INITIAL_PROJECT_FRECENCY, prClosingFold, put, taskClosingFold, tok, versioned } from "@atlas/memory"
 import type {
   Awareness,
   ClosingFold,
@@ -50,6 +56,9 @@ import type {
   MemoryRecord,
   NamedScanner,
   Orientation,
+  PrClosingFold,
+  PrMemoryEntry,
+  ProjectMemoryEntry,
   ResumeUnit,
   TaskMemoryEntry,
   TurnHeader,
@@ -60,6 +69,8 @@ import type { DurableMemory, MemoryRead } from "./memory-store.js"
 import { createMemoryEmit } from "./memory-emit.js"
 import type { MemoryRejected } from "./memory-emit.js"
 import { createMemoryRead } from "./memory-read.js"
+import { createAwarenessStore } from "./awareness-store.js"
+import { createDurableOrientation } from "./orientation-store.js"
 import { KNOWN_SCANNERS, detectAvailableScanner, runScanner } from "./scanner.js"
 import type { ScannerBinarySpec } from "./scanner.js"
 
@@ -69,9 +80,10 @@ export interface AtlasBinding {
   readonly source: { readonly worktree: string; readonly revision: string }
   /** The stable roster member id (clause 2). The ONLY owner this surface writes as, and the owner it reads as. */
   readonly memoryOwner: MemberId
-  /** Ids the SAME member's records were written under before its id was renamed. `recall` and `resolveFold` read a
-   *  record owned by one of them as the binding owner's; nothing is ever written or minted under them, and the stored
-   *  record is served unchanged. NOT in clause 1's field set — added for a harness seat rename. */
+  /** Ids the SAME member's records were written under before its id was renamed. `recall`, `resolveFold` and the
+   *  header's rules read a record owned by one of them as the binding owner's; nothing is ever written or minted
+   *  under them, and a stored record is served unchanged. NOT in clause 1's field set — added for a harness seat
+   *  rename. */
   readonly legacyOwners?: readonly MemberId[]
   /** Execution provenance. Carried for the host's receipt; never written into an entry or record (clause 3). */
   readonly execution: {
@@ -124,14 +136,14 @@ export type FoldRefusal =
   | "store-partial"
   | "store-unavailable"
   | "ambiguous"
-/** Clause 15. `fold` is present for a `task` unit; a `pr` projection is A2's (see the header). */
+/** Clause 15. `fold` is the `ClosingFold` of a `task` unit and the `PrClosingFold` of a `pr` unit. */
 export type FoldVerdict =
   | {
       readonly ok: true
       readonly unit: ResumeUnit
       readonly ref: RecordRef
       readonly record: MemoryRecord
-      readonly fold?: ClosingFold
+      readonly fold: ClosingFold | PrClosingFold
     }
   | { readonly ok: false; readonly refusal: FoldRefusal; readonly reason: string }
 
@@ -145,13 +157,20 @@ export type ReconcileVerdict =
   | { readonly present: true; readonly ref: RecordRef }
   | { readonly present: false; readonly store: StoreState }
 
+/** A `project` rule as a seat proposes it: Atlas owns the initial `frecency` (clause 22, work package A2), so the
+ *  bound write takes no caller-supplied score. */
+export type ProjectRuleProposal = Omit<ProjectMemoryEntry, "frecency">
+/** The entries the bound write and reconcile doors accept: a seat's own `task`/`pr` checkpoint or `project` rule.
+ *  `logbook` is orchestrator-only and never reaches a seat's binding. */
+export type BoundEntry = TaskMemoryEntry | PrMemoryEntry | ProjectRuleProposal
+
 export interface NativeMemory {
   readonly binding: AtlasBinding
   header(awareness: Awareness, orientation: Orientation): BoundHeader
   recall(query: BoundRecallQuery): BoundRecall
   resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict
-  write(entry: MemoryEntry): WriteVerdict
-  reconcile(entry: MemoryEntry): ReconcileVerdict
+  write(entry: BoundEntry): WriteVerdict
+  reconcile(entry: BoundEntry): ReconcileVerdict
 }
 
 export function createNativeMemory(input: AtlasBinding): NativeMemory {
@@ -202,8 +221,16 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       return refuse("foreign-owner", `record ${ref.eventId} belongs to '${record.owner}', not '${owner}'`)
     if (!isOwnUnit(record, unit))
       return refuse("unit-mismatch", `record ${ref.eventId} is not the ${unit.kind} '${unit.id}'`)
-    const base = { ok: true as const, unit: { kind: unit.kind, id: unit.id }, ref, record }
-    return unit.kind === "task" ? { ...base, fold: taskClosingFold(record.entry as TaskMemoryEntry) } : base
+    return {
+      ok: true,
+      unit: { kind: unit.kind, id: unit.id },
+      ref,
+      record,
+      fold:
+        unit.kind === "task"
+          ? taskClosingFold(record.entry as TaskMemoryEntry)
+          : prClosingFold(record.entry as PrMemoryEntry),
+    }
   }
 
   function isOwnUnit(record: MemoryRecord, unit: ResumeUnit): boolean {
@@ -216,18 +243,7 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
   return {
     binding,
 
-    header(awareness, orientation): BoundHeader {
-      const read = store.read()
-      const rules = storeStateOf(read)
-      const state = { awareness: facetStates(awareness), rules }
-      if (rules === "unavailable") return { state, bound: { rulesWords: 0, method: "whitespace-words" } }
-      const header = createMemoryRead({ store: frozen(read, store.path), actor: owner }).header(awareness, orientation)
-      return {
-        header,
-        state,
-        bound: { rulesWords: header.rules.reduce((n, r) => n + tok(r), 0), method: "whitespace-words" },
-      }
-    },
+    header: (awareness, orientation) => boundHeader(binding, store, awareness, orientation),
 
     recall(query): BoundRecall {
       const q = narrowRecall(query)
@@ -251,17 +267,70 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
     resolveFold,
 
     write(entry): WriteVerdict {
-      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(entry)
+      const complete = withAtlasFrecency(entry)
+      if (complete === undefined) {
+        return {
+          ok: false,
+          refusal: "template-invalid",
+          reason: "`frecency` is assigned by Atlas policy (INITIAL_PROJECT_FRECENCY); an entry may not supply it",
+        }
+      }
+      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(complete)
       return verdict.ok ? { ok: true, record: verdict.record, ref: refOfRecord(verdict.record) } : verdict
     },
 
     reconcile(entry): ReconcileVerdict {
       const read = store.read()
       const state = storeStateOf(read)
-      const ref = admissibleRef(entry, owner)
+      const complete = withAtlasFrecency(entry)
+      const ref = complete === undefined ? undefined : admissibleRef(complete, owner)
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
     },
+  }
+}
+
+/** The part of `AtlasBinding` a header read needs (clauses 1, 2, 30). A header read writes nothing and mints no
+ *  receipt, so it takes no execution provenance, and a host never has to fabricate one to read it. */
+export type HeaderBinding = Pick<AtlasBinding, "storage" | "memoryOwner" | "legacyOwners">
+
+/** Clauses 6-9 as one host read: the bound running header for `memoryOwner` (and its `legacyOwners`), with the
+ *  shared Awareness and Orientation slabs assembled from the SAME storage root's own stores — the slabs
+ *  `compose.ts` builds for the CLI/MCP header, without its `ATLAS_ACTOR ?? git user.email` owner (clause 4).
+ *  Reads only; an Awareness or Orientation source that cannot be assembled throws, and the host renders that
+ *  as a degraded header (clause 10). */
+export function readBoundHeader(input: HeaderBinding): BoundHeader {
+  const binding = freezeBinding(input)
+  const root = binding.storage.root
+  return boundHeader(
+    binding,
+    createDurableMemory(root),
+    createAwarenessStore(root).read(),
+    createDurableOrientation(root).orientation(),
+  )
+}
+
+/** Clause 7. A legacy owner's `project` rules rank as the binding owner's own: the read door ranks a snapshot in
+ *  which those records carry `memoryOwner`, so a rule kept under the member's former id stays in its header and
+ *  the same rule text under both ids folds to one. The log itself is never rewritten. */
+function boundHeader(
+  binding: HeaderBinding,
+  store: DurableMemory,
+  awareness: Awareness,
+  orientation: Orientation,
+): BoundHeader {
+  const owner = binding.memoryOwner
+  const legacy = new Set(binding.legacyOwners ?? [])
+  const read = store.read()
+  const rules = storeStateOf(read)
+  const state = { awareness: facetStates(awareness), rules }
+  if (rules === "unavailable") return { state, bound: { rulesWords: 0, method: "whitespace-words" } }
+  const own = { ...read, store: read.store.map((r) => (legacy.has(r.owner) ? { ...r, owner } : r)) }
+  const header = createMemoryRead({ store: frozen(own, store.path), actor: owner }).header(awareness, orientation)
+  return {
+    header,
+    state,
+    bound: { rulesWords: header.rules.reduce((n, r) => n + tok(r), 0), method: "whitespace-words" },
   }
 }
 
@@ -272,6 +341,16 @@ export function storeStateOf(read: MemoryRead): StoreState {
 }
 
 const refuse = (refusal: FoldRefusal, reason: string): FoldVerdict => ({ ok: false, refusal, reason })
+
+/** Clause 22: the entry the emit door judges. A `project` proposal gains `INITIAL_PROJECT_FRECENCY`; an entry
+ *  carrying its own `frecency` is `undefined`, because a seat never sets a rule's rank. */
+function withAtlasFrecency(entry: BoundEntry): MemoryEntry | undefined {
+  // A runtime non-object reaches the emit door as is, which refuses it `undetermined-kind`.
+  if (typeof entry !== "object" || entry === null) return entry
+  if ("frecency" in entry) return undefined
+  if ("rule" in entry) return { ...entry, frecency: INITIAL_PROJECT_FRECENCY }
+  return entry
+}
 
 /** The exact event `DurableMemory.append` writes for `record` — the same `versioned` seam, so the ref a
  *  write returns is the key the next read finds it under. */
@@ -349,7 +428,7 @@ function scannerFor(binding: AtlasBinding): { readonly scanner?: NamedScanner } 
 /** Clause 1: a deep, frozen COPY, so neither the caller's object nor a later mutation of it can move the
  *  owner or the root after composition. Validated, because an empty owner or root is a host bug that would
  *  otherwise surface as an `unowned` refusal or a write into `cwd`. */
-function freezeBinding(input: AtlasBinding): AtlasBinding {
+function freezeBinding<T extends HeaderBinding>(input: T): T {
   if (typeof input.memoryOwner !== "string" || input.memoryOwner === "") {
     throw new Error("native-memory: AtlasBinding.memoryOwner must be a non-empty roster member id")
   }
@@ -360,7 +439,7 @@ function freezeBinding(input: AtlasBinding): AtlasBinding {
   ) {
     throw new Error("native-memory: AtlasBinding.legacyOwners must be non-empty ids other than memoryOwner")
   }
-  if (typeof input.storage?.root !== "string" || !input.storage.root.startsWith("/")) {
+  if (typeof input.storage?.root !== "string" || !isAbsolute(input.storage.root)) {
     throw new Error("native-memory: AtlasBinding.storage.root must be an absolute path")
   }
   return deepFreeze(structuredClone(input))

@@ -3,6 +3,7 @@ import { Effect, Layer, Option } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { CodeMode, OpenAPI, Tool } from "../src/index.js"
 import { inputTypeScript, outputTypeScript } from "../src/tool-schema.js"
+import { rethrow } from "./rejection.js"
 
 const baseUrl = "http://localhost:4096"
 type Document = OpenAPI.Document
@@ -491,9 +492,9 @@ describe("OpenAPI.fromSpec", () => {
     expect(url.searchParams.get("nullable")).toBe("null")
     expect(url.searchParams.get("constructor")).toBe("safe")
     expect(client.requests[0]!.headers.meta).toBe("a=b,c=d")
-    await expect(Effect.runPromise(tool.run({ keys: [undefined] }).pipe(Effect.provide(client.layer)))).rejects.toThrow(
-      "unsupported nested value",
-    )
+    expect(
+      await rethrow(Effect.runPromise(tool.run({ keys: [undefined] }).pipe(Effect.provide(client.layer)))),
+    ).toThrow("unsupported nested value")
   })
 
   test("skips unsupported parameter encodings and malformed security", () => {
@@ -621,7 +622,7 @@ describe("OpenAPI.fromSpec", () => {
       "test",
     )
     if (!Tool.isDefinition(duplicate)) throw new Error("duplicate auth tool was not generated")
-    await expect(Effect.runPromise(duplicate.run({}).pipe(Effect.provide(client.layer)))).rejects.toThrow(
+    expect(await rethrow(Effect.runPromise(duplicate.run({}).pipe(Effect.provide(client.layer))))).toThrow(
       "multiple credentials",
     )
 
@@ -733,9 +734,9 @@ describe("OpenAPI.fromSpec", () => {
     )
     if (!Tool.isDefinition(tool)) throw new Error("test was not generated")
 
-    await expect(
-      Effect.runPromise(tool.run({ filter: { value: undefined } }).pipe(Effect.provide(client.layer))),
-    ).rejects.toThrow("unsupported nested value")
+    expect(
+      await rethrow(Effect.runPromise(tool.run({ filter: { value: undefined } }).pipe(Effect.provide(client.layer)))),
+    ).toThrow("unsupported nested value")
     expect(resolutions).toEqual([])
     expect(client.requests).toEqual([])
   })
@@ -763,7 +764,7 @@ describe("OpenAPI.fromSpec", () => {
     expect(client.requests[0]!.headers["content-type"]).toBe("application/merge-patch+json")
     const cyclic: Record<string, unknown> = {}
     cyclic.self = cyclic
-    await expect(Effect.runPromise(tool.run({ body: cyclic }).pipe(Effect.provide(client.layer)))).rejects.toThrow(
+    expect(await rethrow(Effect.runPromise(tool.run({ body: cyclic }).pipe(Effect.provide(client.layer))))).toThrow(
       "Invalid JSON body",
     )
   })
@@ -777,15 +778,10 @@ describe("OpenAPI.fromSpec", () => {
     const malformed = recordingClient(() => new Response("{", { headers: { "content-type": "application/json" } }))
     const chunked = recordingClient(() => new Response(new Uint8Array(50 * 1024 * 1024 + 1)))
 
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(oversized.layer)))).rejects.toThrow(
-      "response exceeds 50 MiB",
-    )
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(malformed.layer)))).rejects.toThrow(
-      "returned malformed JSON",
-    )
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(chunked.layer)))).rejects.toThrow(
-      "response exceeds 50 MiB",
-    )
+    const run = (client: typeof oversized) => Effect.runPromise(tool.run({}).pipe(Effect.provide(client.layer)))
+    expect(await rethrow(run(oversized))).toThrow("response exceeds 50 MiB")
+    expect(await rethrow(run(malformed))).toThrow("returned malformed JSON")
+    expect(await rethrow(run(chunked))).toThrow("response exceeds 50 MiB")
   })
 
   test("keeps non-JSON responses raw and unions every success output", async () => {
@@ -800,7 +796,7 @@ describe("OpenAPI.fromSpec", () => {
     const client = recordingClient(() => new Response("123", { headers: { "content-type": "text/plain" } }))
 
     expect(outputTypeScript(tool)).toBe("string | null")
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(client.layer)))).resolves.toBe("123")
+    expect(await Effect.runPromise(tool.run({}).pipe(Effect.provide(client.layer)))).toBe("123")
   })
 
   test("fails missing required parameters before auth and network", async () => {

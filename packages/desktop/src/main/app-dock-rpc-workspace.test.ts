@@ -3,6 +3,7 @@ import type { AppDockAPI } from "./app-dock-api"
 import type { WorkspacePreparation } from "./app-dock-rpc"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import { cleanups, closeFixtures, confirm, fixture, identity, observe, target, turn } from "./app-dock-rpc-workspace.fixture"
+import { rejection } from "./rejection.fixture"
 
 afterEach(closeFixtures)
 
@@ -97,7 +98,7 @@ test.each([
       ...(fault === "success" ? {} : { cleanup: { code: "helper-termination-failed", outcome: "unknown" } }) } })
   expect(wire.requests.map((request) => request.op)).toEqual(["bind", "bind", "shutdown"])
   expect(wire.terminations).toBe(1)
-  if (fault === "reap") await expect(f.native.reset()).rejects.toMatchObject({ code: "helper-termination-failed" })
+  if (fault === "reap") expect(await rejection(f.native.reset())).toMatchObject({ code: "helper-termination-failed" })
 })
 
 test.each([
@@ -122,7 +123,7 @@ test.each([
     error: { backend: "linux-atspi", code: "wrong-scope", message: "Prepared target does not match captured workspace",
       outcome: "not-dispatched", cleanup: { code: "native-cleanup-failed", outcome: "unknown" } } })
   expect(wire.requests.map((request) => request.op)).toEqual(["shutdown"])
-  await expect(f.native.reset()).rejects.toBe(failure)
+  expect(await rejection(f.native.reset())).toBe(failure)
 })
 
 test("workspace: permission denial sends no RPC and calls no preparer", async () => {
@@ -500,7 +501,7 @@ test("workspace: a returned shared client survives orphan cleanup after scope lo
   expect(await reading).toMatchObject({ code: "wrong-scope" })
   expect(f.clients[0]!.wire.reaped).toBe(false)
   expect(f.native.has(keeper)).toBe(true)
-  await expect(f.native.dispatch("read", keeper, {})).resolves.toMatchObject({ backend: "linux-atspi" })
+  expect(await f.native.dispatch("read", keeper, {})).toMatchObject({ backend: "linux-atspi" })
 })
 
 test("workspace: 32 failed reaps reject preparation before acquiring client 33", async () => {
@@ -515,7 +516,7 @@ test("workspace: 32 failed reaps reject preparation before acquiring client 33",
     removal.catch(() => {})
     await wire.termination.promise
     wire.reap.reject(new Error("Synthetic reap failure"))
-    await expect(removal).rejects.toMatchObject({ code: "helper-termination-failed" })
+    expect(await rejection(removal)).toMatchObject({ code: "helper-termination-failed" })
   }
   f.prepare(() => f.acquire())
   expect(await f.json("dock_read")).toMatchObject({ code: "capacity", outcome: "not-dispatched" })
@@ -533,7 +534,7 @@ test("workspace: preparation watchdog fails caller/reset, retains capacity, and 
   const resetting = f.rpc.reset()
   resetting.catch(() => {})
   expect(await reading).toMatchObject({ code: "native-preparation-timeout", outcome: "unknown" })
-  await expect(resetting).rejects.toMatchObject({ code: "native-preparation-timeout", outcome: "unknown" })
+  expect(await rejection(resetting)).toMatchObject({ code: "native-preparation-timeout", outcome: "unknown" })
   const reservations = Array.from({ length: 31 }, () => f.native.reserveClient())
   try {
     expect(() => f.native.reserveClient()).toThrow("Native client cleanup capacity exhausted")
@@ -548,7 +549,7 @@ test("workspace: preparation watchdog fails caller/reset, retains capacity, and 
   expect(f.clients[0]!.wire.requests.map((request) => request.op)).toEqual(["shutdown"])
   expect(f.clients[0]!.wire.reaped).toBe(true)
   expect(f.replies.filter((reply) => NativeDockProtocol.object(reply) && reply.type === "dock.rpc.result")).toHaveLength(1)
-  await expect(resetting).rejects.toMatchObject({ code: "native-preparation-timeout" })
+  expect(await rejection(resetting)).toMatchObject({ code: "native-preparation-timeout" })
   const recovered = f.native.reserveClient()
   recovered.fail(new NativeDockProtocol.NativeError("cancelled", "No acquisition"))
   await Promise.allSettled([recovered.completion])
