@@ -6,6 +6,7 @@ import { tmpdir } from "../../fixture/fixture"
 import { createTuiPluginApi } from "../../fixture/tui-plugin"
 import { createTuiResolvedConfig } from "../../fixture/tui-runtime"
 import { TuiConfig } from "../../../src/config/tui"
+import { rethrow } from "../../lib/rejection"
 
 const { TuiPluginRuntime } = await import("../../../src/plugin/tui/runtime")
 
@@ -53,7 +54,7 @@ test("skips external tui plugins in pure mode", async () => {
 
   try {
     await TuiPluginRuntime.init({ api: createTuiPluginApi(), config })
-    await expect(fs.readFile(tmp.extra.marker, "utf8")).rejects.toThrow()
+    expect(await rethrow(fs.readFile(tmp.extra.marker, "utf8"))).toThrow()
   } finally {
     await TuiPluginRuntime.dispose()
     cwd.mockRestore()

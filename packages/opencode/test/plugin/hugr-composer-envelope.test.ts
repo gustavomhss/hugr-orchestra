@@ -14,6 +14,7 @@ import { HugrComposerClient } from "@/plugin/hugr-composer/client"
 import { createHuGRTools } from "@/plugin/hugr-composer/tools"
 import { requireInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { rejection, rethrow } from "../lib/rejection"
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Config.node, Agent.node, Skill.node, Permission.node, Session.node]), [
@@ -63,7 +64,7 @@ cases.forEach(({ mode, expected }) => {
         yield* Effect.forEach(calls, (call) =>
           Effect.promise(async () => {
             if (expected === undefined) {
-              await expect(call()).rejects.toMatchObject({ message: "HuGR Composer backend operation failed" })
+              expect(await rejection(call())).toMatchObject({ message: "HuGR Composer backend operation failed" })
               return
             }
             const result = await call()
@@ -87,12 +88,12 @@ it.instance(
     Effect.gen(function* () {
       const fixture = yield* composerFixture("plain")
       yield* Effect.promise(async () => {
-        await expect(
-          fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context),
-        ).rejects.toThrow()
-        await expect(
-          fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, fixture.context),
-        ).rejects.toThrow()
+        expect(
+          await rethrow(fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context)),
+        ).toThrow()
+        expect(
+          await rethrow(fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, fixture.context)),
+        ).toThrow()
         expect(await Bun.file(fixture.marker).exists()).toBe(false)
         // Same real peer is the positive control for absence and lazy startup.
         expect(await fixture.tools["hugr-search"].execute({ query: "control" }, fixture.context)).toMatchObject({
@@ -117,7 +118,7 @@ Array.of("compose", "scaffold").forEach((operation) => {
             operation === "compose"
               ? fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context)
               : fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, fixture.context)
-          await expect(call).rejects.toThrow()
+          expect(await rethrow(call)).toThrow()
           expect(await Bun.file(fixture.marker).text()).toBe("initialize\ntools/call\n")
           expect(fixture.metadata).toEqual([])
         })

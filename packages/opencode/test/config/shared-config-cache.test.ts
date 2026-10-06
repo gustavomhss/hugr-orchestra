@@ -6,6 +6,7 @@ import { Config } from "@/config/config"
 import { ConfigCacheTest } from "../fixture/config-cache"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { rethrow } from "../lib/rejection"
 
 const it = testEffect(LayerNode.compile(Config.node))
 
@@ -27,7 +28,7 @@ const it = testEffect(LayerNode.compile(Config.node))
       }, async () => {
         if (failDisposal) throw new Error("fixture disposal failure")
       })
-      if (failDisposal) await expect(run).rejects.toThrow("fixture disposal failure")
+      if (failDisposal) expect(await rethrow(run)).toThrow("fixture disposal failure")
       if (!failDisposal) await run
       expect(Global.Path.config).toBe(previous)
       expect(await Effect.runPromise(config.getGlobal())).toEqual(localBaseline)
