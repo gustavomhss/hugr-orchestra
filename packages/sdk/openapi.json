@@ -2660,6 +2660,85 @@
         ]
       }
     },
+    "/vcs/activity": {
+      "get": {
+        "tags": ["instance"],
+        "operationId": "vcs.activity",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "required": true
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "VCS activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VcsActivity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/effect_HttpApiError_BadRequest"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.",
+        "summary": "Get VCS activity",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.vcs.activity({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/command": {
       "get": {
         "tags": ["instance"],
@@ -2819,6 +2898,9 @@
                       },
                       "content": {
                         "type": "string"
+                      },
+                      "mtime": {
+                        "type": "number"
                       }
                     },
                     "required": ["name", "location", "content"],
@@ -2846,6 +2928,182 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.app.skills({\n  ...\n})"
+          }
+        ]
+      },
+      "put": {
+        "tags": ["instance"],
+        "operationId": "app.skillSave",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "mtime": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["name", "location", "content"],
+                  "additionalProperties": false,
+                  "description": "Saved skill"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "SkillWriteError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SkillWriteError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SkillConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillConflictError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
+        "summary": "Save skill",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillSaveInput"
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.app.skillSave({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["instance"],
+        "operationId": "app.skillRemove",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Skill removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "description": "Skill removed"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "SkillWriteError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SkillWriteError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SkillConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillConflictError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Delete a registered project skill file given its path, and its folder when that is left empty.",
+        "summary": "Remove skill",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.app.skillRemove({\n  ...\n})"
           }
         ]
       }
@@ -3109,6 +3367,319 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.mcp.add({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/mcp/tools": {
+      "get": {
+        "tags": ["mcp"],
+        "operationId": "mcp.tools",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tool names reported by each connected MCP server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": "Tool names reported by each connected MCP server"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "description": "List the tool names each connected Model Context Protocol (MCP) server reports.",
+        "summary": "List MCP tools",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.mcp.tools({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/mcp/config": {
+      "get": {
+        "tags": ["mcp"],
+        "operationId": "mcp.config.list",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP servers defined in the project's own config files, unresolved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["local", "remote"]
+                      },
+                      "command": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "url": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "description": "MCP servers defined in the project's own config files, unresolved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "McpConfigError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/McpConfigError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "List the type, command and URL of each MCP server the project's own config files define, as written (variables are not resolved).",
+        "summary": "List project MCP server config",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.mcp.config.list({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/mcp/{name}/config": {
+      "put": {
+        "tags": ["mcp"],
+        "operationId": "mcp.config.update",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP server saved to the project config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "description": "MCP server saved to the project config"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "McpConfigError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/McpConfigError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Create or update an MCP server in the project's own config file. Fields that are not sent keep their existing values.",
+        "summary": "Save MCP server config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "config": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/McpLocalConfig"
+                      },
+                      {
+                        "$ref": "#/components/schemas/McpRemoteConfig"
+                      }
+                    ]
+                  }
+                },
+                "required": ["config"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.mcp.config.update({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["mcp"],
+        "operationId": "mcp.config.remove",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP server removed from the project config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "description": "MCP server removed from the project config"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "McpConfigError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/McpConfigError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "McpServerNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpServerNotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Remove an MCP server from the project's own config files.",
+        "summary": "Remove MCP server config",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.mcp.config.remove({\n  ...\n})"
           }
         ]
       }
@@ -5571,6 +6142,76 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.session.status({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/session/activity": {
+      "get": {
+        "tags": ["session"],
+        "operationId": "session.activity",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["7d", "30d", "90d", "all"]
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionActivity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/effect_HttpApiError_BadRequest"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Aggregate the user and assistant messages of this project's sessions for a period into one fact per bucket, session and model, plus the wall clock of root-session assistant turns per bucket. Buckets are server-local days; a fixed period has the equal window before it as bucket 0.",
+        "summary": "Get session activity",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.session.activity({\n  ...\n})"
           }
         ]
       }
@@ -9983,6 +10624,230 @@
         ]
       }
     },
+    "/api/agent/{agentID}/file": {
+      "get": {
+        "tags": ["opencode HttpApi"],
+        "operationId": "v2.agent.file.get",
+        "parameters": [
+          {
+            "name": "agentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AgentFileInfo"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "UnknownError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnknownError1"
+                }
+              }
+            }
+          }
+        },
+        "description": "Read the agent definition stored in this location's .opencode/agent directory.",
+        "summary": "Get agent file",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.agent.file.get({\n  ...\n})"
+          }
+        ]
+      },
+      "put": {
+        "tags": ["opencode HttpApi"],
+        "operationId": "v2.agent.file.update",
+        "parameters": [
+          {
+            "name": "agentID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AgentFileInfo"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "UnknownError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnknownError1"
+                }
+              }
+            }
+          }
+        },
+        "description": "Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.",
+        "summary": "Update agent file",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentFileInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.agent.file.update({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/api/session": {
       "get": {
         "tags": ["sessions"],
@@ -13759,6 +14624,200 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.skill.list({\n  ...\n})"
+          }
+        ]
+      },
+      "put": {
+        "tags": ["skills"],
+        "operationId": "v2.skill.save",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SkillV2Info"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
+        "summary": "Save skill",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillV2SaveInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.skill.save({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["skills"],
+        "operationId": "v2.skill.remove",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Delete a registered project skill file given its path, and its folder when that is left empty.",
+        "summary": "Remove skill",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.skill.remove({\n  ...\n})"
           }
         ]
       }
@@ -23959,6 +25018,172 @@
         "required": ["name", "data"],
         "additionalProperties": false
       },
+      "VcsActivityTotals": {
+        "type": "object",
+        "properties": {
+          "commits": {
+            "type": "number"
+          },
+          "merges": {
+            "type": "number"
+          },
+          "authors": {
+            "type": "number"
+          },
+          "additions": {
+            "type": "number"
+          },
+          "deletions": {
+            "type": "number"
+          },
+          "filesChanged": {
+            "type": "number"
+          }
+        },
+        "required": ["commits", "merges", "authors", "additions", "deletions", "filesChanged"],
+        "additionalProperties": false
+      },
+      "VcsActivityDay": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "description": "Server-local YYYY-MM-DD of the commit author time"
+          },
+          "commits": {
+            "type": "number"
+          },
+          "merges": {
+            "type": "number"
+          },
+          "additions": {
+            "type": "number"
+          },
+          "deletions": {
+            "type": "number"
+          }
+        },
+        "required": ["day", "commits", "merges", "additions", "deletions"],
+        "additionalProperties": false
+      },
+      "VcsActivityPath": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "number"
+          }
+        },
+        "required": ["path", "changes"],
+        "additionalProperties": false
+      },
+      "VcsActivityCommit": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "time": {
+            "type": "number"
+          }
+        },
+        "required": ["hash", "subject", "time"],
+        "additionalProperties": false
+      },
+      "VcsActivityPartial": {
+        "type": "object",
+        "properties": {
+          "commits": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "boolean"
+          }
+        },
+        "required": ["commits", "lines"],
+        "additionalProperties": false
+      },
+      "VcsActivity": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "type": "boolean"
+          },
+          "since": {
+            "type": "number"
+          },
+          "until": {
+            "type": "number"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/VcsActivityTotals"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VcsActivityDay"
+            }
+          },
+          "topPaths": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VcsActivityPath"
+            }
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VcsActivityCommit"
+            }
+          },
+          "ahead": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "behind": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when a commit, output or time bound cut any scan short"
+          },
+          "partial": {
+            "$ref": "#/components/schemas/VcsActivityPartial"
+          }
+        },
+        "required": [
+          "repository",
+          "since",
+          "until",
+          "totals",
+          "days",
+          "topPaths",
+          "recent",
+          "ahead",
+          "behind",
+          "truncated",
+          "partial"
+        ],
+        "additionalProperties": false
+      },
       "Command": {
         "type": "object",
         "properties": {
@@ -24055,6 +25280,74 @@
           }
         },
         "required": ["name", "mode", "permission", "options"],
+        "additionalProperties": false
+      },
+      "SkillSaveInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "mtime": {
+            "type": "number"
+          }
+        },
+        "required": ["name", "description", "content"],
+        "additionalProperties": false
+      },
+      "SkillWriteError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["SkillWriteError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string",
+                "enum": ["invalid", "missing", "readonly"]
+              }
+            },
+            "required": ["message", "reason"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "SkillConflictError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["SkillConflictError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
         "additionalProperties": false
       },
       "LSPStatus": {
@@ -24176,14 +25469,14 @@
           }
         ]
       },
-      "McpUnsupportedOAuthError": {
+      "McpConfigError": {
         "type": "object",
         "properties": {
-          "error": {
+          "message": {
             "type": "string"
           }
         },
-        "required": ["error"],
+        "required": ["message"],
         "additionalProperties": false
       },
       "McpServerNotFoundError": {
@@ -24201,6 +25494,16 @@
           }
         },
         "required": ["_tag", "name", "message"],
+        "additionalProperties": false
+      },
+      "McpUnsupportedOAuthError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": ["error"],
         "additionalProperties": false
       },
       "Project": {
@@ -24551,6 +25854,120 @@
           }
         },
         "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "SessionActivitySession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "parentID": {
+            "type": "string"
+          },
+          "created": {
+            "type": "number"
+          },
+          "updated": {
+            "type": "number"
+          },
+          "additions": {
+            "type": "number"
+          },
+          "deletions": {
+            "type": "number"
+          },
+          "files": {
+            "type": "number"
+          }
+        },
+        "required": ["id", "title", "parentID", "created", "updated", "additions", "deletions", "files"],
+        "additionalProperties": false
+      },
+      "SessionActivityFact": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "number"
+          },
+          "sessionID": {
+            "type": "string"
+          },
+          "providerID": {
+            "type": "string"
+          },
+          "modelID": {
+            "type": "string"
+          },
+          "user": {
+            "type": "number"
+          },
+          "assistant": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "tokens": {
+            "type": "number"
+          }
+        },
+        "required": ["bucket", "sessionID", "providerID", "modelID", "user", "assistant", "failed", "tokens"],
+        "additionalProperties": false
+      },
+      "SessionActivity": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": ["7d", "30d", "90d", "all"]
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Ascending bucket boundaries at server-local midnights; bucket i is [edges[i], edges[i + 1])"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Server-local YYYY-MM-DD of each edge"
+          },
+          "previous": {
+            "type": "boolean",
+            "description": "True when bucket 0 is the equal window before the period"
+          },
+          "activeMs": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Per bucket, wall clock during which any root-session assistant turn was running"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionActivitySession"
+            }
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionActivityFact"
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when more than 200000 messages were in range"
+          }
+        },
+        "required": ["period", "edges", "days", "previous", "activeMs", "sessions", "facts", "truncated"],
         "additionalProperties": false
       },
       "NotFoundError": {
@@ -24983,6 +26400,40 @@
         "required": ["_tag", "message"],
         "additionalProperties": false
       },
+      "UnknownError1": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["UnknownError"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "message"],
+        "additionalProperties": false
+      },
+      "ConflictError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["ConflictError"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "message"],
+        "additionalProperties": false
+      },
       "SessionsResponse": {
         "type": "object",
         "properties": {
@@ -25072,23 +26523,6 @@
         "required": ["text"],
         "additionalProperties": false
       },
-      "ConflictError": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": ["ConflictError"]
-          },
-          "message": {
-            "type": "string"
-          },
-          "resource": {
-            "type": "string"
-          }
-        },
-        "required": ["_tag", "message"],
-        "additionalProperties": false
-      },
       "ServiceUnavailableError": {
         "type": "object",
         "properties": {
@@ -25124,23 +26558,6 @@
           }
         },
         "required": ["_tag", "sessionID", "messageID", "message"],
-        "additionalProperties": false
-      },
-      "UnknownError1": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": ["UnknownError"]
-          },
-          "message": {
-            "type": "string"
-          },
-          "ref": {
-            "type": "string"
-          }
-        },
-        "required": ["_tag", "message"],
         "additionalProperties": false
       },
       "SessionDurableEvent": {
@@ -30669,6 +32086,103 @@
         "required": ["id", "request", "mode", "hidden", "permissions"],
         "additionalProperties": false
       },
+      "AgentFileAction": {
+        "type": "string",
+        "enum": ["allow", "ask", "deny"]
+      },
+      "AgentFilePermission": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/AgentFileAction"
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AgentFileAction"
+            }
+          }
+        ]
+      },
+      "AgentFileInfo": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "exists": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "invalid": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["subagent", "primary", "all"]
+          },
+          "model": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "system": {
+            "type": "string"
+          },
+          "permission": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AgentFilePermission"
+            }
+          },
+          "disable": {
+            "type": "boolean"
+          }
+        },
+        "required": ["path", "exists", "revision"],
+        "additionalProperties": false
+      },
+      "AgentFileInput": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["subagent", "primary", "all"]
+          },
+          "model": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "system": {
+            "type": "string"
+          },
+          "permission": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AgentFilePermission"
+            }
+          },
+          "disable": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SessionV2Info": {
         "type": "object",
         "properties": {
@@ -34103,9 +35617,34 @@
           },
           "content": {
             "type": "string"
+          },
+          "mtime": {
+            "type": "number"
           }
         },
         "required": ["name", "location", "content"],
+        "additionalProperties": false
+      },
+      "SkillV2SaveInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "mtime": {
+            "type": "number"
+          }
+        },
+        "required": ["name", "description", "content"],
         "additionalProperties": false
       },
       "Models-devRefreshed": {

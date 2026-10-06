@@ -8,6 +8,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstanceState } from "@/effect/instance-state"
 import { Global } from "@opencode-ai/core/global"
 import { SkillPlugin } from "@opencode-ai/core/plugin/skill"
+import { SkillFile } from "@opencode-ai/core/skill/file"
 import { Permission } from "@/permission"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Config } from "@/config/config"
@@ -18,6 +19,7 @@ import { Glob } from "@opencode-ai/core/util/glob"
 import { Discovery } from "./discovery"
 import { isRecord } from "@/util/record"
 import { escapeHtml } from "@/util/html"
+import { backendSkills, roster } from "@/maestro/roster"
 
 const CLAUDE_EXTERNAL_DIR = ".claude"
 const AGENTS_EXTERNAL_DIR = ".agents"
@@ -40,6 +42,8 @@ export const Info = Schema.Struct({
   description: Schema.optional(Schema.String),
   location: Schema.String,
   content: Schema.String,
+  /** Last modification time (ms) of the skill file, for optimistic concurrency on save. */
+  mtime: Schema.optional(Schema.Finite),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 
@@ -83,11 +87,14 @@ export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("Ski
 type State = {
   skills: Record<string, Info>
   dirs: Set<string>
+  // Host-registered native-seat skills. Offered only to native seats, never listed by `all()`.
+  seat: Record<string, Info>
 }
 
 type DiscoveryState = {
   matches: string[]
   dirs: string[]
+  seat: string[]
 }
 
 type ScanState = {
@@ -97,13 +104,21 @@ type ScanState = {
 
 export interface Interface {
   readonly get: (name: string) => Effect.Effect<Info | undefined>
-  readonly require: (name: string) => Effect.Effect<Info, NotFoundError>
+  readonly require: (name: string, agentID?: string) => Effect.Effect<Info, NotFoundError>
   readonly all: () => Effect.Effect<Info[]>
   readonly dirs: () => Effect.Effect<string[]>
   readonly available: (agent?: Agent.Info) => Effect.Effect<Info[]>
+  /** Writes a skill file (see SkillFile.save) and rescans this instance's skills. */
+  readonly save: (input: SkillFile.SaveInput) => Effect.Effect<Info, SkillFile.WriteError>
+  readonly remove: (location: string) => Effect.Effect<void, SkillFile.WriteError>
 }
 
-const add = Effect.fnUntraced(function* (state: State, match: string, events: EventV2Bridge.Service["Service"]) {
+const add = Effect.fnUntraced(function* (
+  state: State,
+  match: string,
+  events: EventV2Bridge.Service["Service"],
+  fsys: FSUtil.Interface,
+) {
   const md = yield* Effect.tryPromise({
     try: () => ConfigMarkdown.parse(match),
     catch: (err) => err,
@@ -142,6 +157,7 @@ const add = Effect.fnUntraced(function* (state: State, match: string, events: Ev
     description: md.data.description,
     location: match,
     content: md.content,
+    mtime: yield* SkillFile.modified(match).pipe(Effect.provideService(FSUtil.Service, fsys)),
   }
 })
 
@@ -270,9 +286,14 @@ const discoverSkills = Effect.fnUntraced(function* (
     }
   }
 
+  // The backend specialist's skill root, scanned like a `skills.paths` entry (F6-D1) but kept out of the instance-wide list.
+  const seat: ScanState = { matches: new Set(), dirs: new Set() }
+  if (yield* fsys.isDir(backendSkills.root)) yield* scan(seat, backendSkills.root, SKILL_PATTERN)
+
   return {
     matches: Array.from(state.matches),
     dirs: Array.from(state.dirs),
+    seat: Array.from(seat.matches),
   }
 })
 
@@ -280,8 +301,9 @@ const loadSkills = Effect.fnUntraced(function* (
   state: State,
   discovered: DiscoveryState,
   events: EventV2Bridge.Service["Service"],
+  fsys: FSUtil.Interface,
 ) {
-  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events), {
+  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events, fsys), {
     concurrency: "unbounded",
     discard: true,
   })
@@ -318,7 +340,7 @@ const layer = Layer.effect(
     )
     const state = yield* InstanceState.make(
       Effect.fn("Skill.state")(function* () {
-        const s: State = { skills: {}, dirs: new Set() }
+        const s: State = { skills: {}, dirs: new Set(), seat: {} }
         // Register the built-in skill BEFORE disk discovery so a user-disk
         // skill with the same name can override it.
         s.skills[CUSTOMIZE_OPENCODE_SKILL_NAME] = {
@@ -327,7 +349,11 @@ const layer = Layer.effect(
           location: "<built-in>",
           content: CUSTOMIZE_OPENCODE_SKILL_BODY,
         }
-        yield* loadSkills(s, yield* InstanceState.get(discovered), events)
+        const found = yield* InstanceState.get(discovered)
+        yield* loadSkills(s, found, events, fsys)
+        const seat: State = { skills: {}, dirs: new Set(), seat: {} }
+        yield* loadSkills(seat, { matches: found.seat, dirs: [], seat: [] }, events, fsys)
+        s.seat = seat.skills
         return s
       }),
     )
@@ -337,11 +363,12 @@ const layer = Layer.effect(
       return s.skills[name]
     })
 
-    const require = Effect.fn("Skill.require")(function* (name: string) {
+    const require = Effect.fn("Skill.require")(function* (name: string, agentID?: string) {
       const s = yield* InstanceState.get(state)
-      const info = s.skills[name]
+      const visible = nativeSeat(agentID) ? { ...s.skills, ...s.seat } : s.skills
+      const info = visible[name]
       if (info) return info
-      return yield* new NotFoundError({ name, available: Object.keys(s.skills).toSorted() })
+      return yield* new NotFoundError({ name, available: Object.keys(visible).toSorted() })
     })
 
     const all = Effect.fn("Skill.all")(function* () {
@@ -355,14 +382,44 @@ const layer = Layer.effect(
 
     const available = Effect.fn("Skill.available")(function* (agent?: Agent.Info) {
       const s = yield* InstanceState.get(state)
-      const list = Object.values(s.skills).toSorted((a, b) => a.name.localeCompare(b.name))
+      const list = Object.values(nativeSeat(agent?.id) ? { ...s.skills, ...s.seat } : s.skills).toSorted((a, b) =>
+        a.name.localeCompare(b.name),
+      )
       if (!agent) return list
       return list.filter((skill) => Permission.evaluate("skill", skill.name, agent.permission).action !== "deny")
     })
 
-    return Service.of({ get, require, all, dirs, available })
+    const rescan = Effect.fnUntraced(function* () {
+      yield* InstanceState.invalidate(discovered)
+      yield* InstanceState.invalidate(state)
+    })
+
+    const save = Effect.fn("Skill.save")(function* (input: SkillFile.SaveInput) {
+      const directory = yield* InstanceState.directory
+      const saved = yield* SkillFile.save({ directory, registered: yield* all(), skill: input }).pipe(
+        Effect.provideService(FSUtil.Service, fsys),
+      )
+      yield* rescan()
+      return saved
+    })
+
+    const remove = Effect.fn("Skill.remove")(function* (location: string) {
+      const directory = yield* InstanceState.directory
+      yield* SkillFile.remove({ directory, registered: yield* all(), location }).pipe(
+        Effect.provideService(FSUtil.Service, fsys),
+      )
+      yield* rescan()
+    })
+
+    return Service.of({ get, require, all, dirs, available, save, remove })
   }),
 )
+
+// Native seat IDs are fixed by the roster and cannot be redefined by config, so the stable ID decides.
+// Which seat skills a seat may load is still decided by its native permission profile.
+function nativeSeat(agentID?: string) {
+  return roster.some((member) => member.memberId === agentID && member.nativeProfile !== undefined)
+}
 
 export function fmt(list: Info[], opts: { verbose: boolean }) {
   const described = list.filter((skill) => skill.description !== undefined)

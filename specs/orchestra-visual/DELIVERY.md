@@ -12,9 +12,8 @@ Current campaign state and recovery entry: [HANDOFF.md](HANDOFF.md).
 - Wave 1 chapters C01, C02, C07 and C09–C13 are in `dev` through #240; C03, C04,
   C05, C06 and C08 are deferred ([CHAPTERS-SCOPE.md](CHAPTERS-SCOPE.md)). Owner
   acceptance of the integrated identity and of every chapter is still pending.
-- Sidebar widths: 230px from 1440px. The wave B compact navigation, not yet in
-  `dev`, adds a 208px sidebar that is visible only at 1280–1439px. Its CSS rule
-  spans 768–1439px, but the layout forces the 56px rail below 1280px, and at
+- Sidebar widths: 230px down to 1280px (owner decision 2026-10-05, replacing a
+  208px step at 1280–1439px). The layout forces the 56px rail below 1280px, and at
   768–1023px the rail is hidden behind a titlebar button.
 - The remote `fork` is now GitLab `gmhelmold/hugr-orchestra`, and GitLab CI has
   never executed a test. Current verification is tracked in
@@ -34,8 +33,8 @@ Candidate dark/light × LTR/RTL captures use the existing production bundle and
 actual application components, without replacement CSS. The original delivery
 captures below retain their separate source-branch provenance.
 
-- 230px sidebar, 45px toolbar, 6px gutters and approved shared glass. (The 208px and
-  56px compact widths came later with wave B; see Current status.)
+- 230px sidebar, 45px toolbar, 6px gutters and approved shared glass. (The 56px
+  compact rail came later with wave B; see Current status.)
 - Official 121×32px HuGR mark, `Human Guardrail`, continuous mountain background.
 - Bottom 46px repository profile card; metadata 12px; upward menu portal.
 - Reference margin colors, default 400 text weight and light toggle paint.

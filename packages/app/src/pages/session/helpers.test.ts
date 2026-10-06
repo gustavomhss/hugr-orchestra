@@ -9,6 +9,7 @@ import {
   createSidePanelTabs,
   focusTerminalById,
   getTabReorderIndex,
+  planTasksTab,
   shouldShowFileTree,
 } from "./helpers"
 
@@ -16,6 +17,29 @@ describe("shouldShowFileTree", () => {
   test("does not reserve space for a disabled file tree", () => {
     expect(shouldShowFileTree({ visible: false, opened: true })).toBe(false)
     expect(shouldShowFileTree({ visible: true, opened: true })).toBe(true)
+  })
+})
+
+describe("planTasksTab", () => {
+  test("adds Tasks behind an active Apps tab without taking focus", () => {
+    const all = ["apps", "file://src/a.ts"]
+    expect(planTasksTab({ active: "apps", all })).toEqual({
+      all: ["apps", "file://src/a.ts", "tasks"],
+      activate: false,
+    })
+    expect(all).toEqual(["apps", "file://src/a.ts"])
+  })
+
+  test("activates Tasks when Apps is not the active tab", () => {
+    expect(planTasksTab({ active: "review", all: ["apps"] })).toEqual({ all: ["apps", "tasks"], activate: true })
+    expect(planTasksTab({ active: undefined, all: [] })).toEqual({ all: ["tasks"], activate: true })
+  })
+
+  test("does not duplicate an existing Tasks tab", () => {
+    expect(planTasksTab({ active: "apps", all: ["tasks", "apps"] })).toEqual({
+      all: ["tasks", "apps"],
+      activate: false,
+    })
   })
 })
 
@@ -288,6 +312,27 @@ describe("createSessionTabs in the Orchestra cockpit", () => {
       expect(panel("apps", true).closableTab()).toBeUndefined()
       expect(panel("apps", false).closableTab()).toBeUndefined()
       expect(panel("apps", false).activeFileTab()).toBeUndefined()
+      dispose()
+    })
+  })
+
+  test("the Orchestra rail keeps Context and Tasks open while file tabs still close", () => {
+    createRoot((dispose) => {
+      const rail = (active: string, permanent: boolean) =>
+        createSidePanelTabs({
+          tabs: createMemo(() => ({ active: () => active, all: () => ["file://src/a.ts", "tasks", "context"] })),
+          pathFromTab: (tab) => (tab.startsWith("file://") ? tab.slice("file://".length) : undefined),
+          normalizeTab: (tab) => tab,
+          cockpit: () => false,
+          permanent: () => permanent,
+        })
+
+      expect(rail("tasks", true).activeTab()).toBe("tasks")
+      expect(rail("tasks", true).closableTab()).toBeUndefined()
+      expect(rail("context", true).closableTab()).toBeUndefined()
+      expect(rail("file://src/a.ts", true).closableTab()).toBe("file://src/a.ts")
+      expect(rail("tasks", false).closableTab()).toBe("tasks")
+      expect(rail("context", false).closableTab()).toBe("context")
       dispose()
     })
   })

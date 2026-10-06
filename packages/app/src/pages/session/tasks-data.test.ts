@@ -94,6 +94,7 @@ function setup(input: Partial<TasksInput> & { calls?: Part[] }): TasksInput {
     status: {},
     permission: {},
     question: {},
+    agents: [],
     loaded: () => false,
     more: () => false,
     aggregates: true,
@@ -208,6 +209,28 @@ describe("deriveTasks state", () => {
 })
 
 describe("deriveTasks rows", () => {
+  test("a renamed seat renders its label and keeps its stable id as the key", () => {
+    const call = taskCall("c1", "ses_backend", "completed")
+    if (call.type !== "tool") throw new Error("expected a tool part")
+    call.state.input.subagent_type = "backend"
+    const item = only(
+      setup({
+        agents: [{ id: "backend", name: "Pikachu" }],
+        sessions: [session("ses_backend", { parentID: parent })],
+        message: {
+          [parent]: [assistant(parent, "msg_parent")],
+          ses_backend: [assistant("ses_backend", "msg_child", { agent: "backend", mode: "backend" })],
+        },
+        calls: [call],
+      }),
+    )
+    expect(item.agentID).toBe("backend")
+    expect(item.agent).toBe("Pikachu")
+    expect(item.stats?.agent).toBe("Pikachu")
+    // An agent the client has not synced still shows its id rather than nothing.
+    expect(only(setup({ calls: [taskCall("c2", "ses_explore", "completed")] })).agent).toBe("explore")
+  })
+
   test("an orphan task call yields exactly one row", () => {
     const result = deriveTasks(setup({ calls: [taskCall("c1", "ses_orphan", "completed")] }))
     expect(result.finished.map((item) => item.childId)).toEqual(["ses_orphan"])

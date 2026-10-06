@@ -31,20 +31,20 @@ const canonMap = (m: OwnerMap): string =>
 const ownerOf = (m: OwnerMap, name: string): string | undefined => [...m.entries()].find(([t]) => t.name === name)?.[1]
 
 describe("INDEX-15 — generated + reconciled ownership (visible goldens)", () => {
-  // charlie authored 4/5 (80%) of region core/cas; dana the remaining fifth.
+  // backend authored 4/5 (80%) of region core/cas; dana the remaining fifth.
   const casBlame: BlameEntry[] = [
-    { path: "core/cas/a.ts", authors: ["charlie"] },
-    { path: "core/cas/b.ts", authors: ["charlie"] },
-    { path: "core/cas/c.ts", authors: ["charlie"] },
-    { path: "core/cas/d.ts", authors: ["charlie"] },
+    { path: "core/cas/a.ts", authors: ["backend"] },
+    { path: "core/cas/b.ts", authors: ["backend"] },
+    { path: "core/cas/c.ts", authors: ["backend"] },
+    { path: "core/cas/d.ts", authors: ["backend"] },
     { path: "core/cas/e.ts", authors: ["dana"] },
   ]
 
   it("SCN-INDEX-15a-1: [generation ENABLED] owner is generated from graph + blame ($0-LLM)", () => {
     const empty: Manifest = { territories: [] }
     const map = reconcile(NO_GRAPH, casBlame, empty)
-    // territory:cas owner generated = charlie (blame majority), NOT left null/unassigned.
-    expect(ownerOf(map, "core/cas")).toBe("charlie")
+    // territory:cas owner generated = backend (blame majority), NOT left null/unassigned.
+    expect(ownerOf(map, "core/cas")).toBe("backend")
     expect(reconcileModelCalls()).toBe(0)
   })
 
@@ -52,9 +52,9 @@ describe("INDEX-15 — generated + reconciled ownership (visible goldens)", () =
     const listed = T("cas", "dana", "T1", ["core/cas/**"]) // explicit override = dana
     const map = reconcile(NO_GRAPH, casBlame, { territories: [listed] })
     expect(map.get(listed)).toBe("dana")
-    // proof the override actually overrode: with an EMPTY override the same inputs generate charlie.
+    // proof the override actually overrode: with an EMPTY override the same inputs generate backend.
     const gen = T("cas", "", "T1", ["core/cas/**"])
-    expect(reconcile(NO_GRAPH, casBlame, { territories: [gen] }).get(gen)).toBe("charlie")
+    expect(reconcile(NO_GRAPH, casBlame, { territories: [gen] }).get(gen)).toBe("backend")
   })
 
   it("SCN-INDEX-15c-1: reconciliation is deterministic and zero-LLM", () => {
@@ -76,7 +76,7 @@ describe("INDEX-15 — generated + reconciled ownership (visible goldens)", () =
     // manifest lists only `docs`; region core/cas is UNLISTED yet still resolves an owner from blame.
     const listed = T("docs", "erin", "T2", ["docs/**"])
     const map = reconcile(NO_GRAPH, casBlame, { territories: [listed] })
-    expect(ownerOf(map, "core/cas")).toBe("charlie") // unlisted territory still owned (anti-CODEOWNERS-rot)
+    expect(ownerOf(map, "core/cas")).toBe("backend") // unlisted territory still owned (anti-CODEOWNERS-rot)
   })
 })
 

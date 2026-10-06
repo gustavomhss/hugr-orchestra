@@ -1,7 +1,7 @@
 const words = [
   "alpha",
   "bravo",
-  "charlie",
+  "cobalt",
   "delta",
   "echo",
   "foxtrot",

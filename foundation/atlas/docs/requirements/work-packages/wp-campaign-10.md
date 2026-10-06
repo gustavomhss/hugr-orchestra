@@ -110,7 +110,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A1.TOOLS ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ PROP-AUTH-1 green ∧ derivation sites == 1 ∧ the pre-existing emit/reconcile suites are byte-unchanged
   context_refs: [ reference/atlas-authoring.md, method-tags-authoring.md#INV-AUTH-1/3/4, adr/ADR-0004 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../design/authoring.md#33-coupling-found--and-how-it-is-resolved # ptr
 
@@ -156,7 +156,7 @@ source_reqs: # ptr+digest
   deps: [ ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ both governed constants byte-unchanged ∧ the spec-conformance guard still passes
   context_refs: [ reference/atlas-authoring.md, adr/ADR-0004, adr/ADR-0003 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../reference/atlas-authoring.md#author-2 # ptr
 
@@ -195,7 +195,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A1.TOOLS ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ PROP-AUTH-2 green ∧ every pre-existing CLI golden byte-unchanged
   context_refs: [ reference/atlas-authoring.md#author-2, goldens-authoring.md ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../design/authoring.md#1-define--the-job-the-pain-the-outcomes # ptr
 
@@ -254,7 +254,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A1.ADAPTER, WP-10.A1.TOOLS ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ adding a 13th slot member fails the type-check
   context_refs: [ reference/atlas-authoring.md#author-5/6/7, method-tags-authoring.md#INV-AUTH-5 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../reference/atlas-authoring.md#author-6 # ptr
 
@@ -294,7 +294,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A2-a.TOOLS ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ no CLI invocation requires a computed field
   context_refs: [ reference/atlas-authoring.md#author-6/7 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../design/authoring.md#22-the-four-risks-cagan--written-not-asserted # ptr
 
@@ -334,7 +334,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A2-a.CLI ] · parallel_group: —
   exit_predicate: PROP-AUTH-8 green over the fixture's full unit set ∧ zero @atlas/\* imports in the story
   context_refs: [ properties-authoring.md#PROP-AUTH-8, goldens-authoring.md#fixture-universe ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../adr/ADR-0004-authoring-planner-doors.md # ptr
 
@@ -386,7 +386,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A2-a.TOOLS ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ the reworded-claim witness (SCN-AUTH-10c-1) reports UPDATE
   context_refs: [ reference/atlas-authoring.md#author-9/10/13 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../reference/atlas-authoring.md#author-13 # ptr
 
@@ -425,7 +425,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A2-b.TOOLS ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ WRITE_PATHS byte-unchanged
   context_refs: [ reference/atlas-authoring.md#author-13, adr/ADR-0003 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../adr/ADR-0004-authoring-planner-doors.md # ptr
 
@@ -477,7 +477,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A1.ADAPTER ] · parallel_group: —
   exit_predicate: all acceptance goldens green ∧ PROP-AUTH-12 green ∧ **every pre-existing governance golden byte-unchanged**
   context_refs: [ reference/atlas-authoring.md#author-11/12, adr/ADR-0003 ]
-  owner: charlie (FORGE); billy (FORTRESS) reviews — this WP touches the governed write path
+  owner: backend (FORGE); billy (FORTRESS) reviews — this WP touches the governed write path
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../reference/atlas-authoring.md#author-11 # ptr
 
@@ -517,7 +517,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A3.ADAPTER ] · parallel_group: —
   exit_predicate: PROP-AUTH-11 green including the multi-gate-failure arm (verdict AND first-refusing-gate agree)
   context_refs: [ properties-authoring.md#PROP-AUTH-11 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../reference/atlas-authoring.md#author-11 # ptr
 
@@ -554,7 +554,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A1.TOOLS ] · parallel_group: [P] with EPIC-A3
   exit_predicate: acceptance green ∧ the existing CAS id field present and byte-unchanged in every emit golden
   context_refs: [ reference/atlas-authoring.md#author-14 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../design/authoring-surface-study.md#lens-6--resource--crud # ptr
 
@@ -590,7 +590,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A4.TOOLS ] · parallel_group: [P] with EPIC-A3
   exit_predicate: acceptance green ∧ both consumers (per-node read door, CAS read-back) succeed from one receipt
   context_refs: [ reference/atlas-authoring.md#author-14 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../reference/atlas-authoring.md#author-14 # ptr
 
@@ -640,7 +640,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A4.ADAPTER ] · parallel_group: [P] with EPIC-A3
   exit_predicate: acceptance green ∧ adding a command to the parser without touching help FAILS SCN-CLI-5c-1
   context_refs: [ reference/atlas-authoring.md#entry-cli-5/6 ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../design/authoring.md#22-the-four-risks-cagan--written-not-asserted # ptr
 
@@ -690,7 +690,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A3.TOOLS, WP-10.A4.CLI ] · parallel_group: —
   exit_predicate: PROP-MCP-3 green ∧ both governed constants byte-unchanged
   context_refs: [ adr/ADR-0005-mcp-read-surface.md, properties-authoring.md#PROP-MCP-3 ]
-  owner: charlie (FORGE); billy (FORTRESS) reviews the surface pin
+  owner: backend (FORGE); billy (FORTRESS) reviews the surface pin
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../adr/ADR-0005-mcp-read-surface.md # ptr
 
@@ -731,7 +731,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A5.TOOLS ] · parallel_group: —
   exit_predicate: acceptance green ∧ every advertised tool publishes a handler-owned schema
   context_refs: [ adr/ADR-0005-mcp-read-surface.md ]
-  owner: charlie (FORGE)
+  owner: backend (FORGE)
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../adr/ADR-0005-mcp-read-surface.md # ptr
 
@@ -778,7 +778,7 @@ source_reqs: # ptr+digest
   deps: [ WP-10.A5.MCP, WP-10.A2-a.E2E ] · parallel_group: —
   exit_predicate: PROP-MCP-4 green (including the partially-populated arm SCN-MCP-4c-1) ∧ the MCP-only authoring story green (`s-mcp-authoring`) ∧ the two new stories import zero `@atlas/*` ∧ the full black-box suite green. [AMENDED 2026-08-25] author.ts deletion is NOT an exit condition (owner-decided) — its adversarial-fixture role is kept; happy-path re-point is hygiene follow-up.
   context_refs: [ properties-authoring.md#PROP-MCP-4, adr/ADR-0004 §Consequences ]
-  owner: charlie (FORGE); lucy (MICROSCOPE) cold-reviews the two new acceptance-bearing stories
+  owner: backend (FORGE); lucy (MICROSCOPE) cold-reviews the two new acceptance-bearing stories
   outputs: [ ] · provenance: [ ] · trace_ref: —
   rationale: ../../adr/ADR-0004-authoring-planner-doors.md # ptr
 

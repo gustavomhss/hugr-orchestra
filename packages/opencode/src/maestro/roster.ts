@@ -1,11 +1,41 @@
+import path from "path"
 import PROMPT_BILLY from "../agent/prompt/billy.txt"
 import PROMPT_BOBBY from "../agent/prompt/bobby.txt"
-import PROMPT_CHARLIE from "../agent/prompt/charlie.txt"
+import PROMPT_BACKEND from "../agent/prompt/backend.txt"
 import PROMPT_FRANKIE from "../agent/prompt/frankie.txt"
 import PROMPT_JIMMY from "../agent/prompt/jimmy.txt"
 import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
+import { BackendSkillRoot } from "./backend-skill-root"
+
+// The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
+export const backendSkills = Object.freeze({
+  root: BackendSkillRoot.root,
+  names: Object.freeze([
+    "backend-implement",
+    "backend-api",
+    "backend-data",
+    "backend-concurrency",
+    "backend-refactor",
+    "backend-check",
+  ] as const),
+})
+
+// The backend seat's default display label, its only literal name in the repository (F1.2): config
+// `agent.backend.name` or HUGR_BACKEND_NAME replaces it, and test/agent/specialist-name-guard.test.ts pins it.
+export const BACKEND_DEFAULT_LABEL = "Charlie"
+
+// Data written before the backend seat got its stable `backend` id carries its former id, which was the lowercased
+// default label. It is derived, never spelled, and only read: `canonicalMemberId` maps it to `backend` wherever a stored
+// or user-supplied member id enters, and every write uses `backend`.
+export const LEGACY_BACKEND_ID = BACKEND_DEFAULT_LABEL.toLowerCase()
+
+export function canonicalMemberId(id: string): string
+export function canonicalMemberId(id: string | undefined): string | undefined
+export function canonicalMemberId(id: string | undefined) {
+  return id === LEGACY_BACKEND_ID ? "backend" : id
+}
 
 export const nativeProfiles = Object.freeze({
   execution: Object.freeze({
@@ -15,6 +45,21 @@ export const nativeProfiles = Object.freeze({
     grep: "allow",
     bash: "allow",
     edit: "allow",
+  } as const),
+  // Backend-specialist-only (F1.8): the execution set plus its six entry skills and access to their packaged root. Agent
+  // registration adds the worktree-relative edit deny that keeps that root read-only.
+  backend: Object.freeze({
+    "*": "deny",
+    read: "allow",
+    glob: "allow",
+    grep: "allow",
+    bash: "allow",
+    edit: "allow",
+    skill: Object.freeze({
+      "*": "deny",
+      ...Object.fromEntries(backendSkills.names.map((name) => [name, "allow" as const])),
+    }),
+    external_directory: Object.freeze({ "*": "deny", [path.join(backendSkills.root, "*")]: "allow" } as const),
   } as const),
   review: Object.freeze({
     "*": "deny",
@@ -38,6 +83,13 @@ export type RosterMember = {
 
 export type Roster = readonly RosterMember[]
 
+// Seat prompts are label templates: the host renders the configured display label (F1.2), so the roster holds none.
+export const LABEL = "{{label}}"
+
+export function renderPrompt(member: RosterMember, label: string) {
+  return member.prompt?.replaceAll(LABEL, label)
+}
+
 export type RosterLookup =
   | { status: "FOUND"; member: RosterMember }
   | { status: "HOLD"; reason: "malformed-member-id" | "unknown-member-id" }
@@ -52,14 +104,25 @@ export const roster = createRoster([
     forbiddenActions: ["product implementation", "self-approval", "self-review"],
   },
   {
-    displayName: "Charlie",
-    memberId: "charlie",
+    displayName: BACKEND_DEFAULT_LABEL,
+    memberId: "backend",
     role: "backend execution",
     abilityClass: "scoped repository write",
-    returnCard: "implementation card, gates, diff receipt",
-    forbiddenActions: ["approve", "review own work", "merge"],
-    nativeProfile: "execution",
-    prompt: PROMPT_CHARLIE,
+    returnCard: "backend-result",
+    // Single source of the charter's Forbidden line; native-team.test.ts asserts the prompt renders it verbatim.
+    forbiddenActions: [
+      "investigation or diagnosis",
+      "architecture or scope decisions",
+      "delegation",
+      "self-review",
+      "claims of verification or acceptance",
+      "commit, push, branch, merge or pull request",
+      "installing tools",
+      "working around permission denials or safety holds",
+      "editing Atlas memory files",
+    ],
+    nativeProfile: "backend",
+    prompt: PROMPT_BACKEND,
   },
   {
     displayName: "Patty",
@@ -137,23 +200,28 @@ export function createRoster(members: readonly RosterMember[]): Roster {
   const memberIds = new Set<string>()
   return Object.freeze(
     members.map((member) => {
-      if (!canonicalMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
+      if (!wellFormedMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
       if (memberIds.has(member.memberId)) throw new Error(`Roster memberId must be unique: ${member.memberId}`)
       memberIds.add(member.memberId)
-      return Object.freeze({ ...member, forbiddenActions: Object.freeze([...member.forbiddenActions]) })
+      // Windows checkouts may convert prompt files to CRLF; prompts and their hashes must not depend on the checkout.
+      return Object.freeze({
+        ...member,
+        ...(member.prompt === undefined ? {} : { prompt: member.prompt.replaceAll("\r\n", "\n") }),
+        forbiddenActions: Object.freeze([...member.forbiddenActions]),
+      })
     }),
   )
 }
 
 export function lookupRosterMember(memberId: unknown, members: Roster = roster): RosterLookup {
-  if (!canonicalMemberId(memberId)) {
+  if (!wellFormedMemberId(memberId)) {
     return { status: "HOLD", reason: "malformed-member-id" }
   }
-  const member = members.find((candidate) => candidate.memberId === memberId)
+  const member = members.find((candidate) => candidate.memberId === canonicalMemberId(memberId))
   if (!member) return { status: "HOLD", reason: "unknown-member-id" }
   return { status: "FOUND", member }
 }
 
-function canonicalMemberId(value: unknown): value is string {
+function wellFormedMemberId(value: unknown): value is string {
   return typeof value === "string" && /^[a-z]+(?:-[a-z]+)*$/.test(value)
 }

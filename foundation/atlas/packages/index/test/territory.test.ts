@@ -25,9 +25,9 @@ const T = (name: string, owner: string, tier: Territory["tier"], globs: string[]
 describe("INDEX-14 — territory assignment & overlap resolution (visible goldens)", () => {
   it("SCN-INDEX-14a-1: assignment derives from the hashed manifest (not a hardcoded map)", () => {
     const path = "core/cas/cas.ts"
-    const mA: Manifest = { territories: [T("cas", "charlie", "T1", ["core/cas/**"])] }
+    const mA: Manifest = { territories: [T("cas", "backend", "T1", ["core/cas/**"])] }
     const rA = assign(path, mA)
-    expect(rA).toEqual({ kind: "assigned", owner: "charlie", tier: "T1" })
+    expect(rA).toEqual({ kind: "assigned", owner: "backend", tier: "T1" })
     // teeth: changing the manifest MUST change the assignment — it is read from the manifest, not a fixed map.
     const mB: Manifest = { territories: [T("cas", "dana", "T2", ["core/cas/**"])] }
     const rB = assign(path, mB)
@@ -37,7 +37,7 @@ describe("INDEX-14 — territory assignment & overlap resolution (visible golden
   it("SCN-INDEX-14b-1: overlapping globs resolve by longest-path-match, then declaration order", () => {
     // T0 declared FIRST (shorter glob) — longest-path MUST still beat declaration order.
     const manifest: Manifest = {
-      territories: [T("t0", "charlie", "T0", ["core/**"]), T("t1", "dana", "T1", ["core/cas/**"])],
+      territories: [T("t0", "backend", "T0", ["core/**"]), T("t1", "dana", "T1", ["core/cas/**"])],
     }
     const r = assign("core/cas/cas.ts", manifest)
     expect(r).toEqual({ kind: "assigned", owner: "dana", tier: "T1" }) // core/cas/** is the longer match
@@ -45,7 +45,7 @@ describe("INDEX-14 — territory assignment & overlap resolution (visible golden
 
   it("SCN-INDEX-14c-1: assignment is byte-identical across rebuilds", () => {
     const manifest: Manifest = {
-      territories: [T("t0", "charlie", "T0", ["core/**"]), T("t1", "dana", "T1", ["core/cas/**"])],
+      territories: [T("t0", "backend", "T0", ["core/**"]), T("t1", "dana", "T1", ["core/cas/**"])],
     }
     for (const p of ["core/cas/cas.ts", "core/other.ts", "scripts/tmp.sh"]) {
       expect(canon(assign(p, manifest))).toBe(canon(assign(p, manifest)))
@@ -53,14 +53,14 @@ describe("INDEX-14 — territory assignment & overlap resolution (visible golden
   })
 
   it("SCN-INDEX-14d-1: a path matched by no glob is flagged uncovered (a verdict, not a silent pass)", () => {
-    const manifest: Manifest = { territories: [T("cas", "charlie", "T1", ["core/cas/**"])] }
+    const manifest: Manifest = { territories: [T("cas", "backend", "T1", ["core/cas/**"])] }
     const r = assign("scripts/tmp.sh", manifest)
     expect(r.kind).toBe("uncovered") // NOT assigned to a default owner
   })
 
   it("SCN-INDEX-14e-1: a T0-adjacent uncovered path defaults to deny", () => {
     // T0 member is the exact file core/cas/cas.ts; new.ts shares region core/cas but matches no glob.
-    const manifest: Manifest = { territories: [T("cas", "charlie", "T0", ["core/cas/cas.ts"])] }
+    const manifest: Manifest = { territories: [T("cas", "backend", "T0", ["core/cas/cas.ts"])] }
     const r = assign("core/cas/new.ts", manifest)
     expect(r).toEqual({ kind: "uncovered", verdict: "deny" })
     // a non-T0-adjacent uncovered path does NOT default to deny.
@@ -69,7 +69,7 @@ describe("INDEX-14 — territory assignment & overlap resolution (visible golden
 
   it("SCN-INDEX-14f-1: assignment calls no model (model-call-count == 0)", () => {
     const manifest: Manifest = {
-      territories: [T("t0", "charlie", "T0", ["core/**"]), T("t1", "dana", "T1", ["core/cas/**"])],
+      territories: [T("t0", "backend", "T0", ["core/**"]), T("t1", "dana", "T1", ["core/cas/**"])],
     }
     assign("core/cas/cas.ts", manifest)
     assign("scripts/tmp.sh", manifest)

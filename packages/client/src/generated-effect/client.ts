@@ -30,7 +30,50 @@ type Endpoint2_0Input = { readonly location?: Endpoint2_0Request["query"]["locat
 const Endpoint2_0 = (raw: RawClient["server.agent"]) => (input?: Endpoint2_0Input) =>
   raw["agent.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
 
-const adaptGroup2 = (raw: RawClient["server.agent"]) => ({ list: Endpoint2_0(raw) })
+type Endpoint2_1Request = Parameters<RawClient["server.agent"]["agent.file.get"]>[0]
+type Endpoint2_1Input = {
+  readonly agentID: Endpoint2_1Request["params"]["agentID"]
+  readonly location?: Endpoint2_1Request["query"]["location"]
+}
+const Endpoint2_1 = (raw: RawClient["server.agent"]) => (input: Endpoint2_1Input) =>
+  raw["agent.file.get"]({ params: { agentID: input["agentID"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint2_2Request = Parameters<RawClient["server.agent"]["agent.file.update"]>[0]
+type Endpoint2_2Input = {
+  readonly agentID: Endpoint2_2Request["params"]["agentID"]
+  readonly location?: Endpoint2_2Request["query"]["location"]
+  readonly description?: Endpoint2_2Request["payload"]["description"]
+  readonly mode?: Endpoint2_2Request["payload"]["mode"]
+  readonly model?: Endpoint2_2Request["payload"]["model"]
+  readonly steps?: Endpoint2_2Request["payload"]["steps"]
+  readonly system?: Endpoint2_2Request["payload"]["system"]
+  readonly permission?: Endpoint2_2Request["payload"]["permission"]
+  readonly disable?: Endpoint2_2Request["payload"]["disable"]
+  readonly revision?: Endpoint2_2Request["payload"]["revision"]
+}
+const Endpoint2_2 = (raw: RawClient["server.agent"]) => (input: Endpoint2_2Input) =>
+  raw["agent.file.update"]({
+    params: { agentID: input["agentID"] },
+    query: { location: input["location"] },
+    payload: {
+      description: input["description"],
+      mode: input["mode"],
+      model: input["model"],
+      steps: input["steps"],
+      system: input["system"],
+      permission: input["permission"],
+      disable: input["disable"],
+      revision: input["revision"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup2 = (raw: RawClient["server.agent"]) => ({
+  list: Endpoint2_0(raw),
+  getFile: Endpoint2_1(raw),
+  updateFile: Endpoint2_2(raw),
+})
 
 type Endpoint3_0Request = Parameters<RawClient["server.session"]["session.list"]>[0]
 type Endpoint3_0Input = {
@@ -506,7 +549,42 @@ type Endpoint12_0Input = { readonly location?: Endpoint12_0Request["query"]["loc
 const Endpoint12_0 = (raw: RawClient["server.skill"]) => (input?: Endpoint12_0Input) =>
   raw["skill.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
 
-const adaptGroup12 = (raw: RawClient["server.skill"]) => ({ list: Endpoint12_0(raw) })
+type Endpoint12_1Request = Parameters<RawClient["server.skill"]["skill.save"]>[0]
+type Endpoint12_1Input = {
+  readonly location?: Endpoint12_1Request["query"]["location"]
+  readonly name: Endpoint12_1Request["payload"]["name"]
+  readonly description: Endpoint12_1Request["payload"]["description"]
+  readonly content: Endpoint12_1Request["payload"]["content"]
+  readonly path?: Endpoint12_1Request["payload"]["path"]
+  readonly mtime?: Endpoint12_1Request["payload"]["mtime"]
+}
+const Endpoint12_1 = (raw: RawClient["server.skill"]) => (input: Endpoint12_1Input) =>
+  raw["skill.save"]({
+    query: { location: input["location"] },
+    payload: {
+      name: input["name"],
+      description: input["description"],
+      content: input["content"],
+      path: input["path"],
+      mtime: input["mtime"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint12_2Request = Parameters<RawClient["server.skill"]["skill.remove"]>[0]
+type Endpoint12_2Input = {
+  readonly location?: Endpoint12_2Request["query"]["location"]
+  readonly path: Endpoint12_2Request["query"]["path"]
+}
+const Endpoint12_2 = (raw: RawClient["server.skill"]) => (input: Endpoint12_2Input) =>
+  raw["skill.remove"]({ query: { location: input["location"], path: input["path"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+const adaptGroup12 = (raw: RawClient["server.skill"]) => ({
+  list: Endpoint12_0(raw),
+  save: Endpoint12_1(raw),
+  remove: Endpoint12_2(raw),
+})
 
 const Endpoint13_0 = (raw: RawClient["server.event"]) => () =>
   Stream.unwrap(

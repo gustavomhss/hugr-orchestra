@@ -29,7 +29,7 @@ export const MaestroRequestReviewTool = Tool.define(
     const config = yield* Config.Service
     const fs = yield* FileSystem.FileSystem
     return {
-      description: "Delegate one read-only cold review to native Lucy. Maestro only.",
+      description: "Delegate one read-only cold review to the native cold reviewer (`lucy`). Maestro only.",
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx) =>
         Effect.gen(function* () {
@@ -156,9 +156,11 @@ export const MaestroRequestReviewTool = Tool.define(
               },
             ),
           )
+          // Titles render the reviewer seat's configured label; output codes stay stable for parsers.
+          const reviewer = (yield* agents.get("lucy"))?.name ?? "lucy"
           if (Exit.isFailure(result)) {
             return {
-              title: "Lucy review failed",
+              title: `${reviewer} review failed`,
               metadata: { childSessionID: child.id, reviewReceiptID: "" },
               output: `LUCY_ERROR: ${String(Cause.squash(result.cause))}`,
             }
@@ -168,13 +170,13 @@ export const MaestroRequestReviewTool = Tool.define(
           )
           if (review)
             return {
-              title: `Lucy review ${review.data.verdict}`,
+              title: `${reviewer} review ${review.data.verdict}`,
               metadata: { childSessionID: child.id, reviewReceiptID: review.id },
               output: `${review.data.verdict}: ${review.id}`,
             }
           const text = result.value.parts.findLast((part) => part.type === "text")?.text ?? ""
           return {
-            title: "Lucy review missing receipt",
+            title: `${reviewer} review missing receipt`,
             metadata: { childSessionID: child.id, reviewReceiptID: "" },
             output: text ? `LUCY_NO_RECEIPT: ${text}` : `LUCY_NO_RECEIPT: ${child.id}`,
           }

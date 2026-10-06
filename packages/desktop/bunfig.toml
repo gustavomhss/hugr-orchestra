@@ -1,0 +1,14 @@
+[test]
+# Tests run on GitHub Actions; see AGENTS.md (Testing).
+preload = ["../../script/test-guard.ts"]
+pathIgnorePatterns = [
+  # Standalone App Dock harnesses: they register no bun tests, and importing one bundles and launches a real
+  # Electron and sets process.exitCode. They run with `bun run <file>` (package.json test:app-dock:*).
+  "src/main/app-dock-live.test.ts",
+  "src/main/app-dock-rpc.test.ts",
+  "src/main/app-dock-security.test.ts",
+  "src/main/app-dock-tools.test.ts",
+  "src/main/app-dock-youtube.test.ts",
+  # node:sqlite exists in Node and Electron, not in Bun; package.json test runs these with node --test.
+  "src/**/*.node.test.ts",
+]

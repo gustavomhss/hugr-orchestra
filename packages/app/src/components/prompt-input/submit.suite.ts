@@ -2,8 +2,11 @@ import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
 import { createStore } from "solid-js/store"
 import type { Prompt, PromptStore } from "@/context/prompt"
 import type { ModelSelection } from "@/context/local"
+import type { FollowupDraft } from "./submit"
 
 let createPromptSubmit: typeof import("./submit").createPromptSubmit
+let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
+let followupSystem: typeof import("./submit").followupSystem
 
 const createdClients: string[] = []
 const createdSessions: string[] = []
@@ -25,6 +28,7 @@ const optimistic: Array<{
 const optimisticSeeded: boolean[] = []
 const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 const promoted: Array<{ directory: string; sessionID: string }> = []
+const promotedAgents: Array<string | undefined> = []
 const sentShell: Array<{ sessionID: string; id?: string; command: string }> = []
 const syncedDirectories: string[] = []
 const promotedDrafts: Array<{ draftID: string; server: string; sessionId: string }> = []
@@ -33,6 +37,10 @@ const promptInputs: unknown[] = []
 const sentCommands: unknown[] = []
 const commands: Array<{ name: string }> = []
 let serverSessionSyncs = 0
+const behaviorReads: Array<{ scope: string; directory: string; projects: unknown }> = []
+const behaviors = { system: undefined as string | undefined, fail: false }
+const events: string[] = []
+const profileProjects = [{ id: "project", worktree: "/repo/main", sandboxes: ["/repo/worktree-a"] }]
 
 let params: { id?: string } = {}
 let search: { draftId?: string } = {}
@@ -69,6 +77,23 @@ const prompt = {
   },
   capture: () => prompt,
 }
+
+const submitInput = (): Parameters<typeof import("./submit").createPromptSubmit>[0] => ({
+  prompt,
+  info: () => ({ id: "session-1" }),
+  imageAttachments: () => [],
+  commentCount: () => 0,
+  autoAccept: () => false,
+  mode: () => "normal",
+  working: () => false,
+  editor: () => undefined,
+  queueScroll: () => undefined,
+  promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+  addToHistory: () => undefined,
+  resetHistoryNavigation: () => undefined,
+  setMode: () => undefined,
+  setPopover: () => undefined,
+})
 
 const clientFor = (directory: string) => {
   createdClients.push(directory)
@@ -142,6 +167,17 @@ beforeAll(async () => {
     base64Encode: (value: string) => value,
   }))
 
+  // This suite runs Solid's server build, where persisted stores cannot load. The real store (storage
+  // failures, slow loads, profile resolution) is covered in test-browser/llm-behaviors-store.test.ts.
+  mock.module("@/utils/llm-behaviors-store", () => ({
+    resolveBehaviorSystem: async (input: { scope: string; directory: string; projects: unknown }) => {
+      events.push("resolve behaviors")
+      behaviorReads.push({ scope: input.scope, directory: input.directory, projects: input.projects })
+      if (behaviors.fail) throw new Error("storage unavailable")
+      return behaviors.system
+    },
+  }))
+
   mock.module("@/context/local", () => ({
     useLocal: () => ({
       model: {
@@ -149,11 +185,13 @@ beforeAll(async () => {
         variant: { current: () => variant },
       },
       agent: {
-        current: () => ({ name: "agent" }),
+        // A seat renamed from its default label: payloads must carry the stable id, never the label.
+        current: () => ({ id: "backend", name: "Pikachu" }),
       },
       session: {
-        promote(directory: string, sessionID: string) {
+        promote(directory: string, sessionID: string, state: { agent?: string }) {
           promoted.push({ directory, sessionID })
+          promotedAgents.push(state.agent)
         },
       },
     }),
@@ -239,6 +277,7 @@ beforeAll(async () => {
 
   mock.module("@/context/server-sync", () => ({
     useServerSync: () => () => ({
+      data: { project: profileProjects },
       session: {
         remember: () => undefined,
         set: () => undefined,
@@ -281,6 +320,8 @@ beforeAll(async () => {
 
   const mod = await import("./submit")
   createPromptSubmit = mod.createPromptSubmit
+  sendFollowupDraft = mod.sendFollowupDraft
+  followupSystem = mod.followupSystem
 })
 
 beforeEach(() => {
@@ -291,9 +332,14 @@ beforeEach(() => {
   optimistic.length = 0
   optimisticSeeded.length = 0
   promoted.length = 0
+  promotedAgents.length = 0
   promotedDrafts.length = 0
   sentPrompts.length = 0
   promptInputs.length = 0
+  behaviorReads.length = 0
+  behaviors.system = undefined
+  behaviors.fail = false
+  events.length = 0
   sentCommands.length = 0
   commands.length = 0
   promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
@@ -341,12 +387,12 @@ describe("prompt submit worktree selection", () => {
     expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
     expect(sessionCreateInputs).toEqual([
       {
-        agent: "agent",
+        agent: "backend",
         model: { id: "model", providerID: "provider", variant: undefined },
         location: { directory: "/repo/worktree-a" },
       },
       {
-        agent: "agent",
+        agent: "backend",
         model: { id: "model", providerID: "provider", variant: undefined },
         location: { directory: "/repo/worktree-b" },
       },
@@ -361,6 +407,8 @@ describe("prompt submit worktree selection", () => {
       { directory: "/repo/worktree-a", sessionID: "session-1" },
       { directory: "/repo/worktree-b", sessionID: "session-2" },
     ])
+    expect(promotedAgents).toEqual(["backend", "backend"])
+    expect(JSON.stringify([sessionCreateInputs, sentShell])).not.toContain("Pikachu")
     expect(syncedDirectories).toEqual(["/repo/worktree-a", "/repo/worktree-a", "/repo/worktree-b", "/repo/worktree-b"])
   })
 
@@ -482,7 +530,7 @@ describe("prompt submit worktree selection", () => {
     expect(optimistic).toHaveLength(1)
     expect(optimistic[0]).toMatchObject({
       message: {
-        agent: "agent",
+        agent: "backend",
         model: { providerID: "provider", modelID: "model", variant: "high" },
       },
     })
@@ -497,6 +545,157 @@ describe("prompt submit worktree selection", () => {
     expect((promptInputs[0] as { legacyParts?: { id: string; type: string; text?: string }[] }).legacyParts).toEqual([
       { id: expect.stringMatching(/^prt_/), type: "text", text: "ls" },
     ])
+  })
+
+  test("reads the profile's LLM behaviors when each message is sent, after the input clears", async () => {
+    params = { id: "session-1" }
+    const submit = createPromptSubmit({
+      ...submitInput(),
+      setPopover: () => void events.push("clear input"),
+    })
+    const event = { preventDefault: () => undefined } as unknown as Event
+
+    behaviors.system = "## Caveman (intensity: ultra)"
+    await submit.handleSubmit(event)
+    await Bun.sleep(0)
+    behaviors.system = undefined
+    await submit.handleSubmit(event)
+    await Bun.sleep(0)
+
+    expect(events).toEqual(["clear input", "resolve behaviors", "clear input", "resolve behaviors"])
+    expect(behaviorReads).toEqual([
+      { scope: "local", directory: "/repo/main", projects: profileProjects },
+      { scope: "local", directory: "/repo/main", projects: profileProjects },
+    ])
+    expect(promptInputs).toHaveLength(2)
+    expect((promptInputs[0] as { system?: string }).system).toBe("## Caveman (intensity: ultra)")
+    expect((promptInputs[1] as { system?: string }).system).toBeUndefined()
+  })
+
+  test("a failing behavior read still sends the message, without behaviors", async () => {
+    params = { id: "session-1" }
+    behaviors.fail = true
+    await createPromptSubmit(submitInput()).handleSubmit({ preventDefault: () => undefined } as unknown as Event)
+    await Bun.sleep(0)
+
+    expect(promptInputs).toHaveLength(1)
+    expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "ls" })
+    expect((promptInputs[0] as { system?: string }).system).toBeUndefined()
+  })
+
+  test("a queued message stores no behaviors; they are read when it is sent", async () => {
+    params = { id: "session-1" }
+    behaviors.system = "## Caveman (intensity: lite)"
+    const queued: FollowupDraft[] = []
+    await createPromptSubmit({
+      ...submitInput(),
+      shouldQueue: () => true,
+      onQueue: (draft) => void queued.push(draft),
+    }).handleSubmit({ preventDefault: () => undefined } as unknown as Event)
+
+    expect(queued).toHaveLength(1)
+    expect(queued[0]).not.toHaveProperty("system")
+    expect(behaviorReads).toEqual([])
+    expect(promptInputs).toEqual([])
+
+    const sync = { data: { command: [] }, session: { optimistic: { add: () => {}, remove: () => {} } } }
+    const serverSync = { data: { project: profileProjects }, session: { set: () => {} } }
+    const send = (draft: FollowupDraft) =>
+      sendFollowupDraft({
+        api: clientFor("/repo/main").api.session as unknown as Parameters<typeof sendFollowupDraft>[0]["api"],
+        sync: sync as unknown as Parameters<typeof sendFollowupDraft>[0]["sync"],
+        serverSync: serverSync as unknown as Parameters<typeof sendFollowupDraft>[0]["serverSync"],
+        draft,
+      })
+    const system = await followupSystem(
+      { platform: "web" } as Parameters<typeof followupSystem>[0],
+      "local" as Parameters<typeof followupSystem>[1],
+      serverSync as unknown as Parameters<typeof followupSystem>[2],
+      "/repo/worktree-a",
+    )
+    await send({ ...queued[0]!, system })
+    await send(queued[0]!)
+
+    expect(behaviorReads).toEqual([{ scope: "local", directory: "/repo/worktree-a", projects: profileProjects }])
+    expect((promptInputs[0] as { system?: string }).system).toBe("## Caveman (intensity: lite)")
+    expect((promptInputs[1] as { system?: string }).system).toBeUndefined()
+  })
+
+  test("sends the composer's delivery choice with prompts and commands to an existing session", async () => {
+    params = { id: "session-1" }
+    commands.push({ name: "review" })
+    const submit = (delivery: "steer" | "queue" | undefined) =>
+      createPromptSubmit({
+        prompt,
+        info: () => ({ id: "session-1" }),
+        imageAttachments: () => [],
+        commentCount: () => 0,
+        autoAccept: () => false,
+        mode: () => "normal",
+        working: () => false,
+        editor: () => undefined,
+        queueScroll: () => undefined,
+        promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+        addToHistory: () => undefined,
+        resetHistoryNavigation: () => undefined,
+        setMode: () => undefined,
+        setPopover: () => undefined,
+        delivery: () => delivery,
+      })
+    const event = { preventDefault: () => undefined } as unknown as Event
+
+    await submit("queue").handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(1)
+    expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "ls", delivery: "queue" })
+
+    // Without a choice (a V1 server), no delivery field is sent at all.
+    promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
+    await submit(undefined).handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs[1]).not.toHaveProperty("delivery", expect.anything())
+
+    promptValue = [{ type: "text", content: "/review staged changes", start: 0, end: 22 }]
+    await submit("steer").handleSubmit(event)
+    expect(sentCommands).toHaveLength(1)
+    expect(sentCommands[0]).toMatchObject({ command: "review", delivery: "steer" })
+  })
+
+  test("a queued prompt sent while the session works gets no optimistic sent turn", async () => {
+    params = { id: "session-1" }
+    const submit = (working: boolean) =>
+      createPromptSubmit({
+        prompt,
+        info: () => ({ id: "session-1" }),
+        imageAttachments: () => [],
+        commentCount: () => 0,
+        autoAccept: () => false,
+        mode: () => "normal",
+        working: () => working,
+        editor: () => undefined,
+        queueScroll: () => undefined,
+        promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+        addToHistory: () => undefined,
+        resetHistoryNavigation: () => undefined,
+        setMode: () => undefined,
+        setPopover: () => undefined,
+        delivery: () => "queue",
+      })
+    const event = { preventDefault: () => undefined } as unknown as Event
+
+    await submit(true).handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(1)
+    expect(promptInputs[0]).toMatchObject({ delivery: "queue" })
+    expect(optimistic).toHaveLength(0)
+
+    // Idle, the queued prompt promotes at once, so it shows as sent like any prompt.
+    promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
+    await submit(false).handleSubmit(event)
+    await Bun.sleep(0)
+    expect(promptInputs).toHaveLength(2)
+    expect(optimistic).toHaveLength(1)
   })
 
   test("submits slash commands through the current session API", async () => {
@@ -530,7 +729,7 @@ describe("prompt submit worktree selection", () => {
         id: expect.stringMatching(/^msg_/),
         command: "review",
         arguments: "staged changes",
-        agent: "agent",
+        agent: "backend",
         model: { id: "model", providerID: "provider", variant: "high" },
         files: [],
       },

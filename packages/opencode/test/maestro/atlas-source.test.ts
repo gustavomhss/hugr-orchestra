@@ -79,9 +79,10 @@ const fixture = Effect.fn("AtlasTest.fixture")(function* (
   yield* command(test.directory, ["add", "src"])
   yield* command(test.directory, ["commit", "-m", "source fixture"])
   const revision = yield* command(test.directory, ["rev-parse", "HEAD"])
-  const blobs = yield* Effect.forEach(["src/alpha.ts", "src/beta.ts"], (file) =>
-    command(test.directory, ["hash-object", "--no-filters", "--", file]),
-  )
+  // One hash-object process for both files: git spawns dominate this fixture's cost on Windows.
+  const blobs = (yield* command(test.directory, ["hash-object", "--no-filters", "--", "src/alpha.ts", "src/beta.ts"]))
+    .split(/\r?\n/)
+  expect(blobs).toHaveLength(2)
   const snapshot = parseOwnSnapshot(
     JSON.stringify({
       schemaVersion: 1,
@@ -116,7 +117,7 @@ const fixture = Effect.fn("AtlasTest.fixture")(function* (
   yield* fs.writeFileString(
     path.join(directory, "TERRITORY-CATALOG.json"),
     JSON.stringify(
-      publishTerritoryCatalog(projectID, [{ name: "backend", owner: "charlie", tier: "T1", globs: ["src/**"] }]),
+      publishTerritoryCatalog(projectID, [{ name: "backend", owner: "backend", tier: "T1", globs: ["src/**"] }]),
     ),
   )
   const output = yield* persist(directory, snapshot)
@@ -125,7 +126,7 @@ const fixture = Effect.fn("AtlasTest.fixture")(function* (
 
 function planFor(source: AtlasSource, session = { id: sessionID, projectID }) {
   const compiled = compileContextToolPlan({
-    actor: { memberId: "charlie", projectId: session.projectID, sessionId: session.id },
+    actor: { memberId: "backend", projectId: session.projectID, sessionId: session.id },
     revision: { id: "plan_atlas", hash: "a".repeat(64), projectId: session.projectID, sessionId: session.id },
     territories: ["backend"],
     units: [...units].reverse(),

@@ -429,6 +429,36 @@ describe("tool.task", () => {
     }),
   )
 
+  it.instance("execute refuses a primary agent as the subagent so delegation only goes down", () =>
+    Effect.gen(function* () {
+      const { chat, assistant } = yield* seed()
+      const tool = yield* TaskTool
+      const def = yield* tool.init()
+
+      const exit = yield* def
+        .execute(
+          { description: "escape scope", prompt: "do it on the host", subagent_type: "build" },
+          {
+            sessionID: chat.id,
+            messageID: assistant.id,
+            agent: "general",
+            abort: new AbortController().signal,
+            extra: { promptOps: stubOps({}) },
+            messages: [],
+            metadata: () => Effect.void,
+            ask: () => Effect.void,
+          },
+        )
+        .pipe(Effect.exit)
+
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isSuccess(exit)) throw new Error("expected task failure")
+      const failure = Cause.squash(exit.cause)
+      if (!(failure instanceof Error)) throw new Error("expected Error defect")
+      expect(failure.message).toContain("primary agent")
+    }),
+  )
+
   it.instance("execute surfaces child errors with a resumable task_id", () =>
     Effect.gen(function* () {
       const sessions = yield* Session.Service
@@ -889,7 +919,8 @@ describe("tool.task", () => {
 
       yield* Deferred.succeed(done, undefined)
       expect((yield* jobs.wait({ id: result.metadata.sessionId })).info?.output).toBe("background done")
-      expect((yield* Deferred.await(injected)).parts[0]?.type).toBe("text")
+      expect((yield* Deferred.await(injected)).parts[0]).toMatchObject({ type: "text", synthetic: true,
+        metadata: { source: { type: "task-return", task_id: result.metadata.sessionId, state: "completed" } } })
       expect(runs).toBe(1)
     }),
   )

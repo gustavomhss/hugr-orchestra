@@ -202,7 +202,7 @@ context_refs:
 - source: ../../method/wp-template.md
 - source: ./wp-fix-scip-local-edges.md
 
-owner: SPEC territory · builder_id: `charlie`
+owner: SPEC territory · builder_id: `backend`
 
 outputs:
 

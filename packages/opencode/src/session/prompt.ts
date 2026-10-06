@@ -20,6 +20,7 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
+import { commandSource } from "@/continuity/alias"
 import { SystemPrompt } from "./system"
 import { Instruction } from "./instruction"
 import { Plugin } from "../plugin"
@@ -213,7 +214,8 @@ const layer = Layer.effect(
       const firstInfo = firstUser.info
 
       const subtasks = firstUser.parts.filter((p): p is SessionV1.SubtaskPart => p.type === "subtask")
-      const onlySubtasks = subtasks.length > 0 && firstUser.parts.every((p) => p.type === "subtask")
+      const onlySubtasks = subtasks.length > 0 &&
+        firstUser.parts.every((p) => p.type === "subtask" || (p.type === "text" && p.ignored))
 
       const ag = yield* agents.get("title")
       if (!ag) return
@@ -1225,12 +1227,15 @@ const layer = Layer.effect(
             .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
 
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
+            // Tools read this history when they run. Working memory needs their recall capability to choose
+            // what the model is sent, so it is refilled with that choice once continuity prepares it.
+            const sent = [...msgs]
             const tools = yield* SessionNativeTools.resolve({
               agent,
               session,
               model,
               processor: handle,
-              messages: msgs,
+              messages: sent,
             }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
 
             canRecall = Object.hasOwn(
@@ -1253,6 +1258,7 @@ const layer = Layer.effect(
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
             const prepared = yield* continuity.prepare({ sessionID, messages: msgs, canRecall })
+            sent.splice(0, sent.length, ...prepared.messages)
 
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
@@ -1270,7 +1276,7 @@ const layer = Layer.effect(
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
-            const result = yield* handle.process({
+            const streamInput = {
               contextMemory: prepared.system.length > 0,
               user: lastUser,
               agent,
@@ -1284,8 +1290,14 @@ const layer = Layer.effect(
               ],
               tools,
               model,
-              toolChoice: format.type === "json_schema" ? "required" : undefined,
+              toolChoice: format.type === "json_schema" ? ("required" as const) : undefined,
+            }
+            yield* continuity.observe({
+              sessionID,
+              request: streamInput,
+              messageIDs: prepared.messages.map((message) => message.info.id),
             })
+            const result = yield* handle.process(streamInput)
 
             if (structured !== undefined) {
               handle.message.structured = structured
@@ -1461,7 +1473,9 @@ const layer = Layer.effect(
         throw error
       }
 
-      const templateParts = yield* resolvePromptParts(template)
+      const { invocation, source } = commandSource(input.command, input.arguments)
+      const templateParts = (yield* resolvePromptParts(template)).map((part) =>
+        part.type === "text" ? { ...part, metadata: { ...part.metadata, source } } : part)
       const inputFiles = new Set(
         input.parts?.filter((part) => new URL(part.url).protocol === "file:").map((part) => fileURLToPath(part.url)),
       )
@@ -1479,6 +1493,7 @@ const layer = Layer.effect(
               model: { providerID: taskModel.providerID, modelID: taskModel.modelID },
               prompt: templateParts.find((y) => y.type === "text")?.text ?? "",
             },
+            { type: "text" as const, text: invocation, ignored: true, metadata: { source } }, // typed invocation
           ]
         : [...uniqueTemplateParts, ...(input.parts ?? [])]
 

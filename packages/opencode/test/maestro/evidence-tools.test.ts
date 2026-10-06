@@ -170,7 +170,7 @@ describe("Maestro evidence tools", () => {
             workCardID: "card_review_tool",
             workCard,
             workCardHash: workCardHash(workCard),
-            routedMemberID: "charlie",
+            routedMemberID: "backend",
             rosterHash: "b".repeat(64),
             grantHash: "c".repeat(64),
             reviewPolicyHash: "d".repeat(64),
@@ -209,6 +209,7 @@ describe("Maestro evidence tools", () => {
         )
 
         expect(result.output).toContain("LUCY_NO_RECEIPT")
+        expect(result.title).toBe("Lucy review missing receipt")
         expect(prompt).toContain(`\"baseSHA\":\"${base}\"`)
         expect(prompt).toContain("first.txt")
         expect(prompt).toContain("second.txt")
@@ -269,7 +270,7 @@ describe("Maestro evidence tools", () => {
                 projectID: other.projectID,
                 workCardID: "foreign",
                 workCard,
-                routedMemberID: "charlie",
+                routedMemberID: "backend",
                 validatorVersion: "validation-v1",
                 checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],
               },
@@ -410,7 +411,7 @@ describe("Maestro evidence tools", () => {
             workCardID: "card_stale_presentation",
             workCard: "# Card\n",
             workCardHash: workCardHash("# Card\n"),
-            routedMemberID: "charlie",
+            routedMemberID: "backend",
             rosterHash: "f".repeat(64),
             grantHash: "1".repeat(64),
             reviewPolicyHash: "2".repeat(64),
@@ -434,7 +435,7 @@ describe("Maestro evidence tools", () => {
                 validationHash: "ignored",
                 contextHash: "ignored",
                 policyHash: "ignored",
-                intent: { subagentType: "charlie", prompt: "implement card" },
+                intent: { subagentType: "backend", prompt: "implement card" },
                 methodVersion: "request-approval-v1",
                 plan: "ignored",
                 provenance: "ignored",

@@ -24,7 +24,7 @@ summary(kite) · **`!`** user-goal(sea) · **`-`** subfunction(fish).
 
 - **Human — Steward/Owner** (`STW`): ratifies T0, declares territories/tiers, reviews the knowledge-delta, rewinds, exports, sets maintenance appetite.
 - **AI — Orchestrator/Lead** (`ORC`, PODIUM kit — grounded `TEAM.md`): composes packs, dispatches, absorbs, ratifies non-T0, meters, keeps the logbook.
-- **AI — consuming seat** (`SEAT`): charlie/patty (exec) · lucy/bobby/frankie (verify) · **billy** (security — owns T0 ratification input + cred-scrub, `KNOW-8/18`, `PERSIST-10a`) · **jimmy** (explore/mine, `COMPASS`) · **rosie** (docs — owns docs-as-CAS-objects + their drift-check, `INDEX-11`) · **walt** (DEFINE — curates `ontology`/`slot='definition'` nodes + the ratified DEFINE artifact that sources mission/goal, `MEM-11`, `GEN-9`).
+- **AI — consuming seat** (`SEAT`): backend/patty (exec) · lucy/bobby/frankie (verify) · **billy** (security — owns T0 ratification input + cred-scrub, `KNOW-8/18`, `PERSIST-10a`) · **jimmy** (explore/mine, `COMPASS`) · **rosie** (docs — owns docs-as-CAS-objects + their drift-check, `INDEX-11`) · **walt** (DEFINE — curates `ontology`/`slot='definition'` nodes + the ratified DEFINE artifact that sources mission/goal, `MEM-11`, `GEN-9`).
 - **Non-human — Git repo** (`GIT`): emits commit/PR-open/PR-merge/branch/**merge**/rebase/squash/fork/clone/push; is the archive.
 - **Non-human — Host/forge adapter** (`HOST`: GitHub/GitLab/Gitea): attaches trailers/notes/PR-memory, configures the notes refspec (`§7.1`, `PERSIST-8`).
 - **Non-human — Merge driver** `orchestra-atlas` (`MRG`): git invokes it on merge to OR-Set-union Atlas events (`PERSIST-11`, `KERNEL-12`).

@@ -85,3 +85,24 @@ test("recovery restores binary blobs byte-for-byte without text decoding", async
   await recoveryRestore(f.context, f.root, plan.token)
   expect(Buffer.from(await Bun.file(join(f.root, "owned.bin")).arrayBuffer())).toEqual(bytes)
 })
+test("recovery ownership refuses git metadata under either separator and its NTFS aliases before any read", async () => {
+  const f = await fixture()
+  await f.init()
+  // Pure string refusal, so it holds on every OS; on Windows these spellings open the real .git directory.
+  await Promise.all([".git\\config", "sub\\.git\\HEAD", ".GIT/config", "git~1\\config", ".git.\\config", "C:.git\\config", "\\\\server\\share\\owned.ts"].map((path) =>
+    expect(recoveryBegin(f.context, f.root, "wave", [path])).rejects.toThrow("RECOVERY_GIT_METADATA_DENIED")))
+  expect(f.permissions.some((request) => request.effect === "read")).toBe(false)
+})
+test("recovery restores an owned file in a subdirectory", async () => {
+  const f = await fixture()
+  await f.init()
+  await Bun.write(join(f.root, "src", "nested.ts"), "export const nested = 1\n")
+  await f.runGit("add", "src/nested.ts")
+  await f.runGit("commit", "-m", "test: nested baseline")
+  await recoveryBegin(f.context, f.root, "wave", ["src/nested.ts"])
+  await Bun.write(join(f.root, "src", "nested.ts"), "wave dirt\n")
+  const plan = await recoveryPrepare(f.context, f.root, "wave")
+  // Git lists the temporary restore file with "/"; only Windows spells it differently natively.
+  expect(await recoveryRestore(f.context, f.root, plan.token)).toMatchObject({ restored: ["src/nested.ts"] })
+  expect(await Bun.file(join(f.root, "src", "nested.ts")).text()).toBe("export const nested = 1\n")
+})

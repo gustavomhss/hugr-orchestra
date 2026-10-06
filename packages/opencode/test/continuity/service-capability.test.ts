@@ -42,39 +42,38 @@ it.instance("denied recall prevents maintenance; revocation restores native hist
   }).pipe(Effect.provide(environment([first, second])))
 }), 30_000)
 
-it.instance("reference retirement preserves real recall; append-only publication avoids rereading retired history until invalidation", () => Effect.gen(function* () {
+it.instance("memory aliases recall exact sources; append-only publication avoids rereading old history until invalidation", () => Effect.gen(function* () {
   const first = yield* held(FIRST, { reference: NONCE })
   const second = yield* held(SECOND)
-  const third = yield* held("# Work\nVerification still pending; approval constraint retained.")
+  const third = yield* held("Work: Verification still pending; approval constraint retained.")
   const repaired = yield* held(FIRST)
   yield* Effect.gen(function* () {
     const sessionID = yield* seed(B, A, RECEIPT)
     const enteredFirst = yield* entered(first)
     const ref = fragments(packet(enteredFirst.request)).find((entry) => entry.text.includes(NONCE))!
+    expect(ref.id).toMatch(/^t\d+$/)
     const initial = yield* applyFirst(sessionID, first)
-    expect(initial.system[0]).toContain(ref.id)
+    expect(initial.system[0]).toContain(`(${ref.id} · `)
     expect(initial.system[0]).not.toContain(NONCE)
-    const archived = yield* recall(sessionID, { reference: ref.id })
-    expect(archived.status).toBe("found")
-    expect(archived.content).toContain(RECEIPT)
-    expect(archived.content).toContain("Exit: 75")
+    const recalled = yield* recall(sessionID, { reference: ref.id })
+    expect(recalled.status).toBe("found")
+    expect(recalled.content).toContain(NONCE)
+    expect(recalled.content).toContain('"exit":75')
     yield* complete(yield* begin(sessionID, "RETIRE_TRIGGER"), "RETIRE_REPLY", 50_000)
     const refresh = yield* entered(second)
-    expect(packet(refresh.request)).toContain(ref.id)
     expect(packet(refresh.request)).toContain(FIRST)
-    expect(packet(refresh.request)).not.toContain(NONCE)
+    expect(fragments(packet(refresh.request)).map((entry) => entry.text).join("\n")).not.toContain(NONCE)
     yield* Deferred.succeed(second.release, undefined)
     yield* terminal(refresh.jobID, "completed", "applied")
-    const retired = yield* prepare(sessionID)
-    expect(retired.system[0]).toContain(SECOND)
-    expect(retired.system[0]).not.toContain(ref.id)
-    expect((yield* recall(sessionID, { archive_list: true, limit: 20 })).references?.some((entry) => entry.id === ref.id)).toBe(true)
-    expect((yield* recall(sessionID, { reference: ref.id })).content).toBe(archived.content)
+    expect((yield* prepare(sessionID)).system[0]).toContain(SECOND)
+    // Retiring the item does not retire the source: the alias still recalls the same stored record.
+    expect((yield* recall(sessionID, { reference: ref.id })).content).toBe(recalled.content)
     const archive = yield* Archive.Service
-    const original = yield* archive.read({ sessionID, id: ref.id })
-    if (!original) throw new Error("Expected real retained fragment")
-    yield* Effect.promise(() => Bun.write(archiveFile(sessionID, ref.id), original.markdown + "CORRUPTED"))
-    expect(Exit.isFailure(yield* archive.read({ sessionID, id: ref.id }).pipe(Effect.exit))).toBe(true)
+    const fragment = (yield* Effect.forEach(yield* archive.list(sessionID), (item) => archive.read({ sessionID, id: item.id })))
+      .find((chunk) => chunk?.markdown.includes(NONCE))
+    if (!fragment) throw new Error("Expected real retained fragment")
+    yield* Effect.promise(() => Bun.write(archiveFile(sessionID, fragment.id), fragment.markdown + "CORRUPTED"))
+    expect(Exit.isFailure(yield* archive.read({ sessionID, id: fragment.id }).pipe(Effect.exit))).toBe(true)
     // A publish that resubmits/rereads the old prefix would now fail hash verification.
     yield* complete(yield* begin(sessionID, "APPEND_ONLY_TRIGGER"), "APPEND_ONLY_REPLY", 50_000)
     const append = yield* entered(third)
@@ -88,17 +87,17 @@ it.instance("reference retirement preserves real recall; append-only publication
     expect(yield* Deferred.isDone(repaired.entered)).toBe(false)
     const sessions = yield* Session.Service
     expect(yield* prepare(sessionID)).toEqual({ messages: yield* sessions.messages({ sessionID }), system: [] })
-    yield* Effect.promise(() => Bun.write(archiveFile(sessionID, ref.id), original.markdown))
+    yield* Effect.promise(() => Bun.write(archiveFile(sessionID, fragment.id), fragment.markdown))
     yield* complete(yield* begin(sessionID, "REPAIR_RETRY"), "REPAIR_REPLY", 100)
     const retry = yield* entered(repaired)
-    expect(packet(retry.request)).toContain("No prior working memory.")
+    expect(packet(retry.request)).toContain("## Current working memory\n\n(none)")
     expect(packet(retry.request)).toContain(NONCE)
     yield* Deferred.succeed(repaired.release, undefined)
     yield* terminal(retry.jobID, "completed", "applied")
   }).pipe(Effect.provide(environment([first, second, third, repaired])))
 }), 30_000)
 
-for (const damage of ["missing", "corrupt"] as const) it.instance(`active reference ${damage} prevents pruning; repaired bytes restore stored context`, () => Effect.gen(function* () {
+for (const damage of ["missing", "corrupt"] as const) it.instance(`a ${damage} archive fragment leaves memory and alias recall intact`, () => Effect.gen(function* () {
   const first = yield* held(FIRST, { reference: NONCE })
   yield* Effect.gen(function* () {
     const sessionID = yield* seed(B, A, RECEIPT)
@@ -106,16 +105,13 @@ for (const damage of ["missing", "corrupt"] as const) it.instance(`active refere
     const ref = fragments(packet(hit.request)).find((entry) => entry.text.includes(NONCE))!
     const allowed = yield* applyFirst(sessionID, first)
     const archive = yield* Archive.Service
-    const original = yield* archive.read({ sessionID, id: ref.id })
-    if (!original) throw new Error("Expected real archive")
-    expect((yield* recall(sessionID, { reference: ref.id })).content).toContain(NONCE)
-    if (damage === "missing") yield* Effect.promise(() => fs.unlink(archiveFile(sessionID, ref.id)))
-    if (damage === "corrupt") yield* Effect.promise(() => Bun.write(archiveFile(sessionID, ref.id), "not the hashed content"))
-    expect((yield* recall(sessionID, { reference: ref.id })).status).toBe("unavailable")
-    const sessions = yield* Session.Service
-    expect(yield* prepare(sessionID)).toEqual({ messages: yield* sessions.messages({ sessionID }), system: [] })
-    yield* Effect.promise(() => Bun.write(archiveFile(sessionID, ref.id), original.markdown))
+    for (const item of yield* archive.list(sessionID)) {
+      if (damage === "missing") yield* Effect.promise(() => fs.unlink(archiveFile(sessionID, item.id)))
+      if (damage === "corrupt") yield* Effect.promise(() => Bun.write(archiveFile(sessionID, item.id), "not the hashed content"))
+    }
+    // Aliases resolve from stored messages, so the memory never depends on archive fragments.
     expect(yield* prepare(sessionID)).toEqual(allowed)
+    expect((yield* recall(sessionID, { reference: ref.id })).content).toContain(NONCE)
   }).pipe(Effect.provide(environment([first])))
 }), 30_000)
 

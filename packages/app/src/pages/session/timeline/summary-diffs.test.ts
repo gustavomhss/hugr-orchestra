@@ -29,14 +29,14 @@ describe("uniqueSummaryDiffs", () => {
     const oldAlpha = diff("alpha.ts", 1)
     const oldBeta = diff("beta.ts", 1)
     const newAlpha = diff("alpha.ts", 2)
-    const charlie = diff("charlie.ts", 1)
+    const gamma = diff("gamma.ts", 1)
     const newBeta = diff("beta.ts", 2)
 
-    const result = uniqueSummaryDiffs([oldAlpha, oldBeta, newAlpha, charlie, newBeta])
+    const result = uniqueSummaryDiffs([oldAlpha, oldBeta, newAlpha, gamma, newBeta])
 
-    expect(result).toEqual([newAlpha, charlie, newBeta])
+    expect(result).toEqual([newAlpha, gamma, newBeta])
     expect(result[0]).toBe(newAlpha)
-    expect(result[1]).toBe(charlie)
+    expect(result[1]).toBe(gamma)
     expect(result[2]).toBe(newBeta)
   })
 })

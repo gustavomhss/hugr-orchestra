@@ -72,6 +72,7 @@ function fixture(root: string) {
     sessionID: "session",
     messageID: "message",
     agent: "agent",
+    agentID: "agent",
     directory: root,
     worktree: root,
     abort: new AbortController().signal,

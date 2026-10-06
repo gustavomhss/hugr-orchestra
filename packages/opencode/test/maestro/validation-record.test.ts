@@ -49,7 +49,7 @@ const base = {
   contextHash: "c".repeat(64),
   workCardID: "card_validation",
   workCard: "# Card\nImplement exact behavior.\n",
-  routedMemberID: "charlie",
+  routedMemberID: "backend",
   validatorID: "maestro",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],
@@ -730,17 +730,18 @@ describe("Maestro validation receipt", () => {
         ).toEqual([{ path: "proof.txt", line: 1, message: "actual added line" }])
         const test = yield* TestInstance
         const git = yield* Git.Service
-        yield* Effect.promise(() => Bun.write(path.join(test.directory, "untracked-control.txt"), "untracked\n"))
+        const fs = yield* FileSystem.FileSystem
+        yield* fs.writeFileString(path.join(test.directory, "untracked-control.txt"), "untracked\n")
         const dirty = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: test.directory })
         expect(dirty.exitCode).toBe(0)
         expect(dirty.text()).toContain("?? untracked-control.txt")
-        expectReviewRejection(
-          yield* recordReview({
-            ...review,
-            findings: [{ path: "proof.txt", line: 99, message: "invented citation" }],
-          }).pipe(Effect.flip),
-          "artifact-context-mismatch",
-        )
+        const unclean = yield* recordReview({
+          ...review,
+          findings: [{ path: "proof.txt", line: 99, message: "invented citation" }],
+        }).pipe(Effect.flip)
+        expectReviewRejection(unclean, "artifact-context-mismatch")
+        // The rejection names what was dirty so an intermittent CI failure is diagnosable from its log alone.
+        expect("detail" in unclean && unclean.detail).toBe("git status exit 0: ?? untracked-control.txt")
         yield* Effect.promise(() => rm(path.join(test.directory, "untracked-control.txt")))
         const clean = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: test.directory })
         expect({ exitCode: clean.exitCode, truncated: clean.truncated, stdout: clean.text() }).toEqual({

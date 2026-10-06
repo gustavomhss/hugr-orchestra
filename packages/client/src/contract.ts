@@ -38,6 +38,8 @@ export const groupNames = {
 } as const
 
 export const endpointNames = {
+  "agent.file.get": "getFile",
+  "agent.file.update": "updateFile",
   "session.messages": "list",
   "integration.connect.key": "connectKey",
   "integration.connect.oauth": "connectOauth",

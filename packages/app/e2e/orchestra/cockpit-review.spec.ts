@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 import { installDockBridge } from "./session-cockpit-bridge"
+import { railTab } from "./session-cockpit.fixture"
 
 const directory = "/work/cockpit-review"
 const parent = "ses_review_parent"
@@ -18,7 +19,7 @@ test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 for (const mode of ["summary", "running detail", "finished detail"] as const) {
   test(`Tasks ${mode} preserves focus and row identity through child updates`, async ({ page }) => {
     const update = await setup(page)
-    await openCockpit(page)
+    await openTasks(page)
     await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
     const panel = page.locator('[data-component="tasks-panel"]')
     await expect(panel.locator('[data-slot="task-row"]')).toHaveCount(3)
@@ -145,11 +146,21 @@ async function expectMaterial(element: Locator, token: string) {
     .toBe(true)
 }
 
-async function openCockpit(page: Page) {
+// Live work opens the rail on its Tasks tab, which holds the Tasks card.
+async function openTasks(page: Page) {
   await page.goto(`/server/${base64Encode(server)}/session/${parent}`)
   await expectSessionTitle(page, title)
   await page.getByRole("button", { name: "Toggle review" }).click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+  await expect(page.locator('[data-component="tasks-panel"]')).toBeVisible()
+}
+
+// The Apps tab hosts only the Dock.
+async function openCockpit(page: Page) {
+  await openTasks(page)
+  await railTab(page, "apps").click()
   await expect(page.getByRole("region", { name: "Dock", exact: true })).toBeVisible()
+  await expect(page.locator('[data-component="tasks-panel"]')).toHaveCount(0)
 }
 
 async function setup(page: Page, scheme: "dark" | "light" = "dark") {

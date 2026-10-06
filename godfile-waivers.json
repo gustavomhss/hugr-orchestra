@@ -13,382 +13,394 @@
       "authorizedAt": "2026-09-08"
     },
     "packages/app/src/i18n/am.ts": {
-      "maximumLines": 1170,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1188,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ar.ts": {
-      "maximumLines": 1202,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1220,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/az.ts": {
-      "maximumLines": 1204,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1222,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/bg.ts": {
-      "maximumLines": 1210,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1228,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/bn.ts": {
-      "maximumLines": 1192,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1210,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/br.ts": {
-      "maximumLines": 1209,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1227,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/bs.ts": {
-      "maximumLines": 1205,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1223,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ca.ts": {
-      "maximumLines": 1214,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1232,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/cs.ts": {
-      "maximumLines": 1205,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1223,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/da.ts": {
-      "maximumLines": 1198,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1216,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/de.ts": {
-      "maximumLines": 1216,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1234,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/dv.ts": {
-      "maximumLines": 1217,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1235,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/dz.ts": {
-      "maximumLines": 1221,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1239,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/el.ts": {
-      "maximumLines": 1213,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1231,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/en.ts": {
-      "maximumLines": 1102,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1120,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/es.ts": {
-      "maximumLines": 1214,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1232,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/et.ts": {
-      "maximumLines": 1191,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1209,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/fa.ts": {
-      "maximumLines": 1195,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1213,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/fi.ts": {
-      "maximumLines": 1204,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1222,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/fo.ts": {
-      "maximumLines": 1194,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1212,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/fr.ts": {
-      "maximumLines": 1228,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1246,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/hi.ts": {
-      "maximumLines": 1193,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1211,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/hr.ts": {
-      "maximumLines": 1207,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1225,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/hu.ts": {
-      "maximumLines": 1208,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1226,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/hy.ts": {
-      "maximumLines": 1205,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1223,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/id.ts": {
-      "maximumLines": 1195,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1213,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/is.ts": {
-      "maximumLines": 1195,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1213,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/it.ts": {
-      "maximumLines": 1213,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1231,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ja.ts": {
-      "maximumLines": 1196,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1214,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ka.ts": {
-      "maximumLines": 1196,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1214,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/km.ts": {
-      "maximumLines": 1191,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1209,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ko.ts": {
-      "maximumLines": 1186,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1204,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/lo.ts": {
-      "maximumLines": 1188,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1206,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/lt.ts": {
-      "maximumLines": 1213,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1231,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/lv.ts": {
-      "maximumLines": 1203,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1221,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/mk.ts": {
-      "maximumLines": 1206,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1224,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/mn.ts": {
-      "maximumLines": 1208,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1226,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ms.ts": {
-      "maximumLines": 1197,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1215,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/my.ts": {
-      "maximumLines": 1216,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1234,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ne.ts": {
-      "maximumLines": 1197,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1215,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/nl.ts": {
-      "maximumLines": 1207,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1225,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/no.ts": {
-      "maximumLines": 1203,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1221,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/pa.ts": {
-      "maximumLines": 1191,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1209,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/pl.ts": {
-      "maximumLines": 1214,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1232,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ro.ts": {
-      "maximumLines": 1203,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1221,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ru.ts": {
-      "maximumLines": 1216,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1234,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/si.ts": {
-      "maximumLines": 1193,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1211,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/sk.ts": {
-      "maximumLines": 1201,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1219,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/sl.ts": {
-      "maximumLines": 1205,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1223,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/sq.ts": {
-      "maximumLines": 1203,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1221,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/sr.ts": {
-      "maximumLines": 1202,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1220,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/sv.ts": {
-      "maximumLines": 1196,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1214,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/tg.ts": {
-      "maximumLines": 1204,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1222,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/th.ts": {
-      "maximumLines": 1185,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1203,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/tk.ts": {
-      "maximumLines": 1199,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1217,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/tr.ts": {
-      "maximumLines": 1204,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1222,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/uk.ts": {
-      "maximumLines": 1213,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1231,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/ur.ts": {
-      "maximumLines": 1194,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1212,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/uz.ts": {
-      "maximumLines": 1211,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1229,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/vi.ts": {
-      "maximumLines": 1199,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1217,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/zh.ts": {
-      "maximumLines": 1172,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1190,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/i18n/zht.ts": {
-      "maximumLines": 1173,
-      "reason": "Janitor translations extend pre-existing locale waiver.",
+      "maximumLines": 1191,
+      "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-25"
+      "authorizedAt": "2026-10-05"
     },
     "packages/app/src/pages/session/session-side-panel.tsx": {
       "maximumLines": 936,
       "reason": "Human waiver: pre-existing file over Godfile cap.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
+    },
+    "packages/client/src/generated/client.ts": {
+      "maximumLines": 1111,
+      "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign.",
+      "authorizedBy": "owner (gustavomhss), mock-parity integration",
+      "authorizedAt": "2026-10-05"
+    },
+    "packages/client/src/generated/types.ts": {
+      "maximumLines": 2965,
+      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign.",
+      "authorizedBy": "owner (gustavomhss), mock-parity integration",
+      "authorizedAt": "2026-10-05"
     },
     "packages/opencode/src/provider/provider.ts": {
       "maximumLines": 1940,
@@ -415,16 +427,16 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 6957,
+      "maximumLines": 7540,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
-      "authorizedBy": "generated-code-policy",
-      "authorizedAt": "2026-09-29"
+      "authorizedBy": "owner (gustavomhss), mock-parity integration",
+      "authorizedAt": "2026-10-05"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 13849,
+      "maximumLines": 14663,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
-      "authorizedBy": "generated-code-policy",
-      "authorizedAt": "2026-09-29"
+      "authorizedBy": "owner (gustavomhss), mock-parity integration",
+      "authorizedAt": "2026-10-05"
     },
     "packages/stats/app/src/routes/index.tsx": {
       "maximumLines": 1596,

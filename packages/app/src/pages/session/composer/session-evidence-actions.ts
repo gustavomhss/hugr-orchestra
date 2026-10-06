@@ -14,6 +14,7 @@ import { useSync } from "@/context/sync"
 import { formatServerError } from "@/utils/server-errors"
 import type { EvidenceSource } from "../orchestra-evidence-data"
 import { createSessionOwnership } from "../session-ownership"
+import { agentKey } from "@/context/agent-identity"
 
 export type ReplayBlock = "session" | "workdir" | "blocked" | "busy" | "pending" | "model"
 export type EvidenceOwner = ReturnType<ReturnType<typeof createSessionOwnership>["capture"]>
@@ -86,7 +87,7 @@ export function createEvidenceComposerActions(input: {
         api: sdk().api.session,
         sessionID: source.sessionID,
         command: source.command,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: { providerID: model.provider.id, modelID: model.id },
       })
         .then(() => ({ status: "sent" as const }))

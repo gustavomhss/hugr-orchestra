@@ -1,13 +1,28 @@
 import { expect, test } from "bun:test"
-import { shouldStart, tokenCount, isSafe } from "./trigger"
+import { DEFAULT_TRIGGER, settings, shouldStart, tokenCount, isSafe } from "./trigger"
 import { MessageID, SessionID } from "@/session/schema"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
-test("starts at the continuity threshold", () => {
-  expect(shouldStart({ tokens: 50_000, active: false })).toBe(true)
-  expect(shouldStart({ tokens: 49_999, active: false })).toBe(false)
+test("starts at the configured fraction of the context window", () => {
+  expect(shouldStart({ tokens: 70_000, active: false, context: 100_000, trigger: 0.7 })).toBe(true)
+  expect(shouldStart({ tokens: 69_999, active: false, context: 100_000, trigger: 0.7 })).toBe(false)
+  expect(shouldStart({ tokens: 700_000, active: false, context: 1_000_000, trigger: 0.7 })).toBe(true)
+  expect(shouldStart({ tokens: 500_000, active: false, context: 1_000_000, trigger: 0.7 })).toBe(false)
+  expect(shouldStart({ tokens: 25_000, active: false, context: 100_000, trigger: 0.25 })).toBe(true)
+})
+
+test("unknown context windows never start maintenance", () => {
+  for (const context of [0, -1, NaN, Infinity]) expect(shouldStart({ tokens: 1e9, active: false, context, trigger: 0.7 })).toBe(false)
+})
+
+test("settings default to enabled at 0.7 and reject invalid triggers", () => {
+  expect(settings({})).toEqual({ enabled: true, trigger: DEFAULT_TRIGGER })
+  expect(DEFAULT_TRIGGER).toBe(0.7)
+  expect(settings({ continuity: { enabled: false } })).toEqual({ enabled: false, trigger: 0.7 })
+  expect(settings({ continuity: { trigger: 0.5 } })).toEqual({ enabled: true, trigger: 0.5 })
+  for (const trigger of [0, 1, 1.5, -0.2, NaN, Infinity]) expect(settings({ continuity: { trigger } }).trigger).toBe(0.7)
 })
 
 const tokens: SessionV1.Assistant["tokens"] = {
@@ -42,5 +57,5 @@ test("only successful completed non-summary turns are safe", () => {
 })
 
 test("does not duplicate active maintenance", () => {
-  expect(shouldStart({ tokens: 100_000, active: true })).toBe(false)
+  expect(shouldStart({ tokens: 100_000, active: true, context: 100_000, trigger: 0.7 })).toBe(false)
 })

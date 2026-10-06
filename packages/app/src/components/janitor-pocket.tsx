@@ -19,6 +19,7 @@ import type { ServerConnection } from "@/context/server"
 import { SessionRouteKey, SessionStateKey } from "@/utils/server-scope"
 import { normalizeSessionInfo } from "@/utils/session"
 import type { JanitorReport } from "@/utils/janitor-report"
+import { agentKey } from "@/context/agent-identity"
 
 export function JanitorPocketChat(props: {
   directory: () => string
@@ -135,7 +136,7 @@ function PocketComposer(props: {
       const currentSync = serverSync().ensureDirSyncContext(directory)
       const created = await sdk()
         .api.session.create({
-          agent: agent.name,
+          agent: agentKey(agent),
           model: { id: selected.id, providerID: selected.provider.id },
           location: { directory: props.directory() },
         })

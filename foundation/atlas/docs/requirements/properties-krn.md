@@ -2,7 +2,7 @@
 
 > **state:** S3-sibling · **protocol:** [`properties-template`](../method/properties-template.md) ·
 > **source:** [`method-tags-krn.md`](method-tags-krn.md) (frozen S2 — the `up-property` law of each behavioural INV) ·
-> **owner:** charlie (FORGE); formal cluster architecture-reviewed by bobby.
+> **owner:** backend (FORGE); formal cluster architecture-reviewed by bobby.
 >
 > **Purpose:** render each frozen KRN `up-property` into a runnable **∀-quantified property** — the oracle-free,
 > beyond-the-witness check that raises a WP from FLOOR toward FULL assurance for the execution GATE's PBT leg.

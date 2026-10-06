@@ -144,7 +144,7 @@ deps: [ ] parallel_group: [P] (disjoint from `fix/surface-truth`)
 exit_predicate: all acceptance goldens green ∧ `tsc -b` clean ∧ the suite reconciled against the
 `origin/master` baseline ∧ every gate exit 0 ∧ I1-I6 and C1-C6 each individually evidenced.
 
-owner: GENESIS + ADAPTERS territory · builder_id: `charlie`
+owner: GENESIS + ADAPTERS territory · builder_id: `backend`
 
 outputs:
 

@@ -65,6 +65,7 @@ import { TodoWrite } from "./todo-write"
 import { animate } from "motion"
 import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
+import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
 
 async function writeClipboard(text: string): Promise<boolean> {
@@ -434,13 +435,10 @@ function tone(name: string) {
   return agentPalette[hash % agentPalette.length]
 }
 
-function taskAgent(
-  raw: unknown,
-  list?: readonly { name: string; color?: string }[],
-): { name?: string; color?: string; v2Color?: string } {
+function taskAgent(raw: unknown, list?: readonly AgentEntry[]): { name?: string; color?: string; v2Color?: string } {
   if (typeof raw !== "string" || !raw) return {}
   const key = raw.toLowerCase()
-  const item = list?.find((entry) => entry.name === raw || entry.name.toLowerCase() === key)
+  const item = findTaskAgent(raw, list)
   const v2Tone = item?.color ? undefined : v2AgentTones[key]
   const color = agentColor(item?.color, agentThemeColors) ?? agentTones[key] ?? tone(key)
   const v2Color = agentColor(item?.color, v2AgentThemeColors) ?? v2Tone ?? color
@@ -592,7 +590,7 @@ function taskSession(
   input: Record<string, any>,
   parentID: string | undefined,
   sessions: Session[] | undefined,
-  agents?: readonly { name: string; color?: string }[],
+  agents?: readonly AgentEntry[],
 ) {
   if (!parentID) return undefined
   const description = typeof input.description === "string" ? input.description : ""

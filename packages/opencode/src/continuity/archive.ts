@@ -9,7 +9,7 @@ import { Global } from "@opencode-ai/core/global"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import type { SessionID } from "@/session/schema"
 import type { ArchiveChunk, ArchiveReference } from "./memory-types"
-import { hash, hashPattern, identity, readManifest, verify } from "./archive-format"
+import { hash, hashPattern, identity, readManifest, readStored, verify, writeStored, type StoredMemory } from "./archive-format"
 import { chunks } from "./transcript"
 
 export class ArchiveError extends Schema.TaggedErrorClass<ArchiveError>()("ContinuityArchiveError", {
@@ -24,6 +24,11 @@ export interface Interface {
   readonly list: (sessionID: SessionID) => Effect.Effect<ArchiveReference[], ArchiveError>
   /** Verifies the requested fragment's hash, ownership and descriptors; callers must read active refs before pruning. */
   readonly read: (input: { sessionID: SessionID; id: string }) => Effect.Effect<ArchiveChunk | undefined, ArchiveError>
+  /** The session's persisted memory; a corrupt or foreign file fails with archive-corrupt-memory. */
+  readonly readMemory: (sessionID: SessionID) => Effect.Effect<StoredMemory | undefined, ArchiveError>
+  /** Atomically replaces the file with the value taken under the session's memory lock; nothing stored deletes it. */
+  readonly writeMemory: (sessionID: SessionID, value: () => StoredMemory | undefined) => Effect.Effect<void, ArchiveError>
+  readonly removeMemory: (sessionID: SessionID) => Effect.Effect<void, ArchiveError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/ContinuityArchive") {}
@@ -123,6 +128,27 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
     }))
   })
 
+  const writeMemory = Effect.fn("ContinuityArchive.writeMemory")(function* (sessionID: SessionID, value: () => StoredMemory | undefined) {
+    yield* checked(() => identity(sessionID, "ses"))
+    // Read the value under the lock, so a write queued behind a delete cannot restore cleared memory.
+    return yield* serialized(path.join(Global.Path.data, hash(sessionID), "memory.json"), Effect.gen(function* () {
+      const stored = value()
+      const empty = !stored?.context && !stored?.masks.length
+      const dir = yield* directory(sessionID, !empty)
+      if (!dir) return
+      const files = yield* inventory(dir)
+      if (!stored || empty) {
+        const target = yield* file(files, "memory.json")
+        if (target) yield* fs.remove(target, { force: true })
+        return
+      }
+      yield* temporary(dir, writeStored(sessionID, stored), (temp) => Effect.gen(function* () {
+        yield* file(files, "memory.json")
+        yield* fs.rename(temp, path.join(dir, "memory.json"))
+      }))
+    }))
+  }, Effect.mapError(unavailable))
+
   return Service.of({
     publish: Effect.fn("ContinuityArchive.publish")(function* (input: Parameters<Interface["publish"]>[0]) {
       // Validate/render the whole batch before creating directories or publishing any bytes.
@@ -168,6 +194,16 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
       const ref = refs.find((ref) => ref.id === input.id)
       return ref ? yield* readChunk(files, input.sessionID, ref) : undefined
     }, Effect.mapError(unavailable)),
+    readMemory: Effect.fn("ContinuityArchive.readMemory")(function* (sessionID: SessionID) {
+      const dir = yield* directory(sessionID, false)
+      if (!dir) return undefined
+      const target = yield* file(yield* inventory(dir), "memory.json")
+      if (!target) return undefined
+      const text = yield* fs.readFileString(target)
+      return yield* checked(() => readStored(text, sessionID), "archive-corrupt-memory")
+    }, Effect.mapError(unavailable)),
+    writeMemory,
+    removeMemory: (sessionID: SessionID) => writeMemory(sessionID, () => undefined),
   })
 }))
 

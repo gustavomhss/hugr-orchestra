@@ -1,0 +1,232 @@
+export * as AppDockOutline from "./app-dock-outline"
+
+// AT-SPI role numbers (atspi-constants.h AtspiRole) to the names screen readers announce.
+const ROLES = ["invalid", "accelerator label", "alert", "animation", "arrow", "calendar", "canvas", "check box",
+  "check menu item", "color chooser", "column header", "combo box", "date editor", "desktop icon", "desktop frame", "dial",
+  "dialog", "directory pane", "drawing area", "file chooser", "filler", "focus traversable", "font chooser", "frame",
+  "glass pane", "html container", "icon", "image", "internal frame", "label", "layered pane", "list", "list item", "menu",
+  "menu bar", "menu item", "option pane", "page tab", "page tab list", "panel", "password text", "popup menu",
+  "progress bar", "push button", "radio button", "radio menu item", "root pane", "row header", "scroll bar",
+  "scroll pane", "separator", "slider", "spin button", "split pane", "status bar", "table", "table cell",
+  "table column header", "table row header", "tearoff menu item", "terminal", "text", "toggle button", "tool bar",
+  "tool tip", "tree", "tree table", "unknown", "viewport", "window", "extended", "header", "footer", "paragraph",
+  "ruler", "application", "autocomplete", "editbar", "embedded", "entry", "chart", "caption", "document frame",
+  "heading", "page", "section", "redundant object", "form", "link", "input method window", "table row", "tree item",
+  "document spreadsheet", "document presentation", "document text", "document web", "document email", "comment",
+  "list box", "grouping", "image map", "notification", "info bar", "level bar", "title bar", "block quote", "audio",
+  "video", "definition", "article", "landmark", "log", "marquee", "math", "rating", "timer", "static",
+  "math fraction", "math root", "subscript", "superscript", "description list", "description term",
+  "description value", "footnote", "content deletion", "content insertion", "mark", "suggestion", "push button menu"]
+
+// Containers a person scans first, like a screen reader's landmark and region lists.
+const REGIONS = new Set(["frame", "dialog", "alert", "window", "menu bar", "menu", "popup menu", "tool bar",
+  "page tab list", "landmark", "status bar", "tree", "tree table", "list", "list box", "table", "form",
+  "document web", "document frame", "notification", "info bar", "split pane", "grouping", "panel", "section"])
+const WRAPPERS = new Set(["filler", "panel", "section", "redundant object", "unknown", "grouping", "html container",
+  "layered pane", "root pane", "glass pane", "viewport", "scroll pane", "static", "label", "paragraph"])
+const MODALS = new Set(["dialog", "alert", "file chooser", "color chooser", "font chooser"])
+// Top-level app windows: GTK and Qt give their own file, color and font choosers and message boxes those roles.
+export const WINDOWS = new Set(["frame", "window", ...MODALS])
+
+// Rotor kinds for list(kind), by readable role.
+export const KINDS: Record<string, string[]> = {
+  buttons: ["push button", "toggle button", "push button menu"],
+  fields: ["entry", "text", "password text", "spin button", "combo box", "editbar", "autocomplete"],
+  checks: ["check box", "check menu item", "radio button", "radio menu item", "toggle button"],
+  tabs: ["page tab"],
+  items: ["list item", "tree item", "table row", "table cell"],
+  menus: ["menu bar", "menu", "menu item", "check menu item", "radio menu item", "popup menu"],
+  links: ["link"],
+  headings: ["heading"],
+  regions: [...REGIONS],
+}
+
+export type Item = { ref: string; parentRef?: string | null; role?: number; roleName: string; name: string; states?: number[];
+  actions?: unknown[]; capabilities?: Record<string, unknown> }
+
+export type Node = { item: Item; role: string; name: string; keys?: string; children: Node[]; parent?: Node }
+
+// A region handle survives rescans by shape, not by ref: one step per enclosing region from the top, each naming the
+// node by role, name and which same-shaped node it is among everything its region holds directly.
+export type Handle = { role: string; name: string; occurrence: number }[]
+
+export function role(item: { role?: unknown; roleName: string }) {
+  if (typeof item.role === "number" && ROLES[item.role]) return ROLES[item.role]!
+  return item.roleName.replace(/-/g, " ")
+}
+
+// "Explorer (Ctrl+Shift+E)" and "Settings Ctrl+," carry the shortcut inside the name; separate them.
+export function keys(name: string) {
+  const match = /^(.*?)\s*\(?((?:(?:Ctrl|Control|Shift|Alt|Super|Meta|Cmd)\+)+[^\s)]+)\)?\s*$/.exec(name)
+  if (!match || !match[1]) return { name }
+  return { name: match[1], keys: match[2] }
+}
+
+// Every app keeps its own focused control, but keys reach only the one whose window is active. Roots come first.
+export function focused<T extends { item: Item }>(matches: T[]) {
+  const items = new Map(matches.map((match) => [match.item.ref, match.item]))
+  const top = (item: Item, depth = 0): Item =>
+    item.parentRef && items.has(item.parentRef) && depth < 64 ? top(items.get(item.parentRef)!, depth + 1) : item
+  return matches.filter((match) => match.item.states?.includes(12)
+    && WINDOWS.has(role(top(match.item))) && top(match.item).states?.includes(1))
+}
+
+export function tree(items: Item[]) {
+  const nodes = new Map(items.map((item) => [item.ref, { item, role: role(item), ...keys(item.name), children: [] } as Node]))
+  const roots: Node[] = []
+  for (const node of nodes.values()) {
+    const parent = node.item.parentRef ? nodes.get(node.item.parentRef) : undefined
+    if (!parent) {
+      roots.push(node)
+      continue
+    }
+    node.parent = parent
+    parent.children.push(node)
+  }
+  return roots
+}
+
+const has = (node: Node, state: number) => Array.isArray(node.item.states) && node.item.states.includes(state)
+const interactive = (node: Node) => (Array.isArray(node.item.actions) && node.item.actions.length > 0)
+  || Object.values(node.item.capabilities ?? {}).some((entry) => typeof entry === "object" && entry !== null
+    && "supported" in entry && entry.supported === true)
+const region = (node: Node) => REGIONS.has(node.role) && (node.name !== "" || !["grouping", "panel", "section"].includes(node.role))
+
+// Hidden subtrees (inactive views, closed popups) are skipped unless they hold the focus; toolkits that never
+// report showing/visible keep everything.
+const hidden = (node: Node) => Array.isArray(node.item.states) && node.item.states.length > 0
+  && !node.item.states.includes(25) && !node.item.states.includes(30) && !node.item.states.includes(12)
+
+function walk(node: Node, visit: (node: Node) => void) {
+  if (hidden(node)) return
+  visit(node)
+  node.children.forEach((child) => walk(child, visit))
+}
+
+// Every node a person could see, in reading order.
+export function visible(roots: Node[]) {
+  const all: Node[] = []
+  roots.forEach((root) => walk(root, (node) => all.push(node)))
+  return all
+}
+
+// The visible nodes a region holds directly (the workspace top when none), looking through unnamed wrappers.
+function held(roots: Node[], owner?: Node) {
+  const found: Node[] = []
+  const visit = (node: Node) => {
+    if (hidden(node)) return
+    found.push(node)
+    if (!region(node)) node.children.forEach(visit)
+  }
+  ;(owner ? owner.children : roots).forEach(visit)
+  return found
+}
+
+const holder = (node: Node): Node | undefined => node.parent && (region(node.parent) ? node.parent : holder(node.parent))
+
+// The region a person works in: the focused control's own region (itself when it is one). Run 17 (Thunar) entered
+// five nested panes by number, again and again, to reach the focused file list; ui_enter focus=true goes there at once.
+export function focusRegion(roots: Node[]) {
+  const focus = visible(roots).find((node) => has(node, 12))
+  return focus && (region(focus) ? focus : holder(focus))
+}
+
+// Same-shaped nodes count across the whole region, not per parent: Chromium wraps each row's toolbar in its own
+// unnamed section, and per-parent counting gave every one of them the same handle, so none could be entered.
+export function handle(roots: Node[], node: Node): Handle {
+  const owner = holder(node)
+  const step = { role: node.role, name: node.name,
+    occurrence: held(roots, owner).filter((other) => other.role === node.role && other.name === node.name).indexOf(node) }
+  return [...(owner ? handle(roots, owner) : []), step]
+}
+
+export function locate(roots: Node[], wanted: Handle) {
+  // null stands for the workspace top before the first step; undefined for a step that is gone.
+  return wanted.reduce<Node | null | undefined>((owner, step) => owner === undefined ? undefined
+    : held(roots, owner ?? undefined).filter((node) => node.role === step.role && node.name === step.name)[step.occurrence],
+  null) ?? undefined
+}
+
+// The visible meaning of a control in one line; the role and name double as a ui_act/ui_type target.
+export function line(node: Node) {
+  const states = [has(node, 1) && "active", has(node, 12) && "focused", has(node, 4) && "checked", has(node, 23) && "selected",
+    has(node, 10) && "expanded", has(node, 9) && "expandable", !has(node, 8) && interactive(node) && "disabled"].filter(Boolean)
+  return `${node.role}${node.name ? ` "${node.name}"` : ""}${node.keys ? ` keys=${node.keys}` : ""}${states.length ? ` [${states.join(", ")}]` : ""}`
+}
+
+function count(node: Node) {
+  const totals = { controls: 0, regions: 0 }
+  node.children.forEach((child) => walk(child, (inner) => {
+    if (region(inner)) totals.regions++
+    else if (interactive(inner)) totals.controls++
+  }))
+  return totals
+}
+
+// Regions directly below `scope`, looking through unnamed wrappers; controls directly in scope, likewise.
+function contents(scope: Node) {
+  const regions: Node[] = []
+  const controls: Node[] = []
+  const visit = (node: Node) => {
+    if (hidden(node)) return
+    if (region(node)) return void regions.push(node)
+    if (interactive(node) || (node.name && !WRAPPERS.has(node.role)) || node.role === "heading") controls.push(node)
+    node.children.forEach(visit)
+  }
+  scope.children.forEach(visit)
+  return { regions, controls }
+}
+
+export function windows(roots: Node[]) {
+  return roots.flatMap((root) => WINDOWS.has(root.role) || root.role === "application" ? [root] : [])
+}
+
+// scope is the line of the view's scope, so a later ui_enter can say which view its numbers came from.
+export type Look = { text: string; regions: Handle[]; scope: string }
+
+// What a screen reader user hears for "where am I" plus a landmark list: modal first, focus, then the scope's map.
+export function look(roots: Node[], scope?: Node, limit = 40): Look {
+  const all = visible(roots)
+  const focused = all.find((node) => has(node, 12))
+  const modal = all.find((node) => MODALS.has(node.role) && (has(node, 16) || has(node, 1)))
+  const active = windows(roots).find((node) => has(node, 1)) ?? windows(roots)[0]
+  const base = scope ?? modal ?? active ?? roots[0]
+  const lines: string[] = []
+  if (!base) return { text: "No app windows are visible in the Linux workspace.", regions: [], scope: "" }
+  lines.push(`windows: ${windows(roots).map(line).join("; ") || "none"}`)
+  if (windows(roots).length && !windows(roots).some((node) => has(node, 1)))
+    lines.push("input: none of these windows is active; a window that shows no controls here (such as a native file dialog) or nothing holds the keyboard")
+  if (modal) lines.push(`modal: ${line(modal)} — it holds the input until it is closed`)
+  if (focused) {
+    const trail: string[] = []
+    for (let current = focused.parent; current; current = current.parent) if (region(current) && current.name) trail.push(line(current))
+    const home = region(focused) ? focused : holder(focused)
+    lines.push(`focus: ${line(focused)}${trail.length ? ` in ${trail.slice(0, 3).join(" < ")}` : ""}${home && home !== base ? " (ui_enter focus=true goes to its region)" : ""}`)
+  }
+  lines.push(`scope: ${line(base)}${scope ? " (ui_up to leave)" : ""}`)
+  const inside = contents(base)
+  const handles = inside.regions.map((node) => handle(roots, node))
+  if (inside.regions.length) {
+    lines.push("regions (ui_enter with the number):")
+    inside.regions.forEach((node, index) => {
+      const totals = count(node)
+      const preview = node.children.length <= 8 ? contents(node).controls.slice(0, 6).map((child) => `${child.name}${child.keys ? ` (${child.keys})` : ""}`).filter(Boolean) : []
+      lines.push(`  #${index + 1} ${line(node)} — ${totals.controls} controls${totals.regions ? `, ${totals.regions} regions` : ""}${preview.length ? `: ${preview.join(", ")}` : ""}`)
+    })
+  }
+  if (inside.controls.length) {
+    lines.push(`controls here${inside.controls.length > limit ? ` (first ${limit} of ${inside.controls.length})` : ""}:`)
+    inside.controls.slice(0, limit).forEach((node) => lines.push(`  ${line(node)}`))
+  }
+  return { text: lines.join("\n"), regions: handles, scope: line(base) }
+}
+
+export function list(scope: Node, kind: string, limit = 60) {
+  const roles = KINDS[kind] ?? []
+  const found: Node[] = []
+  scope.children.forEach((child) => walk(child, (node) => {
+    if (roles.includes(node.role) && (kind !== "regions" || region(node))) found.push(node)
+  }))
+  const lines = found.slice(0, limit).map(line)
+  return `${found.length} ${kind} in ${line(scope)}${found.length > limit ? ` (first ${limit})` : ""}:\n${lines.map((entry) => `  ${entry}`).join("\n")}`
+}

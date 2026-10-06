@@ -3,7 +3,7 @@
 > **state:** S3-sibling · **protocol:** [`properties-template`](../method/properties-template.md) ·
 > **source (frozen):** [`method-tags-pst.md`](./method-tags-pst.md) — the S2 `up-property` of each behavioural INV ·
 > **formal cluster (verbatim):** [`fspec-merge.md`](../spec/fspec-merge.md) §PERSIST-11 / §UP / §escalation-ladder ·
-> **owner:** charlie (FORGE).
+> **owner:** backend (FORGE).
 >
 > **Purpose:** render each frozen PST `up-property` into a runnable ∀-quantified property — the oracle-free
 > beyond-the-witness check. **Invents no law:** every `law` is a faithful render of the frozen `up-property`

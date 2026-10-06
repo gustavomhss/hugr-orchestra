@@ -122,7 +122,7 @@ const PROJECT = (rule, frecency = 1) => ({ rule, scope: "harness", frecency })
 // in-process array would both satisfy a same-process test; only a new child proves the bytes are on disk.
 function axisM1() {
   const dir = freshRepo("m1")
-  const seat = "seat:charlie"
+  const seat = "seat:backend"
 
   // CONTROL — the instrument must be able to answer EMPTY. If recall answered non-empty here, every later
   // "the fact came back" would be uninterpretable.
@@ -148,7 +148,7 @@ function axisM1() {
 // wrong 8 times out of 9; only the per-name check separates those.
 function axisM2() {
   const dir = freshRepo("m2")
-  const seat = "seat:charlie"
+  const seat = "seat:backend"
   const RSA =
     "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA7ZQ8Y2LxK1vN3pQrS4tUvWxYzA0B1C2D3E4F5G6H7I8J9K0L\n-----END RSA PRIVATE KEY-----"
 
@@ -281,19 +281,19 @@ function LOGBOOK(prId) {
 // invisible — the test would be unfalsifiable rather than passing.
 function axisM3() {
   const dir = freshRepo("m3")
-  for (let i = 0; i < 3; i += 1) emitEntry(dir, PROJECT(`charlie rule number ${i}`), "seat:charlie")
+  for (let i = 0; i < 3; i += 1) emitEntry(dir, PROJECT(`backend rule number ${i}`), "seat:backend")
   emitEntry(dir, PROJECT("the one lucy rule"), "seat:lucy")
 
   const count = (out) => {
     const m = /(\d+) project rule\(s\) injected/.exec(out)
     return m ? Number(m[1]) : -1
   }
-  const c = count(atlas(dir, ["memory-header"], { ATLAS_ACTOR: "seat:charlie" }).out)
+  const c = count(atlas(dir, ["memory-header"], { ATLAS_ACTOR: "seat:backend" }).out)
   const l = count(atlas(dir, ["memory-header"], { ATLAS_ACTOR: "seat:lucy" }).out)
   const asym = c !== l // the control: if these are equal the axis proves nothing
-  record("M3", "CONTROL: the two seats hold different counts (leak is falsifiable)", asym, `charlie=${c} lucy=${l}`)
-  record("M3", "charlie sees exactly its own 3", c === 3, `count=${c}`)
-  record("M3", "lucy sees exactly its own 1 (no leak of charlie 3)", l === 1, `count=${l}`)
+  record("M3", "CONTROL: the two seats hold different counts (leak is falsifiable)", asym, `backend=${c} lucy=${l}`)
+  record("M3", "backend sees exactly its own 3", c === 3, `count=${c}`)
+  record("M3", "lucy sees exactly its own 1 (no leak of backend 3)", l === 1, `count=${l}`)
 
   if (!KEEP) rmSync(dir, { recursive: true, force: true })
   return asym
@@ -312,7 +312,7 @@ function axisM3() {
 // the task write is a real negative rather than a stuck instrument.
 function axisM4() {
   const dir = freshRepo("m4")
-  const seat = "seat:charlie"
+  const seat = "seat:backend"
   const count = (out) => {
     const m = /(\d+) project rule\(s\) injected/.exec(out)
     return m ? Number(m[1]) : -1
@@ -376,7 +376,7 @@ function axisM4() {
 // "refused at the door" apart from "the instrument stopped looking".
 function axisM5() {
   const dir = freshRepo("m5")
-  const seat = "seat:charlie"
+  const seat = "seat:backend"
 
   // POSITIVE CONTROL first: a well-typed record with the SAME field set must still be admitted and must
   // still rank. Without it, every refusal below is satisfied by a door that has stopped accepting writes.

@@ -636,7 +636,7 @@ export const RunCommand = effectCmd({
           return undefined
         }
 
-        const agent = modes.find((a) => a.name === name)
+        const agent = modes.find((a) => (a.id ?? a.name) === name)
         if (!agent) {
           UI.println(
             UI.Style.TEXT_WARNING_BOLD + "!",

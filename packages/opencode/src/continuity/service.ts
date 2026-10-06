@@ -2,20 +2,22 @@ export * as SessionContinuity from "./service"
 
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { BackgroundJob } from "@/background/job"
+import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { Provider } from "@/provider/provider"
 import { LLM } from "@/session/llm"
-import type { MessageID, SessionID } from "@/session/schema"
+import { SessionID, type MessageID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { MessageV2 } from "@/session/message-v2"
 import { Archive } from "./archive"
-import { chunks } from "./transcript"
+import { child } from "./alias"
 import { Token } from "@/util/token"
-import { Cause, Context, Effect, Layer, Scope } from "effect"
+import { Cause, Context, Deferred, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
-import { run, snapshot } from "./fork"
+import { carriesMemory, measure, run, snapshot, type ParentRequest, type Pass } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
-import { isSafe, shouldStart, tokenCount } from "./trigger"
+import { isSafe, PREPARE_MARGIN, settings, shouldStart, tokenCount } from "./trigger"
+import { apply as applyMasks, candidates as maskCandidates } from "./masking"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
 type Active = { generation: number; boundary: MessageID }
@@ -28,8 +30,28 @@ type Entry = {
   attempted?: MessageID
   refresh: boolean
   archived?: MessageID
+  /** Consecutive producer failures; maintenance stops for the session at MAX_FAILURES. */
+  failures?: number
 }
-type State = { sessions: Map<SessionID, Entry>; contexts: ReturnType<typeof create>; scope: Scope.Scope }
+type State = {
+  sessions: Map<SessionID, Entry>
+  contexts: ReturnType<typeof create>
+  scope: Scope.Scope
+  /** Latest parent model request per session, kept so maintenance can reuse its prompt cache. */
+  requests: Map<SessionID, ParentRequest>
+  /** The parent's measured system and tool overhead per session; it outlives the evicted request. */
+  overheads: Map<SessionID, number>
+  /** Masked tool part IDs per session, mapped to the archive reference with the full output. */
+  masks: Map<SessionID, Map<string, string>>
+  /** Sessions whose persisted memory was loaded, is loading, or must not load (invalidated or forgotten). */
+  loads: Map<SessionID, Deferred.Deferred<void>>
+}
+
+// After this many consecutive failed or invalid maintenance runs, stop until the user edits history.
+export const MAX_FAILURES = 3
+
+// Requests hold whole message arrays; keep only the most recently active sessions.
+const MAX_OBSERVED_REQUESTS = 4
 
 export interface Interface {
   readonly prepare: (input: { sessionID: SessionID; messages: SessionV1.WithParts[]; canRecall?: boolean }) => Effect.Effect<{
@@ -40,6 +62,12 @@ export interface Interface {
     sessionID: SessionID
     message: SessionV1.Assistant
     canRecall?: boolean
+  }) => Effect.Effect<void>
+  /** Record the parent's model request so a later maintenance fork can replay its prefix. */
+  readonly observe: (input: {
+    sessionID: SessionID
+    request: LLM.StreamInput
+    messageIDs: readonly MessageID[]
   }) => Effect.Effect<void>
   readonly advance: (sessionID: SessionID) => Effect.Effect<void>
   readonly invalidate: (sessionID: SessionID) => Effect.Effect<void>
@@ -57,9 +85,16 @@ function entry(state: State, sessionID: SessionID) {
 }
 
 // Provider causes may contain conversation content. Keep diagnostics structural.
-function diagnostic(sessionID: SessionID, boundary: MessageID | undefined, reason: string) {
-  return Effect.logWarning("continuity maintenance", { sessionID, boundary, reason })
+// One event per pass, whatever its outcome; a pass summary carries op kinds, sections and IDs, never contents.
+function diagnostic(sessionID: SessionID, boundary: MessageID | undefined, reason: string, pass?: Omit<Pass, "artifact">) {
+  return Effect.logWarning("continuity maintenance", { sessionID, boundary, reason, ...pass })
 }
+
+const memoryDiagnostic = (sessionID: SessionID, error: Archive.ArchiveError) =>
+  Effect.logWarning("continuity memory", { sessionID, reason: error.reason })
+
+const loaded = Deferred.makeUnsafe<void>()
+Deferred.doneUnsafe(loaded, Effect.void)
 
 const layer = Layer.effect(
   Service,
@@ -69,12 +104,56 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const llm = yield* LLM.Service
     const archive = yield* Archive.Service
+    const config = yield* Config.Service
+    const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
-      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope }
+      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map(), masks: new Map(), overheads: new Map(),
+        loads: new Map() }
     }))
 
+    // Load a session's persisted memory once per process, before its first use.
+    const restore = (current: State, sessionID: SessionID) => Effect.suspend(() => {
+      const existing = current.loads.get(sessionID)
+      if (existing) return Deferred.await(existing)
+      const done = Deferred.makeUnsafe<void>()
+      current.loads.set(sessionID, done)
+      return archive.readMemory(sessionID).pipe(
+        Effect.flatMap((memory) => Effect.sync(() => {
+          // An invalidation during the read replaced this load.
+          if (!memory || current.loads.get(sessionID) !== done) return
+          if (memory.context) current.contexts.set(memory.context)
+          if (memory.masks.length) current.masks.set(sessionID, new Map(memory.masks))
+        })),
+        Effect.catch((error) => memoryDiagnostic(sessionID, error).pipe(Effect.andThen(error.reason === "archive-corrupt-memory"
+          ? archive.removeMemory(sessionID).pipe(Effect.catch((error) => memoryDiagnostic(sessionID, error))) : Effect.void))),
+        Effect.ensuring(Deferred.succeed(done, undefined)),
+        Effect.uninterruptible,
+      )
+    })
+
+    const persist = (current: State, sessionID: SessionID) => archive.writeMemory(sessionID, () => {
+      const context = current.contexts.get(sessionID)
+      return { context: context && hasArtifact(context) ? context : undefined, masks: [...current.masks.get(sessionID) ?? []] }
+    }).pipe(Effect.catch((error) => memoryDiagnostic(sessionID, error)))
+
+    const unload = (current: State, sessionID: SessionID) => Effect.suspend(() => {
+      current.loads.set(sessionID, loaded)
+      return archive.removeMemory(sessionID).pipe(Effect.catch((error) => memoryDiagnostic(sessionID, error)))
+    })
+
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
+      // Disabling continuity also stops using memory and masks applied earlier.
+      if (!(yield* enabled).enabled) return { messages: input.messages, system: [] }
+      yield* restore(yield* InstanceState.get(state), input.sessionID)
+      const view = yield* memory(input)
+      // Stubs point at archived output; without recall the full history stays native.
+      if (input.canRecall !== true) return view
+      const masks = (yield* InstanceState.get(state)).masks.get(input.sessionID)
+      return masks?.size ? { ...view, messages: applyMasks(view.messages, masks) } : view
+    })
+
+    const memory = Effect.fn("SessionContinuity.memory")(function* (input: Parameters<Interface["prepare"]>[0]) {
       const current = yield* InstanceState.get(state)
       const prepared = current.contexts.prepare(input.sessionID, input.messages, input.canRecall)
       if (!prepared.system.length) return prepared
@@ -90,13 +169,23 @@ const layer = Layer.effect(
       )
       if (Token.estimate(prepared.system.join("\n") + JSON.stringify(prepared.messages)) + 2048 > capacity)
         return { messages: input.messages, system: [] }
-      const available = yield* Effect.forEach(artifact.references, (reference) =>
-        archive.read({ sessionID: input.sessionID, id: reference.id }).pipe(
-          Effect.map((chunk) => !!chunk), Effect.catch(() => Effect.succeed(false)),
-        ))
       const unchanged = current.sessions.get(input.sessionID) === item && item?.generation === generation &&
         current.contexts.get(input.sessionID)?.artifact === artifact
-      return unchanged && available.every(Boolean) ? prepared : { messages: input.messages, system: [] }
+      return unchanged ? prepared : { messages: input.messages, system: [] }
+    })
+
+    const observe: Interface["observe"] = Effect.fn("SessionContinuity.observe")(function* (input) {
+      const current = yield* InstanceState.get(state)
+      const overhead = yield* measure({ input: input.request, messageIDs: input.messageIDs }, current.contexts.get(input.sessionID)?.text)
+      yield* Effect.sync(() => {
+        current.overheads.set(input.sessionID, overhead)
+        current.requests.delete(input.sessionID)
+        current.requests.set(input.sessionID, { input: input.request, messageIDs: [...input.messageIDs] })
+        for (const key of current.requests.keys()) {
+          if (current.requests.size <= MAX_OBSERVED_REQUESTS) break
+          current.requests.delete(key)
+        }
+      })
     })
 
     const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")(function* (sessionID) {
@@ -114,33 +203,51 @@ const layer = Layer.effect(
       yield* advance(sessionID)
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
+      current.requests.delete(sessionID)
+      current.overheads.delete(sessionID)
+      current.masks.delete(sessionID)
       const item = entry(current, sessionID)
       item.attempted = undefined
+      item.failures = undefined
       item.refresh = true
       item.archived = undefined
+      yield* unload(current, sessionID)
     })
 
     const forget: Interface["forget"] = Effect.fn("SessionContinuity.forget")(function* (sessionID) {
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
       current.sessions.delete(sessionID)
+      current.requests.delete(sessionID)
+      current.overheads.delete(sessionID)
+      current.masks.delete(sessionID)
+      yield* unload(current, sessionID)
     })
 
     const schedule = (current: State, sessionID: SessionID, pending: Pending,
       expected?: { entry: Entry; generation: number }): Effect.Effect<void> =>
       Effect.gen(function* () {
         const message = pending.message
+        const options = yield* enabled
+        if (!options.enabled) return
+        yield* restore(current, sessionID)
+        const context = yield* provider.getModel(message.providerID, message.modelID).pipe(
+          Effect.map((model) => model.limit.context),
+          Effect.orElseSucceed(() => 0),
+        )
         const active = yield* Effect.sync(() => {
           const item = current.sessions.get(sessionID)
           if (!item || expected && (item !== expected.entry || item.generation !== expected.generation)) return
           if (item.active || item.safe !== message.id || item.attempted === message.id) return
+          if ((item.failures ?? 0) >= MAX_FAILURES) return
           const previous = current.contexts.get(sessionID)
           if (previous && !hasArtifact(previous)) {
             current.contexts.discard(sessionID)
             item.refresh = true
           }
           if (current.contexts.get(sessionID)?.boundary === message.id) return
-          if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false })) return
+          if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false, context,
+            trigger: options.trigger })) return
           const active: Active = { generation: item.generation, boundary: message.id }
           item.active = active
           item.attempted = message.id
@@ -148,6 +255,15 @@ const layer = Layer.effect(
           return active
         })
         if (!active) return
+
+        // Count consecutive producer failures for this generation; success resets the count.
+        const outcome = (ok: boolean) => Effect.sync(() => {
+          const item = current.sessions.get(sessionID)
+          if (!item || item.generation !== active.generation) return
+          item.failures = ok ? 0 : (item.failures ?? 0) + 1
+          if (item.failures === MAX_FAILURES) return "open" as const
+        }).pipe(Effect.flatMap((state) => state === "open"
+          ? diagnostic(sessionID, active.boundary, "circuit-open") : Effect.void))
 
         const finish = Effect.gen(function* () {
           const next = yield* Effect.sync(() => {
@@ -191,6 +307,33 @@ const layer = Layer.effect(
               const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
               const headBudget = Math.max(0, Math.min(32_000, Math.floor(inputLimit / 2)))
               const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall })
+              // Mask old tool output first: it needs no model call and often frees enough on its own.
+              const references = yield* archive.list(sessionID)
+              const firstFragment = new Map<string, string>()
+              for (const reference of references) if (!firstFragment.has(reference.first)) firstFragment.set(reference.first, reference.id)
+              const { masked, added } = yield* Effect.sync(() => {
+                const item = current.sessions.get(sessionID)
+                if (!item || item.active !== active || item.generation !== active.generation) return { masked: 0, added: false }
+                const masks = current.masks.get(sessionID) ?? new Map<string, string>()
+                const before = masks.size
+                let freed = 0
+                for (const candidate of maskCandidates(prepared.messages, masks)) {
+                  const reference = firstFragment.get(candidate.messageID)
+                  if (reference === undefined) continue
+                  masks.set(candidate.part.id, reference)
+                  freed += candidate.saved
+                }
+                if (masks.size) current.masks.set(sessionID, masks)
+                return { masked: freed, added: masks.size !== before }
+              })
+              if (added) yield* persist(current, sessionID)
+              if (masked > 0 && tokenCount(message.tokens) - masked <= context * (options.trigger - PREPARE_MARGIN)) {
+                yield* diagnostic(sessionID, active.boundary, "masked")
+                yield* outcome(true)
+                return "masked"
+              }
+              const request = current.requests.get(sessionID)
+              let budget = headBudget
               const selected = yield* Effect.sync(() => {
                 const item = current.sessions.get(sessionID)
                 if (
@@ -204,30 +347,38 @@ const layer = Layer.effect(
                 const previous = current.contexts.get(sessionID)
                 // Full history is required for incompatible or unavailable prior coverage.
                 if (previous && !hasArtifact(previous)) current.contexts.discard(sessionID)
-                return snapshot(
-                  sessionID,
-                  activeHistory,
-                  prepared.system.length ? previous?.artifact : undefined,
-                  pending.canRecall,
-                  headBudget,
-                )
+                const prior = prepared.system.length ? previous?.artifact : undefined
+                // The replay transport sends the index, not the head transcript: only the isolated path caps the head.
+                if (request && carriesMemory(request, prior) && request.input.model.providerID === model.providerID &&
+                  request.input.model.id === model.id) budget = Infinity
+                return snapshot(sessionID, activeHistory, prior, pending.canRecall, budget)
               })
               if (!selected) {
                 yield* diagnostic(sessionID, active.boundary, "no-current-snapshot")
                 return "discarded"
               }
-              const selectedChunks = chunks(sessionID, selected.head)
-              const previousRefs = selected.previous?.references ?? []
-              const available = [...new Map([...selectedChunks, ...previousRefs].map((ref) => [ref.id, ref])).values()]
-              for (const reference of available) {
-                if (!(yield* archive.read({ sessionID, id: reference.id }))) {
-                  yield* diagnostic(sessionID, active.boundary, "archive-unavailable")
-                  return "discarded"
-                }
+              // A turn that started before the last swap replays older memory than this
+              // pass edits. Wait for a turn that carries the current memory instead of
+              // paying for an uncached isolated request.
+              if (request && !carriesMemory(request, selected.previous)) {
+                yield* diagnostic(sessionID, active.boundary, "stale-request")
+                return "discarded"
               }
-              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available)
+              // Host data the producer never writes: delegation registry state and members.
+              const children = [...new Set(history.flatMap((item) => item.parts.flatMap((part) => child(part) ?? [])))]
+              const delegations = Object.fromEntries(yield* Effect.forEach(children, (id) => Effect.gen(function* () {
+                const job = yield* background.get(id)
+                const info = yield* sessions.get(SessionID.make(id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+                return [id, { member: info?.agent, status: job?.status }] as const
+              })))
+              const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
+              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member },
+                { trigger: options.trigger, masks: current.masks.get(sessionID), parent: request, overhead: current.overheads.get(sessionID) })
+              // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
-                yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
+                yield* diagnostic(sessionID, active.boundary, pass.skip ? `skipped-${pass.skip}` : "rejected", pass)
+                if (pass.skip) return "skipped"
+                yield* outcome(false)
                 return "discarded"
               }
               const latest = (yield* sessions.messages({ sessionID })).at(-1)?.info.id
@@ -259,17 +410,21 @@ const layer = Layer.effect(
                   })
                 )
                   return false
-                item.refresh = !!snapshot(sessionID, activeHistory, artifact, pending.canRecall, headBudget)
+                item.refresh = !!snapshot(sessionID, activeHistory, artifact, pending.canRecall, budget)
                 return true
               })
               if (!applied) {
-                yield* diagnostic(sessionID, active.boundary, "stale-or-mismatched-artifact")
+                yield* diagnostic(sessionID, active.boundary, "stale-or-mismatched-artifact", pass)
                 return "discarded"
               }
+              yield* persist(current, sessionID)
+              yield* diagnostic(sessionID, active.boundary, "applied", pass)
+              yield* outcome(true)
               return "applied"
             }).pipe(
               Effect.catchCause((cause) =>
                 diagnostic(sessionID, active.boundary, Cause.hasInterruptsOnly(cause) ? "cancelled" : "failed").pipe(
+                  Effect.andThen(Cause.hasInterruptsOnly(cause) ? Effect.void : outcome(false)),
                   Effect.andThen(
                     Cause.hasInterruptsOnly(cause)
                       ? Effect.failCause(cause)
@@ -324,12 +479,12 @@ const layer = Layer.effect(
       ),
     )
 
-    return Service.of({ prepare, start, advance, invalidate, forget })
+    return Service.of({ prepare, start, observe, advance, invalidate, forget })
   }),
 )
 
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node],
+  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node],
 })

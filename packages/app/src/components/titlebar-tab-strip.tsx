@@ -29,6 +29,7 @@ import { showToast } from "@/utils/toast"
 import { canStartTabDrag, isTabCloseTarget } from "./titlebar-tab-gesture"
 import { adjacentTabKey, mergeVisibleTabOrder, tabMatchesProfile } from "./titlebar-tab-order"
 import type { Session } from "@opencode-ai/sdk/v2"
+import { agentKey } from "@/context/agent-identity"
 
 function SessionTabSlot(props: {
   tab: SessionTab
@@ -216,9 +217,7 @@ function DraftTabSlot(props: {
     const chosen = selectPromptModel(
       {
         chosen: prompt()?.model.current(),
-        agent: active?.recent
-          ? active.agent
-          : store.agent.find((item) => item.mode !== "subagent" && !item.hidden)?.model,
+        agent: active?.recent ? active.agent : store.agent.find((item) => agentKey(item) === "maestro")?.model,
         configured: resolveDefaultModel(store.provider.defaultModel, store.config.model),
         recent: active?.recent ?? models.recent.list(),
         fallback: provider && id ? { modelID: id, providerID: provider.id } : undefined,
