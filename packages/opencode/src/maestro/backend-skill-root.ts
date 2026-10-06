@@ -39,11 +39,24 @@ export async function extract(files: Record<string, string>, cache: string, vers
   await Promise.all(entries.map(([file, bytes]) => Bun.write(path.join(temp, ...file.split("/")), bytes)))
   await fs.rm(dir, { recursive: true, force: true })
   // A concurrent start may place the same tree first. Its copy is as good as this one.
-  await fs.rename(temp, dir).catch(async (error) => {
+  await place(temp, dir).catch(async (error) => {
     await fs.rm(temp, { recursive: true, force: true })
     if (digest(await readTree(dir)) !== expected) throw error
   })
   return canonical()
+}
+
+// Windows can refuse a rename for a moment while another handle (an indexer, antivirus, a read that just closed) still
+// holds the directory, so a transient refusal is retried briefly before it counts as a failure.
+async function place(from: string, to: string, delays = [50, 100, 200, 400]): Promise<void> {
+  const error = await fs.rename(from, to).then(
+    () => undefined,
+    (error: NodeJS.ErrnoException) => error,
+  )
+  if (!error) return
+  if (!["EPERM", "EACCES", "EBUSY"].includes(error.code ?? "") || delays.length === 0) throw error
+  await Bun.sleep(delays[0]!)
+  return place(from, to, delays.slice(1))
 }
 
 // Every non-directory entry counts, so an added file or a planted link also fails verification.
