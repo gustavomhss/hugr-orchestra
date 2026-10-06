@@ -398,9 +398,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.title": "Μη υποστηριζόμενο συνημμένο",
   "prompt.toast.pasteUnsupported.description": "Εδώ επισυνάπτονται μόνο εικόνες, αρχεία PDF ή αρχεία κειμένου.",
   "prompt.toast.attachmentDuplicate.title": "Αυτό το αρχείο έχει ήδη μεταφορτωθεί",
-  "prompt.toast.modelAgentRequired.title": "Επιλέξτε έναν πράκτορα και μοντέλο",
-  "prompt.toast.modelAgentRequired.description":
-    "Επιλέξτε έναν πράκτορα και ένα μοντέλο πριν στείλετε ένα μήνυμα προτροπής.",
+  "prompt.toast.modelRequired.title": "Επιλέξτε ένα μοντέλο",
+  "prompt.toast.modelRequired.description": "Επιλέξτε ένα μοντέλο πριν στείλετε ένα μήνυμα προτροπής.",
   "prompt.toast.worktreeCreateFailed.title": "Αποτυχία δημιουργίας δέντρου εργασίας",
   "prompt.toast.sessionCreateFailed.title": "Αποτυχία δημιουργίας συνεδρίας",
   "prompt.toast.shellSendFailed.title": "Αποτυχία αποστολής εντολής κελύφους",

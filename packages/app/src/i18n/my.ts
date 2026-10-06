@@ -401,8 +401,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "ရုပ်ပုံများ၊ PDF များ သို့မဟုတ် စာသားဖိုင်များကိုသာ ဤနေရာတွင် ပူးတွဲနိုင်ပါသည်။",
   "prompt.toast.attachmentDuplicate.title": "ဤဖိုင်ကို အပ်လုဒ်လုပ်ပြီးပါပြီ။",
-  "prompt.toast.modelAgentRequired.title": "အေးဂျင့်နှင့် မော်ဒယ်ကို ရွေးပါ။",
-  "prompt.toast.modelAgentRequired.description": "Prompt မပို့မီ အေးဂျင့်နှင့် မော်ဒယ်ကို ရွေးပါ။",
+  "prompt.toast.modelRequired.title": "မော်ဒယ်ကို ရွေးပါ။",
+  "prompt.toast.modelRequired.description": "Prompt မပို့မီ မော်ဒယ်ကို ရွေးပါ။",
   "prompt.toast.worktreeCreateFailed.title": "Git worktree ဖန်တီး၍မရပါ။",
   "prompt.toast.sessionCreateFailed.title": "စက်ရှင်ကို ဖန်တီး၍မရပါ။",
   "prompt.toast.shellSendFailed.title": "shell command ကို ပို့၍မရပါ။",

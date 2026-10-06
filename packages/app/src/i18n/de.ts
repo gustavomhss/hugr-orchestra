@@ -308,9 +308,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.title": "Nicht unterstützter Anhang",
   "prompt.toast.attachmentDuplicate.title": "Diese Datei wurde bereits hochgeladen",
   "prompt.toast.pasteUnsupported.description": "Hier können nur Bilder, PDFs oder Textdateien angehängt werden.",
-  "prompt.toast.modelAgentRequired.title": "Wählen Sie einen Agenten und ein Modell",
-  "prompt.toast.modelAgentRequired.description":
-    "Wählen Sie einen Agenten und ein Modell, bevor Sie eine Eingabe senden.",
+  "prompt.toast.modelRequired.title": "Wählen Sie ein Modell",
+  "prompt.toast.modelRequired.description": "Wählen Sie ein Modell, bevor Sie eine Eingabe senden.",
   "prompt.toast.worktreeCreateFailed.title": "Der Worktree konnte nicht erstellt werden",
   "prompt.toast.sessionCreateFailed.title": "Sitzung konnte nicht erstellt werden",
   "prompt.toast.shellSendFailed.title": "Shell-Befehl konnte nicht gesendet werden",

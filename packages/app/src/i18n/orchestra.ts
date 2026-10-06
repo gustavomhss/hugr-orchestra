@@ -273,7 +273,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.evidence.rerun.block.blocked": "This session is waiting for your answer. Respond to it first.",
   "orchestra.evidence.rerun.block.busy": "This session is working. Run the command again when it is idle.",
   "orchestra.evidence.rerun.block.pending": "A command request is still being sent. Wait for its response.",
-  "orchestra.evidence.rerun.block.model": "Select an agent and model to run commands.",
+  "orchestra.evidence.rerun.block.model": "Select a model to run commands.",
   "orchestra.evidence.sessionChanged": "The session changed; no text was inserted.",
   "orchestra.pr.append.title": "Add to your draft?",
   "orchestra.pr.append.body":

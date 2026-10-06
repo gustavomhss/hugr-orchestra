@@ -398,8 +398,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "Hier kunnen alleen afbeeldingen, pdf's of tekstbestanden worden bijgevoegd.",
   "prompt.toast.attachmentDuplicate.title": "Dit bestand is al geüpload",
-  "prompt.toast.modelAgentRequired.title": "Selecteer een agent en model",
-  "prompt.toast.modelAgentRequired.description": "Kies een agent en model voordat je een prompt verzendt.",
+  "prompt.toast.modelRequired.title": "Selecteer een model",
+  "prompt.toast.modelRequired.description": "Kies een model voordat je een prompt verzendt.",
   "prompt.toast.worktreeCreateFailed.title": "Kan worktree niet maken",
   "prompt.toast.sessionCreateFailed.title": "Kan sessie niet maken",
   "prompt.toast.shellSendFailed.title": "Kan shell-opdracht niet verzenden",

@@ -402,8 +402,8 @@ export const dict: Record<string, string> = {
   "prompt.toast.pasteUnsupported.description":
     "པར་རིས་དང་པི་ཌི་ཨེཕ་ ཡང་ན་ ཚིག་ཡིག་ཡིག་སྣོད་ཚུ་རྐྱངམ་ཅིག་ ནཱ་ལུ་མཉམ་སྦྲགས་འབད་བཏུབ།",
   "prompt.toast.attachmentDuplicate.title": "ཡིག་སྣོད་འདི་ཧེ་མ་ལས་སྐྱེལ་བཙུགས་འབད་ཡི།",
-  "prompt.toast.modelAgentRequired.title": "ལས་ཚབ་དང་དཔེ་ཚད་ཅིག་སེལ་འཐུ་འབད།",
-  "prompt.toast.modelAgentRequired.description": "བརྡ་སྟོན་མ་གཏང་པའི་ཧེ་མ་ ལས་ཚབ་དང་དཔེ་ཚད་གདམ་ཁ་རྐྱབས།",
+  "prompt.toast.modelRequired.title": "དཔེ་ཚད་ཅིག་སེལ་འཐུ་འབད།",
+  "prompt.toast.modelRequired.description": "བརྡ་སྟོན་མ་གཏང་པའི་ཧེ་མ་ དཔེ་ཚད་གདམ་ཁ་རྐྱབས།",
   "prompt.toast.worktreeCreateFailed.title": "Git worktree གསར་བསྐྲུན་འབད་མ་ཚུགས།",
   "prompt.toast.sessionCreateFailed.title": "ལཱ་ཡུན་གསར་བསྐྲུན་འབད་ནི་ལུ་འཐུས་ཤོར་འབྱུང་ཡོདཔ།",
   "prompt.toast.shellSendFailed.title": "Shell བརྡ་བཀོད་གཏང་མ་ཚུགས།",

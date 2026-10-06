@@ -403,8 +403,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "މިތަނުގައި އެޓޭޗް ކުރެވޭނީ ހަމައެކަނި ތަސްވީރު، PDFs، ނުވަތަ ޓެކްސްޓް ފައިލްތަކެވެ.",
   "prompt.toast.attachmentDuplicate.title": "މި ފައިލް މިހާރު ވަނީ އަޕްލޯޑްކޮށްފައެވެ",
-  "prompt.toast.modelAgentRequired.title": "އޭޖެންޓަކާއި މޮޑެލްއެއް ހޮވުން",
-  "prompt.toast.modelAgentRequired.description": "ޕްރޮމްޕްޓެއް ފޮނުވުމުގެ ކުރިން އޭޖެންޓަކާއި މޮޑެލްއެއް ހޮވުން.",
+  "prompt.toast.modelRequired.title": "މޮޑެލްއެއް ހޮވުން",
+  "prompt.toast.modelRequired.description": "ޕްރޮމްޕްޓެއް ފޮނުވުމުގެ ކުރިން މޮޑެލްއެއް ހޮވުން.",
   "prompt.toast.worktreeCreateFailed.title": "ވޯކްޓްރީ އުފެއްދުމަށް ނާކާމިޔާބުވިއެވެ",
   "prompt.toast.sessionCreateFailed.title": "ސެޝަން އުފެއްދުމަށް ނާކާމިޔާބުވިއެވެ",
   "prompt.toast.shellSendFailed.title": "ޝެލް ކޮމާންޑް ފޮނުވަން ނާކާމިޔާބުވިއެވެ",

@@ -399,8 +399,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "Дар ин ҷо танҳо тасвирҳо, PDFс ё файлҳои матнӣ замима кардан мумкин аст.",
   "prompt.toast.attachmentDuplicate.title": "Ин файл аллакай бор карда шудааст",
-  "prompt.toast.modelAgentRequired.title": "Агент ва моделро интихоб кунед",
-  "prompt.toast.modelAgentRequired.description": "Пеш аз фиристодани промпт агент ва моделро интихоб кунед.",
+  "prompt.toast.modelRequired.title": "Моделро интихоб кунед",
+  "prompt.toast.modelRequired.description": "Пеш аз фиристодани промпт моделро интихоб кунед.",
   "prompt.toast.worktreeCreateFailed.title": "Эҷоди Git worktree муяссар нашуд",
   "prompt.toast.sessionCreateFailed.title": "Эҷоди сессия натавонист",
   "prompt.toast.shellSendFailed.title": "Фармони shell фиристода нашуд",

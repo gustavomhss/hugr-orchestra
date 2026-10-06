@@ -398,8 +398,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "Këtu mund të bashkëngjiten vetëm imazhe, skedarë PDF ose skedarë teksti.",
   "prompt.toast.attachmentDuplicate.title": "Ky skedar tashmë është ngarkuar",
-  "prompt.toast.modelAgentRequired.title": "Zgjidhni një agjent dhe model",
-  "prompt.toast.modelAgentRequired.description": "Zgjidhni një agjent dhe model përpara se të dërgoni një kërkesë.",
+  "prompt.toast.modelRequired.title": "Zgjidhni një model",
+  "prompt.toast.modelRequired.description": "Zgjidhni një model përpara se të dërgoni një kërkesë.",
   "prompt.toast.worktreeCreateFailed.title": "Krijimi i pemës së punës dështoi",
   "prompt.toast.sessionCreateFailed.title": "Krijimi i sesionit dështoi",
   "prompt.toast.shellSendFailed.title": "Dërgimi i komandës së predhës dështoi",

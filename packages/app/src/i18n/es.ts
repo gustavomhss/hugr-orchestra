@@ -426,8 +426,8 @@ export const dict = {
   "prompt.toast.attachmentDuplicate.title": "Este archivo ya se ha subido",
   "prompt.toast.pasteUnsupported.description":
     "Aquí solo se pueden adjuntar imágenes, archivos PDF o archivos de texto.",
-  "prompt.toast.modelAgentRequired.title": "Selecciona un agente y modelo",
-  "prompt.toast.modelAgentRequired.description": "Elige un agente y modelo antes de enviar un prompt.",
+  "prompt.toast.modelRequired.title": "Selecciona un modelo",
+  "prompt.toast.modelRequired.description": "Elige un modelo antes de enviar un prompt.",
   "prompt.toast.worktreeCreateFailed.title": "Fallo al crear el árbol de trabajo",
   "prompt.toast.sessionCreateFailed.title": "Fallo al crear la sesión",
   "prompt.toast.shellSendFailed.title": "Fallo al enviar comando de shell",
