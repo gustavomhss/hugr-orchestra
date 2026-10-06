@@ -22,18 +22,15 @@ export function create() {
     discard(sessionID: SessionID) {
       entries.delete(sessionID)
     },
-    prepare(
-      sessionID: SessionID,
-      messages: SessionV1.WithParts[],
-      canRecall = false,
-    ): { messages: SessionV1.WithParts[]; system: string[] } {
+    prepare(sessionID: SessionID, messages: SessionV1.WithParts[]): { messages: SessionV1.WithParts[]; system: string[] } {
       const entry = entries.get(sessionID)
-      // Revocation restores native history without destroying the stored entry.
-      if (!entry || canRecall !== true || !hasArtifact(entry)) return { messages, system: [] }
+      if (!entry || !hasArtifact(entry)) return { messages, system: [] }
       const index = tailIndex(entry, messages)
       if (index === undefined) return { messages, system: [] }
+      // A tail cut inside a turn opens with that turn's user message, so the request still starts with the user.
+      const opener = messages[index].info.role === "user" ? undefined : messages.slice(0, index).findLast((message) => message.info.role === "user")
       return {
-        messages: messages.slice(index),
+        messages: [...opener ? [opener] : [], ...messages.slice(index)],
         system: [entry.artifact.text],
       }
     },

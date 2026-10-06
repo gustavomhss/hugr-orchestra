@@ -395,6 +395,49 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       ],
       "type": "object",
     },
+    "memoryUnit": {
+      "anyOf": [
+        {
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "task",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "kind",
+            "id",
+          ],
+          "type": "object",
+        },
+        {
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "pr",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "kind",
+            "id",
+          ],
+          "type": "object",
+        },
+      ],
+      "description": "Backend specialist resume only: the task or PR unit whose latest admitted Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for other agents.",
+    },
     "model": {
       "description": "Run the subagent on a specific model as 'providerID/modelID' (e.g. 'openrouter/deepseek/deepseek-chat', 'groq/llama-3.3-70b-versatile'). Overrides the subagent's configured model and the parent session model. The provider part also selects credentials: OAuth subscriptions (Claude Max, ChatGPT) and API keys resolve per providerID at run time — use a custom provider alias in opencode.json to pin a second key for the same backend.",
       "type": "string",

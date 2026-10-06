@@ -5,6 +5,7 @@ import { ConfigMaestro } from "@opencode-ai/schema/config-maestro"
 import { NonNegativeInt, PositiveInt, type DeepMutable } from "../../schema"
 import { ConfigExperimental } from "../../config/experimental"
 import { ConfigReference } from "../../config/reference"
+import { ConfigRelay } from "../../config/relay"
 import { ConfigAgentV1 } from "./agent"
 import { ConfigAttachmentV1 } from "./attachment"
 import { ConfigCommandV1 } from "./command"
@@ -181,6 +182,7 @@ export const Info = Schema.Struct({
       }),
     }),
   ),
+  relay: Schema.optional(ConfigRelay.Info).annotate({ description: "Relay workflow and hook engine settings" }),
   experimental: Schema.optional(
     Schema.Struct({
       disable_paste_summary: Schema.optional(Schema.Boolean),

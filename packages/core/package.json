@@ -20,6 +20,7 @@
     "./effect/app-node": "./src/effect/app-node.ts",
     "./session/runner": "./src/session/runner/index.ts",
     "./system-context": "./src/system-context/index.ts",
+    "./backend-toolkit": "./src/backend-toolkit/index.ts",
     "./*": "./src/*.ts"
   },
   "imports": {
@@ -97,6 +98,7 @@
     "@opencode-ai/maestro-arsenal": "workspace:*",
     "@opencode-ai/schema": "workspace:*",
     "@opencode-ai/plugin": "workspace:*",
+    "@opencode-ai/relay": "workspace:*",
     "@opentelemetry/api": "1.9.0",
     "@opentelemetry/context-async-hooks": "2.6.1",
     "@opentelemetry/exporter-trace-otlp-http": "0.214.0",

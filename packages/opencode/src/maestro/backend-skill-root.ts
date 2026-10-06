@@ -21,18 +21,20 @@ const embedded = await import(
 
 export const root = embedded ? await extract(embedded, Global.Path.cache, InstallationVersion) : source
 
-// Copies `files` into a directory keyed by the installation version, unless it already holds exactly those bytes.
-// Versions never share a copy, so installs of different versions can run side by side. A partial, stale or
-// tampered copy is replaced whole: the tree is written to a sibling temp directory and renamed into place.
+// Copies `files` into a directory keyed `<version>-<digest12>` by the installation version and the embedded content
+// digest (the F6.12 manifest), unless it already holds exactly those bytes. Two builds never share a copy, even with the
+// same version string (unversioned builds are all "local"), so no install replaces or removes a copy another process
+// is reading. Old copies are kept: a rollback re-selects its own. Only a partial or tampered copy of this very content
+// is replaced whole: the tree is written to a sibling temp directory and renamed into place.
 export async function extract(files: Record<string, string>, cache: string, version: string) {
-  const dir = path.join(cache, "backend-skills", version)
-  // Windows temp and cache paths can carry 8.3 short names (RUNNER~1); permission checks compare canonical paths, so the
-  // root handed to grants and the read tool must be the canonical one.
-  const canonical = () => fs.realpath(dir)
   const entries = await Promise.all(
     Object.entries(files).map(async ([file, from]) => [file, await Bun.file(from).bytes()] as const),
   )
   const expected = digest(entries)
+  const dir = path.join(cache, "backend-skills", `${version}-${expected.slice(0, 12)}`)
+  // Windows temp and cache paths can carry 8.3 short names (RUNNER~1); permission checks compare canonical paths, so the
+  // root handed to grants and the read tool must be the canonical one.
+  const canonical = () => fs.realpath(dir)
   if (digest(await readTree(dir)) === expected) return canonical()
 
   const temp = `${dir}.${randomUUID()}.tmp`

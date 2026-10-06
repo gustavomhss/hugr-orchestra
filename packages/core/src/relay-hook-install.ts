@@ -6,6 +6,7 @@ import { rmSync } from "fs"
 import { Clock, Effect, Option, Schema } from "effect"
 import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
+import { RelayJson } from "@opencode-ai/relay/json"
 import { KeyedMutex } from "./effect/keyed-mutex"
 import { FSUtil } from "./fs-util"
 import { MaestroArsenal } from "./tool/maestro-arsenal"
@@ -223,33 +224,21 @@ const ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/
 // directory are out of scope), so an in-process lock with a synchronous release is enough.
 const locks = KeyedMutex.makeUnsafe<string>()
 
-/**
- * `json.compact` on a hook export, which holds only strings, integers, booleans, arrays and fixed-key objects:
- * JSON.stringify keeps the key order and escapes as `jq -c` does, except that jq also escapes DEL.
- */
-function compact(value: unknown) {
-  return stringify(value).pipe(
-    Option.flatMap(Option.fromUndefinedOr),
-    Option.map((text) => text.replaceAll("\u007f", "\\u007f")),
-  )
-}
-
-// JSON.stringify throws on a BigInt or a cycle and returns undefined for a function or undefined.
-const stringify = Option.liftThrowable((value: unknown): string | undefined => JSON.stringify(value))
-
 function sha256(text: string) {
   return createHash("sha256").update(text).digest("hex")
 }
 
 /**
- * The snapshot as an install stores it: the JSON its sha256 covers, read back, so a value JSON cannot carry (NaN, a
- * function) is refused rather than silently changed. Validated, not decoded: decoding rebuilds objects in schema key
- * order, and the sha256 is taken over the export's own key order.
+ * The snapshot as an install stores it: `json.compact` (`RelayJson.compact`, jq's bytes) read back, so a value compact
+ * JSON cannot carry (NaN, a fraction, a function, a key a JS object would reorder) is refused rather than silently
+ * changed. Validated, not decoded: decoding rebuilds objects in schema key order, and the sha256 is taken over the
+ * export's own key order.
  */
 const pin = Effect.fnUntraced(function* (snapshot: unknown, expected: string) {
-  const text = compact(snapshot)
-  if (Option.isNone(text)) return yield* refuse("snapshot-invalid", "The snapshot is not JSON.")
-  const parsed = yield* Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(text.value).pipe(
+  const text = yield* RelayJson.compact(snapshot).pipe(
+    Effect.mapError(() => new Refused({ reason: "snapshot-invalid", message: "The snapshot is not JSON." })),
+  )
+  const parsed = yield* Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(text).pipe(
     Effect.mapError(() => new Refused({ reason: "snapshot-invalid", message: "The snapshot is not JSON." })),
   )
   const hook = yield* Schema.decodeUnknownEffect(RelayHook.V1)(parsed, STRICT).pipe(
@@ -263,7 +252,7 @@ const pin = Effect.fnUntraced(function* (snapshot: unknown, expected: string) {
   )
   const broken = violation(hook)
   if (broken) return yield* refuse("snapshot-invalid", broken)
-  if (sha256(text.value) !== expected)
+  if (sha256(text) !== expected)
     return yield* refuse("sha256-mismatch", "The snapshot does not match the published sha256.")
   return parsed as RelayHook.V1
 })
@@ -330,15 +319,15 @@ const parse = Effect.fnUntraced(function* (text: string) {
     return yield* corrupt("hooks.json repeats an install ID.")
   // Kept as read, not as decoded, so each snapshot keeps the key order its sha256 covers.
   const installs = (parsed as RelayHook.Installs).installs
-  const broken = installs
-    .map((item) => {
+  const broken = yield* Effect.forEach(installs, (item) =>
+    Effect.gen(function* () {
       if (!ID.test(item.installID)) return `Install ${item.installID} has an invalid ID.`
-      if (!Option.contains(Option.map(compact(item.snapshot), sha256), item.sha256))
-        return `Install ${item.installID} does not match its sha256.`
+      const digest = yield* RelayJson.compact(item.snapshot).pipe(Effect.map(sha256), Effect.option)
+      if (!Option.contains(digest, item.sha256)) return `Install ${item.installID} does not match its sha256.`
       const rule = violation(item.snapshot)
       return rule ? `Install ${item.installID}: ${rule}` : undefined
-    })
-    .find((reason) => reason !== undefined)
+    }),
+  ).pipe(Effect.map((reasons) => reasons.find((reason) => reason !== undefined)))
   if (broken) return yield* corrupt(broken)
   return { installs } satisfies RelayHook.Installs
 })

@@ -234,14 +234,14 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
 }
 
 for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", "no-toolcall", "revoked", "session-pattern-deny", "agent-pattern-deny", "pattern-revoked"] as const) {
-  it.instance(`encoded HTTP tool capability controls memory application: ${condition}`, () => Effect.gen(function* () {
+  // Memory needs no recall: without it the legacy compaction no longer stands in. Recall only gates masking.
+  it.instance(`working memory applies whatever the recall capability: ${condition}`, () => Effect.gen(function* () {
     const llm = yield* TestLLMServer
     const instance = yield* TestInstance
     const prompt = yield* SessionPrompt.Service
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     const jobs = yield* BackgroundJob.Service
-    const allowed = condition === "allowed" || condition === "revoked" || condition === "pattern-revoked"
     yield* configure(llm.url, instance.directory, { toolcall: condition !== "no-toolcall", permission:
       condition === "agent-deny" ? "deny" : condition === "agent-pattern-deny" ? { "*": "allow", "ses_*": "deny" } : "allow" })
     const chat = yield* sessions.create({ title: `Working-memory capability ${condition}`,
@@ -263,16 +263,14 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
       expect(result.info.error).toBeUndefined()
     }
     const history = yield* sessions.messages({ sessionID: chat.id })
-    if (allowed) {
-      const job = yield* jobFor(chat.id, history.at(-1)!.info.id)
-      const done = yield* jobs.wait({ id: job.id, timeout: 10_000 })
-      expect(done.timedOut).toBe(false)
-      expect(done.info?.output).toBe("applied")
-    }
-    expect(yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: false })).toEqual({ messages: history, system: [] })
+    const job = yield* jobFor(chat.id, history.at(-1)!.info.id)
+    const done = yield* jobs.wait({ id: job.id, timeout: 10_000 })
+    expect(done.timedOut).toBe(false)
+    expect(done.info?.output).toBe("applied")
     const saved = yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })
-    expect(saved.messages).toEqual(allowed ? history.slice(4) : history)
-    expect(saved.system.length > 0).toBe(allowed)
+    expect(yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: false })).toEqual(saved)
+    expect(saved.messages).toEqual(history.slice(4))
+    expect(saved.system.length > 0).toBe(true)
     if (condition === "revoked" || condition === "pattern-revoked") yield* sessions.setPermission({ sessionID: chat.id,
       permission: [{ permission: "context_recall", pattern: condition === "pattern-revoked" ? chat.id : "*", action: "deny" }] })
     const next = yield* send("CAPABILITY_NEXT")
@@ -281,19 +279,18 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     const wire = wireMessages(hit.body)
     const system = wire.filter((entry) => entry.role === "system").map((entry) => entry.content).join("\n")
     const conversation = wire.filter((entry) => entry.role !== "system").map((entry) => entry.content).join("\n")
-    for (const message of condition === "allowed" ? history.slice(4) : history) for (const part of message.parts)
+    for (const message of history.slice(4)) for (const part of message.parts)
       if (part.type === "text") expect(conversation).toContain(part.text)
-    expect(system.includes("# Working memory")).toBe(condition === "allowed")
-    if (condition === "allowed") {
-      expect(system).toContain(FIRST)
-      expect(conversation).not.toContain(seed[0])
-    }
+    expect(system).toContain("# Working memory")
+    expect(system).toContain(FIRST)
+    expect(conversation).not.toContain(seed[0])
     const patterned = condition === "session-pattern-deny" || condition === "agent-pattern-deny" || condition === "pattern-revoked"
     expect(hasRecall(hit)).toBe(condition === "allowed" || condition === "no-toolcall" || patterned)
-    expect(hasRecall(capture.hits[0].hit)).toBe(allowed || condition === "no-toolcall" || patterned)
-    expect(capture.hits.map((entry) => entry.name)).toEqual([...seed, ...(allowed ? ["memory"] : []), "next"])
+    expect(hasRecall(capture.hits[0].hit)).toBe(condition === "allowed" || condition === "revoked" || condition === "pattern-revoked" ||
+      condition === "no-toolcall" || patterned)
+    expect(capture.hits.map((entry) => entry.name)).toEqual([...seed, "memory", "next"])
     expect(yield* llm.hits).toEqual(capture.hits.map((entry) => entry.hit))
-    expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === chat.id)).toHaveLength(allowed ? 1 : 0)
+    expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === chat.id)).toHaveLength(1)
     expect((yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })).system).toEqual(saved.system)
   }), 120_000)
 }
