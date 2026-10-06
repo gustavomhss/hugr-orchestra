@@ -340,6 +340,7 @@ class BusTests(unittest.TestCase):
 
         status = self.bus.subscribe_lifecycle(self.owner, dirty)
         self.assertEqual(status["defunct"], "registered; delivery requires empirical proof")
+        self.assertEqual(status["changes"], "registered")
         self.valid()  # Flush subscription setup before sending fixture signals.
         for connection, ref in ((self.service.other, self.owner), (self.service.exporter, self.service.other.get_unique_name())):
             connection.emit_signal(None, "/org/a11y/atspi/cache", "org.a11y.atspi.Cache", "RemoveAccessible",
@@ -350,14 +351,17 @@ class BusTests(unittest.TestCase):
                                           GLib.Variant("((so))", ((self.owner, ROOT),)))
         self.service.exporter.emit_signal(None, ROOT, "org.a11y.atspi.Event.Object", "StateChanged", GLib.Variant("(si)", ("defunct", 1)))
         self.service.exporter.flush_sync(None)
+        lifecycle = lambda: [event for event in events if event[0] != "changed"]
         with changed:
-            self.assertTrue(changed.wait_for(lambda: len(events) >= 2, timeout=2))
-            self.assertEqual(events, [("cache-remove", self.owner, ROOT), ("defunct", self.owner, ROOT)])
+            self.assertTrue(changed.wait_for(lambda: len(events) >= 4, timeout=2))
+            self.assertEqual(lifecycle(), [("cache-remove", self.owner, ROOT), ("defunct", self.owner, ROOT)])
+            # Every owned object event, defunct or not, also drops cached traversal facts for its path.
+            self.assertEqual([event for event in events if event[0] == "changed"], [("changed", self.owner, ROOT)] * 2)
         self.service.exporter.close_sync(None)
         with changed:
-            self.assertTrue(changed.wait_for(lambda: len(events) >= 3, timeout=2))
+            self.assertTrue(changed.wait_for(lambda: len(events) >= 5, timeout=2))
             self.assertEqual(events[-1], ("owner-loss", self.owner, ROOT))
-            self.assertEqual(len(events), 3)
+            self.assertEqual(len(lifecycle()), 3)
 
 
 def self_check(args):
