@@ -1,3 +1,6 @@
+import { Integration } from "@opencode-ai/schema/integration"
+import { Option, Schema } from "effect"
+
 // Pure projection of server provider data into the mock's provider cards, popular rows and picker rows.
 
 export type ProviderModel = { id: string; name: string }
@@ -196,6 +199,16 @@ export function customProvider(input: { name: string; endpoint: string; model: s
       models: { [model]: { name: model } },
     },
   }
+}
+
+const decodeMethods = Schema.decodeUnknownOption(Schema.Array(Integration.Method))
+
+// The integration reply is untrusted: malformed sign-in methods fail its read, so the connect dialog falls back
+// to the API key method instead of mapping them while it renders.
+export function connectableIntegration<T extends { methods: unknown }>(value: T | null | undefined) {
+  if (!value || Option.isNone(decodeMethods(value.methods)))
+    throw new Error("The server returned a malformed integration.")
+  return value
 }
 
 type Prompt = {

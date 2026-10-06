@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import {
   authorizationURL,
   baseID,
+  connectableIntegration,
   customProvider,
   errorMessage,
   fromV1,
@@ -218,6 +219,33 @@ test("OAuth prompts follow their conditions and default selects to the first opt
     shown: [prompts[0], prompts[1]],
     values: { kind: "self", host: "h" },
   })
+})
+
+test("the connect dialog reads only an integration whose sign-in methods are well formed", () => {
+  const integration = {
+    id: "acme",
+    methods: [
+      { type: "key", label: "API key" },
+      {
+        type: "oauth",
+        id: "browser",
+        label: "Sign in",
+        prompts: [{ type: "select", key: "kind", message: "Kind", options: [{ label: "Cloud", value: "cloud" }] }],
+      },
+      { type: "env", names: ["ACME_API_KEY"] },
+    ],
+  }
+  expect(connectableIntegration(integration)).toBe(integration)
+  expect(connectableIntegration({ methods: [] })).toEqual({ methods: [] })
+  // Each of these used to reach `.flatMap` or the prompt `.reduce` during render.
+  for (const methods of [
+    {},
+    undefined,
+    [{ type: "oauth", label: "Sign in" }],
+    [{ type: "oauth", id: "x", label: "Sign in", prompts: {} }],
+  ])
+    expect(() => connectableIntegration({ methods })).toThrow("The server returned a malformed integration.")
+  expect(() => connectableIntegration(undefined)).toThrow("The server returned a malformed integration.")
 })
 
 test("error messages prefer the server's message", () => {

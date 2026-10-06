@@ -100,21 +100,33 @@ const ShellSetting: Component<{ controller: ShellSettingsController }> = (props)
       title={language.t("settings.general.row.shell.title")}
       description={language.t("settings.general.row.shell.description")}
     >
-      <SelectV2
-        appearance="inline"
-        data-action="settings-shell"
-        options={options()}
-        current={options().find((option) => option.value === props.controller.current()) ?? options()[0]}
-        placement="bottom-end"
-        gutter={6}
-        value={(option) => option.id}
-        label={(option) => {
-          if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
-          if (!option.terminalOnly) return option.name
-          return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
-        }}
-        onSelect={(option) => option && props.controller.select(option.value)}
-      />
+      <Show
+        when={!props.controller.failed()}
+        fallback={
+          <div class="flex items-center gap-3" role="alert" data-action="settings-shell-error">
+            <span class="text-text-weak">{language.t("orchestra.settings.general.shellError")}</span>
+            <ButtonV2 size="small" variant="neutral" onClick={props.controller.retry}>
+              {language.t("orchestra.settings.general.shellRetry")}
+            </ButtonV2>
+          </div>
+        }
+      >
+        <SelectV2
+          appearance="inline"
+          data-action="settings-shell"
+          options={options()}
+          current={options().find((option) => option.value === props.controller.current()) ?? options()[0]}
+          placement="bottom-end"
+          gutter={6}
+          value={(option) => option.id}
+          label={(option) => {
+            if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
+            if (!option.terminalOnly) return option.name
+            return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
+          }}
+          onSelect={(option) => option && props.controller.select(option.value)}
+        />
+      </Show>
     </SettingsRowV2>
   )
 }

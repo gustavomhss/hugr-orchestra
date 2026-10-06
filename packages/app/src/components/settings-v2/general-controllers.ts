@@ -17,7 +17,7 @@ import {
   useSettings,
 } from "@/context/settings"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
-import { createSoundPreviewController, type ShellOption } from "./general-controller-behavior"
+import { createSoundPreviewController, readShells, type ShellOption } from "./general-controller-behavior"
 
 export { createShellOptions, createSoundPreviewController } from "./general-controller-behavior"
 export type { ShellOption, ShellSelectOption } from "./general-controller-behavior"
@@ -52,18 +52,22 @@ export function createPermissionScopeController(sessionID: Accessor<string | und
 export function createShellSettingsController() {
   const serverSdk = useServerSDK()
   const serverSync = useServerSync()
-  const [shells] = createResource(
+  const [shells, { refetch }] = createResource(
     async () => {
       const sdk = serverSdk()
-      if ((await sdk.protocol) === "v1") return (await sdk.client.pty.shells()).data ?? []
-      return [] as ShellOption[]
+      if ((await sdk.protocol) === "v1") return readShells((await sdk.client.pty.shells()).data)
+      return []
     },
-    { initialValue: [] as ShellOption[] },
+    { initialValue: [] as readonly ShellOption[] },
   )
   const current = createMemo(() => serverSync().data.config.shell ?? "")
+  // Reading an errored resource throws into the app-wide boundary, so a failed read stays this row's state.
+  const failed = () => shells.state === "errored"
 
   return {
-    shells: () => shells.latest,
+    shells: () => (failed() ? [] : shells.latest),
+    failed,
+    retry: () => void refetch(),
     current,
     select: (value: string) => {
       if (value === current()) return

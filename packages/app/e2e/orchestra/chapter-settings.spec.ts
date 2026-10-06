@@ -62,6 +62,45 @@ test("the sidebar opens the routed view with the mock's masthead, sections and d
   await expect(view.locator(".settings-sec > h3")).toHaveText("Servers")
 })
 
+test("a malformed shell list stays in General's shell row, which retries, and the app keeps running", async ({
+  page,
+}) => {
+  await setup(page, fixture())
+  const replies: unknown[] = [
+    {},
+    [
+      { path: "/bin/zsh", name: "zsh", acceptable: true },
+      { path: "/usr/bin/fish", name: "fish", acceptable: false },
+    ],
+  ]
+  let served = 0
+  // Registered after the shared mock's empty list, so this answers first: `{}` once, then a real list.
+  await page.route(
+    (url) => url.origin === server && url.pathname === "/pty/shells",
+    (route) =>
+      route.request().method() === "GET"
+        ? json(route, replies[Math.min(served++, replies.length - 1)])
+        : route.fallback(),
+  )
+  await page.goto("/orchestra/settings?section=general", { waitUntil: "domcontentloaded" })
+  const view = page.locator('[data-mx-page="settings"]')
+  const error = view.locator('[data-action="settings-shell-error"]')
+  await expect(error).toContainText("Could not load the shells on this server.")
+  await expect(page.getByText("Something went wrong")).toHaveCount(0)
+  await expect(view.locator('[data-action="settings-shell"]')).toHaveCount(0)
+  // Only the shell row depends on that reply: the rest of the section still works.
+  await expect(view.locator('[data-action="settings-color-scheme"]')).toBeVisible()
+  await expect(view.locator('[data-action="settings-language"]')).toBeVisible()
+
+  await error.getByRole("button", { name: "Try again", exact: true }).click()
+  await expect(error).toHaveCount(0)
+  const shell = view.locator('[data-action="settings-shell"]')
+  await expect(shell).toContainText("Auto (Default)")
+  await shell.click()
+  await expect(page.getByRole("option", { name: "zsh", exact: true })).toBeVisible()
+  await expect(page.getByRole("option", { name: "fish (terminal only)", exact: true })).toBeVisible()
+})
+
 test("tool permissions follow the server's rule order, save in place, roll back failures and use arrow keys", async ({
   page,
 }) => {
