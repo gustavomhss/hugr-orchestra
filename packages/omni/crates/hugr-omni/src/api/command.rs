@@ -131,6 +131,16 @@ impl Command {
         self
     }
 
+    /// `spawn()` with pipes only (default `false`): while a consumer is attached and a stream has 16 MiB waiting
+    /// for it, the library stops reading that stream instead of dropping, so the pipe fills and the child blocks
+    /// on its writes; nothing is ever lost and no `lost_before` appears. With no consumer attached the usual
+    /// budget applies. `wait()` and `stop()` never depend on the consumer: `stop()` still ends the tree, and
+    /// detaching or stopping lets the output go. Ignored by `run()` and by terminals.
+    pub fn backpressure(&mut self, yes: bool) -> &mut Self {
+        self.opts.backpressure = yes;
+        self
+    }
+
     /// Runs inside a terminal of `size`: used by `run()` and `spawn_pty()`.
     pub fn pty(&mut self, size: PtySize) -> &mut Self {
         self.pty = Some(size);

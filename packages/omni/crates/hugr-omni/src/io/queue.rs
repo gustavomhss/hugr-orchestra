@@ -15,7 +15,7 @@
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{ErrorKind, Read};
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError, mpsc};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError, mpsc};
 use std::thread;
 use std::time::Duration;
 
@@ -101,6 +101,9 @@ pub(super) struct State {
     cut: bool,
     /// The pumps were dropped: the readers stop at their next wake-up.
     closed: bool,
+    /// Backpressure (WP-H): while a consumer is attached, a reader whose stream is at its budget waits for room
+    /// instead of dropping, so the pipe fills and the child blocks. `end()`, `cut` and detaching release it.
+    hold: bool,
 }
 
 impl State {
@@ -116,6 +119,17 @@ impl State {
 
     pub(super) fn ended(&self) -> bool {
         self.ended
+    }
+
+    /// A reader of `slot` with `len` new bytes must wait: backpressure is on, a consumer is attached, the tree is
+    /// not ended, and the bytes do not fit the stream's budget.
+    fn holds_back(&self, slot: usize, len: usize) -> bool {
+        self.hold
+            && self.claim == Claim::Attached
+            && !self.ended
+            && !self.cut
+            && !self.closed
+            && self.slots[slot].queued.saturating_add(len) > ATTACHED
     }
 
     /// New output is still queued: someone reads it, or may still claim it, and it was not cut.
@@ -156,6 +170,8 @@ pub(super) struct Shared {
     state: Mutex<State>,
     /// Woken (`notify_waiters`) on every change a consumer or `ended()` waits for.
     pub changed: Notify,
+    /// Woken on every change a reader held back by backpressure waits for (room, detach, end, cut).
+    room: Condvar,
     pub text: bool,
     pub streams: [Stream; 2],
 }
@@ -177,8 +193,10 @@ impl Shared {
                 ended: false,
                 cut: false,
                 closed: false,
+                hold: false,
             }),
             changed: Notify::new(),
+            room: Condvar::new(),
             text,
             streams,
         }
@@ -219,12 +237,30 @@ impl Shared {
             slot.queued = 0;
             slot.lost = 0;
         }
+        self.room.notify_all();
+    }
+
+    /// Bytes of `slot` waiting in the queue (tests).
+    #[cfg(test)]
+    pub(super) fn queued(&self, slot: usize) -> usize {
+        self.lock().slots[slot].queued
+    }
+
+    /// Turns backpressure on (before the first claim): see `State::hold`.
+    pub(super) fn hold(&self) {
+        self.lock().hold = true;
+    }
+
+    /// The consumer took items from the queue: a reader held back may go on.
+    pub(super) fn made_room(&self) {
+        self.room.notify_all();
     }
 
     /// `end()`; `true` the first time (the caller then cuts the output after `DRAIN`).
     pub(super) fn end(&self) -> bool {
         let first = !std::mem::replace(&mut self.lock().ended, true);
         self.changed.notify_waiters();
+        self.room.notify_all();
         first
     }
 
@@ -249,6 +285,7 @@ impl Shared {
             st.closed |= close;
         }
         self.changed.notify_waiters();
+        self.room.notify_all();
     }
 
     /// Resolves once every source reached end of file, or `end()` was called.
@@ -269,6 +306,10 @@ impl Shared {
     /// Queues what fits the budget of `slot` and counts the rest as dropped. `false`: stop reading.
     pub(super) fn accept(&self, slot: usize, bytes: &[u8]) -> bool {
         let mut guard = self.lock();
+        // Backpressure: wait for room while an attached consumer's stream is full (no drop, so no gap).
+        while guard.holds_back(slot, bytes.len()) {
+            guard = self.room.wait(guard).unwrap_or_else(PoisonError::into_inner);
+        }
         let st = &mut *guard;
         if st.closed {
             return false;

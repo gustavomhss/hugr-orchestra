@@ -222,6 +222,9 @@ pub(crate) fn spawn_pipe(req: &Request, opts: &Options) -> Result<PipeChild, Err
     let rt = client::runtime()?;
     let spawned = client::spawn(&spec)?;
     let child = Child::start(rt.handle(), spawned, opts.text, spec.grace)?;
+    if opts.backpressure {
+        child.inner.pumps.hold(); // before anyone can claim the output
+    }
     deadline::arm(rt.handle(), &child.inner, req.timeout, opts.cancel.clone());
     Ok(PipeChild { child })
 }

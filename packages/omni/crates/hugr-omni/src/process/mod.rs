@@ -28,6 +28,9 @@ pub(crate) struct Options {
     pub text: bool,
     pub input: Option<Vec<u8>>,
     pub max_output_bytes: usize,
+    /// `spawn()` with pipes only (WP-H): an attached consumer that falls behind holds the child back instead of
+    /// losing output.
+    pub backpressure: bool,
 }
 
 impl Default for Options {
@@ -37,6 +40,7 @@ impl Default for Options {
             text: true,
             input: None,
             max_output_bytes: DEFAULT_MAX_OUTPUT,
+            backpressure: false,
         }
     }
 }
