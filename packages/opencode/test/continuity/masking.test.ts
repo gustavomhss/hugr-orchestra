@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
-import { ERROR_LINES, TAIL_TURNS, apply, candidates, stub } from "@/continuity/masking"
+import { ERROR_LINES, TAIL_STEPS, apply, candidates, stub } from "@/continuity/masking"
 import { PartID } from "@/session/schema"
 import { messages, sessionID } from "./memory-fixture"
 
@@ -16,7 +16,7 @@ function tool(message: SessionV1.WithParts, name: string, output: string, extra:
   return part
 }
 
-// Sixteen alternating messages: eight user turns. The first three are older than the tail.
+// Sixteen alternating messages: eight steps. The first two steps are older than the tail.
 function history() {
   const value = messages()
   const big = "line of output\n".repeat(2_000)
@@ -36,7 +36,7 @@ test("only completed, unprotected results older than the verbatim tail are candi
   expect(found).not.toContain(todo.id)
   expect(found).not.toContain(recent.id)
   expect(candidates(value, new Map([[read.id, REF]])).map((entry) => entry.part.id)).toEqual([bash.id])
-  expect(candidates(value.slice(-(TAIL_TURNS * 2 - 1)), new Map())).toEqual([])
+  expect(candidates(value.slice(-(TAIL_STEPS * 2)), new Map())).toEqual([])
 })
 
 test("candidates report the tokens that masking frees", () => {

@@ -1,8 +1,8 @@
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
 
-/** User turns, with everything after them, that always stay verbatim. */
-export const TAIL_TURNS = 5
+/** Assistant steps, with everything after them, whose tool output always stays verbatim. */
+export const TAIL_STEPS = 6
 
 /** Failed output keeps this many leading lines verbatim; errors are high-value evidence. */
 export const ERROR_LINES = 20
@@ -52,22 +52,17 @@ export function stub(part: CompletedTool, reference: string) {
 }
 
 /**
- * Completed tool results older than the last TAIL_TURNS user turns that are not protected
- * and not yet masked, with the tokens masking them would free.
+ * Completed tool results older than the last TAIL_STEPS assistant steps that are not protected
+ * and not yet masked, with the tokens masking them would free. Steps, not user turns: one long
+ * autonomous turn is pruned as it grows.
  */
 export function candidates(messages: SessionV1.WithParts[], masks: Masks) {
-  let turns = 0
-  let cutoff = 0
+  let steps = 0
   for (let index = messages.length - 1; index >= 0; index--) {
-    if (messages[index].info.role !== "user") continue
-    turns++
-    if (turns === TAIL_TURNS) {
-      cutoff = index
-      break
-    }
+    if (messages[index].info.role !== "assistant") continue
+    if (++steps === TAIL_STEPS) return before(messages, index, masks)
   }
-  if (turns < TAIL_TURNS) return []
-  return before(messages, cutoff, masks)
+  return []
 }
 
 /** The last resort at the hard limit: every maskable result except those of the latest message. */
