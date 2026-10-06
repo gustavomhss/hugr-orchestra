@@ -82,7 +82,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.agents.action.allow": "Allow",
   "orchestra.agents.action.ask": "Ask",
   "orchestra.agents.action.deny": "Deny",
-  "orchestra.agents.subagentNote": "Subagents are invoked by another agent and cannot start a chat directly.",
+  "orchestra.agents.maestroOnly": "Only Maestro chats with you; other agents work through it.",
   "orchestra.agents.openChat": "Open Chat",
   "orchestra.agents.draftError": "The draft could not be opened. Try again.",
   "orchestra.workspaces.title": "Workspaces",

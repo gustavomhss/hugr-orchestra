@@ -177,7 +177,7 @@ export default function Agents(props: ChapterPageProps) {
                     </Show>
                     <Show
                       when={item().chat}
-                      fallback={<p class="agents-note">{language.t("orchestra.agents.subagentNote")}</p>}
+                      fallback={<p class="agents-note">{language.t("orchestra.agents.maestroOnly")}</p>}
                     >
                       <ButtonV2
                         disabled={state.opening || !tabs.ready()}

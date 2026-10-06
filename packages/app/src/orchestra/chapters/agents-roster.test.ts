@@ -11,20 +11,24 @@ const agent = (name: string, mode: Agent["mode"], hidden = false): Agent => ({
 })
 
 describe("Agents roster", () => {
-  test("excludes hidden agents and marks subagents without offering chat", () => {
+  test("excludes hidden agents and marks subagents", () => {
     expect(
-      agentRoster([agent("build", "primary"), agent("research", "subagent"), agent("secret", "all", true)]),
+      agentRoster([agent("maestro", "primary"), agent("research", "subagent"), agent("secret", "all", true)]),
     ).toEqual([
-      { agent: agent("build", "primary"), subagent: false, chat: true },
+      { agent: agent("maestro", "primary"), subagent: false, chat: true },
       { agent: agent("research", "subagent"), subagent: true, chat: false },
     ])
   })
 
-  test("primary and all modes can open chat; an empty roster stays empty", () => {
-    expect(agentRoster([agent("build", "primary"), agent("review", "all")]).map((item) => item.chat)).toEqual([
-      true,
-      true,
-    ])
+  test("only maestro opens chat, whatever the other agents' modes; an empty roster stays empty", () => {
+    expect(
+      agentRoster([
+        agent("build", "primary"),
+        agent("maestro", "primary"),
+        agent("review", "all"),
+        agent("research", "subagent"),
+      ]).map((item) => item.chat),
+    ).toEqual([false, true, false, false])
     expect(agentRoster([])).toEqual([])
   })
 

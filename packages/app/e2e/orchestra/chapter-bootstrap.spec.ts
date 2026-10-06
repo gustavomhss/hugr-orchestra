@@ -51,7 +51,7 @@ test("restored local profile loads agents and opens a draft through the mocked A
   })
   await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agents", exact: true }).click()
-  await expect(page.getByRole("list", { name: "Configured agents" }).getByRole("button")).toHaveCount(2)
+  await expect(page.getByRole("list", { name: "Configured agents" }).getByRole("button")).toHaveCount(1)
   expect(agents).toContain(server)
   expect(agents.filter((origin) => origin !== server)).toEqual([])
   await page.getByRole("button", { name: "Open Chat", exact: true }).click()

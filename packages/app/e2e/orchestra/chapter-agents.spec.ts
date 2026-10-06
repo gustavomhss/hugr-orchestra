@@ -5,7 +5,18 @@ const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
 const directory = "/repo/shared"
 const otherDirectory = "/repo/other"
+const maestroOnly = "Only Maestro chats with you; other agents work through it."
+// The server lists its default agent, maestro, first.
 const agents = [
+  {
+    name: "maestro",
+    description: "Orchestrates repository work",
+    mode: "primary",
+    native: true,
+    model: { providerID: "example", modelID: "reasoner" },
+    permission: [],
+    options: {},
+  },
   {
     name: "build",
     description: "Implements repository changes",
@@ -47,7 +58,7 @@ for (const scheme of ["dark", "light"] as const) {
     await setup(page, { scheme })
     await openAgents(page)
     const roster = page.getByRole("list", { name: "Configured agents" })
-    await expect(roster.getByRole("button")).toHaveCount(4)
+    await expect(roster.getByRole("button")).toHaveCount(5)
     await expect(roster).not.toContainText("secret")
     await expect(roster).toContainText("Inherited / unspecified")
     const plan = roster.getByRole("button", { name: /^plan Primary/ })
@@ -66,14 +77,19 @@ for (const scheme of ["dark", "light"] as const) {
       .soft(await detail.locator("tbody td").allTextContents())
       .toEqual(["bash", "git *", "Ask", "edit", "*", "Deny"])
     await page.screenshot({ path: test.info().outputPath(`${scheme}.png`), fullPage: true })
-    await roster.getByRole("button", { name: /research Subagent/ }).click()
-    await expect(page.getByRole("button", { name: "Open Chat", exact: true })).toHaveCount(0)
-    await expect(page.getByRole("article")).toContainText("Subagents are invoked by another agent")
-    await roster.getByRole("button", { name: /review Primary & subagent/ }).click()
-    await expect(page.getByRole("button", { name: "Open Chat", exact: true })).toBeVisible()
-    await roster.getByRole("button", { name: /build Primary/ }).click()
+    // Primary, subagent and all-mode agents alike work through Maestro.
+    for (const name of ["plan", "research", "review", "build"]) {
+      await roster.getByRole("button", { name: new RegExp(`^${name} `) }).click()
+      // Waiting for this agent's details keeps the absence check below from reading the previous agent.
+      await expect(page.getByRole("article", { name: `Details for ${name}` })).toContainText(maestroOnly)
+      await expect(page.getByRole("button", { name: "Open Chat", exact: true })).toHaveCount(0)
+    }
     await expect(page.getByRole("article")).toContainText("Unspecified")
     await expect(page.getByRole("article")).toContainText("No permission rules returned.")
+    await roster.getByRole("button", { name: /^maestro Primary/ }).click()
+    const maestro = page.getByRole("article", { name: "Details for maestro" })
+    await expect(maestro.getByRole("button", { name: "Open Chat", exact: true })).toBeVisible()
+    await expect(maestro).not.toContainText(maestroOnly)
   })
 }
 
@@ -81,8 +97,8 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
   const requests = await setup(page)
   await openAgents(page)
   await page
-    .getByRole("list")
-    .getByRole("button", { name: /^plan Primary/ })
+    .getByRole("list", { name: "Configured agents" })
+    .getByRole("button", { name: /^maestro Primary/ })
     .click()
   await page.getByRole("button", { name: "Open Chat", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/, { timeout: 30_000 })
@@ -140,16 +156,17 @@ test("ordinary drafts offer no agent choice", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
 })
 
-test("Open Chat does not carry the chosen agent's model into the draft", async ({ page }) => {
+test("Open Chat opens a draft on Maestro's configured model", async ({ page }) => {
   const requests = await setup(page, { models: true })
   await openAgents(page)
   await page
-    .getByRole("list")
-    .getByRole("button", { name: /^plan Primary/ })
+    .getByRole("list", { name: "Configured agents" })
+    .getByRole("button", { name: /^maestro Primary/ })
     .click()
   await page.getByRole("button", { name: "Open Chat", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
-  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Builder")
+  // Maestro's model, not the provider default Builder, shows the draft runs on Maestro.
+  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Reasoner")
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
   expect(requests.filter((request) => request.method === "POST")).toEqual([])
 })

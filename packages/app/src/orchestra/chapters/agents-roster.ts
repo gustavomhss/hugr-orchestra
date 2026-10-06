@@ -6,7 +6,8 @@ export function agentRoster(agents: readonly Agent[]) {
     .map((agent) => ({
       agent,
       subagent: agent.mode === "subagent",
-      chat: agent.mode === "primary" || agent.mode === "all",
+      // The user talks only to Maestro; every other agent works through it.
+      chat: agent.name === "maestro",
     }))
 }
 
