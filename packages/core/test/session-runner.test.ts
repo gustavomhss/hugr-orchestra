@@ -768,7 +768,7 @@ describe("SessionRunnerLLM", () => {
       const agent = yield* AgentV2.Service
       yield* agent.transform((editor) =>
         editor.update(AgentV2.ID.make("maestro"), (agent) => {
-          agent.system = "Maestro agent instructions"
+          agent.system = "Maestro instructions"
           agent.mode = "primary"
         }),
       )
@@ -779,10 +779,7 @@ describe("SessionRunnerLLM", () => {
       response = fragmentFixture("text", "text-default", ["Done"]).completeEvents
       yield* session.resume(sessionID)
 
-      expect(requests.at(-1)?.system.map((part) => part.text)).toEqual([
-        "Maestro agent instructions",
-        "Initial context",
-      ])
+      expect(requests.at(-1)?.system.map((part) => part.text)).toEqual(["Maestro instructions", "Initial context"])
     }),
   )
 
@@ -792,7 +789,7 @@ describe("SessionRunnerLLM", () => {
       const agent = yield* AgentV2.Service
       yield* agent.transform((editor) => {
         editor.update(AgentV2.ID.make("maestro"), (agent) => {
-          agent.system = "Maestro agent instructions"
+          agent.system = "Maestro instructions"
           agent.mode = "primary"
         })
         editor.update(AgentV2.ID.make("reviewer"), (agent) => {
