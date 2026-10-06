@@ -43,7 +43,9 @@ test("look gives a screen-reader map: windows, focus with its place, numbered re
     '  push button "Open Folder..."',
     '  entry "Search settings" [focused]',
   ].join("\n"))
-  expect(result.regions.map((region) => `${region.role}:${region.name}`)).toEqual(["menu bar:", "page tab list:Active View Switcher", "tool bar:Manage"])
+  expect(result.regions.map((region) => region.map((step) => `${step.role}:${step.name}`).join("/"))).toEqual([
+    "frame:Welcome - Visual Studio Code/menu bar:", "frame:Welcome - Visual Studio Code/page tab list:Active View Switcher",
+    "frame:Welcome - Visual Studio Code/tool bar:Manage"])
 })
 
 test("entering a region keeps it addressable across rescans, and a vanished region is reported missing", () => {
@@ -90,8 +92,44 @@ test("same-named regions in different panes stay distinct", () => {
     { ref: "rb", parentRef: "rt", role: 43, roleName: "push-button", name: "Split Right", states: SHOWN, actions: press },
   ])
   const roots = AppDockOutline.tree(panes())
-  const right = AppDockOutline.locate(roots, AppDockOutline.look(roots, AppDockOutline.locate(roots,
-    { role: "panel", name: "Right editor", occurrence: 0, path: ['frame:Welcome - Visual Studio Code'] })!).regions[0]!)!
-  const again = AppDockOutline.locate(AppDockOutline.tree(panes()), AppDockOutline.handle(right))
+  const right = AppDockOutline.locate(roots, AppDockOutline.look(roots, AppDockOutline.locate(roots, [
+    { role: "frame", name: "Welcome - Visual Studio Code", occurrence: 0 }, { role: "panel", name: "Right editor", occurrence: 0 }])!).regions[0]!)!
+  const again = AppDockOutline.locate(AppDockOutline.tree(panes()), AppDockOutline.handle(roots, right))
   expect(again && AppDockOutline.list(again, "buttons")).toContain("Split Right")
+})
+
+// VS Code's Settings list wraps each row's toolbar in its own unnamed section: counted per parent, every toolbar got
+// the same handle and ui_enter refused every number ui_look had just printed.
+test("same-shaped regions in sibling wrappers each stay enterable across rescans", () => {
+  const rows = (): AppDockOutline.Item[] => vscode([
+    { ref: "tree", parentRef: "f", role: 65, roleName: "tree", name: "Settings", states: SHOWN },
+    ...[1, 2].flatMap((row): AppDockOutline.Item[] => [
+      { ref: `row${row}`, parentRef: "tree", role: 91, roleName: "tree-item", name: `Row ${row}`, states: SHOWN },
+      { ref: `wrap${row}`, parentRef: `row${row}`, role: 85, roleName: "atspi-role-85", name: "", states: SHOWN },
+      { ref: `bar${row}`, parentRef: `wrap${row}`, role: 63, roleName: "atspi-role-63", name: "Setting actions", states: SHOWN },
+      { ref: `more${row}`, parentRef: `bar${row}`, role: 43, roleName: "push-button", name: `More ${row}`, states: SHOWN, actions: press },
+    ]),
+  ])
+  const roots = AppDockOutline.tree(rows())
+  const tree = AppDockOutline.locate(roots, AppDockOutline.look(roots).regions.find((region) => region.at(-1)!.name === "Settings")!)!
+  const bars = AppDockOutline.look(roots, tree)
+  expect(bars.text).toContain('#2 tool bar "Setting actions" — 1 controls: More 2')
+  const again = AppDockOutline.tree(rows())
+  expect(bars.regions.map((region) => AppDockOutline.locate(again, region)?.children[0]?.name)).toEqual(["More 1", "More 2"])
+})
+
+test("an app's top-level file chooser or alert is a window, and look says when no window holds the input", () => {
+  const items: AppDockOutline.Item[] = [
+    { ref: "f", parentRef: null, role: 23, roleName: "frame", name: "notes.txt - Mousepad", states: [12, ...SHOWN] },
+    { ref: "d", parentRef: null, role: 19, roleName: "file-chooser", name: "Open File", states: [1, 16, ...SHOWN] },
+    { ref: "loc", parentRef: "d", role: 61, roleName: "text", name: "", states: [7, 12, ...SHOWN] },
+    { ref: "a", parentRef: null, role: 2, roleName: "alert", name: "Save changes?", states: SHOWN },
+  ]
+  const chooser = AppDockOutline.tree(items)
+  expect(AppDockOutline.windows(chooser).map((node) => node.role)).toEqual(["frame", "file chooser", "alert"])
+  // Keys reach only the active window: the chooser's focused field, not the frame's own focus.
+  expect(AppDockOutline.focused(items.map((item) => ({ item }))).map((match) => match.item.ref)).toEqual(["loc"])
+  expect(AppDockOutline.look(chooser).text).not.toContain("input: none")
+  const inactive = AppDockOutline.look(AppDockOutline.tree(vscode().map((item) => item.ref === "f" ? { ...item, states: SHOWN } : item)))
+  expect(inactive.text.split("\n")[1]).toBe("input: none of these windows is active; a window that shows no controls here (such as a native file dialog) or nothing holds the keyboard")
 })

@@ -9,6 +9,10 @@ from bus import BusError
 A = "org.a11y.atspi."
 ROOT = "/org/a11y/atspi/accessible/root"
 DBUS = "org.freedesktop.DBus"
+# Top-level children of an application that are its windows: alert, color chooser, dialog, file chooser,
+# font chooser, frame and window. GTK and Qt give their own modal dialogs (file, color and font choosers,
+# message boxes) the specific roles, so a frame/dialog/window-only set left them unreachable.
+WINDOW_ROLES = (2, 9, 16, 19, 22, 23, 69)
 
 # timeoutMs stays 10 s (host limits.timeoutMs must match). Measured on VS Code 1.140
 # Settings (~870 workspace nodes, 2026-10-05): read pages end by construction at the
@@ -94,7 +98,7 @@ class RequestContext:
         if self.calls >= LIMITS["calls"]:
             raise BusError("read-budget", "Native call budget exhausted")
         self.calls += 1
-        if method in ("DoAction", "SetTextContents", "GenerateKeyboardEvent", "GrabFocus"):
+        if method in ("DoAction", "SetTextContents", "GenerateKeyboardEvent", "GenerateMouseEvent", "GrabFocus"):
             self.dispatch_started = True
         return self.bus.call(owner, path, interface, method, signature, parameters, reply,
                              min(800, remaining, timeout_ms or remaining))
@@ -154,7 +158,7 @@ class RequestContext:
             self.remaining()
             if any(r["owner"] == owner and r["path"] == current for r in self.binding["roots"]):
                 role = self.call(owner, current, A + "Accessible", "GetRole", reply="(u)")[0]
-                if role not in (16, 23, 69):
+                if role not in WINDOW_ROLES:
                     raise BusError("wrong-scope", "Confirmed root is not a concrete dialog or window")
                 if 6 in states(self.call(owner, current, A + "Accessible", "GetState", reply="(au)")[0]):
                     raise BusError("defunct", "Confirmed window root is defunct")

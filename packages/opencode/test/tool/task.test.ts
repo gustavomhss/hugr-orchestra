@@ -919,7 +919,8 @@ describe("tool.task", () => {
 
       yield* Deferred.succeed(done, undefined)
       expect((yield* jobs.wait({ id: result.metadata.sessionId })).info?.output).toBe("background done")
-      expect((yield* Deferred.await(injected)).parts[0]?.type).toBe("text")
+      expect((yield* Deferred.await(injected)).parts[0]).toMatchObject({ type: "text", synthetic: true,
+        metadata: { source: { type: "task-return", task_id: result.metadata.sessionId, state: "completed" } } })
       expect(runs).toBe(1)
     }),
   )

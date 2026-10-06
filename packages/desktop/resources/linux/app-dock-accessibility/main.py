@@ -13,14 +13,14 @@ import sys
 from threading import Event, Lock, Thread
 from time import monotonic
 
-from actions import invoke, press, replace_text
+from actions import invoke, pointer, press, replace_text
 from bindings import BindingStore, word
 from bus import AtspiBus, BusError
 from context import LIMITS, RequestContext, process_identity
 from refs import RefRegistry, SCOPE_KINDS
 from snapshot import read
 
-OPERATIONS = ("bind", "read", "action", "type", "key", "unbind", "cancel", "shutdown")
+OPERATIONS = ("bind", "read", "action", "type", "key", "pointer", "unbind", "cancel", "shutdown")
 
 
 class Helper:
@@ -85,8 +85,9 @@ class Helper:
                     args = request["args"]
                     value = read(context, args) if request["op"] == "read" else (
                         invoke(context, args["ref"], args.get("actionID"), args.get("mode", "stable")) if request["op"] == "action" else
-                        press(context, args["ref"], args["keys"]) if request["op"] == "key" else
-                        replace_text(context, args["ref"], args["text"], args.get("mode", "editable")))
+                        press(context, args["ref"], args.get("keys"), args.get("text")) if request["op"] == "key" else
+                        pointer(context, args["ref"], args["kind"]) if request["op"] == "pointer" else
+                        replace_text(context, args["ref"], args["text"], args.get("mode", "editable"), args.get("focused", False)))
                 terminal = {"value": value}
             except BusError as error:
                 terminal = {"error": {"code": error.code, "message": error.message,
@@ -188,7 +189,7 @@ def _request(request, epoch, sequence):
 
 
 def _scope(request):
-    if request["op"] in ("read", "action", "type", "key", "unbind"):
+    if request["op"] in ("read", "action", "type", "key", "pointer", "unbind"):
         if not word(request.get("bindingID")) or not word(request.get("bindingEpoch")):
             raise BusError("wrong-scope", "Native binding identity is required")
         return
@@ -204,18 +205,24 @@ def _arguments(op, args):
     if op == "read":
         return  # snapshot._query validates the bounded discriminated read arguments.
     if op == "key":
-        if set(args) != {"ref", "keys"} or not word(args.get("ref")) or not args["ref"].startswith("n:") or not isinstance(args.get("keys"), str):
-            raise BusError("protocol-error", "Key combination requires an opaque ref and keys")
+        field = "text" if "text" in args else "keys"
+        if set(args) != {"ref", field} or not word(args.get("ref")) or not args["ref"].startswith("n:") or not isinstance(args.get(field), str):
+            raise BusError("protocol-error", "Keys require an opaque ref and either keys or text")
+        return
+    if op == "pointer":
+        if set(args) != {"ref", "kind"} or not word(args.get("ref")) or not args["ref"].startswith("n:") or args.get("kind") not in ("hover", "contextMenu"):
+            raise BusError("protocol-error", "Pointer requires an opaque ref and kind hover or contextMenu")
         return
     if op in ("action", "type"):
-        allowed = {"ref", "actionID", "mode"} if op == "action" else {"ref", "text", "mode"}
+        allowed = {"ref", "actionID", "mode"} if op == "action" else {"ref", "text", "mode", "focused"}
         if set(args) - allowed or not word(args.get("ref")) or not args["ref"].startswith("n:"):
             raise BusError("protocol-error", "Native mutation requires an opaque ref")
         if op == "action" and "actionID" in args and not word(args["actionID"]):
             raise BusError("protocol-error", "Invalid native action ID")
         if op == "action" and args.get("mode", "stable") not in ("stable", "observed"):
             raise BusError("protocol-error", "Invalid native action identity mode")
-        if op == "type" and (not isinstance(args.get("text"), str) or args.get("mode", "editable") not in ("editable", "keyboard")):
+        if op == "type" and (not isinstance(args.get("text"), str) or args.get("mode", "editable") not in ("editable", "keyboard")
+                             or args.get("focused", False) is not False and (args["focused"] is not True or args.get("mode") != "keyboard")):
             raise BusError("protocol-error", "Invalid native text replacement")
         return
     if op == "cancel" and (set(args) != {"requestID"} or not word(args.get("requestID"))):

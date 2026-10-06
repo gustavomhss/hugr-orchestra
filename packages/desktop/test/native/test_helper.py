@@ -4,7 +4,7 @@
 Run on Linux with PyGObject, without a GUI or D-Bus session:
     python3 -B test/native/test_helper.py --payload resources/linux/app-dock-accessibility
 
---case selects one test; --self-check kills three bounded, temporary-module mutants.
+--case selects one test; --self-check kills four bounded, temporary-module mutants.
 A11Y_PAYLOAD also selects the payload. No GI stubs or alternate Helper/RefRegistry
 implementations are used. This tests composition, not Gio transport conformance
 (test_bus.py owns that). Saturation always runs in a separately reaped process.
@@ -44,6 +44,8 @@ MUTATIONS = (
     ("H3", "main.py", "test_output_saturation", "H3-finite-retirement",
      "        except Full:\n            self.stopped.set()\n            os._exit(1)",
      '        except Full:\n            raise BusError("busy", "Native stdout backlog exhausted")'),
+    ("H4", "main.py", "test_pointer_and_focused_type_arguments", "P1-pointer-arguments",
+     ' or args.get("kind") not in ("hover", "contextMenu"):', ':'),
 )
 
 
@@ -397,6 +399,24 @@ class HelperTests(unittest.TestCase):
                 replies = channel.finish()
                 require(len(replies) == 1 and replies[0]["id"] == request["id"]
                         and replies[0]["error"]["code"] == "protocol-error", "K1-key-arguments")
+
+    def test_pointer_and_focused_type_arguments(self):
+        # Each malformed envelope ends the helper, so each case gets its own channel.
+        for op, args, name in (("pointer", {"ref": "n:x"}, "P1-pointer-arguments"),
+                               ("pointer", {"ref": "n:x", "kind": "doubleClick"}, "P1-pointer-arguments"),
+                               ("pointer", {"ref": "n:x", "kind": "hover", "x": 1}, "P1-pointer-arguments"),
+                               ("pointer", {"ref": "invalid-ref", "kind": "hover"}, "P1-pointer-arguments"),
+                               ("type", {"ref": "n:x", "text": "a", "mode": "editable", "focused": True}, "T1-focused-keyboard-only"),
+                               ("type", {"ref": "n:x", "text": "a", "mode": "keyboard", "focused": 1}, "T1-focused-keyboard-only")):
+            with Channel(self.api, self.config) as channel:
+                request = channel.send(op, args, channel.bind())
+                replies = channel.finish()
+                require(len(replies) == 1 and replies[0]["id"] == request["id"]
+                        and replies[0]["error"]["code"] == "protocol-error", name)
+        with Channel(self.api, self.config) as channel:
+            request = channel.send("pointer", {"ref": "n:x", "kind": "hover"})
+            reply = json.loads(channel.output.line())
+            require(reply["id"] == request["id"] and reply["error"]["code"] == "wrong-scope", "P1-pointer-needs-binding")
 
     def test_draining_output_successive_operations(self):
         with Channel(self.api, self.config) as channel:

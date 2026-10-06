@@ -17,7 +17,7 @@ function history(sessionID: SessionID): SessionV1.WithParts[] {
       text: "Discovery: read-only verification succeeded. Keep deployment awaiting approval.\n" + "Exact detail 😀\r\n".repeat(6000) }] }]
 }
 
-test("durable Markdown fragments preserve captured text, have content IDs, and survive reference retirement", async () => {
+test("durable Markdown fragments preserve captured text, have content IDs, and survive memory retirement", async () => {
   const sessionID = SessionID.descending()
   const messages = history(sessionID)
   const planned = chunks(sessionID, messages)
@@ -32,16 +32,18 @@ test("durable Markdown fragments preserve captured text, have content IDs, and s
     const tail = [{ info: { ...messages[0].info, id: MessageID.make("msg_tail") }, parts: [] }]
     const snapshot = { sessionID, boundary: tail[0].info.id, tailStart: tail[0].info.id,
       head: messages, tail, canRecall: true }
-    const first = decode({ text: JSON.stringify({ memory: "# Work\nRead-only verification succeeded; deployment awaits approval.",
-      references: [{ id: written[0].id, why: "Verification details if deployment is requested." }] }),
-      snapshot, producerID: SessionID.descending(), available: written, maxTokens: 100000 })
-    expect(first).toBeDefined()
-    const next = decode({ text: JSON.stringify({ memory: "# Work\nDeployment remains awaiting approval. Verification details are no longer active.", references: [] }),
-      snapshot: { ...snapshot, previous: first, head: tail,
-        boundary: MessageID.make("msg_next_tail"), tailStart: MessageID.make("msg_next_tail"),
-        tail: [{ info: { ...messages[0].info, id: MessageID.make("msg_next_tail") }, parts: [] }] },
-      producerID: SessionID.descending(), available: written, maxTokens: 100000 })
-    expect(next?.references).toEqual([])
+    const host = { history: [...messages, ...tail], delegations: {}, member: false }
+    const first = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "findings", src: ["u1"], fields: {
+      finding: "Read-only verification succeeded; deployment awaits approval.", why: "Deployment is next.", status: "confirmed" } }] }),
+      snapshot, producerID: SessionID.descending(), host, ceiling: 100000 })
+    if (!("artifact" in first)) throw new Error("Expected first memory")
+    // Retiring the only item leaves a valid memory with zero items; the archive keeps every fragment.
+    const after = [...tail, { info: { ...messages[0].info, id: MessageID.make("msg_next_tail") }, parts: [] }]
+    const next = decode({ text: JSON.stringify({ ops: [{ op: "retire", id: "m1", reason: "Verification details are no longer active." }] }),
+      snapshot: { ...snapshot, previous: first.artifact, head: tail, boundary: after[1].info.id, tailStart: after[1].info.id, tail: after.slice(1) },
+      producerID: SessionID.descending(), host: { ...host, history: [...messages, ...after] }, ceiling: 100000 })
+    expect("artifact" in next && next.artifact.items).toEqual([])
+    expect("artifact" in next && next.artifact.text).toContain("## Findings\n(none)")
     const inventory = yield* archive.list(sessionID)
     expect(inventory.map((entry) => entry.id)).toEqual(written.map((entry) => entry.id))
     expect(yield* archive.read({ sessionID: SessionID.descending(), id: written[0].id })).toBeUndefined()

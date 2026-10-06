@@ -50,13 +50,16 @@ def invoke(context, ref, action_id=None, mode="stable"):
         raise
 
 
-def replace_text(context, ref, text, mode="editable"):
+def replace_text(context, ref, text, mode="editable", focused=False):
+    """focused: the field must still hold keyboard focus (typing into the focused field); refused before any dispatch."""
     record = context.registry.resolve(ref, context)
     context.registry.invalidate(context.binding)
     if not isinstance(text, str) or "\x00" in text or any(0xD800 <= ord(c) <= 0xDFFF for c in text):
         raise BusError("protocol-error", "Text must be a valid D-Bus Unicode string")
     if mode not in ("editable", "keyboard"):
         raise BusError("unsupported-operation", "Unknown text replacement mode")
+    if focused and mode != "keyboard":
+        raise BusError("protocol-error", "Typing into the focused field uses keyboard mode")
     limit = keyboard.MAX_TEXT if mode == "keyboard" else LIMITS["text"]
     if len(text) > limit:
         raise BusError("verification-incomplete", "Replacement exceeds native Text verification budget")
@@ -65,6 +68,8 @@ def replace_text(context, ref, text, mode="editable"):
     evidence, live = _target(context, record, mode)
     if mode == "keyboard":
         evidence = _keyboard_window(context, record, evidence, live)
+        if focused and 12 not in live and "focus" not in evidence:
+            raise BusError("focus-unconfirmed", "The field no longer holds keyboard focus")
         result = {"method": "keyboard", "dispatch": "unknown", "postcondition": "unverified", "value": None}
         try:
             result = _keyboard_result(keyboard.replace_text(context, record, text, context.remaining(), evidence))
@@ -100,23 +105,52 @@ def replace_text(context, ref, text, mode="editable"):
         raise
 
 
-def press(context, ref, keys):
-    """Send one key combination to the owned window holding ref; the app decides what it means."""
+def press(context, ref, keys=None, text=None):
+    """Send one key combination, or printable text as key events, to the owned window holding ref; the app decides
+    what it means. Text goes only to ref when ref holds focus."""
     record = context.registry.resolve(ref, context)
     context.registry.invalidate(context.binding)
-    keyboard.parse_keys(keys)  # Refuse unknown or server-level combinations before any native call.
+    # Refuse unknown or server-level combinations and unprintable text before any native call.
+    keyboard.parse_keys(keys) if text is None else keyboard.parse_text(text)
     evidence = context.require_owned(record)
     try:
-        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence))
+        return _keys_result(keyboard.press_keys(context, record, keys, context.remaining(), evidence, text))
     except BusError as error:
         if hasattr(error, "result"):
             error.result = _keys_result(error.result)
         raise
 
 
+def pointer(context, ref, kind):
+    """Hover over or right-click the center of a showing control; the app decides what that shows."""
+    record = context.registry.resolve(ref, context)  # Fresh ownership, role, name and parent.
+    context.registry.invalidate(context.binding)
+    # Rows of virtual lists and trees qualify, unlike for actions: hover and right-click land on a point that
+    # the resolve above (fresh role, name and parent), fresh extents and a hit test tie to this row, so a
+    # recycled row shows another name and refuses. Stale, transient or unreadable identity still refuses.
+    if not set(record["unstableReasons"]) <= {"virtual"}:
+        raise BusError("unstable-ref", "Native target identity is not stable enough for pointer events")
+    evidence = context.require_owned(record)
+    try:
+        return _pointer_result(keyboard.point(context, record, kind, context.remaining(), evidence))
+    except BusError as error:
+        if hasattr(error, "result"):
+            error.result = _pointer_result(error.result)
+        raise
+
+
+def _pointer_result(result):
+    point = result.get("point")
+    return {"method": "pointer", "kind": str(result.get("kind", ""))[:16], "dispatch": result["dispatch"],
+            "postcondition": "unverified", "hit": str(result.get("hit", "unverified"))[:16],
+            "point": {"x": point["x"], "y": point["y"]} if isinstance(point, dict) else None,
+            "controllerCalls": result.get("controllerCalls", 0)}
+
+
 def _keys_result(result):
     focus = result.get("focus", {})
-    bounded = {"method": "keys", "keys": str(result.get("keys", ""))[:64], "dispatch": result["dispatch"],
+    typed = {"characters": result["characters"]} if type(result.get("characters")) is int else {"keys": str(result.get("keys", ""))[:64]}
+    bounded = {"method": "keys", **typed, "dispatch": result["dispatch"],
                "postcondition": "unverified", "focus": {"requested": bool(focus.get("requested")),
                "confirmed": bool(focus.get("confirmed")), "externalRaces": "unfenced"},
                "controllerCalls": result.get("controllerCalls", 0)}

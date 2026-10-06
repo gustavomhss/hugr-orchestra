@@ -21,7 +21,7 @@ import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { httpError, raw, reply, TestLLMServer } from "../lib/llm-server"
 import { testProviderConfig } from "../lib/test-provider"
-import { FIRST, NONCE, body, fragments, jobFor, packet, wireMessages } from "./service-fixture"
+import { FIRST, NONCE, PAD, body, fragments, jobFor, packet, wireMessages } from "./service-fixture"
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 const llmNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
@@ -41,18 +41,21 @@ type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const maintenance: Match = (hit) => {
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY PRODUCER PROTOCOL v2")) ||
-    (wire.at(-1)?.role === "user" && wire.at(-1)!.content.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
+  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY CHECKPOINT · working memory v4")) ||
+    (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
 }
 const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
 
-function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown } = {}) {
+function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number } = {}) {
   const config = testProviderConfig(url)
   config.provider.test.models["test-model"].tool_call = options.toolcall ?? true
+  if (options.context) config.provider.test.models["test-model"].limit.context = options.context
   return Effect.promise(() => Bun.write(path.join(directory, "opencode.json"), JSON.stringify({
     ...config, model: "test/test-model", small_model: "test/test-model", enabled_providers: ["test"],
     plugin: [], mcp: {}, compaction: { auto: false },
+    // Scenario turns report 50,000 tokens against the test model's 100,000-token window.
+    continuity: { trigger: 0.5 },
     agent: { build: { permission: { context_recall: options.permission ?? "allow" } } },
   })))
 }
@@ -70,7 +73,7 @@ function forkAnswer(memory: string, match: Match, reference?: string, wait?: Pro
   return { match: (hit: Hit) => {
     if (!match(hit)) return false
     const value = body(hit.body, memory, reference)
-    expect(fragments(packet(hit.body)).every((entry) => /^[a-f0-9]{64}$/.test(entry.id))).toBe(true)
+    expect(fragments(packet(hit.body)).every((entry) => /^[uat][1-9][0-9]*$/.test(entry.id))).toBe(true)
     tail.push(...chunks(JSON.stringify(value)))
     return true
   }, response: raw({ wait, tail }) }
@@ -104,19 +107,19 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const chat = yield* sessions.create({ title: "HTTP working memory and recall" })
   const head = `HEAD_ONLY_FACT_7E5D: ${FIRST}\nRecorded nonce=${NONCE}`
   const tail = "TAIL_KEEP_A129"
-  const seed = Array.from({ length: 6 }, (_, index) => ({ user: index === 0 ? head : index === 5 ? tail : `SEED_USER_${index}`, assistant: `SEED_REPLY_${index}` }))
+  const seed = Array.from({ length: 6 }, (_, index) => ({ user: index === 0 ? head : index === 5 ? tail : `SEED_USER_${index}`, assistant: `SEED_REPLY_${index} ${PAD}` }))
   const a = yield* gate
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(maintenance(control("CONTEXT CONTINUITY PRODUCER PROTOCOL v2", "system"))).toBe(true)
+  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT · working memory v4", "system"))).toBe(true)
   expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
   for (const turn of seed) yield* llm.pushMatch(capture.record(turn.user, parent(turn.user)), answer(turn.assistant))
   yield* llm.pushMatch(capture.record("trigger", parent("TRIGGER")), answer("TRIGGER_DONE", 50_000, cached))
-  // The replayed instruction identifies references by the opening words of their first message.
-  const stale = forkAnswer("# Work\nSTALE_HTTP_MEMORY", capture.record("A", maintenance), "7E5D", a.wait)
+  // The replayed instruction indexes the new span by alias with the opening words of each source.
+  const stale = forkAnswer("Work: STALE_HTTP_MEMORY", capture.record("A", maintenance), "7E5D", a.wait)
   yield* llm.pushMatch(stale.match, stale.response)
   yield* llm.pushMatch(capture.record("advance", parent("ADVANCE_WHILE_HELD")), answer("PARENT_ADVANCED", 100))
   const fresh = forkAnswer(FIRST, capture.record("B", maintenance), "7E5D", b.wait)
@@ -138,7 +141,7 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   expect(Array.isArray(forkMessages) && Array.isArray(triggerMessages)).toBe(true)
   expect((forkMessages as unknown[]).slice(0, -1)).toEqual(triggerMessages as unknown[])
   expect(hasRecall(capture.hits.at(-1)!.hit)).toBe(true)
-  expect(packet(fork)).toContain("## Coverage")
+  expect(packet(fork)).toContain("## New span")
   expect(packet(fork)).not.toContain(tail)
   expect((yield* send("ADVANCE_WHILE_HELD")).parts.some((part) => part.type === "text" && part.text === "PARENT_ADVANCED")).toBe(true)
   expect(yield* Deferred.isDone(a.release)).toBe(false)
@@ -154,7 +157,8 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
     Effect.map((value) => value.system[0]?.includes(FIRST) ? value : undefined)), "B never applied", "10 seconds")
   expect(prepared.messages).toEqual(history.slice(-8))
   expect(prepared.system[0]).not.toContain("STALE_HTTP_MEMORY")
-  expect(prepared.system[0]).not.toContain(NONCE)
+  // The nonce was written by the user, so the verbatim user ledger keeps it; alias recall serves the stored message.
+  expect(prepared.system[0]).toContain("## User messages (verbatim, host-collected)")
   expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
   const providerB = capture.hits.find((entry) => entry.name === "B")!
   const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes("7E5D"))!.id
@@ -197,10 +201,12 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
     const chat = yield* sessions.create({ title: "Closed working-memory HTTP validation" })
     const capture = ledger()
     const seed = Array.from({ length: 6 }, (_, index) => `CLOSED_SEED_${index}`)
-    for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+    for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
     const valid = forkAnswer(FIRST, maintenance)
     yield* llm.pushMatch(valid.match, valid.response)
     yield* llm.pushMatch(parent("REFRESH_CLOSED"), answer("REFRESH_DONE", 50_000))
+    // The one retry after the failed check gets the same invalid reply.
+    yield* llm.pushMatch(maintenance, answer(invalid))
     yield* llm.pushMatch(maintenance, answer(invalid))
     yield* llm.pushMatch(capture.record("next", parent("AFTER_INVALID")), answer("NEXT_VALID"))
     const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
@@ -244,7 +250,7 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
       permission: [{ permission: "context_recall", pattern: chat.id, action: "deny" }] })
     const capture = ledger()
     const seed = Array.from({ length: 6 }, (_, index) => `CAPABILITY_SEED_${index}`)
-    for (const text of seed) yield* llm.pushMatch(capture.record(text, parent(text)), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+    for (const text of seed) yield* llm.pushMatch(capture.record(text, parent(text)), answer(`REPLY_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
     const response = forkAnswer(FIRST, capture.record("memory", maintenance), seed[0])
     yield* llm.pushMatch(response.match, response.response)
     yield* llm.pushMatch(capture.record("next", parent("CAPABILITY_NEXT")), answer("NEXT_DONE"))
@@ -277,7 +283,7 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     const conversation = wire.filter((entry) => entry.role !== "system").map((entry) => entry.content).join("\n")
     for (const message of condition === "allowed" ? history.slice(4) : history) for (const part of message.parts)
       if (part.type === "text") expect(conversation).toContain(part.text)
-    expect(system.includes("# Historical working memory")).toBe(condition === "allowed")
+    expect(system.includes("# Working memory")).toBe(condition === "allowed")
     if (condition === "allowed") {
       expect(system).toContain(FIRST)
       expect(conversation).not.toContain(seed[0])
@@ -307,7 +313,7 @@ it.instance("read shows nested rules again after working memory drops the turn t
   const capture = ledger()
   const seed = Array.from({ length: 6 }, (_, index) => `RULES_SEED_${index}`)
   yield* llm.pushMatch(parent(seed[0]), reply().tool("read", { filePath: path.join(rules, "first.txt") }))
-  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 50_000 : 100))
+  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
   const memory = forkAnswer(FIRST, maintenance)
   yield* llm.pushMatch(memory.match, memory.response)
   yield* llm.pushMatch(capture.record("next", parent("RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
@@ -332,5 +338,48 @@ it.instance("read shows nested rules again after working memory drops the turn t
   expect(conversation).not.toContain(seed[0])
   expect(conversation).not.toContain("NESTED_RULE_5C1E")
   expect(reads[1].output).toContain(`Instructions from: ${path.join(rules, "AGENTS.md")}\nNESTED_RULE_5C1E`)
+  expect(reads[1].metadata.loaded).toEqual([path.join(rules, "AGENTS.md")])
+}), 120_000)
+
+it.instance("read shows nested rules again after masking hides the read that showed them", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const jobs = yield* BackgroundJob.Service
+  // A 50,000-token window starts maintenance at 25,000 tokens; masking alone settles it under 17,500, so no fork runs.
+  yield* configure(llm.url, instance.directory, { context: 50_000 })
+  const rules = path.join(instance.directory, "rules")
+  yield* Effect.promise(() => Bun.write(path.join(rules, "AGENTS.md"), "NESTED_RULE_8D2A"))
+  // About 10,000 tokens of read output: masking it frees enough on its own.
+  yield* Effect.promise(() => Bun.write(path.join(rules, "first.txt"), "filler line that gives the first read its weight\n".repeat(800)))
+  yield* Effect.promise(() => Bun.write(path.join(rules, "second.txt"), "second"))
+  const chat = yield* sessions.create({ title: "Nested rules after masking" })
+  const capture = ledger()
+  const seed = Array.from({ length: 6 }, (_, index) => `MASKED_RULES_SEED_${index}`)
+  yield* llm.pushMatch(parent(seed[0]), reply().tool("read", { filePath: path.join(rules, "first.txt") }))
+  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 25_000 : 100))
+  yield* llm.pushMatch(capture.record("next", parent("MASKED_RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
+  yield* llm.pushMatch(parent("MASKED_RULES_NEXT"), answer("NEXT_DONE"))
+  yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unexpected masked-rules request" } }))
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+    parts: [{ type: "text", text }] }), "Masked-rules HTTP request stalled", "30 seconds")
+  for (const text of seed) yield* send(text)
+  const history = yield* sessions.messages({ sessionID: chat.id })
+  const job = yield* jobFor(chat.id, history.at(-1)!.info.id)
+  const done = yield* jobs.wait({ id: job.id, timeout: 10_000 })
+  expect(done.info?.output).toBe("masked")
+  yield* send("MASKED_RULES_NEXT")
+  const durable = yield* sessions.messages({ sessionID: chat.id })
+  const reads = durable.flatMap((message) => message.parts).flatMap((part) =>
+    part.type === "tool" && part.tool === "read" && part.state.status === "completed" ? [part.state] : [])
+  expect(reads).toHaveLength(2)
+  expect(reads[0].output).toContain("NESTED_RULE_8D2A")
+  // The request that made the second read still carried the first read, masked, without the rules it showed.
+  const conversation = wireMessages(capture.hits[0].hit.body).filter((entry) => entry.role !== "system")
+    .map((entry) => entry.content).join("\n")
+  expect(conversation).toContain(`[masked tool result: read filePath=${path.join(rules, "first.txt")} → completed`)
+  expect(conversation).not.toContain("NESTED_RULE_8D2A")
+  expect(reads[1].output).toContain(`Instructions from: ${path.join(rules, "AGENTS.md")}\nNESTED_RULE_8D2A`)
   expect(reads[1].metadata.loaded).toEqual([path.join(rules, "AGENTS.md")])
 }), 120_000)
