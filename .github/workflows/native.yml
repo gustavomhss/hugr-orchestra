@@ -86,3 +86,7 @@ jobs:
       - name: Keyboard
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite keyboard_regression.py
+
+      - name: App dialogs
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
+        run: $RUNNER_TEMP/suite test_dialogs.py

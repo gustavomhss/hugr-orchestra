@@ -117,3 +117,19 @@ test("same-shaped regions in sibling wrappers each stay enterable across rescans
   const again = AppDockOutline.tree(rows())
   expect(bars.regions.map((region) => AppDockOutline.locate(again, region)?.children[0]?.name)).toEqual(["More 1", "More 2"])
 })
+
+test("an app's top-level file chooser or alert is a window, and look says when no window holds the input", () => {
+  const items: AppDockOutline.Item[] = [
+    { ref: "f", parentRef: null, role: 23, roleName: "frame", name: "notes.txt - Mousepad", states: [12, ...SHOWN] },
+    { ref: "d", parentRef: null, role: 19, roleName: "file-chooser", name: "Open File", states: [1, 16, ...SHOWN] },
+    { ref: "loc", parentRef: "d", role: 61, roleName: "text", name: "", states: [7, 12, ...SHOWN] },
+    { ref: "a", parentRef: null, role: 2, roleName: "alert", name: "Save changes?", states: SHOWN },
+  ]
+  const chooser = AppDockOutline.tree(items)
+  expect(AppDockOutline.windows(chooser).map((node) => node.role)).toEqual(["frame", "file chooser", "alert"])
+  // Keys reach only the active window: the chooser's focused field, not the frame's own focus.
+  expect(AppDockOutline.focused(items.map((item) => ({ item }))).map((match) => match.item.ref)).toEqual(["loc"])
+  expect(AppDockOutline.look(chooser).text).not.toContain("input: none")
+  const inactive = AppDockOutline.look(AppDockOutline.tree(vscode().map((item) => item.ref === "f" ? { ...item, states: SHOWN } : item)))
+  expect(inactive.text.split("\n")[1]).toBe("input: none of these windows is active; a window that shows no controls here (such as a native file dialog) or nothing holds the keyboard")
+})

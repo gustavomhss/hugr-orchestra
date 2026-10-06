@@ -247,7 +247,7 @@ def run(proof, bus_dir):
     targets = [n for n in ast.walk(tree) if isinstance(n, ast.If) and any(isinstance(c, ast.Constant) and c.value == "roots" for c in ast.walk(n.test))]
     proof.check("mutation-one-scope-guard", len(targets) == 1)
     targets[0].test = ast.BoolOp(op=ast.Or(), values=[ast.Compare(left=ast.Name(id="current", ctx=ast.Load()), ops=[ast.Eq()], comparators=[ast.Name(id="ROOT", ctx=ast.Load())]), targets[0].test])
-    roles = [n for n in ast.walk(tree) if isinstance(n, ast.Tuple) and [getattr(v, "value", None) for v in n.elts] == [16, 23, 69]]
+    roles = [n for n in ast.walk(tree) if isinstance(n, ast.Tuple) and [getattr(v, "value", None) for v in n.elts] == [2, 9, 16, 19, 22, 23, 69]]
     proof.check("mutation-one-window-role-guard", len(roles) == 1)
     roles[0].elts.append(ast.Constant(value=75))
     copy = proof.root / "context-copy.py"
