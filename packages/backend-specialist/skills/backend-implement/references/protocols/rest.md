@@ -26,6 +26,7 @@ An assigned JSON HTTP handler against a fixed method, path and response contract
 ## Tools and outputs
 
 - Existing raw HTTP fixtures, the contract checker and the selected codegen entrypoint.
+- Toolkit engine, only for the stubs or clients the packet assigns: [openapi-generator](../recipes/external/openapi-generator.md) generates them from the OpenAPI document.
 - Output: the handwritten handler and error adapter, plus generated artifacts only when the packet authorizes regeneration.
 
 ## Limits and checks
