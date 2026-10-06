@@ -310,11 +310,8 @@ describe("checklist-item bodies", () => {
     "e4-judge-responses": { "EXIT-BLOCKING": exitSeven, "EXIT-ADVISORY": exitSeven },
     "e5-host-check": { permissions: null },
   }
-  test("the arm goldens record checklist rounds", async () => {
-    const ledgers = [...new Bun.Glob("*/expected/*/ledger.jsonl").scanSync(dir)]
-    const text = (await Promise.all(ledgers.map((file) => Bun.file(path.join(dir, file)).text()))).join("")
-    expect(text.split(`"event":"checklist-item"`).length).toBeGreaterThan(100)
-  })
+  // Lines regraded per scenario; the last test proves every recorded round was reached, not skipped.
+  const regraded: number[] = []
 
   names.sort().forEach((name) =>
     test(`arm/${name}`, async () => {
@@ -350,6 +347,7 @@ describe("checklist-item bodies", () => {
           return [{ entry: { ...entry, ...departure }, line: departure ? undefined : lines[k] }]
         })
         const want = await Promise.all(kept.map((item) => item.line ?? compact(item.entry)))
+        regraded.push(entries.length)
         const got = await Promise.all(
           result.verdicts.map((verdict, k) => {
             const entry = kept[k]?.entry ?? entries[0]
@@ -362,6 +360,21 @@ describe("checklist-item bodies", () => {
       }
     }),
   )
+
+  test("every checklist-item line of the arm goldens was regraded", async () => {
+    // The last fire's ledger holds every line the fires appended; a prestate ledger's lines were never graded here.
+    const items = (text: unknown) => String(text ?? "").split(`"event":"checklist-item"`).length - 1
+    const counts = await Promise.all(
+      names.map(async (name) => {
+        const scenario: Scenario = await Bun.file(path.join(dir, name, "scenario.json")).json()
+        const last = path.join(dir, name, "expected", String(scenario.fires.length - 1), "ledger.jsonl")
+        return items(await read(last)) - items(scenario.prestate?.["ledger.jsonl"])
+      }),
+    )
+    const total = counts.reduce((sum, count) => sum + count, 0)
+    expect(total).toBeGreaterThan(100)
+    expect(regraded.reduce((sum, count) => sum + count, 0)).toBe(total)
+  })
 })
 
 // e4-judge-responses runs a judge program from its tree; the TS judge is a service, so its replies are scripted here.
