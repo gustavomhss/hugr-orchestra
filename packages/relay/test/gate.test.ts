@@ -88,13 +88,14 @@ async function git(cwd: string, home: string, ...args: string[]) {
 const gitText = async (env: Env, ...args: string[]) =>
   new TextDecoder().decode((await git(env.work, env.home, ...args)).stdout)
 
-async function repo(env: Env, commits: ReadonlyArray<Files>) {
+// Commits like the generator; the message is part of the SHA a golden records.
+async function repo(env: Env, commits: ReadonlyArray<Files>, messages: ReadonlyArray<string> = []) {
   await git(env.work, env.home, "-c", "init.defaultBranch=main", "init", "-q")
   const shas: string[] = []
-  for (const files of commits) {
+  for (const [k, files] of commits.entries()) {
     await write(env.work, files)
     await git(env.work, env.home, "add", "-A")
-    await git(env.work, env.home, "commit", "-q", "--allow-empty", "-m", "fixture")
+    await git(env.work, env.home, "commit", "-q", "--allow-empty", "-m", messages[k] ?? "fixture")
     shas.push((await gitText(env, "rev-parse", "HEAD")).trim())
   }
   return shas
@@ -189,7 +190,8 @@ describe("check goldens", () => {
       const state = path.join(env.dir, "arm")
       await mkdir(state)
       const commits = (scenario.commits ?? []).map((commit) => bytes(commit.files, []))
-      const shas = commits.length ? await repo(env, commits) : []
+      const messages = (scenario.commits ?? []).map((commit) => commit.message)
+      const shas = commits.length ? await repo(env, commits, messages) : []
       await write(env.work, bytes(scenario.tree ?? {}, shas))
       await write(state, bytes(scenario.prestate ?? {}, shas))
       const forced = scenario.env?.RELAY_JUDGE_STUB
@@ -231,7 +233,7 @@ interface Scenario {
   readonly sprint: RelaySprint.Sprint
   readonly env?: Record<string, string>
   readonly prestate?: Record<string, unknown>
-  readonly commits?: ReadonlyArray<{ readonly files: Record<string, unknown> }>
+  readonly commits?: ReadonlyArray<{ readonly message: string; readonly files: Record<string, unknown> }>
   readonly tree?: Record<string, unknown>
   readonly fires: ReadonlyArray<{
     readonly tree?: Record<string, unknown>
@@ -587,12 +589,16 @@ describe("plan errors", () => {
     },
   )
 
-  test.each([true, 17, [], {}, "report\u0000text"])("assertion %j stops before the command runs", async (assert) => {
-    const env = await scratch()
-    const error = await fails(env, [{ id: "D", assert, cmd: "touch ran" }])
-    expect(error.message).toBe("relay: checklist D has invalid assertion (expected a NUL-free string)")
-    expect(existsSync(path.join(env.work, "ran"))).toBe(false)
-  })
+  // Rows are wrapped: a bare [] row would be spread into no arguments.
+  test.each([[true], [17], [[]], [{}], ["report\u0000text"]])(
+    "assertion %j stops before the command runs",
+    async (assert) => {
+      const env = await scratch()
+      const error = await fails(env, [{ id: "D", assert, cmd: "touch ran" }])
+      expect(error.message).toBe("relay: checklist D has invalid assertion (expected a NUL-free string)")
+      expect(existsSync(path.join(env.work, "ran"))).toBe(false)
+    },
+  )
 
   test("a failed record stops the checklist before the next control", async () => {
     const env = await scratch()
