@@ -81,6 +81,26 @@ it.instance(
 )
 
 it.instance(
+  "a location rule on the playbooks keeps them off an agent's list but loadable by name",
+  () =>
+    Effect.gen(function* () {
+      const skill = yield* Skill.Service
+      const agents = yield* Agent.Service
+      const maestro = yield* agents.get("maestro")
+      const general = yield* agents.get("general")
+      expect((yield* skill.available(maestro)).map((item) => item.name)).toContain("maestro-verify")
+      const listed = (yield* skill.available(general)).map((item) => item.name)
+      expect(listed).not.toContain("maestro-verify")
+      expect(listed).not.toContain("frame-request")
+      expect(Permission.evaluate("skill", "maestro-verify", general.permission).action).toBe("allow")
+    }),
+  {
+    git: true,
+    config: { agent: { general: { permission: { skill: { [path.join(Skill.PLAYBOOKS_DIR, "*")]: "deny" } } } } },
+  },
+)
+
+it.instance(
   "a project skill with a playbook's name replaces the shipped one",
   () =>
     Effect.gen(function* () {
