@@ -1,0 +1,9 @@
+# H5 (WP-H): the Windows binaries (the addon and the supervisor) link the C runtime statically, so they need no Visual
+# C++ Redistributable (VCRUNTIME140.dll) on the user's machine. `bindings/node/npm/verify.mjs` checks the import table.
+# Cargo reads this file when it runs from this directory (scripts/ci.mjs, the workflows); a RUSTFLAGS variable would
+# replace these flags.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

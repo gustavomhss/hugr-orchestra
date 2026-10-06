@@ -91,6 +91,40 @@ async function timed(command, extraEnv) {
   return { out: stdout + stderr, seconds: (performance.now() - start) / 1000 };
 }
 
+/**
+ * The DLLs a PE file (`.exe`, `.dll`, `.node`) imports, eagerly and delay-loaded: what `dumpbin /dependents` lists, read
+ * from the file itself so no Visual Studio prompt is needed. Throws on anything that is not a PE32+ image it can read.
+ */
+function peImports(pe) {
+  const at = pe.readUInt32LE(0x3c);
+  assert(pe.readUInt16LE(0) === 0x5a4d && pe.readUInt32LE(at) === 0x4550, "not a PE file");
+  const coff = at + 4;
+  const sections = pe.readUInt16LE(coff + 2);
+  const optional = coff + 20;
+  assert(pe.readUInt16LE(optional) === 0x20b, "not a PE32+ (64-bit) image");
+  const table = optional + pe.readUInt16LE(coff + 16);
+  const offset = (rva) => {
+    for (let i = 0; i < sections; i++) {
+      const s = table + i * 40;
+      const [va, size, raw] = [pe.readUInt32LE(s + 12), Math.max(pe.readUInt32LE(s + 8), pe.readUInt32LE(s + 16)), pe.readUInt32LE(s + 20)];
+      if (rva >= va && rva < va + size) return rva - va + raw;
+    }
+    throw new Error(`RVA ${rva} is in no section`);
+  };
+  const name = (rva) => {
+    const from = offset(rva);
+    return pe.toString("latin1", from, pe.indexOf(0, from));
+  };
+  const dlls = [];
+  // Data directories 1 (imports, 20-byte descriptors, name at +12) and 13 (delay imports, 32-byte, name at +4).
+  for (const [dir, size, nameAt] of [[1, 20, 12], [13, 32, 4]]) {
+    const rva = pe.readUInt32LE(optional + 112 + dir * 8);
+    if (rva === 0) continue;
+    for (let d = offset(rva); pe.readUInt32LE(d + nameAt) !== 0; d += size) dlls.push(name(pe.readUInt32LE(d + nameAt)));
+  }
+  return dlls;
+}
+
 try {
   // `npx -y deno@2` run in the project would read its .npmrc (the fixture registry): the binary itself runs there.
   const launcher = { bun: [process.env.HUGR_BUN ?? "bun", "-e", `"console.log(process.execPath)"`], deno: [process.env.HUGR_DENO ?? "deno", "eval", `"console.log(Deno.execPath())"`] }[runtime];
@@ -108,7 +142,18 @@ try {
   for (const other of Object.values(IDS).filter((o) => o !== id)) {
     assert.throws(() => createRequire(main).resolve(`hugr-omni-${other}`), `hugr-omni-${other} must not be installed on ${id}`);
   }
-  assert(existsSync(join(dirname(addon), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor")), "the supervisor is not next to the addon");
+  const supervisor = join(dirname(addon), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor");
+  assert(existsSync(supervisor), "the supervisor is not next to the addon");
+  if (process.platform === "win32") {
+    // H5: built with a static C runtime, so no Visual C++ Redistributable is needed. KERNEL32 is the positive control:
+    // an import table read as empty would otherwise pass.
+    for (const file of [addon, supervisor]) {
+      const dlls = peImports(readFileSync(file));
+      assert(dlls.some((d) => /^kernel32\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);
+      const crt = dlls.filter((d) => /^(vcruntime|msvcp)/i.test(d));
+      assert.deepEqual(crt, [], `${file} needs the Visual C++ runtime (${crt.join(", ")}): build it with +crt-static (.cargo/config.toml)`);
+    }
+  }
   for (const dir of [dirname(main), dirname(addon)]) assert.equal(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).scripts, undefined, `${dir} has scripts`);
   assert.match(installed.out, /hugr-omni/, "the install log is empty: the check below would pass on nothing");
   assert.doesNotMatch(installed.out, /node-gyp|gyp ERR|cargo (build|install)|rustc|maturin/i, "the install compiled something");
@@ -135,7 +180,8 @@ try {
     // The loader's messages, from the package alone (no platform package, no checkout): unsupported, and not installed.
     const alone = join(tmp, "alone");
     cpSync(dirname(main), join(alone, "node_modules", "hugr-omni"), { recursive: true });
-    writeFileSync(join(alone, "probe.cjs"), `if (process.argv[2]) Object.defineProperty(process, "platform", { value: process.argv[2] });\ntry { require("hugr-omni"); console.log("LOADED"); } catch (e) { console.log(e.message); }\n`);
+    // The addon loads at the first use (WP-H), so the probe uses it: spawn() throws the loader's message.
+    writeFileSync(join(alone, "probe.cjs"), `if (process.argv[2]) Object.defineProperty(process, "platform", { value: process.argv[2] });\ntry { require("hugr-omni").spawn("x"); console.log("LOADED"); } catch (e) { console.log(e.message); }\n`);
     const probe = (...args) => execFileSync(process.execPath, ["probe.cjs", ...args], { cwd: alone, env, encoding: "utf8" });
     const unsupported = probe("freebsd");
     for (const supported of Object.values(IDS)) assert(unsupported.includes(supported), `the unsupported-platform message does not list ${supported}: ${unsupported}`);
