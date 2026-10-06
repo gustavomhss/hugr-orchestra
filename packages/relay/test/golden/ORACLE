@@ -4,9 +4,9 @@
 relay            0b8b08724077db03b2aacce524db29bfb6b834ed  HuGR Relay main, imported as packages/relay by c2098b4ae2ac327981a06a2946a1d383673c598d
 relay_authoring  b52d976163b1713e59cbe5ff8b2bf807d934f94f  lib/relay_authoring at its relay-native landing commit
 base             93481de6c22c7755dad5d075f8af7bc39d7cb03d  relay-native WP0, the tree the generators ran against
-# Tools the committed goldens were generated with. jq 1.7.x was not available; jq 1.8.1 and Apple's
-# jq-1.6-159-apple-gcff5336 (decNumber) produce byte-identical escape, number and object tables, so the
-# generators accept jq 1.7.x and 1.8.x. Rerun with jq 1.7.x when one is available and expect no diff.
+# Tools the committed goldens were generated with; each area's GENERATOR.json records them per run. The plan named
+# jq 1.7.x, which was not available: the generators assert exactly jq-1.8.1 (FORMAT.md). Apple's
+# jq-1.6-159-apple-gcff5336 (decNumber) printed byte-identical escape, number and object tables.
 tool             jq-1.8.1
 tool             Python 3.14.5
 tool             GNU bash 5.3.3

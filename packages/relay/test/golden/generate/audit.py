@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ledger import COMPLETE, GOLDEN, KEY, PKG, WRONG_KEY, control, rel, record_audit, reset, seal, start, write_bytes, write_json  # noqa: E402
+from ledger import COMPLETE, GOLDEN, KEY, PKG, WRONG_KEY, control, rel, record_audit, reset, seal, start, write_bytes, write_generator, write_json  # noqa: E402
 
 
 def sha(text):
@@ -287,6 +287,7 @@ def main():
     tmp = start()
     try:
         generate()
+        write_generator(GOLDEN / "audit", "audit.py", ["benchmark/verify_ledger.py", "bin/relay"])
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

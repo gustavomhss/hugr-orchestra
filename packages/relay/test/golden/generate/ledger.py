@@ -47,6 +47,7 @@ EPOCH = 1700000000
 KEY = "relay-golden-ledger-key"
 WRONG_KEY = "relay-golden-wrong-key"
 REQUIRED_TOOLS = ("python3", "bash", "jq", "git", "openssl", "shasum")
+JQ = "jq-1.8.1"
 
 
 # ---- harness ------------------------------------------------------------------------------------------------------
@@ -54,9 +55,10 @@ REQUIRED_TOOLS = ("python3", "bash", "jq", "git", "openssl", "shasum")
 def enter_clean_env():
     """Re-exec under the equivalent of `env -i`, once; returns the run's scratch directory.
 
-    The clean environment holds PATH (a fake `date` printing EPOCH first, then the tool directories), HOME (scratch),
-    and three Python switches that keep the oracle deterministic and the tree clean: PYTHONHASHSEED=0,
-    PYTHONDONTWRITEBYTECODE=1 and PYTHONUTF8=1. Oracle subprocesses get exactly that plus explicit RELAY_* values.
+    The clean environment holds PATH (a scratch bin with the fake `date` printing EPOCH and a link to each required
+    tool as the caller's PATH resolved it, then /usr/bin:/bin), HOME (scratch), and three Python switches that keep
+    the oracle deterministic and the tree clean: PYTHONHASHSEED=0, PYTHONDONTWRITEBYTECODE=1 and PYTHONUTF8=1.
+    Oracle subprocesses get exactly that plus explicit RELAY_* values.
     """
     if os.environ.get("RELAY_GOLDEN_TMP"):
         return Path(os.environ["RELAY_GOLDEN_TMP"])
@@ -70,10 +72,13 @@ def enter_clean_env():
     date = tmp / "bin" / "date"
     date.write_text(f"#!/bin/sh\nprintf '%s\\n' {EPOCH}\n")
     date.chmod(0o755)
-    dirs = list(dict.fromkeys([str(Path(where).parent) for where in found.values()] + ["/usr/bin", "/bin"]))
-    env = {"PATH": ":".join([str(tmp / "bin"), *dirs]), "HOME": str(tmp / "home"), "RELAY_GOLDEN_TMP": str(tmp),
+    # Link each tool by name, so the version asserted is the one every oracle script runs, whatever else
+    # shares its directory.
+    for tool, where in found.items():
+        (tmp / "bin" / tool).symlink_to(where)
+    env = {"PATH": f"{tmp / 'bin'}:/usr/bin:/bin", "HOME": str(tmp / "home"), "RELAY_GOLDEN_TMP": str(tmp),
            "PYTHONHASHSEED": "0", "PYTHONDONTWRITEBYTECODE": "1", "PYTHONUTF8": "1"}
-    python = found["python3"]
+    python = str(tmp / "bin" / "python3")
     os.execve(python, [python, str(Path(sys.argv[0]).resolve()), *sys.argv[1:]], env)
 
 
@@ -85,10 +90,10 @@ def oracle_env(**relay):
 
 
 def assert_tools():
-    """jq 1.7.x or 1.8.x (see ORACLE), Python 3.10+, bash, git, openssl and shasum, before anything is written."""
+    """Exactly jq 1.8.1 (FORMAT.md), Python 3.10+, bash, git, openssl and shasum, before anything is written."""
     jq = run(["jq", "--version"]).stdout.decode().strip()
-    if not re.fullmatch(r"jq-1\.[78](\.\d+)?", jq):
-        sys.exit(f"golden generator: jq 1.7.x or 1.8.x required, found {jq!r}")
+    if jq != JQ:
+        sys.exit(f"golden generator: {JQ} required, found {jq!r}")
     if sys.version_info < (3, 10):
         sys.exit("golden generator: Python 3.10+ required")
     for argv in (["bash", "--version"], ["git", "--version"], ["openssl", "version"], ["shasum", "--version"]):
@@ -106,10 +111,40 @@ def assert_oracle_pins():
         sys.exit(f"golden generator: oracle files differ from ORACLE: {', '.join(drift)}")
 
 
+def oracle_pins():
+    return {path: digest for _, digest, path in (line.split() for line in (GOLDEN / "ORACLE").read_text().splitlines()
+                                                  if line.startswith("sha256 "))}
+
+
+def write_generator(directory, generator, oracle):
+    """GENERATOR.json: the generator, the oracle files it ran and their sha256, and the exact tools it ran with."""
+    pins = oracle_pins()
+    tools = {"jq": run(["jq", "--version"]).stdout.decode().strip(),
+             "python3": ".".join(map(str, sys.version_info[:3])),
+             "bash": run(["bash", "-c", "printf %s \"$BASH_VERSION\""]).stdout.decode(),
+             "git": run(["git", "--version"]).stdout.decode().strip(),
+             "openssl": run(["openssl", "version"]).stdout.decode().strip(),
+             "sqlite": __import__("sqlite3").sqlite_version}
+    write_json(directory / "GENERATOR.json", {
+        "generator": f"test/golden/generate/{generator}",
+        "oracle": {path: pins[path] for path in oracle},
+        "tools": tools,
+        "cwd": "packages/relay",
+        "env": {"PATH": "<tmp>/bin (fake date, links to the tools above), /usr/bin, /bin", "HOME": "<tmp>/home",
+                "PYTHONHASHSEED": "0", "PYTHONDONTWRITEBYTECODE": "1", "PYTHONUTF8": "1"},
+        "epoch": EPOCH,
+        "keys": {"keyed": KEY, "wrong-key": WRONG_KEY},
+    })
+
+
 def start():
     tmp = enter_clean_env()
-    assert_tools()
-    assert_oracle_pins()
+    try:
+        assert_tools()
+        assert_oracle_pins()
+    except SystemExit:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
     return tmp
 
 
@@ -431,7 +466,7 @@ def generate_mutants(tmp):
 def generate_ledger_goldens(mutants):
     out = GOLDEN / "ledger"
     for entry in out.glob("*"):
-        if not entry.name.startswith("writer-"):
+        if entry.is_dir() and not entry.name.startswith("writer-"):
             shutil.rmtree(entry)
     fixtures = sorted(path.name.removesuffix(".ledger.jsonl") for path in FIXTURES.glob("*.ledger.jsonl"))
     targets = [(name, f"test/fixtures/{name}.ledger.jsonl") for name in fixtures]
@@ -504,6 +539,9 @@ def main():
         mutants = generate_mutants(tmp)
         generate_ledger_goldens(mutants)
         generate_writer_goldens(tmp)
+        write_generator(GOLDEN / "json", "ledger.py", ["benchmark/verify_ledger.py", "lib/relay-gate.sh"])
+        write_generator(GOLDEN / "ledger", "ledger.py", ["benchmark/verify_ledger.py", "bin/relay", "bin/relay-note",
+                                                         "lib/relay-gate.sh"])
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
