@@ -1,11 +1,11 @@
 // Model transports for the continuity benchmark harnesses (identical copy in the v3 and v4 harnesses).
 // - dry:  a stub that replies {"ops":[]} and costs nothing.
-// - file: BENCH_MODEL=file. A call writes $BENCH_DIR/exchange/<version>-<step>.request.{md,json} and exits with
-//         code 3; on a re-run, $BENCH_DIR/exchange/<version>-<step>.reply.txt is used as the model's reply.
+// - file: BENCH_MODEL=file. A call writes <exchange>/<version>-<step>.request.{md,json} and exits with
+//         code 3; on a re-run, <exchange>/<version>-<step>.reply.txt is used as the model's reply.
 // - api:  the app's real LLM service.
-// Every call is charged to $BENCH_DIR/ledger.jsonl (one line per step label); the guard refuses a call that
-// could cross the cap. File replies have no API usage, so input and output are chars/4 estimates.
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+// Every call is charged to the seed's ledger in $BENCH_DIR (one line per step label); the guard refuses a call
+// that could push the sum of all seeds' ledgers past the cap. File replies have no API usage, so input and output are chars/4 estimates.
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { Effect, Stream } from "effect"
 import type { LLM } from "@/session/llm"
@@ -15,13 +15,16 @@ export const CAP = 1_800_000
 export type Transport = "dry" | "file" | "api"
 export type Call = { label: string; text: string; usage: unknown; estimate: number }
 
-export function create(input: { dir: string; version: string; transport: Transport; reserve: number }) {
-  const ledger = path.join(input.dir, "ledger.jsonl")
-  const exchange = path.join(input.dir, "exchange")
+export function create(input: { dir: string; exchange: string; ledger: string; version: string; transport: Transport; reserve: number }) {
+  const ledger = path.join(input.dir, input.ledger)
+  const exchange = input.exchange
   mkdirSync(exchange, { recursive: true })
-  const entries = () => existsSync(ledger)
-    ? readFileSync(ledger, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as { label: string; total: number }) : []
-  const spent = () => entries().reduce((sum, entry) => sum + entry.total, 0)
+  const read = (file: string) => existsSync(file)
+    ? readFileSync(file, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as { label: string; total: number }) : []
+  const entries = () => read(ledger)
+  // The cap covers every seed: seed 1's ledger.jsonl plus each ledger-seed-N.jsonl.
+  const spent = () => readdirSync(input.dir).filter((name) => /^ledger(-seed-[0-9]+)?\.jsonl$/.test(name))
+    .flatMap((name) => read(path.join(input.dir, name))).reduce((sum, entry) => sum + entry.total, 0)
   // A file reply is re-read on every re-run; it is charged once. An API call is charged every time it runs.
   const charge = (entry: Record<string, unknown> & { label: string; total: number }, once: boolean) => {
     if (once && entries().some((item) => item.label === entry.label)) return
@@ -150,13 +153,13 @@ export function render(sent: Sent, name: string) {
   ].join("\n") + "\n"
 }
 
-/** Split a numbered reply: answer k starts at a line beginning (column 0) with `k.` or `k)`, searched in order. */
+/** Split a numbered reply: answer k starts at a line beginning (column 0) with `k.` or `k)`, searched in order; the number may stand alone on its line. */
 export function numbered(text: string, count: number) {
   const lines = text.split("\n")
   const starts: number[] = []
   let next = 1
   lines.forEach((value, index) => {
-    if (next <= count && new RegExp(`^(\\*\\*)?${next}[.)](\\*\\*)?\\s`).test(value)) { starts.push(index); next++ }
+    if (next <= count && new RegExp(`^(\\*\\*)?${next}[.)](\\*\\*)?(\\s|$)`).test(value)) { starts.push(index); next++ }
   })
   return Array.from({ length: count }, (_, k) => k < starts.length
     ? lines.slice(starts[k], starts[k + 1] ?? lines.length).join("\n").replace(new RegExp(`^\\s*(\\*\\*)?${k + 1}[.)]\\s*(\\*\\*)?\\s*`), "").trim()

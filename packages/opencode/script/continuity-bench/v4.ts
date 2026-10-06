@@ -1,5 +1,5 @@
 // Benchmark harness for continuity working memory v4 (see specs/context-continuity-benchmark-v3-v4.md).
-// Usage: BENCH_DIR=<scratch> [BENCH_MODEL=file] bun script/continuity-bench/v4.ts <dry|passes|drift|probe>
+// Usage: BENCH_DIR=<scratch> [BENCH_MODEL=file] [BENCH_SEED=n] bun script/continuity-bench/v4.ts <dry|passes|drift|probe>
 // Reads a copy of the trace DB at $BENCH_DIR/trace.db and writes evidence under $BENCH_DIR/evidence/v4.
 // Steps are resumable: a step whose evidence exists is loaded, not re-run. See transport.ts for the transports.
 import { Database } from "bun:sqlite"
@@ -33,7 +33,11 @@ const HEAD_BUDGET = 32_000 // the service cap; see the report for why not min(32
 const OVERHEAD = 13_000 // Maestro system + tools, from the trace's first request (13,156 input tokens)
 const MAIN = [36, 62, 89] // boundary message indices (assistant turns with finish=stop)
 const DRIFT = [77, 89] // from main pass 2: two extra passes, so 55-80 is covered by two passes instead of one
-const OUT = path.join(DIR, "evidence", VERSION)
+// Seed 1 keeps the original layout; seed N >= 2 has its own exchange, evidence and ledger, and never reads seed 1's.
+const SEED = Number(process.env.BENCH_SEED ?? "1")
+if (!Number.isInteger(SEED) || SEED < 1) throw new Error(`BENCH_SEED must be a positive integer, got ${process.env.BENCH_SEED}`)
+const ROOT = SEED === 1 ? DIR : path.join(DIR, `seed-${SEED}`)
+const OUT = path.join(ROOT, "evidence", VERSION)
 mkdirSync(OUT, { recursive: true })
 
 // ---- trace ----
@@ -46,7 +50,8 @@ const messages = rows.map((row) => ({
 })) as unknown as SessionV1.WithParts[]
 const agents = new Map((db.query("select id, agent from session where parent_id = ?").all(SESSION) as { id: string; agent: string }[]).map((row) => [row.id, row.agent]))
 
-const model = transport({ dir: DIR, version: VERSION, transport: TRANSPORT, reserve: OUTPUT })
+const model = transport({ dir: DIR, exchange: path.join(ROOT, "exchange"), ledger: SEED === 1 ? "ledger.jsonl" : `ledger-seed-${SEED}.jsonl`,
+  version: VERSION, transport: TRANSPORT, reserve: OUTPUT })
 
 function limited(provider: Provider.Interface): Provider.Interface {
   return { ...provider, getModel: (providerID: any, modelID: any) => provider.getModel(providerID, modelID).pipe(
@@ -143,7 +148,7 @@ const program = Effect.gen(function* () {
   const provider = limited(yield* Provider.Service)
   const llm = model.wrap(yield* LLM.Service)
   const services = { provider, llm }
-  console.log(`transport ${TRANSPORT}; spent before: ${model.spent()}`)
+  console.log(`transport ${TRANSPORT}; seed ${SEED}; spent before (all seeds): ${model.spent()}`)
   if (MODE === "dry") {
     let previous: MemoryArtifact | undefined
     for (const [index, boundary] of MAIN.entries()) previous = yield* pass(services, boundary, previous, `dry-pass${index + 1}`)
