@@ -1,11 +1,12 @@
 // Native stdio MCP seam. No global configuration, subprocess harness or implicit permission grants.
 import { realpath } from "node:fs/promises"
-import { isAbsolute, relative, resolve } from "node:path"
+import { isAbsolute, resolve } from "node:path"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { ArsenalContext, Effect } from "./contract"
 import { Arsenal } from "./index"
+import { inside } from "./engine/acquisition"
 
 export function createServer(context: ArsenalContext): Server {
   if (!context.directory || !context.stateDirectory || !context.projectID || typeof context.authorize !== "function") throw new Error("standalone server requires explicit ArsenalContext")
@@ -45,13 +46,12 @@ if (import.meta.main) {
   const projectID = options.get("--project-id")
   if (!directory || !stateDirectory || !projectID || !isAbsolute(directory) || !isAbsolute(stateDirectory)) throw new Error("explicit absolute --directory, --state-directory and --project-id are required")
   const roots = await Promise.all([realpath(directory), realpath(stateDirectory)])
-  const within = (root: string, path: string) => { const rel = relative(root, path); return rel === "" || rel !== ".." && !rel.startsWith("../") && !isAbsolute(rel) }
-  if (within(roots[0], roots[1]) || within(roots[1], roots[0])) throw new Error("project root and state root must be disjoint; state root must be project-isolated")
+  if (inside(roots[0], roots[1]) || inside(roots[1], roots[0])) throw new Error("project root and state root must be disjoint; state root must be project-isolated")
   await start({ directory: roots[0], stateDirectory: roots[1], projectID,
     async authorize(request) {
       if (!allowed.has(request.effect)) throw new Error(`authorization denied: ${request.effect}; supply explicit --allow ${request.effect}`)
       if (!request.paths.length && !request.commands.length) throw new Error("authorization request requires explicit paths or commands")
-      if (request.paths.some((path) => !isAbsolute(path) || !roots.some((root) => within(root, resolve(path))))) throw new Error("authorization denied: path outside explicit roots")
+      if (request.paths.some((path) => !isAbsolute(path) || !roots.some((root) => inside(root, resolve(path))))) throw new Error("authorization denied: path outside explicit roots")
       if (request.commands.length && request.effect !== "process") throw new Error("authorization denied: command requires process effect")
       // I/O owners additionally resolve symlinks and fence exact process inputs/outputs before execution.
     },

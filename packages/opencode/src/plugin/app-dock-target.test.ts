@@ -376,7 +376,7 @@ test("ui_* tools always address the Linux workspace and expose only native argum
   expect(dock.calls.length).toBeGreaterThan(3)
   expect(dock.calls.every((call) => call.args.world === "linux")).toBe(true)
   expect(Object.keys(dock.hooks.tool.ui_read.args).sort()).toEqual(["budget", "cursor", "maxText", "rootRef", "textOffset"])
-  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target"])
+  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target", "text"])
 })
 
 test("dock_* called by an agent addresses browser tabs; without an agent the legacy envelope is unchanged", async () => {
@@ -400,6 +400,13 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
   expect(Permission.evaluate("linux", "exec", linux).action).toBe("allow")
   expect(Permission.evaluate("dock", "action", linux).action).toBe("ask")
   expect(config.agent!.linux).toMatchObject({ mode: "subagent", model: "opencode/mimo" })
+  // Run 13: after the task the model ran its own "behavior proof", drove a native dialog with xdotool and killed VS Code.
+  const prompt = String(config.agent!.linux!.prompt)
+  for (const rule of ["Do exactly the task. Verify it through the app's own state or the file the task names; do not run extra experiments",
+    "Never close or kill app windows or processes unless the task asks for it.",
+    "Operate what is on screen with ui_*, not linux_exec; xdotool, wmctrl and the like are not tools for UI work.",
+    "ui_keys with text types it as key events into whatever has focus"])
+    expect(prompt).toContain(rule)
   const plain: { permission?: unknown } = { permission: "ask" }
   scopeLinuxWorkspace(plain)
   expect(plain.permission).toEqual({ "*": "ask", "linux_*": "deny", "ui_*": "deny" })

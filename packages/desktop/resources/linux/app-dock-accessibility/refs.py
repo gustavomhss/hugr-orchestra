@@ -8,7 +8,7 @@ from threading import Lock
 from time import monotonic
 
 from bus import BusError
-from context import A, LIMITS, interface_name, states
+from context import A, LIMITS, WINDOW_ROLES, interface_name, states
 
 VIRTUAL_ROLES = {31, 32, 55, 56, 65, 66, 90, 91}
 INSTABILITY = {"virtual", "stale", "transient", "fingerprint", "interface", "protected"}
@@ -153,7 +153,7 @@ def ancestry_reasons(context, record):
     for _ in range(LIMITS["depth"]):
         reasons.update(current["unstableReasons"])
         if any(root["owner"] == current["owner"] and root["path"] == current["path"] for root in context.binding["roots"]):
-            if current["role"] not in (16, 23, 69):
+            if current["role"] not in WINDOW_ROLES:
                 raise BusError("wrong-scope", "Native window role changed")
             return sorted(reasons)
         owner, path = current["parent"]

@@ -29,6 +29,19 @@ SESSION_BYTES = 8192
 CONFIG_BYTES = 65536
 # VS Code-family desktop IDs and their profile directories under ~/.config.
 EDITORS = {"code.desktop": "Code", "code-oss.desktop": "Code - OSS", "codium.desktop": "VSCodium"}
+# Settings that keep those editors operable through the accessibility tree, each seeded only while absent.
+EDITOR_DEFAULTS = {
+    # With "auto" VS Code asks once whether to enable screen-reader support and stores "off" when declined; its
+    # editors and inputs then expose only "The editor is not accessible at this time".
+    "editor.accessibilitySupport": "on",
+    # Electron's native GTK open/save dialog never reaches the AT-SPI bus (Chromium owns the accessibility root), so
+    # no ui_* tool can see or type into it; VS Code's own simple dialog opens inside the window instead.
+    "files.simpleDialog.enable": True,
+}
+RENDERER_SWITCH = "--force-renderer-accessibility"
+# Files every Chromium build ships next to its binary (Electron apps, Chrome, Chromium); wrapper scripts that live
+# elsewhere are not recognised. VS Code-family editors also turn renderer accessibility on through EDITOR_DEFAULTS.
+CHROMIUM_FILES = ("resources.pak", "v8_context_snapshot.bin", "snapshot_blob.bin")
 
 
 class SessionError(RuntimeError):
@@ -448,10 +461,9 @@ def accessibility_bus(environment, *, activate=False, _runtime=RUNTIME, _deadlin
 
 
 def seed_editor_accessibility(app_ids, *, _home=HOME):
-    """Start VS Code-family editors with screen-reader support on unless the user already chose a value.
+    """Start VS Code-family editors with EDITOR_DEFAULTS, keeping every value the user already chose.
 
-    With "auto" VS Code asks once whether to enable it and stores "off" when declined; its editors then expose
-    only "The editor is not accessible at this time". A file that is not plain JSON (comments) is left alone."""
+    A file that already holds every key is not rewritten; one that is not plain JSON (comments) is left alone."""
     for app_id in app_ids:
         if app_id not in EDITORS:
             continue
@@ -461,9 +473,9 @@ def seed_editor_accessibility(app_ids, *, _home=HOME):
                 continue
             data = path.read_bytes() if path.exists() else b""
             settings = json.loads(data) if data.strip() else {}
-            if not isinstance(settings, dict) or "editor.accessibilitySupport" in settings:
+            if not isinstance(settings, dict) or set(EDITOR_DEFAULTS) <= set(settings):
                 continue
-            settings["editor.accessibilitySupport"] = "on"
+            settings = {**EDITOR_DEFAULTS, **settings}
             path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
             atomic_private_file(path, (json.dumps(settings, indent=4, ensure_ascii=False) + "\n").encode(), CONFIG_BYTES)
         except (OSError, ValueError, SessionError):
@@ -477,6 +489,28 @@ def applications():
         app.get_id(): app for app in Gio.AppInfo.get_all()
         if isinstance(app, Gio.DesktopAppInfo) and app.should_show() and app.get_id() and app.get_display_name()
     }
+
+
+def renderer_accessibility(app):
+    """Launch Chromium-family apps (Electron, Chrome) with their web contents in the accessibility tree.
+
+    Without RENDERER_SWITCH they export only an empty frame: neither org.a11y.Status IsEnabled/ScreenReaderEnabled
+    nor ACCESSIBILITY_ENABLED=1 turns renderer accessibility on (measured on VS Code 1.140's Electron). Any other app,
+    an entry that already passes the switch, or an unreadable entry launches unchanged."""
+    from gi.repository import Gio, GLib
+
+    executable = GLib.find_program_in_path(app.get_executable() or "")
+    command = app.get_string("Exec") or ""
+    if (not executable or RENDERER_SWITCH in command
+            or not any((Path(os.path.realpath(executable)).parent / name).is_file() for name in CHROMIUM_FILES)):
+        return app
+    entry = GLib.KeyFile()
+    try:
+        entry.load_from_file(app.get_filename(), GLib.KeyFileFlags.KEEP_TRANSLATIONS)
+    except GLib.Error:
+        return app
+    entry.set_string("Desktop Entry", "Exec", f"{command} {RENDERER_SWITCH}")
+    return Gio.DesktopAppInfo.new_from_keyfile(entry) or app
 
 
 def clear_stale_display():
@@ -589,7 +623,7 @@ def main():
         context = Gio.AppLaunchContext()
         for key, value in environment.items():
             context.setenv(key, value)
-        if not app.launch([], context):
+        if not renderer_accessibility(app).launch([], context):
             raise RuntimeError("failed")
         return
     if command == "prepare":

@@ -2,7 +2,6 @@ import { expect } from "bun:test"
 import { Deferred, Effect, Fiber } from "effect"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
-import { Archive } from "@/continuity/archive"
 import { SessionContinuity } from "@/continuity/service"
 import { Provider } from "@/provider/provider"
 import { Session } from "@/session/session"
@@ -10,13 +9,14 @@ import { ProviderTest } from "../fake/provider"
 import { awaitWithTimeout, it } from "../lib/effect"
 import { A, B, FIRST, SECOND, NONCE, RECEIPT, applyFirst, begin, complete, entered, environment, held, prepare, seed, terminal } from "./service-fixture"
 
-for (const phase of ["model", "archive"] as const) for (const action of ["unchanged", "invalidate", "forget", "advance", "replace"] as const) {
+// Memory no longer reads the archive in prepare (aliases recall stored messages), so the model lookup is the async boundary.
+for (const phase of ["model"] as const) for (const action of ["unchanged", "invalidate", "forget", "advance", "replace"] as const) {
   it.instance(`prepare rechecks entry/generation/artifact after held ${phase}: ${action}`, () => Effect.gen(function* () {
     const first = yield* held(FIRST, { reference: NONCE })
     const second = yield* held(SECOND)
     const waiting = yield* Deferred.make<void>()
     const release = yield* Deferred.make<void>()
-    const gate = { armed: false, model: 0, archive: 0 }
+    const gate = { armed: false, model: 0 }
     yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
     const pause = (at: typeof phase) => Effect.gen(function* () {
       if (!gate.armed || at !== phase) return
@@ -31,17 +31,6 @@ for (const phase of ["model", "archive"] as const) for (const action of ["unchan
       expect(modelID).toBe(model.id)
       yield* pause("model")
       return model
-    })
-    const archive = (actual: Archive.Interface): Archive.Interface => ({ ...actual,
-      read: (input) => Effect.gen(function* () {
-        const chunk = yield* actual.read(input)
-        if (gate.armed && phase === "archive") {
-          expect(chunk?.id).toBe(input.id)
-          expect(chunk?.markdown).toContain(NONCE)
-        }
-        yield* pause("archive")
-        return chunk
-      }),
     })
     yield* Effect.gen(function* () {
       const sessions = yield* Session.Service
@@ -104,6 +93,6 @@ for (const phase of ["model", "archive"] as const) for (const action of ["unchan
       yield* Deferred.succeed(second.release, undefined)
       yield* terminal(rebuilt.jobID, "completed", "applied")
       expect((yield* prepare(sessionID)).system[0]).toContain(SECOND)
-    }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)), Effect.provide(environment([first, second], { getModel, archive })))
+    }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)), Effect.provide(environment([first, second], { getModel })))
   }), 60_000)
 }
