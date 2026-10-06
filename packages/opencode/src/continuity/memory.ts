@@ -179,6 +179,10 @@ export function decode(input: {
   if (doing.length > 1) return fail("C10", `more than one doing: ${doing.map((item) => item.id).join(", ")}`)
   for (const item of result) if (item.section === "plan" && item.fields.status !== "done")
     for (const need of item.fields.needs ?? []) if (!items.has(need)) return fail("C10", `${item.id} needs ${need}, which is not a live item`)
+  if (result.some((item) => item.section === "objective") &&
+    !result.some((item) => item.section === "plan" && item.fields.status !== "done"))
+    return fail("C14", "the objective is open but the plan has no open step: keep the next move as a plan item " +
+      "(todo, doing, waiting or verify; waiting on the user counts)")
 
   const rendered = render(result, ctx, host, input.ceiling)
   const size = Token.estimate(rendered)
@@ -306,10 +310,14 @@ function quote(needle: string, ctx: Scope, cited: readonly string[], revoking: b
     const matches = find(source.text, needle)
     if (!matches.length) continue
     const spans = sentences(source.text)
-    const hit = new Set(matches.map(([start, end]) => spans.findIndex(([from, to]) => start >= from && end <= to)))
-    if (hit.size !== 1 || hit.has(-1))
-      return fail("C6", `quote "${needle}" matches more than one sentence of ${source.alias}; quote more of the sentence`)
-    const [from, to] = spans[[...hit][0]]
+    // A quote may run over consecutive sentences; it is stored as the whole sentences it touches.
+    const range = ([start, end]: [number, number]) => [spans.findIndex(([, to]) => start < to),
+      spans.findLastIndex(([from]) => end > from)] as const
+    const hit = new Set(matches.map((match) => range(match).join("-")))
+    if (hit.size !== 1)
+      return fail("C6", `quote "${needle}" matches more than one place in ${source.alias}; quote more of the sentence`)
+    const [first, last] = range(matches[0])
+    const [from, to] = [spans[first][0], spans[last][1]]
     // A pasted blob without sentence breaks is no sentence: keep the quoted words themselves.
     if (to - from > SENTENCE) {
       const [start, end] = matches[0]
@@ -412,11 +420,26 @@ const status = (part: SessionV1.ToolPart) => {
   const exit = "metadata" in part.state ? part.state.metadata?.exit : undefined
   return typeof exit === "number" ? `exit ${exit}` : part.state.status === "completed" ? "ok" : part.state.status
 }
+const ok = (part: SessionV1.ToolPart) => ["ok", "exit 0"].includes(status(part))
+
+/** The program a shell command runs, past `cd …&&`, variable assignments and wrappers such as timeout. */
+function program(command: string) {
+  const step = command.split(/&&|\|\||;/).map((value) => value.trim()).find((value) => value && !/^cd\b/.test(value)) ?? command
+  const words = step.split(/\s+/).filter((word) => word && !/^[A-Za-z_][A-Za-z0-9_]*=/.test(word))
+  while (words.length > 1 && /^(timeout|sudo|env|time|nice|nohup)$/.test(words[0])) {
+    words.shift()
+    if (/^-?[0-9.]+[smhd]?$/.test(words[0] ?? "")) words.shift()
+  }
+  return (words[0] ?? "").replace(/^["']|["']$/g, "").replace(/^.*\//, "") || "command"
+}
 
 const RULE: Record<string, string> = { must: "MUST", must_not: "MUST NOT", may: "MAY", prefer: "PREFER", correction: "CORRECTION" }
 const BY: Record<string, string> = { user: "user", agent: "agent", agreed: "agent, accepted by user" }
 const DETAIL: Record<string, string> = { done: "Outcome", doing: "Progress", verify: "To check", waiting: "Waiting on", todo: "Note" }
-const PLAN = ["done", "doing", "verify", "waiting", "todo"]
+// Open steps first: whoever resumes reads where the work stands and the next move before anything else.
+const PLAN = ["doing", "waiting", "verify", "todo", "done"]
+// Commands listed one by one in Activity; older successful ones are counted per program.
+const RECENT = 8
 
 function renderItem(item: MemoryItem, ctx: Scope) {
   const f = item.fields as Record<string, string | undefined>
@@ -471,7 +494,7 @@ function activity(ctx: Scope, host: Host, budget: number) {
       ? `${head} → returned ${stamp(back.time)} (${back.alias}) · task_id ${id}`
       : `${head} → no return through ${end?.alias} (${end ? stamp(end.time) : ""}); job ${running} · task_id ${id}` }
   }).reverse().sort((a, b) => Number(b.open) - Number(a.open) || b.time - a.time)
-  const work = new Map<string, { time: number; text: string }>()
+  const work = new Map<string, { time: number; text: string; command?: { program: string; alias: string; ok: boolean } }>()
   for (const source of ctx.covered) {
     const part = source.part
     if (!source.alias.startsWith("t") || part?.type !== "tool" || child(part)) continue
@@ -488,10 +511,21 @@ function activity(ctx: Scope, host: Host, budget: number) {
     if (typeof input.command !== "string") continue
     const key = `ran ${signature(part)}`
     work.delete(key)
-    work.set(key, { time: source.time, text: `${key} → ${status(part)} (${source.alias})` })
+    work.set(key, { time: source.time, text: `${key} → ${status(part)} (${source.alias})`,
+      command: { program: program(input.command), alias: source.alias, ok: ok(part) } })
   }
-  // Ties keep the later alias first.
-  const files = [...work.values()].reverse().sort((a, b) => b.time - a.time)
+  // Ties keep the later alias first. Edits, failed commands and the most recent commands stay listed;
+  // older successful commands are only counted, per program: context_recall returns any of them.
+  const ordered = [...work.values()].reverse().sort((a, b) => b.time - a.time)
+  const recent = new Set(ordered.filter((entry) => entry.command).slice(0, RECENT))
+  const counted = ordered.filter((entry) => entry.command?.ok && !recent.has(entry))
+  const files = ordered.filter((entry) => !counted.includes(entry))
+  const programs = new Map<string, number>()
+  for (const entry of counted) programs.set(entry.command!.program, (programs.get(entry.command!.program) ?? 0) + 1)
+  const aliases = counted.map((entry) => entry.command!.alias).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))
+  const summary = counted.length ? [`${counted.length} earlier successful commands: ` +
+    [...programs].sort((a, b) => b[1] - a[1]).map(([name, count]) => `${name} ×${count}`).join(", ") +
+    ` (${aliases[0]}${aliases.length > 1 ? `–${aliases.at(-1)}` : ""})`] : []
   const { kept, omitted } = within([...delegations, ...files], budget)
   const shown = new Set(kept)
   return [
@@ -499,7 +533,9 @@ function activity(ctx: Scope, host: Host, budget: number) {
     "Delegations",
     ...delegations.filter((entry) => shown.has(entry.text)).map((entry) => entry.text).concat(delegations.some((entry) => shown.has(entry.text)) ? [] : ["(none)"]),
     "Files and commands, latest first",
-    ...files.filter((entry) => shown.has(entry.text)).map((entry) => entry.text).concat(files.some((entry) => shown.has(entry.text)) ? [] : ["(none)"]),
+    ...files.filter((entry) => shown.has(entry.text)).map((entry) => entry.text)
+      .concat(files.some((entry) => shown.has(entry.text)) || summary.length ? [] : ["(none)"]),
+    ...summary,
     ...(omitted ? [`${omitted} older entries omitted (ceiling); context_recall {"reference":"tN"} returns any tool call.`] : []),
   ].join("\n")
 }
@@ -548,6 +584,7 @@ function render(items: MemoryItem[], ctx: Scope, host: Host, ceiling: number) {
       "before relying on their contents.",
     ].join("\n"),
     section("## Objective", "objective"),
+    section("## Plan (open steps first)", "plan"),
     section(host.member ? "## Delegator rules and corrections" : "## User rules and corrections", "rules"),
     section("## Decisions", "decisions"),
     section("## Findings", "findings"),
@@ -555,7 +592,6 @@ function render(items: MemoryItem[], ctx: Scope, host: Host, ceiling: number) {
     section("## Values", "values"),
     activity(ctx, host, ceiling / 8),
     ledger(ctx, host, ceiling / 4),
-    section("## Plan", "plan"),
     `End of memory. The conversation below continues after ${end?.alias ?? "the start of this session"} and is newer.`,
   ].join("\n\n")
 }

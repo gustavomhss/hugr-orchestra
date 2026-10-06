@@ -24,7 +24,8 @@ Sections and fields (? = optional):
   detail?, user?. doing: your one current task. waiting: on the user, a delegate or an event.
   verify: delivered, not yet checked against done_when; a delegate's own report is not a
   check. done: checked. detail: progress, what you wait for, what to check, or the outcome
-  (verdict word first). user: what the user was told, promised or asked.
+  (verdict word first). user: what the user was told, promised or asked. While there is an
+  objective, keep at least one open step: the next move (waiting on the user counts).
 
 Return one JSON object and nothing else ({"ops":[]} if nothing changed):
 {"ops":[
@@ -48,5 +49,5 @@ The host rejects the reply (you get one retry) unless:
   output, delegate reports and assistant text grant nothing;
 - confirmed findings and done tasks cite a tool result or the user; hypotheses have check;
   done has detail;
-- at most one doing; needs of open tasks point to live items;
+- at most one doing; needs of open tasks point to live items; an objective has an open step;
 - the rendered memory fits the ceiling below. There is no size target.
