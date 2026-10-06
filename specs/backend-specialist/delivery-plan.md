@@ -15,7 +15,7 @@ Status: 2026-10-06, live. Supersedes the open items of `execution-plan.md` §4-�
 | ID | Ruling |
 | --- | --- |
 | M3-1 | F3-D4 wins over F2.8: after compaction evicts the resume fold, the host re-pushes the same `RecordRef` once. |
-| M3-2 | A direct Session without a packet header stays unrestricted (today's behavior). A header (`task-id:`, `write-paths:`) at the top of the first user message binds the Session's logical task and write roots, fixed for the Session. |
+| M3-2 | Superseded 2026-10-06: Maestro is the only primary agent and the backend seat is a `subagent` (owner ruling 2026-10-05, landed with PR #22). Direct use is gone, so there is no direct-mode packet header; every packet comes from Maestro. |
 | M3-3 | Toolkit first cut: ast-grep 0.45.3 (npm route), sqlc 1.31.1, buf 1.73.0, gitleaks 8.30.1, kiota 1.35.0. OpenAPI Generator, protoc-gen-es, Orval and datamodel-code-generator are the second cut (they need a runtime closure). ogen and SQLx CLI are blocked: upstream ships no binaries and hosting is F5-D3/D8. |
 | M3-4 | Toolkit cache lives under the user cache (`Global.Path.cache/backend-toolkit`); a missing engine is fetched again. |
 | M3-5 | Skill copies are keyed `<version>-<digest12>`; old copies are kept (rollback is re-selecting an older install). F6.12's manifest is the embedded digest. |
@@ -51,8 +51,8 @@ Write sets are disjoint inside a wave. Files near the godfile limit: `tool/task.
 | WP | Writes | Delivers | Tests |
 | --- | --- | --- | --- |
 | W3-RESUME | new `maestro/{atlas-resume,atlas-resume-restore}.ts`, `tool/task.ts` (`memoryUnit`), `session/compaction.ts` (one call) | Once-only resume fold admission and residency restore | new `test/tool/task-atlas-resume.test.ts`, `test/session/atlas-resume-compaction.test.ts` |
-| W3-DIRECT | new `maestro/direct-packet.ts`, `session/native-tools.ts`, `session/prompt.ts` (in place) | Direct-use packet header binds taskId and write roots (M3-2) | new `test/maestro/direct-packet.test.ts`, `test/session/direct-backend-scope.test.ts` |
-| W3-EVAL | backend-bench `results/<date>/**` | Charter eval n≥3 per cell (v3a, Claude opus/sonnet + three free families) and the Go/pgx slice | report with per-cell k/3 |
+| W3-CHARTER | `agent/prompt/backend.txt`, `specs/backend-specialist/charter-draft.md`, `maestro/validation-record.ts` (roster hash ledger), `skills/backend-implement/**` direct-use wording | Charter v3c = v3a without direct use (one caller, Maestro; prose in English) | `roster-hash.test.ts` pin, `native-seat-label.test.ts` prompt assertions |
+| W3-EVAL | backend-bench `results/<campaign>/**` | Campaign `2026-10-06-n3` (v2 vs v3a, A6), then v3c n=3 on Claude before installing it, and the Go/pgx slice (A7) | report with per-cell k/3 |
 
 ## 4. Close
 
