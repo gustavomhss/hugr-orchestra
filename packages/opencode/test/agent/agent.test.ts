@@ -318,13 +318,13 @@ it.instance(
   "agent name can be overridden",
   () =>
     Effect.gen(function* () {
-      const maestro = yield* load((svc) => svc.get("maestro"))
-      expect(maestro?.name).toBe("Conductor")
+      const general = yield* load((svc) => svc.get("general"))
+      expect(general?.name).toBe("Generalist")
     }),
   {
     config: {
       agent: {
-        maestro: { name: "Conductor" },
+        general: { name: "Generalist" },
       },
     },
   },
