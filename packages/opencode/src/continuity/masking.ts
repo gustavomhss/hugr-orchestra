@@ -84,7 +84,10 @@ export function apply(messages: SessionV1.WithParts[], masks: Masks): SessionV1.
       parts: message.parts.map((part) => {
         const reference = masks.get(part.id)
         if (reference === undefined || !completed(part)) return part
-        return { ...part, state: { ...part.state, output: stub(part, reference), attachments: [] } }
+        // `read` skips nested rules that an earlier read in this view lists in `loaded`. The stub drops the
+        // reminder that carried them, so the masked copy must not list them as shown.
+        return { ...part, state: { ...part.state, output: stub(part, reference), attachments: [],
+          metadata: part.tool === "read" ? { ...part.state.metadata, loaded: [] } : part.state.metadata } }
       }),
     }
   })
