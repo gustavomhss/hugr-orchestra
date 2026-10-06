@@ -221,9 +221,9 @@ Exit / RunResult · OmniError.
   **`Drop` force-kills the tree immediately and does not block**; reaping runs on a dedicated thread, not on
   the tokio runtime, so it also works after the runtime shut down (INV-16).
 
-## Amendment (WP-H, proposed)
+## Amendment WP-H (approved by the lead, 2026-10-06)
 
-Additive; written by WP-H for the lead, who approves or rejects it at merge. Nothing above changes meaning. The
+Additive; written by WP-H, approved by the lead at merge. Nothing above changes meaning. The
 glossary keeps its 15 concepts: `configure` is placed under *spawn* and `backpressure` under *output*
 (`scripts/surface-check/parity.txt`).
 

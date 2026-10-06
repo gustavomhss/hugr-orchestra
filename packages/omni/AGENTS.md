@@ -42,7 +42,7 @@ by a lead decision. Their bodies and every private item belong to the module's o
 ## Rules that are never bent
 
 - **No shell, ever.** On Windows, `.cmd`/`.bat` run through `cmd.exe` with batch-safe quoting, or are refused.
-- **The host never forks,** installs no signal handler or exit hook, and never changes console state. All of that
+- **The host never forks,** installs no signal handler or process-exit hook, and never changes console state (a JS environment cleanup hook that stops that environment's trees is allowed: WP-H). All of that
   lives in the supervisor.
 - **Never observe child exit through tokio's process/SIGCHLD machinery** (INV-16). `tokio::process` is banned.
 - **No `unwrap`/`expect`/`panic` in library or supervisor code** (clippy denies it). Nothing may panic across FFI.

@@ -10,6 +10,7 @@
 // A v* tag or RELEASE=1 means --release. TEST_FILTER is passed to `cargo test`. Stops at the first failing step and
 // prints how long each step took.
 import { spawnSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const os = { linux: "linux", darwin: "darwin", win32: "windows" }[process.platform];
@@ -17,6 +18,12 @@ const release = process.argv.includes("--release") || process.env.RELEASE === "1
 const target = process.env.CARGO_TARGET_DIR ?? "target";
 const filter = (process.env.TEST_FILTER ?? "").split(" ").filter(Boolean);
 const lint = ["linux"];
+/** The skills and their references: their code blocks go through readme-check like the docs. */
+const skillDocs = () =>
+  readdirSync("skills").sort().flatMap((s) => [
+    `skills/${s}/SKILL.md`,
+    ...(readdirSync(`skills/${s}`).includes("references") ? readdirSync(`skills/${s}/references`).sort().map((r) => `skills/${s}/references/${r}`) : []),
+  ]);
 const npx = (...a) => ["npx", "-y", ...a];
 const tsc = (p) => npx("-p", "typescript@5", "tsc", "-p", p);
 
@@ -32,11 +39,13 @@ const steps = [
   { name: "file-size guard (own tests)", on: lint, cmd: ["python3", "scripts/test_file_size_guard.py"] },
   { name: "plan sections", on: lint, cmd: ["python3", "scripts/plan-sections-check.py"] },
   { name: "rustfmt", on: lint, cmd: ["cargo", "fmt", "--all", "--", "--check"] },
-  { name: "surface checks (own tests)", on: lint, release: true, cmd: ["node", "--test", "scripts/surface-check/surface.test.mjs", "scripts/guarantees-check/check.test.mjs"] },
+  { name: "surface checks (own tests)", on: lint, release: true, cmd: ["node", "--test", "scripts/surface-check/surface.test.mjs", "scripts/guarantees-check/check.test.mjs", "scripts/skill-check/check.test.mjs"] },
   { name: "surface parity", on: lint, cmd: ["node", "scripts/surface-check/parity.mjs"] },
   { name: "binding surface", on: lint, cmd: ["node", "scripts/surface-check/binding.mjs"] },
   { name: "guarantees ledger", on: lint, cmd: ["node", "scripts/guarantees-check/check.mjs"] },
   { name: "docs blocks (static)", on: lint, cmd: ["node", "scripts/readme-check/check.mjs", "--static"] },
+  { name: "skills", on: lint, cmd: ["node", "scripts/skill-check/check.mjs"] },
+  { name: "skill blocks (static)", on: lint, cmd: () => ["node", "scripts/readme-check/check.mjs", "--static", ...skillDocs()] },
   { name: "tsc", on: lint, cmd: tsc("bindings/node/tsconfig.json") },
   { name: "tsc (tests)", on: lint, cmd: tsc("bindings/node/test/tsconfig.json") },
   { name: "clippy", cmd: ["cargo", "clippy", "--workspace", "--all-targets", "--", "-D", "warnings"] },
@@ -67,6 +76,7 @@ const steps = [
     { name: `TS ${t} (deno)`, release: true, cmd: npx("deno@2", "run", "-A", `bindings/node/test/${t}.mjs`) },
   ]),
   { name: "docs blocks (run)", release: true, cmd: ["node", "scripts/readme-check/check.mjs"] },
+  { name: "skill blocks (run)", release: true, cmd: () => ["node", "scripts/readme-check/check.mjs", ...skillDocs()] },
   { name: "K4 (release build)", release: true, cmd: ["cargo", "build", "--release", "--workspace", "--bins"] },
   { name: "K4", release: true, cmd: ["cargo", "test", "--release", "-p", "hugr-omni", "--no-fail-fast", "--", "k4"] },
   ...packageSteps(),
