@@ -1,6 +1,6 @@
 # atlas-tools — Reference
 
-> owner: charlie (FORGE) · grounding: claims checked against `spec/atlas.md` §6, §6.1, A-2, A-3, A-5, A-6, A-10, and the acceptance fences §8 · status: draft
+> owner: backend (FORGE) · grounding: claims checked against `spec/atlas.md` §6, §6.1, A-2, A-3, A-5, A-6, A-10, and the acceptance fences §8 · status: draft
 
 ## Purpose
 

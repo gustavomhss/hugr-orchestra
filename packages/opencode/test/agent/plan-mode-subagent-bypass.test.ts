@@ -70,12 +70,12 @@ it.instance("subagent's own read-only restriction remains effective", () =>
   }),
 )
 
-it.instance("Task agent lookup resolves Charlie and Lucy", () =>
+it.instance("Task agent lookup resolves the backend specialist and Lucy", () =>
   Effect.gen(function* () {
-    const charlie = yield* Agent.use.get("charlie")
+    const backend = yield* Agent.use.get("backend")
     const lucy = yield* Agent.use.get("lucy")
 
-    expect(charlie?.mode).toBe("subagent")
+    expect(backend?.mode).toBe("all")
     expect(lucy?.mode).toBe("subagent")
   }),
 )

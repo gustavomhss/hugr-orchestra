@@ -76,7 +76,7 @@ discard in `service.ts`.
   `done` cite any `t` alias, including a delegate's own return. The binding itself is producer
   judgment: no check confirms that the user's sentence limits the rule to that task.
 - **Failure scenarios:**
-  1. Rule m2 is `MUST NOT, for m37: Do not push to main while the release runs`. Charlie's card
+  1. Rule m2 is `MUST NOT, for m37: Do not push to main while the release runs`. The backend specialist's card
      t130 says "release done". The producer emits `update m37 {"status":"done","detail":"Released"}`
      with `src: ["t130"]`. C9 passes, and the prohibition stops rendering while the release is
      still running. This is the R14 scenario; it moved from `retire` to `update`.
@@ -206,9 +206,9 @@ discard in `service.ts`.
 - **Problem:** `resolvePromptParts` receives only a template string, and `command()`, the task tool
   and `maestro_request_review` all share it. If the marker is set there, every delegation brief
   becomes a "command expansion", and its user text is an invocation that does not exist.
-- **Failure scenario:** Charlie's session reaches the trigger. u1, Maestro's brief, has no user
+- **Failure scenario:** The backend specialist's session reaches the trigger. u1, Maestro's brief, has no user
   text, so the alias u1 does not exist. The producer adds the objective citing u1, and C4 fails
-  because the alias does not exist. The retry fails, three passes open the breaker, and Charlie's
+  because the alias does not exist. The retry fails, three passes open the breaker, and the backend specialist's
   session overflows into native compaction. Even without that failure, the "Delegator rules"
   section stays empty for the whole session. A second, smaller gap: messages persisted before the
   upgrade carry no marker, so in sessions that span the upgrade, old command expansions (including
@@ -230,7 +230,7 @@ discard in `service.ts`.
      C7's own "Prevents" column claims to stop "a delegate report or the agent … changing the
      user's goal".
 - **Failure scenario:**
-  - `update m1 {"done_when":"Charlie's gates pass"}` with `src: ["t130"]` passes every check, and the
+  - `update m1 {"done_when":"The backend specialist's gates pass"}` with `src: ["t130"]` passes every check, and the
     owner's acceptance criterion becomes a delegate's.
   - `update m14 {"decision":"A loose output format is fine"}` with `src: ["a88"]` rewrites a user
     decision while the owner's quoted sentence still renders under it.

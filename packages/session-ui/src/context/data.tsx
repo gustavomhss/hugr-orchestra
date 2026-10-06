@@ -17,6 +17,7 @@ export type NormalizedProviderListResponse = {
 
 type Data = {
   agent?: {
+    id?: string
     name: string
     color?: string
   }[]

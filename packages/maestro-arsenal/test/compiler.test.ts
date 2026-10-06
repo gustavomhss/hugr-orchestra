@@ -7,6 +7,7 @@ import { detectBriefUsage } from "../src/engine/brief-usage.ts";
 import { detectSymbolFlow } from "../src/engine/symbol-flow.ts";
 import { runDecompose } from "../src/engine/run-decompose.ts";
 import { computeBaseline, verifyInProject } from "../src/engine/verify-in-project.ts";
+import { rethrow } from "./rejection.ts";
 
 test("compiler oracle sees known bad source before clean source", async () => {
   const f = await fixture();
@@ -23,15 +24,15 @@ test("compiler oracle sees known bad source before clean source", async () => {
 test("compiler acquisition failure: invalid tsconfig never empty diagnostics", async () => {
   const f = await fixture({ "tsconfig.json": "{ invalid json", "target.ts": "export const x = 1" });
   try {
-    await expect(compile({ files: { "target.ts": "export const x = 1" }, targetPath: "target.ts" }, f.context)).rejects.toThrow("COMPILER_CONFIG_FAILED");
-    await expect(runDecompose({ targetPath: "target.ts", k: 0 }, f.context)).rejects.toThrow("PARTITION_COUNT_INVALID");
+    expect(await rethrow(compile({ files: { "target.ts": "export const x = 1" }, targetPath: "target.ts" }, f.context))).toThrow("COMPILER_CONFIG_FAILED");
+    expect(await rethrow(runDecompose({ targetPath: "target.ts", k: 0 }, f.context))).toThrow("PARTITION_COUNT_INVALID");
   } finally { await f.cleanup(); }
 });
 
 test("brief set difference and real unused compiler harvest; omitted acquisition rejected", async () => {
   const f = await fixture();
   try {
-    await expect(detectBriefUsage({ declared: ["x"] })).rejects.toThrow("BRIEF_ACQUISITION_MISSING");
+    expect(await rethrow(detectBriefUsage({ declared: ["x"] }))).toThrow("BRIEF_ACQUISITION_MISSING");
     expect(await detectBriefUsage({ declared: ["x", "y"], available: { exports: [], helpers: ["x"], importNames: [] } })).toMatchObject({ overSpec: ["y"], ok: false });
     expect(await detectBriefUsage({ declared: ["unused"], source: "const unused = 1; export const used = 2;" }, f.context)).toMatchObject({ overSpec: ["unused"], ok: false });
     expect(await detectBriefUsage({ declared: ["used"], source: "const used = 1; export const consumer = used;" }, f.context)).toMatchObject({ overSpec: [], ok: true });
@@ -44,8 +45,8 @@ test("actual cross-WP flow and valid import, malicious file paths rejected", asy
     const wps = [{ id: "owner", files: [{ path: "owner.ts", source: "const helper = 1;" }] }, { id: "consumer", files: [{ path: "consumer.ts", source: "export const consumer = helper;" }] }];
     expect(await detectSymbolFlow({ wps }, f.context)).toMatchObject({ ok: false, undeclaredFlows: [{ symbol: "helper", from: "owner", to: "consumer" }] });
     expect(await detectSymbolFlow({ wps: [{ id: "owner", files: [{ path: "owner.ts", source: "export const helper = 1;" }] }, { id: "consumer", files: [{ path: "consumer.ts", source: "import { helper } from './owner'; export const consumer = helper;" }] }] }, f.context)).toMatchObject({ ok: true, undeclaredFlows: [] });
-    await expect(detectSymbolFlow({ wps: [{ id: "evil", files: [{ path: "../escape.ts", source: "export const x = 1" }] }] }, f.context)).rejects.toThrow("FLOW_PATH_INVALID");
-    await expect(detectSymbolFlow({ wps: [] }, f.context)).rejects.toThrow("FLOW_EMPTY_INPUT");
+    expect(await rethrow(detectSymbolFlow({ wps: [{ id: "evil", files: [{ path: "../escape.ts", source: "export const x = 1" }] }] }, f.context))).toThrow("FLOW_PATH_INVALID");
+    expect(await rethrow(detectSymbolFlow({ wps: [] }, f.context))).toThrow("FLOW_EMPTY_INPUT");
   } finally { await f.cleanup(); }
 });
 
@@ -80,22 +81,22 @@ test("compiler symlink escape and denied process fail closed", async () => {
   try {
     await writeFile(join(f.base, "outside.ts"), "export const outside = 1");
     await symlink(join(f.base, "outside.ts"), join(f.context.directory, "outside.ts"));
-    await expect(compile({ files: { "input.ts": "import { outside } from './outside'; export const x = outside" } }, f.context)).rejects.toThrow("COMPILER_PATH_ESCAPE");
-    await expect(compile({ files: { "input.ts": "export const x = 1" } }, { ...f.context, async authorize(request) { if (request.effect === "process") throw new Error("PROCESS_DENIED"); } })).rejects.toThrow("PROCESS_DENIED");
+    expect(await rethrow(compile({ files: { "input.ts": "import { outside } from './outside'; export const x = outside" } }, f.context))).toThrow("COMPILER_PATH_ESCAPE");
+    expect(await rethrow(compile({ files: { "input.ts": "export const x = 1" } }, { ...f.context, async authorize(request) { if (request.effect === "process") throw new Error("PROCESS_DENIED"); } }))).toThrow("PROCESS_DENIED");
   } finally { await f.cleanup(); }
 });
 
 test("decompose explicit authorized materialization, denied writes and overwrite refusal", async () => {
   const f = await fixture({ "target.ts": "export const A = 1;\nexport const B = 2;\n" });
   try {
-    await expect(runDecompose({ targetPath: "target.ts", k: 2, materialize: { directory: "output" } }, { ...f.context, async authorize(request) { if (request.effect === "write") throw new Error("WRITE_DENIED"); } })).rejects.toThrow("WRITE_DENIED");
+    expect(await rethrow(runDecompose({ targetPath: "target.ts", k: 2, materialize: { directory: "output" } }, { ...f.context, async authorize(request) { if (request.effect === "write") throw new Error("WRITE_DENIED"); } }))).toThrow("WRITE_DENIED");
     expect(await readdir(f.context.directory)).toEqual(["target.ts"]);
     const result = await runDecompose({ targetPath: "target.ts", k: 2, materialize: { directory: "output" } }, f.context);
     expect(result.mode).toBe("GREEN");
     expect((await readdir(join(f.context.directory, "output"))).sort()).toEqual(["barrel.ts", "m1.ts", "m2.ts"]);
-    await expect(runDecompose({ targetPath: "target.ts", k: 2, materialize: { directory: "output" } }, f.context)).rejects.toThrow("MATERIALIZATION_COLLISION");
+    expect(await rethrow(runDecompose({ targetPath: "target.ts", k: 2, materialize: { directory: "output" } }, f.context))).toThrow("MATERIALIZATION_COLLISION");
     expect(await Bun.file(join(f.context.directory, "target.ts")).text()).toBe("export const A = 1;\nexport const B = 2;\n");
     await writeFile(join(f.context.directory, "unsupported.ts"), "export const A = 1, B = 2;\nexport const C = 3;");
-    await expect(runDecompose({ targetPath: "unsupported.ts", k: 2 }, f.context)).rejects.toThrow("DECOMPOSE_UNSUPPORTED_SYNTAX");
+    expect(await rethrow(runDecompose({ targetPath: "unsupported.ts", k: 2 }, f.context))).toThrow("DECOMPOSE_UNSUPPORTED_SYNTAX");
   } finally { await f.cleanup(); }
 }, 90000);

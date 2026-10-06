@@ -165,7 +165,7 @@ out-of-vocabulary slot REFUSED at exit 2 naming the value, the vocabulary and th
 behaviour explicit, tested and documented ∧ `tsc -b` clean ∧ every `harness/gates/*.mjs` exit 0 by name ∧
 the suite reconciled against `origin/master` with the literal delta.
 
-owner: KNOWLEDGE territory · builder_id: `charlie`
+owner: KNOWLEDGE territory · builder_id: `backend`
 
 ---
 

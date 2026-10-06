@@ -38,7 +38,7 @@ function fixture() {
             freshness: "FRESH",
           },
         ],
-        shape: { contents: [], owner: "charlie", tier: "T1" },
+        shape: { contents: [], owner: "backend", tier: "T1" },
         edges: { dependents: [], dependencies: [] },
         gotchas: [],
         memory: null,
@@ -62,7 +62,7 @@ function fixture() {
   const verified = verifyHostContext({
     projectId: "p1",
     catalog: publishTerritoryCatalog("p1", [
-      { name: "finance", owner: "charlie", tier: "T1", globs: ["crates/**"] },
+      { name: "finance", owner: "backend", tier: "T1", globs: ["crates/**"] },
       { name: "platform", owner: "maestro", tier: "T0", globs: ["services/**"] },
     ]),
     snapshotContent,
@@ -71,7 +71,7 @@ function fixture() {
   })
   if (verified.status !== "READY") throw new Error(JSON.stringify(verified))
   return {
-    actor: { memberId: "charlie", projectId: "p1", sessionId: "s1" },
+    actor: { memberId: "backend", projectId: "p1", sessionId: "s1" },
     revision: { id: "r1", hash: "c".repeat(64), projectId: "p1", sessionId: "s1" },
     territories: ["platform", "finance"],
     units: unitIds.slice(0, 2),
@@ -152,7 +152,7 @@ describe("ContextToolPlan canonical offline boundary", () => {
     expect(plan.version).toBe("context-tool-plan-v1")
     expect(plan.actor).toEqual(input.actor)
     expect(plan.actorBytes).toBe(
-      '{"memberId":"charlie","projectId":"p1","sessionId":"s1","version":"maestro-actor-v1"}',
+      '{"memberId":"backend","projectId":"p1","sessionId":"s1","version":"maestro-actor-v1"}',
     )
     expect(plan.planRevision).toEqual({ id: "r1", hash: "c".repeat(64) })
     expect(plan.catalogVersion).toBe(input.context.catalogVersion)
@@ -253,7 +253,7 @@ describe("ContextToolPlan canonical offline boundary", () => {
   })
 
   test.each([
-    ["display name", { memberId: "Charlie" }, "actor-invalid"],
+    ["display name", { memberId: "Backend" }, "actor-invalid"],
     ["unknown member", { memberId: "outsider" }, "actor-invalid"],
     ["empty project", { projectId: "" }, "actor-invalid"],
     ["control session", { sessionId: "s1\n" }, "actor-invalid"],

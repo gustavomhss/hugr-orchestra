@@ -68,7 +68,7 @@ all 12 flagged `behavioural`, tradeoffs recorded per-row.
 - ✅ **U2 / KERNEL-10** — CLOSED. The invariant now resolves by OR-Set union + `contentHash` tie-break; the
   seq-LWW branch that caused the U2 resurrection bug is removed (ADR-K10 records the rejected alternative).
 - ✅ **spec↔ref contradiction (KRN)** — none found; KERNEL-9/10/11 cohere with `spec §3.2` + the event-log fold.
-- ✅ **owner** — `atlas-kernel.md` now `owner: charlie (FORGE)` (assigned at freeze; the KRN formal-merge core
+- ✅ **owner** — `atlas-kernel.md` now `owner: backend (FORGE)` (assigned at freeze; the KRN formal-merge core
   is architecture-reviewed by bobby). Closed.
 - ✅ **behavioural flag** — all 12 KRN invariants are behavioural (each has a testable acceptance); tagged.
 
@@ -385,7 +385,7 @@ rows re-home as:
 
 **A. `owner: TBD` doc-metadata — ✅ DONE (7 blocks, owner scheme = by seat/kit).** All seven `owner: TBD`
 headers assigned (the freeze-review caught that it was **7, not 6** — atlas-tools was unlisted): KRN·GRD·RET·
-PST·IDX·TLS → **charlie (FORGE)** (backend subsystems); GEN → **jimmy (COMPASS)** (mining/genesis domain).
+PST·IDX·TLS → **backend (FORGE)** (backend subsystems); GEN → **jimmy (COMPASS)** (mining/genesis domain).
 (MEM=`orchestrator`, KNW=`reconcile/lead` were already assigned.) Cross-cutting: the FR-12 safety concern is
 **billy (FORTRESS)**'s domain; the KRN formal-merge core is architecture-reviewed by **bobby**; T0 ratification
 stays human (owner). Zero `owner: TBD` remain — the freeze predicate holds.

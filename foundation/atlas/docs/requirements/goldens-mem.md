@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-mem.md`; every MEM INV method-tagged, no `formal` cluster — MEM only consumes kernel seams) ·
-> **owner:** charlie (FORGE). MEM carries **no** `FSPEC` (the one Atlas `formal` model, `FSPEC-merge`, lives in KRN).
+> **owner:** backend (FORGE). MEM carries **no** `FSPEC` (the one Atlas `formal` model, `FSPEC-merge`, lives in KRN).
 >
 > **Derivation (not hand-authored where a generator exists):**
 >

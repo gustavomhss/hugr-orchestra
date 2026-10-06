@@ -105,15 +105,17 @@ runs:
         fi
       shell: bash
 
+    # Only dev saves (cache-warm): every other ref can read dev's entries, while a 700 MB copy saved by each
+    # test:ci branch pushed the repository past its 10 GB quota and evicted dev's caches.
     - name: Save Bun dependencies
-      if: runner.os != 'Windows' && steps.bun-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      if: runner.os != 'Windows' && steps.bun-cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/dev'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.cache.outputs.dir }}
         key: ${{ steps.keys.outputs.bun }}
 
     - name: Save Windows node_modules
-      if: runner.os == 'Windows' && inputs.install-flags == '' && steps.modules-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      if: runner.os == 'Windows' && inputs.install-flags == '' && steps.modules-cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/dev'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |

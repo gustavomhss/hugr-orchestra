@@ -13,6 +13,8 @@ import { EventV2Bridge } from "../event-v2-bridge"
 import { verifyGovernedTask } from "./governed-task"
 import { taskHash } from "./task-hash"
 import { recordApproval } from "./approval-record"
+import { canonicalMemberId } from "./roster"
+import { WriteRoots } from "./write-roots"
 
 export function childPermissions(input: { parent: Session.Info; next: Agent.Info; primaryTools?: string[] }) {
   const inherited = deriveSubagentSessionPermission({
@@ -301,10 +303,13 @@ function requireReservation(
     existing.callID !== reservation.callID ||
     existing.childSessionID !== reservation.childSessionID ||
     existing.parentSessionID !== reservation.parentSessionID ||
-    existing.agent !== reservation.agent
+    canonicalMemberId(existing.agent) !== reservation.agent
   ) {
     throw new Error("Governed Task denied: reservation-binding-mismatch")
   }
+  // The reservation binds the backend seat's write roots; a replay that asks for others is refused, never widened.
+  if (JSON.stringify(WriteRoots.read(existing.permission)) !== JSON.stringify(WriteRoots.read(reservation.permission)))
+    throw new Error("Governed Task denied: reservation-write-roots-mismatch")
   return existing.permission
 }
 

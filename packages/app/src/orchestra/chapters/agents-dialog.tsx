@@ -2,6 +2,7 @@ import { For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Agent, AgentFileInfo, AgentFileInput } from "@opencode-ai/sdk/v2/client"
 import { useLanguage } from "@/context/language"
+import { agentKey } from "@/context/agent-identity"
 import {
   AGENT_MODES,
   agentDraft,
@@ -81,7 +82,8 @@ export function AgentDialog(props: {
     if (!agent) return
     setState({ phase: "loading", loadError: "" })
     props
-      .load(agent.name)
+      // Agent files are keyed by the stable id; the display name is configurable.
+      .load(agentKey(agent))
       .then((file) => {
         setDraft(agentDraft(agent, file))
         setState({ phase: "edit", file })

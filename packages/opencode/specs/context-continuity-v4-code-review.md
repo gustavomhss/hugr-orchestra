@@ -155,9 +155,9 @@ that child session (`returns.get(id) === source`). Resuming the same `task_id` (
 tag in provenance and its `returned (member)` word in the index. Spec 2.5 says unchanged items
 render to identical bytes. Spec 1.2 says a delegation-return source carries the member name.
 
-**Failure scenario.** This is P2. In spec 7.5, Maestro re-briefs Charlie on the same `task_id`.
-After that, every finding or plan item citing Charlie's first card renders `(t130)` instead of
-`(t130 charlie)`. The reader can no longer see that the evidence is a delegate's self-report, even
+**Failure scenario.** This is P2. In spec 7.5, Maestro re-briefs the backend specialist on the same `task_id`.
+After that, every finding or plan item citing the backend specialist's first card renders `(t130)` instead of
+`(t130 backend)`. The reader can no longer see that the evidence is a delegate's self-report, even
 though the item itself was never touched.
 
 **Smallest fix.** Make `returned()` stateless: a source is a return if it is a task-return notice,

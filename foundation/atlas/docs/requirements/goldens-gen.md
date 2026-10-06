@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-gen.md`; every INV method-tagged, **no** FSPEC in GEN — the sole Atlas formal model is `FSPEC-merge`, Block KRN) ·
-> **owner:** charlie (FORGE); genesis domain authored by jimmy (COMPASS). GEN is the **largest block** (75 REQ over 16 INV).
+> **owner:** backend (FORGE); genesis domain authored by jimmy (COMPASS). GEN is the **largest block** (75 REQ over 16 INV).
 >
 > **Derivation (generated from the S2 method-tag — hand-authored only for true residue; GEN has none):**
 >
@@ -960,7 +960,7 @@ gen: conformance
 
 ## Held-out second fixtures (Wave H · execution-GATE held-out leg → FULL assurance)
 
-> **state:** S3 re-freeze (Wave H) · **owner:** charlie (FORGE) · **grounds:** invents **no** behaviour —
+> **state:** S3 re-freeze (Wave H) · **owner:** backend (FORGE) · **grounds:** invents **no** behaviour —
 > each `-2` SCN witnesses the _same_ INV branch + teeth as its `-1` sibling on a **genuinely independent**
 > fixture (different repo skeleton, mined candidate set, ranked frontier, budget, resume token). The GATE
 > holds this second fixture back from the builder; an implementation that memorised the acme-repo fixture-1

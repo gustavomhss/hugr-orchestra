@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { fetchSessionExport, sessionExportFilename } from "./session-export"
 import type { Message, Part, Session } from "@opencode-ai/sdk/v2/client"
+import { rethrow } from "../testing/rejection"
 
 describe("sessionExportFilename", () => {
   test("generates filename from title", () => {
@@ -52,10 +53,12 @@ describe("fetchSessionExport", () => {
     }
 
     expect(
-      fetchSessionExport({
-        sessionID: "ses_missing",
-        client,
-      }),
-    ).rejects.toThrow("Session not found: ses_missing")
+      await rethrow(
+        fetchSessionExport({
+          sessionID: "ses_missing",
+          client,
+        }),
+      ),
+    ).toThrow("Session not found: ses_missing")
   })
 })

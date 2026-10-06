@@ -50,6 +50,8 @@ import { EffectBridge } from "@/effect/bridge"
 import { ArsenalVerification } from "@/maestro/arsenal-verification"
 import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
+import { canonicalMemberId } from "./roster"
+import { WriteRoots } from "./write-roots"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -316,7 +318,7 @@ export const make = Effect.gen(function* () {
       )(calls[0].data)
       if (Option.isNone(call)) return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-invalid" })
       const actor = yield* agents.get(call.value.state.input.subagent_type)
-      if ((actor.id ?? actor.name) !== child.agent)
+      if ((actor.id ?? actor.name) !== canonicalMemberId(child.agent))
         return yield* new ToolSafety.Denied({ reason: "completion-native-task-agent-mismatch" })
       const rows = yield* database.db
         .select()
@@ -339,7 +341,7 @@ export const make = Effect.gen(function* () {
           reserved.sessionID !== session.id ||
           reserved.parentSessionID !== session.id ||
           reserved.projectID !== session.projectID ||
-          reserved.agent !== child.agent ||
+          canonicalMemberId(reserved.agent) !== canonicalMemberId(child.agent) ||
           (input.planID !== undefined && reserved.planRevisionID !== input.planID) ||
           !isDeepStrictEqual(reserved.permission, child.permission)
         )
@@ -363,7 +365,7 @@ export const make = Effect.gen(function* () {
           validation.projectID !== session.projectID ||
           reserved.sessionID !== session.id ||
           reserved.projectID !== session.projectID ||
-          reserved.routedMemberID !== child.agent ||
+          canonicalMemberId(reserved.routedMemberID) !== canonicalMemberId(child.agent) ||
           authorization.sessionID !== session.id ||
           authorization.projectID !== session.projectID ||
           (input.planID !== undefined && validation.planRevisionID !== input.planID) ||
@@ -607,7 +609,7 @@ export const make = Effect.gen(function* () {
         Effect.gen(function* () {
           const local = yield* InstanceState.get(state).pipe(Effect.orDie)
           return yield* effect.pipe(
-            Effect.provideService(ToolSafety.RuntimeProfileLoader, local.loadProfile),
+            Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, session)),
             Effect.provideService(ArsenalCompletion.NativeHost, host),
             Effect.provideService(ToolSafety.NativeHost, approvalHost),
             Effect.provideService(ToolSafety.NativeContext, { directory: session.directory, projectID: session.projectID }),

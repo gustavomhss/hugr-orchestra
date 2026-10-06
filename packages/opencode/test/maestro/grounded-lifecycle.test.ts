@@ -99,7 +99,7 @@ const prepare = Effect.fn("GroundedLifecycleTest.prepare")(function* () {
                 freshness: "FRESH",
               },
             ],
-            shape: { contents: ["src/owned.ts"], owner: "charlie", tier: "T1" },
+            shape: { contents: ["src/owned.ts"], owner: "backend", tier: "T1" },
             edges: { dependents: [], dependencies: [] },
             gotchas: [],
             advisory: [],
@@ -122,7 +122,7 @@ const prepare = Effect.fn("GroundedLifecycleTest.prepare")(function* () {
     path.join(test.directory, ".atlas/TERRITORY-CATALOG.json"),
     JSON.stringify(
       publishTerritoryCatalog(instance.project.id, [
-        { name: "backend", owner: "charlie", tier: "T1", globs: ["src/**"] },
+        { name: "backend", owner: "backend", tier: "T1", globs: ["src/**"] },
       ]),
     ),
   )
@@ -216,7 +216,7 @@ it.instance(
         projectID: data.session.projectID,
         workCardID: "grounded-card",
         workCard: "# Card\nBounded backend work.\n",
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validation-v1",
         checks: [{ id: "source", status: "PASS", detail: "current" }],
@@ -288,7 +288,7 @@ it.instance(
         time: { created: Date.now() },
       }
       yield* sessions.updateMessage(assistant)
-      const intent = { subagentType: "charlie", prompt: "Implement exact backend behavior" }
+      const intent = { subagentType: "backend", prompt: "Implement exact backend behavior" }
       const presentation = yield* presentApprovalFromSession({
         sessionID: data.session.id,
         assistantMessageID: assistant.id,
@@ -352,7 +352,7 @@ it.instance(
         {
           description: "grounded backend",
           prompt: intent.prompt,
-          subagent_type: "charlie",
+          subagent_type: "backend",
           authorizationID: authorization.id,
         },
         {
@@ -377,7 +377,7 @@ it.instance(
                     id: MessageID.ascending(),
                     role: "user",
                     sessionID: input.sessionID,
-                    agent: "charlie",
+                    agent: "backend",
                     model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test") },
                     time: { created: Date.now() },
                   })
@@ -386,8 +386,8 @@ it.instance(
                     id: MessageID.ascending(),
                     parentID: childUser.id,
                     sessionID: input.sessionID,
-                    agent: "charlie",
-                    mode: "charlie",
+                    agent: "backend",
+                    mode: "backend",
                     finish: "stop",
                     time: { created: Date.now() },
                   }

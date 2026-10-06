@@ -3,7 +3,7 @@
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-idx.md`; every INDEX-1..16 method-tagged, **0 `formal`** — the Atlas's one
 > `formal` cluster is `FSPEC-merge` in KRN; IDX is the addressing substrate, not a convergence core) ·
-> **owner:** charlie (FORGE).
+> **owner:** backend (FORGE).
 >
 > **Derivation (generated from the S2 method-tag, not hand-authored where a generator exists):**
 >
@@ -49,7 +49,7 @@ by scip-typescript). C's `coChanged` git-history band = {P, Q}.
 
 | decl | name  | owner   | tier | globs         |
 | ---- | ----- | ------- | ---- | ------------- |
-| 0    | atlas | charlie | T0   | `core/**`     |
+| 0    | atlas | backend | T0   | `core/**`     |
 | 1    | cas   | dana    | T1   | `core/cas/**` |
 
 `core/cas/cas.ts` is matched by **both** globs → longest-path-match `core/cas/**` (dana, T1) wins.
@@ -930,10 +930,10 @@ gen: PBT # `index/ref/territory.ts`
 ### SCN-INDEX-14b-1 — overlapping globs resolve by longest-path-match, then declaration order (happy)
 
 source: REQ-INDEX-14b
-Given `T0{owner:charlie, globs:["core/**"], decl0}` and `T1{owner:dana, globs:["core/cas/**"], decl1}`, unit `"core/cas/cas.ts"` matched by both
+Given `T0{owner:backend, globs:["core/**"], decl0}` and `T1{owner:dana, globs:["core/cas/**"], decl1}`, unit `"core/cas/cas.ts"` matched by both
 When `assign` runs
 Then the unit resolves to a single `{owner:dana, tier:T1}` — `"core/cas/**"` is the longer path-match (declaration order is only the tiebreak when specificity ties)
-teeth: breaks-on "the tie-break is mutated to first-declaration-wins regardless of specificity — the unit resolves to charlie (the shorter glob), violating longest-path-match"
+teeth: breaks-on "the tie-break is mutated to first-declaration-wins regardless of specificity — the unit resolves to backend (the shorter glob), violating longest-path-match"
 gen: PBT # tie-break law witness (cf. RETR-6 drop-order)
 
 ### REQ-INDEX-14c — assignment byte-identical across rebuilds (happy)
@@ -995,9 +995,9 @@ gen: PBT
 ### SCN-INDEX-15a-1 — [DEFINE-parametric] where owner-generation is enabled, owner is generated from graph + blame (happy)
 
 source: REQ-INDEX-15a
-Given owner-generation **ENABLED** (the optional feature), an empty manifest, and structural graph + git-blame showing charlie authored 80% of `territory:cas`
+Given owner-generation **ENABLED** (the optional feature), an empty manifest, and structural graph + git-blame showing backend authored 80% of `territory:cas`
 When `reconcile(graph, blame, manifest)` runs
-Then `territory:cas` owner is generated = charlie, deterministically from graph+blame, `$0`-LLM
+Then `territory:cas` owner is generated = backend, deterministically from graph+blame, `$0`-LLM
 teeth: breaks-on "with generation enabled, `owner` is left null/unassigned despite blame evidence — the SHOULD-projected generation path is a no-op"
 gen: conformance # differential vs `index/ref/ownership.ts`; feature-gated (optional)
 
@@ -1012,10 +1012,10 @@ gen: conformance # differential vs `index/ref/ownership.ts`; feature-gated (opti
 ### SCN-INDEX-15b-1 — an explicit manifest override beats the generated owner (guard)
 
 source: REQ-INDEX-15b
-Given a generated owner for `territory:cas` = charlie, and an explicit manifest override `owner = dana`
+Given a generated owner for `territory:cas` = backend, and an explicit manifest override `owner = dana`
 When reconciliation applies the override-precedence layer
 Then the resolved owner is dana — the explicit override wins
-teeth: breaks-on "the generated owner beats the override — resolved owner is charlie despite the explicit `dana` override (precedence inverted)"
+teeth: breaks-on "the generated owner beats the override — resolved owner is backend despite the explicit `dana` override (precedence inverted)"
 gen: conformance
 
 ### SCN-INDEX-15b-2 — [held-out] an explicit manifest override beats the generated owner (guard)

@@ -15,7 +15,17 @@ import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { lookupRouteGrant } from "./route-grant"
-import { lookupRosterMember, nativeProfiles, roster, type RosterMember } from "./roster"
+import { omit, pick } from "remeda"
+import {
+  canonicalMemberId,
+  LEGACY_BACKEND_ID,
+  lookupRosterMember,
+  nativeProfiles,
+  renderPrompt,
+  roster,
+  type Roster,
+  type RosterMember,
+} from "./roster"
 import { contextIsCurrent, readContext } from "./context-record"
 
 type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
@@ -114,8 +124,70 @@ function stable(value: unknown): string {
   return JSON.stringify(value)
 }
 
+// F1.4: new records bind behavior, not presentation. v2 hashes project each member without its display label (prompts
+// stay label templates) and tag the preimage with their version, so no v2 hash can equal a v1 hash. v1 hashed the full
+// members with their default labels rendered into the prompts; records holding it stay verifiable and are never
+// rewritten. Hashes stay bare hex because authorization receipts require that shape.
+const ROSTER_V2 = "maestro-roster-v2"
+const REVIEW_POLICY_V2 = "maestro-review-policy-v2"
+
+export function rosterHash(members: Roster) {
+  return hash({ version: ROSTER_V2, members: members.map(behavior) })
+}
+
+// Hashes of superseded rosters. Recomputing them from the current prompts stops working once any prompt changes, so
+// when the roster changes its previous current hash is recorded here (roster-hash.test pins the current hash to force it).
+// A Map, not an object literal: a recorded value such as "constructor" must never find an inherited entry.
+const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
+  ["fab95c176e80b185e87f31599aa9f0008d4a35d9ff4c01f9a9d19cb8df149a45", "maestro-roster-v1"],
+  // Before the backend seat's stable id became `backend`.
+  ["5a2df5f95e6c6783322fcf59f39af317639f9fdec9ad1a704e4b9ad75661ea3a", ROSTER_V2],
+  // Backend charter v2, before the v3a checks rule.
+  ["8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", ROSTER_V2],
+])
+const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
+  ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
+])
+
+/** The hash version a recorded roster hash verifies under against `members`, if any. */
+export function verifyRosterHash(recorded: string, members: Roster) {
+  if (recorded === rosterHash(members) || recorded === rosterHash(members.map(preRename))) return ROSTER_V2
+  if (recorded === hash(members.map((member) => legacy(preRename(member))))) return "maestro-roster-v1"
+  return HISTORICAL_ROSTER_HASHES.get(recorded)
+}
+
 export function reviewPolicyHash(reviewer: RosterMember, profile: unknown) {
-  return hash({ version: "maestro-review-policy-v1", reviewer, profile })
+  return hash({ version: REVIEW_POLICY_V2, reviewer: behavior(reviewer), profile })
+}
+
+/** The hash version a recorded review-policy hash verifies under, if any. */
+export function verifyReviewPolicyHash(recorded: string, reviewer: RosterMember, profile: unknown) {
+  if (recorded === reviewPolicyHash(reviewer, profile)) return REVIEW_POLICY_V2
+  if (recorded === hash({ version: "maestro-review-policy-v1", reviewer: legacy(reviewer), profile }))
+    return "maestro-review-policy-v1"
+  return HISTORICAL_REVIEW_POLICY_HASHES.get(recorded)
+}
+
+function behavior(member: RosterMember) {
+  return omit(member, ["displayName"])
+}
+
+function legacy(member: RosterMember) {
+  return member.prompt === undefined ? member : { ...member, prompt: renderPrompt(member, member.displayName) }
+}
+
+// Records written before the backend seat got its stable `backend` id hashed the seat under its former id, which was
+// the lowercased default label, as member id, native profile and return-card prefix. Projecting the seat back keeps
+// those records verifiable without spelling the former name; it moves with the default label, as v1 already does.
+function preRename(member: RosterMember): RosterMember {
+  if (member.memberId !== "backend") return member
+  return {
+    ...member,
+    memberId: LEGACY_BACKEND_ID,
+    returnCard: `${LEGACY_BACKEND_ID}-result`,
+    nativeProfile: LEGACY_BACKEND_ID as RosterMember["nativeProfile"],
+    prompt: member.prompt?.replaceAll("backend-result", `${LEGACY_BACKEND_ID}-result`),
+  }
 }
 
 function validationEventID(input: Pick<RecordValidationInput, "sessionID" | "workCardID">) {
@@ -161,7 +233,7 @@ function validation(input: RecordValidationInput): Omit<ValidationData, "actor" 
     workCard,
     workCardHash: workCardHash(workCard),
     routedMemberID: member.member.memberId,
-    rosterHash: hash(roster),
+    rosterHash: rosterHash(roster),
     grantHash: hash(grant.grant),
     reviewPolicyHash: reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]),
     validatorID: "maestro",
@@ -303,8 +375,7 @@ export const recordValidation = Effect.fn("MaestroValidation.record")(function* 
   const id = validationEventID(input)
   const existing = yield* readValidation(id)
   if (existing) {
-    const { id: existingID, ...recorded } = existing
-    if (isDeepStrictEqual(recorded, wanted)) return existing
+    if (sameValidation(existing, wanted)) return existing
     return yield* new ValidationConflictError({ sessionID: input.sessionID, workCardID: input.workCardID })
   }
   const events = yield* EventV2Bridge.Service
@@ -315,13 +386,47 @@ export const recordValidation = Effect.fn("MaestroValidation.record")(function* 
         if (!isDuplicate(cause)) return yield* Effect.failCause(cause)
         const existing = yield* readValidation(id)
         if (!existing) return yield* Effect.failCause(cause)
-        const { id: existingID, ...recorded } = existing
-        if (isDeepStrictEqual(recorded, wanted)) return existing
+        if (sameValidation(existing, wanted)) return existing
         return yield* new ValidationConflictError({ sessionID: input.sessionID, workCardID: input.workCardID })
       }),
     ),
   )
 })
+
+// An exact retry of a record written under an earlier hash version still matches when its hashes verify under that
+// version against the current roster and review policy.
+function sameValidation(existing: ValidationRecord, wanted: ValidationData) {
+  const { id: _, ...recorded } = existing
+  const reviewer = roster.find((candidate) => candidate.memberId === "lucy")
+  if (!reviewer?.nativeProfile) return false
+  return (
+    isDeepStrictEqual(
+      {
+        ...recorded,
+        routedMemberID: canonicalMemberId(recorded.routedMemberID),
+        grantHash: wanted.grantHash,
+        rosterHash: wanted.rosterHash,
+        reviewPolicyHash: wanted.reviewPolicyHash,
+      },
+      wanted,
+    ) &&
+    sameGrant(recorded, wanted) &&
+    verifyRosterHash(recorded.rosterHash, roster) !== undefined &&
+    verifyReviewPolicyHash(recorded.reviewPolicyHash, reviewer, nativeProfiles[reviewer.nativeProfile]) !== undefined
+  )
+}
+
+// A record routed to the backend seat under its former id hashed that seat's grant under the former id as well.
+function sameGrant(recorded: Pick<ValidationRecord, "grantHash" | "routedMemberID">, wanted: ValidationData) {
+  if (recorded.grantHash === wanted.grantHash) return true
+  const member = roster.find((candidate) => candidate.memberId === "backend")
+  return (
+    recorded.routedMemberID === LEGACY_BACKEND_ID &&
+    member !== undefined &&
+    recorded.grantHash ===
+      hash(pick(preRename(member), ["memberId", "role", "abilityClass", "returnCard", "forbiddenActions"]))
+  )
+}
 
 export const readReview = Effect.fn("MaestroReview.read")(function* (id: string) {
   if (!id.startsWith("evt_")) return undefined

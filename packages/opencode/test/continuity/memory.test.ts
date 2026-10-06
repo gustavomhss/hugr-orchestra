@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
-import { decode, index, type Decoded, type Failure } from "@/continuity/memory"
+import { decode, index, inQuotes, type Decoded, type Failure } from "@/continuity/memory"
 import type { MemoryArtifact } from "@/continuity/memory-types"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { messages, producerID, sessionID } from "./memory-fixture"
@@ -44,6 +44,8 @@ const ok = (result: Decoded | Failure) => {
   return result.artifact
 }
 const failed = (result: Decoded | Failure) => "check" in result ? result.check : "accepted"
+// C8 drops the op whose exact string is not found; the rest of the pass applies.
+const dropped = (result: Decoded | Failure) => "check" in result ? result.check : result.dropped
 
 const objective = { op: "add", section: "objective", src: ["u1"], fields: { goal: "Make the render-card test pass",
   why: "It blocks the release", done_when: "bun test test/render-card.test.ts passes without touching the database" } }
@@ -197,22 +199,53 @@ test("C7 requires the user's citation and revoking words for the user's items", 
   const later = { ...snap(8, 10, may) }
   expect(failed(decode({ text: JSON.stringify({ ops: [{ op: "retire", id: "m8", reason: "Limit ended" }] }), snapshot: later,
     producerID, host: host(), ceiling: 20_000 }))).toBe("accepted")
+  // An objective retires on the user's new message, which rarely holds revoking words.
+  expect(failed(run([{ op: "retire", id: "m1", reason: "User changed the goal", src: ["u3"] }], { previous }))).toBe("accepted")
+  expect(failed(run([{ op: "retire", id: "m1", reason: "x", src: ["t4"] }], { previous }))).toBe("C7")
+  expect(failed(run([{ op: "retire", id: "m1", reason: "x", src: ["u1"] }], { previous }))).toBe("C7")
+})
+
+test("a user message without sentence breaks keeps only the quoted words", () => {
+  const long = structuredClone(HISTORY)
+  long[4].parts = [{ ...long[4].parts[0], text: `${"contexto ".repeat(40)}nao mexe no banco ${"mais ".repeat(20)}` } as SessionV1.Part]
+  const result = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "rules", src: ["u3"],
+    fields: { kind: "must_not", rule: "Do not touch the database", quote: "nao mexe no banco" } }] }),
+    snapshot: { ...snap(4, 8, first()), head: long.slice(4, 8), tail: long.slice(8) }, producerID,
+    host: { ...host(), history: long }, ceiling: 20_000 })
+  expect(ok(result).items.find((item) => item.section === "rules" && item.src.includes("u3"))?.fields.quote).toBe("…nao mexe no banco…")
 })
 
 test("C8 locates errors in raw tool output and values in identity arguments, output or user text", () => {
-  expect(failed(run([{ ...failure, fields: { ...failure.fields, error: "Cannot read tier of null" } }]))).toBe("C8")
+  expect(dropped(run([{ ...failure, fields: { ...failure.fields, error: "Cannot read tier of null" } }]))).toBe(1)
   // Errors come from tool output, not from what the user or the agent wrote.
-  expect(failed(run([{ ...failure, fields: { ...failure.fields, error: "corrupted tier" } }]))).toBe("C8")
-  expect(failed(run([{ ...failure, src: ["u1"], fields: { ...failure.fields, error: "trava o release" } }]))).toBe("C8")
-  expect(failed(run([{ ...value, fields: { ...value.fields, value: "card.ts:9" } }]))).toBe("C8")
+  expect(dropped(run([{ ...failure, fields: { ...failure.fields, error: "corrupted tier" } }]))).toBe(1)
+  expect(dropped(run([{ ...failure, src: ["u1"], fields: { ...failure.fields, error: "trava o release" } }]))).toBe(1)
+  expect(dropped(run([{ ...value, fields: { ...value.fields, value: "card.ts:9" } }]))).toBe(1)
   // Matching folds whitespace, but a value whose match crosses a line break is rejected.
-  expect(failed(run([{ ...value, fields: { ...value.fields, value: "Expected: \"Gold\" Received" } }]))).toBe("C8")
+  expect(dropped(run([{ ...value, fields: { ...value.fields, value: "Expected: \"Gold\" Received" } }]))).toBe(1)
   expect(ok(run([{ ...value, src: ["t3"], fields: { ...value.fields, value: "TEST/fresh-fixtures.ts" } }])).text).toContain("`test/fresh-fixtures.ts`")
   expect(ok(run([{ ...value, src: ["u1"], fields: { ...value.fields, value: "render-card" } }])).items[0].src).toEqual(["u1"])
   // A cited source from earlier covered history is searched too.
   expect(failed(run([failure, { ...rule, key: undefined }], { previous: first() }))).toBe("accepted")
   // A hint that names the wrong alias still records where the string occurs.
   expect(ok(run([{ ...value, src: ["a1"], fields: { ...value.fields, value: "reading 'tier'" } }])).items[0].src).toEqual(["a1", "t2"])
+  // Only the op with the unfound string is lost; the others apply, and its key leaves needs.
+  const kept = run([{ ...value, key: "bad", fields: { ...value.fields, value: "card.ts:9" } }, failure,
+    { op: "add", section: "plan", src: ["u1"], fields: { status: "todo", task: "Ship", needs: ["bad"] } }])
+  expect(dropped(kept)).toBe(1)
+  expect(ok(kept).items.map((item) => item.section)).toEqual(["failures", "plan"])
+  expect(ok(kept).items[1].fields.needs).toEqual([])
+})
+
+test("C8 accepts the session ID as a value, though only host framing shows it", () => {
+  const session = { op: "add", section: "values", src: ["a1"], fields: { name: "Session", value: sessionID } }
+  const memory = ok(run([session]))
+  expect(memory.items[0].fields.value).toBe(sessionID)
+  expect(memory.items[0].src).toEqual(["a1"])
+  // Any other session ID, and the session ID as an error, are still not found.
+  expect(dropped(run([{ ...session, fields: { ...session.fields, value: "ses_memory_other" } }]))).toBe(1)
+  expect(dropped(run([{ ...session, fields: { ...session.fields, value: producerID } }]))).toBe(1)
+  expect(dropped(run([{ ...failure, fields: { ...failure.fields, error: sessionID } }]))).toBe(1)
 })
 
 test("C9 requires evidence for facts and outcomes", () => {
@@ -226,6 +259,14 @@ test("C9 requires evidence for facts and outcomes", () => {
   expect(failed(run([{ op: "update", id: "m2", src: ["a3"], fields: { status: "done", detail: "I think it works" } }], { previous }))).toBe("C9")
   expect(failed(run([{ op: "update", id: "m7", src: ["a3"], fields: { status: "confirmed", check: null } }], { previous }))).toBe("C9")
   expect(failed(run([{ op: "update", id: "m7", src: ["u3"], fields: { status: "confirmed", check: null } }], { previous }))).toBe("accepted")
+})
+
+test("keys are any unique name except an item ID", () => {
+  expect(ok(run([{ ...plan, key: "fix-card" }, { op: "add", section: "plan", src: ["u1"],
+    fields: { status: "todo", task: "Ship", needs: ["fix-card"] } }])).items[1].fields.needs).toEqual(["m1"])
+  expect(failed(run([{ ...plan, key: "m9" }]))).toBe("C2")
+  expect(failed(run([plan, { ...plan, fields: { ...plan.fields, status: "todo" } }]))).toBe("C2")
+  expect(failed(run([{ op: "add", section: "plan", src: ["u1"], fields: { status: "todo", task: "Ship", needs: ["nope"] } }]))).toBe("C2")
 })
 
 test("C10 keeps one doing and live inputs for open work; handles become item IDs", () => {
@@ -396,4 +437,13 @@ test("background return notices get their own alias and render the member", () =
   expect(index(snap(0, 4), { history: team, member: false, delegations: {} }, 0, 1)).toMatch(/\nt5 [^\n]+ return bobby "Design" → completed/)
   // The notice is never user text.
   expect(memory.text).not.toContain("u2 ·")
+})
+
+test("a quoted source sentence is not wrapped in quote marks twice", () => {
+  expect(inQuotes("Do not modify files.")).toBe('"Do not modify files."')
+  expect(inQuotes('"Do not modify files."')).toBe('"Do not modify files."')
+  expect(inQuotes("“Não mexe.”")).toBe('"Não mexe."')
+  // The user wraps each message in quotes, so a stored sentence may carry a mark at one end only.
+  expect(inQuotes('"open quote only')).toBe('"open quote only"')
+  expect(inQuotes('closing quote only."')).toBe('"closing quote only."')
 })

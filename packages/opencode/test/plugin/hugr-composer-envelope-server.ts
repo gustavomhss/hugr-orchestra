@@ -11,7 +11,11 @@ const error = mode?.endsWith("object")
     : mode?.endsWith("zero")
       ? 0
       : secret
-const envelope = mode?.includes("error") ? { error } : { ok: false, error: secret }
+const envelope = mode?.includes("coded")
+  ? { ok: false, code: mode.includes("bad-coded") ? secret : "target-exists", what_happened: secret }
+  : mode?.includes("error")
+    ? { error }
+    : { ok: false, error: secret }
 const success = {
   success: false,
   data: { error: secret, errors: [secret], ok: false, success: false },

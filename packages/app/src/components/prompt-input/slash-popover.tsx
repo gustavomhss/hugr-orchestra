@@ -111,7 +111,8 @@ export const PromptPopover: Component<PromptPopoverProps> = (props) => {
                             "text-text-strong": !props.newLayoutDesigns,
                           }}
                         >
-                          @{item.name}
+                          {/* `name` is the agent's stable id; `display` is its label. */}
+                          @{item.display}
                         </span>
                       </button>
                     )

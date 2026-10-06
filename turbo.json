@@ -8,61 +8,79 @@
       "dependsOn": [],
       "outputs": ["dist/**"]
     },
+    // A test task hashes only its own package unless it depends on its workspace dependencies. Most of them
+    // have no build script, so ^build alone left a cached pass in place after a dependency changed;
+    // ^transit puts every workspace dependency's files into each test hash without running anything.
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "opencode#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["transit", "^build"],
       "outputs": [],
       "passThroughEnv": ["*"]
     },
     "@opencode-ai/core#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
     "@opencode-ai/function#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/app#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
     "@opencode-ai/ui#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
     "@opencode-ai/session-ui#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
     "@opencode-ai/codemode#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/effect-drizzle-sqlite#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/http-recorder#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/httpapi-codegen#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/llm#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/maestro-arsenal#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/client#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/atlas-boundary#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/sdk-next#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/tui#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "@opencode-ai/desktop#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     }
   }

@@ -85,6 +85,7 @@ import { createPromptInputTransientState } from "./prompt-input/transient-state"
 import { showToast } from "@/utils/toast"
 import { ImagePreview } from "@opencode-ai/ui/image-preview"
 import type { ReferenceInfo } from "@opencode-ai/sdk/v2/client"
+import { agentKey } from "@/context/agent-identity"
 
 export { createPromptInputHistory }
 export type { PromptInputControls, PromptInputHistory, PromptInputProps, PromptInputState, PromptInputSubmission }
@@ -585,7 +586,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const agentList = createMemo(() =>
     props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
-      .map((agent): AtOption => ({ type: "agent", name: agent.name, display: agent.name })),
+      .map((agent): AtOption => ({ type: "agent", name: agentKey(agent), display: agent.name })),
   )
 
   const mcpResourceList = createMemo(() =>
@@ -605,7 +606,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const handleAtSelect = (option: AtOption | undefined) => {
     if (!option) return
     if (option.type === "agent") {
-      addPart({ type: "agent", name: option.name, content: "@" + option.name, start: 0, end: 0 })
+      addPart({ type: "agent", name: option.name, content: "@" + option.display, start: 0, end: 0 })
       return
     }
     if (option.type === "reference") {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { accessTokenIsExpiring, pollDeviceCodeToken, requestDeviceCode, XaiAuthPlugin } from "../../src/plugin/xai"
 import { OAUTH_DUMMY_KEY } from "../../src/auth"
+import { rethrow } from "../lib/rejection"
 
 function makeJwt(payload: object): string {
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url")
@@ -293,7 +294,7 @@ describe("plugin.xai", () => {
       ).auth!.loader!(async () => ({ type: "oauth", access: "old", refresh: "rt-old", expires: 0 }), {} as any)
 
       await opts.fetch!(new URL("/chat/completions", server.url), { headers: {} })
-      await expect(opts.fetch!(new URL("/chat/completions", server.url), { headers: {} })).rejects.toThrow(
+      expect(await rethrow(opts.fetch!(new URL("/chat/completions", server.url), { headers: {} }))).toThrow(
         /xAI token refresh failed \(503\)/,
       )
       await opts.fetch!(new URL("/chat/completions", server.url), { headers: {} })
@@ -368,7 +369,7 @@ describe("plugin.xai", () => {
         await XaiAuthPlugin(input, { tokenUrl: "http://127.0.0.1:9/oauth2/token" })
       ).auth!.loader!(async () => ({ type: "oauth", access: "old", refresh: "rt", expires: 0 }), {} as any)
 
-      await expect(opts.fetch!("https://api.x.ai/v1/chat/completions", { headers: {} })).rejects.toThrow()
+      expect(await rethrow(opts.fetch!("https://api.x.ai/v1/chat/completions", { headers: {} }))).toThrow()
     })
   })
 
@@ -440,12 +441,12 @@ describe("plugin.xai", () => {
       expect(parsed.get("scope")).toContain("grok-cli:access")
       expect(parsed.get("scope")).toContain("api:access")
       expect(parsed.get("referrer")).toBe("opencode")
-      await expect(
-        requestDeviceCode({ deviceAuthorizationUrl: new URL("/error", server.url).toString() }),
-      ).rejects.toThrow(/429.*rate limited/)
-      await expect(
-        requestDeviceCode({ deviceAuthorizationUrl: new URL("/missing", server.url).toString() }),
-      ).rejects.toThrow(/missing device_code/)
+      expect(
+        await rethrow(requestDeviceCode({ deviceAuthorizationUrl: new URL("/error", server.url).toString() })),
+      ).toThrow(/429.*rate limited/)
+      expect(
+        await rethrow(requestDeviceCode({ deviceAuthorizationUrl: new URL("/missing", server.url).toString() })),
+      ).toThrow(/missing device_code/)
     })
 
     test("pollDeviceCodeToken resolves on success and posts the device-code grant", async () => {
@@ -493,32 +494,36 @@ describe("plugin.xai", () => {
         [{ error: "server_error", error_description: "oops" }, /500.*oops/],
       ] as const) {
         using server = makeServer(() => Response.json(body, { status: 500 }))
-        await expect(
-          pollDeviceCodeToken(
-            {
-              device_code: "DC",
-              user_code: "UC",
-              verification_uri: "https://x.ai/device",
-              interval: 1,
-              expires_in: 600,
-            },
-            { sleep: async () => {}, tokenUrl: new URL("/oauth2/token", server.url).toString() },
+        expect(
+          await rethrow(
+            pollDeviceCodeToken(
+              {
+                device_code: "DC",
+                user_code: "UC",
+                verification_uri: "https://x.ai/device",
+                interval: 1,
+                expires_in: 600,
+              },
+              { sleep: async () => {}, tokenUrl: new URL("/oauth2/token", server.url).toString() },
+            ),
           ),
-        ).rejects.toThrow(error)
+        ).toThrow(error)
       }
 
       using pending = makeServer(() => Response.json({ error: "authorization_pending" }, { status: 400 }))
       let tick = 0
-      await expect(
-        pollDeviceCodeToken(
-          { device_code: "DC", user_code: "UC", verification_uri: "https://x.ai/device", interval: 1, expires_in: 1 },
-          {
-            sleep: async () => {},
-            now: () => 1_000_000 + tick++ * 600,
-            tokenUrl: new URL("/oauth2/token", pending.url).toString(),
-          },
+      expect(
+        await rethrow(
+          pollDeviceCodeToken(
+            { device_code: "DC", user_code: "UC", verification_uri: "https://x.ai/device", interval: 1, expires_in: 1 },
+            {
+              sleep: async () => {},
+              now: () => 1_000_000 + tick++ * 600,
+              tokenUrl: new URL("/oauth2/token", pending.url).toString(),
+            },
+          ),
         ),
-      ).rejects.toThrow(/timed out/)
+      ).toThrow(/timed out/)
     })
 
     test("pollDeviceCodeToken normalizes bad interval and expires_in values", async () => {

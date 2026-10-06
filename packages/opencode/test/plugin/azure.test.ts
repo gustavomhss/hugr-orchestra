@@ -9,6 +9,7 @@ import { OAUTH_DUMMY_KEY } from "../../src/auth"
 import { AzureAuthPlugin, createAzureAuthHooks } from "../../src/plugin/azure"
 import { Process } from "../../src/util/process"
 import { which } from "@opencode-ai/core/util/which"
+import { rethrow } from "../lib/rejection"
 
 const resourceName = process.env.AZURE_RESOURCE_NAME
 const originalPath = process.env.PATH
@@ -231,7 +232,7 @@ describe("plugin.azure", () => {
     const authorization = await oauthMethod(hooks).authorize({ resourceName: "test-resource" })
     if (authorization.method !== "auto") throw new Error("Unexpected Azure authorization method")
 
-    await expect(authorization.callback()).rejects.toThrow("Azure CLI returned an invalid token expiration")
+    expect(await rethrow(authorization.callback())).toThrow("Azure CLI returned an invalid token expiration")
   })
 
   test("does not change API-key loading", async () => {

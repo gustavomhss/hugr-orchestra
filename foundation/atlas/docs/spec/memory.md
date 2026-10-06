@@ -18,7 +18,7 @@ then it retires. Add new content to reference/atlas-memory.md, not here. -->
 **Memory is the Atlas's per-member kind.** It lives in the _same_ Atlas as Knowledge — same
 content-addressed hashed index, same grounding primitive, same templated-write rule, same portable
 export — it is **not** a separate system. What makes it Memory rather than Knowledge is its **scope**:
-every seat — `charlie`, `lucy`, `jimmy`, … — **and the orchestrator itself** owns its own Memory, private
+every seat — `backend`, `lucy`, `jimmy`, … — **and the orchestrator itself** owns its own Memory, private
 to that member, granular, and decaying. Knowledge is shared and grounded to the _codebase_; Memory is a
 member's own craft/experience of _doing the work_.
 

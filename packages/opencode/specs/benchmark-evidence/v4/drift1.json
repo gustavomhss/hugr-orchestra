@@ -1,0 +1,59 @@
+{
+  "name": "drift1",
+  "transport": "file",
+  "boundary": 77,
+  "head": [
+    55,
+    68
+  ],
+  "tailStart": 69,
+  "crossed": true,
+  "contextTokens": 42984,
+  "retried": false,
+  "ceiling": 7702,
+  "size": 5229,
+  "dropped": 0,
+  "ops": [
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "findings"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "update",
+      "id": "m33"
+    },
+    {
+      "op": "update",
+      "id": "m35"
+    },
+    {
+      "op": "update",
+      "id": "m27"
+    }
+  ],
+  "applied": true,
+  "items": 40,
+  "memoryTokens": 5229,
+  "calls": [
+    {
+      "label": "v4/drift1",
+      "estimate": 8055,
+      "usage": {
+        "inputTokens": 8055,
+        "outputTokens": 752
+      }
+    }
+  ]
+}

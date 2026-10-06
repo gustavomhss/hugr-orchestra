@@ -170,6 +170,8 @@ export type Pass = {
   check?: string
   retried: boolean
   ops: { op: string; section?: string; id?: string }[]
+  /** Ops dropped because their exact value or error was not found. */
+  dropped?: number
   size: number
   ceiling: number
 }
@@ -263,7 +265,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
 }, Effect.timeout("180 seconds"))
 
 const accepted = (decoded: Decoded, retried: boolean, ceiling: number): Pass => ({
-  artifact: decoded.artifact, retried, ceiling, size: Token.estimate(decoded.artifact.text),
+  artifact: decoded.artifact, retried, ceiling, size: Token.estimate(decoded.artifact.text), dropped: decoded.dropped,
   ops: decoded.ops.map((op) => ({ op: op.op, ...("section" in op ? { section: op.section } : {}), ...("id" in op ? { id: op.id } : {}) })),
 })
 

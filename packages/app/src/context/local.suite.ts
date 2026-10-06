@@ -3,7 +3,7 @@ import { createRoot } from "solid-js"
 
 let useLocal: typeof import("./local").useLocal
 
-const native = (name: string) => ({ name, mode: "primary", native: true })
+const native = (name: string, id?: string) => ({ name, mode: "primary", native: true, ...(id ? { id } : {}) })
 const roster = [native("build"), native("plan"), native("maestro")]
 
 let params: { id?: string } = {}
@@ -102,5 +102,17 @@ describe("Local agent", () => {
     agents = roster.filter((agent) => agent.name !== "maestro")
 
     expect(currentAgent()).toBeUndefined()
+  })
+
+  test("a renamed maestro is still found and sent by its stable id", () => {
+    agents = [native("build"), native("plan"), native("Conductor", "maestro")]
+
+    const key = createRoot((dispose) => {
+      const local = useLocal()
+      const result = { label: local.agent.current()?.name, key: local.agent.key() }
+      dispose()
+      return result
+    })
+    expect(key).toEqual({ label: "Conductor", key: "maestro" })
   })
 })

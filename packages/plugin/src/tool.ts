@@ -3,7 +3,10 @@ import { z } from "zod"
 export type ToolContext = {
   sessionID: string
   messageID: string
+  /** Display label of the executing agent. Users can rename it, so never route or authorize on it. */
   agent: string
+  /** Stable id of the executing agent: the identity that routes, owns memory and holds permissions. */
+  agentID: string
   /**
    * Current project directory for this session.
    * Prefer this over process.cwd() when resolving relative paths.

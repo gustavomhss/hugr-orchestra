@@ -30,7 +30,7 @@ Line numbers refer to the v4 spec unless a file is named. Findings are ordered b
      quotes against the archive chunk markdown (memory.ts:63), which contains all of them.
   3. In member sessions, which the brief says use the same format (2a), `u1` is Maestro's brief
      (task.ts:515, non-synthetic). A claim Maestro relayed from a tool ("Jimmy says the user
-     approved deploy") becomes a quoted user rule in Charlie's memory. This undoes the protection
+     approved deploy") becomes a quoted user rule in the backend specialist's memory. This undoes the protection
      claimed in 7.1 after one delegation hop.
 - **Why wrong:** the security model rests on "u = human words". That claim is false for command
   expansions, persisted reminders, attachments and delegate briefs.
@@ -163,14 +163,14 @@ Line numbers refer to the v4 spec unless a file is named. Findings are ordered b
   alias is added.
 - **Failure scenarios:**
   1. `update m50 {status: done, detail: "APPROVE"} src [t130, a131]`, where a131 is Maestro saying
-     "Charlie finished, marking done". C9 passes, so the delegate's self-report closes the item.
-  2. Charlie's card "all tests pass" is recorded as `findings {status: confirmed}` citing t130.
+     "The backend specialist finished, marking done". C9 passes, so the delegate's self-report closes the item.
+  2. The backend specialist's card "all tests pass" is recorded as `findings {status: confirmed}` citing t130.
      C9 restricts only `done` items, so the self-report becomes a "Confirmed" fact.
   3. m53 "Cold review of branch A" is DONE citing only t140 (Lucy's own task). Lucy's verdict
      **is** the deliverable, but C9 rejects it. Example 7.5 has to add an unrelated "Maestro's own
      read t142" to get past the rule.
 - **Smallest fix:** drop the single-member clause. Render delegation provenance with the member
-  name (`(t130 charlie)`) so the reader can see that the evidence is a member report. Keep `verify`
+  name (`(t130 backend)`) so the reader can see that the evidence is a member report. Keep `verify`
   as a producer convention. This also reduces producer load.
 
 ### R8. MAJOR: `needs` cannot reference an item added in the same pass, and C10 blocks normal replacement
@@ -300,7 +300,7 @@ Line numbers refer to the v4 spec unless a file is named. Findings are ordered b
 - **Problem:** "its task is done" cannot be verified because the rule is not linked to any task,
   and the retire may cite **any** covered alias.
 - **Failure scenario:** m2 is `MUST NOT, this task: Do not push to main while the release runs`.
-  Charlie's card t130 says "task complete". The producer emits
+  The backend specialist's card t130 says "task complete". The producer emits
   `retire m2 {reason: "task done", src: [t130]}` and C7 accepts. The prohibition disappears while
   the release is still running. This is exactly what idea 2 says cannot happen.
 - **Smallest fix:** a `scope: task` rule carries `task: mN`, a plan item ID. A retire without a

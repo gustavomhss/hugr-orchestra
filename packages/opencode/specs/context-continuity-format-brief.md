@@ -90,7 +90,7 @@ The team (roster role → what each returns):
 
 | Member | Role | Returns |
 | --- | --- | --- |
-| Charlie | backend execution | implementation card, gates, diff receipt |
+| Backend specialist | backend execution | implementation card, gates, diff receipt |
 | Patty | frontend execution | implementation card, sensory evidence, diff receipt |
 | Lucy | cold review | cited APPROVE / FIX_FIRST / REJECT card |
 | Bobby | architecture | seam/contract verdict |
@@ -100,8 +100,8 @@ The team (roster role → what each returns):
 | Frankie | process audit | audit verdict |
 
 **The team members never talk to each other; they talk only to Maestro.** Maestro is the
-single hub. Everything one member produces that another needs (Charlie's diff for Lucy's
-review, Jimmy's findings for Charlie's brief, Bobby's contract verdict for both) passes
+single hub. Everything one member produces that another needs (the backend specialist's diff for Lucy's
+review, Jimmy's findings for the backend specialist's brief, Bobby's contract verdict for both) passes
 through Maestro's context. If Maestro's working memory loses it, no one else has it.
 
 What this means for the format (decide how, without over-engineering):

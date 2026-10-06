@@ -3,6 +3,7 @@ import type { DockIdentity } from "./app-dock-native"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import { NativeDockClient } from "./app-dock-native-client"
 import { BoundaryClient, WireChannel, closeDocks, confirm, deferred, fixture, identity, occupancy, root, target, turn, wireFixture, workspaceFixture, workspaceIdentity, workspaceTarget } from "./app-dock-native.fixture"
+import { rejection } from "./rejection.fixture"
 
 afterEach(closeDocks)
 
@@ -14,7 +15,7 @@ test("reservation: last free unit admits one concurrent claimant and ordinary bi
     claims.forEach((claim) => { if (claim.status === "fulfilled") reservations.push(claim.value) })
     expect(claims.map((claim) => claim.status)).toEqual(["fulfilled", "rejected"])
     expect(claims[1]).toMatchObject({ status: "rejected", reason: { code: "capacity" } })
-    await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "capacity" })
+    expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "capacity" })
     expect(f.client.calls).toEqual([])
   } finally {
     reservations.forEach((reservation) => reservation.fail(new NativeDockProtocol.NativeError("cancelled", "No acquisition")))
@@ -29,7 +30,7 @@ test("reservation: unknown acquisition failure stays accounted until actual adop
   const failed = f.dock.reserveClient()
   const error = new Error("Acquisition cleanup is unknown")
   failed.fail(error)
-  await expect(failed.completion).rejects.toBe(error)
+  expect(await rejection(failed.completion)).toBe(error)
   const others = Array.from({ length: 31 }, () => f.dock.reserveClient())
   try {
     expect(() => f.dock.reserveClient()).toThrow("Native client cleanup capacity exhausted")
@@ -41,8 +42,8 @@ test("reservation: unknown acquisition failure stays accounted until actual adop
     failed.complete()
   }
   expect(f.client.closed).toBe(1)
-  await expect(failed.completion).rejects.toBe(error)
-  await expect(f.dock.reset()).resolves.toBeUndefined()
+  expect(await rejection(failed.completion)).toBe(error)
+  expect(await f.dock.reset()).toBeUndefined()
 })
 
 test("P1 cleanup: no-dispatch primary with unknown cleanup retains its reservation", async () => {
@@ -51,7 +52,7 @@ test("P1 cleanup: no-dispatch primary with unknown cleanup retains its reservati
   const error = new NativeDockProtocol.NativeError("not-ready", "Acquisition failed", "not-dispatched", undefined,
     { code: "native-cleanup-failed", outcome: "unknown" })
   failed.fail(error)
-  await expect(failed.completion).rejects.toBe(error)
+  expect(await rejection(failed.completion)).toBe(error)
   const others = Array.from({ length: 31 }, () => f.dock.reserveClient())
   try {
     expect(() => others.push(f.dock.reserveClient())).toThrow("Native client cleanup capacity exhausted")
@@ -64,7 +65,7 @@ test("P1 cleanup: no-dispatch primary with unknown cleanup retains its reservati
     }).catch(() => {})
   }
   expect(f.client.closed).toBe(1)
-  await expect(failed.completion).rejects.toBe(error)
+  expect(await rejection(failed.completion)).toBe(error)
 })
 
 test("scope: legacy application identities and targets normalize without a scope-capable hello", async () => {
@@ -75,7 +76,7 @@ test("scope: legacy application identities and targets normalize without a scope
   expect(f.dock.has(identity())).toBe(true)
   expect(f.dock.metadata(identity())).toEqual({ backend: "linux-atspi", scopeKind: "application", nativeReadiness: "bound",
     helperEpoch: "helper", sessionID: "session" })
-  await expect(f.dock.dispatch("read", identity(), {})).resolves.toMatchObject({ backend: "linux-atspi" })
+  expect(await f.dock.dispatch("read", identity(), {})).toMatchObject({ backend: "linux-atspi" })
   await f.dock.unbind(identity())
   expect(f.dock.metadata(identity())).toEqual({ backend: "linux-atspi", scopeKind: "application", nativeReadiness: "unbound" })
 })
@@ -84,11 +85,11 @@ test("rebind: invalid target and unsupported helper cannot touch the old workspa
   const f = workspaceFixture(["application", "workspace"])
   await f.dock.bind(workspaceIdentity(), workspaceTarget(), f.client, confirm)
   const incompatible = new BoundaryClient()
-  await expect(f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), incompatible, confirm)).rejects.toMatchObject({ code: "unsupported-scope" })
-  await expect(f.dock.rebindWorkspace(workspaceIdentity(), { ...workspaceTarget(), processIdentities: [] }, f.client, confirm)).rejects.toMatchObject({ code: "ownership-unresolved" })
-  await expect(f.dock.rebindWorkspace({ ...workspaceIdentity(), scopeKind: "application" }, { ...workspaceTarget(), scopeKind: "application" }, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), incompatible, confirm))).toMatchObject({ code: "unsupported-scope" })
+  expect(await rejection(f.dock.rebindWorkspace(workspaceIdentity(), { ...workspaceTarget(), processIdentities: [] }, f.client, confirm))).toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.rebindWorkspace({ ...workspaceIdentity(), scopeKind: "application" }, { ...workspaceTarget(), scopeKind: "application" }, f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   const invalid = { hello: f.client.hello, request: undefined, close: () => f.client.close() } as unknown as NativeDockProtocol.Client
-  await expect(f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), invalid, confirm)).rejects.toMatchObject({ code: "protocol-error" })
+  expect(await rejection(f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), invalid, confirm))).toMatchObject({ code: "protocol-error" })
   expect(f.client.calls.map((call) => call.op)).toEqual(["bind", "bind"])
   expect(incompatible.calls).toEqual([])
   expect(f.dock.has(workspaceIdentity())).toBe(true)
@@ -105,13 +106,13 @@ test("rebind: explicit workspace rebind changes profile/runtime at eight slots w
   const bindings = await Promise.all(ids.map((id) => f.dock.bind(id, workspaceTarget(), f.client, confirm)))
   const next = { ...ids[0]!, profileID: "other", runtimeID: "other", runtimeEpoch: "next" }
   const proof = { ...workspaceTarget(), runtime: { ...workspaceTarget().runtime, runtimeID: "other", runtimeEpoch: "next" } }
-  await expect(f.dock.bind(next, proof, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(next, proof, f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   const binding = await f.dock.rebindWorkspace(next, proof, f.client, confirm)
   expect(binding.bindingID).not.toBe(bindings[0]!.bindingID)
   expect(f.dock.has(next)).toBe(true)
   expect(() => f.dock.has(ids[0]!)).toThrow("Native registration belongs to another scope")
   expect(occupancy(f.dock)).toEqual({ slots: 8, clients: 1, retiring: 0, cleanups: 0, controlClients: 0, maxControls: 0 })
-  await expect(f.dock.bind({ ...next, tabID: "overflow" }, proof, f.client, confirm)).rejects.toMatchObject({ code: "capacity" })
+  expect(await rejection(f.dock.bind({ ...next, tabID: "overflow" }, proof, f.client, confirm))).toMatchObject({ code: "capacity" })
   expect(channel.requests.filter((request) => request.op === "unbind").map((request) => request.bindingID)).toEqual([bindings[0]!.bindingID])
   expect(channel.terminating).toBe(0)
 })
@@ -125,7 +126,7 @@ test("rebind: pending predecessor chains remain bounded and only the newest regi
   const work = Array.from({ length: 32 }, () => f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), f.client, confirm)
     .then((binding) => ({ binding }), (error: unknown) => ({ error })))
   try {
-    await expect(f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), f.client, confirm)).rejects.toMatchObject({ code: "capacity" })
+    expect(await rejection(f.dock.rebindWorkspace(workspaceIdentity(), workspaceTarget(), f.client, confirm))).toMatchObject({ code: "capacity" })
     expect(f.client.calls.filter((call) => call.op === "bind")).toHaveLength(2)
     release.resolve({ unbound: true })
     const settled = await Promise.all(work)
@@ -142,8 +143,8 @@ test("rebind: pending predecessor chains remain bounded and only the newest regi
 test.each(["", "desktop", null, 1])("scope: unknown kind %j rejects before discovery", async (value) => {
   const f = fixture()
   const invalid = value as unknown as NativeDockProtocol.ScopeKind
-  await expect(f.dock.bind({ ...identity(), scopeKind: invalid }, target(), f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
-  await expect(f.dock.bind(identity(), { ...target(), scopeKind: invalid }, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind({ ...identity(), scopeKind: invalid }, target(), f.client, confirm))).toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(identity(), { ...target(), scopeKind: invalid }, f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   expect(() => f.dock.metadata({ ...identity(), scopeKind: invalid })).toThrow(NativeDockProtocol.NativeError)
   expect(f.client.calls).toEqual([])
   await f.dock.bind(identity(), target(), f.client, confirm)
@@ -154,8 +155,8 @@ test.each([
   ["application", "workspace"], ["workspace", "application"], [undefined, "workspace"], ["workspace", undefined],
 ] as const)("scope: identity %s cannot bind target %s", async (identityKind, targetKind) => {
   const f = workspaceFixture(["application", "workspace"])
-  await expect(f.dock.bind({ ...workspaceIdentity(), scopeKind: identityKind },
-    { ...workspaceTarget(), scopeKind: targetKind }, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.bind({ ...workspaceIdentity(), scopeKind: identityKind },
+    { ...workspaceTarget(), scopeKind: targetKind }, f.client, confirm))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
   expect(f.client.calls).toEqual([])
 })
 
@@ -168,17 +169,17 @@ test.each(["application", "workspace"] as const)("scope: captured %s cannot flip
   const foreign = { ...current, scopeKind: kind === "application" ? "workspace" as const : undefined }
   expect(() => f.dock.has(foreign)).toThrow("Native registration belongs to another scope")
   expect(() => f.dock.metadata(foreign)).toThrow("Native registration belongs to another scope")
-  await expect(f.dock.dispatch("click", foreign, { ref: "n:current" })).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
-  await expect(f.dock.unbind(foreign)).rejects.toMatchObject({ code: "wrong-scope" })
-  await expect(f.dock.bind(foreign, { ...proof, scopeKind: foreign.scopeKind }, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.dispatch("click", foreign, { ref: "n:current" }))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.unbind(foreign))).toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(foreign, { ...proof, scopeKind: foreign.scopeKind }, f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   expect(f.client.calls.map((call) => call.op)).toEqual(["bind", "bind", "action"])
   expect(f.dock.has(current)).toBe(true)
 })
 
 test.each(["appID", "launchEpoch"] as const)("scope: workspace rejects matching but invalid %s markers", async (field) => {
   const f = workspaceFixture(["application", "workspace"])
-  await expect(f.dock.bind({ ...workspaceIdentity(), [field]: "foreign" },
-    { ...workspaceTarget(), [field]: "foreign" }, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.bind({ ...workspaceIdentity(), [field]: "foreign" },
+    { ...workspaceTarget(), [field]: "foreign" }, f.client, confirm))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
   expect(f.client.calls).toEqual([])
 })
 
@@ -186,13 +187,13 @@ test.each(["bootID", "pidNamespace", "mountNamespace"] as const)("scope: workspa
   const f = workspaceFixture(["application", "workspace"])
   const proof = workspaceTarget()
   proof.processIdentities[1]![field] = "foreign"
-  await expect(f.dock.bind(workspaceIdentity(), proof, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.bind(workspaceIdentity(), proof, f.client, confirm))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
   expect(f.client.calls).toEqual([])
 })
 
 test.each([{ scopeKinds: undefined }, { scopeKinds: ["application"] as NativeDockProtocol.ScopeKind[] }])("scope: workspace feature gate rejects hello %j before discovery", async (hello) => {
   const f = workspaceFixture(hello.scopeKinds)
-  await expect(f.dock.bind(workspaceIdentity(), workspaceTarget(), f.client, confirm)).rejects.toMatchObject({
+  expect(await rejection(f.dock.bind(workspaceIdentity(), workspaceTarget(), f.client, confirm))).toMatchObject({
     code: "unsupported-scope", outcome: "not-dispatched",
   })
   expect(f.client.calls).toEqual([])
@@ -204,7 +205,7 @@ test.each([{ scopeKinds: undefined }, { scopeKinds: ["application"] as NativeDoc
 
 test("discover then required runtime confirmation precede binding and every action", async () => {
   const f = fixture()
-  await expect(f.dock.dispatch("click", identity(), { ref: "n:opaque" })).rejects.toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.dispatch("click", identity(), { ref: "n:opaque" }))).toMatchObject({ code: "ownership-unresolved" })
   const approval = deferred<NativeDockProtocol.Handle[]>()
   const proposals: NativeDockProtocol.Proposal[] = []
   const bound = f.dock.bind(identity(), target(), f.client, async (proposal) => {
@@ -215,7 +216,7 @@ test("discover then required runtime confirmation precede binding and every acti
   expect(proposals).toEqual([{ status: "proposal", proposalID: "proposal-1", roots: [{ ...root(), name: "Window", role: 23 }] }])
   expect(f.dock.has(identity())).toBe(true)
   expect(f.dock.metadata(identity())).toMatchObject({ backend: "linux-atspi", nativeReadiness: "binding" })
-  await expect(f.dock.dispatch("read", identity(), {})).rejects.toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.dispatch("read", identity(), {}))).toMatchObject({ code: "ownership-unresolved" })
   expect(f.client.calls).toEqual([{ op: "bind", args: { phase: "discover", identity: {
     senderID: 1, tabID: "native", generation: 1, profileID: "profile",
   }, target: { ...target(), scopeKind: "application" } } }])
@@ -238,8 +239,8 @@ test("every captured scope field rejects mismatching identity without fallback",
     expect(() => f.dock.has(foreign)).toThrow(NativeDockProtocol.NativeError)
     expect(() => f.dock.has(foreign)).toThrow("Native registration belongs to another scope")
     expect(() => f.dock.metadata(foreign)).toThrow("Native registration belongs to another scope")
-    await expect(f.dock.dispatch("read", foreign, {})).rejects.toMatchObject({ code: "wrong-scope" })
-    await expect(f.dock.unbind(foreign)).rejects.toMatchObject({ code: "wrong-scope" })
+    expect(await rejection(f.dock.dispatch("read", foreign, {}))).toMatchObject({ code: "wrong-scope" })
+    expect(await rejection(f.dock.unbind(foreign))).toMatchObject({ code: "wrong-scope" })
     expect(f.dock.has(identity())).toBe(true)
   }
   expect(f.dock.has({ ...identity(), senderID: 2 })).toBe(false)
@@ -247,7 +248,7 @@ test("every captured scope field rejects mismatching identity without fallback",
   expect(f.client.calls.length).toBe(2)
   f.client.hello = { ...f.client.hello, helperEpoch: "restarted" }
   expect(() => f.dock.has(identity())).toThrow("Native registration belongs to another scope")
-  await expect(f.dock.dispatch("read", identity(), {})).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.dispatch("read", identity(), {}))).toMatchObject({ code: "wrong-scope" })
   await f.dock.closeTab(1, "native")
 })
 
@@ -259,30 +260,30 @@ test("target runtime/app/launch/revision/session and helper session are checked 
     { ...target(), runtime: { ...target().runtime, runtimeEpoch: "foreign" } },
     { ...target(), runtime: { ...target().runtime, accessibilitySessionID: "foreign" } },
   ]
-  for (const proof of foreign) await expect(f.dock.bind(identity(), proof, f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  for (const proof of foreign) expect(await rejection(f.dock.bind(identity(), proof, f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   f.client.hello = { ...f.client.hello, sessionID: "foreign" }
-  await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   expect(f.client.calls).toEqual([])
 })
 
 test("missing/empty process proof or confirmation cannot bind, even with matching title and PID", async () => {
   const f = fixture()
-  await expect(f.dock.bind(identity(), target(), f.client, undefined as unknown as NativeDockProtocol.Confirm)).rejects.toMatchObject({ code: "ownership-unresolved" })
-  await expect(f.dock.bind(identity(), { ...target(), processIdentities: [] }, f.client, confirm)).rejects.toMatchObject({ code: "ownership-unresolved" })
-  await expect(f.dock.bind(identity(), { ...target(), processIdentities: [{ pid: 42 } as NativeDockProtocol.ProcessIdentity] }, f.client, confirm)).rejects.toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.bind(identity(), target(), f.client, undefined as unknown as NativeDockProtocol.Confirm))).toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.bind(identity(), { ...target(), processIdentities: [] }, f.client, confirm))).toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.bind(identity(), { ...target(), processIdentities: [{ pid: 42 } as NativeDockProtocol.ProcessIdentity] }, f.client, confirm))).toMatchObject({ code: "ownership-unresolved" })
   expect(f.client.calls).toEqual([])
-  await expect(f.dock.bind(identity(), target(), f.client, async () => [])).rejects.toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.bind(identity(), target(), f.client, async () => []))).toMatchObject({ code: "ownership-unresolved" })
   expect(f.dock.has(identity())).toBe(false)
   expect(f.client.calls.map((call) => call.args.phase)).toEqual(["discover"])
 })
 
 test("confirmation must be a nonempty subset of proposed and runtime-owned roots", async () => {
   const f = fixture()
-  await expect(f.dock.bind(identity(), target(), f.client, async () => [{ ...root(), owner: ":1.99" }])).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(identity(), target(), f.client, async () => [{ ...root(), owner: ":1.99" }]))).toMatchObject({ code: "wrong-scope" })
   const second = new BoundaryClient()
   const third = new BoundaryClient()
-  await expect(f.dock.bind(identity(), { ...target(), roots: [{ ...root(), path: "/foreign" }] }, second, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
-  await expect(f.dock.bind(identity(), target(), third, async () => [root(), root()])).rejects.toMatchObject({ code: "ownership-unresolved" })
+  expect(await rejection(f.dock.bind(identity(), { ...target(), roots: [{ ...root(), path: "/foreign" }] }, second, confirm))).toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(identity(), target(), third, async () => [root(), root()]))).toMatchObject({ code: "ownership-unresolved" })
   expect([f.client, second, third].every((client) => client.closed === 1 && client.calls.every((call) => call.args.phase === "discover"))).toBe(true)
 })
 
@@ -298,10 +299,10 @@ test("malformed, non-concrete and duplicate proposals never reach runtime confir
   for (const reply of invalid) {
     const client = new BoundaryClient()
     client.reply = async () => reply
-    await expect(f.dock.bind(identity(), target(), client, async (proposal) => {
+    expect(await rejection(f.dock.bind(identity(), target(), client, async (proposal) => {
       confirmed.push(proposal)
       return [root()]
-    })).rejects.toMatchObject({ code: "protocol-error" })
+    }))).toMatchObject({ code: "protocol-error" })
     expect(client.closed).toBe(1)
   }
   expect(confirmed).toEqual([])
@@ -312,12 +313,12 @@ test("duplicate pending registrations reject and capacity is eight sender/tab sl
   const f = fixture()
   const approval = deferred<NativeDockProtocol.Handle[]>()
   const pending = f.dock.bind(identity(), target(), f.client, () => approval.promise)
-  await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "duplicate-bind" })
-  await expect(f.dock.bind({ ...identity(), generation: 2 }, target(), f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope" })
+  expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "duplicate-bind" })
+  expect(await rejection(f.dock.bind({ ...identity(), generation: 2 }, target(), f.client, confirm))).toMatchObject({ code: "wrong-scope" })
   approval.resolve([root()])
   await pending
   await Promise.all(Array.from({ length: 7 }, (_, index) => f.dock.bind({ ...identity(), tabID: `native-${index}` }, target(), f.client, confirm)))
-  await expect(f.dock.bind({ ...identity(), tabID: "ninth" }, target(), f.client, confirm)).rejects.toMatchObject({ code: "capacity" })
+  expect(await rejection(f.dock.bind({ ...identity(), tabID: "ninth" }, target(), f.client, confirm))).toMatchObject({ code: "capacity" })
   await f.dock.unbind(identity())
   await f.dock.bind({ ...identity(), tabID: "replacement" }, target(), f.client, confirm)
   expect(f.client.closed).toBe(0)
@@ -391,7 +392,7 @@ test("malformed binding or binding for another app/launch never becomes routable
   for (const [index, reply] of invalid.entries()) {
     const client = clients[index]
     client.reply = async (call) => call.op === "bind" && call.args.phase === "confirm" ? reply : client.defaultReply(call)
-    await expect(f.dock.bind(identity(), target(), client, confirm)).rejects.toBeInstanceOf(NativeDockProtocol.NativeError)
+    expect(await rejection(f.dock.bind(identity(), target(), client, confirm))).toBeInstanceOf(NativeDockProtocol.NativeError)
     expect(f.dock.has(identity())).toBe(false)
     expect(client.closed).toBe(1)
   }
@@ -429,10 +430,10 @@ test("pointer and focused typing refuse malformed arguments before client work",
   await f.dock.bind(identity(), target(), f.client, confirm)
   const before = f.client.calls.length
   for (const kind of [undefined, "click", "doubleClick", 3])
-    await expect(f.dock.dispatch("pointer", identity(), { ref: "n:row", kind })).rejects.toMatchObject({ code: "invalid-argument" })
-  await expect(f.dock.dispatch("pointer", identity(), { ref: 7, kind: "hover" })).rejects.toMatchObject({ code: "wrong-scope" })
+    expect(await rejection(f.dock.dispatch("pointer", identity(), { ref: "n:row", kind }))).toMatchObject({ code: "invalid-argument" })
+  expect(await rejection(f.dock.dispatch("pointer", identity(), { ref: 7, kind: "hover" }))).toMatchObject({ code: "wrong-scope" })
   for (const args of [{ focused: true }, { focused: true, mode: "editable" }, { focused: "yes", mode: "keyboard" }, { focused: false, mode: "keyboard" }])
-    await expect(f.dock.dispatch("type", identity(), { ref: "n:input", text: "x", ...args })).rejects.toMatchObject({ code: "invalid-argument" })
+    expect(await rejection(f.dock.dispatch("type", identity(), { ref: "n:input", text: "x", ...args }))).toMatchObject({ code: "invalid-argument" })
   expect(f.client.calls.length).toBe(before)
 })
 
@@ -444,7 +445,7 @@ test("typed text reaches the helper as a key operation, bounded and never mixed 
   expect(f.client.calls.at(-1)).toEqual({ op: "key", args: { ref: "n:focus", text: "trim trailing whitespace" }, ...scope })
   const before = f.client.calls.length
   for (const args of [{ text: "" }, { text: "x".repeat(257) }, { text: 7 }, { text: "x", keys: "Return" }])
-    await expect(f.dock.dispatch("keyboard", identity(), { ref: "n:focus", ...args })).rejects.toMatchObject({ code: "invalid-argument" })
+    expect(await rejection(f.dock.dispatch("keyboard", identity(), { ref: "n:focus", ...args }))).toMatchObject({ code: "invalid-argument" })
   expect(f.client.calls.length).toBe(before)
 })
 
@@ -464,23 +465,23 @@ test("top-level file choosers, alerts and other app dialogs are proposable windo
   for (const role of [32, 40, 75]) {
     const client = new BoundaryClient()
     client.reply = async () => ({ status: "proposal", proposalID: "proposal", roots: [{ ...root(), name: "Window", role }] })
-    await expect(other.dock.bind(identity(), target(), client, confirm)).rejects.toMatchObject({ code: "protocol-error" })
+    expect(await rejection(other.dock.bind(identity(), target(), client, confirm))).toMatchObject({ code: "protocol-error" })
   }
 })
 
 test("numeric native refs, invalid args and browser-only operations fail before client work", async () => {
   const f = fixture()
   await f.dock.bind(identity(), target(), f.client, confirm)
-  for (const op of ["click", "action", "type"]) await expect(f.dock.dispatch(op, identity(), { ref: 7, text: "text", actionID: "action" })).rejects.toMatchObject({ code: "wrong-scope" })
+  for (const op of ["click", "action", "type"]) expect(await rejection(f.dock.dispatch(op, identity(), { ref: 7, text: "text", actionID: "action" }))).toMatchObject({ code: "wrong-scope" })
   for (const op of ["list", "activate", "close", "navigate", "go", "open", "clickAt", "screenshot", "scroll", "evaluate", "storage", "network", "hover", "drag"])
-    await expect(f.dock.dispatch(op, identity(), {})).rejects.toMatchObject({ code: "unsupported-operation" })
+    expect(await rejection(f.dock.dispatch(op, identity(), {}))).toMatchObject({ code: "unsupported-operation" })
   for (const args of [{ budget: 501 }, { maxText: -1 }, { rootRef: 7 }, { cursor: "" }, { textOffset: -1 }])
-    await expect(f.dock.dispatch("read", identity(), args)).rejects.toMatchObject({ code: "invalid-argument" })
-  await expect(f.dock.dispatch("action", identity(), { ref: "n:button" })).rejects.toMatchObject({ code: "invalid-argument" })
-  await expect(f.dock.dispatch("keyboard", identity(), {})).rejects.toMatchObject({ code: "wrong-scope" })
+    expect(await rejection(f.dock.dispatch("read", identity(), args))).toMatchObject({ code: "invalid-argument" })
+  expect(await rejection(f.dock.dispatch("action", identity(), { ref: "n:button" }))).toMatchObject({ code: "invalid-argument" })
+  expect(await rejection(f.dock.dispatch("keyboard", identity(), {}))).toMatchObject({ code: "wrong-scope" })
   for (const keys of [undefined, "", "x".repeat(65), 7])
-    await expect(f.dock.dispatch("keyboard", identity(), { ref: "n:window", keys })).rejects.toMatchObject({ code: "invalid-argument" })
-  await expect(f.dock.dispatch("type", identity(), { ref: "n:input", text: "", mode: "fallback" })).rejects.toMatchObject({ code: "invalid-argument" })
+    expect(await rejection(f.dock.dispatch("keyboard", identity(), { ref: "n:window", keys }))).toMatchObject({ code: "invalid-argument" })
+  expect(await rejection(f.dock.dispatch("type", identity(), { ref: "n:input", text: "", mode: "fallback" }))).toMatchObject({ code: "invalid-argument" })
   expect(f.client.calls.length).toBe(2)
 })
 
@@ -489,7 +490,7 @@ test("native provider error code/outcome/result survive with no retry", async ()
   await f.dock.bind(identity(), target(), f.client, confirm)
   const error = new NativeDockProtocol.NativeError("provider-rejected", "Provider declined", "unknown", { method: "action", dispatch: "rejected", postcondition: "unverified" })
   f.client.reply = async (call) => { if (call.op === "action") throw error; return f.client.defaultReply(call) }
-  await expect(f.dock.dispatch("click", identity(), { ref: "n:button" })).rejects.toBe(error)
+  expect(await rejection(f.dock.dispatch("click", identity(), { ref: "n:button" }))).toBe(error)
   expect(f.client.calls.filter((call) => call.op === "action").length).toBe(1)
 })
 
@@ -498,11 +499,11 @@ test("pre-aborted request never reaches client and pending dispatch capacity is 
   await f.dock.bind(identity(), target(), f.client, confirm)
   const abort = new AbortController()
   abort.abort()
-  await expect(f.dock.dispatch("click", identity(), { ref: "n:button" }, abort.signal)).rejects.toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.dispatch("click", identity(), { ref: "n:button" }, abort.signal))).toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
   expect(f.client.calls).toHaveLength(2)
   f.client.reply = async (call) => call.op === "read" ? new Promise(() => {}) : f.client.defaultReply(call)
   const work = Array.from({ length: 32 }, () => f.dock.dispatch("read", identity(), {}).then(() => null, (error: NativeDockProtocol.NativeError) => error))
-  await expect(f.dock.dispatch("read", identity(), {})).rejects.toMatchObject({ code: "capacity" })
+  expect(await rejection(f.dock.dispatch("read", identity(), {}))).toMatchObject({ code: "capacity" })
   await turn()
   expect(f.client.calls.filter((call) => call.op === "read")).toHaveLength(32)
   await f.dock.unbind(identity())
@@ -516,13 +517,13 @@ test("wait is bounded cancellable delay, not application proof, and releases abo
   const abort = new AbortController()
   const add = spyOn(abort.signal, "addEventListener")
   const remove = spyOn(abort.signal, "removeEventListener")
-  await expect(f.dock.dispatch("wait", identity(), { milliseconds: 0 }, abort.signal)).resolves.toEqual({ backend: "linux-atspi", milliseconds: 0, readiness: "delay-only", postcondition: "unverified" })
+  expect(await f.dock.dispatch("wait", identity(), { milliseconds: 0 }, abort.signal)).toEqual({ backend: "linux-atspi", milliseconds: 0, readiness: "delay-only", postcondition: "unverified" })
   expect(add.mock.calls.length).toBe(1)
   expect(remove.mock.calls.length).toBe(1)
   const waiting = f.dock.dispatch("wait", identity(), { milliseconds: 10000 }, abort.signal)
   abort.abort()
-  await expect(waiting).rejects.toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
-  await expect(f.dock.dispatch("wait", identity(), { milliseconds: 10001 })).rejects.toMatchObject({ code: "invalid-argument" })
+  expect(await rejection(waiting)).toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.dispatch("wait", identity(), { milliseconds: 10001 }))).toMatchObject({ code: "invalid-argument" })
   expect(f.client.calls.length).toBe(2)
   expect(remove.mock.calls.length).toBe(2)
   add.mockRestore()
@@ -543,7 +544,7 @@ test("unbind removes route immediately, cancels tied work, sends captured guest 
   const unbound = f.dock.unbind(identity())
   expect(f.dock.has(identity())).toBe(false)
   expect(signal?.aborted).toBe(true)
-  await expect(work).rejects.toMatchObject({ code: "cancelled", outcome: "unknown" })
+  expect(await rejection(work)).toMatchObject({ code: "cancelled", outcome: "unknown" })
   await turn()
   expect(f.client.calls.at(-1)).toEqual({ op: "unbind", args: {}, bindingID: binding.bindingID, bindingEpoch: binding.bindingEpoch })
   expect(f.client.closed).toBe(0)
@@ -569,10 +570,10 @@ test("closeTab targets stored sender/tab; close cancels all work and closes each
   const closed = f.dock.close()
   expect(f.dock.has(other)).toBe(false)
   expect(f.dock.has(third)).toBe(false)
-  await expect(waiting).rejects.toMatchObject({ code: "cancelled" })
+  expect(await rejection(waiting)).toMatchObject({ code: "cancelled" })
   await closed
   await f.dock.close()
   expect(f.client.closed).toBe(1)
   expect(second.closed).toBe(1)
-  await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "closed" })
+  expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "closed" })
 })

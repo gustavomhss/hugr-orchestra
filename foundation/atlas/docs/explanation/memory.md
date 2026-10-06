@@ -11,7 +11,7 @@ memory is accessed** — and everything else follows from getting that right.
 
 ## Why it's this way
 
-**Why per-member.** Craft doesn't generalize cleanly. `charlie`'s retry lesson about a flaky migration is
+**Why per-member.** Craft doesn't generalize cleanly. `backend`'s retry lesson about a flaky migration is
 not a fact about the codebase, and it is not `lucy`'s experience. Storing it as shared Knowledge would
 pollute the codebase truth with one seat's episodic noise; storing it in a common pool would leak one
 member's context into every other. So each member owns its Memory, private to it — and the orchestrator is

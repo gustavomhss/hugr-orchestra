@@ -2,7 +2,7 @@
 
 > **state:** S3-sibling · **protocol:** [`properties-template`](../method/properties-template.md) ·
 > **source:** [`method-tags-grd.md`](method-tags-grd.md) (frozen S2; each `### INV-GROUND-<n>` carries the
-> `up-property` law this file renders) · **owner:** charlie (FORGE).
+> `up-property` law this file renders) · **owner:** backend (FORGE).
 >
 > **Purpose:** render every behavioural GROUND invariant's frozen `up-property` into a runnable ∀-quantified
 > property — the oracle-free, beyond-the-witness check that raises a WP from FLOOR toward FULL. **Invents no

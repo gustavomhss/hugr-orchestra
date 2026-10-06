@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-gen.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE); genesis domain authored by jimmy (COMPASS).
+> **owner:** backend (FORGE); genesis domain authored by jimmy (COMPASS).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. The GEN block carries **no** `formal` cluster — the
 > sole machine-checked model in the whole Atlas is `FSPEC-merge` (Block KRN). Genesis is a
