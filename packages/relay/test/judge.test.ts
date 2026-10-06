@@ -6,14 +6,25 @@ import { JudgeApi } from "../src/judge/api"
 import { JudgeBallot } from "../src/judge/ballot"
 import { JudgeConfig } from "../src/judge/config"
 
-// The judge's API backend against a fake Messages endpoint, porting `tests/test_judge_api.py`: the verdict comes from a
-// forced tool call, a missing verdict or a transport failure is never a vote, a tie fails, and every cut of the
-// artifact reaches the backend tag the ledger records.
+// The judge's API backend against a fake Messages endpoint. The G1 goldens replay `benchmark/judge.py` against the same
+// fake: the verdict comes from a forced tool call, a missing verdict or a transport failure is never a vote, a tie
+// fails, and every cut of the artifact reaches the backend tag the ledger records. The tests after them pin what the
+// goldens cannot reach.
 
 interface Seen {
+  readonly method: string
   readonly path: string
   readonly headers: Record<string, string>
   readonly body: Record<string, unknown>
+}
+
+interface Case {
+  readonly name: string
+  readonly criterion: string
+  readonly files: ReadonlyArray<{ readonly name: string; readonly text: string | null }>
+  readonly env: Record<string, string>
+  readonly status: number
+  readonly replies: ReadonlyArray<unknown>
 }
 
 const servers: ReturnType<typeof Bun.serve>[] = []
@@ -26,6 +37,7 @@ function endpoint(replies: ReadonlyArray<unknown>, status = 200) {
     port: 0,
     fetch: async (request) => {
       seen.push({
+        method: request.method,
         path: new URL(request.url).pathname,
         headers: Object.fromEntries(request.headers),
         body: (await request.json()) as Record<string, unknown>,
@@ -34,7 +46,7 @@ function endpoint(replies: ReadonlyArray<unknown>, status = 200) {
     },
   })
   servers.push(server)
-  return { url: server.url.href, seen }
+  return { url: server.url.href.replace(/\/$/, ""), seen }
 }
 
 const config = (url: string | undefined, overrides: Partial<JudgeConfig.Config> = {}): JudgeConfig.Config => ({
@@ -53,88 +65,79 @@ const tool = (verdict: unknown, reason: unknown = "because") => ({
   content: [{ type: "tool_use", name: "submit_verdict", input: { verdict, reason } }],
 })
 const prose = (text: unknown) => ({ content: [{ type: "text", text }] })
-const empty = { content: [], stop_reason: "max_tokens" }
-const big = (name = "big.diff") => ({ name: `/work/run/${name}`, text: "x".repeat(5000) })
-const cut = { maxContext: 1000, votes: 3 }
+const big = { name: "/work/run/big.diff", text: "x".repeat(5000) }
 
-describe("wire", () => {
-  test("the verdict comes from the forced tool call", async () => {
-    const fake = endpoint([tool("pass", "the artifact satisfies it")])
-    expect(await judge(fake.url)).toEqual({
-      verdict: "pass",
-      reason: "the artifact satisfies it",
-      backend: "llm:test-model",
-      available: true,
-    })
+const GOLDEN = path.join(import.meta.dir, "golden", "judge")
+const cases: Case[] = await Promise.all(
+  [...new Bun.Glob("*/case.json").scanSync(GOLDEN)].sort().map(async (file) => ({
+    name: path.dirname(file),
+    ...(await Bun.file(path.join(GOLDEN, file)).json()),
+  })),
+)
+// The stub cases belong to the gate core's stub (WP3); every other case drives this backend.
+const api = cases.filter((golden) => golden.env.RELAY_JUDGE_BACKEND === "api")
+
+// Declared divergences (PARITY-EXCEPTIONS.md), applied to the golden's expected response.
+const EXCEPTIONS: Record<string, (expected: JudgeBallot.Response) => JudgeBallot.Response> = {
+  // J2: the TS judge names its own setting, not a provider variable it never reads.
+  "no-base-url-no-key": (expected) => ({ ...expected, reason: "api: judge API key not set" }),
+}
+
+describe("goldens", () => {
+  test("every golden is an api or stub case, and the api cases are all here", () => {
+    expect(cases.filter((golden) => !["api", "stub"].includes(golden.env.RELAY_JUDGE_BACKEND))).toEqual([])
+    expect(api.length).toBeGreaterThanOrEqual(60)
+    expect(Object.keys(EXCEPTIONS).filter((name) => !api.some((golden) => golden.name === name))).toEqual([])
   })
 
-  test("the request forces the tool, does not stream and carries the judge config", async () => {
-    const fake = endpoint([tool("fail")])
-    await judge(`${fake.url}//`)
-    expect(fake.seen).toHaveLength(1)
-    expect(fake.seen[0]!.path).toBe("/v1/messages")
-    expect(fake.seen[0]!.headers).toMatchObject({
-      "x-api-key": "local",
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    })
-    expect(fake.seen[0]!.body).toEqual({
-      model: "test-model",
-      max_tokens: 8192,
-      system: expect.stringContaining("End your reply with a final line that is exactly 'VERDICT: PASS'"),
-      tools: [
-        {
-          name: "submit_verdict",
-          description: "Return the compliance verdict for the stated criterion.",
-          input_schema: {
-            type: "object",
-            properties: {
-              verdict: { type: "string", enum: ["pass", "fail"] },
-              reason: { type: "string", description: "One or two sentences of justification." },
-            },
-            required: ["verdict", "reason"],
-          },
-        },
-      ],
-      tool_choice: { type: "tool", name: "submit_verdict" },
-      stream: false,
-      messages: [
-        {
-          role: "user",
-          content:
-            "CRITERION:\ncrit\n\nARTIFACT UNDER REVIEW:\n(no artifact provided)\n\n" +
-            "Does the artifact satisfy the criterion? Reason briefly, then give the VERDICT line.",
-        },
-      ],
-    })
-  })
-
-  test("max_tokens is generous by default and configurable", async () => {
-    const fake = endpoint([tool("pass")])
-    await judge(fake.url)
-    await judge(fake.url, { maxTokens: 123 })
-    expect(fake.seen.map((seen) => seen.body.max_tokens)).toEqual([8192, 123])
-    expect(JudgeConfig.defaults.maxContext).toBeGreaterThanOrEqual(100_000)
-  })
-
-  test("each file is labelled by its basename and a missing one reads (file not found)", async () => {
-    const fake = endpoint([tool("pass")])
-    await judge(fake.url, {}, [{ name: "/work/run/review.md", text: "A review" }, { name: "/work/gone.md" }])
-    const messages = fake.seen[0]!.body.messages as { content: string }[]
-    expect(messages[0]!.content).toContain(
-      "ARTIFACT UNDER REVIEW:\n--- review.md ---\nA review\n\n--- gone.md ---\n(file not found)\n\nDoes the artifact",
+  test.each(api.map((golden) => [golden.name, golden] as const))("%s", async (name, golden) => {
+    const fake = endpoint(golden.replies, golden.status)
+    const env = Object.fromEntries(
+      Object.entries(golden.env).map(([key, value]) => [key, value.replace("{server}", fake.url)]),
     )
+    const settings: JudgeConfig.Config = {
+      ...JudgeConfig.defaults,
+      backend: "api",
+      model: env.RELAY_JUDGE_MODEL ?? JudgeConfig.defaults.model,
+      baseURL: env.RELAY_JUDGE_BASE_URL,
+      apiKey: env.RELAY_JUDGE_API_KEY === undefined ? undefined : Redacted.make(env.RELAY_JUDGE_API_KEY),
+      votes: Number(env.RELAY_JUDGE_VOTES ?? JudgeConfig.defaults.votes),
+      maxContext: Number(env.RELAY_JUDGE_MAX_CTX ?? JudgeConfig.defaults.maxContext),
+      maxTokens: Number(env.RELAY_JUDGE_MAX_TOKENS ?? JudgeConfig.defaults.maxTokens),
+    }
+    // judge.py was handed full paths; the label is the basename.
+    const files = golden.files.map((file) =>
+      file.text === null ? { name: `/work/run/${file.name}` } : { name: `/work/run/${file.name}`, text: file.text },
+    )
+    const response = await Effect.runPromise(JudgeApi.judge(settings, { criterion: golden.criterion, files }))
+
+    const exchange = await Bun.file(path.join(GOLDEN, name, "exchange.json")).json()
+    const expected = JSON.parse(await Bun.file(path.join(GOLDEN, name, "response.jsonl")).text())
+    expect(
+      fake.seen.map((seen) => ({
+        method: seen.method,
+        path: seen.path,
+        headers: Object.fromEntries(
+          ["anthropic-version", "content-type", "x-api-key"].map((header) => [header, seen.headers[header] ?? null]),
+        ),
+        body: seen.body,
+      })),
+    ).toEqual(exchange.requests)
+    expect(response).toEqual((EXCEPTIONS[name] ?? ((same) => same))(expected))
   })
 
-  test("a cut artifact is announced to the model and to the ledger", async () => {
-    const fake = endpoint([tool("pass")])
-    expect((await judge(fake.url, { maxContext: 1000 }, [big()])).backend).toBe("llm:test-model(truncated:big.diff)")
-    const sent = (fake.seen[0]!.body.messages as { content: string }[])[0]!.content
-    expect(sent).toContain(`--- big.diff ---\n${"x".repeat(1000)}\n\n[TRUNCATED at 1000 characters — the rest of`)
-    expect(sent).toContain("big.diff was NOT shown to you. If the criterion cannot be decided")
-    expect((await judge(fake.url, { maxContext: 100_000 }, [big()])).backend).toBe("llm:test-model")
+  test("the defaults are judge.py's", () => {
+    expect(JudgeConfig.defaults).toEqual({
+      backend: "stub",
+      model: "claude-sonnet-4-6",
+      votes: 1,
+      maxContext: 120_000,
+      maxTokens: 8192,
+    })
   })
+})
 
+describe("beyond the goldens", () => {
   test("the cut counts characters, not UTF-16 units", async () => {
     const fake = endpoint([tool("pass")])
     const astral = String.fromCodePoint(0x1f600)
@@ -144,184 +147,27 @@ describe("wire", () => {
     const sent = (fake.seen[1]!.body.messages as { content: string }[])[0]!.content
     expect(sent).toContain(`--- emoji.txt ---\n${astral.repeat(9)}\n\n[TRUNCATED at 9 characters`)
   })
-})
-
-describe("verdicts", () => {
-  test("a tool call with a bogus verdict does not pass", async () => {
-    expect((await judge(endpoint([tool("maybe", "unsure")]).url)).verdict).toBe("fail")
-  })
-
-  test("the prose verdict still works where tool_choice is ignored, and keeps truncation", async () => {
-    expect(await judge(endpoint([prose("looks fine\nVERDICT: PASS")]).url)).toEqual({
-      verdict: "pass",
-      reason: "VERDICT: PASS",
-      backend: "llm:test-model",
-      available: true,
-    })
-    const response = await judge(endpoint([prose("VERDICT: FAIL")]).url, { maxContext: 1000 }, [big()])
-    expect(response.backend).toBe("llm:test-model(truncated:big.diff)")
-  })
-
-  test("a judge that never answered is tagged no-verdict, never recorded as a judgment", async () => {
-    expect(await judge(endpoint([prose("I was still thinking about it")]).url)).toEqual({
-      verdict: "fail",
-      reason: "no VERDICT line in 29 chars of reply (truncated at max_tokens?): I was still thinking about it",
-      backend: "llm:test-model(no-verdict)",
-      available: false,
-    })
-    expect(await judge(endpoint([empty]).url)).toEqual({
-      verdict: "fail",
-      reason: "no VERDICT line in 0 chars of reply (truncated at max_tokens?): no response",
-      backend: "llm:test-model(no-verdict)",
-      available: false,
-    })
-  })
-
-  test("the backend tag names the model that graded", async () => {
-    expect((await judge(endpoint([tool("pass")]).url, { model: "some-other-model" })).backend).toBe(
-      "llm:some-other-model",
-    )
-  })
-
-  test.each([
-    "VERDICT: FAIL (previous PASS was incorrect)",
-    "VERDICT: PASS or FAIL",
-    "VERDICT: NOTPASS",
-    "VERDICT: UNKNOWN",
-    "Result: VERDICT: PASS",
-    "VERDICT: PASS\nVERDICT: FAIL (previous PASS was incorrect)",
-    // Python's strip keeps a byte-order mark, so this line never declares a verdict.
-    `${String.fromCharCode(0xfeff)}VERDICT: PASS`,
-  ])("ambiguous prose is unavailable, not a vote: %j", async (line) => {
-    const fake = endpoint([prose(line), tool("pass"), tool("pass")])
-    const response = await judge(fake.url, { votes: 3 })
-    expect([response.verdict, response.backend, fake.seen.length]).toEqual(["fail", "llm:test-model(no-verdict)", 1])
-  })
-
-  test.each(["pass", "fail"] as const)("an exact prose verdict accepts only case and outer whitespace: %s", async (v) => {
-    const fake = endpoint([prose(`Explanation mentions PASS.\n \tVeRdIcT: ${v}\t \n`)])
-    expect(await judge(fake.url)).toMatchObject({ verdict: v, backend: "llm:test-model" })
-    expect(fake.seen).toHaveLength(1)
-  })
 
   test("outer whitespace and line breaks follow Python's str.strip and str.splitlines", async () => {
-    const separator = String.fromCharCode(0x2028)
     const text = `first${String.fromCharCode(0x1c)}VERDICT: PASS${String.fromCharCode(0x85)}`
     expect(await judge(endpoint([prose(text)]).url)).toMatchObject({ verdict: "pass", reason: "VERDICT: PASS" })
-    expect(await judge(endpoint([prose(`VERDICT: FAIL${separator}said`)]).url)).toMatchObject({
-      verdict: "fail",
-      reason: "said",
-      available: true,
-    })
-  })
-
-  test.each([
-    ["pass", "FAIL"],
-    ["fail", "PASS"],
-  ] as const)("the forced tool verdict %s takes priority over conflicting prose", async (verdict, other) => {
-    const reply = tool(verdict, "tool judgment")
-    const fake = endpoint([{ content: [{ type: "text", text: `VERDICT: ${other}` }, ...reply.content] }])
-    expect(await judge(fake.url)).toEqual({
-      verdict,
-      reason: "tool judgment",
-      backend: "llm:test-model",
-      available: true,
-    })
-  })
-
-  test("a tool reason is cut to 300 characters and an empty one is named", async () => {
-    expect((await judge(endpoint([tool("pass", "r".repeat(400))]).url)).reason).toBe("r".repeat(300))
-    expect((await judge(endpoint([tool("fail", "")]).url)).reason).toBe("(no reason given)")
-  })
-})
-
-describe("votes", () => {
-  test("a flapping judge is decided by majority", async () => {
-    const fake = endpoint([tool("pass"), tool("fail"), tool("pass")])
-    const response = await judge(fake.url, { votes: 3 })
-    expect(response).toEqual({
-      verdict: "pass",
-      reason: "2/3 passed · because",
-      backend: "llm:test-model(votes:2/3)",
-      available: true,
-    })
-    expect(fake.seen).toHaveLength(3)
-  })
-
-  test("the minority does not win and a tie fails", async () => {
-    const minority = await judge(endpoint([tool("fail"), tool("pass"), tool("fail")]).url, { votes: 3 })
-    expect([minority.verdict, minority.backend]).toEqual(["fail", "llm:test-model(votes:1/3)"])
-    const tie = await judge(endpoint([tool("pass", "yes"), tool("fail", "no")]).url, { votes: 2 })
-    expect(tie).toEqual({ verdict: "fail", reason: "1/2 passed · no", backend: "llm:test-model(votes:1/2)", available: true })
-  })
-
-  test("the tally reaches the ledger, and one vote is the default and costs one call", async () => {
-    expect((await judge(endpoint([tool("pass")]).url, { votes: 3 })).backend).toBe("llm:test-model(votes:3/3)")
-    const fake = endpoint([tool("pass")])
-    expect((await judge(fake.url)).backend).toBe("llm:test-model")
-    expect(fake.seen).toHaveLength(1)
-  })
-
-  test("a missing verdict is not a vote: it aborts the ballot", async () => {
-    const fake = endpoint([tool("pass"), { content: [] }, tool("pass")])
-    expect(await judge(fake.url, { votes: 3 })).toMatchObject({
+    const split = `VERDICT: FAIL${String.fromCharCode(0x2028)}said`
+    expect(await judge(endpoint([prose(split)]).url)).toMatchObject({ verdict: "fail", reason: "said", available: true })
+    // Python's strip keeps a byte-order mark, so this line never declares a verdict.
+    const marked = `${String.fromCharCode(0xfeff)}VERDICT: PASS`
+    expect(await judge(endpoint([prose(marked)]).url)).toMatchObject({
       verdict: "fail",
       backend: "llm:test-model(no-verdict)",
-      available: false,
     })
-    expect(fake.seen).toHaveLength(2)
   })
 
-  test("an empty reply with a cut context aborts before later passes", async () => {
-    const fake = endpoint([empty, tool("pass"), tool("pass")])
-    const response = await judge(fake.url, cut, [big()])
-    expect([response.verdict, response.backend]).toEqual(["fail", "llm:test-model(no-verdict)(truncated:big.diff)"])
-    expect(response.reason).toContain("no VERDICT line")
-    expect(fake.seen).toHaveLength(1)
-  })
-
-  test.each(["big.diff", "big(no-verdict).diff"])("a valid majority keeps model, tally and truncation: %s", async (name) => {
-    const fake = endpoint([tool("pass", "first accepted judgment"), tool("fail"), tool("pass")])
-    expect(await judge(fake.url, cut, [big(name)])).toEqual({
-      verdict: "pass",
-      reason: "2/3 passed · first accepted judgment",
-      backend: `llm:test-model(votes:2/3)(truncated:${name})`,
-      available: true,
-    })
-    expect(fake.seen).toHaveLength(3)
-  })
-
-  const MARKER_MODELS = [
-    "alias(truncated:shadow)",
-    "alias(no-verdict)",
-    "alias(extra)",
-    "alias(truncated:shadow(no-verdict))",
-    "alias(no-verdict)(truncated:shadow)",
-    "alias(api-error)(cli-error)(votes:0/3)",
-  ]
-  const artifact = big("large(no-verdict)(truncated:shadow(votes:9)).diff")
-
-  test.each(MARKER_MODELS.flatMap((model) => [{ model, answer: tool("pass") }, { model, answer: prose("VERDICT: PASS") }]))(
-    "model alias markers keep valid votes and exact identity: $model",
-    async ({ model, answer }) => {
-      const fake = endpoint([answer])
-      const response = await judge(fake.url, { ...cut, model }, [artifact])
-      expect(response).toMatchObject({
-        verdict: "pass",
-        available: true,
-        backend: `llm:${model}(votes:3/3)(truncated:large(no-verdict)(truncated:shadow(votes:9)).diff)`,
-      })
-      expect(response.reason.startsWith("3/3 passed")).toBe(true)
-      expect(fake.seen.map((seen) => seen.body.model)).toEqual([model, model, model])
-    },
-  )
-
-  test.each(MARKER_MODELS)("model alias markers cannot hide an empty reply: %s", async (model) => {
-    const fake = endpoint([empty, tool("pass"), tool("pass")])
-    expect(await judge(fake.url, { ...cut, model }, [artifact])).toMatchObject({
+  test("a non-string text names its block and Python's type", async () => {
+    const fake = endpoint([{ content: [{ type: "text", text: "a" }, { text: 1.5 }] }, tool("pass")])
+    expect(await judge(fake.url, { votes: 3 })).toEqual({
       verdict: "fail",
+      reason: "api error: sequence item 1: expected str instance, float found",
+      backend: "api-error:test-model",
       available: false,
-      backend: `llm:${model}(no-verdict)(truncated:large(no-verdict)(truncated:shadow(votes:9)).diff)`,
     })
     expect(fake.seen).toHaveLength(1)
   })
@@ -342,66 +188,13 @@ describe("votes", () => {
     // Code point order puts U+FF5E before U+1F600, where UTF-16 order would not.
     expect(response.backend).toBe(`llm:m(votes:6/6)(truncated:a,z)(truncated:b)(truncated:${high})(truncated:${astral})`)
   })
-})
-
-describe("errors abort the ballot", () => {
-  test.each([
-    [["pass"], "submit_verdict input must be an object"],
-    ["pass", "submit_verdict input must be an object"],
-    [1, "submit_verdict input must be an object"],
-    [null, "submit_verdict input must be an object"],
-    [{}, "submit_verdict verdict must be pass or fail"],
-    [{ verdict: ["pass"], reason: "bad verdict type" }, "submit_verdict verdict must be pass or fail"],
-    [{ verdict: "pass", reason: ["bad reason type"] }, "submit_verdict reason must be a string"],
-    [{ verdict: "pass" }, "submit_verdict reason must be a string"],
-  ])("malformed tool input %j", async (input, message) => {
-    const call = { type: "tool_use", name: "submit_verdict", input }
-    const fake = endpoint([{ content: [{ type: "text", text: "VERDICT: PASS" }, call] }, tool("pass")])
-    expect(await judge(fake.url, cut, [big()])).toEqual({
-      verdict: "fail",
-      reason: `api error: ${message}`,
-      backend: "api-error:test-model(truncated:big.diff)",
-      available: false,
-    })
-    expect(fake.seen).toHaveLength(1)
-  })
-
-  test.each([
-    [null, "response must be an object"],
-    [[], "response must be an object"],
-    [{ content: null }, "response content must be a list of objects"],
-    [{ content: {} }, "response content must be a list of objects"],
-    [{ content: [null] }, "response content must be a list of objects"],
-    [{ content: [{ type: "text", text: null }] }, "sequence item 0: expected str instance, NoneType found"],
-    [{ content: [{ type: "text", text: "a" }, { text: 1.5 }] }, "sequence item 1: expected str instance, float found"],
-  ])("malformed response %j", async (reply, message) => {
-    const fake = endpoint([reply, tool("pass")])
-    expect(await judge(fake.url, { votes: 3 })).toEqual({
-      verdict: "fail",
-      reason: `api error: ${message}`,
-      backend: "api-error:test-model",
-      available: false,
-    })
-    expect(fake.seen).toHaveLength(1)
-  })
-
-  test("an HTTP error keeps the transport, the model and the truncation", async () => {
-    const fake = endpoint([tool("pass")], 503)
-    expect(await judge(fake.url, cut, [big()])).toEqual({
-      verdict: "fail",
-      reason: "api error: HTTP Error 503: Service Unavailable",
-      backend: "api-error:test-model(truncated:big.diff)",
-      available: false,
-    })
-    expect(fake.seen).toHaveLength(1)
-  })
 
   // PARITY-EXCEPTIONS J1: urllib follows a 301-303 as a GET; the TS judge never follows a redirect with its key.
   test("a redirect is an HTTP error and is never followed", async () => {
     const target = endpoint([tool("pass")])
     const server = Bun.serve({
       port: 0,
-      fetch: () => new Response(null, { status: 302, headers: { location: `${target.url}v1/messages` } }),
+      fetch: () => new Response(null, { status: 302, headers: { location: `${target.url}/v1/messages` } }),
     })
     servers.push(server)
     expect(await judge(server.url.href)).toMatchObject({ reason: "api error: HTTP Error 302: Found", available: false })
@@ -412,7 +205,7 @@ describe("errors abort the ballot", () => {
   test("a body that is not JSON is an api error", async () => {
     const server = Bun.serve({ port: 0, fetch: () => new Response("not json") })
     servers.push(server)
-    const response = await judge(server.url.href, cut, [big()])
+    const response = await judge(server.url.href, { maxContext: 1000 }, [big])
     expect(response).toMatchObject({
       verdict: "fail",
       backend: "api-error:test-model(truncated:big.diff)",
