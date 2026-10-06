@@ -16,8 +16,8 @@ import { Cause, Context, Deferred, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
 import { carriesMemory, measure, run, snapshot, type ParentRequest, type Pass } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
-import { hardLimit, isSafe, PREPARE_MARGIN, settings, shouldStart, tokenCount } from "./trigger"
-import { apply as applyMasks, candidates as maskCandidates, urgent } from "./masking"
+import { hardLimit, isSafe, PREPARE_MARGIN, PRUNE_STEP, settings, shouldStart, tokenCount } from "./trigger"
+import { apply as applyMasks, candidates as maskCandidates, estimate, urgent } from "./masking"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
 type Active = { generation: number; boundary: MessageID; done: Deferred.Deferred<void> }
@@ -34,6 +34,8 @@ type Entry = {
   failures?: number
   /** How the last maintenance run ended. */
   result?: string
+  /** Context size after the last prune below the trigger; the next one runs PRUNE_STEP of the window later. */
+  pruned?: number
 }
 type State = {
   sessions: Map<SessionID, Entry>
@@ -180,7 +182,7 @@ const layer = Layer.effect(
         Effect.map((model) => Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)),
         Effect.catch(() => Effect.succeed(0)),
       )
-      if (Token.estimate(prepared.system.join("\n") + JSON.stringify(prepared.messages)) + 2048 > capacity)
+      if (Token.estimate(prepared.system.join("\n")) + estimate(prepared.messages) + 2048 > capacity)
         return { messages: input.messages, system: [] }
       const unchanged = current.sessions.get(input.sessionID) === item && item?.generation === generation &&
         current.contexts.get(input.sessionID)?.artifact === artifact
@@ -237,6 +239,32 @@ const layer = Layer.effect(
       yield* unload(current, sessionID)
     })
 
+    /** Stub the selected tool results of the stored history, publishing first what the archive has not seen. */
+    const stubs = (current: State, sessionID: SessionID, stored: SessionV1.WithParts[],
+      select: (messages: SessionV1.WithParts[], masks: Map<string, string>) => { messageID: string; part: { id: string }; saved: number }[]) =>
+      Effect.gen(function* () {
+        const item = entry(current, sessionID)
+        const archivedIndex = item.archived ? stored.findIndex((message) => message.info.id === item.archived) : -1
+        yield* archive.publish({ sessionID, messages: stored.slice(archivedIndex + 1) })
+        item.archived = stored.at(-1)?.info.id
+        const references = yield* archive.list(sessionID)
+        const firstFragment = new Map<string, string>()
+        for (const reference of references) if (!firstFragment.has(reference.first)) firstFragment.set(reference.first, reference.id)
+        const view = yield* prepare({ sessionID, messages: MessageV2.filterCompacted(stored.toReversed()), canRecall: true })
+        const masks = current.masks.get(sessionID) ?? new Map<string, string>()
+        let freed = 0
+        for (const candidate of select(view.messages, masks)) {
+          const reference = firstFragment.get(candidate.messageID)
+          if (reference === undefined) continue
+          masks.set(candidate.part.id, reference)
+          freed += candidate.saved
+        }
+        if (!freed) return 0
+        current.masks.set(sessionID, masks)
+        yield* persist(current, sessionID)
+        return freed
+      })
+
     const schedule = (current: State, sessionID: SessionID, pending: Pending,
       expected?: { entry: Entry; generation: number }): Effect.Effect<void> =>
       Effect.gen(function* () {
@@ -261,13 +289,30 @@ const layer = Layer.effect(
           }
           if (current.contexts.get(sessionID)?.boundary === message.id) return
           if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false, context,
-            trigger: options.trigger })) return
+            trigger: options.trigger })) {
+            // Below the trigger: prune old tool output once the context grew PRUNE_STEP since the last batch.
+            const tokens = tokenCount(message.tokens)
+            if (tokens < (item.pruned ?? 0)) item.pruned = tokens
+            return pending.canRecall && context > 0 && tokens >= (item.pruned ?? 0) + PRUNE_STEP * context
+              ? "prune" as const : undefined
+          }
           const active: Active = { generation: item.generation, boundary: message.id, done: Deferred.makeUnsafe<void>() }
           item.active = active
           item.attempted = message.id
           item.pending = undefined
           return active
         })
+        if (active === "prune") {
+          // No model call: stub tool output that left the verbatim tail, restorable through context_recall.
+          const tokens = tokenCount(message.tokens)
+          yield* sessions.messages({ sessionID }).pipe(
+            Effect.flatMap((stored) => stubs(current, sessionID, stored, maskCandidates)),
+            Effect.tap((freed) => Effect.sync(() => { entry(current, sessionID).pruned = tokens - freed })),
+            Effect.flatMap((freed) => freed > 0 ? diagnostic(sessionID, message.id, "pruned") : Effect.void),
+            Effect.catchCause(() => diagnostic(sessionID, message.id, "prune-failed")),
+          )
+          return
+        }
         if (!active) return
 
         const result = (value: string) => Effect.sync(() => {
@@ -390,8 +435,7 @@ const layer = Layer.effect(
                 return [id, { member: info?.agent, status: job?.status }] as const
               })))
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
-              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member },
-                { trigger: options.trigger, masks: current.masks.get(sessionID), parent: request, overhead: current.overheads.get(sessionID) })
+              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member }, { parent: request })
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.skip ? `skipped-${pass.skip}` : "rejected", pass)
@@ -520,7 +564,7 @@ const layer = Layer.effect(
         const view = yield* prepare({ sessionID, messages: history, canRecall: input.canRecall })
         const sent = yield* MessageV2.toModelMessagesEffect(view.messages, model).pipe(Effect.orElseSucceed(() => view.messages))
         return { stored, history,
-          tokens: (current.overheads.get(sessionID) ?? 0) + Token.estimate(view.system.join("\n") + JSON.stringify(sent)) }
+          tokens: (current.overheads.get(sessionID) ?? 0) + Token.estimate(view.system.join("\n")) + estimate(sent) }
       })
       if (!input.force && (yield* pressure).tokens < limit) return "fits" as const
       const item = entry(current, sessionID)
@@ -538,23 +582,7 @@ const layer = Layer.effect(
       if (after.tokens < limit && (ran || !input.force)) return ran ?? "fits" as const
       if (input.canRecall !== true) return ran ?? (after.tokens < limit ? "fits" as const : "over" as const)
       // Last resort, with no model call: stub every old result the archive can restore.
-      // Publish only what the archive has not seen, as the maintenance run does.
-      const archivedIndex = item.archived ? after.stored.findIndex((message) => message.info.id === item.archived) : -1
-      yield* archive.publish({ sessionID, messages: after.stored.slice(archivedIndex + 1) })
-      item.archived = after.stored.at(-1)?.info.id
-      const references = yield* archive.list(sessionID)
-      const firstFragment = new Map<string, string>()
-      for (const reference of references) if (!firstFragment.has(reference.first)) firstFragment.set(reference.first, reference.id)
-      const view = yield* prepare({ sessionID, messages: after.history, canRecall: true })
-      const masks = current.masks.get(sessionID) ?? new Map<string, string>()
-      const before = masks.size
-      for (const candidate of urgent(view.messages, masks)) {
-        const reference = firstFragment.get(candidate.messageID)
-        if (reference !== undefined) masks.set(candidate.part.id, reference)
-      }
-      if (masks.size === before) return ran ?? (after.tokens < limit ? "fits" as const : "over" as const)
-      current.masks.set(sessionID, masks)
-      yield* persist(current, sessionID)
+      if (!(yield* stubs(current, sessionID, after.stored, urgent))) return ran ?? (after.tokens < limit ? "fits" as const : "over" as const)
       yield* diagnostic(sessionID, last.id, "urgent-masked")
       return (yield* pressure).tokens < limit || input.force ? "masked" as const : "over" as const
     }, Effect.catchCause((cause) => Effect.logWarning("continuity compact failed", { cause: Cause.pretty(cause) }).pipe(

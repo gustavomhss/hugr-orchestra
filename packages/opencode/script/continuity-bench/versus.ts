@@ -5,8 +5,9 @@
 // Both arms replay the same trace message by message and act where production would:
 // - legacy: the compaction this branch replaced. At each assistant message whose context reaches the usable window,
 //   compact as SessionCompaction.process did (summary of the head, recent tail kept, auto-continue message);
-// - continuity: at each finished step past trigger x window, masking of old tool output (service.ts) and a memory pass
-//   (fork.ts) when masking alone does not free enough; past the hard limit, the blocking path of compact().
+// - continuity: below the trigger, masking of old tool output every PRUNE_STEP of growth (BENCH_PRUNE=0 turns it off);
+//   at each finished step past trigger x window, masking (service.ts) and a memory pass (fork.ts) when masking alone
+//   does not free enough; past the hard limit, the blocking path of compact().
 // The context size is the same estimate for both arms: trace overhead plus Token.estimate of the model messages.
 // The probe asks every question in one request over exactly what the model would see at the end of the trace.
 import { Database } from "bun:sqlite"
@@ -23,8 +24,8 @@ import { Token } from "@/util/token"
 import { run, snapshot } from "@/continuity/fork"
 import { create as contexts } from "@/continuity/context"
 import { child } from "@/continuity/alias"
-import { hardLimit, isSafe, PREPARE_MARGIN } from "@/continuity/trigger"
-import { apply as applyMasks, candidates, urgent } from "@/continuity/masking"
+import { DEFAULT_TRIGGER, hardLimit, isSafe, PREPARE_MARGIN, PRUNE_STEP } from "@/continuity/trigger"
+import { apply as applyMasks, candidates, estimate, urgent } from "@/continuity/masking"
 import type { MemoryArtifact } from "@/continuity/memory-types"
 import { buildPrompt } from "@opencode-ai/core/session/compaction"
 import PROMPT_COMPACTION from "@/agent/prompt/compaction.txt"
@@ -55,12 +56,13 @@ type Config = {
   /** Model used to shape requests and limits (any catalog model; the window and output come from this config). */
   model: { providerID: string; modelID: string }
 }
-const TRIGGER = 0.7
+const TRIGGER = DEFAULT_TRIGGER
+const PRUNE = process.env.BENCH_PRUNE !== "0"
 const BASE = path.join(DIR, "traces", TRACE)
 const config = JSON.parse(readFileSync(path.join(BASE, "config.json"), "utf8")) as Config
 const HEAD = config.head ?? Math.min(32_000, Math.floor((config.context - config.output) / 2))
 const ROOT = path.join(BASE, `seed-${SEED}`)
-const OUT = path.join(ROOT, "evidence", MODE === "dry" ? `${ARM}-dry` : ARM)
+const OUT = path.join(ROOT, "evidence", `${MODE === "dry" ? `${ARM}-dry` : ARM}${PRUNE ? "" : "-noprune"}`)
 mkdirSync(OUT, { recursive: true })
 const SID = SessionID.make(config.session)
 
@@ -92,7 +94,7 @@ const done = (name: string) => existsSync(path.join(OUT, `${name}.json`))
 const size = (services: Services, view: SessionV1.WithParts[], system: string[]) => Effect.gen(function* () {
   const shaped = yield* services.provider.getModel("" as never, "" as never)
   const sent = yield* MessageV2.toModelMessagesEffect(view, shaped)
-  return config.overhead + Token.estimate(system.join("\n")) + Token.estimate(JSON.stringify(sent))
+  return config.overhead + Token.estimate(system.join("\n")) + estimate(sent)
 })
 
 // ---- replay ----
@@ -131,6 +133,7 @@ const replay = (services: Services) => Effect.gen(function* () {
   const log: unknown[] = []
   let passes = 0
   let compactions = 0
+  let pruned = 0
   // continuity.prepare: memory as system text and the native tail (when the memory still anchors in the history), then masks.
   const view = (history: SessionV1.WithParts[]) => {
     if (!enabled) return { messages: history, raw: history, system: [] as string[] }
@@ -161,8 +164,7 @@ const replay = (services: Services) => Effect.gen(function* () {
     const before = model.calls.length
     const delegations = Object.fromEntries([...new Set(history.flatMap((message) => message.parts.flatMap((part) => child(part) ?? [])))]
       .map((id) => [id, { member: agents.get(id), status: undefined }]))
-    const { artifact: next, ...summary } = yield* run(captured, services, { history, delegations, member: false },
-      { trigger: TRIGGER, masks, overhead: config.overhead })
+    const { artifact: next, ...summary } = yield* run(captured, services, { history, delegations, member: false },)
     model.calls.slice(before).forEach((call, position) => save(`${name}.reply${position + 1}.txt`, call.text))
     if (next) {
       save(`${name}.memory.md`, next.text)
@@ -221,9 +223,21 @@ const replay = (services: Services) => Effect.gen(function* () {
       if (tokens >= usable) yield* compact(index, message, history, tokens)
       continue
     }
-    // A finished step past the trigger starts maintenance (service.ts start).
+    // A finished step past the trigger starts maintenance (service.ts start); below it, pruning every PRUNE_STEP.
     if (isSafe(info) && artifact?.boundary !== info.id && tokens >= config.context * TRIGGER)
       yield* pass(index, history, current, tokens)
+    else if (PRUNE && isSafe(info)) {
+      if (tokens < pruned) pruned = tokens
+      if (tokens >= pruned + PRUNE_STEP * config.context) {
+        let freed = 0
+        for (const candidate of candidates(current.raw, masks)) {
+          masks.set(candidate.part.id, `arc_${candidate.messageID}`)
+          freed += candidate.saved
+        }
+        pruned = tokens - freed
+        if (freed > 0) log.push({ index, tokens, action: "pruned", freed })
+      }
+    }
     if (tokens < hard) continue
     // compact(): past the hard limit the next request waits; one more pass unless memory already covers this step,
     // then every old result the archive can restore is masked.

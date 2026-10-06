@@ -105,3 +105,12 @@ F5 now describes engines fetched on demand (`f5-f6-toolkit-skills.md`, "Amendmen
 - F5-D7 is satisfied: the manifest compiles into the host.
 - First cut is five engines: ast-grep, sqlc, buf, gitleaks, kiota (M3-3).
 - The shell tool exposes `BACKEND_TOOLKIT_BIN` to the native backend seat only and fetches the engines a command names before running it; a failure blocks the command with `toolkit-not-ready:failed:<engine>:<cause>` or `unsupported-target:<reason>`. `toolkit status` and `toolkit prefetch` are the CLI.
+
+## 7. F5 Amendment M4 (2026-10-06)
+
+Ruling M4-1, written into `f5-f6-toolkit-skills.md` as "Amendment M4":
+
+- Hosted engines run on pinned runtimes: `orval` and `protoc-gen-es` on Node, `openapi-generator` on the Temurin JRE, `datamodel-codegen` on CPython. No ambient interpreter is used (F5.8).
+- npm and pip closures are pinned by lockfile and hash list: `npm ci --ignore-scripts` over a lockfile with an integrity for every package, `pip install --require-hashes --no-deps --only-binary=:all:` over a list with a sha256 for every wheel; a jar is pinned by its own digest.
+- Runtimes are shared per user cache: one install per version and target under `<TK>/runtimes/<id>/<version>-<target>/`, used by every engine on it.
+- A runtime that cannot be made ready blocks its engines with `toolkit-not-ready:failed:<engine>:runtime-<cause>`.

@@ -64,7 +64,7 @@ const program = Effect.gen(function* () {
     const delegations = Object.fromEntries([...new Set(messages.flatMap((message) => message.parts.flatMap((part) => child(part) ?? [])))]
       .map((id) => [id, { member: agents.get(id), status: undefined }]))
     const captured = { sessionID: SID, boundary: messages.at(-1)!.info.id, tailStart: tail[0].info.id, head, tail, canRecall: true }
-    const result = yield* run(captured, { provider, llm }, { history: messages, delegations, member: false }, { trigger: 0.7, overhead: 13_000 })
+    const result = yield* run(captured, { provider, llm }, { history: messages, delegations, member: false })
     if (!result.artifact) throw new Error(`pass not applied: ${JSON.stringify({ ...result, artifact: undefined })}`)
     text = result.artifact.text
     writeFileSync(path.join(OUT, `${ARM}.pass.json`), JSON.stringify({ ...result, artifact: undefined }, null, 2))

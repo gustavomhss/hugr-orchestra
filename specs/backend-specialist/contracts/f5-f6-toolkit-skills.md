@@ -24,6 +24,17 @@ Applies owner decision F5-OD and milestone rulings M3-3 and M3-4 (`../delivery-p
 - **F5-D7 satisfied.** The manifest compiles into the host, so the engine set is locked to the host version by construction; F5.27's `hostCompat` check is dropped.
 - **Repair, update, channels (amends F5.26, F5.28, F5.29).** Repair is removing an engine directory or the cache; the next need fetches it again. A host update with new pins installs side by side under a new `<version>-<target>`; old directories stay until the cache is evicted. Install channels carry no engines; their postcondition is that the first need, or `toolkit prefetch`, fetches them.
 
+### Amendment M4 (2026-10-06): hosted engines on pinned runtimes
+
+Applies milestone ruling M4-1. Where this block and Amendment M3 or a clause below disagree, this block wins. Built in `packages/core/src/backend-toolkit/` (`manifest.ts`, `index.ts`, data in `hosted/{node,java,python}.ts`).
+
+- **Second cut (M4-1).** `orval` and `protoc-gen-es` run on the private Node, `openapi-generator` on the private Temurin JRE and `datamodel-codegen` (datamodel-code-generator) on the private CPython. Their pins are in the `hosted/` data files and F5.5; F5.8 holds: no ambient interpreter is ever used.
+- **Runtimes are shared per user cache.** A runtime installs once per version and target into `<TK>/runtimes/<id>/<version>-<target>/` with the same rules as an engine (pinned archive checked before any byte reaches the disk, one rename of a complete staging directory, `.complete` last, one shared fetch per host process, a failure remembered for five minutes). Every engine on that runtime uses the same install.
+- **Engine closures are pinned byte for byte.** An npm engine is installed by the runtime's bundled npm with `npm ci --ignore-scripts --no-audit --no-fund` from a `package.json` and a lockfile v3 that carries an integrity for every package, including every target's optional packages; the npm cache is `<TK>/cache/npm`. A pip engine is installed by the runtime's own `python -m pip install --require-hashes --no-deps --only-binary=:all: --target <install>` from a requirements list that names every wheel for every target with its sha256; the pip cache is `<TK>/cache/pip`. A jar engine is the raw jar checked against its pin. Each installs into `<TK>/engines/<id>/<version>-<target>/` like a native engine.
+- **Launcher.** A hosted engine's install carries a launcher (`<id>`, or `<id>.cmd` for Windows) that runs the runtime interpreter with the engine's `launch` arguments, then the caller's, with `{install}` and `{runtime}` expanded and the engine's `env` set (pip engines also get `PYTHONPATH=<install>`). That launcher is the engine's `executable` in `ready`, and the same text is written as `<TK>/bin/<id>` for the host target.
+- **States and blockers.** Hosted engines appear in `toolkit status`, `toolkit prefetch` and the shell's `BACKEND_TOOLKIT_BIN` scan like native ones; there is no runtime state of its own. When the runtime cannot be made ready the engine is `failed` with cause `runtime-<cause>` and the blocker is `toolkit-not-ready:failed:<engine>:runtime-<cause>`. A failed npm or pip run is `install:npm` or `install:pip`.
+- **Other targets.** `toolkit prefetch --target` for another target installs runtimes and jar engines, but an npm or pip engine needs that target's own interpreter to run, so it fails with `cross-target:npm` or `cross-target:pip`.
+
 ### Contract
 
 **Targets**

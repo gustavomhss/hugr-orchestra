@@ -3,14 +3,19 @@ import type { ConfigV1 } from "@opencode-ai/core/v1/config/config"
 import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 
-export const DEFAULT_TRIGGER = 0.7
+// Maintenance prunes and reorganizes early and often, so the context stays well under the window.
+export const DEFAULT_TRIGGER = 0.4
 
-// The last 10% of the window is reserved for maintenance and never negotiable: at this fraction a pass runs before the
-// next model request. A model whose output reservation leaves less room lowers it to its input limit.
-export const HARD_LIMIT = 0.9
+// Past this fraction the context is in bad shape: a pass runs before the next model request. Not configurable.
+// A model whose output reservation leaves less room lowers it to its input limit.
+export const HARD_LIMIT = 0.7
 
 // Background memory starts this far below the trigger; masking alone that reaches it skips the fork.
 export const PREPARE_MARGIN = 0.15
+
+// Below the trigger, old tool output is stubbed each time the context grows by this fraction of the window.
+// Batches keep the cached prefix stable between them; each batch rewrites only output that just left the tail.
+export const PRUNE_STEP = 0.05
 
 export type Settings = { enabled: boolean; trigger: number }
 
@@ -45,7 +50,7 @@ export function inputLimit(model: Provider.Model) {
 
 /** Context size at which maintenance must finish before the next model request. */
 export function hardLimit(model: Provider.Model) {
-  return Math.max(0, Math.min(HARD_LIMIT * model.limit.context, inputLimit(model)))
+  return Math.max(0, Math.floor(Math.min(HARD_LIMIT * model.limit.context, inputLimit(model))))
 }
 
 /** A finished step: the end of a turn, or a tool-call step whose tools have run. */

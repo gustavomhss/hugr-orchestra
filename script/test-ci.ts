@@ -47,6 +47,7 @@ const commit = await api("POST", `repos/${repo}/git/commits`, {
   tree,
   parents: [base],
 })
+await waitForRunners()
 const branch = `ci-run-${request.os}-${Date.now().toString(36)}-${commit.sha.slice(0, 7)}`
 await api("POST", `repos/${repo}/git/refs`, { ref: `refs/heads/${branch}`, sha: commit.sha })
 const removeBranch = () => api("DELETE", `repos/${repo}/git/refs/heads/${branch}`).catch(() => undefined)
@@ -180,6 +181,21 @@ async function uploadBlobs() {
       }),
     )
   }
+}
+
+// The account runs at most 20 hosted jobs at once, shared by every session, and GitHub cancels jobs it cannot place.
+// A queued run means no runner is free, so this run waits its turn before pushing the branch that starts it, for at
+// most 30 minutes.
+async function waitForRunners() {
+  const deadline = Date.now() + 30 * 60_000
+  for (let announced = false; Date.now() < deadline; announced = true) {
+    const queued: { total_count: number } = await api("GET", `repos/${repo}/actions/runs?status=queued&per_page=1`)
+    if (queued.total_count === 0) return
+    if (!announced)
+      console.log(`test-ci: ${queued.total_count} workflow runs are waiting for runners; waiting for room`)
+    await Bun.sleep(30_000)
+  }
+  console.log("test-ci: still no free runners after 30 minutes; starting anyway")
 }
 
 async function follow(id: number) {

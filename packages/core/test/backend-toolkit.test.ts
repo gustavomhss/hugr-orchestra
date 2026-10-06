@@ -57,7 +57,14 @@ const fixture = Effect.gen(function* () {
         targets: { "darwin-arm64": pin, "darwin-x64": pin, "linux-arm64": pin, "linux-x64": pin, "win32-x64": pin },
       }
     }
-    return { "ast-grep": engine("ast-grep"), sqlc: engine("sqlc"), buf: engine("buf"), gitleaks: engine("gitleaks"), kiota: engine("kiota") }
+    return {
+      ...BackendToolkitManifest.ENGINES,
+      "ast-grep": engine("ast-grep"),
+      sqlc: engine("sqlc"),
+      buf: engine("buf"),
+      gitleaks: engine("gitleaks"),
+      kiota: engine("kiota"),
+    }
   }
   const total = () => Object.values(hits).reduce((sum, count) => sum + count, 0)
   return { root, hits, manifest, total }
@@ -169,7 +176,7 @@ it.live("a musl host is blocked as an unsupported target without fetching", () =
       blocked: "unsupported-target:libc-musl",
     })
     const states = yield* BackendToolkit.status().pipe(scoped)
-    expect(states).toHaveLength(5)
+    expect(states).toHaveLength(Object.keys(BackendToolkitManifest.ENGINES).length)
     expect(states.every((state) => state.status === "unsupported" && state.reason === "libc-musl")).toBe(true)
     expect(f.total()).toBe(0)
   }), 30_000,
