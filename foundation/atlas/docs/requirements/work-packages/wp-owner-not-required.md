@@ -136,7 +136,7 @@ context_refs: # closed list
 - source: ../invariant-register.md
 - source: ./wp-fix-enforce-owner.md
 
-owner: KNOW territory · builder_id `charlie` (dispatched by the lead for an owner-ratified spec amendment, #187)
+owner: KNOW territory · builder_id `backend` (dispatched by the lead for an owner-ratified spec amendment, #187)
 
 outputs:
 

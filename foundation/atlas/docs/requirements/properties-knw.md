@@ -1,6 +1,6 @@
 # Properties — Block KNW (knowledge) · S3-sibling render (runnable ∀-laws)
 
-> **state:** S3-sibling · **source:** `method-tags-knw.md` (frozen S2 up-property laws) · **owner:** charlie (FORGE).
+> **state:** S3-sibling · **source:** `method-tags-knw.md` (frozen S2 up-property laws) · **owner:** backend (FORGE).
 > **purpose:** render each behavioural INV's frozen `up-property` into a runnable ∀-quantified property (the
 > oracle-free beyond-the-witness PBT leg). **Invents no law** — every PROP is a faithful render of a frozen
 > `up-property`, carried as a `# ptr+digest` so an upstream edit renders the property STALE.

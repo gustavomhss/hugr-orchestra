@@ -156,7 +156,7 @@ context_refs: # closed list
 - source: ../goldens-knw.md
 - source: ../goldens-gen.md
 
-owner: KNOWLEDGE + GENESIS territory · builder_id `charlie`
+owner: KNOWLEDGE + GENESIS territory · builder_id `backend`
 
 outputs:
 

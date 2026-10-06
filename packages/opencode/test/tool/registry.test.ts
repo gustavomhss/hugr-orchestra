@@ -6,6 +6,7 @@ import { Effect, Layer, Result, Schema } from "effect"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { ToolRegistry, allowedTaskModels } from "@/tool/registry"
+import { Truncate } from "@/tool/truncate"
 import { Tool } from "@/tool/tool"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -97,6 +98,60 @@ const withEmptyCodeMode = testEffect(
   ]),
 )
 const withBrokenPlugin = testEffect(TestAppNodeBuilder.build(root, [...replacements, [Plugin.node, brokenPluginLayer]]))
+
+// F1.2 / F1.10: renamed seats. Maestro's tools include Task, so the truncation hint shows which agent the lookup found.
+const renamed = testEffect(
+  TestAppNodeBuilder.build(root, [
+    [
+      Config.node,
+      TestConfig.layer({
+        directories: () => InstanceState.directory.pipe(Effect.map((dir) => [path.join(dir, ".opencode")])),
+        get: () =>
+          Effect.succeed({
+            agent: { maestro: { name: "Pikachu" }, backend: { name: "Raichu" } },
+          }),
+      }),
+    ],
+    [RuntimeFlags.node, RuntimeFlags.layer()],
+  ]),
+)
+
+// Writes a custom tool that reports the agent identity it was given, one line per field.
+const identityTool = Effect.fn("RegistryTest.identityTool")(function* () {
+  const test = yield* TestInstance
+  const customTools = path.join(test.directory, ".opencode", "tools")
+  const pluginTool = pathToFileURL(path.resolve(import.meta.dir, "../../../plugin/src/tool.ts")).href
+  yield* Effect.promise(() => fs.mkdir(customTools, { recursive: true }))
+  yield* Effect.promise(() =>
+    Bun.write(
+      path.join(customTools, "whoami.ts"),
+      [
+        `import { tool } from ${JSON.stringify(pluginTool)}`,
+        "export default tool({",
+        "  description: 'identity tool',",
+        "  args: { lines: tool.schema.number() },",
+        "  execute: async (args, context) =>",
+        "    [JSON.stringify({ agentID: context.agentID, agent: context.agent }), ...Array(args.lines).fill('more')].join('\\n'),",
+        "})",
+        "",
+      ].join("\n"),
+    ),
+  )
+  const registry = yield* ToolRegistry.Service
+  const loaded = (yield* registry.all()).find((tool) => tool.id === "whoami")
+  if (!loaded) throw new Error("custom whoami tool was not loaded")
+  const session = yield* (yield* Session.Service).create({})
+  return (lines: number, caller: { agent: string; agentID?: string }) =>
+    loaded.execute({ lines }, {
+      sessionID: session.id,
+      messageID: MessageID.make("msg_test"),
+      ...caller,
+      abort: new AbortController().signal,
+      messages: [],
+      metadata: () => Effect.void,
+      ask: () => Effect.void,
+    } satisfies Tool.Context)
+})
 
 afterEach(async () => {
   await disposeAllInstances()
@@ -573,6 +628,45 @@ describe("tool.registry", () => {
       const ids = yield* registry.ids()
       expect(ids).toContain("cowsay")
     }),
+  )
+})
+
+describe("tool.registry agent identity", () => {
+  renamed.instance(
+    "plugin tools receive the stable agent id beside the label",
+    () =>
+      Effect.gen(function* () {
+        const run = yield* identityTool()
+        expect((yield* run(0, { agent: "Raichu", agentID: "backend" })).output).toBe(
+          JSON.stringify({ agentID: "backend", agent: "Raichu" }),
+        )
+        // A caller that predates ids passes only `agent`, which is then also the key.
+        expect((yield* run(0, { agent: "build" })).output).toBe(JSON.stringify({ agentID: "build", agent: "build" }))
+      }),
+    20_000,
+  )
+
+  renamed.instance(
+    "resolves the executing agent by id, never by its old or new label",
+    () =>
+      Effect.gen(function* () {
+        const agents = yield* Agent.Service
+        expect((yield* agents.get("maestro")).name).toBe("Pikachu")
+        expect(yield* agents.get("Pikachu")).toBeUndefined()
+        const run = yield* identityTool()
+        // Past Truncate.MAX_LINES, so the registry truncates and hints with the resolved agent's tools.
+        const result = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "maestro" })
+        expect(result.metadata.truncated).toBe(true)
+        // Only Maestro's own permissions (task allowed) add the explore teammate to the hint; an unresolved agent gets
+        // only the grep and read hint.
+        const teammate = "hand it to an `explore` teammate with `task`"
+        const hint = (output: string) => output.split("\n").find((line) => line.startsWith("Use `grep`"))
+        expect(hint(result.output)).toContain(teammate)
+        const unresolved = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "Pikachu" })
+        expect(hint(unresolved.output)).toBeDefined()
+        expect(hint(unresolved.output)).not.toContain(teammate)
+      }),
+    20_000,
   )
 })
 

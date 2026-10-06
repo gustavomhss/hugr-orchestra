@@ -57,7 +57,7 @@ The roster is fixed and named, so role is known (no self-declared `role` field �
 
 | Seat      | Phase                 | Discipline                                                                  | Kit        |
 | --------- | --------------------- | --------------------------------------------------------------------------- | ---------- |
-| `charlie` | 4 EXECUTE (generator) | backend execution — transcribes anchor code, never designs                  | FORGE      |
+| `backend` | 4 EXECUTE (generator) | backend execution — transcribes anchor code, never designs                  | FORGE      |
 | `patty`   | 4 EXECUTE (generator) | frontend execution — against a frozen design-token contract                 | ATELIER    |
 | `lucy`    | 5 VERIFY (evaluator)  | cold code-review — mechanical evidence, never sees the author's chat        | MICROSCOPE |
 | `billy`   | 5 VERIFY (evaluator)  | security — proves exploitability with taint paths + PoC-as-gate             | FORTRESS   |
@@ -68,7 +68,7 @@ The roster is fixed and named, so role is known (no self-declared `role` field �
 
 ## 3. The GAN rule (enforced from this roster)
 
-A **generator's** WP (`charlie`/`patty`) is **not sealable** until a matching **evaluator**
+A **generator's** WP (`backend`/`patty`) is **not sealable** until a matching **evaluator**
 (`lucy`/`billy`/`bobby`/`frankie`) returns a passing ResultCard. The Conductor enforces this from the
 roster above — the owner's "cold-review every returning agent" law is structural, not a habit.
 

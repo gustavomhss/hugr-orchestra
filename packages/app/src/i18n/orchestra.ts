@@ -337,7 +337,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.governance.kind.context": "Context record",
   "orchestra.governance.kind.validation": "Validation record",
   "orchestra.governance.kind.review": "Review receipt",
-  "orchestra.governance.kind.lucy": "Lucy review",
+  "orchestra.governance.kind.lucy": "Cold review",
   "orchestra.governance.kind.presentation": "Approval presentation",
   "orchestra.governance.kind.decision": "Approval decision",
   "orchestra.governance.kind.authorization": "Authorization",

@@ -23,7 +23,7 @@ the same export — but they are **distinct and must never be conflated**. The l
 
 |                  | **Knowledge (shared)**                                                               | **Memory (per member)**                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Scope            | **shared**, one substrate, project-level                                             | **scoped to each member** (charlie's, lucy's, jimmy's own)                                                                 |
+| Scope            | **shared**, one substrate, project-level                                             | **scoped to each member** (backend's, lucy's, jimmy's own)                                                                 |
 | What it holds    | what is **true about the codebase** — grounded facts, invariants, the structural map | a member's **craft & experience on this repo** — "where the docs lie", "this territory generalizes badly from one example" |
 | Grounding        | every entry pinned to `source@sha`, re-checks                                        | a lesson, not a citation; scoped to the seat, decays by non-use                                                            |
 | Evolution        | **edit / supersede** existing facts as the world changes (§7)                        | accretes and decays privately, per seat                                                                                    |
@@ -32,7 +32,7 @@ the same export — but they are **distinct and must never be conflated**. The l
 
 **Why the granularity of Memory matters.** Memory _belongs to_ a member. `jimmy`'s lesson that a library's
 README lies is `jimmy`'s — it makes tomorrow's `jimmy` sharper without polluting the shared truth or
-binding `charlie`. Collapse Memory into Knowledge and you get both failure modes at once: the shared graph
+binding `backend`. Collapse Memory into Knowledge and you get both failure modes at once: the shared graph
 fills with un-grounded per-agent hunches, and private craft gets mistaken for ratified fact.
 
 **Both are parts of the Atlas.** They share its substrate, index, grounding, format, and export — Memory is

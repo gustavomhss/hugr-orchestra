@@ -272,7 +272,7 @@ describe("tool.task", () => {
         (yield* registry.tools({ ...ref, agent: maestro })).find((tool) => tool.id === TaskTool.id)?.description ?? ""
 
       expect(description).toContain(
-        "- charlie: Backend execution. Edits files and runs shell commands. Returns implementation card, gates, diff receipt.",
+        "- backend: Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. Edits files and runs shell commands. Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.",
       )
       expect(description).toContain(
         "- lucy: Cold code review; records governed reviews. Read-only: reads and searches files; cannot edit or run commands. Returns cited APPROVE/FIX_FIRST/REJECT card.",
@@ -671,7 +671,7 @@ describe("tool.task", () => {
       const def = yield* tool.init()
       let prompted = false
 
-      for (const taskID of ["ses_missing", "charlie-1", foreign.id]) {
+      for (const taskID of ["ses_missing", "backend-1", foreign.id]) {
         const exit = yield* def
           .execute(
             {

@@ -25,6 +25,7 @@ describe("normalizeAgentList", () => {
 
     expect(result).toEqual([
       {
+        id: "build",
         name: "build",
         description: undefined,
         mode: "primary",

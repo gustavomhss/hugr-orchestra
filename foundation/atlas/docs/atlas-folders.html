@@ -452,7 +452,7 @@
 ├─ <span class="d">index/</span>                    <span class="c"># o índice hasheado — ponteiros p/ tudo (peça A)</span>
 ├─ <span class="d">archive/</span>                  <span class="c"># nada morre — decaído/fechado, deduped, re-spawnável</span>
 └─ <span class="d">members/</span>
-   ├─ <span class="d">charlie/</span>               <span class="c"># ← UMA PASTA POR MEMBRO (esqueleto pré-definido)</span>
+   ├─ <span class="d">backend/</span>               <span class="c"># ← UMA PASTA POR MEMBRO (esqueleto pré-definido)</span>
    │  ├─ <span class="same">manifest.json</span>       <span class="c"># classe · kit · escopo · caps/templates ← ONDE DIFERE</span>
    │  ├─ <span class="same">knowledge/</span>          <span class="c"># o knowledge que ELE possui (owner-write, shared-read)</span>
    │  │  └─ <span class="c">*.json          # fatos grounded, no template da sua classe</span>
@@ -517,7 +517,7 @@
     <div class="note">
       <span class="label">O princípio de co-locação</span>
       A pasta de um membro guarda <b>o knowledge que ELE possui + a memória dele</b>. <b>Escrita é do dono</b> (só
-      charlie escreve em <code>charlie/</code>); <b>leitura é universal</b> (qualquer um lê qualquer pasta). Instâncias
+      backend escreve em <code>backend/</code>); <b>leitura é universal</b> (qualquer um lê qualquer pasta). Instâncias
       efêmeras (<code>jimmy-1..n</code>) escrevem na pasta do <b>membro</b> — a pasta é a identidade do assento, não da
       instância.
     </div>
@@ -533,9 +533,9 @@
       >
     </h2>
     <p class="lead">Todo membro nasce do mesmo template de pasta; o manifest é o que o especializa. Comparando dois:</p>
-    <pre class="code"><span class="c">// charlie — classe build</span>
+    <pre class="code"><span class="c">// backend — classe build</span>
 {
-  <span class="k">"member"</span>: <span class="s">"charlie"</span>, <span class="k">"class"</span>: <span class="s">"build"</span>, <span class="k">"kit"</span>: <span class="s">"FORGE"</span>,
+  <span class="k">"member"</span>: <span class="s">"backend"</span>, <span class="k">"class"</span>: <span class="s">"build"</span>, <span class="k">"kit"</span>: <span class="s">"FORGE"</span>,
   <span class="k">"owns"</span>: { <span class="k">"scope"</span>: <span class="s">"territory"</span>, <span class="k">"write"</span>: <span class="s">"knowledge/**"</span> },
   <span class="k">"knowledge"</span>: { <span class="k">"template"</span>: <span class="s">"anchor-fact-v1"</span>, <span class="k">"scope"</span>: <span class="s">"territory"</span> },
   <span class="k">"memory"</span>: {
@@ -594,7 +594,7 @@
           </tr>
           <tr>
             <td><span class="cls">Build</span></td>
-            <td><span class="own">charlie · patty</span></td>
+            <td><span class="own">backend · patty</span></td>
             <td class="g">padrão-âncora</td>
             <td class="g">território</td>
             <td><span class="df">fonte do pack</span></td>

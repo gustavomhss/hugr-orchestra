@@ -1,15 +1,9 @@
 // @atlas/adapter-io — src/memory-store.ts  (the DURABLE per-seat Memory store — CAMPAIGN-11 W2)
 //
-// ── REFERENCE MODEL — NO PRODUCTION CALLERS ──────────────────────────────────────────────────────────
-// Nothing in `packages/*/src` calls `createDurableMemory` yet. The doors that will are later work packages
-// in the same campaign: W4 (the governed write door) and W6 (the read doors). This is DECLARED in
-// `harness/gates/reference-model-guard.mjs` rather than pre-wired, because wiring a door early to clear
-// that gate is exactly the stub the gate exists to refuse — and a door with no gates behind it is worse
-// than no door. The entry goes stale the moment W4 composes this, and the ledger's STALE leg says so out
-// loud when it does.
-//
-// It is a reference model in CALLERS only, not in rigour: the acceptance items it owns (A1-A4) are driven
-// against the real filesystem, and A4 with eight real subprocesses.
+// ── CALLERS ──────────────────────────────────────────────────────────────────────────────────────────
+// `compose.ts` (the CLI/MCP memory doors, CAMPAIGN-11 W8) and `native-memory.ts` (the bound Memory
+// composition a harness drives under an explicit `AtlasBinding`). This header used to declare the module a
+// reference model with no production callers; W8 made that false and the header outlived the fact.
 //
 // This file is now a thin PROJECTION over `durable-log.ts` — the append-only, content-keyed JSONL
 // primitive, which carries the durability argument, the torn-line defence and the travel argument in one
@@ -31,6 +25,8 @@ export interface MemoryRead {
   readonly log: EventLog
   /** Lines that did not parse, or whose stored `id` is not their content hash. Never silently discarded. */
   readonly rejected: number
+  /** The log FILE could not be read at all — see `LogRead.unreadable`. Absent on every readable outcome. */
+  readonly unreadable?: true
 }
 
 /** The durable store's surface. Deliberately two verbs: memory is appended and folded, never mutated. */
@@ -48,8 +44,9 @@ export function createDurableMemory(repoPath: string): DurableMemory {
   return {
     path: log.path,
     read(): MemoryRead {
-      const { log: folded, rejected } = log.read()
-      return { store: respawnFromRecord(folded), log: folded, rejected }
+      const raw = log.read()
+      const base = { store: respawnFromRecord(raw.log), log: raw.log, rejected: raw.rejected }
+      return raw.unreadable === true ? { ...base, unreadable: true } : base
     },
     append(record: MemoryRecord): void {
       // The record is versioned through `@atlas/memory` rather than event-shaped here, so the identity seam

@@ -94,4 +94,12 @@ export function render(name: string, platform: NodeJS.Platform, limits: Limits, 
   }
 }
 
+// Native execution seats may not commit and hold no tmp grant (charter CH-6, R67 K12), so their copy of the
+// description drops the tmp claim and the Git and GitHub section.
+export function nativeSeat(description: string) {
+  return description
+    .replace(/\r?\nUse `[^`\r\n]+` for temporary work outside the workspace\.[^\r\n]*\r?\n/, "")
+    .replace(/(\r?\n)+# Git and GitHub\r?\n[\s\S]*$/, "\n")
+}
+
 export * as ShellPrompt from "./prompt"

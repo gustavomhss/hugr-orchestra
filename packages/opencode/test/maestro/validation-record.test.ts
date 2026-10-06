@@ -50,7 +50,7 @@ const base = {
   workCardID: "card_validation",
   workCard:
     "# Card\n## Definition of Done\nThe exact behavior is implemented.\n## Invariants\nReceipts are immutable once recorded.\n## Quality Standards\nTypecheck passes.\n## Completeness Criteria\nBoth proof files are covered.\n## Success Criteria\nLucy can review the exact card bytes.\n",
-  routedMemberID: "charlie",
+  routedMemberID: "backend",
   validatorID: "maestro",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],

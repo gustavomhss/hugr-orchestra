@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-idx.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE).
+> **owner:** backend (FORGE).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. IDX is the **substrate** — the content-addressed
 > index that every other module addresses through — **not** a convergence core, so **nothing here is `formal`**

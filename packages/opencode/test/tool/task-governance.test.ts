@@ -128,7 +128,7 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-// Records the plan, context, validation and authorization that route "implement card" to charlie.
+// Records the plan, context, validation and authorization that route "implement card" to the backend seat.
 const grant = Effect.fn("TaskGovernanceTest.grant")(function* () {
   const events = yield* EventV2Bridge.Service
   const { chat, assistant } = yield* seed()
@@ -164,7 +164,7 @@ const grant = Effect.fn("TaskGovernanceTest.grant")(function* () {
     projectID: chat.projectID,
     workCardID: "card_task_test",
     workCard: "# Card\n",
-    routedMemberID: "charlie",
+    routedMemberID: "backend",
     validatorID: "maestro",
     validatorVersion: "validation-v1",
     checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],
@@ -184,7 +184,7 @@ const grant = Effect.fn("TaskGovernanceTest.grant")(function* () {
       reviewPolicyHash: validation.reviewPolicyHash,
       actor: validation.actor,
       reviewerID: "lucy",
-      taskIntentHash: authorizationTaskIntentHash({ subagentType: "charlie", prompt: "implement card" }),
+      taskIntentHash: authorizationTaskIntentHash({ subagentType: "backend", prompt: "implement card" }),
       methodVersion: "authorization-v1",
     },
     { id: authorizationID },
@@ -215,6 +215,7 @@ it.instance(
       )
       const def = yield* task.init()
       let prompts = 0
+      const streamed: Record<string, unknown>[] = []
       const context = {
         sessionID: chat.id,
         messageID: assistant.id,
@@ -223,13 +224,16 @@ it.instance(
         abort: new AbortController().signal,
         extra: { promptOps: stubOps(() => prompts++) },
         messages: [],
-        metadata: () => Effect.void,
+        metadata: (input: { metadata?: Record<string, unknown> }) =>
+          Effect.sync(() => {
+            if (input.metadata) streamed.push(input.metadata)
+          }),
         ask: () => Effect.void,
       }
       const params = {
         description: "implement card",
         prompt: "implement card",
-        subagent_type: "charlie",
+        subagent_type: "backend",
         authorizationID,
       }
       const first = yield* def.execute(params, context).pipe(Effect.exit, Effect.forkChild({ startImmediately: true }))
@@ -247,18 +251,30 @@ it.instance(
       const result = successes[0].value
       const sessions = yield* Session.Service
       const child = (yield* sessions.children(chat.id))[0]
-      expect(child?.agent).toBe("charlie")
+      expect(child?.agent).toBe("backend")
       expect(result.metadata.sessionId).toBe(child?.id)
       expect(prompts).toBe(1)
+      streamed.length = 0
       const incomplete = yield* def.execute(params, context).pipe(Effect.exit)
       expect(Exit.isFailure(incomplete)).toBe(true)
       if (Exit.isFailure(incomplete)) expect(Cause.pretty(incomplete.cause)).toContain("reserved-child-incomplete")
+      // F4 cl.6: a governed replay with no completed child message still streams a work result, with no card.
+      expect(streamed.at(-1)?.workResult).toEqual({
+        schema: "backend-work-result-v1",
+        card: { parsed: false },
+        changes: [],
+        checks: [],
+        blockers: [],
+        risks: [],
+        nextActions: [],
+        terminal: { reason: "interrupted", hostDetail: "Governed Task denied: reserved-child-incomplete" },
+      })
       if (!child) throw new Error("missing child")
       const childUser = yield* sessions.updateMessage({
         id: MessageID.ascending(),
         role: "user",
         sessionID: child.id,
-        agent: "charlie",
+        agent: "backend",
         model,
         time: { created: Date.now() },
       })
@@ -267,8 +283,8 @@ it.instance(
         role: "assistant",
         parentID: childUser.id,
         sessionID: child.id,
-        mode: "charlie",
-        agent: "charlie",
+        mode: "backend",
+        agent: "backend",
         cost: 0,
         path: { cwd: "/tmp", root: "/tmp" },
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -358,7 +374,7 @@ it.instance(
       expect(prompts).toBe(1)
       const changed = yield* Effect.exit(
         def.execute(
-          { description: "different", prompt: "different work", subagent_type: "charlie", authorizationID },
+          { description: "different", prompt: "different work", subagent_type: "backend", authorizationID },
           context,
         ),
       )
@@ -390,7 +406,7 @@ it.instance(
       const approved = {
         description: "implement card",
         prompt: "implement card",
-        subagent_type: "charlie",
+        subagent_type: "backend",
         authorizationID,
       }
       // general carries its own todowrite rule, so a reservation made for it would pin a different permission
@@ -399,7 +415,7 @@ it.instance(
       expect(Exit.isFailure(wrongSeat)).toBe(true)
       if (Exit.isFailure(wrongSeat))
         expect(Cause.pretty(wrongSeat.cause)).toContain(
-          "routed-seat-mismatch. This authorization dispatches only charlie",
+          "routed-seat-mismatch. This authorization dispatches only backend",
         )
       const wrongIntent = yield* def.execute({ ...approved, prompt: "different work" }, context).pipe(Effect.exit)
       expect(Exit.isFailure(wrongIntent)).toBe(true)
@@ -409,7 +425,7 @@ it.instance(
       const result = yield* def.execute(approved, context)
       const sessions = yield* Session.Service
       const child = (yield* sessions.children(chat.id))[0]
-      expect(child?.agent).toBe("charlie")
+      expect(child?.agent).toBe("backend")
       expect(result.metadata.sessionId).toBe(child?.id)
       expect(prompts).toBe(1)
     }),
@@ -547,13 +563,14 @@ it.instance(
       const { chat, assistant } = yield* seed()
       const task = yield* TaskTool
       const def = yield* task.init()
-      const invoke = (caller: string) =>
+      const invoke = (caller: string, agentID?: string) =>
         def.execute(
           { description: "inspect bug", prompt: "look into the cache key path", subagent_type: "general" },
           {
             sessionID: chat.id,
             messageID: assistant.id,
             agent: caller,
+            ...(agentID ? { agentID } : {}),
             abort: new AbortController().signal,
             extra: { bypassAgentCheck: true, promptOps: stubOps() },
             messages: [],
@@ -561,11 +578,21 @@ it.instance(
             ask: () => Effect.void,
           },
         )
-      for (const caller of ["Lucy", "Charlie"]) {
-        const exit = yield* invoke(caller).pipe(Effect.exit)
+      for (const [label, id] of [
+        ["Lucy", "lucy"],
+        ["Backend", "backend"],
+      ]) {
+        const exit = yield* invoke(label, id).pipe(Effect.exit)
         expect(Exit.isFailure(exit)).toBe(true)
         if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBeInstanceOf(PermissionV1.DeniedError)
+        // A label is never an identity (F1.13): without an id the caller fails closed instead of being guessed.
+        const unresolved = yield* invoke(label).pipe(Effect.exit)
+        expect(Exit.isFailure(unresolved)).toBe(true)
+        if (Exit.isFailure(unresolved)) expect(Cause.pretty(unresolved.cause)).toContain(`Unknown Task caller: ${label}`)
       }
+      const byKey = yield* invoke("backend").pipe(Effect.exit)
+      if (Exit.isFailure(byKey)) expect(Cause.squash(byKey.cause)).toBeInstanceOf(PermissionV1.DeniedError)
+      expect(Exit.isFailure(byKey)).toBe(true)
       yield* invoke("custom")
     }),
   { config: { agent: { custom: { mode: "subagent" } } } },

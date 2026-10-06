@@ -27,7 +27,7 @@ describe("Maestro route grants", () => {
 
   test("holds malformed, unknown, and forged seat IDs", () => {
     expect(lookupRouteGrant(undefined)).toEqual({ status: "HOLD", reason: "malformed-member-id" })
-    expect(lookupRouteGrant("Charlie")).toEqual({ status: "HOLD", reason: "malformed-member-id" })
+    expect(lookupRouteGrant("Backend")).toEqual({ status: "HOLD", reason: "malformed-member-id" })
     expect(lookupRouteGrant("unknown")).toEqual({ status: "HOLD", reason: "unknown-member-id" })
     expect(lookupRouteGrant("maestro")).toEqual({ status: "HOLD", reason: "forged-member-id" })
   })

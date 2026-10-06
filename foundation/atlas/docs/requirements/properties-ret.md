@@ -1,6 +1,6 @@
 # Properties — Block RET (retrieval) · S3-sibling ∀-render
 
-> **state:** S3-sibling (rendered from the frozen S2 method-tags) · **owner:** charlie (FORGE) ·
+> **state:** S3-sibling (rendered from the frozen S2 method-tags) · **owner:** backend (FORGE) ·
 > **source (frozen):** [`method-tags-ret.md`](method-tags-ret.md) `@ sha256:c95f2e951bc0b6b2` — every PROP's `law`
 > is a faithful render of that INV's frozen `up-property`; the ptr+digest carries drift (an upstream edit renders
 > the PROP STALE). · **purpose:** transcribe each behavioural INV's `up-property` into a runnable ∀-quantified

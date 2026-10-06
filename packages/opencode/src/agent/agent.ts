@@ -28,7 +28,22 @@ import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/l
 import { Reference } from "@opencode-ai/core/reference"
 import { Location } from "@opencode-ai/core/location"
 import { PluginV2 } from "@opencode-ai/core/plugin"
-import { roster, nativeProfiles, envRead, publishRules } from "@/maestro/roster"
+import {
+  roster,
+  nativeProfiles,
+  envRead,
+  publishRules,
+  backendSkills,
+  canonicalMemberId,
+  LEGACY_BACKEND_ID,
+  renderPrompt,
+  type RosterMember,
+} from "@/maestro/roster"
+import { containsPath } from "@/project/instance-context"
+import { RuntimeFlags } from "@/effect/runtime-flags"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { NamedError } from "@opencode-ai/core/util/error"
+import { SessionV1 } from "@opencode-ai/core/v1/session"
 
 export const Info = Schema.Struct({
   id: Schema.optional(Schema.String),
@@ -57,6 +72,7 @@ export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>
 // What each roster native profile lets a teammate do, as the task tool lists it.
 const nativeAccess = {
   execution: "Edits files and runs shell commands.",
+  backend: "Edits files and runs shell commands.",
   review: "Read-only: reads and searches files; cannot edit or run commands.",
 } satisfies Record<keyof typeof nativeProfiles, string>
 
@@ -100,6 +116,8 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const locations = yield* LocationServiceMap.Service
     const global = yield* Global.Service
+    const flags = yield* RuntimeFlags.Service
+    const events = yield* EventV2Bridge.Service
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("Agent.state")(function* (ctx) {
@@ -145,6 +163,13 @@ const layer = Layer.effect(
         })
 
         const user = Permission.fromConfig(cfg.permission ?? {})
+        // The backend specialist's profile grants external access to its packaged skill root; edit patterns are worktree-relative,
+        // so the deny that keeps that root read-only is rendered here. Inside the project it is ordinary source.
+        const backendReadOnly = containsPath(backendSkills.root, ctx)
+          ? []
+          : Permission.fromConfig({
+              edit: { [path.join(path.relative(ctx.worktree, backendSkills.root), "*")]: "deny" },
+            })
 
         const agents: Record<string, Info> = {
           maestro: {
@@ -256,11 +281,14 @@ const layer = Layer.effect(
                 member.memberId,
                 {
                   id: member.memberId,
-                  name: member.displayName,
-                  description: `${member.role.charAt(0).toUpperCase()}${member.role.slice(1)}. ${nativeAccess[member.nativeProfile!]} Returns ${member.returnCard}.`,
-                  prompt: member.prompt,
+                  ...present(member, member.displayName),
                   options: {},
-                  permission: Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
+                  permission: Permission.merge(
+                    Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
+                    member.nativeProfile === "backend" ? backendReadOnly : [],
+                  ),
+                  // The user talks only to Maestro, so every seat, the backend specialist included, works only as
+                  // Maestro's teammate and never as a primary agent.
                   mode: "subagent" as const,
                   native: true,
                 },
@@ -268,7 +296,27 @@ const layer = Layer.effect(
           ),
         }
 
-        for (const [key, value] of Object.entries(cfg.agent ?? {})) {
+        // Config written before the backend seat's rename keys the seat by its former id. That key still configures the
+        // seat, never a custom agent, and warns on the channel invalid labels use; when `agent.backend` is also set, it wins.
+        const legacyBackend = cfg.agent?.[LEGACY_BACKEND_ID]
+        const backendKey = legacyBackend && !cfg.agent?.backend ? LEGACY_BACKEND_ID : "backend"
+        const agentConfig = Object.fromEntries(
+          Object.entries(cfg.agent ?? {}).flatMap(([key, value]) => {
+            if (key !== LEGACY_BACKEND_ID) return [[key, value] as const]
+            return backendKey === LEGACY_BACKEND_ID ? [["backend", value] as const] : []
+          }),
+        )
+        if (legacyBackend) {
+          const message =
+            backendKey === LEGACY_BACKEND_ID
+              ? `Deprecated configuration agent.${LEGACY_BACKEND_ID}: rename it to agent.backend.`
+              : `Deprecated configuration agent.${LEGACY_BACKEND_ID} is ignored: agent.backend is also set and takes precedence.`
+          yield* Effect.logWarning("deprecated native seat configuration", { path: `agent.${LEGACY_BACKEND_ID}` })
+          yield* events.publish(SessionV1.Event.Error, { error: new NamedError.Unknown({ message }).toObject() })
+        }
+
+        for (const [key, value] of Object.entries(agentConfig)) {
+          // Native seats accept only model, variant, temperature and their display label (resolved below).
           if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
             const item = agents[key]
             if (value.model) item.model = Provider.parseModel(value.model)
@@ -305,6 +353,34 @@ const layer = Layer.effect(
           item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))
         }
 
+        // A native seat's label is presentation only (F1.2): it never changes the seat's id, permissions, skills or
+        // routing. Config `agent.<id>.name` sets it, HUGR_BACKEND_NAME overrides it for the backend seat (F1-D2), and an
+        // invalid label keeps the default and surfaces a configuration error instead of failing startup (F1-D1).
+        const overrides: Record<string, { path: string; value: string } | undefined> = {
+          backend: flags.backendName === undefined ? undefined : { path: "HUGR_BACKEND_NAME", value: flags.backendName },
+        }
+        for (const member of roster.filter((member) => member.nativeProfile && member.prompt)) {
+          const configured = agentConfig[member.memberId]?.name
+          const key = member.memberId === "backend" ? backendKey : member.memberId
+          const source =
+            overrides[member.memberId] ??
+            (configured === undefined ? undefined : { path: `agent.${key}.name`, value: configured })
+          if (!source) continue
+          const label = typeof source.value === "string" ? source.value.trim() : ""
+          const problem = labelProblem(
+            label,
+            Object.values(agents).filter((agent) => agent.id !== member.memberId),
+          )
+          if (problem) {
+            // Same channel as skill and plugin load failures: a Session error event the clients already render.
+            const message = `Invalid configuration ${source.path}: label ${problem}. Using "${member.displayName}".`
+            yield* Effect.logWarning("invalid native seat label", { path: source.path, problem })
+            yield* events.publish(SessionV1.Event.Error, { error: new NamedError.Unknown({ message }).toObject() })
+            continue
+          }
+          Object.assign(agents[member.memberId], present(member, label))
+        }
+
         // Ensure Truncate.GLOB is allowed unless explicitly configured
         for (const name in agents) {
           const agent = agents[name]
@@ -322,8 +398,9 @@ const layer = Layer.effect(
           )
         }
 
+        // Stored sessions, messages and Task calls may name the backend seat by its former id.
         const get = Effect.fnUntraced(function* (agent: string) {
-          return agents[agent]
+          return agents[canonicalMemberId(agent)]
         })
 
         const list = Effect.fnUntraced(function* () {
@@ -415,7 +492,7 @@ const layer = Layer.effect(
                 )),
             {
               role: "user",
-              content: `Create an agent configuration based on this request: "${input.description}".\n\nIMPORTANT: The following identifiers already exist and must NOT be used: ${existing.map((i) => i.name).join(", ")}\n  Return ONLY the JSON object, no other text, do not wrap in backticks`,
+              content: `Create an agent configuration based on this request: "${input.description}".\n\nIMPORTANT: The following identifiers already exist and must NOT be used: ${existing.map((i) => i.id ?? i.name).join(", ")}\n  Return ONLY the JSON object, no other text, do not wrap in backticks`,
             },
           ],
           model: language,
@@ -448,6 +525,37 @@ const layer = Layer.effect(
   }),
 )
 
+// Renders a native seat's presentation from its label. The description is how the task tool lists the seat, so it
+// gives the role, access and return and never the label.
+function present(member: RosterMember, label: string) {
+  const access = nativeAccess[member.nativeProfile!]
+  return {
+    name: label,
+    description:
+      member.memberId === "backend"
+        ? `Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. ${access} Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.`
+        : `${member.role.charAt(0).toUpperCase()}${member.role.slice(1)}. ${access} Returns ${member.returnCard}.`,
+    prompt: renderPrompt(member, label),
+  }
+}
+
+const reservedLabels = new Set(["build", "plan", "general", "explore", "maestro", "title", "summary", "compaction"])
+
+// F1.3 / F1-D1: a label must stay unambiguous against every id and label, because legacy `.name` paths still exist.
+function labelProblem(label: string, others: Info[]) {
+  if (!label) return "empty"
+  if ([...label].length > 40) return "longer than 40 characters"
+  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(label)) return "contains a control character or line break"
+  const folded = fold(label)
+  if (reservedLabels.has(folded)) return "reserved agent id"
+  if (others.some((agent) => fold(agent.name) === folded || (agent.id !== undefined && fold(agent.id) === folded)))
+    return "already used by another agent"
+}
+
+function fold(value: string) {
+  return value.normalize("NFC").toLowerCase()
+}
+
 const locationServiceMapNode = LayerNode.make({
   service: LocationServiceMap.Service,
   layer: locationServiceMapLayer,
@@ -457,7 +565,17 @@ const locationServiceMapNode = LayerNode.make({
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [Config.node, Auth.node, Plugin.node, Skill.node, Provider.node, locationServiceMapNode, Global.node],
+  deps: [
+    Config.node,
+    Auth.node,
+    Plugin.node,
+    Skill.node,
+    Provider.node,
+    locationServiceMapNode,
+    Global.node,
+    RuntimeFlags.node,
+    EventV2Bridge.node,
+  ],
 })
 
 export * as Agent from "./agent"

@@ -133,3 +133,42 @@ test("an app's top-level file chooser or alert is a window, and look says when n
   const inactive = AppDockOutline.look(AppDockOutline.tree(vscode().map((item) => item.ref === "f" ? { ...item, states: SHOWN } : item)))
   expect(inactive.text.split("\n")[1]).toBe("input: none of these windows is active; a window that shows no controls here (such as a native file dialog) or nothing holds the keyboard")
 })
+
+// Run 17 (Thunar): the focused file list sits five unnamed panes deep. The model entered #2, #2, #2, #1, #1 after
+// nearly every keypress to read it (30 of its 52 navigation calls); focus=true reaches it in one.
+function thunar(): AppDockOutline.Item[] {
+  return [
+    { ref: "f", parentRef: null, role: 23, roleName: "frame", name: "dock - Thunar", states: [1, ...SHOWN] },
+    { ref: "tb", parentRef: "f", role: 63, roleName: "tool bar", name: "", states: SHOWN },
+    { ref: "back", parentRef: "tb", role: 43, roleName: "push-button", name: "Back", states: SHOWN, actions: press },
+    { ref: "sp1", parentRef: "f", role: 53, roleName: "split pane", name: "", states: SHOWN },
+    { ref: "places", parentRef: "sp1", role: 55, roleName: "table", name: "", states: SHOWN },
+    { ref: "home", parentRef: "places", role: 56, roleName: "table cell", name: "dock", states: SHOWN },
+    { ref: "sp2", parentRef: "sp1", role: 53, roleName: "split pane", name: "", states: SHOWN },
+    { ref: "status", parentRef: "sp2", role: 54, roleName: "status bar", name: '"notas.txt" | 8 bytes', states: SHOWN },
+    { ref: "sp3", parentRef: "sp2", role: 53, roleName: "split pane", name: "", states: SHOWN },
+    { ref: "tabs", parentRef: "sp3", role: 38, roleName: "page tab list", name: "", states: SHOWN },
+    { ref: "pane", parentRef: "tabs", role: 17, roleName: "directory pane", name: "Details view", states: SHOWN },
+    { ref: "files", parentRef: "pane", role: 55, roleName: "table", name: "", states: [12, ...SHOWN] },
+    { ref: "name", parentRef: "files", role: 57, roleName: "table column header", name: "Name", states: SHOWN },
+    { ref: "notas", parentRef: "files", role: 56, roleName: "table cell", name: "notas.txt", states: [23, ...SHOWN] },
+  ]
+}
+
+test("look points at the focused control's region and focusRegion reaches it however deep it sits", () => {
+  const roots = AppDockOutline.tree(thunar())
+  const text = AppDockOutline.look(roots).text
+  expect(text).toContain('focus: table [focused] in frame "dock - Thunar" [active] (ui_enter focus=true goes to its region)')
+  const files = AppDockOutline.focusRegion(roots)!
+  expect(files.item.ref).toBe("files")
+  // Five numbered enters from the window (one per enclosing region below it) become one.
+  expect(AppDockOutline.handle(roots, files).length - 1).toBe(5)
+  const inside = AppDockOutline.look(roots, files).text
+  expect(inside).toContain('table cell "notas.txt" [selected]')
+  // Already there: no pointer to where the view already is.
+  expect(inside).toContain("focus: table [focused] in frame \"dock - Thunar\" [active]\n")
+  // A focused control that is not a region leads to the region holding it.
+  const vs = AppDockOutline.tree(vscode())
+  expect(AppDockOutline.focusRegion(vs)?.item.ref).toBe("f")
+  expect(AppDockOutline.look(vs).text).not.toContain("focus=true")
+})

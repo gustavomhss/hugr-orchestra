@@ -2,6 +2,15 @@ packages/core/migration/**/snapshot.json linguist-generated
 packages/core/src/database/migration.gen.ts linguist-generated
 # Recorded runner output: keep bytes exact, Windows checkouts must not convert to CRLF.
 packages/app/src/pages/session/orchestra-evidence-fixtures/** -text
+# The two append-only Atlas logs under Orchestra's own `.atlas/` (the backend specialist's `binding.storage.root`, F3 clause
+# 30, owner ruling F3-D5) merge by UNION: parallel branches both append at end-of-file, which the default
+# driver reports as a conflict. Every line is a whole, content-keyed record, so a union cannot splice two.
+# Rationale and the rank effect of union ordering: `foundation/atlas/.gitattributes`.
+.atlas/memory.jsonl merge=union
+.atlas/orientation.jsonl merge=union
+# Shipped specialist skills and seat prompts are LF on every platform (F6.6); Windows checkouts must not convert them.
+packages/backend-specialist/skills/** text eol=lf
+packages/opencode/src/agent/prompt/*.txt text eol=lf
 # Generated Atlas boundary: the contract is its bytes. A CRLF checkout would also add a carriage return to the line
 # break inside a joined template literal, changing what the code produces, so Windows checkouts must not convert it.
 packages/atlas-boundary/src/generated/** -text

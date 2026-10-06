@@ -4,6 +4,8 @@ import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
+import { ShellPrompt } from "./shell/prompt"
+import { roster } from "@/maestro/roster"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
@@ -215,6 +217,8 @@ const layer = Layer.effect(
                 })
                 const pluginCtx: PluginToolContext = {
                   ...toolCtx,
+                  // Callers that predate ids pass only `agent`, which is then also the key (as in the lookup below).
+                  agentID: toolCtx.agentID ?? toolCtx.agent,
                   ask: (req) => bridge.promise(toolCtx.ask(req)),
                   directory: ctx.directory,
                   worktree: ctx.worktree,
@@ -240,7 +244,8 @@ const layer = Layer.effect(
                 const output = typeof result === "string" ? result : result.output
                 const metadata = typeof result === "string" ? {} : (result.metadata ?? {})
                 const attachments = typeof result === "string" ? undefined : result.attachments
-                const info = yield* agent.get(toolCtx.agent)
+                // Lookup by stable id (F1.10); `toolCtx.agent` is the display label.
+                const info = yield* agent.get(toolCtx.agentID ?? toolCtx.agent)
                 const out = yield* truncate.output(output, {}, info)
                 return {
                   title: typeof result === "string" ? "" : (result.title ?? ""),
@@ -492,10 +497,14 @@ const layer = Layer.effect(
             output.parameters === tool.parameters || output.jsonSchema !== tool.jsonSchema
               ? output.jsonSchema
               : undefined
+          const nativeShell =
+            tool.id === ShellTool.id &&
+            input.agent.native === true &&
+            roster.some((member) => member.memberId === input.agent.id && member.nativeProfile)
           return {
             id: tool.id,
             description: [
-              output.description,
+              nativeShell ? ShellPrompt.nativeSeat(output.description) : output.description,
               tool.id === TaskTool.id ? yield* describeTask(input.agent, input.permission) : undefined,
               tool.id === "execute" ? codeModeDescription : undefined,
             ]

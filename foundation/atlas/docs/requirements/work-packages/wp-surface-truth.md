@@ -135,7 +135,7 @@ context_refs: # closed list
 - source: ../../adr/ADR-0013-the-pack-has-two-bands-governing-and-advisory.md
 - source: ../../method/wp-template.md
 
-owner: TOOLS territory · builder_id `charlie` (dispatched by the lead for two measured surface defects)
+owner: TOOLS territory · builder_id `backend` (dispatched by the lead for two measured surface defects)
 
 outputs:
 

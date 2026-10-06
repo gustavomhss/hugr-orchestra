@@ -53,6 +53,8 @@ export class Service extends ConfigService.Service<Service>()("@opencode/Runtime
   experimentalNativeLlm: bool("OPENCODE_EXPERIMENTAL_NATIVE_LLM"),
   experimentalWebSockets: bool("OPENCODE_EXPERIMENTAL_WEBSOCKETS"),
   client: Config.string("OPENCODE_CLIENT").pipe(Config.withDefault("cli")),
+  // Display label override for the backend native seat (F1-D2); the config key `agent.backend.name` is the source.
+  backendName: Config.string("HUGR_BACKEND_NAME").pipe(Config.option, Config.map(Option.getOrUndefined)),
 }) {}
 
 export type Info = Context.Service.Shape<typeof Service>

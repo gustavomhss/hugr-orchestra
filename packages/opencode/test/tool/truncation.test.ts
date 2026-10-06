@@ -218,6 +218,28 @@ describe("Truncate", () => {
       }),
     )
 
+    // Run 16: the Linux workspace agent was told the full output sat at a host path and grepped it inside the workspace.
+    it.live("a scoped agent without file tools gets no saved-file path, only how to ask its tools for less", () =>
+      Effect.gen(function* () {
+        const svc = yield* Truncate.Service
+        const lines = Array.from({ length: 100 }, (_, i) => `line${i}`).join("\n")
+        const linux = { permission: [{ permission: "*", pattern: "*", action: "deny" as const },
+          { permission: "ui_*", pattern: "*", action: "allow" as const }] }
+        const result = yield* svc.output(lines, { maxLines: 10 }, linux as any)
+
+        if (!result.truncated) throw new Error("expected truncated")
+        expect(result.content).toStartWith("line0\n")
+        expect(result.content).toContain("...90 lines truncated...")
+        expect(result.content).toContain("do not look for a file")
+        expect(result.content).toContain("its paging arguments (cursor, offset)")
+        expect(result.content).not.toContain(result.outputPath)
+        expect(result.content).not.toContain("Grep")
+        // One file tool left is enough to reach the saved output.
+        const reader = { permission: [...linux.permission, { permission: "read", pattern: "*", action: "allow" as const }] }
+        expect((yield* svc.output(lines, { maxLines: 10 }, reader as any)).content).toContain("Full output saved to:")
+      }),
+    )
+
     it.live("does not write file when not truncated", () =>
       Effect.gen(function* () {
         const svc = yield* Truncate.Service

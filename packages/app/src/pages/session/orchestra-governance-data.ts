@@ -10,6 +10,7 @@ import type {
 import type { SessionMessageAssistantTool, SessionMessageInfo } from "@opencode-ai/client/promise"
 import type { State } from "@/context/global-sync/types"
 import type { ServerProtocol } from "@/utils/server-protocol"
+import { agentKey } from "@/context/agent-identity"
 
 // Session message APIs retain tool results, not a current Maestro read projection. Session history
 // exposes Session events; the legacy /sync/history dump is unscoped across aggregates. These are
@@ -166,7 +167,7 @@ export function sessionWorking(working: boolean, read: State["load"]["session_st
 }
 
 export function maestroCapability(agents: readonly Agent[], read: State["load"]["agent"]) {
-  if (agents.some((agent) => agent.name === "maestro" && agent.native !== false)) return "available"
+  if (agents.some((agent) => agentKey(agent) === "maestro" && agent.native !== false)) return "available"
   // A listed agent proves some read completed, even one outside this directory's bootstrap.
   if (read === "ready" || agents.length > 0) return "unavailable"
   if (read === "failed") return "unknown"

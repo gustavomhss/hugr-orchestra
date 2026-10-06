@@ -10,6 +10,7 @@ import { decodeReview, readValidation, validationRecordHash } from "./validation
 import { recordApproval } from "./approval-record"
 import { readPlanRevision } from "./plan-revision"
 import { contextIsCurrent, DIRTY_CONTEXT_NEXT_STEP, readContext, STALE_CONTEXT_NEXT_STEP } from "./context-record"
+import { canonicalMemberId } from "./roster"
 
 export class AuthorizationRejectedError extends Schema.TaggedErrorClass<AuthorizationRejectedError>()(
   "MaestroAuthorizationRejected",
@@ -75,7 +76,9 @@ export const readAuthorization = Effect.fn("MaestroAuthorization.read")(function
     .get()
     .pipe(Effect.orDie)
   if (!row || row.type !== EventV2.versionedType(MaestroEvent.Authorization.Granted.type, 1)) return undefined
-  return { id: row.id, ...Schema.decodeUnknownSync(MaestroEvent.Authorization.Granted.data)(row.data) }
+  const data = Schema.decodeUnknownSync(MaestroEvent.Authorization.Granted.data)(row.data)
+  // A grant recorded before the backend seat's rename routes to its former id; it is read as `backend`.
+  return { id: row.id, ...data, routedMemberID: canonicalMemberId(data.routedMemberID) }
 })
 
 export const grantAuthorization = Effect.fn("MaestroAuthorization.grant")(function* (input: AuthorizationInput) {
@@ -146,7 +149,7 @@ export const grantAuthorization = Effect.fn("MaestroAuthorization.grant")(functi
     approvalMessageID: input.approvalMessageID,
     validationRecordID: input.validationRecordID,
     workCardHash: validation.workCardHash,
-    routedMemberID: validation.routedMemberID,
+    routedMemberID: canonicalMemberId(validation.routedMemberID),
     rosterHash: validation.rosterHash,
     grantHash: validation.grantHash,
     reviewPolicyHash: validation.reviewPolicyHash,

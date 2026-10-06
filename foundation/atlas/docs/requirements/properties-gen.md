@@ -1,7 +1,7 @@
 # Property-set — Block GEN (genesis / mining) · S3-sibling ∀-render
 
 > **state:** S3-sibling (rendered from the frozen S2 method-tags) · **source of law:** `method-tags-gen.md` (frozen) ·
-> **owner:** charlie (FORGE); genesis domain authored by jimmy (COMPASS) ·
+> **owner:** backend (FORGE); genesis domain authored by jimmy (COMPASS) ·
 > **purpose:** render each behavioural INV's frozen `up-property` into a runnable ∀-quantified property — the
 > oracle-free beyond-the-witness check that raises a WP from FLOOR toward FULL assurance. **Invents no law.**
 >

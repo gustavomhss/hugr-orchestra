@@ -59,6 +59,29 @@ export const modelKey = (model: DefaultModel) => `${model.providerID}/${model.mo
 
 export const variants = (snapshot: Snapshot, model: DefaultModel) => snapshot.variantsByModel[modelKey(model)]
 
+type ModeAgent = {
+  readonly id?: string
+  readonly name: string
+  readonly description?: string
+  readonly mode: "subagent" | "primary" | "all"
+  readonly hidden?: boolean
+}
+
+// Mode ids are stable agent ids; the label is only the mode name.
+export const modes = (agents: readonly ModeAgent[]): ModeOption[] =>
+  agents
+    .filter((agent) => agent.mode !== "subagent" && agent.hidden !== true)
+    .map((agent) => ({
+      id: agent.id ?? agent.name,
+      name: agent.name,
+      ...(agent.description ? { description: agent.description } : {}),
+    }))
+
+export const defaultModeID = (agents: readonly ModeAgent[]) => {
+  const primary = agents.find((agent) => agent.mode === "primary" && agent.hidden !== true)
+  return primary ? (primary.id ?? primary.name) : "maestro"
+}
+
 export const build = (input: {
   readonly directory: string
   readonly providers: Record<ProviderV2.ID, Provider.Info>

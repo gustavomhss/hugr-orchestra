@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
 
 describe("Maestro roster", () => {
   test("declares exact nine contract seats in deterministic order", () => {
@@ -22,12 +22,22 @@ describe("Maestro roster", () => {
         forbiddenActions: ["product implementation", "self-approval", "self-review"],
       },
       {
-        displayName: "Charlie",
-        memberId: "charlie",
+        displayName: BACKEND_DEFAULT_LABEL,
+        memberId: "backend",
         role: "backend execution",
         abilityClass: "scoped repository write",
-        returnCard: "implementation card, gates, diff receipt",
-        forbiddenActions: ["approve", "review own work", "merge"],
+        returnCard: "backend-result",
+        forbiddenActions: [
+          "investigation or diagnosis",
+          "architecture or scope decisions",
+          "delegation",
+          "self-review",
+          "claims of verification or acceptance",
+          "commit, push, branch, merge or pull request",
+          "installing tools",
+          "working around permission denials or safety holds",
+          "editing Atlas memory files",
+        ],
       },
       {
         displayName: "Patty",
@@ -91,12 +101,12 @@ describe("Maestro roster", () => {
   })
 
   test("looks up valid member ID", () => {
-    expect(lookupRosterMember("charlie")).toEqual({ status: "FOUND", member: roster[1] })
+    expect(lookupRosterMember("backend")).toEqual({ status: "FOUND", member: roster[1] })
   })
 
   test("holds unknown or malformed member ID", () => {
     expect(lookupRosterMember("unknown")).toEqual({ status: "HOLD", reason: "unknown-member-id" })
-    expect(lookupRosterMember("Charlie")).toEqual({ status: "HOLD", reason: "malformed-member-id" })
+    expect(lookupRosterMember("Backend")).toEqual({ status: "HOLD", reason: "malformed-member-id" })
     expect(lookupRosterMember(undefined)).toEqual({ status: "HOLD", reason: "malformed-member-id" })
   })
 
@@ -113,7 +123,7 @@ describe("Maestro roster", () => {
   test("display rename preserves member identity", () => {
     const renamed = createRoster([{ ...roster[1]!, displayName: "Ana" }])
 
-    expect(lookupRosterMember("charlie", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
+    expect(lookupRosterMember("backend", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
     expect(lookupRosterMember("ana", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
   })
 })

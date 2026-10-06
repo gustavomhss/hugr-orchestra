@@ -115,7 +115,7 @@ const prepare = Effect.fn("NativeBindingsTest.prepare")(function* () {
             invariants: [
               { nodeId: "owned:contract", tier: "T1", claim: "Owned stays deterministic.", freshness: "FRESH" },
             ],
-            shape: { contents: ["src/owned.ts"], owner: "charlie", tier: "T1" },
+            shape: { contents: ["src/owned.ts"], owner: "backend", tier: "T1" },
             edges: { dependents: [], dependencies: [] },
             gotchas: [],
             advisory: [],
@@ -138,7 +138,7 @@ const prepare = Effect.fn("NativeBindingsTest.prepare")(function* () {
     path.join(test.directory, ".atlas/TERRITORY-CATALOG.json"),
     JSON.stringify(
       publishTerritoryCatalog(instance.project.id, [
-        { name: "backend", owner: "charlie", tier: "T1", globs: ["src/**"] },
+        { name: "backend", owner: "backend", tier: "T1", globs: ["src/**"] },
       ]),
     ),
   )
@@ -267,7 +267,7 @@ describe("Maestro native output bindings", () => {
           projectID: data.session.projectID,
           workCardID: "bounded-backend",
           workCard,
-          routedMemberID: "charlie",
+          routedMemberID: "backend",
           validatorVersion: "validation-v1",
           checks,
         }

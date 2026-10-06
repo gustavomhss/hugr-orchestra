@@ -1,13 +1,9 @@
 // @atlas/adapter-io -- src/scanner.ts  (CAMPAIGN-11 W5 - MEM-9b/9c binding)
 //
-// ── REFERENCE MODEL ── NO PRODUCTION CALLERS ───────────────────────────────────────────────────
-// Nothing in `packages/*/src` calls `makeScannerAdapter` yet. `packages/memory/src/portable.ts`
-// (`writeWithScanner`) defines the `NamedScanner` seam and BLOCKS a write fail-closed on a hit; that seam
-// has never been bound to a real binary. Wiring it into the write door is W4, a different work package in
-// this campaign -- declared here rather than pre-wired, because composing a door early just to clear this
-// gate is exactly the stub `reference-model-guard.mjs` exists to refuse. It becomes shipped code the moment
-// W4 composes it, and this entry goes STALE then (that leg of the gate says so out loud when it happens).
-// Mirrors `packages/adapter-io/src/memory-store.ts` banner exactly (same campaign, same shape of gap).
+// ── CALLERS ── `compose.ts` (`makeScannerAdapter`, the CLI/MCP write door, W8) and `native-memory.ts`
+// (`detectAvailableScanner` + `runScanner` + `KNOWN_SCANNERS`, the bound composition, which keeps the
+// three-value verdict instead of the boolean collapse below). This header used to declare a reference model
+// with no production callers; W8 made that false.
 //
 // -- WHAT THIS FILE DOES, AND DOES NOT, CLAIM --------------------------------------------------------
 // Detection QUALITY (which byte patterns ARE a secret) is delegated to the named binary (FR-12) -- this
@@ -76,7 +72,10 @@ export interface ScannerBinarySpec {
 //
 // trufflehog remains DOC-DERIVED and unmeasured -- it is not installed on this machine. That is stated here
 // rather than left to be assumed calibrated by association with the line above it.
-const KNOWN_SCANNERS: readonly ScannerBinarySpec[] = [
+// Exported for `native-memory.ts`, which binds the SAME calibrated argv to an explicit binary path the
+// harness supplies (the backend specialist toolkit fetches `gitleaks` on demand) before it falls back to PATH. A copy
+// of this table there would be the second, uncalibrated argv this comment exists to prevent.
+export const KNOWN_SCANNERS: readonly ScannerBinarySpec[] = [
   {
     name: "gitleaks",
     command: "gitleaks",

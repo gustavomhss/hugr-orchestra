@@ -151,9 +151,9 @@ it.effect("native seat permission denies survive session rules", () =>
       options: {},
       permission: Permission.fromConfig({ "*": "deny", read: "allow", glob: "allow", grep: "allow" }),
     } satisfies Agent.Info
-    const charlie = {
-      id: "charlie",
-      name: "Charlie",
+    const backend = {
+      id: "backend",
+      name: "Backend",
       native: true,
       mode: "subagent",
       options: {},
@@ -178,7 +178,7 @@ it.effect("native seat permission denies survive session rules", () =>
     const denied = yield* invoke(lucy).pipe(Effect.exit)
     expect(Exit.isFailure(denied)).toBe(true)
     if (Exit.isFailure(denied)) expect(Cause.pretty(denied.cause)).toContain("PermissionDeniedError")
-    yield* invoke(charlie)
+    yield* invoke(backend)
     yield* invoke(custom)
   }),
 )

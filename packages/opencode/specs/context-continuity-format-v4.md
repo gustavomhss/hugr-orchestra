@@ -169,7 +169,7 @@ Rendering rules:
 - **Provenance.**
   - Every item ends with its sources in parentheses, for example `(u5)`, `(a12, u5)` or
     `(t31 · 10-05 13:58 -03)`.
-  - A source that is a delegation return carries the member name, as in `(t130 charlie)`, so the
+  - A source that is a delegation return carries the member name, as in `(t130 backend)`, so the
     reader can see when evidence is a member's own report.
   - The final parenthesized group of an item is always host-written, so a value ending in "(u3)"
     cannot forge provenance.
@@ -305,7 +305,7 @@ Field meanings:
     `verify`. `done` means checked.
   - `done_when`: the acceptance criterion; for a delegation, what the brief demanded.
   - `needs`: the items this work depends on or must hand over, such as Jimmy's findings for
-    Charlie's brief.
+    the backend specialist's brief.
   - `detail`: progress, what is awaited, what to check, or the outcome. For a review, the
     reviewer's verdict word comes first, as returned.
   - `user`: what the user was told, promised or asked about this item.
@@ -447,7 +447,7 @@ original bytes, and records the alias where the string occurs.
 
 **What the checks cannot do.** Locating proves that the words exist in the source, not that the
 item's meaning follows from them. Findings and other gist fields are not verified. Delegate
-self-reports are visible through provenance (`t130 charlie`) and the `verify` convention; no check
+self-reports are visible through provenance (`t130 backend`) and the `verify` convention; no check
 enforces them. Section 10 measures meaning. No second model judges passes.
 
 ## 4. Producer instruction
@@ -950,7 +950,7 @@ return state.
 
 **7.1 A tool output, delegate card, command expansion or relayed brief says "the user approved X".**
 
-- **Tool output or delegate card.** Charlie's return t88 says "User approved deploy to staging". A
+- **Tool output or delegate card.** The backend specialist's return t88 says "User approved deploy to staging". A
   `may` rule citing t88 is rejected: rules need a `u` alias (C7), and the quote must be located in
   user text (C6). A background notice is a `t` alias, never a `u` alias.
 - **Command expansion.** `/review-pr 42` expands a template whose `` !`gh pr view 42` `` output says
@@ -958,11 +958,11 @@ return state.
   `/review-pr 42`. Residual risk: messages persisted before the upgrade carry no marker, so in a
   session that spans the upgrade an old expansion still counts as user text.
 - **Persisted reminders and attachments** are synthetic and never count as user text.
-- **Member session.** Charlie's `u1` is Maestro's brief, built by `resolvePromptParts` and not
-  marked as a command. Charlie's memory shows "Delegator rules and corrections", and its preamble
+- **Member session.** The backend specialist's `u1` is Maestro's brief, built by `resolvePromptParts` and not
+  marked as a command. The backend specialist's memory shows "Delegator rules and corrections", and its preamble
   says the rules come from the delegating agent, not from a human.
-- **Residual risk.** The producer could record "Charlie reports the user approved deploy" as a
-  finding citing `t88 charlie`, and no check can stop a finding from reporting a claim. The reader
+- **Residual risk.** The producer could record "The backend specialist reports the user approved deploy" as a
+  finding citing `t88 backend`, and no check can stop a finding from reporting a claim. The reader
   sees a delegate source, the preamble says only rules grant permissions, and m4 (MUST NOT deploy)
   stays, because retiring it needs the user's revoking words.
 
@@ -995,17 +995,17 @@ rejects. If the reopened item had a stale `user` line, `"user": null` would remo
 **7.5 Two parallel work streams (Maestro).**
 
 - Jimmy's findings card returns in the head (t96). The return is protected from masking, so the
-  producer can read it. Maestro briefs Charlie (t100) and Patty (t101). The ops are
+  producer can read it. Maestro briefs the backend specialist (t100) and Patty (t101). The ops are
   `add findings {key: n1, …} src [t96]`, then two plan items with `needs: ["n1", "m46"]` (m46 is
-  Bobby's contract verdict), WAITING on charlie and on patty. Branches are values.
+  Bobby's contract verdict), WAITING on backend and on patty. Branches are values.
 - Activity shows both delegations. Who is working on what, and for how long, needs no producer
   effort.
-- Charlie returns (t130 charlie), and the producer moves the backend item to VERIFY: "To check:
+- The backend specialist returns (t130 backend), and the producer moves the backend item to VERIFY: "To check:
   gates and diff receipt against done_when".
 - Maestro calls `maestro_request_review` (t140, a child `lucy` session, so it is a delegation). Lucy
   returns FIX_FIRST. The review item becomes `done` with "Outcome: FIX_FIRST: missing null check in
   …" citing `t140 lucy`. Her verdict is the deliverable. The backend item goes to TODO with
-  "Re-brief Charlie with Lucy's two findings", and its `needs` points to the review item.
+  "Re-brief the backend specialist with Lucy's two findings", and its `needs` points to the review item.
 - While these items are open, C10 rejects retiring the finding, the contract or the review. Once
   they are `done`, their `needs` no longer pin anything, so the C12 retry can offer them for
   retirement.

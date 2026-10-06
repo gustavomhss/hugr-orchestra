@@ -26,14 +26,18 @@ const skipEmbedWebUi = process.argv.includes("--skip-embed-web-ui")
 const createEmbeddedWebUIBundle = async () => {
   console.log(`Building Web UI to embed in the binary`)
   const appDir = path.join(import.meta.dirname, "../../app")
-  const dist = path.join(appDir, "dist")
   await $`OPENCODE_CHANNEL=${Script.channel} bun run --cwd ${appDir} build`
-  const files = (await Array.fromAsync(new Bun.Glob("**/*").scan({ cwd: dist })))
+  return createEmbeddedFileMap(path.join(appDir, "dist"), (file) => !file.endsWith(".map"))
+}
+
+// A module whose default export maps each file's path under `root` to its embedded file in the binary.
+const createEmbeddedFileMap = async (root: string, include: (file: string) => boolean) => {
+  const files = (await Array.fromAsync(new Bun.Glob("**/*").scan({ cwd: root })))
     .map((file) => file.replaceAll("\\", "/"))
-    .filter((file) => !file.endsWith(".map"))
+    .filter(include)
     .sort()
   const imports = files.map((file, i) => {
-    const spec = path.relative(dir, path.join(dist, file)).replaceAll("\\", "/")
+    const spec = path.relative(dir, path.join(root, file)).replaceAll("\\", "/")
     return `import file_${i} from ${JSON.stringify(spec.startsWith(".") ? spec : `./${spec}`)} with { type: "file" };`
   })
   const entries = files.map((file, i) => `  ${JSON.stringify(file)}: file_${i},`)
@@ -48,6 +52,8 @@ const createEmbeddedWebUIBundle = async () => {
 }
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
+// The backend specialist's packaged skills (F6.12), extracted to a real directory at runtime by src/maestro/backend-skill-root.ts.
+const backendSkillsFileMap = await createEmbeddedFileMap(path.join(dir, "../backend-specialist/skills"), () => true)
 const treeSitterWorker = await Bun.file(fileURLToPath(import.meta.resolve("@opentui/core/parser.worker"))).text()
 
 const allTargets: {
@@ -182,11 +188,13 @@ for (const item of targets) {
     files: {
       [treeSitterWorkerPath]: treeSitterWorker,
       ...(embeddedFileMap ? { "opencode-web-ui.gen.ts": embeddedFileMap } : {}),
+      "opencode-backend-skills.gen.ts": backendSkillsFileMap,
     },
     entrypoints: [
       "./src/index.ts",
       workerPath,
       treeSitterWorkerPath,
+      "opencode-backend-skills.gen.ts",
       ...(embeddedFileMap ? ["opencode-web-ui.gen.ts"] : []),
     ],
     define: {

@@ -47,15 +47,18 @@ function bash(agent: Agent.Info, command: string) {
 
 // Maestro and general ask the owner. Seats with a shell never get a prompt and explore only reads, so they are denied.
 const asking = ["maestro", "general"]
+const shellProfiles = ["execution", "backend"] as const
 const denied = [
-  ...roster.filter((member) => member.nativeProfile === "execution").map((member) => member.memberId),
+  ...roster
+    .filter((member) => shellProfiles.some((profile) => profile === member.nativeProfile))
+    .map((member) => member.memberId),
   "explore",
 ]
 
 it.instance("maestro and general ask before publishing, shell seats and explore cannot, others keep their access", () =>
   Effect.gen(function* () {
     const agents = yield* load((svc) => svc.list())
-    expect(denied).toEqual(["charlie", "patty", "rosie", "explore"])
+    expect(denied).toEqual(["backend", "patty", "rosie", "explore"])
 
     for (const agent of agents) {
       const id = agent.id ?? agent.name
@@ -68,8 +71,9 @@ it.instance("maestro and general ask before publishing, shell seats and explore 
         expect(bash(agent, command)).toBe("allow")
     }
     // A seat's runtime check reads its native profile directly.
-    for (const command of publishing)
-      expect(Permission.evaluate("bash", command, Permission.fromConfig(nativeProfiles.execution)).action).toBe("deny")
+    for (const profile of shellProfiles)
+      for (const command of publishing)
+        expect(Permission.evaluate("bash", command, Permission.fromConfig(nativeProfiles[profile])).action).toBe("deny")
   }),
 )
 
@@ -95,8 +99,10 @@ it.instance(
         expect(bash(agent, "gh pr merge 12 --squash")).toBe("allow")
         expect(bash(agent, "gh release create v1.2.3")).toBe("ask")
       }
-      const charlie = yield* load((svc) => svc.get("charlie"))
-      expect(bash(charlie, "gh pr create --fill")).toBe("deny")
+      for (const id of ["backend", "patty"]) {
+        const seat = yield* load((svc) => svc.get(id))
+        expect(bash(seat, "gh pr create --fill")).toBe("deny")
+      }
     }),
   { config: { permission: { bash: { "gh pr *": "allow" } } } },
 )

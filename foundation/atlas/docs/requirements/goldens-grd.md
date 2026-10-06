@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-grd.md`; every GROUND-1..13 method-tagged, **no `FSPEC`** in GRD — the
-> Atlas's one formal cluster is `FSPEC-merge` in Block KRN) · **owner:** charlie (FORGE).
+> Atlas's one formal cluster is `FSPEC-merge` in Block KRN) · **owner:** backend (FORGE).
 >
 > **Derivation (not hand-authored where a generator exists):**
 >
