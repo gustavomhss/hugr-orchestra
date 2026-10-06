@@ -67,6 +67,8 @@ export enum MaybeApplyPatchVerified {
 }
 
 // Parser implementation
+const END_OF_FILE = "*** End of File"
+
 function parsePatchHeader(
   lines: string[],
   startIdx: number,
@@ -100,67 +102,87 @@ function parsePatchHeader(
   return null
 }
 
-function parseUpdateFileChunks(lines: string[], startIdx: number): { chunks: UpdateFileChunk[]; nextIdx: number } {
+function parseUpdateFileChunks(
+  lines: string[],
+  startIdx: number,
+  filePath: string,
+): { chunks: UpdateFileChunk[]; nextIdx: number } {
   const chunks: UpdateFileChunk[] = []
   let i = startIdx
 
   while (i < lines.length && !lines[i].startsWith("***")) {
-    if (lines[i].startsWith("@@")) {
-      // Parse context line
-      const contextLine = lines[i].substring(2).trim()
+    // Blank lines may separate hunks
+    if (lines[i].trim() === "") {
       i++
+      continue
+    }
 
-      const oldLines: string[] = []
-      const newLines: string[] = []
-      let isEndOfFile = false
+    // Codex-style patches often leave out the first hunk's `@@` line, so those lines form a hunk without context.
+    // Any later hunk starts here only after `*** End of File`, and it needs its own `@@` line.
+    const header = lines[i].startsWith("@@")
+    if (!header && chunks.length > 0) {
+      throw new Error(`Unexpected line '${lines[i]}' after *** End of File in ${filePath}: start the next hunk with @@`)
+    }
+    const contextLine = header ? lines[i].substring(2).trim() : ""
+    if (header) i++
 
-      // Parse change lines
-      while (i < lines.length && !lines[i].startsWith("@@") && !lines[i].startsWith("***")) {
-        const changeLine = lines[i]
+    const oldLines: string[] = []
+    const newLines: string[] = []
 
-        if (changeLine === "*** End of File") {
-          isEndOfFile = true
-          i++
-          break
-        }
+    // Parse change lines
+    while (i < lines.length && !lines[i].startsWith("@@") && !lines[i].startsWith("***")) {
+      const changeLine = lines[i]
 
-        if (changeLine.startsWith(" ")) {
-          // Keep line - appears in both old and new
-          const content = changeLine.substring(1)
-          oldLines.push(content)
-          newLines.push(content)
-        } else if (changeLine.startsWith("-")) {
-          // Remove line - only in old
-          oldLines.push(changeLine.substring(1))
-        } else if (changeLine.startsWith("+")) {
-          // Add line - only in new
-          newLines.push(changeLine.substring(1))
-        }
-
-        i++
+      if (changeLine.startsWith(" ")) {
+        // Keep line - appears in both old and new
+        const content = changeLine.substring(1)
+        oldLines.push(content)
+        newLines.push(content)
+      } else if (changeLine.startsWith("-")) {
+        // Remove line - only in old
+        oldLines.push(changeLine.substring(1))
+      } else if (changeLine.startsWith("+")) {
+        // Add line - only in new
+        newLines.push(changeLine.substring(1))
+      } else if (changeLine.trim() !== "") {
+        throw new Error(
+          `Unexpected line '${changeLine}' in *** Update File: ${filePath}: hunk lines start with ' ' (context), '-' (remove) or '+' (add)`,
+        )
       }
 
-      chunks.push({
-        old_lines: oldLines,
-        new_lines: newLines,
-        change_context: contextLine || undefined,
-        is_end_of_file: isEndOfFile || undefined,
-      })
-    } else {
       i++
     }
+
+    // `*** End of File` closes the hunk and anchors it to the end of the file
+    const isEndOfFile = i < lines.length && lines[i].trimEnd() === END_OF_FILE
+    if (isEndOfFile) i++
+
+    chunks.push({
+      old_lines: oldLines,
+      new_lines: newLines,
+      change_context: contextLine || undefined,
+      is_end_of_file: isEndOfFile || undefined,
+    })
   }
 
   return { chunks, nextIdx: i }
 }
 
-function parseAddFileContent(lines: string[], startIdx: number): { content: string; nextIdx: number } {
+function parseAddFileContent(
+  lines: string[],
+  startIdx: number,
+  filePath: string,
+): { content: string; nextIdx: number } {
   let content = ""
   let i = startIdx
 
   while (i < lines.length && !lines[i].startsWith("***")) {
     if (lines[i].startsWith("+")) {
       content += lines[i].substring(1) + "\n"
+    } else if (lines[i].trim() !== "") {
+      throw new Error(
+        `Unexpected line '${lines[i]}' in *** Add File: ${filePath}: every line of a new file starts with +`,
+      )
     }
     i++
   }
@@ -192,49 +214,62 @@ export function parsePatch(patchText: string): { hunks: Hunk[] } {
   const beginMarker = "*** Begin Patch"
   const endMarker = "*** End Patch"
 
+  // The last end marker closes the patch, so a context line that reads `*** End Patch` cannot cut it short
   const beginIdx = lines.findIndex((line) => line.trim() === beginMarker)
-  const endIdx = lines.findIndex((line) => line.trim() === endMarker)
+  const endIdx = lines.findLastIndex((line) => line.trim() === endMarker)
 
   if (beginIdx === -1 || endIdx === -1 || beginIdx >= endIdx) {
     throw new Error("Invalid patch format: missing Begin/End markers")
   }
 
-  // Parse content between markers
-  i = beginIdx + 1
+  // Every line between the markers belongs to a file section or is blank, so no line is skipped unnoticed
+  const body = lines.slice(beginIdx + 1, endIdx)
 
-  while (i < endIdx) {
-    const header = parsePatchHeader(lines, i)
-    if (!header) {
+  while (i < body.length) {
+    if (body[i].trim() === "") {
       i++
       continue
     }
 
-    if (lines[i].startsWith("*** Add File:")) {
-      const { content, nextIdx } = parseAddFileContent(lines, header.nextIdx)
+    const header = parsePatchHeader(body, i)
+    if (!header) {
+      throw new Error(
+        `Unexpected line '${body[i]}': each file in a patch starts with *** Add File:, *** Update File: or *** Delete File:`,
+      )
+    }
+
+    if (body[i].startsWith("*** Add File:")) {
+      const { content, nextIdx } = parseAddFileContent(body, header.nextIdx, header.filePath)
       hunks.push({
         type: "add",
         path: header.filePath,
         contents: content,
       })
       i = nextIdx
-    } else if (lines[i].startsWith("*** Delete File:")) {
+      continue
+    }
+
+    if (body[i].startsWith("*** Delete File:")) {
       hunks.push({
         type: "delete",
         path: header.filePath,
       })
       i = header.nextIdx
-    } else if (lines[i].startsWith("*** Update File:")) {
-      const { chunks, nextIdx } = parseUpdateFileChunks(lines, header.nextIdx)
-      hunks.push({
-        type: "update",
-        path: header.filePath,
-        move_path: header.movePath,
-        chunks,
-      })
-      i = nextIdx
-    } else {
-      i++
+      continue
     }
+
+    const { chunks, nextIdx } = parseUpdateFileChunks(body, header.nextIdx, header.filePath)
+    // Without hunk lines the file would be rewritten unchanged and still reported as modified; a bare Move to renames
+    if (!header.movePath && chunks.every((chunk) => chunk.old_lines.length === 0 && chunk.new_lines.length === 0)) {
+      throw new Error(`*** Update File: ${header.filePath} has no hunk lines, so it would change nothing`)
+    }
+    hunks.push({
+      type: "update",
+      path: header.filePath,
+      move_path: header.movePath,
+      chunks,
+    })
+    i = nextIdx
   }
 
   return { hunks }
@@ -381,12 +416,12 @@ function computeReplacements(
       found = seekSequence(originalLines, pattern, lineIndex, chunk.is_end_of_file)
     }
 
-    if (found !== -1) {
-      replacements.push([found, pattern.length, newSlice])
-      lineIndex = found + pattern.length
-    } else {
-      throw new Error(`Failed to find expected lines in ${filePath}:\n${chunk.old_lines.join("\n")}`)
+    if (found === -1) {
+      const where = chunk.is_end_of_file ? "at the end of" : "in"
+      throw new Error(`Failed to find expected lines ${where} ${filePath}:\n${chunk.old_lines.join("\n")}`)
     }
+    replacements.push([found, pattern.length, newSlice])
+    lineIndex = found + pattern.length
   }
 
   // Sort replacements by index to apply in order
@@ -427,31 +462,17 @@ function normalizeUnicode(str: string): string {
 type Comparator = (a: string, b: string) => boolean
 
 function tryMatch(lines: string[], pattern: string[], startIndex: number, compare: Comparator, eof: boolean): number {
-  // If EOF anchor, try matching from end of file first
+  const matchesAt = (start: number) => pattern.every((line, j) => compare(lines[start + j], line))
+
+  // `*** End of File` anchors the hunk: it may only match the last lines of the file
   if (eof) {
     const fromEnd = lines.length - pattern.length
-    if (fromEnd >= startIndex) {
-      let matches = true
-      for (let j = 0; j < pattern.length; j++) {
-        if (!compare(lines[fromEnd + j], pattern[j])) {
-          matches = false
-          break
-        }
-      }
-      if (matches) return fromEnd
-    }
+    return fromEnd >= startIndex && matchesAt(fromEnd) ? fromEnd : -1
   }
 
   // Forward search from startIndex
   for (let i = startIndex; i <= lines.length - pattern.length; i++) {
-    let matches = true
-    for (let j = 0; j < pattern.length; j++) {
-      if (!compare(lines[i + j], pattern[j])) {
-        matches = false
-        break
-      }
-    }
-    if (matches) return i
+    if (matchesAt(i)) return i
   }
 
   return -1

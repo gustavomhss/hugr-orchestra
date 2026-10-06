@@ -44,10 +44,11 @@ export type Item = { ref: string; parentRef?: string | null; role?: number; role
 
 export type Node = { item: Item; role: string; name: string; keys?: string; children: Node[]; parent?: Node }
 
-// A region handle survives rescans by shape, not by ref: role, name, and which same-shaped sibling it is.
-export type Handle = { role: string; name: string; occurrence: number; path: string[] }
+// A region handle survives rescans by shape, not by ref: one step per enclosing region from the top, each naming the
+// node by role, name and which same-shaped node it is among everything its region holds directly.
+export type Handle = { role: string; name: string; occurrence: number }[]
 
-export function role(item: Pick<Item, "role" | "roleName">) {
+export function role(item: { role?: unknown; roleName: string }) {
   if (typeof item.role === "number" && ROLES[item.role]) return ROLES[item.role]!
   return item.roleName.replace(/-/g, " ")
 }
@@ -57,6 +58,15 @@ export function keys(name: string) {
   const match = /^(.*?)\s*\(?((?:(?:Ctrl|Control|Shift|Alt|Super|Meta|Cmd)\+)+[^\s)]+)\)?\s*$/.exec(name)
   if (!match || !match[1]) return { name }
   return { name: match[1], keys: match[2] }
+}
+
+// Every app keeps its own focused control, but keys reach only the one whose window is active. Roots come first.
+export function focused<T extends { item: Item }>(matches: T[]) {
+  const items = new Map(matches.map((match) => [match.item.ref, match.item]))
+  const top = (item: Item, depth = 0): Item =>
+    item.parentRef && items.has(item.parentRef) && depth < 64 ? top(items.get(item.parentRef)!, depth + 1) : item
+  return matches.filter((match) => match.item.states?.includes(12)
+    && ["frame", "dialog", "window"].includes(role(top(match.item))) && top(match.item).states?.includes(1))
 }
 
 export function tree(items: Item[]) {
@@ -91,22 +101,41 @@ function walk(node: Node, visit: (node: Node) => void) {
   node.children.forEach((child) => walk(child, visit))
 }
 
-export function handle(node: Node): Handle {
-  const path: string[] = []
-  for (let current = node.parent; current; current = current.parent) if (region(current)) path.unshift(`${current.role}:${current.name}`)
-  const siblings = node.parent ? node.parent.children : []
-  return { role: node.role, name: node.name, path,
-    occurrence: siblings.filter((other) => other.role === node.role && other.name === node.name).indexOf(node) }
+// Every node a person could see, in reading order.
+export function visible(roots: Node[]) {
+  const all: Node[] = []
+  roots.forEach((root) => walk(root, (node) => all.push(node)))
+  return all
+}
+
+// The visible nodes a region holds directly (the workspace top when none), looking through unnamed wrappers.
+function held(roots: Node[], owner?: Node) {
+  const found: Node[] = []
+  const visit = (node: Node) => {
+    if (hidden(node)) return
+    found.push(node)
+    if (!region(node)) node.children.forEach(visit)
+  }
+  ;(owner ? owner.children : roots).forEach(visit)
+  return found
+}
+
+const holder = (node: Node): Node | undefined => node.parent && (region(node.parent) ? node.parent : holder(node.parent))
+
+// Same-shaped nodes count across the whole region, not per parent: Chromium wraps each row's toolbar in its own
+// unnamed section, and per-parent counting gave every one of them the same handle, so none could be entered.
+export function handle(roots: Node[], node: Node): Handle {
+  const owner = holder(node)
+  const step = { role: node.role, name: node.name,
+    occurrence: held(roots, owner).filter((other) => other.role === node.role && other.name === node.name).indexOf(node) }
+  return [...(owner ? handle(roots, owner) : []), step]
 }
 
 export function locate(roots: Node[], wanted: Handle) {
-  const found: Node[] = []
-  roots.forEach((root) => walk(root, (node) => {
-    const current = handle(node)
-    if (current.role === wanted.role && current.name === wanted.name && current.occurrence === wanted.occurrence
-      && current.path.join("/") === wanted.path.join("/")) found.push(node)
-  }))
-  return found.length === 1 ? found[0] : undefined
+  // null stands for the workspace top before the first step; undefined for a step that is gone.
+  return wanted.reduce<Node | null | undefined>((owner, step) => owner === undefined ? undefined
+    : held(roots, owner ?? undefined).filter((node) => node.role === step.role && node.name === step.name)[step.occurrence],
+  null) ?? undefined
 }
 
 // The visible meaning of a control in one line; the role and name double as a ui_act/ui_type target.
@@ -143,18 +172,18 @@ export function windows(roots: Node[]) {
   return roots.flatMap((root) => ["frame", "dialog", "window", "alert", "application"].includes(root.role) ? [root] : [])
 }
 
-export type Look = { text: string; regions: Handle[] }
+// scope is the line of the view's scope, so a later ui_enter can say which view its numbers came from.
+export type Look = { text: string; regions: Handle[]; scope: string }
 
 // What a screen reader user hears for "where am I" plus a landmark list: modal first, focus, then the scope's map.
 export function look(roots: Node[], scope?: Node, limit = 40): Look {
-  const all: Node[] = []
-  roots.forEach((root) => walk(root, (node) => all.push(node)))
+  const all = visible(roots)
   const focused = all.find((node) => has(node, 12))
   const modal = all.find((node) => MODALS.has(node.role) && (has(node, 16) || has(node, 1)))
   const active = windows(roots).find((node) => has(node, 1)) ?? windows(roots)[0]
   const base = scope ?? modal ?? active ?? roots[0]
   const lines: string[] = []
-  if (!base) return { text: "No app windows are visible in the Linux workspace.", regions: [] }
+  if (!base) return { text: "No app windows are visible in the Linux workspace.", regions: [], scope: "" }
   lines.push(`windows: ${windows(roots).map(line).join("; ") || "none"}`)
   if (modal) lines.push(`modal: ${line(modal)} — it holds the input until it is closed`)
   if (focused) {
@@ -164,7 +193,7 @@ export function look(roots: Node[], scope?: Node, limit = 40): Look {
   }
   lines.push(`scope: ${line(base)}${scope ? " (ui_up to leave)" : ""}`)
   const inside = contents(base)
-  const handles = inside.regions.map(handle)
+  const handles = inside.regions.map((node) => handle(roots, node))
   if (inside.regions.length) {
     lines.push("regions (ui_enter with the number):")
     inside.regions.forEach((node, index) => {
@@ -177,7 +206,7 @@ export function look(roots: Node[], scope?: Node, limit = 40): Look {
     lines.push(`controls here${inside.controls.length > limit ? ` (first ${limit} of ${inside.controls.length})` : ""}:`)
     inside.controls.slice(0, limit).forEach((node) => lines.push(`  ${line(node)}`))
   }
-  return { text: lines.join("\n"), regions: handles }
+  return { text: lines.join("\n"), regions: handles, scope: line(base) }
 }
 
 export function list(scope: Node, kind: string, limit = 60) {

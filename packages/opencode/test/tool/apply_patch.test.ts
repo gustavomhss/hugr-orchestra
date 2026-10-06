@@ -443,21 +443,170 @@ describe("tool.apply_patch freeform", () => {
     }),
   )
 
-  it.instance("EOF anchor matches from end of file first", () =>
+  it.instance("EOF anchor edits the last match, not the first", () =>
     Effect.gen(function* () {
       const test = yield* TestInstance
       const { ctx } = makeCtx()
       const target = path.join(test.directory, "eof_anchor.txt")
-      // File has duplicate "marker" lines - one in middle, one at end
-      yield* writeText(target, "start\nmarker\nmiddle\nmarker\nend\n")
+      // The hunk's lines appear twice; the anchor must pick the pair at the end of the file
+      yield* writeText(target, "start\nmarker\nend\nmarker\nend\n")
 
-      // With EOF anchor, should match the LAST "marker" line, not the first
       const patchText =
         "*** Begin Patch\n*** Update File: eof_anchor.txt\n@@\n-marker\n-end\n+marker-changed\n+end\n*** End of File\n*** End Patch"
 
       yield* execute({ patchText }, ctx)
-      // First marker unchanged, second marker changed
-      expect(yield* readText(target)).toBe("start\nmarker\nmiddle\nmarker-changed\nend\n")
+      expect(yield* readText(target)).toBe("start\nmarker\nend\nmarker-changed\nend\n")
+    }),
+  )
+
+  it.instance("rejects an EOF-anchored hunk that is not at the end of the file", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "eof_middle.txt")
+      yield* writeText(target, "alpha\nlast\nextra\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Update File: eof_middle.txt\n@@\n-last\n+end\n*** End of File\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "at the end of")
+      expect(yield* readText(target)).toBe("alpha\nlast\nextra\n")
+    }),
+  )
+
+  it.instance("applies a first hunk without an @@ line", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "no_header.txt")
+      yield* writeText(target, "line1\nline2\nline3\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Update File: no_header.txt\n line1\n-line2\n+changed\n line3\n*** End Patch"
+
+      yield* execute({ patchText }, ctx)
+      expect(yield* readText(target)).toBe("line1\nchanged\nline3\n")
+    }),
+  )
+
+  it.instance("rejects an update without hunk lines", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "unchanged.txt")
+      yield* writeText(target, "line1\n")
+
+      yield* expectFailure(
+        execute({ patchText: "*** Begin Patch\n*** Update File: unchanged.txt\n*** End Patch" }, ctx),
+        "has no hunk lines",
+      )
+      yield* expectFailure(
+        execute({ patchText: "*** Begin Patch\n*** Update File: unchanged.txt\n@@\n*** End Patch" }, ctx),
+        "has no hunk lines",
+      )
+      expect(yield* readText(target)).toBe("line1\n")
+    }),
+  )
+
+  it.instance("rejects a hunk line without a prefix", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "unprefixed.txt")
+      yield* writeText(target, "line1\nline2\n")
+
+      const patchText = "*** Begin Patch\n*** Update File: unprefixed.txt\n@@\n-line2\nchanged\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "Unexpected line 'changed'")
+      expect(yield* readText(target)).toBe("line1\nline2\n")
+    }),
+  )
+
+  it.instance("rejects an unknown line between file sections", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "kept.txt")
+      yield* writeText(target, "line1\nline2\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Add File: added.txt\n+hello\n*** Updte File: kept.txt\n@@\n-line2\n+changed\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "Unexpected line '*** Updte File: kept.txt'")
+      yield* expectReadFailure(path.join(test.directory, "added.txt"))
+      expect(yield* readText(target)).toBe("line1\nline2\n")
+    }),
+  )
+
+  it.instance("keeps a context line that reads *** End Patch", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "format.md")
+      yield* writeText(target, "intro\n*** End Patch\nold\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Update File: format.md\n@@\n intro\n *** End Patch\n-old\n+new\n*** End Patch"
+
+      yield* execute({ patchText }, ctx)
+      expect(yield* readText(target)).toBe("intro\n*** End Patch\nnew\n")
+    }),
+  )
+
+  it.instance("rejects a second patch envelope", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "second.txt")
+      yield* writeText(target, "old\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Add File: first.txt\n+first\n*** End Patch\n*** Begin Patch\n*** Update File: second.txt\n@@\n-old\n+new\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "Unexpected line '*** End Patch'")
+      yield* expectReadFailure(path.join(test.directory, "first.txt"))
+      expect(yield* readText(target)).toBe("old\n")
+    }),
+  )
+
+  it.instance("rejects an Add File line without +", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const patchText = "*** Begin Patch\n*** Add File: added.txt\n+first\nsecond\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "Unexpected line 'second'")
+      yield* expectReadFailure(path.join(test.directory, "added.txt"))
+    }),
+  )
+
+  it.instance("narrows the match with stacked @@ lines", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const target = path.join(test.directory, "stacked.txt")
+      yield* writeText(target, "class A\n  def run\n    x = 1\nclass B\n  def run\n    x = 1\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Update File: stacked.txt\n@@ class B\n@@   def run\n-    x = 1\n+    x = 2\n*** End Patch"
+
+      yield* execute({ patchText }, ctx)
+      expect(yield* readText(target)).toBe("class A\n  def run\n    x = 1\nclass B\n  def run\n    x = 2\n")
+    }),
+  )
+
+  it.instance("renames a file with Move to and no hunks", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx } = makeCtx()
+      const original = path.join(test.directory, "before.txt")
+      yield* writeText(original, "content\n")
+
+      const patchText = "*** Begin Patch\n*** Update File: before.txt\n*** Move to: after.txt\n*** End Patch"
+
+      yield* execute({ patchText }, ctx)
+      yield* expectReadFailure(original)
+      expect(yield* readText(path.join(test.directory, "after.txt"))).toBe("content\n")
     }),
   )
 

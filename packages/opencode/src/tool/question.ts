@@ -33,7 +33,7 @@ export const QuestionTool = Tool.define<typeof Parameters, Metadata, Question.Se
 
           return {
             title: `Asked ${params.questions.length} question${params.questions.length > 1 ? "s" : ""}`,
-            output: `User has answered your questions: ${formatted}. You can now continue with the user's answers in mind.`,
+            output: `The owner has answered your questions: ${formatted}. You can now continue with the owner's answers in mind.`,
             metadata: {
               answers,
             },

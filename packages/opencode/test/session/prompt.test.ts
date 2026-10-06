@@ -583,7 +583,7 @@ noLLMServer.instance.skip(
       expect(typeof row?.data.time.created).toBe("number")
       expect(messages).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ type: "synthetic", text: expect.stringContaining("Called the Read tool") }),
+          expect.objectContaining({ type: "synthetic", text: expect.stringContaining("The owner attached note.txt.") }),
           expect.objectContaining({ type: "synthetic", text: "note content" }),
         ]),
       )
@@ -1990,7 +1990,7 @@ noLLMServer.instance(
 
       if (msg.info.role !== "user") throw new Error("expected user message")
       const hasFailure = msg.parts.some(
-        (part) => part.type === "text" && part.synthetic && part.text.includes("Read tool failed to read"),
+        (part) => part.type === "text" && part.synthetic && part.text.includes("but it could not be read:"),
       )
       expect(hasFailure).toBe(true)
 
@@ -2032,8 +2032,8 @@ noLLMServer.instance(
       })
       const text = stored.parts.filter((part) => part.type === "text").map((part) => part.text)
 
-      expect(text[0]?.startsWith("Called the Read tool with the following input:")).toBe(true)
-      expect(text[1]?.includes("Read tool failed to read")).toBe(true)
+      expect(text[0]).toMatch(/^The owner attached .+\. Its content as of when they sent this message:$/)
+      expect(text[1]).toMatch(/^The owner attached .+, but it could not be read: /)
       expect(text[2]).toBe("after-file")
 
       yield* sessions.remove(session.id)

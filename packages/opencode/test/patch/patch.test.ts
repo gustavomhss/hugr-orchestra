@@ -86,6 +86,30 @@ describe("Patch namespace", () => {
       }
     })
 
+    test("should parse *** End of File and keep the hunks after it", () => {
+      const patchText = `*** Begin Patch
+*** Update File: tail.txt
+@@
+-last
++end
+*** End of File
+@@
++appended
+*** End Patch`
+
+      const result = Patch.parsePatch(patchText)
+      expect(result.hunks).toEqual([
+        {
+          type: "update",
+          path: "tail.txt",
+          chunks: [
+            { old_lines: ["last"], new_lines: ["end"], is_end_of_file: true },
+            { old_lines: [], new_lines: ["appended"] },
+          ],
+        },
+      ])
+    })
+
     test("should throw error for invalid patch format", () => {
       const invalidPatch = `This is not a valid patch`
 
