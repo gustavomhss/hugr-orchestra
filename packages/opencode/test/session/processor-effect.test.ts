@@ -5,7 +5,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
 import { tool } from "ai"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Stream } from "effect"
+import { Cause, Clock, Deferred, Effect, Exit, Fiber, Layer, Queue, Stream } from "effect"
 import path from "path"
 import z from "zod"
 import type { Agent } from "../../src/agent/agent"
@@ -15,12 +15,13 @@ import { Session } from "@/session/session"
 import { LLM } from "../../src/session/llm"
 import { MessageV2 } from "../../src/session/message-v2"
 import { SessionProcessor } from "../../src/session/processor"
+import { SessionRetry } from "../../src/session/retry"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { SessionStatus } from "../../src/session/status"
 import { SessionSummary } from "../../src/session/summary"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { TestInstance, provideTmpdirInstance, provideTmpdirServer } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { heldClock, testEffect } from "../lib/effect"
 import { raw, reply, TestLLMServer } from "../lib/llm-server"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -77,7 +78,20 @@ const interruptLLM = Layer.succeed(LLM.Service, LLM.Service.of({ stream: () => S
 const interruptEnv = LayerNode.compile(root, [...replacements, [LLM.node, interruptLLM]])
 const itInterrupt = testEffect(interruptEnv)
 
-
+// Runs a processor call on a held Clock. The retry backoff is the processor's
+// only sleep, so this asserts the backoff was requested at policy length, then
+// releases it instead of waiting it out in real time.
+const releaseBackoff = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.gen(function* () {
+    const held = yield* heldClock
+    const fiber = yield* effect.pipe(Effect.provideService(Clock.Clock, held.clock), Effect.forkChild)
+    const backoff = yield* Queue.take(held.sleeps).pipe(
+      Effect.raceFirst(Fiber.await(fiber).pipe(Effect.andThen(Effect.die("processor finished without retry backoff")))),
+    )
+    expect(backoff.millis).toBeGreaterThanOrEqual(SessionRetry.RETRY_INITIAL_DELAY)
+    yield* backoff.wake
+    return yield* Fiber.join(fiber)
+  })
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -343,7 +357,7 @@ it.live("session.processor effect tests reset reasoning state across retries", (
           system: [],
           messages: [{ role: "user", content: "reason" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
         const reasoning = parts.filter((part): part is SessionV1.ReasoningPart => part.type === "reasoning")
@@ -434,7 +448,7 @@ it.live("session.processor effect tests retry recognized structured json errors"
           system: [],
           messages: [{ role: "user", content: "retry json" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
 
@@ -481,7 +495,7 @@ it.live("session.processor effect tests retry OpenAI-compatible midstream server
           system: [],
           messages: [{ role: "user", content: "retry midstream server error" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
 
@@ -538,7 +552,7 @@ it.live("session.processor effect tests retry network_error finish reasons", () 
           system: [],
           messages: [{ role: "user", content: "retry network error" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         const parts = yield* MessageV2.parts(msg.id)
 
@@ -593,7 +607,7 @@ it.live("session.processor effect tests publish retry status updates", () =>
           system: [],
           messages: [{ role: "user", content: "retry" }],
           tools: {},
-        })
+        }).pipe(releaseBackoff)
 
         yield* off
 
