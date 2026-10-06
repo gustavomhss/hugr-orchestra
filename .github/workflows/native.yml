@@ -55,6 +55,10 @@ jobs:
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_snapshot.py --self-check
 
+      - name: Large trees
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
+        run: $RUNNER_TEMP/suite test_large_tree.py --payload resources/linux/app-dock-accessibility --self-check
+
       - name: Helper
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_helper.py --payload resources/linux/app-dock-accessibility --self-check

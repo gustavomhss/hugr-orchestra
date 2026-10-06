@@ -57,6 +57,15 @@ const getBase = (appId: string): Configuration => ({
   },
   files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
   extraResources: [
+    {
+      from: "resources/linux/app-dock-accessibility",
+      to: "app-dock-accessibility",
+      filter: ["*.py"],
+    },
+    {
+      from: "resources/linux-runtime",
+      to: "linux-runtime",
+    },
     ...(channel === "dev"
       ? [
           {

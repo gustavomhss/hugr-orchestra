@@ -6,6 +6,11 @@ on:
   pull_request:
     types: [labeled]
   workflow_dispatch:
+    inputs:
+      windows_e2e:
+        description: Also run the e2e suite on Windows (unit tests always run on Windows)
+        type: boolean
+        default: false
 
 concurrency:
   # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
@@ -20,30 +25,17 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  godfile:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: godfile
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-
-      - name: Fetch target branch
-        run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
-
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun
-
-      - name: Test godfile gate
-        run: bun --cwd packages/core test test/godfile.test.ts
-
-      - name: Run godfile gate
-        run: bun run check:godfile
-
+  # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
+  # cancels jobs it cannot place. One epic run (this file plus typecheck, nix-eval, storybook and
+  # native) stays at 16 jobs, so short gates share jobs instead of getting their own.
+  #
+  # Every job has a timeout: a hung Windows build once held a runner past 40 minutes, and the
+  # GitHub default is 6 hours.
   atlas-scope:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: atlas scope
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       changed: ${{ steps.scope.outputs.changed }}
     steps:
@@ -82,6 +74,7 @@ jobs:
   atlas:
     name: atlas
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: atlas-scope
     # Atlas guards cover its vendor subtree; a failed scope detector fails this workflow rather than skipping it.
     if: github.event_name != 'pull_request' || needs.atlas-scope.outputs.changed == 'true'
@@ -161,31 +154,29 @@ jobs:
         if: github.event_name != 'pull_request' || steps.atlas-diff.outputs.touches_code == 'true'
         run: npm test
 
+  # packages/opencode holds almost all unit-test time, so it runs in Bun shards; every other
+  # package runs through Turbo in unit-rest, where unchanged packages replay from the Turbo cache.
   unit:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: unit (${{ matrix.settings.name }})
+    name: unit (${{ matrix.name }} opencode ${{ matrix.shard }}/${{ matrix.shards }})
     strategy:
       fail-fast: false
       matrix:
-        settings:
-          - name: linux
-            host: ubuntu-latest
-          - name: windows
-            host: windows-latest
-    runs-on: ${{ matrix.settings.host }}
+        # Windows runs these files about 2.7x slower, so it gets one more shard than Linux.
+        include:
+          - { name: linux, host: ubuntu-latest, shard: 1, shards: 2 }
+          - { name: linux, host: ubuntu-latest, shard: 2, shards: 2 }
+          - { name: windows, host: windows-latest, shard: 1, shards: 3 }
+          - { name: windows, host: windows-latest, shard: 2, shards: 3 }
+          - { name: windows, host: windows-latest, shard: 3, shards: 3 }
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 35
     defaults:
       run:
         shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "24"
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
@@ -195,13 +186,64 @@ jobs:
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "opencode"
 
-      - name: Cache Turbo
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      # Per-file timings show where suite time goes; the edit stays inside the runner checkout.
+      - name: Enable JUnit timings
+        run: printf "\n[test.reporter]\njunit = '%s'\n" "$RUNNER_TEMP/junit-opencode-${{ matrix.shard }}.xml" >> packages/opencode/bunfig.toml
+
+      - name: Run opencode tests
+        timeout-minutes: 30
+        working-directory: packages/opencode
+        # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
+        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/${{ matrix.shards }}
+        env:
+          OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+
+      - name: Upload JUnit timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          path: node_modules/.cache/turbo
-          key: turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json') }}-${{ github.sha }}
+          name: junit-${{ matrix.name }}-opencode-${{ matrix.shard }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: ${{ runner.temp }}/junit-*.xml
+
+  unit-rest:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    name: unit (${{ matrix.settings.name }} other packages${{ matrix.settings.name == 'linux' && ', godfile, httpapi' || '' }})
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - name: linux
+            host: ubuntu-latest
+          - name: windows
+            host: windows-latest
+    runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "bot@opencode.ai"
+          git config --global user.name "opencode"
+
+      # Turbo 2 keeps its local cache in .turbo/cache. Only cache-warm saves it (on dev), so every
+      # pull_request run restores the same dev-scoped entry instead of short-lived PR-scoped copies.
+      # Turbo checks each entry against its own task hash, so the key only selects the newest blob.
+      - name: Restore Turbo cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-${{ runner.os }}-${{ hashFiles('turbo.json', '**/package.json') }}-
             turbo-${{ runner.os }}-
 
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
@@ -210,9 +252,21 @@ jobs:
         working-directory: packages/atlas-boundary
         run: bun run check:generated
 
+      - name: Fetch target branch for godfile
+        if: runner.os == 'Linux'
+        run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
+
+      - name: Test godfile gate
+        if: runner.os == 'Linux'
+        run: bun --cwd packages/core test test/godfile.test.ts
+
+      - name: Run godfile gate
+        if: runner.os == 'Linux'
+        run: bun run check:godfile
+
       - name: Run unit tests
-        timeout-minutes: 45
-        run: GITHUB_ACTIONS=false bun turbo test
+        timeout-minutes: 30
+        run: GITHUB_ACTIONS=false bun turbo test --filter='!opencode'
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
@@ -220,6 +274,10 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: packages/client
         run: bun run check:generated
+
+      - name: Build HttpApi exerciser dependencies
+        if: runner.os == 'Linux'
+        run: bun turbo build --filter=opencode^...
 
       - name: Run HttpApi exerciser gates
         if: runner.os == 'Linux'
@@ -230,16 +288,17 @@ jobs:
 
   e2e:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: e2e (${{ matrix.settings.name }})
+    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/3)
     strategy:
       fail-fast: false
       matrix:
-        settings:
-          - name: linux
-            host: ubuntu-latest
-          - name: windows
-            host: windows-latest
+        # Each shard boots its own app server, so shards share no state.
+        shard: [1, 2, 3]
+        # e2e drives Chromium against a per-page mocked backend, so Windows repeats the Linux
+        # coverage; it runs only when dispatched with windows_e2e. Windows unit tests always run.
+        settings: ${{ fromJSON(inputs.windows_e2e && '[{"name":"linux","host":"ubuntu-latest"},{"name":"windows","host":"windows-latest"}]' || '[{"name":"linux","host":"ubuntu-latest"}]') }}
     runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 40
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
     defaults:
@@ -266,9 +325,10 @@ jobs:
           version=$(node -e 'console.log(require("./package.json").workspaces.catalog["@playwright/test"])')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Cache Playwright browsers
+      # cache-warm saves the browsers on dev; per-PR copies (about 540 MB each) only crowd the 10 GB quota.
+      - name: Restore Playwright browsers
         id: playwright-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ github.workspace }}/.playwright-browsers
           key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ steps.playwright-version.outputs.version }}-chromium
@@ -284,17 +344,20 @@ jobs:
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
-        run: bun --cwd packages/app test:e2e:local
+        working-directory: packages/app
+        run: bun run test:e2e:local --shard=${{ matrix.shard }}/3
         env:
           CI: true
-        # One CI worker runs the whole suite; on 2-vCPU Windows runners it takes about 30 minutes.
-        timeout-minutes: 45
+          # The backend is mocked per page, so Linux shards run two browsers; Windows keeps one.
+          PLAYWRIGHT_WORKERS: ${{ runner.os == 'Linux' && '2' || '1' }}
+        # The unsharded single-worker suite took 20-30 minutes.
+        timeout-minutes: 30
 
       - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: playwright-${{ matrix.settings.name }}-${{ github.run_attempt }}
+          name: playwright-${{ matrix.settings.name }}-${{ matrix.shard }}-${{ github.run_attempt }}
           if-no-files-found: ignore
           retention-days: 7
           path: |

@@ -66,7 +66,8 @@ git ls-files --others --exclude-standard
 ```
 
 Resolve baseline/paths before execution. Inspect untracked file contents separately; Git diffs omit them.
-From `packages/opencode`, run `bun test <resolved-suite> --timeout 30000` and `bun typecheck`.
+Run tests on Actions with `bun run test:ci opencode <resolved-suite>` from the repository root and
+`bun typecheck` from `packages/opencode`.
 For CI claims, inspect `gh pr checks <pr>` at exact PR head; local green is not CI green.
 Broaden checks only for changed dependencies/harness, cross-package effects, or unresolved risk.
 Never invoke uninstalled source-only scripts (`acceptance-gate.py`, `story-test-gen`, `verify.sh`) as host features.

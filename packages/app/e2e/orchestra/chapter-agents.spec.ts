@@ -77,7 +77,7 @@ for (const scheme of ["dark", "light"] as const) {
   })
 }
 
-test("Open Chat selects the agent in a blank draft for the same profile and sends nothing", async ({ page }) => {
+test("Open Chat opens a blank draft with no agent choice for the same profile and sends nothing", async ({ page }) => {
   const requests = await setup(page)
   await openAgents(page)
   await page
@@ -99,8 +99,8 @@ test("Open Chat selects the agent in a blank draft for the same profile and send
       }, draftID),
     )
     .toMatchObject({ server: serverA, directory })
-  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveText("plan")
   await expect(page.locator('[contenteditable="true"]').first()).toHaveText("")
+  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
   expect(requests.filter((request) => request.method === "POST")).toEqual([])
   expect(
     requests
@@ -111,7 +111,8 @@ test("Open Chat selects the agent in a blank draft for the same profile and send
       ),
   ).toBe(true)
   await page.reload()
-  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveText("plan")
+  await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
+  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
   expect(requests.filter((request) => request.method === "POST")).toEqual([])
 })
 
@@ -130,7 +131,7 @@ test("agent requests target the selected profile", async ({ page }) => {
   ).toBe(true)
 })
 
-test("ordinary drafts retain the native agent visibility setting", async ({ page }) => {
+test("ordinary drafts offer no agent choice", async ({ page }) => {
   await setup(page)
   await openAgents(page)
   await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Chat", exact: true }).click()
@@ -139,7 +140,7 @@ test("ordinary drafts retain the native agent visibility setting", async ({ page
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
 })
 
-test("an explicit agent stays with its draft when an ordinary draft opens", async ({ page }) => {
+test("Open Chat does not carry the chosen agent's model into the draft", async ({ page }) => {
   const requests = await setup(page, { models: true })
   await openAgents(page)
   await page
@@ -148,23 +149,8 @@ test("an explicit agent stays with its draft when an ordinary draft opens", asyn
     .click()
   await page.getByRole("button", { name: "Open Chat", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
-  const chosen = new URL(page.url()).searchParams.get("draftId")
-  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveText("plan")
-  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Reasoner")
-
-  await page
-    .locator('[data-slot="orchestra-tab-controls"]')
-    .getByRole("button", { name: "New session", exact: true })
-    .click()
-  await expect.poll(() => new URL(page.url()).searchParams.get("draftId")).not.toBe(chosen)
-  await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
-  await expect.soft(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
-  await expect.soft(page.locator('[data-action="prompt-model"]')).toContainText("Builder")
-
-  await page.locator(`[data-tab-key="draft:${chosen}"] a`).click()
-  await expect.poll(() => new URL(page.url()).searchParams.get("draftId")).toBe(chosen)
-  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveText("plan")
-  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Reasoner")
+  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Builder")
+  await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
   expect(requests.filter((request) => request.method === "POST")).toEqual([])
 })
 

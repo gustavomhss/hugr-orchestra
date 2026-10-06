@@ -66,8 +66,8 @@ git merge-base --is-ancestor <baseline-sha> HEAD
 At initial dispatch, HEAD must equal assigned baseline unless lead explicitly declared an existing delta.
 At return, verify ancestry and complete baseline-to-working-tree diff; multi-commit work need not have
 HEAD's immediate parent equal baseline. Nonzero Git exit is a failed check, not an empty clean result.
-For this repository, specify checks from `packages/opencode`: `bun test <resolved-suite> --timeout 30000`
-and `bun typecheck`. Respect package-local runners; never run tests from repository root.
+For this repository, tests run on Actions: `bun run test:ci opencode <resolved-suite>` from the repository
+root, and `bun typecheck` from `packages/opencode`. Never run `bun test` locally.
 
 ## Success / fail
 

@@ -184,12 +184,7 @@ export default function Agents(props: ChapterPageProps) {
                         onClick={() => {
                           setState({ opening: true, failed: false })
                           void tabs
-                            .newDraft(
-                              { server: ServerConnection.key(props.server), directory: props.directory },
-                              undefined,
-                              undefined,
-                              item().agent.name,
-                            )
+                            .newDraft({ server: ServerConnection.key(props.server), directory: props.directory })
                             .catch(() => setState({ opening: false, failed: true }))
                         }}
                       >

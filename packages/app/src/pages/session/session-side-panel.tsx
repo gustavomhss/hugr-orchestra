@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
+import { For, Show, createEffect, createMemo, onCleanup, untrack, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { DragDropProvider as DndKitProvider, PointerSensor } from "@dnd-kit/solid"
@@ -48,6 +48,7 @@ import {
   createOpenSessionFileTab,
   createSidePanelTabs,
   getTabReorderIndex,
+  planTasksTab,
   shouldShowFileTree,
   type Sizing,
 } from "@/pages/session/helpers"
@@ -193,10 +194,17 @@ export function SessionSidePanel(props: {
     if (wasOpen && !open) snoozed = true
     wasOpen = open
     if (!open && !snoozed) {
+      // Read the tab state before changing it: open() always activates its tab,
+      // which would detach an active App Dock and break the agent's dock tools.
+      const plan = untrack(() => planTasksTab({ active: tabs().active(), all: tabs().all() }))
       // Panel first, then tab, then focus in a microtask so the freshly
       // mounted tab strip selects that tab instead of falling back to Review.
       const tab = cockpit() ? "apps" : "tasks"
       view().reviewPanel.open()
+      if (tab === "tasks" && !plan.activate) {
+        tabs().setAll(plan.all)
+        return
+      }
       tabs().open(tab)
       queueMicrotask(() => tabs().setActive(tab))
     }
