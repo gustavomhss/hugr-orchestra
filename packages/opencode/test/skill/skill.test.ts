@@ -142,8 +142,7 @@ Instructions here.
             Bun.write(review, "---\nname: review\ndescription: Review changes.\n---\n\n# Review\n"),
           )
           const skill = yield* Skill.Service
-          const project = () =>
-            skill.all().pipe(Effect.map((list) => list.filter((item) => item.location !== "<built-in>")))
+          const project = () => skill.all().pipe(Effect.map((list) => list.filter(written)))
           const before = (yield* project()).find((item) => item.name === "review")
           expect(typeof before?.mtime).toBe("number")
 

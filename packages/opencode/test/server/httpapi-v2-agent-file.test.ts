@@ -126,19 +126,19 @@ describe("v2 agent file HttpApi", () => {
       ((await (await request("/agent", tmp.path)).json()) as { name: string; prompt?: string }[]).find(
         (agent) => agent.name === "explore",
       )
-    const before = { v2: (await agents(tmp.path)).find((agent) => agent.id === "build"), v1: await legacy() }
+    const before = { v2: (await agents(tmp.path)).find((agent) => agent.id === "maestro"), v1: await legacy() }
     expect(before.v2?.system).toBeTruthy()
     expect(before.v1?.prompt).toBeTruthy()
-    for (const name of ["build", "explore"]) {
+    for (const name of ["maestro", "explore"]) {
       const saved = await request(`/api/agent/${name}/file`, tmp.path, {
         method: "PUT",
         body: JSON.stringify({ permission: { bash: "deny" } }),
       })
       expect(saved.status).toBe(200)
     }
-    const build = (await agents(tmp.path)).find((agent) => agent.id === "build")
-    expect(build?.system).toBe(before.v2?.system)
-    expect(build?.permissions.at(-1)).toEqual({ action: "bash", resource: "*", effect: "deny" })
+    const maestro = (await agents(tmp.path)).find((agent) => agent.id === "maestro")
+    expect(maestro?.system).toBe(before.v2?.system)
+    expect(maestro?.permissions.at(-1)).toEqual({ action: "bash", resource: "*", effect: "deny" })
     expect((await request("/instance/dispose", tmp.path, { method: "POST" })).status).toBe(200)
     expect((await legacy())?.prompt).toBe(before.v1?.prompt)
   })
@@ -146,13 +146,13 @@ describe("v2 agent file HttpApi", () => {
   test("disabling an agent removes it from the roster", async () => {
     await using tmp = await tmpdir({ git: true })
     await fs.mkdir(path.join(tmp.path, ".opencode"), { recursive: true })
-    expect(await agents(tmp.path)).toContainEqual(expect.objectContaining({ id: "plan" }))
-    const saved = await request("/api/agent/plan/file", tmp.path, {
+    expect(await agents(tmp.path)).toContainEqual(expect.objectContaining({ id: "explore" }))
+    const saved = await request("/api/agent/explore/file", tmp.path, {
       method: "PUT",
       body: JSON.stringify({ disable: true }),
     })
     expect(saved.status).toBe(200)
-    expect(await agents(tmp.path)).not.toContainEqual(expect.objectContaining({ id: "plan" }))
+    expect(await agents(tmp.path)).not.toContainEqual(expect.objectContaining({ id: "explore" }))
   })
 
   test("edits the definition discovery applies last and refuses a stale revision", async () => {
