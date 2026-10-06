@@ -41,6 +41,20 @@
   cursor: not-allowed;
 }
 
+.zen-linux button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.zen-linux button[aria-busy="true"] {
+  opacity: 1;
+}
+
+.zen-linux p.is-refused {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
 .zen-linux button:focus-visible {
   outline: 2px solid var(--text-strong);
   outline-offset: -2px;
