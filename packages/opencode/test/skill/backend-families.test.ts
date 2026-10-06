@@ -26,11 +26,20 @@ const TUPLES = {
     "frameworks/python/fastapi.md": ["0.118.0", "0.48.0"],
     "libraries/python/pydantic.md": ["2.11.7"],
     "libraries/python/sqlalchemy.md": ["2.0.43"],
+    "frameworks/python/django.md": ["6.1.2", "3.18.3", "3.12.11", "3.18.1", "2.4.0", "0.30.0"],
   },
   "js-ts": {
     "languages/js-ts.md": ["22.18.0", "5.1.0", "2.2.0", "5.6.1", "4.1.8", "8.16.3", "1.3.14"],
     "frameworks/js-ts/express.md": ["5.1.0", "2.2.0", "4.21.2"],
     "frameworks/js-ts/fastify.md": ["5.6.1", "4.29.1"],
+  },
+  ruby: {
+    "languages/ruby.md": ["4.0.7", "8.1.4", "0.6.13532", "0.20.0", "4.2.0", "2.1.0", "0.13.1"],
+    "frameworks/ruby/rails.md": ["4.0.7", "8.1.4", "0.6.13532", "0.20.0", "4.2.0", "2.1.0", "0.13.1"],
+  },
+  php: {
+    "languages/php.md": ["8.5.11", "13.35.0", "3.12.3", "2.3.0"],
+    "frameworks/php/laravel.md": ["8.5.11", "13.35.0", "3.12.3", "2.3.0"],
   },
 } as Record<string, Record<string, string[]>>
 // Ruling M6-1: the toolkit packs are the pin source. Every pack that serves an entry skill has one recipe, and the

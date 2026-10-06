@@ -9,6 +9,7 @@ After this card, read only the references the assigned component uses:
 - [FastAPI](../frameworks/python/fastapi.md): path operations, dependencies and responses on FastAPI.
 - [Pydantic v2](../libraries/python/pydantic.md): request, response and settings models.
 - [SQLAlchemy async](../libraries/python/sqlalchemy.md): `AsyncSession` reads and writes.
+- [Django and DRF](../frameworks/python/django.md): DRF views, serializers and permissions on Django.
 
 The general procedures in [cancellation](../lifetimes/cancellation.md) and [atomic writes](../data/transaction.md) still apply; this card gives their Python form.
 
@@ -16,7 +17,7 @@ The general procedures in [cancellation](../lifetimes/cancellation.md) and [atom
 
 - A package that merely appears in the lock file or a neighbor service. Select by the component the packet assigns.
 - Choosing a framework, ORM, driver or async runtime, or raising the Python line or a dependency to reach a newer helper. Each is a `packet` blocker.
-- Django, DRF, Flask, plain Starlette or synchronous SQLAlchemy components: no reference is authored for them. Follow the packet and the surrounding code; never port async code into them.
+- Flask, plain Starlette or synchronous SQLAlchemy components: no reference is authored for them. Follow the packet and the surrounding code; never port async code into them.
 
 ## Inputs
 

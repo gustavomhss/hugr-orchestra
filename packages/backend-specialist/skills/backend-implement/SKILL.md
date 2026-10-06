@@ -59,7 +59,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Your choices: private helpers, idiomatic control flow, concrete SQL, DTO mapping, resource wrappers, fixture arrangement for assigned tests, ordinary parameters of project commands the packet names, and fixes for compile or test errors in lines you wrote. The caller does not need to prewrite SQL, line spans or a tool manual.
 - Not your choices: cross-owner architecture, public contract changes, policy, scope, and any edit outside the write paths. Each is a `packet` blocker.
 - Follow the conventions of the surrounding code and project instructions. Leave unrelated code and other people's changes alone.
-- Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md). Read only the packet's language.
+- Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md), [Ruby](references/languages/ruby.md), [PHP](references/languages/php.md). Read only the packet's language.
 - With a generator or owned tool ([toolkit recipes](references/recipes/external/index.md)), generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
 
 ## 4. Run the checks
