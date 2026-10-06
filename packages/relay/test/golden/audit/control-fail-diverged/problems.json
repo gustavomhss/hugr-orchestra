@@ -1,0 +1,15 @@
+{
+  "ledger": "test/golden/audit/control-fail-diverged/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "awaiting-human",
+      "wp": "wp1",
+      "cause": "retry budget spent at wp1; still failing: C1"
+    },
+    {
+      "category": "oracle-drift",
+      "wp": null,
+      "cause": "graded under more than one oracle: C1"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/record-invalid-assert-dict/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

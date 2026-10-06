@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "undeclared-macro",
+      "severity": "error",
+      "wp": "a",
+      "detail": "macro 'carve' is not in macros[], so its protocol is never injected"
+    }
+  ],
+  "exit": 1
+}

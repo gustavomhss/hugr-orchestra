@@ -1,0 +1,85 @@
+{
+  "op": "hook",
+  "document": {
+    "name": "Protect generated files",
+    "nodes": [
+      {
+        "id": "event",
+        "name": "Before edit",
+        "type": "relay.hookEventTrigger",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "condition",
+        "name": "Generated file?",
+        "type": "relay.hookCondition",
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "pattern": "src/generated/**"
+        }
+      },
+      {
+        "id": "block",
+        "name": "Block change",
+        "type": "relay.hookBlock",
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "message": "Edit the source contract and regenerate."
+        }
+      },
+      {
+        "id": "record",
+        "name": "Record",
+        "type": "relay.hookRecord",
+        "position": [
+          448,
+          224
+        ],
+        "parameters": {
+          "message": "File is outside the generated tree."
+        }
+      }
+    ],
+    "connections": {
+      "Before edit": {
+        "main": [
+          [
+            {
+              "node": "Generated file?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generated file?": {
+        "main": [
+          [
+            {
+              "node": "Block change",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

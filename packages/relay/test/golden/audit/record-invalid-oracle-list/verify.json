@@ -1,0 +1,29 @@
+{
+  "ledger": "test/golden/audit/record-invalid-oracle-list/input/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 2 chained entries [PLAIN (SHA-256)], chain head cbe89155ff35…\n  (1 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [
+    {
+      "entry": 1,
+      "field": "oracle",
+      "reason": "must be a SHA-256 hex string when present"
+    }
+  ],
+  "controls": [],
+  "deterministic_total": 0,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Broken or unusable record; sprint comparison not run."
+  },
+  "no_controls": true,
+  "escalated": false,
+  "result": "RECORD-INVALID",
+  "exit": 2
+}
