@@ -1,0 +1,53 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "first",
+        "instructions": "do first",
+        "checklist": [
+          {
+            "id": "EARLIER",
+            "cmd": "false"
+          }
+        ],
+        "dod": [
+          {
+            "cmd": "false"
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "instructions": "do second",
+        "checklist": [
+          {
+            "id": "CURRENT",
+            "cmd": "test -f second.txt"
+          }
+        ],
+        "dod": [
+          {
+            "id": "DOD",
+            "cmd": "false"
+          }
+        ]
+      }
+    ]
+  },
+  "fires": [
+    {
+      "check": {
+        "counter": 1
+      }
+    },
+    {
+      "tree": {
+        "second.txt": "2\n"
+      },
+      "check": {
+        "counter": 1
+      }
+    }
+  ]
+}

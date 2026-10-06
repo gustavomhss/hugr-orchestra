@@ -1,0 +1,65 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "inserted",
+        "instructions": "do inserted",
+        "checklist": [
+          {
+            "id": "WRONG",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "alpha",
+        "instructions": "do alpha",
+        "checklist": [
+          {
+            "id": "F-ALPHA",
+            "cmd": "test -f alpha.txt",
+            "assert": "alpha.txt exists"
+          }
+        ]
+      },
+      {
+        "id": "beta",
+        "instructions": "do beta",
+        "checklist": [
+          {
+            "id": "F-BETA",
+            "cmd": "test -f beta.txt",
+            "assert": "beta.txt exists"
+          }
+        ]
+      }
+    ]
+  },
+  "prestate": {
+    "position": "build.beta",
+    "retry_2": "2\n",
+    "ledger.jsonl": "",
+    "state": "active"
+  },
+  "fires": [
+    {
+      "check": {
+        "position": "beta",
+        "counter": 0
+      }
+    },
+    {
+      "check": {
+        "position": "build.beta",
+        "counter": 99
+      }
+    },
+    {
+      "check": {
+        "position": "beta",
+        "counter": "stale"
+      }
+    }
+  ]
+}
