@@ -1,5 +1,6 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import path from "path"
+import { fileURLToPath } from "url"
 import { Effect, FileSystem, Layer, Context, Schema } from "effect"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { NamedError } from "@opencode-ai/core/util/error"
@@ -24,6 +25,11 @@ const AGENTS_EXTERNAL_DIR = ".agents"
 const EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"
 const OPENCODE_SKILL_PATTERN = "{skill,skills}/**/SKILL.md"
 const SKILL_PATTERN = "**/SKILL.md"
+
+// Maestro's playbooks ship with Orchestra, so every repository has them. The desktop app points
+// ORCHESTRA_PLAYBOOKS_DIR at its packaged copy; a run from this repository reads the source copy.
+export const PLAYBOOKS_DIR =
+  process.env.ORCHESTRA_PLAYBOOKS_DIR ?? fileURLToPath(new URL("../../playbooks", import.meta.url))
 
 // Built-in skill that ships with opencode. The model's intuition for what an
 // opencode.json should look like is often wrong, and opencode hard-fails on
@@ -87,6 +93,7 @@ type State = {
 }
 
 type DiscoveryState = {
+  playbooks: string[]
   matches: string[]
   dirs: string[]
 }
@@ -189,6 +196,8 @@ const discoverSkills = Effect.fnUntraced(function* (
   projectID: string,
 ) {
   const state: ScanState = { matches: new Set(), dirs: new Set() }
+  const playbooks: ScanState = { matches: new Set(), dirs: state.dirs }
+  if (yield* fsys.isDir(PLAYBOOKS_DIR)) yield* scan(playbooks, PLAYBOOKS_DIR, SKILL_PATTERN, { scope: "bundled" })
 
   const externalDirs: string[] = []
   if (!disableExternalSkills) {
@@ -272,6 +281,7 @@ const discoverSkills = Effect.fnUntraced(function* (
   }
 
   return {
+    playbooks: Array.from(playbooks.matches),
     matches: Array.from(state.matches),
     dirs: Array.from(state.dirs),
   }
@@ -282,10 +292,13 @@ const loadSkills = Effect.fnUntraced(function* (
   discovered: DiscoveryState,
   events: EventV2Bridge.Service["Service"],
 ) {
-  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events), {
-    concurrency: "unbounded",
-    discard: true,
-  })
+  // Playbooks load first, so a skill of the same name from any other source replaces one.
+  yield* Effect.forEach(
+    [discovered.playbooks, discovered.matches],
+    (matches) =>
+      Effect.forEach(matches, (match) => add(state, match, events), { concurrency: "unbounded", discard: true }),
+    { discard: true },
+  )
 
   yield* Effect.logInfo("init", { count: Object.keys(state.skills).length })
 })

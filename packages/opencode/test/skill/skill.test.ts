@@ -118,7 +118,7 @@ Instructions here.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.length).toBe(1)
           const item = list.find((x) => x.name === "test-skill")
           expect(item).toBeDefined()
@@ -149,9 +149,8 @@ description: Skill for dirs test.
             )
 
             const skill = yield* Skill.Service
-            const dirs = yield* skill.dirs()
-            expect(dirs).toContain(path.join(dir, ".opencode", "skill", "dir-skill"))
-            expect(dirs.length).toBe(1)
+            const dirs = (yield* skill.dirs()).filter((item) => !shipped(item))
+            expect(dirs).toEqual([path.join(dir, ".opencode", "skill", "dir-skill")])
           }),
         ),
       { git: true },
@@ -188,7 +187,7 @@ description: Second test skill.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.length).toBe(2)
           expect(list.find((x) => x.name === "skill-one")).toBeDefined()
           expect(list.find((x) => x.name === "skill-two")).toBeDefined()
@@ -212,7 +211,7 @@ Just some content without YAML frontmatter.
           )
 
           const skill = yield* Skill.Service
-          expect((yield* skill.all()).filter((s) => s.location !== "<built-in>")).toEqual([])
+          expect((yield* skill.all()).filter(written)).toEqual([])
         }),
       { git: true },
     ),
@@ -237,7 +236,7 @@ Instructions here.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.length).toBe(1)
           const item = list.find((x) => x.name === "manual-skill")
           expect(item).toBeDefined()
@@ -267,7 +266,7 @@ description: A skill in the .claude/skills directory.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.length).toBe(1)
           const item = list.find((x) => x.name === "claude-skill")
           expect(item).toBeDefined()
@@ -290,7 +289,7 @@ description: A skill in the .claude/skills directory.
           yield* Effect.promise(() => createGlobalSkill(tmp.path))
           yield* Effect.gen(function* () {
             const skill = yield* Skill.Service
-            const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+            const list = (yield* skill.all()).filter(written)
             expect(list.length).toBe(1)
             expect(list[0].name).toBe("global-test-skill")
             expect(list[0].description).toBe("A global skill from ~/.claude/skills for testing.")
@@ -306,7 +305,7 @@ description: A skill in the .claude/skills directory.
       () =>
         Effect.gen(function* () {
           const skill = yield* Skill.Service
-          expect((yield* skill.all()).filter((s) => s.location !== "<built-in>")).toEqual([])
+          expect((yield* skill.all()).filter(written)).toEqual([])
         }),
       { git: true },
     ),
@@ -361,7 +360,7 @@ description: A skill in the .agents/skills directory.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.length).toBe(1)
           const item = list.find((x) => x.name === "agent-skill")
           expect(item).toBeDefined()
@@ -400,7 +399,7 @@ This skill is loaded from the global home directory.
 
           yield* Effect.gen(function* () {
             const skill = yield* Skill.Service
-            const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+            const list = (yield* skill.all()).filter(written)
             expect(list.length).toBe(1)
             expect(list[0].name).toBe("global-agent-skill")
             expect(list[0].description).toBe("A global skill from ~/.agents/skills for testing.")
@@ -441,7 +440,7 @@ description: A skill in the .agents/skills directory.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.length).toBe(2)
           expect(list.find((x) => x.name === "claude-skill")).toBeDefined()
           expect(list.find((x) => x.name === "agent-skill")).toBeDefined()
@@ -480,7 +479,7 @@ description: A skill in the .agents/skills directory.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.map((s) => s.name)).toEqual(["agent-skill"])
         }),
       { git: true },
@@ -527,7 +526,7 @@ description: A skill in the .opencode/skill directory.
           )
 
           const skill = yield* Skill.Service
-          const list = (yield* skill.all()).filter((s) => s.location !== "<built-in>")
+          const list = (yield* skill.all()).filter(written)
           expect(list.map((s) => s.name)).toEqual(["opencode-skill"])
         }),
       { git: true },
@@ -584,7 +583,7 @@ description: A skill in the .opencode/skills directory.
           )
 
           const skill = yield* Skill.Service
-          expect((yield* skill.dirs()).length).toBe(4)
+          expect((yield* skill.dirs()).filter((item) => !shipped(item)).length).toBe(4)
         }),
       { git: true },
     ),
@@ -700,5 +699,9 @@ const listed = Effect.fn("SkillTest.listed")(function* (agentID: string) {
   const skill = yield* Skill.Service
   const agents = yield* Agent.Service
   const agent = yield* agents.get(agentID)
-  return (yield* skill.available(agent)).map((item) => item.name)
+  return (yield* skill.available(agent)).filter((item) => !shipped(item.location)).map((item) => item.name)
 })
+
+// Every instance also has Maestro's shipped playbooks (see playbooks.test.ts); these tests look at the other sources.
+const shipped = (location: string) => location.startsWith(Skill.PLAYBOOKS_DIR + path.sep)
+const written = (skill: Skill.Info) => skill.location !== "<built-in>" && !shipped(skill.location)
