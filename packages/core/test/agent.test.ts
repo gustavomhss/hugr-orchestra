@@ -4,6 +4,7 @@ import { AgentV2 } from "@opencode-ai/core/agent"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { Location } from "@opencode-ai/core/location"
 import { AgentPlugin } from "@opencode-ai/core/plugin/agent"
+import { AgentPrompt } from "@opencode-ai/core/agent/prompt"
 import { AbsolutePath } from "@opencode-ai/core/schema"
 import { location } from "./fixture/location"
 import { testEffect } from "./lib/effect"
@@ -174,6 +175,30 @@ describe("AgentV2", () => {
       for (const item of agents) {
         expect(item.permissions.some((rule) => rule.action === "bash" && rule.effect !== "deny")).toBe(false)
       }
+    }),
+  )
+
+  it.effect("gives built-in agents the prompts the V1 session path uses", () =>
+    Effect.gen(function* () {
+      const agent = yield* AgentV2.Service
+      yield* AgentPlugin.Plugin.effect(host({ agent: agentHost(agent) })).pipe(
+        Effect.provideService(
+          Location.Service,
+          Location.Service.of(location({ directory: AbsolutePath.make("/project") })),
+        ),
+      )
+
+      expect(Object.fromEntries((yield* agent.all()).map((item) => [item.id, item.system]))).toEqual({
+        maestro: AgentPrompt.maestro,
+        general: AgentPrompt.general,
+        explore: AgentPrompt.explore,
+        compaction: AgentPrompt.compaction,
+        title: AgentPrompt.title,
+        summary: AgentPrompt.summary,
+      })
+      expect(AgentPrompt.maestro).toStartWith("You are Maestro")
+      for (const item of yield* agent.all())
+        expect(`${item.system} ${item.description ?? ""}`.toLowerCase()).not.toContain("opencode")
     }),
   )
 })

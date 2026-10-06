@@ -63,10 +63,10 @@ describe("Maestro Arsenal playbooks", () => {
     expect((await skills(path.join(root, ".opencode/skills"))).filter((name) => shipped.includes(name))).toEqual([])
   })
 
-  // The prompt replaces the provider base prompt, so it carries the harness facts; procedures live in playbooks and
+  // The prompt replaces the base prompt, so it carries the harness facts; procedures live in playbooks and
   // tool descriptions. The ceiling is a tripwire against unreviewed growth, not a target.
   test("Maestro prompt stays within its size budget and names only shipped playbooks", async () => {
-    const file = Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt"))
+    const file = Bun.file(path.join(root, "packages/core/src/agent/prompt/maestro.txt"))
     expect(file.size).toBeLessThanOrEqual(24 * 1024)
     const named = Array.from((await file.text()).matchAll(/`(frame-request|maestro-[a-z-]+)`/g), (match) => match[1]!)
     expect(named).toContain("maestro-governed")
@@ -114,7 +114,7 @@ describe("Maestro Arsenal playbooks", () => {
 
   test("dispatch uses native context pressure and fresh Own facts", async () => {
     const skill = await readSkill("maestro-pack")
-    expect(skill.content).toContain("Use existing OpenCode truncation, output/resource pointers, Session evidence")
+    expect(skill.content).toContain("Use existing Orchestra truncation, output/resource pointers, Session evidence")
     expect(skill.content).toContain("Current static `own_*` facts dominate reconnaissance")
     expect(skill.content).toContain("Source pointers must match current identities")
     expect(skill.content).toContain("Arming alone is not enforcement.")
