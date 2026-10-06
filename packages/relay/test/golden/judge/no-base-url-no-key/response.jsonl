@@ -1,0 +1,1 @@
+{"verdict": "fail", "reason": "api: ANTHROPIC_API_KEY not set", "backend": "api-error:claude-sonnet-4-6", "available": false}

@@ -95,7 +95,9 @@ runs with packages/relay as its cwd and relative paths, so paths inside messages
   nodeTypes, lint, checksum, store) and either `output.json` or `refusal.json` (`{status, code, message}`). A case
   name contains `-refused-` exactly when it refuses. `test/fixtures/authoring.sqlite3` is a store the Python `Store`
   wrote; `authoring/store-fixture/output.json` is what it reads back (open a copy: WAL mode writes beside the file).
-- `judge/<name>/`: the fake Messages server exchange and the resulting response line.
+- `judge/<name>/`: `case.json` `{criterion, files, env, status, replies}` (`{server}` in `env` is the fake
+  server's base URL), `exchange.json` `{requests, exit, stderr}` (method, path, three headers and the parsed body
+  of each request), and `response.jsonl`, judge.py's stdout byte for byte. Stub cases need no server.
 
 ## Exit paths that need a scenario
 
