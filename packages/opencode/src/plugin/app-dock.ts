@@ -1,6 +1,7 @@
 import type { Plugin, PluginInput, Hooks, ToolContext } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import { randomUUID } from "node:crypto"
+import { AppDockHints } from "./app-dock-hints"
 import { AppDockOutline } from "./app-dock-outline"
 import { scopeLinuxWorkspace } from "./app-dock-linux"
 
@@ -86,8 +87,8 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
           port.postMessage({ type: "dock.rpc.cancel", id })
         } catch (error) {
           entry.finish(entry.native
-            ? new NativeRPCError("transport-error", toolErrorMessage(error), "unknown", undefined, entry.target)
-            : new Error(toolErrorMessage(error)))
+            ? new NativeRPCError("transport-error", AppDockHints.toolErrorMessage(error), "unknown", undefined, entry.target)
+            : new Error(AppDockHints.toolErrorMessage(error)))
         }
       },
       finish: (error, value) => {
@@ -116,8 +117,8 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
       if (entry.aborted && router.get(id) === entry) entry.cancel()
     } catch (error) {
       entry.finish(entry.native
-        ? new NativeRPCError("transport-error", toolErrorMessage(error), "unknown", undefined, entry.target)
-        : new Error(toolErrorMessage(error)))
+        ? new NativeRPCError("transport-error", AppDockHints.toolErrorMessage(error), "unknown", undefined, entry.target)
+        : new Error(AppDockHints.toolErrorMessage(error)))
     }
   })
 }
@@ -125,24 +126,11 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
 const parentPort = (): ParentPortLike | undefined =>
   (process as typeof process & { parentPort?: ParentPortLike }).parentPort
 
-// Only browser-scoped callers meet this message: a Linux-scoped call reports the missing workspace instead.
-const toolErrorMessage = (error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error)
-  return message === "App Dock has no open tabs" ? `${message}; open one with dock_open` : message
-}
-// What the model can do next for codes that otherwise led unscripted runs into blind retries. Native codes reach
-// agents only through the linux agent's ui_* tools; unsupported-backend only through a browser-scoped call.
-const hints: Record<string, string> = {
-  "unstable-ref": 'This control sits below virtual ancestry (lists, trees); retry ui_act with mode: "observed"',
-  "unsupported-interface": 'This field has no editable-text interface; retry ui_type with mode: "keyboard"',
-  "stale-ref": "Native refs expire when the app changes; pass target {name, role} to locate and act in one call",
-  "unsupported-backend": "dock_* tools act on browser tabs: read the page with dock_read and use its numeric refs. Apps in the Linux workspace are operated by the linux agent; hand that work to it",
-}
 const toolError = (error: unknown) => error instanceof NativeRPCError
   ? toJSON({ backend: error.backend, code: error.code, message: error.message, outcome: error.outcome,
     ...(error.result === undefined ? {} : { result: error.result }), ...(error.target === undefined ? {} : { target: error.target }),
-    ...(error.cleanup === undefined ? {} : { cleanup: error.cleanup }), ...(hints[error.code] ? { hint: hints[error.code] } : {}) })
-  : toolErrorMessage(error)
+    ...(error.cleanup === undefined ? {} : { cleanup: error.cleanup }), ...(AppDockHints.hintFor(error.code) ? { hint: AppDockHints.hintFor(error.code) } : {}) })
+  : AppDockHints.toolErrorMessage(error)
 
 function cleanupEvidence(value: unknown) {
   if (value === undefined) return
@@ -668,7 +656,12 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     while (stack.length && !AppDockOutline.locate(roots, stack.at(-1)!)) stack.pop()
     scopes.set(context.sessionID, stack)
     const scope = stack.length ? AppDockOutline.locate(roots, stack.at(-1)!) : undefined
-    const note = scan.complete ? "" : `\n(partial view: ${JSON.stringify(scan.reasons)})`
+    // The helper leaves out an app that stops answering (busy in a dialog, hung) and names it as app-not-responding:<process>.
+    const reasons = Array.isArray(scan.reasons) ? scan.reasons.filter((reason): reason is string => typeof reason === "string") : []
+    const silent = reasons.flatMap((reason) => reason.startsWith("app-not-responding:") ? [reason.slice(19)] : [])
+    const partial = reasons.filter((reason) => !reason.startsWith("app-not-responding:"))
+    const note = (silent.length ? `\nNot responding, so missing from this view: ${silent.join(", ")} (it may be busy in a dialog; ui_look again in a moment)` : "")
+      + (scan.complete || (silent.length && !partial.length) ? "" : `\n(partial view: ${JSON.stringify(partial)})`)
     return { roots, scope, stack, note }
   })
   const view = (context: ToolContext, roots: AppDockOutline.Node[], scope: AppDockOutline.Node | undefined, note: string) => {

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { join } from "node:path"
 import { transpileModule } from "typescript"
 import { Arsenal } from "../src/index"
 import { surfaceHash } from "../src/contract"
@@ -175,7 +176,8 @@ test("check/policy advice stays declarative; cannot mint enforcement or authorit
   const checks = await run("plan-to-gates", { plan, scopeDir: "src", workdir: "/project", worktreeRoot: "/worktrees", typecheckCmd: "fallback" })
   expect(checks.authority).toBe("proposal")
   const service = checks.proposals.find((proposal: { moduleId: string }) => proposal.moduleId === "service")
-  expect(service.workdir).toBe("/worktrees/service")
+  // Proposals carry a native host path; Windows spells the same location with backslashes.
+  expect(service.workdir).toBe(join("/worktrees", "service"))
   expect(service.checks[0]).toMatchObject({ kind: "scope", paths: ["src/service.ts", "src/helper.ts"], includeUntracked: true })
   expect(service.checks[1]).toMatchObject({ kind: "contract", exports: ["create"], acquisition: "compiler-required" })
   expect(service.checks[2]).toMatchObject({ kind: "command", command: "bun test {file}", bindings: { file: "src/service.ts" } })

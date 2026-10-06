@@ -131,6 +131,13 @@ test("explicit release run executes committed actual repository recipe, verifies
   expect(await f.runGit("cat-file", "-t", "v1.0.0")).toBe("tag")
   await expect(operation(f.input, f.context)).rejects.toThrow("RELEASE_TAG_EXISTS")
 })
+test("release recipe path refuses git metadata under either separator before reading it", async () => {
+  const f = await releaseFixture()
+  await Promise.all([".git\\hooks\\pre-commit", "sub\\.git\\HEAD", ".GIT/config"].map((recipePath) =>
+    expect(operation({ ...f.input, recipePath }, f.context)).rejects.toThrow("RELEASE_RECIPE_PATH_INVALID")))
+  expect(f.permissions.filter((request) => request.effect === "read").flatMap((request) => request.paths).every((path) => path === f.root)).toBe(true)
+  expect(await f.runGit("tag", "--list")).toBe("")
+})
 test("release native process denial, changed recipe and userApproved boolean cannot authorize local tag", async () => {
   const f = await releaseFixture()
   await expect(operation(f.input, { ...f.context, async authorize(request) { if (request.commands.some((command) => command.startsWith("'bash'"))) throw new Error("NATIVE_RELEASE_DENIED") } })).rejects.toThrow("NATIVE_RELEASE_DENIED")

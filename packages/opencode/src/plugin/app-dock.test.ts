@@ -5,6 +5,9 @@ import { AppDockPlugin, createAppDockHooks } from "./app-dock"
 import { Permission } from "@/permission"
 import { context, input, fakePort, turn, admission, control, type Envelope } from "./app-dock.fixture"
 
+// A native timeout tells the model the app may be busy in a dialog (see app-dock.ts hints).
+const busy = expect.stringContaining("may be busy, e.g. showing a dialog an action opened")
+
 type PermissionConfig = Parameters<typeof Permission.fromConfig>[0]
 
 
@@ -182,7 +185,7 @@ test("workspace pending makes timeout native unknown and cancels original UUID w
   await turn()
   const id = (f.sent[0] as Envelope).id
   f.deliver({ type: "dock.rpc.native-pending", id, backend: "linux-atspi", scopeKind: "workspace" })
-  expect(JSON.parse(String(await work))).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock read request timed out", outcome: "unknown" })
+  expect(JSON.parse(String(await work))).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock read request timed out", outcome: "unknown", hint: busy })
   expect(f.sent[1]).toEqual({ type: "dock.rpc.cancel", id })
 })
 
@@ -457,8 +460,8 @@ test("native outer timeout is conservative unknown plus original-ID cancellation
   await turn()
   const ids = f.sent.map((sent) => (sent as Envelope).id)
   f.deliver(admission(ids[0]))
-  expect(JSON.parse(await admitted as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock wait request timed out", outcome: "unknown", target: admission(ids[0]).target })
-  expect(JSON.parse(await intent as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock click request timed out", outcome: "unknown" })
+  expect(JSON.parse(await admitted as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock wait request timed out", outcome: "unknown", target: admission(ids[0]).target, hint: busy })
+  expect(JSON.parse(await intent as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock click request timed out", outcome: "unknown", hint: busy })
   await expect(browser).resolves.toBe("App Dock click request timed out")
   await turn()
   expect(f.sent.slice(3)).toEqual([{ type: "dock.rpc.cancel", id: ids[0] }, { type: "dock.rpc.cancel", id: ids[1] }])
