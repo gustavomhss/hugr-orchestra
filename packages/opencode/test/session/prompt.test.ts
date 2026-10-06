@@ -858,10 +858,12 @@ noLLMServer.instance("prompt tools replace previous prompt tool rules", () =>
     const prompt = yield* SessionPrompt.Service
     const sessions = yield* Session.Service
     const session = yield* sessions.create({ title: "Prompt tools" })
+    const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 
     yield* prompt.prompt({
       sessionID: session.id,
       agent: "maestro",
+      model,
       noReply: true,
       tools: { bash: false },
       parts: [{ type: "text", text: "first" }],
@@ -869,6 +871,7 @@ noLLMServer.instance("prompt tools replace previous prompt tool rules", () =>
     yield* prompt.prompt({
       sessionID: session.id,
       agent: "maestro",
+      model,
       noReply: true,
       tools: { read: true },
       parts: [{ type: "text", text: "second" }],
