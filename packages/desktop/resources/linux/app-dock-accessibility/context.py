@@ -10,10 +10,14 @@ A = "org.a11y.atspi."
 ROOT = "/org/a11y/atspi/accessible/root"
 DBUS = "org.freedesktop.DBus"
 
+# timeoutMs stays 10 s (host limits.timeoutMs must match). Measured on VS Code 1.140
+# Settings (~870 workspace nodes, 2026-10-05): read pages end by construction at the
+# 5 s slice (observed <= 5.3 s) or the 8.5 s call cutoff; a key took <= 0.1 s
+# (23 calls) and a keyboard-mode type <= 5.5 s with VS Code held to half a CPU.
 LIMITS = {"frameBytes": 262144, "bindings": 8, "refs": 512, "nodes": 512,
           "calls": 1600, "depth": 40, "text": 20000, "field": 256,
           "pending": 32, "timeoutMs": 10000, "cursors": 2, "proposals": 8,
-          "actions": 8, "roots": 32, "processes": 128, "keyboardCalls": 800}
+          "actions": 8, "roots": 32, "processes": 128, "keyboardCalls": 800, "cache": 4096}
 
 
 def process_identity(pid):
@@ -53,9 +57,14 @@ def interface_name(value):
 
 
 class RequestContext:
-    def __init__(self, bus, registry, binding, timeout_ms, cancelled=None):
-        self.bus, self.registry, self.binding = bus, registry, binding
-        self.deadline = monotonic() + min(timeout_ms, LIMITS["timeoutMs"]) / 1000
+    def __init__(self, bus, registry, binding, timeout_ms, cancelled=None, cache=None):
+        self.bus, self.registry, self.binding, self.cache = bus, registry, binding, cache
+        self.fenced, self.hits = set(), 0
+        budget, started = min(timeout_ms, LIMITS["timeoutMs"]) / 1000, monotonic()
+        self.deadline = started + budget
+        # Reads stop starting records after half the budget, and a read's provider
+        # calls end by 85% of it, so its reply beats the host's matching deadline.
+        self.slice, self.cutoff, self.paged = started + budget / 2, started + budget * 0.85, False
         self.cancelled = cancelled or (lambda: False)
         self.calls, self.dispatch_started = 0, False
         self.connection = bus.connection
@@ -69,8 +78,19 @@ class RequestContext:
             raise BusError("timeout", "Native request deadline expired")
         return remaining
 
+    def sliced(self):
+        return monotonic() >= self.slice
+
+    def stalled(self):
+        """A paged read hit its call cutoff or a provider timeout while the request deadline still holds."""
+        return self.paged and not self.cancelled() and monotonic() < self.deadline
+
     def call(self, owner, path, interface, method, signature="()", parameters=(), reply="()", timeout_ms=None):
         remaining = self.remaining()
+        if self.paged:
+            remaining = int((self.cutoff - monotonic()) * 1000)
+            if remaining < 1:
+                raise BusError("timeout", "Native read page cutoff reached")
         if self.calls >= LIMITS["calls"]:
             raise BusError("read-budget", "Native call budget exhausted")
         self.calls += 1
@@ -78,6 +98,32 @@ class RequestContext:
             self.dispatch_started = True
         return self.bus.call(owner, path, interface, method, signature, parameters, reply,
                              min(800, remaining, timeout_ms or remaining))
+
+    def fence(self, owners):
+        """Order the cache after every change event an exporter sent before this request.
+
+        One D-Bus reply from each exporter follows its earlier signals on the wire;
+        the bus fence then runs every invalidation those signals queued."""
+        pending = sorted(owner for owner in owners - self.fenced if self.cache is not None and self.cache.enabled(owner))
+        for owner in pending:
+            self.call(owner, ROOT, A + "Accessible", "GetRole", reply="(u)")
+        if pending:
+            self.bus.fence()
+            self.fenced.update(pending)
+
+    def cached(self, owner, path, field, fetch, keep=lambda value: True):
+        """Traversal facts only; refs, roots and mutation targets always read the wire."""
+        if self.cache is None or owner not in self.fenced:
+            return fetch()
+        value = self.cache.get(owner, path, field)
+        if value is not None:
+            self.hits += 1
+            return value
+        seen = self.cache.mark(owner)
+        value = fetch()
+        if keep(value):
+            self.cache.put(owner, path, field, value, seen)
+        return value
 
     def property(self, owner, path, interface, name):
         return self.call(owner, path, "org.freedesktop.DBus.Properties", "Get", "(ss)", (interface, name), "(v)")[0]

@@ -316,11 +316,12 @@ test("dock_find lists a role without a name and dock_action takes an actionID pa
   expect(dock.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:a", actionID: "a:n:a" } })
 })
 
+const frame = (ref: string, name: string, active: boolean) => control(ref, name, { roleName: "frame", role: 23, parentRef: null,
+  states: active ? [1, 8, 24] : [8, 24], actions: [] })
+
 test("dock_keyboard sends native key combinations to a ref, a target or the one active window", async () => {
-  const frame = (ref: string, name: string, active: boolean) => control(ref, name, { roleName: "frame", role: 23,
-    states: active ? [1, 8, 24] : [8, 24], actions: [] })
   const dock = host((op) => op === "keyboard" ? { ok: true, value: { method: "keys", dispatch: "acknowledged" } }
-    : page([frame("n:code", "Welcome - Visual Studio Code", true), frame("n:term", "xterm", false), control("n:a", "Open")]))
+    : page([frame("n:code", "Welcome - Visual Studio Code", true), frame("n:term", "xterm", false), control("n:a", "Open", { parentRef: "n:code" })]))
   const sent = () => dock.calls.filter((call) => call.op === "keyboard").map((call) => call.args)
   expect(JSON.parse(String(await dock.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
     .toMatchObject({ dispatch: "acknowledged" })
@@ -335,6 +336,29 @@ test("dock_keyboard sends native key combinations to a ref, a target or the one 
   expect(JSON.parse(String(await idle.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
     .toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
   expect(idle.calls.every((call) => call.op === "read")).toBe(true)
+})
+
+test("dock_keyboard without a target reads one roots page, however large the tree", async () => {
+  // A Settings-sized tree: every cursor page would cost seconds of native calls.
+  const big = host((op, args) => op === "keyboard" ? { ok: true, value: { method: "keys", dispatch: "acknowledged" } }
+    : args.cursor === undefined ? page([frame("n:term", "xterm", false), frame("n:code", "Settings - Visual Studio Code", true),
+      control("n:x", "Search settings", { parentRef: "n:term" })], "c1") : page([control("n:y", "Other", { parentRef: "n:x" })], "c2"))
+  expect(JSON.parse(String(await big.hooks.tool.dock_keyboard.execute({ keys: "f" }, context)))).toMatchObject({ dispatch: "acknowledged" })
+  expect(big.calls.map((call) => call.op === "read" ? call.args : { keyboard: call.args.ref }))
+    .toEqual([{ budget: 32, maxText: 0 }, { keyboard: "n:code" }])
+  // Roots still filling the page leave the catalogue unproven; two active roots are ambiguous. Neither dispatches.
+  const partial = host(() => page([frame("n:code", "Code", true)], "c1"))
+  expect(JSON.parse(String(await partial.hooks.tool.dock_keyboard.execute({ keys: "f" }, context))))
+    .toMatchObject({ code: "target-search-incomplete", outcome: "not-dispatched" })
+  const two = host(() => page([frame("n:a", "A", true), frame("n:b", "B", true)]))
+  expect(JSON.parse(String(await two.hooks.tool.dock_keyboard.execute({ keys: "f" }, context))))
+    .toMatchObject({ code: "target-ambiguous", outcome: "not-dispatched", found: 2 })
+  expect([...partial.calls, ...two.calls].every((call) => call.op === "read")).toBe(true)
+  // An application-scope binding keeps the whole-tree search.
+  const app = host((op, args) => op === "keyboard" ? { ok: true, value: { dispatch: "acknowledged" } } : { ok: true, value: {
+    ...(page([frame("n:code", "Code", true)]) as { value: Record<string, unknown> }).value, scopeKind: "application" } })
+  expect(JSON.parse(String(await app.hooks.tool.dock_keyboard.execute({ keys: "f" }, context)))).toMatchObject({ dispatch: "acknowledged" })
+  expect(app.calls.filter((call) => call.op === "read").length).toBeGreaterThan(1)
 })
 
 test("ui_* tools always address the Linux workspace and expose only native arguments", async () => {
