@@ -310,7 +310,6 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         }
       }
 
-      const loaded = yield* instruction.resolve(ctx.messages, filepath, ctx.messageID)
       const first = yield* sample(filepath, Number(stat.size))
       const mime = sniffAttachmentMime(first, FSUtil.mimeType(filepath))
       if (SUPPORTED_IMAGE_MIMES.has(mime) || isPdfAttachment(mime)) {
@@ -325,13 +324,15 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         return {
           title,
           output,
-          metadata: { preview: output, truncated: false, loaded: loaded.map((item) => item.filepath) },
+          metadata: { preview: output, truncated: false, loaded: [] },
           attachments: [
             { type: "file" as const, mime, url: `data:${mime};base64,${Buffer.from(bytes).toString("base64")}` },
           ],
         }
       }
       if (binary(filepath, first)) return yield* Effect.fail(new Error(`Cannot read binary file: ${filepath}`))
+      // Resolving claims nested instruction files as shown, and only text output carries their reminder.
+      const loaded = yield* instruction.resolve(ctx.messages, filepath, ctx.messageID)
 
       const explicit = params.offset !== undefined || params.limit !== undefined
       const limit = params.limit ?? DEFAULT_READ_LIMIT
