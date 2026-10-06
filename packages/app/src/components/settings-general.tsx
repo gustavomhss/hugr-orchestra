@@ -12,8 +12,6 @@ import { useParams } from "@solidjs/router"
 import { useLanguage } from "@/context/language"
 import { usePermission } from "@/context/permission"
 import { usePlatform, type DisplayBackend } from "@/context/platform"
-import { useServerSync } from "@/context/server-sync"
-import { useServerSDK } from "@/context/server-sdk"
 import { useUpdaterAction } from "./updater-action"
 import {
   monoDefault,
@@ -31,6 +29,7 @@ import { decode64 } from "@/utils/base64"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
 import { ExternalLink } from "./external-link"
 import { SettingsList } from "./settings-list"
+import { createShellOptions, createShellSettingsController } from "./settings-v2/general-controllers"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,
@@ -41,18 +40,6 @@ let demoSoundState = {
 type ThemeOption = {
   id: string
   name: string
-}
-
-type ShellOption = {
-  path: string
-  name: string
-  acceptable: boolean
-}
-
-type ShellSelectOption = {
-  id: string
-  value: string
-  label: string
 }
 
 // To prevent audio from overlapping/playing very quickly when navigating the settings menus,
@@ -123,20 +110,8 @@ export const SettingsGeneral: Component = () => {
 
   const themeOptions = createMemo<ThemeOption[]>(() => theme.ids().map((id) => ({ id, name: theme.name(id) })))
 
-  const serverSync = useServerSync()
-  const serverSdk = useServerSDK()
-
-  const [shells] = createResource(
-    async () => {
-      const sdk = serverSdk()
-      if ((await sdk.protocol) === "v1") {
-        return (await sdk.client.pty.shells()).data ?? []
-      }
-      // return (await sdk.api.pty.shells()).data
-      return [] as ShellOption[]
-    },
-    { initialValue: [] as ShellOption[] },
-  )
+  const shell = createShellSettingsController()
+  const shellOptions = createMemo(() => createShellOptions({ shells: shell.shells(), current: shell.current() }))
 
   const [displayBackend, { refetch: refetchDisplayBackend }] = createResource(
     () => (linux() && platform.getDisplayBackend ? true : false),
@@ -152,40 +127,6 @@ export const SettingsGeneral: Component = () => {
 
   onMount(() => {
     void theme.loadThemes()
-  })
-
-  const autoOption = { id: "auto", value: "", label: language.t("settings.general.row.shell.autoDefault") }
-  const currentShell = createMemo(() => serverSync().data.config.shell ?? "")
-
-  const shellOptions = createMemo<ShellSelectOption[]>(() => {
-    const list = shells.latest
-    const current = serverSync().data.config.shell
-
-    const nameCounts = new Map<string, number>()
-    for (const s of list) {
-      nameCounts.set(s.name, (nameCounts.get(s.name) || 0) + 1)
-    }
-
-    const options = [
-      autoOption,
-      ...list.map((s) => {
-        const ambiguousName = (nameCounts.get(s.name) || 0) > 1
-        const text = ambiguousName ? s.path : s.name
-        const label = s.acceptable ? text : `${text} (${language.t("settings.general.row.shell.terminalOnly")})`
-        return {
-          id: s.path,
-          // Prefer name over path - "bash" is much cleaner than the explicit full route even when it may change due to PATH.
-          value: ambiguousName ? s.path : s.name,
-          label,
-        }
-      }),
-    ]
-
-    if (current && !options.some((o) => o.value === current)) {
-      options.push({ id: current, value: current, label: current })
-    }
-
-    return options
   })
 
   const onDisplayBackendChange = (checked: boolean) => {
@@ -329,22 +270,34 @@ export const SettingsGeneral: Component = () => {
           title={language.t("settings.general.row.shell.title")}
           description={language.t("settings.general.row.shell.description")}
         >
-          <Select
-            data-action="settings-shell"
-            options={shellOptions()}
-            current={shellOptions().find((o) => o.value === currentShell()) ?? autoOption}
-            value={(o) => o.id}
-            label={(o) => o.label}
-            onSelect={(option) => {
-              if (!option) return
-              if (option.value === currentShell()) return
-              serverSync().updateConfig({ shell: option.value })
-            }}
-            variant="secondary"
-            size="small"
-            triggerVariant="settings"
-            triggerStyle={{ "min-width": "180px" }}
-          />
+          <Show
+            when={!shell.failed()}
+            fallback={
+              <div class="flex items-center gap-3" role="alert" data-action="settings-shell-error">
+                <span class="text-text-weak">{language.t("orchestra.settings.general.shellError")}</span>
+                <Button size="small" variant="secondary" onClick={shell.retry}>
+                  {language.t("orchestra.settings.general.shellRetry")}
+                </Button>
+              </div>
+            }
+          >
+            <Select
+              data-action="settings-shell"
+              options={shellOptions()}
+              current={shellOptions().find((o) => o.value === shell.current()) ?? shellOptions()[0]}
+              value={(o) => o.id}
+              label={(o) => {
+                if (o.id === "auto") return language.t("settings.general.row.shell.autoDefault")
+                if (!o.terminalOnly) return o.name
+                return `${o.name} (${language.t("settings.general.row.shell.terminalOnly")})`
+              }}
+              onSelect={(option) => option && shell.select(option.value)}
+              variant="secondary"
+              size="small"
+              triggerVariant="settings"
+              triggerStyle={{ "min-width": "180px" }}
+            />
+          </Show>
         </SettingsRow>
 
         <SettingsRow

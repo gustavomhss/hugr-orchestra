@@ -292,6 +292,20 @@ for (const protocol of ["v1", "v2"] as const) {
       await expect(chapter.locator(".skills-card")).toHaveCount(2)
     })
   }
+
+  test(`${protocol}: a malformed catalog is the page's own error, and retry recovers`, async ({ page }) => {
+    // One entry without a name: sorting never compares it, so it used to reach the render's search filter.
+    const response = { status: 200, skills: catalog, raw: [{ location: catalog[0].location, content: "" }] as unknown }
+    await setup(page, { protocol, response })
+    await openSkills(page)
+    const chapter = page.locator('[data-chapter="skills"]')
+    await expect(chapter.getByRole("status")).toHaveText("Could not load skills for this profile.")
+    await expect(page.getByText("Something went wrong")).toHaveCount(0)
+    await expect(chapter.locator(".skills-card")).toHaveCount(0)
+    response.raw = undefined
+    await chapter.getByRole("button", { name: "Try again" }).click()
+    await expect(chapter.locator(".skills-card")).toHaveCount(2)
+  })
 }
 
 for (const protocol of ["v1", "v2"] as const) {
@@ -375,7 +389,7 @@ async function setup(
     protocol: "v1" | "v2"
     requests?: string[]
     scheme?: "dark" | "light"
-    response?: { status: number; skills: SkillFixture[]; hidden?: string[] }
+    response?: { status: number; skills: SkillFixture[]; hidden?: string[]; raw?: unknown }
     writes?: { method: string; url: string; body: unknown }[]
     beforeA?: () => Promise<void>
     afterA?: () => void
@@ -435,7 +449,8 @@ async function setup(
       if (url.origin === serverA) await input.beforeA?.()
       const skills =
         url.origin === serverA
-          ? (input.response?.skills ?? catalog).filter((skill) => !input.response?.hidden?.includes(skill.location))
+          ? (input.response?.raw ??
+            (input.response?.skills ?? catalog).filter((skill) => !input.response?.hidden?.includes(skill.location)))
           : [{ ...catalog[1], name: "Server B instructions", content: "Only server B.\n" }]
       await json(
         route,

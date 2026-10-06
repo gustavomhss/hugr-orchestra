@@ -68,4 +68,6 @@ export const SETTINGS_COPY = {
   "orchestra.settings.mcp.status.pending": "Connecting",
   "orchestra.settings.shortcuts.description": "Make the workspace feel like yours.",
   "orchestra.settings.shortcuts.edit": "Edit {{name}}",
+  "orchestra.settings.general.shellError": "Could not load the shells on this server.",
+  "orchestra.settings.general.shellRetry": "Try again",
 }
