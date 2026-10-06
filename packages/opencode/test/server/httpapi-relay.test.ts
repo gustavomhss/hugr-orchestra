@@ -204,7 +204,11 @@ describe("relay documents", () => {
       { versionId: document.versionId, expectedChecksum: document.checksum },
       ALICE,
     )
-    expect(published).toMatchObject({ active: true, activeVersionId: document.versionId, publishedBy: os.userInfo().username })
+    expect(published).toMatchObject({
+      active: true,
+      activeVersionId: document.versionId,
+      publishedBy: os.userInfo().username,
+    })
     expect(published.activeVersion).toMatchObject({ versionId: document.versionId, workflowId: document.id })
     expect(await ok(tmp.path, "GET", route)).toMatchObject({ publishedBy: os.userInfo().username })
 
