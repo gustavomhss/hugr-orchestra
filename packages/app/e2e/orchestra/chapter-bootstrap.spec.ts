@@ -56,7 +56,10 @@ test("restored local profile loads agents and opens a draft through the mocked A
   await expect(roster.getByRole("listitem", { name: "build", exact: true })).toBeVisible()
   expect(agents).toContain(server)
   expect(agents.filter((origin) => origin !== server)).toEqual([])
-  await page.getByRole("button", { name: "Open Chat", exact: true }).click()
+  await roster
+    .getByRole("listitem", { name: "build", exact: true })
+    .getByRole("button", { name: "Open Chat", exact: true })
+    .click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await expect(page.locator('[data-component="prompt-input"][contenteditable="true"]')).toBeEditable()
   await expect(page.locator('[data-component="prompt-input"][contenteditable="true"]')).toHaveText("")

@@ -44,7 +44,8 @@ for (const scheme of ["dark", "light"] as const) {
     const nav = page.locator(sidebar)
     await expect(nav).toHaveCSS("width", "230px")
     await expect(nav.getByRole("button", { name: "Chat", exact: true })).toBeEnabled()
-    await expect(nav.locator(".orchestra-profile-text small")).toHaveText("1 agent · main")
+    // The mock server lists build plus Orchestra's native maestro agent.
+    await expect(nav.locator(".orchestra-profile-text small")).toHaveText("2 agents · main")
     await expect(page.locator(home)).toHaveText(/\w/)
     expect(await auditAccessibility(page, [sidebar])).toEqual([])
     await expectTabOrder(page, [sidebar], { trap: false })

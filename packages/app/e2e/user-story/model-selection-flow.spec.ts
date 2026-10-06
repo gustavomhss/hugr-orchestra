@@ -86,7 +86,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(profile).toContainText("NewProject")
   // The approved card reads the new profile's agents and branch; its full directory stays verbatim in the title.
   const meta = profile.locator("small")
-  await expect(meta).toHaveText("1 agent · main")
+  // The mock server lists build plus Orchestra's native maestro agent.
+  await expect(meta).toHaveText("2 agents · main")
   await expect(meta).toHaveAttribute("title", directory)
   await expect(profile).toHaveAttribute("aria-expanded", "false")
 
@@ -133,7 +134,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(page).toHaveURL(draftURL.href)
   await expect(draftTab).toHaveCount(1)
   await expect(profile).toContainText("NewProject")
-  await expect(meta).toHaveText("1 agent · main")
+  await expect(meta).toHaveText("2 agents · main")
   await expect(meta).toHaveAttribute("title", directory)
   await expect(modelControl).toHaveText("Go Model 1")
   await expect(editor).toHaveText(draft)
