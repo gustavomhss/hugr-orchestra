@@ -38,7 +38,7 @@ The general procedures in [cancellation](../lifetimes/cancellation.md) and [atom
 
 - Scoped to the packet's modules: `python -m pytest <assigned-nodeid>` from the runner's working directory, plus the type checker and linter the packet names.
 - Outputs: handwritten route, service, repository and test code. Generated code is regenerated from its inputs, never edited.
-- Toolkit engines, only for the artifacts the packet assigns: [ast-grep](../recipes/external/ast-grep.md) for bounded syntax rewrites, [buf](../recipes/external/buf.md) for Protobuf schema checks, [kiota](../recipes/external/kiota.md) for API clients from an OpenAPI description, [datamodel-codegen](../recipes/external/datamodel-codegen.md) for Pydantic v2 models from an OpenAPI document or JSON Schema.
+- Toolkit engines ([recipes](../recipes/external/index.md)), only for the artifacts the packet assigns: ast-grep for bounded syntax rewrites, buf for Protobuf schema checks, kiota for API clients from an OpenAPI description, datamodel-codegen for Pydantic v2 models from an OpenAPI document or JSON Schema.
 
 ## Limits and checks
 

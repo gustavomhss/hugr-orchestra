@@ -123,3 +123,11 @@ Ruling M5-1, written into `f5-f6-toolkit-skills.md` as "Amendment M5":
 - Sources are pinned archives (Go module zip, published `.crate`); dependencies are pinned by `go.sum` with the checksum DB and `-mod=readonly`, and by the packaged `Cargo.lock` with `--locked`.
 - The built binary is the engine's executable and the shim execs it; a failed build is `install:go` or `install:cargo`, a missing toolchain `runtime-<cause>`.
 - Prefetch for another target refuses a source engine with `cross-target:source`. An engine can be unsupported on one target with its own reason (`sqlx` on Windows: `needs-msvc-linker`).
+
+## 9. F5 Amendment M6 (2026-10-06)
+
+Ruling M6-1, written into `f5-f6-toolkit-skills.md` as "Amendment M6":
+
+- The pack socket: one file per engine, `packages/core/src/backend-toolkit/packs/<id>.ts`, with its pins and a required `fit` (`role`, `input`, `skills`); runtimes in `runtimes/<id>.ts`; `packs/index.ts` is the only engine list.
+- The fit filter: every pack with skills has one recipe and a line in the generated recipe index, grouped by entry skill; `gitleaks` (host-side Memory scanner) has no skills and no recipe.
+- `bun script/toolkit-pack.ts add|bump` scaffolds or bumps a pack; one generic test replaces the per-engine pin tests, and the recipe guard reads pins from the packs.

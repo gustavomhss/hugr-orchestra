@@ -60,7 +60,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Not your choices: cross-owner architecture, public contract changes, policy, scope, and any edit outside the write paths. Each is a `packet` blocker.
 - Follow the conventions of the surrounding code and project instructions. Leave unrelated code and other people's changes alone.
 - Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md). Read only the packet's language.
-- With a generator or owned tool, generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
+- With a generator or owned tool ([toolkit recipes](references/recipes/external/index.md)), generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
 
 ## 4. Run the checks
 
