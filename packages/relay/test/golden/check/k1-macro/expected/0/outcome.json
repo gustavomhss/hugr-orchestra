@@ -1,0 +1,11 @@
+{
+  "exit": 0,
+  "stdout": {
+    "outcome": "check",
+    "i": 0,
+    "wp": "current",
+    "failing": [],
+    "macro": "\tbuild\n\n"
+  },
+  "stderr": ""
+}
