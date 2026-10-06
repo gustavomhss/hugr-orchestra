@@ -9,12 +9,12 @@ changes: the host keeps every item you do not touch and writes all formatting. R
 and why they matter, not the journey. One line per value.
 
 Sections and fields (? = optional):
-- objective: goal, why, done_when. When the user changes it, retire it citing that user
-  message and add the new one.
+- objective: goal, why, done_when. When the user changes it, retire it citing that message
+  and add the new one.
 - rules: kind (must | must_not | may | prefer | correction), rule, quote. Only standing
-  instructions the user typed; one about a single reply or call is not a rule. quote = the
-  user's exact words; write any limit the user gave in rule. A correction
-  states the right version and what was wrong.
+  instructions the user typed; one about a single reply or call is not a rule. Record every
+  standing prohibition, including ones on which tools or commands to call. quote = the user's
+  exact words; write any limit in rule. A correction states the right version and what was wrong.
 - decisions: decision, why, by (user | agent | agreed), rejected?, quote? (for user, agreed).
 - findings: finding, why, status (confirmed | hypothesis), check? (how to confirm).
   Anything that fits nowhere else is a finding.
