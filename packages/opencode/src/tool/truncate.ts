@@ -130,7 +130,7 @@ const layer = Layer.effect(
       const file = yield* write(text)
 
       // Searching or paging the saved file is cheap; only a long analysis of it is worth a subagent.
-      const hint = `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse Grep to search the full content or Read with offset/limit to view specific sections.${hasTaskTool(agent) ? " For a long analysis of the whole file, delegate it to the explore agent with the Task tool." : ""}`
+      const hint = `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse \`grep\` to search the full content or \`read\` with offset/limit to view specific sections.${hasTaskTool(agent) ? " For a long analysis of the whole file, hand it to an `explore` teammate with `task`." : ""}`
       const pressure = `Context pressure: this result exceeds the configured ${maxBytes}-byte/${maxLines}-line tool budget. Use bounded saved-output slices or the existing compaction flow; do not paste the full transcript.`
 
       return {

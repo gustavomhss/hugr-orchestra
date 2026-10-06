@@ -71,14 +71,13 @@ opencode 還支援從多個位置讀取 `AGENTS.md` 檔案，不同的位置有�
 對於從 Claude Code 遷移過來的使用者，OpenCode 支援 Claude Code 的檔案慣例作為備援方案：
 
 - **專案規則**：專案目錄中的 `CLAUDE.md`（在沒有 `AGENTS.md` 的情況下使用）
-- **全域規則**：`~/.claude/CLAUDE.md`（在沒有 `~/.config/opencode/AGENTS.md` 的情況下使用）
 - **技能**：`~/.claude/skills/` — 詳情請參閱[代理技能](/docs/skills/)
 
 要停用 Claude Code 相容性，請設定以下環境變數之一：
 
 ```bash
 export OPENCODE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
-export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
+export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only project CLAUDE.md files
 export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 ```
 
@@ -90,9 +89,8 @@ export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 
 1. **本機檔案**，從當前目錄向上遍歷（`AGENTS.md`、`CLAUDE.md`）
 2. **全域檔案**，位於 `~/.config/opencode/AGENTS.md`
-3. **Claude Code 檔案**，位於 `~/.claude/CLAUDE.md`（除非已停用）
 
-在每個類別中，第一個符合的檔案優先。例如，如果您同時擁有 `AGENTS.md` 和 `CLAUDE.md`，則只會使用 `AGENTS.md`。同樣，`~/.config/opencode/AGENTS.md` 優先於 `~/.claude/CLAUDE.md`。
+在每個類別中，第一個符合的檔案優先。例如，如果您同時擁有 `AGENTS.md` 和 `CLAUDE.md`，則只會使用 `AGENTS.md`。
 
 ---
 
