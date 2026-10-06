@@ -12,10 +12,12 @@ import { $ } from "bun"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
-import { closestBase } from "./test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay } from "./test-ci-upload"
 
 const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
+// Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
+let rateLimitDeadline = 0
 const root = (await $`git rev-parse --show-toplevel`.text()).trim()
 const request = parse(process.argv.slice(2))
 const remote = await findRemote()
@@ -152,11 +154,12 @@ async function changed() {
   return result
 }
 
+// Two at a time: GitHub's secondary rate limits punish bursts of requests that create content.
 async function uploadBlobs() {
   const blobs = changes.filter((change) => change.status !== "D" && change.mode !== "160000")
-  for (let start = 0; start < blobs.length; start += 8)
+  for (let start = 0; start < blobs.length; start += 2)
     await Promise.all(
-      blobs.slice(start, start + 8).map(async (change) => {
+      blobs.slice(start, start + 2).map(async (change) => {
         const content = Buffer.from(await $`git cat-file blob ${change.sha}`.cwd(root).arrayBuffer())
         const created = await api("POST", `repos/${repo}/git/blobs`, {
           content: content.toString("base64"),
@@ -220,11 +223,23 @@ async function report(view: RunView) {
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {
   const input = body === undefined ? [] : ["--input", "-"]
-  const result = await $`gh api --method ${method} ${route} ${input} < ${Buffer.from(JSON.stringify(body ?? {}))}`
-    .quiet()
-    .nothrow()
-  if (result.exitCode !== 0) throw new Error(`gh api ${method} ${route} failed: ${result.stderr.toString().trim()}`)
-  return result.stdout.length > 0 ? JSON.parse(result.text()) : undefined
+  for (let attempt = 0; ; attempt++) {
+    // --include prints the response headers, which carry GitHub's rate-limit hints.
+    const result =
+      await $`gh api --include --method ${method} ${route} ${input} < ${Buffer.from(JSON.stringify(body ?? {}))}`
+        .quiet()
+        .nothrow()
+    const response = parseResponse(result.text())
+    if (result.exitCode === 0) return response.body.length > 0 ? JSON.parse(response.body) : undefined
+    const error = `gh api ${method} ${route} failed: ${result.stderr.toString().trim()}`
+    const delay = rateLimitDelay(response, attempt)
+    if (delay === undefined) throw new Error(error)
+    rateLimitDeadline ||= Date.now() + 10 * 60_000
+    if (Date.now() + delay > rateLimitDeadline)
+      throw new Error(`${error}\ntest:ci waits at most 10 minutes for GitHub's rate limit to lift; run it again later.`)
+    console.log(`test-ci: GitHub rate limit, retrying in ${Math.ceil(delay / 1000)} s`)
+    await Bun.sleep(delay)
+  }
 }
 
 async function waitFor<T>(what: string, limit: number, check: () => Promise<T | undefined>, every = 5_000): Promise<T> {

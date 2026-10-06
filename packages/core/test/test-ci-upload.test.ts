@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, test } from "bun:test"
-import { closestBase } from "../../../script/test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay } from "../../../script/test-ci-upload"
 
 const repos: string[] = []
 
@@ -52,5 +52,52 @@ describe("test:ci base", () => {
     const tree = await rev(cwd, "HEAD^{tree}")
     expect(await closestBase(cwd, ["fork/missing", "fork/dev"], tree)).toBe(await rev(cwd, "start"))
     expect(await closestBase(cwd, ["fork/missing"], tree)).toBeUndefined()
+  })
+})
+
+// What `gh api --include` prints: the status line, CRLF-terminated headers, a blank line, then the body.
+const output = (status: string, headers: Record<string, string>, body: string) =>
+  `HTTP/2.0 ${status}\n${Object.entries({ "Content-Type": "application/json; charset=utf-8", ...headers })
+    .map((entry) => `${entry[0]}: ${entry[1]}\r\n`)
+    .join("")}\r\n${body}`
+
+const secondary = JSON.stringify({ message: "You have exceeded a secondary rate limit. Please wait a few minutes." })
+
+describe("test:ci rate limit", () => {
+  test("reads the status, headers and body gh prints", () => {
+    const response = parseResponse(output("201 Created", { "X-Ratelimit-Remaining": "4999" }, '{"sha":"abc"}'))
+    expect(response.status).toBe(201)
+    expect(response.headers.get("x-ratelimit-remaining")).toBe("4999")
+    expect(JSON.parse(response.body)).toEqual({ sha: "abc" })
+    expect(parseResponse(output("204 No Content", {}, "")).body).toBe("")
+    expect(parseResponse("").status).toBe(0)
+  })
+
+  test("honours Retry-After", () => {
+    expect(rateLimitDelay(parseResponse(output("403 Forbidden", { "Retry-After": "60" }, secondary)), 0)).toBe(60_000)
+    expect(rateLimitDelay(parseResponse(output("429 Too Many Requests", { "Retry-After": "5" }, "{}")), 3)).toBe(5_000)
+  })
+
+  test("waits for the reset when no requests remain", () => {
+    const response = output(
+      "429 Too Many Requests",
+      { "X-Ratelimit-Remaining": "0", "X-Ratelimit-Reset": "1030" },
+      "{}",
+    )
+    expect(rateLimitDelay(parseResponse(response), 0, 1_000_000)).toBe(30_000)
+  })
+
+  test("backs off from a minute when GitHub gives no hint", () => {
+    const response = parseResponse(output("403 Forbidden", {}, secondary))
+    expect([0, 1, 2].map((attempt) => rateLimitDelay(response, attempt))).toEqual([60_000, 120_000, 240_000])
+  })
+
+  test("does not retry other failures", () => {
+    const forbidden = JSON.stringify({ message: "Resource not accessible by integration" })
+    expect(
+      rateLimitDelay(parseResponse(output("403 Forbidden", { "Retry-After": "60" }, forbidden)), 0),
+    ).toBeUndefined()
+    expect(rateLimitDelay(parseResponse(output("422 Unprocessable Entity", {}, "{}")), 0)).toBeUndefined()
+    expect(rateLimitDelay(parseResponse(""), 0)).toBeUndefined()
   })
 })
