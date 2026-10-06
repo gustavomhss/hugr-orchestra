@@ -3,8 +3,9 @@ import fs from "fs/promises"
 import path from "path"
 
 // Family layout of the backend specialist's shared references (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md,
-// F6.4) and the per-reference word cap S-1b. Discovery, link resolution and depth-2 reachability are covered by
-// backend-skills.test.ts; this file checks what that one cannot see: which family a reference belongs to.
+// F6.4), the per-reference word cap S-1b, the frozen family tuples and the engine recipe pins (F6.11). Discovery, link
+// resolution and depth-2 reachability are covered by backend-skills.test.ts; this file checks what that one cannot see:
+// which family a reference belongs to and which versions it may name.
 
 const REFERENCES = path.resolve(import.meta.dir, "../../../backend-specialist/skills/backend-implement/references")
 // F6.4: `<familyId>` values, and the subset that may own a `languages/<familyId>.md` file.
@@ -16,6 +17,8 @@ const SHARED_LANGUAGE = { effect: "js-ts", next: "js-ts" } as Record<string, str
 const MAX_REFERENCE_WORDS = 700
 // Lead ruling F6-D3 with M3-6: the frozen Go tuple.
 const GO_PINS = { chi: "v5.3.2", pgx: "v5.8.0", sqlc: "1.31.1" }
+// Ruling M3-3 (F5.5 pins): the first toolkit cut, one recipe per engine. gitleaks is a host-side scanner with none.
+const ENGINE_PINS = { "ast-grep": "0.45.3", sqlc: "1.31.1", buf: "1.73.0", kiota: "1.35.0" } as Record<string, string>
 
 describe("backend skill families", () => {
   test("keys family references by an allowed family id", async () => {
@@ -117,6 +120,44 @@ describe("backend skill families", () => {
           .map((version) => ({ file: item.file, version })),
       ),
     ).toEqual([])
+  })
+})
+
+describe("backend skill engine recipes", () => {
+  test("pins each engine recipe and runs it only through the toolkit path", async () => {
+    const recipes = (await listReferences()).filter((file) => file.startsWith("recipes/external/"))
+    expect(recipes).toEqual(
+      Object.keys(ENGINE_PINS)
+        .map((id) => `recipes/external/${id}.md`)
+        .toSorted(),
+    )
+
+    const results = await Promise.all(
+      Object.entries(ENGINE_PINS).map(async ([id, pin]) => {
+        const text = await Bun.file(path.join(REFERENCES, `recipes/external/${id}.md`)).text()
+        return {
+          id,
+          pin: text.includes(`\`${pin}\``),
+          invokes: text.includes(`"$BACKEND_TOOLKIT_BIN/${id}"`),
+          // F5.31 outcomes the recipe must turn into a `tool` blocker.
+          outcomes: text.includes("toolkit-not-ready:") && text.includes("unsupported-target:"),
+          otherVersions: [...text.matchAll(/\b\d+\.\d+\.\d+\b/g)].map((match) => match[0]).filter((v) => v !== pin),
+          otherEngines: [...text.matchAll(/\$\{?BACKEND_TOOLKIT_BIN\}?"?\/([a-z0-9-]+)/g)]
+            .map((match) => match[1])
+            .filter((engine) => engine !== id),
+        }
+      }),
+    )
+    expect(results).toEqual(
+      Object.keys(ENGINE_PINS).map((id) => ({
+        id,
+        pin: true,
+        invokes: true,
+        outcomes: true,
+        otherVersions: [],
+        otherEngines: [],
+      })),
+    )
   })
 })
 

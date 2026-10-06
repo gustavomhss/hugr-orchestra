@@ -24,7 +24,7 @@ Calling Go code that sqlc `1.31.1` generated for PostgreSQL with `sql_package: p
 4. Handle absence. A `:one` query with no row returns `pgx.ErrNoRows`; match it with `errors.Is`. A `:many` query with no rows returns a nil slice unless `emit_empty_slices` is set, so encode an empty JSON array explicitly when the contract needs `[]`.
 5. Map nullable columns. Without overrides, a nullable column becomes a `pgtype` value: `pgtype.Text{String, Valid}`, `pgtype.Int4{Int32, Valid}`, `pgtype.Int8{Int64, Valid}`, `pgtype.Timestamptz{Time, Valid}`. `Valid: false` is SQL `NULL`, and the zero struct is `NULL`, not `""` or `0`. With `emit_pointers_for_null_types: true` the field is a pointer instead. `uuid` maps to `pgtype.UUID` unless an override says otherwise.
 6. In SQL you author, name parameters with `@name` or `sqlc.arg(name)`; `sqlc.narg(name)` makes one nullable. A PostgreSQL list filter is `= ANY(@ids::bigint[])`, which takes a Go slice.
-7. After a query file changes, run the packet's generation command and read the generated diff before calling new signatures.
+7. After a query file changes, regenerate through the [sqlc recipe](../../recipes/external/sqlc.md), or the packet's own generation command when it names one, and read the generated diff before calling new signatures.
 
 ## Tools and outputs
 
