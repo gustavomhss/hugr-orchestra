@@ -7,7 +7,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
-import { Cause, Clock, Deferred, Duration, Effect, Exit, Fiber, Queue } from "effect"
+import { Cause, Clock, Deferred, Duration, Effect, Exit, Fiber } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
 import { NamedError } from "@opencode-ai/core/util/error"
@@ -27,7 +27,7 @@ import { SessionExecution } from "@opencode-ai/core/session/execution"
 import { Shell } from "@opencode-ai/core/shell"
 import { ToolRegistry } from "@/tool/registry"
 import { TestInstance } from "../fixture/fixture"
-import { awaitWithTimeout, heldClock, pollWithTimeout, testEffect } from "../lib/effect"
+import { awaitWithTimeout, fireSleep, heldClock, pollWithTimeout, testEffect } from "../lib/effect"
 import { reply, TestLLMServer } from "../lib/llm-server"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
@@ -1739,24 +1739,11 @@ unixNoLLMServer(
           })
           .pipe(Effect.provideService(Clock.Clock, held.clock), Effect.forkChild)
 
-        yield* Effect.gen(function* () {
-          while (!(yield* afs.existsSafe(ready))) {
-            yield* Effect.sleep(Duration.millis(10))
-          }
-        }).pipe(Effect.timeout(Duration.seconds(5)))
-
-        // The shell ignores SIGTERM, so cancel can only finish once the 3s
-        // forceKillAfter escalation sends SIGKILL. That timer runs on the held
-        // clock: wait for it to start, then fire it instead of waiting 3s.
-        const cancel = yield* prompt.cancel(chat.id).pipe(Effect.forkChild)
-        const escalation = yield* Effect.gen(function* () {
-          while (true) {
-            const sleep = yield* Queue.take(held.sleeps)
-            if (sleep.millis === 3_000) return sleep
-          }
-        }).pipe(Effect.timeout(Duration.seconds(5)))
-        yield* escalation.wake
-        yield* Fiber.join(cancel)
+        yield* pollWithTimeout(
+          afs.existsSafe(ready).pipe(Effect.map((exists) => (exists ? true : undefined))),
+          "shell never installed the TERM trap",
+        )
+        yield* prompt.cancel(chat.id).pipe(fireSleep(held, 3_000))
 
         const exit = yield* Fiber.await(sh)
         expect(Exit.isSuccess(exit)).toBe(true)

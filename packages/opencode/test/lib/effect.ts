@@ -1,6 +1,6 @@
-import { test, type TestOptions } from "bun:test"
+import { expect, test, type TestOptions } from "bun:test"
 import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
-import { Cause, Clock, Deferred, Duration, Effect, Exit, Layer, Queue } from "effect"
+import { Cause, Clock, Deferred, Duration, Effect, Exit, Fiber, Layer, Queue } from "effect"
 import * as Scope from "effect/Scope"
 import * as TestClock from "effect/testing/TestClock"
 import * as TestConsole from "effect/testing/TestConsole"
@@ -201,3 +201,36 @@ export const heldClock = Effect.gen(function* () {
   }
   return { clock, sleeps }
 })
+
+// Runs `effect` on a fresh held clock, requires its first sleep to last at least `minMillis`, then
+// releases it. Fails if the effect finishes without sleeping.
+export const releaseFirstSleep =
+  (minMillis: number) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.gen(function* () {
+      const held = yield* heldClock
+      const fiber = yield* effect.pipe(Effect.provideService(Clock.Clock, held.clock), Effect.forkChild)
+      const sleep = yield* Queue.take(held.sleeps).pipe(
+        Effect.raceFirst(Fiber.await(fiber).pipe(Effect.andThen(Effect.die("finished without sleeping")))),
+      )
+      expect(sleep.millis).toBeGreaterThanOrEqual(minMillis)
+      yield* sleep.wake
+      return yield* Fiber.join(fiber)
+    })
+
+// Runs `effect` until something on `held` requests a sleep of exactly `millis`, fires that sleep, and
+// returns the effect's result, so a test can trigger one timer (say a kill escalation) without waiting.
+export const fireSleep =
+  (held: Effect.Success<typeof heldClock>, millis: number) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.gen(function* () {
+      const fiber = yield* effect.pipe(Effect.forkChild)
+      const sleep = yield* Effect.gen(function* () {
+        while (true) {
+          const next = yield* Queue.take(held.sleeps)
+          if (next.millis === millis) return next
+        }
+      }).pipe(Effect.timeout(Duration.seconds(5)))
+      yield* sleep.wake
+      return yield* Fiber.join(fiber)
+    })
