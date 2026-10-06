@@ -25,7 +25,10 @@ interface Input {
 }
 
 const cases = await Promise.all(
-  readdirSync(GOLDENS)
+  readdirSync(GOLDENS, { withFileTypes: true })
+    // Each case is a folder; GENERATOR.json beside them records the generator's tool versions.
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
     .sort()
     .map(async (name) => {
       const dir = path.join(GOLDENS, name)
