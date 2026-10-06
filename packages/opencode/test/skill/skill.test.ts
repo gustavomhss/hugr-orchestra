@@ -9,29 +9,34 @@ import { Config } from "../../src/config/config"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Global } from "@opencode-ai/core/global"
+import { Npm } from "@opencode-ai/core/npm"
 import { Agent } from "../../src/agent/agent"
 import { Auth } from "../../src/auth"
 import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { provideInstance, provideTmpdirInstance, testInstanceStoreLayer, tmpdir, tmpdirScoped } from "../fixture/fixture"
+import { NpmTest } from "../fake/npm"
 import { testEffect } from "../lib/effect"
 import path from "path"
 import fs from "fs/promises"
 
 const node = LayerNode.compile(CrossSpawnSpawner.node)
+// Config starts a detached npm install into every .opencode directory it loads. A real one keeps extracting
+// packages after its test ends and, on Windows, starves file I/O for later test files in the same process.
+const npm = [Npm.node, NpmTest.noop] as const
 
-const it = testEffect(Layer.mergeAll(LayerNode.compile(Skill.node), node, testInstanceStoreLayer))
+const it = testEffect(Layer.mergeAll(LayerNode.compile(Skill.node, [npm]), node, testInstanceStoreLayer))
 const itWithoutClaudeCodeSkills = testEffect(
   Layer.mergeAll(
-    LayerNode.compile(Skill.node, [[RuntimeFlags.node, RuntimeFlags.layer({ disableClaudeCodeSkills: true })]]),
+    LayerNode.compile(Skill.node, [npm, [RuntimeFlags.node, RuntimeFlags.layer({ disableClaudeCodeSkills: true })]]),
     node,
     testInstanceStoreLayer,
   ),
 )
 const itWithoutExternalSkills = testEffect(
   Layer.mergeAll(
-    LayerNode.compile(Skill.node, [[RuntimeFlags.node, RuntimeFlags.layer({ disableExternalSkills: true })]]),
+    LayerNode.compile(Skill.node, [npm, [RuntimeFlags.node, RuntimeFlags.layer({ disableExternalSkills: true })]]),
     node,
     testInstanceStoreLayer,
   ),
@@ -679,7 +684,7 @@ description: A skill in the .opencode/skills directory.
 const agentLayer = (home: string) =>
   LayerNode.compile(
     LayerNode.group([Agent.node, Plugin.node, Provider.node, Auth.node, Config.node, Skill.node, RuntimeFlags.node]),
-    [[Global.node, Global.layerWith({ home })]],
+    [[Global.node, Global.layerWith({ home })], npm],
   )
 
 const writeSkill = (root: string, name: string) =>
