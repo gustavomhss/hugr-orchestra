@@ -64,3 +64,24 @@ it.instance("a media read leaves nested rules for the next text read", () =>
     expect(text.metadata.loaded).toEqual([rules])
   }),
 )
+
+it.instance("following every partial footer reads the whole file", () =>
+  Effect.gen(function* () {
+    const test = yield* TestInstance
+    const file = path.join(test.directory, "mixed.txt")
+    // Short lines end the first page at 2000 lines; the 2000 lines after it are far over 50 KB.
+    yield* put(file, Array.from({ length: 3000 }, (_, index) => (index < 2100 ? "short" : "x".repeat(400))).join("\n"))
+
+    const seen: number[] = []
+    let next: { offset?: number; limit?: number } = {}
+    while (true) {
+      const output = (yield* read({ filePath: file, ...next })).output
+      expect(Buffer.byteLength(output, "utf-8")).toBeLessThanOrEqual(50 * 1024)
+      seen.push(...Array.from(output.matchAll(/^(\d+): /gm), (match) => Number(match[1])))
+      const footer = output.match(/Use offset=(\d+)(?: limit=(\d+))? to continue/)
+      if (!footer) break
+      next = { offset: Number(footer[1]), limit: footer[2] ? Number(footer[2]) : undefined }
+    }
+    expect(seen).toEqual(Array.from({ length: 3000 }, (_, index) => index + 1))
+  }),
+)

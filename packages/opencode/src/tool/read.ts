@@ -50,7 +50,8 @@ type Display =
     }
 
 type Metadata = { preview: string; truncated: boolean; loaded: string[]; display?: Display }
-type Page = { lines: string[]; start: number; more: boolean; total?: number; capped: boolean }
+/** `next` is how many lines after the page fit in one more page; 0 when the page ends the file. */
+type Page = { lines: string[]; start: number; more: boolean; total?: number; capped: boolean; next: number }
 
 export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service | Instruction.Service>(
   "read",
@@ -156,36 +157,35 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
       filepath: string,
       start: number,
       limit: number,
-      reserve: (lineCount: number) => number,
+      reserve: (first: number, lineCount: number) => number,
       byteStart = 0,
     ) {
       const lines: string[] = []
       const decoder = new TextDecoder("utf-8")
       const inspector = OutputInspector.make()
+      const page = { first: start, count: 0, bytes: 0 }
+      // Lines after the page are measured as one more page, so the footer can name a limit that fits.
+      let next: typeof page | undefined
       let pending = ""
       let line = byteStart ? start : 1
-      let more = false
-      let capped = false
       let done = false
-      let bytes = 0
+      const fit = (target: typeof page, value: string) => {
+        const size = Buffer.byteLength(`${target.first + target.count}: ${value}`, "utf-8") + (target.count ? 1 : 0)
+        if (target.count >= limit || target.bytes + size + reserve(target.first, target.count + 1) > MAX_BYTES)
+          return false
+        target.count++
+        target.bytes += size
+        return true
+      }
       const take = (raw: string) => {
         if (line++ < start) return
-        if (lines.length >= limit) {
-          more = true
-          done = true
-          return
-        }
         const value = trim(raw)
-        const rendered = `${start + lines.length}: ${value}`
-        const size = Buffer.byteLength(rendered, "utf-8") + (lines.length ? 1 : 0)
-        if (bytes + size + reserve(lines.length + 1) > MAX_BYTES) {
-          more = true
-          capped = true
-          done = true
+        if (!next && fit(page, value)) {
+          lines.push(value)
           return
         }
-        lines.push(value)
-        bytes += size
+        next ??= { first: start + lines.length, count: 0, bytes: 0 }
+        if (!fit(next, value)) done = true
       }
       const consume = (chunk: string) => {
         const segments = chunk.split("\n")
@@ -204,7 +204,8 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           while (!done) {
             const bytes = yield* file.readAlloc(CHUNK_BYTES)
             if (Option.isNone(bytes)) break
-            const reason = inspector.push(bytes.value)
+            // Measured lines are never returned, so inspection ends with the chunk that ends the page.
+            const reason = next ? undefined : inspector.push(bytes.value)
             if (reason) return yield* new ToolSafety.Denied({ reason })
             consume(decoder.decode(bytes.value, { stream: true }))
           }
@@ -216,7 +217,15 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           if (reason) return yield* new ToolSafety.Denied({ reason })
         }),
       )
-      return { lines, start, more, capped, ...(lines.length ? {} : { total: line - 1 }) } satisfies Page
+      return {
+        lines,
+        start,
+        more: next !== undefined,
+        capped: next !== undefined && lines.length < limit,
+        // Only the reserved reminder, which the continuation does not repeat, can leave none; one line fits without it.
+        next: next ? Math.max(1, next.count) : 0,
+        ...(lines.length ? {} : { total: line - 1 }),
+      } satisfies Page
     })
 
     const tail = Effect.fn("ReadTool.tail")(function* (filepath: string, size: number, count: number) {
@@ -347,10 +356,12 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         ? `\n<system-reminder>\n${loaded.map((item) => item.content).join("\n\n")}\n</system-reminder>`
         : ""
       const prefix = `<path>${filepath}</path>\n<type>file</type>\n<content>\n`
-      const finish = (lines: string[], more: boolean) => {
+      const partial = (first: number, last: number, next: number) =>
+        `(PARTIAL view. Showing lines ${first}-${last}. Use offset=${last + 1} limit=${next} to continue.)`
+      const finish = (lines: string[], next = 0) => {
         const last = start + lines.length - 1
-        const footer = more
-          ? `(PARTIAL view. Showing lines ${start}-${last}. Use offset=${last + 1} to continue.)`
+        const footer = next
+          ? partial(start, last, next)
           : total === undefined
             ? "(End of file)"
             : `(End of file - total ${total} lines)`
@@ -360,17 +371,18 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           `\n${footer}\n</content>${reminder}`
         )
       }
-      if (Buffer.byteLength(finish([], false), "utf-8") > MAX_BYTES)
+      if (Buffer.byteLength(finish([]), "utf-8") > MAX_BYTES)
         return yield* Effect.fail(new Error(`System reminders exceed ${MAX_BYTES / 1024} KB output limit.`))
       const page = yield* forward(
         filepath,
         start,
         limit,
-        (lineCount) => {
-          const last = start + lineCount - 1
-          const footer = `(PARTIAL view. Showing lines ${start}-${last}. Use offset=${last + 1} to continue.)`
-          return Buffer.byteLength(`${prefix}\n${footer}\n</content>${reminder}`, "utf-8")
-        },
+        // Footers never name a limit above this read's, so measuring with it bounds this page and the next one.
+        (first, lineCount) =>
+          Buffer.byteLength(
+            `${prefix}\n${partial(first, first + lineCount - 1, limit)}\n</content>${reminder}`,
+            "utf-8",
+          ),
         byteStart,
       )
       if (!page.lines.length && start !== 1)
@@ -389,7 +401,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         )
 
       const last = start + page.lines.length - 1
-      const output = finish(page.lines, page.more)
+      const output = finish(page.lines, page.next)
       return {
         title,
         output,
