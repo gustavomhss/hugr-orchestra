@@ -71,14 +71,34 @@ describe("HttpApi CORS", () => {
       const response = yield* Effect.promise(() =>
         handler(
           new Request(new URL("/global/config", "http://localhost"), {
-            headers: { origin: "https://app.opencode.ai" },
+            headers: { origin: "http://localhost:3000" },
           }),
           HttpApiApp.context,
         ),
       )
 
       expect(response.status).toBe(401)
-      expect(response.headers.get("access-control-allow-origin")).toBe("https://app.opencode.ai")
+      expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:3000")
+    }),
+  )
+
+  it.live("does not trust hosted upstream origins", () =>
+    Effect.gen(function* () {
+      const handler = HttpRouter.toWebHandler(
+        HttpApiApp.createRoutes().pipe(
+          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ OPENCODE_SERVER_PASSWORD: "secret" }))),
+        ),
+        { disableLogger: true },
+      ).handler
+      for (const origin of ["https://app.opencode.ai", "https://opencode.ai"]) {
+        const response = yield* Effect.promise(() =>
+          handler(
+            new Request(new URL("/global/config", "http://localhost"), { headers: { origin } }),
+            HttpApiApp.context,
+          ),
+        )
+        expect(response.headers.get("access-control-allow-origin")).toBeNull()
+      }
     }),
   )
 

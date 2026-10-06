@@ -642,10 +642,13 @@ const pricing = Effect.fn("ArsenalObservations.pricing")(function* (
   if (keys.length >= 512) return yield* new ToolFailure({ message: "OBSERVATION_PRICING_MODEL_OVERFLOW" })
   if (!keys.length) return []
   yield* plugins.wait(PluginV2.ID.make("config-provider"))
-  const url = Flag.OPENCODE_MODELS_URL || "https://models.opencode.ai"
+  const url = Flag.OPENCODE_MODELS_URL || ModelsDev.DEFAULT_SOURCE
   const file =
     Flag.OPENCODE_MODELS_PATH ??
-    path.join(Global.Path.cache, url === "https://models.opencode.ai" ? "models.json" : `models-${Hash.fast(url)}.json`)
+    path.join(
+      Global.Path.cache,
+      url === ModelsDev.DEFAULT_SOURCE ? "models.json" : `models-${Hash.fast(url)}.json`,
+    )
   const before = yield* fs.stat(file).pipe(Effect.catch(() => Effect.succeed(undefined)))
   if (!before || before.type !== "File" || before.size > MAX_PRICING_BYTES || Option.isNone(before.mtime)) return []
   const text = yield* fs.readFileString(file).pipe(Effect.catch(() => Effect.succeed(undefined)))
