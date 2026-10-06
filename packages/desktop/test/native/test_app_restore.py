@@ -67,6 +67,15 @@ class AppRestoreTests(unittest.TestCase):
         for process in processes:
             self.addCleanup(process.wait)
             self.addCleanup(process.kill)
+        # Popen returns once exec has replaced the child's memory, before the kernel has laid out its environment, so
+        # /proc/<pid>/environ can still read empty for a moment; a real app has long been running when remember scans.
+        deadline = time.monotonic() + 5
+        for process, app_id in zip(processes, app_ids):
+            marker = f"{MARKER}={app_id}".encode()
+            while marker not in Path(f"/proc/{process.pid}/environ").read_bytes().split(b"\0"):
+                if time.monotonic() >= deadline:
+                    raise AssertionError("marked process never exposed its environment")
+                time.sleep(0.01)
         return processes
 
     def launched(self, count):
