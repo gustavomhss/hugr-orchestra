@@ -1,7 +1,7 @@
 # Guarantees
 
 What hugr-omni promises on each OS, and the evidence for it. A row is **planned** until its scenario or KPI is green
-on that OS in CI; then it links the run. A promise without evidence on an OS is not made on that OS (INV-09).
+on that OS in CI; then it links the run (`run <n>`: GitHub Actions of github.com/gustavomhss/hugr-omni). A promise without evidence on an OS is not made on that OS (INV-09).
 The promises themselves are `docs/api-contract.md`; the items are `docs/acceptance.md`.
 
 ## Containment tiers (ADR-0005)
@@ -27,16 +27,18 @@ The promises themselves are `docs/api-contract.md`; the items are `docs/acceptan
 | C-SPAWN-02 args byte-identical, `.cmd`/`.bat` safe or refused | planned | planned | planned | scenario |
 | C-SPAWN-03 relative program and cwd | planned | planned | planned | scenario |
 | C-ERR-01 / C-ERR-02 typed errors before anything runs | planned | planned | planned | scenarios |
-| C-ENV-01 environment | planned | planned | planned | scenario |
-| C-IO-01..04 output never blocks the child; loss counted in order; nothing lost at exit | planned | planned | planned | scenarios + K5 |
+| C-ENV-01 environment | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | scenario + ci.yml run 37509111310 |
+| C-IO-01..04 output never blocks the child; loss counted in order; nothing lost at exit | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | scenarios + K5 + ci.yml run 37509111310 |
 | C-RUN-01 `run()` complete or `OUTPUT_LIMIT` | planned | planned | planned | scenario |
-| C-KILL-01 / C-KILL-02 whole tree, one deadline | planned | planned | planned | scenarios + K1, K3 |
+| C-KILL-01 / C-KILL-02 whole tree, one deadline | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | scenarios + K1, K3 + ci.yml run 37509111310 |
 | C-KILL-03 deliberate escape behaves per tier | planned | planned | planned | scenario |
 | C-EXIT-01 exit codes and reason | planned | planned | planned | scenario |
 | C-PROC-01 `processes()` = what `stop()` reaches | planned | planned | planned | scenario |
-| C-SCOPE-01 scope exit kills the tree | planned | planned | planned | idiom tests |
+| C-SCOPE-01 scope exit kills the tree | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | idiom tests + ci.yml run 37509111310 |
 | C-TMO-01 / C-TMO-02 timeout and cancellation | planned | planned | planned | scenarios + K2 |
-| C-HOST-01 host exit leaves trees per tier | planned | planned | planned | idiom tests + K1 |
-| C-PTY-01..04 terminal size, interaction, no lost output, tree stop | planned | planned | planned | scenarios |
+| C-HOST-01 host exit leaves trees per tier | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | idiom tests + K1 + ci.yml run 37509111310 |
+| C-PTY-01..04 terminal size, interaction, no lost output, tree stop | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | scenarios + ci.yml run 37509111310 |
+| ConPTY close bound: `stop()` of a terminal ends at its grace although `ClosePseudoConsole` blocks (about 5 s on Server 2022, build 20348) | – | – | green (run 37509111310) | W12w, ci.yml run 37509111310 |
 | ConPTY on builds < 26100: per-pseudoconsole handle leak | – | – | declared: 1 handle per terminal session stays in the supervisor on build 20348 (Server 2022); 0 on 26100 and later | W12w, windows.yml run 37067122812 (CONPTY-HANDLES) |
-| C-TS-01 / C-TS-02 TS on Node 22/24, Bun, Deno | planned | planned | planned | runner |
+| C-TS-01 / C-TS-02 TS on Node 22 | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | runner + ci.yml run 37509111310 |
+| C-TS-02 TS on Bun (fast gate from WP-H on), Node 24 and Deno (release gate) | planned | planned | planned | runner |
