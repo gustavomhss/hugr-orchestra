@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { mkdir, symlink } from "node:fs/promises"
 import { join } from "node:path"
-import { readState, updateState, STATE_BYTES } from "../src/governance/state.ts"
+import { readState, scopedPath, updateState, STATE_BYTES } from "../src/governance/state.ts"
 import { fixture } from "./fixtures.governance.ts"
 test("state serializes concurrent writes without lost updates", async () => {
   const f = await fixture()
@@ -43,4 +43,21 @@ test("state rechecks physical boundary after async authorization", async () => {
   } }
   await expect(updateState(context, "count", "wave", () => 1)).rejects.toThrow("PATH_SYMLINK_DENIED")
   expect(await Bun.file(join(f.root, "count", "wave.json")).exists()).toBe(false)
+})
+test("state root above the repository is refused because project state could land inside it", async () => {
+  const f = await fixture()
+  const repo = join(f.directory, "project", "count")
+  await mkdir(repo, { recursive: true })
+  await expect(updateState({ ...f.context, directory: repo, stateDirectory: f.directory }, "count", "wave", () => 1)).rejects.toThrow("STATE_ROOT_INSIDE_REPOSITORY")
+  expect(await Bun.file(join(repo, "wave.json")).exists()).toBe(false)
+})
+// Only Windows reads these as parents, other drives and UNC roots; POSIX reads the same strings as file names.
+test.if(process.platform === "win32")("Windows scoped paths refuse backslash parents, other drives and UNC roots", async () => {
+  const f = await fixture()
+  const drive = f.root.toUpperCase().startsWith("C:") ? "D:" : "C:"
+  await Promise.all(["..\\outside", `${drive}\\outside`, "\\\\server\\share\\outside"].map((path) => expect(scopedPath(f.root, path)).rejects.toThrow("PATH_ESCAPE")))
+})
+test.if(process.platform !== "win32")("POSIX scoped paths keep a backslash as a file name character", async () => {
+  const f = await fixture()
+  expect(await scopedPath(f.root, "..\\outside")).toBe(join(f.root, "..\\outside"))
 })
