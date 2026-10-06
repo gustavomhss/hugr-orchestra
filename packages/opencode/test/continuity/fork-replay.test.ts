@@ -4,7 +4,8 @@ import { LLMEvent } from "@opencode-ai/llm"
 import { jsonSchema, tool, type Tool } from "ai"
 import type { ModelMessage } from "ai"
 import type { LLM } from "@/session/llm"
-import { replay, run, snapshot, type ParentRequest } from "@/continuity/fork"
+import { carriesMemory, replay, run, snapshot, type ParentRequest } from "@/continuity/fork"
+import type { MemoryArtifact } from "@/continuity/memory-types"
 import { chunks } from "@/continuity/transcript"
 import { testEffect } from "../lib/effect"
 import { memory, messages, model, provider, sessionID } from "./memory-fixture"
@@ -112,4 +113,17 @@ test("replay refuses requests whose reply cannot be a producer artifact", () => 
 test("replay refuses provider-executed tools that host denial cannot stop", () => {
   const remote = { type: "provider", id: "openai.web_search", args: {} } as unknown as Tool
   expect(replay(parent({ tools: { web_search: remote } }), captured(), model, "x")).toBeUndefined()
+})
+
+test("replay requires the parent request to carry the memory this pass edits", () => {
+  const withMemory = { ...captured(), previous: { text: "Working memory K" } as MemoryArtifact }
+  // First pass: no prior memory, so a request that carries one is out of date.
+  expect(replay(parent({ contextMemory: true }), captured(), model, "x")).toBeUndefined()
+  // A turn that started before the last swap carries no memory or the older one.
+  expect(replay(parent(), withMemory, model, "x")).toBeUndefined()
+  expect(replay(parent({ contextMemory: true, system: ["parent system", "Historical working memory follows.\n\nWorking memory J"] }),
+    withMemory, model, "x")).toBeUndefined()
+  const current = parent({ contextMemory: true, system: ["parent system", "Historical working memory follows.\n\nWorking memory K"] })
+  expect(carriesMemory(current, withMemory)).toBe(true)
+  expect(replay(current, withMemory, model, "x")).toBeDefined()
 })

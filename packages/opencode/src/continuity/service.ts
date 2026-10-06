@@ -14,7 +14,7 @@ import { chunks } from "./transcript"
 import { Token } from "@/util/token"
 import { Cause, Context, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
-import { run, snapshot, type ParentRequest } from "./fork"
+import { carriesMemory, run, snapshot, type ParentRequest } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
 import { isSafe, settings, shouldStart, tokenCount } from "./trigger"
 import { apply as applyMasks, candidates as maskCandidates } from "./masking"
@@ -321,7 +321,15 @@ const layer = Layer.effect(
                   return "discarded"
                 }
               }
-              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available, current.requests.get(sessionID))
+              const request = current.requests.get(sessionID)
+              // A turn that started before the last swap replays older memory than this
+              // pass edits. Wait for a turn that carries the current memory instead of
+              // paying for an uncached isolated request.
+              if (request && !carriesMemory(request, selected)) {
+                yield* diagnostic(sessionID, active.boundary, "stale-request")
+                return "discarded"
+              }
+              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available, request)
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
                 yield* outcome(false)

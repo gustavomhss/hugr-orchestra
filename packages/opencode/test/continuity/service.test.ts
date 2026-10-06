@@ -7,6 +7,7 @@ import { Session } from "@/session/session"
 import { MessageV2 } from "@/session/message-v2"
 import { PartID } from "@/session/schema"
 import { SessionContinuity } from "@/continuity/service"
+import type { LLM } from "@/session/llm"
 import { awaitWithTimeout, it } from "../lib/effect"
 import { A, B, FIRST, SECOND, applyFirst, begin, complete, entered, environment, fragments, held, jobFor, packet, prepare, seed, terminal } from "./service-fixture"
 
@@ -288,3 +289,30 @@ it.instance("three consecutive invalid producer results stop maintenance until h
     expect(yield* count()).toBe(4)
   }).pipe(Effect.provide(environment([...plans, recovered])))
 }), 90_000)
+
+it.instance("a parent request built before the current memory waits for a turn that carries it", () => Effect.gen(function* () {
+  const first = yield* held(FIRST)
+  const second = yield* held(SECOND)
+  yield* Effect.gen(function* () {
+    const continuity = yield* SessionContinuity.Service
+    const sessions = yield* Session.Service
+    const sessionID = yield* seed()
+    yield* applyFirst(sessionID, first)
+    // The model never matches, so a request that passes the memory check falls back to the isolated producer.
+    const request = (system: string[], contextMemory: boolean) => ({
+      sessionID, model: { providerID: "none", id: "none" }, system, messages: [], tools: {}, contextMemory,
+    }) as unknown as LLM.StreamInput
+    yield* continuity.observe({ sessionID, request: request(["parent system"], false), messageIDs: [] })
+    yield* complete(yield* begin(sessionID, "STALE_TURN"), "STALE_REPLY", 50_000)
+    const stale = yield* jobFor(sessionID, (yield* sessions.messages({ sessionID })).at(-1)!.info.id)
+    yield* terminal(stale.id, "completed", "discarded")
+    expect(yield* Deferred.isDone(second.entered)).toBe(false)
+    const memory = (yield* prepare(sessionID)).system
+    yield* continuity.observe({ sessionID, request: request(memory, true), messageIDs: [] })
+    yield* complete(yield* begin(sessionID, "FRESH_TURN"), "FRESH_REPLY", 50_000)
+    const hit = yield* entered(second)
+    expect(packet(hit.request)).toContain(FIRST)
+    yield* Deferred.succeed(second.release, undefined)
+    yield* terminal(hit.jobID, "completed", "applied")
+  }).pipe(Effect.provide(environment([first, second])))
+}), 60_000)

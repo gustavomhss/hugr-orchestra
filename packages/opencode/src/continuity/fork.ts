@@ -42,6 +42,17 @@ function denied(tool: Tool): Tool {
 }
 
 /**
+ * Whether the parent request carries the working memory this snapshot builds on.
+ * A turn that started before the last swap still shows the older memory, so a
+ * producer replaying it would emit ops against items it cannot see.
+ */
+export function carriesMemory(parent: ParentRequest, captured: MemorySnapshot) {
+  const memory = captured.previous?.text
+  if (!memory) return parent.input.contextMemory !== true
+  return parent.input.contextMemory === true && parent.input.system.some((part) => part.includes(memory))
+}
+
+/**
  * Rebuild the parent's last request with one appended instruction so the provider
  * reuses the parent's prompt cache: same model, system, tools, options and cache key.
  * Returns undefined when that request cannot carry this snapshot safely.
@@ -57,6 +68,7 @@ export function replay(
   // A forced tool call or structured output would make the producer reply unusable.
   if (input.toolChoice === "required" || input.responseSchema !== undefined) return
   if (input.model.providerID !== model.providerID || input.model.id !== model.id) return
+  if (!carriesMemory(parent, captured)) return
   const sent = new Set(parent.messageIDs)
   if (!captured.head.length || !captured.head.every((message) => sent.has(message.info.id))) return
   const tools = Object.entries(input.tools)
