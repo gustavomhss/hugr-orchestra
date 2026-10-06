@@ -3,7 +3,7 @@ export * as PluginInternal from "./internal"
 import { makeLocationNode } from "../effect/app-node"
 import { httpClient } from "../effect/app-node-platform"
 import type { PluginContext } from "@opencode-ai/plugin/v2/effect"
-import { Effect, Layer, Scope } from "effect"
+import { Cause, Effect, Layer, Scope } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { CommandV2 } from "../command"
@@ -104,6 +104,9 @@ const layer = Layer.effectDiscard(
       return plugin.add(PluginV2.ID.make(loaded.id), loaded.effect)
     }
 
+    // The boot finishes before the location is handed out. The batch only materializes agents, commands and the
+    // catalog once every plugin is added, so a forked boot let the first request on a new location read empty state.
+    // A failing plugin still leaves the location usable, as it did when the boot ran in the background.
     yield* State.batch(
       Effect.gen(function* () {
         yield* add(ConfigReferencePlugin.Plugin)
@@ -118,7 +121,13 @@ const layer = Layer.effectDiscard(
         yield* add(ConfigProviderPlugin.Plugin)
         yield* add(VariantPlugin.Plugin)
       }),
-    ).pipe(Effect.withSpan("PluginInternal.boot"), Effect.forkScoped({ startImmediately: true }))
+    ).pipe(
+      Effect.withSpan("PluginInternal.boot"),
+      Effect.catchCauseIf(
+        (cause) => !Cause.hasInterrupts(cause),
+        (cause) => Effect.logError("internal plugin boot failed", { cause }),
+      ),
+    )
   }),
 )
 

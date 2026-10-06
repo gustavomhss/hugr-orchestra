@@ -196,6 +196,26 @@ describe("LocationServiceMap", () => {
     ),
   )
 
+  it.live("opens a location with the built-in agents already registered", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((dir) =>
+        Effect.gen(function* () {
+          const agents = yield* AgentV2.Service
+          // Read before anything else yields: the first request on a new location must not see the roster empty.
+          expect((yield* agents.all()).map((agent) => agent.id)).toEqual(
+            expect.arrayContaining([AgentV2.ID.make("build"), AgentV2.ID.make("plan")]),
+          )
+        }).pipe(
+          Effect.scoped,
+          Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
+        ),
+      ),
+    ),
+  )
+
   it.live("installs public plugins into a location", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
