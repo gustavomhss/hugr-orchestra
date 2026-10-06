@@ -5,6 +5,7 @@ import { Context } from "effect"
 import { HttpApiApp } from "../../src/server/routes/instance/httpapi/server"
 import { resetDatabase } from "../fixture/db"
 import { disposeAllInstances, tmpdir } from "../fixture/fixture"
+import { rethrow } from "../lib/rejection"
 
 const context = Context.empty() as Context.Context<unknown>
 
@@ -112,7 +113,7 @@ describe("v2 agent file HttpApi", () => {
     expect(await fs.readFile(filepath, "utf8")).toBe(
       "---\ndescription: Keeps docs current\ncolor: '#336699'\nmode: primary\npermission:\n  edit: deny\n---\nNew prompt\n",
     )
-    await expect(fs.stat(path.join(tmp.path, ".opencode", "agent"))).rejects.toThrow()
+    expect(await rethrow(fs.stat(path.join(tmp.path, ".opencode", "agent")))).toThrow()
     expect((await agents(tmp.path)).find((agent) => agent.id === "docs")).toMatchObject({
       description: "Keeps docs current",
       mode: "primary",
@@ -289,6 +290,6 @@ describe("v2 agent file HttpApi", () => {
       })
       expect(response.status).toBe(400)
     }
-    await expect(fs.stat(path.join(tmp.path, ".opencode"))).rejects.toThrow()
+    expect(await rethrow(fs.stat(path.join(tmp.path, ".opencode")))).toThrow()
   })
 })

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, mock, spyOn, test } from "bun:test"
 import { OpencodeClient, type GlobalEvent } from "@opencode-ai/sdk/v2"
 import { createSessionTransport } from "@/cli/cmd/run/stream.transport"
 import type { FooterApi, FooterEvent, LocalReplayRow, RunFilePart, StreamCommit } from "@/cli/cmd/run/types"
+import { rethrow } from "../../lib/rejection"
 
 type EventStream = Awaited<ReturnType<OpencodeClient["event"]["subscribe"]>>["stream"]
 type GlobalEventStream = Awaited<ReturnType<OpencodeClient["global"]["event"]>>["stream"]
@@ -2253,16 +2254,15 @@ describe("run stream transport", () => {
     })
 
     try {
-      await expect(
-        transport.runPromptTurn({
-          agent: undefined,
-          model: undefined,
-          variant: undefined,
-          prompt: { text: "hello", parts: [] },
-          files: [],
-          includeFiles: false,
-        }),
-      ).rejects.toThrow("boom")
+      const turn = transport.runPromptTurn({
+        agent: undefined,
+        model: undefined,
+        variant: undefined,
+        prompt: { text: "hello", parts: [] },
+        files: [],
+        includeFiles: false,
+      })
+      expect(await rethrow(turn)).toThrow("boom")
     } finally {
       await transport.close()
     }
@@ -2301,16 +2301,15 @@ describe("run stream transport", () => {
     })
 
     try {
-      await expect(
-        transport.runPromptTurn({
-          agent: undefined,
-          model: undefined,
-          variant: undefined,
-          prompt: { text: "hello", parts: [] },
-          files: [],
-          includeFiles: false,
-        }),
-      ).rejects.toThrow("instance disposed")
+      const turn = transport.runPromptTurn({
+        agent: undefined,
+        model: undefined,
+        variant: undefined,
+        prompt: { text: "hello", parts: [] },
+        files: [],
+        includeFiles: false,
+      })
+      expect(await rethrow(turn)).toThrow("instance disposed")
     } finally {
       await transport.close()
     }
@@ -2342,16 +2341,15 @@ describe("run stream transport", () => {
         signal: ctrl.signal,
       })
 
-      await expect(
-        transport.runPromptTurn({
-          agent: undefined,
-          model: undefined,
-          variant: undefined,
-          prompt: { text: "two", parts: [] },
-          files: [],
-          includeFiles: false,
-        }),
-      ).rejects.toThrow("prompt already running")
+      const turn = transport.runPromptTurn({
+        agent: undefined,
+        model: undefined,
+        variant: undefined,
+        prompt: { text: "two", parts: [] },
+        files: [],
+        includeFiles: false,
+      })
+      expect(await rethrow(turn)).toThrow("prompt already running")
 
       ctrl.abort()
       await task
