@@ -170,12 +170,13 @@ def main():
             page = first.pop("value", None)
             window = next((item for item in (page or {}).get("items", []) if item["parentRef"] is None
                            and item["roleName"] in ("frame", "window") and 1 in item["states"]), None)
-            key = timed(bus, registry, binding, args.deadline_ms, lambda context: press(context, window["ref"], "end")) if window else {}
+            key = timed(bus, registry, binding, args.deadline_ms, lambda context: press(context, window["ref"], "f12")) if window else {}
             key.pop("value", None)
             receipt["keys-no-target"] = {"rootsPage": first, "key": key, "ms": round((monotonic() - started) * 1000)}
             # ui_type by target, as act() does it: two whole-tree scans, a third up to the winner's page, then the type.
             started = monotonic()
-            wanted = lambda item: "search settings" in item["name"].lower() and item["capabilities"]["type"]["supported"]
+            # VS Code's Settings search is a Monaco field: keyboard mode only.
+            wanted = lambda item: "search settings" in item["name"].lower() and item["capabilities"]["keyboardType"]["supported"]
             first, _ = scan(bus, registry, binding, args.deadline_ms, query, wanted)
             second, _ = scan(bus, registry, binding, args.deadline_ms, query, wanted)
             winner = next((index for index, page in enumerate(first) if page.get("match")), None)
@@ -186,9 +187,12 @@ def main():
                 MAX_PAGES[0] = limit
                 flow["scan3"] = summary(third)
                 field = third[-1].get("match")
-                typed = timed(bus, registry, binding, args.deadline_ms, lambda context: replace_text(context, field["ref"], "font size")) if field else {}
+                typed = timed(bus, registry, binding, args.deadline_ms, lambda context: replace_text(context, field["ref"], "font size", "keyboard")) if field else {}
                 typed.pop("value", None)
                 flow["type"] = typed
+                # Restore the unfiltered Settings list for the next run; focus is still in the field.
+                subprocess.run(["xdotool", "key", "--clearmodifiers", "ctrl+a", "BackSpace"], check=True, timeout=5)
+                sleep(args.settle_s)
             flow["ms"] = round((monotonic() - started) * 1000)
             receipt["type-by-target"] = flow
         store.unbind(binding)

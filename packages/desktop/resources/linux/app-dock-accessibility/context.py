@@ -10,6 +10,10 @@ A = "org.a11y.atspi."
 ROOT = "/org/a11y/atspi/accessible/root"
 DBUS = "org.freedesktop.DBus"
 
+# timeoutMs stays 10 s (host limits.timeoutMs must match). Measured on VS Code 1.140
+# Settings (~870 workspace nodes, 2026-10-05): read pages end by construction at the
+# 5 s slice (observed <= 5.3 s) or the 8.5 s call cutoff; a key took <= 0.1 s
+# (23 calls) and a keyboard-mode type <= 5.5 s with VS Code held to half a CPU.
 LIMITS = {"frameBytes": 262144, "bindings": 8, "refs": 512, "nodes": 512,
           "calls": 1600, "depth": 40, "text": 20000, "field": 256,
           "pending": 32, "timeoutMs": 10000, "cursors": 2, "proposals": 8,
