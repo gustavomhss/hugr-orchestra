@@ -213,7 +213,7 @@ describe("Atlas resume fold residency across compaction", () => {
     "a non-backend Session gets nothing",
     () =>
       Effect.gen(function* () {
-        const session = yield* (yield* Session.Service).create({ agent: "build" })
+        const session = yield* (yield* Session.Service).create({ agent: "maestro" })
         yield* turn(session.id, "packet", ADMISSION)
         yield* turn(session.id, "older turn")
         yield* turn(session.id, "recent turn")
