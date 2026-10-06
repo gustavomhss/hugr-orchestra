@@ -1,6 +1,7 @@
 export * as LedgerChain from "./chain"
 
 import path from "node:path"
+import { createHash, createHmac } from "node:crypto"
 import { appendFileSync, mkdirSync, readFileSync, rmdirSync } from "node:fs"
 import { Effect, Redacted, Result, Schema } from "effect"
 import { RelayJson } from "../json"
@@ -67,8 +68,8 @@ export const LOCK_INTERVAL_MS = 50
 // The keyed or plain digest of a signed body, as hex. Verification uses the same function.
 export const mac = (body: string, key?: Redacted.Redacted<string>): string => {
   const secret = key === undefined ? "" : Redacted.value(key)
-  const hasher = secret === "" ? new Bun.CryptoHasher("sha256") : new Bun.CryptoHasher("sha256", secret)
-  return hasher.update(body).digest("hex")
+  if (secret === "") return createHash("sha256").update(body).digest("hex")
+  return createHmac("sha256", secret).update(body).digest("hex")
 }
 
 /**

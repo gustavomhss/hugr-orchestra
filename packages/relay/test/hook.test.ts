@@ -373,6 +373,90 @@ describe("patterns", () => {
     )
   })
 
+  test("path globs agree with Bun's own matcher, which HookGlob ports for Node", () => {
+    // Each hand-picked row separates a HookGlob mutant the seeded rows missed; the seeded rows mix the same syntax.
+    const nest = (depth: number) => "{".repeat(depth) + "a" + "}".repeat(depth)
+    const curated: ReadonlyArray<readonly [string, string]> = [
+      ...[9, 10, 11].map((depth) => [nest(depth), "a"] as const),
+      ["{a,{b,{c,d}}}", "d"],
+      ["{a\\,b,c}", "a,b"],
+      ["{a\\,b}", "b"],
+      ["{a\\}b,c}", "a}b"],
+      ["{a,b\\}}", "a}"],
+      ["src/{**/a,b}", "src/x/y/a"],
+      ["src/{a,**/b}", "src/x/y/b"],
+      ["[^.]", "a"],
+      ["[^a]", "a"],
+      ["[!a]", "b"],
+      ["[a-c]", "b"],
+      ["[z-a]", "b"],
+      ["[é-ü]", "ö"],
+      ["[😀-😂]", "😁"],
+      ["[\\b]", "\b"],
+      ["[\\]]", "]"],
+      ["[\\é]", "é"],
+      ["\\é", "é"],
+      ["\\b", "\b"],
+      ["\\n", "\n"],
+      ["\\a", "a"],
+      ["\\*", "*"],
+      ["\\*", "a"],
+      ["a\\\\b", "a\\b"],
+      ["a/*", "a\\b"],
+      ["a/b", "a\\b"],
+      ["?", "é"],
+      ["??", "é"],
+      ["?", "\ud800"],
+      ["é*", "éa"],
+      ["**", ".env"],
+      ["src/*", "src/.env"],
+      ["*.{ts,tsx}", "a.tsx"],
+      ["!src/**", "lib/a"],
+      ["!!src/**", "src/a"],
+      ["!", ""],
+      ["!a", ""],
+      ["[", "a"],
+      ["[a", "a"],
+      ["a\\", "a"],
+      ["!a\\", "b"],
+      ["a/**/*", "a"],
+      ["**/", "a/"],
+      ["**/", "aa"],
+      ["a/**", "a"],
+      ["a/**", "a/"],
+      ["**/a", "a"],
+      ["a**b", "axb"],
+      ["a**b", "ax/b"],
+      ["**a", "x/a"],
+      ["a/**/**/b", "a/b"],
+      ["a/**/**", "a/x/y"],
+      ["**/**", "a"],
+      ["****/**", ""],
+    ]
+    const ATOMS = ["src", "a", "b", "**", "*", "?", "a?", "*.ts", "*.{ts,tsx}", "{a,b}", "{a,{b,{c,d}}}", "{**/a,b}"]
+    const MORE = ["[a-c]", "[!a]*", "[^.]", "[\\]a]", "[é-ü]", "[z-a]", "\\*", "\\b", "\\n", "\\a", ".env", "é*"]
+    const ODD = ["x{y,{z,w}}", "", "!", "{", "}", ",", "[", "\\"]
+    const NAMES = ["src", "a", "b", "c", "d", "x", "y", "z", "w", "a.ts", "b.tsx", ".env", "*", "é", "ü", "\b", "\n"]
+    const atoms = [...ATOMS, ...MORE, ...ODD]
+    const names = [...NAMES, "]", "ab", "", "a\\b"]
+    const random = seeded(20261006)
+    const some = (list: ReadonlyArray<string>, separator: string) =>
+      Array.from({ length: 1 + random(4) }, () => list[random(list.length)]!).join(separator)
+    const generated = Array.from(
+      { length: 20_000 },
+      () => [["", "", "", "!", "!!"][random(5)]! + some(atoms, random(4) === 0 ? "" : "/"), some(names, "/")] as const,
+    )
+    const rows = [...curated, ...generated]
+    const differ = rows.filter(
+      ([pattern, value]) => HookEvaluate.matches("path", pattern, value) !== new Bun.Glob(pattern).match(value),
+    )
+    expect(differ).toEqual([])
+    // Both outcomes are well represented, so agreement is not two matchers that always say no.
+    const matched = rows.filter(([pattern, value]) => new Bun.Glob(pattern).match(value)).length
+    expect(matched).toBeGreaterThan(rows.length / 10)
+    expect(matched).toBeLessThan(rows.length / 2)
+  })
+
   test("tool, command and event use Orchestra's Wildcard", () => {
     const ROWS = [
       ["command", "git push*", "git push origin dev", true],
@@ -475,3 +559,12 @@ describe("session triggers", () => {
     expect(fired([stop, anyTool], call("tool.after", { tool: "glob" }))).toEqual(["tool:r"])
   })
 })
+
+// A deterministic generator: the same rows on every run and every OS.
+function seeded(seed: number) {
+  const state = { seed }
+  return (bound: number) => {
+    state.seed = (state.seed * 1103515245 + 12345) % 2 ** 31
+    return state.seed % bound
+  }
+}

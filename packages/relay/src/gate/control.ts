@@ -1,6 +1,7 @@
 export * as GateControl from "./control"
 
-import { stat } from "node:fs/promises"
+import { createHash } from "node:crypto"
+import { readFile, stat } from "node:fs/promises"
 import { Effect, Option, Schema } from "effect"
 import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
 import type { RelaySprint } from "@opencode-ai/schema/relay-sprint"
@@ -112,9 +113,7 @@ export const artifactSha = (paths: string, workdir: string): Effect.Effect<Optio
         )
           return `${path}:absent\\n`
         // `[ -f ]` passed but `shasum < file` could not read: bash recorded an empty digest.
-        const bytes = await Bun.file(file)
-          .bytes()
-          .catch(() => undefined)
+        const bytes = await readFile(file).catch(() => undefined)
         return `${path}:${bytes ? sha256(bytes) : ""}\\n`
       }),
     )
@@ -297,11 +296,7 @@ function contextNames(context: unknown) {
 // judge.py reads each file in text mode: strict UTF-8 and universal newlines. A missing, unreadable or undecodable
 // file has no text (PARITY-EXCEPTIONS WP3-5). The judge sees the basename.
 function readContext(file: string): Effect.Effect<JudgeConfig.File> {
-  return Effect.promise(() =>
-    Bun.file(file)
-      .bytes()
-      .catch(() => undefined),
-  ).pipe(
+  return Effect.promise(() => readFile(file).catch(() => undefined)).pipe(
     Effect.map((bytes) => {
       const decoded = bytes ? GateDiff.utf8(bytes) : Option.none<string>()
       const name = file.slice(file.lastIndexOf("/") + 1)
@@ -315,7 +310,7 @@ function newlines(value: string) {
 }
 
 function sha256(value: string | Uint8Array) {
-  return new Bun.CryptoHasher("sha256").update(value).digest("hex")
+  return createHash("sha256").update(value).digest("hex")
 }
 
 // bash `printf '%b'` (`bexpand`): the backslash escapes below, `\c` ends all output, anything else stays as written.

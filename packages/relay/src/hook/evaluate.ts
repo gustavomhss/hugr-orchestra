@@ -2,6 +2,7 @@ export * as HookEvaluate from "./evaluate"
 
 import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
+import { HookGlob } from "./glob"
 
 // Pure hook evaluation (WP9): which installed actions fire for one invocation, in what order. Core enforces them
 // (WP11); nothing here grants anything. The Python Relay never ran hooks, so there is no golden: the tests pin this.
@@ -49,10 +50,10 @@ export const plan = (installs: ReadonlyArray<RelayHook.Install>, invocation: Inv
     .toSorted((a, b) => a.order - b.order)
     .flatMap((install) => fire(install, invocation))
 
-// `**` crosses directories in path patterns (Bun.Glob, minimatch-like and case-sensitive); other fields use Orchestra's
+// `**` crosses directories in path patterns (HookGlob: minimatch-like and case-sensitive); other fields use Orchestra's
 // permission Wildcard.
 export const matches = (field: "path" | "tool" | "command" | "event", pattern: string, value: string): boolean => {
-  if (field === "path") return new Bun.Glob(pattern).match(value)
+  if (field === "path") return HookGlob.match(pattern, value)
   const fold = process.platform === "win32"
   const normalized = pattern.replaceAll("\\", "/")
   const subject = value.replaceAll("\\", "/")
