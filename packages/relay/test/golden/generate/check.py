@@ -48,6 +48,7 @@ GATE = RELAY / "bin" / "relay-gate"
 ORACLE_FILES = ["bin/relay-arm-hook.sh", "bin/relay-gate", "lib/relay-gate.sh", "benchmark/judge.py"]
 FORMAT = GOLDEN / "FORMAT.md"
 
+JQ = "jq-1.8.1"
 TOKEN = "tok"
 EPOCH = 1700000000
 STEP = 60
@@ -85,10 +86,10 @@ def tools():
     path = os.pathsep.join(dirs)
     probe = {"PATH": path}
     jq = run_text(["jq", "--version"], probe)
-    # FORMAT pins jq 1.7.x. jq 1.8 prints the integers, escapes and key order this oracle produces identically;
-    # 1.6 (macOS /usr/bin/jq) does not, so it is refused.
-    if not re.fullmatch(r"jq-1\.[78]\.\d+", jq):
-        sys.exit(f"generator: jq 1.7.x or 1.8.x required, found {jq!r} on {path}")
+    # Number printing and escapes differ between jq versions (plan R1), so the generator runs only on the version the
+    # committed goldens were made with. Changing JQ is a regeneration and its own reviewed change.
+    if jq != JQ:
+        sys.exit(f"generator: {JQ} required, found {jq!r} on {path}")
     bash = run_text(["bash", "-c", 'printf %s "$BASH_VERSION"'], probe)
     if not bash.startswith("5."):
         sys.exit(f"generator: bash 5.x required, found {bash!r}")
