@@ -5,18 +5,18 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-06T16:13:51Z
-- **Files:** 71
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `4b4dd21bae6f5fc751b22d06915377e49084ebea7ac58cc76bd876cf7fb714e0`
+- **Generated:** 2026-10-06T16:30:59Z
+- **Files:** 73
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `88f8b3b37c90bb1f3cd2cb46a07c422816179b14bd461cd5a05169f7f81fac42`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
 | `AGENTS.md` | 50 | 2535 | `bcbbd5ecdc6f9f918a125149605eb10ab79069aee6ffc19f45640bae50c28765` |
-| `CHANGELOG.md` | 303 | 25111 | `d6fd0df278e5932b56118b5e35ef485997af697d19c71c6303cdad672d650fdf` |
+| `CHANGELOG.md` | 312 | 25705 | `55c274fec7d13c2e8f657d85b9087d07c66cdc40acc7f6e53254565091887a1a` |
 | `CONTRIBUTING.md` | 60 | 2842 | `953c9d8f8dced59cb5f460b3b2adf522fd791f0c51bc16252eaab35edef8a02b` |
-| `PRODUCT.md` | 113 | 11309 | `8eec797d8830e8fc3b26e1d0028c2eeced7bfa268fd6e59d40f66aeefbb2f6b4` |
-| `README.md` | 100 | 5995 | `64777388a955d4b781d42c9d5b6d8a1eb2d63837ce06f80f96e83fdc895eb05d` |
-| `SPEC.md` | 422 | 33070 | `1e035abccaf835d3da6db8657526b889afc0eb0f7723f2591a23f7695e38c9b0` |
+| `PRODUCT.md` | 114 | 11597 | `0fdda087d136eae1e20bd151e2f76a00afa796940783e8148855218fb3b67ad6` |
+| `README.md` | 102 | 6174 | `4e35af897c2a32dbf0221e4d81e6818aa4ea0ed290571418173bc185c4cadce5` |
+| `SPEC.md` | 443 | 34564 | `953428d6dd99e656e87a4fd986c89dba9d33abd1836a0bd851ac6bd936a40d89` |
 | `WHITEPAPER.md` | 123 | 7684 | `febba8ec4a88c9f2a8e4222039a9fab007eafe81c9f935a3b6ef731d292c912d` |
 | `benchmark/DESIGN.md` | 83 | 5594 | `96c0f824a36bf6fb4b7b2763cfba95499d1933680c6c7a8d4fcd3ce7df47e443` |
 | `benchmark/GOALS.md` | 44 | 3053 | `d138b4cdafe719702adf55d27e8f98628e862538fd399cf3733453e07fbaf29f` |
@@ -27,8 +27,9 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `benchmark/campaigns/02-billing-engine-pro/README.md` | 43 | 2538 | `b7dd5b358ec9c9ded9c8ef3c6941558728a381788fd91462c1e8fb6959d71297` |
 | `benchmark/campaigns/README.md` | 50 | 2959 | `8db1bc58e09f5e1b558ecbe282f1d505f235626763d016724f110f7db0ff59cd` |
 | `docs/FINDING-self-graded-review-verdicts.md` | 116 | 8165 | `97a52eb9ae6e780e321b16a97c9ee6252f465dd295fdc295dea0bbebda97fb60` |
-| `docs/README.md` | 45 | 2526 | `ef3e847458e6bfe0949adfdc1ebeb8400cb95aa56a3da7b0e7b8ad57f8b8ac82` |
+| `docs/README.md` | 46 | 2611 | `593e8ccec9812d5a33e6f4e46056a94e0aedce817ca4330b330b0a2f2500f308` |
 | `docs/architecture.md` | 199 | 15560 | `7a81d8513ce5df669c562fb8868454347d32df9dd57c4e68c60b6955e182b988` |
+| `docs/authoring-api.md` | 90 | 5926 | `cdb77e1328dfd044ed7f7642c9f5e8e7810505443ac023019bc4e0906bf2bfe9` |
 | `docs/authoring-sprints.md` | 248 | 16966 | `a54d5c8e16cc0f515b70d2f626fa2f2cc93e51dc8ff72ae134e25a4787481c11` |
 | `docs/auto-decompose.md` | 71 | 3589 | `a614f0b3b432fe36d1efdecb79a58e8fa6a9efb9cd6705cf20b0e3fd11a27e09` |
 | `docs/compaction.md` | 58 | 2569 | `ab6c2fc73746c1005748540a44bd586defe2619b049d9bd911e7f86eda96683a` |
@@ -58,19 +59,20 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/sdk.md` | 165 | 9702 | `8fbe49a6da1a38cdd94300db54d8ff3c5577c7896ac2f0a00dad194146ffb66a` |
 | `docs/skills/relay-arm-hook/SKILL.md` | 114 | 14360 | `d8be9b58576e2a076b2b56a8f6beac031fa3907cdd342043b7b4a118ea5fb23b` |
 | `docs/skills/relay-audit/SKILL.md` | 114 | 15918 | `bcf595da0aa73e725cc20972299e7d9c6404ada243f79070be351cac02f32831` |
+| `docs/skills/relay-authoring/SKILL.md` | 77 | 4027 | `ad8e72d11cbc53a6d13ee71ce26638d456af15538522f3683f84087383bf6517` |
 | `docs/skills/relay-autodecompose/SKILL.md` | 98 | 5339 | `d2b11f5e65f9614f6ca6a1d123e31cd1fb7aaee5755bea3bc3b30599c5c35f37` |
 | `docs/skills/relay-benchmark/SKILL.md` | 144 | 12613 | `db5c6a14cc1baf0540bd4c36346f6f85f366fbdadec0e5db196f15d5ef09f8e7` |
-| `docs/skills/relay-blast-radius/SKILL.md` | 133 | 18470 | `183ad47115e59f618922105bbe0ff3b3e5dd68c32c081351561509f7b4695476` |
+| `docs/skills/relay-blast-radius/SKILL.md` | 135 | 18837 | `c096ad9bd02662e92875eb62d69686de3b8dba80dbf0915fd76744ca9a675014` |
 | `docs/skills/relay-daemon/SKILL.md` | 111 | 13601 | `c75caabbe1078f3c6f87e977097c2b0b5c3ad693c7c0c2ff764f21fe03a236c6` |
 | `docs/skills/relay-design/SKILL.md` | 112 | 10541 | `a6a42839a95e19a2a7bf602b4cd47e90c17eff23a4367626162681c61b367080` |
-| `docs/skills/relay-doc-tooling/SKILL.md` | 121 | 9121 | `fa1b8ad8a937c3cecdef8355a055a019da93cbb69f5a4ffc4265922a9a6e8101` |
+| `docs/skills/relay-doc-tooling/SKILL.md` | 121 | 9118 | `c02066b8c6523ddb940f780520dc82d0caf2d52187ea457ca6323e52136a6fbc` |
 | `docs/skills/relay-examples/SKILL.md` | 104 | 7212 | `ef86acf94d5a4912aa5230d064c9ffe195c1b59e4e14588ecc27af4f97aa15fb` |
 | `docs/skills/relay-gate-cli/SKILL.md` | 120 | 15105 | `f6160a218de45e051c0a77afc4e6e37a1c125fcae0b54a16fe190743bbff5774` |
 | `docs/skills/relay-gate-core/SKILL.md` | 125 | 17366 | `10b212690f43852d573e83a67992a42d66da0433414485449424a72ea4e82b77` |
-| `docs/skills/relay-integration/SKILL.md` | 241 | 18628 | `70f03f891af8207f6a29bfdb8b31daea34b2c494138c8d7d6e27a8cae8fd9e76` |
+| `docs/skills/relay-integration/SKILL.md` | 243 | 18835 | `9764ca3b567869ed6a1a8b51e82ba81d209dc9bc06da4637ee161025bf8ddd49` |
 | `docs/skills/relay-judge/SKILL.md` | 136 | 10357 | `6425ae13fe4a13953a4652afe81af0de45868b7588693e4113c1672603de6f38` |
 | `docs/skills/relay-maintenance/SKILL.md` | 134 | 11001 | `714ddde66e3e7046c10be48c03554cb10cae966404426a9b34365ae20bd93ad1` |
-| `docs/skills/relay-ownership/SKILL.md` | 106 | 9034 | `10971c72a01f90774c52bfd96d530dfd0ce780f457c99630f072084717950415` |
+| `docs/skills/relay-ownership/SKILL.md` | 107 | 9182 | `b4870a7b649a68d781694cca34b3b0ea13f83f7bb4637edcec5dc2a57588c718` |
 | `docs/skills/relay-planning/SKILL.md` | 100 | 8782 | `9a3461e0b7d46018a2e5e572aae70da7009dabf7d6f5ce822766b03255fc2fea` |
 | `docs/skills/relay-policies/SKILL.md` | 113 | 7294 | `bfd4bddefc9e5302d387159c82e0a8dbf5097d6899b9a126fa71db37135348c7` |
 | `docs/skills/relay-profiles/SKILL.md` | 102 | 10238 | `06d364ef3aeda4f8e652600ce19ca1ce7d8a83e69b07b26fa3a640e37abca92b` |

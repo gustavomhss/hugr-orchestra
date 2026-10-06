@@ -30,6 +30,7 @@ New operational guides live in `docs/skills/relay-*/SKILL.md`.
 
 | Surface | Skills |
 |---|---|
+| Authoring service and API | [relay-authoring](docs/skills/relay-authoring/SKILL.md) |
 | Gate evaluation and hooks | [relay-gate-core](docs/skills/relay-gate-core/SKILL.md), [relay-arm-hook](docs/skills/relay-arm-hook/SKILL.md), [relay-gate-cli](docs/skills/relay-gate-cli/SKILL.md) |
 | Audit and run views | [relay-audit](docs/skills/relay-audit/SKILL.md), [relay-telemetry](docs/skills/relay-telemetry/SKILL.md) |
 | Runtime coordination | [relay-daemon](docs/skills/relay-daemon/SKILL.md) |
@@ -39,6 +40,7 @@ New operational guides live in `docs/skills/relay-*/SKILL.md`.
 
 ## Run or inspect
 
+- Serve workflow and hook authoring for Orchestra: [authoring API](docs/authoring-api.md).
 - Configure an arm: [getting-started](docs/getting-started.md),
   [per-agent arms](docs/per-agent-arms.md).
 - Drive a non-hook harness: [gate CLI contract](docs/sdk.md).

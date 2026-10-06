@@ -23,6 +23,8 @@ Use when wiring gate outcomes into harness continuation. Choose one driver per r
 - Harness owns dispatch, the first WP prompt, workdir, environment, state isolation, and escalation handling.
 - Gate owns checklist evaluation and trace append; verifier owns integrity and recorded-control reporting.
 - Judge supplies non-independent semantic opinions. It never becomes a deterministic oracle.
+- [Authoring](../relay-authoring/SKILL.md) owns the authoring API. Its gate-only evaluation is not
+  Orchestra session dispatch or hook installation; see the [authoring API](../../../docs/authoring-api.md).
 
 ## Contracts
 

@@ -10,6 +10,15 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Authoring service — versioned API for Orchestra
+
+- Added `relay-api serve`, a loopback authoring service with a versioned `<base>api/v1/` API:
+  workspace-scoped documents, versions, scopes, skill bindings and uploads, sprint compilation,
+  `relay.hook.v1` export, publication, execution receipts, ledger audit and a server-sent event stream.
+- Evaluation delegates to the original daemon with frozen retry snapshots and same-run budgets.
+  Hook installation, agent dispatch and authentication remain host work.
+- Moved the operational skills from `.opencode/skills/` to `docs/skills/`.
+
 ### Runtime — repair failures exposed by independent review
 
 - Preserve decoded command/control text through current checks and JSONL regression/DoD transport,

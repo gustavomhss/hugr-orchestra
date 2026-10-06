@@ -24,6 +24,7 @@ Treat `docs/skills.json` as authority for exact source assignments, tests, depen
 
 | Module ID | Maintenance domain | Maintenance skill |
 |---|---|---|
+| `authoring` | Authoring service, versioned API, scoped persistence and gate evaluation adapter | [relay-authoring](../relay-authoring/SKILL.md) |
 | `gate-core` | Shared checklist evaluation, ledger append, and note adapter | [relay-gate-core](../relay-gate-core/SKILL.md) |
 | `arm-hook` | Per-agent hook binding, position, and arm state transitions | [relay-arm-hook](../relay-arm-hook/SKILL.md) |
 | `gate-cli` | Model-agnostic gate commands and index-based state | [relay-gate-cli](../relay-gate-cli/SKILL.md) |

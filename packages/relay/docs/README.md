@@ -26,6 +26,7 @@ It is the ownership inventory; do not maintain another source-file inventory in 
 | Sprint and control authoring | [authoring-sprints.md](authoring-sprints.md), [gates.md](gates.md) |
 | Environment and registration | [configuration.md](configuration.md), [per-agent-arms.md](per-agent-arms.md) |
 | Portable CLI and HTTP | [sdk.md](sdk.md), [daemon.md](daemon.md) |
+| Workflow and hook authoring for Orchestra | [authoring-api.md](authoring-api.md) |
 | Profile compilation | [profiles.md](profiles.md) |
 | Corpus, telemetry, policy and templates | [trace-corpus.md](trace-corpus.md), [telemetry.md](telemetry.md), [guardrails.md](guardrails.md), [spec-library.md](spec-library.md) |
 | Change procedure | [CONTRIBUTING.md](../CONTRIBUTING.md), [AGENTS.md](../AGENTS.md) |

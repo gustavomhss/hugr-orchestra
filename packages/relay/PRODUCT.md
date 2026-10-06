@@ -22,6 +22,7 @@ recorded prefix, not a delivered campaign.
 
 | Surface | Shipped implementation | Scope |
 |---|---|---|
+| Authoring service | [bin/relay-api](bin/relay-api), [authoring API](docs/authoring-api.md) | Versioned API for workflow and hook documents, sprint compilation, publication, scopes, skill bindings and gate evaluation through the daemon; Orchestra supervision and screens are host work |
 | Per-agent arms | [bin/relay-arm-hook.sh](bin/relay-arm-hook.sh) | `SubagentStop`, transcript-token binding, optional `agent_id` ownership check, named position, macro entry, retries, regression checks, parking and release; whole-evaluation `.run.lock`, busy exit `3` |
 | Gate core | [lib/relay-gate.sh](lib/relay-gate.sh) | Checklist evaluation; exact decoded command/judge oracle hashes, generation and origin fields; locked SHA-256/HMAC-SHA256 chain append |
 | Vendor-neutral CLI | [bin/relay-gate](bin/relay-gate) | One-step `eval` and checklist-only `check`; JSON outcomes; integer-counter driver; named position/base-ref overrides for `check` |

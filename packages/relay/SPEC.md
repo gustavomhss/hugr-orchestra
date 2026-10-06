@@ -418,5 +418,26 @@ when unmeasured; its data is not a cost estimate for CLI/benchmark runs.
 `cost` load entries without integrity or audit-schema checks; malformed input can still fail without
 structured JSON. Handle absent/unparseable output as an execution failure, not a verdict.
 
+## 7. Authoring service and host boundary
+
+`python3 bin/relay-api serve` runs the authoring service for one workspace on loopback. It owns
+workspace-scoped documents, versions, scopes, skill bindings and uploads, and execution receipts in
+SQLite, and exposes them through the versioned `<base>api/v1/` API that Orchestra consumes. It ships no UI.
+
+Workflow graphs compile to ordered flat WPs; phases map to macros and must be contiguous stretches of
+the chain. A start node carries the objective and per-WP retry budget, stays outside phases and is not a
+WP. Incomplete drafts save with diagnostics but cannot publish or evaluate; malformed shapes are refused
+before persistence. Saves carry a checksum and version guard. Publishing marks a definition available; it
+does not arm or schedule anything. Hook export is `relay.hook.v1` with `installed:false`; event binding
+is not implemented here.
+
+Evaluation delegates to the original daemon and CLI. A destination evaluates a prefix, not an isolated
+WP. Retry keeps the original sprint, skill snapshot, state directory and counters; only the latest failed
+attempt can retry, and any escalation in the run refuses retry without resetting its budget. A restart
+marks in-flight receipts crashed without rerunning them. The service does not cancel evaluations,
+dispatch agents, deliver ARM kinds, release arms or authenticate callers.
+
+See the [authoring API](docs/authoring-api.md) and the [authoring skill](docs/skills/relay-authoring/SKILL.md).
+
 See [architecture](docs/architecture.md), [authoring](docs/authoring-sprints.md),
 [configuration](docs/configuration.md), and [gates](docs/gates.md) for focused references.

@@ -157,7 +157,7 @@ pipeline:
     type: human_approval
     name: Wet Ink
     approver_pubkey: ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c
-    approval_prompt: Assine o design do Finance Funnel — você está assinando o escopo v1 e os riscos aceitos.
+    approval_prompt: Sign the Finance Funnel design. You are signing the v1 scope and the accepted risks.
     criteria:
     - owner_signed
   - id: checklist

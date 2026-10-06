@@ -57,8 +57,8 @@ Use when changing authored Markdown, source-to-skill ownership, or documentation
 - Document read/decode failures become `documentation-read` findings; guard CLI also reports caught check errors.
 - Empty documentation, skill, or source inventories produce findings; malformed/missing catalog produces findings.
   Guard exits 0 for valid structure, 1 for named findings, 2 for missing imported dependencies.
-- Index selects root `*.md` and recursively selects Markdown under `docs`, `benchmark`, `examples`, and
-  `.opencode/skills`; it excludes `docs/INDEX.md` itself and applies the shared authored-path filter.
+- Index selects root `*.md` and recursively selects Markdown under `docs` (skills included), `benchmark`
+  and `examples`; it excludes `docs/INDEX.md` itself and applies the shared authored-path filter.
 - Any path component beginning `_gen` or equal to `.git`, `__pycache__`, `.pytest_cache`, `.relay-state`,
   `.relay-ledger`, `_runs`, `runs`, `.live-runs`, `node_modules`, `.venv`, or `venv` is excluded.
 - Index hashes file bytes and a sorted hash/path manifest. `--check` writes nothing, ignores only the generated
