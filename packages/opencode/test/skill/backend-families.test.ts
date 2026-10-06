@@ -3,8 +3,9 @@ import fs from "fs/promises"
 import path from "path"
 
 // Family layout of the backend specialist's shared references (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md,
-// F6.4) and the per-reference word cap S-1b. Discovery, link resolution and depth-2 reachability are covered by
-// backend-skills.test.ts; this file checks what that one cannot see: which family a reference belongs to.
+// F6.4), the per-reference word cap S-1b, the frozen family tuples and the engine recipe pins (F6.11). Discovery, link
+// resolution and depth-2 reachability are covered by backend-skills.test.ts; this file checks what that one cannot see:
+// which family a reference belongs to and which versions it may name.
 
 const REFERENCES = path.resolve(import.meta.dir, "../../../backend-specialist/skills/backend-implement/references")
 // F6.4: `<familyId>` values, and the subset that may own a `languages/<familyId>.md` file.
@@ -12,14 +13,27 @@ const FAMILIES = ["python", "go", "rust", "js-ts", "effect", "next", "jvm", "dot
 const LANGUAGE_FAMILIES = ["python", "go", "rust", "js-ts", "jvm", "dotnet", "ruby", "php", "elixir"]
 // F6.4: `effect` and `next` build on the JavaScript and TypeScript language card instead of owning one.
 const SHARED_LANGUAGE = { effect: "js-ts", next: "js-ts" } as Record<string, string>
-// Lead ruling M3-6 (S-1b), counted in whitespace words like S-1.
+// Lead ruling M3-6 (S-1b), counted in whitespace words like S-1. It has no exceptions.
 const MAX_REFERENCE_WORDS = 700
-// Declared exceptions to S-1b. Each entry must still exceed the cap, so a fixed file has to leave the ledger.
-const OVERSIZED = {
-  "continuity.md": "authored before S-1b (840 words); trimming it belongs to the continuity owner",
-} as Record<string, string>
 // Lead ruling F6-D3 with M3-6: the frozen Go tuple.
 const GO_PINS = { chi: "v5.3.2", pgx: "v5.8.0", sqlc: "1.31.1" }
+// Lead rulings F6-D3b and F6-D3c: every file of these families, with the pins it must state. The language card states
+// the whole tuple; Express 4 and Fastify 4 are delta sections inside their framework file, not frozen majors.
+const TUPLES = {
+  python: {
+    "languages/python.md": ["3.12.11", "0.118.0", "0.48.0", "2.11.7", "2.0.43", "0.28.1"],
+    "frameworks/python/fastapi.md": ["0.118.0", "0.48.0"],
+    "libraries/python/pydantic.md": ["2.11.7"],
+    "libraries/python/sqlalchemy.md": ["2.0.43"],
+  },
+  "js-ts": {
+    "languages/js-ts.md": ["22.18.0", "5.1.0", "2.2.0", "5.6.1", "4.1.8", "8.16.3", "1.3.14"],
+    "frameworks/js-ts/express.md": ["5.1.0", "2.2.0", "4.21.2"],
+    "frameworks/js-ts/fastify.md": ["5.6.1", "4.29.1"],
+  },
+} as Record<string, Record<string, string[]>>
+// Ruling M3-3 (F5.5 pins): the first toolkit cut, one recipe per engine. gitleaks is a host-side scanner with none.
+const ENGINE_PINS = { "ast-grep": "0.45.3", sqlc: "1.31.1", buf: "1.73.0", kiota: "1.35.0" } as Record<string, string>
 
 describe("backend skill families", () => {
   test("keys family references by an allowed family id", async () => {
@@ -90,15 +104,7 @@ describe("backend skill families", () => {
         words: (await Bun.file(path.join(REFERENCES, file)).text()).split(/\s+/).filter(Boolean).length,
       })),
     )
-    expect(
-      counts.filter((item) => item.words > MAX_REFERENCE_WORDS && !(item.file in OVERSIZED)),
-    ).toEqual([])
-    // A ledger entry for a file that is gone or back under the cap is stale.
-    expect(
-      Object.keys(OVERSIZED).filter(
-        (file) => !counts.some((item) => item.file === file && item.words > MAX_REFERENCE_WORDS),
-      ),
-    ).toEqual([])
+    expect(counts.filter((item) => item.words > MAX_REFERENCE_WORDS)).toEqual([])
   })
 
   test("states the frozen Go tuple and no other version of its components", async () => {
@@ -129,6 +135,77 @@ describe("backend skill families", () => {
           .map((version) => ({ file: item.file, version })),
       ),
     ).toEqual([])
+  })
+})
+
+describe("backend skill family tuples and engine recipes", () => {
+  test("states each frozen family tuple and no other version inside the family", async () => {
+    const files = await listReferences()
+    const read = (file: string) => Bun.file(path.join(REFERENCES, file)).text()
+
+    const results = await Promise.all(
+      Object.entries(TUPLES).map(async ([family, pins]) => {
+        const owned = files.filter((file) => familyOf(file) === family)
+        const allowed = new Set(Object.values(pins).flat())
+        const texts = await Promise.all(owned.map(async (file) => ({ file, text: await read(file) })))
+        return {
+          family,
+          // Every family file declares its pins here, so a new file cannot slip past the version check.
+          undeclared: owned.filter((file) => !(file in pins)),
+          absent: Object.keys(pins).filter((file) => !owned.includes(file)),
+          unstated: texts.flatMap((item) =>
+            (pins[item.file] ?? [])
+              .filter((pin) => !item.text.includes(`\`${pin}\``))
+              .map((pin) => ({ file: item.file, pin })),
+          ),
+          foreign: texts.flatMap((item) =>
+            [...item.text.matchAll(/\b\d+\.\d+\.\d+\b/g)]
+              .map((match) => match[0])
+              .filter((version) => !allowed.has(version))
+              .map((version) => ({ file: item.file, version })),
+          ),
+        }
+      }),
+    )
+    expect(results).toEqual(
+      Object.keys(TUPLES).map((family) => ({ family, undeclared: [], absent: [], unstated: [], foreign: [] })),
+    )
+  })
+
+  test("pins each engine recipe and runs it only through the toolkit path", async () => {
+    const recipes = (await listReferences()).filter((file) => file.startsWith("recipes/external/"))
+    expect(recipes).toEqual(
+      Object.keys(ENGINE_PINS)
+        .map((id) => `recipes/external/${id}.md`)
+        .toSorted(),
+    )
+
+    const results = await Promise.all(
+      Object.entries(ENGINE_PINS).map(async ([id, pin]) => {
+        const text = await Bun.file(path.join(REFERENCES, `recipes/external/${id}.md`)).text()
+        return {
+          id,
+          pin: text.includes(`\`${pin}\``),
+          invokes: text.includes(`"$BACKEND_TOOLKIT_BIN/${id}"`),
+          // F5.31 outcomes the recipe must turn into a `tool` blocker.
+          outcomes: text.includes("toolkit-not-ready:") && text.includes("unsupported-target:"),
+          otherVersions: [...text.matchAll(/\b\d+\.\d+\.\d+\b/g)].map((match) => match[0]).filter((v) => v !== pin),
+          otherEngines: [...text.matchAll(/\$\{?BACKEND_TOOLKIT_BIN\}?"?\/([a-z0-9-]+)/g)]
+            .map((match) => match[1])
+            .filter((engine) => engine !== id),
+        }
+      }),
+    )
+    expect(results).toEqual(
+      Object.keys(ENGINE_PINS).map((id) => ({
+        id,
+        pin: true,
+        invokes: true,
+        outcomes: true,
+        otherVersions: [],
+        otherEngines: [],
+      })),
+    )
   })
 })
 
