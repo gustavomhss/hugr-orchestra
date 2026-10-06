@@ -162,7 +162,7 @@ export const compile = (
         const retained = previous.get(node.id)
         const wp = structuredClone(retained ?? {})
         const listed = get(params, "checklist", "[]")
-        const checks = typeof listed === "string" ? loads(listed) : listed
+        const checks = typeof listed === "string" ? strictJson(listed) : listed
         if (!Array.isArray(checks)) return refuse("Criteria must be a JSON list")
         checks.forEach((item) => {
           if (!isObject(item)) return refuse("A criterion must be a JSON object")
@@ -315,6 +315,9 @@ export const project = (
       >
     }),
   )
+
+// `loads`: the strict JSON reader for criteria text, with Python's messages.
+export const loads = (text: string): Effect.Effect<unknown, Refusal> => refusing(Effect.sync(() => strictJson(text)))
 
 // Throws a refusal from synchronous checks; only valid inside `refusing`.
 export const refuse = (message: string, status = 400, code = "invalid-request"): never => {
@@ -487,10 +490,10 @@ function orderedChain(graph: Graph, nodes: ReadonlyArray<GraphNode>) {
   return ordered
 }
 
-// `loads`: CPython's C json scanner with Relay's hooks. A repeated key or a NaN/Infinity constant is refused, and every
+// CPython's C json scanner with Relay's hooks. A repeated key or a NaN/Infinity constant is refused, and every
 // message is Python's, with positions counted in code points as Python counts them. Scanning loops, rather than
 // recursing per character or element, so long criteria cannot exhaust the stack; only nesting recurses, as in Python.
-function loads(source: string): unknown {
+function strictJson(source: string): unknown {
   const chars = Array.from(source)
   const fail = (message: string, at: number): never => {
     const before = chars.slice(0, at)

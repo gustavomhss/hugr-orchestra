@@ -1,8 +1,43 @@
 import { describe, expect, test } from "bun:test"
+import { readdirSync } from "node:fs"
+import path from "node:path"
 import { Effect } from "effect"
+import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
+import type { RelaySprint } from "@opencode-ai/schema/relay-sprint"
 import { AuthoringGraph } from "../src/authoring/graph"
 import { AuthoringHook } from "../src/authoring/hook"
 import { AuthoringLint } from "../src/authoring/lint"
+
+// G1 authoring goldens (test/golden/generate/authoring.py): input.json `{op, ...}` and output.json or refusal.json.
+// `checksum` and `store` cases belong to the store (WP8, store.test.ts).
+const GOLDENS = path.join(import.meta.dir, "golden", "authoring")
+const OPS = ["compile", "roundtrip", "project", "hook", "isHook", "validate", "loads", "nodeTypes", "lint"]
+
+interface Input {
+  readonly op: string
+  readonly document?: unknown
+  readonly skills?: Record<string, { id: string; content: string; sha256: string }>
+  readonly name?: string
+  // Raw oracle JSON; project checks it the way Python does, so a non-sprint is refused, not cast away.
+  readonly sprint?: RelaySprint.Sprint
+  readonly text?: string
+  readonly allowUngated?: boolean
+}
+
+const cases = await Promise.all(
+  readdirSync(GOLDENS)
+    .sort()
+    .map(async (name) => {
+      const dir = path.join(GOLDENS, name)
+      const input: Input = await Bun.file(path.join(dir, "input.json")).json()
+      const refused = Bun.file(path.join(dir, "refusal.json"))
+      const expected = (await refused.exists())
+        ? { refusal: await refused.json() }
+        : { output: await Bun.file(path.join(dir, "output.json")).json() }
+      return { name, input, expected }
+    }),
+)
+const owned = cases.filter((entry) => OPS.includes(entry.input.op))
 
 // What an authoring golden records: the output, or the refusal's status, code and exact message.
 function settle<A>(effect: Effect.Effect<A, AuthoringGraph.Refusal>) {
@@ -13,6 +48,106 @@ function settle<A>(effect: Effect.Effect<A, AuthoringGraph.Refusal>) {
     }),
   )
 }
+
+function run(input: Input) {
+  if (input.op === "compile") return settle(AuthoringGraph.compile(input.document, catalog(input.skills)))
+  if (input.op === "roundtrip")
+    return settle(
+      AuthoringGraph.project(input.name!, input.sprint!).pipe(
+        Effect.flatMap((document) => AuthoringGraph.compile(document)),
+      ),
+    )
+  if (input.op === "project") return settle(AuthoringGraph.project(input.name!, input.sprint!))
+  if (input.op === "hook") return settle(AuthoringHook.compile(input.document))
+  if (input.op === "isHook") return { output: AuthoringHook.isHook(input.document) }
+  if (input.op === "validate") return settle(AuthoringGraph.validate(input.document).pipe(Effect.as(null)))
+  if (input.op === "loads") return settle(AuthoringGraph.loads(input.text!))
+  if (input.op === "nodeTypes")
+    return { output: { workflow: AuthoringGraph.nodeTypes(), hook: AuthoringHook.nodeTypes() } }
+  const findings = AuthoringLint.lint(input.sprint, { allowUngated: input.allowUngated })
+  // relay-spec lint exits 1 when any finding is an error.
+  return { output: { findings, exit: findings.some((finding) => finding.severity === "error") ? 1 : 0 } }
+}
+
+// The generator's catalog: an unknown skill is refused the way Orchestra's catalog refuses it.
+function catalog(skills: Input["skills"]): AuthoringGraph.SkillResolver | undefined {
+  if (!skills) return undefined
+  return (skill) =>
+    Object.hasOwn(skills, skill)
+      ? Effect.succeed(skills[skill]!)
+      : Effect.fail(
+          new AuthoringGraph.Refusal({ status: 404, code: "skill-unavailable", message: "Skill unavailable" }),
+        )
+}
+
+// W7-1: the Python hook catalog plus the additive relay.hook.v1 vocabulary, and nothing else.
+function additive(expected: unknown) {
+  const catalogs = expected as { workflow: unknown; hook: RelayAuthoring.NodeTypeDescriptor[] }
+  const operations = [
+    { value: "tool", label: "Any tool" },
+    { value: "session-start", label: "Session start" },
+    { value: "prompt", label: "Prompt" },
+    { value: "session-idle", label: "Session stop" },
+  ]
+  const hook = catalogs.hook.map((descriptor) => {
+    if (descriptor.type === "relay.hookVerify") return { ...descriptor, outputs: ["Pass", "Fail"] }
+    if (descriptor.type !== "relay.hookEventTrigger") return descriptor
+    return {
+      ...descriptor,
+      parameters: descriptor.parameters.map((parameter) =>
+        parameter.name === "operation" ? { ...parameter, options: [...parameter.options!, ...operations] } : parameter,
+      ),
+    }
+  })
+  const allow = {
+    type: "relay.hookAllow",
+    label: "Allow",
+    inputs: 1,
+    outputs: ["main"],
+    parameters: [{ name: "message", label: "Note", type: "text", default: "" }],
+  }
+  return { workflow: catalogs.workflow, hook: [...hook, allow] }
+}
+
+describe("authoring goldens", () => {
+  test("the goldens reach every owned operation and the named acceptance cases", () => {
+    expect(owned.length).toBeGreaterThan(150)
+    expect(new Set(owned.map((entry) => entry.input.op))).toEqual(new Set(OPS))
+    // Only the store's cases are left to WP8.
+    expect(new Set(cases.filter((entry) => !owned.includes(entry)).map((entry) => entry.input.op))).toEqual(
+      new Set(["checksum", "store"]),
+    )
+    cases.forEach((entry) =>
+      expect([entry.name, "refusal" in entry.expected]).toEqual([entry.name, entry.name.includes("-refused-")]),
+    )
+    const names = owned.map((entry) => entry.name)
+    ;[
+      "compile-refused-branch",
+      "compile-refused-bare-branch",
+      "compile-refused-cycle",
+      "compile-refused-bare-cycle",
+      "compile-refused-noncontiguous",
+      "project-refused-noncontiguous",
+      "hook-refused-cycle",
+      "hook-refused-after-block",
+      "hook-refused-after-approve",
+      "node-types",
+    ].forEach((name) => expect(names).toContain(name))
+  })
+
+  owned.forEach((entry) =>
+    test(entry.name, () => {
+      const actual = JSON.parse(JSON.stringify(run(entry.input)))
+      const expected =
+        entry.input.op === "nodeTypes"
+          ? { output: additive((entry.expected as { output: unknown }).output) }
+          : entry.expected
+      expect(actual).toEqual(expected)
+      // Python's key order too: a hook's sha256 is taken over its export as compiled.
+      expect(JSON.stringify(actual)).toBe(JSON.stringify(expected))
+    }),
+  )
+})
 
 function refusal(message: string) {
   return { refusal: { status: 400, code: "invalid-request", message } }
