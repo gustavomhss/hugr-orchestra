@@ -299,16 +299,7 @@ describe("tool.task", () => {
             subagent_type: "custom",
             task_id: child.id,
           },
-          {
-            sessionID: chat.id,
-            messageID: assistant.id,
-            agent: "build",
-            abort: new AbortController().signal,
-            extra: { promptOps: stubOps({ onPrompt: (input) => (seen = input) }) },
-            messages: [],
-            metadata: () => Effect.void,
-            ask: () => Effect.void,
-          },
+          callContext(chat.id, assistant.id, stubOps({ onPrompt: (input) => (seen = input) })),
         )
 
         expect(seen?.agent).toBe("custom")
@@ -368,16 +359,7 @@ describe("tool.task", () => {
             subagent_type: "general",
             model: "nodivider",
           },
-          {
-            sessionID: chat.id,
-            messageID: assistant.id,
-            agent: "build",
-            abort: new AbortController().signal,
-            extra: { promptOps: stubOps({}) },
-            messages: [],
-            metadata: () => Effect.void,
-            ask: () => Effect.void,
-          },
+          callContext(chat.id, assistant.id, stubOps({})),
         )
         .pipe(Effect.exit)
 
@@ -876,16 +858,7 @@ describe("tool.task", () => {
             subagent_type: "general",
             background: true,
           },
-          {
-            sessionID: chat.id,
-            messageID: assistant.id,
-            agent: "build",
-            abort: new AbortController().signal,
-            extra: { promptOps: stubOps() },
-            messages: [],
-            metadata: () => Effect.void,
-            ask: () => Effect.void,
-          },
+          callContext(chat.id, assistant.id, stubOps()),
         )
         .pipe(Effect.exit)
 
@@ -1085,16 +1058,7 @@ describe("tool.task", () => {
           subagent_type: "general",
           background: true,
         },
-        {
-          sessionID: chat.id,
-          messageID: assistant.id,
-          agent: "build",
-          abort: new AbortController().signal,
-          extra: { promptOps: stubOps({ text: "background done" }) },
-          messages: [],
-          metadata: () => Effect.void,
-          ask: () => Effect.void,
-        },
+        callContext(chat.id, assistant.id, stubOps({ text: "background done" })),
       )
 
       const waited = yield* jobs.wait({ id: result.metadata.sessionId, timeout: 1_000 })
