@@ -1,6 +1,6 @@
 [test]
 # Tests run on GitHub Actions; see AGENTS.md (Testing).
-preload = ["../../script/test-guard.ts"]
+preload = ["../../script/test-guard.ts", "../../script/test-omni-control.ts"]
 pathIgnorePatterns = [
   # Standalone App Dock harnesses: they register no bun tests, and importing one bundles and launches a real
   # Electron and sets process.exitCode. They run with `bun run <file>` (package.json test:app-dock:*).

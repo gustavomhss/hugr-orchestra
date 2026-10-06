@@ -9,7 +9,11 @@
 // Named test files run exactly and in the given order. Any other argument, such as a directory, is a Bun substring
 // filter that may match several files, which Bun runs in its own order.
 //
-// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]
+// --env KEY=VALUE passes an allow-listed variable to the tests. --runner node runs named node:test smoke scripts
+// (*.node-smoke.mjs) with node instead of bun test.
+//
+// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|both|all] [--timeout ms]
+//        [--env KEY=VALUE] [--runner bun|node]
 
 import { $ } from "bun"
 import os from "node:os"
@@ -18,7 +22,13 @@ import { statSync } from "node:fs"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
 
-const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
+const USAGE =
+  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node]"
+// Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
+const ENV_KEYS = ["OPENCODE_EXPERIMENTAL_OMNI_SPAWNER"]
+const ENV_VALUE = /^[A-Za-z0-9_]+$/
+// Each value is also a ci-run-<os>-* branch prefix that test-ci.yml maps to its runners.
+const OSES = ["linux", "windows", "macos", "both", "all"]
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
@@ -29,7 +39,13 @@ const tree = await snapshot()
 const base = await chooseBase()
 const changes = await changed()
 
-console.log(`test-ci: ${request.package} ${request.args.join(" ")} on ${request.os}`)
+console.log(
+  `test-ci: ${request.package} ${request.args.join(" ")} on ${request.os} (${request.runner}${Object.entries(
+    request.env,
+  )
+    .map(([key, value]) => `, ${key}=${value}`)
+    .join("")})`,
+)
 console.log(`test-ci: uploading ${changes.length} changed files on top of ${base.slice(0, 10)}`)
 await uploadBlobs()
 const uploaded = await api("POST", `repos/${repo}/git/trees`, {
@@ -67,18 +83,28 @@ process.exit(failed ? 1 : 0)
 
 function parse(argv: string[]) {
   const positional: string[] = []
-  const options = { os: "linux", timeout: "120000", pattern: undefined as string | undefined }
+  const options = { os: "linux", timeout: "120000", pattern: undefined as string | undefined, runner: "bun" }
+  const env: Record<string, string> = {}
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index]!
     if (arg === "-t" || arg === "--test-name-pattern") options.pattern = argv[++index]
     else if (arg === "--os") options.os = argv[++index] ?? ""
     else if (arg === "--timeout") options.timeout = argv[++index] ?? ""
-    else if (arg === "-h" || arg === "--help") fail(USAGE, 0)
+    else if (arg === "--runner") options.runner = argv[++index] ?? ""
+    else if (arg === "--env") {
+      const pair = argv[++index] ?? ""
+      const key = pair.slice(0, pair.indexOf("="))
+      const value = pair.slice(pair.indexOf("=") + 1)
+      if (!ENV_KEYS.includes(key)) fail(`--env takes KEY=VALUE with KEY one of ${ENV_KEYS.join(", ")}\n${USAGE}`, 2)
+      if (!ENV_VALUE.test(value)) fail(`--env ${key} needs a value matching ${ENV_VALUE}\n${USAGE}`, 2)
+      env[key] = value
+    } else if (arg === "-h" || arg === "--help") fail(USAGE, 0)
     else positional.push(arg)
   }
   const name = positional[0]?.replace(/^packages\//, "").replace(/\/$/, "")
   if (!name) fail(USAGE, 2)
-  if (!["linux", "windows", "both"].includes(options.os)) fail(`--os must be linux, windows or both\n${USAGE}`, 2)
+  if (!OSES.includes(options.os)) fail(`--os must be one of ${OSES.join(", ")}\n${USAGE}`, 2)
+  if (!["bun", "node"].includes(options.runner)) fail(`--runner must be bun or node\n${USAGE}`, 2)
   if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
   if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
     fail(`-t needs a pattern\n${USAGE}`, 2)
@@ -87,10 +113,20 @@ function parse(argv: string[]) {
     positional.slice(1),
     (file) => statSync(path.join(root, "packages", name, file), { throwIfNoEntry: false })?.isFile() ?? false,
   )
+  if (options.runner === "node") {
+    if (options.pattern !== undefined) fail(`-t is a bun test option; the node runner takes smoke scripts only`, 2)
+    if (files.length === 0 || files.some((file) => !file.endsWith(".node-smoke.mjs")))
+      fail(`--runner node runs named *.node-smoke.mjs scripts only, never bun:test files\n${USAGE}`, 2)
+  }
   return {
     package: name,
     os: options.os,
-    args: [...files, "--timeout", options.timeout, ...(options.pattern ? ["-t", options.pattern] : [])],
+    runner: options.runner,
+    env,
+    args:
+      options.runner === "node"
+        ? files
+        : [...files, "--timeout", options.timeout, ...(options.pattern ? ["-t", options.pattern] : [])],
   }
 }
 
@@ -124,7 +160,12 @@ async function snapshot() {
   )
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
-  const body = JSON.stringify({ package: request.package, args: request.args })
+  const body = JSON.stringify({
+    package: request.package,
+    args: request.args,
+    runner: request.runner,
+    env: request.env,
+  })
   const blob = (await $`git hash-object -w --stdin < ${Buffer.from(body)}`.cwd(root).text()).trim()
   await $`git update-index --add --cacheinfo ${`100644,${blob},.ci-run.json`}`.cwd(root).env(env).quiet()
   const result = (await $`git write-tree`.cwd(root).env(env).text()).trim()

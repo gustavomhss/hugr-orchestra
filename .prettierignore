@@ -6,3 +6,5 @@ packages/client/src/generated-effect/
 packages/atlas-boundary/src/generated/
 # Exact-byte projections belong to own-snapshot-materialize, not the general formatter.
 foundation/atlas/.opencode/skills/own/
+# hugr-omni keeps its own gate (packages/omni/scripts/ci.mjs).
+packages/omni/**

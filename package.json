@@ -14,6 +14,7 @@
     "dev:storybook": "bun --cwd packages/storybook storybook",
     "lint": "oxlint",
     "check:godfile": "bun run script/godfile.ts",
+    "check:spawn-imports": "bun run script/check-spawn-imports.ts",
     "typecheck": "bun turbo typecheck",
     "upgrade-opentui": "bun run script/upgrade-opentui.ts",
     "postinstall": "bun run --cwd packages/core fix-node-pty",
@@ -22,6 +23,7 @@
     "sso": "aws sso login --sso-session=opencode --no-browser",
     "translate:app": "bun run script/translate-app.ts",
     "test": "echo 'do not run tests from root' && exit 1",
+    "omni:build": "cargo build --manifest-path packages/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
     "test:ci": "bun run script/test-ci.ts"
   },
   "workspaces": {
@@ -30,6 +32,7 @@
       "packages/console/*",
       "packages/stats/*",
       "packages/sdk/js",
+      "packages/omni/bindings/node",
       "packages/slack"
     ],
     "catalog": {

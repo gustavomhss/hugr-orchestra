@@ -362,6 +362,7 @@
         "google-auth-library": "10.5.0",
         "gray-matter": "4.0.3",
         "htmlparser2": "8.0.2",
+        "hugr-omni": "workspace:*",
         "ignore": "7.0.5",
         "immer": "11.1.4",
         "jsonc-parser": "3.3.1",
@@ -411,6 +412,7 @@
         "electron-store": "11.0.2",
         "electron-updater": "6.8.9",
         "electron-window-state": "^5.0.3",
+        "hugr-omni": "workspace:*",
       },
       "devDependencies": {
         "@actions/artifact": "4.0.0",
@@ -582,6 +584,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.29.0",
+        "hugr-omni": "workspace:*",
         "tree-sitter": "0.25.0",
         "tree-sitter-python": "0.25.0",
         "tree-sitter-typescript": "0.23.2",
@@ -591,6 +594,17 @@
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "@typescript/native-preview": "catalog:",
+      },
+    },
+    "packages/omni/bindings/node": {
+      "name": "hugr-omni",
+      "version": "0.1.0",
+      "optionalDependencies": {
+        "hugr-omni-darwin-arm64": "0.1.0",
+        "hugr-omni-darwin-x64": "0.1.0",
+        "hugr-omni-linux-arm64-gnu": "0.1.0",
+        "hugr-omni-linux-x64-gnu": "0.1.0",
+        "hugr-omni-win32-x64-msvc": "0.1.0",
       },
     },
     "packages/opencode": {
@@ -675,6 +689,7 @@
         "google-auth-library": "10.5.0",
         "gray-matter": "4.0.3",
         "htmlparser2": "8.0.2",
+        "hugr-omni": "workspace:*",
         "ignore": "7.0.5",
         "immer": "11.1.4",
         "jsonc-parser": "3.3.1",
@@ -4018,6 +4033,8 @@
     "http2-wrapper": ["http2-wrapper@1.0.3", "", { "dependencies": { "quick-lru": "^5.1.1", "resolve-alpn": "^1.0.0" } }, "sha512-V+23sDMr12Wnz7iTcDeJr3O6AIxlnvT/bmaAAAP/Xda35C90p9599p0F1eHR/N1KILWSoWVAiOMFjBBXaXSMxg=="],
 
     "https-proxy-agent": ["https-proxy-agent@7.0.6", "", { "dependencies": { "agent-base": "^7.1.2", "debug": "4" } }, "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw=="],
+
+    "hugr-omni": ["hugr-omni@workspace:packages/omni/bindings/node"],
 
     "human-signals": ["human-signals@5.0.0", "", {}, "sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ=="],
 

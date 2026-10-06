@@ -1,7 +1,8 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, args }). This workflow runs exactly those tests, then deletes the branch.
+# with a .ci-run.json request ({ package, args, runner, env }). This workflow runs exactly those tests, then deletes the
+# branch.
 on:
   push:
     branches:
@@ -16,8 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-* or ci-run-both-*.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || '["ubuntu-latest"]') }}
+        # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
+        # ci-run-both-* (Linux and Windows) or ci-run-all-*. Every prefix is distinct, so the order of the tests is free.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -35,6 +37,28 @@ jobs:
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "opencode"
 
+      # Only allow-listed keys with plain values reach the environment; test-ci.ts checks the same before upload.
+      - name: Export requested environment
+        run: |
+          jq -r '(.env // {}) | to_entries[] | "\(.key)=\(.value)"' .ci-run.json | tr -d '\r' | while IFS= read -r line; do
+            key=${line%%=*}
+            value=${line#*=}
+            case "$key" in
+              OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) ;;
+              *) echo "::error::.ci-run.json env key $key is not allow-listed"; exit 2 ;;
+            esac
+            if ! printf '%s' "$value" | grep -Eq '^[A-Za-z0-9_]+$'; then
+              echo "::error::.ci-run.json env value for $key is not [A-Za-z0-9_]+"
+              exit 2
+            fi
+            echo "$key=$value" >> "$GITHUB_ENV"
+          done
+
+      # Tests with omni on need its addon and supervisor: from the omni binary cache, else built once here.
+      - name: omni binaries
+        if: env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER != ''
+        uses: ./.github/actions/omni-binaries
+
       - name: Run tests
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -50,9 +74,25 @@ jobs:
             echo "::error::packages/$package does not exist"
             exit 2
           fi
-          mapfile -t args < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
+          # A read loop, not mapfile: macOS runners ship bash 3.2.
+          args=()
+          while IFS= read -r arg; do args+=("$arg"); done < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
+          runner=$(jq -r '.runner // "bun"' .ci-run.json | tr -d '\r')
           cd "packages/$package"
-          GITHUB_ACTIONS=false bun test "${args[@]}"
+          case "$runner" in
+            bun) GITHUB_ACTIONS=false bun test "${args[@]}" ;;
+            node)
+              # The node runner runs named node:test smoke scripts only, never bun:test files.
+              for file in "${args[@]}"; do
+                case "$file" in
+                  *.node-smoke.mjs) ;;
+                  *) echo "::error::the node runner runs only *.node-smoke.mjs files, not $file"; exit 2 ;;
+                esac
+              done
+              node --experimental-strip-types --test "${args[@]}"
+              ;;
+            *) echo "::error::.ci-run.json runner must be bun or node"; exit 2 ;;
+          esac
 
   cleanup:
     needs: test

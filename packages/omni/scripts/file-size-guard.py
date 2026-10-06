@@ -7,7 +7,9 @@ Bands (physical lines, counted on the raw bytes, nothing stripped):
   <= 650  tolerated; printed as WARN so review asks for a split plan
   >  650  FAIL
 
-Scope: every file tracked by git (`git ls-files`). Each file is classified as
+Scope: every file tracked by git under the omni root, the parent of this
+script's directory (`git ls-files` run there, so a checkout that holds omni as
+a subfolder, such as Orchestra's packages/omni, scans omni only). Each file is classified as
 CODE (checked) or NOT-CODE (documents, data, config, assets; skipped) by the
 closed sets below. A file that fits neither set is a hard failure, so a new
 kind of source file can never slip past unchecked.
@@ -60,10 +62,10 @@ def count_lines(data: bytes) -> int:
 
 
 def main() -> int:
+    # The omni root, not the git top level: inside Orchestra, omni is packages/omni and the rest is not ours.
+    root = Path(__file__).resolve().parent.parent
     try:
-        root = Path(subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            check=True, capture_output=True, text=True).stdout.strip())
+        # Run in the root, `git ls-files` lists only that subtree, with paths relative to it.
         listing = subprocess.run(
             ["git", "ls-files", "-z"], cwd=root, check=True, capture_output=True).stdout
     except (OSError, subprocess.CalledProcessError) as err:

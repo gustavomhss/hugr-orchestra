@@ -312,6 +312,10 @@ jobs:
         if: runner.os == 'Linux'
         run: bun run check:godfile
 
+      - name: Run spawn-import gate
+        if: runner.os == 'Linux'
+        run: bun run check:spawn-imports
+
       - name: Run unit tests
         timeout-minutes: 30
         # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.

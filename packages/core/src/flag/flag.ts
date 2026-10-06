@@ -8,6 +8,26 @@ export function truthy(key: string) {
 const copy = process.env["OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT"]
 const fff = process.env["OPENCODE_DISABLE_FFF"]
 
+export type OmniSpawner = "off" | "on" | "strict"
+
+const omniWarned = new Set<string>()
+
+/**
+ * OPENCODE_EXPERIMENTAL_OMNI_SPAWNER has three states, so it has its own parser rather than truthy(), and
+ * OPENCODE_EXPERIMENTAL does not turn it on. Unset or "0" is off (legacy spawning), "1" is on (omni, delegating
+ * unsupported options to legacy), "strict" is omni with no delegation. Anything else is off, with one warning.
+ */
+export function omniSpawner(value: string | undefined): OmniSpawner {
+  if (value === undefined || value === "" || value === "0") return "off"
+  if (value === "1") return "on"
+  if (value === "strict") return "strict"
+  if (!omniWarned.has(value)) {
+    omniWarned.add(value)
+    console.warn(`OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=${JSON.stringify(value)} is not 0, 1 or strict; omni stays off.`)
+  }
+  return "off"
+}
+
 function enabledByExperimental(key: string) {
   return process.env[key] === undefined ? truthy("OPENCODE_EXPERIMENTAL") : truthy(key)
 }
@@ -53,6 +73,9 @@ export const Flag = {
   // external tooling set these env vars at runtime.
   get OPENCODE_DISABLE_PROJECT_CONFIG() {
     return truthy("OPENCODE_DISABLE_PROJECT_CONFIG")
+  },
+  get OPENCODE_EXPERIMENTAL_OMNI_SPAWNER() {
+    return omniSpawner(process.env["OPENCODE_EXPERIMENTAL_OMNI_SPAWNER"])
   },
   get OPENCODE_EXPERIMENTAL_REFERENCES() {
     return enabledByExperimental("OPENCODE_EXPERIMENTAL_REFERENCES")
