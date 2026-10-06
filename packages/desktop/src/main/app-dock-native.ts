@@ -560,7 +560,7 @@ function operation(op: string, args: Record<string, unknown>): NativeDockProtoco
     return { op, args: Object.fromEntries(["budget", "maxText", "rootRef", "cursor", "textOffset"]
       .filter((field) => args[field] !== undefined).map((field) => [field, args[field]])) as NativeDockProtocol.JSONObject }
   }
-  if (!["click", "action", "type", "keyboard"].includes(op))
+  if (!["click", "action", "type", "keyboard", "pointer"].includes(op))
     throw new NativeDockProtocol.NativeError("unsupported-operation", `Native dock does not support ${op}`)
   if (!NativeDockProtocol.isNativeRef(args.ref))
     throw new NativeDockProtocol.NativeError("wrong-scope", "Native operations require an opaque native ref")
@@ -570,6 +570,12 @@ function operation(op: string, args: Record<string, unknown>): NativeDockProtoco
       throw new NativeDockProtocol.NativeError("invalid-argument", "Native keyboard requires keys such as ctrl+comma")
     return { op: "key", args: { ref: args.ref, keys: args.keys } }
   }
+  // Hover or right-click at the control's center; the helper proves the point inside the owned, active window.
+  if (op === "pointer") {
+    if (args.kind !== "hover" && args.kind !== "contextMenu")
+      throw new NativeDockProtocol.NativeError("invalid-argument", "Native pointer kind must be hover or contextMenu")
+    return { op: "pointer", args: { ref: args.ref, kind: args.kind } }
+  }
   if (op !== "type") {
     if (op === "action" && !word(args.actionID))
       throw new NativeDockProtocol.NativeError("invalid-argument", "Native action requires an actionID")
@@ -578,9 +584,11 @@ function operation(op: string, args: Record<string, unknown>): NativeDockProtoco
     return { op: "action", args: { ref: args.ref, ...(op === "action" ? { actionID: args.actionID as string,
       ...(args.mode === undefined ? {} : { mode: args.mode as string }) } : {}) } }
   }
-  if (typeof args.text !== "string" || args.text.length > 20000 || (args.mode !== undefined && args.mode !== "editable" && args.mode !== "keyboard"))
+  if (typeof args.text !== "string" || args.text.length > 20000 || (args.mode !== undefined && args.mode !== "editable" && args.mode !== "keyboard")
+    || (args.focused !== undefined && (args.focused !== true || args.mode !== "keyboard")))
     throw new NativeDockProtocol.NativeError("invalid-argument", "Invalid native text or input mode")
-  return { op: "type", args: { ref: args.ref, text: args.text, mode: args.mode ?? "editable" } }
+  // focused: the helper refuses, before any key, a field that no longer holds keyboard focus.
+  return { op: "type", args: { ref: args.ref, text: args.text, mode: args.mode ?? "editable", ...(args.focused ? { focused: true } : {}) } }
 }
 
 function boundedResult(value: unknown): NativeDockProtocol.JSONValue | undefined {

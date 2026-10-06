@@ -416,6 +416,24 @@ test("read/click/action/type carry only captured binding and explicit native arg
   expect(f.client.calls.at(-1)).toEqual({ op: "type", args: { ref: "n:input", text: "", mode: "keyboard" }, ...scope })
   await f.dock.dispatch("keyboard", identity(), { ref: "n:window", keys: "ctrl+comma", type: "keyDown" })
   expect(f.client.calls.at(-1)).toEqual({ op: "key", args: { ref: "n:window", keys: "ctrl+comma" }, ...scope })
+  await f.dock.dispatch("type", identity(), { ref: "n:input", text: "x", mode: "keyboard", focused: true, world: "linux" })
+  expect(f.client.calls.at(-1)).toEqual({ op: "type", args: { ref: "n:input", text: "x", mode: "keyboard", focused: true }, ...scope })
+  for (const kind of ["hover", "contextMenu"]) {
+    await f.dock.dispatch("pointer", identity(), { ref: "n:row", kind, x: 5 })
+    expect(f.client.calls.at(-1)).toEqual({ op: "pointer", args: { ref: "n:row", kind }, ...scope })
+  }
+})
+
+test("pointer and focused typing refuse malformed arguments before client work", async () => {
+  const f = fixture()
+  await f.dock.bind(identity(), target(), f.client, confirm)
+  const before = f.client.calls.length
+  for (const kind of [undefined, "click", "doubleClick", 3])
+    await expect(f.dock.dispatch("pointer", identity(), { ref: "n:row", kind })).rejects.toMatchObject({ code: "invalid-argument" })
+  await expect(f.dock.dispatch("pointer", identity(), { ref: 7, kind: "hover" })).rejects.toMatchObject({ code: "wrong-scope" })
+  for (const args of [{ focused: true }, { focused: true, mode: "editable" }, { focused: "yes", mode: "keyboard" }, { focused: false, mode: "keyboard" }])
+    await expect(f.dock.dispatch("type", identity(), { ref: "n:input", text: "x", ...args })).rejects.toMatchObject({ code: "invalid-argument" })
+  expect(f.client.calls.length).toBe(before)
 })
 
 test("numeric native refs, invalid args and browser-only operations fail before client work", async () => {
