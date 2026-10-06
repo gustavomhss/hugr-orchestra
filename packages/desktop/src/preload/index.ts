@@ -11,7 +11,14 @@ const updaterHandler = (_: unknown, state: UpdaterState) => {
 }
 
 const api: ElectronAPI = {
+  appDockLinuxOpen: (bounds, profile) => ipcRenderer.invoke("app-dock-linux-open", bounds, profile),
+  appDockLinuxList: () => ipcRenderer.invoke("app-dock-linux-list"),
+  appDockLinuxInstall: () => ipcRenderer.invoke("app-dock-linux-install"),
+  appDockLinuxLaunch: (appID) => ipcRenderer.invoke("app-dock-linux-launch", appID),
+  appDockLinuxWindows: (tabID, generation) => ipcRenderer.invoke("app-dock-linux-windows", tabID, generation),
+  appDockLinuxFocus: (tabID, generation, windowID) => ipcRenderer.invoke("app-dock-linux-focus", tabID, generation, windowID),
   appDockOpen: (url, bounds, profile) => ipcRenderer.invoke("app-dock-open", url, bounds, profile),
+  appDockList: () => ipcRenderer.invoke("app-dock-list"),
   appDockDeleteProfile: (profileID) => ipcRenderer.invoke("app-dock-delete-profile", { profileID }),
   appDockResize: (tab, bounds) => ipcRenderer.invoke("app-dock-resize", tab, bounds),
   appDockHide: (tab) => ipcRenderer.invoke("app-dock-hide", tab),

@@ -1225,12 +1225,15 @@ const layer = Layer.effect(
             .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
 
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
+            // Tools read this history when they run. Working memory needs their recall capability to choose
+            // what the model is sent, so it is refilled with that choice once continuity prepares it.
+            const sent = [...msgs]
             const tools = yield* SessionNativeTools.resolve({
               agent,
               session,
               model,
               processor: handle,
-              messages: msgs,
+              messages: sent,
             }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
 
             canRecall = Object.hasOwn(
@@ -1253,6 +1256,7 @@ const layer = Layer.effect(
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
             const prepared = yield* continuity.prepare({ sessionID, messages: msgs, canRecall })
+            sent.splice(0, sent.length, ...prepared.messages)
 
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
@@ -1270,7 +1274,7 @@ const layer = Layer.effect(
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
-            const result = yield* handle.process({
+            const streamInput = {
               contextMemory: prepared.system.length > 0,
               user: lastUser,
               agent,
@@ -1284,8 +1288,14 @@ const layer = Layer.effect(
               ],
               tools,
               model,
-              toolChoice: format.type === "json_schema" ? "required" : undefined,
+              toolChoice: format.type === "json_schema" ? ("required" as const) : undefined,
+            }
+            yield* continuity.observe({
+              sessionID,
+              request: streamInput,
+              messageIDs: prepared.messages.map((message) => message.info.id),
             })
+            const result = yield* handle.process(streamInput)
 
             if (structured !== undefined) {
               handle.message.structured = structured

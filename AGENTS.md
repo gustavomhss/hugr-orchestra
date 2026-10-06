@@ -142,11 +142,14 @@ const table = sqliteTable("session", {
 
 - Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
 - Test actual implementation, do not duplicate logic into tests
-- Tests cannot run from repo root (guard: `do-not-run-tests-from-root`); run from package dirs like `packages/opencode`.
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci opencode test/tool/task.test.ts`.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+  - A run takes a few minutes: give the shell call a long timeout or run it in the background.
+  - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
 
 ## CI Cadence
 
-- GitHub Actions runs once per epic, not per unit of work. Gate each unit locally with change-scoped tests and package typecheck.
+- The full suite runs once per epic, not per unit of work. Gate each unit with change-scoped tests through `bun run test:ci` and a local package typecheck.
 - To run CI, add the `epic` label to the epic PR (remove and re-add it to rerun) or dispatch the workflow manually. Pushes and unlabeled PRs run nothing.
 - A local green is not a CI green; say which gate ran.
 

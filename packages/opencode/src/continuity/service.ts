@@ -13,7 +13,7 @@ import { chunks } from "./transcript"
 import { Token } from "@/util/token"
 import { Cause, Context, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
-import { run, snapshot } from "./fork"
+import { run, snapshot, type ParentRequest } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
 import { isSafe, shouldStart, tokenCount } from "./trigger"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
@@ -29,7 +29,16 @@ type Entry = {
   refresh: boolean
   archived?: MessageID
 }
-type State = { sessions: Map<SessionID, Entry>; contexts: ReturnType<typeof create>; scope: Scope.Scope }
+type State = {
+  sessions: Map<SessionID, Entry>
+  contexts: ReturnType<typeof create>
+  scope: Scope.Scope
+  /** Latest parent model request per session, kept so maintenance can reuse its prompt cache. */
+  requests: Map<SessionID, ParentRequest>
+}
+
+// Requests hold whole message arrays; keep only the most recently active sessions.
+const MAX_OBSERVED_REQUESTS = 4
 
 export interface Interface {
   readonly prepare: (input: { sessionID: SessionID; messages: SessionV1.WithParts[]; canRecall?: boolean }) => Effect.Effect<{
@@ -40,6 +49,12 @@ export interface Interface {
     sessionID: SessionID
     message: SessionV1.Assistant
     canRecall?: boolean
+  }) => Effect.Effect<void>
+  /** Record the parent's model request so a later maintenance fork can replay its prefix. */
+  readonly observe: (input: {
+    sessionID: SessionID
+    request: LLM.StreamInput
+    messageIDs: readonly MessageID[]
   }) => Effect.Effect<void>
   readonly advance: (sessionID: SessionID) => Effect.Effect<void>
   readonly invalidate: (sessionID: SessionID) => Effect.Effect<void>
@@ -71,7 +86,7 @@ const layer = Layer.effect(
     const archive = yield* Archive.Service
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
-      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope }
+      return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map() }
     }))
 
     const prepare: Interface["prepare"] = Effect.fn("SessionContinuity.prepare")(function* (input) {
@@ -99,6 +114,18 @@ const layer = Layer.effect(
       return unchanged && available.every(Boolean) ? prepared : { messages: input.messages, system: [] }
     })
 
+    const observe: Interface["observe"] = Effect.fn("SessionContinuity.observe")(function* (input) {
+      const current = yield* InstanceState.get(state)
+      yield* Effect.sync(() => {
+        current.requests.delete(input.sessionID)
+        current.requests.set(input.sessionID, { input: input.request, messageIDs: [...input.messageIDs] })
+        for (const key of current.requests.keys()) {
+          if (current.requests.size <= MAX_OBSERVED_REQUESTS) break
+          current.requests.delete(key)
+        }
+      })
+    })
+
     const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")(function* (sessionID) {
       const current = yield* InstanceState.get(state)
       yield* Effect.sync(() => {
@@ -114,6 +141,7 @@ const layer = Layer.effect(
       yield* advance(sessionID)
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
+      current.requests.delete(sessionID)
       const item = entry(current, sessionID)
       item.attempted = undefined
       item.refresh = true
@@ -124,6 +152,7 @@ const layer = Layer.effect(
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
       current.sessions.delete(sessionID)
+      current.requests.delete(sessionID)
     })
 
     const schedule = (current: State, sessionID: SessionID, pending: Pending,
@@ -225,7 +254,7 @@ const layer = Layer.effect(
                   return "discarded"
                 }
               }
-              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available)
+              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available, current.requests.get(sessionID))
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
                 return "discarded"
@@ -324,7 +353,7 @@ const layer = Layer.effect(
       ),
     )
 
-    return Service.of({ prepare, start, advance, invalidate, forget })
+    return Service.of({ prepare, start, observe, advance, invalidate, forget })
   }),
 )
 

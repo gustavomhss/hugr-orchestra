@@ -79,7 +79,8 @@ git rev-parse HEAD
 git status --short
 ```
 
-In this repository, from `packages/opencode`: `bun test <suite> --timeout 30000` and `bun typecheck`.
+In this repository: `bun run test:ci opencode <suite>` from the repository root (tests run on Actions) and
+`bun typecheck` from `packages/opencode`.
 Record command, cwd, exit, evidence pointer, baseline identity, and skipped/missing configurations.
 
 ## Success / fail
