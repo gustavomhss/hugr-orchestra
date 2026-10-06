@@ -2,17 +2,22 @@ export * as BackendToolkit from "./index"
 
 import path from "path"
 import { randomUUID } from "crypto"
+import { execFile } from "child_process"
 import { chmod, mkdir, readFile, rename, rm, writeFile } from "fs/promises"
+import { promisify } from "util"
 import { Context, Effect, Schema } from "effect"
 import { Global } from "../global"
 import { PinnedArtifact } from "../pinned-artifact"
-import { ENGINES, type Engine, type EngineId } from "./manifest"
+import { ENGINES, RUNTIMES, type Engine, type EngineId, type HostedEngine, type Runtime, type RuntimeId } from "./manifest"
 import { detect, type TargetId } from "./target"
 
 // The backend specialist's engines are fetched by the host on first use (the backend seat's shell has no network),
 // verified against the pinned manifest and cached per user (ruling M3-4: an evicted engine is fetched again). Each
 // engine installs into `<root>/engines/<id>/<version>-<target>/` and, once ready, gets a shim at `<root>/bin/<id>`
 // (`<id>.cmd` on Windows) that carries the engine's environment; the shell exposes `<root>/bin` as BACKEND_TOOLKIT_BIN.
+// A hosted engine (ruling M4-1) first needs its private runtime, installed once per user into
+// `<root>/runtimes/<id>/<version>-<target>/` and shared by every engine on it. Its own install then carries a launcher
+// `<id>` (`<id>.cmd` for Windows) that runs the runtime with the engine's arguments; that launcher is its executable.
 
 export type EngineState =
   | { readonly status: "absent" }
@@ -42,6 +47,10 @@ export const Manifest = Context.Reference<Readonly<Record<EngineId, Engine>>>("@
   defaultValue: () => ENGINES,
 })
 
+export const Runtimes = Context.Reference<Readonly<Record<RuntimeId, Runtime>>>("@opencode/BackendToolkit/Runtimes", {
+  defaultValue: () => RUNTIMES,
+})
+
 /** The host's toolkit target, or why it has none. */
 export const Target = Context.Reference<ReturnType<typeof detect>>("@opencode/BackendToolkit/Target", {
   defaultValue: () => detect(),
@@ -49,6 +58,7 @@ export const Target = Context.Reference<ReturnType<typeof detect>>("@opencode/Ba
 
 // A failed fetch is retried by a later need after this window, not by every command.
 const RETRY_MS = 5 * 60_000
+const INSTALL_MS = 10 * 60_000
 
 // Keyed by install directory. Concurrent needs share the running fetch, which resolves to its failure cause.
 const attempts = new Map<string, { readonly running?: Promise<string | undefined>; readonly failed?: string; readonly at: number }>()
@@ -108,17 +118,32 @@ export const prepare = Effect.fn("BackendToolkit.prepare")(function* (command: s
 const acquire = Effect.fnUntraced(function* (id: EngineId, target: TargetId, host: boolean) {
   const root = yield* Root
   const engine = (yield* Manifest)[id]
-  const pin = engine.targets[target]
+  const runtimes = yield* Runtimes
   const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
-  const executable = path.join(directory, pin.executable)
+  const work =
+    "runtime" in engine
+      ? hosted(root, engine, runtimes[engine.runtime], directory, target, host)
+      : PinnedArtifact.install(directory, [engine.targets[target].artifact]).pipe(
+          Effect.andThen(
+            host
+              ? shim(root, engine.id, launcher(process.platform === "win32", [executable(engine, directory, target)], engine.env ?? {}))
+              : Effect.void,
+          ),
+        )
+  const cause = yield* once(directory, work)
+  if (cause !== undefined) return yield* new NotReady({ reason: `toolkit-not-ready:failed:${id}:${cause}` })
+  return { executable: executable(engine, directory, target) }
+})
+
+/** Run `work` for `directory` at most once at a time and remember its failure; resolves to the failure cause. */
+const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect<unknown, PinnedArtifact.Failed>) {
   const attempt = attempts.get(directory)
   if (attempt?.failed && Date.now() - attempt.at < RETRY_MS && !(yield* PinnedArtifact.installed(directory)))
-    return yield* new NotReady({ reason: `toolkit-not-ready:failed:${id}:${attempt.failed}` })
+    return attempt.failed
   const running =
     attempt?.running ??
     Effect.runPromise(
-      PinnedArtifact.install(directory, [pin.artifact]).pipe(
-        Effect.andThen(host ? shim(root, engine, executable) : Effect.void),
+      work.pipe(
         Effect.match({
           onSuccess: () => {
             attempts.delete(directory)
@@ -132,10 +157,69 @@ const acquire = Effect.fnUntraced(function* (id: EngineId, target: TargetId, hos
       ),
     )
   if (!attempt?.running) attempts.set(directory, { running, at: Date.now() })
-  const cause = yield* Effect.promise(() => running)
-  if (cause !== undefined) return yield* new NotReady({ reason: `toolkit-not-ready:failed:${id}:${cause}` })
-  return { executable }
+  return yield* Effect.promise(() => running)
 })
+
+/**
+ * Install the engine's runtime (shared, `runtime-<cause>` on failure), then the engine with its launcher. npm and pip
+ * run the target's own interpreter, so they install only for the host target.
+ */
+function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory: string, target: TargetId, host: boolean) {
+  const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
+  const pin = runtime.targets[target]
+  const interpreter = path.join(home, pin.executable)
+  const windows = target === "win32-x64"
+  const expand = (text: string) => text.replaceAll("{install}", directory).replaceAll("{runtime}", home)
+  const install = engine.install
+  const env = Object.entries({ ...(install.kind === "pip" ? { PYTHONPATH: "{install}" } : {}), ...engine.env })
+  const text = launcher(windows, [interpreter, ...engine.launch.map(expand)], Object.fromEntries(env.map(([key, value]) => [key, expand(value)])))
+  return Effect.gen(function* () {
+    if (install.kind !== "jar" && !host) return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
+    const cause = yield* once(home, PinnedArtifact.install(home, [pin.artifact]))
+    if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
+    yield* PinnedArtifact.install(directory, install.kind === "jar" ? [install.artifact] : [], (staging) =>
+      Effect.tryPromise({
+        try: async () => {
+          if (install.kind === "npm") {
+            await writeFile(path.join(staging, "package.json"), install.packageJson)
+            await writeFile(path.join(staging, "package-lock.json"), install.lock)
+            // Node's Windows zip keeps npm beside node.exe; the POSIX tarballs keep it under lib/.
+            const npm = windows
+              ? path.join(path.dirname(interpreter), "node_modules", "npm", "bin", "npm-cli.js")
+              : path.join(home, "lib", "node_modules", "npm", "bin", "npm-cli.js")
+            await run(interpreter, [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"], staging, {
+              npm_config_cache: path.join(root, "cache", "npm"),
+              npm_config_update_notifier: "false",
+            })
+          }
+          if (install.kind === "pip") {
+            const requirements = path.join(staging, "requirements.txt")
+            await writeFile(requirements, install.requirements)
+            await run(
+              interpreter,
+              ["-m", "pip", "install", "--require-hashes", "--no-deps", "--only-binary=:all:", "--target", staging, "-r", requirements],
+              staging,
+              { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
+            )
+          }
+          const file = path.join(staging, windows ? `${engine.id}.cmd` : engine.id)
+          await writeFile(file, text)
+          await chmod(file, 0o755)
+        },
+        catch: () => new PinnedArtifact.Failed({ cause: `install:${install.kind}` }),
+      }),
+    )
+    if (host) yield* shim(root, engine.id, text)
+  })
+}
+
+const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record<string, string>) =>
+  promisify(execFile)(file, [...args], { cwd, env: { ...process.env, ...env }, timeout: INSTALL_MS, maxBuffer: 64 * 1024 * 1024 })
+
+function executable(engine: Engine, directory: string, target: TargetId) {
+  if ("runtime" in engine) return path.join(directory, target === "win32-x64" ? `${engine.id}.cmd` : engine.id)
+  return path.join(directory, engine.targets[target].executable)
+}
 
 const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target: TargetId) {
   const root = yield* Root
@@ -146,7 +230,7 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
       const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
       const base = { engine: id, version: engine.version, target }
       if (yield* PinnedArtifact.installed(directory))
-        return { ...base, status: "ready", directory, executable: path.join(directory, engine.targets[target].executable) } satisfies State
+        return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State
       const attempt = attempts.get(directory)
       if (attempt?.running) return { ...base, status: "fetching" } satisfies State
       if (attempt?.failed) return { ...base, status: "failed", cause: attempt.failed, at: attempt.at } satisfies State
@@ -155,20 +239,23 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
   )
 })
 
-/** Write the engine's launcher through a temp file and one rename, skipping it when it is already current. */
-function shim(root: string, engine: Engine, executable: string) {
+/** A launcher that runs `command` with the caller's arguments appended and `env` set for the child only. */
+function launcher(windows: boolean, command: ReadonlyArray<string>, env: Readonly<Record<string, string>>) {
+  const vars = Object.entries(env)
+  if (windows)
+    return ["@echo off", "setlocal", ...vars.map(([key, value]) => `set "${key}=${value}"`), `${command.map((part) => `"${part}"`).join(" ")} %*`, "exit /b %errorlevel%", ""].join("\r\n")
+  return ["#!/bin/sh", ...vars.map(([key, value]) => `export ${key}=${quote(value)}`), `exec ${command.map(quote).join(" ")} "$@"`, ""].join("\n")
+}
+
+/** Write an engine's `<root>/bin` launcher through a temp file and one rename, skipping it when it is already current. */
+function shim(root: string, id: EngineId, text: string) {
   return Effect.tryPromise({
     try: async () => {
       const bin = path.join(root, "bin")
-      const windows = process.platform === "win32"
-      const file = path.join(bin, windows ? `${engine.id}.cmd` : engine.id)
-      const env = Object.entries(engine.env ?? {})
-      const text = windows
-        ? ["@echo off", "setlocal", ...env.map(([key, value]) => `set "${key}=${value}"`), `"${executable}" %*`, "exit /b %errorlevel%", ""].join("\r\n")
-        : ["#!/bin/sh", ...env.map(([key, value]) => `export ${key}=${quote(value)}`), `exec ${quote(executable)} "$@"`, ""].join("\n")
+      const file = path.join(bin, process.platform === "win32" ? `${id}.cmd` : id)
       if ((await readFile(file, "utf8").catch(() => undefined)) === text) return
       await mkdir(bin, { recursive: true })
-      const temp = path.join(bin, `.${engine.id}-${randomUUID()}`)
+      const temp = path.join(bin, `.${id}-${randomUUID()}`)
       await writeFile(temp, text)
       await chmod(temp, 0o755)
       await rename(temp, file).catch(async (error) => {

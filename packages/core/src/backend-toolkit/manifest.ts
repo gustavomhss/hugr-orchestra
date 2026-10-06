@@ -2,10 +2,58 @@ export * as BackendToolkitManifest from "./manifest"
 
 import type { PinnedArtifact } from "../pinned-artifact"
 import type { TargetId } from "./target"
+import { JAVA, OPENAPI_GENERATOR } from "./hosted/java"
+import { NODE, ORVAL, PROTOC_GEN_ES } from "./hosted/node"
+import { DATAMODEL_CODEGEN, PYTHON } from "./hosted/python"
 
-export type EngineId = "ast-grep" | "sqlc" | "buf" | "gitleaks" | "kiota"
+export type EngineId =
+  | "ast-grep"
+  | "sqlc"
+  | "buf"
+  | "gitleaks"
+  | "kiota"
+  | "orval"
+  | "protoc-gen-es"
+  | "openapi-generator"
+  | "datamodel-codegen"
 
-export type Engine = {
+export type RuntimeId = "node" | "java" | "python"
+
+/** A private interpreter shared by every hosted engine that names it (ruling M4-1). */
+export type Runtime = {
+  readonly id: RuntimeId
+  readonly version: string
+  readonly license: string
+  readonly upstream: string
+  /** Per target: the pinned archive and the install-relative interpreter, e.g. `bin/node` or `python.exe`. */
+  readonly targets: Readonly<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
+}
+
+/** An engine that runs on a private runtime; every byte of its own install is pinned. */
+export type HostedEngine = {
+  readonly id: EngineId
+  readonly version: string
+  readonly license: string
+  readonly upstream: string
+  /** Launcher environment; values may use `{install}` and `{runtime}`. */
+  readonly env?: Readonly<Record<string, string>>
+  readonly runtime: RuntimeId
+  /**
+   * `npm`: `npm ci --ignore-scripts` with the runtime's bundled npm over a lockfile carrying an integrity for every
+   * package. `pip`: `pip install --require-hashes --no-deps --only-binary=:all:` over a hash list covering every target.
+   * `jar`: the raw jar.
+   */
+  readonly install:
+    | { readonly kind: "npm"; readonly packageJson: string; readonly lock: string }
+    | { readonly kind: "pip"; readonly requirements: string }
+    | { readonly kind: "jar"; readonly artifact: PinnedArtifact.Artifact }
+  /** Arguments after the runtime interpreter; `{install}` and `{runtime}` expand to the two install directories. */
+  readonly launch: ReadonlyArray<string>
+}
+
+export type Engine = NativeEngine | HostedEngine
+
+export type NativeEngine = {
   readonly id: EngineId
   readonly version: string
   /** SPDX identifier of the upstream license. */
@@ -85,7 +133,10 @@ const kiota = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], e
   executable,
 })
 
-export const ENGINES: Readonly<Record<EngineId, Engine>> = {
+export const RUNTIMES: Readonly<Record<RuntimeId, Runtime>> = { node: NODE, java: JAVA, python: PYTHON }
+
+// Declared without widening so a native entry keeps its `targets`.
+export const ENGINES = {
   "ast-grep": {
     id: "ast-grep",
     version: AST_GREP,
@@ -152,4 +203,8 @@ export const ENGINES: Readonly<Record<EngineId, Engine>> = {
       "win32-x64": kiota("win-x64", "sha256-ZrVUe5SPe+ck+l4N3d69qPe2YldK5Y6507jFHGCcYnE=", "kiota.exe"),
     },
   },
-}
+  orval: ORVAL,
+  "protoc-gen-es": PROTOC_GEN_ES,
+  "openapi-generator": OPENAPI_GENERATOR,
+  "datamodel-codegen": DATAMODEL_CODEGEN,
+} satisfies Readonly<Record<EngineId, Engine>>

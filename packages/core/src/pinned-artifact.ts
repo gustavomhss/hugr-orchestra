@@ -37,10 +37,14 @@ export class Failed extends Schema.TaggedErrorClass<Failed>()("PinnedArtifactFai
 
 const DOWNLOAD_MS = 10 * 60_000
 
-/** Download, verify and lay out every artifact in a staging dir, then move it into `directory` in one rename. */
+/**
+ * Download, verify and lay out every artifact in a staging dir, run `populate` over it, then move it into `directory`
+ * in one rename.
+ */
 export const install = Effect.fn("PinnedArtifact.install")(function* (
   directory: string,
   artifacts: ReadonlyArray<Artifact>,
+  populate?: (staging: string) => Effect.Effect<void, Failed>,
 ) {
   if (yield* installed(directory)) return directory
   const parent = path.dirname(directory)
@@ -48,6 +52,7 @@ export const install = Effect.fn("PinnedArtifact.install")(function* (
   const staging = yield* step("filesystem", () => mkdtemp(path.join(parent, ".staging-")))
   yield* Effect.gen(function* () {
     yield* Effect.forEach(artifacts, (artifact) => unpack(staging, artifact), { discard: true })
+    if (populate) yield* populate(staging)
     yield* step("filesystem", () => writeFile(path.join(staging, ".complete"), ""))
     // A concurrent install may have renamed its staging dir first; its complete install wins.
     yield* step("filesystem", () => rename(staging, directory)).pipe(
