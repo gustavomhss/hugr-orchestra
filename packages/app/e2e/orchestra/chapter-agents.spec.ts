@@ -291,8 +291,6 @@ async function setup(
         JSON.stringify({
           general: {
             newLayoutDesigns: true,
-            agentVisibilityInitialized: true,
-            showCustomAgents: false,
             shouldDisplayTabsToast: false,
             newInterfaceNoticeDismissed: true,
           },
