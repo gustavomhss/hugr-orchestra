@@ -87,6 +87,8 @@ const fixture = Effect.gen(function* () {
     node: runtime("node", missing.includes("node")),
     java: runtime("java", missing.includes("java")),
     python: runtime("python", missing.includes("python")),
+    go: runtime("go", missing.includes("go")),
+    rust: runtime("rust", missing.includes("rust")),
   })
   const jar = { kind: "jar" as const, artifact: { url: `${base}/fake.jar`, integrity: sri(JAR), format: "raw" as const, entries: [{ from: "fake.jar", to: "fake.jar" }] } }
   const engine = (

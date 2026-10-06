@@ -5,6 +5,8 @@ import type { TargetId } from "./target"
 import { JAVA, OPENAPI_GENERATOR } from "./hosted/java"
 import { NODE, ORVAL, PROTOC_GEN_ES } from "./hosted/node"
 import { DATAMODEL_CODEGEN, PYTHON } from "./hosted/python"
+import { GO, OGEN } from "./hosted/go"
+import { RUST, SQLX } from "./hosted/rust"
 
 export type EngineId =
   | "ast-grep"
@@ -16,8 +18,10 @@ export type EngineId =
   | "protoc-gen-es"
   | "openapi-generator"
   | "datamodel-codegen"
+  | "ogen"
+  | "sqlx"
 
-export type RuntimeId = "node" | "java" | "python"
+export type RuntimeId = "node" | "java" | "python" | "go" | "rust"
 
 /** A private interpreter shared by every hosted engine that names it (ruling M4-1). */
 export type Runtime = {
@@ -41,14 +45,30 @@ export type HostedEngine = {
   /**
    * `npm`: `npm ci --ignore-scripts` with the runtime's bundled npm over a lockfile carrying an integrity for every
    * package. `pip`: `pip install --require-hashes --no-deps --only-binary=:all:` over a hash list covering every target.
-   * `jar`: the raw jar.
+   * `jar`: the raw jar. `source` (ruling M5-1): the upstream source archive, whose entries must lay the source root at
+   * `src`, built by the runtime toolchain; go's `path` is the package dir inside the module, cargo's the crate dir.
    */
   readonly install:
     | { readonly kind: "npm"; readonly packageJson: string; readonly lock: string }
     | { readonly kind: "pip"; readonly requirements: string }
     | { readonly kind: "jar"; readonly artifact: PinnedArtifact.Artifact }
-  /** Arguments after the runtime interpreter; `{install}` and `{runtime}` expand to the two install directories. */
+    | {
+        readonly kind: "source"
+        readonly artifact: PinnedArtifact.Artifact
+        readonly build: "go" | "cargo"
+        readonly path: string
+        /** The built executable's name without `.exe`. */
+        readonly binary: string
+        /** Cargo only. */
+        readonly features?: ReadonlyArray<string>
+      }
+  /**
+   * Arguments after the runtime interpreter; `{install}` and `{runtime}` expand to the two install directories. Empty
+   * for a `source` engine, whose launcher runs the built binary.
+   */
   readonly launch: ReadonlyArray<string>
+  /** Targets the engine cannot be made ready on, with the reason, e.g. `needs-msvc-linker`. */
+  readonly unsupported?: Readonly<Partial<Record<TargetId, string>>>
 }
 
 export type Engine = NativeEngine | HostedEngine
@@ -133,7 +153,7 @@ const kiota = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], e
   executable,
 })
 
-export const RUNTIMES: Readonly<Record<RuntimeId, Runtime>> = { node: NODE, java: JAVA, python: PYTHON }
+export const RUNTIMES: Readonly<Record<RuntimeId, Runtime>> = { node: NODE, java: JAVA, python: PYTHON, go: GO, rust: RUST }
 
 // Declared without widening so a native entry keeps its `targets`.
 export const ENGINES = {
@@ -207,4 +227,6 @@ export const ENGINES = {
   "protoc-gen-es": PROTOC_GEN_ES,
   "openapi-generator": OPENAPI_GENERATOR,
   "datamodel-codegen": DATAMODEL_CODEGEN,
+  ogen: OGEN,
+  sqlx: SQLX,
 } satisfies Readonly<Record<EngineId, Engine>>
