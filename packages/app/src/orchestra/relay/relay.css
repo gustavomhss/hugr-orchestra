@@ -563,6 +563,20 @@ html[data-color-scheme="light"] .wf-editor {
   flex-wrap: nowrap;
   min-inline-size: 0;
 }
+.wf-head .mx-badge {
+  white-space: nowrap;
+}
+.wf-badge-compact {
+  display: none;
+}
+@media (max-width: 1439px) {
+  .wf-head .wf-badge-full {
+    display: none;
+  }
+  .wf-head .wf-badge-compact {
+    display: inline-flex;
+  }
+}
 .wf-head-right {
   display: flex;
   align-items: center;

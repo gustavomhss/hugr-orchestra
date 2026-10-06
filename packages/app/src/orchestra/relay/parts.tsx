@@ -53,13 +53,19 @@ export function HeadBadge(props: { document: RelayDocument }) {
           </span>
         }
       >
-        <span class="mx-badge" title={copy.t("orchestra.workflows.badge.aheadTitle")}>
+        <span class="mx-badge wf-badge-full" title={copy.t("orchestra.workflows.badge.aheadTitle")}>
           {copy.t("orchestra.workflows.badge.draft", { version: props.document.versionCounter })} ·{" "}
           <span style={{ color: "var(--mx-good)" }}>
             {props.document.publishedCounter === undefined
               ? copy.t("orchestra.workflows.badge.livePlain")
               : copy.t("orchestra.workflows.badge.live", { version: props.document.publishedCounter })}
           </span>
+        </span>
+        {/* Narrow windows keep the live version only, as the approved mock does at 1280px. */}
+        <span class="mx-badge good wf-badge-compact" title={copy.t("orchestra.workflows.badge.aheadTitle")}>
+          {props.document.publishedCounter === undefined
+            ? copy.t("orchestra.workflows.badge.publishedPlain")
+            : copy.t("orchestra.workflows.badge.published", { version: props.document.publishedCounter })}
         </span>
       </Show>
     </Show>
