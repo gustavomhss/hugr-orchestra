@@ -74,7 +74,9 @@ jobs:
             echo "::error::packages/$package does not exist"
             exit 2
           fi
-          mapfile -t args < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
+          # A read loop, not mapfile: macOS runners ship bash 3.2.
+          args=()
+          while IFS= read -r arg; do args+=("$arg"); done < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
           runner=$(jq -r '.runner // "bun"' .ci-run.json | tr -d '\r')
           cd "packages/$package"
           case "$runner" in
