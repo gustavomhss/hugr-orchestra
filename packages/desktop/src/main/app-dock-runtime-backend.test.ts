@@ -212,3 +212,10 @@ test("a remember that cannot refresh the helper still stops the workspace", asyn
   expect(f.calls).toEqual([`stop ${pinned}`])
   expect((await f.runtime.state()).phase).toBe("stopped")
 }, 10_000)
+
+test("an unpinned running workspace is stopped without running remember into it", async () => {
+  const f = await fixture({ workspace: running(pinned) })
+
+  await f.runtime.stop()
+  expect(f.calls).toEqual([`stop ${pinned}`])
+})
