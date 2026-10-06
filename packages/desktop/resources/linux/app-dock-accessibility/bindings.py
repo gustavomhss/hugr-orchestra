@@ -7,7 +7,7 @@ from time import monotonic
 
 from bus import BusError
 from context import A, DBUS, LIMITS, ROOT, RequestContext, process_identity
-from refs import scope_kind
+from refs import TreeCache, scope_kind
 
 
 def word(value):
@@ -25,6 +25,7 @@ class BindingStore:
         self.bus, self.registry, self.session_id = bus, registry, session_id
         self.bindings, self.proposals, self.subscriptions = {}, {}, {}
         self.registered_owners = set()
+        self.cache = TreeCache()
         self._lifecycle = RLock()
 
     def get(self, binding_id, epoch):
@@ -130,6 +131,8 @@ class BindingStore:
                     if owner not in self.subscriptions:
                         self.subscriptions[owner] = self.bus.subscribe_lifecycle(owner, self.dirty)
                         self.registered_owners.add(owner)
+                        if self.subscriptions[owner].get("changes") == "registered":
+                            self.cache.enable(owner)
                     context.remaining()
             except BusError:
                 self.unbind(binding)
@@ -139,6 +142,9 @@ class BindingStore:
     def dirty(self, kind, owner, path):
         # At most eight bindings; no accessible traversal in the GLib callback.
         # Do not take _lifecycle: confirmation can hold it while awaiting Gio.
+        self.cache.invalidate(owner, None if kind == "owner-loss" else path)
+        if kind == "changed":
+            return  # Ordinary UI changes keep refs; resolution re-reads them fresh.
         for binding in tuple(self.bindings.values()):
             if any(root["owner"] == owner for root in binding["roots"]):
                 self.registry.mark_dirty(binding, kind)
@@ -150,6 +156,7 @@ class BindingStore:
             live = {root["owner"] for item in self.bindings.values() for root in item["roots"]}
             for owner in tuple(self.subscriptions):
                 if owner not in live:
+                    self.cache.disable(owner)
                     self.bus.unsubscribe_lifecycle(self.subscriptions.pop(owner))
 
 
