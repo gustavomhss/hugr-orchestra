@@ -4,9 +4,10 @@ import { TestClock } from "effect/testing"
 import { LLMEvent } from "@opencode-ai/llm"
 import type { Provider } from "@/provider/provider"
 import type { LLM } from "@/session/llm"
-import { request, run, snapshot } from "@/continuity/fork"
+import { request, run, snapshot, tailCut } from "@/continuity/fork"
 import { transcript } from "@/continuity/transcript"
 import { Token } from "@/util/token"
+import type { MemorySnapshot } from "@/continuity/memory-types"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { testEffect } from "../lib/effect"
 import { artifact, finding, host, memory, messages, model, provider, sessionID } from "./memory-fixture"
@@ -57,12 +58,12 @@ test("head budget uses real transcript cost and never splits a tool exchange", (
   const history = messages()
   history[1].parts.push({ id: PartID.make("prt_tool"), messageID: history[1].info.id, sessionID,
     type: "tool", tool: "bash", callID: "call", state: { status: "completed", input: { command: "read-only check" },
-      title: "check", output: "failed verification\n".repeat(300), metadata: { exit: 75 }, time: { start: 1, end: 2 } } })
+      title: "check", output: "failed verification\n".repeat(90), metadata: { exit: 75 }, time: { start: 1, end: 2 } } })
   const budget = Token.estimate(transcript(history.slice(0, 2)))
   expect(snapshot(sessionID, history, undefined, true, budget)?.head).toEqual(history.slice(0, 2))
   expect(snapshot(sessionID, history, undefined, true, budget)?.tail).toEqual(history.slice(2))
-  // One whole turn over the budget is still taken, so coverage never stalls on it.
-  expect(snapshot(sessionID, history, undefined, true, budget - 1)?.head).toEqual(history.slice(0, 2))
+  // A turn over the budget is cut between its messages; the first message is always taken, so coverage never stalls.
+  expect(snapshot(sessionID, history, undefined, true, budget - 1)?.head).toEqual(history.slice(0, 1))
   // The replay transport sends no head transcript: an infinite budget covers up to the native tail.
   expect(snapshot(sessionID, history, undefined, true, Infinity)?.head).toEqual(history.slice(0, 8))
   expect(snapshot(sessionID, history, undefined, true, Token.estimate(transcript(history.slice(0, 4))))?.head)
@@ -90,6 +91,27 @@ test("prior memory starts at its tail; incompatible prior falls back to the raw 
     expect(fallback?.previous).toBeUndefined()
     expect(fallback?.head).toEqual(history.slice(0, 8))
   }
+})
+
+test("a turn longer than the tail ceiling is cut between its steps", () => {
+  const history = messages(["user", ...Array<"assistant">(12).fill("assistant")])
+  for (const message of history.slice(1)) message.parts.push({ id: PartID.make(`prt_${message.info.id}`), messageID: message.info.id,
+    sessionID, type: "tool", tool: "read", callID: `call_${message.info.id}`, state: { status: "completed", input: { filePath: "a.ts" },
+      title: "read", output: "line\n".repeat(400), metadata: {}, time: { start: 1, end: 2 } } })
+  const step = Token.estimate(transcript(history.slice(12)))
+  // Without a ceiling the whole turn stays native and nothing can be covered.
+  expect(snapshot(sessionID, history)).toBeUndefined()
+  expect(tailCut(history)).toBe(0)
+  // With one: the most recent steps that fit stay native, the earlier steps join the head.
+  const result = snapshot(sessionID, history, undefined, true, Infinity, step * 3)!
+  expect(result.tail).toEqual(history.slice(10))
+  expect(result.head).toEqual(history.slice(0, 10))
+  expect(result.tail[0].info.role).toBe("assistant")
+  expect(result.tailTokens).toBe(step * 3)
+  // The last message always stays native, even when it alone is over the ceiling.
+  expect(snapshot(sessionID, history, undefined, true, Infinity, 1)?.tail).toEqual(history.slice(12))
+  // A turn that fits keeps the old rule: the tail starts at its user message.
+  expect(tailCut(messages(), Infinity)).toBe(tailCut(messages(), 1_000_000))
 })
 
 test("declines empty head, oversized first turn, foreign messages and invalid budgets", () => {
@@ -248,7 +270,11 @@ it.effect("the ceiling is derived from the trigger and the head, never from the 
   const text = large.head[0].parts[0]
   if (text.type !== "text") throw new Error("Expected text")
   text.text = "raw input ".repeat(10_000)
-  const oversized = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 10_000 } })
+  // A huge part reaches the producer clipped (the archive keeps every byte), so it fits a 10,000-token input.
+  const clipped = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 10_000 } })
+  expect(clipped.pass.skip).toBeUndefined()
+  expect(String(clipped.requests[0].messages[0].content)).toContain("more characters; the archive keeps them")
+  const oversized = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 2_000 } })
   expect(oversized.requests).toEqual([])
   expect(oversized.pass.skip).toBe("input-limit")
   // The head is measured as the model sees it: stored metadata such as an edit diff is not context.
@@ -261,11 +287,11 @@ it.effect("the ceiling is derived from the trigger and the head, never from the 
   expect(measured.pass.ceiling).toBeLessThan(10_000)
 }))
 
-it.effect("declines without recall capability", () => Effect.gen(function* () {
+it.effect("runs without recall capability: memory no longer depends on it", () => Effect.gen(function* () {
   const calls: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (value: LLM.StreamInput) => { calls.push(value); return stopped() } } }
-  expect(yield* run({ ...input(), canRecall: false }, services, host(), { trigger: 0.7 })).toMatchObject({ skip: "precondition" })
-  expect(calls).toEqual([])
+  expect((yield* run({ ...input(), canRecall: false }, services, host(), { trigger: 0.7 })).skip).toBeUndefined()
+  expect(calls.length).toBeGreaterThan(0)
 }))
 
 it.effect("workflow aliases decline; generic providers retain JSON transport without native schema", () => Effect.gen(function* () {
@@ -300,4 +326,17 @@ for (const phase of ["lookup", "stream"] as const) it.effect(`180-second timeout
   const exit = yield* Fiber.join(fiber)
   expect(Exit.isFailure(exit)).toBe(true)
   if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toMatchObject({ _tag: "TimeoutError" })
+}))
+
+it.effect("a span inside one long turn takes the model from that turn's user message in the history", () => Effect.gen(function* () {
+  const history = messages(["user", ...Array<"assistant">(12).fill("assistant")])
+  const part = history[1].parts[0]
+  if (part.type === "text") part.text = `step-1 ${"historical context ".repeat(1_000)}`
+  // Head and tail both sit inside the turn: neither holds a user message.
+  const captured: MemorySnapshot = { sessionID, boundary: history[12].info.id, tailStart: history[5].info.id,
+    head: history.slice(1, 5), tail: history.slice(5), canRecall: true }
+  const calls: LLM.StreamInput[] = []
+  const services = { provider: provider(), llm: { stream: (value: LLM.StreamInput) => { calls.push(value); return stopped() } } }
+  expect((yield* run(captured, services, host(history), { trigger: 0.7 })).skip).toBeUndefined()
+  expect(calls[0]?.model.id).toBe(model.id)
 }))
