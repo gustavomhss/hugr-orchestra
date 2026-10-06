@@ -6,7 +6,7 @@ The packet assigns a change to `.proto` files in a Buf module (`buf.yaml` presen
 
 ## Non-trigger
 
-- Code generation. No generation plugin ships with the toolkit yet, so `buf generate` is not a toolkit step. A packet that assigns generation must name a project-pinned plugin route that is already installed; otherwise return a `packet` blocker. Never fetch a plugin.
+- Code generation for TypeScript: follow [protoc-gen-es](protoc-gen-es.md), the one generation plugin the toolkit ships. Any other plugin must be a project-pinned route that is already installed; otherwise return a `packet` blocker. Never fetch a plugin.
 - Changing `buf.yaml` lint or breaking rules, module layout or `deps`. That configuration is supplied.
 - Registry work: `buf push`, `buf dep update`, `buf registry ...`, `--against-registry`.
 

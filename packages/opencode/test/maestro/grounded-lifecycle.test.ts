@@ -440,3 +440,23 @@ it.instance(
   { git: true },
   30000,
 )
+
+// F4-O4: Atlas Memory logs travel with the code but are not task output, so a Memory write keeps the context current.
+it.instance(
+  "an Atlas Memory write keeps the context current while a code change still makes it stale",
+  () =>
+    Effect.gen(function* () {
+      const data = yield* prepare()
+      const plan = yield* recordPlanRevision(data.input)
+      const context = yield* recordContext(plan.id, data.session.id, true)
+      const fs = yield* FileSystem.FileSystem
+      yield* fs.writeFileString(path.join(data.test.directory, ".atlas/memory.jsonl"), '{"memory":"lesson"}\n')
+      yield* fs.writeFileString(path.join(data.test.directory, ".atlas/orientation.jsonl"), '{"orientation":"hit"}\n')
+      expect(yield* contextIsCurrent(context)).toBe(true)
+      expect(yield* recordContext(plan.id, data.session.id, true)).toEqual(context)
+      yield* fs.writeFileString(path.join(data.test.directory, "src/owned.ts"), "export const owned = 2\n")
+      expect(yield* contextIsCurrent(context)).toBe(false)
+    }),
+  { git: true },
+  30000,
+)
