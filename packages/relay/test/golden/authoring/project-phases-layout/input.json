@@ -1,0 +1,48 @@
+{
+  "op": "project",
+  "name": "Phases",
+  "sprint": {
+    "brief": "Phases",
+    "macros": [
+      {
+        "id": "m1",
+        "title": "One",
+        "instructions": "first"
+      },
+      {
+        "id": "m2",
+        "instructions": "second"
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "a",
+        "macro": "m1"
+      },
+      {
+        "id": "b",
+        "macro": "m1",
+        "kind": "gate"
+      },
+      {
+        "id": "c",
+        "macro": "m2"
+      },
+      {
+        "id": "d"
+      },
+      {
+        "id": "e",
+        "macro": "m3",
+        "title": "E"
+      },
+      {
+        "id": "f",
+        "macro": "m3",
+        "kind": "inject",
+        "text": "t",
+        "file": "f.md"
+      }
+    ]
+  }
+}

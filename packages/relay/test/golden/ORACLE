@@ -12,6 +12,7 @@ tool             Python 3.14.5
 tool             GNU bash 5.3.3
 tool             git 2.51.0
 tool             LibreSSL 3.3.6 (openssl dgst -hmac), shasum 6.02
+tool             SQLite 3.53.1 (Python sqlite3; wrote test/fixtures/authoring.sqlite3)
 sha256 bf0d96cbc9efee59225b1e8211d88ffaa5116fa112aa81257f8830ed61c3db75  benchmark/judge.py
 sha256 ce7fe19291da6b468679883db9372882062833cae3be4edd1e037c58fff9c45c  benchmark/verify_ledger.py
 sha256 81b1cca267d535c47dcd04399ff877c1625a316d94427904a76857dbfa3cfbff  bin/relay

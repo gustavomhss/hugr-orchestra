@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "A connection points to a missing step or to a step with several inputs"
+}
