@@ -10,36 +10,14 @@ import { it } from "../lib/effect"
 import { A, B, FIRST, SECOND, NONCE, RECEIPT, applyFirst, archiveDirectory, archiveFile, begin, complete, entered,
   environment, fragments, held, jobFor, packet, prepare, recall, seed, terminal } from "./service-fixture"
 
-it.instance("denied recall prevents maintenance; revocation restores native history even without active references", () => Effect.gen(function* () {
+it.instance("memory applies without recall; recall only gates masking", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
-  const second = yield* held(SECOND)
   yield* Effect.gen(function* () {
+    // Without the legacy compaction, an agent that cannot recall still needs its context maintained.
     const sessionID = yield* seed(B, A, undefined, false)
-    const jobs = yield* BackgroundJob.Service
-    const sessions = yield* Session.Service
-    const continuity = yield* SessionContinuity.Service
-    const history = yield* sessions.messages({ sessionID })
-    expect(yield* jobs.list()).toEqual([])
-    expect(yield* Deferred.isDone(first.entered)).toBe(false)
-    expect(yield* prepare(sessionID, false)).toEqual({ messages: history, system: [] })
-    const latest = history.at(-1)!.info
-    if (latest.role !== "assistant") throw new Error("Expected assistant")
-    yield* continuity.start({ sessionID, message: latest, canRecall: true })
     const allowed = yield* applyFirst(sessionID, first)
-    expect(yield* prepare(sessionID, false)).toEqual({ messages: history, system: [] })
-    expect(yield* prepare(sessionID, true)).toEqual(allowed)
-    yield* complete(yield* begin(sessionID, "REVOKED_USER"), "REVOKED_REPLY", 50_000, false)
-    const current = yield* sessions.messages({ sessionID })
-    expect(yield* prepare(sessionID, false)).toEqual({ messages: current, system: [] })
-    expect((yield* prepare(sessionID, true)).system).toEqual(allowed.system)
-    expect(yield* Deferred.isDone(second.entered)).toBe(false)
-    yield* complete(yield* begin(sessionID, "RE_ENABLED"), "RE_ENABLED_REPLY", 50_000, true)
-    const hit = yield* entered(second)
-    expect(packet(hit.request)).toContain(FIRST)
-    yield* Deferred.succeed(second.release, undefined)
-    yield* terminal(hit.jobID, "completed", "applied")
-    expect((yield* prepare(sessionID)).system[0]).toContain(SECOND)
-  }).pipe(Effect.provide(environment([first, second])))
+    expect(yield* prepare(sessionID, false)).toEqual(allowed)
+  }).pipe(Effect.provide(environment([first])))
 }), 30_000)
 
 it.instance("memory aliases recall exact sources; append-only publication avoids rereading old history until invalidation", () => Effect.gen(function* () {
@@ -137,11 +115,14 @@ it.instance("failed real archive publication never starts the producer or author
 
 it.instance("foreign-owner archive IDs cannot enter memory or bypass real tool ownership", () => Effect.gen(function* () {
   const first = yield* held(FIRST, { reference: NONCE })
+  const other = yield* held(FIRST)
   const rejected = yield* held(SECOND)
   yield* Effect.gen(function* () {
     const own = yield* seed(B, A, RECEIPT)
     yield* applyFirst(own, first)
     const foreign = yield* seed(B, A, RECEIPT, false)
+    // The foreign session is maintained too (memory needs no recall); let its own pass finish first.
+    yield* applyFirst(foreign, other)
     const sessions = yield* Session.Service
     const archive = yield* Archive.Service
     const refs = yield* archive.publish({ sessionID: foreign, messages: yield* sessions.messages({ sessionID: foreign }) })
@@ -158,5 +139,5 @@ it.instance("foreign-owner archive IDs cannot enter memory or bypass real tool o
     yield* terminal(hit.jobID, "completed", "discarded")
     expect(yield* prepare(own)).toEqual(before)
     expect(before.system[0]).not.toContain(selected.id)
-  }).pipe(Effect.provide(environment([first, rejected])))
+  }).pipe(Effect.provide(environment([first, other, rejected])))
 }), 30_000)

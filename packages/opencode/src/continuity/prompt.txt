@@ -36,8 +36,8 @@ update sends only changed fields; null clears an optional field. key is any name
 this reply, for a new item; use it only in needs.
 
 src: aliases from the index (uN user, aN assistant, tN tool call or delegation return). Copy
-exact strings only from what you can see, one value per item, never joined; otherwise cite the
-alias. An error or value the host cannot find drops only its own op. Retire what is disproven,
+exact strings only from what you can see, one value or error per item, never joined (two errors
+are two failures); otherwise cite the alias. An error or value the host cannot find drops only its own op. Retire what is disproven,
 finished with or no longer true; keep a dead end worth remembering as a failure.
 
 The host rejects the reply (you get one retry) unless:

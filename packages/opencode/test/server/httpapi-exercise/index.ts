@@ -1510,10 +1510,11 @@ const scenarios: Scenario[] = [
       (body, ctx) =>
         Effect.gen(function* () {
           check(body === true, "summarize should return true")
+          // Summarize runs a working-memory pass; the legacy summary message is gone.
           const messages = yield* ctx.messages(ctx.state.id)
           check(
-            messages.some((message) => message.info.role === "assistant" && message.info.summary === true),
-            "summarize should create a summary assistant message",
+            !messages.some((message) => message.info.role === "assistant" && message.info.summary === true),
+            "summarize should not create a legacy summary message",
           )
           yield* ctx.llmWait(1)
         }),
