@@ -131,7 +131,7 @@ it.instance("backend loads its entry skill, reads a companion and cannot load an
     // Seat skills stay out of the instance-wide list and are offered only to the native seat.
     expect((yield* skills.all()).map((item) => item.name)).not.toContain("backend-implement")
     expect((yield* skills.available(backend)).map((item) => item.name)).toEqual(["backend-implement"])
-    expect((yield* skills.available(yield* agents.get("build"))).map((item) => item.name)).not.toContain(
+    expect((yield* skills.available(yield* agents.get("maestro"))).map((item) => item.name)).not.toContain(
       "backend-implement",
     )
 
@@ -148,7 +148,7 @@ it.instance("backend loads its entry skill, reads a companion and cannot load an
     expect(Exit.isSuccess(read)).toBe(true)
     if (Exit.isSuccess(read)) expect(JSON.stringify(read.value)).toContain("continuity.md")
 
-    const other = yield* call(tools.skill, { name: "customize-opencode" })
+    const other = yield* call(tools.skill, { name: "maestro-governed" })
     expect(Exit.isFailure(other)).toBe(true)
     if (Exit.isFailure(other)) expect(String(other.cause)).toContain("PermissionDeniedError")
 

@@ -126,7 +126,7 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
 
     expect(backendSkills.root).toBe(path.resolve(import.meta.dir, "../../../backend-specialist/skills"))
     for (const name of backendSkills.names) expect(check("skill", name)).toBe("allow")
-    expect(check("skill", "customize-opencode")).toBe("deny")
+    expect(check("skill", "maestro-governed")).toBe("deny")
     expect(check("skill", "own_backend-implement")).toBe("deny")
     expect(check("external_directory", path.join(backendSkills.root, "backend-implement", "references", "*"))).toBe(
       "allow",
