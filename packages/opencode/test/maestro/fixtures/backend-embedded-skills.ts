@@ -9,17 +9,19 @@ const files = (await fs.readdir(source, { recursive: true, withFileTypes: true }
   .filter((entry) => entry.isFile())
   .map((entry) => path.join(entry.parentPath, entry.name))
 
+const contents = Object.fromEntries(
+  await Promise.all(
+    files.map(async (file) => [path.relative(source, file).split(path.sep).join("/"), await fs.readFile(file, "utf8")]),
+  ),
+)
+
 plugin({
   name: "backend-embedded-skills",
   setup(build) {
     build.module("opencode-backend-skills.gen.ts", () => ({
       loader: "object",
       exports: {
-        default: Object.fromEntries(
-          await Promise.all(
-            files.map(async (file) => [path.relative(source, file).split(path.sep).join("/"), await fs.readFile(file, "utf8")]),
-          ),
-        ),
+        default: contents,
       },
     }))
   },
