@@ -1,65 +1,88 @@
-import { ScrollView } from "@opencode-ai/ui/scroll-view"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { createMediaQuery } from "@solid-primitives/media"
-import { Show } from "solid-js"
+import { Show, startTransition } from "solid-js"
+import { useCommand } from "@/context/command"
+import { useLanguage } from "@/context/language"
+import { useTabs } from "@/context/tabs"
+import { OrchestraHome } from "@/orchestra/chapters/kpis-home"
 import { createHomeController } from "./home/home-controller"
 import { createHomeProjectsController } from "./home/home-projects-controller"
-import { HomeUtilityNav } from "./home/home-projects-view"
 import { HomeProjects } from "./home/home-projects"
-import { createHomeScrollController } from "./home/home-scroll-controller"
-import { createHomeSessionSearchController } from "./home/home-session-search-controller"
-import { createHomeSessionsController } from "./home/home-sessions-controller"
-import { HomeSessions } from "./home/home-sessions"
-import { RecordedUsageHome } from "@/orchestra/chapters/kpis-home"
+import { HomeUtilityNav } from "./home/home-projects-view"
 
 export function NewHome() {
   const desktop = createMediaQuery("(min-width: 768px)")
   const home = createHomeController()
+  // Also registers the settings command the sidebar's Settings entry triggers.
   const projects = createHomeProjectsController(home)
-  const sessions = createHomeSessionsController(home)
-  const search = createHomeSessionSearchController(home, sessions)
-  const scroll = createHomeScrollController(sessions.data.groups)
+  const command = useCommand()
+  const dialog = useDialog()
+  const language = useLanguage()
+  const tabs = useTabs()
+  command.register("home.palette", () => [
+    {
+      id: "command.palette",
+      title: language.t("command.palette"),
+      hidden: true,
+      onSelect: async () => {
+        const conn = home.server.focused()
+        const ctx = home.server.focusedContext()
+        if (!conn || !ctx) return
+        const { DialogHomeCommandPaletteV2 } = await import("@/components/dialog-command-palette-v2")
+        void dialog.show(() => (
+          <DialogHomeCommandPaletteV2
+            server={conn}
+            onSelectSession={(entry) => {
+              if (!entry.sessionID || !entry.directory || !entry.server) return
+              const sessionID = entry.sessionID
+              const server = entry.server
+              const directory = entry.project?.worktree ?? entry.directory
+              ctx.projects.open(directory)
+              ctx.projects.touch(directory)
+              void startTransition(() => {
+                const tab = tabs.addSessionTab({ server, sessionId: sessionID })
+                tabs.select(tab)
+              })
+            }}
+          />
+        ))
+      },
+    },
+  ])
   return (
     <div
       data-component="orchestra-home"
       class={`
-        m-2 min-h-0 flex-1 self-stretch overflow-hidden rounded-[10px]
+        m-2 flex min-h-0 flex-1 flex-col self-stretch overflow-hidden rounded-[10px]
         bg-v2-background-bg-base shadow-[var(--v2-elevation-raised)]
       `}
     >
-      <ScrollView
-        class="h-full [container-type:size]"
-        thumbContainer={scroll.viewport.thumbTrack}
-        thumbHoverTarget={scroll.viewport.hoverTarget}
-        viewportRef={scroll.viewport.setViewport}
-        onScroll={(event) => scroll.viewport.update(event.currentTarget.scrollTop)}
-        onWheel={scroll.viewport.containOuterWheel}
-      >
-        <div
-          data-slot="orchestra-home-grid"
-          class={`
-            mx-auto grid min-h-full w-full max-w-[1080px] grid-rows-[auto_minmax(0,1fr)_auto] gap-4 px-3
-            lg:grid-cols-[280px_minmax(0,720px)] lg:grid-rows-1 lg:gap-8 lg:px-6
-          `}
-        >
-          <Show when={!desktop()}>
-            <HomeProjects projects={projects} scroll={scroll} />
-          </Show>
-          <HomeSessions sessions={sessions} search={search} scroll={scroll} />
-          <Show when={!desktop()}>
-            <HomeUtilityNav
-              class="flex lg:hidden"
-              onOpenSettings={projects.utility.settings}
-              onOpenHelp={projects.utility.help}
-              language={projects.copy.language}
-            />
-          </Show>
-        </div>
-        <Show when={desktop()}>
-          <div class="mx-auto w-full max-w-[720px] px-6">
-            <RecordedUsageHome home={home} />
-          </div>
-        </Show>
-      </ScrollView>
+      <Show when={desktop()} fallback={<NarrowHome home={home} projects={projects} />}>
+        <OrchestraHome home={home} />
+      </Show>
+    </div>
+  )
+}
+
+// Narrow windows have no Orchestra sidebar, so Home keeps the project list above the dashboard.
+function NarrowHome(props: {
+  home: ReturnType<typeof createHomeController>
+  projects: ReturnType<typeof createHomeProjectsController>
+}) {
+  return (
+    <div data-slot="orchestra-home-narrow" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pt-3">
+      <div class="shrink-0">
+        <HomeProjects projects={props.projects} />
+      </div>
+      <div class="shrink-0">
+        <OrchestraHome home={props.home} />
+      </div>
+      <HomeUtilityNav
+        class="flex shrink-0 pb-3"
+        onOpenSettings={props.projects.utility.settings}
+        onOpenHelp={props.projects.utility.help}
+        language={props.projects.copy.language}
+      />
     </div>
   )
 }

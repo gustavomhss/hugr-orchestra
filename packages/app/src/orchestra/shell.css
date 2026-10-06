@@ -187,10 +187,17 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     display: none;
   }
 
+  /* Every main view is one glass panel, as the reference's .main.glass: chapter pages carry
+     .orchestra-glass, and Home's container takes the same shared glass here. */
   .orchestra-shell [data-component="orchestra-home"] {
     margin-block: 0;
     margin-inline: 0;
+    border: 1px solid var(--glass-border);
     border-radius: 9px;
+    background: var(--glass-background);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
   }
 
   .orchestra-shell [data-slot="orchestra-home-grid"] {
@@ -200,6 +207,15 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     gap: 0;
     padding-inline: 24px;
   }
+}
+
+/* The app body is 13px/24px at weight 440; the reference shell inherits 16px/normal/400. The
+   titlebar sets the type of its own reference slots below. */
+.orchestra-sidebar,
+.orchestra-profile-menu {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
 }
 
 .orchestra-sidebar {
@@ -259,7 +275,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 .orchestra-nav-button {
   display: flex;
   inline-size: 100%;
-  block-size: 34px;
+  block-size: 31px;
   align-items: center;
   gap: 11px;
   padding-block: 0;
@@ -328,7 +344,9 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   border-radius: 4px;
   color: var(--orchestra-sidebar-key-text);
   background: var(--orchestra-sidebar-key-background);
+  font-family: monospace;
   font-size: 10px;
+  line-height: normal;
   white-space: nowrap;
 }
 
@@ -348,6 +366,38 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   background: var(--v2-state-fg-warning);
 }
 
+/* The reference's chapter marker (.mx-origin), marking screens to revisit before production. */
+:is(.orchestra-wip-chip, .orchestra-wip-mark) {
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: 6px;
+  background: var(--orchestra-wip-background);
+  color: var(--orchestra-wip-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.orchestra-wip-chip {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding-block: 1px;
+  padding-inline: 6px;
+}
+
+/* In flow above the page, so it never covers a page's own eyebrow, title or header action. Pages use
+   different content columns, so it sits in the panel's corner rather than on any one of them. */
+.orchestra-wip-mark {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-block: 14px 0;
+  margin-inline: 16px;
+  padding-block: 4px;
+  padding-inline: 8px;
+}
+
 .orchestra-sidebar-foot {
   display: grid;
   flex-shrink: 0;
@@ -360,6 +410,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   display: flex;
   inline-size: 100%;
   min-inline-size: 0;
+  /* The reference card height, so a name without its meta line stays centered. */
+  min-block-size: 46px;
   align-items: center;
   gap: 9px;
   padding-block: 8px;
@@ -391,6 +443,14 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   font-weight: 650;
 }
 
+/* A repository without its own icon or color gets the reference's square profile mark. */
+.orchestra-profile-avatar[data-unset] [data-slot="project-avatar-surface"] {
+  background: var(--orchestra-sidebar-profile-logo);
+  box-shadow: none;
+  color: var(--orchestra-sidebar-profile-logo-text);
+  text-shadow: none;
+}
+
 .orchestra-profile-text {
   min-inline-size: 0;
   flex: 1;
@@ -406,18 +466,20 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 .orchestra-profile-text strong {
   font-size: 12px;
   font-weight: 600;
-  line-height: 16px;
+  line-height: normal;
 }
 
 .orchestra-profile-text small {
   color: var(--orchestra-sidebar-profile-muted);
   font-size: 10px;
-  line-height: 12px;
+  line-height: normal;
 }
 
 .orchestra-profile-chevron {
   flex-shrink: 0;
   color: var(--orchestra-sidebar-profile-chevron);
+  font-size: 11px;
+  line-height: normal;
 }
 
 .orchestra-sidebar-footer {
@@ -513,20 +575,38 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   margin-block-end: 8px;
 }
 
+/* Expanded, the collapse control sits at the end of the brand row so the navigation keeps the
+   reference rhythm; the compact rail keeps it as a row under the mark. */
+[data-navigation="expanded"] .orchestra-sidebar > .orchestra-navigation-toggle {
+  position: absolute;
+  inset-block-start: 18px;
+  inset-inline-end: 10px;
+  inline-size: 28px;
+  block-size: 28px;
+  justify-content: center;
+  margin-block-end: 0;
+  padding-inline: 0;
+}
+
+[data-navigation="expanded"] .orchestra-sidebar > .orchestra-navigation-toggle .orchestra-nav-label {
+  display: none;
+}
+
 .orchestra-navigation-toggle:focus-visible {
   outline: 2px solid var(--v2-icon-icon-accent);
   outline-offset: -2px;
 }
 
+/* Paint the glyph with the navigation icon color. The glyph's own path sets its fill, so the
+   root fill changes nothing on screen and exposes the ink to contrast checks. */
+.orchestra-navigation-toggle-icon {
+  color: var(--orchestra-sidebar-icon);
+  fill: currentColor;
+}
+
 /* The glyph draws its panel divider on the left; the navigation sits at inline-start. */
 .orchestra-navigation-toggle:dir(rtl) [data-slot="icon-svg"] {
   transform: scaleX(-1);
-}
-
-@media (min-width: 768px) and (max-width: 1439px) {
-  .orchestra-workspace {
-    --orchestra-navigation-width: 208px;
-  }
 }
 
 /* The layout attribute only changes navigation geometry. No timeline ancestor
@@ -542,8 +622,29 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   --orchestra-navigation-display: none;
 }
 
+.orchestra-shell
+  > [data-slot="titlebar-v2"]
+  :is([data-slot="orchestra-titlebar-breadcrumb"], [data-slot="orchestra-titlebar-caption"]) {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+}
+
+/* The reference's 520 resolves to Inter Medium plus synthetic bold; Blink synthesizes bold for web
+   fonts only at 600 or more against a lighter face, so ask the Medium-only face for 600. */
+.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
+  font-family: "Mx Inter Medium", var(--orchestra-font-family-sans);
+  font-weight: 600;
+}
+
+/* The reference spaces the caption 16px from the scheme toggle. */
+.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-caption"] {
+  margin-inline-end: 10px;
+}
+
 .orchestra-shell > [data-slot="titlebar-v2"] .orchestra-navigation-toggle {
   inline-size: 34px;
+  block-size: 34px;
   margin-block-end: 0;
   padding-inline: 7px;
   -webkit-app-region: no-drag;
@@ -608,6 +709,23 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   inline-size: 2px;
   border-radius: 1px;
   background: var(--orchestra-sidebar-active-icon);
+}
+
+/* The compact rail keeps the mark as a dot on the icon. */
+[data-navigation="compact"] .orchestra-wip-chip {
+  position: absolute;
+  inset-inline-end: 4px;
+  inset-block-start: 4px;
+  inline-size: 5px;
+  block-size: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--orchestra-wip-text);
+}
+
+[data-navigation="compact"] .orchestra-wip-chip > span {
+  display: none;
 }
 
 [data-navigation="compact"] .orchestra-pending-dot {

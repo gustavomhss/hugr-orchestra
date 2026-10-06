@@ -1,5 +1,5 @@
 import { createMediaQuery } from "@solid-primitives/media"
-import { createEffect, createMemo, on, onCleanup, onMount } from "solid-js"
+import { createEffect, createMemo, on, onCleanup, onMount, Show, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -13,13 +13,13 @@ import {
   appDockProfile,
   isLinux,
   sameTab,
-  tabLabel,
   type AppDockAPI,
   type Bookmark,
   type Tab,
   type TabIdentity,
 } from "./apps-panel-controller"
 import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
+import { FindBar, LibraryPopover } from "./apps-panel-library"
 import { DockModes, LinuxToolbar } from "./apps-panel-linux"
 import { TabButton } from "./apps-panel-tab-button"
 import { TabMenu } from "./apps-panel-tab-menu"
@@ -32,11 +32,13 @@ export type DockAddressDraft = { owner?: string; tab?: TabIdentity; value: strin
 // A view of the window's App Dock. The live tabs belong to the controller and the repository
 // profile in context, so unmounting this view hides the native browser instead of closing it.
 // The compact view is the cockpit's Dock card: tabs above the address bar and only the core controls.
+// A placeholder fills the page area while no native page covers it (loading, no tabs, a failed load).
 export function AppsPanel(
   props: {
     compact?: boolean
     draft?: DockAddressDraft
     onDraftChange?: (draft: DockAddressDraft | undefined) => void
+    placeholder?: JSX.Element
   } = {},
 ) {
   const dock = appDockController()
@@ -66,11 +68,10 @@ export function AppsPanel(
     return appDockProfile(ServerConnection.key(server), project?.worktree ?? sdk().directory)
   })
   const [view, setView] = createStore({
-    libraryOpen: undefined as "bookmarks" | "history" | undefined,
+    libraryOpen: undefined as "bookmarks" | "history" | "downloads" | undefined,
     findOpen: false,
     findText: "",
     findResult: undefined as { requestID: number; activeMatchOrdinal: number; matches: number } | undefined,
-    downloadsOpen: false,
     sidebarCollapsed: localStorage.getItem(sidebarCollapsedKey) === "true",
     menu: undefined as { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement } | undefined,
     profileCreating: false,
@@ -151,7 +152,6 @@ export function AppsPanel(
         if (view.menu) closeMenu()
         else if (view.findOpen) closeFind()
         else if (view.libraryOpen) setView("libraryOpen", undefined)
-        else if (view.downloadsOpen) setView("downloadsOpen", false)
         else return
         event.preventDefault()
         return
@@ -229,6 +229,8 @@ export function AppsPanel(
     const tab = state.active
     if (tab) void api?.appDockFullscreen(tab.tabID, !state.fullscreen)
   }
+  const toggleLibrary = (kind: "bookmarks" | "history" | "downloads") =>
+    setView("libraryOpen", view.libraryOpen === kind ? undefined : kind)
   const openLibraryItem = (entry: Bookmark) => {
     setView("libraryOpen", undefined)
     void dock.openLibraryItem(entry)
@@ -247,7 +249,7 @@ export function AppsPanel(
     <div ref={root} class="zen-browser-frame">
       <DockModes compact={props.compact} dock={dock} menu={linuxMenu} />
       <div
-        class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""}`}
+        class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""} ${view.findOpen && !activeLinux() ? "is-finding" : ""}`}
         data-status={state.status}
       >
         <aside class="zen-browser-sidebar" aria-label="Browser workspaces">
@@ -410,7 +412,7 @@ export function AppsPanel(
               class="zen-nav-button zen-nav-extra"
               type="button"
               aria-label="Bookmarks"
-              onClick={() => setView("libraryOpen", view.libraryOpen === "bookmarks" ? undefined : "bookmarks")}
+              onClick={() => toggleLibrary("bookmarks")}
             >
               &#9734;
             </button>
@@ -418,7 +420,7 @@ export function AppsPanel(
               class="zen-nav-button zen-nav-extra"
               type="button"
               aria-label="History"
-              onClick={() => setView("libraryOpen", view.libraryOpen === "history" ? undefined : "history")}
+              onClick={() => toggleLibrary("history")}
             >
               &#8986;
             </button>
@@ -453,7 +455,7 @@ export function AppsPanel(
               class="zen-nav-button zen-nav-extra"
               type="button"
               aria-label="Downloads"
-              onClick={() => setView("downloadsOpen", !view.downloadsOpen)}
+              onClick={() => toggleLibrary("downloads")}
             >
               &#8595;
             </button>
@@ -489,7 +491,7 @@ export function AppsPanel(
             </div>
           )}
           {state.permission && (
-            <div class="zen-error" role="status" aria-live="polite">
+            <div class="zen-error warn" role="status" aria-live="polite">
               {`${state.permission.permission} permission ${state.permission.state}`}
             </div>
           )}
@@ -497,6 +499,7 @@ export function AppsPanel(
             <div class="zen-tab-crash" role="alert" aria-live="assertive">
               <span>Tab crashed ({activeCrashed()!.reason}).</span>
               <button
+                class="zen-open-button"
                 type="button"
                 disabled={
                   !(activeLinux() ? capability("appDockLinuxOpen") : capability("appDockRecoverTab")) ||
@@ -513,89 +516,53 @@ export function AppsPanel(
               {language.t("common.requestFailed")}
             </div>
           )}
-          {api && ready() && !state.active && !activeLinux() && (
-            <div class="zen-empty-state">
-              <strong>{language.t("appDock.browser.title")}</strong>
-              <span>{language.t("appDock.browser.empty")}</span>
-            </div>
-          )}
-          {view.libraryOpen && (
-            <div
-              class="zen-library"
-              role="dialog"
-              aria-label={view.libraryOpen === "bookmarks" ? "Bookmarks" : "History"}
-            >
-              <div class="zen-library-title">{view.libraryOpen === "bookmarks" ? "Bookmarks" : "History"}</div>
-              {(view.libraryOpen === "bookmarks" ? state.bookmarks : state.history).map((entry) => (
-                <button type="button" onClick={() => openLibraryItem(entry)}>
-                  <span>{entry.title}</span>
-                  <small>{new URL(entry.url).hostname}</small>
-                </button>
-              ))}
-              {(view.libraryOpen === "bookmarks" ? state.bookmarks : state.history).length === 0 && (
-                <p>Nothing here yet.</p>
-              )}
-            </div>
-          )}
-          {view.findOpen && !activeLinux() && (
-            <form
-              class="zen-findbar"
-              onSubmit={(event) => {
-                event.preventDefault()
-                void find(true)
-              }}
-            >
-              <input
-                autofocus
-                value={view.findText}
-                onInput={(event) => setView("findText", event.currentTarget.value)}
-                aria-label="Find in page"
-                placeholder="Find in page"
+          <Show when={view.libraryOpen}>
+            {(kind) => (
+              <LibraryPopover
+                kind={kind()}
+                entries={kind() === "bookmarks" ? state.bookmarks : state.history}
+                downloads={state.downloads}
+                register={dock.registerOverlay}
+                onOpen={openLibraryItem}
+                onOpenDownload={(id) => void api?.appDockOpenDownload(id)}
+                onCancelDownload={(id) => void api?.appDockCancelDownload(id)}
               />
-              <span>{view.findResult ? `${view.findResult.activeMatchOrdinal}/${view.findResult.matches}` : ""}</span>
-              <button type="button" aria-label="Previous match" onClick={() => void find(false)}>
-                &#8593;
-              </button>
-              <button type="submit" aria-label="Next match">
-                &#8595;
-              </button>
-              <button type="button" aria-label="Close find" onClick={closeFind}>
-                x
-              </button>
-            </form>
-          )}
-          {view.downloadsOpen && (
-            <div class="zen-library" role="dialog" aria-label="Downloads">
-              <div class="zen-library-title">Downloads</div>
-              {state.downloads.map((download) => (
-                <div class="zen-download">
-                  <span>{download.filename}</span>
-                  <small>
-                    {download.state === "progressing" && download.totalBytes > 0
-                      ? `${Math.round((download.receivedBytes / download.totalBytes) * 100)}%`
-                      : download.state}
-                  </small>
-                  {download.state === "completed" ? (
-                    <button type="button" onClick={() => void api?.appDockOpenDownload(download.id)}>
-                      Open
-                    </button>
-                  ) : download.state === "progressing" || download.state === "paused" ? (
-                    <button type="button" onClick={() => void api?.appDockCancelDownload(download.id)}>
-                      Cancel
-                    </button>
-                  ) : null}
+            )}
+          </Show>
+          <Show when={view.findOpen && !activeLinux()}>
+            <FindBar
+              text={view.findText}
+              result={view.findResult}
+              onInput={(text) => setView("findText", text)}
+              onFind={(forward) => void find(forward)}
+              onClose={closeFind}
+            />
+          </Show>
+          {/* The page area. The native browser covers the view inside it, which starts below the find
+              bar while that is open so the bar stays above the page it searches. */}
+          <div class="zen-browser-host">
+            <div ref={host} class="zen-browser-view" />
+            {api ? (
+              props.placeholder
+            ) : (
+              <div class="zen-empty-state">
+                <strong>Browser needs OpenCode Desktop.</strong>
+                <span>Native browser tabs are unavailable in web app.</span>
+              </div>
+            )}
+            {/* The browser side with no page. Views that already report an empty Dock (the cockpit card,
+                a placeholder) only need it while the Linux workspace is the sole tab. */}
+            {api &&
+              ready() &&
+              !state.active &&
+              !activeLinux() &&
+              (state.tabs.length > 0 || !(props.compact || "placeholder" in props)) && (
+                <div class="zen-empty-state">
+                  <strong>{language.t("appDock.browser.title")}</strong>
+                  <span>{language.t("appDock.browser.empty")}</span>
                 </div>
-              ))}
-              {state.downloads.length === 0 && <p>No downloads yet.</p>}
-            </div>
-          )}
-          {!api && (
-            <div class="zen-empty-state">
-              <strong>Browser needs OpenCode Desktop.</strong>
-              <span>Native browser tabs are unavailable in web app.</span>
-            </div>
-          )}
-          <div ref={host} class="zen-browser-host" />
+              )}
+          </div>
           {view.menu && (
             <TabMenu
               tab={view.menu.tab}

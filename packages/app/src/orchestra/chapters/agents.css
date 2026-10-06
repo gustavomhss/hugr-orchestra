@@ -1,141 +1,109 @@
-.orchestra-agents {
-  padding: 28px;
-  overflow: auto;
-  color: var(--orchestra-text);
-  font-family: var(--orchestra-font-family-sans);
+/* Agents (mock `#viewAgents`): the slim masthead and roster cards that the shared kit does not cover. */
+.orchestra-agents .agents-inner {
+  inline-size: min(1020px, calc(100% - 72px));
+  margin: 0 auto;
+  padding: 52px 0 72px;
 }
-.orchestra-agents h1 {
-  font-size: 28px;
-  font-weight: 600;
-}
-.orchestra-agents h2 {
-  font-size: 22px;
-  font-weight: 600;
-}
-.orchestra-agents h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-block: 24px 12px;
-}
-.orchestra-agents p {
-  color: var(--orchestra-muted);
-  margin-block: 8px 20px;
-}
-.agents-toolbar {
+.agents-mast {
   display: flex;
-  align-items: center;
+  align-items: end;
   justify-content: space-between;
-  gap: 12px;
-  padding-block: 20px;
-  border-block-end: 1px solid var(--orchestra-border-muted);
-  margin-block-end: 20px;
+  gap: 28px;
+  margin-block-end: 22px;
 }
-.agents-directory {
-  overflow-wrap: anywhere;
-  font-size: 12px;
-  color: var(--orchestra-muted);
+.agents-kicker {
+  color: #788899;
+  font-size: 11px;
+  font-weight: 580;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.agents-content {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.3fr);
-  gap: 20px;
-  align-items: start;
+.agents-mast h1 {
+  margin: 9px 0 0;
+  color: #ebeff3;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
 }
-.agents-roster {
-  display: grid;
-  gap: 12px;
+.agents-mast h1 span {
+  color: #8e9cab;
+  font-weight: 450;
+}
+.agents-grid {
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-.agents-card[data-component="button-v2"] {
+.agent-top b {
+  min-inline-size: 0;
+  overflow: hidden;
+  color: #dbe4ec;
+  font-size: 13.5px;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-role {
+  margin-inline-start: auto;
+  color: #7f8fa0;
+  font: 10.5px var(--mx-mono);
+}
+.agents-ic {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.orchestra-agents .mx-empty p {
+  margin: 0 0 12px;
+}
+.agents-draft-error {
+  margin-block-start: 15px;
+}
+
+html[data-color-scheme="light"] .agents-kicker {
+  color: #6f7883;
+}
+html[data-color-scheme="light"] .agents-mast h1 {
+  color: #171c23;
+}
+html[data-color-scheme="light"] .agents-mast h1 span {
+  color: #666f7a;
+}
+html[data-color-scheme="light"] .agent-top b {
+  color: #1f2833;
+}
+html[data-color-scheme="light"] .agent-role {
+  color: #6b7480;
+}
+
+/* The native modal dialog: the form scrolls its body between the fixed head and foot, as in the mock.
+   The app's preflight zeroes margins, so restore the UA centering of a modal dialog. */
+.agents-dialog {
+  margin: auto;
+}
+.agents-dialog form {
   display: flex;
+  min-block-size: 0;
+  max-block-size: calc(100vh - 66px);
   flex-direction: column;
-  align-items: stretch;
-  white-space: normal;
-  text-align: start;
-  inline-size: 100%;
-  block-size: auto;
-  padding: 18px;
-  border: 1px solid var(--orchestra-border-muted);
-  border-radius: 10px;
-  background: var(--glass-background);
-  box-shadow: var(--glass-shadow);
-  color: var(--orchestra-text);
-}
-.agents-card[aria-pressed="true"] {
-  border-color: var(--orchestra-accent);
-}
-.agents-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.agents-mode {
-  color: var(--orchestra-accent);
-  font-size: 12px;
-}
-.agents-card-description {
-  color: var(--orchestra-body);
-  font-size: 13px;
-  margin-block: 12px;
-}
-.agents-card-model {
-  color: var(--orchestra-muted);
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-.agents-detail {
-  padding: 24px;
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  background: var(--glass-background);
-  box-shadow: var(--glass-shadow);
-}
-.agents-detail dl > div {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 16px;
-  padding-block: 12px;
-  border-block-end: 1px solid var(--orchestra-border-muted);
-}
-.agents-detail dt {
-  color: var(--orchestra-muted);
-}
-.agents-detail dd {
   margin: 0;
-  overflow-wrap: anywhere;
 }
-.agents-permissions {
-  overflow-x: auto;
-  margin-block-end: 24px;
+.agents-dialog::backdrop {
+  background: var(--mx-backdrop, rgba(3, 9, 16, 0.55));
+  backdrop-filter: blur(5px);
 }
-.agents-permissions table {
-  inline-size: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
+.agents-fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
-.agents-permissions th,
-.agents-permissions td {
-  text-align: start;
-  padding-block: 10px;
-  padding-inline-end: 16px;
-  border-block-end: 1px solid var(--orchestra-border-muted);
-  overflow-wrap: anywhere;
-}
-.agents-permissions th {
-  color: var(--orchestra-muted);
-  font-weight: 500;
-}
-.agents-note {
-  font-size: 13px;
-}
-.orchestra-agents button:focus-visible {
-  outline: 2px solid var(--orchestra-accent);
-  outline-offset: 3px;
-}
-@media (max-width: 1000px) {
-  .agents-content {
-    grid-template-columns: 1fr;
-  }
+.agents-close {
+  flex: none;
 }

@@ -152,6 +152,22 @@ describe("createCompatibleApi", () => {
     ])
   })
 
+  test("sends profile behavior instructions as the V1 per-message system prompt only", async () => {
+    const system = "LLM behaviors active for this profile.\n\n## Caveman (intensity: lite)"
+    const legacy = setup("v1")
+    await legacy.api.session.prompt({ sessionID: "ses_1", id: "msg_1", text: "hello", system })
+    expect(new URL(legacy.requests[0]!.url).pathname).toBe("/session/ses_1/prompt_async")
+    expect((await legacy.requests[0]!.json()).system).toBe(system)
+
+    await legacy.api.session.prompt({ sessionID: "ses_1", id: "msg_2", text: "hello" })
+    expect(await legacy.requests[1]!.json()).not.toHaveProperty("system")
+
+    const current = setup("v2")
+    await current.api.session.prompt({ sessionID: "ses_1", id: "msg_1", text: "hello", system })
+    expect(new URL(current.requests[0]!.url).pathname).toBe("/api/session/ses_1/prompt")
+    expect(JSON.stringify(await current.requests[0]!.json())).not.toContain("Caveman")
+  })
+
   test("resolves protocol detection once across implementation methods", async () => {
     let detections = 0
     const resolved = Promise.resolve<"v1" | "v2">("v2")

@@ -33,7 +33,7 @@ export default function NewSessionPage() {
   })
   const ready = Promise.resolve()
   const [suspendUntilPromptReady] = createResource(
-    () => draft.prompt.readyPromise() ?? ready,
+    () => Promise.all([draft.prompt.readyPromise() ?? ready, workspace.ready.promise ?? ready]),
     (promise) => promise.then(() => true),
   )
 

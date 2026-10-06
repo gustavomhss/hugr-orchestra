@@ -10,6 +10,7 @@ import {
   pane,
   parentID,
   parentTitle,
+  railTab,
   server,
   setupCockpit,
 } from "./session-cockpit.fixture"
@@ -17,7 +18,9 @@ import {
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
 
-test("the Apps tab shows the Dock, Tasks and Activity together, with local panes", async ({ page }) => {
+test("the Apps tab hosts only the Dock and the Tasks tab holds Tasks and Activity, with local panes", async ({
+  page,
+}) => {
   const ptys: string[] = []
   const reads: string[] = []
   const lists: string[] = []
@@ -32,25 +35,32 @@ test("the Apps tab shows the Dock, Tasks and Activity together, with local panes
   await openCockpit(page)
   await page.getByRole("textbox", { name: "Prompt", exact: true }).fill("Keep this cockpit draft")
   const bar = page.locator('[data-slot="session-side-panel-tab-bar"]')
-  await expect(bar.getByRole("tab", { name: /^Apps/ })).toHaveAttribute("aria-selected", "true")
-  await expect(
-    bar.getByRole("tab", { name: /^Apps/ }).locator('[data-slot="session-side-panel-tab-count"]'),
-  ).toHaveText("1")
-  await expect(bar.getByRole("tab", { name: "Tasks" })).toHaveCount(0)
+  const count = '[data-slot="session-side-panel-tab-count"]'
+  await expect(bar.getByRole("tab")).toHaveText([/^Review/, "Context", /^Tasks/, "Apps"])
+  await expect(railTab(page, "apps")).toHaveAttribute("aria-selected", "true")
+  // The live count belongs to the Tasks tab, as in the approved rail; Apps carries none.
+  await expect(railTab(page, "tasks").locator(count)).toHaveText("1")
+  await expect(railTab(page, "apps").locator(count)).toHaveCount(0)
 
-  // All three at once: the Dock on top, Tasks and Activity under it.
+  // Apps hosts the Dock alone; Tasks and Activity live in the Tasks tab.
   const dock = dockCard(page)
   const tasks = page.locator('[data-component="tasks-panel"][data-variant="summary"]')
   const activity = page.getByRole("region", { name: "Activity" })
   await expect(dock).toBeVisible()
-  await expect(tasks).toBeVisible()
-  await expect(activity).toBeVisible()
+  await expect(tasks).toHaveCount(0)
+  await expect(activity).toHaveCount(0)
   await expect(dock.getByRole("tab")).toHaveText(["Browser", "Files", "Docs", "Terminal"])
   await expect(pane(dock, "Browser")).toHaveAttribute("aria-selected", "true")
   await expect(dock.getByRole("tabpanel")).toContainText("Browser unavailable here")
   await shoot(page, "cockpit-web-unavailable")
   expect(reads).toEqual([])
   expect(lists).not.toContain("docs")
+
+  await railTab(page, "tasks").click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+  await expect(dock).toHaveCount(0)
+  await expect(tasks).toBeVisible()
+  await expect(activity).toBeVisible()
 
   await expect(tasks.locator('[data-slot="tasks-count"]')).toHaveText("1 task")
   await expect(tasks.locator('[data-slot="task-title"]')).toHaveText(["Running task", "Failed task"])
@@ -68,6 +78,9 @@ test("the Apps tab shows the Dock, Tasks and Activity together, with local panes
   await tasks.getByRole("button", { name: "Show less" }).click()
   await expect(tasks.locator('[data-slot="task-stats"]')).toHaveCount(0)
 
+  // Back in Apps the Dock remounts on the pane it had.
+  await railTab(page, "apps").click()
+  await expect(pane(dock, "Browser")).toHaveAttribute("aria-selected", "true")
   await pane(dock, "Files").click()
   const files = dock.getByRole("tabpanel")
   await files.getByText("package.json", { exact: true }).click()
@@ -75,7 +88,7 @@ test("the Apps tab shows the Dock, Tasks and Activity together, with local panes
   await expect(files.getByText("cockpit-package-contents", { exact: true })).toBeVisible()
   expect(reads).toEqual(["package.json"])
   await expect(dock).toBeVisible()
-  await expect(tasks).toBeVisible()
+  await expect(tasks).toHaveCount(0)
 
   await pane(dock, "Docs").click()
   const docs = dock.getByRole("tabpanel")
@@ -155,12 +168,15 @@ test("switching panes hides and shows the same native tab, and its bounds follow
     moves.filter((call) => call.type === "select").map(({ tabID, generation }) => ({ tabID, generation })),
   ).toEqual([tab])
 
-  // Activity names this window's tab and brings Browser back to it.
+  // Activity, in the Tasks tab, names this window's tab and brings Apps and its Browser back to it.
   const activity = page.getByRole("region", { name: "Activity" })
   const row = activity.locator('[data-slot="activity-row"][data-kind="dock"]')
-  await expect(row).toHaveText("DockPage /aWindow · Page ready")
   await pane(dock, "Files").click()
+  await railTab(page, "tasks").click()
+  await expect(dock).toHaveCount(0)
+  await expect(row).toHaveText("DockPage /aWindow · Page ready")
   await row.click()
+  await expect(railTab(page, "apps")).toHaveAttribute("aria-selected", "true")
   await expect(pane(dock, "Browser")).toHaveAttribute("aria-selected", "true")
   await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toHaveAttribute("aria-selected", "true")
 
@@ -172,11 +188,26 @@ test("switching panes hides and shows the same native tab, and its bounds follow
   await expect.poll(() => boundsInSync(page, dock)).toBe("in sync")
   expect(await lastResize(page)).toMatchObject(tab)
   const anchored = await hostBounds(dock)
+  // Leaving Apps hides the native tab by name; the Tasks detail cannot move a Dock it does not share.
+  const left = (await calls(page)).length
+  await railTab(page, "tasks").click()
+  await expect(dock).toHaveCount(0)
+  await expect
+    .poll(async () => (await calls(page)).slice(left).filter((call) => call.type === "hide"))
+    .toEqual([{ type: "hide", ...tab }])
   await page.locator('[data-component="tasks-panel"]').getByRole("button", { name: "View all (2)" }).click()
   await expect(page.locator('[data-slot="task-stats"]')).toHaveCount(2)
-  expect(await hostBounds(dock)).toEqual(anchored)
   await page.locator('[data-component="tasks-panel"]').getByRole("button", { name: "Show less" }).click()
   await expect(activity.getByRole("heading", { name: "Activity" })).toBeInViewport()
+  // Returning selects the same tab and generation in the same bounds; nothing reopens.
+  await railTab(page, "apps").click()
+  await expect.poll(() => boundsInSync(page, dock)).toBe("in sync")
+  await expect.poll(() => hostBounds(dock)).toEqual(anchored)
+  const back = (await calls(page)).slice(left)
+  expect(back.filter((call) => ["open", "close", "close-tab", "navigate"].includes(call.type))).toEqual([])
+  expect(back.filter((call) => call.type === "select").map(({ tabID, generation }) => ({ tabID, generation }))).toEqual(
+    [tab],
+  )
   await shoot(page, "cockpit-desktop")
   await page.locator('[data-slot="orchestra-theme-toggle"]').click()
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "light")
@@ -211,7 +242,10 @@ test("address drafts survive title events and lazy pane switches; Escape restore
   await address.press("Escape")
   await expect(address).toHaveValue("https://example.com/a")
   expect((await calls(page)).filter((call) => call.type === "navigate")).toEqual([])
-  const activityTask = page.getByRole("region", { name: "Activity" }).getByRole("button", {
+  // Activity reads the Dock's state from the Tasks tab, so title events reach it without taking focus.
+  await railTab(page, "tasks").click()
+  const activity = page.getByRole("region", { name: "Activity" })
+  const activityTask = activity.getByRole("button", {
     name: "Agent Running task Session · Running",
     exact: true,
   })
@@ -223,13 +257,17 @@ test("address drafts survive title events and lazy pane switches; Escape restore
       payload: { tabID: "tab-1", generation: 1, url: "https://example.com/a", title: "Final title", loading: false },
     }),
   )
-  await expect(dock.locator(".zen-tab-title")).toHaveText("Final title")
+  await expect(activity.locator('[data-slot="activity-row"][data-kind="dock"]')).toContainText("Final title")
   await expect(activityTask).toBeFocused()
+  await railTab(page, "apps").click()
+  await expect(dock.locator(".zen-tab-title")).toHaveText("Final title")
 })
 
 test("65 active tasks remain reachable in bounded Tasks and Activity details", async ({ page }) => {
   await setupCockpit(page, { bridge: true, many: true })
   await openCockpit(page)
+  await railTab(page, "tasks").click()
+  await expect(railTab(page, "tasks").locator('[data-slot="session-side-panel-tab-count"]')).toHaveText("65")
   const tasks = page.locator('[data-component="tasks-panel"]')
   const activity = page.getByRole("region", { name: "Activity" })
   await expect(tasks.locator('[data-slot="tasks-count"]')).toHaveText("65 tasks")
@@ -392,6 +430,7 @@ test("shell tasks and Activity reveal the confirmed originating turn without int
     if (new URL(request.url()).pathname.endsWith("/abort")) aborts.push(request.url())
   })
   await openCockpit(page)
+  await railTab(page, "tasks").click()
   // The row is named by what it shows; where it leads is its description.
   const shell = page.locator('[data-component="tasks-panel"]').getByRole("button", { name: /^Inspect workspace/ })
   await expect(shell).toHaveAccessibleDescription("Open execution")
@@ -412,10 +451,15 @@ test("empty Docs offers the real Files pane; empty Tasks and Activity claim no w
   await page.goto(`/server/${base64Encode(server)}/session/${parentID}`)
   await expectSessionTitle(page, parentTitle)
   await page.getByRole("button", { name: "Toggle review" }).click()
-  await page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps", exact: true }).click()
-  const dock = dockCard(page)
+  // Without live work nothing opens Tasks for the user; its count reads zero.
+  await expect(railTab(page, "review")).toHaveAttribute("aria-selected", "true")
+  await expect(railTab(page, "tasks").locator('[data-slot="session-side-panel-tab-count"]')).toHaveText("0")
+  await railTab(page, "tasks").click()
+  await expect(page.locator('[data-component="tasks-panel"]')).toBeVisible()
   await expect(page.locator('[data-slot="task-row"]')).toHaveCount(0)
   await expect(page.getByRole("region", { name: "Activity" })).toContainText("No recent activity")
+  await railTab(page, "apps").click()
+  const dock = dockCard(page)
   await pane(dock, "Docs").click()
   await expect(dock.getByRole("status")).toContainText("No local documentation found")
   await dock.getByRole("button", { name: "Open in Files" }).click()
@@ -431,6 +475,8 @@ test("Arabic locale keeps pane order logical and code paths LTR", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
   // Existing Arabic dictionary copy, not a translation supplied by this fixture.
   await page.getByRole("button", { name: "تبديل المراجعة" }).click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+  await railTab(page, "apps").click()
   const dock = dockCard(page)
   await pane(dock, "Browser").focus()
   await page.keyboard.press("ArrowLeft")
@@ -519,11 +565,13 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
       await page.keyboard.press("Escape")
       await expect(menu).toHaveCount(0)
 
-      // In a short window the menu opens upward from the pointer instead.
-      await page.setViewportSize({ width, height: 460 })
+      // In a short window the menu opens upward from the pointer instead. The window is short enough
+      // that the menu cannot fit below the pointer, which the first check proves.
+      const shortHeight = 440
+      await page.setViewportSize({ width, height: shortHeight })
       const short = await rect(tabs.nth(3))
       const low = { x: Math.round(rtl ? short.left + 4 : short.right - 4), y: Math.round(short.bottom - 2) }
-      expect(low.y + size.height).toBeGreaterThan(460)
+      expect(low.y + size.height).toBeGreaterThan(shortHeight)
       await page.mouse.click(low.x, low.y, { button: "right" })
       await expect(menu).toBeVisible()
       await expectAnchored(page, menu, low, { x: end, y: "bottom" })
@@ -572,6 +620,8 @@ async function openTabs(page: Page, locale: "en" | "ar", count: number) {
   await expect(page.locator("html")).toHaveAttribute("dir", rtl ? "rtl" : "ltr")
   // Existing dictionary copy for the review toggle, not a translation supplied by this fixture.
   await page.getByRole("button", { name: rtl ? "تبديل المراجعة" : "Toggle review", exact: true }).click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+  await railTab(page, "apps").click()
   const dock = dockCard(page)
   await expect(dock).toBeVisible()
   const address = dock.getByRole("textbox", { name: "Address" })

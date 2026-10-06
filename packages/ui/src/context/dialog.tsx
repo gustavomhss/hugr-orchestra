@@ -24,6 +24,7 @@ type Active = {
   dispose: () => void
   owner: Owner
   onClose?: () => void
+  closing: () => boolean
   setClosing: (closing: boolean) => void
 }
 
@@ -85,17 +86,19 @@ function init() {
     const id = Math.random().toString(36).slice(2)
     const zIndex = 50 + layer * 10
     let dispose: (() => void) | undefined
+    let closing: (() => boolean) | undefined
     let setClosing: ((closing: boolean) => void) | undefined
 
     const node = runWithOwner(owner, () =>
       createRoot((d: () => void) => {
         dispose = d
-        const [closing, setClosingSignal] = createSignal(false)
+        const [isClosing, setClosingSignal] = createSignal(false)
+        closing = isClosing
         setClosing = setClosingSignal
         return (
           <Kobalte
             modal={stack().at(-1)?.id === id}
-            open={!closing()}
+            open={!isClosing()}
             onOpenChange={(open: boolean) => {
               if (open || stack().at(-1)?.id !== id) return
               close(id)
@@ -127,9 +130,9 @@ function init() {
       }),
     )
 
-    if (!dispose || !setClosing) return
+    if (!dispose || !closing || !setClosing) return
 
-    const active: Active = { id, node, dispose, owner, onClose, setClosing }
+    const active: Active = { id, node, dispose, owner, onClose, closing, setClosing }
     setStack((items) => [...items, active])
     return id
   }
@@ -195,6 +198,10 @@ export function useDialog() {
   return {
     get active() {
       return ctx.stack().at(-1)
+    },
+    // A closed dialog stays on the stack until its exit animation ends, but it no longer owns the keyboard.
+    get open() {
+      return ctx.stack().some((item) => !item.closing())
     },
     show(element: DialogElement, onClose?: () => void) {
       const base = ctx.stack().at(-1)?.owner ?? owner

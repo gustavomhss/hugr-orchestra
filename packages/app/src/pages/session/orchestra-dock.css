@@ -96,7 +96,7 @@
   gap: 6px;
 }
 
-.orchestra-dock-pane > .zen-browser-shell {
+.orchestra-dock-pane > .zen-browser-frame {
   block-size: auto;
   min-block-size: 0;
   flex: 1;

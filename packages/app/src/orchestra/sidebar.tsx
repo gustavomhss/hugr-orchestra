@@ -4,11 +4,23 @@ import { Dialog, DialogBody, DialogHeader, DialogTitle, DialogTitleGroup } from 
 import { Icon } from "@opencode-ai/ui/v2/icon"
 import { ProjectAvatar } from "@opencode-ai/ui/v2/project-avatar-v2"
 import { useNavigate } from "@solidjs/router"
-import { createEffect, createMemo, createRoot, For, getOwner, onCleanup, Show, type JSX } from "solid-js"
+import { skipToken, useQuery } from "@tanstack/solid-query"
+import {
+  createEffect,
+  createMemo,
+  createRoot,
+  For,
+  getOwner,
+  onCleanup,
+  Show,
+  startTransition,
+  type JSX,
+} from "solid-js"
 import { createStore } from "solid-js/store"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { useCommand } from "@/context/command"
 import { useGlobal } from "@/context/global"
+import { directoryKey } from "@/context/global-sync/utils"
 import { getProjectAvatarVariant, type LocalProject, useLayout } from "@/context/layout"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
@@ -16,7 +28,7 @@ import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
-import { navigation } from "@/orchestra/navigation"
+import { isWip, navigation } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
 import { createHomeController } from "@/pages/home/home-controller"
@@ -125,9 +137,88 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
               !!directory &&
               (pathKey(project.worktree) === directory ||
                 project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory)),
-          ),
+          ) ??
+        (group && target.directory ? copyOwner(group.conn, group.projects(), target.directory) : undefined),
     }
   })
+
+  // A V2 project copy (a workspace) never appears in `sandboxes`, but its directory's bootstrap already asked the
+  // server which project owns it. Reading that answer passively keeps a draft in a copy on its repository profile,
+  // so chapters opened from it get the repository root.
+  function copyOwner(conn: ServerConnection.Any, projects: LocalProject[], directory: string) {
+    const id = global.ensureServerCtx(conn).sync.peek(directory, { bootstrap: false })[0].project
+    if (!id || id === "global") return
+    return projects.find((project) => project.id === id)
+  }
+
+  // The profile card only reads: passive reads must not initialize (bootstrap) the selected directory.
+  // The agent list shares the bootstrap's query cache.
+  const agents = useQuery(() => {
+    const target = profile()
+    if (!target.conn || !target.project || !target.directory)
+      return { queryKey: ["orchestra-profile-agents"], queryFn: skipToken }
+    return global.ensureServerCtx(target.conn).sync.queryOptions.agents(directoryKey(target.directory))
+  })
+  // Legacy servers answer GET /vcs; a server that does not (V2) leaves the branch off the card.
+  const branch = useQuery(() => {
+    const target = profile()
+    const conn = target.conn
+    const directory = target.directory
+    return {
+      queryKey: ["orchestra-profile-branch", target.server, directory],
+      queryFn:
+        conn && target.project && directory
+          ? () =>
+              global
+                .ensureServerCtx(conn)
+                .sdk.createClient({ directory, throwOnError: true })
+                .vcs.get()
+                .then((result) => result.data?.branch ?? null)
+          : skipToken,
+      retry: false,
+    }
+  })
+  const meta = () => {
+    const count = agents.data?.filter((agent) => !agent.hidden).length
+    return [
+      count === undefined
+        ? undefined
+        : language.t(count === 1 ? "orchestra.shell.profile.agents.one" : "orchestra.shell.profile.agents.other", {
+            count,
+          }),
+      branch.data,
+    ]
+      .filter(Boolean)
+      .join(" · ")
+  }
+
+  // Chapter pages register no palette of their own; Home and sessions register theirs over this one.
+  command.register("orchestra.palette", () =>
+    layout.route().type === "chapter"
+      ? [{ id: "command.palette", title: language.t("command.palette"), hidden: true, onSelect: openPalette }]
+      : [],
+  )
+
+  async function openPalette() {
+    const conn = profile().conn ?? home.server.focused()
+    if (!conn) return
+    const ctx = global.ensureServerCtx(conn)
+    const { DialogHomeCommandPaletteV2 } = await import("@/components/dialog-command-palette-v2")
+    void dialog.show(() => (
+      <DialogHomeCommandPaletteV2
+        server={conn}
+        onSelectSession={(entry) => {
+          if (!entry.sessionID || !entry.directory || !entry.server) return
+          const sessionID = entry.sessionID
+          const server = entry.server
+          const directory = entry.project?.worktree ?? entry.directory
+          ctx.projects.open(directory)
+          ctx.projects.touch(directory)
+          void startTransition(() => tabs.select(tabs.addSessionTab({ server, sessionId: sessionID })))
+        }}
+      />
+    ))
+  }
 
   async function projectTab(conn: ServerConnection.Any, project: LocalProject) {
     const key = ServerConnection.key(conn)
@@ -345,7 +436,12 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
   return (
     <aside data-component="orchestra-sidebar" class="orchestra-sidebar" aria-label={language.t("home.projects")}>
       <HugrBrand compact={props.compact} />
-      <OrchestraNavigationToggle compact={props.compact} constrained={props.constrained} onToggle={props.onToggle} />
+      <OrchestraNavigationToggle
+        compact={props.compact}
+        constrained={props.constrained}
+        iconOnly
+        onToggle={props.onToggle}
+      />
       <Show when={state.settings} keyed>
         {(launch) => launch()}
       </Show>
@@ -357,12 +453,15 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                 <Show when={item.id === "search"}>
                   <div class="orchestra-nav-rule" />
                 </Show>
+                {/* Expanded, a WIP row's tooltip carries the mark's meaning; the compact rail keeps names. */}
                 <OrchestraNavigationTooltip
-                  compact={props.compact}
+                  enabled={props.compact || isWip(item.id)}
                   value={
-                    item.chapter && !chapterPages[item.id]
-                      ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
-                      : language.t(item.label)
+                    !props.compact && isWip(item.id)
+                      ? language.t("orchestra.shell.wip.description")
+                      : item.chapter && !chapterPages[item.id]
+                        ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
+                        : language.t(item.label)
                   }
                 >
                   {(Trigger) => (
@@ -371,11 +470,14 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       class="orchestra-nav-button"
                       aria-label={language.t(item.label)}
                       aria-description={
-                        item.chapter && !chapterPages[item.id] ? language.t("orchestra.rework.pending") : undefined
+                        isWip(item.id)
+                          ? language.t("orchestra.shell.wip.description")
+                          : item.chapter && !chapterPages[item.id]
+                            ? language.t("orchestra.rework.pending")
+                            : undefined
                       }
                       disabled={
                         (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
-                        (item.id === "settings" && !command.options.some((option) => option.id === "settings.open")) ||
                         (item.id === "chat" &&
                           (!layout.ready() ||
                             !tabs.ready() ||
@@ -387,7 +489,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                         if (item.id === "chat") return openChat()
                         if (item.id === "maestro") return openMaestro()
                         if (item.id === "search") return command.show()
-                        if (item.id === "settings") return command.trigger("settings.open")
                         if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
                         if (chapterPages[item.id]) return openChapter(item.id)
                         if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
@@ -404,7 +505,13 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       <Show when={item.id === "search"}>
                         <kbd>{command.keybind("command.palette")}</kbd>
                       </Show>
-                      <Show when={item.chapter && !chapterPages[item.id]}>
+                      {/* The WIP mark replaces the pending dot; an unbuilt WIP chapter keeps its pending dialog. */}
+                      <Show when={isWip(item.id)}>
+                        <span class="orchestra-wip-chip" data-slot="orchestra-nav-wip">
+                          <span aria-hidden="true">{language.t("orchestra.shell.wip.chip")}</span>
+                        </span>
+                      </Show>
+                      <Show when={!isWip(item.id) && item.chapter && !chapterPages[item.id]}>
                         <span class="orchestra-pending-dot" aria-hidden="true" />
                         <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
                       </Show>
@@ -427,7 +534,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
             setState("profileOpen", open)
           }}
         >
-          <OrchestraNavigationTooltip compact={props.compact} value={language.t("orchestra.profile.choose")}>
+          <OrchestraNavigationTooltip enabled={props.compact} value={language.t("orchestra.profile.choose")}>
             {(Trigger) => (
               <Trigger
                 as={DropdownMenu.Trigger}
@@ -438,6 +545,12 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
               >
                 <ProjectAvatar
                   class="orchestra-profile-avatar"
+                  data-unset={
+                    !getProjectAvatarSource(profile().project?.id, profile().project?.icon) &&
+                    !profile().project?.icon?.color
+                      ? ""
+                      : undefined
+                  }
                   fallback={profile().project ? displayName(profile().project!) : ""}
                   src={getProjectAvatarSource(profile().project?.id, profile().project?.icon)}
                   variant={getProjectAvatarVariant(profile().project?.icon?.color)}
@@ -450,10 +563,12 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                     </bdi>
                   </strong>
                   <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
-                    {profile().project?.worktree ?? serverName(profile().conn)}
+                    {profile().project ? meta() : serverName(profile().conn)}
                   </small>
                 </span>
-                <Icon name="chevron-down" class="orchestra-profile-chevron" />
+                <span class="orchestra-profile-chevron" aria-hidden="true">
+                  ⌄
+                </span>
               </Trigger>
             )}
           </OrchestraNavigationTooltip>
