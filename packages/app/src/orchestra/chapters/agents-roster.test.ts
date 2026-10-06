@@ -7,6 +7,7 @@ import {
   agentUnavailable,
   draftError,
   inheritedAction,
+  isMaestro,
   PERMISSION_TOOLS,
   removeInput,
 } from "./agents-roster"
@@ -141,6 +142,34 @@ describe("Agent editor", () => {
       steps: 4,
       permission: {},
     })
+  })
+
+  test("Maestro is found by its stable id, or by its name when the server sends no id", () => {
+    expect(isMaestro(agent("maestro", "primary"))).toBe(true)
+    expect(isMaestro({ ...agent("Conductor", "primary"), id: "maestro" })).toBe(true)
+    expect(isMaestro({ ...agent("maestro", "primary"), id: "conductor" })).toBe(false)
+    expect(isMaestro(agent("Maestro", "primary"))).toBe(false)
+    expect(isMaestro(undefined)).toBe(false)
+  })
+
+  test("Maestro stays primary whatever its file or the server says, so a save writes it back as primary", () => {
+    const maestro = { ...agent("maestro", "subagent"), id: "maestro" }
+    const handEdited = {
+      path: "/repo/.opencode/agent/maestro.md",
+      exists: true,
+      revision: "m1",
+      mode: "subagent" as const,
+      disable: true,
+    }
+    const draft = agentDraft(maestro, handEdited)
+    expect(draft.mode).toBe("primary")
+    // `disable` is left out, so the save drops it from the file too.
+    expect(agentFileInput(draft, handEdited, maestro)).toEqual({ mode: "primary", permission: {}, revision: "m1" })
+    // Without a mode in the file, none is written.
+    const missing = { path: handEdited.path, exists: false, revision: "" }
+    expect(agentFileInput(agentDraft(maestro, missing), missing, maestro)).toEqual({ permission: {}, revision: "" })
+    // Other agents still take the file's mode first.
+    expect(agentDraft(plan, { ...file, mode: "subagent" }).mode).toBe("subagent")
   })
 
   test("disabling keeps the file's own fields and its revision", () => {

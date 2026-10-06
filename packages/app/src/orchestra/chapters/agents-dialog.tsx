@@ -11,6 +11,7 @@ import {
   errorKind,
   errorStatus,
   inheritedAction,
+  isMaestro,
   PERMISSION_TOOLS,
   removeInput,
   type PermissionChoice,
@@ -37,6 +38,7 @@ export function AgentDialog(props: {
     error: "",
   })
   const [draft, setDraft] = createStore(agentDraft(props.agent, undefined))
+  const maestro = isMaestro(props.agent)
   // Focus goes back to the button that opened the dialog; the roster stays mounted underneath.
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
   const life = { open: true, element: undefined as HTMLDialogElement | undefined }
@@ -61,6 +63,8 @@ export function AgentDialog(props: {
     if (kind === "agent_file_outside") return language.t("orchestra.agents.error.outside")
     if (kind === "agent_file_unparseable")
       return language.t("orchestra.agents.error.invalid", { path: relative(state.file?.path ?? "") })
+    // Reachable when creating `maestro` while configuration has disabled it.
+    if (kind === "agent_file_protected") return language.t("orchestra.agents.maestroLocked")
     return language.t("orchestra.agents.error.save")
   }
   const notice = () => {
@@ -215,6 +219,8 @@ export function AgentDialog(props: {
                     <select
                       name="mode"
                       aria-labelledby="agents-field-mode"
+                      aria-describedby={maestro ? "agents-maestro-note" : undefined}
+                      disabled={maestro}
                       onChange={(event) => setDraft("mode", AGENT_MODES[event.currentTarget.selectedIndex])}
                     >
                       <For each={AGENT_MODES}>
@@ -227,6 +233,11 @@ export function AgentDialog(props: {
                     </select>
                   </label>
                 </div>
+                <Show when={maestro}>
+                  <p id="agents-maestro-note" class="mx-note">
+                    {language.t("orchestra.agents.maestroLocked")}
+                  </p>
+                </Show>
                 <label class="mx-field">
                   <span id="agents-field-description">{language.t("orchestra.agents.field.description")}</span>
                   <input
@@ -327,7 +338,7 @@ export function AgentDialog(props: {
                   </For>
                 </div>
               </fieldset>
-              <Show when={props.agent && !readOnly()}>
+              <Show when={props.agent && !readOnly() && !maestro}>
                 <p class="mx-note">
                   <button
                     type="button"
