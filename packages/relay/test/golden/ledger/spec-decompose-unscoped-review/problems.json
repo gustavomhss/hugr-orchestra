@@ -1,0 +1,10 @@
+{
+  "ledger": "test/fixtures/spec-decompose-unscoped-review.ledger.jsonl",
+  "problems": [
+    {
+      "category": "gate-failing",
+      "wp": "requirements.cold_review",
+      "cause": "retry 3: requirements-review-engages-with-the-diff"
+    }
+  ]
+}

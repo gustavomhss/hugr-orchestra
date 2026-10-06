@@ -1,0 +1,23 @@
+{
+  "ledger": "test/fixtures/mutants/head-deleted.ledger.jsonl",
+  "chain_intact": false,
+  "chain_detail": "TAMPERED line 1: broken link (prev='5762232147ca29b3c0bd902f7a9c7da97bf00ead8b86f8f219d32c49af0bb686', expected 'GENESIS')\n   -> a preceding line was altered, removed, or reordered.",
+  "record_errors": [],
+  "controls": [],
+  "deterministic_total": 0,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": null,
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Broken or unusable record; sprint comparison not run."
+  },
+  "no_controls": true,
+  "escalated": false,
+  "result": "TAMPERED",
+  "exit": 1
+}

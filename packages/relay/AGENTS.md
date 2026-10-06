@@ -18,7 +18,7 @@ discovers them automatically.
 
 - Code defines installed behavior. Update SPEC and affected skills with behavior changes.
 - `Status: historical` marks evidence or superseded plans, not operating instructions.
-- Preserve meaning of `docs/fixtures/`, `benchmark/judge_cases/` and recorded results. Never edit
+- Preserve meaning of `docs/fixtures/`, `test/fixtures/`, `benchmark/judge_cases/` and recorded results. Never edit
   a failing example solely to make a new claim green.
 - `runs/`, `.live-runs/`, generated campaigns and local archives are runtime artifacts.
 - Compiler acceptance does not imply every driver implements a field. Check SPEC's matrix.

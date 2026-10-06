@@ -39,10 +39,10 @@ The historical account reported these off-gate synthesis-review costs:
 | Wall clock | About two hours of the 199-minute run |
 | Gate-visible synthesis review | Three passing checklist items in one fire |
 
-Read the [agent-driven historical ledger](fixtures/research-v2-agent-driven-PASS.ledger.jsonl) for
+Read the [agent-driven historical ledger](../test/fixtures/research-v2-agent-driven-PASS.ledger.jsonl) for
 the old `evidence-review-verdict` and `synthesis-review-verdict` rows. The clone/token/growth account
 was reconstructed from reviewer transcripts; those costs are not reconstructable from the ledger
-alone and are not re-measured here. Read the [escalated ledger](fixtures/research-v2-live-escalated.ledger.jsonl)
+alone and are not re-measured here. Read the [escalated ledger](../test/fixtures/research-v2-live-escalated.ledger.jsonl)
 as another dated failure record, not evidence of the replacement controls converging.
 
 The account called this a justification **ratchet**: revisions grew the artifact rather than cycling

@@ -1,0 +1,18 @@
+{
+  "sprint": {
+    "work_packages": []
+  },
+  "key": null,
+  "bodies": [
+    "{\"event\":\"note\",\"s\":\"plain\"}",
+    "{\"event\":\"note\",\"esc\":\"\\u0000\\u0001\\u001f\\u007f\\\"\\\\\\/\\b\\f\\n\\r\\t\",\"u2028\":\"\\u2028\\u2029\",\"astral\":\"\\ud83d\\ude00\",\"latin\":\"\\u00e9\"}",
+    "{\"event\":\"note\",\"raw\":\"é😀 ·\"}",
+    "{ \"event\" : \"note\" , \"spaced\" : [ 1 , 2 ] , \"nested\" : { \"a\" : null } }",
+    "{\"event\":\"note\",\"n\":[0,-0,1,-1,9007199254740993,12345678901234567890,1.0,1.5,1E2,1e-2]}",
+    "{\"event\":\"note\",\"order\":{\"b\":1,\"a\":2,\"2\":3,\"1\":4}}",
+    "{\"event\":\"note\",\"data\":{\"h\":\"nested\",\"rows\":[{\"h\":\"x\"}]}}",
+    "{\"event\":\"note\",\"bool\":true,\"nil\":null,\"empty\":{},\"list\":[]}",
+    "{\"event\":\"note\",\"dup\":1,\"dup\":2}",
+    "{\"event\":\"note\",\"\\u0068ash\":\"escaped key\",\"gen\":\"body gen is overwritten\",\"seq\":99}"
+  ]
+}
