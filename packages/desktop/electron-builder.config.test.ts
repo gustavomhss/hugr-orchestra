@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import path from "node:path"
 import type { Configuration } from "electron-builder"
 
 const legacyDesktopEntry = "resources/linux/opencode-desktop.desktop"
@@ -26,6 +27,25 @@ for (const channel of channels) {
     expect(config.linux?.desktop?.entry?.StartupWMClass).toBe(channel.appId)
     expect(config.deb?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
     expect(config.rpm?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
+  })
+}
+
+for (const channel of channels) {
+  test(`ships Maestro's playbooks outside the app archive for ${channel.channel}`, async () => {
+    const previous = process.env.OPENCODE_CHANNEL
+    process.env.OPENCODE_CHANNEL = channel.channel
+
+    const module = await import(`./electron-builder.config.ts?playbooks=${channel.channel}`)
+    const config = module.default as Configuration
+
+    if (previous === undefined) delete process.env.OPENCODE_CHANNEL
+    else process.env.OPENCODE_CHANNEL = previous
+
+    // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
+    expect(config.extraResources).toContainEqual({ from: "../opencode/playbooks", to: "playbooks" })
+    expect(await Bun.file(path.join(import.meta.dir, "../opencode/playbooks/maestro-governed/SKILL.md")).exists()).toBe(
+      true,
+    )
   })
 }
 
