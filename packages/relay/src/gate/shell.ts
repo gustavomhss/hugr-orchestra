@@ -3,17 +3,27 @@ export * as GateShell from "./shell"
 import { Context, Duration, Effect, Schema } from "effect"
 
 // The process boundary. The engine never spawns anything itself: core binds these ports to AppProcess and the
-// ToolSafety sandbox (WP10). Checks run as `bash --noprofile --norc -o nounset -o pipefail -c <program>` in the
-// workdir, stdin at EOF, output discarded, with only PATH, HOME, RELAY_* and the run's params in the environment.
+// ToolSafety sandbox (WP10). Checks run as `argv(program)` in the workdir, stdin at EOF, output discarded, with only
+// PATH, HOME, RELAY_* and the run's params in the environment.
 
 export class Unavailable extends Schema.TaggedErrorClass<Unavailable>()("GateShell.Unavailable", {
   // missing: no bash or git; timeout: the process group was killed; spawn: the process could not start.
   reason: Schema.Literals(["missing", "timeout", "spawn"]),
 }) {}
 
+/**
+ * The one check invocation (R2). The Python gate runs `eval "$cmd"` in a subshell of a `set -euo pipefail` hook, as
+ * an `if` condition: nounset and pipefail stay active and errexit is suppressed. A fresh non-errexit bash with both
+ * options is the same program semantics. BASH_ENV, ENV and SHELLOPTS must never reach this environment: a fresh bash
+ * reads them at startup, which the hook's `eval` never did.
+ */
+export const argv = (program: string) =>
+  ["bash", "--noprofile", "--norc", "-o", "nounset", "-o", "pipefail", "-c", program] as const
+
 export interface RunInput {
   readonly program: string
   readonly cwd: string
+  // The run's params; the port adds PATH, HOME and RELAY_*.
   readonly env: Readonly<Record<string, string>>
   readonly timeout?: Duration.Input
 }

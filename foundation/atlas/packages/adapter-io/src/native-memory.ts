@@ -31,8 +31,13 @@
 // unit id — it never consults `spawnFold`/`makeRespawn`, whose `archive.find` returns the FIRST own match in
 // log order, i.e. the OLDEST checkpoint. Without a ref (no host receipt, clause 16) exactly one own record
 // is selected; several refuse `ambiguous` (owner ruling F3-D3); log order is never read as "latest".
-// The `pr` projection (`PrClosingFold`, clause 14) belongs to work package A2 and does not exist yet: a `pr`
-// resolution returns the exact verified `record` and no `fold`.
+// The same rules hold for a `task` and a `pr` unit; only the projection differs (`taskClosingFold` /
+// `prClosingFold`, clause 14).
+//
+// ── ATLAS OWNS A RULE'S FRECENCY (clause 22, owner ruling F3-D6) ─────────────────────────────────────────
+// `write` and `reconcile` complete a `project` proposal with `INITIAL_PROJECT_FRECENCY`, so both derive the
+// same record and the same ref. An entry that carries its own `frecency` is refused `template-invalid` before
+// the emit door sees it; everything else is still judged by the door's own gates.
 //
 // ── ADMISSION CONCURRENCY, BOUNDED (clause 26, owner ruling F3-D8) ───────────────────────────────────────
 // Correct for ONE writer process per storage root. The emit door reads the incumbent/cap state, scans, then
@@ -41,7 +46,7 @@
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
 import { isAbsolute } from "node:path"
-import { put, taskClosingFold, tok, versioned } from "@atlas/memory"
+import { INITIAL_PROJECT_FRECENCY, prClosingFold, put, taskClosingFold, tok, versioned } from "@atlas/memory"
 import type {
   Awareness,
   ClosingFold,
@@ -51,6 +56,9 @@ import type {
   MemoryRecord,
   NamedScanner,
   Orientation,
+  PrClosingFold,
+  PrMemoryEntry,
+  ProjectMemoryEntry,
   ResumeUnit,
   TaskMemoryEntry,
   TurnHeader,
@@ -128,14 +136,14 @@ export type FoldRefusal =
   | "store-partial"
   | "store-unavailable"
   | "ambiguous"
-/** Clause 15. `fold` is present for a `task` unit; a `pr` projection is A2's (see the header). */
+/** Clause 15. `fold` is the `ClosingFold` of a `task` unit and the `PrClosingFold` of a `pr` unit. */
 export type FoldVerdict =
   | {
       readonly ok: true
       readonly unit: ResumeUnit
       readonly ref: RecordRef
       readonly record: MemoryRecord
-      readonly fold?: ClosingFold
+      readonly fold: ClosingFold | PrClosingFold
     }
   | { readonly ok: false; readonly refusal: FoldRefusal; readonly reason: string }
 
@@ -149,13 +157,20 @@ export type ReconcileVerdict =
   | { readonly present: true; readonly ref: RecordRef }
   | { readonly present: false; readonly store: StoreState }
 
+/** A `project` rule as a seat proposes it: Atlas owns the initial `frecency` (clause 22, work package A2), so the
+ *  bound write takes no caller-supplied score. */
+export type ProjectRuleProposal = Omit<ProjectMemoryEntry, "frecency">
+/** The entries the bound write and reconcile doors accept: a seat's own `task`/`pr` checkpoint or `project` rule.
+ *  `logbook` is orchestrator-only and never reaches a seat's binding. */
+export type BoundEntry = TaskMemoryEntry | PrMemoryEntry | ProjectRuleProposal
+
 export interface NativeMemory {
   readonly binding: AtlasBinding
   header(awareness: Awareness, orientation: Orientation): BoundHeader
   recall(query: BoundRecallQuery): BoundRecall
   resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict
-  write(entry: MemoryEntry): WriteVerdict
-  reconcile(entry: MemoryEntry): ReconcileVerdict
+  write(entry: BoundEntry): WriteVerdict
+  reconcile(entry: BoundEntry): ReconcileVerdict
 }
 
 export function createNativeMemory(input: AtlasBinding): NativeMemory {
@@ -206,8 +221,16 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       return refuse("foreign-owner", `record ${ref.eventId} belongs to '${record.owner}', not '${owner}'`)
     if (!isOwnUnit(record, unit))
       return refuse("unit-mismatch", `record ${ref.eventId} is not the ${unit.kind} '${unit.id}'`)
-    const base = { ok: true as const, unit: { kind: unit.kind, id: unit.id }, ref, record }
-    return unit.kind === "task" ? { ...base, fold: taskClosingFold(record.entry as TaskMemoryEntry) } : base
+    return {
+      ok: true,
+      unit: { kind: unit.kind, id: unit.id },
+      ref,
+      record,
+      fold:
+        unit.kind === "task"
+          ? taskClosingFold(record.entry as TaskMemoryEntry)
+          : prClosingFold(record.entry as PrMemoryEntry),
+    }
   }
 
   function isOwnUnit(record: MemoryRecord, unit: ResumeUnit): boolean {
@@ -244,14 +267,23 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
     resolveFold,
 
     write(entry): WriteVerdict {
-      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(entry)
+      const complete = withAtlasFrecency(entry)
+      if (complete === undefined) {
+        return {
+          ok: false,
+          refusal: "template-invalid",
+          reason: "`frecency` is assigned by Atlas policy (INITIAL_PROJECT_FRECENCY); an entry may not supply it",
+        }
+      }
+      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(complete)
       return verdict.ok ? { ok: true, record: verdict.record, ref: refOfRecord(verdict.record) } : verdict
     },
 
     reconcile(entry): ReconcileVerdict {
       const read = store.read()
       const state = storeStateOf(read)
-      const ref = admissibleRef(entry, owner)
+      const complete = withAtlasFrecency(entry)
+      const ref = complete === undefined ? undefined : admissibleRef(complete, owner)
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
     },
@@ -309,6 +341,16 @@ export function storeStateOf(read: MemoryRead): StoreState {
 }
 
 const refuse = (refusal: FoldRefusal, reason: string): FoldVerdict => ({ ok: false, refusal, reason })
+
+/** Clause 22: the entry the emit door judges. A `project` proposal gains `INITIAL_PROJECT_FRECENCY`; an entry
+ *  carrying its own `frecency` is `undefined`, because a seat never sets a rule's rank. */
+function withAtlasFrecency(entry: BoundEntry): MemoryEntry | undefined {
+  // A runtime non-object reaches the emit door as is, which refuses it `undetermined-kind`.
+  if (typeof entry !== "object" || entry === null) return entry
+  if ("frecency" in entry) return undefined
+  if ("rule" in entry) return { ...entry, frecency: INITIAL_PROJECT_FRECENCY }
+  return entry
+}
 
 /** The exact event `DurableMemory.append` writes for `record` — the same `versioned` seam, so the ref a
  *  write returns is the key the next read finds it under. */

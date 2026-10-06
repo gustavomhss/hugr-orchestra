@@ -22,6 +22,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { buildPrompt } from "@opencode-ai/core/session/compaction"
 import { SessionCompactionEvent } from "@opencode-ai/schema/session-compaction-event"
+import { AtlasResumeRestore } from "@/maestro/atlas-resume-restore"
 
 export const Event = SessionCompactionEvent
 
@@ -464,6 +465,8 @@ const layer = Layer.effect(
           tail_start_id: selected.tail_start_id,
         })
       }
+
+      yield* AtlasResumeRestore.restore({ session, sessionID: input.sessionID, messageID: input.parentID })
 
       if (result === "continue" && input.auto) {
         if (replay) {

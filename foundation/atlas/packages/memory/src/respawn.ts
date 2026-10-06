@@ -11,7 +11,7 @@
 import { id, eventId, createLog, combine } from "@atlas/kernel"
 import type { Event, EventLog } from "@atlas/kernel"
 import type { Hash } from "@atlas/contracts"
-import type { MemberId, MemoryKind, MemoryRecord, MemoryStore, TaskMemoryEntry } from "./types.js"
+import type { MemberId, MemoryKind, MemoryRecord, MemoryStore, PrMemoryEntry, TaskMemoryEntry } from "./types.js"
 
 // ── frozen re-spawn surface, co-located here (was ref/respawn.ts) ──────────────────────────────────────────
 
@@ -21,6 +21,12 @@ import type { MemberId, MemoryKind, MemoryRecord, MemoryStore, TaskMemoryEntry }
  * (atlas-memory:19, 127). (`pr` folds carry the analogous decisions/outcomes subset of `PrMemoryEntry`.)
  */
 export type ClosingFold = Pick<TaskMemoryEntry, "attempted" | "failedWith" | "stoppedAt" | "lesson">
+
+/**
+ * The `pr` closing fold (F3 clause 14; owner ruling F3-D2 keeps `knowledgeDelta`): the
+ * `{ decisions, reviewOutcomes, knowledgeDelta }` projection of `PrMemoryEntry`, produced by `prClosingFold`.
+ */
+export type PrClosingFold = Pick<PrMemoryEntry, "decisions" | "reviewOutcomes" | "knowledgeDelta">
 
 /**
  * The unit a seat is resuming (a `task` / `pr` it previously touched — MEM-13).
@@ -125,6 +131,18 @@ export function taskClosingFold(t: TaskMemoryEntry): ClosingFold {
     failedWith: t.failedWith,
     stoppedAt: t.stoppedAt,
     lesson: t.lesson,
+  }
+}
+
+/**
+ * The `pr` closing-fold projection (F3 clause 14, owner ruling F3-D2): the `{ decisions, reviewOutcomes,
+ * knowledgeDelta }` `Pick` of a `PrMemoryEntry`. `prId` names the unit and `ref` is evidence, so neither is in it.
+ */
+export function prClosingFold(p: PrMemoryEntry): PrClosingFold {
+  return {
+    decisions: p.decisions,
+    reviewOutcomes: p.reviewOutcomes,
+    knowledgeDelta: p.knowledgeDelta,
   }
 }
 

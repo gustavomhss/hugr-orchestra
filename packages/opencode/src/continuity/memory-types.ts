@@ -54,4 +54,6 @@ export type MemorySnapshot = {
   tail: SessionV1.WithParts[]
   previous?: MemoryArtifact
   canRecall: boolean
+  /** Ceiling on the native tail; a longer last turn is cut between its steps. */
+  tailTokens?: number
 }

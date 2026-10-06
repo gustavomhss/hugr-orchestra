@@ -609,7 +609,7 @@ export const make = Effect.gen(function* () {
         Effect.gen(function* () {
           const local = yield* InstanceState.get(state).pipe(Effect.orDie)
           return yield* effect.pipe(
-            Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, session)),
+            Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, () => sessions.get(session.id).pipe(Effect.orDie))),
             Effect.provideService(ArsenalCompletion.NativeHost, host),
             Effect.provideService(ToolSafety.NativeHost, approvalHost),
             Effect.provideService(ToolSafety.NativeContext, { directory: session.directory, projectID: session.projectID }),
