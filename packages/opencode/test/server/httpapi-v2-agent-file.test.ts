@@ -155,6 +155,67 @@ describe("v2 agent file HttpApi", () => {
     expect(await agents(tmp.path)).not.toContainEqual(expect.objectContaining({ id: "explore" }))
   })
 
+  test("refuses to disable Maestro or take it out of primary mode; its other fields stay editable", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const put = (body: Record<string, unknown>) =>
+      request("/api/agent/maestro/file", tmp.path, { method: "PUT", body: JSON.stringify(body) })
+    for (const body of [{ disable: true }, { mode: "subagent" }, { mode: "all" }, { mode: "primary", disable: true }]) {
+      const refused = await put(body)
+      expect(refused.status).toBe(400)
+      expect(await refused.json()).toMatchObject({
+        _tag: "InvalidRequestError",
+        kind: "agent_file_protected",
+        message: "Maestro runs every session, so it cannot be disabled or set to a mode other than primary.",
+      })
+    }
+    await expect(fs.stat(path.join(tmp.path, ".opencode"))).rejects.toThrow()
+
+    const saved = await put({
+      mode: "primary",
+      description: "Conducts the team",
+      steps: 9,
+      permission: { bash: "ask" },
+    })
+    expect(saved.status).toBe(200)
+    const maestro = (await agents(tmp.path)).find((agent) => agent.id === "maestro")
+    expect(maestro).toMatchObject({ mode: "primary", description: "Conducts the team", steps: 9 })
+    expect(maestro?.permissions.at(-1)).toEqual({ action: "bash", resource: "*", effect: "ask" })
+  })
+
+  test("both protocols ignore mode and disable in a hand-edited Maestro file; a save writes them back", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const filepath = path.join(tmp.path, ".opencode", "agent", "maestro.md")
+    await fs.mkdir(path.dirname(filepath), { recursive: true })
+    await fs.mkdir(path.join(tmp.path, ".opencode", "mode"), { recursive: true })
+    await fs.writeFile(filepath, "---\ndescription: Hand edited\nmode: subagent\ndisable: true\n---\n")
+    // A legacy mode file is an agent file too.
+    await fs.writeFile(path.join(tmp.path, ".opencode", "mode", "maestro.md"), "---\ndisable: true\n---\n")
+
+    expect((await agents(tmp.path)).find((agent) => agent.id === "maestro")).toMatchObject({
+      description: "Hand edited",
+      mode: "primary",
+    })
+    const legacy = await request("/agent", tmp.path)
+    expect(legacy.status).toBe(200)
+    expect(
+      ((await legacy.json()) as { name: string; mode: string; description?: string }[]).find(
+        (agent) => agent.name === "maestro",
+      ),
+    ).toMatchObject({ description: "Hand edited", mode: "primary" })
+
+    // Reading reports the file as written; saving it from the editor drops `disable` and writes `mode: primary`.
+    const read = (await (await request("/api/agent/maestro/file", tmp.path)).json()) as {
+      data: { revision: string; mode?: string; disable?: boolean }
+    }
+    expect(read.data).toMatchObject({ mode: "subagent", disable: true })
+    const saved = await request("/api/agent/maestro/file", tmp.path, {
+      method: "PUT",
+      body: JSON.stringify({ mode: "primary", description: "Hand edited", revision: read.data.revision }),
+    })
+    expect(saved.status).toBe(200)
+    expect(await fs.readFile(filepath, "utf8")).toBe("---\ndescription: Hand edited\nmode: primary\n---\n")
+  })
+
   test("edits the definition discovery applies last and refuses a stale revision", async () => {
     await using tmp = await tmpdir({ git: true })
     const early = path.join(tmp.path, ".opencode", "agent", "docs.md")
