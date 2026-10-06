@@ -116,3 +116,45 @@ one-line record of the action and its result already compacts most of it.
 
 The native tail cut (15% of the window, cut between steps in a long turn) stays: it decides what stays verbatim, not
 how large the memory may be.
+
+## 6. Continuous pruning by steps
+
+The owner approved pruning that keeps the conversation small between memory passes.
+
+- **Tail by steps.** Tool output in the last 5 assistant steps stays verbatim. Before, it was the last 5 user turns, so one
+  long autonomous turn was never pruned until the hard limit.
+- **Prune below the trigger.** Each time the context grows by 5% of the window (`PRUNE_STEP`), older tool output becomes a
+  one-line record (`[masked tool result: <call> → <status>, ~N tokens; full output: context_recall …]`). Failures keep
+  their first 20 lines. No model call is made. After the first batch, each batch rewrites only output that has just left
+  the tail, so the cached prefix before it stays valid.
+- **Attachments.** An inline file (image, PDF page) counts 1,600 tokens, not its base64 length, and a stub drops it.
+  Before, a 2 MB screenshot counted ~530k tokens, so `compact()` saw the context over the hard limit and the memory was
+  dropped as too large. Masking never freed the screenshot, because only the text output was counted.
+- **Delegations in Activity.** Open delegations and the 8 latest returns stay listed. Older returns become one count per
+  member, as older successful commands do.
+
+Trade-off: the producer reads what the agent reads. A long successful output that was pruned before a pass shows only its
+record, so a value that appears only there is not written to memory. It stays one `context_recall` away. Short outputs
+and the last 20 lines of failures are still in the index.
+
+The same replay of the 10 traces (`versus.ts` dry; head clipping included), with pruning off and on:
+
+| Trace | Window | Passes off → on | Pruned batches | Tokens freed by pruning |
+| --- | --- | --- | --- | --- |
+| f-f0b5d8c0 | 200k | 52 → 52 | 87 | 758k |
+| f-f0c3ddc4 | 200k | 41 → 40 | 86 | 780k |
+| f-f0fde466 | 200k | 31 → 30 | 73 | 642k |
+| f-maestro200 | 200k | 28 → 24 | 36 | 391k |
+| f-f33fe530 | 200k | 10 → 10 | 26 | 196k |
+| f-f2f68ffc | 200k | 10 → 9 | 14 | 169k |
+| f-lgtv | 200k | 4 → 4 | 5 | 49k |
+| codex, darkmode, lgtv | 55k | 8 → 7, 9 → 9, 9 → 9 | 5, 1, 0 | 2k, 0, 0 |
+
+- **The two largest traces now fit.** f-f0c3ddc4 had 1,780 input-limit skips before head clipping; now its passes apply.
+  f-f0b5d8c0 had 141 steps still over the hard limit, all caused by the screenshot; now it has none.
+- **Pruning removes the noise, not the memory passes.** It frees 50k–780k tokens per long trace without model calls.
+  Passes drop a little (up to 4 of 28), because the 40% trigger is still reached by growth that pruning cannot remove:
+  the agent's own text, user messages and the protected outputs (delegation returns, todos, recall).
+- **Still over in one place.** f-f0c3ddc4 opens with a 2.7 MB user message (a pasted file), larger than the window by
+  itself. Nothing can cut a message in the native tail; the first pass covers it once the turn has steps. A real
+  provider would reject that first request.
