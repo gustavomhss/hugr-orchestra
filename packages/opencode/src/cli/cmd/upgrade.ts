@@ -3,10 +3,10 @@ import { UI } from "../ui"
 import * as prompts from "@clack/prompts"
 import { Installation } from "../../installation"
 
-// Kept registered, with its original args, so `opencode upgrade` still parses and explains why it does nothing.
+// Kept registered, with its original args, so `orchestra upgrade` still parses and explains why it does nothing.
 export const UpgradeCommand = {
   command: "upgrade [target]",
-  describe: "upgrade opencode to the latest or a specific version",
+  describe: "upgrade Orchestra to the latest or a specific version",
   builder: (yargs: Argv) => {
     return yargs
       .positional("target", {
