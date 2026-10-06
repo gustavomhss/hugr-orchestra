@@ -23,6 +23,7 @@ const FIELDS: Record<Section, { required: string[]; optional: string[]; labels?:
 }
 // Fields the host locates in the source and stores as the source's own bytes.
 const EXACT = new Set(["quote", "error", "value"])
+const ITEM_ID = /^m[1-9][0-9]*$/
 
 type Fields = Record<string, string | string[] | null>
 export type Op =
@@ -31,7 +32,8 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-export type Decoded = { artifact: MemoryArtifact; ops: Op[] }
+/** `dropped` counts ops whose exact value or error was not found; the rest of the pass still applies. */
+export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
 const parse = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
@@ -86,7 +88,7 @@ export function decode(input: {
   }
   const ops = body.ops as Op[]
   for (const op of ops) for (const need of op.op === "retire" ? [] : op.fields.needs ?? [])
-    if (need.startsWith("n") && !keys.has(need)) return fail("C2", `needs names ${need}, which is no key in this reply`)
+    if (!ITEM_ID.test(need) && !keys.has(need)) return fail("C2", `needs names ${need}, which is no item ID or key in this reply`)
   const ctx = scope(snapshot, host)
   for (const op of ops) for (const alias of op.src ?? [])
     if (!ctx.sources.has(alias)) return fail("C4", `${alias} is not an alias at or before ${ctx.end?.alias ?? "the new span"}`)
@@ -104,8 +106,10 @@ export function decode(input: {
 
   const items = new Map(live)
   const handles = new Map<string, string>()
+  const lost = new Set<string>()
+  const applied: Op[] = []
   let next = snapshot.previous?.next ?? 1
-  for (const op of ops) {
+  each: for (const op of ops) {
     if (op.op === "retire") {
       const item = items.get(op.id)!
       if (quoted(item)) {
@@ -114,6 +118,7 @@ export function decode(input: {
         if ("check" in found) return found
       }
       items.delete(op.id)
+      applied.push(op)
       continue
     }
     const base = op.op === "update" ? items.get(op.id)! : undefined
@@ -127,6 +132,11 @@ export function decode(input: {
       else if (!EXACT.has(name)) fields[name] = value.replace(/\s+/g, " ").trim()
       else {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
+        // A wrong exact value or error costs only its own op; a wrong user quote rejects the pass.
+        if ("check" in found && name !== "quote") {
+          if (op.op === "add" && op.key) lost.add(op.key)
+          continue each
+        }
         if ("check" in found) return found
         fields[name] = found.text
         src.push(found.alias)
@@ -144,11 +154,13 @@ export function decode(input: {
     const id = base?.id ?? `m${next++}`
     if (op.op === "add" && op.key) handles.set(op.key, id)
     items.set(id, { id, section, fields, src: [...new Set(src)] })
+    applied.push(op)
   }
   for (const item of items.values()) {
     const needs = item.fields.needs
-    if (Array.isArray(needs) && needs.some((need) => handles.has(need)))
-      items.set(item.id, { ...item, fields: { ...item.fields, needs: needs.map((need) => handles.get(need) ?? need) } })
+    if (Array.isArray(needs) && needs.some((need) => handles.has(need) || lost.has(need)))
+      items.set(item.id, { ...item, fields: { ...item.fields,
+        needs: needs.filter((need) => !lost.has(need)).map((need) => handles.get(need) ?? need) } })
   }
 
   const result = [...items.values()]
@@ -172,7 +184,8 @@ export function decode(input: {
       `Items you can retire without a quote: ${offer.join(", ") || "none"}`)
   }
   return {
-    ops,
+    ops: applied,
+    dropped: ops.length - applied.length,
     artifact: {
       version: 4,
       parentID: snapshot.sessionID,
@@ -207,8 +220,8 @@ function shape(op: unknown, live: Map<string, MemoryItem>, keys: Set<string>): s
   if (op.op === "add") {
     if (!SECTIONS.includes(op.section as Section)) return `unknown section ${JSON.stringify(op.section)}`
     section = op.section as Section
-    if (op.key !== undefined && (typeof op.key !== "string" || !/^n[1-9][0-9]*$/.test(op.key) || keys.has(op.key)))
-      return "key must be a handle n1, n2, … unique within the reply"
+    if (op.key !== undefined && (!text(op.key) || ITEM_ID.test(op.key) || keys.has(op.key)))
+      return "key must be a name unique within the reply, not an item ID"
     if (typeof op.key === "string") keys.add(op.key)
   }
   const fields = op.fields
@@ -223,8 +236,7 @@ function shape(op: unknown, live: Map<string, MemoryItem>, keys: Set<string>): s
       continue
     }
     if (name === "needs") {
-      if (!Array.isArray(value) || !value.every((need) => typeof need === "string" && /^[mn][1-9][0-9]*$/.test(need)))
-        return "needs must be an array of item IDs or handles"
+      if (!Array.isArray(value) || !value.every(text)) return "needs must be an array of item IDs or keys"
       continue
     }
     if (!text(value)) return `${section}.${name} must be a non-empty string`
