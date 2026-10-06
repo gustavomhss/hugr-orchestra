@@ -1,6 +1,6 @@
 ---
 name: maestro-governed
-description: Run the governed approval chain from preconditions to verified dispatch, covering admission, grounding, validation, Lucy review, owner approval, authorization and task. Use before the first governed tool call whenever the owner asks for a governed or auditable flow.
+description: Run the governed approval chain from preconditions to verified dispatch, covering admission, grounding, validation, the cold review (`lucy`), owner approval, authorization and task. Use before the first governed tool call whenever the owner asks for a governed or auditable flow.
 ---
 
 # Maestro Governed
@@ -19,9 +19,10 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 
 1. Atlas is configured: `maestro_catalog_context` answers without a HOLD.
 2. Clean tree: `git status --porcelain --untracked-files=all` prints nothing. Untracked files count.
-3. Reviewable delta: Lucy reviews the committed diff from `merge-base(HEAD, <primary remote>/HEAD)` to `HEAD`, never
-   your prose. It must be non-empty, and `git diff --binary --full-index --no-renames <base> HEAD | wc -c` must be at
-   most 262144. The base is not a parameter: when the primary remote points at a large upstream, report the HOLD.
+3. Reviewable delta: the cold reviewer (`lucy`) reviews the committed diff from
+   `merge-base(HEAD, <primary remote>/HEAD)` to `HEAD`, never your prose. It must be non-empty, and
+   `git diff --binary --full-index --no-renames <base> HEAD | wc -c` must be at most 262144. The base is not a
+   parameter: when the primary remote points at a large upstream, report the HOLD.
 4. Own is fresh: no file anchored by an Own unit changed since the snapshot, committed or not.
 
 ## Procedure
@@ -84,8 +85,8 @@ Rejections and HOLDs state their cause and the next step: follow it once and nev
   changed one. A plan revision with any changed field is a new revision.
 - A repeated presentation returns the original, still bound to its first message; change `methodVersion` to present
   again.
-- A repeated review request still starts a Lucy child, then returns the first receipt, so do not repeat it once a
-  receipt exists.
+- A repeated review request still starts a cold-review (`lucy`) child, then returns the first receipt, so do not repeat
+  it once a receipt exists.
 - A repeated dispatch replays the completed child.
 - A call shown as aborted has an unknown effect. For admission, plan revision, context, validation and authorization,
   call again with identical input to read the record back; for the other steps, follow the lines above.
@@ -94,9 +95,9 @@ Rejections and HOLDs state their cause and the next step: follow it once and nev
 
 Success: an authorized task ran with the exact approved intent, its result was verified, and the report names every
 record reached. HOLD: a precondition or tool returned HOLD; report the exact reason and who can resolve it, then stop.
-FIX: Lucy returned `FIX_FIRST` or `REJECT`; run the fix-and-review loop. FAIL: verification of the returned work
-failed; report the findings. Never: guessed or placeholder IDs, PASS for an unrun check, approval from other words,
-edits between context and task, or calling the flow complete before the dispatched work is verified.
+FIX: the cold review (`lucy`) returned `FIX_FIRST` or `REJECT`; run the fix-and-review loop. FAIL: verification of
+the returned work failed; report the findings. Never: guessed or placeholder IDs, PASS for an unrun check, approval
+from other words, edits between context and task, or calling the flow complete before the dispatched work is verified.
 
 ## Output schema
 

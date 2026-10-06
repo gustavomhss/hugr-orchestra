@@ -109,7 +109,7 @@ it.instance(
       expect(denied).toMatchObject({ reason: "review-not-approved" })
       // The model sees only the message, so it must carry the reason and the step that satisfies it.
       expect(denied instanceof Error && denied.message).toBe(
-        "MaestroAuthorizationRejected: review-not-approved. Authorization needs Lucy's APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
+        "MaestroAuthorizationRejected: review-not-approved. Authorization needs a cold-review (`lucy`) APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
       )
       yield* events.publish(MaestroEvent.Review.Received, {
         sessionID: session.id,

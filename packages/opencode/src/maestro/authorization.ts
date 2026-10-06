@@ -35,7 +35,7 @@ const nextSteps: Record<string, string> = {
   "context-not-current": STALE_CONTEXT_NEXT_STEP,
   "context-dirty": DIRTY_CONTEXT_NEXT_STEP,
   "review-not-approved":
-    "Authorization needs Lucy's APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
+    "Authorization needs a cold-review (`lucy`) APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
   "approval-not-current":
     "The owner's latest message must be the exact approve reply to the newest presentation; call maestro_record_approval to see why it is not.",
   "approval-binding-mismatch":

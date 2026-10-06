@@ -34,13 +34,14 @@ Missing/stale/held canonical ownership evidence stays HOLD; Composer does not re
    State the slice's five criteria in one to three lines each, as deltas from the parent unit.
    Commands must be resolved, copy-pasteable, and available in that checkout; not generic placeholders.
    A worker may choose local implementation within its contract; it must return new architectural forks.
-4. Carry project knowledge yourself. Seats cannot load skills: only governed Task and Lucy review receive
-   GROUNDED Own content automatically, so any other brief must quote the governing facts, gotchas and drill
-   facts the slice needs, with fact IDs. Governing (T0/T1) facts are binding; advisory (T2) facts are
-   unratified proposals, labelled as such and placed last. Send the smallest set that carries the load and
-   name what you left out instead of dropping it silently. Go deeper only through the exact `own_*` names in
-   catalog `drillUnits` or a Drill section, never through path search or guessed names. Atlas Memory (task,
-   pr, project, logbook) is not wired into Orchestra, so never claim or invent it.
+4. Carry project knowledge yourself. Seats cannot load project skills (the backend specialist loads only its own
+   backend skills): only governed Task and the cold review (`lucy`) receive GROUNDED Own content automatically, so
+   any other brief must quote the governing facts, gotchas and drill facts the slice needs, with fact IDs.
+   Governing (T0/T1) facts are binding; advisory (T2) facts are unratified proposals, labelled as such and placed
+   last. Send the smallest set that carries the load and name what you left out instead of dropping it silently.
+   Go deeper only through the exact `own_*` names in catalog `drillUnits` or a Drill section, never through path
+   search or guessed names. Atlas Memory (task, pr, project, logbook) is not wired into Orchestra, so never claim
+   or invent it.
 5. Budget packet + working-set reads + reasoning + output + safety headroom against actual model limits.
    Consider lead's whole-context pressure too. Trim repeated material or re-slice before escalating models.
    Use actual provider metadata and Session usage; unknown limits/prices stay unknown, not hardcoded.

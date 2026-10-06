@@ -564,7 +564,7 @@ describe("Maestro evidence tools", () => {
         expect(Exit.isFailure(exit)).toBe(true)
         if (Exit.isFailure(exit))
           expect(Cause.pretty(exit.cause)).toContain(
-            `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: Lucy reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${base}..${context.headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
+            `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: the cold reviewer (\`lucy\`) reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${base}..${context.headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
           )
         expect(delegations).toBe(0)
       }),
