@@ -158,12 +158,16 @@ eventos AT-SPI), #36 (papéis legíveis únicos, `ui_enter` estável, dicas de a
 
 | Rodada | Resultado | Causa / correção |
 |---|---|---|
-| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como opencode |
+| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como opencode; revertido para identidade do Orchestra ("Linux workspace specialist on the Orchestra team"), pois o Orchestra não guarda identidade do opencode — se o free tier recusar de novo, usar outro provedor |
 | 8–10 | ponte nunca liga | carga (memória/swap); preparação do helper morta a cada timeout → preparação em fundo |
 | 11 | lê, mas configurações do VS Code estouram | varreduras repetidas e custo quadrático → #34 |
 | 12 | liga a opção pela UI; não desfaz; 9× `xdotool` | faltavam verbos (foco, ponteiro), papéis inconsistentes → #36, #40 |
 | 13 | liga em ~5 min sem `xdotool`; sai do escopo e derruba o VS Code | diálogo nativo fora do barramento, digitação letra a letra → #42 |
 | 14 | **tarefa completa**: liga, confere no JSON pela UI, desfaz, confere; oráculo volta ao original | 6,5 min, 43 chamadas, 4 erros, 0 `xdotool`, 0 `linux_exec` |
+| 15 | FeatherPad (Qt): conclui que a opção do menu vale só para a sessão e mexe no arquivo de configuração; 1 `xdotool` | tarefas com oráculo externo por app (`VALIDATION-APPS.md`) e #47–#50 |
+| 16 | **Mousepad (GTK 3) completa pela UI** | ~6 min, 0 `xdotool` |
+| 17 | **Thunar completo pela UI** (pasta criada e removida pelos diálogos do app) | 15 min, 157 chamadas, 0 `xdotool` |
+| 18 | **FeatherPad completo pela UI** (Options > Preferences) | 113 chamadas, 0 `xdotool` |
 
 Pré-requisito de validação: home com `settings.json` limpo (o workspace grava `editor.accessibilitySupport:
 "on"` e `files.simpleDialog.enable: true` só quando ausentes; homes antigas guardam o "off" explícito).
@@ -172,25 +176,22 @@ Carga da máquina: o load 300–400 vinha de swap (16 GB, VM do Docker com 8 GB 
 validação com load < ~100 e o Docker só ligado quando necessário. Alternativa leve em estudo: Lightr `vz`
 (spike: ~1 GB com VS Code contra 8 GB reservados; ADR 0024 e correções locais no repositório do Lightr).
 
-## Pendências (próximas fatias)
+## Encerramento (2026-10-06)
 
-0. Generalizar: a mesma validação aberta com apps de outros toolkits (GTK, Qt, gerenciador de arquivos),
-   com oráculo externo por app (`VALIDATION-APPS.md`, em preparação).
-1. Ergonomia remanescente (lista antiga, parte resolvida pelas rodadas 7–14):
-   - repetir a rodada aberta com as correções acima (Linux aberto e VS Code rodando antes da tarefa);
-   - preparação por chamada (censo `native-scope` por `docker exec`, 2–5 s com load) torna cada leitura nova lenta;
-   - o agente não consegue abrir o workspace Linux sozinho se o usuário não abriu a view;
-   - fechar o app para o workspace Linux (o VS Code aberto se perde entre sessões do app);
-   - papéis sem nome (`atspi-role-116`) no snapshot do helper;
-   - `xdotool` não entrega teclado ao VS Code (sem gerenciador de janelas) e o screenshot do guest sai preto;
-   - recusa de permissão encerra o turno do agente; o Big Pickle chegou a inventar uma conclusão sem chamar ferramenta.
+Campanha encerrada por decisão do dono: o agente opera o workspace Linux pela CLI e pela interface de apps
+Electron (VS Code), GTK 3 (Mousepad, Thunar) e Qt (FeatherPad), validado em rodadas abertas com oráculo
+externo e sem `xdotool`. PRs #20–#50 e #64 no `dev`.
 
+Fora do escopo, para épicos próprios:
 
-1. Rodar `app-dock-runtime-native.test.ts` com Docker (ver acima) e provar no app real: abrir a view
-   Linux pré-aquece o helper; lista de apps e launch respondem durante a partida a frio.
-2. Teste Docker de `stop()`/`dispose()` com terminal (`access`) abrindo.
-3. W06 no harness com as ferramentas novas; pacote empacotado (`extraResources`); Windows/arm64; performance.
-4. Nome com atalho ("Settings Ctrl+,") impede casamento exato.
+- Runtime Lightr `vz` no lugar do Docker: ADR 0024 aceita; etapa 2 (init de contêiner e flags de run)
+  no PR gustavomhss/hugr-lightr#2; faltam a etapa 3 (`exec` por vsock) e o backend Lightr atrás de
+  `app-dock-runtime-backend.ts`, com o helper em TCP local autenticado dentro da VM.
+- O agente não abre o workspace Linux sozinho: sem a view aberta, para e pede ao usuário.
+- O workspace (e o VS Code aberto nele) não volta depois de reiniciar o app.
+- Visão de ícones do Thunar não expõe arquivos (lacuna do app; a visão de lista funciona).
+- Build empacotado, hosts Windows/arm64 e performance sob carga não foram validados em rodada aberta.
+- Recusa de permissão encerra o turno do agente; papéis sem nome (`atspi-role-*`) ainda aparecem.
 
 ## Regras herdadas das duas frentes
 
