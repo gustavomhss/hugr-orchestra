@@ -31,6 +31,7 @@ const toolNames = [
   "ui_find",
   "ui_act",
   "ui_type",
+  "ui_pointer",
   "ui_keys",
   "ui_wait",
   "dock_list",

@@ -166,9 +166,9 @@ const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Re
     })
 }
 
-// window: only an active frame, dialog or window (where native key combinations land).
+// window: only an active frame, dialog or window (where native key combinations land). focused: only the control with focus.
 type NativeQuery = { name?: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number;
-  window?: boolean }
+  window?: boolean; focused?: boolean }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
 // occurrence counts earlier matches with the same name and roleName on the same page, and index is the item's position
 // on that page, so a rescan can re-identify the control.
@@ -236,6 +236,8 @@ const ALTERNATIVES: Record<string, string[]> = { action: ["action", "observedAct
 function missed(scan: NativeScan, query: NativeQuery) {
   if (query.window) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
     hint: "No app window is active in the Linux workspace; pass target {name, role} of the window or of a control in it (ui_look lists them)" })
+  if (query.focused && scan.found.length === 0) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
+    hint: "No control has keyboard focus; pass target {name, role} for the field" })
   if (scan.found.length === 0) return compactScan(scan, "target-not-found")
   const items = scan.found.map((match) => match.item)
   const roles = [...new Set(items.map((item) => AppDockOutline.role(item)))]
@@ -246,8 +248,9 @@ function missed(scan: NativeScan, query: NativeQuery) {
       ? ['Controls with this name only support observed actions; retry with mode: "observed"'] : []),
     ...(query.capability === "type" && shaped.some((item) => supports(item, "keyboardType"))
       ? ['Fields with this name only accept keyboard input; retry with mode: "keyboard"'] : []),
+    ...(query.focused ? ["The focused control does not take typed text; pass target {name, role} for the field"] : []),
     // The helper never acts on list and tree rows themselves, so a row matched by name otherwise looked like a typo.
-    ...(query.capability !== undefined && shaped.length > 0
+    ...(query.capability !== undefined && !query.focused && shaped.length > 0
       && !shaped.some((item) => ALTERNATIVES[query.capability!].some((capability) => supports(item, capability)))
       ? [`The control with this name accepts no ${query.capability === "type" || query.capability === "keyboardType" ? "typing" : "action"} (${
         [...new Set(shaped.map((item) => `${AppDockOutline.role(item)}: ${reason(item, ALTERNATIVES[query.capability!][0]!)}`))].join("; ")
@@ -369,13 +372,15 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     clock: Clock, attempt = 0): Promise<unknown> => {
     // Scans match by name only; role and input mode filter afterwards so a miss can report what it excluded.
     const loose = { name: query.name, maxText: query.maxText }
-    const named = await find(context, loose, () => false, clock)
+    // A focus query scans every control so each focused one can be traced to its window.
+    const located = (scan: NativeScan) => (query.focused ? { ...scan, found: AppDockOutline.focused(scan.found) } : scan)
+    const named = located(await find(context, loose, () => false, clock))
     const all = only(named, query)
     // A provider error or skipped subtree can end a traversal without more pages, so uniqueness needs full coverage.
     if (!all.complete) return compactScan(all, "target-search-incomplete")
     const winner = pick(all, query)
     if (winner === undefined) return all.found.length === 0 ? missed(named, query) : compactScan(all, "target-ambiguous")
-    const fresh = only(await find(context, loose, () => false, clock), query)
+    const fresh = only(located(await find(context, loose, () => false, clock)), query)
     if (Date.now() >= clock.deadline) return compactScan(expired(all), "target-search-incomplete")
     if (!fresh.complete) return compactScan(fresh, "target-search-incomplete")
     const current = pick(fresh, query)
@@ -386,7 +391,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     // Each native page is a new observation that retires the refs of earlier pages, so a winner before the last
     // page needs a scan that stops on its page to hold a live ref, re-identified the same way.
     const live = current.page === fresh.pages ? current
-      : only(await find(context, loose, (scan) => scan.pages >= winner.page, clock), query).found.find((match) =>
+      : only(located(await find(context, loose, (scan) => scan.pages >= winner.page, clock)), query).found.find((match) =>
         same(match, winner))
     if (Date.now() >= clock.deadline) return compactScan(expired(all), "target-search-incomplete")
     if (live === undefined) return toJSON({ code: "target-changed", outcome: "not-dispatched", item: compactItem(winner.item) })
@@ -591,7 +596,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           }, { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
-      // Shared with ui_type: a browser element by numeric ref, a native field by ref or target.
+      // Shared with ui_type: a browser element by numeric ref; a native field by ref, target or keyboard focus.
       dock_type: tool({
         description: "Replace the value of an editable element of the active browser tab, found by its numeric ref from dock_read, and check that it now holds the text.",
         args: {
@@ -602,8 +607,15 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         },
         execute: (args, context) => {
           const mode = args.mode === undefined ? {} : { mode: args.mode }
+          // Into the focused field: the helper refuses, before any key, a field that lost focus since the scan.
+          if (args.target === undefined && args.ref === undefined && (context as Scoped).world === "linux") return args.mode === "editable"
+            ? Promise.resolve("Typing into the focused field uses keyboard mode; pass target or ref for editable mode")
+            : exclusive(() => act(context, { focused: true, capability: "keyboardType" }, (item, clock) => call(context, "type", { ref: item.ref,
+              text: args.text, mode: "keyboard", focused: true }, clock).then(toJSON), { deadline: Date.now() + findDeadlineMs }))
+              .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
           if (args.target === undefined) {
-            if (args.ref === undefined) return Promise.resolve((context as Scoped).world === "linux" ? "Pass ref or target" : "Pass ref")
+            // A Linux-scoped call without ref or target already went to the focused field above.
+            if (args.ref === undefined) return Promise.resolve("Pass ref")
             return call(context, "type", { ref: args.ref, text: args.text, ...mode }).then(toJSON, toolError)
           }
           const wanted = args.target
@@ -732,7 +744,20 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       ui_read: linux(dock.dock_read, "Read the accessibility tree of the apps open in the Linux workspace, one bounded page at a time. Items carry opaque refs (n:...) that expire when the app changes or the next page is read; prefer ui_find, or ui_act/ui_type with `target`, which locate and act in one call. Use rootRef to read one subtree and cursor for the next page (cursors expire within seconds).", argsOf(dock.dock_read, ["budget", "maxText", "rootRef", "cursor", "textOffset"])),
       ui_find: linux(dock.dock_find, "Find controls in the Linux workspace apps by accessible name (case-insensitive substring) and/or role. Pages the tree itself and returns compact matches with refs usable right away; searchComplete:false means part of the tree was not searched.", dock.dock_find.args),
       ui_act: linux(dock.dock_action, "Press, click, toggle or otherwise invoke a control in a Linux workspace app. Prefer `target` {name, role} plus an action name: it locates the control and acts in one call. Use mode observed for controls inside lists and trees. Acknowledgement is not proof; read again to confirm the result.", dock.dock_action.args),
-      ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref. Editable mode sets and verifies the value; keyboard mode types it for fields that only accept keys.", { ...argsOf(dock.dock_type, ["target", "text", "mode"]), ref: nativeRef.optional().describe("Ref from ui_read or ui_find") }),
+      ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref. Editable mode sets and verifies the value; keyboard mode types it for fields that only accept keys. Without target or ref it types, in keyboard mode, into the field that has keyboard focus (e.g. a search box just opened by a shortcut).", { ...argsOf(dock.dock_type, ["target", "text", "mode"]), ref: nativeRef.optional().describe("Ref from ui_read or ui_find") }),
+      ui_pointer: tool({
+        description: "Move the mouse onto a control in a Linux workspace app (kind hover) or right-click it (kind contextMenu), by `target` {name, role} or ref. Use it for what apps show only under the mouse, such as a row's gear or toolbar, and for right-click menus that ui_act and ui_keys do not open. It is a real mouse event at the control's center, so apps may react to it as they would to a person (a right-click on a VS Code boolean setting's description toggles it); look again afterwards.",
+        args: { kind: tool.schema.enum(["hover", "contextMenu"]), target: target.optional().describe("Locate the control by name"),
+          ref: nativeRef.optional().describe("Ref from ui_read or ui_find") },
+        execute: (args, context) => {
+          const scoped = { ...context, world: "linux" } as Scoped
+          if (args.ref !== undefined) return call(scoped, "pointer", { ref: args.ref, kind: args.kind }).then(toJSON, toolError)
+          const wanted = args.target
+          if (wanted === undefined) return Promise.resolve("ui_pointer requires target or ref")
+          return exclusive(() => act(scoped, wanted, (item, clock) => call(scoped, "pointer", { ref: item.ref, kind: args.kind }, clock)
+            .then(toJSON), { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+        },
+      }),
       ui_keys: linux(dock.dock_keyboard, "Press a key combination in a Linux workspace app, such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1. It goes to the active app window, or to the window holding `ref`/`target`. Apps are often fastest through their shortcuts; names often show them, e.g. \"Explorer (Ctrl+Shift+E)\". The effect is up to the app, so read again afterwards.", { keys: keyCombination, ...argsOf(dock.dock_keyboard, ["ref", "target"]) }),
       ui_wait: linux(dock.dock_wait, "Wait a bounded time for a Linux workspace app to settle; this is a delay, not proof that the app is ready.", dock.dock_wait.args),
     },
@@ -756,6 +781,7 @@ How to work:
 - Start with ui_look: it shows the windows, any open dialog, the focus and a numbered map of regions. ui_enter zooms into a region by a number from the latest ui_look or ui_enter output, ui_up leaves it, ui_list lists one kind of control. Look again after anything that changes the screen.
 - Act in one call: copy role and name from a ui_look or ui_list line (role "name") into target {name, role} for ui_act or ui_type. ui_find searches by name across everything. Use ui_keys for shortcuts: names often show them (e.g. "Explorer (Ctrl+Shift+E)"), and many apps open settings with ctrl+comma and a command palette with ctrl+shift+p.
 - For a check box, ui_act with action check or uncheck when it offers them (mode observed inside lists and trees). Rows of lists and trees take no action themselves; act on the check box or button inside the row.
+- After a shortcut opens a search box or input, ui_type without target types into the focused field. ui_pointer hovers a control (kind hover) to reveal what apps show only under the mouse, such as a row's gear, or right-clicks it (kind contextMenu) for a context menu.
 - Refs expire when an app changes; prefer target over refs you saw earlier.
 - After an action, read again or check the resulting file or state, and say what you verified and how.
 - If something blocks you (the workspace is not open, an app exposes no controls, a call is refused), stop and report exactly what blocked you; you cannot ask the owner. Do not look for other ways out of the workspace.
