@@ -1,12 +1,10 @@
 import { EOL } from "os"
 import { logo as glyphs } from "./logo"
 
-const wordmark = [
-  `⠀                                ▄     `,
-  `█▀▀█ █▀▀█ █▀▀█ █▀▀▄ █▀▀▀ █▀▀█ █▀▀█ █▀▀█`,
-  `█  █ █  █ █▀▀▀ █  █ █    █  █ █  █ █▀▀▀`,
-  `▀▀▀▀ █▀▀▀ ▀▀▀▀ ▀  ▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀`,
-]
+// Plain-text rendering of the same glyphs the TTY branch of logo() colors.
+const wordmark = glyphs.left.map((row, index) =>
+  `${row} ${glyphs.right[index] ?? ""}`.replace(/_/g, " ").replace(/\^/g, "▀").replace(/[~,]/g, " ").trimEnd(),
+)
 
 export const Style = {
   TEXT_HIGHLIGHT: "\x1b[96m",

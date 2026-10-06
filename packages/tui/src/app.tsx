@@ -63,7 +63,6 @@ import { isDefaultTitle } from "./util/session"
 import { KVProvider, useKV } from "./context/kv"
 import * as Model from "./util/model"
 import { ArgsProvider, useArgs, type Args } from "./context/args"
-import open from "open"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { TuiConfigProvider, useTuiConfig, type TuiConfig } from "./config"
 import { createTuiApiAdapters } from "./plugin/adapters"
@@ -124,7 +123,6 @@ const appBindingCommands = [
   "theme.switch_mode",
   "theme.mode.lock",
   "help.show",
-  "docs.open",
   "diff.open",
   "workspace.list",
   "app.debug",
@@ -454,14 +452,14 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     if (!terminalTitleEnabled() || Flag.OPENCODE_DISABLE_TERMINAL_TITLE) return
 
     if (route.data.type === "home") {
-      renderer.setTerminalTitle("OpenCode")
+      renderer.setTerminalTitle("Orchestra")
       return
     }
 
     if (route.data.type === "session") {
       const session = sync.session.get(route.data.sessionID)
       if (!session || isDefaultTitle(session.title)) {
-        renderer.setTerminalTitle("OpenCode")
+        renderer.setTerminalTitle("Orchestra")
         return
       }
 
@@ -816,15 +814,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         category: "System",
       },
       {
-        name: "docs.open",
-        title: "Open docs",
-        run: () => {
-          open("https://opencode.ai/docs").catch(() => {})
-          dialog.clear()
-        },
-        category: "System",
-      },
-      {
         name: "app.exit",
         title: "Exit the app",
         slashName: "exit",
@@ -1070,7 +1059,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     await DialogAlert.show(
       dialog,
       "Update Complete",
-      `Successfully updated to OpenCode v${result.data.version}. Please restart the application.`,
+      `Successfully updated to Orchestra v${result.data.version}. Please restart the application.`,
     )
 
     void exit()
