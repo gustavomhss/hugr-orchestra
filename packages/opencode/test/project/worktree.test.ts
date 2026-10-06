@@ -88,7 +88,7 @@ describe("Worktree", () => {
 
           expect(info.name).toBeDefined()
           expect(typeof info.name).toBe("string")
-          expect(info.branch).toBe(`opencode/${info.name}`)
+          expect(info.branch).toBe(`orchestra/${info.name}`)
           expect(info.directory).toContain(info.name)
         }),
       { git: true },
@@ -102,7 +102,7 @@ describe("Worktree", () => {
           const info = yield* svc.makeWorktreeInfo({ name: "my-feature" })
 
           expect(info.name).toBe("my-feature")
-          expect(info.branch).toBe("opencode/my-feature")
+          expect(info.branch).toBe("orchestra/my-feature")
         }),
       { git: true },
     )
@@ -125,7 +125,7 @@ describe("Worktree", () => {
         Effect.gen(function* () {
           const test = yield* TestInstance
           const svc = yield* Worktree.Service
-          yield* git(test.directory, ["branch", "opencode/my-feature"])
+          yield* git(test.directory, ["branch", "orchestra/my-feature"])
 
           const info = yield* svc.makeWorktreeInfo({ name: "my-feature", detached: true })
 
@@ -184,7 +184,7 @@ describe("Worktree", () => {
         withCreatedWorktree(undefined, ({ info }) =>
           Effect.gen(function* () {
             expect(info.name).toBeDefined()
-            expect(info.branch ?? "").toStartWith("opencode/")
+            expect(info.branch ?? "").toStartWith("orchestra/")
             expect(info.directory).toBeDefined()
           }),
         ),
@@ -199,7 +199,7 @@ describe("Worktree", () => {
             const svc = yield* Worktree.Service
 
             expect(info.name).toBeDefined()
-            expect(info.branch ?? "").toStartWith("opencode/")
+            expect(info.branch ?? "").toStartWith("orchestra/")
 
             expect(ready.name).toBe(info.name)
             expect(ready.branch).toBe(info.branch)
@@ -233,7 +233,7 @@ describe("Worktree", () => {
         withCreatedWorktree({ name: "test-workspace" }, ({ info }) =>
           Effect.gen(function* () {
             expect(info.name).toBe("test-workspace")
-            expect(info.branch).toBe("opencode/test-workspace")
+            expect(info.branch).toBe("orchestra/test-workspace")
           }),
         ),
       { git: true },
@@ -288,6 +288,35 @@ describe("Worktree", () => {
           })
 
           yield* svc.remove({ directory: target })
+        }),
+      { git: true },
+    )
+
+    it.instance(
+      "lists a worktree on a legacy opencode/ branch and removes it with its branch",
+      () =>
+        Effect.gen(function* () {
+          const test = yield* TestInstance
+          const fs = yield* FSUtil.Service
+          const svc = yield* Worktree.Service
+          const name = `legacy-${Date.now().toString(36)}`
+          const branch = `opencode/${name}`
+          const target = path.join(path.dirname(test.directory), name)
+
+          yield* git(test.directory, ["worktree", "add", "-b", branch, target])
+          const directory = yield* fs.realPath(target).pipe(Effect.catch(() => Effect.succeed(target)))
+
+          const list = yield* svc.list()
+          expect(list.map((item) => ({ ...item, directory: normalize(item.directory) }))).toContainEqual({
+            name,
+            branch,
+            directory: normalize(directory),
+          })
+
+          expect(yield* svc.remove({ directory: target })).toBe(true)
+          expect((yield* svc.list()).map((item) => item.branch)).not.toContain(branch)
+          const ref = yield* gitResult(test.directory, ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`])
+          expect(ref.exitCode).not.toBe(0)
         }),
       { git: true },
     )
