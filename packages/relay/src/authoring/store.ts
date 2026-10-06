@@ -37,14 +37,17 @@ export interface Interface {
   readonly remove: (id: string) => Effect.Effect<void, AuthoringGraph.Refusal>
   readonly versions: (id: string) => Effect.Effect<ReadonlyArray<RelayAuthoring.Version>>
   readonly version: (id: string, versionID: string) => Effect.Effect<RelayAuthoring.Version, AuthoringGraph.Refusal>
+  // `principal`, when given, is recorded as `publishedBy` or `unpublishedBy` (PARITY-EXCEPTIONS W14-1).
   readonly publish: (
     id: string,
     versionID: string,
     expectedChecksum?: string,
+    principal?: string,
   ) => Effect.Effect<RelayAuthoring.Document, AuthoringGraph.Refusal>
   readonly unpublish: (
     id: string,
     expectedChecksum?: string,
+    principal?: string,
   ) => Effect.Effect<RelayAuthoring.Document, AuthoringGraph.Refusal>
   readonly scopes: () => Effect.Effect<ReadonlyArray<RelayAuthoring.Scope>>
   readonly saveScope: (
@@ -172,21 +175,31 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
             return version
           }),
         ),
-      publish: (id, versionID, expectedChecksum) =>
+      publish: (id, versionID, expectedChecksum, principal) =>
         write((now) => {
           const document = row<RelayAuthoring.Document>("documents", id)
           checkChecksum(document, expectedChecksum)
           if (document.versionId !== versionID)
             return AuthoringGraph.refuse("The version changed before publishing", 409, "version-conflict")
-          const published = { ...document, active: true, activeVersionId: versionID, updatedAt: now }
+          const published = {
+            ...attribute(document, "publishedBy", principal),
+            active: true,
+            activeVersionId: versionID,
+            updatedAt: now,
+          }
           put("documents", id, published)
           return published
         }),
-      unpublish: (id, expectedChecksum) =>
+      unpublish: (id, expectedChecksum, principal) =>
         write((now) => {
           const document = row<RelayAuthoring.Document>("documents", id)
           checkChecksum(document, expectedChecksum)
-          const unpublished = { ...document, active: false, activeVersionId: null, updatedAt: now }
+          const unpublished = {
+            ...attribute(document, "unpublishedBy", principal),
+            active: false,
+            activeVersionId: null,
+            updatedAt: now,
+          }
           put("documents", id, unpublished)
           return unpublished
         }),
@@ -325,6 +338,20 @@ const stamp = Effect.map(Clock.currentTimeMillis, (millis) => {
   const iso = new Date(millis).toISOString()
   return iso.endsWith(".000Z") ? iso.slice(0, -5) + "Z" : iso.slice(0, -1) + "000Z"
 })
+
+// Who made the latest publish or unpublish, replacing the other's mark. Python records neither (W14-1).
+function attribute(
+  document: RelayAuthoring.Document,
+  mark: "publishedBy" | "unpublishedBy",
+  principal: string | undefined,
+): RelayAuthoring.Document {
+  if (principal === undefined) return document
+  const other = mark === "publishedBy" ? "unpublishedBy" : "publishedBy"
+  return {
+    ...(Object.fromEntries(Object.entries(document).filter((entry) => entry[0] !== other)) as RelayAuthoring.Document),
+    [mark]: principal,
+  }
+}
 
 function checkChecksum(document: RelayAuthoring.Document, expected: string | undefined) {
   if (expected !== undefined && expected !== checksum(document)) AuthoringGraph.refuse(CHANGED, 409, "version-conflict")

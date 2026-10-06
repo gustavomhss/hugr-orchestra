@@ -3,7 +3,7 @@ export * as RelayHookInstall from "./relay-hook-install"
 import path from "path"
 import { createHash, randomBytes, randomUUID } from "crypto"
 import { rmSync } from "fs"
-import { Clock, Effect, Option, Schema } from "effect"
+import { Clock, Effect, Option, Result, Schema } from "effect"
 import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
 import { RelayJson } from "@opencode-ai/relay/json"
@@ -38,6 +38,9 @@ export const Reason = Schema.Literals([
   "document-installed",
   "install-missing",
   "order-mismatch",
+  // Repairing hooks.json.
+  "repair-not-needed",
+  "repair-refused",
 ])
 export type Reason = typeof Reason.Type
 
@@ -172,6 +175,43 @@ export const reorder = Effect.fn("RelayHookInstall.reorder")(function* (
     }))
     return Effect.succeed({ installs: reordered, changed: reordered })
   })
+})
+
+/**
+ * The owner's explicit repair of a corrupt `hooks.json`, never run on its own: a regular file the loader refuses as
+ * `profile-invalid` (not UTF-8 or JSON, not an install list, or an install that no longer holds its sha256 or graph
+ * rules) or as over the size cap is renamed aside to `hooks.json.corrupt-<ms>-<hex>` beside it, and an empty install
+ * list is written in its place. Nothing is deleted. A valid file is never touched (`repair-not-needed`), and neither is
+ * a symlink, a non-file, a file that changed while it was read or one that cannot be read (`repair-refused`): those are
+ * not corruption the server can prove, so they stay for the owner to inspect.
+ */
+export const repair = Effect.fn("RelayHookInstall.repair")(function* (binding: Binding) {
+  const fs = yield* FSUtil.Service
+  const target = yield* locate(fs, binding)
+  return yield* locks.withLock(target)(
+    Effect.gen(function* () {
+      const loaded = yield* load(fs, target).pipe(Effect.result)
+      if (Result.isSuccess(loaded))
+        return yield* refuse("repair-not-needed", "hooks.json is valid; there is nothing to repair.")
+      const reason = loaded.failure.reason
+      const refused = () => refuse("repair-refused", `hooks.json was left as it is: ${loaded.failure.message}`)
+      if (reason !== "profile-invalid" && reason !== "profile-not-file-or-overflow") return yield* refused()
+      // The cap refusal also covers a directory or a symlinked file; only a regular file reached directly is moved.
+      const info = yield* fs.stat(target).pipe(Effect.option)
+      const real = yield* fs.realPath(target).pipe(Effect.option)
+      if (Option.isNone(info) || info.value.type !== "File" || !Option.contains(real, target)) return yield* refused()
+      const backup = `${target}.corrupt-${yield* Clock.currentTimeMillis}-${randomBytes(4).toString("hex")}`
+      yield* fs
+        .rename(target, backup)
+        .pipe(
+          Effect.mapError(
+            () => new Refused({ reason: "profile-write-acquisition", message: "Unable to move hooks.json aside." }),
+          ),
+        )
+      yield* write(fs, target, { installs: [] })
+      return { backup, installs: [] as ReadonlyArray<RelayHook.Install> }
+    }),
+  )
 })
 
 /** The `compile_hook` rule a structurally valid export breaks, as its refusal message; undefined when none. */
