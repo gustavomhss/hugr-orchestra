@@ -140,24 +140,26 @@ const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect
   const attempt = attempts.get(directory)
   if (attempt?.failed && Date.now() - attempt.at < RETRY_MS && !(yield* PinnedArtifact.installed(directory)))
     return attempt.failed
-  const running =
-    attempt?.running ??
-    Effect.runPromise(
-      work.pipe(
-        Effect.match({
-          onSuccess: () => {
-            attempts.delete(directory)
-            return undefined
-          },
-          onFailure: (error) => {
-            attempts.set(directory, { failed: error.cause, at: Date.now() })
-            return error.cause
-          },
-        }),
-      ),
-    )
-  if (!attempt?.running) attempts.set(directory, { running, at: Date.now() })
-  return yield* Effect.promise(() => running)
+  if (attempt?.running) return yield* Effect.promise(() => attempt.running!)
+  // Registered before the work starts: work that fails synchronously settles before runPromise returns, and its
+  // failure must not be overwritten by a running entry that never resolves.
+  const running = Promise.withResolvers<string | undefined>()
+  attempts.set(directory, { running: running.promise, at: Date.now() })
+  void Effect.runPromise(
+    work.pipe(
+      Effect.match({
+        onSuccess: () => {
+          attempts.delete(directory)
+          return undefined
+        },
+        onFailure: (error) => {
+          attempts.set(directory, { failed: error.cause, at: Date.now() })
+          return error.cause
+        },
+      }),
+    ),
+  ).then(running.resolve)
+  return yield* Effect.promise(() => running.promise)
 })
 
 /**
