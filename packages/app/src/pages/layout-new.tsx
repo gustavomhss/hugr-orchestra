@@ -81,6 +81,18 @@ export default function NewLayout(props: ParentProps) {
           }
         >
           <Show when={desktop()}>
+            {/* The session panels' blur; see the glass layer in orchestra/session.css. */}
+            <div class="orchestra-glass-layer" aria-hidden="true">
+              <div data-orchestra-glass="session-body">
+                <div />
+              </div>
+              <div data-orchestra-glass="session-side-panel">
+                <div />
+              </div>
+              <div data-orchestra-glass="session-new-design">
+                <div />
+              </div>
+            </div>
             <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
           </Show>
           <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
