@@ -1,0 +1,79 @@
+{
+  "name": "pass2",
+  "transport": "file",
+  "boundary": 62,
+  "head": [
+    29,
+    54
+  ],
+  "tailStart": 55,
+  "crossed": true,
+  "contextTokens": 40801,
+  "retried": false,
+  "ceiling": 11424,
+  "size": 4484,
+  "dropped": 0,
+  "ops": [
+    {
+      "op": "retire",
+      "id": "m13"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "decisions"
+    },
+    {
+      "op": "add",
+      "section": "findings"
+    },
+    {
+      "op": "add",
+      "section": "findings"
+    },
+    {
+      "op": "add",
+      "section": "findings"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "update",
+      "id": "m27"
+    }
+  ],
+  "applied": true,
+  "items": 36,
+  "memoryTokens": 4484,
+  "calls": [
+    {
+      "label": "v4/pass2",
+      "estimate": 9975,
+      "usage": {
+        "inputTokens": 9975,
+        "outputTokens": 1122
+      }
+    }
+  ]
+}
