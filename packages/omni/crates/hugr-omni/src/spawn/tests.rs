@@ -72,6 +72,11 @@ fn a_clean_env_is_only_what_was_passed_plus_system_root_on_windows() {
     assert_eq!(windows, vars(&[("SystemRoot", "C:\\Windows"), ("X", "1")]));
     // ... unless env sets or removes it, in any case.
     assert_eq!(merge(host.clone(), &[(os("SYSTEMROOT"), None)], false, Os::Windows), []);
+    let shouted = vars(&[("PATH", "/bin"), ("SYSTEMROOT", "C:\\Windows")]);
+    assert_eq!(
+        merge(shouted, &[], false, Os::Windows),
+        vars(&[("SystemRoot", "C:\\Windows")])
+    );
     let replaced = merge(host, &[(os("systemroot"), Some(os("D:\\W")))], false, Os::Windows);
     assert_eq!(replaced, vars(&[("systemroot", "D:\\W")]));
 }
