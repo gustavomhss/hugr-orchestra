@@ -541,6 +541,12 @@ Probes were run by reviewer 3 on macOS x64 with Bun 1.3.14 and Node 22.17.1. P6 
     the host dies (the supervisor stops it).
   - Node: red. `terminate()` returns (code 1) and the host exits 0, but both tree processes are still alive 5 s after
     the terminate; they go only when the host exits.
+  - **After WP-H** (lead, 2026-10-06, on the integrated `omni-native`): Bun rc=0 and Node rc=0. Both print "0 tree
+    processes alive 5 s after terminate (PASS)".
+- **maestro-arsenal and the loader** (WP0 deviation, lead decision). Core already depends on maestro-arsenal, so
+  arsenal cannot depend on core: that would be a cycle. In WP3, arsenal exposes a process-runner injection point.
+  Core installs the omni runner when it loads arsenal, and arsenal keeps `Bun.spawn` as its default when nothing is
+  injected.
 
 ## 8. Lean test matrix
 
