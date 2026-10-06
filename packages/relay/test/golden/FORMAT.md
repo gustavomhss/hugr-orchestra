@@ -1,0 +1,144 @@
+# Golden format
+
+Frozen in WP0. The Python Relay in `packages/relay/{bin,lib,benchmark}` is the oracle; `ORACLE` pins its SHAs. The
+generator in `generate/` (dev-only bash and Python, never run by tests) writes the goldens once and they are committed.
+Regenerating them is its own reviewed change. TS tests read goldens and never spawn Python.
+
+## Determinism
+
+The generator:
+
+- puts a fake `date` on `PATH` that prints the fire's epoch (`at`, below);
+- runs every fire under `env -i` with only `PATH`, `HOME` and the scenario's explicit `RELAY_*` variables;
+- pins `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_AUTHOR_DATE` and the `GIT_COMMITTER_*` equivalents;
+- sets `RELAY_JUDGE_BACKEND=stub` and `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0` unless the scenario sets them;
+- asserts jq 1.7.x, python3, bash and git before writing anything;
+- always passes the arm token through `RELAY_ARM_TOKEN`, because the TS arm has no transcript marker scan.
+
+Two consecutive generator runs must be byte-identical.
+
+## Byte values
+
+Wherever a file's bytes appear in JSON, the value is either a string (the UTF-8 bytes of that text, written as is) or
+`{"base64": "..."}` for bytes that are not UTF-8 or must stay unambiguous. `null` deletes the path.
+
+## Scenario
+
+`<area>/<name>/scenario.json`, where area is `arm` or `check`:
+
+```json
+{
+  "sprint": {},
+  "meta": {},
+  "prestate": { "position": "build.write", "retry_write": "1\n" },
+  "commits": [{ "message": "base", "files": { "result.json": "{}" } }],
+  "tree": { "SUMMARY.md": "draft" },
+  "env": { "RELAY_JUDGE_STUB": "pass" },
+  "fires": [{ "at": 1700000060, "transcript": [], "agentID": "agent-1", "release": "owner: retry after fixture fix" }]
+}
+```
+
+- `sprint`, `meta`: written as `sprint.json` and `meta.json` in the arm directory, compact, without a trailing LF.
+  `meta.workdir` is replaced by the scenario's working tree. `meta.base_ref` may be `{"commit": N}`, the SHA of
+  `commits[N]`; so may any `prestate` value.
+- `prestate`: arm state files that exist before the first fire, keyed by file name, as byte values.
+- `commits`: applied in order to a fresh git repository in the working tree; each commit's `files` are byte values.
+  No commits means the working tree is not a git repository.
+- `tree`: uncommitted working-tree changes applied after the commits.
+- `env`: extra `RELAY_*` variables, check parameters and `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`.
+- `fires`: one hook stop each, in order. Optional fields:
+  - `at`: the epoch the fake `date` prints; default `1700000000 + 60 * n` for fire `n`;
+  - `transcript`: JSONL rows (objects or raw strings) written as the agent transcript, given as
+    `agent_transcript_path`;
+  - `agentID`: the payload's `agent_id`;
+  - `release`: bytes written to `release` before the fire;
+  - `tree`: working-tree changes applied before the fire;
+  - `check`: for `check` scenarios, `{"position"?, "counter"?, "baseRef"?}`, which runs `relay-gate check` instead of
+    the arm hook (`baseRef: ""` is an explicit empty base).
+
+## Expected output
+
+`<area>/<name>/expected/<n>/` after fire `n`:
+
+| File | Content | Equality |
+|---|---|---|
+| `outcome.json` | `{"exit", "stdout", "stderr"}`; `stdout` is the parsed JSON, or null when empty | exit and stdout exact; stderr informational |
+| `reason.txt` | the block `reason`, exact bytes; absent when the fire emitted no block | bytes |
+| `arm/**` | every file in the arm directory, except `relay.log`, `ledger.jsonl` and the two locks | bytes |
+| `ledger.jsonl` | the arm ledger | bytes |
+
+After every fire `.run.lock` and `.chain.lock` must be absent. `relay.log` is diagnostic and not compared.
+
+## Ledger, audit, authoring and judge goldens (G1)
+
+- `test/fixtures/<name>.ledger.jsonl`: the 15 `docs/fixtures` ledgers, moved unchanged, plus the mutants of §3.
+- `ledger/<name>/`: `verify.stdout`, `verify.exit` (`verify_ledger.py`, plain and, where relevant, keyed),
+  `verify.json`, `problems.json`, `cost.json` (`bin/relay … --json`, parsed) and their exit codes in `exits.json`.
+- `json/`: the compact writer's escape and number tables.
+- `authoring/<name>/`: `input.json` and either `output.json` or `refusal.json` (`{status, code, message}`).
+- `judge/<name>/`: the fake Messages server exchange and the resulting response line.
+
+## Exit paths that need a scenario
+
+Every path below needs at least one scenario. TS is the outcome `ArmEvaluate.evaluate` returns. Paths marked † are
+dropped from the TS arm by the module map; their scenarios record the oracle and their divergence is declared in
+`PARITY-EXCEPTIONS.md` when WP6 lands.
+
+### `bin/relay-arm-hook.sh`
+
+| ID | Path | Python | TS |
+|---|---|---|---|
+| A1 † | no token and no marker | exit 0, silent | none (the token is explicit) |
+| A2 † | several distinct markers | exit 0, stderr refusal | none |
+| A3 | token `.` or containing `..` | exit 0, silent | `refused` |
+| A4 | unknown token (no `sprint.json`) | exit 0, silent | `defect` `arm-missing` |
+| A5 | `.run.lock` held | exit 3, stderr | `busy` |
+| A6 | first `agent_id` binds; a different one later | exit 0, stderr refusal | `defect` `agent-mismatch` |
+| B1 | no `position`: migrate from `counter` | evaluates | as evaluated |
+| B2 | no `position`, `counter` past the end | `complete`, exit 0 | `noop` |
+| B3 | empty plan | position `?`, `complete` | `noop` |
+| B4 | `state` is `complete` | exit 0, no evaluation | `noop` |
+| B5 | parked (`awaiting-human` or legacy `escalated`), no release | exit 0, silent | `parked` |
+| B6 | parked, release blank after normalization | exit 0, stderr | `parked` |
+| B7 | parked, valid release | `human-release`, reset, evaluates the same WP | as evaluated |
+| B8 | position resolved by suffix after the first dot, or after stripping trailing LF | evaluates, canonical rewrite | as evaluated |
+| B9 | position not in the plan | `position-lost`, stderr, exit 0 | `defect` `position-lost` |
+| B10 | invalid current WP ID or macro | exit 1 | `defect` |
+| C1 | kind not implemented (`human`) | `unknown-kind`, stderr, exit 0 | `defect` `unknown-kind` |
+| C2 | block cap nonzero and below WPs + 1 | `cap-risk` once, warning prefixes the next block | `reason` prefix |
+| D1 | inject, inline text | `inject` `(inline)`, text precedes the advance reason | `inject` |
+| D2 | inject, file present | `inject` with file sha, file text in the reason | `inject` |
+| D3 | inject, nothing declared or file absent | `inject-missing`, stderr, exit 0 | `defect` `inject-missing` |
+| E1 | checklist neither array nor null; invalid control ID or assertion | exit 1 | `defect` |
+| E2 | invalid command | `unavailable(invalid-command)`, fail | `gate-fail` |
+| E3 | judge: invalid criterion, invalid scope, no diff | named `judge:unavailable(…)` | as recorded |
+| E4 | judge: exit N, invalid response, pass, fail; blocking and advisory | as recorded | as recorded |
+| E5 | `host_check` control (TS only) | none | as recorded |
+| F1 | regression-only failure within its budget | `gate-fail` with `reg`, regression block | `regression-fail` |
+| F2 | regression-only failure at its budget | `escalate`, parked | `escalate` |
+| G1 | blocked claim on a failing gate | `blocked-claim` honored, re-block | `gate-fail` |
+| G2 | the same honored claim again | `escalate` without spending the budget | `escalate` |
+| G3 | blocked claim on a passing gate | `blocked-claim` not honored, advances | `advance` |
+| H1 | pass, next WP: macro first entry, self-check, review reminder | `advance-reveal`, block with next instructions | `advance` |
+| H2 | pass at or after `compactAfter` | `advance-reveal`, `compaction-hint`, checkpoint text | `advance` |
+| H3 | pass on the last WP | `sprint-complete`, `complete`, no block | `complete` |
+| H4 | next WP identity invalid | exit 1 after the checks, no advance | `defect` |
+| I1 | first failure | `gate-fail`, "is NOT satisfied" with instructions | `gate-fail` |
+| I2 | later failure | `gate-fail`, "still failing" | `gate-fail` |
+| I3 | identical failing round | `gate-fail-repeat` with round sha and count | `gate-fail` |
+| I4 | retry budget spent, or budget 0 on the first failure | `escalate`, `awaiting-human`, counter = WPs | `escalate` |
+| J1 | transcript usage in the window; usage elsewhere only; no usage at all | `cost` totals; zeros; no `cost` | as recorded |
+| J2 | first state; later states | no `elapsed_s`; `elapsed_s` | as recorded |
+
+### `bin/relay-gate check`
+
+| ID | Path | Python | TS |
+|---|---|---|---|
+| K1 | all selected controls pass | exit 0, `check`, `failing: []`, `macro` when set | `check` |
+| K2 | a selected control fails | exit 1, `check` with failing IDs | `check` |
+| K3 | unknown named position | exit 2, `error` `unknown-position` | `error` |
+| K4 | no named position, counter past the end | exit 0, `complete` | `complete` |
+| K5 | position by exact ID, by suffix, overriding a parked or past-end counter | `check` | `check` |
+| K6 | `baseRef: ""` with a diff control | diff unavailable | as recorded |
+| K7 | state directory lock held | exit 3, stderr | `Busy` |
+| K8 | invalid selected WP ID or macro, or invalid checklist | exit 1, no JSON | `PlanError` |

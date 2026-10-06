@@ -10,8 +10,9 @@
 // filter that may match several files, which Bun runs in its own order.
 //
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]
-// A Python package (requirements-dev.txt and no package.json, such as packages/relay) runs pytest: -t becomes
-// pytest's -k expression and --timeout does not apply.
+// A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
+// --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
+// only when every named test file is a .py file, and bun test otherwise.
 
 import { $ } from "bun"
 import { existsSync, statSync } from "node:fs"
@@ -84,11 +85,15 @@ function parse(argv: string[]) {
   if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
   if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
     fail(`-t needs a pattern\n${USAGE}`, 2)
-  if (pythonPackage(name)) {
-    // Test paths may be given from the repository root or from the package directory.
-    const files = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
-    return { package: name, os: options.os, args: [...files, ...(options.pattern ? ["-k", options.pattern] : [])] }
-  }
+  // Test paths may be given from the repository root or from the package directory.
+  const named = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
+  if (pytest(name, named))
+    return {
+      package: name,
+      os: options.os,
+      runner: "pytest",
+      args: [...named, ...(options.pattern ? ["-k", options.pattern] : [])],
+    }
   const files = testPaths(
     name,
     positional.slice(1),
@@ -97,20 +102,23 @@ function parse(argv: string[]) {
   return {
     package: name,
     os: options.os,
+    runner: "bun",
     args: [...files, "--timeout", options.timeout, ...(options.pattern ? ["-t", options.pattern] : [])],
   }
 }
 
-// test-ci.yml makes the same choice: package.json means bun test, otherwise requirements-dev.txt means pytest.
-function pythonPackage(name: string) {
+// The runner travels in .ci-run.json; test-ci.yml falls back to the same file rule when a request carries none.
+function pytest(name: string, files: string[]) {
   const dir = path.join(root, "packages", name)
-  return !existsSync(path.join(dir, "package.json")) && existsSync(path.join(dir, "requirements-dev.txt"))
+  if (!existsSync(path.join(dir, "requirements-dev.txt"))) return false
+  if (!existsSync(path.join(dir, "package.json"))) return true
+  return files.length > 0 && files.every((file) => file.endsWith(".py"))
 }
 
 async function findRemote() {
   if (
     !(await Bun.file(path.join(root, "packages", request.package, "package.json")).exists()) &&
-    !pythonPackage(request.package)
+    !(await Bun.file(path.join(root, "packages", request.package, "requirements-dev.txt")).exists())
   )
     fail(`packages/${request.package} is not a package in this checkout`, 2)
   const pattern = new RegExp(`github\\.com[:/]${repo.replace(".", "\\.")}(\\.git)?$`)
@@ -140,7 +148,7 @@ async function snapshot() {
   )
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
-  const body = JSON.stringify({ package: request.package, args: request.args })
+  const body = JSON.stringify({ package: request.package, runner: request.runner, args: request.args })
   const blob = (await $`git hash-object -w --stdin < ${Buffer.from(body)}`.cwd(root).text()).trim()
   await $`git update-index --add --cacheinfo ${`100644,${blob},.ci-run.json`}`.cwd(root).env(env).quiet()
   const result = (await $`git write-tree`.cwd(root).env(env).text()).trim()

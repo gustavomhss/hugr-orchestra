@@ -63,6 +63,10 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
+    "@opencode-ai/relay#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@opencode-ai/client#test": {
       "dependsOn": ["transit"],
       "outputs": []
