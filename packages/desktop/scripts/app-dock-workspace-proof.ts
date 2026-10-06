@@ -254,9 +254,9 @@ export async function run(options: Options) {
           record("runtime.helper.setup-failed", { chain: chain(error, 0) })
           throw error
         })
-        if (helpers.has(resource.containerID)) return resource
+        if (helpers.has(resource.id)) return resource
         const tracked = { resource, partial: Buffer.alloc(0), reaped: false, off: [] as (() => void)[], exit: undefined as NativeDockProtocol.Exit | undefined }
-        helpers.set(resource.containerID, tracked)
+        helpers.set(resource.id, tracked)
         const decode: unknown = Reflect.get(resource.client, "read")
         check(typeof decode === "function", "trace-client-decoder-unavailable")
         // The existing client can terminate the channel during its shutdown ACK,
@@ -271,15 +271,15 @@ export async function run(options: Options) {
               tracked.partial = Buffer.concat([tracked.partial, chunk.subarray(offset, end)]); offset = end
               if (newline < 0) continue
               const wire = frame(tracked.partial)
-              record("wire.reply", { helper: resource.containerID, raw: wire.raw, bytes: wire.bytes, sha256: wire.sha256,
+              record("wire.reply", { helper: resource.id, raw: wire.raw, bytes: wire.bytes, sha256: wire.sha256,
                 value: { id: wire.value.id, ok: wire.value.ok } }); tracked.partial = Buffer.alloc(0)
             }
           } catch (error) { fail(error); void resource.channel.terminate().catch(fail) }
           decode.call(resource.client, chunk)
         })
-        tracked.off.push(resource.channel.onData((chunk) => record("wire.channel-delivery", { helper: resource.containerID, bytes: chunk.byteLength, sha256: hash(chunk) })),
-          resource.channel.onExit((exit) => { tracked.exit = exit; record("helper.exit", { helper: resource.containerID, exit }) }))
-        record("runtime.helper.hello-parsed", { containerID: resource.containerID, hello: resource.client.hello, runtime: resource.runtime, payload: resource.payload })
+        tracked.off.push(resource.channel.onData((chunk) => record("wire.channel-delivery", { helper: resource.id, bytes: chunk.byteLength, sha256: hash(chunk) })),
+          resource.channel.onExit((exit) => { tracked.exit = exit; record("helper.exit", { helper: resource.id, exit }) }))
+        record("runtime.helper.hello-parsed", { containerID: resource.id, hello: resource.client.hello, runtime: resource.runtime, payload: resource.payload })
         check(resource.payload.files.length === 8 && resource.payload.files.every((file) =>
           (receipt.provenance.before as { path: string; sha256: string; bytes: number }[]).some((source) => source.path === join(payload, file.name)
             && source.sha256 === file.sha256 && source.bytes === file.bytes)), "helper-payload-source-mismatch")
@@ -292,14 +292,14 @@ export async function run(options: Options) {
             const value = { method: "action", action: state.actionName, dispatch: "acknowledged", postcondition: "unverified",
               consistency: "non-atomic", identity: request.args.mode === "observed" ? "observed-control" : "snapshot-bound-control", logicalIdentity: "unverified" }
             const reply = Buffer.from(JSON.stringify({ v: 1, id: request.id, ok: true, value }) + "\n")
-            record("control.suppressed-action", { helper: resource.containerID, ...wire }); state.suppressed++
-            record("control.synthetic-ack", { helper: resource.containerID, ...frame(reply) })
+            record("control.suppressed-action", { helper: resource.id, ...wire }); state.suppressed++
+            record("control.synthetic-ack", { helper: resource.id, ...frame(reply) })
             // Runtime already subscribed its client before returning. Feed only the
             // declared control ACK to that same decoder, without replacing the client.
             decode.call(resource.client, reply)
             return
           }
-          record("wire.request", { helper: resource.containerID, ...wire }); await write(bytes)
+          record("wire.request", { helper: resource.id, ...wire }); await write(bytes)
         }
         return resource
       })()) },
@@ -720,7 +720,7 @@ export async function run(options: Options) {
       await tracked.resource.client.close().catch(fail)
       await tracked.resource.channel.terminate().then(() => {
         check(tracked.exit && tracked.partial.length === 0, "helper-reaping-or-trace-incomplete")
-        tracked.reaped = true; record("helper.reaped", { helper: tracked.resource.containerID, exit: tracked.exit, authority: "production channel termination joins helper-container removal" })
+        tracked.reaped = true; record("helper.reaped", { helper: tracked.resource.id, exit: tracked.exit, authority: "production channel termination joins helper-container removal" })
       }).catch(fail)
       tracked.off.forEach((off) => off())
     }))

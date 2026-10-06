@@ -4,8 +4,9 @@ import { execFile, spawn } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
+import type { Command } from "./app-dock-runtime-backend"
 
-export type Connection = { endpoint: string; containerID: string; key: string }
+export type Connection = { endpoint: string; workspaceID: string; key: string }
 export type Input = { argv: string[]; cwd?: string; env?: Record<string, string>; timeoutMs?: number; stdin?: string }
 export type Result = {
   stdout: string
@@ -30,63 +31,30 @@ type Terminal = {
 const helper = "/opt/orchestra/workspace-access.py"
 const limit = 1024 * 1024
 const exec = promisify(execFile)
-const hostEnvironment = () =>
-  Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key]) =>
-        !["DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_TLS_VERIFY", "DOCKER_CERT_PATH", "DOCKER_API_VERSION"].includes(key),
-    ),
-  )
 
 export function create(options: {
   prepare: () => Promise<Connection>
   verify: (connection: Connection) => Promise<void>
+  // Host process running argv as the workspace user, with stdio attached.
+  command: (connection: Connection, input: { argv: string[]; tty?: boolean }) => Command
 }) {
   const terminals = new Map<string, Terminal>()
   const running = new Map<AbortController, Promise<void>>()
   const opening = { count: 0 }
   const lifecycle = { closing: false }
-  const command = (connection: Connection, op: string, runID: string) =>
-    exec(
-      "docker",
-      [
-        "--host",
-        connection.endpoint,
-        "exec",
-        "--interactive",
-        "--user",
-        "dock",
-        connection.containerID,
-        ...(op === "cancel" ? ["sudo", "-n"] : []),
-        "python3",
-        helper,
-        op,
-        runID,
-      ],
-      { env: hostEnvironment(), timeout: 20_000, maxBuffer: limit },
-    ).catch(() => {
+  const control = (connection: Connection, op: string, runID: string) => {
+    const host = options.command(connection, {
+      argv: [...(op === "cancel" ? ["sudo", "-n"] : []), "python3", helper, op, runID],
+    })
+    return exec(host.file, host.args, { env: host.env, timeout: 20_000, maxBuffer: limit }).catch(() => {
       throw new Error("workspace-control-failed")
     })
+  }
   const configure = async (connection: Connection, runID: string, input: Input) => {
     const value = requireInput(input)
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(
-        "docker",
-        [
-          "--host",
-          connection.endpoint,
-          "exec",
-          "-i",
-          "--user",
-          "dock",
-          connection.containerID,
-          "python3",
-          helper,
-          "prepare",
-          runID,
-        ],
-        { env: hostEnvironment(), stdio: ["pipe", "ignore", "ignore"] },
-      )
+      const host = options.command(connection, { argv: ["python3", helper, "prepare", runID] })
+      const child = spawn(host.file, host.args, { env: host.env, stdio: ["pipe", "ignore", "ignore"] })
       const timer = setTimeout(() => child.kill("SIGKILL"), 10_000)
       child.stdin.on("error", () => reject(new Error("workspace-prepare-failed")))
       child.once("error", () => {
@@ -103,11 +71,11 @@ export function create(options: {
   }
   const cancel = async (connection: Connection, runID: string) => {
     await options.verify(connection)
-    await command(connection, "cancel", runID)
+    await control(connection, "cancel", runID)
   }
   const clean = async (connection: Connection, runID: string) => {
     await options.verify(connection)
-    return command(connection, "clean", runID)
+    return control(connection, "clean", runID)
   }
   const terminal = async (owner: string, id: string) => {
     const found = terminals.get(id)
@@ -178,23 +146,8 @@ export function create(options: {
         controller.signal.throwIfAborted()
         await options.verify(connection)
         const result = await new Promise<Result>((resolve, reject) => {
-          const child = spawn(
-            "docker",
-            [
-              "--host",
-              connection.endpoint,
-              "exec",
-              "-i",
-              "--user",
-              "dock",
-              connection.containerID,
-              "python3",
-              helper,
-              "run",
-              runID,
-            ],
-            { env: hostEnvironment(), stdio: ["pipe", "pipe", "pipe"] },
-          )
+          const host = options.command(connection, { argv: ["python3", helper, "run", runID] })
+          const child = spawn(host.file, host.args, { env: host.env, stdio: ["pipe", "pipe", "pipe"] })
           const stdout: Buffer[] = []
           const stderr: Buffer[] = []
           const escalation = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
@@ -295,23 +248,8 @@ export function create(options: {
       const runID = randomUUID()
       await configure(connection, runID, input)
       await options.verify(connection)
-      const child = spawn(
-        "docker",
-        [
-          "--host",
-          connection.endpoint,
-          "exec",
-          "-it",
-          "--user",
-          "dock",
-          connection.containerID,
-          "python3",
-          helper,
-          "terminal",
-          runID,
-        ],
-        { env: hostEnvironment(), stdio: "inherit" },
-      )
+      const host = options.command(connection, { argv: ["python3", helper, "terminal", runID], tty: true })
+      const child = spawn(host.file, host.args, { env: host.env, stdio: "inherit" })
       const interruption = { failure: undefined as Error | undefined }
       const stop = () => {
         void cancel(connection, runID)
@@ -352,23 +290,8 @@ export function create(options: {
         await options.verify(connection)
         if (lifecycle.closing) throw new Error("workspace-closing")
         const { spawn } = await import("@lydell/node-pty")
-        const process = spawn(
-          "docker",
-          [
-            "--host",
-            connection.endpoint,
-            "exec",
-            "-it",
-            "--user",
-            "dock",
-            connection.containerID,
-            "python3",
-            helper,
-            "terminal",
-            runID,
-          ],
-          { name: "xterm-256color", cols, rows, cwd: "/", env: hostEnvironment() },
-        )
+        const host = options.command(connection, { argv: ["python3", helper, "terminal", runID], tty: true })
+        const process = spawn(host.file, host.args, { name: "xterm-256color", cols, rows, cwd: "/", env: host.env })
         const ended = Promise.withResolvers<void>()
         const ready = Promise.withResolvers<void>()
         const marker = `\u001b]777;orchestra-ready=${runID}\u0007`
