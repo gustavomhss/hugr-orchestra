@@ -1,0 +1,95 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "W1",
+        "instructions": "do W1",
+        "checklist": [
+          {
+            "id": "W1-file",
+            "cmd": "test -f w1.txt"
+          }
+        ]
+      },
+      {
+        "id": "W2",
+        "instructions": "do W2",
+        "checklist": [
+          {
+            "id": "W2-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "W3",
+        "instructions": "do W3",
+        "checklist": [
+          {
+            "id": "W3-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "W4",
+        "instructions": "do W4",
+        "checklist": [
+          {
+            "id": "W4-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "W5",
+        "instructions": "do W5",
+        "checklist": [
+          {
+            "id": "W5-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "W6",
+        "instructions": "do W6",
+        "checklist": [
+          {
+            "id": "W6-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "W7",
+        "instructions": "do W7",
+        "checklist": [
+          {
+            "id": "W7-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "W8",
+        "instructions": "do W8",
+        "checklist": [
+          {
+            "id": "W8-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "env": {
+    "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP": "junk"
+  },
+  "fires": [
+    {}
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "bad",
+            "cmd": "printf bad >> executed"
+          }
+        ],
+        "macro": "scope\u0000"
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "position": "A",
+    "counter": "0\n"
+  },
+  "fires": [
+    {}
+  ]
+}
