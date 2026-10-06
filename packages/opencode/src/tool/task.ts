@@ -595,6 +595,7 @@ export const TaskTool = Tool.define(
               {
                 type: "text",
                 synthetic: true,
+                metadata: { source: { type: "task-return", task_id: nextSession.id, state } },
                 text: renderOutput({
                   sessionID: nextSession.id,
                   state,

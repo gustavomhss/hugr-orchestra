@@ -23,6 +23,8 @@ function history() {
   const read = tool(value[1], "read", big)
   const bash = tool(value[3], "bash", big, { exit: 0, input: { command: "npm test" } })
   const todo = tool(value[3], "todowrite", big)
+  tool(value[3], "task", big)
+  tool(value[3], "maestro_request_review", big)
   const recent = tool(value[value.length - 1], "read", big)
   return { value, read, bash, todo, recent }
 }

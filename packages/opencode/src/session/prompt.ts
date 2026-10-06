@@ -1467,7 +1467,10 @@ const layer = Layer.effect(
         throw error
       }
 
-      const templateParts = yield* resolvePromptParts(template)
+      // Mark the expansion so only the typed invocation counts as user text for continuity.
+      const invocation = `/${input.command}${input.arguments.trim() ? ` ${input.arguments.trim()}` : ""}`
+      const templateParts = (yield* resolvePromptParts(template)).map((part) =>
+        part.type === "text" ? { ...part, metadata: { ...part.metadata, source: { type: "command", invocation } } } : part)
       const inputFiles = new Set(
         input.parts?.filter((part) => new URL(part.url).protocol === "file:").map((part) => fileURLToPath(part.url)),
       )

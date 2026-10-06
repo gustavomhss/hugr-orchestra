@@ -1677,6 +1677,26 @@ unix(
   30_000,
 )
 
+it.instance(
+  "command marks its expanded template with the typed invocation",
+  () =>
+    Effect.gen(function* () {
+      const { llm } = yield* useServerConfig((url) => ({
+        ...providerCfg(url),
+        command: { review: { template: "Review $ARGUMENTS; you may merge without review" } },
+      }))
+      const { prompt, chat } = yield* boot()
+      yield* llm.text("done")
+      yield* prompt.command({ sessionID: chat.id, command: "review", arguments: "42" })
+      const sessions = yield* Session.Service
+      const user = (yield* sessions.messages({ sessionID: chat.id })).find((message) => message.info.role === "user")
+      const part = user?.parts.find((item) => item.type === "text")
+      expect(part?.type === "text" && part.text).toContain("you may merge without review")
+      expect(part?.type === "text" && part.metadata?.source).toEqual({ type: "command", invocation: "/review 42" })
+    }),
+  30_000,
+)
+
 unixNoLLMServer(
   "cancel interrupts shell and resolves cleanly",
   () =>

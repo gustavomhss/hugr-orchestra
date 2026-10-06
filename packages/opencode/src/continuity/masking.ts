@@ -7,11 +7,11 @@ export const TAIL_TURNS = 5
 /** Failed output keeps this many leading lines verbatim; errors are high-value evidence. */
 export const ERROR_LINES = 20
 
-// Planning state and recovered detail are what the model needs next; never hide them.
-const PROTECTED = new Set(["skill", "todowrite", "todoread", "context_recall"])
+// Planning state, recovered detail and delegation returns are what the model needs next; never hide them.
+const PROTECTED = new Set(["skill", "todowrite", "todoread", "context_recall", "task", "maestro_request_review"])
 
 // Tool arguments that identify a call well enough to re-run or recover it.
-const KEY_ARGS = ["filePath", "path", "command", "pattern", "url", "query", "include", "description"]
+export const KEY_ARGS = ["filePath", "path", "command", "pattern", "url", "query", "include", "description"]
 
 /** Masked tool part IDs mapped to the archive reference holding the full output. */
 export type Masks = ReadonlyMap<string, string>
@@ -27,7 +27,7 @@ export function failed(part: CompletedTool) {
   return typeof exit === "number" && exit !== 0
 }
 
-export function signature(part: CompletedTool) {
+export function signature(part: SessionV1.ToolPart) {
   const input = part.state.input ?? {}
   const args = KEY_ARGS.flatMap((key) => {
     const value = (input as Record<string, unknown>)[key]

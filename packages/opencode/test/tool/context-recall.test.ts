@@ -145,6 +145,34 @@ describe("context_recall", () => {
     }).pipe(Effect.provide(layer)),
   )
 
+  it.instance("resolves memory aliases from this session's stored history only", () =>
+    Effect.gen(function* () {
+      const own = yield* seed
+      const answer = yield* own.session.updatePart({
+        id: PartID.ascending(), sessionID: own.chat.id, messageID: own.assistant.id, type: "tool", tool: "question",
+        callID: "call_question", state: { status: "completed", input: { questions: [] }, output: "asked", title: "Asked",
+          metadata: { answers: [["Ship it"]] }, time: { start: 3, end: 4 } },
+      })
+      yield* own.session.updatePart({ id: PartID.ascending(), sessionID: own.chat.id, messageID: own.assistant.id,
+        type: "text", text: "Assistant reply ZX-20." })
+      const lookup = (reference: string) => Effect.gen(function* () {
+        return reply((yield* own.tool.execute({ reference }, own.ctx)).output)
+      })
+      expect((yield* lookup("u1")).source).toEqual({ message_id: own.user.id })
+      expect((yield* lookup("u1")).content).toContain("Stored own receipt ZX-19.")
+      expect((yield* lookup("a1")).content).toContain("Assistant reply ZX-20.")
+      expect((yield* lookup("t1")).source).toEqual({ message_id: own.assistant.id, part_id: answer.id })
+      expect((yield* lookup("u2")).source).toEqual({ message_id: own.assistant.id, part_id: answer.id })
+      expect((yield* lookup("u2")).content).toContain("Ship it")
+      // Numbering is a pure function of stored history: the same alias resolves the same way again.
+      expect((yield* lookup("t1")).content).toBe((yield* lookup("t1")).content)
+      const foreign = yield* seed
+      const denied = reply((yield* foreign.tool.execute({ reference: "a1" }, foreign.ctx)).output)
+      expect(denied.status).toBe("unavailable")
+      expect((yield* lookup("t9")).status).toBe("unavailable")
+    }).pipe(Effect.provide(layer)),
+  )
+
   it.instance("keeps completed lifecycle, exit 1, truncation and volatile saved-file metadata distinct", () =>
     Effect.gen(function* () {
       const f = yield* seed
