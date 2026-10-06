@@ -2,40 +2,7 @@ import type { PinnedArtifact } from "../../pinned-artifact"
 import type { TargetId } from "../target"
 import orvalLock from "./node-orval.package-lock.json"
 import protocGenEsLock from "./node-protoc-gen-es.package-lock.json"
-
-// Local copies of the frozen milestone 4 manifest types, only so this file typechecks before tk-core lands them;
-// at merge they are replaced by `import type { HostedEngine, Runtime } from "../manifest"`.
-type RuntimeId = "node" | "java" | "python"
-type EngineId =
-  | "ast-grep"
-  | "sqlc"
-  | "buf"
-  | "gitleaks"
-  | "kiota"
-  | "orval"
-  | "protoc-gen-es"
-  | "openapi-generator"
-  | "datamodel-codegen"
-type Runtime = {
-  readonly id: RuntimeId
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly targets: Readonly<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
-}
-type HostedEngine = {
-  readonly id: EngineId
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly env?: Readonly<Record<string, string>>
-  readonly runtime: RuntimeId
-  readonly install:
-    | { readonly kind: "npm"; readonly packageJson: string; readonly lock: string }
-    | { readonly kind: "pip"; readonly requirements: string }
-    | { readonly kind: "jar"; readonly artifact: PinnedArtifact.Artifact }
-  readonly launch: ReadonlyArray<string>
-}
+import type { HostedEngine, Runtime } from "../manifest"
 
 // Node pins are the sha256 lines of nodejs.org's SHASUMS256.txt for the release, in SRI form. The engine locks were
 // written by `npm install --package-lock-only --ignore-scripts` with npm 10.9.8 (the npm this Node bundles); they keep

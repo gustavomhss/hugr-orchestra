@@ -40,7 +40,11 @@ const ENGINE_PINS = {
   kiota: "1.35.0",
   "openapi-generator": "7.25.0",
   "datamodel-codegen": "0.83.0",
+  orval: "8.39.0",
+  "protoc-gen-es": "2.16.0",
 } as Record<string, string>
+// A recipe may also run the engine that drives it: protoc-gen-es is a buf plugin.
+const ENGINE_DRIVERS: Record<string, string[]> = { "protoc-gen-es": ["buf"] }
 
 describe("backend skill families", () => {
   test("keys family references by an allowed family id", async () => {
@@ -199,7 +203,7 @@ describe("backend skill family tuples and engine recipes", () => {
           otherVersions: [...text.matchAll(/\b\d+\.\d+\.\d+\b/g)].map((match) => match[0]).filter((v) => v !== pin),
           otherEngines: [...text.matchAll(/\$\{?BACKEND_TOOLKIT_BIN\}?"?\/([a-z0-9-]+)/g)]
             .map((match) => match[1])
-            .filter((engine) => engine !== id),
+            .filter((engine) => engine !== id && !(ENGINE_DRIVERS[id] ?? []).includes(engine)),
         }
       }),
     )
