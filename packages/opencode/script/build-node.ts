@@ -26,6 +26,8 @@ await Bun.build({
   },
   files: {
     "opencode-web-ui.gen.ts": "",
+    // No embedded skill tree in the Node build yet; backend-skill-root.ts falls back to the source tree.
+    "opencode-backend-skills.gen.ts": "",
   },
 })
 
