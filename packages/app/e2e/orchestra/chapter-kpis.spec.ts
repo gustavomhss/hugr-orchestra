@@ -82,8 +82,7 @@ for (const scheme of ["dark", "light"] as const) {
     // Held activity: Orchestra tiles show no number, Export is unavailable, git and PR tiles stand alone.
     for (const id of ["tokens", "hours", "messages", "models", "failed"])
       await expect(value(page, id)).toHaveAttribute("data-state", "loading")
-    await expect(home(page).locator(".home-kpi-value:not([data-state])")).toHaveText(["12", "3"])
-    await expect(value(page, "pullRequests")).toHaveText("Not connected")
+    await expect(home(page).locator(".home-kpi-value:not([data-state])")).toHaveText(["12", "6", "3"])
     await expect(home(page).getByRole("button", { name: "Export" })).toBeDisabled()
     await expect(rows(page)).toHaveCount(0)
     gate.resolve()
@@ -103,7 +102,7 @@ for (const scheme of ["dark", "light"] as const) {
       "2.0h",
       "20",
       "12",
-      "Not connected",
+      "6",
       "3",
       "2",
       "1",
@@ -113,7 +112,7 @@ for (const scheme of ["dark", "light"] as const) {
       "↘ 20%agent turn wall clock",
       "↗ 567%human + agent",
       "↗ 20%on main",
-      "no GitHub or GitLab connection",
+      "open on GitHub",
       "merge commits",
       "2 providers",
       "of 13 total7.7%",
@@ -168,7 +167,7 @@ for (const scheme of ["dark", "light"] as const) {
         ["Hours worked", "2", "hours", "-20"],
         ["Messages", "20", "count", "567"],
         ["Commits", "12", "count", "20"],
-        ["Pull requests", "Not connected", "", ""],
+        ["Pull requests", "6", "count", ""],
         ["Merges", "3", "count", ""],
         ["Models run", "2", "count", ""],
         ["Failed runs", "1", "count", ""],
@@ -197,7 +196,8 @@ test("period switch reads each period once while fresh, keeps the choice per pro
 }) => {
   const requests: URL[] = []
   const gitRequests: URL[] = []
-  await setup(page, { requests, gitRequests })
+  const pullRequests = { mode: "github" as const, requests: [] as URL[] }
+  await setup(page, { requests, gitRequests, pullRequests })
   await page.goto("/")
   await expect(value(page, "tokens")).toHaveText("1.8M")
   await home(page).getByRole("button", { name: "7d", exact: true }).click()
@@ -209,6 +209,9 @@ test("period switch reads each period once while fresh, keeps the choice per pro
   await home(page).getByRole("button", { name: "30d", exact: true }).click()
   await expect(value(page, "tokens")).toHaveText("1.8M")
   expect(requests.map((url) => url.searchParams.get("period"))).toEqual(["30d", "7d"])
+  // The open count is the same for every period, so one read serves them all.
+  await expect(value(page, "pullRequests")).toHaveText("6")
+  expect(pullRequests.requests.map((url) => url.searchParams.get("location[directory]"))).toEqual([directory])
   // Git windows cover the previous period in any time zone; days outside it are not counted.
   expect(gitRequests.map((url) => [url.searchParams.get("since"), url.searchParams.get("until")])).toEqual([
     [String(now - 62 * DAY), String(now)],
@@ -337,6 +340,38 @@ test("empty, unavailable, partial, non-git and partial-git states are explicit",
   await expect(tile(page, "commits").locator(".home-bars i")).toHaveCount(0)
 })
 
+test("the pull request tile shows the host's open count, or why it cannot know it, never a guess", async ({ page }) => {
+  test.slow()
+  const pullRequests = { mode: "gitlab" as PullRequestMode }
+  await setup(page, { pullRequests })
+  await page.goto("/")
+  await expect(value(page, "pullRequests")).toHaveText("3")
+  await expect(tile(page, "pullRequests").locator(".home-kpi-foot")).toHaveText("open on GitLab")
+  await expect(tile(page, "pullRequests").locator(".home-bars i")).toHaveCount(0)
+  const states: [PullRequestMode, string, string][] = [
+    // The host's total counts, not the page of pull requests it listed.
+    ["truncated", "240", "open on GitHub"],
+    ["not_installed", "Not connected", "gh is not installed on this server"],
+    ["not_authenticated", "Not connected", "glab is not signed in on this server"],
+    ["no_remote", "Not connected", "no github.com or gitlab.com remote"],
+    ["cli_failed", "Unavailable", "could not read pull requests"],
+    ["missing", "Unavailable", "this server cannot read pull requests"],
+    ["malformed", "Unavailable", "could not read pull requests"],
+  ]
+  for (const [mode, state, note] of states) {
+    pullRequests.mode = mode
+    await page.reload()
+    await expect(value(page, "tokens")).toHaveText("1.8M")
+    await expect(value(page, "pullRequests")).toHaveText(state)
+    await expect(tile(page, "pullRequests").locator(".home-kpi-foot")).toHaveText(note)
+  }
+  // The export writes the tile's state, not a number.
+  const download = page.waitForEvent("download")
+  await home(page).getByRole("button", { name: "Export" }).click()
+  const csv = await readFile((await (await download).path())!, "utf8")
+  expect(csv).toContain('"Pull requests","Unavailable","",""\r\n')
+})
+
 test("Configure tracking opens Providers and Manage opens the models settings", async ({ page }) => {
   await setup(page)
   await page.goto("/")
@@ -378,7 +413,8 @@ test("at 700px Home keeps the project list and lays tiles in two columns without
 test("no selected profile shows no KPIs and reads nothing", async ({ page }) => {
   const requests: URL[] = []
   const gitRequests: URL[] = []
-  await setup(page, { requests, gitRequests, noSelection: true })
+  const pullRequests = { mode: "github" as const, requests: [] as URL[] }
+  await setup(page, { requests, gitRequests, pullRequests, noSelection: true })
   await page.goto("/")
   await expect(page.locator('[data-component="orchestra-home"]')).toBeVisible()
   await expect(page.locator('[data-component="orchestra-kpis-empty"]')).toContainText(
@@ -388,6 +424,7 @@ test("no selected profile shows no KPIs and reads nothing", async ({ page }) => 
   await expect(home(page)).toHaveCount(0)
   expect(requests).toHaveLength(0)
   expect(gitRequests).toHaveLength(0)
+  expect(pullRequests.requests).toHaveLength(0)
 })
 
 test("opening a chapter right after choosing a profile replaces Home while activity loads", async ({ page }) => {
@@ -525,6 +562,7 @@ async function setup(
     failure?: { enabled: boolean }
     git?: { mode: "ok" | "missing" | "none" | "truncated" | "lines" }
     activity?: { mode: "empty" | "missing" | "truncated" }
+    pullRequests?: { mode: PullRequestMode; requests?: URL[] }
     noSelection?: boolean
   } = {},
 ) {
@@ -599,6 +637,11 @@ async function setup(
       input.finished?.()
       return
     }
+    if (url.pathname === "/api/pull-request") {
+      input.pullRequests?.requests?.push(url)
+      const reply = pullRequestReply(input.pullRequests?.mode ?? "github")
+      return json(route, reply.body, reply.status)
+    }
     if (url.pathname === "/vcs/activity") {
       input.gitRequests?.push(url)
       const mode = input.git?.mode ?? "ok"
@@ -642,6 +685,51 @@ async function setup(
     if (url.pathname === "/provider") return json(route, { all: [], connected: [], default: {} })
     return json(route, {})
   })
+}
+
+type PullRequestMode =
+  | "github"
+  | "gitlab"
+  | "truncated"
+  | "not_installed"
+  | "not_authenticated"
+  | "no_remote"
+  | "cli_failed"
+  | "missing"
+  | "malformed"
+
+// What the server's /api/pull-request answers in each mode: open pull requests from the host CLI, or its reason.
+function pullRequestReply(mode: PullRequestMode) {
+  const location = { directory, project: { id: project.id, directory } }
+  const list = (host: string, count: number, shown = count) => ({
+    status: 200,
+    body: {
+      location,
+      data: {
+        host,
+        repository: "acme/widgets",
+        count,
+        truncated: shown < count,
+        items: Array.from({ length: shown }, (_, index) => ({
+          number: index + 1,
+          title: `Change ${index + 1}`,
+          url: `https://example.test/${index + 1}`,
+          state: host === "gitlab" ? "opened" : "open",
+          author: "ada",
+        })),
+      },
+    },
+  })
+  const failure = (kind: string, host?: string) => ({
+    status: 400,
+    body: { name: "PullRequestError", data: { kind, message: `${kind} on the server`, host } },
+  })
+  if (mode === "github") return list("github", 6)
+  if (mode === "gitlab") return list("gitlab", 3)
+  if (mode === "truncated") return list("github", 240, 100)
+  if (mode === "missing") return { status: 404, body: {} }
+  if (mode === "malformed") return { status: 200, body: { location, data: { host: "github", count: "six" } } }
+  return failure(mode, mode === "not_authenticated" ? "gitlab" : "github")
 }
 
 function json(route: Route, body: unknown, status = 200) {

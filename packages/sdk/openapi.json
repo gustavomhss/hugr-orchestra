@@ -16326,6 +16326,184 @@
         ]
       }
     },
+    "/api/pull-request": {
+      "get": {
+        "tags": ["pullRequest"],
+        "operationId": "v2.pullRequest.list",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PullRequestList"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "PullRequestError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PullRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "List open pull requests on the location's github.com or gitlab.com remote through the gh or glab CLI signed in on the server.",
+        "summary": "List open pull requests",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.pullRequest.list({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["pullRequest"],
+        "operationId": "v2.pullRequest.create",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PullRequestCreated"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "PullRequestError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PullRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Open a pull request from a pushed branch of the location's repository through the gh or glab CLI signed in on the server.",
+        "summary": "Create pull request",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PullRequestCreateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.pullRequest.create({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/pty/{ptyID}/connect": {
       "get": {
         "tags": ["pty"],
@@ -27366,6 +27544,39 @@
               }
             },
             "required": ["message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "PullRequestError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["PullRequestError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "$ref": "#/components/schemas/PullRequestErrorKind"
+              },
+              "message": {
+                "type": "string"
+              },
+              "host": {
+                "$ref": "#/components/schemas/PullRequestHost"
+              },
+              "branch": {
+                "type": "string"
+              },
+              "remote": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "message"],
             "additionalProperties": false
           }
         },
@@ -40582,6 +40793,99 @@
         "required": ["directory"],
         "additionalProperties": false
       },
+      "PullRequestHost": {
+        "type": "string",
+        "enum": ["github", "gitlab"]
+      },
+      "PullRequestInfo": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          }
+        },
+        "required": ["number", "title", "url", "state", "author"],
+        "additionalProperties": false
+      },
+      "PullRequestList": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "$ref": "#/components/schemas/PullRequestHost"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PullRequestInfo"
+            }
+          }
+        },
+        "required": ["host", "repository", "count", "truncated", "items"],
+        "additionalProperties": false
+      },
+      "PullRequestErrorKind": {
+        "type": "string",
+        "enum": ["not_installed", "not_authenticated", "no_remote", "branch_not_pushed", "cli_failed"]
+      },
+      "PullRequestCreateInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "head": {
+            "type": "string"
+          }
+        },
+        "required": ["title", "body", "base"],
+        "additionalProperties": false
+      },
+      "PullRequestCreated": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "$ref": "#/components/schemas/PullRequestHost"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": ["host", "repository", "number", "url"],
+        "additionalProperties": false
+      },
       "EventModels-devRefreshed": {
         "type": "object",
         "properties": {
@@ -45035,6 +45339,10 @@
     {
       "name": "projectCopy",
       "description": "Project copy management routes."
+    },
+    {
+      "name": "pullRequest",
+      "description": "Host pull requests through the server's gh or glab CLI."
     },
     {
       "name": "pty",

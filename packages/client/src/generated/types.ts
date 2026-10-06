@@ -103,6 +103,19 @@ export type ProjectCopyError = {
 export const isProjectCopyError = (value: unknown): value is ProjectCopyError =>
   typeof value === "object" && value !== null && "name" in value && value["name"] === "ProjectCopyError"
 
+export type PullRequestError = {
+  readonly name: "PullRequestError"
+  readonly data: {
+    readonly kind: "not_installed" | "not_authenticated" | "no_remote" | "branch_not_pushed" | "cli_failed"
+    readonly message: string
+    readonly host?: "github" | "gitlab"
+    readonly branch?: string
+    readonly remote?: string
+  }
+}
+export const isPullRequestError = (value: unknown): value is PullRequestError =>
+  typeof value === "object" && value !== null && "name" in value && value["name"] === "PullRequestError"
+
 export type HealthGetOutput = { readonly healthy: true }
 
 export type LocationGetInput = {
@@ -2612,3 +2625,74 @@ export type ProjectCopiesRefreshInput = {
 }
 
 export type ProjectCopiesRefreshOutput = void
+
+export type PullRequestsListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type PullRequestsListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly host: "github" | "gitlab"
+    readonly repository: string
+    readonly count: number
+    readonly truncated: boolean
+    readonly items: ReadonlyArray<{
+      readonly number: number
+      readonly title: string
+      readonly url: string
+      readonly state: string
+      readonly author: string | null
+    }>
+  }
+}
+
+export type PullRequestsCreateInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly title: {
+    readonly title: string
+    readonly body: string
+    readonly base: string
+    readonly head?: string
+  }["title"]
+  readonly body: {
+    readonly title: string
+    readonly body: string
+    readonly base: string
+    readonly head?: string
+  }["body"]
+  readonly base: {
+    readonly title: string
+    readonly body: string
+    readonly base: string
+    readonly head?: string
+  }["base"]
+  readonly head?: {
+    readonly title: string
+    readonly body: string
+    readonly base: string
+    readonly head?: string
+  }["head"]
+}
+
+export type PullRequestsCreateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly host: "github" | "gitlab"
+    readonly repository: string
+    readonly number: number
+    readonly url: string
+  }
+}

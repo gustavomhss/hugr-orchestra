@@ -181,6 +181,7 @@ import type {
   PtyShellsResponses,
   PtyUpdateErrors,
   PtyUpdateResponses,
+  PullRequestCreateInput,
   QuestionAnswer,
   QuestionListErrors,
   QuestionListResponses,
@@ -353,6 +354,10 @@ import type {
   V2PtyRemoveResponses,
   V2PtyUpdateErrors,
   V2PtyUpdateResponses,
+  V2PullRequestCreateErrors,
+  V2PullRequestCreateResponses,
+  V2PullRequestListErrors,
+  V2PullRequestListResponses,
   V2QuestionRequestListErrors,
   V2QuestionRequestListResponses,
   V2ReferenceListErrors,
@@ -7481,6 +7486,70 @@ export class ProjectCopy2 extends HeyApiClient {
   }
 }
 
+export class PullRequest extends HeyApiClient {
+  /**
+   * List open pull requests
+   *
+   * List open pull requests on the location's github.com or gitlab.com remote through the gh or glab CLI signed in on the server.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2PullRequestListResponses, V2PullRequestListErrors, ThrowOnError>({
+      url: "/api/pull-request",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create pull request
+   *
+   * Open a pull request from a pushed branch of the location's repository through the gh or glab CLI signed in on the server.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      pullRequestCreateInput: PullRequestCreateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "pullRequestCreateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2PullRequestCreateResponses, V2PullRequestCreateErrors, ThrowOnError>(
+      {
+        url: "/api/pull-request",
+        ...options,
+        ...params,
+        headers: {
+          "Content-Type": "application/json",
+          ...options?.headers,
+          ...params.headers,
+        },
+      },
+    )
+  }
+}
+
 export class V2 extends HeyApiClient {
   private _health?: Health
   get health(): Health {
@@ -7570,6 +7639,11 @@ export class V2 extends HeyApiClient {
   private _projectCopy?: ProjectCopy2
   get projectCopy(): ProjectCopy2 {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
+  }
+
+  private _pullRequest?: PullRequest
+  get pullRequest(): PullRequest {
+    return (this._pullRequest ??= new PullRequest({ client: this.client }))
   }
 }
 
