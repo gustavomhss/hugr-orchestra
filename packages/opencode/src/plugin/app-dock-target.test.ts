@@ -425,7 +425,10 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
   for (const rule of ["Do exactly the task. Verify it through the app's own state or the file the task names; do not run extra experiments",
     "Never close or kill app windows or processes unless the task asks for it.",
     "Operate what is on screen with ui_*, not linux_exec; xdotool, wmctrl and the like are not tools for UI work.",
-    "ui_keys with text types it as key events into whatever has focus"])
+    "ui_keys with text types it as key events into whatever has focus",
+    "Always end with a written report in your final message, because the caller sees only that message",
+    "with focus true straight into the region holding the focused control",
+    "Saved tool output lives outside the workspace, out of your reach."])
     expect(prompt).toContain(rule)
   const plain: { permission?: unknown } = { permission: "ask" }
   scopeLinuxWorkspace(plain)
@@ -519,4 +522,26 @@ test("a target named as ui_look prints it, without the shortcut, is an exact nam
   expect(JSON.parse(String(await dock.hooks.tool.ui_act.execute({ target: { name: "Explorer", role: "push button" } }, context))))
     .toEqual({ dispatch: "acknowledged" })
   expect(dock.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:explorer", actionID: "a:n:explorer", world: "linux" } })
+})
+
+// Run 17: Thunar's file list holds the focus five panes deep; focus=true enters it in one call and ui_up comes back.
+test("ui_enter focus=true goes straight to the region holding the focused control", async () => {
+  const shown = [8, 24, 25, 30]
+  const items = [
+    { ref: "n:f", parentRef: null, role: 23, roleName: "frame", name: "dock - Thunar", states: [1, ...shown], actions: [] },
+    ...["n:s1", "n:s2", "n:s3"].map((ref, index) =>
+      ({ ref, parentRef: index ? `n:s${index}` : "n:f", role: 53, roleName: "split pane", name: "", states: shown, actions: [] })),
+    { ref: "n:files", parentRef: "n:s3", role: 55, roleName: "table", name: "", states: [12, ...shown], actions: [] },
+    control("n:notas", "notas.txt", { parentRef: "n:files", states: shown }),
+  ]
+  const dock = host(() => page(items))
+  const scoped = { ...context, agent: "linux", sessionID: "ses_focus" } as ToolContext
+  expect(String(await dock.hooks.tool.ui_look.execute({}, scoped))).toContain("(ui_enter focus=true goes to its region)")
+  const inside = String(await dock.hooks.tool.ui_enter.execute({ focus: true }, scoped))
+  expect(inside).toContain("scope: table [focused] (ui_up to leave)")
+  expect(inside).toContain('push button "notas.txt"')
+  expect(String(await dock.hooks.tool.ui_up.execute({}, scoped))).toContain('scope: frame "dock - Thunar" [active]')
+  const blurred = host(() => page(items.map((item) => ({ ...item, states: item.states.filter((state) => state !== 12) }))))
+  expect(String(await blurred.hooks.tool.ui_enter.execute({ focus: true }, scoped)))
+    .toBe("No control holds the focus inside a region; call ui_look and enter by number")
 })

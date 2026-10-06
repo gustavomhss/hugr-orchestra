@@ -683,14 +683,21 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       execute: (_args, context) => outline(context).then((state) => view(context, state.roots, state.scope, state.note), toolError),
     }),
     ui_enter: tool({
-      description: "Zoom the view into one region from ui_look, by its number or by {name, role}. ui_look and ui_list then show only that region until ui_up.",
+      description: "Zoom the view into one region from ui_look, by its number, by {name, role}, or with focus=true straight into the region that holds the focused control however deep it sits. ui_look and ui_list then show only that region until ui_up.",
       args: {
+        focus: tool.schema.boolean().optional().describe("Enter the region holding the focused control (the focus: line of ui_look)"),
         region: tool.schema.number().int().min(1).optional().describe("Region number from the last ui_look"),
         name: tool.schema.string().min(1).max(256).optional().describe("Region name, when not using a number"),
         role: tool.schema.string().min(1).max(64).optional().describe("Region role, e.g. tool bar, page tab list, list"),
       },
       execute: (args, context) => outline(context).then((state) => {
         const last = looks.get(context.sessionID)
+        if (args.focus) {
+          const home = AppDockOutline.focusRegion(state.roots)
+          if (!home) return "No control holds the focus inside a region; call ui_look and enter by number"
+          state.stack.push(AppDockOutline.handle(state.roots, home))
+          return view(context, state.roots, home, state.note)
+        }
         if (args.region !== undefined) {
           const wanted = last?.regions[args.region - 1]
           // Numbers always come from the latest view; after an enter, that is the entered region's own map.
@@ -703,7 +710,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           state.stack.push(wanted)
           return view(context, state.roots, node, state.note)
         }
-        if (args.name === undefined && args.role === undefined) return "ui_enter needs a region number from ui_look, or a name or role"
+        if (args.name === undefined && args.role === undefined) return "ui_enter needs a region number from ui_look, a name or role, or focus=true"
         const candidates = AppDockOutline.visible(state.roots).filter((node) =>
           (args.name === undefined || node.name.toLowerCase().includes(args.name.toLowerCase()))
           && (args.role === undefined || roleKey(node.role) === roleKey(args.role)))
