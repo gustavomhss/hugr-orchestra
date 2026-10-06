@@ -24,7 +24,7 @@ function lineSchema(line: Record<string, unknown>) {
 }
 
 async function fixtureLines() {
-  const dir = path.join(root, "docs/fixtures")
+  const dir = path.join(root, "test/fixtures")
   const files = [...new Bun.Glob("*.ledger.jsonl").scanSync(dir)].sort()
   const lines = await Promise.all(
     files.map(async (file) =>

@@ -1,0 +1,240 @@
+{
+  "ledger": "test/fixtures/spec-decompose-live.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 276 chained entries [PLAIN (SHA-256)], chain head 350e194d5910…\n  (36 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "invariants_registered",
+      "assert": "invariants_registered",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "each_invariant_grounded",
+      "assert": "each_invariant_grounded",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "each_invariant_falsifiable",
+      "assert": "each_invariant_falsifiable",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "invariants-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "invariants-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "invariants-review-engages-with-the-diff",
+      "assert": "invariants-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    },
+    {
+      "id": "invariants_phase_validates",
+      "assert": "invariants_phase_validates",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements_atomic",
+      "assert": "requirements_atomic",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements_traced_to_invariants",
+      "assert": "requirements_traced_to_invariants",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "ambiguity_scan_done",
+      "assert": "ambiguity_scan_done",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements-review-engages-with-the-diff",
+      "assert": "requirements-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    },
+    {
+      "id": "requirements_phase_validates",
+      "assert": "requirements_phase_validates",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "interfaces_defined",
+      "assert": "interfaces_defined",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "error_behavior_specified",
+      "assert": "error_behavior_specified",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "edge_cases_enumerated",
+      "assert": "edge_cases_enumerated",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "spec-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "spec-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "spec-review-engages-with-the-diff",
+      "assert": "spec-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    },
+    {
+      "id": "spec_phase_validates",
+      "assert": "spec_phase_validates",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "happy_scenarios_written",
+      "assert": "happy_scenarios_written",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "guard_scenarios_written",
+      "assert": "guard_scenarios_written",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_requirement_covered",
+      "assert": "every_requirement_covered",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_scenario_can_fail",
+      "assert": "every_scenario_can_fail",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "goldens-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "goldens-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "goldens-review-engages-with-the-diff",
+      "assert": "goldens-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    },
+    {
+      "id": "goldens_phase_validates",
+      "assert": "goldens_phase_validates",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "wp_cards_complete",
+      "assert": "wp_cards_complete",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "coverage_matrix_closed",
+      "assert": "coverage_matrix_closed",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "dependencies_mapped",
+      "assert": "dependencies_mapped",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "work_packages-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "work_packages-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "work_packages-review-engages-with-the-diff",
+      "assert": "work_packages-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    },
+    {
+      "id": "work_packages_phase_validates",
+      "assert": "work_packages_phase_validates",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 31,
+  "deterministic_passed": 31,
+  "advisory": 5,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "PASS",
+  "exit": 0
+}

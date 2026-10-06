@@ -5,13 +5,13 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-06T16:30:59Z
+- **Generated:** 2026-10-06T20:31:29Z
 - **Files:** 73
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `88f8b3b37c90bb1f3cd2cb46a07c422816179b14bd461cd5a05169f7f81fac42`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `d00c40b3f342b32d40caaefcab206f354fefbc60a2619701e71df10bb4ca6972`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
-| `AGENTS.md` | 50 | 2535 | `bcbbd5ecdc6f9f918a125149605eb10ab79069aee6ffc19f45640bae50c28765` |
+| `AGENTS.md` | 50 | 2553 | `02d23e86df2695b0acaa8bffa338554025ce8777d104167febee7c937f9dd32a` |
 | `CHANGELOG.md` | 312 | 25705 | `55c274fec7d13c2e8f657d85b9087d07c66cdc40acc7f6e53254565091887a1a` |
 | `CONTRIBUTING.md` | 60 | 2842 | `953c9d8f8dced59cb5f460b3b2adf522fd791f0c51bc16252eaab35edef8a02b` |
 | `PRODUCT.md` | 114 | 11597 | `0fdda087d136eae1e20bd151e2f76a00afa796940783e8148855218fb3b67ad6` |
@@ -26,8 +26,8 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `benchmark/campaigns/01-billing-integrity/README.md` | 37 | 2037 | `e1b246416f11175593401d007f60796724e1b3e5f51c53805fcd12e76db3f455` |
 | `benchmark/campaigns/02-billing-engine-pro/README.md` | 43 | 2538 | `b7dd5b358ec9c9ded9c8ef3c6941558728a381788fd91462c1e8fb6959d71297` |
 | `benchmark/campaigns/README.md` | 50 | 2959 | `8db1bc58e09f5e1b558ecbe282f1d505f235626763d016724f110f7db0ff59cd` |
-| `docs/FINDING-self-graded-review-verdicts.md` | 116 | 8165 | `97a52eb9ae6e780e321b16a97c9ee6252f465dd295fdc295dea0bbebda97fb60` |
-| `docs/README.md` | 46 | 2611 | `593e8ccec9812d5a33e6f4e46056a94e0aedce817ca4330b330b0a2f2500f308` |
+| `docs/FINDING-self-graded-review-verdicts.md` | 116 | 8181 | `561ea2e78936e8d479f686c68e62930a0da37a7dfd8f7438e3f14705b2248b10` |
+| `docs/README.md` | 46 | 2665 | `d81cd533d84f0ac9f54a74b0474137f2fe18ccdb7520f1236778d924fc513b75` |
 | `docs/architecture.md` | 199 | 15560 | `7a81d8513ce5df669c562fb8868454347d32df9dd57c4e68c60b6955e182b988` |
 | `docs/authoring-api.md` | 90 | 5926 | `cdb77e1328dfd044ed7f7642c9f5e8e7810505443ac023019bc4e0906bf2bfe9` |
 | `docs/authoring-sprints.md` | 248 | 16966 | `a54d5c8e16cc0f515b70d2f626fa2f2cc93e51dc8ff72ae134e25a4787481c11` |
@@ -50,13 +50,13 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/getting-started.md` | 153 | 7022 | `7c0a9565c77c915faf45df650c735b239045c0348a9e3826e0fec81a72ecaccf` |
 | `docs/guardrails.md` | 62 | 3664 | `5b937c4b0b24d0133dd702f53bf0b37225432b0a8a24f50be3aa7229341b2a91` |
 | `docs/per-agent-arms.md` | 202 | 11281 | `04a9581a3235194b46204931c1181b780f91815c18a703219ab079419f695f72` |
-| `docs/profiles.md` | 231 | 17118 | `6a6bafc671ea7fb69981fd0c25556d67a5013dd4c0283e660f1ddf24862a9dc9` |
-| `docs/relay-v2.md` | 187 | 13331 | `569110c0b3b5f2ed83fec959d3e45468be6910c362c21d9b27f7e96d8c8f93e2` |
+| `docs/profiles.md` | 231 | 17190 | `b3b51c3404b86d882fd9a94ed892e4f29308ad2273a3d76528562ef6f95bd696` |
+| `docs/relay-v2.md` | 187 | 13339 | `dd6daed894a3d668224c7ca4d30b59ae82363ed88654497feb4cbf2c255dee7a` |
 | `docs/roadmaps/R1-telemetry.md` | 24 | 1312 | `af946235ccd824228eb9d672e306f166d4400df18c5133b81fe6e67c5a4dc930` |
 | `docs/roadmaps/R2-guardrails.md` | 28 | 1478 | `c18daea73b6b85ea6fb3875d8417e0912a34a621059ada8eee1214397354d758` |
 | `docs/roadmaps/R3-spec-library.md` | 27 | 1507 | `2c2f03ec05bea6c838a7d1b8468cb2ba4454cc05ae0b5c50f9afb8d4e2d2a531` |
 | `docs/roadmaps/R4-daemon.md` | 31 | 1591 | `d357424e2d1417c04e462239f4ca95eda6ea5dbf6d8a16dae360833c5bcf148d` |
-| `docs/sdk.md` | 165 | 9702 | `8fbe49a6da1a38cdd94300db54d8ff3c5577c7896ac2f0a00dad194146ffb66a` |
+| `docs/sdk.md` | 165 | 9710 | `e76b61e8ee8571c9c68ba6c5be45081d0215f48fb927feecb8f5f0fafa9e02f3` |
 | `docs/skills/relay-arm-hook/SKILL.md` | 114 | 14360 | `d8be9b58576e2a076b2b56a8f6beac031fa3907cdd342043b7b4a118ea5fb23b` |
 | `docs/skills/relay-audit/SKILL.md` | 114 | 15918 | `bcf595da0aa73e725cc20972299e7d9c6404ada243f79070be351cac02f32831` |
 | `docs/skills/relay-authoring/SKILL.md` | 77 | 4027 | `ad8e72d11cbc53a6d13ee71ce26638d456af15538522f3683f84087383bf6517` |
@@ -81,7 +81,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/skills/relay-specification/SKILL.md` | 94 | 8623 | `17c457b60305531f5202cb0d9dae75cb577c30bd0ffdcabab2bd830d345d48de` |
 | `docs/skills/relay-telemetry/SKILL.md` | 117 | 7599 | `128301e919acd4a98cb6c157eabcf35e8a4f4534a516aac6b8d077ac66a04563` |
 | `docs/spec-library.md` | 53 | 3577 | `94e911803777672f89ee02b0b0603204b104567b14c54250cbc2263c0573769c` |
-| `docs/telemetry.md` | 47 | 3284 | `a6c252f12371e461ae423be4b31f4c829cb42ad712e82a79f39e3b02c5e24396` |
+| `docs/telemetry.md` | 47 | 3292 | `e747897e4b42785e89db177bc5f6a646d37a78a7b83093e07cc803fc8f85e1df` |
 | `docs/trace-corpus.md` | 53 | 2890 | `8c8ad754faee2fcca5326bbe367b2b93e8508d99ace7356c1ad13b933be9e8bf` |
 | `examples/fleet-chain/README.md` | 70 | 3559 | `4de504ce0037d8ae82512ad2636465bc84382a3bdf2c8fde4577e10a763e0a28` |
 
