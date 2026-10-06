@@ -164,7 +164,8 @@ async function changed() {
 // Two at a time: GitHub's secondary rate limits punish bursts of requests that create content.
 async function uploadBlobs() {
   const blobs = changes.filter((change) => change.status !== "D" && change.mode !== "160000")
-  for (let start = 0; start < blobs.length; start += 2)
+  for (let start = 0; start < blobs.length; start += 2) {
+    if (start > 0 && start % 20 === 0) console.log(`test-ci: uploaded ${start} of ${blobs.length} files`)
     await Promise.all(
       blobs.slice(start, start + 2).map(async (change) => {
         const content = Buffer.from(await $`git cat-file blob ${change.sha}`.cwd(root).arrayBuffer())
@@ -175,6 +176,7 @@ async function uploadBlobs() {
         if (created.sha !== change.sha) fail(`GitHub stored ${change.path} as ${created.sha}, expected ${change.sha}`)
       }),
     )
+  }
 }
 
 async function follow(id: number) {
@@ -230,15 +232,32 @@ async function report(view: RunView) {
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {
   const input = body === undefined ? [] : ["--input", "-"]
+  let timeouts = 0
   for (let attempt = 0; ; attempt++) {
-    // --include prints the response headers, which carry GitHub's rate-limit hints.
-    const result =
-      await $`gh api --include --method ${method} ${route} ${input} < ${Buffer.from(JSON.stringify(body ?? {}))}`
-        .quiet()
-        .nothrow()
-    const response = parseResponse(result.text())
-    if (result.exitCode === 0) return response.body.length > 0 ? JSON.parse(response.body) : undefined
-    const error = `gh api ${method} ${route} failed: ${result.stderr.toString().trim()}`
+    // --include prints the response headers, which carry GitHub's rate-limit hints. A gh call can stall without output
+    // when this machine is overloaded, so each one gets a deadline; every request here is safe to repeat.
+    const child = Bun.spawn(["gh", "api", "--include", "--method", method, route, ...input], {
+      stdin: Buffer.from(JSON.stringify(body ?? {})),
+      stdout: "pipe",
+      stderr: "pipe",
+      timeout: 90_000,
+    })
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ])
+    if (child.signalCode) {
+      if (++timeouts > 3)
+        throw new Error(`gh api ${method} ${route} timed out ${timeouts} times; run test:ci again later.`)
+      console.log(`test-ci: gh api ${method} ${route} got no answer in 90 s, retrying`)
+      continue
+    }
+    const response = parseResponse(stdout)
+    if (exitCode === 0) return response.body.length > 0 ? JSON.parse(response.body) : undefined
+    // A timed-out request may still have created the branch; the name is unique to this run, so it is ours.
+    if (timeouts > 0 && response.status === 422 && route.endsWith("/git/refs")) return undefined
+    const error = `gh api ${method} ${route} failed: ${stderr.trim()}`
     const delay = rateLimitDelay(response, attempt)
     if (delay === undefined) throw new Error(error)
     rateLimitDeadline ||= Date.now() + 10 * 60_000
