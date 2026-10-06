@@ -48,8 +48,9 @@ export const nativeProfiles = Object.freeze({
     bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
     edit: "allow",
   } as const),
-  // Backend-specialist-only (F1.8): the execution set plus its six entry skills and access to their packaged root. Agent
-  // registration adds the worktree-relative edit deny that keeps that root read-only.
+  // Backend-specialist-only (F1.8): the execution set plus its bound Atlas Memory tools (F3 clause 29), its six entry
+  // skills and access to their packaged root. Agent registration adds the worktree-relative edit deny that keeps that
+  // root read-only.
   backend: Object.freeze({
     "*": "deny",
     read: envRead("deny"),
@@ -57,6 +58,8 @@ export const nativeProfiles = Object.freeze({
     grep: "allow",
     bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
     edit: "allow",
+    atlas_memory_recall: "allow",
+    atlas_memory_emit: "allow",
     skill: Object.freeze({
       "*": "deny",
       ...Object.fromEntries(backendSkills.names.map((name) => [name, "allow" as const])),

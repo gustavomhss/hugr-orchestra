@@ -11,6 +11,7 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
+import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
@@ -163,6 +164,8 @@ const layer = Layer.effect(
     const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
     const read = yield* ReadTool
     const recall = yield* ContextRecallTool
+    const atlasRecall = yield* AtlasMemoryRecallTool
+    const atlasEmit = yield* AtlasMemoryEmitTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
@@ -303,6 +306,8 @@ const layer = Layer.effect(
           shell: Tool.init(shell),
           read: Tool.init(read),
           recall: Tool.init(recall),
+          atlasRecall: Tool.init(atlasRecall),
+          atlasEmit: Tool.init(atlasEmit),
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
@@ -339,6 +344,8 @@ const layer = Layer.effect(
             tool.shell,
             tool.read,
             tool.recall,
+            tool.atlasRecall,
+            tool.atlasEmit,
             tool.glob,
             tool.grep,
             tool.edit,
@@ -457,7 +464,10 @@ const layer = Layer.effect(
             tool.id === MaestroRecordValidationTool.id) &&
             input.agent.id !== "maestro") ||
           (tool.id === MaestroRecordReviewTool.id && input.agent.id !== "lucy") ||
-          (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro")
+          (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro") ||
+          // Bound to the backend seat's Memory owner: a configured agent that merely reuses the id gets neither.
+          ((tool.id === AtlasMemoryRecallTool.id || tool.id === AtlasMemoryEmitTool.id) &&
+            (input.agent.id !== "backend" || input.agent.native !== true))
         ) {
           return false
         }

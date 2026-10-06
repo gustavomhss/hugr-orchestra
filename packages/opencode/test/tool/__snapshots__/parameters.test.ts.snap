@@ -387,6 +387,49 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       ],
       "type": "object",
     },
+    "memoryUnit": {
+      "anyOf": [
+        {
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "task",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "kind",
+            "id",
+          ],
+          "type": "object",
+        },
+        {
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "pr",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "kind",
+            "id",
+          ],
+          "type": "object",
+        },
+      ],
+      "description": "Backend specialist resume only: the task or PR unit whose latest admitted Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for other agents.",
+    },
     "model": {
       "description": "The model to run the teammate on, as 'providerID/modelID'. Without it, the teammate runs on its configured model, or else on yours.",
       "type": "string",

@@ -539,6 +539,24 @@ export namespace Dispatch {
   export type ReservedV2 = typeof ReservedV2.Type
 }
 
+export namespace Task {
+  // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
+  // derived from the execution Session, so one Session binds at most one logical task.
+  export const Bound = Event.define({
+    type: "maestro.task.bound",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      taskId: Schema.NonEmptyString,
+      projectID: Schema.NonEmptyString,
+      memberID: Schema.NonEmptyString,
+      executionSessionID: Schema.NonEmptyString,
+      authoritySessionID: Schema.NonEmptyString,
+      source: Schema.Literals(["host", "user", "dispatch", "governed"]),
+    },
+  })
+  export type Bound = typeof Bound.Type
+}
+
 export const Definitions = Event.inventory(
   Approval.Presented,
   Approval.Decided,
@@ -562,4 +580,5 @@ export const Definitions = Event.inventory(
   Authorization.Granted,
   Dispatch.Reserved,
   Dispatch.ReservedV2,
+  Task.Bound,
 )
