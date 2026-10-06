@@ -47,7 +47,7 @@ The entry file:
 ```
 $ ATLAS_ACTOR=dev@example.com atlas memory-emit project-entry.json
 status: rejected
-next: a refused write named the gate that declined (undetermined-kind / template-invalid / kind-conflation / unowned / logbook-duplicate / logbook-unauthorized / over-cap / scanner-blocked / scanner-unavailable) — fix and re-emit; nothing is persisted on a refusal
+next: a refused write named the gate that declined (undetermined-kind / template-invalid / kind-conflation / unowned / logbook-duplicate / logbook-unauthorized / over-cap / scanner-blocked / scanner-unavailable / store-partial / store-unavailable) — fix and re-emit; nothing is persisted on a refusal
 invariant: MEM-1..9 / WP-11.W8: atlas-memory-emit is a governed fail-closed write door (WRITE_PATHS: atlas-emit, atlas-link, atlas-memory-emit — GOVERNANCE_SURFACE six members) — one append on admission, nothing on refusal
 reason: scanner-unavailable: MEM-9 pre-write scan: no NAMED scanner is configured, so this write was not checked for secrets. "Not checked" and "no secret" are refused as the same value — and so are "not checked" and "a secret was found".
 # exit 2
@@ -97,6 +97,10 @@ Each refusal names the gate that fired, as a machine-readable discriminant (`rea
   block is attributable.
 - **`scanner-unavailable`** — MEM-9: no named scanner is configured, OR the configured one could not run to
   completion. See the worked example above.
+- **`store-partial`** / **`store-unavailable`** — a `logbook` or `project` write is judged against the owner's
+  durable set (the one-per-PR check, the cap), so it is refused rather than judged when `.atlas/memory.jsonl`
+  has a rejected line (`partial`) or cannot be read at all (`unavailable`). `task`/`pr` writes consult no
+  durable state and are not affected.
 
 Usage errors are a different class and exit `1`, not `2`:
 

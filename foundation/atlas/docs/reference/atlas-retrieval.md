@@ -1,6 +1,6 @@
 # atlas-retrieval — Reference
 
-> owner: charlie (FORGE) · grounding: claims checked against `spec/atlas.md` §3.4, §3.6, §6.1, §6.2, A-14, A-15 · status: draft
+> owner: backend (FORGE) · grounding: claims checked against `spec/atlas.md` §3.4, §3.6, §6.1, §6.2, A-14, A-15 · status: draft
 
 ## Purpose
 

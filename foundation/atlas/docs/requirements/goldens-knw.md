@@ -3,7 +3,7 @@
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-knw.md`; every INV method-tagged, `formal` footprint 0 in KNW — the one
 > `FSPEC-merge` cluster is KRN's; KNOW-15/4's UPDATE/union leg _consumes_ it as oracle, is not itself formal) ·
-> **owner:** charlie (FORGE). This is the **KNW block** — it carries the write-decision `exhaustive` triad
+> **owner:** backend (FORGE). This is the **KNW block** — it carries the write-decision `exhaustive` triad
 > (KNOW-4 / 10 / 15).
 >
 > **Derivation (generated from each INV's S2 method-tag; only the true residue is hand-authored):**
@@ -1194,7 +1194,7 @@ gen: conformance
 
 ## Held-out fixtures (Wave H — execution GATE held-out leg)
 
-> **state:** S3 golden re-freeze (Wave H) · **owner:** charlie (FORGE). Each `gen: conformance` REQ now carries a
+> **state:** S3 golden re-freeze (Wave H) · **owner:** backend (FORGE). Each `gen: conformance` REQ now carries a
 > **second, independent fixture** marked `held_out: true` (naming `SCN-KNOW-<req>-2`), inserted adjacent to its
 > `-1` sibling. The execution GATE **withholds** the `-2` fixture from the builder: a builder who hard-codes the
 > fixture-1 answer (overfit) **FAILS** the held-out leg, because each `-2` uses **different concrete data**

@@ -93,7 +93,7 @@ source_reqs: # ptr+digest
 - source: ../../reference/atlas-tools.md#tools-2
 - source: ../../reference/atlas-tools.md#tools-15
 - source: ../goldens-tls.md
-  owner: charlie (FORGE) # value
+  owner: backend (FORGE) # value
   outputs: # exec — empty at S4-freeze
   provenance: # exec — empty at S4-freeze
   trace_ref: # exec — empty at S4-freeze
@@ -173,7 +173,7 @@ source_reqs: # ptr+digest
 - source: ../../reference/atlas-tools.md#tools-4
 - source: ../../reference/atlas-tools.md#tools-12
 - source: ../goldens-tls.md
-  owner: charlie (FORGE) # value
+  owner: backend (FORGE) # value
   outputs: # exec — empty at S4-freeze
   provenance: # exec — empty at S4-freeze
   trace_ref: # exec — empty at S4-freeze
@@ -266,7 +266,7 @@ source_reqs: # ptr+digest
 - source: ../../reference/atlas-tools.md#tools-11
 - source: ../../reference/atlas-tools.md#tools-11a
 - source: ../goldens-tls.md
-  owner: charlie (FORGE) # value
+  owner: backend (FORGE) # value
   outputs: # exec — empty at S4-freeze
   provenance: # exec — empty at S4-freeze
   trace_ref: # exec — empty at S4-freeze
@@ -343,7 +343,7 @@ source_reqs: # ptr+digest
 - source: ../../reference/atlas-persist.md#persist-14
 - source: ../method-tags-pst.md
 - source: ../goldens-pst.md
-  owner: charlie (FORGE) # value
+  owner: backend (FORGE) # value
   outputs: # exec — empty at S4-freeze
   provenance: # exec — empty at S4-freeze
   trace_ref: # exec — empty at S4-freeze
@@ -416,7 +416,7 @@ source_reqs: # ptr+digest
 - source: ../../reference/atlas-tools.md#tools-16
 - source: ../req-pst.md#REQ-PERSIST-14-a
 - source: ../goldens-tls.md
-  owner: charlie (FORGE) # value
+  owner: backend (FORGE) # value
   outputs: # exec — empty at S4-freeze
   provenance: # exec — empty at S4-freeze
   trace_ref: # exec — empty at S4-freeze

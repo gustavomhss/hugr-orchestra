@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-krn.md`; every INV method-tagged, `FSPEC-merge` exists for the core) ·
-> **owner:** charlie (FORGE). This is the **KRN pilot** — it carries the one `formal` cluster in the Atlas.
+> **owner:** backend (FORGE). This is the **KRN pilot** — it carries the one `formal` cluster in the Atlas.
 >
 > **Derivation (not hand-authored where a generator exists):**
 >

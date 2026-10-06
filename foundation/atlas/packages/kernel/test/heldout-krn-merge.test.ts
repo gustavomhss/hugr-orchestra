@@ -56,7 +56,7 @@ describe("GATE SCN-KERNEL-12b-2 — NO shared line: disjoint add/add unions loss
   it("re-fold(lineMerge(ours,theirs)) ≡ fold(RefLog.merge); {e1,eX,eY,e3} all four retained", () => {
     const e1 = ev(NK, "zz-alpha", { v: 1 })
     const eX = ev(NK, "mm-bravo", { v: 2 })
-    const eY = ev("claim:globex-hq", "kk-charlie", { v: 3 })
+    const eY = ev("claim:globex-hq", "kk-cobalt", { v: 3 })
     const e3 = ev("claim:globex-hq", "aa-delta", { v: 4 })
     const ours = toJsonl(logOf([e1, eX])) // [line(e1), line(eX)]
     const theirs = toJsonl(logOf([eY, e3])) // [line(eY), line(e3)] — NO overlap with ours

@@ -36,7 +36,7 @@ Target: `maestro-dev` at `e87a1223b4`. Consumer: Wave 2 authorization and Wave 3
 
 ## Completeness Criteria
 
-- Valid routed Charlie/Patty/Rosie card with `VALID` checks persists and reads exact bytes/hash after SQLite readback.
+- Valid routed backend specialist/Patty/Rosie card with `VALID` checks persists and reads exact bytes/hash after SQLite readback.
 - Unknown, malformed, Maestro, and non-routed member fail before EventV2 publish.
 - Empty, duplicate, unsorted, malformed, or failed/HOLD check set produces named invalid/hold result according to frozen validator rule.
 - Changed work-card byte, project, session, route grant, roster revision, reviewer policy, validator version, or review verdict cannot reuse old receipt.

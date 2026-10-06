@@ -75,7 +75,7 @@ const validation = {
   projectID: "prj_validation_tool",
   workCardID: "card_validation_tool",
   workCard: "# Card\nTool boundary evidence.\n",
-  routedMemberID: "charlie",
+  routedMemberID: "backend",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],
 }
@@ -160,6 +160,37 @@ describe("Maestro validation tools", () => {
       expect(Exit.isFailure(history) && String(Cause.squash(history.cause))).toContain("unknown parameter")
       expect(yield* db.select().from(EventTable).all().pipe(Effect.orDie)).toHaveLength(0)
     }),
+  )
+
+  direct.instance(
+    "names the configured cold reviewer label and never authorizes by it",
+    () =>
+      Effect.gen(function* () {
+        const tool = yield* MaestroRecordReviewTool
+        const def = yield* tool.init()
+        const review = {
+          validationRecordID: "evt_validation",
+          workCard: validation.workCard,
+          reviewMethodVersion: "review-v1",
+          verdict: "APPROVE" as const,
+          findings: [],
+          artifact: {
+            baseSHA: "a".repeat(40),
+            headSHA: "b".repeat(40),
+            worktree: "/tmp/worktree",
+            changedPaths: [],
+            sha256: "a".repeat(64),
+          },
+          checks: validation.checks,
+        } as never
+        for (const caller of [context("Pikachu", "build"), context("Pikachu", "Pikachu"), context("Lucy", "Lucy")]) {
+          const rejected = yield* Effect.exit(def.execute(review, caller))
+          expect(Exit.isFailure(rejected) && Cause.pretty(rejected.cause)).toContain(
+            "Review recording requires Pikachu",
+          )
+        }
+      }),
+    { config: { agent: { lucy: { name: "Pikachu" } } } },
   )
 
   direct.instance("uses stable native ID, never display name, for authorization", () =>

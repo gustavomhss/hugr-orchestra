@@ -4,7 +4,7 @@ import { fixture, pageMessages } from "../smoke/session-timeline.fixture"
 import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const NAMES = ["alpha-service", "bravo-web", "charlie-api", "delta-tools", "echo-infra", "foxtrot-docs"]
+const NAMES = ["alpha-service", "bravo-web", "cobalt-api", "delta-tools", "echo-infra", "foxtrot-docs"]
 const worktrees = NAMES.map((name) => `/opencode-demo/${name}`)
 
 // The sixth project sits outside the five-item recent cap, so it is only reachable if the

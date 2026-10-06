@@ -1,9 +1,8 @@
 // @atlas/adapter-io — src/memory-emit.ts  (the GOVERNED MEMORY WRITE DOOR — CAMPAIGN-11 W4)
 //
-// ── REFERENCE MODEL — NO PRODUCTION CALLERS ──────────────────────────────────────────────────────────
-// Nothing in `packages/*/src` calls `createMemoryEmit` yet; W8 exposes it over the CLI and MCP. Declared in
-// `harness/gates/reference-model-guard.mjs` rather than pre-wired — a door hung early to clear a gate is
-// the stub that gate exists to refuse.
+// ── CALLERS ──────────────────────────────────────────────────────────────────────────────────────────
+// `compose.ts` (the CLI/MCP `atlas-memory-emit` door, W8) and `native-memory.ts` (the bound composition).
+// This header used to declare a reference model with no production callers; W8 made that false.
 //
 // ── WHAT THIS DOOR IS ────────────────────────────────────────────────────────────────────────────────────
 // The one path by which a memory record reaches disk. Every gate it runs already exists as a pure function
@@ -19,6 +18,11 @@
 //      fail-closed (MEM-5). Runs before the store is touched at all.
 //   3. PARTITION + OWNER (`put`). Memory-vs-Knowledge conflation, both directions, and an empty owner
 //      (MEM-2, MEM-1). This is what mints the `MemoryRecord`.
+//   3b. STORE STATE, only for the two kinds whose next gate JUDGES the durable set (logbook, project). A
+//      set that read PARTIAL (a rejected line) or UNAVAILABLE (the file could not be read) is refused as
+//      `store-partial` / `store-unavailable` instead of judged: a duplicate or a cap computed over an
+//      incomplete set is a guess presented as a verdict (F3 clause 23b). `task`/`pr` writes consult no
+//      durable state, so a torn line elsewhere in the log does not block them.
 //   4. LOGBOOK DISCIPLINE, only for that kind: one entry per PR (MEM-8). The incumbent is read from the
 //      DURABLE log, so the guard survives a restart — a second entry filed tomorrow is refused the same as
 //      one filed a second later.
@@ -68,6 +72,8 @@ export type MemoryRefusal =
   | "over-cap"
   | "scanner-blocked"
   | "scanner-unavailable"
+  | "store-partial"
+  | "store-unavailable"
 
 /** A refused write: the gate that declined, why, and the receipt that gate owes the caller. */
 export interface MemoryRejected {
@@ -157,14 +163,29 @@ export function createMemoryEmit(deps: MemoryEmitDeps): MemoryEmit {
 
     const durable = deps.store.read()
 
+    // MEM-8's author check judges the ACTOR, not the store, so it precedes the store-state gate.
+    if (kind === "logbook" && deps.actor !== LOGBOOK_AUTHOR) {
+      return reject(
+        "logbook-unauthorized",
+        `MEM-8 logbook: only '${LOGBOOK_AUTHOR}' may append; '${deps.actor}' may not`,
+      )
+    }
+
+    // 3b — the store state, for the kinds whose next gate judges the durable set (see the header).
+    if ((kind === "logbook" || kind === "project") && durable.rejected > 0) {
+      return durable.unreadable === true
+        ? reject(
+            "store-unavailable",
+            `the memory log at '${deps.store.path}' could not be read; a ${kind} write is judged against it, so it is refused rather than judged against nothing`,
+          )
+        : reject(
+            "store-partial",
+            `the memory log at '${deps.store.path}' has ${durable.rejected} rejected line(s); a ${kind} write is judged against the whole set, so it is refused rather than judged against part of it`,
+          )
+    }
+
     // 4 — MEM-8, logbook only. Read from the DURABLE log so the guard survives a restart.
     if (kind === "logbook") {
-      if (deps.actor !== LOGBOOK_AUTHOR) {
-        return reject(
-          "logbook-unauthorized",
-          `MEM-8 logbook: only '${LOGBOOK_AUTHOR}' may append; '${deps.actor}' may not`,
-        )
-      }
       const prId = (entry as { readonly prId: string }).prId
       const extant = durable.store.some(
         (r) => r.kind === "logbook" && (r.entry as { readonly prId?: string }).prId === prId,

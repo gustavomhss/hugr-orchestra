@@ -35,7 +35,7 @@ const config: ProjectConfig = {
       type: "SingleSelect",
       options: [
         { id: "01b0cacc", name: "Maestro" },
-        { id: "848d4e73", name: "Charlie" },
+        { id: "848d4e73", name: "Backend" },
         { id: "60a9b6ec", name: "Patty" },
         { id: "11dd93df", name: "Lucy" },
         { id: "37d9d703", name: "Bobby" },
@@ -90,6 +90,23 @@ const config: ProjectConfig = {
 }
 
 describe("maestro.project-config", () => {
+  test("binds Seat options by option id and member id, not by label", () => {
+    const relabel = (rename: (option: { id: string; name: string }) => { id: string; name: string }) =>
+      config.fields.map((field) =>
+        field.name === "Seat"
+          ? { ...field, options: field.options?.map((option) => rename({ id: option.id, name: option.name ?? "" })) }
+          : field,
+      )
+    const renamed = relabel((option) => (option.id === "848d4e73" ? { ...option, name: "Pikachu" } : option))
+    const result = validateProjectConfig({ ...config, fields: renamed })
+    if (result.status !== "VALID") throw new Error("expected a relabeled Seat option to validate")
+    const seat = result.config.fields.find((field) => field.name === "Seat")
+    expect(seat?.options?.find((option) => option.memberId === "backend")?.id).toBe("848d4e73")
+    expect(seat?.options?.every((option) => option.name === undefined)).toBe(true)
+    const moved = relabel((option) => (option.id === "848d4e73" ? { ...option, id: "deadbeef" } : option))
+    expect(validateProjectConfig({ ...config, fields: moved })).toEqual({ status: "HOLD", reason: "field-mismatch" })
+  })
+
   test("validates full 19-field census with unrelated fields", () => {
     const fields = [
       ...config.fields,

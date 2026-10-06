@@ -60,8 +60,8 @@ const logbook: LogbookEntry = {
 }
 
 const oneOfEach: MemoryStore = [
-  { owner: "charlie", kind: "project", entry: project },
-  { owner: "charlie", kind: "task", entry: task },
+  { owner: "backend", kind: "project", entry: project },
+  { owner: "backend", kind: "task", entry: task },
   { owner: "lucy", kind: "pr", entry: pr },
   { owner: "orch", kind: "logbook", entry: logbook },
 ]
@@ -76,7 +76,7 @@ describe("SCN-MEM-9a-1 — Memory exports to open JSON, replays 1:1 (REQ-MEM-9a)
 
     // teeth: an export that dropped the `task`-memory map (a lossy / lock-in encoding) would fail this —
     // the `task` record survives the round-trip.
-    expect(round).toContainEqual({ owner: "charlie", kind: "task", entry: task })
+    expect(round).toContainEqual({ owner: "backend", kind: "task", entry: task })
   })
 
   it("the dump is OPEN JSON with 0 host/external refs (no lock-in)", () => {
@@ -106,7 +106,7 @@ describe("SCN-MEM-9a-1 — Memory exports to open JSON, replays 1:1 (REQ-MEM-9a)
 describe("SCN-MEM-9b-1 — a named scanner runs before the write persists (REQ-MEM-9b)", () => {
   it("the scanner stage is present and NAMED, and runs before the record is persisted", () => {
     const calls: string[] = []
-    const record: MemoryRecord = { owner: "charlie", kind: "project", entry: project }
+    const record: MemoryRecord = { owner: "backend", kind: "project", entry: project }
     const scanner: NamedScanner = {
       name: "gitleaks", // NAMED (gitleaks / trufflehog) — the golden requires the stage be named
       scan: (r): boolean => {
@@ -120,13 +120,13 @@ describe("SCN-MEM-9b-1 — a named scanner runs before the write persists (REQ-M
 
     // the named scanner ran BEFORE the write persisted
     expect(scanner.name).toBe("gitleaks")
-    expect(calls).toEqual(["scanned:charlie"])
+    expect(calls).toEqual(["scanned:backend"])
     expect(after).toEqual([record]) // clean scan → the write persisted after the scanner
     expect(before).toEqual([]) // append-only, input store not mutated
   })
 
   it("teeth: an unnamed scanner is rejected — the pre-write stage MUST be a named scanner", () => {
-    const record: MemoryRecord = { owner: "charlie", kind: "project", entry: project }
+    const record: MemoryRecord = { owner: "backend", kind: "project", entry: project }
     const unnamed: NamedScanner = { name: "", scan: (): boolean => false }
     expect(() => writeWithScanner([], record, unnamed)).toThrow(/NAMED scanner/)
   })
@@ -137,7 +137,7 @@ describe("SCN-MEM-9b-1 — a named scanner runs before the write persists (REQ-M
 describe("SCN-MEM-9c-1 — a scanner hit blocks the write, fail-closed (REQ-MEM-9c)", () => {
   it("on a hit the write is BLOCKED (fail-closed) — not redacted-and-continued, not logged-and-passed", () => {
     const record: MemoryRecord = {
-      owner: "charlie",
+      owner: "backend",
       kind: "task",
       entry: { ...task, lesson: "ghp_PLANTEDSECRETshape123456" }, // planted secret (hit is delegated input)
     }
@@ -154,7 +154,7 @@ describe("SCN-MEM-9c-1 — a scanner hit blocks the write, fail-closed (REQ-MEM-
   })
 
   it("the block is attributable to the named scanner (not a silent redaction)", () => {
-    const record: MemoryRecord = { owner: "charlie", kind: "project", entry: project }
+    const record: MemoryRecord = { owner: "backend", kind: "project", entry: project }
     const hitScanner: NamedScanner = { name: "gitleaks", scan: (): boolean => true }
     try {
       writeWithScanner([], record, hitScanner)

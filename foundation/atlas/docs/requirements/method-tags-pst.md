@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-pst.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE); formal-merge core architecture-reviewed by bobby.
+> **owner:** backend (FORGE); formal-merge core architecture-reviewed by bobby.
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. PST carries **no** standalone formal model of its own:
 > its one `formal` INV — **PERSIST-11** — is the _persistence-side consumer_ of the KRN `FSPEC-merge` core, not a

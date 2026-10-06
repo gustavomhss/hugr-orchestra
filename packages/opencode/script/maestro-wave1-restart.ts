@@ -148,7 +148,7 @@ async function write() {
         projectID,
         workCardID: "card_wave1_restart",
         workCard: "# restart card\n",
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validate-v1",
         checks: [{ id: "route", status: "PASS", detail: "routed" }],

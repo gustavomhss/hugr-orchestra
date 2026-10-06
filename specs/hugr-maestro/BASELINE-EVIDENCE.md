@@ -281,7 +281,7 @@ Exact output from read-only filtered command:
 gh project field-list 2 --owner gustavomhss --format json --jq '.fields[] | select(.name == "Status" or .name == "CI" or .name == "Seat" or .name == "Priority" or .name == "Risk" or .name == "Stage" or .name == "Blocked reason") | [.name, .id, ([.options[]? | "\(.name)=\(.id)"] | join(", "))]'
 ["Status","PVTSSF_lAHODZlCY84BkufizhjeEZQ","Todo=f75ad846, In Progress=47fc9ee4, Done=98236657"]
 ["CI","PVTSSF_lAHODZlCY84BkufizhjeEfs","Not required=5e5dc314, Planned=28f62ede, Pending=e9ba446f, Green=b97c0da3, Red=c57b4aa7, Stale=8fac1095"]
-["Seat","PVTSSF_lAHODZlCY84BkufizhjeEf0","Maestro=01b0cacc, Charlie=848d4e73, Patty=60a9b6ec, Lucy=11dd93df, Bobby=37d9d703, Billy=905fe6a8, Jimmy=ac92afd9, Rosie=08feaad7, Frankie=bab8dcee"]
+["Seat","PVTSSF_lAHODZlCY84BkufizhjeEf0","Maestro=01b0cacc, <backend default label>=848d4e73, Patty=60a9b6ec, Lucy=11dd93df, Bobby=37d9d703, Billy=905fe6a8, Jimmy=ac92afd9, Rosie=08feaad7, Frankie=bab8dcee"]
 ["Priority","PVTSSF_lAHODZlCY84BkufizhjeEf4","P0=74ef11b7, P1=a47b10e1, P2=69ca99ab, P3=c7286fe0"]
 ["Blocked reason","PVTF_lAHODZlCY84BkufizhjeEi4",""]
 ["Risk","PVTSSF_lAHODZlCY84BkufizhjeEi8","Low=5b547516, Medium=6f6cc626, High=492b6113, Critical=fa5d760f"]

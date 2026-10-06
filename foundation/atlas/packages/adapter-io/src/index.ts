@@ -160,8 +160,27 @@ export { createDurableOrientation, orientationLogPath } from "./orientation-stor
 export type { DurableOrientation, OrientationRead } from "./orientation-store.js"
 export { createAwarenessStore, realAtlasRoot } from "./awareness-store.js"
 export type { AwarenessStore } from "./awareness-store.js"
-export { makeScannerAdapter, detectAvailableScanner, runScanner, NO_SCANNER_NAME } from "./scanner.js"
+export { makeScannerAdapter, detectAvailableScanner, runScanner, NO_SCANNER_NAME, KNOWN_SCANNERS } from "./scanner.js"
 export type { ScanVerdict, ScannerBinarySpec } from "./scanner.js"
+// F3 / A1 — the BOUND Memory composition: the same doors, composed under one immutable `AtlasBinding` a
+// harness supplies (owner, root and scanner path forced from it), never through `composeRuntime`'s
+// `ATLAS_ACTOR ?? git user.email` resolution. Its consumer lives outside this tree (see the file header).
+export { createNativeMemory, storeStateOf } from "./native-memory.js"
+export type {
+  AtlasBinding,
+  BoundHeader,
+  BoundRecall,
+  BoundRecallQuery,
+  FoldRefusal,
+  FoldVerdict,
+  HeaderBound,
+  NativeMemory,
+  ReconcileVerdict,
+  RecordRef,
+  SlabStates,
+  StoreState,
+  WriteVerdict,
+} from "./native-memory.js"
 export { composeRuntime, buildHeuristic, buildGate, buildMineAdmission } from "./compose.js"
 export type { ComposedRuntime, MineAdmission, Reground } from "./compose.js"
 // WP-10.A1.ADAPTER — the ONE grounding computer (AUTHOR-1): the single fold→build derivation the emit truth-

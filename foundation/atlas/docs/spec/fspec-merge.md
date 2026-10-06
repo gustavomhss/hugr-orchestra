@@ -2,7 +2,7 @@
 
 > **cluster:** KERNEL-9 / KERNEL-10 / KERNEL-11 (+ **PERSIST-11** consumer; **KERNEL-12** reuses the reducer as
 > its safe-degrade floor) · **method-tag:** `formal` · **state:** S2 (`formal-decision`) ·
-> **owner:** charlie (FORGE); architecture-reviewed by bobby.
+> **owner:** backend (FORGE); architecture-reviewed by bobby.
 >
 > **Authority (nothing invented):** Shapiro et al. 2011 (INRIA RR-7506) — the state-based CRDT
 > **join-semilattice** reduction: `merge` = least-upper-bound (LUB), **commutative / associative / idempotent**;

@@ -10,6 +10,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { readAuthorization } from "./authorization"
 import { contextIsCurrent, readContext } from "./context-record"
 import { readValidation } from "./validation-record"
+import { canonicalMemberId } from "./roster"
 
 export class DispatchRejectedError extends Schema.TaggedErrorClass<DispatchRejectedError>()("MaestroDispatchRejected", {
   reason: Schema.String,
@@ -35,10 +36,9 @@ function reservation(
   if (existing.type !== EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2)) {
     throw new DispatchRejectedError({ reason: "reservation-missing-permission-snapshot" })
   }
-  const recorded = {
-    id: existing.id,
-    ...Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)(existing.data),
-  }
+  const data = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)(existing.data)
+  // A reservation recorded before the backend seat's rename routes to its former id; it is read as `backend`.
+  const recorded = { id: existing.id, ...data, routedMemberID: canonicalMemberId(data.routedMemberID) }
   if (isDeepStrictEqual(recorded, { id, ...wanted })) return recorded
   throw new DispatchRejectedError({ reason: "reservation-binding-mismatch" })
 }

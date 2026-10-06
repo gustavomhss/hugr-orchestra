@@ -4,7 +4,7 @@
 > **axiom:** S1 frozen (`requirements-adapters.md`; 55 REQs at the freeze, **58 counted today** — +REQ-MCP-1d/1e
 > by the governed-write-doors amendment, +REQ-ADAPTER-1e by the tracked-symlink amendment 2026-08-02) + S2 frozen (`method-tags-adapters.md`; every
 > behavioural INV method-tagged, **0 `formal`** in the ring — the sole `formal` cluster `FSPEC-merge` lives one
-> layer down and is unchanged, consumed via frozen seams) · **owner:** charlie (FORGE).
+> layer down and is unchanged, consumed via frozen seams) · **owner:** backend (FORGE).
 >
 > **Derivation (generated from the method-tag, NOT hand-authored where a generator exists):**
 >

@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-ret.md`; every RETR INV method-tagged, no `formal` cluster in this block —
-> retrieval **consumes** the KRN `FSPEC-merge` core, it does not host one) · **owner:** charlie (FORGE).
+> retrieval **consumes** the KRN `FSPEC-merge` core, it does not host one) · **owner:** backend (FORGE).
 >
 > **Derivation (not hand-authored where a generator exists):**
 >
@@ -787,7 +787,7 @@ gen: conformance
 
 # Wave H — held-out second fixtures + scenarios (execution GATE held-out leg) · S3 re-freeze
 
-> **state:** S3 re-freeze (Wave H) · **owner:** charlie (FORGE). For **every conformance / reference-model**
+> **state:** S3 re-freeze (Wave H) · **owner:** backend (FORGE). For **every conformance / reference-model**
 > behavioural REQ (RETR-1 / 3 / 4 / 5 / 7 / 8 / 9 / 11 / 13-non-residue), this wave adds a **held-out `-2`
 > scenario** over a **genuinely INDEPENDENT** fixture — a NEW territory + index / injection budget / tool-call
 > sequence with **different nodes / tiers / ppr / hits / tokenEstimates** — that exercises the **SAME

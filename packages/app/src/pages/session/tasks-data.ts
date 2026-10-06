@@ -13,6 +13,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { useSessionLayout } from "./session-layout"
+import { agentKey } from "@/context/agent-identity"
 
 type ToolPart = Extract<Part, { type: "tool" }>
 
@@ -23,6 +24,9 @@ export interface TasksItem {
   key: string
   kind: "agent" | "shell"
   headline: string
+  /** Stable id of the Task's agent: the key. */
+  agentID?: string
+  /** The agent's display label, rendered as `@<label>`; renaming a seat never changes `agentID`. */
   agent?: string
   state: TasksItemState
   /** Undefined when no synced record says when the work started. */
@@ -46,6 +50,7 @@ export interface TasksItem {
 /** Undefined fields are unknown; numbers are values the synced data proves, zeros included. */
 export interface TaskStats {
   model?: string
+  /** Display label of the agent that ran the child. */
   agent?: string
   toolCalls?: number
   fails?: number
@@ -62,6 +67,8 @@ export type TasksInput = {
   status: Record<string, SessionStatus | undefined>
   permission: Record<string, PermissionRequest[] | undefined>
   question: Record<string, QuestionRequest[] | undefined>
+  /** Synced agents, which turn the stable ids in Task calls and messages into labels. */
+  agents: readonly { id?: string; name: string }[]
   /** True only after a transcript page has loaded, with no page load in flight. */
   loaded: (sessionID: string) => boolean
   /** True while older transcript pages exist that the store has not loaded. */
@@ -93,6 +100,7 @@ export function createTasksData() {
       status: store.data.session_status,
       permission: store.data.permission,
       question: store.data.question,
+      agents: store.data.agent,
       loaded: store.session.history.loaded,
       more: store.session.history.more,
       aggregates: serverSDK().protocolKind() === "v2",
@@ -268,7 +276,8 @@ function agentItem(
       (call && toolTitle(call.state)) ||
       text(callInput.description) ||
       (child ? (child.title ?? "").replace(/ \(@[^)]* subagent\)$/, "") : childID),
-    agent: text(callInput.subagent_type),
+    agentID: text(callInput.subagent_type),
+    agent: label(input, text(callInput.subagent_type)),
     state: outcome.state,
     startTime: child?.time.created ?? (call ? toolStart(call.state) : undefined),
     endTime: outcome.endTime,
@@ -327,7 +336,7 @@ function agentStats(
       (last && shortModel(last.providerID, last.modelID)) ??
       (child?.model && shortModel(child.model.providerID, child.model.id)) ??
       (isRecord(callModel) ? shortModel(text(callModel.providerID), text(callModel.modelID)) : undefined),
-    agent: last?.agent || child?.agent || undefined,
+    agent: label(input, last?.agent || child?.agent || undefined),
     toolCalls: tools?.length,
     fails: tools?.filter((part) => part.state.status === "error").length,
     // Session aggregates are server-maintained; a complete transcript is the only other proof.
@@ -395,6 +404,12 @@ function toolMetadata(part: ToolPart | undefined): Record<string, unknown> {
   if (!part) return {}
   if (part.state.status === "pending") return part.metadata ?? {}
   return part.metadata ?? part.state.metadata ?? {}
+}
+
+// Task calls and messages store the agent's stable id; servers that predate ids store the name, which is then the key.
+function label(input: TasksInput, id: string | undefined) {
+  if (!id) return undefined
+  return input.agents.find((agent) => agentKey(agent) === id)?.name ?? id
 }
 
 function shortModel(providerID: string | undefined, modelID: string | undefined) {
