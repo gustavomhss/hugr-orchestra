@@ -236,6 +236,17 @@ function missed(scan: NativeScan, query: NativeQuery) {
 
 const only = (scan: NativeScan, query: NativeQuery): NativeScan => ({ ...scan, found: scan.found.filter((match) => fits(match.item, query)) })
 
+// Every app keeps its own focused control, but keys reach only the one whose window is active. Roots come first.
+function focus(scan: NativeScan): NativeScan {
+  const items = new Map(scan.found.map((match) => [match.item.ref, match.item]))
+  const top = (item: NativeItem, depth = 0): NativeItem => {
+    const parent = typeof item.parentRef === "string" ? items.get(item.parentRef) : undefined
+    return parent && depth < 64 ? top(parent, depth + 1) : item
+  }
+  return { ...scan, found: scan.found.filter((match) => fits(match.item, { focused: true })
+    && fits(top(match.item), { window: true })) }
+}
+
 function compactItem(item: NativeItem) {
   const capabilities = object(item.capabilities) ? item.capabilities : {}
   return {
@@ -336,14 +347,16 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   const act = async (context: ToolContext, query: NativeQuery, run: (item: NativeItem, clock: Clock) => Promise<unknown> | string,
     clock: Clock, attempt = 0): Promise<unknown> => {
     // Scans match by name only; role and input mode filter afterwards so a miss can report what it excluded.
-    const loose = { name: query.name, maxText: query.maxText, focused: query.focused }
-    const named = await find(context, loose, () => false, clock)
+    const loose = { name: query.name, maxText: query.maxText }
+    // A focus query scans every control so each focused one can be traced to its window.
+    const located = (scan: NativeScan) => (query.focused ? focus(scan) : scan)
+    const named = located(await find(context, loose, () => false, clock))
     const all = only(named, query)
     // A provider error or skipped subtree can end a traversal without more pages, so uniqueness needs full coverage.
     if (!all.complete) return compactScan(all, "target-search-incomplete")
     const winner = pick(all, query)
     if (winner === undefined) return all.found.length === 0 ? missed(named, query) : compactScan(all, "target-ambiguous")
-    const fresh = only(await find(context, loose, () => false, clock), query)
+    const fresh = only(located(await find(context, loose, () => false, clock)), query)
     if (Date.now() >= clock.deadline) return compactScan(expired(all), "target-search-incomplete")
     if (!fresh.complete) return compactScan(fresh, "target-search-incomplete")
     const current = pick(fresh, query)
@@ -354,7 +367,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     // Each native page is a new observation that retires the refs of earlier pages, so a winner before the last
     // page needs a scan that stops on its page to hold a live ref, re-identified the same way.
     const live = current.page === fresh.pages ? current
-      : only(await find(context, loose, (scan) => scan.pages >= winner.page, clock), query).found.find((match) =>
+      : only(located(await find(context, loose, (scan) => scan.pages >= winner.page, clock)), query).found.find((match) =>
         same(match, winner))
     if (Date.now() >= clock.deadline) return compactScan(expired(all), "target-search-incomplete")
     if (live === undefined) return toJSON({ code: "target-changed", outcome: "not-dispatched", item: compactItem(winner.item) })
@@ -689,7 +702,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       ui_act: linux(dock.dock_action, "Press, click, toggle or otherwise invoke a control in a Linux workspace app. Prefer `target` {name, role} plus an action name: it locates the control and acts in one call. Use mode observed for controls inside lists and trees. Acknowledgement is not proof; read again to confirm the result.", ["target", "action", "ref", "actionID", "mode"]),
       ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref. Editable mode sets and verifies the value; keyboard mode types it for fields that only accept keys. Without target or ref it types, in keyboard mode, into the field that has keyboard focus (e.g. a search box just opened by a shortcut).", ["target", "ref", "text", "mode"]),
       ui_pointer: tool({
-        description: "Move the mouse onto a control in a Linux workspace app (kind hover) or right-click it (kind contextMenu), by `target` {name, role} or ref. Use it for what apps show only under the mouse, such as a row's gear or toolbar, and for right-click menus that ui_act and ui_keys do not open. The effect is up to the app and never verified, so look again afterwards.",
+        description: "Move the mouse onto a control in a Linux workspace app (kind hover) or right-click it (kind contextMenu), by `target` {name, role} or ref. Use it for what apps show only under the mouse, such as a row's gear or toolbar, and for right-click menus that ui_act and ui_keys do not open. It is a real mouse event at the control's center, so apps may react to it as they would to a person (a right-click on a VS Code boolean setting's description toggles it); look again afterwards.",
         args: { kind: tool.schema.enum(["hover", "contextMenu"]), target: target.optional().describe("Locate the control by name"),
           ref: ref.optional().describe("Element ref from ui_find or ui_read") },
         execute: (args, context) => {
