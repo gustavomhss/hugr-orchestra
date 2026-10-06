@@ -103,6 +103,14 @@ export const DECAY_PER_WAVE = 0.5
  * retained (a live single fresh hit `= 1.0`) bands — any value in `(0.098, 1.0)` honours both `-1` goldens.
  */
 export const NEAR_ZERO_FRECENCY = 0.1
+/**
+ * The stored `frecency` Atlas assigns a newly admitted `project` rule (F3 clause 22, owner ruling F3-D6) — a
+ * seat or model never supplies it. It is the score of ONE fresh cited hit, `DECAY_PER_WAVE ^ 0 = 1`: proposing a
+ * rule is citing it as governing once, at the head wave. `0` (no hit) would sit below `NEAR_ZERO_FRECENCY` and
+ * evict the rule on admission; anything above 1 would claim hits that were never logged. It must also be an
+ * integer, because canonical form refuses a non-integer number and the record could not be persisted.
+ */
+export const INITIAL_PROJECT_FRECENCY = 1
 
 // ── MEM-3: the injected-cap gate ─────────────────────────────────────────────────────────────────────────
 

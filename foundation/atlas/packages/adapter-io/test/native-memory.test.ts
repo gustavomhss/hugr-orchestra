@@ -9,11 +9,12 @@ import { appendFileSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createNativeMemory, readBoundHeader } from "../src/native-memory.js"
-import type { AtlasBinding } from "../src/native-memory.js"
+import type { AtlasBinding, BoundEntry } from "../src/native-memory.js"
 import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
 import { createMemoryRead } from "../src/memory-read.js"
 import { createAwarenessStore } from "../src/awareness-store.js"
 import { createDurableOrientation } from "../src/orientation-store.js"
+import { INITIAL_PROJECT_FRECENCY } from "@atlas/memory"
 import type {
   Awareness,
   MemoryRecord,
@@ -43,13 +44,17 @@ const taskEntry = (taskId: string, tag: string): TaskMemoryEntry => ({
   stoppedAt: `s-${tag}`,
   lesson: `l-${tag}`,
 })
-const prEntry = (prId: string): PrMemoryEntry => ({
+const prEntry = (prId: string, tag = "x"): PrMemoryEntry => ({
   prId,
-  decisions: ["d"],
-  reviewOutcomes: ["r"],
-  knowledgeDelta: [],
+  decisions: [`d-${tag}`],
+  reviewOutcomes: [`r-${tag}`],
+  knowledgeDelta: [{ id: `k-${tag}` } as never],
+  ref: `pr-ref-${tag}`,
 })
+/** A stored rule, appended straight to the log (it carries the `frecency` Atlas assigned at admission). */
 const rule = (text: string): ProjectMemoryEntry => ({ rule: text, scope: "*", frecency: 1 })
+/** A rule as a seat proposes it through the bound write: no `frecency` (clause 22). */
+const proposal = (text: string) => ({ rule: text, scope: "*" })
 
 /** A fake scanner executable. `exit` is its whole verdict; stdin is drained so the pipe never breaks. */
 function scanner(name: string, exit: number): string {
@@ -205,13 +210,27 @@ describe("clause 15 — exact fold resolution", () => {
     expect(mem.resolveFold(unit)).toMatchObject({ ok: false, refusal: "ambiguous" })
   })
 
-  it("a pr unit resolves to its exact record with no fold (the PrClosingFold projection is A2's)", () => {
+  it("a pr ref resolves to exactly { decisions, reviewOutcomes, knowledgeDelta } of the referenced record", () => {
     const mem = createNativeMemory(binding())
-    const w = mem.write(prEntry("P1"))
+    mem.write(prEntry("P1", "old"))
+    const w = mem.write(prEntry("P1", "new"))
     if (!w.ok) throw new Error(w.reason)
     const v = mem.resolveFold({ kind: "pr", id: "P1" }, w.ref)
-    expect(v).toMatchObject({ ok: true, record: w.record })
-    expect(v.ok && "fold" in v).toBe(false)
+    expect(v).toMatchObject({ ok: true, unit: { kind: "pr", id: "P1" }, ref: w.ref, record: w.record })
+    expect(v.ok && v.fold).toEqual({
+      decisions: ["d-new"],
+      reviewOutcomes: ["r-new"],
+      knowledgeDelta: [{ id: "k-new" }],
+    })
+  })
+
+  it("a pr unit without a receipt: one own record resolves, two are ambiguous", () => {
+    const mem = createNativeMemory(binding())
+    const unit = { kind: "pr" as const, id: "P1" }
+    mem.write(prEntry("P1", "one"))
+    expect(mem.resolveFold(unit)).toMatchObject({ ok: true, fold: { decisions: ["d-one"] } })
+    mem.write(prEntry("P1", "two"))
+    expect(mem.resolveFold(unit)).toMatchObject({ ok: false, refusal: "ambiguous" })
   })
 
   it("refuses store-partial when the ref is absent from a torn log, store-unavailable when unreadable", () => {
@@ -235,7 +254,7 @@ describe("clause 15 — exact fold resolution", () => {
 describe("clauses 7, 8, 13 — store state is derived, never an empty-looking default", () => {
   it("complete: header present, awareness facet states passed through, rules bounded in whitespace words", () => {
     const mem = createNativeMemory(binding())
-    mem.write(rule("never commit secrets"))
+    mem.write(proposal("never commit secrets"))
     const h = mem.header(AW, OR)
     expect(h.state.rules).toBe("complete")
     expect(h.state.awareness).toEqual({
@@ -251,7 +270,7 @@ describe("clauses 7, 8, 13 — store state is derived, never an empty-looking de
 
   it("partial: a torn line makes the header and recall PARTIAL while still serving what verified", () => {
     const mem = createNativeMemory(binding())
-    mem.write(rule("always run the gate"))
+    mem.write(proposal("always run the gate"))
     mem.write(taskEntry("T1", "x"))
     tearLine()
     const h = mem.header(AW, OR)
@@ -286,21 +305,46 @@ describe("clause 23 — write refusals pass through verbatim", () => {
     const mem = createNativeMemory(binding())
     mem.write(taskEntry("T0", "x"))
     tearLine()
-    expect(mem.write(rule("never guess"))).toMatchObject({ ok: false, refusal: "store-partial" })
+    expect(mem.write(proposal("never guess"))).toMatchObject({ ok: false, refusal: "store-partial" })
     expect(mem.write(taskEntry("T1", "y"))).toMatchObject({ ok: true })
   })
 
   it("store-unavailable refuses a project write when the log cannot be read", () => {
     mkdirSync(memoryLogPath(root), { recursive: true })
-    expect(createNativeMemory(binding()).write(rule("never guess"))).toMatchObject({
+    expect(createNativeMemory(binding()).write(proposal("never guess"))).toMatchObject({
       ok: false,
       refusal: "store-unavailable",
     })
   })
 
   it("over-cap keeps its tokens/cap receipt", () => {
-    const v = createNativeMemory(binding()).write(rule(Array(501).fill("w").join(" ")))
+    const v = createNativeMemory(binding()).write(proposal(Array(501).fill("w").join(" ")))
     expect(v).toMatchObject({ ok: false, refusal: "over-cap", tokens: 501, cap: 500 })
+  })
+})
+
+describe("clause 22 — Atlas, never the seat, sets a project rule's frecency", () => {
+  it("refuses an entry carrying frecency as template-invalid and writes nothing", () => {
+    const mem = createNativeMemory(binding())
+    const v = mem.write(rule("never guess") as BoundEntry)
+    expect(v).toMatchObject({ ok: false, refusal: "template-invalid" })
+    expect(v.ok || v.reason).toMatch(/frecency/)
+    expect(mem.reconcile(rule("never guess") as BoundEntry)).toEqual({ present: false, store: "complete" })
+    expect(createDurableMemory(root).read().store).toHaveLength(0)
+  })
+
+  it("admits a proposal with the policy frecency, and reconcile returns the same ref", () => {
+    const mem = createNativeMemory(binding())
+    expect(mem.reconcile(proposal("keep handlers thin"))).toEqual({ present: false, store: "complete" })
+    const w = mem.write(proposal("keep handlers thin"))
+    if (!w.ok) throw new Error(w.reason)
+    expect(w.record).toEqual({
+      owner: "backend",
+      kind: "project",
+      entry: { rule: "keep handlers thin", scope: "*", frecency: INITIAL_PROJECT_FRECENCY },
+    })
+    expect(mem.reconcile(proposal("keep handlers thin"))).toEqual({ present: true, ref: w.ref })
+    expect(mem.header(AW, OR).header?.rules.map((r) => r.rule)).toEqual(["keep handlers thin"])
   })
 })
 
