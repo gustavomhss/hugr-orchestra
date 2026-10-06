@@ -7,6 +7,10 @@ import { join } from "node:path"
 import { AppDockNativeRuntime } from "./app-dock-native-runtime"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 
+// The Docker fixture listens on a unix:// socket, which the runtime rejects on Windows by design (it accepts only
+// npipe:// there). Every case would fail, or pass only because the endpoint was refused first.
+const unixSocketTest = test.skipIf(process.platform === "win32")
+
 const owner = "11dc45b7-3ed8-40ea-a56e-232a1c39f381"
 const sessionID = "96cab8ab-6bce-4d07-94ec-fb0a2951d998"
 const workspaceID = "a".repeat(64)
@@ -279,7 +283,7 @@ async function rejected(promise: Promise<unknown>) {
   })
 }
 
-test("deploys exact byte manifest, captures inputs, overrides image entrypoint, and reaps only owned helper", async () => {
+unixSocketTest("deploys exact byte manifest, captures inputs, overrides image entrypoint, and reaps only owned helper", async () => {
   const f = await fixture()
   const creating = AppDockNativeRuntime.create(f.options)
   f.options.owner = "mutated"
@@ -322,7 +326,7 @@ test("deploys exact byte manifest, captures inputs, overrides image entrypoint, 
   expect(f.state.container).toBeUndefined()
 })
 
-test("USTAR upload carries root ownership and exact checked payload bytes", async () => {
+unixSocketTest("USTAR upload carries root ownership and exact checked payload bytes", async () => {
   const f = await fixture()
   const result = await AppDockNativeRuntime.create(f.options)
   channels.push(result.channel)
@@ -339,7 +343,7 @@ test("USTAR upload carries root ownership and exact checked payload bytes", asyn
   expect(f.state.events).toEqual(["verify", "create", "inspect", "upload", "inspect", "attach", "verify", "inspect", "start"])
 })
 
-test("security policy capture isolates nested caller mutation before first await", async () => {
+unixSocketTest("security policy capture isolates nested caller mutation before first await", async () => {
   const f = await fixture()
   const expected = JSON.stringify(f.policy)
   const creating = AppDockNativeRuntime.create(f.options)
@@ -353,7 +357,7 @@ test("security policy capture isolates nested caller mutation before first await
   expect(result.active()).toBe(true)
 })
 
-test.each([
+unixSocketTest.each([
   { name: "null", policy: null },
   { name: "undefined", policy: undefined },
   { name: "array", policy: [] },
@@ -373,7 +377,7 @@ test.each([
   expect(f.state.requests).toEqual([])
 })
 
-test("rejects cyclic security policy before engine I/O", async () => {
+unixSocketTest("rejects cyclic security policy before engine I/O", async () => {
   const f = await fixture()
   const policy: Record<string, unknown> = { defaultAction: "SCMP_ACT_ERRNO" }
   policy.self = policy
@@ -383,7 +387,7 @@ test("rejects cyclic security policy before engine I/O", async () => {
   expect(f.state.requests).toEqual([])
 })
 
-test.each([0, 1])("security policy byte boundary plus %i", async (extra) => {
+unixSocketTest.each([0, 1])("security policy byte boundary plus %i", async (extra) => {
   const f = await fixture()
   const policy = { ...f.policy, comment: "" }
   policy.comment = "x".repeat(131072 - Buffer.byteLength(JSON.stringify(policy)) + extra)
@@ -400,7 +404,7 @@ test.each([0, 1])("security policy byte boundary plus %i", async (extra) => {
   expect(f.state.container!.HostConfig.SecurityOpt).toEqual([`seccomp=${JSON.stringify(policy)}`, "no-new-privileges"])
 })
 
-test.each(["valid", "wrong-boot", "wrong-pid-namespace", "missing-identity", "same-mount-namespace"])(
+unixSocketTest.each(["valid", "wrong-boot", "wrong-pid-namespace", "missing-identity", "same-mount-namespace"])(
   "helper placement %s is checked before client admission", async (kind) => {
     const f = await fixture()
     if (kind === "wrong-boot") f.state.helloIdentity!.bootID = owner
@@ -423,7 +427,7 @@ test.each(["valid", "wrong-boot", "wrong-pid-namespace", "missing-identity", "sa
   },
 )
 
-test.each(["owner", "id", "name", "session", "workspace", "kind"])("foreign %s never permits upload, start, kill, or delete", async (kind) => {
+unixSocketTest.each(["owner", "id", "name", "session", "workspace", "kind"])("foreign %s never permits upload, start, kill, or delete", async (kind) => {
   const f = await fixture()
   f.state.mutate = (found) => {
     if (kind === "id") { found.Id = workspaceID; return }
@@ -434,7 +438,7 @@ test.each(["owner", "id", "name", "session", "workspace", "kind"])("foreign %s n
   expect(f.state.events).toEqual(["verify", "create", "inspect", "inspect"])
 })
 
-test.each(["User", "Memory", "MemorySwap", "NanoCpus", "PidsLimit", "PidMode", "NetworkMode", "CapAdd", "SecurityOpt", "Mounts", "Cmd", "Env", "OpenStdin", "StdinOnce", "Tty", "Healthcheck"])(
+unixSocketTest.each(["User", "Memory", "MemorySwap", "NanoCpus", "PidsLimit", "PidMode", "NetworkMode", "CapAdd", "SecurityOpt", "Mounts", "Cmd", "Env", "OpenStdin", "StdinOnce", "Tty", "Healthcheck"])(
   "rejects wrong %s before admission, then removes proven stopped helper", async (key) => {
     const f = await fixture()
     f.state.mutate = (found) => {
@@ -447,7 +451,7 @@ test.each(["User", "Memory", "MemorySwap", "NanoCpus", "PidsLimit", "PidMode", "
   },
 )
 
-test.each(["manifest", "resource"])("changed %s after upload is rejected before attach", async (kind) => {
+unixSocketTest.each(["manifest", "resource"])("changed %s after upload is rejected before attach", async (kind) => {
   const f = await fixture()
   f.state.mutate = (found) => {
     if (!f.state.upload) return
@@ -462,7 +466,7 @@ test.each(["manifest", "resource"])("changed %s after upload is rejected before 
   expect(f.state.container).toBeUndefined()
 })
 
-test.each(["workspace", "engine", "hello", "upload", "create"])("%s rejection joins cleanup before returning sanitized failure", async (point) => {
+unixSocketTest.each(["workspace", "engine", "hello", "upload", "create"])("%s rejection joins cleanup before returning sanitized failure", async (point) => {
   const f = await fixture()
   f.state.rejectVerify = point === "workspace" ? 2 : 0
   f.state.rejectStart = point === "engine"
@@ -476,7 +480,7 @@ test.each(["workspace", "engine", "hello", "upload", "create"])("%s rejection jo
   if (point === "upload") expect(f.state.events).toEqual(["verify", "create", "inspect", "upload", "inspect", "delete"])
 })
 
-test("failed removal preserves unknown instead of reporting successful cleanup", async () => {
+unixSocketTest("failed removal preserves unknown instead of reporting successful cleanup", async () => {
   const f = await fixture()
   f.state.uploadFailure = true
   f.state.rejectDelete = true
@@ -484,7 +488,7 @@ test("failed removal preserves unknown instead of reporting successful cleanup",
   expect(f.state.container?.State).toMatchObject({ Running: false, Pid: 0 })
 })
 
-test("EOF cannot reap a still-running helper; final inspect records OOM reason", async () => {
+unixSocketTest("EOF cannot reap a still-running helper; final inspect records OOM reason", async () => {
   const f = await fixture()
   f.state.delayReap = true
   const result = await AppDockNativeRuntime.create(f.options)
@@ -506,7 +510,7 @@ test("EOF cannot reap a still-running helper; final inspect records OOM reason",
   expect(f.state.events.at(-1)).toBe("delete")
 })
 
-test("exit racing kill conflict still requires inspect evidence", async () => {
+unixSocketTest("exit racing kill conflict still requires inspect evidence", async () => {
   const f = await fixture()
   f.state.killConflict = true
   const result = await AppDockNativeRuntime.create(f.options)
@@ -515,7 +519,7 @@ test("exit racing kill conflict still requires inspect evidence", async () => {
   expect(f.state.events.slice(-4)).toEqual(["inspect", "kill", "inspect", "delete"])
 })
 
-test("late old cleanup refuses replacement identity", async () => {
+unixSocketTest("late old cleanup refuses replacement identity", async () => {
   const f = await fixture()
   const result = await AppDockNativeRuntime.create(f.options)
   channels.push(result.channel)
@@ -525,7 +529,7 @@ test("late old cleanup refuses replacement identity", async () => {
   expect(f.state.container!.State.Running).toBe(true)
 })
 
-test("unreaped helper exhausts one absolute stop budget and reports unknown", async () => {
+unixSocketTest("unreaped helper exhausts one absolute stop budget and reports unknown", async () => {
   const f = await fixture()
   const result = await AppDockNativeRuntime.create(f.options)
   channels.push(result.channel)
@@ -541,7 +545,7 @@ test("unreaped helper exhausts one absolute stop budget and reports unknown", as
   expect(f.state.container!.State.Running).toBe(true)
 }, 6000)
 
-test("payload capture precedes workspace callback mutation of original source", async () => {
+unixSocketTest("payload capture precedes workspace callback mutation of original source", async () => {
   const f = await fixture()
   const verify = f.options.verifyWorkspace
   f.options.verifyWorkspace = async () => {
@@ -557,7 +561,7 @@ test("payload capture precedes workspace callback mutation of original source", 
   expect(await readFile(join(f.options.payloadDirectory, "main.py"), "utf8")).toBe("changed after capture")
 })
 
-test("admits exact per-file and total byte boundaries with optional XAUTHORITY absent", async () => {
+unixSocketTest("admits exact per-file and total byte boundaries with optional XAUTHORITY absent", async () => {
   const f = await fixture()
   delete f.options.session.environment.XAUTHORITY
   await Promise.all(f.source.map(async (file, index) => {
@@ -573,7 +577,7 @@ test("admits exact per-file and total byte boundaries with optional XAUTHORITY a
   expect(f.state.archiveBytes).toBeLessThanOrEqual(262144 + 9 * 512 + 8 * 511 + 2 * 512)
 })
 
-test.each(["owner", "workspaceID", "imageID", "homeVolume", "sessionID", "process", "namespace", "env-extra", "display", "bus", "xauth", "atspi", "env-session", "endpoint"])(
+unixSocketTest.each(["owner", "workspaceID", "imageID", "homeVolume", "sessionID", "process", "namespace", "env-extra", "display", "bus", "xauth", "atspi", "env-session", "endpoint"])(
   "rejects invalid %s before engine I/O", async (kind) => {
     const f = await fixture()
     if (kind === "owner") f.options.owner = "invalid"
@@ -596,7 +600,7 @@ test.each(["owner", "workspaceID", "imageID", "homeVolume", "sessionID", "proces
   },
 )
 
-test.each(["empty", "oversize", "total", "link", "missing"])("rejects %s payload before create", async (kind) => {
+unixSocketTest.each(["empty", "oversize", "total", "link", "missing"])("rejects %s payload before create", async (kind) => {
   const f = await fixture()
   if (kind === "empty") await writeFile(join(f.options.payloadDirectory, "main.py"), "")
   if (kind === "oversize") await writeFile(join(f.options.payloadDirectory, "main.py"), Buffer.alloc(131073))
