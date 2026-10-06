@@ -199,6 +199,20 @@ test("C7 requires the user's citation and revoking words for the user's items", 
   const later = { ...snap(8, 10, may) }
   expect(failed(decode({ text: JSON.stringify({ ops: [{ op: "retire", id: "m8", reason: "Limit ended" }] }), snapshot: later,
     producerID, host: host(), ceiling: 20_000 }))).toBe("accepted")
+  // An objective retires on the user's new message, which rarely holds revoking words.
+  expect(failed(run([{ op: "retire", id: "m1", reason: "User changed the goal", src: ["u3"] }], { previous }))).toBe("accepted")
+  expect(failed(run([{ op: "retire", id: "m1", reason: "x", src: ["t4"] }], { previous }))).toBe("C7")
+  expect(failed(run([{ op: "retire", id: "m1", reason: "x", src: ["u1"] }], { previous }))).toBe("C7")
+})
+
+test("a user message without sentence breaks keeps only the quoted words", () => {
+  const long = structuredClone(HISTORY)
+  long[4].parts = [{ ...long[4].parts[0], text: `${"contexto ".repeat(40)}nao mexe no banco ${"mais ".repeat(20)}` } as SessionV1.Part]
+  const result = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "rules", src: ["u3"],
+    fields: { kind: "must_not", rule: "Do not touch the database", quote: "nao mexe no banco" } }] }),
+    snapshot: { ...snap(4, 8, first()), head: long.slice(4, 8), tail: long.slice(8) }, producerID,
+    host: { ...host(), history: long }, ceiling: 20_000 })
+  expect(ok(result).items.find((item) => item.section === "rules" && item.src.includes("u3"))?.fields.quote).toBe("…nao mexe no banco…")
 })
 
 test("C8 locates errors in raw tool output and values in identity arguments, output or user text", () => {
@@ -417,6 +431,8 @@ test("background return notices get their own alias and render the member", () =
 test("a quoted source sentence is not wrapped in quote marks twice", () => {
   expect(inQuotes("Do not modify files.")).toBe('"Do not modify files."')
   expect(inQuotes('"Do not modify files."')).toBe('"Do not modify files."')
-  expect(inQuotes("“Não mexe.”")).toBe("“Não mexe.”")
-  expect(inQuotes('"open quote only')).toBe('""open quote only"')
+  expect(inQuotes("“Não mexe.”")).toBe('"Não mexe."')
+  // The user wraps each message in quotes, so a stored sentence may carry a mark at one end only.
+  expect(inQuotes('"open quote only')).toBe('"open quote only"')
+  expect(inQuotes('closing quote only."')).toBe('"closing quote only."')
 })

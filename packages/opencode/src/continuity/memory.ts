@@ -24,6 +24,7 @@ const FIELDS: Record<Section, { required: string[]; optional: string[]; labels?:
 // Fields the host locates in the source and stores as the source's own bytes.
 const EXACT = new Set(["quote", "error", "value"])
 const ITEM_ID = /^m[1-9][0-9]*$/
+const SENTENCE = 280
 
 type Fields = Record<string, string | string[] | null>
 export type Op =
@@ -112,7 +113,11 @@ export function decode(input: {
   each: for (const op of ops) {
     if (op.op === "retire") {
       const item = items.get(op.id)!
-      if (quoted(item)) {
+      // The user changes a goal by asking for something else, rarely with revoking words.
+      if (item.section === "objective") {
+        if (!(op.src ?? []).some((alias) => alias.startsWith("u") && ctx.span.some((source) => source.alias === alias)))
+          return fail("C7", `retiring the objective ${op.id} cites the user's message in the new span that changed it`)
+      } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
         const found = quote(op.quote, ctx, op.src ?? [], true)
         if ("check" in found) return found
@@ -304,6 +309,11 @@ function quote(needle: string, ctx: Scope, cited: readonly string[], revoking: b
     if (hit.size !== 1 || hit.has(-1))
       return fail("C6", `quote "${needle}" matches more than one sentence of ${source.alias}; quote more of the sentence`)
     const [from, to] = spans[[...hit][0]]
+    // A pasted blob without sentence breaks is no sentence: keep the quoted words themselves.
+    if (to - from > SENTENCE) {
+      const [start, end] = matches[0]
+      return { text: `…${source.text.slice(start, end).trim()}…`, alias: source.alias }
+    }
     return { text: source.text.slice(from, to).trim(), alias: source.alias }
   }
   return fail("C6", `quote "${needle}" not found in ${revoking ? "the user text of the new span" :
@@ -345,8 +355,8 @@ export function stamp(time: number) {
     `${offset < 0 ? "-" : "+"}${pad(Math.floor(Math.abs(offset) / 60))}${minutes ? `:${pad(minutes)}` : ""}`
 }
 
-// A source sentence that already carries its own quote marks is not wrapped again.
-export const inQuotes = (value: string) => /^["“].*["”]$/s.test(value) ? value : `"${value}"`
+// Quote marks the source sentence carries at either end are not doubled.
+export const inQuotes = (value: string) => `"${value.replace(/^["“]/, "").replace(/["”]$/, "")}"`
 const oneLine = (value: string) => value.replace(/\s+/g, " ").trim()
 const cut = (value: string, length: number) => {
   const line = oneLine(value)
