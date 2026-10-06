@@ -85,6 +85,8 @@ jobs:
         run: |
           filters=(--filter='!opencode')
           if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@opencode-ai/httpapi-codegen'); fi
-          GITHUB_ACTIONS=false bun turbo test "${filters[@]}"
+          # 16 suites share a 4-vCPU runner; Turbo's default of 10 at once pushed tests that take 1-3 s alone
+          # past their 5-10 s timeouts.
+          GITHUB_ACTIONS=false bun turbo test --concurrency=2 "${filters[@]}"
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
