@@ -3,6 +3,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Effect, Layer, Stream } from "effect"
+import { mkdirSync, writeFileSync } from "fs"
 import path from "path"
 import {
   disposeAllInstances,
@@ -36,9 +37,12 @@ const commit = Effect.fn("VcsActivityTest.commit")(function* (
   cwd: string,
   input: { message: string; time: number; email?: string; files?: Record<string, string | Uint8Array> },
 ) {
-  yield* Effect.forEach(Object.entries(input.files ?? {}), (entry) =>
-    Effect.promise(() => Bun.write(path.join(cwd, entry[0]), entry[1])),
-  )
+  // Written synchronously: in loaded Windows shards git twice staged a file Bun.write had created but not yet filled,
+  // committing it empty (runs 37479048888 and 37521326813).
+  Object.entries(input.files ?? {}).forEach((entry) => {
+    mkdirSync(path.dirname(path.join(cwd, entry[0])), { recursive: true })
+    writeFileSync(path.join(cwd, entry[0]), entry[1])
+  })
   yield* git(cwd, ["add", "-A"])
   yield* git(cwd, ["commit", "--no-gpg-sign", "--allow-empty", "-m", input.message], dated(input.time, input.email))
 })
