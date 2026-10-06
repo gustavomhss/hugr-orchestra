@@ -114,13 +114,20 @@ it.instance(
         const run = (tool: string, args: Record<string, unknown>) => {
           const execute = tools[tool]?.execute
           if (!execute) return Effect.succeed(undefined)
+          // A call still pending is waiting for the owner's permission reply, which is neither access nor a denial.
           return Effect.promise(() =>
             execute(args, {
               toolCallId: `call_${agent.id}_${tool}`,
               abortSignal: new AbortController().signal,
               messages: [],
             }),
-          ).pipe(Effect.exit)
+          ).pipe(
+            Effect.timeoutOrElse({
+              duration: "10 seconds",
+              orElse: () => Effect.die(new Error(`${agent.id} ${tool} asked the owner for permission`)),
+            }),
+            Effect.exit,
+          )
         }
         const denied = (exit: Exit.Exit<unknown> | undefined) =>
           exit === undefined || (Exit.isFailure(exit) && Cause.pretty(exit.cause).includes("PermissionDeniedError"))
