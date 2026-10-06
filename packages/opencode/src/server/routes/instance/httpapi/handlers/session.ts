@@ -17,6 +17,7 @@ import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
 import { SessionSummary } from "@/session/summary"
 import { Todo } from "@/session/todo"
+import { WriteRoots } from "@/maestro/write-roots"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { NamedError } from "@opencode-ai/core/util/error"
 import { Cause, Clock, Effect, Option, Schema, Scope } from "effect"
@@ -48,6 +49,11 @@ const tryParseJson = (text: string) =>
     try: () => JSON.parse(text) as unknown,
     catch: () => new HttpApiError.BadRequest({}),
   })
+
+// Write-root rules bind a delegated child's write scope (F2.14). Only the host writes them; a client that could add an
+// allow rule would widen a child's bound roots.
+const reservesWriteRoots = (permission: ReadonlyArray<{ readonly permission: string }> | undefined) =>
+  permission?.some((rule) => rule.permission === WriteRoots.PERMISSION) ?? false
 
 export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", (handlers) =>
   Effect.gen(function* () {
@@ -172,6 +178,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
     })
 
     const create = Effect.fn("SessionHttpApi.create")(function* (ctx: { payload?: Session.CreateInput }) {
+      if (reservesWriteRoots(ctx.payload?.permission)) return yield* new HttpApiError.BadRequest({})
       return yield* shareSvc.create(ctx.payload)
     })
 
@@ -206,6 +213,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       params: { sessionID: SessionID }
       payload: typeof UpdatePayload.Type
     }) {
+      if (reservesWriteRoots(ctx.payload.permission)) return yield* new HttpApiError.BadRequest({})
       const current = yield* requireSession(ctx.params.sessionID)
       if (ctx.payload.title !== undefined) {
         yield* session.setTitle({ sessionID: ctx.params.sessionID, title: ctx.payload.title })

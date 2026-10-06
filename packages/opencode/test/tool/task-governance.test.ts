@@ -263,6 +263,8 @@ it.instance(
         risks: [],
         nextActions: [],
         terminal: { reason: "interrupted", hostDetail: "Governed Task denied: reserved-child-incomplete" },
+        taskId: expect.stringMatching(/^tsk_[0-9a-f]{64}$/),
+        memory: { reads: [], writes: [] },
         writeRoots: [],
         ...(yield* ToolSafetySandbox.status()),
       })

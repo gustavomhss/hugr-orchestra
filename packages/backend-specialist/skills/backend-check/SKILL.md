@@ -34,6 +34,8 @@ Ordinary checks are part of `backend-implement`; do not load this skill to run t
 
 Framework test harness APIs live in the references your stack selects.
 
+Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md). Read only the packet's language.
+
 ## Common procedure
 
 1. Reuse the supplied fixture first. Add a library only for a concrete missing mechanism, and only when its manifest is in the write paths.
