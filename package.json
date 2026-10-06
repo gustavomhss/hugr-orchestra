@@ -22,6 +22,7 @@
     "sso": "aws sso login --sso-session=opencode --no-browser",
     "translate:app": "bun run script/translate-app.ts",
     "test": "echo 'do not run tests from root' && exit 1",
+    "omni:build": "cargo build --manifest-path packages/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
     "test:ci": "bun run script/test-ci.ts"
   },
   "workspaces": {
@@ -30,6 +31,7 @@
       "packages/console/*",
       "packages/stats/*",
       "packages/sdk/js",
+      "packages/omni/bindings/node",
       "packages/slack"
     ],
     "catalog": {

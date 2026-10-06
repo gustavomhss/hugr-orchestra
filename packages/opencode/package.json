@@ -53,6 +53,7 @@
     "why-is-node-running": "3.2.2"
   },
   "dependencies": {
+    "hugr-omni": "workspace:*",
     "@opencode-ai/atlas-boundary": "workspace:*",
     "@actions/core": "1.11.1",
     "@actions/github": "6.0.1",
