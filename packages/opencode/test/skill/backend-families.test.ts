@@ -33,7 +33,14 @@ const TUPLES = {
   },
 } as Record<string, Record<string, string[]>>
 // Ruling M3-3 (F5.5 pins): the first toolkit cut, one recipe per engine. gitleaks is a host-side scanner with none.
-const ENGINE_PINS = { "ast-grep": "0.45.3", sqlc: "1.31.1", buf: "1.73.0", kiota: "1.35.0" } as Record<string, string>
+const ENGINE_PINS = {
+  "ast-grep": "0.45.3",
+  sqlc: "1.31.1",
+  buf: "1.73.0",
+  kiota: "1.35.0",
+  "openapi-generator": "7.25.0",
+  "datamodel-codegen": "0.83.0",
+} as Record<string, string>
 
 describe("backend skill families", () => {
   test("keys family references by an allowed family id", async () => {

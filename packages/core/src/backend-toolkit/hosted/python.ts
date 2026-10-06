@@ -1,29 +1,7 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
 import type { TargetId } from "../target"
 import { WHEELS } from "./python-wheels"
-
-// Local copies of the frozen milestone-4 shapes; replaced at merge by `import type { HostedEngine, Runtime } from
-// "../manifest"`, which declares them identically.
-type Runtime = {
-  readonly id: "node" | "java" | "python"
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly targets: Readonly<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
-}
-type HostedEngine = {
-  readonly id: "datamodel-codegen"
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly env?: Readonly<Record<string, string>>
-  readonly runtime: "node" | "java" | "python"
-  readonly install:
-    | { readonly kind: "npm"; readonly packageJson: string; readonly lock: string }
-    | { readonly kind: "pip"; readonly requirements: string }
-    | { readonly kind: "jar"; readonly artifact: PinnedArtifact.Artifact }
-  readonly launch: ReadonlyArray<string>
-}
+import type { HostedEngine, Runtime } from "../manifest"
 
 // Pins are the `install_only` archives of python-build-standalone release 20261003; digests are the release's
 // SHA256SUMS lines in SRI form, which agreed with GitHub's asset digests when pinning.

@@ -1,24 +1,6 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
 import type { TargetId } from "../target"
-
-// Frozen milestone 4 shapes; tk-core's Runtime and HostedEngine in manifest.ts replace these local aliases at merge.
-type Runtime = {
-  readonly id: "java"
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly targets: Readonly<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
-}
-type HostedEngine = {
-  readonly id: "openapi-generator"
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  readonly env?: Readonly<Record<string, string>>
-  readonly runtime: "java"
-  readonly install: { readonly kind: "jar"; readonly artifact: PinnedArtifact.Artifact }
-  readonly launch: ReadonlyArray<string>
-}
+import type { HostedEngine, Runtime } from "../manifest"
 
 // GitHub pins are the Temurin release assets' sha256 digests in SRI form; each `.sha256.txt` companion agreed with them
 // when pinning. The Maven Central pin is the jar's sha256, computed from the download, whose `.sha1` and `.md5` agreed.
