@@ -14,6 +14,7 @@ import {
 import { createStore, produce } from "solid-js/store"
 import { Dynamic } from "solid-js/web"
 import { useNavigate } from "@solidjs/router"
+import { createMediaQuery } from "@solid-primitives/media"
 import { useMutation } from "@tanstack/solid-query"
 import { createVirtualizer, defaultRangeExtractor, elementScroll, type VirtualItem } from "@tanstack/solid-virtual"
 import { Accordion } from "@opencode-ai/ui/accordion"
@@ -260,6 +261,10 @@ export function MessageTimeline(props: {
   const sdk = useSDK()
   const sync = useSync()
   const settings = useSettings()
+  // The approved turn chrome is styled for the desktop session layout only (session.css gates it at 768px).
+  // The compact layout keeps the bare transcript; unstyled, the turn marks grow to the full row width.
+  const desktop = createMediaQuery("(min-width: 768px)")
+  const turnChrome = () => settings.general.newLayoutDesigns() && desktop()
   const dialog = useDialog()
   const sessionArchive = useSessionArchive()
   const language = useLanguage()
@@ -1088,7 +1093,7 @@ export function MessageTimeline(props: {
             <Show when={message()}>
               {(message) => (
                 <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-                  <OrchestraTurn role="user" head time={message().time.created}>
+                  <OrchestraTurn chrome={turnChrome()} role="user" head time={message().time.created}>
                     <div data-slot="session-turn-message-content" aria-live="off">
                       <Message
                         message={message()}
@@ -1134,6 +1139,7 @@ export function MessageTimeline(props: {
           <TimelineRowFrame row={assistantPartRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
               <OrchestraTurn
+                chrome={turnChrome()}
                 role="assistant"
                 head={!assistantPartRow().previousAssistantPart}
                 who={agentLabel(head()?.agent)}
@@ -1155,7 +1161,7 @@ export function MessageTimeline(props: {
         return (
           <TimelineRowFrame row={thinkingRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-              <OrchestraTurn role="assistant" head={false}>
+              <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
                 <TimelineThinkingRow
                   reasoningHeading={thinkingRow().reasoningHeading}
                   showReasoningSummaries={settings.general.showReasoningSummaries()}
@@ -1170,7 +1176,7 @@ export function MessageTimeline(props: {
         return (
           <TimelineRowFrame row={retryRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-              <OrchestraTurn role="assistant" head={false}>
+              <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
                 <SessionRetry status={sessionStatus()} show={activeMessageID() === retryRow().userMessageID} />
               </OrchestraTurn>
             </div>
@@ -1182,7 +1188,7 @@ export function MessageTimeline(props: {
         return (
           <TimelineRowFrame row={diffSummaryRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-              <OrchestraTurn role="assistant" head={false}>
+              <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
                 <TimelineDiffSummaryRow diffs={diffSummaryRow().diffs} />
               </OrchestraTurn>
             </div>
@@ -1194,7 +1200,7 @@ export function MessageTimeline(props: {
         return (
           <TimelineRowFrame row={errorRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-              <OrchestraTurn role="assistant" head={false}>
+              <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
                 <Card variant="error" class="error-card">
                   {errorRow().text}
                 </Card>
