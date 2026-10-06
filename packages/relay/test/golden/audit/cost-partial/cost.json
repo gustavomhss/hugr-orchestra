@@ -1,0 +1,68 @@
+{
+  "ledger": "test/golden/audit/cost-partial/input/ledger.jsonl",
+  "total": {
+    "in": 205,
+    "out": 41,
+    "cache_read": 1000,
+    "cache_write": 600,
+    "turns": 1,
+    "elapsed_s": 7
+  },
+  "states": [
+    {
+      "wp": "a",
+      "macro": "m1",
+      "elapsed_s": null,
+      "in": 5,
+      "out": 1,
+      "cache_read": 0,
+      "cache_write": 0,
+      "turns": 0
+    },
+    {
+      "wp": "b",
+      "macro": "m1",
+      "elapsed_s": 4
+    },
+    {
+      "wp": "c",
+      "macro": "m2",
+      "elapsed_s": 2,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": null
+    },
+    {
+      "wp": "d",
+      "macro": "m2",
+      "elapsed_s": 1,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    }
+  ],
+  "macros": [
+    {
+      "macro": "m1",
+      "elapsed_s": 4,
+      "in": 5,
+      "out": 1,
+      "cache_read": 0,
+      "cache_write": 0,
+      "turns": 0
+    },
+    {
+      "macro": "m2",
+      "elapsed_s": 3,
+      "in": 200,
+      "out": 40,
+      "cache_read": 1000,
+      "cache_write": 600,
+      "turns": 1
+    }
+  ]
+}

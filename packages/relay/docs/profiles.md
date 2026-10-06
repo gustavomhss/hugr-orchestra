@@ -221,11 +221,11 @@ lint, and runtime owners. Report residual gaps instead of silently weakening a c
 
 Use these fixtures to inspect recorded events and failure modes, not as guarantees for current profiles:
 
-- TDD: [live ledger](fixtures/tdd-feature-live.ledger.jsonl), [untracked-file defect](fixtures/tdd-feature-untracked-defect.ledger.jsonl).
-- WP execution: [live ledger](fixtures/wp-execute-live.ledger.jsonl), [judge-blind ledger](fixtures/wp-execute-judge-blind.ledger.jsonl).
-- Specification: [live ledger](fixtures/spec-decompose-live.ledger.jsonl), [unscoped review](fixtures/spec-decompose-unscoped-review.ledger.jsonl).
-- Research: [agent-driven snapshot](fixtures/research-v2-agent-driven-PASS.ledger.jsonl), [escalated snapshot](fixtures/research-v2-live-escalated.ledger.jsonl).
-- Gate concurrency: [forked historical chain](fixtures/gate-race-forked-chain.ledger.jsonl).
+- TDD: [live ledger](../test/fixtures/tdd-feature-live.ledger.jsonl), [untracked-file defect](../test/fixtures/tdd-feature-untracked-defect.ledger.jsonl).
+- WP execution: [live ledger](../test/fixtures/wp-execute-live.ledger.jsonl), [judge-blind ledger](../test/fixtures/wp-execute-judge-blind.ledger.jsonl).
+- Specification: [live ledger](../test/fixtures/spec-decompose-live.ledger.jsonl), [unscoped review](../test/fixtures/spec-decompose-unscoped-review.ledger.jsonl).
+- Research: [agent-driven snapshot](../test/fixtures/research-v2-agent-driven-PASS.ledger.jsonl), [escalated snapshot](../test/fixtures/research-v2-live-escalated.ledger.jsonl).
+- Gate concurrency: [forked historical chain](../test/fixtures/gate-race-forked-chain.ledger.jsonl).
 
 Read [self-graded review verdicts](FINDING-self-graded-review-verdicts.md) for the dated finding and
 current source-backed residuals. Preserve original ledgers; do not rewrite them to match today's controls.

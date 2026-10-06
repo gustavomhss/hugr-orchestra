@@ -1,0 +1,336 @@
+{
+  "ledger": "test/fixtures/research-v2-agent-driven-PASS.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 359 chained entries [PLAIN (SHA-256)], chain head bbd1aba3a76d…\n  (53 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "question-written",
+      "assert": "this state wrote the bound question",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "question_stated",
+      "assert": "question_stated",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "answer_shape_declared",
+      "assert": "answer_shape_declared",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "out_of_scope_declared",
+      "assert": "out_of_scope_declared",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "competing_hypotheses_enumerated",
+      "assert": "competing_hypotheses_enumerated",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "sources-written",
+      "assert": "this state wrote the source register",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "sources_registered",
+      "assert": "sources_registered",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "source_reliability_rated",
+      "assert": "source_reliability_rated",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "search_record_is_reproducible",
+      "assert": "search_record_is_reproducible",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "excluded_sources_recorded",
+      "assert": "excluded_sources_recorded",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "not_searched_declared",
+      "assert": "not_searched_declared",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "retrieved_sources_are_snapshotted",
+      "assert": "retrieved_sources_are_snapshotted",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "saturation_is_declared",
+      "assert": "saturation_is_declared",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "findings-written",
+      "assert": "this state wrote the findings register",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "memos-written",
+      "assert": "this state wrote analytic memos as it worked",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "evidence-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "evidence-review-is-substantive",
+      "assert": "the review carries at least 250 characters of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "evidence-review-engages-with-the-diff",
+      "assert": "evidence-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:cli:sonnet(votes:3/3)(non-independent)"
+    },
+    {
+      "id": "findings_registered",
+      "assert": "findings_registered",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_finding_has_a_falsifier",
+      "assert": "every_finding_has_a_falsifier",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "evidence_traces_to_a_source",
+      "assert": "evidence_traces_to_a_source",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "quotes_are_verbatim",
+      "assert": "quotes_are_verbatim",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "command_evidence_replays",
+      "assert": "command_evidence_replays",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "credibility_is_earned",
+      "assert": "credibility_is_earned",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_finding_is_compared_to_the_corpus",
+      "assert": "every_finding_is_compared_to_the_corpus",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "memos_were_written_during_the_work",
+      "assert": "memos_were_written_during_the_work",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "contest-written",
+      "assert": "this state wrote the contest record",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_finding_contested",
+      "assert": "every_finding_contested",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "contest_records_what_was_searched",
+      "assert": "contest_records_what_was_searched",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_finding_scored_against_every_hypothesis",
+      "assert": "every_finding_scored_against_every_hypothesis",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "non_diagnostic_findings_are_marked",
+      "assert": "non_diagnostic_findings_are_marked",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "hypotheses_are_refuted_or_survival_is_declared",
+      "assert": "hypotheses_are_refuted_or_survival_is_declared",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "contradictions_are_resolved_or_declared_open",
+      "assert": "contradictions_are_resolved_or_declared_open",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "conclusions-written",
+      "assert": "this state wrote the conclusions",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "synthesis-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "synthesis-review-is-substantive",
+      "assert": "the review carries at least 250 characters of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "synthesis-review-engages-with-the-diff",
+      "assert": "synthesis-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:cli:sonnet(votes:3/3)(non-independent)"
+    },
+    {
+      "id": "conclusions_cite_findings",
+      "assert": "conclusions_cite_findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "calibration_is_derived",
+      "assert": "calibration_is_derived",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "downgrades_name_a_grade_domain",
+      "assert": "downgrades_name_a_grade_domain",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "calibration_matches_the_evidence",
+      "assert": "calibration_matches_the_evidence",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "every_conclusion_says_what_would_change_it",
+      "assert": "every_conclusion_says_what_would_change_it",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "conclusions_answer_the_question",
+      "assert": "conclusions_answer_the_question",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report-written-here",
+      "assert": "this state wrote the report",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_written",
+      "assert": "report_written",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_carries_every_conclusion",
+      "assert": "report_carries_every_conclusion",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_labels_every_conclusion_with_its_calibration",
+      "assert": "report_labels_every_conclusion_with_its_calibration",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_declares_source_age",
+      "assert": "report_declares_source_age",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_carries_every_open_contradiction",
+      "assert": "report_carries_every_open_contradiction",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_states_the_rejected_hypotheses",
+      "assert": "report_states_the_rejected_hypotheses",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_states_the_setting",
+      "assert": "report_states_the_setting",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "report_confronts_the_prior_belief",
+      "assert": "report_confronts_the_prior_belief",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 50,
+  "deterministic_passed": 50,
+  "advisory": 2,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "PASS",
+  "exit": 0
+}

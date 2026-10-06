@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/record-invalid-event/input/ledger.jsonl",
+  "problems": []
+}

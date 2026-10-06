@@ -159,7 +159,7 @@ Preserve the plan alongside the trace. Source:
 [audit runtime tests](../tests/test_audit_runtime.py).
 
 [Recorded non-Claude harness](fixtures/non-claude-harness.sh) and
-[ledger](fixtures/non-claude-harness.ledger.jsonl) are evidence of one run.
+[ledger](../test/fixtures/non-claude-harness.ledger.jsonl) are evidence of one run.
 The harness has machine-local paths and gateway dependencies; adapt it before
 use. It does not establish general model quality. Arm lifecycle differs:
 [per-agent arms](per-agent-arms.md).

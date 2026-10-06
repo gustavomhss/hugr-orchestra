@@ -1,0 +1,11 @@
+{
+  "op": "project",
+  "name": "Invalid",
+  "sprint": {
+    "work_packages": [
+      {
+        "title": "no id"
+      }
+    ]
+  }
+}

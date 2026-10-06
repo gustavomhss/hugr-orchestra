@@ -1,0 +1,18 @@
+{
+  "ledger": "test/fixtures/tdd-feature-untracked-defect.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "implement.inject_context",
+      "macro": "implement",
+      "elapsed_s": null
+    },
+    {
+      "wp": "implement.write",
+      "macro": "implement",
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

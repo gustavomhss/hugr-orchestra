@@ -1,0 +1,7 @@
+{
+  "ledger": "test/fixtures/mutants/keyed.ledger.jsonl",
+  "keys": {
+    "keyed": "relay-golden-ledger-key",
+    "wrong-key": "relay-golden-wrong-key"
+  }
+}

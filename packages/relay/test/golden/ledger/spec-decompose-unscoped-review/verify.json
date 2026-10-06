@@ -1,0 +1,102 @@
+{
+  "ledger": "test/fixtures/spec-decompose-unscoped-review.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 77 chained entries [PLAIN (SHA-256)], chain head ba713adb4d03…\n  (22 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.\n  NOTE: trace ends on 'gate-fail', not a terminal event — possible tail-truncation; only an out-of-band anchor of the head can rule it out.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "invariants_registered",
+      "assert": "invariants_registered",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "each_invariant_grounded",
+      "assert": "each_invariant_grounded",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "each_invariant_falsifiable",
+      "assert": "each_invariant_falsifiable",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "invariants-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "invariants-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "invariants-review-engages-with-the-diff",
+      "assert": "invariants-review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    },
+    {
+      "id": "invariants_phase_validates",
+      "assert": "invariants_phase_validates",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements_atomic",
+      "assert": "requirements_atomic",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements_traced_to_invariants",
+      "assert": "requirements_traced_to_invariants",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "ambiguity_scan_done",
+      "assert": "ambiguity_scan_done",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements-review-verdict",
+      "assert": "the cold reviewer returned APPROVE",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements-review-is-substantive",
+      "assert": "the review carries at least 40 words of findings",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "requirements-review-engages-with-the-diff",
+      "assert": "requirements-review-engages-with-the-diff",
+      "verdict": "fail",
+      "graded_by": "judge:llm:claude-mistral-medium(non-independent)"
+    }
+  ],
+  "deterministic_total": 11,
+  "deterministic_passed": 11,
+  "advisory": 2,
+  "last_event": "gate-fail",
+  "truncated": true,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "TRUNCATED",
+  "exit": 2
+}

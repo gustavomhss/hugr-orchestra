@@ -1,0 +1,24 @@
+{
+  "op": "compile",
+  "document": {
+    "name": "Chain",
+    "nodes": [
+      {
+        "id": "load",
+        "name": "load",
+        "type": "relay.inject",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "text": [
+            "not",
+            "text"
+          ]
+        }
+      }
+    ],
+    "connections": {}
+  }
+}

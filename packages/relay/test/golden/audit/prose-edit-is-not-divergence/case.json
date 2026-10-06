@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/prose-edit-is-not-divergence/input/run",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

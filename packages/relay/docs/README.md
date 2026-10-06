@@ -37,7 +37,7 @@ It is the ownership inventory; do not maintain another source-file inventory in 
 [control-plane.md](control-plane.md), [relay-v2.md](relay-v2.md), [roadmaps](roadmaps/), and
 [self-graded review finding](FINDING-self-graded-review-verdicts.md) record decisions/measurements.
 Respect status labels and evidence limits. A dated outcome does not prove current correctness.
-Fixture prose/ledgers under [fixtures/](fixtures/) are frozen inputs, not operating instructions.
+Fixture prose under [fixtures/](fixtures/) and fixture ledgers under [test/fixtures/](../test/fixtures/) are frozen inputs, not operating instructions.
 
 ## Freshness contract
 

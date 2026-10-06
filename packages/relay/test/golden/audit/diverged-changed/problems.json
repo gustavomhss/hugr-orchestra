@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/diverged-changed/input/run/.relay-state/ledger.jsonl",
+  "problems": []
+}

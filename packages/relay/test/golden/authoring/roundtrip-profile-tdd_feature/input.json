@@ -1,0 +1,113 @@
+{
+  "op": "roundtrip",
+  "name": "Relay · tdd_feature",
+  "sprint": {
+    "brief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+    "gen": 0,
+    "retry_budget": 3,
+    "macros": [
+      {
+        "id": "implement",
+        "title": "Implement (TDD)"
+      },
+      {
+        "id": "review",
+        "title": "Review"
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "implement.inject_context",
+        "macro": "implement",
+        "kind": "inject",
+        "title": "Inject context",
+        "instructions": "Seed the task context",
+        "file": "",
+        "text": "Task: add a token-bucket rate limiter to the gateway.",
+        "checklist": []
+      },
+      {
+        "id": "implement.write",
+        "macro": "implement",
+        "kind": "execute",
+        "title": "Write code (TDD)",
+        "instructions": "Implement using the TDD skill",
+        "checklist": [
+          {
+            "id": "write-produced-a-change",
+            "assert": "this state changed something under the declared source or test paths",
+            "cmd": "git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .",
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "implement.checklist",
+        "macro": "implement",
+        "kind": "gate",
+        "title": "Implement gate",
+        "instructions": "Exit criteria for implementation",
+        "checklist": [
+          {
+            "id": "tests_written",
+            "assert": "tests_written",
+            "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          },
+          {
+            "id": "implementation_done",
+            "assert": "implementation_done",
+            "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          },
+          {
+            "id": "suite_green",
+            "assert": "suite_green",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "review.self_review",
+        "macro": "review",
+        "kind": "review",
+        "title": "Self review",
+        "instructions": "Review using the code-review protocol",
+        "checklist": [
+          {
+            "id": "review-is-substantive",
+            "assert": "the review artifact carries at least 50 words",
+            "cmd": "test \"$(wc -w < ${review_artifact})\" -ge 50",
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          },
+          {
+            "id": "review-engages-with-the-diff",
+            "context": [
+              "${review_artifact}"
+            ],
+            "judge": "Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+            "diff": true,
+            "blocking": true,
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "review.checklist",
+        "macro": "review",
+        "kind": "gate",
+        "title": "Review gate",
+        "instructions": "Exit criteria for review",
+        "checklist": [
+          {
+            "id": "review_done",
+            "assert": "review_done",
+            "cmd": "test -s ${review_artifact}",
+            "origin": "pe-profile:tdd_feature@1.0.0"
+          }
+        ]
+      }
+    ]
+  }
+}
