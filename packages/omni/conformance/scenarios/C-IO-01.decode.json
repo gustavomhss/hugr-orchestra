@@ -1,0 +1,10 @@
+{
+  "id": "C-IO-01.decode",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "out=A\\n\\xc3", "cat", "out=\\xa9\\xff\\n"], "options": {"stdin": "pipe"}, "as": "c"},
+    {"read": "c", "until": {"match": "^A$"}, "expect": {"stdout": "A\n"}},
+    {"write": "c", "close": true},
+    {"read": "c", "until": "end", "expect": {"stdout": "é�\n"}},
+    {"run": ["${FIXTURE}", "out=\\x00\\xff\\xc3\\r\\n"], "options": {"text": false}, "expect": {"exitCode": 0, "stdout": {"hex": "00ffc30d0a"}}}
+  ]
+}

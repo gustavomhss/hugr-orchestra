@@ -1,0 +1,68 @@
+# Release: builds the five platform packages, each on its own OS and CPU, packs it with the main package and proves a
+# clean install with npm, Bun and Deno (K9). The tarballs are the artifacts; publishing is the lead's, by hand, with
+# the owner's yes (platform packages first, hugr-omni last). Started by hand.
+name: release
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { id: linux-x64-gnu, os: ubuntu-24.04, addon: x86_64-unknown-linux-gnu, supervisor: x86_64-unknown-linux-musl }
+          - { id: linux-arm64-gnu, os: ubuntu-24.04-arm, addon: aarch64-unknown-linux-gnu, supervisor: aarch64-unknown-linux-musl }
+          - { id: darwin-arm64, os: macos-14, addon: aarch64-apple-darwin, supervisor: aarch64-apple-darwin }
+          - { id: darwin-x64, os: macos-15-intel, addon: x86_64-apple-darwin, supervisor: x86_64-apple-darwin }
+          - { id: win32-x64-msvc, os: windows-2022, addon: x86_64-pc-windows-msvc, supervisor: x86_64-pc-windows-msvc }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CARGO_TERM_COLOR: always
+      HUGR_BUN: npx -y bun@1
+      HUGR_DENO: npx -y deno@2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Rust toolchain and targets
+        shell: bash
+        run: |
+          rustup toolchain install
+          rustup target add ${{ matrix.addon }} ${{ matrix.supervisor }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.id }}
+          save-if: false
+      # Linux: the addon at the glibc 2.17 floor (zig), the supervisor static (musl).
+      - if: runner.os == 'Linux'
+        uses: mlugg/setup-zig@v2
+      - if: runner.os == 'Linux'
+        uses: taiki-e/install-action@v2
+        with: { tool: cargo-zigbuild }
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo zigbuild --release -p hugr-omni-node --target ${{ matrix.addon }}.2.17
+          cargo build --release -p omni-supervisor --target ${{ matrix.supervisor }}
+          F=$(objdump -T target/${{ matrix.addon }}/release/libhugr_omni_node.so | grep -o 'GLIBC_[0-9.]*' | sort -V | tail -1)
+          [ "$F" = GLIBC_2.17 ] || { echo "the addon needs $F, above the 2.17 floor"; exit 1; }
+      - name: Build (macOS, Windows)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: cargo build --release -p hugr-omni-node -p omni-supervisor --target ${{ matrix.addon }}
+      - name: Pack
+        shell: bash
+        run: node bindings/node/npm/pack.mjs dist ${{ matrix.id }}
+      - name: Clean install and run (npm, Bun, Deno)
+        shell: bash
+        run: for rt in node bun deno; do node bindings/node/npm/verify.mjs dist/tarballs $rt; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ matrix.id }}
+          path: dist/tarballs/*.tgz
+          if-no-files-found: error

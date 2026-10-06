@@ -1,0 +1,29 @@
+[package]
+name = "hugr-omni-node"
+description = "The Node/Bun/Deno binding of hugr-omni: the native addon behind bindings/node/index.js."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false # npm packaging is W14's (ADR-0004)
+
+[lib]
+name = "hugr_omni_node"
+crate-type = ["cdylib"]
+# The addon resolves the Node-API symbols from the host process at load time, so it only links as a cdylib: a test
+# harness of it would not link. Its proof is the TS suite (`bindings/node/test`), run on Node, Bun and Deno.
+test = false
+doctest = false
+
+[dependencies]
+hugr-omni = { path = "../../crates/hugr-omni" }
+# ADR-0004: Node-API 8 (Node 22+, Bun, Deno); no `tokio_rt` (the core owns the one tokio runtime), no async-runtime SPI.
+napi = { version = "3", default-features = false, features = ["napi8"] }
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "2"
+
+[lints]
+workspace = true

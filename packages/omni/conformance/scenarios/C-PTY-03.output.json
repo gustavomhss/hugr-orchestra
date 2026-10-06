@@ -1,0 +1,10 @@
+{
+  "id": "C-PTY-03.output",
+  "steps": [
+    {"run": ["${FIXTURE}", "out=héllo ✓\\n", "exit=0"], "options": {"pty": true}, "expect": {"exitCode": 0, "stdout": {"contains": "héllo ✓"}, "stderr": ""}},
+    {"run": ["${FIXTURE}", "lines=stdout:2000", "exit=0"], "options": {"pty": true}, "expect": {"exitCode": 0, "stdout": {"contains": "line 2000"}}},
+    {"spawn": ["${FIXTURE}", "out=LAST\\n", "exit=0"], "options": {"pty": true}, "as": "c"},
+    {"read": "c", "until": "end", "expect": {"pty": {"contains": "LAST"}}},
+    {"wait": "c", "expect": {"exitCode": 0, "reason": "exit"}}
+  ]
+}

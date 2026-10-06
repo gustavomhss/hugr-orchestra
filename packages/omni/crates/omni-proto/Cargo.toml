@@ -1,0 +1,12 @@
+[package]
+name = "omni-proto"
+description = "hugr-omni host <-> supervisor protocol (internal)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true

@@ -1,0 +1,3 @@
+# Contract items that cannot pass yet: `<ID> <WP>`, the owner from docs/acceptance.md. Only the lead edits this
+# file; it must be empty for a release. A pending item that fails is reported as `pending`; one that passes fails
+# the suite until its line is removed. The W03 items also wait for the spawn path (W04, W05/W06, W07).

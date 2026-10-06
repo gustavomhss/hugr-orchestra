@@ -1,0 +1,9 @@
+{
+  "id": "C-KILL-02.graceful",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "on-term=CLEANUP\\n", "ready", "hang"], "as": "c"},
+    {"read": "c", "until": {"match": "^READY$"}},
+    {"stop": "c", "graceMs": 5000, "expect": {"reason": "killed", "exitCode": 0, "success": false, "elapsedMs": {"lt": 1000}}},
+    {"read": "c", "until": "end", "expect": {"stdout": "CLEANUP\n"}}
+  ]
+}

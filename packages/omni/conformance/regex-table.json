@@ -1,0 +1,407 @@
+{
+ "about": "Differential table of the scenario regex subset (conformance/SPEC.md). Every runner compiles each accepted pattern with its own engine (JavaScript: new RegExp(p, \"u\"), matching by code point) and checks it: each `match` input matches, no `nomatch` input matches, and `group1` maps an input to the text of group 1. Every `refused` pattern must be refused by the runner's subset check.",
+ "accepted": [
+  {
+   "pattern": "^\\d+$",
+   "match": [
+    "0123456789"
+   ],
+   "nomatch": [
+    "٣",
+    "12a",
+    ""
+   ]
+  },
+  {
+   "pattern": "^\\D$",
+   "match": [
+    "a",
+    "é",
+    "٣"
+   ],
+   "nomatch": [
+    "5"
+   ]
+  },
+  {
+   "pattern": "^\\w+$",
+   "match": [
+    "aZ_9"
+   ],
+   "nomatch": [
+    "é",
+    "a-b"
+   ]
+  },
+  {
+   "pattern": "^\\W$",
+   "match": [
+    "-",
+    "é"
+   ],
+   "nomatch": [
+    "_",
+    "a"
+   ]
+  },
+  {
+   "pattern": "^[\\d,]+$",
+   "match": [
+    "1,2"
+   ],
+   "nomatch": [
+    "٣"
+   ]
+  },
+  {
+   "pattern": "^[^\\w]$",
+   "match": [
+    "é"
+   ],
+   "nomatch": [
+    "a"
+   ]
+  },
+  {
+   "pattern": "^a.b$",
+   "match": [
+    "axb",
+    "aéb",
+    "a\tb"
+   ],
+   "nomatch": [
+    "a\nb",
+    "a\rb",
+    "a b",
+    "a b"
+   ]
+  },
+  {
+   "pattern": "^[^�]*$",
+   "match": [
+    "abc\né"
+   ],
+   "nomatch": [
+    "a�"
+   ]
+  },
+  {
+   "pattern": "^(?:ab|c)+$",
+   "match": [
+    "abcab"
+   ],
+   "nomatch": [
+    "abx"
+   ]
+  },
+  {
+   "pattern": "^a{2,3}$",
+   "match": [
+    "aa",
+    "aaa"
+   ],
+   "nomatch": [
+    "a",
+    "aaaa"
+   ]
+  },
+  {
+   "pattern": "^a{2,}b?$",
+   "match": [
+    "aaab"
+   ],
+   "nomatch": [
+    "ab"
+   ]
+  },
+  {
+   "pattern": "^x\\u00e9\\x41$",
+   "match": [
+    "xéA"
+   ],
+   "nomatch": [
+    "xeA"
+   ]
+  },
+  {
+   "pattern": "^\\[\\(\\)\\]\\.\\$\\^\\{\\}\\|\\*\\+\\?\\\\-/$",
+   "match": [
+    "[()].$^{}|*+?\\-/"
+   ],
+   "nomatch": [
+    "x"
+   ]
+  },
+  {
+   "pattern": "^[(.$)]$",
+   "match": [
+    "(",
+    ".",
+    "$"
+   ],
+   "nomatch": [
+    "x"
+   ]
+  },
+  {
+   "pattern": "^\\t\\n$",
+   "match": [
+    "\t\n"
+   ],
+   "nomatch": [
+    "\t"
+   ]
+  },
+  {
+   "pattern": "SIZE 100 30(\\D|$)",
+   "match": [
+    "SIZE 100 30",
+    "\u001b[?25hSIZE 100 30\r"
+   ],
+   "nomatch": [
+    "SIZE 100 300"
+   ]
+  },
+  {
+   "pattern": "^PID \\d (\\d+)$",
+   "match": [
+    "PID 1 42"
+   ],
+   "nomatch": [
+    "PID 1 x"
+   ],
+   "group1": {
+    "PID 2 4711": "4711"
+   }
+  },
+  {
+   "pattern": "^(OUT|ERR)-1$",
+   "match": [
+    "OUT-1",
+    "ERR-1"
+   ],
+   "nomatch": [
+    "OUT-2"
+   ],
+   "group1": {
+    "ERR-1": "ERR"
+   }
+  },
+  {
+   "pattern": "a+?b",
+   "match": [
+    "aab"
+   ],
+   "nomatch": [
+    "b"
+   ]
+  },
+  {
+   "pattern": "^HEADabc[a-z]{993}$",
+   "match": [],
+   "nomatch": [
+    "HEADabc"
+   ]
+  },
+  {
+   "pattern": "^.$",
+   "match": [
+    "😀",
+    "𝒳",
+    "a"
+   ],
+   "nomatch": [
+    "😀𝒳",
+    ""
+   ]
+  },
+  {
+   "pattern": "^.{2}$",
+   "match": [
+    "😀𝒳",
+    "ab"
+   ],
+   "nomatch": [
+    "😀",
+    "abc"
+   ]
+  },
+  {
+   "pattern": "^\\D\\W$",
+   "match": [
+    "😀𝒳"
+   ],
+   "nomatch": [
+    "😀_",
+    "1𝒳"
+   ]
+  },
+  {
+   "pattern": "^[^a]$",
+   "match": [
+    "😀",
+    "𝒳"
+   ],
+   "nomatch": [
+    "a",
+    "😀😀"
+   ]
+  },
+  {
+   "pattern": "^[^\\d]+$",
+   "match": [
+    "😀𝒳a"
+   ],
+   "nomatch": [
+    "😀1"
+   ]
+  },
+  {
+   "pattern": "^😀+$",
+   "match": [
+    "😀",
+    "😀😀😀"
+   ],
+   "nomatch": [
+    "😀a",
+    ""
+   ]
+  },
+  {
+   "pattern": "^(?:𝒳|x){2,3}$",
+   "match": [
+    "𝒳x",
+    "𝒳𝒳𝒳"
+   ],
+   "nomatch": [
+    "𝒳",
+    "𝒳𝒳𝒳𝒳"
+   ]
+  },
+  {
+   "pattern": "^[😀-😂]$",
+   "match": [
+    "😁"
+   ],
+   "nomatch": [
+    "😃",
+    "a"
+   ]
+  },
+  {
+   "pattern": "^a(.)b$",
+   "match": [
+    "a😀b"
+   ],
+   "nomatch": [
+    "a😀😀b"
+   ],
+   "group1": {
+    "a𝒳b": "𝒳"
+   }
+  },
+  {
+   "pattern": "^(.+?)𝒳$",
+   "match": [
+    "😀😀𝒳"
+   ],
+   "nomatch": [
+    "𝒳"
+   ],
+   "group1": {
+    "😀a𝒳": "😀a"
+   }
+  },
+  {
+   "pattern": "^[\\w-]+$",
+   "match": [
+    "a-b_9"
+   ],
+   "nomatch": [
+    "😀"
+   ]
+  },
+  {
+   "pattern": "^[a\\-z]$",
+   "match": [
+    "-",
+    "a",
+    "z"
+   ],
+   "nomatch": [
+    "b"
+   ]
+  },
+  {
+   "pattern": "^a{2}?b$",
+   "match": [
+    "aab"
+   ],
+   "nomatch": [
+    "ab"
+   ]
+  },
+  {
+   "pattern": "^(?:(?:ab)+?c|x*?)$",
+   "match": [
+    "ababc",
+    "",
+    "xx"
+   ],
+   "nomatch": [
+    "abx"
+   ]
+  }
+ ],
+ "refused": [
+  "^(?!x)",
+  "a(?=b)",
+  "(?<=a)b",
+  "(?<!a)b",
+  "(a)\\1",
+  "(?<n>a)",
+  "(?P<n>a)",
+  "\\k<n>",
+  "(?i)a",
+  "(?s).",
+  "[a&&b]",
+  "[a--b]",
+  "[a~~b]",
+  "[[a]]",
+  "[]",
+  "[^]",
+  "\\p{L}",
+  "\\P{L}",
+  "\\s",
+  "\\S",
+  "\\b",
+  "\\B",
+  "\\A",
+  "\\z",
+  "a{,3}",
+  "a{",
+  "a}",
+  "]",
+  "[\\D]",
+  "\\x{41}",
+  "\\u{41}",
+  "\\0",
+  "[a",
+  "\\",
+  "a\\-b",
+  "\\uD83D\\uDE00",
+  "\\uDC00",
+  "[\\d-z]",
+  "[a-\\d]",
+  "[\\w-\\d]",
+  "^*",
+  "a++",
+  "a{2}{3}",
+  "$+",
+  "(*)",
+  "a|?b",
+  "(?:+)",
+  "a???",
+  "a*{2}"
+ ]
+}

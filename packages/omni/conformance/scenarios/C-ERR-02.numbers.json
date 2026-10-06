@@ -1,0 +1,12 @@
+{
+  "id": "C-ERR-02.numbers",
+  "langs": ["ts", "py"],
+  "steps": [
+    {"spawn": ["${FIXTURE}"], "options": {"timeoutMs": -1}, "expect": {"error": "INVALID_ARGUMENT", "message": ["timeout"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"timeoutMs": {"$number": "NaN"}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["timeout"]}},
+    {"run": ["${FIXTURE}"], "options": {"graceMs": {"$number": "Infinity"}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["grace"]}},
+    {"run": ["${FIXTURE}"], "options": {"maxOutputBytes": -1}, "expect": {"error": "INVALID_ARGUMENT", "message": ["utput"]}},
+    {"run": ["${FIXTURE}"], "options": {"maxOutputBytes": 1.5}, "expect": {"error": "INVALID_ARGUMENT", "message": ["utput"]}},
+    {"spawn": ["${FIXTURE}", "tty"], "options": {"pty": {"cols": 1.5, "rows": 24}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["cols"]}}
+  ]
+}

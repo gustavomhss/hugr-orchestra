@@ -1,0 +1,8 @@
+{
+  "id": "C-EXIT-01.signal",
+  "os": ["linux", "macos"],
+  "steps": [
+    {"run": ["${FIXTURE}", "signal=SIGTERM"], "expect": {"exitCode": null, "signal": "SIGTERM", "reason": "signal", "success": false}},
+    {"run": ["${FIXTURE}", "signal=SIGKILL"], "expect": {"exitCode": null, "signal": "SIGKILL", "reason": "signal", "success": false}}
+  ]
+}

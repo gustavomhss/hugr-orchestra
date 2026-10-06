@@ -1,0 +1,14 @@
+{
+  "id": "C-PTY-01.size",
+  "steps": [
+    {"run": ["${FIXTURE}", "tty"], "options": {"pty": true}, "expect": {"exitCode": 0, "stdout": {"contains": "\"stdin\":true,\"stdout\":true,\"stderr\":true,\"cols\":80,\"rows\":24}"}, "stderr": ""}},
+    {"spawn": ["${FIXTURE}", "sizes"], "options": {"pty": {"cols": 100, "rows": 30}}, "as": "c"},
+    {"read": "c", "until": {"match": "SIZE 100 30(\\D|$)"}},
+    {"resize": "c", "cols": 120, "rows": 40},
+    {"read": "c", "until": {"match": "SIZE 120 40(\\D|$)"}},
+    {"resize": "c", "cols": 0, "rows": 40, "expect": {"error": "INVALID_ARGUMENT"}},
+    {"stop": "c", "expect": {"reason": "killed"}},
+    {"resize": "c", "cols": 90, "rows": 25, "expect": {"error": "CLOSED"}},
+    {"run": ["${FIXTURE}", "tty"], "options": {"pty": true, "input": "x"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["input"]}}
+  ]
+}

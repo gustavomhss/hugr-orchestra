@@ -1,0 +1,12 @@
+{
+  "id": "C-EXIT-01.codes",
+  "steps": [
+    {"run": ["${FIXTURE}", "exit=0"], "expect": {"exitCode": 0, "signal": null, "reason": "exit", "success": true}},
+    {"run": ["${FIXTURE}", "exit=1"], "expect": {"exitCode": 1, "signal": null, "reason": "exit", "success": false}},
+    {"run": ["${FIXTURE}", "exit=42"], "expect": {"exitCode": 42, "signal": null, "reason": "exit", "success": false}},
+    {"run": ["${FIXTURE}", "exit=255"], "expect": {"exitCode": 255, "signal": null, "reason": "exit", "success": false}},
+    {"spawn": ["${FIXTURE}", "exit=42"], "as": "c"},
+    {"wait": "c", "expect": {"exitCode": 42, "reason": "exit"}},
+    {"wait": "c", "expect": {"exitCode": 42, "reason": "exit"}}
+  ]
+}

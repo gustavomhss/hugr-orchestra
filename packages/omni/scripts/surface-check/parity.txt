@@ -1,0 +1,46 @@
+# The parity map (C-PAR-01): which public item of each language belongs to which concept of the glossary
+# (docs/api-contract.md §2). `parity.mjs` reads the glossary, `bindings/node/index.d.ts` and the core crate's public
+# API, and fails when any of them and this file disagree, in either direction.
+#
+# [parity] rows:  <concept> | <TypeScript items> | <Rust items>
+#   - the concept is spelled exactly as in the glossary; every glossary concept has exactly one row;
+#   - every public item of each language appears in exactly one row; a name that does not exist is an error;
+#   - TypeScript items: `run`, `Type`, `Type.member`, `Type.member.nested`;
+#   - Rust items: `Type`, `Type.field`, `Type::method`;
+#   - a line that starts with a space continues the row above.
+# Adding a capability to one language means adding it here, which means placing it in a concept, which means
+# adding it to the other language too (INV-02): the check refuses a row with nothing on one side.
+# Python joins in v0.2 as a third column.
+# Declared limit: the rows place capabilities (functions, options, fields, types). The values inside a type, Rust enum
+# variants and TypeScript string-literal unions (error codes, `reason`, `stream`, `stdin`), are not compared across
+# languages: full C-PAR-01 is v0.2.
+#
+# [excluded]: words that name a capability the project decided against. No public item of any language, and no
+# glossary concept, may carry one of these words in its name (`<word> | where it was decided`).
+
+[excluded]
+shell | INV-03 (PLAN §4.3): no shell, ever
+kill | PLAN §3: `stop()` ends the tree, there is no `kill()`
+sandbox | PLAN phases 2-3: arrives with SANDBOX_UNAVAILABLE, not in v0.1 (docs/api-contract.md §11)
+label | PLAN Apêndice E, `processes()` decision: no agent or session label
+
+[parity]
+run | run, CommonOptions, RunOptions | Command, Command::new, Command::arg, Command::args, Command::run
+spawn | spawn, SpawnOptions, PipeChild | Command::spawn, Command::spawn_pty, PipeChild
+cwd | CommonOptions.cwd | Command::cwd
+environment | CommonOptions.env, CommonOptions.inheritEnv | Command::env, Command::env_remove, Command::inherit_env
+terminal | RunOptions.pty, SpawnOptions.pty, spawn.pty, PtyOption, PtyOption.cols, PtyOption.rows, PtyChild, PtyChild.resize | Command::pty, PtySize, PtySize.cols, PtySize.rows, PtyChild, PtyChild::resize
+timeout | CommonOptions.timeoutMs | Command::timeout
+grace | CommonOptions.graceMs, Child.stop.graceMs | Command::grace
+cancellation | CommonOptions.signal | Command::cancel_on, CancellationToken
+stdin | RunOptions.input, SpawnOptions.stdin, Child.write, PipeChild.closeStdin | Command::input, Command::stdin, Stdin, Child::write, PipeChild::close_stdin
+output limit | RunOptions.maxOutputBytes | Command::max_output_bytes
+text vs bytes | CommonOptions.text, run.text, spawn.text | Command::text, Data
+output | CommonOptions.mergeStderr, Child.output, Child.lines, Child.droppedBytes, Child.droppedBytes.stdout, Child.droppedBytes.stderr,
+  Chunk, Chunk.stream, Chunk.data, Chunk.lostBefore, Line, Line.stream, Line.text, Line.lostBefore, Line.continues |
+  Command::merge_stderr, Child::output, Child::lines, Child::dropped_bytes, DroppedBytes, DroppedBytes.stdout, DroppedBytes.stderr,
+  Output, Output::next, Lines, Lines::next, Chunk, Chunk.stream, Chunk.data, Chunk.lost_before, Line, Line.stream, Line.text,
+  Line.lost_before, Line.continues, Stream
+Child | Child, Child.pid, Child.wait, Child.stop, Child.processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parentPid, ProcessInfo.name | Child, Child::pid, Child::wait, Child::stop, Child::processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parent_pid, ProcessInfo.name
+Exit / RunResult | Exit, Exit.exitCode, Exit.signal, Exit.reason, Exit.success, RunResult, RunResult.stdout, RunResult.stderr | Exit, Exit.code, Exit.signal, Exit.reason, Exit::success, Reason, RunOutput, RunOutput.exit, RunOutput.stdout, RunOutput.stderr
+OmniError | OmniError, OmniError.code, OmniError.result | Error, Error::code, Error::result, ErrorCode, ErrorCode::as_str
