@@ -158,7 +158,7 @@ eventos AT-SPI), #36 (papéis legíveis únicos, `ui_enter` estável, dicas de a
 
 | Rodada | Resultado | Causa / correção |
 |---|---|---|
-| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como opencode |
+| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como opencode; revertido para identidade do Orchestra ("Linux workspace specialist on the Orchestra team"), pois o Orchestra não guarda identidade do opencode — se o free tier recusar de novo, usar outro provedor |
 | 8–10 | ponte nunca liga | carga (memória/swap); preparação do helper morta a cada timeout → preparação em fundo |
 | 11 | lê, mas configurações do VS Code estouram | varreduras repetidas e custo quadrático → #34 |
 | 12 | liga a opção pela UI; não desfaz; 9× `xdotool` | faltavam verbos (foco, ponteiro), papéis inconsistentes → #36, #40 |
