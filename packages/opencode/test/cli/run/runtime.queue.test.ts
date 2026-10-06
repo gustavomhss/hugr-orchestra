@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { runPromptQueue } from "@/cli/cmd/run/runtime.queue"
 import type { FooterApi, FooterEvent, RunPrompt, StreamCommit } from "@/cli/cmd/run/types"
+import { rethrow } from "../../lib/rejection"
 
 function footer() {
   const prompts = new Set<(input: RunPrompt) => void>()
@@ -476,6 +477,6 @@ describe("run runtime queue", () => {
     })
 
     ui.submit("one")
-    await expect(task).rejects.toThrow("boom")
+    expect(await rethrow(task)).toThrow("boom")
   })
 })

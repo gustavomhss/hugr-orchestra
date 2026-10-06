@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { unlink, symlink } from "node:fs/promises"
 import { recoveryBegin, recoveryPrepare, recoveryRestore } from "../src/governance/recovery.ts"
 import { fixture, operation, check, capture } from "./fixtures.governance.ts"
+import { rethrow } from "./rejection.ts"
 test("selective recovery restores committed owned file; preserves user dirt, untracked, HEAD/index", async () => {
   const f = await fixture()
   const baseline = await f.init()
@@ -27,7 +28,7 @@ test("recovery refuses concurrent dirt changes after prepare", async () => {
   await Bun.write(join(f.root, "owned.ts"), "wave dirt\n")
   const plan = await recoveryPrepare(f.context, f.root, "wave")
   await Bun.write(join(f.root, "other.ts"), "concurrent user edit\n")
-  await expect(recoveryRestore(f.context, f.root, plan.token)).rejects.toThrow("RECOVERY_CONCURRENT_HEAD_OR_DIRT_CHANGED")
+  expect(await rethrow(recoveryRestore(f.context, f.root, plan.token))).toThrow("RECOVERY_CONCURRENT_HEAD_OR_DIRT_CHANGED")
   expect(await Bun.file(join(f.root, "owned.ts")).text()).toBe("wave dirt\n")
 })
 test("recovery refuses concurrent HEAD changes after prepare", async () => {
@@ -39,19 +40,19 @@ test("recovery refuses concurrent HEAD changes after prepare", async () => {
   await Bun.write(join(f.root, "other.ts"), "new committed head\n")
   await f.runGit("add", "other.ts")
   await f.runGit("commit", "-m", "fix: concurrent head")
-  await expect(recoveryRestore(f.context, f.root, plan.token)).rejects.toThrow("RECOVERY_CONCURRENT_HEAD_OR_DIRT_CHANGED")
+  expect(await rethrow(recoveryRestore(f.context, f.root, plan.token))).toThrow("RECOVERY_CONCURRENT_HEAD_OR_DIRT_CHANGED")
   expect(await Bun.file(join(f.root, "owned.ts")).text()).toBe("wave dirt\n")
 })
 test("recovery native edit denial prevents restore and ownership cannot include untracked/dirty files", async () => {
   const f = await fixture()
   await f.init()
   await Bun.write(join(f.root, "untracked.ts"), "user file\n")
-  await expect(recoveryBegin(f.context, f.root, "bad", ["untracked.ts"])).rejects.toThrow("RECOVERY_NOT_COMMITTED_REGULAR_FILE")
+  expect(await rethrow(recoveryBegin(f.context, f.root, "bad", ["untracked.ts"]))).toThrow("RECOVERY_NOT_COMMITTED_REGULAR_FILE")
   await recoveryBegin(f.context, f.root, "wave", ["owned.ts"])
   await Bun.write(join(f.root, "owned.ts"), "wave dirt\n")
-  await expect(recoveryBegin(f.context, f.root, "dirty", ["owned.ts"])).rejects.toThrow("RECOVERY_BASELINE_OWNED_FILE_DIRTY")
+  expect(await rethrow(recoveryBegin(f.context, f.root, "dirty", ["owned.ts"]))).toThrow("RECOVERY_BASELINE_OWNED_FILE_DIRTY")
   const plan = await recoveryPrepare(f.context, f.root, "wave")
-  await expect(recoveryRestore({ ...f.context, async authorize(request) { if (request.effect === "write") throw new Error("HOST_EDIT_DENIED") } }, f.root, plan.token)).rejects.toThrow("HOST_EDIT_DENIED")
+  expect(await rethrow(recoveryRestore({ ...f.context, async authorize(request) { if (request.effect === "write") throw new Error("HOST_EDIT_DENIED") } }, f.root, plan.token))).toThrow("HOST_EDIT_DENIED")
   expect(await Bun.file(join(f.root, "owned.ts")).text()).toBe("wave dirt\n")
 })
 test("recovery replay uses actual status, preserves green and names missing/skips for retry", async () => {
@@ -69,7 +70,7 @@ test("recovery re-creates deleted committed owned file and rejects symlink subst
   await unlink(join(f.root, "owned.ts"))
   await Bun.write(join(f.state, "outside.ts"), "outside user file\n")
   await symlink(join(f.state, "outside.ts"), join(f.root, "owned.ts"))
-  await expect(recoveryPrepare(f.context, f.root, "wave")).rejects.toThrow("PATH_SYMLINK_DENIED")
+  expect(await rethrow(recoveryPrepare(f.context, f.root, "wave"))).toThrow("PATH_SYMLINK_DENIED")
   expect(await Bun.file(join(f.state, "outside.ts")).text()).toBe("outside user file\n")
 })
 test("recovery restores binary blobs byte-for-byte without text decoding", async () => {
@@ -89,8 +90,8 @@ test("recovery ownership refuses git metadata under either separator and its NTF
   const f = await fixture()
   await f.init()
   // Pure string refusal, so it holds on every OS; on Windows these spellings open the real .git directory.
-  await Promise.all([".git\\config", "sub\\.git\\HEAD", ".GIT/config", "git~1\\config", ".git.\\config", "C:.git\\config", "\\\\server\\share\\owned.ts"].map((path) =>
-    expect(recoveryBegin(f.context, f.root, "wave", [path])).rejects.toThrow("RECOVERY_GIT_METADATA_DENIED")))
+  await Promise.all([".git\\config", "sub\\.git\\HEAD", ".GIT/config", "git~1\\config", ".git.\\config", "C:.git\\config", "\\\\server\\share\\owned.ts"].map(async (path) =>
+    expect(await rethrow(recoveryBegin(f.context, f.root, "wave", [path]))).toThrow("RECOVERY_GIT_METADATA_DENIED")))
   expect(f.permissions.some((request) => request.effect === "read")).toBe(false)
 })
 test("recovery restores an owned file in a subdirectory", async () => {

@@ -6,6 +6,7 @@ import { captureContext } from "../src/context"
 import type { ArsenalContext } from "../src/contract"
 import { validateArgs } from "../src/validate"
 import { fixture } from "./fixture"
+import { rethrow } from "./rejection"
 
 test("selected handler consumes a validated snapshot across lazy import, never caller mutation", async () => {
   const calls = { getter: 0 }
@@ -35,7 +36,7 @@ test("context capture drops pure authority and freezes declared effectful author
   context.authorize = async () => { throw new Error("replacement authorizer reached") }
   expect(Object.isFrozen(captured)).toBe(true)
   await captured.authorize({ effect: "read", paths: ["/original/file"], commands: [] })
-  await expect(captured.authorize({ effect: "process", paths: [], commands: ["git merge topic"] })).rejects.toThrow("undeclared_effect")
+  expect(await rethrow(captured.authorize({ effect: "process", paths: [], commands: ["git merge topic"] }))).toThrow("undeclared_effect")
   expect(calls).toEqual([{ directory: "/original", effect: "read", frozen: true }])
   const effect = { reads: 0 }
   await captured.authorize({ get effect() { return ++effect.reads === 1 ? "read" : "process" }, paths: ["/original/file"], commands: [] })

@@ -7,6 +7,7 @@ import { APICallError } from "ai"
 import { ProviderError } from "../../src/provider/error"
 import { OpenAIWebSocket } from "../../src/plugin/openai/ws"
 import { OpenAIWebSocketPool, TITLE_HEADER } from "../../src/plugin/openai/ws-pool"
+import { rejection, rethrow } from "../lib/rejection"
 
 describe("plugin.openai.ws", () => {
   test("derives websocket URLs and sends auth plus protocol headers", async () => {
@@ -36,24 +37,28 @@ describe("plugin.openai.ws", () => {
   test("enforces websocket connect timeout", async () => {
     await using server = await createHangingTcpServer()
 
-    await expect(
-      OpenAIWebSocket.connectResponsesWebSocket({
-        url: server.wsUrl,
-        headers: {},
-        timeout: 20,
-      }),
-    ).rejects.toThrow("WebSocket connect timed out")
+    expect(
+      await rethrow(
+        OpenAIWebSocket.connectResponsesWebSocket({
+          url: server.wsUrl,
+          headers: {},
+          timeout: 20,
+        }),
+      ),
+    ).toThrow("WebSocket connect timed out")
   })
 
   test("surfaces websocket upgrade rejection messages", async () => {
     await using server = await createRejectingWebSocketServer(() => {})
 
-    await expect(
-      OpenAIWebSocket.connectResponsesWebSocket({
-        url: server.wsUrl,
-        headers: {},
-      }),
-    ).rejects.toThrow("Expected 101 status code")
+    expect(
+      await rethrow(
+        OpenAIWebSocket.connectResponsesWebSocket({
+          url: server.wsUrl,
+          headers: {},
+        }),
+      ),
+    ).toThrow("Expected 101 status code")
   })
 
   test("enforces websocket send idle timeout", async () => {
@@ -812,16 +817,9 @@ function streamRequest(headers?: Record<string, string>, signal?: AbortSignal): 
 }
 
 async function readTextError(promise: Promise<string>) {
-  // Bun 1.3.14 hangs on expect(response.text()).rejects for streams errored from ws callbacks.
-  return promise.then(
-    () => {
-      throw new Error("Expected response text to reject")
-    },
-    (error) => {
-      expect(error).toBeInstanceOf(Error)
-      return error as Error
-    },
-  )
+  const error = await rejection(promise)
+  expect(error).toBeInstanceOf(Error)
+  return error as Error
 }
 
 async function createWebSocketServer(onConnection: (socket: WebSocket, request: IncomingMessage) => void) {

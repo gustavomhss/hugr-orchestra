@@ -54,7 +54,7 @@ test("dock_action target locates and acts in one call, refusing ambiguity withou
   expect(JSON.parse(String(await actions.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "action-ambiguous", outcome: "not-dispatched" })
   expect([...two.calls, ...actions.calls].every((call) => call.op === "read")).toBe(true)
-  await expect(one.hooks.tool.dock_action.execute({ ref: "n:a" }, context)).resolves.toContain("needs the actionID")
+  expect(await one.hooks.tool.dock_action.execute({ ref: "n:a" }, context)).toContain("needs the actionID")
 })
 
 test("target mutation retries only a certainly-undispatched stale ref, never an unknown outcome", async () => {
@@ -74,7 +74,7 @@ test("dock_type target selects only fields with the requested native input capab
   const result = await hooks.tool.dock_type.execute({ target: { name: "search" }, text: "café 漢字 🧪", mode: "keyboard" }, context)
   expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
   expect(calls.at(-1)).toEqual({ op: "type", args: { ref: "n:field", text: "café 漢字 🧪", mode: "keyboard" } })
-  await expect(hooks.tool.dock_type.execute({ text: "x" }, context)).resolves.toBe("dock_type requires ref or target")
+  expect(await hooks.tool.dock_type.execute({ text: "x" }, context)).toBe("dock_type requires ref or target")
 })
 
 test("dock_action target prefers the one control whose whole name equals the query among partial matches", async () => {

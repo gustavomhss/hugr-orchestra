@@ -5,6 +5,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import { McpCatalog } from "@/mcp/catalog"
 import { Effect } from "effect"
+import { rethrow } from "../lib/rejection"
 
 const options = { toolCallId: "call_mcp", abortSignal: new AbortController().signal } as any
 
@@ -98,7 +99,7 @@ test("preserves output schema validation across paginated tool discovery", async
   try {
     const tools = await Effect.runPromise(McpCatalog.defs(client))
     expect(tools?.map((tool) => tool.name)).toEqual(["first", "second"])
-    await expect(client.callTool({ name: "first", arguments: {} })).rejects.toThrow(
+    expect(await rethrow(client.callTool({ name: "first", arguments: {} }))).toThrow(
       "Structured content does not match the tool's output schema",
     )
   } finally {

@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import { closeFixtures, confirm, fixture, identity, observe, target, turn } from "./app-dock-rpc-workspace.fixture"
+import { rejection } from "./rejection.fixture"
 
 afterEach(closeFixtures)
 
@@ -29,8 +30,8 @@ test("rebind: same-client fresh reads await old unbind, rotate bindings/refs, an
   const third = await f.json("dock_read") as { bindingID: string; ref: string }
   expect(third.bindingID).not.toBe(second.bindingID)
   expect(third.ref).not.toBe(second.ref)
-  await expect(prepared.client.request({ op: "action", bindingID: first.bindingID, bindingEpoch: first.bindingID,
-    args: { ref: first.ref, actionID: "action" } })).rejects.toMatchObject({ code: "stale-binding" })
+  expect(await rejection(prepared.client.request({ op: "action", bindingID: first.bindingID, bindingEpoch: first.bindingID,
+    args: { ref: first.ref, actionID: "action" } }))).toMatchObject({ code: "stale-binding" })
   expect(await f.json("dock_action", { ref: first.ref, actionID: "action" })).toMatchObject({ code: "stale-ref" })
   expect(await f.json("dock_action", { ref: third.ref, actionID: "action" })).toEqual(wire.receipt)
   expect(f.clients).toHaveLength(1)

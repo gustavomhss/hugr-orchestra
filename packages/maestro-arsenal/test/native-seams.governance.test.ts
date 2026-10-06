@@ -17,6 +17,7 @@ import ledger from "../src/tools/wave-ledger.ts"
 import scheduler from "../src/tools/wave-scheduler.ts"
 import governance from "../src/tools/governance.ts"
 import { fixture, operation, result, capture, check, provenance } from "./fixtures.governance.ts"
+import { rethrow } from "./rejection.ts"
 const digest = (text: string) => createHash("sha256").update(text).digest("hex")
 
 test("authoritative pure descriptors match handlers, include required governance, fit native describe bound", () => {
@@ -97,7 +98,7 @@ test("persisted completion contracts bind actual compiled host checks in ordered
   expect(green.status).toBe("PASS")
   expect(green.authoritative).toBe(true)
   expect(green.checksExecuted).toBe(2)
-  await expect(runCompletion(f.context, token, "other-session", { "check-one": actualCheck(0, head) })).rejects.toThrow("COMPLETION_SESSION_BINDING_MISMATCH")
+  expect(await rethrow(runCompletion(f.context, token, "other-session", { "check-one": actualCheck(0, head) }))).toThrow("COMPLETION_SESSION_BINDING_MISMATCH")
   const supplied = await operation<{ authoritative: boolean; checksExecuted: boolean }>({ operation: "completion-check", contract, checks: capture(check("one"), check("two")), bindings: ["check-one", "check-two"] }, f.context)
   expect(supplied.authoritative).toBe(false)
   expect(supplied.checksExecuted).toBe(false)
@@ -129,21 +130,21 @@ test("explicit release run executes committed actual repository recipe, verifies
   expect(await operation(f.input, f.context)).toMatchObject({ executed: true, tag: "v1.0.0", target: f.head, rollbackClaim: false })
   expect(await f.runGit("rev-parse", "v1.0.0^{commit}")).toBe(f.head)
   expect(await f.runGit("cat-file", "-t", "v1.0.0")).toBe("tag")
-  await expect(operation(f.input, f.context)).rejects.toThrow("RELEASE_TAG_EXISTS")
+  expect(await rethrow(operation(f.input, f.context))).toThrow("RELEASE_TAG_EXISTS")
 })
 test("release recipe path refuses git metadata under either separator before reading it", async () => {
   const f = await releaseFixture()
-  await Promise.all([".git\\hooks\\pre-commit", "sub\\.git\\HEAD", ".GIT/config"].map((recipePath) =>
-    expect(operation({ ...f.input, recipePath }, f.context)).rejects.toThrow("RELEASE_RECIPE_PATH_INVALID")))
+  await Promise.all([".git\\hooks\\pre-commit", "sub\\.git\\HEAD", ".GIT/config"].map(async (recipePath) =>
+    expect(await rethrow(operation({ ...f.input, recipePath }, f.context))).toThrow("RELEASE_RECIPE_PATH_INVALID")))
   expect(f.permissions.filter((request) => request.effect === "read").flatMap((request) => request.paths).every((path) => path === f.root)).toBe(true)
   expect(await f.runGit("tag", "--list")).toBe("")
 })
 test("release native process denial, changed recipe and userApproved boolean cannot authorize local tag", async () => {
   const f = await releaseFixture()
-  await expect(operation(f.input, { ...f.context, async authorize(request) { if (request.commands.some((command) => command.startsWith("'bash'"))) throw new Error("NATIVE_RELEASE_DENIED") } })).rejects.toThrow("NATIVE_RELEASE_DENIED")
+  expect(await rethrow(operation(f.input, { ...f.context, async authorize(request) { if (request.commands.some((command) => command.startsWith("'bash'"))) throw new Error("NATIVE_RELEASE_DENIED") } }))).toThrow("NATIVE_RELEASE_DENIED")
   expect(await f.runGit("tag", "--list")).toBe("")
   expect(validateArgs(governanceToolDescriptor.inputSchema, { ...f.input, userApproved: true }).ok).toBe(false)
-  await expect(operation({ ...f.input, recipeDigest: "0".repeat(64) }, f.context)).rejects.toThrow("RELEASE_RECIPE_CHANGED")
+  expect(await rethrow(operation({ ...f.input, recipeDigest: "0".repeat(64) }, f.context))).toThrow("RELEASE_RECIPE_CHANGED")
   expect(await f.runGit("tag", "--list")).toBe("")
 })
 test("release recipe exit zero without real tag cannot report completed adaptation", async () => {
@@ -153,7 +154,7 @@ test("release recipe exit zero without real tag cannot report completed adaptati
   await f.runGit("add", "release.sh")
   await f.runGit("commit", "-m", "test: missing tag postcondition")
   const head = await f.runGit("rev-parse", "HEAD")
-  await expect(operation({ ...f.input, recipeDigest: digest(noTagRecipe), operatorRequest: { ...f.input.operatorRequest, expectedHead: head } }, f.context)).rejects.toThrow("PROCESS_ACQUISITION_FAILED")
+  expect(await rethrow(operation({ ...f.input, recipeDigest: digest(noTagRecipe), operatorRequest: { ...f.input.operatorRequest, expectedHead: head } }, f.context))).toThrow("PROCESS_ACQUISITION_FAILED")
   expect(await f.runGit("tag", "--list")).toBe("")
 })
 test("ruleset run native denial happens before real gh invocation, leaves repository/state untouched", async () => {
@@ -161,7 +162,7 @@ test("ruleset run native denial happens before real gh invocation, leaves reposi
   const head = await f.init()
   const before = await readdir(f.root)
   const input = { operation: "ruleset-run" as const, operatorRequest: { requestID: "operator-request", action: "apply-ruleset" as const, expectedHead: head }, repository: "owner/repo" }
-  await expect(operation(input, { ...f.context, async authorize(request) { if (request.commands.some((command) => command.startsWith("'gh'"))) throw new Error("NATIVE_REMOTE_DENIED") } })).rejects.toThrow("NATIVE_REMOTE_DENIED")
+  expect(await rethrow(operation(input, { ...f.context, async authorize(request) { if (request.commands.some((command) => command.startsWith("'gh'"))) throw new Error("NATIVE_REMOTE_DENIED") } }))).toThrow("NATIVE_REMOTE_DENIED")
   expect(await readdir(f.root)).toEqual(before)
   expect(await readdir(f.state)).toEqual([])
   expect(await f.runGit("rev-parse", "HEAD")).toBe(head)
@@ -180,13 +181,13 @@ test("changelog write performs authorized atomic edit, preserves published entry
   const head = await f.init()
   const current = await Bun.file(join(f.root, "CHANGELOG.md")).text()
   const input = { operation: "changelog-write" as const, operatorRequest: { requestID: "operator-request", action: "write-changelog" as const, expectedHead: head }, changelogPath: "CHANGELOG.md", expectedDigest: digest(current), version: "1.1.0", title: "Operator release", date: "2026-10-01" }
-  await expect(operation(input, { ...f.context, async authorize(request) { if (request.effect === "write") throw new Error("NATIVE_CHANGELOG_DENIED") } })).rejects.toThrow("NATIVE_CHANGELOG_DENIED")
+  expect(await rethrow(operation(input, { ...f.context, async authorize(request) { if (request.effect === "write") throw new Error("NATIVE_CHANGELOG_DENIED") } }))).toThrow("NATIVE_CHANGELOG_DENIED")
   expect(await Bun.file(join(f.root, "CHANGELOG.md")).text()).toBe(current)
   expect(await operation(input, f.context)).toMatchObject({ written: true, version: "1.1.0", curated: false })
   const next = await Bun.file(join(f.root, "CHANGELOG.md")).text()
   expect(next).toContain("## [1.1.0]")
   expect(next).toContain(current.slice(current.indexOf("## [1.0.0]")))
-  await expect(operation(input, f.context)).rejects.toThrow("CHANGELOG_CHANGED")
+  expect(await rethrow(operation(input, f.context))).toThrow("CHANGELOG_CHANGED")
 })
 test("actual SHA-256 Git repositories work for acquisition, preflight and selective restoration", async () => {
   const f = await fixture()

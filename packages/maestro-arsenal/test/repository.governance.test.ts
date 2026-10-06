@@ -4,6 +4,7 @@ import { join } from "node:path"
 import { changeBudget, changedFiles, selectCI, changelog, releaseProposal } from "../src/governance/repository.ts"
 import { fixture, operation, capture, check } from "./fixtures.governance.ts"
 import { processOutput, PROCESS_BYTES } from "../src/governance/process.ts"
+import { rethrow } from "./rejection.ts"
 
 test("budget acquires real Git diff/untracked data, partitions reviewers and fails actual hard cap", async () => {
   const f = await fixture()
@@ -15,13 +16,13 @@ test("budget acquires real Git diff/untracked data, partitions reviewers and fai
   expect(report.status).toBe("FAIL")
   expect(report.reviewerPartitions.flatMap((part) => part.paths).sort()).toEqual(["new.ts", "owned.ts"])
   expect(await changeBudget(f.context, f.root, { soft: 10, hard: 20 })).toMatchObject({ status: "PASS", codeLines: 4 })
-  await expect(changeBudget(f.context, f.root, { excludedPaths: ["not-changed.ts"] })).rejects.toThrow("CHANGE_BUDGET_STALE_EXCLUSION")
+  expect(await rethrow(changeBudget(f.context, f.root, { excludedPaths: ["not-changed.ts"] }))).toThrow("CHANGE_BUDGET_STALE_EXCLUSION")
 })
 test("Git launch/acquisition failure, missing dev baseline and binary changes remain named", async () => {
   const f = await fixture()
-  await expect(changedFiles(f.context, f.root)).rejects.toThrow("PROCESS_ACQUISITION_FAILED")
+  expect(await rethrow(changedFiles(f.context, f.root))).toThrow("PROCESS_ACQUISITION_FAILED")
   await f.init()
-  await expect(changedFiles(f.context, f.root, "missing")).rejects.toThrow("PROCESS_ACQUISITION_FAILED")
+  expect(await rethrow(changedFiles(f.context, f.root, "missing"))).toThrow("PROCESS_ACQUISITION_FAILED")
   await Bun.write(join(f.root, "binary.dat"), Buffer.from([0, 1, 2]))
   const report = await changeBudget(f.context, f.root, {})
   expect(report.status).toBe("HOLD")
@@ -30,20 +31,20 @@ test("Git launch/acquisition failure, missing dev baseline and binary changes re
 test("native process denial prevents Git acquisition instead of empty report", async () => {
   const f = await fixture()
   await f.init()
-  await expect(operation({ operation: "change-budget" }, { ...f.context, async authorize(request) { if (request.effect === "process") throw new Error("HOST_PROCESS_DENIED") } })).rejects.toThrow("HOST_PROCESS_DENIED")
+  expect(await rethrow(operation({ operation: "change-budget" }, { ...f.context, async authorize(request) { if (request.effect === "process") throw new Error("HOST_PROCESS_DENIED") } }))).toThrow("HOST_PROCESS_DENIED")
 })
 test("repository-wide acquisition refuses context rooted at subdirectory", async () => {
   const f = await fixture()
   await f.init()
   const nested = join(f.root, "nested")
   await mkdir(nested)
-  await expect(operation({ operation: "change-budget" }, { ...f.context, directory: nested })).rejects.toThrow("GIT_REPOSITORY_ROOT_OUTSIDE_CONTEXT")
+  expect(await rethrow(operation({ operation: "change-budget" }, { ...f.context, directory: nested }))).toThrow("GIT_REPOSITORY_ROOT_OUTSIDE_CONTEXT")
 })
 test("actual process launch and bounded-output acquisition errors are named", async () => {
   const f = await fixture()
-  await expect(processOutput(f.context, f.root, [join(f.directory, "missing-executable")])).rejects.toThrow("PROCESS_LAUNCH_FAILED")
+  expect(await rethrow(processOutput(f.context, f.root, [join(f.directory, "missing-executable")]))).toThrow("PROCESS_LAUNCH_FAILED")
   expect(await processOutput(f.context, f.root, [process.execPath, "-e", "process.stdout.write('actual observation')"])).toBe("actual observation")
-  await expect(processOutput(f.context, f.root, [process.execPath, "-e", `process.stdout.write('x'.repeat(${PROCESS_BYTES + 1}))`])).rejects.toThrow("PROCESS_OUTPUT_OVERFLOW")
+  expect(await rethrow(processOutput(f.context, f.root, [process.execPath, "-e", `process.stdout.write('x'.repeat(${PROCESS_BYTES + 1}))`]))).toThrow("PROCESS_OUTPUT_OVERFLOW")
 })
 test("CI uses actual changed paths and explicit groups, unmatched/config paths select FULL", async () => {
   const f = await fixture()
@@ -65,11 +66,11 @@ test("metrics read exact scope, LOC gate red/green, unreadable/empty/escape acqu
   expect(await operation({ operation: "loc-cap", paths: ["owned.ts"], threshold: 1 }, f.context)).toMatchObject({ status: "PASS" })
   await Bun.write(join(f.root, "owned.ts"), "one\ntwo\n")
   expect(await operation({ operation: "loc-cap", paths: ["owned.ts"], threshold: 1 }, f.context)).toMatchObject({ status: "FAIL", failures: ["LOC_CAP_EXCEEDED: owned.ts"] })
-  await expect(operation({ operation: "metrics-snapshot", paths: [] }, f.context)).rejects.toThrow("METRICS_PATHS_EMPTY_OR_INVALID")
-  await expect(operation({ operation: "metrics-snapshot", paths: ["missing.ts"] }, f.context)).rejects.toThrow("STATE_READ_FAILED: ENOENT")
-  await expect(operation({ operation: "metrics-snapshot", paths: ["../escape"] }, f.context)).rejects.toThrow("PATH_ESCAPE")
+  expect(await rethrow(operation({ operation: "metrics-snapshot", paths: [] }, f.context))).toThrow("METRICS_PATHS_EMPTY_OR_INVALID")
+  expect(await rethrow(operation({ operation: "metrics-snapshot", paths: ["missing.ts"] }, f.context))).toThrow("STATE_READ_FAILED: ENOENT")
+  expect(await rethrow(operation({ operation: "metrics-snapshot", paths: ["../escape"] }, f.context))).toThrow("PATH_ESCAPE")
   await symlink(join(f.state, "secret"), join(f.root, "link"))
-  await expect(operation({ operation: "metrics-snapshot", paths: ["link"] }, f.context)).rejects.toThrow("PATH_SYMLINK_DENIED")
+  expect(await rethrow(operation({ operation: "metrics-snapshot", paths: ["link"] }, f.context))).toThrow("PATH_SYMLINK_DENIED")
   expect(await operation({ operation: "metrics-report", metricsBaseline: { files: [{ path: "owned.ts", loc: 4 }] }, metricsFinal: { files: [{ path: "owned.ts", loc: 2 }] } }, f.context)).toMatchObject({ reductionPercent: 50, correctnessClaim: false })
 })
 test("changelog gate checks actual parsed package/version/body; proposals remain uncurated", async () => {
@@ -81,9 +82,9 @@ test("changelog gate checks actual parsed package/version/body; proposals remain
   await Bun.write(join(f.root, "CHANGELOG.md"), proposal.entry)
   expect((await changelog(f.context, f.root, "package.json", "CHANGELOG.md")).failures).toContain("CHANGELOG_UNCURATED")
   await Bun.write(join(f.root, "CHANGELOG.md"), "# no release section\n")
-  await expect(changelog(f.context, f.root, "package.json", "CHANGELOG.md")).rejects.toThrow("CHANGELOG_SECTION_MISSING")
+  expect(await rethrow(changelog(f.context, f.root, "package.json", "CHANGELOG.md"))).toThrow("CHANGELOG_SECTION_MISSING")
   await Bun.write(join(f.root, "package.json"), JSON.stringify({ version: null }))
-  await expect(changelog(f.context, f.root, "package.json", "CHANGELOG.md")).rejects.toThrow("PACKAGE_VERSION_MISSING_OR_INVALID")
+  expect(await rethrow(changelog(f.context, f.root, "package.json", "CHANGELOG.md"))).toThrow("PACKAGE_VERSION_MISSING_OR_INVALID")
 })
 test("release validates actual HEAD/checks/changelog/dev/tag; never creates tag or publishes", async () => {
   const f = await fixture()
@@ -111,7 +112,7 @@ test("policy/sandbox proposals scope real paths but cannot grant or claim kernel
     expect(await operation({ operation: operationName, policy: { ownedPaths: ["owned.ts"], denyPaths: ["other.ts"], allowedDomains: ["github.com"] } }, f.context)).toMatchObject({ permissionGranted: false, sandboxRunning: false, writes: [join(f.root, "owned.ts")] })
   }
   expect(f.permissions.every((request) => request.effect === "read")).toBe(true)
-  await expect(operation({ operation: "policy-propose", policy: { ownedPaths: ["../escape"], denyPaths: [], allowedDomains: [] } }, f.context)).rejects.toThrow("PATH_ESCAPE")
+  expect(await rethrow(operation({ operation: "policy-propose", policy: { ownedPaths: ["../escape"], denyPaths: [], allowedDomains: [] } }, f.context))).toThrow("PATH_ESCAPE")
 })
 test("preflight actual captures arm/check/disarm; failed rearm revokes earlier green", async () => {
   const f = await fixture()

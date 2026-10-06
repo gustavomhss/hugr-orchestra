@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AppDockNativeWorkspace } from "./app-dock-native-workspace"
+import { rejection } from "./rejection.fixture"
 
 type Runtime = Parameters<typeof AppDockNativeWorkspace.create>[0]
 type Scope = Awaited<ReturnType<Runtime["workspaceScope"]>>
@@ -12,7 +13,7 @@ test("pre-aborted preparation performs neither a census nor helper acquisition",
   expect(f.calls).toEqual([])
   f.controller.abort()
 
-  await expect(f.prepare()).rejects.toMatchObject({
+  expect(await rejection(f.prepare())).toMatchObject({
     name: "NativeError", backend: "linux-atspi", code: "cancelled", outcome: "not-dispatched",
   })
   expect(f.calls).toEqual([])
@@ -22,7 +23,7 @@ test("a failed initial census is ownership-unresolved and leaves no helper to ac
   const f = fixture()
   f.producer.workspaceScope = async () => { throw new Error("Private census producer failure") }
 
-  await expect(f.prepare()).rejects.toMatchObject({
+  expect(await rejection(f.prepare())).toMatchObject({
     name: "NativeError", backend: "linux-atspi", code: "ownership-unresolved", outcome: "not-dispatched",
     message: "Native workspace process evidence is unavailable", cleanup: undefined,
   })
@@ -39,7 +40,7 @@ test("cancellation while the initial census is pending prevents helper acquisiti
 
   f.controller.abort()
   census.resolve(f.scope)
-  await expect(preparing).rejects.toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
+  expect(await rejection(preparing)).toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
   expect(f.calls).toEqual(["census"])
 })
 
@@ -47,7 +48,7 @@ test.each(["runtimeID", "runtimeEpoch"] as const)("captured placement %s mismatc
   const f = fixture()
   f.placement[field] = "stale-placement"
 
-  await expect(f.prepare()).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(f.prepare())).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
   expect(f.calls).toEqual(["census"])
 })
 
@@ -115,7 +116,7 @@ test.each(["runtimeID", "runtimeEpoch", "accessibilitySessionID"] as const)(
     expect(f.placement).toStrictEqual({ runtimeID: "runtime-1", runtimeEpoch: "epoch-1", ready: true })
     expect(f.calls).toEqual(["census", "acquire"])
 
-    await expect(prepared.confirm(f.proposal)).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+    expect(await rejection(prepared.confirm(f.proposal))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
     expect(f.calls).toEqual(["census", "acquire"])
     await prepared.client.close()
     expect(f.calls).toEqual(["census", "acquire", "close"])
@@ -162,7 +163,7 @@ test.each(changes)("confirmation rejects census drift in %s", async (_name, chan
   change(fresh)
   f.producer.workspaceScope = async () => fresh
 
-  await expect(prepared.confirm(f.proposal)).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(prepared.confirm(f.proposal))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
   expect(f.calls).toEqual(["census", "acquire", "census"])
 })
 
@@ -171,7 +172,7 @@ test("pre-aborted confirmation does not take another census", async () => {
   const prepared = await f.prepare()
   f.controller.abort()
 
-  await expect(prepared.confirm(f.proposal)).rejects.toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
+  expect(await rejection(prepared.confirm(f.proposal))).toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
   expect(f.calls).toEqual(["census", "acquire"])
 })
 
@@ -185,7 +186,7 @@ test("cancellation during the confirmation census rejects otherwise matching roo
 
   f.controller.abort()
   census.resolve(structuredClone(f.scope))
-  await expect(confirming).rejects.toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
+  expect(await rejection(confirming)).toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
   expect(f.calls).toEqual(["census", "acquire", "census"])
 })
 

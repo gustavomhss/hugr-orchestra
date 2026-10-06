@@ -3,6 +3,7 @@ import { NativeDock } from "./app-dock-native"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import { NativeDockClient } from "./app-dock-native-client"
 import { WireChannel, closeDocks, confirm, docks, fixture, identity, occupancy, root, target, turn, wireFixture, workspaceIdentity, workspaceTarget } from "./app-dock-native.fixture"
+import { rejection } from "./rejection.fixture"
 
 afterEach(closeDocks)
 
@@ -26,7 +27,7 @@ test.each(["success", "reap"])("P2 binding cleanup: confirmation failure survive
     expect(await binding).toMatchObject({ code: primary.code, message: primary.message, outcome: primary.outcome, result: primary.result,
       cleanup: fault === "success" ? undefined : { code: "helper-termination-failed", outcome: "unknown" } })
     expect(f.channel.requests.map((request) => request.op)).toEqual(["bind", "bind", "shutdown"])
-    if (fault === "reap") await expect(f.dock.reset()).rejects.toMatchObject({ code: "helper-termination-failed" })
+    if (fault === "reap") expect(await rejection(f.dock.reset())).toMatchObject({ code: "helper-termination-failed" })
   } finally {
     docks.delete(f.dock)
     f.channel.reap.resolve()
@@ -99,7 +100,7 @@ test("pending confirmation removal shares retirement and waits for actual client
       expect(state).toEqual({ bound: false, removed: false })
       expect(occupancy(f.dock)).toEqual({ slots: 0, clients: 1, retiring: 1, cleanups: 1, controlClients: 0, maxControls: 0 })
       if (method !== "close")
-        await expect(f.dock.bind({ ...identity(), generation: 2 }, target(), f.client, confirm)).rejects.toMatchObject({ code: "client-retiring", outcome: "not-dispatched" })
+        expect(await rejection(f.dock.bind({ ...identity(), generation: 2 }, target(), f.client, confirm))).toMatchObject({ code: "client-retiring", outcome: "not-dispatched" })
       f.channel.reap.resolve()
       await removal
       expect(await binding).toMatchObject({ code: "cancelled" })
@@ -157,14 +158,14 @@ test("existing full scope is checked before rejecting a retiring client", async 
   const current = { ...identity(), generation: 2 }
   try {
     await f.dock.bind(current, target(), currentClient, confirm)
-    await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
-    await expect(f.dock.bind(current, target(), f.client, confirm)).rejects.toMatchObject({ code: "duplicate-bind" })
-    await expect(f.dock.bind({ ...current, tabID: "other" }, target(), f.client, confirm)).rejects.toMatchObject({ code: "client-retiring" })
+    expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+    expect(await rejection(f.dock.bind(current, target(), f.client, confirm))).toMatchObject({ code: "duplicate-bind" })
+    expect(await rejection(f.dock.bind({ ...current, tabID: "other" }, target(), f.client, confirm))).toMatchObject({ code: "client-retiring" })
     expect(f.dock.has(current)).toBe(true)
     expect(() => f.dock.has(identity())).toThrow("Native registration belongs to another scope")
     f.channel.reap.resolve()
     await removal
-    await expect(f.dock.dispatch("read", current, {})).resolves.toMatchObject({ backend: "linux-atspi" })
+    expect(await f.dock.dispatch("read", current, {})).toMatchObject({ backend: "linux-atspi" })
   } finally {
     f.channel.reap.resolve()
     await removal
@@ -192,7 +193,7 @@ test("removing a pending discovery or confirmation preserves another registered 
       expect(await binding).toMatchObject({ code: "cancelled" })
       expect(f.channel.terminating).toBe(0)
       expect(occupancy(f.dock)).toEqual({ slots: 1, clients: 1, retiring: 0, cleanups: 0, controlClients: 0, maxControls: 0 })
-      await expect(f.dock.dispatch("read", keeper, {})).resolves.toMatchObject({ backend: "linux-atspi" })
+      expect(await f.dock.dispatch("read", keeper, {})).toMatchObject({ backend: "linux-atspi" })
       await f.dock.unbind(keeper)
       expect(f.channel.terminating).toBe(1)
       expect(f.channel.terminated).toBe(true)
@@ -250,7 +251,7 @@ test("last shared-slot removal reserves retirement and waits for every guest con
     expect(controls).toHaveLength(2)
     expect(f.channel.terminating).toBe(0)
     expect(occupancy(f.dock)).toEqual({ slots: 0, clients: 1, retiring: 1, cleanups: 1, controlClients: 1, maxControls: 2 })
-    await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "client-retiring" })
+    expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "client-retiring" })
     f.channel.send(controls[1].id, { backend: "linux-atspi", unbound: true })
     const closing = f.dock.close().then(() => { state.closed = true })
     await turn()
@@ -297,7 +298,7 @@ test("33rd client is rejected while 32 real-client terminations remain held", as
     }
     expect(state.removed).toBe(0)
     expect(occupancy(dock)).toEqual({ slots: 0, clients: 32, retiring: 32, cleanups: 32, controlClients: 0, maxControls: 0 })
-    await expect(dock.bind({ ...identity(), tabID: "overflow" }, target(), extraClient, confirm)).rejects.toMatchObject({ code: "capacity", outcome: "not-dispatched" })
+    expect(await rejection(dock.bind({ ...identity(), tabID: "overflow" }, target(), extraClient, confirm))).toMatchObject({ code: "capacity", outcome: "not-dispatched" })
     expect(extra.requests).toHaveLength(0)
     channels[0].reap.resolve()
     await removals[0]
@@ -350,12 +351,12 @@ test("failed native reaping remains counted and facade close propagates its boun
     await f.channel.terminationStarted.promise
     expect(occupancy(f.dock).clients).toBe(1)
     f.channel.reap.reject(new Error("Synthetic reap failure"))
-    await expect(removal).rejects.toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
+    expect(await rejection(removal)).toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
     expect(f.channel.terminated).toBe(false)
     expect(occupancy(f.dock)).toEqual({ slots: 0, clients: 1, retiring: 1, cleanups: 0, controlClients: 0, maxControls: 0 })
-    await expect(f.dock.bind(identity(), target(), f.client, confirm)).rejects.toMatchObject({ code: "client-retiring" })
-    await expect(f.dock.close()).rejects.toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
-    await expect(f.dock.close()).rejects.toMatchObject({ code: "helper-termination-failed" })
+    expect(await rejection(f.dock.bind(identity(), target(), f.client, confirm))).toMatchObject({ code: "client-retiring" })
+    expect(await rejection(f.dock.close())).toMatchObject({ code: "helper-termination-failed", outcome: "unknown" })
+    expect(await rejection(f.dock.close())).toMatchObject({ code: "helper-termination-failed" })
     expect(f.channel.terminating).toBe(1)
   } finally {
     docks.delete(f.dock)
@@ -369,14 +370,14 @@ test("native reap timeout stays visible instead of claiming successful terminati
   f.channel.holdReap = true
   await f.dock.bind(identity(), target(), f.client, confirm)
   try {
-    await expect(f.dock.unbind(identity())).rejects.toMatchObject({ code: "helper-termination-timeout", outcome: "unknown" })
+    expect(await rejection(f.dock.unbind(identity()))).toMatchObject({ code: "helper-termination-timeout", outcome: "unknown" })
     expect(f.channel.terminated).toBe(false)
     expect(occupancy(f.dock)).toEqual({ slots: 0, clients: 1, retiring: 1, cleanups: 0, controlClients: 0, maxControls: 0 })
-    await expect(f.dock.close()).rejects.toMatchObject({ code: "helper-termination-timeout" })
+    expect(await rejection(f.dock.close())).toMatchObject({ code: "helper-termination-timeout" })
     f.channel.reap.resolve()
     await turn()
     expect(f.channel.terminated).toBe(true)
-    await expect(f.dock.close()).rejects.toMatchObject({ code: "helper-termination-timeout" })
+    expect(await rejection(f.dock.close())).toMatchObject({ code: "helper-termination-timeout" })
     expect(occupancy(f.dock).clients).toBe(1)
   } finally {
     docks.delete(f.dock)
@@ -411,10 +412,10 @@ test("acknowledged action scope loss preserves unknown and bounded result throug
 test("pre-request cancellation and wrong scope remain not-dispatched on actual client", async () => {
   const f = await wireFixture()
   await f.dock.bind(identity(), target(), f.client, confirm)
-  await expect(f.dock.dispatch("click", { ...identity(), generation: 2 }, { ref: "n:button" })).rejects.toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
+  expect(await rejection(f.dock.dispatch("click", { ...identity(), generation: 2 }, { ref: "n:button" }))).toMatchObject({ code: "wrong-scope", outcome: "not-dispatched" })
   const result = f.dock.dispatch("click", identity(), { ref: "n:button" })
   const removal = f.dock.closeTab(1, "native")
-  await expect(result).rejects.toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
+  expect(await rejection(result)).toMatchObject({ code: "cancelled", outcome: "not-dispatched" })
   await removal
   expect(f.channel.requests.filter((request) => request.op === "action")).toHaveLength(0)
 })
@@ -424,11 +425,11 @@ test("operation result evidence obeys JSON structure and UTF-8 frame bounds at c
   await f.dock.bind(identity(), target(), f.client, confirm)
   for (const value of [null, "", { text: "café 🧪 漢字 é", dispatch: "acknowledged", postcondition: "unverified" }]) {
     f.client.reply = async (call) => call.op === "read" ? value : f.client.defaultReply(call)
-    await expect(f.dock.dispatch("read", identity(), {})).resolves.toEqual(value)
+    expect(await f.dock.dispatch("read", identity(), {})).toEqual(value)
   }
   const deep = Array.from({ length: 42 }).reduce<NativeDockProtocol.JSONValue>((value) => ({ child: value }), null)
   for (const value of [Number.NaN, "🧪".repeat(Math.floor(NativeDockProtocol.limits.frameBytes / 4) + 1), Array.from({ length: 4097 }, () => 0), deep]) {
     f.client.reply = async (call) => call.op === "read" ? value : f.client.defaultReply(call)
-    await expect(f.dock.dispatch("read", identity(), {})).rejects.toMatchObject({ code: "protocol-error", outcome: "unknown", result: undefined })
+    expect(await rejection(f.dock.dispatch("read", identity(), {}))).toMatchObject({ code: "protocol-error", outcome: "unknown", result: undefined })
   }
 })
