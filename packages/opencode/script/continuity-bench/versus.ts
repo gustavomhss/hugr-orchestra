@@ -161,8 +161,7 @@ const replay = (services: Services) => Effect.gen(function* () {
     const before = model.calls.length
     const delegations = Object.fromEntries([...new Set(history.flatMap((message) => message.parts.flatMap((part) => child(part) ?? [])))]
       .map((id) => [id, { member: agents.get(id), status: undefined }]))
-    const { artifact: next, ...summary } = yield* run(captured, services, { history, delegations, member: false },
-      { trigger: TRIGGER, masks, overhead: config.overhead })
+    const { artifact: next, ...summary } = yield* run(captured, services, { history, delegations, member: false },)
     model.calls.slice(before).forEach((call, position) => save(`${name}.reply${position + 1}.txt`, call.text))
     if (next) {
       save(`${name}.memory.md`, next.text)

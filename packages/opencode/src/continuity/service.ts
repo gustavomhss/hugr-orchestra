@@ -390,8 +390,7 @@ const layer = Layer.effect(
                 return [id, { member: info?.agent, status: job?.status }] as const
               })))
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
-              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member },
-                { trigger: options.trigger, masks: current.masks.get(sessionID), parent: request, overhead: current.overheads.get(sessionID) })
+              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member }, { parent: request })
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.skip ? `skipped-${pass.skip}` : "rejected", pass)
