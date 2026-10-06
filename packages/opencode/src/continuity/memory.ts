@@ -58,7 +58,8 @@ export function scope(snapshot: MemorySnapshot, host: Host) {
   const span = covered.filter((source) => head.has(source.message.info.id))
   const end = span.at(-1) ?? covered.at(-1)
   return { covered, span, end, tail: all.find((source) => (position.get(source.message.info.id) ?? -1) > last),
-    sources: new Map(covered.map((source) => [source.alias, source])), team: team(covered, host) }
+    sources: new Map(covered.map((source) => [source.alias, source])), team: team(covered, host),
+    sessionID: snapshot.sessionID }
 }
 type Scope = ReturnType<typeof scope>
 
@@ -320,7 +321,7 @@ function quote(needle: string, ctx: Scope, cited: readonly string[], revoking: b
     `${cited.filter((alias) => alias.startsWith("u")).join(", ") || "the cited aliases"} or the new span's user text`}`)
 }
 
-/** C8: errors come from a tool's raw output or error; values also from its identity arguments or user text. */
+/** C8: errors come from a tool's raw output or error; values also from its identity arguments, user text or the host. */
 function exact(name: string, needle: string, ctx: Scope, cited: readonly string[]) {
   for (const source of candidates(ctx, cited)) for (const haystack of raw(source, name)) {
     const [match] = find(haystack, needle)
@@ -330,6 +331,9 @@ function exact(name: string, needle: string, ctx: Scope, cited: readonly string[
       return fail("C8", `value "${needle}" spans a line break in ${source.alias}; values are single-line`)
     return { text: value, alias: source.alias }
   }
+  // The session ID shows only on host-written framing lines (`Session: ses_…`) of every source, so the
+  // op's own first alias already shows it: no new source is credited.
+  if (name === "value" && needle === ctx.sessionID) return { text: needle, alias: cited[0] }
   return fail("C8", `${name} "${needle}" not found in ${cited.join(", ")} or the new span`)
 }
 
