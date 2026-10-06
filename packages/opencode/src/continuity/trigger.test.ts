@@ -1,5 +1,6 @@
+import type { Provider } from "@/provider/provider"
 import { expect, test } from "bun:test"
-import { DEFAULT_TRIGGER, settings, shouldStart, tokenCount, isSafe } from "./trigger"
+import { DEFAULT_TRIGGER, HARD_LIMIT, hardLimit, settings, shouldStart, tokenCount, isSafe } from "./trigger"
 import { MessageID, SessionID } from "@/session/schema"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -40,7 +41,7 @@ test("valid total takes precedence; invalid total falls back", () => {
 test("invalid components cannot manufacture usage", () => {
   expect(tokenCount({ input: NaN, output: -1, reasoning: Infinity, cache: { read: -Infinity, write: -100 } })).toBe(0)
 })
-test("only successful completed non-summary turns are safe", () => {
+test("only successful completed non-summary steps are safe", () => {
   const safe: SessionV1.Assistant = {
     id: MessageID.make("msg_safe"), sessionID: SessionID.make("ses_safe"), parentID: MessageID.make("msg_user"),
     role: "assistant", mode: "build", agent: "build", path: { cwd: "", root: "" }, cost: 0,
@@ -49,13 +50,29 @@ test("only successful completed non-summary turns are safe", () => {
   }
   expect(isSafe(safe)).toBe(true)
   expect(isSafe({ ...safe, finish: "tool-calls", structured: { answer: "valid" } })).toBe(true)
+  // A finished tool-call step is safe too: a long turn is maintained between its steps.
+  expect(isSafe({ ...safe, finish: "tool-calls" })).toBe(true)
   expect(isSafe({ ...safe, time: { created: 0 } })).toBe(false)
   expect(isSafe({ ...safe, finish: undefined })).toBe(false)
   expect(isSafe({ ...safe, summary: true })).toBe(false)
   expect(isSafe({ ...safe, error: { name: "UnknownError", data: { message: "failure" } } })).toBe(false)
-  for (const finish of ["tool-calls", "unknown", "content-filter", "length", "error"]) expect(isSafe({ ...safe, finish })).toBe(false)
+  for (const finish of ["unknown", "content-filter", "length", "error"]) expect(isSafe({ ...safe, finish })).toBe(false)
 })
 
 test("does not duplicate active maintenance", () => {
   expect(shouldStart({ tokens: 100_000, active: true, context: 100_000, trigger: 0.7 })).toBe(false)
+})
+
+test("the hard limit keeps the last 10% of the window, or the model's output reservation when larger", () => {
+  const model = (context: number, output: number, input?: number) => ({ limit: { context, output, input } }) as Provider.Model
+  expect(HARD_LIMIT).toBe(0.9)
+  expect(hardLimit(model(200_000, 8_000))).toBe(180_000)
+  expect(hardLimit(model(200_000, 64_000))).toBe(168_000)
+  expect(hardLimit(model(200_000, 8_000, 150_000))).toBe(150_000)
+  expect(hardLimit(model(0, 0))).toBe(0)
+})
+
+test("a trigger at or past the hard limit falls back to the default", () => {
+  expect(settings({ continuity: { trigger: 0.9 } }).trigger).toBe(DEFAULT_TRIGGER)
+  expect(settings({ continuity: { trigger: 0.89 } }).trigger).toBe(0.89)
 })

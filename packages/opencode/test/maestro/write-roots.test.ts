@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { Cause, Effect, Exit, Layer } from "effect"
+import { Cause, Effect, Exit, FileSystem, Layer } from "effect"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { WriteRoots } from "@/maestro/write-roots"
 import { AppRuntime } from "@/effect/app-runtime"
@@ -42,7 +42,8 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
   // The production path: the shell call goes through ToolSafety.run, which observes it and records its shell fact.
   guarded: (sessionID: SessionID, command: string, observed: ToolSafety.Observation[]) => Effect.Effect<Exit.Exit<unknown, unknown>>
   database: Database.Interface
-}) => Effect.Effect<void, unknown, never>) =>
+  sessions: Session.Interface
+}) => Effect.Effect<void, unknown, FileSystem.FileSystem>) =>
   Effect.promise(async () => {
     await using tmp = await tmpdir({ git: true })
     await prepareArsenalSDK(tmp.path, Global.Path.config)
@@ -84,6 +85,7 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
               Effect.exit,
             ),
           database: yield* Database.Service,
+          sessions,
           guarded: (sessionID, command, observed) =>
             native.withSession(sessionID, ToolSafety.make.pipe(Effect.flatMap((safety) => safety.run(
               { tool: "bash", args: { command }, sessionID, callID: `call-${MessageID.ascending()}`, directory, projectID: instance.project.id },
@@ -189,10 +191,43 @@ describe("WriteRoots.profile", () => {
     expect(WriteRoots.profile({ neverTouch: ["secret"] }, [], directory)).toMatchObject({ neverTouch: ["secret"], writeRoots: [] })
   })
 
-  test("leaves Sessions without bound roots on the project loader", () => {
-    const load = () => Effect.succeed(undefined)
-    expect(WriteRoots.loader(load, { directory: "/w" })).toBe(load)
-    expect(WriteRoots.loader(load, { directory: "/w", permission: [{ permission: "edit", pattern: "*", action: "allow" }] })).toBe(load)
-    expect(WriteRoots.loader(load, { directory: "/w", permission: [{ permission: "tool_safety_write_root", pattern: "*", action: "deny" }] })).not.toBe(load)
+  test("leaves Sessions without bound roots on the project profile", async () => {
+    const project = { writeRoots: ["src"] }
+    const load = () => Effect.succeed(project)
+    const run = (permission?: WriteRoots.Rule[]) =>
+      Effect.runPromise(WriteRoots.loader(load, () => Effect.succeed({ directory: "/w", permission }))())
+    expect(await run()).toBe(project)
+    expect(await run([{ permission: "edit", pattern: "*", action: "allow" }])).toBe(project)
+    expect(await run([{ permission: WriteRoots.PERMISSION, pattern: "*", action: "deny" }])).toMatchObject({ writeRoots: [] })
   })
+})
+
+describe("WriteRoots.keep", () => {
+  test("a ruleset replacement keeps the reserved rules it replaces and adds none of its own", () => {
+    const reserved = [
+      { permission: WriteRoots.PERMISSION, pattern: "*", action: "deny" as const },
+      { permission: WriteRoots.PERMISSION, pattern: "/w/src", action: "allow" as const },
+    ]
+    const next = [
+      { permission: "bash", pattern: "*", action: "deny" as const },
+      { permission: WriteRoots.PERMISSION, pattern: "*", action: "allow" as const },
+    ]
+    expect(WriteRoots.keep([{ permission: "edit", pattern: "*", action: "allow" }, ...reserved], next)).toEqual([next[0], ...reserved])
+    expect(WriteRoots.keep(undefined, next)).toEqual([next[0]])
+  })
+})
+
+describe("WriteRoots.loader", () => {
+  it.live("re-reads the Session on every load, so a binding made after the loader is built narrows the next load", () =>
+    harness([], (h) => Effect.gen(function* () {
+      const session = yield* h.sessions.create({ agent: "backend" })
+      const load = WriteRoots.loader(() => Effect.succeed(undefined), () => h.sessions.get(session.id).pipe(Effect.orDie))
+      expect(yield* load()).toBeUndefined()
+
+      const permission = yield* WriteRoots.bind("backend", ["src"], session.permission ?? [])
+      yield* h.sessions.setPermission({ sessionID: session.id, permission })
+      expect(yield* load()).toMatchObject({ writeRoots: [path.join(h.directory, "src")], requireSandbox: true })
+    })),
+    120000,
+  )
 })

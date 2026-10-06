@@ -19,6 +19,21 @@ import PROMPT from "./prompt.txt"
 
 const TAIL_SIZE = 8
 
+// The producer reads the head as a transcript: one huge tool result or paste must not overflow its request.
+// The archive keeps every byte, and exact values are checked against the stored parts, not this view.
+const CLIP = { tool: 2_000, text: 8_000 }
+
+function clip(messages: SessionV1.WithParts[]): SessionV1.WithParts[] {
+  const cut = (value: string, limit: number) => value.length <= limit ? value
+    : `${value.slice(0, limit)}\n[… ${value.length - limit} more characters; the archive keeps them]`
+  return messages.map((message) => ({ ...message, parts: message.parts.map((part) => {
+    if (part.type === "text") return { ...part, text: cut(part.text, CLIP.text) }
+    if (part.type === "tool" && part.state.status === "completed")
+      return { ...part, state: { ...part.state, output: cut(part.state.output, CLIP.tool) } }
+    return part
+  }) }))
+}
+
 /** The parent's most recent model request and the stored messages it was built from. */
 export type ParentRequest = { input: LLM.StreamInput; messageIDs: readonly MessageID[] }
 
@@ -80,41 +95,59 @@ export function snapshot(
   previous?: MemoryArtifact,
   canRecall = false,
   maxHeadTokens = 32_000,
+  maxTailTokens = Infinity,
 ): MemorySnapshot | undefined {
   // An infinite budget is the replay transport, which sends the index, not the head transcript.
   if (!ownedHistory(sessionID, messages) || !(maxHeadTokens > 0)) return
   const boundary = messages.at(-1)?.info.id
-  const limit = messages.findLastIndex((message, index) =>
-    index <= messages.length - TAIL_SIZE && message.info.role === "user",
-  )
+  const limit = tailCut(messages, maxTailTokens)
   if (!boundary || limit <= 0) return
   const anchor = previous ? tailIndex({ sessionID, boundary: previous.boundary,
     tailStart: previous.tailStart, text: previous.text, artifact: previous }, messages) : undefined
   const start = anchor ?? 0
   if (start >= limit) return
-  // Take a contiguous prefix of complete turns. Unprocessed turns stay native.
+  // Take a contiguous prefix: whole turns while they fit, then the steps of the turn the tail cut.
   // Measuring the real archive transcript also accounts for tool-result framing.
-  // The first whole turn is always taken, so one oversized turn cannot stall coverage.
-  let end = start
-  for (let next = start + 1; next <= limit; next++) {
-    if (messages[next].info.role !== "user") continue
-    if (end > start && Number.isFinite(maxHeadTokens) &&
-      Token.estimate(Transcript.transcript(messages.slice(start, next))) > maxHeadTokens) break
+  // The first message is always taken, so one oversized message cannot stall coverage.
+  const fits = (end: number) => !Number.isFinite(maxHeadTokens) ||
+    Token.estimate(Transcript.transcript(clip(messages.slice(start, end)))) <= maxHeadTokens
+  let end = start + 1
+  for (let next = start + 2; next <= limit; next++) {
+    if (next < limit && messages[next].info.role !== "user") continue
+    if (!fits(next)) break
     end = next
   }
-  if (end === start) return
+  // A turn too large for the budget is taken step by step: the first one, or the last one, which the tail cuts.
+  const last = !messages.slice(end + 1, limit).some((message) => message.info.role === "user")
+  if (end === start + 1 || last) while (end < limit && fits(end + 1)) end++
   return {
     sessionID, boundary, tailStart: messages[end].info.id,
     head: messages.slice(start, end), tail: messages.slice(end),
     previous: anchor === undefined ? undefined : previous, canRecall,
+    ...Number.isFinite(maxTailTokens) ? { tailTokens: maxTailTokens } : {},
   }
 }
 
-/** The region no pass can cover: from the last user turn that leaves TAIL_SIZE messages native. */
+/**
+ * Where the native tail starts: the last user turn that leaves TAIL_SIZE messages, when it fits the ceiling.
+ * A longer turn is cut between its steps, keeping the most recent messages that fit and at least the last one.
+ */
+export function tailCut(messages: SessionV1.WithParts[], maxTokens = Infinity) {
+  const turn = messages.findLastIndex((message, index) => index <= messages.length - TAIL_SIZE && message.info.role === "user")
+  if (!Number.isFinite(maxTokens)) return turn
+  const sizes = messages.map((message) => Token.estimate(Transcript.transcript([message])))
+  let size = sizes.slice(Math.max(turn, 0)).reduce((sum, value) => sum + value, 0)
+  if (turn > 0 && size <= maxTokens) return turn
+  let start = messages.length - 1
+  size = sizes[start]
+  while (start > 1 && messages.length - start < TAIL_SIZE && size + sizes[start - 1] <= maxTokens) size += sizes[--start]
+  return start
+}
+
+/** The region no pass can cover: the native tail as the next snapshot would cut it. */
 function protectedTail(captured: MemorySnapshot) {
   const messages = [...captured.head, ...captured.tail]
-  const limit = messages.findLastIndex((message, index) => index <= messages.length - TAIL_SIZE && message.info.role === "user")
-  return messages.slice(Math.max(captured.head.length, limit))
+  return messages.slice(Math.max(captured.head.length, tailCut(messages, captured.tailTokens)))
 }
 
 /** The parent's system and tool definitions as sent, without the memory a swap replaces. */
@@ -133,7 +166,7 @@ function labelled(captured: MemorySnapshot, host: Host) {
     const key = source.part && source.alias.startsWith("t") || source.answers ? source.part!.id : source.message.info.id
     labels.set(key, [...labels.get(key) ?? [], source.alias])
   }
-  return Transcript.transcript(captured.head).replace(/^(## \w+ message (\S+)|### .* — (\S+))$/gm,
+  return Transcript.transcript(clip(captured.head)).replace(/^(## \w+ message (\S+)|### .* — (\S+))$/gm,
     (line, _heading, message?: string, part?: string) => {
       const names = labels.get(message ?? part ?? "")
       return names ? `${line} · ${names.join(", ")}` : line
@@ -184,8 +217,10 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
 ) {
   const previous = captured.previous?.text ?? ""
   const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ceiling: 0, ...rest })
-  if (captured.canRecall !== true || !validSnapshot(captured)) return pass({ skip: "precondition" })
-  const parent = captured.tail.findLast((message) => message.info.role === "user")?.info
+  if (!validSnapshot(captured)) return pass({ skip: "precondition" })
+  // A long turn can leave no user message in the head or the tail: its user message is earlier in the history.
+  const asker = (messages: SessionV1.WithParts[]) => messages.findLast((message) => message.info.role === "user")?.info
+  const parent = asker([...captured.head, ...captured.tail]) ?? asker(host.history.slice(0, host.history.indexOf(captured.head[0])))
   if (!parent || parent.role !== "user") return pass({ skip: "precondition" })
   const model = yield* services.provider.getModel(parent.model.providerID, parent.model.modelID)
   // Workflow providers create remote sessions and approvals, even without local tools.

@@ -49,20 +49,22 @@ export function tailIndex(context: ContinuityContext, messages: SessionV1.WithPa
   const boundary = messages.findIndex((message) => message.info.id === context.boundary)
   const covered = messages.findIndex((message) => message.info.id === context.artifact.coveredThrough)
   // An absent covered prefix is valid only if the history starts at the native tail.
-  if (index < 0 || boundary < index || messages[index].info.role !== "user" || covered !== index - 1) return
+  // The tail may start inside a turn: a long turn is cut between its steps.
+  if (index < 0 || boundary < index || covered !== index - 1) return
   return index
 }
 
 export function validSnapshot(captured: MemorySnapshot) {
   const messages = [...captured.head, ...captured.tail]
   if (!captured.head.length || !captured.tail.length || !ownedHistory(captured.sessionID, messages) ||
-    captured.tail[0].info.role !== "user" || captured.tailStart !== captured.tail[0].info.id ||
+    captured.tailStart !== captured.tail[0].info.id ||
     captured.boundary !== captured.tail.at(-1)?.info.id) return false
   if (!captured.previous) return true
   return tailIndex({ sessionID: captured.sessionID, boundary: captured.previous.boundary,
     tailStart: captured.previous.tailStart, text: captured.previous.text, artifact: captured.previous }, messages) === 0
 }
 
-export function isCurrent(snapshot: Snapshot, latest: MessageID | undefined) {
-  return snapshot.boundary === latest
+/** A snapshot stays applicable while its boundary is still in the history; later steps only extend the native tail. */
+export function isCurrent(snapshot: Snapshot, history: readonly { info: { id: MessageID } }[]) {
+  return history.some((message) => message.info.id === snapshot.boundary)
 }

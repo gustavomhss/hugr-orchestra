@@ -105,6 +105,10 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
     ).toBe("deny")
     for (const denied of ["task", "question", "webfetch", "websearch", "todowrite", "maestro_record_review"])
       expect(check(denied, "*")).toBe("deny")
+    // F3 clause 29: the bound Atlas Memory tools are granted by explicit tool ID, to this seat only.
+    expect(check("atlas_memory_recall", "backend")).toBe("allow")
+    expect(check("atlas_memory_emit", "backend")).toBe("allow")
+    expect(check("atlas_memory_header", "*")).toBe("deny")
 
     // The shared profiles stay exactly as they were for every other native seat.
     expect(nativeProfiles.execution).toEqual({
@@ -130,6 +134,8 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
       expect(agent.mode).toBe("subagent")
       for (const name of backendSkills.names)
         expect(Permission.evaluate("skill", name, agent.permission).action).toBe("deny")
+      for (const tool of ["atlas_memory_recall", "atlas_memory_emit"])
+        expect(Permission.evaluate(tool, "*", agent.permission).action).toBe("deny")
       expect(
         Permission.evaluate("external_directory", path.join(backendSkills.root, "*"), agent.permission).action,
       ).toBe("deny")
