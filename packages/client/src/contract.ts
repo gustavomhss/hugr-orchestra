@@ -35,6 +35,9 @@ export const groupNames = {
   "server.question": "questions",
   "server.reference": "references",
   "server.projectCopy": "projectCopies",
+  "server.relay.document": "relayDocuments",
+  "server.relay.publish": "relayPublish",
+  "server.relay.hook": "relayHooks",
 } as const
 
 export const endpointNames = {
@@ -50,6 +53,11 @@ export const endpointNames = {
   "permission.saved.list": "listSaved",
   "permission.saved.remove": "removeSaved",
   "question.request.list": "listRequests",
+  "relay.document.export": "definition",
+  "relay.scope.list": "listScopes",
+  "relay.scope.create": "createScope",
+  "relay.scope.update": "updateScope",
+  "relay.scope.remove": "removeScope",
 } as const
 
 export const omitEndpoints = new Set(["fs.read", "pty.connect", "pty.connectToken"])
