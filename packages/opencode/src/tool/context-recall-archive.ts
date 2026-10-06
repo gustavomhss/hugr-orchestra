@@ -6,7 +6,7 @@ import type { SessionID } from "@/session/schema"
 const Offset = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))
 const Count = Schema.Int.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(20))
 export const Lookup = Schema.Struct({
-  reference: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/), Schema.isMaxLength(64)),
+  reference: Schema.String.check(Schema.isPattern(/^(?:[0-9a-f]{64}|[uat][1-9][0-9]*)$/), Schema.isMaxLength(64)),
   offset: Schema.optional(Offset),
   limit: Schema.optional(Schema.Int.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(8000))),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
