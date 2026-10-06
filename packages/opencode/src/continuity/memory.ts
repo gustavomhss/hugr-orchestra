@@ -68,12 +68,12 @@ export function decode(input: {
   snapshot: MemorySnapshot
   producerID: SessionID
   host: Host
-  /** The ceiling for the whole rendered block (2.6). */
-  ceiling: number
+  /** Room for the host-collected sections (user messages, Activity); not a limit on the memory. */
+  budget: number
 }): Decoded | Failure {
   const { snapshot, host } = input
   if (!validSnapshot(snapshot) || !nonempty(input.producerID) || input.producerID === snapshot.sessionID ||
-    !Number.isFinite(input.ceiling) || input.ceiling <= 0) return fail("C13", "the snapshot is not valid")
+    !Number.isFinite(input.budget) || input.budget <= 0) return fail("C13", "the snapshot is not valid")
   const errors: ParseError[] = []
   const tree = parseTree(input.text, errors, { disallowComments: true, allowTrailingComma: false })
   const raw = parse(input.text)
@@ -184,15 +184,7 @@ export function decode(input: {
     return fail("C14", "the objective is open but the plan has no open step: keep the next move as a plan item " +
       "(todo, doing, waiting or verify; waiting on the user counts)")
 
-  const rendered = render(result, ctx, host, input.ceiling)
-  const size = Token.estimate(rendered)
-  if (size > input.ceiling) {
-    const pinned = new Set(result.flatMap((item) => item.section === "plan" && item.fields.status !== "done" ? item.fields.needs ?? [] : []))
-    const offer = result.filter((item) => live.has(item.id) && !quoted(item) && !pinned.has(item.id))
-      .map((item) => `${item.id} (~${Token.estimate(renderItem(item, ctx))} tokens)`)
-    return fail("C12", `the rendered memory is ~${size} tokens, over the ceiling of ${input.ceiling} by ${size - input.ceiling}. ` +
-      `Items you can retire without a quote: ${offer.join(", ") || "none"}`)
-  }
+  const rendered = render(result, ctx, host, input.budget)
   return {
     ops: applied,
     dropped: ops.length - applied.length,
@@ -536,7 +528,7 @@ function activity(ctx: Scope, host: Host, budget: number) {
     ...files.filter((entry) => shown.has(entry.text)).map((entry) => entry.text)
       .concat(files.some((entry) => shown.has(entry.text)) || summary.length ? [] : ["(none)"]),
     ...summary,
-    ...(omitted ? [`${omitted} older entries omitted (ceiling); context_recall {"reference":"tN"} returns any tool call.`] : []),
+    ...(omitted ? [`${omitted} older entries omitted (room); context_recall {"reference":"tN"} returns any tool call.`] : []),
   ].join("\n")
 }
 
@@ -555,13 +547,13 @@ function ledger(ctx: Scope, host: Host, budget: number) {
   const omitted = users.slice(0, users.length - kept.length)
   return [
     host.member ? "## Delegator messages" : "## User messages (verbatim, host-collected)",
-    ...(omitted.length ? [`${omitted[0].alias}${omitted.length > 1 ? `–${omitted.at(-1)!.alias}` : ""} omitted (ceiling); ` +
+    ...(omitted.length ? [`${omitted[0].alias}${omitted.length > 1 ? `–${omitted.at(-1)!.alias}` : ""} omitted (room); ` +
       'context_recall {"reference":"uN"} returns any of them.'] : []),
     ...(kept.length ? kept.toReversed() : ["(none)"]),
   ].join("\n")
 }
 
-function render(items: MemoryItem[], ctx: Scope, host: Host, ceiling: number) {
+function render(items: MemoryItem[], ctx: Scope, host: Host, budget: number) {
   const end = ctx.end
   const through = end ? `${end.alias} (${stamp(end.time)})` : "the start of this session"
   const section = (heading: string, section: Section) => {
@@ -590,19 +582,14 @@ function render(items: MemoryItem[], ctx: Scope, host: Host, ceiling: number) {
     section("## Findings", "findings"),
     section("## Failures and lessons", "failures"),
     section("## Values", "values"),
-    activity(ctx, host, ceiling / 8),
-    ledger(ctx, host, ceiling / 4),
+    activity(ctx, host, budget / 8),
+    ledger(ctx, host, budget / 4),
     `End of memory. The conversation below continues after ${end?.alias ?? "the start of this session"} and is newer.`,
   ].join("\n\n")
 }
 
-/** The size of the memory with no items: the scaffold, the ledger and Activity at this ceiling. */
-export function scaffold(snapshot: MemorySnapshot, host: Host, ceiling: number) {
-  return Token.estimate(render([], scope(snapshot, host), host, ceiling))
-}
-
 /** The host-appended part of the producer instruction: the new span, its index and the size (4.2). */
-export function index(snapshot: MemorySnapshot, host: Host, size: number, ceiling: number) {
+export function index(snapshot: MemorySnapshot, host: Host, size: number) {
   const ctx = scope(snapshot, host)
   const ranges = ["u", "a", "t"].flatMap((kind) => {
     const list = ctx.span.filter((source) => source.alias.startsWith(kind))
@@ -629,7 +616,7 @@ export function index(snapshot: MemorySnapshot, host: Host, size: number, ceilin
     "## Index of the new span",
     ...lines,
     "## Size",
-    `Rendered memory now ~${size.toLocaleString("en-US")} tokens; ceiling ${ceiling.toLocaleString("en-US")}.`,
+    `Rendered memory now ~${size.toLocaleString("en-US")} tokens.`,
   ].join("\n")
 }
 

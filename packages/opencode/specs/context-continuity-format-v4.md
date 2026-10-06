@@ -1,5 +1,10 @@
 # Context Continuity: working-memory format v4
 
+> **Superseded in part (2026-10-06).** The memory size ceiling (C12, `no-ceiling`, `no-room`) is removed. The trigger
+> defaults to 0.4, and a non-configurable hard limit of 0.7 replaces the old 0.9 one. The plan renders first (C14), Activity counts
+> older commands, and agents can call `context_compact`. See `context-continuity-vs-legacy.md`.
+
+
 Status: revision 3, 2026-10-05, after two cold reviews (`context-continuity-format-v4-review.md`,
 `context-continuity-format-v4-review-2.md`, both FIX_FIRST). Section 12 gives the disposition of
 each finding. This format replaces the memory contract of protocol v3: `src/continuity/prompt.txt`,

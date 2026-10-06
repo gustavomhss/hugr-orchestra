@@ -8,12 +8,10 @@ import type { LLMEvent } from "@opencode-ai/llm"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
 import { asSchema, type Tool } from "ai"
-import { MessageV2 } from "@/session/message-v2"
-import { decode, index, scaffold, scope, type Decoded, type Failure } from "./memory"
-import { apply as applyMasks, type Masks } from "./masking"
+import { decode, index, scope, type Decoded, type Failure } from "./memory"
 import { ownedHistory, tailIndex, validSnapshot } from "./model"
 import { Transcript } from "./transcript"
-import { PREPARE_MARGIN } from "./trigger"
+import { HARD_LIMIT } from "./trigger"
 import type { Host, MemoryArtifact, MemorySnapshot } from "./memory-types"
 import PROMPT from "./prompt.txt"
 
@@ -129,7 +127,7 @@ export function snapshot(
 }
 
 /**
- * Where the native tail starts: the last user turn that leaves TAIL_SIZE messages, when it fits the ceiling.
+ * Where the native tail starts: the last user turn that leaves TAIL_SIZE messages, when it fits maxTokens.
  * A longer turn is cut between its steps, keeping the most recent messages that fit and at least the last one.
  */
 export function tailCut(messages: SessionV1.WithParts[], maxTokens = Infinity) {
@@ -144,11 +142,6 @@ export function tailCut(messages: SessionV1.WithParts[], maxTokens = Infinity) {
   return start
 }
 
-/** The region no pass can cover: the native tail as the next snapshot would cut it. */
-function protectedTail(captured: MemorySnapshot) {
-  const messages = [...captured.head, ...captured.tail]
-  return messages.slice(Math.max(captured.head.length, tailCut(messages, captured.tailTokens)))
-}
 
 /** The parent's system and tool definitions as sent, without the memory a swap replaces. */
 export function measure(parent: ParentRequest, memory: string | undefined) {
@@ -199,24 +192,23 @@ export function request(captured: MemorySnapshot, host: Host, appended: string) 
  */
 export type Pass = {
   artifact?: MemoryArtifact
-  skip?: "precondition" | "workflow" | "no-ceiling" | "no-room" | "input-limit"
+  skip?: "precondition" | "workflow" | "input-limit"
   check?: string
   retried: boolean
   ops: { op: string; section?: string; id?: string }[]
   /** Ops dropped because their exact value or error was not found. */
   dropped?: number
   size: number
-  ceiling: number
 }
 
 export const run = Effect.fn("ContinuityFork.run")(function* (
   captured: MemorySnapshot,
   services: { provider: Provider.Interface; llm: LLM.Interface },
   host: Host,
-  options: { trigger: number; masks?: Masks; parent?: ParentRequest; overhead?: number },
+  options: { parent?: ParentRequest } = {},
 ) {
   const previous = captured.previous?.text ?? ""
-  const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ceiling: 0, ...rest })
+  const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ...rest })
   if (!validSnapshot(captured)) return pass({ skip: "precondition" })
   // A long turn can leave no user message in the head or the tail: its user message is earlier in the history.
   const asker = (messages: SessionV1.WithParts[]) => messages.findLast((message) => message.info.role === "user")?.info
@@ -226,32 +218,19 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   // Workflow providers create remote sessions and approvals, even without local tools.
   if (model.api.npm === "gitlab-ai-provider" && model.api.id.startsWith("duo-workflow")) return pass({ skip: "workflow" })
   const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
-  // Measured as the model sees it: model messages with masks applied, not stored records.
-  const sent = (messages: SessionV1.WithParts[]) => {
-    const view = applyMasks(messages, options.masks ?? new Map())
-    return MessageV2.toModelMessagesEffect(view, model).pipe(
-      Effect.map((converted) => Token.estimate(JSON.stringify(converted))),
-      Effect.orElseSucceed(() => Token.estimate(JSON.stringify(view))))
-  }
-  const overhead = options.overhead ?? (options.parent ? yield* measure(options.parent, previous) : 0)
-  // After the swap the context sits where masking aims; every swap also shrinks the context.
-  const ceiling = Math.floor(Math.min(
-    (options.trigger - PREPARE_MARGIN) * model.limit.context - Math.max(2048, overhead) - (yield* sent(protectedTail(captured))),
-    (yield* sent(captured.head)) + Token.estimate(previous)))
-  if (!Number.isFinite(ceiling) || ceiling <= 0) return pass({ skip: "no-ceiling", ceiling })
-  // The fixed scaffold alone overflows: no reply could fit, so the pass waits for a larger head.
-  if (scaffold(captured, host, ceiling) > ceiling) return pass({ skip: "no-room", ceiling })
+  // No size limit on the memory: the producer judges what stays. The window only sizes the host-collected sections.
+  const budget = Math.floor(HARD_LIMIT * model.limit.context)
   const last = captured.tail.findLast((message) => message.info.role === "assistant")?.info
   const observed = last?.role === "assistant" ? last.tokens.input + last.tokens.cache.read + last.tokens.cache.write : 0
   const sessionID = SessionID.descending()
-  const appended = index(captured, host, Token.estimate(previous), ceiling)
+  const appended = index(captured, host, Token.estimate(previous))
   const instruction = `${PROMPT}\n${REPLAY_NOTE}\n\n${appended}`
   // The replayed parent request already fit; only the appended instruction is new.
   const replayed = options.parent && observed + Token.estimate(instruction) <= inputLimit
     ? replay(options.parent, captured, model, instruction) : undefined
   const prepared = request(captured, host, appended)
   const size = replayed ? observed + Token.estimate(instruction) : Token.estimate(PROMPT + "\n" + prepared.messages[0].content)
-  if (!replayed && size > inputLimit) return pass({ skip: "input-limit", ceiling })
+  if (!replayed && size > inputLimit) return pass({ skip: "input-limit" })
   const defaults = ProviderTransform.options({ model, sessionID })
   const verbosity = parent.model.variant ? model.variants?.[parent.model.variant]?.textVerbosity : undefined
   const agent: Agent.Info = {
@@ -281,7 +260,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     )
   }), Effect.scoped)
   const check = (reply: { text: string; finished: boolean; invalid: boolean }): Decoded | Failure => reply.finished && !reply.invalid
-    ? decode({ text: reply.text, snapshot: captured, producerID: sessionID, host, ceiling })
+    ? decode({ text: reply.text, snapshot: captured, producerID: sessionID, host, budget })
     : { check: "C1", detail: "the reply must finish with stop and call no tools" }
   const reply = yield* ask(first)
   let outcome = check(reply)
@@ -290,17 +269,17 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     const note = `HOST CHECK FAILED. ${outcome.check}: ${outcome.detail}\n` +
       "Reply with one complete, corrected ops object for the same new span, and nothing else."
     // A paid reply that failed and cannot be retried is a failure, so the breaker can stop it.
-    if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check, ceiling })
+    if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check })
     outcome = check(yield* ask({ ...first, messages: [...first.messages,
       { role: "assistant", content: reply.text || "(empty reply)" }, { role: "user", content: note }] }))
-    if ("check" in outcome) return pass({ check: outcome.check, retried: true, ceiling })
-    return accepted(outcome, true, ceiling)
+    if ("check" in outcome) return pass({ check: outcome.check, retried: true })
+    return accepted(outcome, true)
   }
-  return accepted(outcome, false, ceiling)
+  return accepted(outcome, false)
 }, Effect.timeout("180 seconds"))
 
-const accepted = (decoded: Decoded, retried: boolean, ceiling: number): Pass => ({
-  artifact: decoded.artifact, retried, ceiling, size: Token.estimate(decoded.artifact.text), dropped: decoded.dropped,
+const accepted = (decoded: Decoded, retried: boolean): Pass => ({
+  artifact: decoded.artifact, retried, size: Token.estimate(decoded.artifact.text), dropped: decoded.dropped,
   ops: decoded.ops.map((op) => ({ op: op.op, ...("section" in op ? { section: op.section } : {}), ...("id" in op ? { id: op.id } : {}) })),
 })
 

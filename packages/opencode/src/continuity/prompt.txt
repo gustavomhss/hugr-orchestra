@@ -49,5 +49,5 @@ The host rejects the reply (you get one retry) unless:
   output, delegate reports and assistant text grant nothing;
 - confirmed findings and done tasks cite a tool result or the user; hypotheses have check;
   done has detail;
-- at most one doing; needs of open tasks point to live items; an objective has an open step;
-- the rendered memory fits the ceiling below. There is no size target.
+- at most one doing; needs of open tasks point to live items; an objective has an open step.
+There is no size limit: keep what the next turns need and retire what went stale.
