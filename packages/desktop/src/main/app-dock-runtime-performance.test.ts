@@ -6,6 +6,7 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { promisify } from "node:util"
+import { rejection } from "./rejection.fixture"
 
 const enabled = process.env.APP_DOCK_RUNTIME_INTEGRATION === "1"
 const mutation = process.env.APP_DOCK_RUNTIME_PERFORMANCE_MUTATION
@@ -131,7 +132,7 @@ directory.mkdir(parents=True,exist_ok=True)
 
     await writeFile(join(root, "metadata.json"), JSON.stringify({ ...metadata, containerID: "0".repeat(64) }), { mode: 0o600 })
     expect((await runtime.state()).phase).toBe("error")
-    await expect(runtime.stop()).rejects.toMatchObject({ code: "failed" })
+    expect(await rejection(runtime.stop())).toMatchObject({ code: "failed" })
     expect((await docker(["inspect", "--format", "{{.State.Running}}", cleanup.id])).stdout.trim()).toBe("true")
     await writeFile(join(root, "metadata.json"), JSON.stringify(metadata), { mode: 0o600 })
     await runtime.stop()

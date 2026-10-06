@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { resolve } from "node:path"
 import type { Metadata } from "./app-dock-runtime-backend"
 import { AppDockRuntimeDocker } from "./app-dock-runtime-docker"
+import { rejection } from "./rejection.fixture"
 
 const owner = "11dc45b7-3ed8-40ea-a56e-232a1c39f381"
 const id = "a".repeat(64)
@@ -62,11 +63,11 @@ const weakened: Array<[string, (found: AppDockRuntimeDocker.Container) => void]>
 test.each(weakened)("refuses a workspace with %s", async (_name, weaken) => {
   const found = container()
   weaken(found)
-  await expect(AppDockRuntimeDocker.proveWorkspace(found, metadata, async () => home)).rejects.toMatchObject({ code: "failed" })
+  expect(await rejection(AppDockRuntimeDocker.proveWorkspace(found, metadata, async () => home))).toMatchObject({ code: "failed" })
 })
 
 test("refuses a workspace whose home volume is missing", async () => {
-  await expect(AppDockRuntimeDocker.proveWorkspace(container(), metadata, async () => undefined)).rejects.toMatchObject({ code: "failed" })
+  expect(await rejection(AppDockRuntimeDocker.proveWorkspace(container(), metadata, async () => undefined))).toMatchObject({ code: "failed" })
 })
 
 test("an unpinned workspace is proven by owner name before the ID is recorded", async () => {
