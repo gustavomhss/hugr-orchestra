@@ -15,6 +15,8 @@ DBUS = "org.freedesktop.DBus"
 DBUS_PATH = "/org/freedesktop/DBus"
 ACCESSIBLE = "org.a11y.atspi.Accessible"
 ROOT = "/org/a11y/atspi/accessible/root"
+# Children, name/role/parent and state changes: everything a cached traversal fact depends on.
+CHANGE_EVENTS = ("object:children-changed", "object:property-change", "object:state-changed")
 
 
 class BusError(Exception):
@@ -238,6 +240,12 @@ class AtspiBus:
                 self._trace.append(entry)
         return message
 
+    def fence(self):
+        """Return after the GLib loop ran every signal callback queued before this call.
+
+        Gio queues signal callbacks at default priority; this idle runs after them."""
+        self._wait(lambda future, _: self._finish(future), self.timeout_ms)
+
     @builtins.property
     def trace(self):
         with self._lock:
@@ -248,7 +256,7 @@ class AtspiBus:
         subscriptions = []
 
         def install(future, _):
-            if len(self._subscriptions) >= 48:
+            if len(self._subscriptions) >= 64:
                 self._finish(future, error=BusError("busy", "Lifecycle subscription limit reached"))
                 return
 
@@ -265,24 +273,36 @@ class AtspiBus:
                 if member == "StateChanged" and parameters.n_children() >= 2 and parameters.get_child_value(1).unpack():
                     callback("defunct", owner, path)
 
-            for sender, path, interface, member, arg0 in (
-                (DBUS, DBUS_PATH, DBUS, "NameOwnerChanged", owner),
-                (owner, "/org/a11y/atspi/cache", "org.a11y.atspi.Cache", "RemoveAccessible", None),
-                (owner, None, "org.a11y.atspi.Event.Object", "StateChanged", "defunct"),
+            def changed(connection, sender, path, interface, member, *_):
+                # Any object event only drops cached traversal facts for its path.
+                if not self._closed:
+                    callback("changed", owner, path)
+
+            for sender, path, interface, member, arg0, handler in (
+                (DBUS, DBUS_PATH, DBUS, "NameOwnerChanged", owner, event),
+                (owner, "/org/a11y/atspi/cache", "org.a11y.atspi.Cache", "RemoveAccessible", None, event),
+                (owner, None, "org.a11y.atspi.Event.Object", "StateChanged", "defunct", event),
+                (owner, None, "org.a11y.atspi.Event.Object", None, None, changed),
             ):
-                subscription = self.connection.signal_subscribe(sender, interface, member, path, arg0, Gio.DBusSignalFlags.NONE, event, None)
+                subscription = self.connection.signal_subscribe(sender, interface, member, path, arg0, Gio.DBusSignalFlags.NONE, handler, None)
                 self._subscriptions.append(subscription)
                 subscriptions.append(subscription)
             self._finish(future)
 
         self._wait(install, self.timeout_ms)
-        status = {"owner-loss": "subscribed", "cache-remove": "subscribed", "defunct": "unconfirmed", "subscriptions": subscriptions}
+        status = {"owner-loss": "subscribed", "cache-remove": "subscribed", "defunct": "unconfirmed", "changes": "unconfirmed",
+                  "subscriptions": subscriptions}
         try:
             self.call("org.a11y.atspi.Registry", "/org/a11y/atspi/registry", "org.a11y.atspi.Registry", "RegisterEvent",
                       "(sass)", ("object:state-changed:defunct", [], owner), "()")
             status["defunct"] = "registered; delivery requires empirical proof"
+            # Bridges emit only registered events; these drive the traversal cache.
+            for name in CHANGE_EVENTS:
+                self.call("org.a11y.atspi.Registry", "/org/a11y/atspi/registry", "org.a11y.atspi.Registry", "RegisterEvent",
+                          "(sass)", (name, [], owner), "()")
+            status["changes"] = "registered"
         except BusError as error:
-            status["defunct"] = error.code
+            status["defunct" if status["defunct"] == "unconfirmed" else "changes"] = error.code
         return status
 
     def unsubscribe_lifecycle(self, status):

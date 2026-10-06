@@ -584,9 +584,10 @@ test("scoped callers reach their own world whatever tab the user has selected", 
   expect((await f.json("dock_list", {}, { agent: "build" }) as { tabID: string }[]).map((tab) => tab.tabID)).toEqual(["browser"])
   // Only the Linux tab left: a browser-scoped caller is refused instead of silently reading the workspace.
   f.viewer.tabs = f.viewer.tabs.filter((tab) => tab.tabID === "workspace")
-  expect(await f.tool("dock_read", {}, { agent: "build" })).toContain("operated by the linux agent")
-  expect(await f.tool("dock_activate", { tabID: "workspace" }, { agent: "build" })).toContain("operated by the linux agent")
+  // Each refusal names the next step its caller can take: a host agent hands Linux work over, the linux agent reports.
+  expect(await f.tool("dock_read", {}, { agent: "build" })).toContain("open one with dock_open. Apps in the Linux workspace are operated by the linux agent, so hand that work to it")
+  expect(await f.tool("dock_activate", { tabID: "workspace" }, { agent: "build" })).toContain("operated by the linux agent, so hand that work to it")
   expect(f.viewer.browserReads).toBe(1)
   f.viewer.tabs = []
-  expect(await f.tool("ui_read", {}, linux)).toContain("Apps > Linux workspace")
+  expect(await f.tool("ui_read", {}, linux)).toContain("stop and report that the owner must open Apps > Linux workspace")
 })

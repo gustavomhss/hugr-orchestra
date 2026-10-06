@@ -204,29 +204,47 @@ test.each([
   expect(JSON.parse(String(await work))).toEqual({ ...primary, cleanup: { code: cleanup.expected, outcome: "unknown" } })
 })
 
-test("actual tool schemas accept browser/native refs, native selectors and explicit input modes", () => {
+test("actual tool schemas take numeric refs on browser tools and native refs, selectors and input modes on ui_* tools", () => {
   const f = fakePort()
   const hooks = createAppDockHooks(f.port) as Required<Hooks>
-  const click = tool.schema.object(hooks.tool.dock_click.args)
-  const read = tool.schema.object(hooks.tool.dock_read.args)
-  const type = tool.schema.object(hooks.tool.dock_type.args)
-  const action = tool.schema.object(hooks.tool.dock_action.args)
+  const click = tool.schema.object(hooks.tool.dock_click.args).strict()
+  const browserType = tool.schema.object(hooks.tool.dock_type.args).strict()
+  const read = tool.schema.object(hooks.tool.ui_read.args)
+  const type = tool.schema.object(hooks.tool.ui_type.args)
+  const action = tool.schema.object(hooks.tool.ui_act.args)
   expect(click.safeParse({ ref: 7 }).success).toBe(true)
   expect(click.safeParse({ ref: 1.5 }).success).toBe(true)
-  expect(click.safeParse({ ref: "n:opaque:punctuation!?" }).success).toBe(true)
-  expect(click.safeParse({ ref: `n:${"x".repeat(254)}` }).success).toBe(true)
-  for (const ref of [0, "7", "n:", `n:${"x".repeat(255)}`]) expect(click.safeParse({ ref }).success).toBe(false)
+  for (const ref of [0, "7", "n:button"]) expect(click.safeParse({ ref }).success).toBe(false)
+  expect(browserType.safeParse({ ref: 7, text: "café 🧪" }).success).toBe(true)
+  // The browser rejects empty text, and native refs and input modes do not exist there.
+  for (const args of [{ ref: 7, text: "" }, { ref: "n:input", text: "x" }, { ref: 7, text: "x", mode: "keyboard" }])
+    expect(browserType.safeParse(args).success).toBe(false)
   expect(read.safeParse({ rootRef: "n:root", cursor: "opaque", textOffset: 0 }).success).toBe(true)
   expect(read.safeParse({ rootRef: 7 }).success).toBe(false)
   expect(read.safeParse({ textOffset: 0.5 }).success).toBe(false)
   expect(read.safeParse({ cursor: "" }).success).toBe(false)
-  expect(type.safeParse({ ref: 7, text: "" }).success).toBe(true)
-  expect(type.safeParse({ ref: "n:input", text: "café 🧪 漢字 é", mode: "editable" }).success).toBe(true)
-  expect(type.safeParse({ ref: "n:input", text: "", mode: "keyboard" }).success).toBe(true)
+  expect(type.safeParse({ ref: "n:opaque:punctuation!?", text: "café 🧪 漢字 é", mode: "editable" }).success).toBe(true)
+  expect(type.safeParse({ ref: `n:${"x".repeat(254)}`, text: "", mode: "keyboard" }).success).toBe(true)
   expect(type.safeParse({ ref: "n:input", text: "", mode: "fallback" }).success).toBe(false)
+  for (const ref of [7, "7", "n:", `n:${"x".repeat(255)}`]) expect(type.safeParse({ ref, text: "" }).success).toBe(false)
   expect(action.safeParse({ ref: "n:button", actionID: "opaque-action" }).success).toBe(true)
-  expect(action.safeParse({ ref: 7, actionID: "opaque-action" }).success).toBe(true)
+  expect(action.safeParse({ ref: 7, actionID: "opaque-action" }).success).toBe(false)
   expect(action.safeParse({ ref: "n:button", actionID: "" }).success).toBe(false)
+})
+
+test("dock_screenshot returns the PNG as an image attachment instead of base64 text", async () => {
+  const f = fakePort()
+  const hooks = createAppDockHooks(f.port) as Required<Hooks>
+  // Large enough that base64 inside the text output would pass the 50 KB tool-output cap.
+  const data = Buffer.alloc(60 * 1024, 7).toString("base64")
+  const shot = hooks.tool.dock_screenshot.execute({}, context)
+  await turn()
+  f.deliver({ type: "dock.rpc.result", id: (f.sent[0] as Envelope).id, ok: true,
+    value: { mime: "image/png", bytes: 60 * 1024, prefix: "iVBORw0KGgo=", sha256: "digest", data } })
+  const result = await shot
+  if (typeof result === "string") throw new Error(`expected an attachment, got text: ${result.slice(0, 80)}`)
+  expect(result.output).not.toContain(data.slice(0, 64))
+  expect(result.attachments).toEqual([{ type: "file", mime: "image/png", url: `data:image/png;base64,${data}` }])
 })
 
 test("browser envelopes omit additive native fields and preserve coordinate precedence/error text", async () => {

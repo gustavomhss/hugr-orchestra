@@ -80,7 +80,8 @@ class Helper:
                 else:
                     binding = self.store.get(request["bindingID"], request["bindingEpoch"])
                     context = RequestContext(self.bus, self.registry, binding, timeout_ms,
-                                             lambda: cancelled.is_set() or binding["bindingID"] not in self.store.bindings)
+                                             lambda: cancelled.is_set() or binding["bindingID"] not in self.store.bindings,
+                                             self.store.cache)
                     args = request["args"]
                     value = read(context, args) if request["op"] == "read" else (
                         invoke(context, args["ref"], args.get("actionID"), args.get("mode", "stable")) if request["op"] == "action" else
