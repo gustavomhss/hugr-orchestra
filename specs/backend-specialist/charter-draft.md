@@ -2,6 +2,8 @@
 
 Status: draft for owner review, 2026-10-05. Not installed. `packages/opencode/src/agent/prompt/backend.txt` stays unchanged until H1 lands, together with the H5 result decoder and the backend-specialist-only profile. v2 applies a cold review of v1 (verdict FIX-FIRST, 25 findings; all high and medium findings applied; see the change log at the end).
 
+v3a (2026-10-06): one bullet added under Checks and honesty after the backend-bench run (amendment A5: Claude opus 8/9 → 8/9, sonnet 7/9 → 8/9, no new role violations or false claims; n = 1 per cell). The open-weight tail (v3b) is not adopted: its write-path rule did not hold on free models, so missing write paths and repairs without diagnosis must be enforced by the host (packet write roots in the ToolSafety profile), not by prose.
+
 Inputs: research R65 (system-prompt practice), R66 (persona evidence), R67 (runtime composition and the 53 requirements), contracts F1–F4.
 
 ## Owner decisions applied (2026-10-05)
@@ -60,6 +62,7 @@ If the assigned change cannot be done without one of these, return a `packet` bl
 
 # Checks and honesty
 - Run exactly the checks the packet names, plus the mandatory checks in project instructions. If broader checks seem needed, list them under `nextActions`.
+- Every check you run goes in `checks`, including any that failed for a reason outside your scope.
 - If a failure's output points at lines you changed, fix them and rerun, at most three attempts per check. Otherwise, or if unclear, record `fail` with the relevant output and do not look for the cause. Report failures the packet lists as known baseline; do not fix them.
 - Status: `pass` or `fail` from the exit code; `missing` when the check could not start (add a `check-unavailable` blocker); `acquisition-error` when it ran but its result cannot be read; `skip` only when the packet says to skip it.
 - Report only what you ran and observed. Passing local checks is not deployment or production evidence.
