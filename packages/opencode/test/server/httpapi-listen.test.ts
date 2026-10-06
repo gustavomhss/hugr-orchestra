@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, spyOn, test } from "bun:test"
 import net from "node:net"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
@@ -389,11 +389,14 @@ describe("HttpApi Server.listen", () => {
       expect((await requestTicket(listener, info.id, tmp.path, { origin: "https://evil.example" })).status).toBe(403)
 
       // Regression for #25698: minting without a directory uses the server cwd
-      // and cannot find a PTY registered in a project directory.
+      // and cannot find a PTY registered in a project directory. That cwd is not the checkout: Config would start a
+      // real npm install into its .opencode that outlives the test.
+      await using elsewhere = await tmpdir()
+      const cwd = spyOn(process, "cwd").mockImplementation(() => elsewhere.path)
       const ambiguous = await fetch(new URL(PtyPaths.connectToken.replace(":ptyID", info.id), listener.url), {
         method: "POST",
         headers: { authorization: authorization(), "x-opencode-ticket": "1" },
-      })
+      }).finally(() => cwd.mockRestore())
       expect(ambiguous.status).toBe(404)
 
       const directoryScoped = await fetch(

@@ -1,6 +1,7 @@
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { Npm } from "@opencode-ai/core/npm"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { Cause, Effect, Exit, Layer } from "effect"
@@ -12,6 +13,7 @@ import { SkillTool } from "../../src/tool/skill"
 import { Session } from "@/session/session"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { ToolRegistry } from "@/tool/registry"
+import { NpmTest } from "../fake/npm"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { SessionID, MessageID } from "../../src/session/schema"
 import { testEffect } from "../lib/effect"
@@ -30,7 +32,14 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([ToolRegistry.node, Session.node, SessionProjector.node, CrossSpawnSpawner.node, Ripgrep.node])))
+// The first test writes .opencode/skill, and Config starts a detached npm install into every .opencode directory it
+// loads. A real one outlives its test and, on Windows, starves file I/O for later test files in the same process.
+const it = testEffect(
+  TestAppNodeBuilder.build(
+    LayerNode.group([ToolRegistry.node, Session.node, SessionProjector.node, CrossSpawnSpawner.node, Ripgrep.node]),
+    [[Npm.node, NpmTest.noop]],
+  ),
+)
 
 describe("tool.skill", () => {
   it.instance("execute returns skill content block with files", () =>

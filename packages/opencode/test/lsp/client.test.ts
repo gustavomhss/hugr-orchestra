@@ -15,18 +15,21 @@ function spawnFakeServer() {
   }
 }
 
+// Every test gets its own directory: an instance in the checkout loads the repository's .opencode, where Config starts
+// a real npm install that outlives the test and, on Windows, starves file I/O for later test files.
 describe("LSPClient interop", () => {
   test("handles workspace/workspaceFolders request", async () => {
     const handle = spawnFakeServer() as any
+    await using tmp = await tmpdir()
 
     const client = await withTestInstance({
-      directory: process.cwd(),
+      directory: tmp.path,
       fn: (ctx) =>
         LSPClient.create({
           serverID: "fake",
           server: handle as unknown as LSPServer.Handle,
-          root: process.cwd(),
-          directory: process.cwd(),
+          root: tmp.path,
+          directory: tmp.path,
           instance: ctx,
         }),
     })
@@ -42,15 +45,16 @@ describe("LSPClient interop", () => {
 
   test("handles client/registerCapability request", async () => {
     const handle = spawnFakeServer() as any
+    await using tmp = await tmpdir()
 
     const client = await withTestInstance({
-      directory: process.cwd(),
+      directory: tmp.path,
       fn: (ctx) =>
         LSPClient.create({
           serverID: "fake",
           server: handle as unknown as LSPServer.Handle,
-          root: process.cwd(),
-          directory: process.cwd(),
+          root: tmp.path,
+          directory: tmp.path,
           instance: ctx,
         }),
     })
@@ -66,15 +70,16 @@ describe("LSPClient interop", () => {
 
   test("handles client/unregisterCapability request", async () => {
     const handle = spawnFakeServer() as any
+    await using tmp = await tmpdir()
 
     const client = await withTestInstance({
-      directory: process.cwd(),
+      directory: tmp.path,
       fn: (ctx) =>
         LSPClient.create({
           serverID: "fake",
           server: handle as unknown as LSPServer.Handle,
-          root: process.cwd(),
-          directory: process.cwd(),
+          root: tmp.path,
+          directory: tmp.path,
           instance: ctx,
         }),
     })
@@ -90,15 +95,16 @@ describe("LSPClient interop", () => {
 
   test("initialize does not overclaim unsupported diagnostics capabilities", async () => {
     const handle = spawnFakeServer() as any
+    await using tmp = await tmpdir()
 
     const client = await withTestInstance({
-      directory: process.cwd(),
+      directory: tmp.path,
       fn: (ctx) =>
         LSPClient.create({
           serverID: "fake",
           server: handle as unknown as LSPServer.Handle,
-          root: process.cwd(),
-          directory: process.cwd(),
+          root: tmp.path,
+          directory: tmp.path,
           instance: ctx,
         }),
     })
@@ -112,6 +118,7 @@ describe("LSPClient interop", () => {
 
   test("workspace/configuration returns one result per requested item", async () => {
     const handle = spawnFakeServer() as any
+    await using tmp = await tmpdir()
     const initialization = {
       alpha: {
         beta: 1,
@@ -120,7 +127,7 @@ describe("LSPClient interop", () => {
     }
 
     const client = await withTestInstance({
-      directory: process.cwd(),
+      directory: tmp.path,
       fn: (ctx) =>
         LSPClient.create({
           serverID: "fake",
@@ -128,8 +135,8 @@ describe("LSPClient interop", () => {
             ...(handle as unknown as LSPServer.Handle),
             initialization,
           },
-          root: process.cwd(),
-          directory: process.cwd(),
+          root: tmp.path,
+          directory: tmp.path,
           instance: ctx,
         }),
     })
