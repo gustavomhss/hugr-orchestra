@@ -154,6 +154,13 @@ const table = sqliteTable("session", {
   - A run takes a few minutes: give the shell call a long timeout or run it in the background.
   - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
 
+## Spawning Processes
+
+- Orchestra code starts child processes only through `ChildProcessSpawner`, `Process`, or `Process.interactive`.
+- Only `packages/core/src/omni.ts` imports `hugr-omni` (`packages/omni`); everything else goes through it.
+- The sites that stay outside omni, and why, are listed in `packages/omni/docs/orchestra-integration.md` §3.
+- `bun run check:spawn-imports` fails on any other import of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or `hugr-omni`, or use of `StdioClientTransport`. Today's sites are in `script/spawn-allowlist.json`; entries are only removed, never added without the lead.
+
 ## CI Cadence
 
 - The full suite runs once per epic, not per unit of work. Gate each unit with change-scoped tests through `bun run test:ci` and a local package typecheck.
