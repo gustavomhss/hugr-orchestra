@@ -237,6 +237,17 @@ test("C8 locates errors in raw tool output and values in identity arguments, out
   expect(ok(kept).items[1].fields.needs).toEqual([])
 })
 
+test("C8 accepts the session ID as a value, though only host framing shows it", () => {
+  const session = { op: "add", section: "values", src: ["a1"], fields: { name: "Session", value: sessionID } }
+  const memory = ok(run([session]))
+  expect(memory.items[0].fields.value).toBe(sessionID)
+  expect(memory.items[0].src).toEqual(["a1"])
+  // Any other session ID, and the session ID as an error, are still not found.
+  expect(dropped(run([{ ...session, fields: { ...session.fields, value: "ses_memory_other" } }]))).toBe(1)
+  expect(dropped(run([{ ...session, fields: { ...session.fields, value: producerID } }]))).toBe(1)
+  expect(dropped(run([{ ...failure, fields: { ...failure.fields, error: sessionID } }]))).toBe(1)
+})
+
 test("C9 requires evidence for facts and outcomes", () => {
   expect(failed(run([{ ...hypothesis, fields: { ...hypothesis.fields, status: "confirmed" } }]))).toBe("C9")
   expect(failed(run([{ ...hypothesis, fields: { status: "hypothesis", finding: "x", why: "y" } }]))).toBe("C9")
