@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {
+      "agentID": "worker-1"
+    }
+  ]
+}

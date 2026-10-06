@@ -1,0 +1,26 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "ran",
+            "cmd": "printf ran >> ran; true"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "checklist": []
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {}
+  ]
+}

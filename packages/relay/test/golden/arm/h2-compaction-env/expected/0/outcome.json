@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'A' passed. Next gate: B. do B (checkpoint: 1 gates cleared — summarize progress and drop now-stale detail before continuing)"
+  },
+  "stderr": ""
+}
