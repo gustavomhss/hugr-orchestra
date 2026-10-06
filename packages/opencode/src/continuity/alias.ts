@@ -31,6 +31,12 @@ export function marker(part: SessionV1.Part): Marker | undefined {
     return { type: "task-return", task_id: value.task_id, state: typeof value.state === "string" ? value.state : "completed" }
 }
 
+/** Marker for a command's expanded template: only the typed invocation counts as user text. */
+export function commandSource(command: string, args: string) {
+  const invocation = `/${command}${args.trim() ? ` ${args.trim()}` : ""}`
+  return { invocation, source: { type: "command", invocation } satisfies Marker }
+}
+
 /** What the human typed in a user message: non-synthetic text, and the invocation for a command template. */
 export function userText(message: SessionV1.WithParts) {
   if (message.info.role !== "user") return ""

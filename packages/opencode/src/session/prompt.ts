@@ -20,6 +20,7 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
+import { commandSource } from "@/continuity/alias"
 import { SystemPrompt } from "./system"
 import { Instruction } from "./instruction"
 import { Plugin } from "../plugin"
@@ -1472,9 +1473,7 @@ const layer = Layer.effect(
         throw error
       }
 
-      // Mark the expansion so only the typed invocation counts as user text for continuity.
-      const invocation = `/${input.command}${input.arguments.trim() ? ` ${input.arguments.trim()}` : ""}`
-      const source = { type: "command", invocation }
+      const { invocation, source } = commandSource(input.command, input.arguments)
       const templateParts = (yield* resolvePromptParts(template)).map((part) =>
         part.type === "text" ? { ...part, metadata: { ...part.metadata, source } } : part)
       const inputFiles = new Set(
@@ -1494,8 +1493,7 @@ const layer = Layer.effect(
               model: { providerID: taskModel.providerID, modelID: taskModel.modelID },
               prompt: templateParts.find((y) => y.type === "text")?.text ?? "",
             },
-            // The subtask part keeps no arguments: persist what the user typed, out of model context.
-            { type: "text" as const, text: invocation, ignored: true, metadata: { source } },
+            { type: "text" as const, text: invocation, ignored: true, metadata: { source } }, // typed invocation
           ]
         : [...uniqueTemplateParts, ...(input.parts ?? [])]
 
