@@ -28,6 +28,8 @@ export type Profile = {
     readonly enabled: boolean
     readonly allowedDomains?: ReadonlyArray<string>
     readonly denyPaths?: ReadonlyArray<string>
+    /** Give each sandboxed command a fresh writable directory as TMPDIR, removed when the command ends. */
+    readonly scratch?: boolean
   }
 }
 
@@ -192,16 +194,11 @@ export const make = Effect.gen(function* () {
         .pipe(Effect.map((entries) => entries.some(Boolean)))
       if (writing) {
         if (profile.writeRoots !== undefined) {
-          const roots = yield* Effect.forEach(profile.writeRoots, (root) => Effect.gen(function* () {
-            const physical = yield* fs.realPath(path.resolve(directory, root)).pipe(
-              Effect.mapError(() => new Denied({ reason: "write-root-acquisition" })),
-            )
-            const info = yield* fs.stat(physical).pipe(
-              Effect.mapError(() => new Denied({ reason: "write-root-stat" })),
-            )
-            if (info.type !== "Directory") return yield* new Denied({ reason: "write-root-not-directory" })
-            return physical
-          }))
+          // A root may be a file or a path not created yet; it resolves through its nearest existing ancestor on
+          // every call, so a root later replaced by a symlink is judged by where it points now.
+          const roots = yield* Effect.forEach(profile.writeRoots, (root) => canonical(path.resolve(directory, root)).pipe(
+            Effect.mapError(() => new Denied({ reason: "write-root-acquisition" })),
+          ))
           if (!roots.some((root) => contains(root, physical)))
             return yield* new Denied({ reason: "write-outside-physical-roots" })
         }

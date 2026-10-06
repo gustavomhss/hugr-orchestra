@@ -250,7 +250,8 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   }
 })
 
-const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [] }
+// No writePaths in these dispatches: the host binds a read-only backend child and reports it.
+const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [] }
 
 describe("tool.task backend-result", () => {
   it.instance("decodes a valid card into the work result", () =>
@@ -267,6 +268,7 @@ describe("tool.task backend-result", () => {
         risks: card.risks,
         nextActions: [],
         terminal: { reason: "ended" },
+        writeRoots: [],
       })
     }),
   )
@@ -459,6 +461,7 @@ describe("tool.task backend-result", () => {
         card: { parsed: true, messageID: result.childMessageID },
         ...card,
         terminal: { reason: "ended" },
+        writeRoots: [],
       })
     }),
   )

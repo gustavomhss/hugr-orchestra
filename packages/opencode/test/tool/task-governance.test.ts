@@ -262,6 +262,7 @@ it.instance(
         risks: [],
         nextActions: [],
         terminal: { reason: "interrupted", hostDetail: "Governed Task denied: reserved-child-incomplete" },
+        writeRoots: [],
       })
       if (!child) throw new Error("missing child")
       const childUser = yield* sessions.updateMessage({

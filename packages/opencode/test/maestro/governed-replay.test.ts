@@ -42,6 +42,9 @@ import { TestInstance, tmpdirScoped } from "../fixture/fixture"
 
 
 import { ref, layer, dispatch } from "./governed-fixture"
+import path from "node:path"
+import { realpath } from "node:fs/promises"
+import { WriteRoots } from "@/maestro/write-roots"
 afterEach(async () => { await disposeAllInstances() })
 const it = testEffect(layer)
 it.instance("completion-bearing governed replay requires actual terminal worker history", () =>
@@ -98,6 +101,26 @@ it.instance("completion-bearing governed replay requires actual terminal worker 
     expect(captures).toHaveLength(1)
 
     expect(promptCount()).toBe(1)
+  }),
+  { git: true, config: { agent: { maestro: { name: "Conductor" } } } },
+  60000,
+)
+
+it.instance("governed replay binds the backend seat's write roots through the reservation", () =>
+  Effect.gen(function* () {
+    const instance = yield* TestInstance
+    const directory = yield* Effect.promise(() => realpath(instance.directory))
+    const { sessions, def, input, first, context } = yield* dispatch({ subagentType: "backend", writePaths: ["src"] })
+    const bound = [path.join(directory, "src")]
+    expect(WriteRoots.read((yield* sessions.get(first.metadata.sessionId)).permission)).toEqual(bound)
+    expect(first.metadata).toMatchObject({ workResult: { writeRoots: ["src"] } })
+    for (const writePaths of [["docs"], ["src", "docs"], [], undefined]) {
+      const replay = yield* Effect.exit(def.execute({ ...input, writePaths }, context))
+      expect(Exit.isFailure(replay)).toBe(true)
+      if (Exit.isFailure(replay)) expect(Cause.pretty(replay.cause)).toContain("reservation-write-roots-mismatch")
+    }
+    expect(WriteRoots.read((yield* sessions.get(first.metadata.sessionId)).permission)).toEqual(bound)
+    expect((yield* def.execute(input, context)).metadata).toMatchObject({ workResult: { writeRoots: ["src"] } })
   }),
   { git: true, config: { agent: { maestro: { name: "Conductor" } } } },
   60000,

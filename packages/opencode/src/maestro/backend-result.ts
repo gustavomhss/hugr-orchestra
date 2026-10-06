@@ -54,6 +54,8 @@ export type WorkResult = {
   risks: Card["risks"]
   nextActions: Card["nextActions"]
   terminal: Terminal
+  // Host fact set by the Task path: the write roots enforced for the child, worktree-relative; empty is read-only.
+  writeRoots?: string[]
 }
 
 /**

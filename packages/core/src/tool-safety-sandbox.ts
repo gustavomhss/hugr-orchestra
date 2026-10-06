@@ -62,14 +62,18 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const cwd = yield* fs.realPath(command.options.cwd ?? process.cwd()).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-cwd-acquisition" })),
   )
-  const roots = yield* Effect.forEach(profile.writeRoots ?? [directory], (root) => Effect.gen(function* () {
-    const actual = yield* fs.realPath(path.resolve(directory, root)).pipe(
-      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-write-root-acquisition" })),
-    )
-    const info = yield* fs.stat(actual).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-write-root-stat" })))
-    if (info.type !== "Directory") return yield* new ToolSafety.Denied({ reason: "sandbox-write-root-not-directory" })
-    return actual
-  }))
+  // Roots follow ToolSafety.before: a file or a path not created yet resolves through its nearest existing ancestor.
+  const declared = yield* Effect.forEach(profile.writeRoots ?? [directory], (root) => canonical(fs, path.resolve(directory, root)).pipe(
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-write-root-acquisition" })),
+  ))
+  const scratch = profile.sandbox?.scratch
+    ? yield* fs.makeTempDirectoryScoped({ prefix: "opencode-tool-scratch-" }).pipe(
+        Effect.flatMap((created) => fs.realPath(created)),
+        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-acquisition" })),
+      )
+    : undefined
+  const roots = scratch ? [...declared, scratch] : declared
+  const confined = scratch ? { ...env, TMPDIR: scratch, TMP: scratch, TEMP: scratch } : env
   const entries = [...new Set([
     Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
     path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
@@ -84,13 +88,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     : [command.command, ...command.args]
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
-    const outside = roots.length ? `(require-all ${roots.map((root) => `(require-not (subpath ${JSON.stringify(root)}))`).join(" ")})` : ""
+    // file-write* also covers mode, flag, owner and xattr changes (chmod, chflags), so those stay inside the roots.
+    // /dev/null stays writable so ordinary redirections work.
+    const outside = `(require-all (require-not (literal "/dev/null")) ${roots.map((root) => `(require-not (subpath ${JSON.stringify(root)}))`).join(" ")})`
     const policy = ["(version 1)", "(allow default)", "(deny network*)", "(deny appleevent-send)", `(deny file-write* ${outside})`,
       ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`),
       ...protectedWrites.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
     ].join("\n")
     return ChildProcess.make(binary, ["-p", policy, ...invocation], {
-      ...command.options, cwd, shell: false, env, extendEnv: false,
+      ...command.options, cwd, shell: false, env: confined, extendEnv: false,
     })
   }
   const temp = yield* fs.makeTempDirectoryScoped({ prefix: "opencode-tool-sandbox-" }).pipe(
@@ -104,7 +110,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   }), { mode: 0o600 }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-write" })))
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`
   return ChildProcess.make(binary, ["--settings", policy, "--", invocation.map(quote).join(" ")], {
-    ...command.options, cwd, shell: false, env, extendEnv: false,
+    ...command.options, cwd, shell: false, env: confined, extendEnv: false,
   })
 })
 
