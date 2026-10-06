@@ -1,10 +1,10 @@
-# Session snapshot + handoff — the backend specialist backend specialist
+# Session snapshot + handoff — the backend specialist
 
 Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude Code) reads this file first, then the listed sources, and continues from §7 without rediscovering prior decisions.
 
-## 0. Preservation warning (read before anything else)
+## 0. Where this lives
 
-This file and **everything under `specs/backend-specialist/` is UNTRACKED** — a fresh clone will NOT contain it. Do not respawn in a fresh clone. Either (a) work in this same worktree (`/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin`, branch `backend-plugin`), or (b) copy `specs/backend-specialist/` into the new checkout first, or (c) ask the user to commit it. Verify with `git status --short | head` that `specs/backend-specialist/` is present before doing anything else.
+`specs/backend-specialist/` is tracked on `dev` (merged with Phase 1, PR #21). The live plan is `delivery-plan.md` next to this file.
 
 ## 1. Where we are (2026-10-06)
 
@@ -77,7 +77,7 @@ Research: `01-codex.md` … `28-backend-depth.md` (R01–R28 history), `29-http-
 
 - Continue in Portuguese, short and plain with a concrete example; technical detail on demand; keep code/docs in normal technical language.
 - Prior Q&A already settled (do not re-ask): external tools are specialized generators like Rails generators, not LLM-specific; one skill may use many tools and vice versa; Matt Pocock/GitHub value = small behavior slices + conditional references, adapted not copied.
-- Do not commit, push, open PRs, install toolchains or run broad suites unless the user explicitly asks; stage by name only if asked to commit.
+- Push, PR and merge are the agent's call; stage by name. CI (the `epic` label) and merges happen once per closed milestone, never per edit. Tests run only through `bun run test:ci`; locally only `bun typecheck` and the godfile check.
 - Do not invent APIs, hooks, MCP tools or Memory fields; verify against the pinned sources first.
 - Treat research reports as evidence/options, not installed behavior; distinguish researched → authored → installed → exercised.
 - Ask before crossing owner boundaries (diagnosis, architecture, scope, permissions, production operations).
