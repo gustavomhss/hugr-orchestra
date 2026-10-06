@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import path from "node:path"
 import { z } from "zod"
 import { ConfigMarkdown } from "@opencode-ai/core/config/markdown"
+import { Skill } from "../../src/skill"
 
 const root = path.resolve(import.meta.dir, "../../../..")
 const names = [
@@ -23,7 +24,7 @@ const frontmatter = z.object({
 })
 
 async function readSkill(name: string) {
-  const location = path.join(root, ".opencode/skills", name, "SKILL.md")
+  const location = path.join(Skill.PLAYBOOKS_DIR, name, "SKILL.md")
   const source = await Bun.file(location).text()
   const markdown = ConfigMarkdown.parse(source)
   return { location, source, content: markdown.content, data: frontmatter.parse(markdown.data) }
@@ -53,6 +54,15 @@ describe("Maestro Arsenal playbooks", () => {
     )
   })
 
+  // A project copy would shadow the shipped playbook in this repository and drift from what every other one gets.
+  test("each playbook has one copy, in the shipped directory", async () => {
+    const skills = async (cwd: string) =>
+      (await Array.fromAsync(new Bun.Glob("*/SKILL.md").scan({ cwd }))).map((file) => path.dirname(file))
+    const shipped = await skills(Skill.PLAYBOOKS_DIR)
+    expect(shipped).toEqual(expect.arrayContaining(names))
+    expect((await skills(path.join(root, ".opencode/skills"))).filter((name) => shipped.includes(name))).toEqual([])
+  })
+
   // The prompt replaces the provider base prompt, so it carries the harness facts; procedures live in playbooks and
   // tool descriptions. The ceiling is a tripwire against unreviewed growth, not a target.
   test("Maestro prompt stays within its size budget and names only shipped playbooks", async () => {
@@ -62,7 +72,7 @@ describe("Maestro Arsenal playbooks", () => {
     expect(named).toContain("maestro-governed")
     await Promise.all(
       named.map(async (name) =>
-        expect(await Bun.file(path.join(root, ".opencode/skills", name, "SKILL.md")).exists()).toBe(true),
+        expect(await Bun.file(path.join(Skill.PLAYBOOKS_DIR, name, "SKILL.md")).exists()).toBe(true),
       ),
     )
   })

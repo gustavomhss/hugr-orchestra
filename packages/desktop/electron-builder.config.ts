@@ -66,6 +66,11 @@ const getBase = (appId: string): Configuration => ({
       from: "resources/linux-runtime",
       to: "linux-runtime",
     },
+    // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them.
+    {
+      from: "../opencode/playbooks",
+      to: "playbooks",
+    },
     ...(channel === "dev"
       ? [
           {
