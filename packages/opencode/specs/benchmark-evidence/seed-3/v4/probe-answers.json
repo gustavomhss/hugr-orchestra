@@ -5,7 +5,7 @@
   },
   {
     "id": "P02",
-    "answer": "Standing rules and restrictions:\n- Do not modify files (u1; applies to the whole flow and was repeated in u2, u3 and later steps).\n- Do not implement the dark mode toggle; only inspect and propose scope (u1).\n- Call maestro_record_admission exactly once, before any inspection (u1, admission step).\n- Report the exact tool result (\"Report exact result.\", u2; the user repeated this on later steps).\n- Lucy's cold review: use maestro_record_review only, with the exact work card \"# Dark mode scope\\nInspect existing settings color scheme only.\\n\" and the same PASS check evidence. No transcript or model history and no file edits (u7, Lucy's review).\n- If Task delegation is unavailable, report the exact blocker (u7, Lucy delegation).\n- Do not use generic Task for Lucy's review. Use maestro_request_review exactly once per request, with the validation record, the exact work card and review-v1 (u10, Lucy review).\n- \"Do not dispatch Task yet; report exact decision.\" (u24, after approval). Later messages repeated \"Do not call Task yet\" for the authorization step. The user then explicitly asked for the task call to charlie, so this restriction no longer holds.\n- \"Do not explain after tool call.\" (u25, maestro_present_approval).\n- Latest messages: for the task call, \"Do not use governed field\", and the child must not edit files or commit."
+    "answer": "Standing rules and restrictions:\n- Do not modify files (u1; applies to the whole flow and was repeated in u2, u3 and later steps).\n- Do not implement the dark mode toggle; only inspect and propose scope (u1).\n- Call maestro_record_admission exactly once, before any inspection (u1, admission step).\n- Report the exact tool result (\"Report exact result.\", u2; the user repeated this on later steps).\n- Lucy's cold review: use maestro_record_review only, with the exact work card \"# Dark mode scope\\nInspect existing settings color scheme only.\\n\" and the same PASS check evidence. No transcript or model history and no file edits (u7, Lucy's review).\n- If Task delegation is unavailable, report the exact blocker (u7, Lucy delegation).\n- Do not use generic Task for Lucy's review. Use maestro_request_review exactly once per request, with the validation record, the exact work card and review-v1 (u10, Lucy review).\n- \"Do not dispatch Task yet; report exact decision.\" (u24, after approval). Later messages repeated \"Do not call Task yet\" for the authorization step. The user then explicitly asked for the task call to backend, so this restriction no longer holds.\n- \"Do not explain after tool call.\" (u25, maestro_present_approval).\n- Latest messages: for the task call, \"Do not use governed field\", and the child must not edit files or commit."
   },
   {
     "id": "P03",
@@ -21,7 +21,7 @@
   },
   {
     "id": "P06",
-    "answer": "None. Maestro edited and created no files. The task child (Charlie) also reported no edits and no commits. The working tree already had uncommitted Maestro changes, which were unrelated and untouched."
+    "answer": "None. Maestro edited and created no files. The task child (The backend specialist) also reported no edits and no commits. The working tree already had uncommitted Maestro changes, which were unrelated and untouched."
   },
   {
     "id": "P07",
@@ -45,11 +45,11 @@
   },
   {
     "id": "P12",
-    "answer": "Maestro should wait for the user's next instruction. The user's last request (task to charlie with the authorization ID) is done and reported. The authorization is evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e. The task is completed under ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e. Maestro should not redo any of it.\n- Maestro should flag Charlie's findings: no approved implementation scope found, and no runtime child-session ID.\n- Maestro should keep the standing rules: do not modify files and do not implement."
+    "answer": "Maestro should wait for the user's next instruction. The user's last request (task to backend with the authorization ID) is done and reported. The authorization is evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e. The task is completed under ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e. Maestro should not redo any of it.\n- Maestro should flag the backend specialist's findings: no approved implementation scope found, and no runtime child-session ID.\n- Maestro should keep the standing rules: do not modify files and do not implement."
   },
   {
     "id": "P13",
-    "answer": "- Lucy (cold reviewer): many delegations (t24, t26-t30, t34-t37). Earlier ones failed or were rejected, and one returned FIX_FIRST. The final delegation (t37) returned and ended in APPROVE with a persisted receipt.\n- Charlie (subagent_type \"charlie\", \"authorized scoped child\"): task ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e, state `completed`. It edited no files, made no commits and ran no tests."
+    "answer": "- Lucy (cold reviewer): many delegations (t24, t26-t30, t34-t37). Earlier ones failed or were rejected, and one returned FIX_FIRST. The final delegation (t37) returned and ended in APPROVE with a persisted receipt.\n- the backend specialist (subagent_type \"backend\", \"authorized scoped child\"): task ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e, state `completed`. It edited no files, made no commits and ran no tests."
   },
   {
     "id": "P14",
