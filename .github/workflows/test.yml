@@ -270,7 +270,11 @@ jobs:
 
       - name: Run unit tests
         timeout-minutes: 30
-        run: GITHUB_ACTIONS=false bun turbo test --filter='!opencode'
+        # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
+        run: |
+          filters=(--filter='!opencode')
+          if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@opencode-ai/httpapi-codegen'); fi
+          GITHUB_ACTIONS=false bun turbo test "${filters[@]}"
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
