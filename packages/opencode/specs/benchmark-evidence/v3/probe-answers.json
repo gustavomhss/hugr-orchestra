@@ -5,7 +5,7 @@
   },
   {
     "id": "P02",
-    "answer": "Standing rules:\n- \"do not implement\" / \"Do not modify files.\" Scope: the whole governed flow, every step. Implementation is not authorized.\n- Lucy review: a read-only cold review for the same work card and validation record, \"no transcript/model history, no file edits\". Scope: the Lucy review step. It goes through maestro_request_review once per explicit user instruction, not a direct maestro_record_review.\n- \"Do not use generic Task.\" Scope: the Lucy review, which must use maestro_request_review.\n- \"Return receipt ID only if trusted runner persisted Lucy APPROVE.\" Scope: reporting review receipts. A Lucy APPROVE in the tool output alone is not a receipt.\n- \"Do not dispatch Task yet\" / \"Do not call Task yet\". Scope: the approval-recording and grant steps. It was superseded when the user later told me to call task once with subagent_type \"backend\".\n- For the task call: \"Do not use governed field.\" and \"Do not edit files, do not commit.\" (Backend's prompt).\n- Other per-step limits: one call \"exactly once\" per instruction, and \"Do not inspect unrelated files\" (one review retry)."
+    "answer": "Standing rules:\n- \"do not implement\" / \"Do not modify files.\" Scope: the whole governed flow, every step. Implementation is not authorized.\n- Lucy review: a read-only cold review for the same work card and validation record, \"no transcript/model history, no file edits\". Scope: the Lucy review step. It goes through maestro_request_review once per explicit user instruction, not a direct maestro_record_review.\n- \"Do not use generic Task.\" Scope: the Lucy review, which must use maestro_request_review.\n- \"Return receipt ID only if trusted runner persisted Lucy APPROVE.\" Scope: reporting review receipts. A Lucy APPROVE in the tool output alone is not a receipt.\n- \"Do not dispatch Task yet\" / \"Do not call Task yet\". Scope: the approval-recording and grant steps. It was superseded when the user later told me to call task once with subagent_type \"backend\".\n- For the task call: \"Do not use governed field.\" and \"Do not edit files, do not commit.\" (The backend specialist's prompt).\n- Other per-step limits: one call \"exactly once\" per instruction, and \"Do not inspect unrelated files\" (one review retry)."
   },
   {
     "id": "P03",
@@ -21,11 +21,11 @@
   },
   {
     "id": "P06",
-    "answer": "None. No files were edited or created, per my statements. Backend also reported \"No files edited\" and no commits. Not independently verified."
+    "answer": "None. No files were edited or created, per my statements. The backend specialist also reported \"No files edited\" and no commits. Not independently verified."
   },
   {
     "id": "P07",
-    "answer": "The command was `git status --short`. Per my summary it showed uncommitted changes to Maestro files: agent/prompt/maestro.txt, tool/maestro-admission.ts, tool/registry.ts, schema/maestro-event.ts, plus new maestro/plan-revision.ts and tool/maestro-plan.ts. I called them pre-existing and unrelated. The raw output is not in the context. Backend later reported 10 modified and 5 untracked Maestro-related files."
+    "answer": "The command was `git status --short`. Per my summary it showed uncommitted changes to Maestro files: agent/prompt/maestro.txt, tool/maestro-admission.ts, tool/registry.ts, schema/maestro-event.ts, plus new maestro/plan-revision.ts and tool/maestro-plan.ts. I called them pre-existing and unrelated. The raw output is not in the context. The backend specialist later reported 10 modified and 5 untracked Maestro-related files."
   },
   {
     "id": "P08",
@@ -45,11 +45,11 @@
   },
   {
     "id": "P12",
-    "answer": "Nothing further is pending from the user's last instruction, since I reported Backend's child result. Wait for the user's next instruction. I should not edit files, implement, commit, or re-run approval or review without a new instruction. Reasons: the work is scope-only, implementation was never authorized, and each step is per explicit user instruction. Note that Backend reported \"No approved implementation scope found\" and no dark-mode files in the diff, which the user may want to look at."
+    "answer": "Nothing further is pending from the user's last instruction, since I reported the backend specialist's child result. Wait for the user's next instruction. I should not edit files, implement, commit, or re-run approval or review without a new instruction. Reasons: the work is scope-only, implementation was never authorized, and each step is per explicit user instruction. Note that the backend specialist reported \"No approved implementation scope found\" and no dark-mode files in the diff, which the user may want to look at."
   },
   {
     "id": "P13",
-    "answer": "Two delegations:\n- Lucy (read-only cold reviewer): generic Task failed with UnknownError. Via maestro_request_review it ended with a persisted APPROVE, receipt evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6. Complete.\n- Backend: validation was routed to member backend. A task call with authorizationID evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e returned task ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e in state \"completed\". It was a read-only inspection: no edits, no commits, no tests, no runtime child-session ID exposed, branch maestro-dev, HEAD cfcaa7026c, 10 modified and 5 untracked Maestro files, no dark-mode files in the diff."
+    "answer": "Two delegations:\n- Lucy (read-only cold reviewer): generic Task failed with UnknownError. Via maestro_request_review it ended with a persisted APPROVE, receipt evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6. Complete.\n- the backend specialist: validation was routed to member backend. A task call with authorizationID evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e returned task ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e in state \"completed\". It was a read-only inspection: no edits, no commits, no tests, no runtime child-session ID exposed, branch maestro-dev, HEAD cfcaa7026c, 10 modified and 5 untracked Maestro files, no dark-mode files in the diff."
   },
   {
     "id": "P14",

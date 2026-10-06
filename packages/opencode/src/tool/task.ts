@@ -28,6 +28,7 @@ import { readValidation } from "@/maestro/validation-record"
 import { readContext } from "@/maestro/context-record"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { BackendWork } from "@/maestro/backend-work"
+import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -96,6 +97,7 @@ const BaseParameterFields = {
   authorizationID: Schema.optional(Schema.String).annotate({
     description: "AuthorizationGranted ID for current team dispatch.",
   }),
+  writePaths: WriteRoots.Param,
 }
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
@@ -182,18 +184,12 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
-      const childPermissions = GovernedTaskReservation.childPermissions({
-        parent,
-        next,
-        primaryTools: cfg.experimental?.primary_tools,
-      })
-      let reservedChildPermissions:
-        | readonly {
-            readonly permission: string
-            readonly pattern: string
-            readonly action: "allow" | "deny" | "ask"
-          }[]
-        | undefined
+      const childPermissions = yield* WriteRoots.bind(
+        nextID,
+        params.writePaths,
+        GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }),
+      )
+      let reservedChildPermissions: readonly WriteRoots.Rule[] | undefined
       if (params.authorizationID) {
         if (caller?.id !== "maestro" || caller.native !== true) {
           return yield* Effect.fail(new Error("Authorized Task requires Maestro"))
@@ -381,6 +377,7 @@ export const TaskTool = Tool.define(
         })
       }
       const session = governedChildID ? reserved : resumed
+      if (!governedChildID) yield* WriteRoots.rebind(sessions, resumed, childPermissions)
       const permissionSnapshot = reservedChildPermissions
       if (
         reserved &&
@@ -463,6 +460,7 @@ export const TaskTool = Tool.define(
       const work = BackendWork.track({
         enabled: nextID === "backend",
         sessionID: nextSession.id,
+        writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
 

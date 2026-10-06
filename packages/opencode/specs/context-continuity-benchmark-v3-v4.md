@@ -47,7 +47,7 @@ Evidence is in `specs/benchmark-evidence/`. The harness is in `script/continuity
 | Transport | File exchange (`BENCH_MODEL=file`): each harness writes the exact request it would send and reads the reply from a file |
 | Producer request | The isolated transport for both versions (no parent request), byte-identical to what `LLMRequestPrep.prepare` sends. v3's provider response schema is included as text, since Claude has no constrained decoding for it. |
 | v4 code | Seed 1: strict run at `6d601b939e` (as merged), then the fixed run at `4287d5595e`. Seeds 2–3: `97de756523`, which adds the quote-rendering change in `278042aa09` and a merge of `dev`. The producer prompt is the same for all fixed runs; the seed-2 pass-1 request is byte-identical to seed 1's apart from session IDs. |
-| Trace | `ses_f1511c48bffeDAL863Z2Lw4p1b` "Dark Mode Toggle Scope Inspection Plan": 90 messages (28 user, 62 assistant), 43 tool calls, 15 child sessions (14 Lucy, 1 Backend). Read from a scratch copy of `opencode-local.db`. |
+| Trace | `ses_f1511c48bffeDAL863Z2Lw4p1b` "Dark Mode Toggle Scope Inspection Plan": 90 messages (28 user, 62 assistant), 43 tool calls, 15 child sessions (14 Lucy, 1 the backend specialist). Read from a scratch copy of `opencode-local.db`. |
 | Model window override | `limit.context` 55,000. 0.7 × 55k = 38.5k is crossed at message 35 of 90, about 40% of the trace. |
 | Output limit | `limit.output` 12,000, which gives an input limit of 43k. At 16k, v3's first request (39.7k) would be skipped on its input limit. |
 | Head budget | 32,000, the service cap, for both versions. The service formula min(32k, inputLimit/2) gives 21.5k here, but the trace's first turn alone is 24.3k transcript tokens, and v3's `snapshot` has no first-whole-turn rule, so v3 could never run. |
@@ -281,7 +281,7 @@ Counted over the final memories of the three seeds, and over passes 2 and 3 for 
 | Lost reply options | 0 of 3 | All six approve/decline words kept in every seed |
 | Stale objective | 0 of 3 | v3 updates the objective each pass; its "done when" is current in all seeds |
 | Per-message instruction promoted to a standing rule | 0 of 3 as a rule | v3 broadens existing rules instead (row 2) |
-| Tool list without outcomes or members | 3 of 3 | "maestro_request_review → ok" for runs that returned `LUCY_ERROR`; no Lucy/Backend names or child IDs |
+| Tool list without outcomes or members | 3 of 3 | "maestro_request_review → ok" for runs that returned `LUCY_ERROR`; no Lucy/the backend specialist names or child IDs |
 | Archive-reference footer | 3 of 3 | About 44% of the memory in seed 1 (27 references, 3,880 tokens) |
 
 **v4 (fixed)**
@@ -299,7 +299,7 @@ Counted over the final memories of the three seeds, and over passes 2 and 3 for 
 | Valid string dropped by C8 | 1 of 3 | Seed 3, `ses_f1511c48bffeDAL863Z2Lw4p1b`, visible only in host framing (section 3) |
 
 Neither version, in any seed, recorded a tool or delegate claim as a user approval, and neither lost a delegation.
-v4's host Activity lists all 10 Lucy delegations in every seed. Backend's delegation sits in the native tail.
+v4's host Activity lists all 10 Lucy delegations in every seed. The backend specialist's delegation sits in the native tail.
 
 ## 8. Threats to validity
 

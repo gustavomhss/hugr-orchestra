@@ -21,11 +21,11 @@
   },
   {
     "id": "P06",
-    "answer": "None. Maestro edited or created no files. The records created through the maestro tools are not files. The worktree already had modified and untracked Maestro files. Maestro called them unrelated existing changes, which was not independently checked. The child Backend also reported no files edited and no commits."
+    "answer": "None. Maestro edited or created no files. The records created through the maestro tools are not files. The worktree already had modified and untracked Maestro files. Maestro called them unrelated existing changes, which was not independently checked. The child the backend specialist also reported no files edited and no commits."
   },
   {
     "id": "P07",
-    "answer": "The command was `git status --short`.\n- It showed modified or untracked Maestro files: maestro.txt, maestro-admission.ts, registry.ts, maestro-event.ts, plan-revision.ts and maestro-plan.ts. The exact raw output is not in the context.\n- The child Backend later reported the worktree as dirty, with 10 modified and 5 untracked files, all Maestro-related."
+    "answer": "The command was `git status --short`.\n- It showed modified or untracked Maestro files: maestro.txt, maestro-admission.ts, registry.ts, maestro-event.ts, plan-revision.ts and maestro-plan.ts. The exact raw output is not in the context.\n- The child the backend specialist later reported the worktree as dirty, with 10 modified and 5 untracked files, all Maestro-related."
   },
   {
     "id": "P08",
@@ -45,11 +45,11 @@
   },
   {
     "id": "P12",
-    "answer": "Nothing is pending in the recorded flow, so Maestro should wait for the user's next instruction.\n- State: the plan is APPROVED, the authorization is evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e, and the Backend child task is completed. Its exact result has already been reported.\n- Maestro should not implement, edit files, or dispatch further Tasks without a new user instruction.\n- It should mention that the child reported \"No approved implementation scope found\" and no dark-mode files in the diff."
+    "answer": "Nothing is pending in the recorded flow, so Maestro should wait for the user's next instruction.\n- State: the plan is APPROVED, the authorization is evt_maestro_authorization_8febb87eaf0ebcf883bd48a4b45c1cc6664332d11c9c96a3524c41dfd39cdc0e, and the the backend specialist child task is completed. Its exact result has already been reported.\n- Maestro should not implement, edit files, or dispatch further Tasks without a new user instruction.\n- It should mention that the child reported \"No approved implementation scope found\" and no dark-mode files in the diff."
   },
   {
     "id": "P13",
-    "answer": "Two members were delegated work.\n- Lucy (cold review): the first Task delegation errored with UnknownError. Via maestro_request_review, the review was finally persisted as APPROVE (evt_maestro_review_909befec...).\n- Backend (task with the authorizationID): state \"completed\", task id ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e. It reported no files edited, no commits and no tests run, on branch maestro-dev, HEAD cfcaa7026c.\n- The \"general\" subagent in the approval's task intent (\"future scoped implementation\") was never dispatched."
+    "answer": "Two members were delegated work.\n- Lucy (cold review): the first Task delegation errored with UnknownError. Via maestro_request_review, the review was finally persisted as APPROVE (evt_maestro_review_909befec...).\n- the backend specialist (task with the authorizationID): state \"completed\", task id ses_maestro_dispatch_f4f558a90ceb4e7f0c67e404b4f12543e512d6c930ed28d10354fe0a85bf835e. It reported no files edited, no commits and no tests run, on branch maestro-dev, HEAD cfcaa7026c.\n- The \"general\" subagent in the approval's task intent (\"future scoped implementation\") was never dispatched."
   },
   {
     "id": "P14",

@@ -22,9 +22,8 @@ const ENTRY_NAMES = [
   "backend-check",
 ]
 const CARD_HEADINGS = ["Applicability", "Non-trigger", "Inputs", "Steps", "Tools and outputs", "Limits and checks"]
-// F6 sets no numeric size limit for an entry body. skill-catalog.md only asks to keep common steps inline and move
-// conditional detail behind links. This bound is provisional, measured in whitespace words (the unit Atlas uses
-// for its header bound), and awaits lead ratification.
+// Lead ruling S-1 (specs/backend-specialist/contracts/README.md) caps an entry body at 1,000 words, measured in
+// whitespace words (the unit Atlas uses for its header bound); references carry the detail.
 const MAX_ENTRY_BODY_WORDS = 1000
 
 const it = testEffect(
@@ -44,15 +43,19 @@ const withBackendSkills = <A, E, R>(self: Effect.Effect<A, E, R>) =>
   provideTmpdirInstance(() => self, { git: true, config: { skills: { paths: [ROOT] } } })
 
 describe("backend skills", () => {
-  it.live("discovers backend-implement with its name and description", () =>
+  it.live("discovers all six entries with their names and descriptions", () =>
     withBackendSkills(
       Effect.gen(function* () {
         const list = yield* discovered
-        const entry = list.find((item) => item.name === "backend-implement")
-        expect(entry).toBeDefined()
-        expect(entry!.location).toBe(path.join(ROOT, "backend-implement", "SKILL.md"))
-        expect(entry!.description).toStartWith("Common procedure for an assigned backend implementation packet")
-        expect(Skill.fmt([entry!], { verbose: false })).toContain("**backend-implement**")
+        // F6.1/F6.2: each entry is discovered once, from its own directory, and is advertised by name.
+        expect(list.map((item) => item.name).toSorted()).toEqual(ENTRY_NAMES.toSorted())
+        ENTRY_NAMES.forEach((name) => {
+          const entry = list.find((item) => item.name === name)
+          expect({ name, location: entry?.location }).toEqual({ name, location: path.join(ROOT, name, "SKILL.md") })
+          expect(Skill.fmt([entry!], { verbose: false })).toContain(`**${name}**`)
+        })
+        const implement = list.find((item) => item.name === "backend-implement")
+        expect(implement!.description).toStartWith("Common procedure for an assigned backend implementation packet")
         // F6.2: every discovered entry is one of the six names and sits in the directory of the same name.
         list.forEach((item) => {
           expect(ENTRY_NAMES).toContain(item.name)
@@ -86,7 +89,9 @@ describe("backend skills", () => {
         const edges = [...bodies].flatMap(([file, body]) => linkTargets(body).map((target) => ({ file, target })))
         expect(edges.length).toBeGreaterThan(0)
 
-        const resolved = yield* Effect.promise(() => Promise.all(edges.map((edge) => resolveLink(edge.file, edge.target))))
+        const resolved = yield* Effect.promise(() =>
+          Promise.all(edges.map((edge) => resolveLink(edge.file, edge.target))),
+        )
         expect(resolved.filter((item) => item.error)).toEqual([])
 
         // F6.9: every reference is reachable from an entry SKILL.md through at most two links.
@@ -97,15 +102,21 @@ describe("backend skills", () => {
         const references = markdown.filter((file) => file.includes(`${path.sep}references${path.sep}`))
         expect(references.length).toBeGreaterThan(0)
         expect(references.filter((file) => !reachable.has(file))).toEqual([])
+        // Every entry reaches the shared tree directly, so no entry ships as a body with nothing behind it.
+        expect(
+          entries
+            .filter((entry) => !graph.some((edge) => edge.from === entry.location && references.includes(edge.to)))
+            .map((entry) => entry.name),
+        ).toEqual([])
       }),
     ),
   )
 
-  it.live("keeps every entry body within the provisional size bound", () =>
+  it.live("keeps every entry body within the 1,000-word cap", () =>
     withBackendSkills(
       Effect.gen(function* () {
         const entries = yield* discovered
-        expect(entries.length).toBeGreaterThan(0)
+        expect(entries.map((entry) => entry.name).toSorted()).toEqual(ENTRY_NAMES.toSorted())
         entries.forEach((entry) => {
           const words = entry.content.split(/\s+/).filter(Boolean).length
           expect({ name: entry.name, words: words > MAX_ENTRY_BODY_WORDS ? words : "within bound" }).toEqual({
@@ -122,18 +133,16 @@ describe("backend skills", () => {
     expect(files.length).toBeGreaterThan(0)
     const relative = files.map((file) => path.relative(ROOT, file).split(path.sep).join("/"))
 
-    // F6.1, F6.3: six possible entry directories, no loose markdown at the root, SKILL.md only at entry level.
+    // F6.1, F6.3: exactly the six entry directories, each with its SKILL.md, no loose markdown at the root, and
+    // SKILL.md only at entry level.
     expect(relative.filter((file) => !ENTRY_NAMES.includes(file.split("/")[0]))).toEqual([])
+    expect(ENTRY_NAMES.filter((name) => !relative.includes(`${name}/SKILL.md`))).toEqual([])
     expect(relative.filter((file) => file.endsWith("/SKILL.md") && file.split("/").length !== 2)).toEqual([])
     // F6.5: entries other than backend-implement contain only their SKILL.md.
-    expect(
-      relative.filter((file) => !file.startsWith("backend-implement/") && !file.endsWith("/SKILL.md")),
-    ).toEqual([])
+    expect(relative.filter((file) => !file.startsWith("backend-implement/") && !file.endsWith("/SKILL.md"))).toEqual([])
     // F6.6: lowercase ASCII names, .md only, relative path of at most 120 characters.
     expect(
-      relative.filter(
-        (file) => file.length > 120 || !/^[a-z0-9-]+(\/[a-z0-9-]+)*\/([a-z0-9-]+|SKILL)\.md$/.test(file),
-      ),
+      relative.filter((file) => file.length > 120 || !/^[a-z0-9-]+(\/[a-z0-9-]+)*\/([a-z0-9-]+|SKILL)\.md$/.test(file)),
     ).toEqual([])
 
     const contents = await Promise.all(files.map(async (file) => ({ file, bytes: await Bun.file(file).bytes() })))
@@ -149,7 +158,9 @@ describe("backend skills", () => {
     const misordered = references.flatMap((item) => {
       const headings = [...stripCode(new TextDecoder().decode(item.bytes)).matchAll(/^## (.+)$/gm)].map((m) => m[1])
       const positions = headings.map((heading) => CARD_HEADINGS.indexOf(heading))
-      const ordered = positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1]))
+      const ordered = positions.every(
+        (position, index) => position >= 0 && (index === 0 || position > positions[index - 1]),
+      )
       return ordered && headings.length > 0 ? [] : [{ file: item.file, headings }]
     })
     expect(misordered).toEqual([])
@@ -191,14 +202,17 @@ async function resolveLink(from: string, target: string) {
     return { from, target, error: "absolute or non-https link" }
   const [file, anchor] = target.split("#")
   const resolved = file === "" ? from : path.resolve(path.dirname(from), file.split("/").join(path.sep))
-  const scope = from.startsWith(path.join(ROOT, "backend-implement") + path.sep)
-    ? path.join(ROOT, "backend-implement")
-    : ROOT
-  if (!resolved.startsWith(scope + path.sep)) return { from, target, error: `escapes ${path.relative(ROOT, scope) || "skills"}` }
+  // F6.4/F6.5: shared references live only under backend-implement, so a link stays inside its own entry or that tree.
+  const own = path.join(ROOT, path.relative(ROOT, from).split(path.sep)[0])
+  const scopes = [own, path.join(ROOT, "backend-implement")]
+  if (!scopes.some((scope) => resolved.startsWith(scope + path.sep)))
+    return { from, target, error: `escapes ${path.relative(ROOT, own)} and the shared tree` }
   const stat = await fs.lstat(resolved).catch(() => undefined)
   if (!stat?.isFile()) return { from, target, error: "target is not an existing regular file" }
   if (anchor === undefined) return { from, target, to: resolved }
-  const slugs = [...stripCode(await Bun.file(resolved).text()).matchAll(/^#{1,6} (.+)$/gm)].map((match) => slug(match[1]))
+  const slugs = [...stripCode(await Bun.file(resolved).text()).matchAll(/^#{1,6} (.+)$/gm)].map((match) =>
+    slug(match[1]),
+  )
   if (!slugs.includes(anchor)) return { from, target, error: "anchor matches no heading" }
   return { from, target, to: resolved }
 }
