@@ -35,7 +35,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ledger import EPOCH, FIXTURES, GOLDEN, PKG, load_module, reset, start, write_bytes, write_json  # noqa: E402
+from ledger import EPOCH, FIXTURES, GOLDEN, PKG, load_module, reset, start, write_bytes, write_generator, write_json  # noqa: E402
 
 sys.path.insert(0, str(PKG / "lib"))
 from relay_authoring import graph, hooks, store  # noqa: E402
@@ -550,6 +550,9 @@ def main():
     try:
         generate()
         generate_store(tmp)
+        write_generator(GOLDEN / "authoring", "authoring.py", [
+            "bin/relay-spec.py", "lib/relay_authoring/__init__.py", "lib/relay_authoring/config.py",
+            "lib/relay_authoring/graph.py", "lib/relay_authoring/hooks.py", "lib/relay_authoring/store.py"])
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

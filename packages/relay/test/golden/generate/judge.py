@@ -23,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ledger import GOLDEN, oracle_env, reset, run, start, write_bytes, write_json  # noqa: E402
+from ledger import GOLDEN, oracle_env, reset, run, start, write_bytes, write_generator, write_json  # noqa: E402
 
 HEADERS = ("anthropic-version", "content-type", "x-api-key")
 API = {"RELAY_JUDGE_BACKEND": "api", "RELAY_JUDGE_BASE_URL": "{server}", "RELAY_JUDGE_API_KEY": "local",
@@ -182,6 +182,7 @@ def main():
     tmp = start()
     try:
         generate(tmp)
+        write_generator(GOLDEN / "judge", "judge.py", ["benchmark/judge.py"])
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
