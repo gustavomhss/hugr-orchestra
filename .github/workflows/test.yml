@@ -194,7 +194,11 @@ jobs:
         timeout-minutes: 30
         working-directory: packages/opencode
         # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
-        run: bun test --timeout 30000 --only-failures --shard=${{ matrix.shard }}/${{ matrix.shards }}
+        # Shards are balanced by measured time (script/test-shard.ts), not by file count; the
+        # assignment fails the step if the script fails instead of falling back to every file.
+        run: |
+          files=$(bun script/test-shard.ts ${{ matrix.name }} ${{ matrix.shard }} ${{ matrix.shards }})
+          bun test --timeout 30000 --only-failures $files
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
@@ -266,7 +270,13 @@ jobs:
 
       - name: Run unit tests
         timeout-minutes: 30
-        run: GITHUB_ACTIONS=false bun turbo test --filter='!opencode'
+        # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
+        run: |
+          filters=(--filter='!opencode')
+          if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@opencode-ai/httpapi-codegen'); fi
+          # 16 suites share a 4-vCPU runner; Turbo's default of 10 at once pushed tests that take 1-3 s alone
+          # past their 5-10 s timeouts.
+          GITHUB_ACTIONS=false bun turbo test --concurrency=2 "${filters[@]}"
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
@@ -348,8 +358,6 @@ jobs:
         run: bun run test:e2e:local --shard=${{ matrix.shard }}/3
         env:
           CI: true
-          # The backend is mocked per page, so Linux shards run two browsers; Windows keeps one.
-          PLAYWRIGHT_WORKERS: ${{ runner.os == 'Linux' && '2' || '1' }}
         # The unsharded single-worker suite took 20-30 minutes.
         timeout-minutes: 30
 

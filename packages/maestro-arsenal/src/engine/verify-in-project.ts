@@ -1,6 +1,6 @@
 // Adapted from TechLead a68e7af, Copyright 2026 HuGR Labs, Apache-2.0.
 // Virtual siblings retain actual project resolution; baseline is a multiset, never an empty fallback.
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { type ArsenalContext } from "../contract.ts";
 import { type AppliedFiles } from "./apply-plan.ts";
@@ -20,7 +20,7 @@ export async function verifyInProject(opts: {
   const names = new Map(opts.files.modules.map((module) => [safeModule(module.id), join(dirname(target), `${prefix}-${module.id}.ts`)]));
   names.set(safeModule(opts.barrelName), target);
   const rewrite = (source: string) => [...names].reduce((out, [id, path]) => {
-    const local = `./${path.slice(path.lastIndexOf("/") + 1).replace(/\.ts$/, ".js")}`;
+    const local = `./${basename(path).replace(/\.ts$/, ".js")}`;
     return out.replaceAll(`'./${id}.js'`, `'${local}'`).replaceAll(`"./${id}.js"`, `"${local}"`);
   }, source);
   const virtual = Object.fromEntries(opts.files.modules.map((module) => [names.get(module.id)!, rewrite(module.content)]));

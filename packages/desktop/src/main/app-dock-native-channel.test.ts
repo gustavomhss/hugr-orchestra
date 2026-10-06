@@ -8,6 +8,13 @@ import { NativeDockClient } from "./app-dock-native-client"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 
 // Real local sockets exercise only transport behavior, not Docker or runtime ownership.
+// The fixture listens on unix:// sockets, which the channel rejects on Windows by design (it accepts only npipe://
+// there), so this file covers the POSIX transport only.
+const unixSocketTest = test.skipIf(process.platform === "win32")
+// The attach retention bound assumes the socket stops reading at readableHighWaterMark, as Electron's Node does.
+// Under Bun on Linux one read buffers far past it (219264 bytes against a 65536 mark on ubuntu-latest), so the
+// cases that leave a large backlog in the socket trip the bound for a reason the product never meets.
+const highWaterMarkTest = test.skipIf(process.platform !== "darwin")
 const response = Buffer.from("HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\n")
 const containerID = "a".repeat(64)
 const cap = NativeDockProtocol.limits.frameBytes
@@ -115,7 +122,7 @@ async function failure(promise: Promise<unknown>) {
   })
 }
 
-test("synchronous create defers attach, snapshots identity, and preserves fragmented/coalesced raw bytes", async () => {
+unixSocketTest("synchronous create defers attach, snapshots identity, and preserves fragmented/coalesced raw bytes", async () => {
   const server = await peer(Buffer.alloc(0))
   const received: Uint8Array[] = []
   const state = { starts: 0, stops: 0 }
@@ -163,7 +170,7 @@ test("synchronous create defers attach, snapshots identity, and preserves fragme
   expect(exits).toEqual([{ code: 23, reason: "helper-exited" }])
 })
 
-test("accepts exact 16 KiB HTTP boundary and exact frame cap; drains stderr beyond 64 KiB", async () => {
+highWaterMarkTest("accepts exact 16 KiB HTTP boundary and exact frame cap; drains stderr beyond 64 KiB", async () => {
   const prefix = "HTTP/1.1 101 Switching Protocols\r\nConnection: keep-alive, Upgrade\r\nUpgrade: tcp\r\nX-Pad: "
   const header = Buffer.from(prefix + "x".repeat(16384 - prefix.length - 4) + "\r\n\r\n")
   expect(header.length).toBe(16384)
@@ -180,7 +187,7 @@ test("accepts exact 16 KiB HTTP boundary and exact frame cap; drains stderr beyo
   expect(transport.state.stops).toBe(0)
 })
 
-test.each([
+unixSocketTest.each([
   ["200", "HTTP/1.1 200 OK\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\n"],
   ["redirect", "HTTP/1.1 307 Redirect\r\nLocation: http://secret.invalid/token\r\n\r\n"],
   ["version", "HTTP/2 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\n"],
@@ -206,7 +213,7 @@ test.each([
   expect(server.state.bytes).toBe(0)
 })
 
-test.each(["selector-0", "selector-3", "selector-255", "reserved-1", "reserved-2", "reserved-3", "oversize", "uint32-max"])(
+unixSocketTest.each(["selector-0", "selector-3", "selector-255", "reserved-1", "reserved-2", "reserved-3", "oversize", "uint32-max"])(
   "rejects multiplex %s and tears down once", async (kind) => {
     const server = await peer()
     const transport = launch(server.endpoint)
@@ -232,7 +239,7 @@ test.each(["selector-0", "selector-3", "selector-255", "reserved-1", "reserved-2
   },
 )
 
-test.each(["header", "mux-header", "payload"])("partial %s EOF fails protocol and joins actual stop", async (kind) => {
+unixSocketTest.each(["header", "mux-header", "payload"])("partial %s EOF fails protocol and joins actual stop", async (kind) => {
   const server = await peer(Buffer.alloc(0))
   const reap = hold<NativeDockProtocol.Exit>({ code: 9, reason: "helper-exited" })
   const transport = launch(server.endpoint, { stop: () => reap.promise })
@@ -251,7 +258,7 @@ test.each(["header", "mux-header", "payload"])("partial %s EOF fails protocol an
   expect(exits).toEqual([{ code: 9, reason: "helper-exited" }])
 })
 
-test.each(["late", "slow"])("%s stdout listener backpressures real socket without dropping bytes", async (kind) => {
+highWaterMarkTest.each(["late", "slow"])("%s stdout listener backpressures real socket without dropping bytes", async (kind) => {
   const server = await peer()
   const transport = launch(server.endpoint)
   const gate = hold<void>(undefined)
@@ -281,7 +288,7 @@ test.each(["late", "slow"])("%s stdout listener backpressures real socket withou
   expect(received.bytes).toBe(16 * cap)
 }, 8000)
 
-test("stdin waits for start and real writable backpressure before resolving; no retry or mutation", async () => {
+unixSocketTest("stdin waits for start and real writable backpressure before resolving; no retry or mutation", async () => {
   const server = await peer(Buffer.alloc(0))
   const starting = hold<void>(undefined)
   const transport = launch(server.endpoint, { start: () => starting.promise })
@@ -309,7 +316,7 @@ test("stdin waits for start and real writable backpressure before resolving; no 
   expect(transport.state.stops).toBe(0)
 })
 
-test("listener installed by start resumes coalesced stdout while previous read is settling", async () => {
+unixSocketTest("listener installed by start resumes coalesced stdout while previous read is settling", async () => {
   const server = await peer(Buffer.concat([response, mux(Buffer.from("coalesced"))]))
   const received: Uint8Array[] = []
   const transport = launch(server.endpoint, { start: async () => {
@@ -321,7 +328,7 @@ test("listener installed by start resumes coalesced stdout while previous read i
   expect(transport.state.stops).toBe(0)
 })
 
-test("write admission bounds queue count, aggregate bytes, and individual frame bytes", async () => {
+unixSocketTest("write admission bounds queue count, aggregate bytes, and individual frame bytes", async () => {
   const server = await peer(Buffer.alloc(0))
   const transport = launch(server.endpoint)
   const writes = Array.from({ length: 32 }, () => failure(transport.channel.write(Buffer.alloc(0))))
@@ -337,7 +344,7 @@ test("write admission bounds queue count, aggregate bytes, and individual frame 
   expect(await maximum).toMatchObject({ code: "client-closed" })
 })
 
-test.each(["attach", "socket"])("1s write deadline covers waiting for %s", async (kind) => {
+unixSocketTest.each(["attach", "socket"])("1s write deadline covers waiting for %s", async (kind) => {
   const server = await peer(Buffer.alloc(0))
   const transport = launch(server.endpoint)
   const attach = await server.attached
@@ -360,7 +367,7 @@ test.each(["attach", "socket"])("1s write deadline covers waiting for %s", async
   expect(server.state.bytes).toBe(0)
 })
 
-test("subscriptions are bounded, removable, and independently owned even for identical functions", async () => {
+unixSocketTest("subscriptions are bounded, removable, and independently owned even for identical functions", async () => {
   const server = await peer(Buffer.alloc(0))
   const transport = launch(server.endpoint)
   const data = () => {}
@@ -381,7 +388,7 @@ test("subscriptions are bounded, removable, and independently owned even for ide
   await transport.channel.terminate()
 })
 
-test("terminate before startup microtask never connects or starts; late exit replays once", async () => {
+unixSocketTest("terminate before startup microtask never connects or starts; late exit replays once", async () => {
   const server = await peer()
   const transport = launch(server.endpoint)
   const stopping = transport.channel.terminate()
@@ -397,7 +404,7 @@ test("terminate before startup microtask never connects or starts; late exit rep
   expect(exits).toEqual([{ code: 0, reason: "helper-exited" }])
 })
 
-test("terminate during attach prevents late upgrade from starting after stop", async () => {
+unixSocketTest("terminate during attach prevents late upgrade from starting after stop", async () => {
   const server = await peer(Buffer.alloc(0))
   const transport = launch(server.endpoint)
   const attach = await server.attached
@@ -408,7 +415,7 @@ test("terminate during attach prevents late upgrade from starting after stop", a
   expect(server.state.connections).toBe(1)
 })
 
-test.each(["resolve", "reject"])("terminate joins in-flight start %s before calling stop", async (kind) => {
+unixSocketTest.each(["resolve", "reject"])("terminate joins in-flight start %s before calling stop", async (kind) => {
   const server = await peer()
   const starting = hold<void>(undefined)
   const reap = hold<NativeDockProtocol.Exit>({ code: 0 })
@@ -432,7 +439,7 @@ test.each(["resolve", "reject"])("terminate joins in-flight start %s before call
   expect(transport.state.stops).toBe(1)
 })
 
-test.each(["throw", "reject"])("start %s triggers one sanitized teardown", async (kind) => {
+unixSocketTest.each(["throw", "reject"])("start %s triggers one sanitized teardown", async (kind) => {
   const server = await peer()
   const transport = launch(server.endpoint, { start: () => {
     if (kind === "throw") throw new Error("private start failure")
@@ -447,7 +454,7 @@ test.each(["throw", "reject"])("start %s triggers one sanitized teardown", async
   expect(server.state.connections).toBe(1)
 })
 
-test("EOF never acknowledges reaping before stop; exit preserves resource reason and isolates callbacks", async () => {
+unixSocketTest("EOF never acknowledges reaping before stop; exit preserves resource reason and isolates callbacks", async () => {
   const server = await peer()
   const reap = hold<NativeDockProtocol.Exit>({ code: 0 })
   const transport = launch(server.endpoint, { stop: () => reap.promise })
@@ -479,7 +486,7 @@ test("EOF never acknowledges reaping before stop; exit preserves resource reason
   expect(transport.state.stops).toBe(1)
 })
 
-test.each(["throw", "reject"])("stop %s rejects shared termination without fake exit or retry", async (kind) => {
+unixSocketTest.each(["throw", "reject"])("stop %s rejects shared termination without fake exit or retry", async (kind) => {
   const server = await peer()
   const transport = launch(server.endpoint, { stop: () => {
     if (kind === "throw") throw new Error("secret owner failure")
@@ -498,7 +505,7 @@ test.each(["throw", "reject"])("stop %s rejects shared termination without fake 
   expect(transport.state.stops).toBe(1)
 })
 
-test("socket and subscriber failures retire once without leaking diagnostics", async () => {
+unixSocketTest("socket and subscriber failures retire once without leaking diagnostics", async () => {
   const server = await peer()
   const missing = launch(`${server.endpoint}-missing`)
   await until(() => missing.state.stops === 1)
@@ -513,7 +520,7 @@ test("socket and subscriber failures retire once without leaking diagnostics", a
   expect(await failure(transport.channel.write(Buffer.alloc(0)))).toMatchObject({ code: "transport-error", message: "Native attach delivery failed" })
 })
 
-test.each(["tcp://127.0.0.1:1", "http://localhost", "unix://foreign/tmp/s", "unix:///tmp/s?token=secret", "unix:///tmp/%00"])(
+unixSocketTest.each(["tcp://127.0.0.1:1", "http://localhost", "unix://foreign/tmp/s", "unix:///tmp/s?token=secret", "unix:///tmp/%00"])(
   "rejects nonlocal or malformed endpoint %s", async (endpoint) => {
     const transport = launch(endpoint)
     await until(() => transport.state.stops === 1)
@@ -524,7 +531,7 @@ test.each(["tcp://127.0.0.1:1", "http://localhost", "unix://foreign/tmp/s", "uni
   },
 )
 
-test("invalid container ID cannot inject request bytes", async () => {
+unixSocketTest("invalid container ID cannot inject request bytes", async () => {
   const server = await peer()
   const state = { stops: 0 }
   const channel = AppDockNativeChannel.create({ endpoint: server.endpoint, containerID: "name\r\nInjected: yes",
@@ -536,7 +543,7 @@ test("invalid container ID cannot inject request bytes", async () => {
   expect(server.state.connections).toBe(0)
 })
 
-test("NativeClient 1s grace reports failure while channel still awaits actual reap", async () => {
+unixSocketTest("NativeClient 1s grace reports failure while channel still awaits actual reap", async () => {
   const server = await peer()
   const reap = hold<NativeDockProtocol.Exit>({ code: 0 })
   const transport = launch(server.endpoint, { stop: () => reap.promise })
@@ -559,7 +566,7 @@ test("NativeClient 1s grace reports failure while channel still awaits actual re
   expect(await failure(native.close())).toMatchObject({ code: "helper-termination-timeout" })
 })
 
-test("5s startup deadline bounds silent attach and unresolved start", async () => {
+unixSocketTest("5s startup deadline bounds silent attach and unresolved start", async () => {
   const silent = await peer(Buffer.alloc(0))
   const server = await peer()
   const starting = hold<void>(undefined)
@@ -575,7 +582,7 @@ test("5s startup deadline bounds silent attach and unresolved start", async () =
   expect(start.state.stops).toBe(1)
 }, 8000)
 
-test("5s cleanup watchdog fails stuck start/stop; late settlement never rewrites failed termination", async () => {
+unixSocketTest("5s cleanup watchdog fails stuck start/stop; late settlement never rewrites failed termination", async () => {
   const server = await peer()
   const other = await peer()
   const starting = hold<void>(undefined)

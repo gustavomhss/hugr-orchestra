@@ -64,6 +64,8 @@ def read(context, query):
               "visited": 0, "calls": 0, "omittedHiddenMenus": 0, "reasons": list(state["partial"])}, "consistency": "non-atomic", "capabilities": {
               "read": {"supported": True, "reason": "bounded-live-traversal"},
               "mutation": {"supported": False, "reason": "per-item-capabilities; no-logical-dataset-identity"}}}
+    for name in binding.get("unresponsive", ())[:8]:
+        _reason(result, "app-not-responding:" + name)  # Left out of this binding; see BindingStore.discover.
     seen, position = set(), None
     context.paged = True
     # Exact JSON bytes of the accepted items (with their ", " separators) and of

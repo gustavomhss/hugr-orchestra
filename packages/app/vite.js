@@ -32,6 +32,15 @@ export default [
         worker: {
           format: "es",
         },
+        optimizeDeps: {
+          // The dep scanner does not follow `?worker&url` imports, so the markdown worker's
+          // dependencies were only discovered when the first message rendered. Vite then
+          // re-optimized and force-reloaded the open page mid-session (and mid-e2e-test).
+          // Anchored on @opencode-ai/ui so the same specs resolve from the app and desktop roots.
+          include: ["@shikijs/stream", "katex", "marked", "marked-shiki", "remend"].map(
+            (dependency) => `@opencode-ai/ui > ${dependency}`,
+          ),
+        },
       }
     },
   },

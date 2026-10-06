@@ -1,8 +1,8 @@
 import type { HomeProjectsController } from "./home-projects-controller"
 import { HomeProjectsView } from "./home-projects-view"
-import type { HomeScrollController } from "./home-scroll-controller"
 
-export function HomeProjects(props: { projects: HomeProjectsController; scroll: HomeScrollController }) {
+// The project list Home shows in narrow windows, where the Orchestra sidebar is not mounted.
+export function HomeProjects(props: { projects: HomeProjectsController }) {
   return (
     <HomeProjectsView
       language={props.projects.copy.language}
@@ -18,7 +18,7 @@ export function HomeProjects(props: { projects: HomeProjectsController; scroll: 
       defaultServerKey={props.projects.server.defaultKey}
       canRevealProject={props.projects.project.canReveal}
       unseenCount={props.projects.project.unseenCount}
-      onWheel={props.scroll.viewport.containWheel}
+      onWheel={() => undefined}
       onChooseProject={props.projects.project.choose}
       onFocusServer={props.projects.server.focus}
       onToggleCollapsed={props.projects.server.toggleCollapsed}

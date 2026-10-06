@@ -10,8 +10,8 @@ import {
 } from "./timeline-test-helpers"
 import { waitForStableTimeline } from "./session-tab-switch-probe"
 
-const homeRow = '[data-component="home-session-row"]'
-const homeShell = '[data-component="home-session-search"]'
+const homeRow = '[data-component="home-impact-row"]'
+const homeShell = '[data-component="orchestra-kpis"]'
 
 benchmark.describe("performance: home and tab navigation", () => {
   benchmark("opens a home session and paints its titlebar tab", async ({ page, report }) => {
@@ -107,8 +107,18 @@ async function setup(page: Parameters<typeof mockStressTimeline>[0], sessionIDs:
   await mockStressTimeline(page)
   await installTimelineSettings(page)
   await installStressSessionTabs(page, { sessionIDs })
+  await installHomeActivity(page)
 }
 
-function messageSelector(id: string) {
-  return `[data-message-id="${id}"]`
+// Home ranks the selected profile's sessions; the mock server gives each root session one message today.
+async function installHomeActivity(page: Parameters<typeof mockStressTimeline>[0]) {
+  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+  await page.addInitScript(
+    ({ server, directory }) =>
+      localStorage.setItem(
+        "opencode.global.dat:layout",
+        JSON.stringify({ home: { selection: { server, directory } } }),
+      ),
+    { server, directory: fixture.directory },
+  )
 }

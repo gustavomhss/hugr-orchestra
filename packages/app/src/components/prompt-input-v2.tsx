@@ -28,6 +28,8 @@ import { useLocal } from "@/context/local"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
 import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
 import { createSessionTabs } from "@/pages/session/helpers"
+import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
+import { useSessionDelivery } from "@/pages/session/composer/delivery"
 import { showToast } from "@/utils/toast"
 import { PromptInputV2, type PromptInputV2Suggestion } from "@opencode-ai/session-ui/v2/prompt-input"
 import {
@@ -52,17 +54,41 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
   const dialog = useDialog()
   const command = useCommand()
   const language = useLanguage()
+  // The session composer reads "Message Orchestra…" in normal mode; Home and Janitor keep their copy.
+  // The view inherits from the controller's own, so its reactive getters stay live.
+  const view = Object.create(props.controller.view, {
+    placeholder: {
+      value: () =>
+        props.controller.state.mode === "normal"
+          ? language.t("orchestra.chat.placeholder")
+          : props.controller.view.placeholder?.(),
+    },
+    // The Orchestra tools carry the session's one Stop, so send stays send while a run works, as in the
+    // approved mock; a second control named Stop would only repeat it.
+    submit: { value: Object.create(props.controller.view.submit, { stopping: { value: () => false } }) },
+  })
+  const controller = () =>
+    props.sessionID
+      ? (Object.create(props.controller, { view: { value: view } }) as PromptInputV2ComposerController)
+      : props.controller
 
   return (
     <div class="flex flex-col gap-3">
       <PromptInputV2
-        controller={props.controller}
+        controller={controller()}
         borderUnderlay={props.borderUnderlay}
         class={props.class}
         variantControlVisible={!props.controller.model.loading}
         attachKeybind={command.keybindParts("file.attach")}
         attachShortcut={command.keybind("file.attach")}
-        subagentModelsControl={<PromptInputV2SubagentModelsControl sessionID={props.sessionID} />}
+        subagentModelsControl={
+          <>
+            <Show when={props.sessionID}>
+              {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
+            </Show>
+            <PromptInputV2SubagentModelsControl sessionID={props.sessionID} />
+          </>
+        }
         modelControl={
           <PromptInputV2ModelControl
             loading={props.controller.model.loading}
@@ -224,6 +250,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     onAbort: props.onAbort,
     onSubmit: props.onSubmit,
     model: props.controls.model.selection,
+    delivery: useSessionDelivery(() => props.controls.session.id).delivery,
   })
 
   const referenceDescription = (reference: ReferenceInfo) =>
@@ -508,7 +535,13 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
         data-control-type="dialog"
         onClick={open}
       >
-        <span class="truncate leading-4">{language.t("session.tasks.models.label", { count: label() })}</span>
+        <span class="truncate leading-4">
+          {props.sessionID
+            ? hasModelScope(rules())
+              ? language.t("orchestra.chat.models.count", { count: label() })
+              : language.t("orchestra.chat.models.all")
+            : language.t("session.tasks.models.label", { count: label() })}
+        </span>
         <span class="-ml-0.5 -mr-1 flex shrink-0">
           <Icon name="chevron-down" />
         </span>

@@ -13,7 +13,7 @@ import {
   setupGovernance,
   title,
 } from "../orchestra/governance.fixture"
-import { dockCard, openCockpit, pane, setupCockpit } from "../orchestra/session-cockpit.fixture"
+import { dockCard, openCockpit, pane, railTab, setupCockpit } from "../orchestra/session-cockpit.fixture"
 import {
   auditAccessibility,
   expectTabOrder,
@@ -29,6 +29,8 @@ test.setTimeout(120_000)
 
 const sidebar = '[data-component="orchestra-sidebar"]'
 const profileMenu = '[data-component="orchestra-profile-picker"]'
+const home = '[data-component="orchestra-home"]'
+const chapter = '[data-component="orchestra-chapter"]'
 const cockpit = ".orchestra-cockpit"
 const dialog = '[role="dialog"]'
 const evidence = "[data-orchestra-evidence]"
@@ -37,14 +39,17 @@ for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: sidebar and profile menu are named, keyboard-ordered, return focus and meet contrast`, async ({
     page,
   }) => {
-    await setupCompactNavigation(page, { scheme })
+    await setupCompactNavigation(page, { scheme, selected: true })
     await page.goto("/")
     const nav = page.locator(sidebar)
     await expect(nav).toHaveCSS("width", "230px")
     await expect(nav.getByRole("button", { name: "Chat", exact: true })).toBeEnabled()
+    // The mock server lists build plus Orchestra's native maestro agent.
+    await expect(nav.locator(".orchestra-profile-text small")).toHaveText("2 agents · main")
+    await expect(page.locator(home)).toHaveText(/\w/)
     expect(await auditAccessibility(page, [sidebar])).toEqual([])
     await expectTabOrder(page, [sidebar], { trap: false })
-    const results = await measureContrast(page, sidebarText)
+    const results = await measureContrast(page, [...sidebarText, { name: "Home text", selector: home }])
     await nav.getByRole("button", { name: "MCP", exact: true }).focus()
     results.push(...(await measureContrast(page, [ring("nav focus ring", `${sidebar} .orchestra-nav-button`)])))
     await nav.getByRole("button", { name: "Home", exact: true }).focus()
@@ -89,8 +94,16 @@ for (const scheme of ["dark", "light"] as const) {
           selector: `${sidebar} .orchestra-nav-button:not(:disabled) .orchestra-nav-icon`,
           kind: "graphic",
         },
+        { name: "compact toggle icon", selector: `${sidebar} .orchestra-navigation-toggle-icon`, kind: "graphic" },
       ])),
     )
+    // Chapter text sits on the same glass over the photograph, which darkens toward the panel's foot.
+    await nav.getByRole("button", { name: ".env", exact: true }).click()
+    await expect(page.getByRole("heading", { name: ".env", level: 1 })).toBeVisible()
+    results.push(...(await measureContrast(page, [{ name: "chapter text", selector: chapter }])))
+    await nav.getByRole("button", { name: "MCP", exact: true }).click()
+    await expect(page.locator('[data-slot="orchestra-wip"]')).toBeVisible()
+    results.push(...(await measureContrast(page, [{ name: "page WIP mark", selector: '[data-slot="orchestra-wip"]' }])))
     await report(results, `sidebar-${scheme}`)
   })
 }
@@ -137,8 +150,15 @@ for (const scheme of ["dark", "light"] as const) {
       await expect(pane(dock, name)).toBeFocused()
       await expect(pane(dock, name)).toHaveAttribute("aria-selected", "true")
     }
-    const results = await measureContrast(page, cockpitText)
+    const results = await measureContrast(page, dockText)
     results.push(...(await measureContrast(page, [ring("Dock tab focus ring", `${cockpit} [role="tab"]`)])))
+
+    // Tasks and Activity live in the Tasks tab; the same container class names both rail panels.
+    await railTab(page, "tasks").click()
+    await expect(dockCard(page)).toHaveCount(0)
+    expect(await auditAccessibility(page, [cockpit])).toEqual([])
+    await expectTabOrder(page, [cockpit], { trap: false })
+    results.push(...(await measureContrast(page, feedText)))
 
     // Controls are operated from the keyboard so the rows measured next show their focus ring.
     const tasks = page.locator('[data-component="tasks-panel"]')
@@ -312,6 +332,9 @@ test("Arabic RTL: evidence card keyboard order and dialog focus return", async (
 test("reduced motion stills Orchestra transitions and animations", async ({ page }) => {
   await setupCockpit(page, { bridge: false })
   await openCockpit(page)
+  // The running task's spinner lives in the Tasks tab; the Dock lives alone in Apps.
+  await railTab(page, "tasks").click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
   const scopes = [sidebar, cockpit, "#orchestra-session-tabs"]
   const tooltip = '[data-component="tooltip-v2"]'
   const nav = page.locator(sidebar)
@@ -332,6 +355,9 @@ test("reduced motion stills Orchestra transitions and animations", async ({ page
 
   await page.emulateMedia({ reducedMotion: "reduce" })
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true)
+  expect(moving(await motionInventory(page, scopes))).toEqual([])
+  await railTab(page, "apps").click()
+  await expect(dockCard(page)).toBeVisible()
   expect(moving(await motionInventory(page, scopes))).toEqual([])
   await nav.getByRole("button", { name: "Chat", exact: true }).focus()
   await nav.getByRole("button", { name: "MCP", exact: true }).focus()
@@ -510,24 +536,7 @@ async function expectDialogReturn(page: Page, trigger: Locator, buttons: string[
 // owner instead of recolored here, each with the ratio measured when it was recorded. The test fails if any
 // other target fails, if a recorded one starts passing (remove the entry with the token change), and if a
 // recorded one measures lower than its baseline beyond sampling noise.
-const findings: Record<string, { ratio: number; cause: string }> = {
-  "sidebar-dark:sidebar footer": { ratio: 4.38, cause: "--orchestra-sidebar-footer #687a8e on the sidebar glass" },
-  "sidebar-dark:menu group label": { ratio: 3.88, cause: "--orchestra-faint #687a8e on the profile menu" },
-  "sidebar-light:brand descriptor": { ratio: 3.58, cause: "--orchestra-brand-descriptor #6e7783 on the glass" },
-  "sidebar-light:search key": { ratio: 3.85, cause: "--orchestra-sidebar-key-text #6e7783 on the key cap" },
-  "sidebar-light:profile path": { ratio: 4.07, cause: "--orchestra-sidebar-profile-muted #6e7783 on the profile" },
-  "sidebar-light:sidebar footer": { ratio: 2.59, cause: "--orchestra-sidebar-footer #828b96 on the sidebar glass" },
-  "sidebar-light:menu group label": { ratio: 3.05, cause: "--orchestra-faint #8d949e on the profile menu" },
-  "cockpit-dark:task meta": { ratio: 3.84, cause: "--orchestra-faint #687a8e for the task time" },
-  "cockpit-dark:task stats": { ratio: 2.77, cause: "--orchestra-faint #687a8e in finished rows at opacity 0.75" },
-  "cockpit-light:task meta": { ratio: 2.89, cause: "--orchestra-faint #8d949e for the task time" },
-  "cockpit-light:task stats": { ratio: 2.14, cause: "--orchestra-faint #8d949e in finished rows at opacity 0.75" },
-  "cockpit-light:Activity meta": { ratio: 4.36, cause: "--orchestra-warm #8a7448 for the row needing attention" },
-  "evidence-dark:evidence command": { ratio: 4.47, cause: "--orchestra-session-meta #76879a on the evidence card" },
-  "evidence-light:evidence command": { ratio: 4.46, cause: "--orchestra-session-meta #6e7783 on the evidence card" },
-  "evidence-light:evidence rows": { ratio: 4.4, cause: "--orchestra-session-meta #6e7783 on the evidence card" },
-  "evidence-light:evidence meta": { ratio: 4.14, cause: "--orchestra-session-meta #6e7783 on the evidence card" },
-}
+const findings: Record<string, { ratio: number; cause: string }> = {}
 
 async function report(results: ContrastResult[], name: string) {
   await writeFile(test.info().outputPath(`${name}-contrast.json`), JSON.stringify(results, null, 2))
@@ -549,7 +558,8 @@ async function report(results: ContrastResult[], name: string) {
 
 const sidebarText: ContrastTarget[] = [
   { name: "brand descriptor", selector: `${sidebar} [data-slot="orchestra-brand-descriptor"]` },
-  { name: "toggle label", selector: `${sidebar} .orchestra-navigation-toggle .orchestra-nav-label` },
+  // Expanded, the collapse control is icon-only in the brand row; its glyph is the visible ink.
+  { name: "toggle icon", selector: `${sidebar} .orchestra-navigation-toggle-icon`, kind: "graphic" },
   { name: "nav label", selector: `${sidebar} .orchestra-nav-button:not([aria-current]) .orchestra-nav-label` },
   { name: "current nav label", selector: `${sidebar} .orchestra-nav-button[aria-current="page"] .orchestra-nav-label` },
   {
@@ -558,8 +568,9 @@ const sidebarText: ContrastTarget[] = [
     kind: "graphic",
   },
   { name: "search key", selector: `${sidebar} .orchestra-nav-button kbd` },
+  { name: "WIP mark", selector: `${sidebar} [data-slot="orchestra-nav-wip"]` },
   { name: "profile name", selector: `${sidebar} .orchestra-profile-text strong` },
-  { name: "profile path", selector: `${sidebar} .orchestra-profile-text small` },
+  { name: "profile meta", selector: `${sidebar} .orchestra-profile-text small` },
   { name: "sidebar footer", selector: `${sidebar} .orchestra-sidebar-footer` },
 ]
 
@@ -569,11 +580,14 @@ const menuText: ContrastTarget[] = [
   { name: "menu add project", selector: `${profileMenu} .orchestra-profile-add` },
 ]
 
-const cockpitText: ContrastTarget[] = [
+const dockText: ContrastTarget[] = [
   { name: "Dock title", selector: `${cockpit} .orchestra-dock-header h2` },
   { name: "Dock selected pane", selector: `${cockpit} [role="tab"][aria-selected="true"]` },
   { name: "Dock pane", selector: `${cockpit} .orchestra-dock-tabs [role="tab"][aria-selected="false"]` },
   { name: "Dock status", selector: `${cockpit} .orchestra-dock-pane [role="status"]` },
+]
+
+const feedText: ContrastTarget[] = [
   { name: "Tasks title", selector: `${cockpit} [data-slot="tasks-title"]` },
   { name: "Tasks count", selector: `${cockpit} [data-slot="tasks-count"]` },
   { name: "Tasks failures", selector: `${cockpit} [data-slot="tasks-failures"]` },

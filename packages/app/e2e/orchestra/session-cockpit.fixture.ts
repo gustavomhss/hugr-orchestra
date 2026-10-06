@@ -24,11 +24,19 @@ export function pane(dock: Locator, name: string) {
   return dock.getByRole("tablist", { name: "Dock panes" }).getByRole("tab", { name, exact: true })
 }
 
+// A rail tab by its value, so the locator holds in every locale.
+export function railTab(page: Page, value: "review" | "context" | "tasks" | "apps") {
+  return page.locator(`[data-slot="session-side-panel-tab-bar"] [role="tab"][data-value="${value}"]`)
+}
+
+// Opens the rail and the Apps tab, which hosts only the Dock. Live work opens the Tasks tab first.
 export async function openCockpit(page: Page) {
   await page.goto(`/server/${base64Encode(server)}/session/${parentID}`, { waitUntil: "domcontentloaded" })
   await expectSessionTitle(page, parentTitle)
-  // Once the side panel mounts, the running child opens the cockpit.
   await page.getByRole("button", { name: "Toggle review" }).click()
+  await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
+  await expect(dockCard(page)).toHaveCount(0)
+  await railTab(page, "apps").click()
   await expect(dockCard(page)).toBeVisible()
 }
 
@@ -45,6 +53,10 @@ export async function setupCockpit(
     scheme?: "dark" | "light"
     reads?: string[]
     lists?: string[]
+    // A fresh profile has not had the rail opened for it yet.
+    rail?: "fresh"
+    vcsDiff?: unknown[]
+    onPrompt?: (input: { sessionID: string; body: unknown }) => void
   },
 ) {
   const extra = options.many
@@ -53,6 +65,9 @@ export async function setupCockpit(
       )
     : []
   await mockOpenCodeServer(page, {
+    freshRail: options.rail === "fresh",
+    vcsDiff: options.vcsDiff,
+    onPrompt: options.onPrompt,
     directory,
     project: {
       id: projectID,

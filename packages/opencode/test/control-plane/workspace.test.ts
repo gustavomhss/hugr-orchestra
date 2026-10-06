@@ -19,7 +19,7 @@ import { SessionTable } from "@opencode-ai/core/session/sql"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { EventSequenceTable } from "@opencode-ai/core/event/sql"
 import { resetDatabase } from "../fixture/db"
-import { disposeAllInstances, provideTmpdirInstance, requireInstance, TestInstance } from "../fixture/fixture"
+import { disposeAllInstances, gitInit, provideTmpdirInstance, requireInstance, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { registerAdapter } from "../../src/control-plane/adapters"
 import { WorkspaceV2 } from "@opencode-ai/core/workspace"
@@ -119,11 +119,7 @@ afterEach(async () => {
 
 async function initGitRepo(dir: string) {
   await fs.mkdir(dir, { recursive: true })
-  await $`git init`.cwd(dir).quiet()
-  await $`git config core.fsmonitor false`.cwd(dir).quiet()
-  await $`git config commit.gpgsign false`.cwd(dir).quiet()
-  await $`git config user.email "test@opencode.test"`.cwd(dir).quiet()
-  await $`git config user.name "Test"`.cwd(dir).quiet()
+  await gitInit(dir)
   await fs.writeFile(path.join(dir, "tracked.txt"), "base\n")
   await $`git add tracked.txt`.cwd(dir).quiet()
   await $`git commit -m "base"`.cwd(dir).quiet()

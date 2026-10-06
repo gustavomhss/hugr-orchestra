@@ -119,6 +119,10 @@ class Provider:
             if name == "NActions":
                 require(path == BUTTON, "fixture-action-target")
                 return (1,)
+            if name == "ToolkitName":
+                # A "click" on GTK goes out as a pointer click (actions._click); this fixture is not GTK.
+                require(path == ROOT, "fixture-toolkit-root")
+                return ("fixture",)
         if method == "GetName":
             require(path == BUTTON and parameters == (0,), "fixture-action-name")
             return ("click",)

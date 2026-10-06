@@ -3,10 +3,10 @@
 import { createHash, randomUUID } from "node:crypto"
 import { constants } from "node:fs"
 import { chmod, open, rename, unlink } from "node:fs/promises"
-import { dirname, join, relative } from "node:path"
+import { dirname, join, relative, sep } from "node:path"
 import { type GovernanceContext, type Capture, requireValue, validateCapture, isSourceRevision } from "./contracts.ts"
-import { readBoundedBytes, scopedPath, readState, updateState } from "./state.ts"
-import { git, gitBytes } from "./process.ts"
+import { readBoundedBytes, scopedPath, readState, updateState, worktreePath } from "./state.ts"
+import { git, gitBytes, gitToplevel } from "./process.ts"
 
 const digest = (value: string) => createHash("sha256").update(value).digest("hex")
 async function contentDigest(file: string) {
@@ -35,11 +35,11 @@ function validateState(value: unknown, context: GovernanceContext, root: string,
   return state
 }
 export async function recoveryBegin(context: GovernanceContext, root: string, wave: string, ownedPaths: readonly string[]) {
-  requireValue((await git(context, root, ["rev-parse", "--show-toplevel"])).trim() === root, "RECOVERY_REQUIRES_REPOSITORY_ROOT")
+  requireValue(await gitToplevel(context, root) === root, "RECOVERY_REQUIRES_REPOSITORY_ROOT")
   requireValue(ownedPaths.length > 0 && ownedPaths.length <= 128 && new Set(ownedPaths).size === ownedPaths.length, "RECOVERY_OWNERSHIP_EMPTY_OR_DUPLICATE")
   const snapshot = await repositorySnapshot(context, root)
   const files = await Promise.all(ownedPaths.map(async (path) => {
-    requireValue(!path.split("/").some((part) => part.toLowerCase() === ".git") && !path.startsWith("/"), "RECOVERY_GIT_METADATA_DENIED")
+    requireValue(worktreePath(path), "RECOVERY_GIT_METADATA_DENIED")
     const file = await scopedPath(root, path)
     await context.authorize({ effect: "read", paths: [file], commands: [] })
     const tree = await git(context, root, ["ls-tree", "-z", snapshot.head, "--", path])
@@ -105,7 +105,8 @@ export async function recoveryRestore(context: GovernanceContext, root: string, 
       await output.writeFile(blobs[index]).then(() => output.sync()).finally(() => output.close())
       await chmod(temporary, file.executable ? 0o755 : 0o644)
       await scopedPath(root, file.path)
-      const finalCheck = await repositorySnapshot(context, root, relative(root, temporary))
+      // git status prints "/" on every OS; a backslash spelling would leave the temporary file counted as dirt.
+      const finalCheck = await repositorySnapshot(context, root, relative(root, temporary).split(sep).join("/"))
       requireValue(finalCheck.head === expected.head && finalCheck.dirt === expected.dirt, "RECOVERY_CONCURRENT_HEAD_OR_DIRT_CHANGED")
       requireValue(await contentDigest(targets[index]) === file.currentDigest, `RECOVERY_OWNED_FILE_CHANGED: ${file.path}`)
       await rename(temporary, targets[index])

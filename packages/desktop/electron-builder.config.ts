@@ -55,6 +55,10 @@ const getBase = (appId: string): Configuration => ({
   extraMetadata: {
     desktopName: `${appId}.desktop`,
   },
+  // Orchestra is a fork separated from upstream opencode and publishes no releases of its own, so it
+  // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
+  // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
+  publish: null,
   files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
   extraResources: [
     {
@@ -147,7 +151,6 @@ function getConfig() {
         appId,
         productName: "OpenCode Beta",
         protocols: { name: "OpenCode Beta", schemes: ["opencode"] },
-        publish: { provider: "github", owner: "anomalyco", repo: "opencode-beta", channel: "latest" },
         deb: { fpm: [metainfoFpm(appId)] },
         rpm: { packageName: "opencode-beta", fpm: [metainfoFpm(appId)] },
       }
@@ -158,7 +161,6 @@ function getConfig() {
         appId,
         productName: "OpenCode",
         protocols: { name: "OpenCode", schemes: ["opencode"] },
-        publish: { provider: "github", owner: "anomalyco", repo: "opencode", channel: "latest" },
         deb: { fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
         rpm: { packageName: "opencode", fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
       }

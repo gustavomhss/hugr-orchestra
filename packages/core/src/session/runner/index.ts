@@ -16,6 +16,9 @@ export type RunError =
   | SystemContext.InitializationBlocked
   | ToolOutputStore.Error
 
+/** Error message recorded on an assistant turn the runner stopped because its drain was interrupted. */
+export const INTERRUPTED_TURN = "Provider turn interrupted"
+
 /** Runs one local continuation from already-recorded Session history. */
 export interface Interface {
   /** Drains eligible durable work. Explicit runs perform one provider attempt even when no work is eligible. */

@@ -7,7 +7,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
-import { Cause, Deferred, Duration, Effect, Exit, Fiber } from "effect"
+import { Cause, Clock, Deferred, Duration, Effect, Exit, Fiber } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
 import { NamedError } from "@opencode-ai/core/util/error"
@@ -27,7 +27,7 @@ import { SessionExecution } from "@opencode-ai/core/session/execution"
 import { Shell } from "@opencode-ai/core/shell"
 import { ToolRegistry } from "@/tool/registry"
 import { TestInstance } from "../fixture/fixture"
-import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
+import { awaitWithTimeout, fireSleep, heldClock, pollWithTimeout, testEffect } from "../lib/effect"
 import { reply, TestLLMServer } from "../lib/llm-server"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
@@ -1726,6 +1726,7 @@ unixNoLLMServer(
         const { directory: dir } = yield* TestInstance
         const afs = yield* FSUtil.Service
         const ready = path.join(dir, ".trap-ready")
+        const held = yield* heldClock
 
         const sh = yield* prompt
           .shell({
@@ -1736,15 +1737,13 @@ unixNoLLMServer(
             // before `trap` runs and the escalation path is never exercised.
             command: `trap '' TERM; touch "${ready}"; sleep 30`,
           })
-          .pipe(Effect.forkChild)
+          .pipe(Effect.provideService(Clock.Clock, held.clock), Effect.forkChild)
 
-        yield* Effect.gen(function* () {
-          while (!(yield* afs.existsSafe(ready))) {
-            yield* Effect.sleep(Duration.millis(10))
-          }
-        }).pipe(Effect.timeout(Duration.seconds(5)))
-
-        yield* prompt.cancel(chat.id)
+        yield* pollWithTimeout(
+          afs.existsSafe(ready).pipe(Effect.map((exists) => (exists ? true : undefined))),
+          "shell never installed the TERM trap",
+        )
+        yield* prompt.cancel(chat.id).pipe(fireSleep(held, 3_000))
 
         const exit = yield* Fiber.await(sh)
         expect(Exit.isSuccess(exit)).toBe(true)
