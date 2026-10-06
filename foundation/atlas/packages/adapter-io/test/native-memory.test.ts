@@ -14,7 +14,14 @@ import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
 import { createMemoryRead } from "../src/memory-read.js"
 import { createAwarenessStore } from "../src/awareness-store.js"
 import { createDurableOrientation } from "../src/orientation-store.js"
-import type { Awareness, MemoryEntry, MemoryRecord, Orientation } from "@atlas/memory"
+import type {
+  Awareness,
+  MemoryRecord,
+  Orientation,
+  PrMemoryEntry,
+  ProjectMemoryEntry,
+  TaskMemoryEntry,
+} from "@atlas/memory"
 
 let root: string
 let bin: string
@@ -29,15 +36,20 @@ const AW: Awareness = {
 }
 const OR: Orientation = { goal: "g", last: "l", current: "c", state: "s" }
 
-const taskEntry = (taskId: string, tag: string): MemoryEntry => ({
+const taskEntry = (taskId: string, tag: string): TaskMemoryEntry => ({
   taskId,
   attempted: [`a-${tag}`],
   failedWith: [`f-${tag}`],
   stoppedAt: `s-${tag}`,
   lesson: `l-${tag}`,
 })
-const prEntry = (prId: string): MemoryEntry => ({ prId, decisions: ["d"], reviewOutcomes: ["r"], knowledgeDelta: [] })
-const rule = (text: string): MemoryEntry => ({ rule: text, scope: "*", frecency: 1 })
+const prEntry = (prId: string): PrMemoryEntry => ({
+  prId,
+  decisions: ["d"],
+  reviewOutcomes: ["r"],
+  knowledgeDelta: [],
+})
+const rule = (text: string): ProjectMemoryEntry => ({ rule: text, scope: "*", frecency: 1 })
 
 /** A fake scanner executable. `exit` is its whole verdict; stdin is drained so the pipe never breaks. */
 function scanner(name: string, exit: number): string {
@@ -83,7 +95,7 @@ describe("clauses 1-4 — the owner is forced from the binding", () => {
     const ok = mem.write(taskEntry("T1", "x"))
     expect(ok.ok && ok.record.owner).toBe("backend")
 
-    const forged = mem.write({ ...taskEntry("T1", "y"), owner: "mallory" } as unknown as MemoryEntry)
+    const forged = mem.write({ ...taskEntry("T1", "y"), owner: "mallory" } as unknown as TaskMemoryEntry)
     expect(forged).toMatchObject({ ok: false, refusal: "undetermined-kind" })
     expect(
       createDurableMemory(root)
@@ -287,7 +299,7 @@ describe("clause 23 — write refusals pass through verbatim", () => {
   })
 
   it("over-cap keeps its tokens/cap receipt", () => {
-    const v = createNativeMemory(binding()).write({ rule: Array(501).fill("w").join(" "), scope: "*", frecency: 1 })
+    const v = createNativeMemory(binding()).write(rule(Array(501).fill("w").join(" ")))
     expect(v).toMatchObject({ ok: false, refusal: "over-cap", tokens: 501, cap: 500 })
   })
 })
