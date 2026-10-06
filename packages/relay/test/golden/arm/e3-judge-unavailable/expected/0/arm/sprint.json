@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"NO-ORACLE"},{"id":"EMPTY-BOTH","cmd":"","judge":""},{"id":"BAD-SCOPE","judge":"x","paths":"a.md"},{"id":"NUL-SCOPE","judge":"x","paths":["bad\u0000path"],"blocking":true},{"id":"NO-DIFF-BLOCKING","judge":"x","diff":true,"blocking":true,"paths":["a.md"]},{"id":"NO-DIFF-ADVISORY","judge":"x","diff":true}]}]}

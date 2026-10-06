@@ -1,0 +1,1 @@
+{"retry_budget":3,"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"stdin","cmd":"cat >/dev/null"},{"id":"kept","cmd":"test -f kept"}]},{"id":"B","instructions":"do B","checklist":[{"id":"B-ok","cmd":"true"}]}]}

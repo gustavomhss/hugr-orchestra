@@ -1,0 +1,10 @@
+Relay gate 'A' passed. Next gate: B. M-PROTOCOL
+do B
+
+Before you finish this state, be ready to answer:
+  - Did you read the frozen artifact?
+  - Is each verdict evidenced?
+
+This is a REVIEW state: it must be worked from a cold read of the frozen artifacts. If you produced
+what is under review in this context, you are disqualified from reviewing it — say so rather than
+proceeding.

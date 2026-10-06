@@ -8,6 +8,7 @@ The Python and bash Relay in packages/relay/{bin,lib,benchmark} is the oracle. t
 scenario format; this runner applies exactly what a scenario.json says and nothing else, so a TS test can rebuild
 every scenario from its JSON alone. Conventions FORMAT.md leaves to the generator, also recorded in GENERATOR.json:
 
+- `meta.workdir`, when present, becomes the working tree; a meta without it leaves the hook on its cwd fallback.
 - Layout under a fresh scenario root: `arms/<token>/` (token `tok`), working tree `work/`, empty `home/`, the agent
   transcript `transcript.jsonl` and the fake `date` in `bin/`. The root is never inside a git repository.
 - Every fire runs with cwd = `work/`, under `env -i` with PATH (fake `date` first, then the asserted tools), HOME,
@@ -189,7 +190,8 @@ def setup(root, scenario):
         (root.arm / "sprint.json").write_text(compact(scenario["sprint"]))
     if "meta" in scenario:
         meta = dict(scenario["meta"])
-        meta["workdir"] = str(root.work)
+        if "workdir" in meta:
+            meta["workdir"] = str(root.work)
         if isinstance(meta.get("base_ref"), dict):
             meta["base_ref"] = to_bytes(meta["base_ref"], shas).decode()
         (root.arm / "meta.json").write_text(compact(meta))

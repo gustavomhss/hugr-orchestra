@@ -1,0 +1,36 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "env": {
+    "RELAY_ARM_TOKEN": ""
+  },
+  "fires": [
+    {
+      "transcript": [
+        {
+          "type": "user",
+          "content": "RELAY-ARM:tok"
+        },
+        {
+          "type": "assistant",
+          "content": "quoting RELAY-ARM:tok again"
+        }
+      ]
+    }
+  ]
+}
