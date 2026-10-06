@@ -1085,7 +1085,7 @@ export const dict = {
   "settings.shortcuts.group.general": "ทั่วไป",
   "settings.shortcuts.group.session": "เซสชัน",
   "settings.shortcuts.group.navigation": "การนำทาง",
-  "settings.shortcuts.group.modelAndAgent": "โมเดลและเอเจนต์",
+  "settings.shortcuts.group.modelAndMcp": "โมเดลและ MCP",
   "settings.shortcuts.group.terminal": "เทอร์มินัล",
   "settings.shortcuts.group.prompt": "พรอมต์",
 

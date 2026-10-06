@@ -1109,7 +1109,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Umumy",
   "settings.shortcuts.group.session": "Sessiýa",
   "settings.shortcuts.group.navigation": "Nawigasiýa",
-  "settings.shortcuts.group.modelAndAgent": "Model we agent",
+  "settings.shortcuts.group.modelAndMcp": "Model we MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Prompt",
   "settings.providers.title": "Üpjün edijiler",

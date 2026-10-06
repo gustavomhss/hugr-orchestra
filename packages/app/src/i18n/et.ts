@@ -1101,7 +1101,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Kindral",
   "settings.shortcuts.group.session": "Seanss",
   "settings.shortcuts.group.navigation": "Navigeerimine",
-  "settings.shortcuts.group.modelAndAgent": "Modell ja agent",
+  "settings.shortcuts.group.modelAndMcp": "Mudel ja MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Viip",
   "settings.providers.title": "Pakkujad",

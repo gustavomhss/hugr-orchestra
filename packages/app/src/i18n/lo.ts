@@ -1098,7 +1098,7 @@ export const dict = {
   "settings.shortcuts.group.general": "ທົ່ວໄປ",
   "settings.shortcuts.group.session": "ເຊດຊັນ",
   "settings.shortcuts.group.navigation": "ການນໍາທາງ",
-  "settings.shortcuts.group.modelAndAgent": "ຕົວແບບ ແລະຕົວແທນ",
+  "settings.shortcuts.group.modelAndMcp": "ຕົວແບບ ແລະ MCP",
   "settings.shortcuts.group.terminal": "ສະຖານີ",
   "settings.shortcuts.group.prompt": "Prompt",
   "settings.providers.title": "ຜູ້ໃຫ້ບໍລິການ",

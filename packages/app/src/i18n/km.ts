@@ -1101,7 +1101,7 @@ export const dict = {
   "settings.shortcuts.group.general": "ទូទៅ",
   "settings.shortcuts.group.session": "សម័យ",
   "settings.shortcuts.group.navigation": "ការរុករក",
-  "settings.shortcuts.group.modelAndAgent": "ម៉ូដែល និងភ្នាក់ងារ",
+  "settings.shortcuts.group.modelAndMcp": "ម៉ូដែល និង MCP",
   "settings.shortcuts.group.terminal": "ស្ថានីយ",
   "settings.shortcuts.group.prompt": "ប្រអប់បញ្ចូល",
   "settings.providers.title": "អ្នកផ្តល់សេវា",

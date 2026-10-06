@@ -744,7 +744,7 @@ export const dict = {
   "settings.shortcuts.group.general": "일반",
   "settings.shortcuts.group.session": "세션",
   "settings.shortcuts.group.navigation": "탐색",
-  "settings.shortcuts.group.modelAndAgent": "모델 및 에이전트",
+  "settings.shortcuts.group.modelAndMcp": "모델 및 MCP",
   "settings.shortcuts.group.terminal": "터미널",
   "settings.shortcuts.group.prompt": "프롬프트",
   "settings.providers.title": "공급자",

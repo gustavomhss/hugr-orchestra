@@ -1103,7 +1103,7 @@ export const dict: Record<string, string> = {
   "settings.shortcuts.group.general": "ජෙනරාල්",
   "settings.shortcuts.group.session": "සැසිය",
   "settings.shortcuts.group.navigation": "සංචලනය",
-  "settings.shortcuts.group.modelAndAgent": "ආකෘතිය සහ නියෝජිතයා",
+  "settings.shortcuts.group.modelAndMcp": "ආකෘතිය සහ MCP",
   "settings.shortcuts.group.terminal": "පර්යන්තය",
   "settings.shortcuts.group.prompt": "ප්‍රොම්ප්ට්",
   "settings.providers.title": "සපයන්නන්",

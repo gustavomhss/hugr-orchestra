@@ -1118,7 +1118,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Генерал",
   "settings.shortcuts.group.session": "Сесс",
   "settings.shortcuts.group.navigation": "Навигац",
-  "settings.shortcuts.group.modelAndAgent": "Загвар өмсөгч, төлөөлөгч",
+  "settings.shortcuts.group.modelAndMcp": "Загвар ба MCP",
   "settings.shortcuts.group.terminal": "Терминал",
   "settings.shortcuts.group.prompt": "Промпт",
   "settings.providers.title": "Үйлчилгээ үзүүлэгчид",

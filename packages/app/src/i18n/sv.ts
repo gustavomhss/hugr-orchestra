@@ -1111,7 +1111,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Allmänt",
   "settings.shortcuts.group.session": "Session",
   "settings.shortcuts.group.navigation": "Navigering",
-  "settings.shortcuts.group.modelAndAgent": "Modell och agent",
+  "settings.shortcuts.group.modelAndMcp": "Modell och MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Prompt",
   "settings.providers.title": "Leverantörer",

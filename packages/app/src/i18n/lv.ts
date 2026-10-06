@@ -1112,7 +1112,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Vispārīgi",
   "settings.shortcuts.group.session": "Sesija",
   "settings.shortcuts.group.navigation": "Navigācija",
-  "settings.shortcuts.group.modelAndAgent": "Modelis un aģents",
+  "settings.shortcuts.group.modelAndMcp": "Modelis un MCP",
   "settings.shortcuts.group.terminal": "Terminālis",
   "settings.shortcuts.group.prompt": "Uzvedne",
   "settings.providers.title": "Pakalpojumu sniedzēji",

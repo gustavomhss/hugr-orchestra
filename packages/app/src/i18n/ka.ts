@@ -1106,7 +1106,7 @@ export const dict = {
   "settings.shortcuts.group.general": "ზოგადი",
   "settings.shortcuts.group.session": "სესია",
   "settings.shortcuts.group.navigation": "ნავიგაცია",
-  "settings.shortcuts.group.modelAndAgent": "მოდელი და აგენტი",
+  "settings.shortcuts.group.modelAndMcp": "მოდელი და MCP",
   "settings.shortcuts.group.terminal": "ტერმინალი",
   "settings.shortcuts.group.prompt": "მოთხოვნა",
   "settings.providers.title": "პროვაიდერები",

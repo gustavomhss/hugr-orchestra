@@ -1121,7 +1121,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Γενικά",
   "settings.shortcuts.group.session": "Συνεδρία",
   "settings.shortcuts.group.navigation": "Πλοήγηση",
-  "settings.shortcuts.group.modelAndAgent": "Μοντέλο και πράκτορας",
+  "settings.shortcuts.group.modelAndMcp": "Μοντέλο και MCP",
   "settings.shortcuts.group.terminal": "Τερματικό",
   "settings.shortcuts.group.prompt": "Προτροπή",
   "settings.providers.title": "Παρόχοι",

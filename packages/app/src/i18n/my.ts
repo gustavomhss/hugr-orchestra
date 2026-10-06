@@ -1124,7 +1124,7 @@ export const dict = {
   "settings.shortcuts.group.general": "အထွေထွေ",
   "settings.shortcuts.group.session": "အပိုင်း",
   "settings.shortcuts.group.navigation": "အညွှန်း",
-  "settings.shortcuts.group.modelAndAgent": "မော်ဒယ်နှင့် အေးဂျင့်",
+  "settings.shortcuts.group.modelAndMcp": "မော်ဒယ်နှင့် MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "အချက်ပြပါ။",
   "settings.providers.title": "ဝန်ဆောင်မှုပေးသူများ",

@@ -1073,7 +1073,7 @@ export const dict = {
   "settings.shortcuts.group.general": "一般",
   "settings.shortcuts.group.session": "工作階段",
   "settings.shortcuts.group.navigation": "導覽",
-  "settings.shortcuts.group.modelAndAgent": "模型與代理程式",
+  "settings.shortcuts.group.modelAndMcp": "模型與 MCP",
   "settings.shortcuts.group.terminal": "終端機",
   "settings.shortcuts.group.prompt": "提示",
 

@@ -1107,7 +1107,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Основные",
   "settings.shortcuts.group.session": "Сессия",
   "settings.shortcuts.group.navigation": "Навигация",
-  "settings.shortcuts.group.modelAndAgent": "Модель и агент",
+  "settings.shortcuts.group.modelAndMcp": "Модель и MCP",
   "settings.shortcuts.group.terminal": "Терминал",
   "settings.shortcuts.group.prompt": "Запрос",
 

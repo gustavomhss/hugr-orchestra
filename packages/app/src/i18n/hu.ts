@@ -1118,7 +1118,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Általános",
   "settings.shortcuts.group.session": "Munkamenet",
   "settings.shortcuts.group.navigation": "Navigáció",
-  "settings.shortcuts.group.modelAndAgent": "Modell és ügynök",
+  "settings.shortcuts.group.modelAndMcp": "Modell és MCP",
   "settings.shortcuts.group.terminal": "Terminál",
   "settings.shortcuts.group.prompt": "Utasítás",
   "settings.providers.title": "Szolgáltatók",

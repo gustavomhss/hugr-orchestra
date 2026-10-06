@@ -1081,7 +1081,7 @@ export const dict = {
   "settings.shortcuts.group.general": "አጠቃላይ",
   "settings.shortcuts.group.session": "ክፍለ ጊዜ",
   "settings.shortcuts.group.navigation": "ዳሰሳ",
-  "settings.shortcuts.group.modelAndAgent": "ሞዴል እና ወኪል",
+  "settings.shortcuts.group.modelAndMcp": "ሞዴል እና MCP",
   "settings.shortcuts.group.terminal": "ተርሚናል",
   "settings.shortcuts.group.prompt": "ፕሮምፕት",
   "settings.providers.title": "አቅራቢዎች",

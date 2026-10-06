@@ -1113,7 +1113,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Splošno",
   "settings.shortcuts.group.session": "Seja",
   "settings.shortcuts.group.navigation": "Navigacija",
-  "settings.shortcuts.group.modelAndAgent": "Model in agent",
+  "settings.shortcuts.group.modelAndMcp": "Model in MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Poziv",
   "settings.providers.title": "Ponudniki",

@@ -1104,7 +1104,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Almenn",
   "settings.shortcuts.group.session": "Seta",
   "settings.shortcuts.group.navigation": "Navigatión",
-  "settings.shortcuts.group.modelAndAgent": "Modell og agentur",
+  "settings.shortcuts.group.modelAndMcp": "Modell og MCP",
   "settings.shortcuts.group.terminal": "Farstøð",
   "settings.shortcuts.group.prompt": "Prompt",
   "settings.providers.title": "Veitarar",

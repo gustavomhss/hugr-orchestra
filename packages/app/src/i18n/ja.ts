@@ -1016,7 +1016,7 @@ export const dict = {
   "settings.shortcuts.group.general": "一般",
   "settings.shortcuts.group.session": "セッション",
   "settings.shortcuts.group.navigation": "ナビゲーション",
-  "settings.shortcuts.group.modelAndAgent": "モデルとエージェント",
+  "settings.shortcuts.group.modelAndMcp": "モデルとMCP",
   "settings.shortcuts.group.terminal": "ターミナル",
   "settings.shortcuts.group.prompt": "プロンプト",
   "settings.providers.title": "プロバイダー",

@@ -1119,7 +1119,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Tổng quan",
   "settings.shortcuts.group.session": "Phiên",
   "settings.shortcuts.group.navigation": "Điều hướng",
-  "settings.shortcuts.group.modelAndAgent": "Mô hình và tác nhân",
+  "settings.shortcuts.group.modelAndMcp": "Mô hình và MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Lời nhắc",
   "settings.providers.title": "Nhà cung cấp",

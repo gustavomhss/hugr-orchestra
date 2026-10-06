@@ -1074,7 +1074,7 @@ export const dict = {
   "settings.shortcuts.group.general": "通用",
   "settings.shortcuts.group.session": "会话",
   "settings.shortcuts.group.navigation": "导航",
-  "settings.shortcuts.group.modelAndAgent": "模型与智能体",
+  "settings.shortcuts.group.modelAndMcp": "模型与 MCP",
   "settings.shortcuts.group.terminal": "终端",
   "settings.shortcuts.group.prompt": "提示",
 

@@ -1109,7 +1109,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Všeobecné",
   "settings.shortcuts.group.session": "Relácia",
   "settings.shortcuts.group.navigation": "Navigácia",
-  "settings.shortcuts.group.modelAndAgent": "Model a agent",
+  "settings.shortcuts.group.modelAndMcp": "Model a MCP",
   "settings.shortcuts.group.terminal": "Terminál",
   "settings.shortcuts.group.prompt": "Výzva",
   "settings.providers.title": "Poskytovatelia",

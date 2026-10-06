@@ -1008,7 +1008,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Yleiset",
   "settings.shortcuts.group.session": "Istunto",
   "settings.shortcuts.group.navigation": "Navigointi",
-  "settings.shortcuts.group.modelAndAgent": "Malli ja agentti",
+  "settings.shortcuts.group.modelAndMcp": "Malli ja MCP",
   "settings.shortcuts.group.terminal": "Terminaali",
   "settings.shortcuts.group.prompt": "Kehote",
   "settings.providers.title": "Palveluntarjoajat",

@@ -1104,7 +1104,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Opšte",
   "settings.shortcuts.group.session": "Sesija",
   "settings.shortcuts.group.navigation": "Navigacija",
-  "settings.shortcuts.group.modelAndAgent": "Model i agent",
+  "settings.shortcuts.group.modelAndMcp": "Model i MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Upit",
 

@@ -1107,7 +1107,7 @@ export const dict: Record<string, string> = {
   "settings.shortcuts.group.general": "सामान्य",
   "settings.shortcuts.group.session": "सत्र",
   "settings.shortcuts.group.navigation": "नेभिगेसन",
-  "settings.shortcuts.group.modelAndAgent": "मोडेल र एजेन्ट",
+  "settings.shortcuts.group.modelAndMcp": "मोडेल र MCP",
   "settings.shortcuts.group.terminal": "टर्मिनल",
   "settings.shortcuts.group.prompt": "प्रम्प्ट",
   "settings.providers.title": "प्रदायकहरू",

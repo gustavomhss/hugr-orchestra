@@ -1114,7 +1114,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Генерал",
   "settings.shortcuts.group.session": "Сессия",
   "settings.shortcuts.group.navigation": "Навигатсия",
-  "settings.shortcuts.group.modelAndAgent": "Модел ва агент",
+  "settings.shortcuts.group.modelAndMcp": "Модел ва MCP",
   "settings.shortcuts.group.terminal": "Терминал",
   "settings.shortcuts.group.prompt": "Промпт",
   "settings.providers.title": "Таъминкунандагон",

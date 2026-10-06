@@ -1121,7 +1121,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Bendra",
   "settings.shortcuts.group.session": "Seansas",
   "settings.shortcuts.group.navigation": "Navigacija",
-  "settings.shortcuts.group.modelAndAgent": "Modelis ir agentas",
+  "settings.shortcuts.group.modelAndMcp": "Modelis ir MCP",
   "settings.shortcuts.group.terminal": "Terminalas",
   "settings.shortcuts.group.prompt": "Užklausa",
   "settings.providers.title": "Teikėjai",

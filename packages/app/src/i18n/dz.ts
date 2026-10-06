@@ -1128,7 +1128,7 @@ export const dict: Record<string, string> = {
   "settings.shortcuts.group.general": "སྤྱིར༌བཏང",
   "settings.shortcuts.group.session": "ལཱ་ཡུན།",
   "settings.shortcuts.group.navigation": "འགྲུལ་བསྐྱོད།",
-  "settings.shortcuts.group.modelAndAgent": "དཔེ་ཚད་དང་ལས་ཚབ།",
+  "settings.shortcuts.group.modelAndMcp": "དཔེ་ཚད་དང་ MCP།",
   "settings.shortcuts.group.terminal": "ཊར་མི་ནཱལ།",
   "settings.shortcuts.group.prompt": "འདི་འཕྲོ་ལས",
   "settings.providers.title": "བྱིན་མི་ཚུ།",

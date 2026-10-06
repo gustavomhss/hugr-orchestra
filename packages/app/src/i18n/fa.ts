@@ -1105,7 +1105,7 @@ export const dict = {
   "settings.shortcuts.group.general": "ژنرال",
   "settings.shortcuts.group.session": "جلسه",
   "settings.shortcuts.group.navigation": "ناوبری",
-  "settings.shortcuts.group.modelAndAgent": "مدل و عامل",
+  "settings.shortcuts.group.modelAndMcp": "مدل و MCP",
   "settings.shortcuts.group.terminal": "ترمینال",
   "settings.shortcuts.group.prompt": "پرامپت",
   "settings.providers.title": "ارائه دهندگان",

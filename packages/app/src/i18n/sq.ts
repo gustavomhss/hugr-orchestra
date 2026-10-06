@@ -1113,7 +1113,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Gjeneral",
   "settings.shortcuts.group.session": "Sesioni",
   "settings.shortcuts.group.navigation": "Navigimi",
-  "settings.shortcuts.group.modelAndAgent": "Model dhe agjent",
+  "settings.shortcuts.group.modelAndMcp": "Model dhe MCP",
   "settings.shortcuts.group.terminal": "Terminali",
   "settings.shortcuts.group.prompt": "Kërkesë",
   "settings.providers.title": "Ofruesit",

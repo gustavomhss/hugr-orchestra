@@ -1026,7 +1026,7 @@ export const dict = {
   "settings.shortcuts.group.general": "عام",
   "settings.shortcuts.group.session": "جلسة",
   "settings.shortcuts.group.navigation": "التنقل",
-  "settings.shortcuts.group.modelAndAgent": "النموذج والوكيل",
+  "settings.shortcuts.group.modelAndMcp": "النموذج وخوادم MCP",
   "settings.shortcuts.group.terminal": "المحطة الطرفية",
   "settings.shortcuts.group.prompt": "موجه",
   "settings.providers.title": "الموفرون",
