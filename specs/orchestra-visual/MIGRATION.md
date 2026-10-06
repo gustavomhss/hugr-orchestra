@@ -30,9 +30,10 @@ Use the measured reference, not an approximate redesign:
 - Sidebar **230px** in the expanded shell (from 1440px wide), toolbar **45px**,
   workspace gutter/padding **6px**;
   panel radius **9px**. Reference outer frame: margin **12px**, radius **13px**.
-- Compact navigation (wave B, not yet in `dev`): 208px is visible only at
-  1280–1439px, the layout forces a 56px rail below 1280px or when collapsed, and
-  at 768–1023px the rail is hidden behind a titlebar button. See Status.
+- Compact navigation (wave B): the sidebar stays 230px down to 1280px (owner
+  decision 2026-10-05, replacing a 208px step at 1280–1439px), the layout forces a
+  56px rail below 1280px or when collapsed, and at 768–1023px the rail is hidden
+  behind a titlebar button. See Status.
 - Dark/light palette, glass gradient/filter/border/shadow values match reference.
 - Sidebar, session strip and active session tab use the same glass tokens.
 - Repository profile picker stays at the bottom; its menu opens upward through
@@ -120,10 +121,9 @@ Current state on 2026-10-04:
   `gusmhs/HuGR-Orchestra` is an archive only. GitLab CI has never executed a test,
   so the owner runs a local gate on macOS; the Windows lanes and `nix-eval` remain
   unproven.
-- Wave B's compact navigation changes the sidebar width outside the expanded
-  shell: 208px is visible only at 1280–1439px. The 208px CSS rule spans
-  768–1439px, but the layout forces the 56px rail below 1280px, and at 768–1023px
-  the rail is hidden behind a titlebar button.
+- Wave B's compact navigation keeps the 230px sidebar down to 1280px (the owner
+  rejected a 208px step at 1280–1439px on 2026-10-05). The layout forces the 56px
+  rail below 1280px, and at 768–1023px the rail is hidden behind a titlebar button.
 - Owner acceptance is pending for the integrated identity, each wave 1 chapter and
   the integrated bundle of waves A and B.
 

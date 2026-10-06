@@ -6,10 +6,18 @@ import { Global } from "@opencode-ai/core/global"
 import { LSP } from "@/lsp/lsp"
 import { Vcs } from "@/project/vcs"
 import { Skill } from "@/skill"
-import { Effect } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { SkillFile } from "@opencode-ai/core/skill/file"
+import { Clock, Effect } from "effect"
+import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ApiVcsApplyError } from "../groups/instance"
+import {
+  ApiSkillConflictError,
+  ApiSkillWriteError,
+  ApiVcsApplyError,
+  SkillRemoveQuery,
+  SkillSaveInput,
+  VcsActivityQuery,
+} from "../groups/instance"
 import { markInstanceForDisposal } from "../lifecycle"
 
 export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance", (handlers) =>
@@ -73,6 +81,14 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       )
     })
 
+    const getVcsActivity = Effect.fn("InstanceHttpApi.vcsActivity")(function* (ctx: {
+      query: typeof VcsActivityQuery.Type
+    }) {
+      const until = ctx.query.until ?? (yield* Clock.currentTimeMillis)
+      if (until <= ctx.query.since) return yield* new HttpApiError.BadRequest({})
+      return yield* vcs.activity({ since: ctx.query.since, until })
+    })
+
     const getCommand = Effect.fn("InstanceHttpApi.command")(function* () {
       return yield* command.list()
     })
@@ -83,6 +99,26 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
 
     const getSkill = Effect.fn("InstanceHttpApi.skill")(function* () {
       return yield* skill.all()
+    })
+
+    const saveSkill = Effect.fn("InstanceHttpApi.skillSave")(function* (ctx: { payload: typeof SkillSaveInput.Type }) {
+      const input = ctx.payload
+      return yield* skill
+        .save({
+          name: input.name,
+          description: input.description,
+          content: input.content,
+          location: input.path,
+          mtime: input.mtime,
+        })
+        .pipe(Effect.mapError(skillWriteError))
+    })
+
+    const removeSkill = Effect.fn("InstanceHttpApi.skillRemove")(function* (ctx: {
+      query: typeof SkillRemoveQuery.Type
+    }) {
+      yield* skill.remove(ctx.query.path).pipe(Effect.mapError(skillWriteError))
+      return true
     })
 
     const getLsp = Effect.fn("InstanceHttpApi.lsp")(function* () {
@@ -101,10 +137,22 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       .handle("vcsDiff", getVcsDiff)
       .handle("vcsDiffRaw", getVcsDiffRaw)
       .handle("vcsApply", applyVcs)
+      .handle("vcsActivity", getVcsActivity)
       .handle("command", getCommand)
       .handle("agent", getAgent)
       .handle("skill", getSkill)
+      .handle("skillSave", saveSkill)
+      .handle("skillRemove", removeSkill)
       .handle("lsp", getLsp)
       .handle("formatter", getFormatter)
   }),
 )
+
+function skillWriteError(error: SkillFile.WriteError) {
+  if (error.reason === "conflict")
+    return new ApiSkillConflictError({ name: "SkillConflictError", data: { message: error.message } })
+  return new ApiSkillWriteError({
+    name: "SkillWriteError",
+    data: { message: error.message, reason: error.reason },
+  })
+}

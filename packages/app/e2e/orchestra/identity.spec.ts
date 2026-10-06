@@ -49,7 +49,7 @@ if (
 }
 
 // The expanded identity oracle stays above the compact-navigation breakpoint.
-// Dedicated navigation cases verify the 208px and 56px responsive modes.
+// Dedicated navigation cases verify the 230px-to-1280px and 56px responsive modes.
 const viewport = { width: 1672, height: 941 }
 test.use({ viewport, deviceScaleFactor: 1, serviceWorkers: "block" })
 

@@ -97,11 +97,12 @@ original contra dev, force-push, ou cherry-pick dos ancestors para resolver CI.*
   descriptor exato `Human Guardrail`. Uma montanha contínua `mtn-src.jpg`.
 - Sidebar 230px, toolbar 45px, gutters/padding 6px, panel radius 9px;
   frame externo margin 12px/radius 13px. Dark/light e glass aprovado.
-- Navegação compacta (onda B): 230px a partir de 1440px, 208px em 1280–1439px,
-  trilho de 56px quando recolhido ou abaixo de 1280px, e trilho escondido com botão
-  na titlebar em 768–1023px. O oracle de geometria da identidade roda em 1672×941,
-  acima do breakpoint, para medir 230/45/6 no shell expandido; 208px e 56px ficam
-  com `packages/app/e2e/orchestra/compact-navigation.spec.ts`.
+- Navegação compacta (onda B): 230px até 1280px (decisão do dono em 2026-10-05,
+  que removeu o degrau de 208px em 1280–1439px), trilho de 56px quando recolhido ou
+  abaixo de 1280px, e trilho escondido com botão na titlebar em 768–1023px. O oracle
+  de geometria da identidade roda em 1672×941 para medir 230/45/6 no shell
+  expandido; 1366, 1280 e 56px ficam com
+  `packages/app/e2e/orchestra/compact-navigation.spec.ts`.
 - Perfil representa repositório/projeto, fica no rodapé; menu sobe em portal.
   Navegação rola independentemente. Settings usa o owner/servidor correto.
 - Abas ficam abaixo da toolbar, sobre conversa e Review; filtro por perfil
@@ -288,7 +289,7 @@ GitLab `gmhelmold/hugr-orchestra`.
    `cockpit-review-fixes@607c2bf4c6`: cockpit simultâneo com Dock compacto acima de
    Tasks e Atividade, painéis locais Arquivos/Docs/Terminal, resumo de testes,
    replay seguro e preparação de PR não enviada, destino de governança do Maestro
-   com estados honestos de Own, e navegação compacta (230px, 208px e 56px, com
+   com estados honestos de Own, e navegação compacta (230px e 56px, com
    RTL). Ordem de merge: !38, depois !27, !31, !33 e !34, e por fim !37
    redirecionada para `dev`. Não mergear !37 em `wave-a-integration` e declarar a
    campanha encerrada.
@@ -305,10 +306,10 @@ GitLab `gmhelmold/hugr-orchestra`.
 
 ### Pendências abertas
 
-1. Aceite visual do dono do bundle integrado, incluindo a barra lateral de 208px.
-   A regra CSS cobre 768–1439px, mas a largura de 208px só aparece em 1280–1439px:
-   abaixo de 1280px o layout força o trilho de 56px, e abaixo de 1024px o trilho
-   fica escondido atrás de um botão da titlebar. Não há captura de 208px.
+1. Aceite visual do dono do bundle integrado. Largura da barra lateral decidida
+   em 2026-10-05: 230px até 1280px (o degrau de 208px em 1280–1439px foi removido).
+   Abaixo de 1280px o layout força o trilho de 56px, e abaixo de 1024px o trilho
+   fica escondido atrás de um botão da titlebar.
 2. Janitor (S21): adiado pelo dono.
 3. Cabeçalho de Tasks, "Finished" ou "Completed": aguarda confirmação do dono. O
    código usa `orchestra.tasks.finished` ("Finished") em

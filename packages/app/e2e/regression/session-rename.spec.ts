@@ -28,17 +28,25 @@ test.beforeEach(async ({ page }) => {
     session.title = payload.title
     await route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
   })
-  await page.addInitScript((directory) => {
-    localStorage.setItem(
-      "opencode.global.dat:server",
-      JSON.stringify({
-        projects: { local: [{ worktree: directory, expanded: true }] },
-        lastProject: { local: directory },
-      }),
-    )
-  }, fixture.directory)
+  // Home ranks the selected profile's sessions; the mock server gives each one message today.
+  await page.addInitScript(
+    ({ directory, server }) => {
+      localStorage.setItem(
+        "opencode.global.dat:server",
+        JSON.stringify({
+          projects: { local: [{ worktree: directory, expanded: true }] },
+          lastProject: { local: directory },
+        }),
+      )
+      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+    },
+    {
+      directory: fixture.directory,
+      server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
+    },
+  )
   await page.goto("/")
-  await page.locator('[data-component="home-session-row"]').filter({ hasText: fixture.expected.targetTitle }).click()
+  await page.locator('[data-component="home-impact-row"]').filter({ hasText: fixture.expected.targetTitle }).click()
   await expect(page.getByRole("heading", { name: fixture.expected.targetTitle, exact: true })).toBeVisible()
 })
 
@@ -116,14 +124,12 @@ test("renames and closes the session tab from its context menu", async ({ page }
   await page.getByRole("menuitem", { name: "Close tab", exact: true }).click()
   await expect(renamed).toBeHidden()
   await page.getByRole("button", { name: "Home", exact: true }).click()
-  await expect(
-    page.locator('[data-component="home-session-row"]').filter({ hasText: "Renamed from tab" }),
-  ).toBeVisible()
+  await expect(page.locator('[data-component="home-impact-row"]').filter({ hasText: "Renamed from tab" })).toBeVisible()
 })
 
 test("renames an inactive tab without switching sessions", async ({ page }) => {
   await page.getByRole("button", { name: "Home", exact: true }).click()
-  await page.locator('[data-component="home-session-row"]').filter({ hasText: fixture.expected.sourceTitle }).click()
+  await page.locator('[data-component="home-impact-row"]').filter({ hasText: fixture.expected.sourceTitle }).click()
   await expect(page.getByRole("heading", { name: fixture.expected.sourceTitle, exact: true })).toBeVisible()
   const tab = page.locator('[data-slot="titlebar-tabs"] a').filter({ hasText: fixture.expected.targetTitle })
   await tab.click({ button: "right" })
