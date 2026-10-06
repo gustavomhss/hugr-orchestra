@@ -1,34 +1,20 @@
-Use the `apply_patch` tool to edit files. Your patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:
+Edit files with a patch in `patchText`:
 
 *** Begin Patch
-[ one or more file sections ]
-*** End Patch
-
-Within that envelope, you get a sequence of file operations.
-You MUST include a header to specify the action you are taking.
-Each operation starts with one of three headers:
-
-*** Add File: <path> - create a new file. Every following line is a + line (the initial contents).
-*** Delete File: <path> - remove an existing file. Nothing follows.
-*** Update File: <path> - patch an existing file in place (optionally with a rename).
-
-Example patch:
-
-```
-*** Begin Patch
-*** Add File: hello.txt
-+Hello world
+*** Add File: docs/notes.md
++# Notes
 *** Update File: src/app.py
 *** Move to: src/main.py
 @@ def greet():
--print("Hi")
-+print("Hello, world!")
+-    print("Hi")
++    print("Hello")
 *** Delete File: obsolete.txt
 *** End Patch
-```
 
-It is important to remember:
-
-- You must include a header with your intended action (Add/Delete/Update)
-- You must prefix new lines with `+` even when creating a new file
-- Context and `-` lines must match the file as it is now; the `N: ` prefix in `read` output is not part of the file
+- Paths are relative to the working directory, or absolute.
+- `*** Add File` writes a file from its `+` lines and replaces any file already at that path. `*** Delete File` removes a file. `*** Move to`, on the line after `*** Update File`, writes the updated file to the new path and removes the old one.
+- In `*** Update File`, start each hunk with an `@@` line; lines before the first `@@` are ignored. Text after `@@`, such as a function or class line, is found first, and the hunk is matched below it. Hunk lines start with a space (context), `-` (remove) or `+` (add), so a blank context line is a single space. Give about three lines of context around each change.
+- Context and `-` lines must match the current file, without the `N: ` prefixes of `read` output. Matching tolerates differences in trailing whitespace, then indentation, then typographic quotes and dashes, and the matched lines are replaced by the hunk's lines as written, context included.
+- Each hunk takes the first match below the previous one, so give hunks in file order, and add context or an `@@` line naming the function or class when lines repeat. A hunk with only `+` lines is appended to the end of the file.
+- Every file is checked before any is written: a hunk that does not match, or a missing file to update or delete, fails the call and changes nothing.
+- The result lists changed files as `A`, `M` or `D`, without their content. A formatter the project configured may reformat them afterwards.
