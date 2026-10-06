@@ -216,9 +216,7 @@ function DraftTabSlot(props: {
     const chosen = selectPromptModel(
       {
         chosen: prompt()?.model.current(),
-        agent: active?.recent
-          ? active.agent
-          : store.agent.find((item) => item.mode !== "subagent" && !item.hidden)?.model,
+        agent: active?.recent ? active.agent : store.agent.find((item) => item.name === "maestro")?.model,
         configured: resolveDefaultModel(store.provider.defaultModel, store.config.model),
         recent: active?.recent ?? models.recent.list(),
         fallback: provider && id ? { modelID: id, providerID: provider.id } : undefined,

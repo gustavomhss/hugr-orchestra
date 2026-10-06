@@ -153,15 +153,11 @@ export default function Agents(props: ChapterPageProps) {
     if (agent.steps === 1) return language.t("orchestra.agents.stepsOne")
     return language.t("orchestra.agents.stepsCount", { count: agent.steps })
   }
-  const openChat = (agent: Agent) => {
+  const openChat = () => {
     setState({ opening: true, failed: false })
     void tabs
-      .newDraft(
-        { server: ServerConnection.key(props.server), directory: props.directory },
-        undefined,
-        undefined,
-        agent.name,
-      )
+      // Every desktop session runs on Maestro (#31), so the draft carries no agent choice.
+      .newDraft({ server: ServerConnection.key(props.server), directory: props.directory })
       .catch(() => setState({ opening: false, failed: true }))
   }
 
@@ -280,7 +276,7 @@ export default function Agents(props: ChapterPageProps) {
                           class="mx-btn"
                           disabled={!item.chat || state.opening || !tabs.ready()}
                           title={item.chat ? undefined : language.t("orchestra.agents.subagentNote")}
-                          onClick={() => openChat(item.agent)}
+                          onClick={() => openChat()}
                         >
                           {language.t("orchestra.agents.openChat")}
                         </button>

@@ -35,10 +35,11 @@ export function AgentsSection(props: { server: ServerConnection.Any; directory: 
   const [opening, setOpening] = createSignal(false)
   const store = () => serverSync().child(props.directory)[0]
   const agents = createMemo(() => agentRoster(store().agent))
-  const openChat = (agent: string) => {
+  const openChat = () => {
     setOpening(true)
     void tabs
-      .newDraft({ server: ServerConnection.key(props.server), directory: props.directory }, undefined, undefined, agent)
+      // Every desktop session runs on Maestro (#31), so the draft carries no agent choice.
+      .newDraft({ server: ServerConnection.key(props.server), directory: props.directory })
       .catch((err: unknown) => {
         setOpening(false)
         showToast({
@@ -98,7 +99,7 @@ export function AgentsSection(props: { server: ServerConnection.Any; directory: 
                     class="mx-btn"
                     disabled={!item.chat || opening() || !tabs.ready()}
                     title={item.chat ? undefined : language.t("orchestra.settings.agents.subagentNote")}
-                    onClick={() => openChat(item.agent.name)}
+                    onClick={() => openChat()}
                   >
                     {language.t("orchestra.settings.agents.openChat")}
                   </button>
