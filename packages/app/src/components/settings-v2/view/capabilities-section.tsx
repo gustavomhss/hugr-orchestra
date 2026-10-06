@@ -94,15 +94,19 @@ export function AgentsSection(props: { server: ServerConnection.Any; directory: 
                   <button type="button" class="mx-btn" onClick={() => navigate("/orchestra/agents")}>
                     {language.t("orchestra.settings.configure")}
                   </button>
-                  <button
-                    type="button"
-                    class="mx-btn"
-                    disabled={!item.chat || opening() || !tabs.ready()}
-                    title={item.chat ? undefined : language.t("orchestra.settings.agents.subagentNote")}
-                    onClick={() => openChat()}
+                  <Show
+                    when={item.chat}
+                    fallback={<p class="mx-note agent-note">{language.t("orchestra.agents.maestroOnly")}</p>}
                   >
-                    {language.t("orchestra.settings.agents.openChat")}
-                  </button>
+                    <button
+                      type="button"
+                      class="mx-btn"
+                      disabled={opening() || !tabs.ready()}
+                      onClick={() => openChat()}
+                    >
+                      {language.t("orchestra.settings.agents.openChat")}
+                    </button>
+                  </Show>
                 </footer>
               </article>
             )}
