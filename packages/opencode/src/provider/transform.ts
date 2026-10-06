@@ -698,7 +698,7 @@ function anthropicBindsThinking(apiId: string) {
 }
 
 // Fable 5.1 binds each thinking signature to the system prompt, tool list, and
-// messages above it, and rejects the request when any of that changes. opencode
+// messages above it, and rejects the request when any of that changes. Orchestra
 // re-renders parts of that prefix between turns (system prompt, tools, compaction),
 // so ask the API to drop the affected blocks instead of failing the request.
 // Older model deployments may reject this field, even with thinking enabled.
@@ -708,7 +708,7 @@ const ANTHROPIC_BLOCK_BINDING = { prefixMismatchBehavior: "drop_block" }
 function anthropicBlockBinding(model: Provider.Model, options: { [x: string]: any }) {
   const sdk = sdkKey(model.api.npm)
   const key = sdk === "bedrock" ? "reasoningConfig" : sdk === "anthropic" ? "thinking" : undefined
-  // Consume the OpenCode-only opt-out even on models outside the default scope.
+  // Consume the Orchestra-only opt-out even on models outside the default scope.
   if (key && options[key]?.blockBinding === false) {
     const result = { ...options, [key]: { ...options[key] } }
     delete result[key].blockBinding
@@ -1580,7 +1580,7 @@ export function schema(model: Provider.Model, schema: JSONSchema7): JSONSchema7 
 
   if (model.api.npm === "@ai-sdk/openai" || model.api.npm === "@ai-sdk/azure") {
     schema = sanitizeOpenAISchema(schema) as JSONSchema7
-    // Codex also applies lossy compaction above 4 KB; defer that until OpenCode needs the same schema budget.
+    // Codex also applies lossy compaction above 4 KB; defer that until Orchestra needs the same schema budget.
   }
 
   if (model.providerID === "moonshotai" || model.api.id.toLowerCase().includes("kimi")) {

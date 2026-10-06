@@ -55,8 +55,7 @@ export class UpgradeFailedError extends Schema.TaggedErrorClass<UpgradeFailedErr
   }
 }
 
-export const UPGRADE_DISABLED_MESSAGE =
-  "Upgrades are disabled: this build would otherwise install upstream opencode over Orchestra."
+export const UPGRADE_DISABLED_MESSAGE = "Upgrades are disabled: Orchestra has no release channel of its own yet."
 
 export interface Interface {
   readonly info: () => Effect.Effect<Info>
