@@ -462,6 +462,11 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 .wf-sub .mx-section {
   margin: 0;
 }
+/* Keeps the empty-state sentence to two balanced lines, as on the approved mock. */
+.wf-empty:not(.wf-empty-canvas) {
+  padding-inline: max(20px, calc(50% - 250px));
+  text-wrap: balance;
+}
 .wf-empty strong {
   display: block;
   margin-block-end: 6px;
