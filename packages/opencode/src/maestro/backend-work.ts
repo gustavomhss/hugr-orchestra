@@ -13,6 +13,8 @@ import { BackendResult } from "./backend-result"
 export function track(input: {
   readonly enabled: boolean
   readonly sessionID: SessionID
+  // Host fact: the logical task bound to the child (F2.11); absent for a seat without a binding.
+  readonly taskId?: string
   // Host fact: the write roots ToolSafety enforces for the child (F2.14); empty means read-only.
   readonly writeRoots?: ReadonlyArray<string>
   readonly publish: (workResult: BackendResult.WorkResult) => Effect.Effect<void>
@@ -20,9 +22,10 @@ export function track(input: {
   const evidence: { value?: BackendResult.WorkResult } = {}
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
   const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult) {
-    if (!input.writeRoots) return result
+    const task = input.taskId ? { ...result, taskId: input.taskId } : result
+    if (!input.writeRoots) return task
     const shell = ToolSafety.shellFact(input.sessionID) ?? (yield* ToolSafetySandbox.status())
-    return { ...result, writeRoots: [...input.writeRoots], ...shell }
+    return { ...task, writeRoots: [...input.writeRoots], ...shell }
   })
   const lastAssistant = () =>
     MessageV2.stream(input.sessionID).pipe(

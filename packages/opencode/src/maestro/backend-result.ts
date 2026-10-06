@@ -47,6 +47,8 @@ type Terminal = {
 
 export type WorkResult = {
   schema: "backend-work-result-v1"
+  // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
+  taskId?: string
   card: { parsed: boolean; messageID?: string }
   outcome?: Card["outcome"]
   changes: Card["changes"]

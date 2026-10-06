@@ -26,6 +26,7 @@ import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
 import { GroundedSkills } from "@/maestro/grounded-skills"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { BackendWork } from "@/maestro/backend-work"
+import { LogicalTask } from "@/maestro/logical-task"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
@@ -109,14 +110,14 @@ export const Parameters = Schema.Struct({
 })
 
 function renderOutput(input: {
-  sessionID: SessionID
+  id: string
   state: "running" | "completed" | "error"
   summary?: string
   text: string
 }) {
   const tag = input.state === "error" ? "task_error" : "task_result"
   return [
-    `<task id="${input.sessionID}" state="${input.state}">`,
+    `<task id="${input.id}" state="${input.state}">`,
     ...(input.summary ? [`<summary>${input.summary}</summary>`] : []),
     `<${tag}>`,
     input.text,
@@ -215,12 +216,9 @@ export const TaskTool = Tool.define(
         replayReserved = true
         requireCompletedReplay = true
       }
-      const resumed = params.task_id
-        ? yield* sessions.get(SessionID.make(params.task_id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
-        : undefined
-      if (resumed && (resumed.parentID !== ctx.sessionID || canonicalMemberId(resumed.agent) !== nextID)) {
-        return yield* Effect.fail(new Error("Task resume denied: task is not direct child for selected agent"))
-      }
+      const strictTask = nextID === "backend" || params.governed !== undefined || params.authorizationID !== undefined
+      const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
+        parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
       if (params.governed) {
         const message = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
           Effect.provideService(Database.Service, database),
@@ -279,7 +277,7 @@ export const TaskTool = Tool.define(
           subagentType: params.subagent_type,
           prompt: params.prompt,
           model: params.model,
-          taskID: params.task_id,
+          taskID: resumed?.id,
           sessionID: ctx.sessionID,
           agent: ctx.agent,
           agentID: ctx.agentID,
@@ -428,6 +426,11 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error("Governed Task denied: reservation-child-permission-mismatch"))
       }
 
+      const logical = strictTask
+        ? yield* LogicalTask.ensure({ executionSessionID: nextSession.id, authoritySessionID: ctx.sessionID,
+            projectID: parent.projectID, memberID: nextID, ...LogicalTask.origin(governedChildID, !!params.governed) })
+        : undefined
+      const shownID = logical?.taskId ?? nextSession.id
       const placement = yield* InstanceState.context
       const completionReceipt = yield* completion.beforeDispatch({
         sessionID: ctx.sessionID, taskID: nextSession.id, callID: ctx.callID ?? "",
@@ -458,6 +461,7 @@ export const TaskTool = Tool.define(
       const work = BackendWork.track({
         enabled: nextID === "backend",
         sessionID: nextSession.id,
+        taskId: logical?.taskId,
         writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
@@ -504,7 +508,7 @@ export const TaskTool = Tool.define(
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
-          output: renderOutput({ sessionID: nextSession.id, state: "completed", text: output }),
+          output: renderOutput({ id: shownID, state: "completed", text: output }),
         }
       }
 
@@ -616,7 +620,7 @@ export const TaskTool = Tool.define(
                   ...(workResult ? { workResult } : {}),
                 },
                 text: renderOutput({
-                  sessionID: nextSession.id,
+                  id: shownID,
                   state,
                   summary:
                     state === "completed"
@@ -647,7 +651,7 @@ export const TaskTool = Tool.define(
           title: params.description,
           metadata: work.attach({ ...metadata, background: true, jobId: nextSession.id }),
           output: renderOutput({
-            sessionID: nextSession.id,
+            id: shownID,
             state: "running",
             summary: "Background task updated",
             text: BACKGROUND_UPDATED,
@@ -677,7 +681,7 @@ export const TaskTool = Tool.define(
           title: params.description,
           metadata: work.attach({ ...metadata, background: true, jobId: info.id }),
           output: renderOutput({
-            sessionID: nextSession.id,
+            id: shownID,
             state: "running",
             summary: "Background task started",
             text: BACKGROUND_STARTED,
@@ -723,7 +727,7 @@ export const TaskTool = Tool.define(
                 ...metadata,
                 ...(completionEvidence.value ? { completion: completionEvidence.value } : {}),
               }),
-              output: renderOutput({ sessionID: nextSession.id, state: "completed", text: result?.output ?? "" }),
+              output: renderOutput({ id: shownID, state: "completed", text: result?.output ?? "" }),
             }
           }),
         (_, exit) =>
