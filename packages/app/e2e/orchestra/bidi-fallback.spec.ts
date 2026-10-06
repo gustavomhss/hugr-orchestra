@@ -27,6 +27,10 @@ for (const scenario of scenarios) {
     await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)
     await page.evaluate(() => document.fonts.ready)
 
+    const caption = page.locator('[data-slot="orchestra-titlebar-caption"]')
+    await expect(caption).toHaveText("OpenCode, evolved.")
+    expectTrailing(await glyphs(caption), "OpenCode, evolved.")
+
     const sidebar = page.locator('[data-component="orchestra-sidebar"]')
     const env = sidebar.getByRole("button", { name: ".env", exact: true })
     expectInOrder(await glyphs(env.locator(".orchestra-nav-label")), 0, 1)
@@ -71,12 +75,11 @@ for (const scenario of scenarios) {
 
     if (scenario.direction === "ltr") return
     // Real Arabic in a slot keeps the RTL base direction, with embedded Latin and digits in order.
-    const crumb = page.locator('[data-slot="orchestra-titlebar-breadcrumb"] > span').last()
     const mixed = `${project}.`
-    await crumb.evaluate((element, text) => {
+    await caption.evaluate((element, text) => {
       element.textContent = text
     }, mixed)
-    const arabic = await glyphs(crumb)
+    const arabic = await glyphs(caption)
     expectInOrder(arabic, mixed.length - 1, mixed.length - 2)
     expect(arabic[0]!.right).toBeGreaterThanOrEqual(Math.max(...arabic.map((box) => box.right)) - 0.5)
     expectInOrder(arabic, mixed.indexOf("C"), mixed.indexOf("o"))

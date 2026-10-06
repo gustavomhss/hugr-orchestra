@@ -209,6 +209,13 @@
     font-weight: 600;
   }
 
+  [data-slot="orchestra-titlebar-caption"] {
+    color: var(--orchestra-toolbar-caption);
+    font-size: 12px;
+    white-space: nowrap;
+    margin-inline-end: 8px;
+  }
+
   [data-slot="orchestra-theme-toggle"] {
     display: grid;
     flex: none;
