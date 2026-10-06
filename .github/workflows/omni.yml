@@ -1,7 +1,7 @@
 name: omni
 
 # hugr-omni's own gate (packages/omni/scripts/ci.mjs) on Linux, Windows and macOS. It runs on pushes to dev that touch
-# packages/omni, when the epic label is added to a pull request (like test.yml), and by hand on any ref. Orchestra's
+# packages/omni, on pull requests that touch packages/omni (and when the epic label is added to one), and by hand. Orchestra's
 # test guard does not apply to it.
 on:
   push:
@@ -10,7 +10,10 @@ on:
     paths:
       - "packages/omni/**"
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - "packages/omni/**"
+      - ".github/workflows/omni.yml"
   workflow_dispatch:
     inputs:
       ref:
@@ -20,7 +23,7 @@ on:
 
 concurrency:
   # Non-epic label events skip the job; give them their own group so they cannot cancel a real run.
-  group: ${{ (github.event_name != 'pull_request' || github.event.label.name == 'epic') && format('omni-{0}', github.event.pull_request.number || inputs.ref || github.ref) || format('omni-skip-{0}', github.run_id) }}
+  group: ${{ (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic') && format('omni-{0}', github.event.pull_request.number || inputs.ref || github.ref) || format('omni-skip-{0}', github.run_id) }}
   cancel-in-progress: true
 
 permissions:
@@ -28,7 +31,7 @@ permissions:
 
 jobs:
   gate:
-    if: github.event_name != 'pull_request' || github.event.label.name == 'epic'
+    if: github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic'
     name: gate (${{ matrix.os }})
     strategy:
       fail-fast: false
