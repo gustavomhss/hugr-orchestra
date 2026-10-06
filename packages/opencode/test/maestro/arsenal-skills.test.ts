@@ -53,10 +53,11 @@ describe("Maestro Arsenal playbooks", () => {
     )
   })
 
-  // The prompt replaces the provider base prompt; procedures live in playbooks and tool descriptions, so it stays small.
-  test("Maestro prompt stays lean and names only shipped playbooks", async () => {
+  // The prompt replaces the provider base prompt, so it carries the harness facts; procedures live in playbooks and
+  // tool descriptions. The ceiling is a tripwire against unreviewed growth, not a target.
+  test("Maestro prompt stays within its size budget and names only shipped playbooks", async () => {
     const file = Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt"))
-    expect(file.size).toBeLessThanOrEqual(8 * 1024)
+    expect(file.size).toBeLessThanOrEqual(16 * 1024)
     const named = Array.from((await file.text()).matchAll(/`(frame-request|maestro-[a-z-]+)`/g), (match) => match[1]!)
     expect(named).toContain("maestro-governed")
     await Promise.all(
