@@ -49,6 +49,21 @@
     },
     "@opencode-ai/maestro-arsenal#test": {
       "outputs": []
+    },
+    "@opencode-ai/client#test": {
+      "outputs": []
+    },
+    "@opencode-ai/atlas-boundary#test": {
+      "outputs": []
+    },
+    "@opencode-ai/sdk-next#test": {
+      "outputs": []
+    },
+    "@opencode-ai/tui#test": {
+      "outputs": []
+    },
+    "@opencode-ai/desktop#test": {
+      "outputs": []
     }
   }
 }
