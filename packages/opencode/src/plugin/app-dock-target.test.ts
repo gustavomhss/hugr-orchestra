@@ -12,7 +12,7 @@ test("dock_find pages native continuations itself and returns compact matches fr
     : args.cursor === "c1" ? page([control("n:b", "Sign In")], "c2") : page([control("n:c", "Continue without Signing In")], "c3"))
   const result = JSON.parse(String(await hooks.tool.dock_find.execute({ name: "continue WITHOUT" }, context)))
   expect(calls).toEqual([{ op: "read", args: { budget: 500, maxText: 0 } }, { op: "read", args: { cursor: "c1" } }, { op: "read", args: { cursor: "c2" } }])
-  expect(result).toEqual({ found: 1, pagesScanned: 3, restarts: 0, searchComplete: false, items: [{ ref: "n:c", role: "push-button",
+  expect(result).toEqual({ found: 1, pagesScanned: 3, restarts: 0, searchComplete: false, items: [{ ref: "n:c", role: "push button",
     name: "Continue without Signing In", states: [], actions: [{ id: "a:n:c", name: "press" }], can: ["action", "observedAction"] }] })
 })
 
@@ -41,9 +41,15 @@ test("dock_action target locates and acts in one call, refusing ambiguity withou
   expect(JSON.parse(String(await one.hooks.tool.dock_action.execute({ target: { name: "continue without" }, action: "press" }, context))))
     .toEqual({ dispatch: "acknowledged" })
   expect(one.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:b", actionID: "a:n:b" } })
-  const two = host(() => page([control("n:a", "Search files"), control("n:b", "Search (Ctrl+Shift+F)")]))
+  const two = host(() => page([control("n:a", "Search files"), control("n:b", "Search folders")]))
   expect(JSON.parse(String(await two.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "target-ambiguous", outcome: "not-dispatched", found: 2 })
+  // A name copied from ui_look without its shortcut is the whole name, so it wins over a partial match.
+  const shortcut = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : page([control("n:a", "Search files"), control("n:b", "Search (Ctrl+Shift+F)")]))
+  expect(JSON.parse(String(await shortcut.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(shortcut.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:b", actionID: "a:n:b" } })
   const actions = host(() => page([control("n:a", "Search", { actions: [{ id: "a1", name: "press" }, { id: "a2", name: "showContextMenu" }] })]))
   expect(JSON.parse(String(await actions.hooks.tool.dock_action.execute({ target: { name: "search" } }, context))))
     .toMatchObject({ code: "action-ambiguous", outcome: "not-dispatched" })
@@ -238,7 +244,7 @@ test("dock_find reports a partial traversal even when it found matches", async (
 
 test("dock_action target accepts role spellings models use and reports controls its filters excluded", async () => {
   const box = (ref: string, extra: Record<string, unknown> = {}) => control(ref, "files.trimTrailingWhitespace", {
-    roleName: "check-box", actions: [{ id: `a:${ref}`, name: "check" }],
+    role: 7, roleName: "check-box", actions: [{ id: `a:${ref}`, name: "check" }],
     capabilities: { action: { supported: false, reason: "virtual-ancestry" }, observedAction: { supported: true, reason: "x" },
       type: { supported: false, reason: "x" }, keyboardType: { supported: false, reason: "x" } }, ...extra })
   const run = (args: Record<string, unknown>) => {
@@ -250,12 +256,12 @@ test("dock_action target accepts role spellings models use and reports controls 
   expect(await run({ target: { name: "files.trimTrailingWhitespace", role: "check-box" } })).toMatchObject({ result: {
     code: "target-not-found", outcome: "not-dispatched", found: 0, nameMatches: 1,
     hints: ['Controls with this name only support observed actions; retry with mode: "observed"'],
-    nearMisses: [{ ref: "n:box", role: "check-box", can: ["observedAction"] }] }, actions: 0 })
-  for (const role of ["checkbox", "Check Box", "check_box"])
+    nearMisses: [{ ref: "n:box", role: "check box", can: ["observedAction"] }] }, actions: 0 })
+  for (const role of ["checkbox", "Check Box", "check_box", "check box", "check-box", "atspi-role-7", "ATSPI-ROLE-7"])
     expect(await run({ target: { name: "files.trimTrailingWhitespace", role }, mode: "observed" }))
       .toEqual({ result: { dispatch: "acknowledged" }, actions: 1 })
   expect(await run({ target: { name: "files.trimTrailingWhitespace", role: "toggle" }, mode: "observed" })).toMatchObject({ result: {
-    code: "target-not-found", hints: ['No control with this name has role "toggle"; roles found: check-box'] }, actions: 0 })
+    code: "target-not-found", hints: ['No control with this name has role "toggle"; roles found: check box'] }, actions: 0 })
 })
 
 test("action-ambiguous names the actions the model can pass", async () => {
@@ -448,4 +454,70 @@ test("ui_look maps the workspace, ui_enter zooms into a numbered region and ui_u
   expect(String(await dock.hooks.tool.ui_look.execute({}, { ...scoped, sessionID: "ses_b" } as ToolContext))).toContain("Open Folder")
   expect(String(await dock.hooks.tool.ui_up.execute({}, scoped))).toContain("Open Folder")
   expect(dock.calls.every((call) => call.op === "read" && call.args.world === "linux")).toBe(true)
+})
+
+// Run 12: inside VS Code's Settings dialog every row wraps its toolbar in an unnamed section, and ui_enter refused the
+// numbers ui_look had just printed; after a successful enter, numbers refer to the entered region's own map.
+test("ui_enter takes every number ui_look printed and says precisely why a number cannot be entered", async () => {
+  const shown = [8, 24, 25, 30]
+  const bars = (count: number) => [
+    { ref: "n:f", parentRef: null, role: 23, roleName: "frame", name: "Editor", states: [1, ...shown], actions: [] },
+    { ref: "n:d", parentRef: "n:f", role: 16, roleName: "dialog", name: "Settings", states: [1, 16, ...shown], actions: [] },
+    ...Array.from({ length: count }, (_, index) => index + 1).flatMap((row) => [
+      { ref: `n:w${row}`, parentRef: "n:d", role: 85, roleName: "atspi-role-85", name: "", states: shown, actions: [] },
+      { ref: `n:t${row}`, parentRef: `n:w${row}`, role: 63, roleName: "atspi-role-63", name: "", states: shown, actions: [] },
+      control(`n:b${row}`, `Button ${row}`, { parentRef: `n:t${row}`, states: shown }),
+    ]),
+  ]
+  const screen = { items: bars(2) }
+  const dock = host(() => page(screen.items))
+  const scoped = { ...context, agent: "linux", sessionID: "ses_enter" } as ToolContext
+  const enter = (region: number) => dock.hooks.tool.ui_enter.execute({ region }, scoped).then(String)
+  expect(await enter(1)).toBe("No view yet in this session; call ui_look and use one of its region numbers")
+  expect(String(await dock.hooks.tool.ui_look.execute({}, scoped))).toContain("#2 tool bar — 1 controls: Button 2")
+  const second = await enter(2)
+  expect(second).toContain("scope: tool bar (ui_up to leave)")
+  expect(second).toContain('push button "Button 2"')
+  expect(second).not.toContain("Button 1")
+  expect(await enter(2)).toBe("The last view (scope tool bar) listed 0 regions, so there is no #2; numbers refer to the latest ui_look or ui_enter output, and ui_up leaves an entered region")
+  expect(String(await dock.hooks.tool.ui_up.execute({}, scoped))).toContain("#2 tool bar")
+  screen.items = bars(1)
+  expect(await enter(2)).toBe("Region #2 (tool bar) from the last view is no longer on screen; call ui_look again")
+})
+
+// Run 12: ui_look printed "static" while ui_find printed "atspi-role-116", and a role copied from one tool missed in
+// the other. Every tool now prints the readable role, and every spelling of a role matches.
+test("every tool prints the readable role and finds a control by any spelling of it", async () => {
+  const search = control("n:search", "Search settings", { role: 116, roleName: "atspi-role-116", actions: [] })
+  const dock = host(() => page([search, control("n:open", "Open")]))
+  const scoped = { ...context, agent: "linux", sessionID: "ses_roles" } as ToolContext
+  for (const role of ["static", "Static", "atspi-role-116"])
+    expect(JSON.parse(String(await dock.hooks.tool.ui_find.execute({ role }, scoped)))).toMatchObject({ found: 1,
+      items: [{ ref: "n:search", role: "static" }] })
+  expect(JSON.parse(String(await dock.hooks.tool.ui_read.execute({}, scoped))).items.map((item: { roleName: string }) => item.roleName))
+    .toEqual(["static", "push button"])
+  expect(String(await dock.hooks.tool.ui_look.execute({}, scoped))).toContain('static "Search settings"')
+})
+
+// Run 12: a prefix of a tree row's name matched (nameMatches: 1), but the helper offers no action on list and tree
+// rows, and the miss gave no reason, so the model kept rewording the name.
+test("a target that matches only controls without the requested input says so and where to act instead", async () => {
+  const row = control("n:row", "Files Trim Trailing Whitespace. When enabled, will trim trailing whitespace when saving a file.", {
+    role: 91, roleName: "tree-item", actions: [], capabilities: { action: { supported: false, reason: "unstable-identity" },
+      observedAction: { supported: false, reason: "explicit-observed-mode; logical-identity-unverified" },
+      type: { supported: false, reason: "unstable-identity" }, keyboardType: { supported: false, reason: "unstable-identity" } } })
+  const dock = host(() => page([row]))
+  for (const mode of [undefined, "observed"])
+    expect(JSON.parse(String(await dock.hooks.tool.ui_act.execute({ action: "click", ...(mode ? { mode } : {}),
+      target: { name: "Files Trim Trailing Whitespace. When enabled", role: "tree item" } } as never, context)))).toMatchObject({
+      code: "target-not-found", nameMatches: 1, hints: ["The control with this name accepts no action (tree item: unstable-identity); act on a control inside or beside it instead, such as its check box or button (ui_list shows them)"] })
+  expect(dock.calls.every((call) => call.op === "read")).toBe(true)
+})
+
+test("a target named as ui_look prints it, without the shortcut, is an exact name among partial matches", async () => {
+  const dock = host((op) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
+    : page([control("n:section", "Explorer Section: Outline"), control("n:explorer", "Explorer (Ctrl+Shift+E)")]))
+  expect(JSON.parse(String(await dock.hooks.tool.ui_act.execute({ target: { name: "Explorer", role: "push button" } }, context))))
+    .toEqual({ dispatch: "acknowledged" })
+  expect(dock.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:explorer", actionID: "a:n:explorer", world: "linux" } })
 })
