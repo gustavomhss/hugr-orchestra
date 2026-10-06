@@ -12,7 +12,6 @@
       rgba(14, 20, 28, 0.93) 50%,
       rgba(12, 17, 24, 0.95) 100%
     );
-    --orchestra-session-filter: blur(16px) brightness(0.58) saturate(0.86);
     --orchestra-session-border: rgba(160, 179, 197, 0.14);
     --orchestra-session-shadow:
       inset 0 1px 0 rgba(214, 231, 247, 0.075), inset 0 -1px 0 rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.42),
@@ -107,7 +106,6 @@
       rgba(250, 251, 253, 0.95) 50%,
       rgba(245, 248, 250, 0.96) 100%
     );
-    --orchestra-session-filter: blur(18px) brightness(1.02) saturate(0.98);
     --orchestra-session-border: rgba(70, 84, 98, 0.15);
     --orchestra-session-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(120, 136, 152, 0.12), 0 1px 2px rgba(38, 50, 64, 0.13),
@@ -212,9 +210,80 @@
     border-radius: inherit;
     background: var(--orchestra-session-background);
     box-shadow: var(--orchestra-session-shadow);
-    -webkit-backdrop-filter: var(--orchestra-session-filter);
-    backdrop-filter: var(--orchestra-session-filter);
     pointer-events: none;
+  }
+
+  /* The panels' blur is painted in the shell's glass layer (layout-new.tsx), under the tint above.
+   * A backdrop-filter is redrawn over its whole box whenever anything inside that box paints
+   * (streaming, scrolling, spinners), which starves software-rendered windows such as headless CI.
+   * Instead each stand-in is clipped to its panel and holds a blurred copy of the workspace
+   * backdrop, and the layer is its own compositor layer, so the blur is reused until a panel moves.
+   * Without its panel an anchor() inset is invalid and the stand-in collapses to nothing. */
+  body[data-new-layout] .orchestra-workspace {
+    anchor-name: --orchestra-workspace;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-layout="body"] {
+    anchor-name: --orchestra-session-body;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-side-panel"] {
+    anchor-name: --orchestra-session-side-panel;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-new-design"] {
+    anchor-name: --orchestra-session-new-design;
+  }
+
+  body[data-new-layout] .orchestra-glass-layer {
+    --orchestra-session-filter: blur(16px) brightness(0.58) saturate(0.86);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    will-change: opacity;
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] .orchestra-glass-layer {
+    --orchestra-session-filter: blur(18px) brightness(1.02) saturate(0.98);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] {
+    position: fixed;
+    clip-path: inset(0 round 9px);
+  }
+
+  /* The workspace's photograph and overlay (theme.css), laid over the same box. */
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div {
+    position: fixed;
+    top: anchor(--orchestra-workspace top);
+    right: anchor(--orchestra-workspace right);
+    bottom: anchor(--orchestra-workspace bottom);
+    left: anchor(--orchestra-workspace left);
+    background:
+      var(--orchestra-workspace-overlay),
+      url("/orchestra/mtn-src.jpg") center / cover no-repeat;
+    filter: var(--orchestra-session-filter);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass="session-body"] {
+    top: anchor(--orchestra-session-body top);
+    right: anchor(--orchestra-session-body right);
+    bottom: anchor(--orchestra-session-body bottom);
+    left: anchor(--orchestra-session-body left);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass="session-side-panel"] {
+    top: anchor(--orchestra-session-side-panel top);
+    right: anchor(--orchestra-session-side-panel right);
+    bottom: anchor(--orchestra-session-side-panel bottom);
+    left: anchor(--orchestra-session-side-panel left);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass="session-new-design"] {
+    top: anchor(--orchestra-session-new-design top);
+    right: anchor(--orchestra-session-new-design right);
+    bottom: anchor(--orchestra-session-new-design bottom);
+    left: anchor(--orchestra-session-new-design left);
   }
 
   body[data-new-layout]
