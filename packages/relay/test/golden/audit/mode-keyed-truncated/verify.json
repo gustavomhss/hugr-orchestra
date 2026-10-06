@@ -1,0 +1,30 @@
+{
+  "ledger": "test/golden/audit/mode-keyed-truncated/input/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 1 chained entries [KEYED (HMAC-SHA256)], chain head 733f396dcdee…\n  (1 checklist-item verdicts on the chain)\n  NOTE: trace ends on 'checklist-item', not a terminal event — possible tail-truncation; only an out-of-band anchor of the head can rule it out.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "C1",
+      "assert": "real control",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 1,
+  "deterministic_passed": 1,
+  "advisory": 0,
+  "last_event": "checklist-item",
+  "truncated": true,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "TRUNCATED",
+  "exit": 2
+}

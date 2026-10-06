@@ -1,0 +1,143 @@
+{
+  "name": "Titles",
+  "nodes": [
+    {
+      "id": "relay-start",
+      "name": "Workflow start",
+      "type": "relay.startTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        240
+      ],
+      "parameters": {
+        "relayBrief": "",
+        "relayRetryBudget": 3
+      }
+    },
+    {
+      "id": "x",
+      "name": "T",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "title": "T",
+        "macro": "",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "y",
+      "name": "T · y",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "parameters": {
+        "title": "T",
+        "macro": "",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "z",
+      "name": "T · z",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        688,
+        240
+      ],
+      "parameters": {
+        "title": "T",
+        "macro": "",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    }
+  ],
+  "connections": {
+    "T": {
+      "main": [
+        [
+          {
+            "node": "T · y",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T · y": {
+      "main": [
+        [
+          {
+            "node": "T · z",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow start": {
+      "main": [
+        [
+          {
+            "node": "T",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "tags": [],
+  "meta": {
+    "relay": {
+      "schema": 1,
+      "kind": "workflow",
+      "sprint": {
+        "work_packages": [
+          {
+            "id": "x",
+            "title": "T"
+          },
+          {
+            "id": "y",
+            "title": "T"
+          },
+          {
+            "id": "z",
+            "title": "T"
+          }
+        ]
+      },
+      "names": {
+        "x": "T",
+        "y": "T · y",
+        "z": "T · z"
+      }
+    }
+  }
+}

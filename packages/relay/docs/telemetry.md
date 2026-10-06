@@ -44,4 +44,4 @@ consumed rows in `tr_cursor`. No usage data produces `total:null`; an observed e
 - Total token cost sums priced events, while state/macro rows select only advance/complete/escalate events.
   Failure-window spend can therefore be present in totals without complete state/macro attribution.
 - CLI runs have no transcript token accounting. Reports are not dollar bills or full separate judge-call billing.
-- [`cost-per-state` fixture](fixtures/cost-per-state.ledger.jsonl) records one run, not a universal cost model.
+- [`cost-per-state` fixture](../test/fixtures/cost-per-state.ledger.jsonl) records one run, not a universal cost model.

@@ -1,0 +1,109 @@
+{
+  "schema": "relay.hook.v1",
+  "name": "Actions",
+  "nodes": [
+    {
+      "id": "event",
+      "name": "Before edit",
+      "type": "relay.hookEventTrigger",
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "operation": "command",
+        "timing": "before"
+      }
+    },
+    {
+      "id": "remind",
+      "name": "Remind",
+      "type": "relay.hookRemind",
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "message": "Remember the contract."
+      }
+    },
+    {
+      "id": "verify",
+      "name": "Verify",
+      "type": "relay.hookVerify",
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "message": "Checks pass.",
+        "check": "bun typecheck"
+      }
+    },
+    {
+      "id": "repair",
+      "name": "Repair",
+      "type": "relay.hookRepair",
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "message": "Fix it."
+      }
+    },
+    {
+      "id": "approve",
+      "name": "Approve",
+      "type": "relay.hookApprove",
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "message": "Ask."
+      }
+    },
+    {
+      "id": "record",
+      "name": "Record",
+      "type": "relay.hookRecord",
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "message": "Recorded."
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "event",
+      "port": 0,
+      "to": "remind"
+    },
+    {
+      "from": "remind",
+      "port": 0,
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "port": 0,
+      "to": "repair"
+    },
+    {
+      "from": "repair",
+      "port": 0,
+      "to": "approve"
+    },
+    {
+      "from": "approve",
+      "port": 0,
+      "to": "record"
+    }
+  ],
+  "binding": "host-required",
+  "installed": false
+}

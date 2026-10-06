@@ -1,0 +1,23 @@
+{
+  "ledger": "test/fixtures/mutants/byte-flip.ledger.jsonl",
+  "chain_intact": false,
+  "chain_detail": "TAMPERED line 2: MAC mismatch under PLAIN (SHA-256)",
+  "record_errors": [],
+  "controls": [],
+  "deterministic_total": 0,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": null,
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Broken or unusable record; sprint comparison not run."
+  },
+  "no_controls": true,
+  "escalated": false,
+  "result": "TAMPERED",
+  "exit": 1
+}

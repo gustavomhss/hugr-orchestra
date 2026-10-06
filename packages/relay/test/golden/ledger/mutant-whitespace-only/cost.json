@@ -1,0 +1,7 @@
+{
+  "ledger": "test/fixtures/mutants/whitespace-only.ledger.jsonl",
+  "total": null,
+  "states": [],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

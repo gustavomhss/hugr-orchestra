@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/sprint-flag-diverged/input/ledger.jsonl",
+  "problems": []
+}

@@ -1,0 +1,2 @@
+{"wp": "wp1", "i": 0, "event": "checklist-item", "item": "C1", "assert": "real control", "verdict": "pass", "graded_by": "deterministic", "oracle": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b", "origin": "sprint", "prev": "GENESIS", "seq": 0,"h":"27d91f27fa27323287afac66f0aaa6d5c2779113650b46c5a3fb02ac1fdf59e2"}
+{"wp": "wp1", "i": 0, "event": "sprint-complete", "retry": 0, "fails": "", "reg": "", "prev": "27d91f27fa27323287afac66f0aaa6d5c2779113650b46c5a3fb02ac1fdf59e2", "seq": 1,"h":"a30a8a001ee6dc3a3b087322596535e5cf624eb2b58982488377ff01d146c0a2"}

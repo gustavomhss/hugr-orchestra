@@ -1,0 +1,28 @@
+{
+  "ledger": "test/fixtures/spec-decompose-unscoped-review.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "invariants.register",
+      "macro": "invariants",
+      "elapsed_s": null
+    },
+    {
+      "wp": "invariants.cold_review",
+      "macro": "invariants",
+      "elapsed_s": null
+    },
+    {
+      "wp": "invariants.gate",
+      "macro": "invariants",
+      "elapsed_s": null
+    },
+    {
+      "wp": "requirements.derive",
+      "macro": "requirements",
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

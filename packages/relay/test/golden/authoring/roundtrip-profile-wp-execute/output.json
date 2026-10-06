@@ -1,0 +1,313 @@
+{
+  "sprint": {
+    "brief": "wp-execute v1.0.0 — Governed execution of one work package — bind, red, green, refactor, gate, seal.",
+    "gen": 0,
+    "retry_budget": 3,
+    "macros": [
+      {
+        "id": "bind",
+        "title": "Bind",
+        "instructions": "## Phase: BIND\n\nRead the work-package card supplied as initial_context for this session —\nit carries the WP id, intent, source requirements, and acceptance\nscenarios. Before touching any file, ground the session in that card.\n\n### Your Approach:\n1. Restate the WP's intent in ONE sentence — if you cannot, the card is\n   ambiguous and you must stop rather than guess.\n2. List every acceptance scenario (SCN id) this WP must satisfy. Do not\n   invent scenarios the card does not carry; do not drop any it does.\n3. Declare the surface you will touch — files and modules — BEFORE\n   writing anything. This declaration is the contract for RED and GREEN.\n\n### Rules:\n- Anything outside the declared surface is scope creep. If the WP turns\n  out to need more surface once work is underway, record it as an\n  explicit deviation — never expand silently.\n- If the card is missing intent, source requirements, or acceptance\n  scenarios, STOP. An underspecified WP cannot be bound, and proceeding\n  on a guess only pushes the ambiguity downstream where it is more\n  expensive to catch.\n\n### Output:\nA one-sentence intent restatement, the full list of SCN ids in scope,\nand the declared file/module surface."
+      },
+      {
+        "id": "red",
+        "title": "Red",
+        "instructions": "## Phase: RED\n\nWrite the test(s) for this WP BEFORE any implementation exists. Each\ntest maps to exactly one acceptance scenario declared at BIND — no\ntest without a scenario, no scenario without a test.\n\n### Your Approach:\n1. Write the failing test(s) first. Do not write a line of\n   implementation in this phase — not even a stub that happens to pass.\n2. Run the tests and CAPTURE the failing output verbatim. This output\n   is the evidence the gate checks; paraphrasing it is not sufficient.\n3. Confirm each test fails for the RIGHT reason — a missing behavior,\n   not a typo or a broken harness.\n\n### Rules:\n- A test that passes before implementation tests nothing: either the\n  behavior already exists (the WP may be redundant) or the test is\n  vacuous (it asserts nothing meaningful). Either case means STOP and\n  rethink the test, not proceed to GREEN.\n- Keep the failing output verbatim — do not summarize it away.\n\n### Output:\nThe new test file(s)/cases, the scenario each maps to, and the\ncaptured failing test-run output."
+      },
+      {
+        "id": "green",
+        "title": "Green",
+        "instructions": "## Phase: GREEN\n\nWrite the MINIMUM implementation that makes the RED tests pass. This\nphase exists to satisfy the tests already written — not to anticipate\nfuture needs.\n\n### Your Approach:\n1. Implement only what the failing tests demand. Resist generalization\n   the tests do not require — speculative flexibility is scope creep,\n   the same as touching undeclared files.\n2. Run the tests and capture the passing output verbatim.\n3. Stay inside the surface declared at BIND.\n\n### Rules:\n- If you must leave the declared surface to make the tests pass, record\n  the deviation explicitly — do not expand the surface silently.\n- Do not refactor here. REFACTOR is a separate, predicate-gated phase.\n\n### Output:\nThe minimal implementation change(s), the captured passing test-run\noutput, and a note confirming the declared surface was respected (or an\nexplicit deviation record if not)."
+      },
+      {
+        "id": "refactor",
+        "title": "Refactor",
+        "instructions": "## Phase: REFACTOR\n\nRefactor is predicate-gated, not automatic. Check the triggers before\ntouching anything:\n- duplicated logic introduced during GREEN\n- a function or file that has outgrown its module's norms\n- naming that no longer reflects behavior\n\n### Your Approach:\n1. Evaluate each trigger against the GREEN diff. If NONE fires, record\n   \"no refactor needed\" with one line of justification — skipping\n   honestly is compliant, skipping silently is not.\n2. If a trigger fires, refactor with tests green the whole time — run\n   them after every change, not just at the end.\n3. Behavior must not change. The tests are the ratchet: if a test needs\n   to change to keep passing, that is not a refactor, it is new\n   behavior, and it belongs in a new RED/GREEN cycle.\n\n### Output:\nEither the refactor diff with tests green throughout, or the recorded\n\"no refactor needed\" justification."
+      },
+      {
+        "id": "gate",
+        "title": "Verification Gate",
+        "instructions": "## Phase: VERIFICATION GATE\n\nThis is full verification, not just a re-run of the WP's own tests.\n\n### Your Approach:\n1. Run the ENTIRE project test suite — a WP that breaks a neighbor is\n   not done, even if its own tests are green.\n2. Run the linter/formatter checks the project uses.\n3. Walk the acceptance scenarios from BIND one by one and record\n   pass/fail per SCN id — do not summarize this as a single verdict.\n4. Capture command outputs as evidence for every check above.\n\n### Rules:\n- Any single failure — suite, lint, or scenario — means this gate does\n  not pass. Fix and re-run the full set; do not cherry-pick a re-run of\n  only the failing piece.\n- The cold-review step that follows is a skeptic's pass over this\n  evidence: it checks that every claimed pass has captured output, and\n  that each check would actually fail if the code were wrong.\n\n### Output:\nFull-suite output, lint output, and a per-SCN-id pass/fail table."
+      },
+      {
+        "id": "seal",
+        "title": "Seal",
+        "instructions": "## Phase: SEAL\n\nAssemble the seal record — the final JSON deliverable the profile's\noutput_contract validates.\n\n### Your Approach:\n1. wp_id and intent — carried from the WP card bound at BIND.\n2. outputs — the artifacts actually produced (file paths).\n3. provenance — the commands run in this session with their evidence;\n   every entry must correspond to a command actually executed here,\n   never a plausible-sounding placeholder.\n4. acceptance_results — one entry per SCN id from the verification\n   gate, each with its pass/fail result.\n5. assurance_level — \"floor\" (tests only), \"property\" (property-based\n   tests included), or \"full\" (tests + property + external\n   verification). Choose honestly based on what this session actually\n   ran.\n\n### Rules:\n- The seal is a claim you sign with evidence. Do not record an output,\n  a provenance entry, or a pass you cannot back with something that\n  actually happened in this session.\n\n### Output:\nThe complete seal record matching the output_contract schema."
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "bind.bind_scope",
+        "macro": "bind",
+        "kind": "execute",
+        "title": "Bind scope",
+        "instructions": "Restate WP intent, list acceptance scenarios, declare the surface to be touched.",
+        "checklist": [
+          {
+            "id": "bind-artifact-written",
+            "assert": "this state wrote wp/bind.json",
+            "cmd": "test -s ${wp_dir}/bind.json",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "bind.gate",
+        "macro": "bind",
+        "kind": "gate",
+        "title": "Bind gate",
+        "instructions": "Mechanical check that the WP is bound before any test or code is written.",
+        "checklist": [
+          {
+            "id": "wp_card_restated",
+            "assert": "wp_card_restated",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if d.get('intent','').strip() else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "acceptance_scenarios_listed",
+            "assert": "acceptance_scenarios_listed",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if len(d.get('scenarios') or [])>0 else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "surface_declared",
+            "assert": "surface_declared",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if len(d.get('surface') or [])>0 else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "red.write_failing_tests",
+        "macro": "red",
+        "kind": "execute",
+        "title": "Write failing tests",
+        "instructions": "Author test(s) mapped to acceptance scenarios and capture the failing run.",
+        "checklist": [
+          {
+            "id": "red-changed-the-tests",
+            "assert": "this state changed the test file",
+            "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "red.gate",
+        "macro": "red",
+        "kind": "gate",
+        "title": "Red gate",
+        "instructions": "Mechanical check that tests were written first and genuinely fail.",
+        "checklist": [
+          {
+            "id": "tests_written_first",
+            "assert": "tests_written_first",
+            "cmd": "test -s ${test_path}",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "failing_output_captured",
+            "assert": "failing_output_captured",
+            "cmd": "grep -qE 'fail|error|FAILED' ${wp_dir}/red.txt",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "tests_map_to_scenarios",
+            "assert": "tests_map_to_scenarios",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/bind.json'));sys.exit(0 if all(any(s.get('test') in open('${test_path}').read() for _ in [0]) for s in (d.get('scenarios') or [])) else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "green.implement",
+        "macro": "green",
+        "kind": "execute",
+        "title": "Implement minimally",
+        "instructions": "Write the smallest implementation that turns the red tests green.",
+        "checklist": [
+          {
+            "id": "green-changed-the-source",
+            "assert": "this state changed the source file",
+            "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "green.gate",
+        "macro": "green",
+        "kind": "gate",
+        "title": "Green gate",
+        "instructions": "Mechanical check that tests pass and the declared surface was respected.",
+        "checklist": [
+          {
+            "id": "tests_pass",
+            "assert": "tests_pass",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "passing_output_captured",
+            "assert": "passing_output_captured",
+            "cmd": "test -s ${wp_dir}/green.txt",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "surface_respected",
+            "assert": "surface_respected",
+            "cmd": "test -s ${src_path}",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "refactor.refactor_or_skip",
+        "macro": "refactor",
+        "kind": "execute",
+        "title": "Refactor or record skip",
+        "instructions": "Fire the refactor triggers or record an honest skip justification.",
+        "checklist": [
+          {
+            "id": "refactor-decision-written",
+            "assert": "this state recorded a decision, refactor or honest skip",
+            "cmd": "test -s ${wp_dir}/refactor.json",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "refactor.gate",
+        "macro": "refactor",
+        "kind": "gate",
+        "title": "Refactor gate",
+        "instructions": "Mechanical check that a refactor decision was recorded and tests still pass.",
+        "checklist": [
+          {
+            "id": "refactor_decision_recorded",
+            "assert": "refactor_decision_recorded",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/refactor.json'));sys.exit(0 if d.get('decision') in ('refactored','skipped') else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "tests_still_pass",
+            "assert": "tests_still_pass",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "gate.verify_all",
+        "macro": "gate",
+        "kind": "execute",
+        "title": "Run full verification",
+        "instructions": "Run the full test suite, lints, and walk acceptance scenarios per SCN id.",
+        "checklist": [
+          {
+            "id": "verify-evidence-written",
+            "assert": "this state captured the full-suite evidence",
+            "cmd": "test -s ${wp_dir}/verify.json",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "gate.cold_review",
+        "macro": "gate",
+        "kind": "review",
+        "title": "Cold-review verification",
+        "instructions": "Review the evidence as a skeptic: does every claimed pass have captured output? Would each check actually fail if the code were wrong? Verdict APPROVE or FIXES-NEEDED.",
+        "checklist": [
+          {
+            "id": "review-is-substantive",
+            "assert": "the review carries at least 40 words",
+            "cmd": "test \"$(wc -w < ${wp_dir}/review.md)\" -ge 40",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "review-engages-with-the-diff",
+            "context": [
+              "${wp_dir}/review.md"
+            ],
+            "judge": "Does this review interrogate the evidence as a skeptic: does every claimed pass have captured output behind it, and would each check actually fail if the code in the diff were wrong? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+            "diff": true,
+            "blocking": true,
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "gate.gate",
+        "macro": "gate",
+        "kind": "gate",
+        "title": "Verification gate",
+        "instructions": "Mechanical check that the full suite is green, lints are clean, and every scenario was walked.",
+        "checklist": [
+          {
+            "id": "full_suite_green",
+            "assert": "full_suite_green",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "lints_clean",
+            "assert": "lints_clean",
+            "cmd": "${lint_cmd}",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "acceptance_walked_per_scenario",
+            "assert": "acceptance_walked_per_scenario",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/verify.json'));sys.exit(0 if len(d.get('acceptance') or [])>0 and all(a.get('result')=='pass' for a in d['acceptance']) else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "seal.assemble_seal",
+        "macro": "seal",
+        "kind": "execute",
+        "title": "Assemble seal record",
+        "instructions": "Build the wp_id/intent/outputs/provenance/acceptance_results/assurance_level record.",
+        "checklist": [
+          {
+            "id": "seal-written",
+            "assert": "this state assembled the seal record",
+            "cmd": "test -s ${wp_dir}/seal.json",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "seal.gate",
+        "macro": "seal",
+        "kind": "gate",
+        "title": "Seal gate",
+        "instructions": "Mechanical check that outputs, provenance, and acceptance results are all recorded.",
+        "checklist": [
+          {
+            "id": "outputs_recorded",
+            "assert": "outputs_recorded",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/seal.json'));sys.exit(0 if len(d.get('outputs') or [])>0 else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "provenance_recorded",
+            "assert": "provenance_recorded",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/seal.json'));sys.exit(0 if d.get('provenance',{}).get('commit') else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          },
+          {
+            "id": "acceptance_results_complete",
+            "assert": "acceptance_results_complete",
+            "cmd": "python3 -c \"import json,sys;d=json.load(open('${wp_dir}/seal.json'));sys.exit(0 if len(d.get('acceptance_results') or [])>0 else 1)\"",
+            "origin": "pe-profile:wp-execute@1.0.0"
+          }
+        ]
+      }
+    ]
+  },
+  "bindings": []
+}
