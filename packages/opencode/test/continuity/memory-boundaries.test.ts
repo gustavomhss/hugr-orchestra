@@ -5,7 +5,7 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { LLMEvent } from "@opencode-ai/llm"
 import { Archive } from "@/continuity/archive"
-import { run } from "@/continuity/fork"
+import { aliases } from "@/continuity/alias"
 import { Transcript } from "@/continuity/transcript"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
@@ -96,31 +96,6 @@ it.instance("G1 every durable source, including pre-compaction history and nativ
   }).pipe(Effect.provide(environment([first, second])))
 }), 60_000)
 
-it.effect("G1 missing middle continuation with valid hashes and every message represented declines before LLM streaming", () => Effect.gen(function* () {
-  const source = captured()
-  const part = source.head[0].parts[0]
-  if (part.type !== "text") throw new Error("Expected text fixture")
-  part.text = "source 😀\r\n".repeat(9000)
-  const archived = Transcript.chunks(source.sessionID, source.head)
-  const split = archived.filter((chunk) => chunk.first === source.head[0].info.id)
-  expect(split.length).toBeGreaterThan(2)
-  const incomplete = archived.filter((chunk) => chunk.id !== split[1].id)
-  expect(new Set(incomplete.map((chunk) => chunk.first))).toEqual(new Set(source.head.map((message) => message.info.id)))
-  for (const chunk of incomplete) expect(createHash("sha256").update(chunk.markdown).digest("hex")).toBe(chunk.id)
-  const calls: LLM.StreamInput[] = []
-  const services = { provider: provider(), llm: { stream: (request: LLM.StreamInput) => {
-    calls.push(request)
-    return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: FIRST, status: "claimed" } }] }) }), LLMEvent.finish({ reason: "stop" }))
-  } } }
-  expect(yield* run(source, services, archived, archived)).toBeDefined()
-  expect(calls).toHaveLength(1)
-  calls.length = 0
-  expect(yield* run(source, services, incomplete, archived)).toBeUndefined()
-  expect(calls).toEqual([])
-  expect(yield* run(source, services, [archived[1], archived[0], ...archived.slice(2)], archived)).toBeUndefined()
-  expect(calls).toEqual([])
-}))
-
 it.instance("G2 smaller parent model, growing native tail and failed model lookup fall back without retiring stored memory", () => Effect.gen(function* () {
   const plan = yield* held(FIRST)
   const state = { fail: false }
@@ -180,8 +155,9 @@ it.instance("G3 budget batches preserve every unfinished turn and low-token comp
       if (i > 0) yield* complete(yield* begin(chat.id, `LOW_USAGE_REFRESH_${i}`), `LOW_REPLY_${i}`, 100)
       const hit = yield* entered(plans[i])
       const history = yield* sessions.messages({ sessionID: chat.id })
-      const refs = new Map((yield* archive.list(chat.id)).map((ref) => [ref.id, ref.first]))
-      const sourceIDs = [...new Set(fragments(packet(hit.request)).map((fragment) => refs.get(fragment.id)))]
+      const named = new Map(aliases(history).map((source) => [source.alias, source.message.info.id]))
+      const span = fragments(packet(hit.request))
+      const sourceIDs = [...new Set(span.map((fragment) => named.get(fragment.id)))]
       const end = i < 3 ? (i + 1) * 2 : history.length - 8
       expect(sourceIDs).toEqual(history.slice(i * 2, end).map((message) => message.info.id))
       if (i > 0) expect(packet(hit.request)).toContain(plans[i - 1].memory)
@@ -190,7 +166,7 @@ it.instance("G3 budget batches preserve every unfinished turn and low-token comp
       const prepared = yield* prepare(chat.id)
       expect(prepared.messages).toEqual(history.slice(end))
       expect(prepared.messages[0].info.role).toBe("user")
-      expect(prepared.system[0].replaceAll("\\_", "_")).toContain(`covered through ${history[end - 1].info.id}; native tail begins ${history[end].info.id}`)
+      expect(prepared.system[0]).toContain(`Covers this session through ${span.at(-1)!.id} (`)
       expect(yield* sessions.messages({ sessionID: chat.id })).toEqual(history)
     }
     const jobs = yield* BackgroundJob.Service

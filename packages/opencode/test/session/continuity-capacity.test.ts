@@ -56,7 +56,7 @@ function request(contextMemory: boolean | undefined = true): LLM.StreamInput {
       permission: [{ permission: "*", pattern: "*", action: "allow" }] },
     user: { id: MessageID.make("msg_context_capacity"), sessionID, role: "user", agent: "build",
       model: { providerID: model.providerID, modelID: model.id }, time: { created: 0 }, system: "Live parent rule." },
-    system: ["# Historical working memory\nKeep work local and read-only."],
+    system: ["# Working memory\nKeep work local and read-only."],
     messages: [{ role: "user", content: "Continue from working memory." }],
     tools: { lookup: tool({ description, inputSchema: jsonSchema<{ query: string }>(schema()), execute }) },
   }

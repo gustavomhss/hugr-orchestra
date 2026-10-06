@@ -3,6 +3,9 @@ import type { ConfigV1 } from "@opencode-ai/core/v1/config/config"
 
 export const DEFAULT_TRIGGER = 0.7
 
+// Background memory starts this far below the trigger; masking alone that reaches it skips the fork.
+export const PREPARE_MARGIN = 0.15
+
 export type Settings = { enabled: boolean; trigger: number }
 
 /** Resolve user settings; an invalid trigger falls back to the default. */

@@ -6,17 +6,17 @@ import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { Provider } from "@/provider/provider"
 import { LLM } from "@/session/llm"
-import type { MessageID, SessionID } from "@/session/schema"
+import { SessionID, type MessageID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { MessageV2 } from "@/session/message-v2"
 import { Archive } from "./archive"
-import { chunks } from "./transcript"
+import { child } from "./alias"
 import { Token } from "@/util/token"
 import { Cause, Context, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
 import { carriesMemory, run, snapshot, type ParentRequest } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
-import { isSafe, settings, shouldStart, tokenCount } from "./trigger"
+import { isSafe, PREPARE_MARGIN, settings, shouldStart, tokenCount } from "./trigger"
 import { apply as applyMasks, candidates as maskCandidates } from "./masking"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
@@ -45,9 +45,6 @@ type State = {
 
 // After this many consecutive failed or invalid maintenance runs, stop until the user edits history.
 export const MAX_FAILURES = 3
-
-// Background memory starts this far below the trigger; masking alone that reaches it skips the fork.
-const PREPARE_MARGIN = 0.15
 
 // Requests hold whole message arrays; keep only the most recently active sessions.
 const MAX_OBSERVED_REQUESTS = 4
@@ -129,13 +126,9 @@ const layer = Layer.effect(
       )
       if (Token.estimate(prepared.system.join("\n") + JSON.stringify(prepared.messages)) + 2048 > capacity)
         return { messages: input.messages, system: [] }
-      const available = yield* Effect.forEach(artifact.references, (reference) =>
-        archive.read({ sessionID: input.sessionID, id: reference.id }).pipe(
-          Effect.map((chunk) => !!chunk), Effect.catch(() => Effect.succeed(false)),
-        ))
       const unchanged = current.sessions.get(input.sessionID) === item && item?.generation === generation &&
         current.contexts.get(input.sessionID)?.artifact === artifact
-      return unchanged && available.every(Boolean) ? prepared : { messages: input.messages, system: [] }
+      return unchanged ? prepared : { messages: input.messages, system: [] }
     })
 
     const observe: Interface["observe"] = Effect.fn("SessionContinuity.observe")(function* (input) {
@@ -312,15 +305,6 @@ const layer = Layer.effect(
                 yield* diagnostic(sessionID, active.boundary, "no-current-snapshot")
                 return "discarded"
               }
-              const selectedChunks = chunks(sessionID, selected.head)
-              const previousRefs = selected.previous?.references ?? []
-              const available = [...new Map([...selectedChunks, ...previousRefs].map((ref) => [ref.id, ref])).values()]
-              for (const reference of available) {
-                if (!(yield* archive.read({ sessionID, id: reference.id }))) {
-                  yield* diagnostic(sessionID, active.boundary, "archive-unavailable")
-                  return "discarded"
-                }
-              }
               const request = current.requests.get(sessionID)
               // A turn that started before the last swap replays older memory than this
               // pass edits. Wait for a turn that carries the current memory instead of
@@ -329,7 +313,16 @@ const layer = Layer.effect(
                 yield* diagnostic(sessionID, active.boundary, "stale-request")
                 return "discarded"
               }
-              const artifact = yield* run(selected, { provider, llm }, selectedChunks, available, request)
+              // Host data the producer never writes: delegation registry state and members.
+              const children = [...new Set(history.flatMap((item) => item.parts.flatMap((part) => child(part) ?? [])))]
+              const delegations = Object.fromEntries(yield* Effect.forEach(children, (id) => Effect.gen(function* () {
+                const job = yield* background.get(id)
+                const info = yield* sessions.get(SessionID.make(id)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+                return [id, { member: info?.agent, status: job?.status }] as const
+              })))
+              const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
+              const artifact = yield* run(selected, { provider, llm }, { history, delegations, member },
+                { trigger: options.trigger, masks: current.masks.get(sessionID), parent: request })
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, "invalid-artifact")
                 yield* outcome(false)

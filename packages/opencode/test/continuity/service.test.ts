@@ -5,7 +5,7 @@ import { Archive } from "@/continuity/archive"
 import { BackgroundJob } from "@/background/job"
 import { Session } from "@/session/session"
 import { MessageV2 } from "@/session/message-v2"
-import { PartID } from "@/session/schema"
+import { MessageID, PartID } from "@/session/schema"
 import { SessionContinuity } from "@/continuity/service"
 import type { LLM } from "@/session/llm"
 import { awaitWithTimeout, it } from "../lib/effect"
@@ -24,14 +24,12 @@ it.instance("repeat maintenance receives prior Markdown and only newly displaced
     const head = fragments(data)
     expect(head.map((entry) => entry.text).join("\n")).toContain(B)
     expect(head.map((entry) => entry.text).join("\n")).toContain("SEED_REPLY_2_027D")
-    expect(data).not.toContain(A)
+    // Covered user text stays in the memory's ledger; the new span indexes only messages 4 and 5.
+    expect(head.map((entry) => entry.id)).toEqual(["u3", "a3"])
+    expect(data.slice(data.indexOf("## Transcript of the new span"))).not.toContain(A)
     expect(data).not.toContain("NEW_USER_INCREMENTAL")
     const sessions = yield* Session.Service
-    const archive = yield* Archive.Service
     const history = yield* sessions.messages({ sessionID })
-    const indexed = yield* archive.list(sessionID)
-    expect(head.map((entry) => indexed.find((ref) => ref.id === entry.id)?.first))
-      .toEqual(history.slice(4, 6).map((message) => message.info.id))
     yield* Deferred.succeed(second.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
     const prepared = yield* prepare(sessionID)
@@ -39,7 +37,7 @@ it.instance("repeat maintenance receives prior Markdown and only newly displaced
     expect(prepared.system[0]).not.toContain(FIRST)
     expect(prepared.messages.slice(0, 6)).toEqual(original.messages.slice(2))
     expect(yield* sessions.messages({ sessionID })).toEqual(history)
-    expect(JSON.stringify(history)).not.toContain("# Historical working memory")
+    expect(JSON.stringify(history)).not.toContain("# Working memory")
     expect(yield* sessions.children(sessionID)).toEqual([])
   }).pipe(Effect.provide(environment([first, second])))
 }), 30_000)
@@ -169,7 +167,7 @@ for (const action of ["edit", "revert", "forget"] as const) it.instance(`${actio
     yield* terminal(hit.jobID, "completed", "discarded")
     yield* complete(yield* begin(sessionID, "AFTER_INVALIDATION"), "AFTER_INVALIDATION_REPLY", action === "forget" ? 50_000 : 100)
     const next = yield* entered(fresh)
-    expect(packet(next.request)).toContain("No prior working memory.")
+    expect(packet(next.request)).toContain("## Current working memory\n\n(none)")
     expect(packet(next.request)).toContain(action === "edit" ? "EDITED_HEAD_FACT" : A)
     yield* Deferred.succeed(fresh.release, undefined)
     yield* terminal(next.jobID, "completed", "applied")
@@ -316,3 +314,19 @@ it.instance("a parent request built before the current memory waits for a turn t
     yield* terminal(hit.jobID, "completed", "applied")
   }).pipe(Effect.provide(environment([first, second])))
 }), 60_000)
+
+it.instance("C13: history that grows during a pass without an advance discards the result", () => Effect.gen(function* () {
+  const first = yield* held(FIRST)
+  yield* Effect.gen(function* () {
+    const sessionID = yield* seed()
+    const hit = yield* entered(first)
+    const sessions = yield* Session.Service
+    // Written straight to storage: the boundary moves without the scheduler being told.
+    const user = { ...(yield* sessions.messages({ sessionID })).findLast((message) => message.info.role === "user")!.info,
+      id: MessageID.ascending(), time: { created: Date.now() } }
+    yield* sessions.updateMessage(user)
+    yield* Deferred.succeed(first.release, undefined)
+    yield* terminal(hit.jobID, "completed", "discarded")
+    expect((yield* prepare(sessionID)).system).toEqual([])
+  }).pipe(Effect.provide(environment([first])))
+}), 30_000)

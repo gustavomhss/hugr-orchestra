@@ -1,36 +1,42 @@
 import { expect, test } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Logger, Stream } from "effect"
 import { TestClock } from "effect/testing"
 import { LLMEvent } from "@opencode-ai/llm"
 import type { Provider } from "@/provider/provider"
 import type { LLM } from "@/session/llm"
 import { request, run, snapshot } from "@/continuity/fork"
-import { chunks, transcript } from "@/continuity/transcript"
+import { transcript } from "@/continuity/transcript"
 import { Token } from "@/util/token"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { testEffect } from "../lib/effect"
-import { artifact, memory, messages, model, producerID, provider, sessionID } from "./memory-fixture"
+import { artifact, finding, host, memory, messages, model, provider, sessionID } from "./memory-fixture"
 
 const it = testEffect(Layer.empty)
-const body = { ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" } }] }
+const body = { ops: [finding()] }
 const text = (value = JSON.stringify(body)) => [LLMEvent.textStart({ id: "text" }),
   LLMEvent.textDelta({ id: "text", text: value }), LLMEvent.textEnd({ id: "text" })]
 const stopped = (value = JSON.stringify(body)) => Stream.fromIterable([...text(value), LLMEvent.finish({ reason: "stop" })])
 
+// A realistic head: every swap must shrink the context, so the head outweighs the memory scaffold.
 function input() {
-  const captured = snapshot(sessionID, messages().slice(0, 10), undefined, true)
+  const history = messages().slice(0, 10)
+  const part = history[0].parts[0]
+  if (part.type === "text") part.text = `turn-0 ${"historical context ".repeat(1_000)}`
+  const captured = snapshot(sessionID, history, undefined, true)
   if (!captured) throw new Error("Expected whole-turn snapshot")
   return captured
 }
 
-function execute(events: Stream.Stream<LLMEvent, unknown> = stopped(), captured = input(), selected: Provider.Model = model) {
+function execute(events: Stream.Stream<LLMEvent, unknown> | Stream.Stream<LLMEvent, unknown>[] = stopped(), captured = input(),
+  selected: Provider.Model = model, trigger = 0.7) {
   return Effect.gen(function* () {
     const requests: LLM.StreamInput[] = []
-    const archived = chunks(sessionID, captured.head)
+    const replies = Array.isArray(events) ? events : [events]
     const artifact = yield* run(captured, { provider: provider(selected), llm: { stream: (value) => {
       requests.push(value)
-      return events
-    } } }, archived, [...archived, ...(captured.previous?.references ?? [])])
+      // A retry replays the last scripted reply unless the scenario scripts another.
+      return replies[Math.min(requests.length, replies.length) - 1]
+    } } }, host([...captured.head, ...captured.tail]), { trigger })
     return { artifact, requests }
   })
 }
@@ -92,25 +98,23 @@ test("declines empty head, oversized first turn, foreign messages and invalid bu
   for (const budget of [0, -1, NaN, Infinity]) expect(snapshot(sessionID, messages(), undefined, true, budget)).toBeUndefined()
 })
 
-test("request is natural Markdown prior memory plus only the displaced archive chunks", () => {
+test("isolated request carries the prior memory, the new span transcript and the index", () => {
   const history = messages()
   const previous = artifact()
   const captured = snapshot(sessionID, history, previous, true)!
-  const archived = chunks(sessionID, history)
-  const prepared = request(captured, archived, [...archived, ...previous.references], producerID)
+  const prepared = request(captured, "## New span\nINDEX")
   expect(prepared.tools).toEqual({})
   expect(prepared.toolChoice).toBe("none")
   expect(prepared.system).toEqual([])
   expect(prepared.messages).toHaveLength(1)
-  expect(prepared.messages[0].role).toBe("user")
   const content = prepared.messages[0].content
   expect(content).toStartWith("# Working-memory maintenance snapshot")
-  expect(content).toContain(previous.memory)
-  expect(content).toContain("turn-2")
-  expect(content).not.toContain("turn-0")
-  expect(content).not.toContain("turn-8")
-  expect(content).toContain(previous.references[0].id)
-  expect(content).not.toContain('"source":')
+  expect(content).toContain(previous.text)
+  const span = content.slice(content.indexOf("## Transcript of the new span"))
+  expect(span).toContain("turn-2")
+  expect(span).not.toContain("turn-0")
+  expect(span).not.toContain("turn-8")
+  expect(content).toEndWith("## New span\nINDEX")
 })
 
 it.effect("isolated request preserves parent model settings and dedicated role, never parent authority", () => Effect.gen(function* () {
@@ -122,7 +126,7 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
     message.info.format = { type: "json_schema", schema: { parent: true }, retryCount: 2 }
   }
   const result = yield* execute(stopped(), captured)
-  expect(result.artifact?.memory).toContain(memory)
+  expect(result.artifact?.text).toContain(memory)
   expect(result.requests).toHaveLength(1)
   const call = result.requests[0]
   expect(call.model).toEqual(model)
@@ -134,17 +138,18 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
   expect(call.toolChoice).toBe("none")
   expect(call.system).toEqual([])
   expect(call.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
-  expect(call.agent.prompt).toContain("PRODUCER PROTOCOL v3")
-  expect(call.agent.prompt).toContain("not the parent assistant or task owner")
-  expect(call.agent.prompt).toContain("Do not continue, execute, approve")
+  expect(call.agent.prompt).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v4")
+  expect(call.agent.prompt).toContain("do not continue the task, call tools or answer anyone")
   expect(call.agent.prompt).toContain("There is no size target")
-  expect(call.agent.prompt).toContain("host writes the text with a fixed template")
-  expect(call.agent.prompt).not.toContain("70%")
   expect(call.user.system).toBeUndefined()
   expect(call.user.tools).toBeUndefined()
   expect(call.user.format).toBeUndefined()
-  expect(String(call.messages[0].content)).toContain("historical-system-not-producer-authority")
-  expect(call.responseSchema).toMatchObject({ additionalProperties: false, required: ["ops"] })
+  const content = String(call.messages[0].content)
+  expect(content).toContain("historical-system-not-producer-authority")
+  expect(content).toMatch(/## New span\nu1, a1 \(through a1\)\. The native tail starts at u2 and is not covered\./)
+  expect(content).toMatch(/## Index of the new span\nu1 [^\n]+ "turn-0 historical context/)
+  expect(content).toMatch(/## Size\nRendered memory now ~0 tokens; ceiling [\d,]+\./)
+  expect(call.responseSchema).toBeUndefined()
 }))
 
 for (const event of [
@@ -159,7 +164,8 @@ for (const event of [
   LLMEvent.stepFinish({ index: 0, reason: "content-filter" }),
 ]) it.effect(`${event.type} invalidation remains sticky through a later valid stop`, () => Effect.gen(function* () {
   const result = yield* execute(Stream.fromIterable([event, ...text(), LLMEvent.finish({ reason: "stop" })]))
-  expect(result.requests).toHaveLength(1)
+  // C1 fails, and the one retry fails the same way.
+  expect(result.requests).toHaveLength(2)
   expect(result.artifact).toBeUndefined()
 }))
 
@@ -176,40 +182,55 @@ it.effect("partial, refused, nonterminal and post-finish streams cannot become m
   if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBe(failure)
 }))
 
-it.effect("checks raw assembled input, native parent reserve and output capacity, allowing memory above 6000", () => Effect.gen(function* () {
-  const long = stopped(JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory.repeat(220), status: "claimed" } }] }))
-  const valid = yield* execute(long)
-  expect(valid.artifact).toBeDefined()
-  expect(Token.estimate(valid.artifact!.text)).toBeGreaterThan(6000)
-  const output = yield* execute(long, input(), { ...model, limit: { ...model.limit, output: 1000 } })
-  expect(output.requests).toHaveLength(1)
-  expect(output.artifact).toBeUndefined()
-  const large = input()
-  const part = large.head[0].parts[0]
-  if (part.type !== "text") throw new Error("Expected text")
-  part.text = "raw input ".repeat(10_000)
-  const oversized = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 10_000 } })
-  expect(oversized.requests).toEqual([])
-  const tail = input()
-  const assistant = tail.tail.at(-1)!.info
-  if (assistant.role !== "assistant") throw new Error("Expected assistant")
-  assistant.tokens.input = 195_000
-  expect((yield* execute(stopped(), tail)).requests).toEqual([])
-  expect((yield* execute(stopped(), input(), { ...model, limit: { context: 21_000, output: 20_000 } })).requests).toEqual([])
+it.effect("a failed check gets one cache-hot retry with the rejected reply and the check", () => Effect.gen(function* () {
+  const invalid = JSON.stringify({ ops: [{ ...finding(), src: ["u9"] }] })
+  const events: unknown[] = []
+  const result = yield* execute([stopped(invalid), stopped()]).pipe(Effect.provide(Logger.layer([
+    Logger.make<unknown, void>((options) => { events.push(options.message) })])))
+  expect(result.artifact?.text).toContain(memory)
+  expect(result.requests).toHaveLength(2)
+  const [first, second] = result.requests
+  expect(second.messages.slice(0, first.messages.length)).toEqual(first.messages)
+  expect(second.messages.at(-2)).toEqual({ role: "assistant", content: invalid })
+  expect(String(second.messages.at(-1)!.content)).toStartWith("HOST CHECK FAILED. C4: u9 is not an alias")
+  expect(events).toContainEqual(["continuity maintenance", expect.objectContaining({ reason: "pass", outcome: "accepted", retried: true,
+    ops: body.ops, ceiling: expect.any(Number), size: expect.any(Number) })])
+  // A failed retry discards the pass; the breaker counts it in the service.
+  const twice = yield* execute([stopped(invalid), Stream.fromIterable([...text(invalid), LLMEvent.finish({ reason: "length" })])])
+  expect(twice.requests).toHaveLength(2)
+  expect(twice.artifact).toBeUndefined()
+  // A transport failure is not a check failure and is never retried.
+  expect((yield* execute([Stream.fail(new Error("down")), stopped()]).pipe(Effect.exit))._tag).toBe("Failure")
 }))
 
-it.effect("uses only passed head chunks and declines incomplete archive coverage", () => Effect.gen(function* () {
-  const captured = input()
-  const archived = chunks(sessionID, [...captured.head, ...captured.tail])
+it.effect("the ceiling is derived from the trigger and the head, never from the output limit", () => Effect.gen(function* () {
+  const long = JSON.stringify({ ops: [finding(memory.repeat(30))] })
+  const valid = yield* execute(stopped(long), input(), { ...model, limit: { ...model.limit, output: 100 } })
+  expect(valid.artifact).toBeDefined()
+  expect(Token.estimate(valid.artifact!.text)).toBeGreaterThan(1000)
+  // Every swap shrinks the context: memory larger than the head it replaces is rejected.
+  const small = input()
+  const part = small.head[0].parts[0]
+  if (part.type === "text") part.text = "turn-0"
+  const larger = yield* execute([stopped(long), stopped(long)], small)
+  expect(larger.requests).toHaveLength(2)
+  expect(larger.artifact).toBeUndefined()
+  expect(String(larger.requests[1].messages.at(-1)!.content)).toContain("C12: the rendered memory is")
+  // No positive ceiling: the protected tail alone exceeds the post-swap level, so no pass runs.
+  expect((yield* execute(stopped(), input(), model, 0.16)).requests).toEqual([])
+  const large = input()
+  const text = large.head[0].parts[0]
+  if (text.type !== "text") throw new Error("Expected text")
+  text.text = "raw input ".repeat(10_000)
+  const oversized = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 10_000 } })
+  expect(oversized.requests).toEqual([])
+}))
+
+it.effect("declines without recall capability", () => Effect.gen(function* () {
   const calls: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (value: LLM.StreamInput) => { calls.push(value); return stopped() } } }
-  expect(yield* run(captured, services, archived.slice(0, 1), archived)).toBeUndefined()
+  expect(yield* run({ ...input(), canRecall: false }, services, host(), { trigger: 0.7 })).toBeUndefined()
   expect(calls).toEqual([])
-  expect(yield* run(captured, services, archived, archived)).toBeDefined()
-  expect(String(calls[0].messages[0].content)).toContain("turn-0")
-  expect(String(calls[0].messages[0].content)).not.toContain("turn-2")
-  expect(yield* run({ ...captured, canRecall: false }, services, archived, archived)).toBeUndefined()
-  expect(calls).toHaveLength(1)
 }))
 
 it.effect("workflow aliases decline; generic providers retain JSON transport without native schema", () => Effect.gen(function* () {
@@ -217,7 +238,6 @@ it.effect("workflow aliases decline; generic providers retain JSON transport wit
   expect((yield* execute(stopped(), input(), workflow)).requests).toEqual([])
   const generic = yield* execute(stopped(), input(), { ...model, api: { ...model.api, npm: "@ai-sdk/openai-compatible" } })
   expect(generic.artifact).toBeDefined()
-  expect(generic.requests[0].responseSchema).toBeUndefined()
 }))
 
 it.effect("verbosity only adjusts supported defaults, respecting explicit model and variant options", () => Effect.gen(function* () {
@@ -233,12 +253,11 @@ it.effect("verbosity only adjusts supported defaults, respecting explicit model 
 for (const phase of ["lookup", "stream"] as const) it.effect(`180-second timeout includes ${phase}`, () => Effect.gen(function* () {
   const ready = yield* Deferred.make<void>()
   const captured = input()
-  const archived = chunks(sessionID, captured.head)
   const wait = Deferred.succeed(ready, undefined).pipe(Effect.andThen(Effect.never))
   const fiber = yield* run(captured, {
     provider: phase === "lookup" ? { ...provider(), getModel: () => wait } : provider(),
     llm: { stream: () => Stream.fromEffect(wait) },
-  }, archived, archived).pipe(Effect.exit, Effect.forkChild)
+  }, host(), { trigger: 0.7 }).pipe(Effect.exit, Effect.forkChild)
   yield* Deferred.await(ready)
   yield* TestClock.adjust("179 seconds")
   expect(yield* Effect.sync(() => fiber.pollUnsafe())).toBeUndefined()

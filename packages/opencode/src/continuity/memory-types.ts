@@ -11,46 +11,39 @@ export type ArchiveReference = {
 
 export type ArchiveChunk = ArchiveReference & { markdown: string }
 
-export const SECTIONS = ["objective", "constraints", "corrections", "failures", "open", "decisions", "findings", "state"] as const
+export const SECTIONS = ["objective", "rules", "decisions", "findings", "failures", "values", "plan"] as const
 export type Section = (typeof SECTIONS)[number]
 
-/**
- * One idea in working memory. The producer fills the fixed fields of its section; the host
- * renders them with a fixed template, assigns IDs and carries unchanged items forward exactly.
- */
+/** One live memory item. The host assigns the ID, stores located strings as source bytes and renders it. */
 export type MemoryItem = {
   id: string
   section: Section
-  fields: Readonly<Record<string, string>>
-  refs: string[]
-  /** The user's exact words, verified against the referenced archive fragment. */
-  quote?: { ref: string; text: string }
+  fields: Readonly<Record<string, string | readonly string[]>>
+  src: readonly string[]
 }
 
-export type MemoryOp =
-  | { op: "add"; section: Section; fields: Readonly<Record<string, string>>; refs?: readonly string[]; quote?: { ref: string; text: string } }
-  | { op: "update"; id: string; fields: unknown; refs?: readonly string[] }
-  | { op: "retire"; id: string; reason: string; ref?: string }
-
-/** Producer transport: operations against the current items, never a rewritten memory. */
-export type MemoryBody = { ops: readonly MemoryOp[] }
-
 export type MemoryArtifact = {
-  version: 3
+  version: 4
   parentID: SessionID
   producerID: SessionID
   boundary: MessageID
   coveredThrough: MessageID
   tailStart: MessageID
   items: MemoryItem[]
-  /** Verbatim user messages from covered history, host-collected. */
-  ledger: { message: MessageID; text: string }[]
-  /** Tool calls from covered history, host-collected. */
-  trail: { message: MessageID; line: string }[]
-  /** Rendered items. */
-  memory: string
-  references: (ArchiveReference & { why: string })[]
+  /** The next item number; IDs are never reused. */
+  next: number
+  /** The rendered block, injected as is. */
   text: string
+}
+
+/** Host data the producer never writes. */
+export type Host = {
+  /** The full stored session history; aliases are computed from it. */
+  history: SessionV1.WithParts[]
+  /** Background registry status and member agent per delegated child session. */
+  delegations: Readonly<Record<string, { member?: string; status?: string }>>
+  /** A member session renders "Delegator" headings: its user text is the delegating agent's brief. */
+  member: boolean
 }
 
 export type MemorySnapshot = {

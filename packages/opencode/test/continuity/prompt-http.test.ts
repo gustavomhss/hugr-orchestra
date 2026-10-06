@@ -41,8 +41,8 @@ type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const maintenance: Match = (hit) => {
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY PRODUCER PROTOCOL v3")) ||
-    (wire.at(-1)?.role === "user" && wire.at(-1)!.content.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
+  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY CHECKPOINT · working memory v4")) ||
+    (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
 }
 const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
@@ -72,7 +72,7 @@ function forkAnswer(memory: string, match: Match, reference?: string, wait?: Pro
   return { match: (hit: Hit) => {
     if (!match(hit)) return false
     const value = body(hit.body, memory, reference)
-    expect(fragments(packet(hit.body)).every((entry) => /^[a-f0-9]{64}$/.test(entry.id))).toBe(true)
+    expect(fragments(packet(hit.body)).every((entry) => /^[uat][1-9][0-9]*$/.test(entry.id))).toBe(true)
     tail.push(...chunks(JSON.stringify(value)))
     return true
   }, response: raw({ wait, tail }) }
@@ -111,13 +111,13 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(maintenance(control("CONTEXT CONTINUITY PRODUCER PROTOCOL v3", "system"))).toBe(true)
+  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT · working memory v4", "system"))).toBe(true)
   expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
   for (const turn of seed) yield* llm.pushMatch(capture.record(turn.user, parent(turn.user)), answer(turn.assistant))
   yield* llm.pushMatch(capture.record("trigger", parent("TRIGGER")), answer("TRIGGER_DONE", 50_000, cached))
-  // The replayed instruction identifies references by the opening words of their first message.
+  // The replayed instruction indexes the new span by alias with the opening words of each source.
   const stale = forkAnswer("Work: STALE_HTTP_MEMORY", capture.record("A", maintenance), "7E5D", a.wait)
   yield* llm.pushMatch(stale.match, stale.response)
   yield* llm.pushMatch(capture.record("advance", parent("ADVANCE_WHILE_HELD")), answer("PARENT_ADVANCED", 100))
@@ -140,7 +140,7 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   expect(Array.isArray(forkMessages) && Array.isArray(triggerMessages)).toBe(true)
   expect((forkMessages as unknown[]).slice(0, -1)).toEqual(triggerMessages as unknown[])
   expect(hasRecall(capture.hits.at(-1)!.hit)).toBe(true)
-  expect(packet(fork)).toContain("## Coverage")
+  expect(packet(fork)).toContain("## New span")
   expect(packet(fork)).not.toContain(tail)
   expect((yield* send("ADVANCE_WHILE_HELD")).parts.some((part) => part.type === "text" && part.text === "PARENT_ADVANCED")).toBe(true)
   expect(yield* Deferred.isDone(a.release)).toBe(false)
@@ -156,8 +156,8 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
     Effect.map((value) => value.system[0]?.includes(FIRST) ? value : undefined)), "B never applied", "10 seconds")
   expect(prepared.messages).toEqual(history.slice(-8))
   expect(prepared.system[0]).not.toContain("STALE_HTTP_MEMORY")
-  // The nonce was written by the user, so the verbatim user ledger keeps it; recall still serves the archive.
-  expect(prepared.system[0]).toContain("Earlier user messages (verbatim, host-collected)")
+  // The nonce was written by the user, so the verbatim user ledger keeps it; alias recall serves the stored message.
+  expect(prepared.system[0]).toContain("## User messages (verbatim, host-collected)")
   expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
   const providerB = capture.hits.find((entry) => entry.name === "B")!
   const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes("7E5D"))!.id
@@ -204,6 +204,8 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
     const valid = forkAnswer(FIRST, maintenance)
     yield* llm.pushMatch(valid.match, valid.response)
     yield* llm.pushMatch(parent("REFRESH_CLOSED"), answer("REFRESH_DONE", 50_000))
+    // The one retry after the failed check gets the same invalid reply.
+    yield* llm.pushMatch(maintenance, answer(invalid))
     yield* llm.pushMatch(maintenance, answer(invalid))
     yield* llm.pushMatch(capture.record("next", parent("AFTER_INVALID")), answer("NEXT_VALID"))
     const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
@@ -280,7 +282,7 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     const conversation = wire.filter((entry) => entry.role !== "system").map((entry) => entry.content).join("\n")
     for (const message of condition === "allowed" ? history.slice(4) : history) for (const part of message.parts)
       if (part.type === "text") expect(conversation).toContain(part.text)
-    expect(system.includes("# Historical working memory")).toBe(condition === "allowed")
+    expect(system.includes("# Working memory")).toBe(condition === "allowed")
     if (condition === "allowed") {
       expect(system).toContain(FIRST)
       expect(conversation).not.toContain(seed[0])

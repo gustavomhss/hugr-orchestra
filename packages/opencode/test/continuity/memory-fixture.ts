@@ -5,7 +5,7 @@ import type { Provider } from "@/provider/provider"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Effect } from "effect"
 import { decode } from "@/continuity/memory"
-import type { ArchiveReference, MemoryArtifact, MemorySnapshot } from "@/continuity/memory-types"
+import type { Host, MemoryArtifact, MemorySnapshot } from "@/continuity/memory-types"
 
 export const sessionID = SessionID.make("ses_memory_parent")
 export const producerID = SessionID.make("ses_memory_producer")
@@ -54,20 +54,25 @@ export function messages(roles: ("user" | "assistant")[] = Array.from({ length: 
 // real snapshot and transcript functions, never these fixed boundaries as a stub.
 export function captured(): MemorySnapshot {
   const history = messages().slice(0, 10)
+  // Every swap must shrink the context, so the covered head outweighs the memory scaffold.
+  if (history[0].parts[0].type === "text") history[0].parts[0].text = `turn-0 ${"historical context ".repeat(1_000)}`
   return { sessionID, boundary: history[9].info.id, tailStart: history[2].info.id,
     head: history.slice(0, 2), tail: history.slice(2), canRecall: true }
 }
 
-export function reference(): ArchiveReference {
-  return { id: "a".repeat(64), title: "Read-only verification", first: MessageID.make("msg_0"),
-    last: MessageID.make("msg_1"), bytes: 100 }
+export function host(history = messages()): Host {
+  return { history, delegations: {}, member: false }
 }
 
-export function artifact(refs = [reference().id]): MemoryArtifact {
-  const result = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" }, refs }] }), snapshot: captured(),
-    producerID, available: [reference()], maxTokens: 20_000 })
-  if (!result) throw new Error("Expected a validated memory fixture")
-  return result
+// A hypothesis is gist that cites any alias, so fixtures can carry scenario text verbatim.
+export function finding(text = memory, src = ["u1"]) {
+  return { op: "add", section: "findings", fields: { finding: text, why: "Scenario memory.", status: "hypothesis", check: "None." }, src }
+}
+
+export function artifact(): MemoryArtifact {
+  const result = decode({ text: JSON.stringify({ ops: [finding()] }), snapshot: captured(), producerID, host: host(), ceiling: 20_000 })
+  if (!("artifact" in result)) throw new Error(`Expected a validated memory fixture: ${JSON.stringify(result)}`)
+  return result.artifact
 }
 
 export function context(value = artifact()) {

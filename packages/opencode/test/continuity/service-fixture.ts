@@ -17,7 +17,6 @@ import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
 import type { ConfigV1 } from "@opencode-ai/core/v1/config/config"
 import { Archive } from "@/continuity/archive"
-import type { MemoryBody } from "@/continuity/memory-types"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -59,43 +58,41 @@ export function wireMessages(input: { messages?: unknown }) {
 }
 
 export function packet(input: { messages?: unknown }) {
-  const content = wireMessages(input).findLast((message) => message.role === "user")?.content
-  if (!content?.startsWith("# Working-memory maintenance snapshot") && !content?.startsWith("CONTEXT CONTINUITY CHECKPOINT"))
-    throw new Error("Expected Markdown maintenance packet")
+  // A retry appends the rejected reply and the failed check after the maintenance packet.
+  const content = wireMessages(input).findLast((message) => message.role === "user" &&
+    (message.content.startsWith("# Working-memory maintenance snapshot") || message.content.startsWith("CONTEXT CONTINUITY CHECKPOINT")))?.content
+  if (!content) throw new Error("Expected Markdown maintenance packet")
   return content
 }
 
+export const retrying = (input: { messages?: unknown }) =>
+  wireMessages(input).at(-1)?.content.startsWith("HOST CHECK FAILED") === true
+
+/** The index entries of the new span: alias and its index text, including appended output lines. */
 export function fragments(markdown: string) {
-  // A replayed request carries the transcript in its cached prefix; the appended
-  // instruction lists references with the opening words of their first message.
-  if (markdown.startsWith("CONTEXT CONTINUITY CHECKPOINT")) {
-    const matches = [...markdown.matchAll(/^- ([a-f0-9]{64}) — (.*)$/gm)]
-    if (!matches.length) throw new Error("Missing real archive handles")
-    // Undo the host's Markdown escaping so scenarios can match their own literals.
-    return matches.map((match) => ({ id: match[1], text: match[2].replace(/\\(.)/g, "$1") }))
-  }
-  const start = markdown.indexOf("## Newly displaced transcript\n")
-  if (start < 0) throw new Error("Missing transcript heading")
-  const text = markdown.slice(start)
-  const matches = [...text.matchAll(/^### Archive fragment ([a-f0-9]{64})$/gm)]
-  if (!matches.length) throw new Error("Missing real archive handles")
-  return matches.map((match, index) => ({ id: match[1], text: text.slice(match.index! + match[0].length, matches[index + 1]?.index) }))
+  const start = markdown.lastIndexOf("## Index of the new span\n")
+  if (start < 0) throw new Error("Missing new-span index")
+  const text = markdown.slice(start, markdown.indexOf("\n## Size", start))
+  const matches = [...text.matchAll(/^([uat][1-9][0-9]*) [^\n]*(?:\n {4}[^\n]*)*/gm)]
+  if (!matches.length) throw new Error("Missing new-span aliases")
+  return matches.map((match) => ({ id: match[1], text: match[0] }))
 }
 
 // This deterministic provider fixture supplies scenario-authored memory. It tests
 // transport/lifecycle, not whether a model can infer or faithfully summarize it.
-// It retires every prior item and adds the scenario memory as one state item, so each
+// It retires every prior item and adds the scenario memory as one hypothesis, so each
 // run's memory reads as that scenario text.
-export function body(input: { messages?: unknown; system?: unknown }, memory: string, reference?: string): MemoryBody {
+export function body(input: { messages?: unknown; system?: unknown }, memory: string, reference?: string) {
   const entries = fragments(packet(input))
-  const selected = reference === undefined ? undefined : entries.find((entry) => entry.text.includes(reference))
-  if (reference !== undefined && !selected) throw new Error(`Expected scenario evidence: ${reference}`)
+  const selected = reference === undefined ? entries[0] : entries.find((entry) => entry.text.includes(reference))
+  if (!selected) throw new Error(`Expected scenario evidence: ${reference}`)
   const system = Array.isArray(input.system) ? input.system.filter((item) => typeof item === "string") : []
   const visible = [...system, ...wireMessages(input).map((message) => message.content)].join("\n")
   const prior = [...new Set([...visible.matchAll(/^\[(m\d+)\] /gm)].map((match) => match[1]))]
   return { ops: [
     ...prior.map((id) => ({ op: "retire" as const, id, reason: "Superseded by the newly covered history." })),
-    { op: "add" as const, section: "state" as const, fields: { what: memory, status: "claimed" }, ...(selected ? { refs: [selected.id] } : {}) },
+    { op: "add" as const, section: "findings" as const, src: [selected.id],
+      fields: { finding: memory, why: "Scenario memory.", status: "hypothesis", check: "None." } },
   ] }
 }
 
@@ -128,6 +125,11 @@ export function environment<A = never, E = never>(plans: Held[], options: {
       const enteredJobs = new Set<string>()
       let index = 0
       return LLM.Service.of({ stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
+        // The one retry after a failed check replays the same plan's reply without re-entering.
+        if (retrying(request) && plans[index - 1]) {
+          const plan = plans[index - 1]
+          return Stream.concat(Stream.make(LLMEvent.textStart({ id: "memory" }), LLMEvent.textDelta({ id: "memory", text: plan.respond(request) })), plan.output)
+        }
         const plan = plans[index++]
         if (!plan) return Stream.fail(new Error("Unexpected maintenance request"))
         // Mirror LLM.stream's scoped transport cleanup, not only normal stream completion.
@@ -263,7 +265,7 @@ export function applyFirst(sessionID: SessionID, plan: Held) {
     const prepared = yield* prepare(sessionID)
     expect(prepared.system).toHaveLength(1)
     expect(prepared.system[0]).toContain(plan.memory)
-    expect(prepared.system[0]).toContain("# Historical working memory")
+    expect(prepared.system[0]).toStartWith("# Working memory\n")
     expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
     expect(prepared.messages).toHaveLength(8)
     return prepared

@@ -1,6 +1,6 @@
 import type { MessageID, SessionID } from "@/session/schema"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
-import type { ArchiveReference, MemoryArtifact, MemorySnapshot } from "./memory-types"
+import type { MemoryArtifact, MemorySnapshot } from "./memory-types"
 
 export type Snapshot = {
   sessionID: SessionID
@@ -20,7 +20,7 @@ export function hasArtifact(
 ): context is ContinuityContext & { artifact: MemoryArtifact } {
   const artifact = context.artifact
   return (
-    artifact?.version === 3 && Array.isArray(artifact.items) && artifact.items.length > 0 &&
+    artifact?.version === 4 && Array.isArray(artifact.items) && Number.isSafeInteger(artifact.next) &&
     nonempty(context.sessionID) &&
     artifact.parentID === context.sessionID &&
     nonempty(artifact.producerID) && artifact.producerID !== context.sessionID &&
@@ -28,21 +28,12 @@ export function hasArtifact(
     nonempty(artifact.tailStart) && artifact.tailStart === context.tailStart &&
     nonempty(artifact.coveredThrough) && artifact.coveredThrough !== artifact.tailStart &&
     artifact.coveredThrough !== artifact.boundary &&
-    nonempty(artifact.memory) && nonempty(artifact.text) &&
-    Array.isArray(artifact.references) &&
-    artifact.references.every((reference) => validReference(reference) && nonempty(reference.why)) &&
-    new Set(artifact.references.map((reference) => reference.id)).size === artifact.references.length
+    nonempty(artifact.text)
   )
 }
 
 export function nonempty(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0
-}
-
-export function validReference(reference: ArchiveReference) {
-  return reference != null && typeof reference.id === "string" && /^[a-f0-9]{64}$/.test(reference.id) &&
-    nonempty(reference.title) && nonempty(reference.first) && nonempty(reference.last) &&
-    Number.isSafeInteger(reference.bytes) && reference.bytes > 0
 }
 
 export function ownedHistory(sessionID: SessionID, messages: SessionV1.WithParts[]) {

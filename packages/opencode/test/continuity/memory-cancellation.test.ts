@@ -5,10 +5,9 @@ import { BackgroundJob } from "@/background/job"
 import { LLMEvent } from "@opencode-ai/llm"
 import type { LLM } from "@/session/llm"
 import { run } from "@/continuity/fork"
-import { chunks } from "@/continuity/transcript"
 import type { MemoryArtifact } from "@/continuity/memory-types"
 import { awaitWithTimeout, testEffect } from "../lib/effect"
-import { captured, memory, provider } from "./memory-fixture"
+import { captured, finding, host, memory, provider } from "./memory-fixture"
 
 const it = testEffect(LayerNode.compile(BackgroundJob.node))
 
@@ -34,7 +33,7 @@ function transport() {
         events.push("closed")
       }))
       // A complete JSON body without terminal stop must not become applied memory.
-      return Stream.concat(Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ ops: [{ op: "add", section: "state", fields: { what: memory, status: "claimed" } }] }) })),
+      return Stream.concat(Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify({ ops: [finding()] }) })),
         Stream.unwrap(Effect.gen(function* () {
           yield* jobs.list()
           yield* Deferred.succeed(entered, undefined)
@@ -51,9 +50,8 @@ it.instance("maintenance completion then cancellation await captured AbortContro
   for (const action of ["complete", "cancel", "cancel-immediate"] as const) {
     const capture = yield* transport()
     const snapshot = captured()
-    const archived = chunks(snapshot.sessionID, snapshot.head)
     const accepted: MemoryArtifact[] = []
-    const job = yield* jobs.start({ type: "context-maintenance", run: run(snapshot, { provider: provider(), llm: capture.llm }, archived, archived).pipe(
+    const job = yield* jobs.start({ type: "context-maintenance", run: run(snapshot, { provider: provider(), llm: capture.llm }, host([...snapshot.head, ...snapshot.tail]), { trigger: 0.7 }).pipe(
       Effect.map((artifact) => {
         if (artifact) accepted.push(artifact)
         return artifact ? "applied" : "discarded"
@@ -72,7 +70,7 @@ it.instance("maintenance completion then cancellation await captured AbortContro
       const result = yield* jobs.wait({ id: job.id })
       expect(result.info?.output).toBe("applied")
       expect(accepted).toHaveLength(1)
-      expect(accepted[0].memory).toContain(memory)
+      expect(accepted[0].text).toContain(memory)
     }
     if (action === "cancel") {
       const cancel = yield* awaitWithTimeout(jobs.cancel(job.id), "Cancellation did not return", "5 seconds").pipe(
