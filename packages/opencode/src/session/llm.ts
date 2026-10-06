@@ -128,7 +128,7 @@ const live: Layer.Layer<
       if (contextMemory) yield* LLMContextBudget.check(prepared, input.responseSchema, isWorkflow ? prepared.system : undefined)
 
       // Wire up toolExecutor for DWS workflow models so that tool calls
-      // from the workflow service are executed via opencode's tool system
+      // from the workflow service are executed via Orchestra's tool system
       // and results sent back over the WebSocket.
       const bridge = yield* EffectBridge.make()
       if (language instanceof GitLabWorkflowLanguageModel) {
