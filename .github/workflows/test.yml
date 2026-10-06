@@ -196,9 +196,29 @@ jobs:
         # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
         # Shards are balanced by measured time (script/test-shard.ts), not by file count; the
         # assignment fails the step if the script fails instead of falling back to every file.
+        #
+        # A test that blocks the event loop never reaches its per-test timeout, and Bun writes JUnit only on
+        # exit, so a hung run used to end at the step timeout with no clue. Windows, where runs have hung, prints
+        # every test, so the log ends at the file and test that hung. The watchdog stops the run three minutes
+        # before the step timeout and lists the processes still running.
         run: |
           files=$(bun script/test-shard.ts ${{ matrix.name }} ${{ matrix.shard }} ${{ matrix.shards }})
-          bun test --timeout 30000 --only-failures $files
+          report=$([ "$RUNNER_OS" = Windows ] || echo --only-failures)
+          bun test --timeout 30000 $report $files &
+          tests=$!
+          deadline=$((SECONDS + 27 * 60))
+          while kill -0 $tests 2>/dev/null && [ $SECONDS -lt $deadline ]; do sleep 5; done
+          if kill -0 $tests 2>/dev/null; then
+            echo "::error::opencode tests still running after 27 minutes; the last file and test above hung. Processes still running:"
+            if [ "$RUNNER_OS" = Windows ]; then
+              powershell -NoProfile -Command 'Get-CimInstance Win32_Process | Sort-Object ProcessId | Format-Table ProcessId, ParentProcessId, CreationDate, CommandLine -Wrap | Out-String -Width 400'
+            else
+              ps -eo pid,ppid,etime,args
+            fi
+            kill $tests
+            exit 1
+          fi
+          wait $tests
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 

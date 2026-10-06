@@ -276,7 +276,7 @@ test("browser dock_read forwards tree-shape args exactly and keeps browser error
   // The browser shape `mode` is not native input policy: a browser read timeout stays plain text and posts no cancel.
   const slow = fakePort()
   const timed = (createAppDockHooks(slow.port, { timeoutMs: 25 }) as Required<Hooks>).tool.dock_read.execute({ mode: "skeleton" }, context)
-  await expect(timed).resolves.toBe("App Dock read request timed out")
+  expect(await timed).toBe("App Dock read request timed out")
   await turn()
   expect(slow.sent.map((sent) => (sent as Envelope).type)).toEqual(["dock.rpc"])
 })
@@ -444,7 +444,10 @@ test("native outer timeout is conservative unknown plus original-ID cancellation
   f.deliver(admission(ids[0]))
   expect(JSON.parse(await admitted as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock wait request timed out", outcome: "unknown", target: admission(ids[0]).target, hint: busy })
   expect(JSON.parse(await intent as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock click request timed out", outcome: "unknown", hint: busy })
-  await expect(browser).resolves.toBe("App Dock click request timed out")
+  // A plain await, not expect().resolves: resolves waits by running a nested event loop, and on Windows Bun 1.3.14
+  // cannot fire a timer from it while it is inside another timer's callbacks. Here it would run inside the drain
+  // that timed out `intent`, so `browser`'s timer never fired and the whole test process spun forever.
+  expect(await browser).toBe("App Dock click request timed out")
   await turn()
   expect(f.sent.slice(3)).toEqual([{ type: "dock.rpc.cancel", id: ids[0] }, { type: "dock.rpc.cancel", id: ids[1] }])
   expect(remove.mock.calls.length).toBe(1)
