@@ -70,6 +70,13 @@ impl Pumps {
         Ok(pumps)
     }
 
+    /// Backpressure (WP-H, before any claim): while a consumer is attached, a full stream stops being read
+    /// instead of dropping; the pipe fills and the child blocks. `end()` (the tree is stopped or gone) and
+    /// detaching release the readers, so `wait()` and `stop()` never depend on the consumer.
+    pub(crate) fn hold(&self) {
+        self.shared.hold();
+    }
+
     /// Claims the single consumer, as chunks.
     pub(crate) fn output(&self) -> Result<Output, Error> {
         self.shared.claim(Claim::Attached)?;

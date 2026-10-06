@@ -2,8 +2,9 @@
 // The CI gate: one step list for every OS, run the same way by GitHub Actions (.github/workflows/ci.yml) and by hand.
 //
 //   node scripts/ci.mjs            the fast gate (every push to main and bundle/*): static checks, clippy, the Rust suite
-//                                  with the contract, and the contract and idioms through the TS binding on Node 22
-//   node scripts/ci.mjs --release  adds what only a release needs: the musl supervisor, Node 24, Bun and Deno, every
+//                                  with the contract, the contract, idioms and hardening (WP-H) through the TS binding on
+//                                  Node 22, and the contract and hardening on Bun
+//   node scripts/ci.mjs --release  adds what only a release needs: the musl supervisor, Node 24, the rest of Bun, Deno, every
 //                                  docs block run for real, K4 on a release build and the npm packages (K9)
 //
 // A v* tag or RELEASE=1 means --release. TEST_FILTER is passed to `cargo test`. Stops at the first failing step and
@@ -47,6 +48,10 @@ const steps = [
   { name: "TS runner teeth", cmd: ["node", "bindings/node/test/teeth.mjs"] },
   { name: "TS contract (node 22)", cmd: ["node", "bindings/node/test/contract.mjs"] },
   { name: "TS idioms (node 22)", cmd: ["node", "bindings/node/test/idioms.mjs"] },
+  { name: "TS hardening (node 22)", cmd: ["node", "bindings/node/test/hardening.mjs"] },
+  // Bun runs Orchestra (the TUI's server runs in a Bun Worker): its contract and the WP-H hardening are fast-gate steps.
+  { name: "TS contract (bun)", cmd: npx("bun@1", "bindings/node/test/contract.mjs") },
+  { name: "TS hardening (bun)", cmd: npx("bun@1", "bindings/node/test/hardening.mjs") },
 
   // Release only.
   { name: "musl supervisor", on: ["linux"], release: true, cmd: ["cargo", "build", "--release", "-p", "omni-supervisor", "--target", "x86_64-unknown-linux-musl"] },
@@ -58,7 +63,7 @@ const steps = [
     env: () => ({ HUGR_OMNI_SUPERVISOR: join(process.cwd(), target, "x86_64-unknown-linux-musl/release/hugr-omni-supervisor") }) },
   ...["contract", "idioms"].flatMap((t) => [
     { name: `TS ${t} (node 24)`, release: true, cmd: npx("node@24", `bindings/node/test/${t}.mjs`) },
-    { name: `TS ${t} (bun)`, release: true, cmd: npx("bun@1", `bindings/node/test/${t}.mjs`) },
+    ...(t === "contract" ? [] : [{ name: `TS ${t} (bun)`, release: true, cmd: npx("bun@1", `bindings/node/test/${t}.mjs`) }]),
     { name: `TS ${t} (deno)`, release: true, cmd: npx("deno@2", "run", "-A", `bindings/node/test/${t}.mjs`) },
   ]),
   { name: "docs blocks (run)", release: true, cmd: ["node", "scripts/readme-check/check.mjs"] },

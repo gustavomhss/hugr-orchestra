@@ -33,12 +33,30 @@ export function spawn(command: string, args: readonly string[] | undefined, opti
 export function spawn(command: string, args?: readonly string[], options?: SpawnOptions & { pty?: undefined }): PipeChild;
 export function spawn(command: string, args?: readonly string[], options?: SpawnOptions): PipeChild | PtyChild;
 
+/**
+ * Where the native addon and the supervisor are (amendment WP-H). Optional: by default the addon is the installed
+ * platform package and the supervisor sits next to it. Call it before the first `run()` or `spawn()`; it loads the
+ * addon at once. Afterwards it throws `INVALID_ARGUMENT`. Resolution: `configure()`'s paths, then the variables
+ * `HUGR_OMNI_ADDON` / `HUGR_OMNI_SUPERVISOR` as `process.env` holds them, then the platform package; a checkout's own
+ * build only when no path was given at all.
+ *
+ * @example
+ * configure({ addon: "/opt/app/hugr_omni.node", supervisor: "/opt/app/hugr-omni-supervisor" });
+ */
+export function configure(options: ConfigureOptions): void;
+export interface ConfigureOptions {
+  /** Full path of the `.node` addon to load. */
+  addon?: string;
+  /** Full path of `hugr-omni-supervisor` (`.exe` on Windows); the same for every JS environment of this process. */
+  supervisor?: string;
+}
+
 export interface CommonOptions {
   /** Working directory (default: the host's). */
   cwd?: string;
   /** Merged over the inherited environment; `null` removes a variable. */
   env?: Record<string, string | null>;
-  /** Default `true`; `false` = only `env` (plus the variables Windows requires). */
+  /** Default `true`: inherit `process.env` as it is now (on Bun too); `false` = only `env` (plus the variables Windows requires). */
   inheritEnv?: boolean;
   /** Whole-run deadline; on expiry the tree is stopped and `reason` is `"timeout"`. */
   timeoutMs?: number;
@@ -62,6 +80,12 @@ export interface RunOptions extends CommonOptions {
 export interface SpawnOptions extends CommonOptions {
   /** Pipe mode only; default `"closed"` (end of input at once). */
   stdin?: "closed" | "pipe";
+  /**
+   * Pipe mode only, default `false` (amendment WP-H): while a consumer is attached and 16 MiB of a stream wait for it,
+   * the library stops reading that stream, so the child blocks on its writes instead of output being dropped (no
+   * `lostBefore`). `wait()` and `stop()` never wait for the consumer; with no consumer attached, the usual budget applies.
+   */
+  backpressure?: boolean;
   /** Run inside a terminal; returns a `PtyChild`. */
   pty?: PtyOption;
 }

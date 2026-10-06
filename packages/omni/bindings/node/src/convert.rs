@@ -152,6 +152,9 @@ pub(crate) fn command(
     if let Some(merge) = field::<bool>(env, &o, "mergeStderr", "true or false")? {
         cmd.merge_stderr(merge);
     }
+    if let Some(hold) = field::<bool>(env, &o, "backpressure", "true or false")? {
+        cmd.backpressure(hold);
+    }
     if let Some(stdin) = o.get::<Unknown>("stdin")?.filter(|v| !nullish(v)) {
         cmd.stdin(match text_of(&stdin).as_deref() {
             Some("pipe") => Stdin::Pipe,

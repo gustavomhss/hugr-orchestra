@@ -6,7 +6,9 @@
 //! tree is gone (Lead decision, PLAN Appendix E).
 
 use std::ops::Deref;
+use std::pin::pin;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::task::{Context, Poll, Waker};
 use std::time::Duration;
 
 use napi::Env;
@@ -21,8 +23,11 @@ use crate::{error, exec};
 /// How often the keeper asks whether a collected child's tree is gone (at most).
 const RECHECK: Duration = Duration::from_secs(1);
 
+/// The most items one `next()` hands over (H7a): what is queued goes in one round trip, within reason.
+const BATCH: usize = 8192;
+
 /// The core's child: with pipes, or inside a terminal.
-enum Kid {
+pub(crate) enum Kid {
     Pipe(PipeChild),
     Pty(PtyChild),
 }
@@ -51,8 +56,11 @@ pub fn spawn(
         true => cmd.spawn_pty().map(Kid::Pty),
         false => cmd.spawn().map(Kid::Pipe),
     };
-    let kid = kid.map_err(|e| error::omni(&env, &e))?;
-    Ok(NativeChild { kid: Arc::new(kid) })
+    let kid = Arc::new(kid.map_err(|e| error::omni(&env, &e))?);
+    if let Some(owned) = error::owned(&env) {
+        owned.add(&kid); // stopped when this JS environment goes away (H1)
+    }
+    Ok(NativeChild { kid })
 }
 
 /// The native half of a JS `Child`.
@@ -86,6 +94,7 @@ impl NativeChild {
         Ok(NativeStream {
             kid: Arc::clone(&self.kid),
             reader: Arc::new(Mutex::new(Some(reader))),
+            failed: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -198,49 +207,92 @@ enum Item {
     Line(Line),
 }
 
-/// The claimed output consumer of a child. `index.js` iterates it with one `next()` at a time; leaving the loop
-/// calls `detach`, which drops the core's consumer: detached for good (contract §4).
+/// The claimed output consumer of a child. `index.js` iterates it with one `next()` at a time, each handing over
+/// every item queued by then (H7a); leaving the loop calls `detach`, which drops the core's consumer: detached for
+/// good (contract §4).
 #[napi]
 pub struct NativeStream {
     kid: Arc<Kid>,
     reader: Arc<Mutex<Option<Reader>>>,
+    /// An error met after other items of a batch: the next `next()` rejects with it.
+    failed: Arc<Mutex<Option<hugr_omni::Error>>>,
 }
 
 #[napi]
 impl NativeStream {
-    /// The next chunk or line; `null` at the end (and after `detach`).
+    /// The next items, in order: at least one, and every other one already queued (at most `BATCH`); `null` at the
+    /// end (and after `detach`).
     #[napi]
     pub fn next<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
-        let (slot, kid) = (Arc::clone(&self.reader), Arc::clone(&self.kid));
+        let (slot, failed, kid) = (
+            Arc::clone(&self.reader),
+            Arc::clone(&self.failed),
+            Arc::clone(&self.kid),
+        );
         let next = async move {
             let _holds = kid; // the child lives while its output is read
+            if let Some(e) = lock(&failed).take() {
+                return Err(e);
+            }
             let Some(mut reader) = lock(&slot).take() else {
                 return Ok(None);
             };
-            let item = match &mut reader {
-                Reader::Chunks(output) => output.next().await.map(|r| r.map(Item::Chunk)),
-                Reader::Lines(lines) => lines.next().await.map(|r| r.map(Item::Line)),
+            let first = match reader.next().await {
+                None => return Ok(None), // the end: nothing is left to read, and the reader is dropped
+                Some(Err(e)) => {
+                    *lock(&slot) = Some(reader);
+                    return Err(e);
+                }
+                Some(Ok(item)) => item,
             };
-            if item.is_some() {
+            let mut batch = vec![first];
+            let mut more = true;
+            while more && batch.len() < BATCH {
+                // Only what is queued now: a pending `next()` holds nothing yet, so dropping it loses nothing.
+                match pin!(reader.next()).poll(&mut Context::from_waker(Waker::noop())) {
+                    Poll::Ready(Some(Ok(item))) => batch.push(item),
+                    Poll::Ready(Some(Err(e))) => {
+                        *lock(&failed) = Some(e);
+                        break;
+                    }
+                    Poll::Ready(None) => more = false,
+                    Poll::Pending => break,
+                }
+            }
+            if more {
                 *lock(&slot) = Some(reader); // at the end it is dropped: nothing is left to read
             }
-            item.transpose()
+            Ok(Some(batch))
         };
-        exec::promise(env, next, item)
+        exec::promise(env, next, items)
     }
 
     /// Leaves the loop for good.
     #[napi]
     pub fn detach(&self) {
         lock(&self.reader).take();
+        lock(&self.failed).take();
     }
 }
 
-fn item(item: Option<Item>) -> Option<Either<ChunkJs, LineJs>> {
-    item.map(|item| match item {
+impl Reader {
+    async fn next(&mut self) -> Option<Result<Item, hugr_omni::Error>> {
+        match self {
+            Reader::Chunks(output) => output.next().await.map(|r| r.map(Item::Chunk)),
+            Reader::Lines(lines) => lines.next().await.map(|r| r.map(Item::Line)),
+        }
+    }
+}
+
+fn items(batch: Option<Vec<Item>>) -> Option<Vec<Either<ChunkJs, LineJs>>> {
+    batch.map(|b| b.into_iter().map(item).collect())
+}
+
+fn item(item: Item) -> Either<ChunkJs, LineJs> {
+    match item {
         Item::Chunk(chunk) => Either::A(convert::chunk(chunk)),
         Item::Line(line) => Either::B(convert::line(line)),
-    })
+    }
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {

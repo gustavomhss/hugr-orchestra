@@ -220,3 +220,37 @@ Exit / RunResult · OmniError.
   (`pid`, `parent_pid`, `name`).
   **`Drop` force-kills the tree immediately and does not block**; reaping runs on a dedicated thread, not on
   the tokio runtime, so it also works after the runtime shut down (INV-16).
+
+## Amendment (WP-H, proposed)
+
+Additive; written by WP-H for the lead, who approves or rejects it at merge. Nothing above changes meaning. The
+glossary keeps its 15 concepts: `configure` is placed under *spawn* and `backpressure` under *output*
+(`scripts/surface-check/parity.txt`).
+
+- **`configure({ addon?, supervisor? })`** (TS only). Says where the native addon and the supervisor are.
+  - Call it before the first `run()` or `spawn()` of the JS environment; it loads the addon at once. Afterwards it
+    throws `INVALID_ARGUMENT`. So does a value that is not a non-empty string, a different `addon` once one is loaded,
+    and a different `supervisor` once this process started a supervisor (one supervisor serves every JS environment of
+    a process; the same path again is fine).
+  - The addon loads lazily: at the first `configure()`, `run()` or `spawn()`, never at `require`. Its path, in order:
+    `configure({ addon })`; `HUGR_OMNI_ADDON` as `process.env` holds it; the installed platform package; this
+    checkout's Cargo build, only when no path was given at all (no `configure()` path, no variable).
+  - The supervisor, in order: `configure({ supervisor })`; `HUGR_OMNI_SUPERVISOR` as `process.env` holds it; next to
+    the module, only when that directory (and the binary in it) belongs to the user or root and is writable by neither
+    group nor others (Unix; Windows keeps the candidate, see `client/start.rs`); next to the executable as started,
+    then next to its canonical path (a symlinked install).
+  - Rust: the same supervisor order without `configure`; `HUGR_OMNI_SUPERVISOR` is read from the C environment.
+- **`inheritEnv: true` inherits the environment the language sees.** In TS that is `process.env` at the call, on Node,
+  Bun and Deno alike (Bun's `process.env` writes reach no C environment). `env` is merged over it; on Windows names
+  compare ignoring case, so one spelling of each variable reaches the child (`Path` or `PATH`, never both: `env`'s
+  spelling wins). `inheritEnv: false` and the Windows `SystemRoot` rule (§3) are unchanged.
+- **`backpressure: true`** (`spawn()` with pipes; Rust `Command::backpressure(true)`; ignored by `run()` and by a
+  terminal). While a consumer is attached and 16 MiB of a stream wait for it, the library stops reading that stream:
+  the pipe fills and the child blocks on its writes. Nothing is dropped, no `lostBefore` appears. With no consumer
+  attached the §4 budget applies (1 MiB kept, the rest dropped and counted). `wait()` and `stop()` never wait for the
+  consumer: `stop()` ends the tree as always, and detaching, `stop()` or the end of the tree lets the readers go.
+- **One pull hands over every queued item.** The TS iteration of `output` / `lines()` is unchanged (one item per step),
+  but each round trip to the addon takes everything queued by then, so a burst costs one round trip, not one per chunk.
+- **A JS environment that ends stops its trees.** When a `Worker` (or any JS environment) that spawned children is
+  torn down, its children's trees are force-stopped before the teardown returns (bounded, 5 s), as the end of the host
+  process does through the supervisor. The garbage collector still never kills a child (§5).

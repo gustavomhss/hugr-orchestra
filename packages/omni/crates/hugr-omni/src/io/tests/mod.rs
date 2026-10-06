@@ -2,6 +2,7 @@
 //! other end. No process is started; every wait is bounded, and running out of time fails the test.
 
 mod collect;
+mod hold;
 mod lines;
 mod output;
 mod stdin;

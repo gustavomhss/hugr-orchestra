@@ -316,6 +316,8 @@ impl Feed {
             {
                 let mut st = self.shared.lock();
                 if let Some(item) = st.pop() {
+                    drop(st);
+                    self.shared.made_room();
                     return Some(item);
                 }
                 self.done = st.over();
