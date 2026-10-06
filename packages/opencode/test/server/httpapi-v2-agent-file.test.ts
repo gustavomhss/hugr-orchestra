@@ -210,6 +210,8 @@ describe("v2 agent file HttpApi", () => {
     expect((await put("escape")).status).toBe(400)
     expect(await fs.readFile(path.join(outside.path, "escape.md"), "utf8")).toContain("Outside")
 
+    // chmod cannot make a file unreadable on Windows, so the unreadable case is POSIX-only.
+    if (process.platform === "win32") return
     const locked = path.join(folder, "locked.md")
     await fs.writeFile(locked, "---\ndescription: Locked\n---\n")
     await fs.chmod(locked, 0o000)
