@@ -34,6 +34,11 @@
 // The same rules hold for a `task` and a `pr` unit; only the projection differs (`taskClosingFold` /
 // `prClosingFold`, clause 14).
 //
+// ── ATLAS OWNS A RULE'S FRECENCY (clause 22, owner ruling F3-D6) ─────────────────────────────────────────
+// `write` and `reconcile` complete a `project` proposal with `INITIAL_PROJECT_FRECENCY`, so both derive the
+// same record and the same ref. An entry that carries its own `frecency` is refused `template-invalid` before
+// the emit door sees it; everything else is still judged by the door's own gates.
+//
 // ── ADMISSION CONCURRENCY, BOUNDED (clause 26, owner ruling F3-D8) ───────────────────────────────────────
 // Correct for ONE writer process per storage root. The emit door reads the incumbent/cap state, scans, then
 // appends; nothing serialises that sequence across processes, and this file adds no lock. Two processes
@@ -41,7 +46,7 @@
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
 import { isAbsolute } from "node:path"
-import { prClosingFold, put, taskClosingFold, tok, versioned } from "@atlas/memory"
+import { INITIAL_PROJECT_FRECENCY, prClosingFold, put, taskClosingFold, tok, versioned } from "@atlas/memory"
 import type {
   Awareness,
   ClosingFold,
@@ -261,17 +266,24 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
 
     resolveFold,
 
-    // Until A2 supplies Atlas's initial `frecency` (clause 22), a `project` proposal reaches the emit door exactly as
-    // given, and the door's own kind and template gates refuse the missing field as they would for any caller.
     write(entry): WriteVerdict {
-      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(entry as MemoryEntry)
+      const complete = withAtlasFrecency(entry)
+      if (complete === undefined) {
+        return {
+          ok: false,
+          refusal: "template-invalid",
+          reason: "`frecency` is assigned by Atlas policy (INITIAL_PROJECT_FRECENCY); an entry may not supply it",
+        }
+      }
+      const verdict = createMemoryEmit({ store, actor: owner, ...scannerFor(binding) }).emit(complete)
       return verdict.ok ? { ok: true, record: verdict.record, ref: refOfRecord(verdict.record) } : verdict
     },
 
     reconcile(entry): ReconcileVerdict {
       const read = store.read()
       const state = storeStateOf(read)
-      const ref = admissibleRef(entry as MemoryEntry, owner)
+      const complete = withAtlasFrecency(entry)
+      const ref = complete === undefined ? undefined : admissibleRef(complete, owner)
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
     },
@@ -329,6 +341,16 @@ export function storeStateOf(read: MemoryRead): StoreState {
 }
 
 const refuse = (refusal: FoldRefusal, reason: string): FoldVerdict => ({ ok: false, refusal, reason })
+
+/** Clause 22: the entry the emit door judges. A `project` proposal gains `INITIAL_PROJECT_FRECENCY`; an entry
+ *  carrying its own `frecency` is `undefined`, because a seat never sets a rule's rank. */
+function withAtlasFrecency(entry: BoundEntry): MemoryEntry | undefined {
+  // A runtime non-object reaches the emit door as is, which refuses it `undetermined-kind`.
+  if (typeof entry !== "object" || entry === null) return entry
+  if ("frecency" in entry) return undefined
+  if ("rule" in entry) return { ...entry, frecency: INITIAL_PROJECT_FRECENCY }
+  return entry
+}
 
 /** The exact event `DurableMemory.append` writes for `record` — the same `versioned` seam, so the ref a
  *  write returns is the key the next read finds it under. */
