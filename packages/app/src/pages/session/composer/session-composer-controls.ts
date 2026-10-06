@@ -16,12 +16,12 @@ import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
 import { useProviders } from "@/hooks/use-providers"
 import { pathKey } from "@/utils/path-key"
-import { agentKey } from "@/context/local-agent"
+import { agentKey } from "@/context/agent-identity"
 
 export function createPromptInputController(input: {
   sessionKey: Accessor<string>
   sessionID: Accessor<string | undefined>
-  queryOptions: Pick<QueryOptionsApi, "agents" | "providers">
+  queryOptions: Pick<QueryOptionsApi, "providers">
   model?: ModelSelection
 }) {
   const layout = useLayout()
@@ -30,7 +30,6 @@ export function createPromptInputController(input: {
   const sync = useSync()
   const providers = useProviders(() => sdk().directory)
   const view = layout.view(input.sessionKey)
-  const agentsQuery = createQuery(() => input.queryOptions.agents(pathKey(sdk().directory)))
   const globalProvidersQuery = createQuery(() => input.queryOptions.providers(null))
   const providersQuery = createQuery(() => input.queryOptions.providers(pathKey(sdk().directory)))
 
@@ -38,19 +37,11 @@ export function createPromptInputController(input: {
     return {
       agents: {
         available: sync().data.agent,
-        options: local.agent.list().map((agent) => ({ id: agentKey(agent), label: agent.name })),
-        current: local.agent.key() ?? "",
-        loading: agentsQuery.isLoading,
-        visible: local.agent.visible(),
-        select: local.agent.set,
       },
       model: {
         selection: input.model ?? local.model,
         paid: providers.paid().length > 0,
-        loading:
-          (local.agent.visible() && agentsQuery.isLoading) ||
-          providersQuery.isLoading ||
-          globalProvidersQuery.isLoading,
+        loading: providersQuery.isLoading || globalProvidersQuery.isLoading,
       },
       session: {
         id: input.sessionID(),

@@ -1,4 +1,4 @@
-import { agentKey } from "@/context/local-agent"
+import { agentKey } from "@/context/agent-identity"
 const defaults: Record<string, string> = {
   ask: "var(--icon-agent-ask-base)",
   build: "var(--icon-agent-build-base)",

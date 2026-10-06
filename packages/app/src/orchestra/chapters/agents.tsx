@@ -11,7 +11,7 @@ import { useTabs } from "@/context/tabs"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
 import type { ChapterPageProps } from "../chapter-route"
 import { agentRoster, agentUnavailable } from "./agents-roster"
-import { agentKey } from "@/context/local-agent"
+import { agentKey } from "@/context/agent-identity"
 import "./agents.css"
 
 export default function Agents(props: ChapterPageProps) {
@@ -185,12 +185,7 @@ export default function Agents(props: ChapterPageProps) {
                         onClick={() => {
                           setState({ opening: true, failed: false })
                           void tabs
-                            .newDraft(
-                              { server: ServerConnection.key(props.server), directory: props.directory },
-                              undefined,
-                              undefined,
-                              agentKey(item().agent),
-                            )
+                            .newDraft({ server: ServerConnection.key(props.server), directory: props.directory })
                             .catch(() => setState({ opening: false, failed: true }))
                         }}
                       >

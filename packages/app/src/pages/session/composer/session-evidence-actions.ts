@@ -14,7 +14,7 @@ import { useSync } from "@/context/sync"
 import { formatServerError } from "@/utils/server-errors"
 import type { EvidenceSource } from "../orchestra-evidence-data"
 import { createSessionOwnership } from "../session-ownership"
-import { agentKey } from "@/context/local-agent"
+import { agentKey } from "@/context/agent-identity"
 
 export type ReplayBlock = "session" | "workdir" | "blocked" | "busy" | "pending" | "model"
 export type EvidenceOwner = ReturnType<ReturnType<typeof createSessionOwnership>["capture"]>

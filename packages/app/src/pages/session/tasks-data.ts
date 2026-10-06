@@ -13,7 +13,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { useSessionLayout } from "./session-layout"
-import { agentKey } from "@/context/local-agent"
+import { agentKey } from "@/context/agent-identity"
 
 type ToolPart = Extract<Part, { type: "tool" }>
 

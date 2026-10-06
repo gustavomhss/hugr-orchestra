@@ -44,7 +44,11 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
     },
     "/project": [config.project],
     "/project/current": config.project,
-    "/agent": [{ name: "build", mode: "primary" }],
+    // Orchestra runs every session on its native maestro agent.
+    "/agent": [
+      { name: "build", mode: "primary" },
+      { name: "maestro", mode: "primary" },
+    ],
     "/vcs": { branch: "main", default_branch: "main" },
     "/session": config.sessions,
   }
@@ -128,6 +132,14 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
           {
             id: "build",
             name: "Build",
+            mode: "primary",
+            hidden: false,
+            request: { settings: {}, headers: {}, body: {} },
+            permissions: [],
+          },
+          {
+            id: "maestro",
+            name: "Maestro",
             mode: "primary",
             hidden: false,
             request: { settings: {}, headers: {}, body: {} },
