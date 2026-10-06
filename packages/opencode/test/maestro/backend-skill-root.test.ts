@@ -21,7 +21,8 @@ describe("backend skill root", () => {
     const cache = path.join(tmp.path, "cache")
 
     const dir = await BackendSkillRoot.extract(files, cache, "1.0.0")
-    expect(dir).toBe(path.join(cache, "backend-skills", "1.0.0"))
+    // The root is canonical (no 8.3 short names or symlinked temp prefixes), so permission checks match it.
+    expect(dir).toBe(await fs.realpath(path.join(cache, "backend-skills", "1.0.0")))
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
 
     // A verified copy is left alone: the directory is not replaced.

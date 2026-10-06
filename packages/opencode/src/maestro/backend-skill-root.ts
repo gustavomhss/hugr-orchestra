@@ -26,11 +26,14 @@ export const root = embedded ? await extract(embedded, Global.Path.cache, Instal
 // tampered copy is replaced whole: the tree is written to a sibling temp directory and renamed into place.
 export async function extract(files: Record<string, string>, cache: string, version: string) {
   const dir = path.join(cache, "backend-skills", version)
+  // Windows temp and cache paths can carry 8.3 short names (RUNNER~1); permission checks compare canonical paths, so the
+  // root handed to grants and the read tool must be the canonical one.
+  const canonical = () => fs.realpath(dir)
   const entries = await Promise.all(
     Object.entries(files).map(async ([file, from]) => [file, await Bun.file(from).bytes()] as const),
   )
   const expected = digest(entries)
-  if (digest(await readTree(dir)) === expected) return dir
+  if (digest(await readTree(dir)) === expected) return canonical()
 
   const temp = `${dir}.${randomUUID()}.tmp`
   await Promise.all(entries.map(([file, bytes]) => Bun.write(path.join(temp, ...file.split("/")), bytes)))
@@ -40,7 +43,7 @@ export async function extract(files: Record<string, string>, cache: string, vers
     await fs.rm(temp, { recursive: true, force: true })
     if (digest(await readTree(dir)) !== expected) throw error
   })
-  return dir
+  return canonical()
 }
 
 // Every non-directory entry counts, so an added file or a planted link also fails verification.
