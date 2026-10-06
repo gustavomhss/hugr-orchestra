@@ -1360,7 +1360,7 @@ test("direct model panel renders current model selector", async () => {
     expect(frame).toContain("GPT-5")
     expect(frame).toContain("current")
     expect(frame).toContain("GPT Free")
-    expect(frame).toContain("Free")
+    expect(frame).toContain("gpt-free")
     expect(frame).not.toContain("┌")
     expect(frame).not.toContain("┃")
     expect(frame).not.toContain("Old Model")
