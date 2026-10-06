@@ -113,7 +113,7 @@ const probe = (services: { provider: Provider.Interface; llm: LLM.Interface }, a
     const store = contexts()
     store.set({ sessionID: SessionID.make(SESSION), boundary: artifact.boundary, tailStart: artifact.tailStart, text: artifact.text, artifact })
     // Exactly what context.ts injects: the memory as system text and the native tail as messages.
-    const prepared = store.prepare(SessionID.make(SESSION), messages, true)
+    const prepared = store.prepare(SessionID.make(SESSION), messages)
     if (!prepared.system.length) throw new Error("memory not applied")
     const user = messages.findLast((message) => message.info.role === "user")!.info as SessionV1.User
     const reader = yield* services.provider.getModel(user.model.providerID, user.model.modelID)

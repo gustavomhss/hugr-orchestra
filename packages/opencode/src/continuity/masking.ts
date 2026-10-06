@@ -67,6 +67,15 @@ export function candidates(messages: SessionV1.WithParts[], masks: Masks) {
     }
   }
   if (turns < TAIL_TURNS) return []
+  return before(messages, cutoff, masks)
+}
+
+/** The last resort at the hard limit: every maskable result except those of the latest message. */
+export function urgent(messages: SessionV1.WithParts[], masks: Masks) {
+  return before(messages, messages.length - 1, masks)
+}
+
+function before(messages: SessionV1.WithParts[], cutoff: number, masks: Masks) {
   return messages.slice(0, cutoff).flatMap((message) => message.parts.flatMap((part) => {
     if (!completed(part) || PROTECTED.has(part.tool) || masks.has(part.id)) return []
     const saved = Token.estimate(part.state.output) - Token.estimate(stub(part, "x".repeat(64)))
