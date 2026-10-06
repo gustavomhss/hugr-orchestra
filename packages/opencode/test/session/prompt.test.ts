@@ -860,22 +860,16 @@ noLLMServer.instance("prompt tools replace previous prompt tool rules", () =>
     const session = yield* sessions.create({ title: "Prompt tools" })
     const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 
-    yield* prompt.prompt({
-      sessionID: session.id,
-      agent: "maestro",
-      model,
-      noReply: true,
-      tools: { bash: false },
-      parts: [{ type: "text", text: "first" }],
-    })
-    yield* prompt.prompt({
-      sessionID: session.id,
-      agent: "maestro",
-      model,
-      noReply: true,
-      tools: { read: true },
-      parts: [{ type: "text", text: "second" }],
-    })
+    for (const tools of [{ bash: false }, { read: true }] as Record<string, boolean>[]) {
+      yield* prompt.prompt({
+        sessionID: session.id,
+        agent: "maestro",
+        model,
+        noReply: true,
+        tools,
+        parts: [{ type: "text", text: "turn" }],
+      })
+    }
 
     const reloaded = yield* sessions.get(session.id)
     expect(reloaded.permission).toEqual([{ permission: "read", pattern: "*", action: "allow" }])
