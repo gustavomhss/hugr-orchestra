@@ -28,8 +28,6 @@ const PINNED = Object.fromEntries(
   ]),
 )
 const SHA = {
-  tabbed: "4f4882f1ace17f0e8daf460bf0e29e9e73aa36f41256c1bd5f3f5cef6c387bd0", // "\ttest -f alpha.txt\n\n"
-  falseTrue: "1138442a8f74f6e52893bf7df5259f0de71cb0593475193c4e58876ba537aa77", // "false; true"
   artifact: "76049f7c660db89b54e6e743a35e75ea43784f6edbaeef05bec32d992603a5ba", // "a.txt:<sha>\nmissing.txt:absent\n"
   reversed: "c6516fe57dbd0f73ddab3d900f39cc2f830c61c964782b27c761162a24afa76d", // the same two lines swapped
   empty: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -101,7 +99,11 @@ async function repo(env: Env, commits: ReadonlyArray<Files>, messages: ReadonlyA
   return shas
 }
 
-function ports(home: string, judge: Layer.Layer<JudgeConfig.Service> = JudgeStub.layer()) {
+// The stub backend as Orchestra config selects it (WP4's JudgeConfig.layer); RELAY_JUDGE_STUB only forces pass or fail.
+const stub = (forced?: string) =>
+  JudgeConfig.layer({ ...JudgeConfig.defaults, stub: forced === "pass" || forced === "fail" ? forced : undefined })
+
+function ports(home: string, judge: Layer.Layer<JudgeConfig.Service> = stub()) {
   const shell = GateShell.Service.of({
     run: (input) =>
       Effect.tryPromise({
@@ -159,6 +161,22 @@ const verdictOf = async (env: Env, control: Record<string, unknown>, options?: O
   (await graded(env, [{ id: "C", ...control }], options)).verdicts[0]!
 
 const brief = (verdict: GateControl.Verdict) => [verdict.verdict, verdict.graded_by]
+
+// Every golden the TS engine departs from on purpose, with the PARITY-EXCEPTIONS row that declares it.
+const DEPARTURES: Record<string, string> = {
+  "check/check-hook-variables-visible": "WP3-1",
+  "arm/parity-hook-variables-visible": "WP3-1",
+  "arm/parity-judge-paths-glob-from-cwd": "WP3-2",
+  "arm/e4-judge-responses": "WP3-4",
+  "arm/e5-host-check": "WP3-8",
+}
+
+test("every golden departure names its PARITY-EXCEPTIONS row", async () => {
+  const rows = (await Bun.file(path.join(root, "test/golden/PARITY-EXCEPTIONS.md")).text()).split("\n")
+  Object.entries(DEPARTURES).forEach(([golden, row]) =>
+    expect(rows.find((line) => line.startsWith(`| ${row} |`))).toContain(`\`${golden}\``),
+  )
+})
 const cmd = (id: string, program: string) => ({ id, cmd: program })
 
 describe("check goldens", () => {
@@ -170,43 +188,32 @@ describe("check goldens", () => {
   // G2 covers K1–K8 with at least one scenario each; without the goldens this fails rather than passing empty.
   test("the check goldens are present", () => expect(names.length).toBeGreaterThanOrEqual(8))
 
-  // Goldens the TS engine departs from on purpose: the declaring PARITY-EXCEPTIONS row and the TS result per fire.
+  // The TS result per fire of a check golden it departs from on purpose (see DEPARTURES).
   const hidden = { outcome: "check", i: 0, wp: "alpha", failing: ["SEES-WP-ID", "SEES-SPRINT", "SEES-MODE"] }
-  const declared: Record<string, { readonly row: string; readonly fires: ReadonlyArray<unknown> }> = {
-    "check-hook-variables-visible": { row: "WP3-1", fires: [{ exit: 1, stdout: hidden }] },
+  const declared: Record<string, ReadonlyArray<unknown>> = {
+    "check-hook-variables-visible": [{ exit: 1, stdout: hidden }],
   }
-  test("every declared golden departure names its PARITY-EXCEPTIONS row", async () => {
-    const rows = (await Bun.file(path.join(root, "test/golden/PARITY-EXCEPTIONS.md")).text()).split("\n")
-    Object.entries(declared).forEach(([name, entry]) =>
-      expect(rows.find((line) => line.startsWith(`| ${entry.row} |`))).toContain(`check/${name}`),
-    )
-  })
 
   names.sort().forEach((name) =>
     test(name, async () => {
       const scenario: Scenario = await Bun.file(path.join(dir, name, "scenario.json")).json()
       expect(scenario.env?.RELAY_JUDGE_BACKEND ?? "stub").toBe("stub")
-      const env = await scratch()
+      const { env, shas } = await setup(scenario)
       const state = path.join(env.dir, "arm")
-      await mkdir(state)
-      const commits = (scenario.commits ?? []).map((commit) => bytes(commit.files, []))
-      const messages = (scenario.commits ?? []).map((commit) => commit.message)
-      const shas = commits.length ? await repo(env, commits, messages) : []
-      await write(env.work, bytes(scenario.tree ?? {}, shas))
       await write(state, bytes(scenario.prestate ?? {}, shas))
-      const forced = scenario.env?.RELAY_JUDGE_STUB
-      const judge = JudgeStub.layer(forced === "pass" || forced === "fail" ? forced : undefined)
+      const judge = stub(scenario.env?.RELAY_JUDGE_STUB)
       for (const [n, fire] of scenario.fires.entries()) {
+        const check = fire.check ?? {}
         await write(env.work, bytes(fire.tree ?? {}, shas))
         // Like the generator: a counter goes through the state file, a number as `<N>\n`, a string as its bytes.
-        const counter = fire.check.counter
+        const counter = check.counter
         if (counter !== undefined)
           await write(state, { counter: typeof counter === "number" ? `${counter}\n` : counter })
-        const baseRef = fire.check.baseRef === undefined ? undefined : String(value(fire.check.baseRef, shas))
+        const baseRef = check.baseRef === undefined ? undefined : String(value(check.baseRef, shas))
         const input = { sprint: scenario.sprint, workdir: env.work, params: scenario.env ?? {}, stateDir: state }
         // The CLI's exit codes: 0 pass or complete, 1 failing or a plan error, 2 unknown position, 3 busy.
         const actual = await Effect.runPromise(
-          GateCheck.check({ ...input, position: fire.check.position, baseRef }).pipe(
+          GateCheck.check({ ...input, position: check.position, baseRef }).pipe(
             Effect.map((outcome) => ({
               exit: outcome.outcome === "error" ? 2 : outcome.outcome === "check" && outcome.failing.length ? 1 : 0,
               stdout: outcome as unknown,
@@ -221,23 +228,42 @@ describe("check goldens", () => {
         const expected = path.join(dir, name, "expected", String(n))
         const outcome = await Bun.file(path.join(expected, "outcome.json")).json()
         const oracle = JSON.stringify({ exit: outcome.exit, stdout: outcome.stdout })
-        if (declared[name]) expect(JSON.stringify(declared[name].fires[n])).not.toBe(oracle)
-        expect(JSON.stringify(actual)).toBe(declared[name] ? JSON.stringify(declared[name].fires[n]) : oracle)
+        if (declared[name]) expect(JSON.stringify(declared[name][n])).not.toBe(oracle)
+        expect(JSON.stringify(actual)).toBe(declared[name] ? JSON.stringify(declared[name][n]) : oracle)
+        expect(existsSync(path.join(state, ".run.lock"))).toBe(
+          Object.hasOwn(scenario.prestate ?? {}, ".run.lock/owner"),
+        )
         expect(await armFiles(state)).toEqual(await armFiles(path.join(expected, "arm")))
       }
     }),
   )
 })
 
+async function setup(scenario: Scenario) {
+  const env = await scratch()
+  const commits = (scenario.commits ?? []).map((commit) => bytes(commit.files, []))
+  const messages = (scenario.commits ?? []).map((commit) => commit.message)
+  const shas = commits.length ? await repo(env, commits, messages) : []
+  await write(env.work, bytes(scenario.tree ?? {}, shas))
+  return { env, shas }
+}
+
+const read = (file: string) =>
+  Bun.file(file)
+    .text()
+    .catch(() => "")
+const compact = (value: unknown) => Effect.runPromise(RelayJson.compact(value))
+
 interface Scenario {
   readonly sprint: RelaySprint.Sprint
+  readonly meta?: { readonly base_ref?: unknown }
   readonly env?: Record<string, string>
   readonly prestate?: Record<string, unknown>
   readonly commits?: ReadonlyArray<{ readonly message: string; readonly files: Record<string, unknown> }>
   readonly tree?: Record<string, unknown>
   readonly fires: ReadonlyArray<{
     readonly tree?: Record<string, unknown>
-    readonly check: { readonly position?: string; readonly counter?: number | string; readonly baseRef?: unknown }
+    readonly check?: { readonly position?: string; readonly counter?: number | string; readonly baseRef?: unknown }
   }>
 }
 
@@ -266,59 +292,100 @@ async function armFiles(dir: string) {
 }
 
 describe("checklist-item bodies", () => {
-  test("bodies are the oracle's bytes in key order, scope and artifact only when set", async () => {
-    const env = await scratch({ "a.txt": "RELAY_JUDGE_OK\n", "alpha.txt": "" })
-    const result = await graded(env, [
-      { id: "D", assert: "alpha exists", cmd: "\ttest -f alpha.txt\n\n", origin: "injected:lead" },
-      {
-        id: "J",
-        judge: "Inspect",
-        paths: ["a.txt", "missing.txt"],
-        context: "missing.txt",
-        blocking: true,
-        policy: "p",
-      },
-    ])
-    const envelope = { arm: "tok", wp: "wp1", i: 0, macro: "build" }
-    // Plain ASCII values, where JSON.stringify and `jq -c` agree; escapes are the golden rebuild's business below.
-    const lines = result.verdicts.map((verdict) => JSON.stringify(GateControl.body(envelope, verdict)))
-    const head = `{"arm":"tok","wp":"wp1","i":0,"event":"checklist-item"`
-    expect(lines).toEqual([
-      `${head},"item":"D","assert":"alpha exists","verdict":"pass","graded_by":"deterministic","oracle":"${SHA.tabbed}","origin":"injected:lead","macro":"build"}`,
-      `${head},"item":"J","assert":"J","verdict":"fail","graded_by":"judge:stub(non-independent)","oracle":"${SHA.scoped}","origin":"policy:p","scope":"a.txt missing.txt","artifact":"${SHA.artifact}","macro":"build"}`,
-    ])
-    expect(result.failing).toEqual(["J"])
+  // Each arm golden fire that records a round is regraded with the oracle's tree, base ref, params and judge, and its
+  // checklist-item lines are rebuilt from the TS verdicts plus the golden's ts and chain suffix.
+  const dir = path.join(root, "test/golden/arm")
+  const names = existsSync(dir)
+    ? readdirSync(dir).filter((name) => existsSync(path.join(dir, name, "scenario.json")))
+    : []
+  const exitSeven = { verdict: "pass", graded_by: "judge:stub(non-independent)" }
+  // Per departing item: the TS fields, or null when TS records no item.
+  const departing: Record<string, Record<string, Record<string, unknown> | null>> = {
+    "parity-hook-variables-visible": {
+      "sees-token": { verdict: "fail" },
+      "sees-arm-dir": { verdict: "fail" },
+      "sees-index": { verdict: "fail" },
+    },
+    "parity-judge-paths-glob-from-cwd": { GLOB: { artifact: SHA.glob } },
+    "e4-judge-responses": { "EXIT-BLOCKING": exitSeven, "EXIT-ADVISORY": exitSeven },
+    "e5-host-check": { permissions: null },
+  }
+  test("the arm goldens record checklist rounds", async () => {
+    const ledgers = [...new Bun.Glob("*/expected/*/ledger.jsonl").scanSync(dir)]
+    const text = (await Promise.all(ledgers.map((file) => Bun.file(path.join(dir, file)).text()))).join("")
+    expect(text.split(`"event":"checklist-item"`).length).toBeGreaterThan(100)
   })
 
-  test("every checklist-item line in the arm goldens rebuilds byte for byte", async () => {
-    const dir = path.join(root, "test/golden/arm")
-    const ledgers = existsSync(dir) ? [...new Bun.Glob("**/ledger.jsonl").scanSync(dir)] : []
-    const lines = (await Promise.all(ledgers.map((file) => Bun.file(path.join(dir, file)).text())))
-      .flatMap((text) => text.split("\n"))
-      .filter((line) => line.includes(`"event":"checklist-item"`))
-    // G2 records checklist items in its arm scenarios; none means the goldens have not landed.
-    expect(lines.length).toBeGreaterThan(0)
-    const rebuilt = await Promise.all(
-      lines.map((line) => {
-        const entry = JSON.parse(line)
-        const verdict: GateControl.Verdict = {
-          item: entry.item,
-          assert: entry.assert,
-          verdict: entry.verdict,
-          graded_by: entry.graded_by,
-          oracle: entry.oracle,
-          origin: entry.origin,
-          ...(entry.scope === undefined ? {} : { scope: entry.scope }),
-          ...(entry.artifact === undefined ? {} : { artifact: entry.artifact }),
-        }
-        const envelope = { arm: entry.arm, wp: entry.wp, i: entry.i, macro: entry.macro, kind: entry.kind }
-        const chain = { gen: entry.gen, prev: entry.prev, seq: entry.seq, mac: entry.mac, h: entry.h }
-        return Effect.runPromise(RelayJson.compact({ ts: entry.ts, ...GateControl.body(envelope, verdict), ...chain }))
-      }),
-    )
-    expect(rebuilt).toEqual(lines)
-  })
+  names.sort().forEach((name) =>
+    test(`arm/${name}`, async () => {
+      const scenario: Scenario = await Bun.file(path.join(dir, name, "scenario.json")).json()
+      const { env, shas } = await setup(scenario)
+      const params = scenario.env ?? {}
+      const judge = params.RELAY_JUDGE ? scripted : stub(params.RELAY_JUDGE_STUB)
+      const prestate = bytes(scenario.prestate ?? {}, shas)
+      const meta = value(scenario.meta?.base_ref ?? "", shas)
+      for (const [n, fire] of scenario.fires.entries()) {
+        await write(env.work, bytes(fire.tree ?? {}, shas))
+        const expected = (k: number) => path.join(dir, name, "expected", String(k))
+        const before = n
+          ? await read(path.join(expected(n - 1), "ledger.jsonl"))
+          : String(prestate["ledger.jsonl"] ?? "")
+        const lines = (await read(path.join(expected(n), "ledger.jsonl")))
+          .slice(before.length)
+          .split("\n")
+          .filter((line) => line.includes(`"event":"checklist-item"`))
+        if (lines.length === 0) continue
+        const entries = lines.map((line) => JSON.parse(line))
+        const index = entries[0].i
+        const state: Record<string, unknown> = n ? await armFiles(expected(n - 1)) : prestate
+        const base = state[`base_${safe(scenario.sprint.work_packages[index]!.id)}`] ?? meta
+        const baseRef = String(base).replace(/\n+$/, "")
+        const input = { sprint: scenario.sprint, index, workdir: env.work, baseRef, params }
+        const result = await Effect.runPromise(
+          GateControl.run(input, () => Effect.void).pipe(Effect.provide(ports(env.home, judge))),
+        )
+        const kept = entries.flatMap((entry, k) => {
+          const departure = departing[name]?.[entry.item]
+          if (departure === null) return []
+          return [{ entry: { ...entry, ...departure }, line: departure ? undefined : lines[k] }]
+        })
+        const want = await Promise.all(kept.map((item) => item.line ?? compact(item.entry)))
+        const got = await Promise.all(
+          result.verdicts.map((verdict, k) => {
+            const entry = kept[k]?.entry ?? entries[0]
+            const envelope = { arm: entry.arm, wp: entry.wp, i: entry.i, macro: entry.macro, kind: entry.kind }
+            const chain = { gen: entry.gen, prev: entry.prev, seq: entry.seq, mac: entry.mac, h: entry.h }
+            return compact({ ts: entry.ts, ...GateControl.body(envelope, verdict), ...chain })
+          }),
+        )
+        expect(got).toEqual(want)
+      }
+    }),
+  )
 })
+
+// e4-judge-responses runs a judge program from its tree; the TS judge is a service, so its replies are scripted here.
+// Malformed stdout ("{broken", two objects) has no service equivalent and becomes a reply without a verdict.
+const scripted = Layer.succeed(
+  JudgeConfig.Service,
+  JudgeConfig.Service.of({
+    judge: (input) =>
+      Effect.succeed(
+        ({
+          "exit-7": { verdict: "pass", backend: "stub" },
+          "advisory-verdict": { verdict: "advisory", backend: "stub" },
+          "numeric-backend": { verdict: "pass", backend: 17 },
+          "api-pass": { verdict: "pass", reason: "ok", backend: "api" },
+          "api-fail": { verdict: "fail", reason: "no", backend: "api" },
+          "empty-backend": { verdict: "pass", backend: "" },
+        }[input.criterion] ?? {}) as unknown as JudgeBallot.Response,
+      ),
+  }),
+)
+
+// The arm's per-WP file suffix: every UTF-8 byte outside [A-Za-z0-9._-] becomes "_".
+const safe = (id: string) =>
+  Array.from(new TextEncoder().encode(id), (byte) => String.fromCharCode(byte).replace(/[^A-Za-z0-9._-]/, "_")).join("")
 
 describe("command transport", () => {
   test.each([
@@ -333,12 +400,6 @@ describe("command transport", () => {
   ])("%j runs as one program and grades on its final status", async (cmd, expected) => {
     const env = await scratch({ "alpha.txt": "" })
     expect(brief(await verdictOf(env, { cmd }))).toEqual([expected, "deterministic"])
-  })
-
-  test("the oracle hashes the exact command bytes, tabs and trailing LF included", async () => {
-    const env = await scratch({ "alpha.txt": "" })
-    expect((await verdictOf(env, { cmd: "\ttest -f alpha.txt\n\n" })).oracle).toBe(SHA.tabbed)
-    expect((await verdictOf(env, { cmd: "false; true" })).oracle).toBe(SHA.falseTrue)
   })
 
   test("controls run in declared order without short-circuiting", async () => {
@@ -420,17 +481,6 @@ describe("${name} expansion", () => {
     ["${1a} ${a-b} $a {a}", { a: "x" }, "${1a} ${a-b} $a {a}"],
     ["a\n${a}\tb", { a: "é" }, "a\né\tb"],
   ])("%j", (text, params, expected) => expect(GateControl.expandParams(text, params)).toBe(expected))
-
-  test("context paths and the scope expand from params while the ledger keeps the raw scope", async () => {
-    const env = await scratch({ "sub/a.txt": "RELAY_JUDGE_OK\n" })
-    const control = { judge: "Inspect", paths: ["${d}/a.txt"], context: ["${d}/a.txt"] }
-    const verdict = await verdictOf(env, control, { params: { d: "sub" } })
-    const artifact = await Effect.runPromise(GateControl.artifactSha("sub/a.txt", env.work))
-    expect(verdict).toMatchObject({ verdict: "pass", scope: "${d}/a.txt", artifact: Option.getOrThrow(artifact) })
-    expect(verdict.oracle).toBe(GateControl.oracleSha("Inspect :: ${d}/a.txt"))
-    const unset = await verdictOf(env, { judge: "Inspect", context: "${d}/a.txt" })
-    expect([unset.verdict, unset.scope, unset.artifact]).toEqual(["fail", undefined, undefined])
-  })
 })
 
 describe("artifact sha", () => {
@@ -446,18 +496,6 @@ describe("artifact sha", () => {
     expect(await sha("x\\101")).toBe(SHA.octal)
     expect(await sha("sub")).toBe(SHA.directory)
     expect(await sha("sub/b.txt")).toBe(SHA.emptyFile)
-  })
-
-  test("a judge entry records the scope digest; a command entry never does", async () => {
-    const env = await scratch({ "a.txt": "RELAY_JUDGE_OK\n" })
-    const result = await graded(env, [
-      { id: "J", judge: "Inspect", paths: ["a.txt", "missing.txt"], context: "a.txt" },
-      { id: "D", cmd: "true", paths: ["a.txt"] },
-    ])
-    expect(result.verdicts.map((verdict) => [verdict.scope, verdict.artifact, verdict.oracle])).toEqual([
-      ["a.txt missing.txt", SHA.artifact, SHA.scoped],
-      [undefined, undefined, GateControl.oracleSha("true")],
-    ])
   })
 })
 
@@ -475,7 +513,7 @@ describe("named failures and judge rules", () => {
     [{ judge: "Inspect", paths: "a.txt" }, "judge:unavailable(invalid-scope)"],
   ])("%j is a named failure that blocks even when advisory", async (control, gradedBy) => {
     const env = await scratch()
-    const result = await graded(env, [{ id: "BAD", ...control }], { judge: JudgeStub.layer("pass") })
+    const result = await graded(env, [{ id: "BAD", ...control }], { judge: stub("pass") })
     expect(result.failing).toEqual(["BAD"])
     expect(result.verdicts).toEqual([
       { item: "BAD", assert: "BAD", verdict: "fail", graded_by: gradedBy, oracle: "", origin: "sprint" },
@@ -485,7 +523,7 @@ describe("named failures and judge rules", () => {
   test("a nonempty command wins over any judge; an empty one falls back to it", async () => {
     const env = await scratch()
     expect(brief(await verdictOf(env, { cmd: "false; true", judge: { x: 1 } }))).toEqual(["pass", "deterministic"])
-    const judged = await verdictOf(env, { cmd: "", judge: "Inspect" }, { judge: JudgeStub.layer("pass") })
+    const judged = await verdictOf(env, { cmd: "", judge: "Inspect" }, { judge: stub("pass") })
     expect([...brief(judged), judged.oracle]).toEqual(["pass", "judge:stub(non-independent)", SHA.inspect])
   })
 
@@ -565,6 +603,31 @@ describe("judge stub", () => {
     const response = await Effect.runPromise(JudgeStub.judge({ criterion: "never read", files }, forced))
     expect(response).toEqual({ verdict, reason, backend: "stub", available: true })
   })
+
+  // G1's stub goldens, through the stub backend as JudgeConfig.layer binds it.
+  const dir = path.join(root, "test/golden/judge")
+  const names = existsSync(dir) ? readdirSync(dir).filter((name) => name.startsWith("stub-")) : []
+  test("the G1 stub goldens are present", () => expect(names.length).toBe(7))
+  names.sort().forEach((name) =>
+    test(`judge/${name}`, async () => {
+      const golden: {
+        criterion: string
+        files: Array<{ name: string; text: string | null }>
+        env: Record<string, string>
+      } = await Bun.file(path.join(dir, name, "case.json")).json()
+      const files = golden.files.map((file) =>
+        file.text === null ? { name: file.name } : { name: file.name, text: file.text },
+      )
+      const response = await Effect.runPromise(
+        Effect.gen(function* () {
+          const judge = yield* JudgeConfig.Service
+          return yield* judge.judge({ criterion: golden.criterion, files })
+        }).pipe(Effect.provide(stub(golden.env.RELAY_JUDGE_STUB))),
+      )
+      const expected = JSON.parse(await Bun.file(path.join(dir, name, "response.jsonl")).text())
+      expect(JSON.stringify(response)).toBe(JSON.stringify(expected))
+    }),
+  )
 })
 
 describe("plan errors", () => {
@@ -618,100 +681,25 @@ describe("plan errors", () => {
   })
 })
 
+// Positions, counters, the lock, base refs and plan errors are pinned by the K1–K8 goldens above; these are the rest.
 describe("check", () => {
-  const sprint = plan([
-    { id: "inserted", checklist: [cmd("WRONG", "true")] },
-    { id: "beta", checklist: [cmd("SUFFIX", "true")] },
-    { id: "build.beta", macro: "\tbuild\n\n", checklist: [cmd("WHOLE", "test -f beta.txt")] },
-  ])
-  const check = (env: Env, input: Partial<GateCheck.Input>) =>
-    GateCheck.check({ sprint, workdir: env.work, params: {}, ...input }).pipe(Effect.provide(ports(env.home)))
-  const run = (env: Env, input: Partial<GateCheck.Input>) => Effect.runPromise(check(env, input))
-  const json = async (env: Env, input: Partial<GateCheck.Input>) => JSON.stringify(await run(env, input))
-  const refused = (env: Env, input: Partial<GateCheck.Input>) => Effect.runPromise(Effect.flip(check(env, input)))
-  const checked = (i: number, wp: string, failing: string[] = []) => ({ outcome: "check" as const, i, wp, failing })
-  const macro = "\tbuild\n\n"
-
-  test("a named position matches the whole ID first, then the suffix after the first dot", async () => {
-    const env = await scratch()
-    const whole = `{"outcome":"check","i":2,"wp":"build.beta","failing":["WHOLE"],"macro":"\\tbuild\\n\\n"}`
-    expect(await json(env, { position: "build.beta" })).toBe(whole)
-    expect(await json(env, { position: "outer.build.beta" })).toBe(whole)
-    expect(await json(env, { position: "x.beta" })).toBe(`{"outcome":"check","i":1,"wp":"beta","failing":[]}`)
-    expect(await json(env, { position: "lost.wp", counter: 99 })).toBe(
-      `{"outcome":"error","error":"unknown-position","position":"lost.wp"}`,
-    )
-  })
-
-  test("the counter selects the WP unless a position is named; past the end is complete", async () => {
-    const env = await scratch({ "beta.txt": "" })
-    const state = path.join(env.dir, "state")
-    await write(state, { counter: "2\n", retry_2: "1\n" })
-    const before = await armFiles(state)
-    expect(await run(env, { stateDir: state })).toEqual({ ...checked(2, "build.beta"), macro })
-    expect(await run(env, { stateDir: state, counter: 0 })).toEqual(checked(0, "inserted"))
-    expect(await json(env, { counter: 3 })).toBe(`{"outcome":"complete","i":3}`)
-    await write(state, { counter: "99" })
-    expect(await run(env, { stateDir: state })).toEqual({ outcome: "complete", i: 99 })
-    expect(await run(env, { stateDir: state, position: "beta" })).toEqual(checked(1, "beta"))
-    expect(await armFiles(state)).toEqual({ ...before, counter: "99" })
-  })
-
-  test("a held lock is Busy before anything runs; a finished check releases its lock", async () => {
-    const env = await scratch()
-    const state = path.join(env.dir, "state")
-    const lock = path.join(state, ".run.lock")
-    await run(env, { stateDir: state, position: "beta" })
-    expect(existsSync(lock)).toBe(false)
-    await mkdir(lock, { recursive: true })
-    const busy = await refused(env, { stateDir: state, position: "lost" })
-    expect(busy).toBeInstanceOf(GateCheck.Busy)
-    expect([(busy as GateCheck.Busy).lock, existsSync(lock)]).toEqual([lock, true])
-  })
-
-  test("base ref: explicit wins, explicit empty disables diff, otherwise the state file", async () => {
-    const env = await scratch()
-    const [base] = await repo(env, [{ "seed.txt": "seed\n" }])
-    await write(env.work, { "result.txt": "RELAY_JUDGE_OK\n" })
-    const state = path.join(env.dir, "state")
-    await write(state, { base_ref: base! })
-    const diff = plan([{ id: "target", checklist: [{ id: "DIFF", judge: "inspect", diff: true, blocking: true }] }])
-    const failing = async (input: Partial<GateCheck.Input>) => {
-      const outcome = await run(env, { sprint: diff, position: "target", stateDir: state, ...input })
-      return outcome.outcome === "check" ? outcome.failing : outcome
-    }
-    expect(await failing({})).toEqual([])
-    expect(await failing({ baseRef: "" })).toEqual(["DIFF"])
-    await write(state, { base_ref: "invalid-state-base" })
-    expect(await failing({})).toEqual(["DIFF"])
-    expect(await failing({ baseRef: base })).toEqual([])
-    expect(await gitText(env, "status", "--porcelain")).toBe("?? result.txt\n")
-  })
-
-  const identity = (key: string) => async (invalid: unknown) => {
-    const env = await scratch()
-    const bad = plan([{ id: "current", checklist: [cmd("SIDE", "touch ran")], [key]: invalid }])
-    const error = await refused(env, { sprint: bad, counter: 0 })
-    expect(error).toBeInstanceOf(GateControl.PlanError)
-    expect((error as GateControl.PlanError).message).toContain(`WP ${key}`)
-    expect(existsSync(path.join(env.work, "ran"))).toBe(false)
-  }
-  test.each([7, "", null, "bad\u0000id"])("an invalid selected WP id %j stops before any control", identity("id"))
-  test.each([false, "bad\u0000macro"])("an invalid selected WP macro %j stops before any control", identity("macro"))
+  const check = (env: Env, sprint: RelaySprint.Sprint) =>
+    GateCheck.check({ sprint, workdir: env.work, params: {}, counter: 0 }).pipe(Effect.provide(ports(env.home)))
+  const checked = (wp: string, failing: string[]) => ({ outcome: "check" as const, i: 0, wp, failing })
 
   test("only the selected WP's identity matters, and failing IDs travel as the CLI's '; '-joined string", async () => {
     const env = await scratch()
     const joined = plan([{ id: "current", checklist: [cmd("a; b", "false"), cmd("tail\n", "false")] }, { id: 7 }])
-    expect(await run(env, { sprint: joined, counter: 0 })).toEqual(checked(0, "current", ["a", "b", "tail"]))
+    expect(await Effect.runPromise(check(env, joined))).toEqual(checked("current", ["a", "b", "tail"]))
   })
 
   test("a dry check fails host checks closed and needs an existing workdir", async () => {
     const env = await scratch()
     const host = plan([{ id: "h", checklist: [{ id: "H", host_check: "permissions" }, cmd("D", "true")] }])
-    expect(await run(env, { sprint: host, counter: 0 })).toEqual(checked(0, "h", ["H"]))
+    expect(await Effect.runPromise(check(env, host))).toEqual(checked("h", ["H"]))
     const absent = path.join(env.dir, "absent")
-    const missing = await refused({ ...env, work: absent }, { counter: 0 })
-    expect((missing as GateControl.PlanError).message).toBe(`relay-gate: workdir not found: ${absent}`)
+    const missing = await Effect.runPromise(Effect.flip(check({ ...env, work: absent }, host)))
+    expect(missing.message).toBe(`relay-gate: workdir not found: ${absent}`)
   })
 })
 
@@ -756,7 +744,7 @@ describe("parity exceptions", () => {
 
   test("WP3-4: no CLI transport, so a criterion argparse refused reaches the judge", async () => {
     const env = await scratch()
-    const verdict = await verdictOf(env, { judge: "-strict", blocking: true }, { judge: JudgeStub.layer("pass") })
+    const verdict = await verdictOf(env, { judge: "-strict", blocking: true }, { judge: stub("pass") })
     expect(brief(verdict)).toEqual(["pass", "judge:stub(non-independent)"])
   })
 
@@ -770,11 +758,7 @@ describe("parity exceptions", () => {
     const tracked = await scratch()
     const [base] = await repo(tracked, [{ "seed.txt": "seed\n" }])
     await write(tracked.work, { "bin.txt": binary })
-    const diff = await verdictOf(
-      tracked,
-      { judge: "Inspect", diff: true },
-      { baseRef: base, judge: JudgeStub.layer("pass") },
-    )
+    const diff = await verdictOf(tracked, { judge: "Inspect", diff: true }, { baseRef: base, judge: stub("pass") })
     expect(brief(diff)).toEqual(["fail", "judge:unavailable(no-diff)"])
   })
 

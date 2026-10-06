@@ -1,8 +1,8 @@
 export * as JudgeStub from "./stub"
 
-import { Effect, Layer } from "effect"
+import { Effect } from "effect"
 import type { JudgeBallot } from "./ballot"
-import { JudgeConfig } from "./config"
+import type { JudgeConfig } from "./config"
 
 // The token a context file must carry for the unforced stub to pass.
 export const MARKER = "RELAY_JUDGE_OK"
@@ -19,10 +19,6 @@ export const judge = (input: JudgeConfig.Input, forced?: "pass" | "fail"): Effec
     if (absent) return answer("fail", `stub: ${MARKER} marker absent in ${absent.name}`)
     return answer("pass", "stub: marker present in all context files")
   })
-
-// The judge service backed by the stub, as `relay.judge.backend: "stub"` binds it.
-export const layer = (forced?: "pass" | "fail") =>
-  Layer.succeed(JudgeConfig.Service, JudgeConfig.Service.of({ judge: (input) => judge(input, forced) }))
 
 function answer(verdict: "pass" | "fail", reason: string): JudgeBallot.Response {
   return { verdict, reason, backend: "stub", available: true }
