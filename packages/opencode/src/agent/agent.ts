@@ -169,7 +169,13 @@ const layer = Layer.effect(
             description:
               "General-purpose work from a full brief: research, analysis or multi-step changes no seat covers. Edits files and runs shell commands; cannot ask the owner questions or start teammates. Returns the outcome, what changed, how it was checked and what is left.",
             prompt: PROMPT_GENERAL,
-            permission: Permission.merge(defaults, Permission.fromConfig({ todowrite: "deny" }), team, user),
+            permission: Permission.merge(
+              defaults,
+              // Playbooks are Maestro's procedures: general's skill list leaves them out, but a brief can still name one.
+              Permission.fromConfig({ todowrite: "deny", skill: { [path.join(Skill.PLAYBOOKS_DIR, "*")]: "deny" } }),
+              team,
+              user,
+            ),
             options: {},
             mode: "subagent",
             native: true,

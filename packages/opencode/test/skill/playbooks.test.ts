@@ -94,10 +94,7 @@ it.instance(
       expect(listed).not.toContain("frame-request")
       expect(Permission.evaluate("skill", "maestro-verify", general.permission).action).toBe("allow")
     }),
-  {
-    git: true,
-    config: { agent: { general: { permission: { skill: { [path.join(Skill.PLAYBOOKS_DIR, "*")]: "deny" } } } } },
-  },
+  { git: true },
 )
 
 it.instance(
