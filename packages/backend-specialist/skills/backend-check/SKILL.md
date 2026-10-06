@@ -44,7 +44,7 @@ Framework test harness APIs live in the references your stack selects.
 
 ## Honest evidence
 
-- A forced skip, zero selected cases, an absent fixture, a fault hook that was never reached, or a generator that rejected every input is never a pass, whatever the exit code.
+- A forced skip, zero selected cases, an absent fixture, a fault hook that was never reached, or a generator that rejected every input is never a pass, whatever the exit code: record `acquisition-error` with the reason, unless the packet itself asked for the skip.
 - A failing case that detects a production defect does not authorize an unassigned repair, and you never weaken a test or its acceptance to make it pass. Report the failure with its reproducer: the concrete input or trace, the fixture recipe and the versions.
 - A prescribed proof or verifier run is a named check like any other: run exactly what the packet names and report what it showed.
 - Your checks show what ran and what it observed. Whether the work is verified is decided by the host's own run, and acceptance by the caller; never claim either.
