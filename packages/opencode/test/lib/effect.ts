@@ -1,6 +1,6 @@
 import { test, type TestOptions } from "bun:test"
 import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
-import { Cause, Duration, Effect, Exit, Layer } from "effect"
+import { Cause, Clock, Deferred, Duration, Effect, Exit, Layer, Queue } from "effect"
 import * as Scope from "effect/Scope"
 import * as TestClock from "effect/testing/TestClock"
 import * as TestConsole from "effect/testing/TestConsole"
@@ -175,3 +175,29 @@ export const pollWithTimeout = <A, E, R>(
       orElse: () => Effect.fail(new Error(message)),
     }),
   )
+
+// A Clock whose sleeps never elapse on their own. Each sleep is published on
+// `sleeps` with its requested length and resumes only when the test runs its
+// `wake`, so a test can wait until a backoff has actually started, check its
+// length, and then release or interrupt it without waiting in real time.
+// Current time still reads the live clock.
+export const heldClock = Effect.gen(function* () {
+  const live = yield* Clock.clockWith(Effect.succeed)
+  const sleeps = yield* Queue.unbounded<{ millis: number; wake: Effect.Effect<void> }>()
+  const clock: Clock.Clock = {
+    currentTimeMillisUnsafe: () => live.currentTimeMillisUnsafe(),
+    currentTimeMillis: live.currentTimeMillis,
+    currentTimeNanosUnsafe: () => live.currentTimeNanosUnsafe(),
+    currentTimeNanos: live.currentTimeNanos,
+    sleep: (duration) =>
+      Effect.gen(function* () {
+        const wake = yield* Deferred.make<void>()
+        yield* Queue.offer(sleeps, {
+          millis: Duration.toMillis(duration),
+          wake: Deferred.succeed(wake, undefined).pipe(Effect.asVoid),
+        })
+        yield* Deferred.await(wake)
+      }),
+  }
+  return { clock, sleeps }
+})
