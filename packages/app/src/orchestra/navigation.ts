@@ -9,10 +9,12 @@ export const navigation = [
   { id: "agents", label: "orchestra.nav.agents", chapter: "C11", wip: true },
   // Session-relative governance (S20), opened as a dialog over the current session; not a route.
   { id: "maestro", label: "orchestra.nav.maestro", chapter: undefined },
+  // Relay workflows sit next to Maestro, which runs them (owner decision, 2026-10-06).
+  { id: "workflows", label: "orchestra.nav.workflows", chapter: "C14" },
   { id: "mcp", label: "orchestra.nav.mcp", chapter: "C01", wip: true },
   { id: "skills", label: "orchestra.nav.skills", chapter: "C02" },
   { id: "plugins", label: "orchestra.nav.plugins", chapter: "C03" },
-  { id: "hooks", label: "orchestra.nav.hooks", chapter: "C04", wip: true },
+  { id: "hooks", label: "orchestra.nav.hooks", chapter: "C04" },
   { id: "cicd", label: "orchestra.nav.cicd", chapter: "C07", wip: true },
   { id: "schedule", label: "orchestra.nav.schedule", chapter: "C08" },
   { id: "env", label: "orchestra.nav.env", chapter: "C09" },

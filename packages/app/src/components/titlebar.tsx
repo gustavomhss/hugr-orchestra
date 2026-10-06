@@ -47,6 +47,7 @@ import { projectForSession } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import { createNativeTitlebarFrame } from "./orchestra/native-frame"
 import { breadcrumbLabel } from "../orchestra/navigation"
+import { CrumbTrail } from "../orchestra/crumbs"
 
 const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 36
@@ -529,7 +530,7 @@ export function Titlebar(props: {
                   >
                     <span>{language.t("orchestra.brand.name")}</span>
                     <span aria-hidden="true">/</span>
-                    <span>{language.t(breadcrumbLabel(layout.route()))}</span>
+                    <CrumbTrail label={language.t(breadcrumbLabel(layout.route()))} />
                   </div>
                 </Show>
                 <Show when={tabsMount()} keyed fallback={tabControls}>

@@ -31,6 +31,7 @@ import { chapterPages } from "@/orchestra/chapter-route"
 import { isWip, navigation } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
+import { useAwaitingRuns } from "@/orchestra/relay/source"
 import { createHomeController } from "@/pages/home/home-controller"
 import {
   displayName,
@@ -51,6 +52,9 @@ const icons = {
   agents:
     '<circle cx="5.4" cy="4.6" r="2.1"/><circle cx="11.4" cy="5" r="1.7"/><path d="M1.6 13.2c.3-2.2 1.9-3.4 3.8-3.4s3.5 1.2 3.8 3.4M9.9 9.9c2.2-.3 3.9 1 4.3 3.3"/>',
   // Official design icon (design/icons/maestro.svg) drawn on a 20-unit grid.
+  // Relay workflows: three linked steps (the approved Relay mock's mark).
+  workflows:
+    '<rect x="1.8" y="2.6" width="4" height="4" rx="1"/><rect x="10.2" y="2.6" width="4" height="4" rx="1"/><rect x="6" y="9.6" width="4" height="4" rx="1"/><path d="M5.8 4.6h4.4M12.2 6.6v1.6a1.2 1.2 0 0 1-1.2 1.2H10"/>',
   maestro:
     '<g transform="scale(.8)" stroke-width="1.75"><path d="M13.332 8.7487C11.4911 8.7487 9.9987 7.25631 9.9987 5.41536M6.66536 11.2487C8.50631 11.2487 9.9987 12.7411 9.9987 14.582M9.9987 2.78209L9.9987 17.0658M16.004 15.0475C17.1255 14.5876 17.9154 13.4849 17.9154 12.1978C17.9154 11.3363 17.5615 10.5575 16.9913 9.9987C17.5615 9.43991 17.9154 8.66108 17.9154 7.79962C17.9154 6.21199 16.7136 4.90504 15.1702 4.73878C14.7858 3.21216 13.4039 2.08203 11.758 2.08203C11.1171 2.08203 10.5162 2.25337 9.9987 2.55275C9.48117 2.25337 8.88032 2.08203 8.23944 2.08203C6.59353 2.08203 5.21157 3.21216 4.82722 4.73878C3.28377 4.90504 2.08203 6.21199 2.08203 7.79962C2.08203 8.66108 2.43585 9.43991 3.00609 9.9987C2.43585 10.5575 2.08203 11.3363 2.08203 12.1978C2.08203 13.4849 2.87191 14.5876 3.99339 15.0475C4.46688 16.7033 5.9917 17.9154 7.79962 17.9154C8.61335 17.9154 9.36972 17.6698 9.9987 17.2488C10.6277 17.6698 11.384 17.9154 12.1978 17.9154C14.0057 17.9154 15.5305 16.7033 16.004 15.0475Z"/></g>',
   mcp: '<path d="M5 2v3M11 2v3M3 5h10v3a5 5 0 0 1-10 0V5ZM8 13v2"/>',
@@ -177,6 +181,12 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
           : skipToken,
       retry: false,
     }
+  })
+  // Runs waiting for a human in this profile; the server reports none when it has no Relay routes.
+  const awaiting = useAwaitingRuns(() => {
+    const target = profile()
+    const directory = target.project?.worktree ?? target.directory
+    return target.conn && directory ? { server: target.conn, directory } : undefined
   })
   const meta = () => {
     const count = agents.data?.filter((agent) => !agent.hidden).length
@@ -311,13 +321,53 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
     })
   }
 
-  function openChapter(id: string) {
+  function openChapter(id: string, view = "") {
     // Chapter pages read the Home selection; carry the profile the user is looking at.
     const target = profile()
     const directory = target.project?.worktree ?? target.directory
     if (directory) layout.home.setSelection({ server: target.server, directory })
-    navigate(`/orchestra/${id}`)
+    navigate(`/orchestra/${id}${view}`)
   }
+
+  // Workflows and Hooks in the command palette, from every page.
+  command.register("orchestra.relay", () => {
+    const category = language.t("orchestra.palette.relay")
+    return [
+      {
+        id: "relay.workflows.open",
+        title: language.t("orchestra.nav.workflows"),
+        description: language.t("orchestra.palette.goTo"),
+        category,
+        onSelect: () => openChapter("workflows"),
+      },
+      {
+        id: "relay.hooks.open",
+        title: language.t("orchestra.nav.hooks"),
+        description: language.t("orchestra.palette.goTo"),
+        category,
+        onSelect: () => openChapter("hooks"),
+      },
+      {
+        id: "relay.executions.open",
+        title: language.t("orchestra.palette.executions"),
+        description: language.t("orchestra.palette.goTo"),
+        category,
+        onSelect: () => openChapter("workflows", "/executions"),
+      },
+      {
+        id: "relay.workflow.new",
+        title: language.t("orchestra.workflows.new"),
+        category,
+        onSelect: () => openChapter("workflows", "/new"),
+      },
+      {
+        id: "relay.hook.new",
+        title: language.t("orchestra.hooks.new"),
+        category,
+        onSelect: () => openChapter("hooks", "/new"),
+      },
+    ]
+  })
 
   function current(id: string) {
     const route = layout.route()
@@ -504,6 +554,18 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       <span class="orchestra-nav-label">{language.t(item.label)}</span>
                       <Show when={item.id === "search"}>
                         <kbd>{command.keybind("command.palette")}</kbd>
+                      </Show>
+                      <Show when={item.id === "workflows" && awaiting() > 0}>
+                        <span
+                          class="orchestra-attention-chip"
+                          data-slot="orchestra-nav-attention"
+                          title={language.t("orchestra.nav.workflows.awaiting", { count: awaiting() })}
+                        >
+                          <span aria-hidden="true">{awaiting()}</span>
+                          <span class="orchestra-sr-only">
+                            {language.t("orchestra.nav.workflows.awaiting", { count: awaiting() })}
+                          </span>
+                        </span>
                       </Show>
                       {/* The WIP mark replaces the pending dot; an unbuilt WIP chapter keeps its pending dialog. */}
                       <Show when={isWip(item.id)}>
