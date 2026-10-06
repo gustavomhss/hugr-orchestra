@@ -76,6 +76,7 @@ function fixture(native: () => Promise<unknown>) {
     focus: () => undefined,
     isDestroyed: () => false,
     isCrashed: () => false,
+    once: () => contents,
   }
   const win = {
     id: 1,
