@@ -180,13 +180,13 @@ it.instance("native execution seats get a shell description without commit or tm
     const agents = yield* Agent.Service
     for (const id of ["backend", "patty", "rosie"]) {
       const description = (yield* resolve(yield* agents.get(id))).bash?.description ?? ""
-      expect(description).toContain("Executes a given")
+      expect(description).toContain("Run a command in a fresh, non-interactive process.")
       expect(description).not.toContain("# Git and GitHub")
-      expect(description).not.toContain("commit, amend, push")
+      expect(description).not.toContain("Commit, push or open a pull request")
       expect(description).not.toContain(Global.Path.tmp)
     }
-    const build = (yield* resolve(yield* agents.get("build"))).bash?.description ?? ""
-    expect(build).toContain("# Git and GitHub")
-    expect(build).toContain(Global.Path.tmp)
+    const maestro = (yield* resolve(yield* agents.get("maestro"))).bash?.description ?? ""
+    expect(maestro).toContain("# Git and GitHub")
+    expect(maestro).toContain(Global.Path.tmp)
   }),
 )

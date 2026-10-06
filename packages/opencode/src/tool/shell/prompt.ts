@@ -98,7 +98,7 @@ export function render(name: string, platform: NodeJS.Platform, limits: Limits, 
 // description drops the tmp claim and the Git and GitHub section.
 export function nativeSeat(description: string) {
   return description
-    .replace(/\r?\nUse `[^`\r\n]+` for temporary work outside the workspace\.[^\r\n]*\r?\n/, "")
+    .replace(/\r?\n- `[^`\r\n]+` exists and is pre-approved for temporary files outside the repository\.[^\r\n]*/, "")
     .replace(/(\r?\n)+# Git and GitHub\r?\n[\s\S]*$/, "\n")
 }
 

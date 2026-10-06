@@ -1,21 +1,22 @@
 import { expect, test } from "bun:test"
+import { Global } from "@opencode-ai/core/global"
 import { ShellPrompt } from "../../src/tool/shell/prompt"
+
+// The real description, so a rewrite of the shell text cannot leave the native seat copy unchanged.
+const description = ShellPrompt.render("bash", "linux", { maxLines: 2000, maxBytes: 51200 }, 120000).description
 
 // Windows checkouts may convert the shell description to CRLF; native seats must lose the same sections either way.
 test.each([
   ["LF", "\n"],
   ["CRLF", "\r\n"],
 ])("native seat description drops tmp and Git guidance with %s line endings", (_, eol) => {
-  const description = [
-    "Executes a given command.",
-    "Use `/tmp/x` for temporary work outside the workspace. It is pre-approved.",
-    "Keep commands short.",
-    "",
-    "# Git and GitHub",
-    "Commit only when asked.",
-  ].join(eol)
-  const seat = ShellPrompt.nativeSeat(description)
-  expect(seat).toContain("Keep commands short.")
-  expect(seat).not.toContain("temporary work outside the workspace")
+  const full = description.replaceAll("\n", eol)
+  expect(full).toContain(Global.Path.tmp)
+  expect(full).toContain("# Git and GitHub")
+  const seat = ShellPrompt.nativeSeat(full)
+  expect(seat).toContain("Read files and edit their contents with the file tools")
+  expect(seat).toContain("# Results")
+  expect(seat).not.toContain(Global.Path.tmp)
+  expect(seat).not.toContain("pre-approved")
   expect(seat).not.toContain("# Git and GitHub")
 })
